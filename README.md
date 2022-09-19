@@ -28,10 +28,12 @@ By default [Parsl](http://parsl-project.org/), used under the hood by Fractal
 Server, submits Slurm jobs under the user that runs Fractal Server.
 It may be desirable, for accounting and management, that slurm jobs be instead
 submitted by the fractal end user. This is currently achieved by sudo-ing to
-the end-user before interacting with Slurm. It is thus required that the
-Fractal Server run under a user with limited sudo privileges like so:
+the end-user before interacting with Slurm. Assuming that the Fractal Server is
+running under the user `fractal`, it is thus required that this user have
+limited sudo privileges like so:
 
-```# /etc/sudoers
+```
+# /etc/sudoers
 [...]
 fractal  ALL=(!root)/bin/su$
 fractal  ALL=(root)/bin/su - [a-zA-Z][a-z0-9A-Z]*
