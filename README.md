@@ -1,5 +1,4 @@
 # Fractal Server
-|licence|
 
 [![PyPI version](https://img.shields.io/pypi/v/fractal-server?color=%2334D058&label=pypi%20package)](https://pypi.org/project/fractal-server/)
 
