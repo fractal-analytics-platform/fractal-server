@@ -1,4 +1,6 @@
 fractal.json
+.python-version
+.coverage
 apply.json
 .pytest_cache/
 __pycache__

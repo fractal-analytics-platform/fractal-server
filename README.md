@@ -22,6 +22,24 @@ Fractal core tasks, use
 pip install fractal-server[core-tasks]
 ```
 
+### SLURM configuration
+
+By default [Parsl](http://parsl-project.org/), used under the hood by Fractal
+Server, submits Slurm jobs under the user that runs Fractal Server.
+It may be desirable, for accounting and management, that slurm jobs be instead
+submitted by the fractal end user. This is currently achieved by sudo-ing to
+the end-user before interacting with Slurm. It is thus required that the
+Fractal Server run under a user with limited sudo privileges like so:
+
+```# /etc/sudoers
+[...]
+fractal  ALL=(!root)/bin/su$
+fractal  ALL=(root)/bin/su - [a-zA-Z][a-z0-9A-Z]*
+fractal  ALL=(!root)/bin/su -
+fractal  ALL=(!root)/bin/su - root
+[...]
+```
+
 ### Environment and database
 
 You will need to define some environment variables in order to use
