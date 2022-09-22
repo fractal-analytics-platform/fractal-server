@@ -1,6 +1,9 @@
 import importlib
 from concurrent.futures import Future
 from copy import deepcopy
+from logging import FileHandler
+from logging import Formatter
+from logging import getLogger
 from pathlib import Path
 from typing import Any
 from typing import Dict
@@ -14,6 +17,7 @@ from parsl.app.python import PythonApp
 from parsl.dataflow.futures import AppFuture
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ... import __VERSION__
 from ..models.project import Dataset
 from ..models.project import Project
 from ..models.task import PreprocessedTask
@@ -24,6 +28,14 @@ from .runner_utils import get_unique_executor
 from .runner_utils import load_parsl_config
 
 # from .runner_utils import shutdown_executors
+
+
+formatter = Formatter("%(asctime)s; %(levelname)s; %(message)s")
+logger = getLogger(__name__)
+handler = FileHandler("fractal.log", mode="a")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.setLevel("INFO")
 
 
 def _task_fun(
@@ -169,6 +181,7 @@ def _atomic_task_factory(
     task_executor = get_unique_executor(
         workflow_id=workflow_id, task_executor=task.executor
     )
+    logger.info(f'Starting "{task.name}" task on "{task_executor}" executor.')
 
     parall_level = task.parallelization_level
     if metadata and parall_level:
@@ -232,7 +245,7 @@ def _process_workflow(
     this_metadata = deepcopy(metadata)
 
     workflow_id = task.id
-    load_parsl_config(workflow_id=workflow_id)
+    load_parsl_config(workflow_id=workflow_id, logger=logger)
 
     apps: List[PythonApp] = []
 
@@ -357,6 +370,12 @@ async def submit_workflow(
 
     input_paths = input_dataset.paths
     output_path = output_dataset.paths[0]
+
+    logger.info("*" * 80)
+    logger.info(f"fractal_server.__VERSION__: {__VERSION__}")
+    logger.info(f"Start workflow {workflow.name}")
+    logger.info(f"{input_paths=}")
+    logger.info(f"{output_path=}")
 
     final_metadata = _process_workflow(
         task=workflow,
