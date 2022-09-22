@@ -16,6 +16,8 @@ services:
                 - 10022:22
         command: "sacctmgr create account name=test0 && sacctmgr create user test0 account=test0"
   slurmnode1:
+        extra_hosts:
+          host.docker.internal: host-gateway
         image: rancavil/slurm-node:19.05.5-1
         hostname: slurmnode1
         user: admin
@@ -26,3 +28,7 @@ services:
                 - SLURM_CPUS_ON_NODE=1
         links:
                 - slurmmaster
+                  # ports:
+                  #   - 50055-50057:50055-50057
+                  #   - 54000-55000:54000-55000
+        command: "sudo apt-get update && sudo apt-get install -y python3-pip && sudo pip install parsl==1.3.0dev1"

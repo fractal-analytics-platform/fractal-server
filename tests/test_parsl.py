@@ -47,7 +47,7 @@ def test_parsl_slurm_config(ssh_params):
         nodes_per_block=1,
         init_blocks=1,
         min_blocks=0,
-        max_blocks=4,
+        max_blocks=1,
         walltime="10:00:00",
     )
     prov_slurm_cpu = SlurmProvider(**provider_args)
@@ -55,7 +55,9 @@ def test_parsl_slurm_config(ssh_params):
     htex = HighThroughputExecutor(
         label="parsl_executor",
         provider=prov_slurm_cpu,
-        address="0.0.0.0:6817",  # address_by_hostname(),
+        address="host.docker.internal",
+        working_dir="/tmp/slurm_share/test0/work",
+        worker_logdir_root="/tmp/slurm_share/test0",
     )
 
     parsl.clear()
@@ -63,7 +65,8 @@ def test_parsl_slurm_config(ssh_params):
     # dfk = DataFlowKernelLoader.dfk()
     # dfk.add_executors([htex])
 
-    parsl_app = PythonApp(hello, executors=["parsl_executor"])
-    print(parsl_app().result())
+    from math import cos
+    parsl_app = PythonApp(cos, executors=["parsl_executor"])
+    print(parsl_app(0).result())
 
     assert False

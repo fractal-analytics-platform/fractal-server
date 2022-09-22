@@ -18,6 +18,7 @@ RUN echo sudo service ssh start >> /home/entrypoint.sh
 RUN cat /etc/slurm-llnl/docker-entrypoint.sh >> /home/entrypoint.sh
 RUN chmod +x /home/entrypoint.sh
 
+EXPOSE 50097
 # RUN mkdir /tmp/slurm_share
 # RUN chown root:users -R /tmp/slurm_share
 # RUN chmod -R a+rwx /tmp/slurm_share
