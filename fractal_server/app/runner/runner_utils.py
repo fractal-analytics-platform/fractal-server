@@ -63,7 +63,7 @@ def load_parsl_config(
     *,
     workflow_id: int,
     enable_monitoring: bool = True,
-    logger: None,
+    logger=None,
 ):
 
     config = settings.PARSL_CONFIG
