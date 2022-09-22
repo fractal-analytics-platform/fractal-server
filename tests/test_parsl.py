@@ -5,10 +5,11 @@ from parsl.channels import LocalChannel
 from parsl.config import Config
 from parsl.executors import HighThroughputExecutor
 from parsl.launchers import SingleNodeLauncher
+from parsl.channels.ssh.ssh import SSHChannel
 from parsl.providers import LocalProvider
 from parsl.providers import SlurmProvider
 
-from fractal_server.app.runner.runner_utils import UserSrunLauncher
+from fractal_server.app.runner.runner_utils import SrunLauncher
 
 
 def hello():
@@ -36,11 +37,13 @@ def test_parsl_local_config():
     assert parsl_app().result() == 42
 
 
-def test_parsl_slurm_config():
+def test_parsl_slurm_config(ssh_params):
     provider_args = dict(
-        partition="main",
-        launcher=UserSrunLauncher(debug=False),
-        channel=LocalChannel(),
+        partition="slurmpar",
+        launcher=SrunLauncher(
+            debug=False,
+        ),
+        channel=SSHChannel(**ssh_params, script_dir="/tmp/slurm_share/test0"),
         nodes_per_block=1,
         init_blocks=1,
         min_blocks=0,
@@ -50,16 +53,17 @@ def test_parsl_slurm_config():
     prov_slurm_cpu = SlurmProvider(**provider_args)
 
     htex = HighThroughputExecutor(
-        label="executor",
+        label="parsl_executor",
         provider=prov_slurm_cpu,
         address="0.0.0.0:6817",  # address_by_hostname(),
     )
 
+    parsl.clear()
     parsl.load(Config(executors=[htex]))
     # dfk = DataFlowKernelLoader.dfk()
     # dfk.add_executors([htex])
 
-    parsl_app = PythonApp(hello, executors=["executor"])
+    parsl_app = PythonApp(hello, executors=["parsl_executor"])
     print(parsl_app().result())
 
     assert False

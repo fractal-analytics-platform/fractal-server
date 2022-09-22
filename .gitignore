@@ -8,7 +8,6 @@ __pycache__
 *.env
 
 # parsl-related
-cmd_parsl.slurm.*.sh
 runinfo
 monitoring.db
 .*.swp

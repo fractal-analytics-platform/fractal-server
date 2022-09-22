@@ -1,10 +1,12 @@
+version: '3'
+
 services:
   slurmmaster:
         image: fractal-slurm:latest
         hostname: slurmmaster
         user: admin
         volumes:
-                - /tmp/slum/:/home/admin
+          - /tmp/slurm_share:/tmp/slurm_share:rw
         environment:
                 - SLURM_CPUS_ON_NODE=1
         ports:
@@ -18,7 +20,7 @@ services:
         hostname: slurmnode1
         user: admin
         volumes:
-                - /tmp/slurm/:/home/admin
+          - /tmp/slurm_share:/tmp/slurm_share:rw
         environment:
                 - SLURM_NODENAME=slurmnode1
                 - SLURM_CPUS_ON_NODE=1
