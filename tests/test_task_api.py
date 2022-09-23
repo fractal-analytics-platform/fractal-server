@@ -1,14 +1,23 @@
+import pytest
 from devtools import debug
-from fractal_tasks_core import __FRACTAL_MANIFEST__
 from sqlmodel import select
 
 from fractal_server.app.models import Task
 from fractal_server.app.models import TaskCreate
 from fractal_server.tasks import collect_tasks
 
-N_CORE_TASKS = len(__FRACTAL_MANIFEST__)
+try:
+    from fractal_tasks_core import __FRACTAL_MANIFEST__
+
+    N_CORE_TASKS = len(__FRACTAL_MANIFEST__)
+    HAS_FRACTAL_TASKS_CORE = True
+except ImportError:
+    HAS_FRACTAL_TASKS_CORE = False
 
 
+@pytest.mark.skipif(
+    not HAS_FRACTAL_TASKS_CORE, reason="Hasn't got fractal-tasks-core"
+)
 async def test_collection(db, client, MockCurrentUser):
     """
     GIVEN a running server
