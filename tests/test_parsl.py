@@ -62,11 +62,12 @@ def test_parsl_slurm_config(ssh_params):
 
     parsl.clear()
     parsl.load(Config(executors=[htex]))
-    # dfk = DataFlowKernelLoader.dfk()
-    # dfk.add_executors([htex])
 
+    # NOTE:
+    # Using cos instead of hello because otherwise we need to install
+    # fractal-server cluster-wide. This might still be desirable at the end.
     from math import cos
     parsl_app = PythonApp(cos, executors=["parsl_executor"])
-    print(parsl_app(0).result())
 
-    assert False
+    result = parsl_app(0).result()
+    assert result == 1.0
