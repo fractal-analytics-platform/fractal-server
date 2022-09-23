@@ -27,10 +27,11 @@ def collect_routers(app: FastAPI) -> None:
 
 
 async def __on_startup():
-    pass
-    # from .app.api.v1.task import collect_tasks_headless
-
-    # await collect_tasks_headless()
+    try:
+        from .app.api.v1.task import collect_tasks_headless
+        await collect_tasks_headless()
+    except ImportError:
+        pass
 
 
 def start_application() -> FastAPI:
