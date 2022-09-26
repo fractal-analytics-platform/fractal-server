@@ -150,20 +150,14 @@ def generate_parsl_config(
             min_blocks=0,
             max_blocks=4,
         )
-        parsl_config.add_executor(
-            name="cpu",
-            type="HighThroughputExecutor",
-            workflow_id=workflow_id,
-            provider_name="default",
-            address=address_by_hostname(),
-        )
-        parsl_config.add_executor(
-            name="cpu-2",
-            type="HighThroughputExecutor",
-            workflow_id=workflow_id,
-            provider_name="default",
-            address=address_by_hostname(),
-        )
+        for name in ["cpu-low", "cpu-mid", "cpu-high", "gpu"]:
+            parsl_config.add_executor(
+                name=name,
+                type="HighThroughputExecutor",
+                workflow_id=workflow_id,
+                provider_name="default",
+                address=address_by_hostname(),
+            )
 
     elif config == "pelkmanslab":
         parsl_config.add_launcher(
@@ -175,55 +169,99 @@ def generate_parsl_config(
             name="default",
             type="LocalChannel",
         )
-        parsl_config.add_provider(
-            name="prov_slurm_cpu",
-            type="SlurmProvider",
+
+        common_provider_args = dict(
             partition="main",
-            launcher_name="srun_launcher",
-            channel_name="default",
             nodes_per_block=1,
             init_blocks=1,
             min_blocks=0,
-            max_blocks=4,
-            walltime="10:00:00",
+            max_blocks=100,
+            parallelism=1,
+            exclusive=False,
+            walltime="20:00:00",
+        )
+
+        parsl_config.add_provider(
+            name="prov_cpu_low",
+            type="SlurmProvider",
+            launcher_name="srun_launcher",
+            channel_name="default",
+            cores_per_node=1,
+            mem_per_node=7,
+            **common_provider_args,
         )
         parsl_config.add_provider(
-            name="prov_slurm_gpu",
+            name="prov_cpu_mid",
             type="SlurmProvider",
-            partition="gpu",
             launcher_name="srun_launcher",
             channel_name="default",
+            cores_per_node=4,
+            mem_per_node=15,
+            **common_provider_args,
+        )
+        parsl_config.add_provider(
+            name="prov_cpu_high",
+            type="SlurmProvider",
+            launcher_name="srun_launcher",
+            channel_name="default",
+            cores_per_node=16,
+            mem_per_node=61,
+            **common_provider_args,
+        )
+        parsl_config.add_provider(
+            name="prov_gpu",
+            type="SlurmProvider",
+            launcher_name="srun_launcher",
+            channel_name="default",
+            partition="gpu",
             nodes_per_block=1,
             init_blocks=1,
             min_blocks=0,
-            max_blocks=1,
+            max_blocks=2,
+            mem_per_node=61,
             walltime="10:00:00",
         )
 
         # Define executors
         parsl_config.add_executor(
-            name="htex_slurm_cpu",
+            name="cpu-low",
             type="HighThroughputExecutor",
             workflow_id=workflow_id,
-            provider_name="prov_slurm_cpu",
+            provider_name="prov_cpu_low",
             address=address_by_hostname(),
             cpu_affinity="block",
+            max_workers=100,
+            mem_per_worker=7,
         )
         parsl_config.add_executor(
-            name="htex_slurm_cpu_2",
+            name="cpu-mid",
             type="HighThroughputExecutor",
             workflow_id=workflow_id,
-            provider_name="prov_slurm_cpu",
+            provider_name="prov_cpu_mid",
             address=address_by_hostname(),
             cpu_affinity="block",
+            max_workers=100,
+            mem_per_worker=15,
         )
         parsl_config.add_executor(
-            name="htex_slurm_gpu",
+            name="cpu-high",
             type="HighThroughputExecutor",
             workflow_id=workflow_id,
-            provider_name="prov_slurm_gpu",
+            provider_name="prov_cpu_high",
             address=address_by_hostname(),
             cpu_affinity="block",
+            max_workers=100,
+            mem_per_worker=61,
+        )
+        parsl_config.add_executor(
+            name="gpu",
+            type="HighThroughputExecutor",
+            workflow_id=workflow_id,
+            provider_name="prov_gpu",
+            address=address_by_hostname(),
+            cpu_affinity="block",
+            max_workers=100,
+            mem_per_worker=61,
         )
     return parsl_config
 

@@ -13,7 +13,7 @@ Zurich.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-__VERSION__ = "0.1.3"
+__VERSION__ = "0.1.4"
 
 
 def collect_routers(app: FastAPI) -> None:
@@ -29,6 +29,7 @@ def collect_routers(app: FastAPI) -> None:
 async def __on_startup():
     try:
         from .app.api.v1.task import collect_tasks_headless
+
         await collect_tasks_headless()
     except ImportError:
         pass

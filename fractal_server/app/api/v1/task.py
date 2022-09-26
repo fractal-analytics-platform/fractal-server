@@ -7,6 +7,7 @@ from typing import List
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
 from fastapi import status
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
@@ -95,6 +96,16 @@ async def create_task(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
+
+    # Check that there is no task with the same user and name
+    stm = select(Task).where(Task.name == task.name)
+    res = await db.execute(stm)
+    if res.scalars().all():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Task name ({task.name}) already in use",
+        )
+
     db_task = Task.from_orm(task)
     db.add(db_task)
     await db.commit()
