@@ -264,7 +264,9 @@ async def test_apply_workflow(
     dummy_task = res.scalar()
 
     MESSAGE = "test apply workflow"
-    await wf.add_subtask(db, subtask=dummy_task, args=dict(message=MESSAGE))
+    await wf.add_subtask(
+        db, subtask=dummy_task, args=dict(message=MESSAGE, executor="cpu-low")
+    )
     debug(TaskRead.from_orm(wf))
 
     # DONE CREATING WORKFLOW
@@ -417,6 +419,7 @@ async def test_yokogawa(
     await wf.add_subtask(
         db,
         subtask=create_ome_zarr_task,
+        args=dict(executor="cpu-low"),
     )
     debug(TaskRead.from_orm(wf))
 
@@ -424,7 +427,9 @@ async def test_yokogawa(
     res = await db.execute(stm)
     yokogawa = res.scalar()
     await wf.add_subtask(
-        db, subtask=yokogawa, args=dict(parallelization_level="well")
+        db,
+        subtask=yokogawa,
+        args=dict(parallelization_level="well", executor="cpu-low"),
     )
     debug(TaskRead.from_orm(wf))
 
