@@ -20,8 +20,10 @@ from ..models.task import PreprocessedTask
 from ..models.task import Subtask
 from ..models.task import Task
 from .runner_utils import async_wrap
+from .runner_utils import generate_parsl_config
 from .runner_utils import get_unique_executor
 from .runner_utils import load_parsl_config
+from .runner_utils import ParslConfiguration
 
 # from .runner_utils import shutdown_executors
 
@@ -209,6 +211,7 @@ def _process_workflow(
     input_paths: List[Path],
     output_path: Path,
     metadata: Dict[str, Any],
+    parsl_config: Optional[ParslConfiguration] = None,
 ) -> AppFuture:
     """
     Creates the PARSL app that will execute the full workflow, taking care of
@@ -232,7 +235,9 @@ def _process_workflow(
     this_metadata = deepcopy(metadata)
 
     workflow_id = task.id
-    load_parsl_config(workflow_id=workflow_id)
+    if not parsl_config:
+        parsl_config = generate_parsl_config(workflow_id=workflow_id)
+    load_parsl_config(parsl_config=parsl_config)
 
     apps: List[PythonApp] = []
 

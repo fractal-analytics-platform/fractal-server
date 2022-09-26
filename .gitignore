@@ -6,10 +6,11 @@ apply.json
 __pycache__
 *.cpython-*.pyc
 *.env
+dist/
+*.db
 
 # parsl-related
 runinfo
-monitoring.db
 .*.swp
 
 output*

@@ -103,11 +103,13 @@ def test_atomic_task_factory(task, message, nfiles, tmp_path, patch_settings):
     """
 
     from fractal_server.app.runner import _atomic_task_factory
+    from fractal_server.app.runner.runner_utils import generate_parsl_config
     from fractal_server.app.runner.runner_utils import load_parsl_config
 
     workflow_id = 0
 
-    load_parsl_config(enable_monitoring=False, workflow_id=workflow_id)
+    parsl_config = generate_parsl_config(workflow_id=workflow_id)
+    load_parsl_config(parsl_config=parsl_config, enable_monitoring=False)
 
     input_path_str = "/input/path"
     output_path = tmp_path
