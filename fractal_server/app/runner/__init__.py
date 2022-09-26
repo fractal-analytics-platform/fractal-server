@@ -26,6 +26,7 @@ from .runner_utils import generate_parsl_config
 from .runner_utils import get_unique_executor
 from .runner_utils import load_parsl_config
 from .runner_utils import ParslConfiguration
+from .runner_utils import shutdown_executors
 
 
 def _task_fun(
@@ -380,8 +381,7 @@ async def submit_workflow(
         app_future=final_metadata
     )
 
-    # FIXME
-    # shutdown_executors(workflow_id=workflow.id)
+    shutdown_executors(workflow_id=workflow.id)
 
     db.add(output_dataset)
 
