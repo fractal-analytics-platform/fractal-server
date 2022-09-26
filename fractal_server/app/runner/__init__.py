@@ -1,9 +1,7 @@
 import importlib
+import logging
 from concurrent.futures import Future
 from copy import deepcopy
-from logging import FileHandler
-from logging import Formatter
-from logging import getLogger
 from pathlib import Path
 from typing import Any
 from typing import Dict
@@ -28,16 +26,6 @@ from .runner_utils import generate_parsl_config
 from .runner_utils import get_unique_executor
 from .runner_utils import load_parsl_config
 from .runner_utils import ParslConfiguration
-
-# from .runner_utils import shutdown_executors
-
-
-formatter = Formatter("%(asctime)s; %(levelname)s; %(message)s")
-logger = getLogger(__name__)
-handler = FileHandler("fractal.log", mode="a")
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-logger.setLevel("INFO")
 
 
 def _task_fun(
@@ -183,7 +171,7 @@ def _atomic_task_factory(
     task_executor = get_unique_executor(
         workflow_id=workflow_id, task_executor=task.executor
     )
-    logger.info(f'Starting "{task.name}" task on "{task_executor}" executor.')
+    logging.info(f'Starting "{task.name}" task on "{task_executor}" executor.')
 
     parall_level = task.parallelization_level
     if metadata and parall_level:
@@ -376,11 +364,11 @@ async def submit_workflow(
     input_paths = input_dataset.paths
     output_path = output_dataset.paths[0]
 
-    logger.info("*" * 80)
-    logger.info(f"fractal_server.__VERSION__: {__VERSION__}")
-    logger.info(f"Start workflow {workflow.name}")
-    logger.info(f"{input_paths=}")
-    logger.info(f"{output_path=}")
+    logging.info("*" * 80)
+    logging.info(f"fractal_server.__VERSION__: {__VERSION__}")
+    logging.info(f"Start workflow {workflow.name}")
+    logging.info(f"{input_paths=}")
+    logging.info(f"{output_path=}")
 
     final_metadata = _process_workflow(
         task=workflow,
