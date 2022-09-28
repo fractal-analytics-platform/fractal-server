@@ -6,59 +6,11 @@ import pytest
 from devtools import debug
 from sqlmodel import select
 
+from .fixtures_workflow import LEN_NONTRIVIAL_WORKFLOW
 from fractal_server.app.models import Dataset
 from fractal_server.app.models import Subtask
 from fractal_server.app.models import Task
 from fractal_server.app.models import TaskRead
-
-
-LEN_NONTRIVIAL_WORKFLOW = 3
-
-
-@pytest.fixture
-def nontrivial_workflow():
-    workflow = Task(
-        name="outer workflow",
-        resource_type="workflow",
-        subtask_list=[
-            Subtask(
-                subtask=Task(
-                    name="inner workflow",
-                    resource_type="workflow",
-                    subtask_list=[
-                        Subtask(
-                            args={"message": "dummy0"},
-                            subtask=Task(
-                                name="dummy0",
-                                module="fractal_tasks_core.dummy:dummy",
-                                default_args=dict(
-                                    message="dummy0", executor="cpu-low"
-                                ),
-                            ),
-                        ),
-                        Subtask(
-                            args={"message": "dummy1"},
-                            subtask=Task(
-                                name="dummy1",
-                                module="fractal_tasks_core.dummy:dummy",
-                                default_args=dict(
-                                    message="dummy1", executor="cpu-low"
-                                ),
-                            ),
-                        ),
-                    ],
-                ),
-            ),
-            Subtask(
-                subtask=Task(
-                    name="dummy2",
-                    module="fractal_tasks_core.dummy:dummy",
-                    default_args=dict(message="dummy2", executor="cpu-low"),
-                )
-            ),
-        ],
-    )
-    return workflow
 
 
 N_INDICES = 3
