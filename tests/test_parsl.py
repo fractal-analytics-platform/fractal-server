@@ -16,6 +16,7 @@ from parsl.providers import LocalProvider
 from parsl.providers import SlurmProvider
 
 from .fixtures_workflow import LEN_NONTRIVIAL_WORKFLOW
+from fractal_server.app.runner.parsl_runner import _process_workflow
 from fractal_server.app.runner.runner_utils import ParslConfiguration
 
 
@@ -124,8 +125,6 @@ async def test_apply_workflow_slurm(
         * it is executable
         * the output is the one expected from the workflow
     """
-
-    from fractal_server.app.runner import _process_workflow
 
     slurm_shared_path = Path("/tmp/slurm_share/test0/")
 

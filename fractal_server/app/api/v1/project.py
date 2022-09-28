@@ -25,9 +25,9 @@ from ...models import Resource
 from ...models import ResourceCreate
 from ...models import ResourceRead
 from ...models.task import Task
-from ...runner import auto_output_dataset
-from ...runner import submit_workflow
-from ...runner import validate_workflow_compatibility
+from ...runner.parsl_runner import auto_output_dataset
+from ...runner.parsl_runner import submit_workflow
+from ...runner.parsl_runner import validate_workflow_compatibility
 from ...security import current_active_user
 from ...security import User
 
