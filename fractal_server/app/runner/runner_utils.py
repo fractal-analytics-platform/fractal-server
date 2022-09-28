@@ -13,13 +13,9 @@ This file is part of Fractal and was originally developed by eXact lab S.r.l.
 Institute for Biomedical Research and Pelkmans Lab from the University of
 Zurich.
 """
-import asyncio
-from functools import partial
-from functools import wraps
 from logging import FileHandler
 from logging import Formatter
 from logging import getLogger
-from typing import Callable
 
 import parsl
 from parsl import channels as parsl_channels
@@ -45,27 +41,6 @@ logger.setLevel("INFO")
 
 def add_prefix(*, workflow_id: int, executor_label: str):
     return f"{workflow_id}___{executor_label}"
-
-
-def async_wrap(func: Callable) -> Callable:
-    """
-    See issue #140 and https://stackoverflow.com/q/43241221/19085332
-
-    By replacing
-        .. = final_metadata.result()
-    with
-        .. = await async_wrap(get_app_future_result)(app_future=final_metadata)
-    we avoid a (long) blocking statement.
-    """
-
-    @wraps(func)
-    async def run(*args, loop=None, executor=None, **kwargs):
-        if loop is None:
-            loop = asyncio.get_event_loop()
-        pfunc = partial(func, *args, **kwargs)
-        return await loop.run_in_executor(executor, pfunc)
-
-    return run
 
 
 class ParslConfiguration:
@@ -130,7 +105,7 @@ def generate_parsl_config(
     config = settings.PARSL_CONFIG
     logger.info(f"settings.PARSL_CONFIG: {config}")
 
-    allowed_configs = ["local", "pelkmanslab", "custom"]
+    allowed_configs = ["local", "pelkmanslab"]
     if config not in allowed_configs:
         raise ValueError(f"{config=} not in {allowed_configs=}")
 
