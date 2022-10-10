@@ -12,8 +12,16 @@ from sqlalchemy import Column
 from sqlalchemy.types import JSON
 from sqlmodel import Field
 from sqlmodel import Relationship
+from sqlmodel import SQLModel
 
 from .security import UserOAuth
+
+
+class LinkTaskProject(SQLModel, table=True):  # type: ignore
+    project_id: Optional[int] = Field(
+        foreign_key="project.id", primary_key=True
+    )
+    task_id: Optional[int] = Field(foreign_key="task.id", primary_key=True)
 
 
 class Dataset(DatasetBase, table=True):  # type: ignore
@@ -44,6 +52,11 @@ class Project(ProjectBase, table=True):  # type: ignore
             "lazy": "selectin",
             "cascade": "all, delete-orphan",
         }
+    )
+    task_list: List["Task"] = Relationship(  # noqa: F821
+        back_populates="project_list",
+        link_model=LinkTaskProject,
+        sa_relationship_kwargs={"lazy": "selectin"},
     )
 
 

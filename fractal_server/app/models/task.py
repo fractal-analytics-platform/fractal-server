@@ -14,6 +14,7 @@ from sqlmodel import Field
 from sqlmodel import Relationship
 
 from ...utils import popget
+from .project import LinkTaskProject
 
 
 def flatten(xx):
@@ -138,6 +139,11 @@ class Task(TaskBase, table=True):  # type: ignore
             order_by="Subtask.order",
             collection_class=ordering_list("order"),
         ),
+    )
+    project_list: List["Project"] = Relationship(  # noqa: F821
+        back_populates="task_list",
+        link_model=LinkTaskProject,
+        sa_relationship_kwargs={"lazy": "selectin"},
     )
 
     def preprocess(self):

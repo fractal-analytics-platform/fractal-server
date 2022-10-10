@@ -1,10 +1,13 @@
 import asyncio
 
 from devtools import debug
+from sqlmodel import select
 
 from fractal_server.app.models import Subtask
 from fractal_server.app.models import SubtaskRead
+from fractal_server.app.models import Task
 from fractal_server.app.models import TaskRead
+from fractal_server.app.models.project import LinkTaskProject
 
 
 async def test_add_subtask(db, task_factory):
@@ -125,3 +128,33 @@ async def test_arguments_parallelization_level(db, task_factory):
     assert pt.parallelization_level == EXPECTED
     assert "parallelization_level" not in pt._arguments
     assert "parallelization_level" not in pt.args
+
+
+async def test_unit_task_project_relationship(
+    db, task_factory, project_factory, MockCurrentUser
+):
+    async with MockCurrentUser(persist=True) as user:
+        t = await task_factory()
+        p = await project_factory(user)
+
+    p.task_list.append(t)
+    db.add(p)
+    await db.commit()
+    await db.refresh(t)
+
+    stm = (
+        select(LinkTaskProject)
+        .where(LinkTaskProject.project_id == p.id)
+        .where(LinkTaskProject.task_id == t.id)
+    )
+    res = await db.execute(stm)
+    obj = res.scalars().all()
+    assert len(obj) == 1
+
+    debug(p)
+    assert p.task_list == [t]
+
+    debug(t)
+    t = await db.get(Task, t.id)
+
+    assert t.project_list == [p]
