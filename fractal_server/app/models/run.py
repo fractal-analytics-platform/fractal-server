@@ -4,8 +4,8 @@ from typing import Optional
 
 from sqlmodel import Field
 
-from ...common.models import ApplyWorkflowBase
 from ...utils import get_timestamp
+from ..schemas import ApplyWorkflowBase
 
 
 class StatusType(str, Enum):

@@ -10,7 +10,7 @@ from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
-from ...common.models.task import WorkflowBase
+from ..schemas.task import WorkflowBase
 from .task import Task
 
 
@@ -30,8 +30,10 @@ class LinkTaskWorkflow(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
+    workflow_id: int = Field(foreign_key="workflow.id")
+
     task_id: Optional[int] = Field(default=None, foreign_key="task.id")
-    task: "Task" = Relationship()
+    # task: "Task" = Relationship()
 
     order: Optional[int]
     args: Dict[str, Any] = Field(sa_column=Column(JSON), default={})
@@ -41,3 +43,11 @@ class Workflow(WorkflowBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     project_id: int = Field(foreign_key="project.id")
 
+    task_list: List["Task"] = Relationship(
+        link_model=LinkTaskWorkflow,
+        # sa_relationship_kwargs=dict(
+        #     lazy="selectin",
+        #     order_by="LinkTaskWorkflow.order",
+        #     collection_class=ordering_list("order"),
+        # ),
+    )
