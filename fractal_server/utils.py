@@ -12,7 +12,6 @@ Zurich.
 """
 from datetime import datetime
 from datetime import timezone
-
 from warnings import warn as _warn
 
 from .config import DeploymentType
@@ -34,3 +33,7 @@ def warn(message):
 
 def get_timestamp() -> datetime:
     return datetime.now(tz=timezone.utc)
+
+
+def slugify(value: str):
+    return value.lower().replace(" ", "_")
