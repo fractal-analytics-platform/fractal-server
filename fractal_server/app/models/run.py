@@ -2,9 +2,9 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-from fractal.common.models import ApplyWorkflowBase
 from sqlmodel import Field
 
+from ...common.models import ApplyWorkflowBase
 from ...utils import get_timestamp
 
 
