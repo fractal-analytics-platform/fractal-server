@@ -21,11 +21,26 @@ from uuid import uuid4
 
 import pytest
 from asgi_lifespan import LifespanManager
+from devtools import debug
 from fastapi import FastAPI
 from httpx import AsyncClient
+from parsl.dataflow.dflow import DataFlowKernelLoader
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
+
+
+@pytest.fixture(scope="function")
+def close_dfk():
+    yield
+    try:
+        dfk = DataFlowKernelLoader.dfk()
+        dfk.cleanup()
+        DataFlowKernelLoader.clear()
+        debug("I CLEANED UP A DFK")
+    except RuntimeError:
+        debug("I DID NOT CLEAN UP ANY DFK")
+        pass
 
 
 def override_environment(testdata_path):
@@ -126,7 +141,13 @@ def db_sync(db_sync_engine):
 
 
 @pytest.fixture
-async def app(patch_settings) -> AsyncGenerator[FastAPI, Any]:
+async def app(patch_settings, tmp_path) -> AsyncGenerator[FastAPI, Any]:
+    import os
+    from devtools import debug
+
+    os.environ["RUNNER_LOG_DIR"] = str(tmp_path / "logs")
+    debug(os.environ["RUNNER_LOG_DIR"])
+
     app = FastAPI()
     yield app
 

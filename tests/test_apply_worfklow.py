@@ -52,7 +52,6 @@ def nontrivial_workflow():
             ),
             Subtask(
                 subtask=Task(
-                    id=1001,
                     name="dummy2",
                     module="fractal_tasks_core.dummy:dummy",
                     default_args=dict(message="dummy2", executor="cpu-low"),
@@ -92,7 +91,7 @@ dummy_subtask_parallel = Subtask(
     ],
 )
 def test_atomic_task_factory(
-    task, message, nfiles, workflow_id, tmp_path, patch_settings
+    task, message, nfiles, workflow_id, tmp_path, patch_settings, close_dfk
 ):
     """
     GIVEN
@@ -157,7 +156,9 @@ def test_preprocess_workflow(nontrivial_workflow):
     assert i + 1 == LEN_NONTRIVIAL_WORKFLOW
 
 
-def test_process_workflow(tmp_path, nontrivial_workflow, patch_settings):
+def test_process_workflow(
+    tmp_path, nontrivial_workflow, patch_settings, close_dfk
+):
     """
     GIVEN a nontrivial workflow
     WHEN the workflow is processed
@@ -189,7 +190,9 @@ def test_process_workflow(tmp_path, nontrivial_workflow, patch_settings):
     assert data[2]["message"] == "dummy2"
 
 
-def test_process_workflow_with_wrong_executor(tmp_path, patch_settings):
+def test_process_workflow_with_wrong_executor(
+    tmp_path, patch_settings, close_dfk
+):
     """
     GIVEN a trivial workflow, with an invalid executor
     WHEN the workflow is processed
@@ -227,6 +230,7 @@ async def test_apply_workflow(
     task_factory,
     tmp_path,
     patch_settings,
+    close_dfk,
 ):
     """
     GIVEN
@@ -295,6 +299,7 @@ async def test_create_zarr(
     task_factory,
     tmp_path,
     patch_settings,
+    close_dfk,
 ):
     """
     GIVEN
@@ -372,6 +377,7 @@ async def test_yokogawa(
     task_factory,
     tmp_path,
     patch_settings,
+    close_dfk,
 ):
     """
     GIVEN
@@ -402,7 +408,7 @@ async def test_yokogawa(
         module=None,
         resource_type="workflow",
         input_type="image",
-        id=31,
+        id=32,
     )
 
     stm = select(Task).where(Task.name == "Create OME-ZARR structure")

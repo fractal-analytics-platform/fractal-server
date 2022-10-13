@@ -36,6 +36,7 @@ async def test_full_workflow(
     testdata_path,
     collect_tasks,
     tmp_path,
+    close_dfk,
 ):
 
     async with MockCurrentUser(persist=True):
@@ -195,6 +196,7 @@ async def test_full_workflow_repeated_tasks(
     MockCurrentUser,
     collect_tasks,
     tmp_path,
+    close_dfk,
 ):
 
     num_subtasks = 3
