@@ -490,7 +490,7 @@ async def submit_workflow(
     logger.addHandler(fileHandler)
 
     logger.info(f"fractal_server.__VERSION__: {__VERSION__}")
-    logger.info(f"START workflow {workflow.name}")
+    logger.info(f"START {workflow.name=}, {workflow.id=}")
 
     logger.info(f"{input_paths=}")
     logger.info(f"{output_path=}")
