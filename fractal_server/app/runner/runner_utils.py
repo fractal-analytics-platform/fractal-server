@@ -379,8 +379,9 @@ def load_parsl_config(
         # Add new executors
         for executor in config.executors:
             if executor.label in current_executor_labels:
-                raise ValueError(f"{executor.label=} already exists")
-        dfk.add_executors(config.executors)
+                warnings.warn(f"{executor.label=} already exists")
+            else:
+                dfk.add_executors([executor])
 
     except RuntimeError:
         logger.info("DFK missing, proceed with a new DataFlowKernel")
