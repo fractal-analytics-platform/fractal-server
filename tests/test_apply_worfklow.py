@@ -18,7 +18,7 @@ LEN_NONTRIVIAL_WORKFLOW = 3
 @pytest.fixture
 def nontrivial_workflow():
     workflow = Task(
-        id=999,
+        id=99,
         name="outer workflow",
         resource_type="workflow",
         subtask_list=[
@@ -199,7 +199,7 @@ def test_process_workflow_with_wrong_executor(tmp_path, patch_settings):
     from fractal_server.app.runner import _process_workflow
 
     dummy_task = Task(
-        id=999,
+        id=21,
         name="dummy",
         resource_type="core task",
         module="fake_module.dummy:dummy",
@@ -257,6 +257,7 @@ async def test_apply_workflow(
         module=None,
         resource_type="workflow",
         input_type="image",
+        id=30,
     )
 
     stm = select(Task).where(Task.name == "dummy")
@@ -324,6 +325,7 @@ async def test_create_zarr(
         module=None,
         resource_type="workflow",
         input_type="image",
+        id=31,
     )
 
     stm = select(Task).where(Task.name == "Create OME-ZARR structure")
@@ -400,6 +402,7 @@ async def test_yokogawa(
         module=None,
         resource_type="workflow",
         input_type="image",
+        id=31,
     )
 
     stm = select(Task).where(Task.name == "Create OME-ZARR structure")
