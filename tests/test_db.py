@@ -33,6 +33,8 @@ async def test_sync_db(db_sync, db):
             resource_type="core task",
             input_type="image",
             output_type="zarr",
+            command="cmd",
+            source="/my/source",
         )
     )
     await db.commit()

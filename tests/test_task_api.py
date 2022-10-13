@@ -78,9 +78,10 @@ async def test_task_create(db, client, MockCurrentUser):
     """
     task = TaskCreate(
         name="mytask",
-        resource_type="workflow",
         input_type="Any",
         output_type="Any",
+        command="cmd",
+        source="/my/source",
     )
     async with MockCurrentUser(persist=True):
         res = await client.post("api/v1/task/", json=task.dict())

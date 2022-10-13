@@ -2,7 +2,6 @@ from typing import Any
 from typing import Dict
 from typing import Optional
 
-from pydantic import BaseModel
 from sqlalchemy import Column
 from sqlalchemy.types import JSON
 from sqlmodel import Field
@@ -11,55 +10,9 @@ from ..schemas import TaskBase
 from .models_utils import popget
 
 
-def flatten(xx):
-    """
-    Flatten an arbitrarily nested sequence of sequences
-    """
-    for x in xx:
-        if isinstance(x, PreprocessedTask):
-            yield x
-        else:
-            yield from x
-
-
-class PreprocessedTask(BaseModel):
-    name: str
-    module: str
-    args: Dict[str, Any]
-    save_intermediate_result: bool = False
-    executor: Optional[str] = None
-    parallelization_level: Optional[str] = None
-
-    @property
-    def callable(self):
-        return self.module.partition(":")[2]
-
-    @property
-    def import_path(self):
-        return self.module.partition(":")[0]
-
-    @property
-    def _arguments(self):
-        return self.args
-
-
 class Task(TaskBase, table=True):  # type: ignore
     id: Optional[int] = Field(default=None, primary_key=True)
     default_args: Dict[str, Any] = Field(sa_column=Column(JSON), default={})
-
-    def preprocess(self):
-        if not self._is_atomic:
-            return flatten(st.preprocess() for st in self.subtask_list)
-        else:
-            return [
-                PreprocessedTask(
-                    name=self.name,
-                    module=self.module,
-                    args=self._arguments,
-                    executor=self.executor,
-                    parallelization_level=self.parallelization_level,
-                )
-            ]
 
     @property
     def _arguments(self):
