@@ -28,6 +28,7 @@ from ..models.task import Task
 from .runner_utils import async_wrap
 from .runner_utils import get_unique_executor
 from .runner_utils import load_parsl_config
+from .runner_utils import shutdown_executors
 
 
 def _task_fun(
@@ -193,10 +194,10 @@ def _atomic_task_factory(
         )
         executors = [task_executor]
     except ValueError as e:
-        # When assigning a task to an unknown executor, make sure to cleanup
-        # DFK before raising an error
-        data_flow_kernel.cleanup()
         logger.error("END of workflow due to ValueError (unknown executors).")
+        logger.info("Start shutting down executors")
+        shutdown_executors(workflow_id)
+        logger.info("End shutting down executors")
         raise ValueError(str(e))
 
     parall_level = task.parallelization_level
@@ -510,10 +511,11 @@ async def submit_workflow(
         app_future=final_metadata
     )
     logger.info(f'END workflow "{workflow.name}"')
+    logger.info("Start shutting down executors")
+    shutdown_executors(workflow_id)
+    logger.info("End shutting down executors")
     logger.info("Now closing the FileHandler")
     fileHandler.close()
-
-    dfk.cleanup()
 
     db.add(output_dataset)
 

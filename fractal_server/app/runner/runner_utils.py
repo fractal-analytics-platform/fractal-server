@@ -24,13 +24,16 @@ from typing import Callable
 from parsl.addresses import address_by_hostname
 from parsl.channels import LocalChannel
 from parsl.config import Config
-from parsl.dataflow.dflow import DataFlowKernel
+from parsl.dataflow.dflow import DataFlowKernelLoader
 from parsl.executors import HighThroughputExecutor
 from parsl.launchers import SingleNodeLauncher
 from parsl.launchers import SrunLauncher
+from parsl.monitoring.message_type import MessageType
 from parsl.monitoring.monitoring import MonitoringHub
 from parsl.providers import LocalProvider
 from parsl.providers import SlurmProvider
+from parsl.providers.provider_base import JobState
+from parsl.providers.provider_base import JobStatus
 
 from ...config_runner import settings
 
@@ -361,17 +364,31 @@ def load_parsl_config(
         config = generate_parsl_config(
             enable_monitoring=enable_monitoring,
             workflow_id=workflow_id,
-            workflow_name=workflow_name,
+            workflow_name="fractal",
             username=username,
             worker_init=worker_init,
         )
 
-    dfk = DataFlowKernel(config=config)
+    try:
+        dfk = DataFlowKernelLoader.dfk()
+        current_executor_labels = dfk.executors.keys()
+        logger.info(
+            f"DFK {dfk} exists, with {len(dfk.executors)} executors: "
+            f"{current_executor_labels}"
+        )
+        # Add new executors
+        for executor in config.executors:
+            if executor.label in current_executor_labels:
+                raise ValueError(f"{executor.label=} already exists")
+        dfk.add_executors(config.executors)
 
-    executor_labels = [
-        executor_label for executor_label in dfk.executors.keys()
-    ]
-    logger.info(f"New DFK {dfk}, with executors {executor_labels}")
+    except RuntimeError:
+        logger.info("DFK missing, proceed with a new DataFlowKernel")
+        DataFlowKernelLoader.load(config)
+        dfk = DataFlowKernelLoader.dfk()
+
+    current_executor_labels = dfk.executors.keys()
+    logger.info(f"Now DFK {dfk} has {current_executor_labels=}")
 
     return dfk
 
@@ -398,3 +415,47 @@ def get_unique_executor(
         )
 
     return new_task_executor
+
+
+def shutdown_executors(workflow_id: int):
+    logger = logging.getLogger(f"WF{workflow_id}")
+    dfk = DataFlowKernelLoader.dfk()
+    labels_to_remove = []
+    for label, executor in dfk.executors.items():
+        prefix = add_prefix(workflow_id=workflow_id, executor_label="")
+        if label.startswith(prefix):
+            labels_to_remove.append(label)
+            # What follows is taken from
+            # https://github.com/Parsl/parsl/blob/
+            # bdcd73c6e9bf3e5fd5de44ca889feb946b2f85d3/parsl/dataflow/dflow.py
+            # #L1103-L1122
+            if executor.managed and not executor.bad_state_is_set:
+                if executor.scaling_enabled:
+                    logger.info(f"Scaling in executor {executor.label}")
+                    job_ids = executor.provider.resources.keys()
+                    block_ids = executor.scale_in(len(job_ids))
+                    if dfk.monitoring and block_ids:
+                        new_status = {}
+                        for bid in block_ids:
+                            new_status[bid] = JobStatus(JobState.CANCELLED)
+                        msg = executor.create_monitoring_info(new_status)
+                        logger.debug(
+                            "Sending message {} to hub from DFK".format(msg)
+                        )
+                        dfk.monitoring.send(MessageType.BLOCK_INFO, msg)
+                logger.info(f"Shutting down executor {executor.label}")
+                executor.shutdown()
+                logger.info(f"Shut down executor {executor.label}")
+            elif (
+                executor.managed and executor.bad_state_is_set
+            ):  # and bad_state_is_set
+                logger.warning(
+                    f"Not shutting down executor {executor.label} because it is in bad state"
+                )
+            else:
+                logger.info(
+                    f"Not shutting down executor {executor.label} because it is unmanaged"
+                )
+
+    for label in labels_to_remove:
+        dfk.executors.pop(label)
