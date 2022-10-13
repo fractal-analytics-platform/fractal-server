@@ -84,14 +84,16 @@ dummy_subtask_parallel = Subtask(
 
 
 @pytest.mark.parametrize(
-    ("task", "message", "nfiles"),
+    ("task", "message", "nfiles", "workflow_id"),
     [
-        (dummy_task, DUMMY_MESSAGE, 1),
-        (dummy_subtask, DUMMY_SUBTASK_MESSAGE, 1),
-        (dummy_subtask_parallel, DUMMY_SUBTASK_MESSAGE, N_INDICES),
+        (dummy_task, DUMMY_MESSAGE, 1, 2),
+        (dummy_subtask, DUMMY_SUBTASK_MESSAGE, 1, 3),
+        (dummy_subtask_parallel, DUMMY_SUBTASK_MESSAGE, N_INDICES, 4),
     ],
 )
-def test_atomic_task_factory(task, message, nfiles, tmp_path, patch_settings):
+def test_atomic_task_factory(
+    task, message, nfiles, workflow_id, tmp_path, patch_settings
+):
     """
     GIVEN
         * a task or subtask
@@ -106,8 +108,6 @@ def test_atomic_task_factory(task, message, nfiles, tmp_path, patch_settings):
 
     from fractal_server.app.runner import _atomic_task_factory
     from fractal_server.app.runner.runner_utils import load_parsl_config
-
-    workflow_id = 0
 
     dfk = load_parsl_config(enable_monitoring=False, workflow_id=workflow_id)
 

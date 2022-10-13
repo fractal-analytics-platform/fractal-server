@@ -379,9 +379,8 @@ def load_parsl_config(
         # Add new executors
         for executor in config.executors:
             if executor.label in current_executor_labels:
-                warnings.warn(f"{executor.label=} already exists")
-            else:
-                dfk.add_executors([executor])
+                raise ValueError(f"{executor.label=} already exists")
+            dfk.add_executors([executor])
 
     except RuntimeError:
         logger.info("DFK missing, proceed with a new DataFlowKernel")
@@ -451,11 +450,13 @@ def shutdown_executors(workflow_id: int):
                 executor.managed and executor.bad_state_is_set
             ):  # and bad_state_is_set
                 logger.warning(
-                    f"Not shutting down executor {executor.label} because it is in bad state"
+                    f"Not shutting down executor {executor.label} because it "
+                    "is in bad state"
                 )
             else:
                 logger.info(
-                    f"Not shutting down executor {executor.label} because it is unmanaged"
+                    f"Not shutting down executor {executor.label} because it "
+                    "is unmanaged"
                 )
 
     for label in labels_to_remove:
