@@ -8,10 +8,10 @@ from sqlmodel import Relationship
 
 from ...config_runner import settings
 from ...utils import get_timestamp
-from ..project import Dataset
-from ..project import Project
 from ..schemas import ApplyWorkflowBase
-from ..workflow import Workflow
+from .project import Dataset
+from .project import Project
+from .workflow import Workflow
 
 
 class StatusType(str, Enum):
