@@ -27,3 +27,5 @@ parsl_executors.log
 fractal.log
 _test.db
 logs
+.mypy_cache
+dist/
