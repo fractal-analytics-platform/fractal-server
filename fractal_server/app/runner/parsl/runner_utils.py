@@ -57,20 +57,13 @@ class LocalChannel_fractal(LocalChannel):
         else:
             if cmd.startswith(("/bin/bash -c '", "ps", "kill")):
                 msg = (
-                    f'We do not add "sudo - {self.username} -c" in front of '
-                    f"LocalProvider commands like {cmd=}."
+                    f"For LocalProvider commands like {cmd=}, we do not "
+                    "impersonate other users."
                 )
                 warnings.warn(msg)
                 new_cmd = cmd
             elif cmd.startswith(("sbatch", "scancel")):
-                if cmd == "scancel ":
-                    new_cmd = (
-                        'echo "execute_wait was called with dummy "'
-                        f'"command "{cmd}". We are replacing it with '
-                        'this echo command."'
-                    )
-                else:
-                    new_cmd = f'sudo su - {self.username} -c "{cmd}"'
+                new_cmd = f"sudo --non-interactive -u {self.username} {cmd}"
             elif cmd.startswith("squeue"):
                 new_cmd = cmd
             else:
