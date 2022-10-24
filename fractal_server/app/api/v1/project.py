@@ -199,6 +199,7 @@ async def apply_workflow(
         username=user.slurm_user,
         db=db,
         job_id=job.id,
+        worker_init=job.worker_init,
     )
 
     return job
