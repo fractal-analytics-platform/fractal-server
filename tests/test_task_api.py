@@ -1,4 +1,11 @@
+from pathlib import Path
+
 from devtools import debug
+
+from fractal_server.config import get_settings
+from fractal_server.syringe import Inject
+from fractal_server.tasks.collection import get_collection_path
+from fractal_server.tasks.collection import get_log_path
 
 
 async def test_task_get_list(db, client, task_factory, MockCurrentUser):
@@ -19,22 +26,50 @@ async def test_collection_api(client, dummy_task_package, MockCurrentUser):
     """
     GIVEN a package in a format that `pip` understands
     WHEN the api to collect tasks from that package is called
-    THEN an environment is created, the package is installed and the task
-         collected
+    THEN
+        * a dedicated directory is created and returned
+        * in the background, an environment is created, the package is
+          installed and the task collected
+        * it is possible to GET the collection with the path to the folder to
+          check the status of the background process
     """
     PREFIX = "/api/v1/task"
 
-    task_collection = dict(
-        collection_type="pypi", package=dummy_task_package.as_posix()
-    )
+    task_collection = dict(package=dummy_task_package.as_posix())
 
     async with MockCurrentUser(persist=True):
-        res = await client.post(f"{PREFIX}/pip/", json=task_collection)
+        res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
         debug(res.json())
         assert res.status_code == 201
 
-    task_list = res.json()
-    task_names = (t["name"] for t in task_list)
-    assert len(task_list) == 2
-    assert "dummy" in task_names
-    assert "dummy parallel" in task_names
+        debug(dummy_task_package)
+        data = res.json()
+        assert "fractal_tasks_dummy" in data["venv_path"]
+        venv_path = Path(data["venv_path"])
+
+        res = await client.get(f"{PREFIX}/collect/{venv_path}")
+        debug(res.json())
+        assert res.status_code == 200
+        data = res.json()
+
+        assert data["status"] == "OK"
+        task_list = data["task_list"]
+        assert data["log"] is None
+
+        task_names = (t["name"] for t in task_list)
+        assert len(task_list) == 2
+        assert "dummy" in task_names
+        assert "dummy parallel" in task_names
+
+        # using verbose option
+        res = await client.get(f"{PREFIX}/collect/{venv_path}?verbose=true")
+        debug(res.json())
+        assert res.status_code == 200
+        data = res.json()
+        assert data["log"] is not None
+        debug(data["log"])
+
+        settings = Inject(get_settings)
+        full_path = settings.FRACTAL_ROOT / venv_path
+        assert get_collection_path(full_path).exists()
+        assert get_log_path(full_path).exists()
