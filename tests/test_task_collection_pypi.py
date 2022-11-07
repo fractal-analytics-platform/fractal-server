@@ -8,6 +8,14 @@ from fractal_server.tasks.collection import _TaskCollectPip
 from fractal_server.tasks.collection import load_manifest
 
 
+def test_task_collect_model(dummy_task_package):
+    debug(dummy_task_package)
+    tc = _TaskCollectPip(package=dummy_task_package.as_posix())
+
+    assert tc.package == "fractal_tasks_dummy"
+    assert tc.package_path == dummy_task_package
+
+
 async def test_init_venv(tmp_path):
     """
     GIVEN a path and a python version
@@ -16,8 +24,11 @@ async def test_init_venv(tmp_path):
     """
     venv_path = tmp_path / "fractal_test"
     venv_path.mkdir(exist_ok=True, parents=True)
+    logger_name = "fractal"
 
-    python_bin = await _init_venv(path=venv_path, python_version="3.8")
+    python_bin = await _init_venv(
+        path=venv_path, python_version="3.8", logger_name=logger_name
+    )
 
     assert venv_path.exists()
     assert (venv_path / "venv").exists()
@@ -38,11 +49,15 @@ async def test_pip_install(tmp_path):
     VERSION = "0.8.0"
     venv_path = tmp_path / "fractal_test" / f"{PACKAGE}{VERSION}"
     venv_path.mkdir(exist_ok=True, parents=True)
+    logger_name = "fractal"
 
-    await _init_venv(path=venv_path, python_version="3.8")
+    await _init_venv(
+        path=venv_path, python_version="3.8", logger_name=logger_name
+    )
     location = await _pip_install(
         venv_path=venv_path,
         task_pkg=_TaskCollectPip(package=PACKAGE, version=VERSION),
+        logger_name=logger_name,
     )
     debug(location)
     assert PACKAGE in location.as_posix()
