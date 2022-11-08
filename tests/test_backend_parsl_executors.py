@@ -55,7 +55,7 @@ async def test_valid_executors(db, project_factory, MockCurrentUser, tmp_path):
         source=dummy.__file__,
         input_type="Any",
         output_type="Any",
-        default_args=dict(parallelization_level="index", executor="cpu-mid"),
+        meta=dict(parallelization_level="index", executor="cpu-mid"),
     )
 
     # Create a workflow with the dummy task as member
@@ -84,7 +84,7 @@ async def test_valid_executors(db, project_factory, MockCurrentUser, tmp_path):
         level=logging.DEBUG,
         formatter=logging.Formatter("%(asctime)s; %(levelname)s; %(message)s"),
     )
-    out = await process_workflow(
+    metadata = await process_workflow(
         workflow=wf,
         input_paths=[tmp_path / "*.txt"],
         output_path=tmp_path / "out.json",
@@ -93,10 +93,10 @@ async def test_valid_executors(db, project_factory, MockCurrentUser, tmp_path):
         workflow_dir=tmp_path,
     )
     close_job_logger(logger)
-    debug(out)
-    assert "dummy" in out.metadata
-    assert "dummy" in out.metadata
-    assert out.metadata["history"] == [
+    debug(metadata)
+    assert "dummy" in metadata
+    assert "dummy" in metadata
+    assert metadata["history"] == [
         tk.name,
         tk.name,
         f"{tp.name}: [0, 1, 2]",
@@ -122,7 +122,7 @@ async def test_invalid_executors(
         source=dummy.__file__,
         input_type="Any",
         output_type="Any",
-        default_args=dict(executor="invalid executor name"),
+        meta=dict(executor="invalid executor name"),
     )
 
     # Create a workflow with the dummy task as member
