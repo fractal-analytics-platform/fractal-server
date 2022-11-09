@@ -110,7 +110,7 @@ class Workflow(_WorkflowBase, table=True):
 
     Attributes
     ----------
-    task_list: List(LinkTaskWorkflow)
+    task_list: List(WorkflowTask)
         List of associations to tasks.
     """
 
