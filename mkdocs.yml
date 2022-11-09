@@ -1,4 +1,22 @@
 site_name: Fractal Analytics Platform - Server Component
 
+repo_url: https://github.com/fractal-analytics-platform/fractal-server
+repo_name: fractal-server@github
+
 theme:
   name: "material"
+
+nav:
+  - reference.md
+
+watch:
+  - fractal_server
+
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          selection:
+            filters: []
