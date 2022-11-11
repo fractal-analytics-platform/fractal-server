@@ -109,9 +109,7 @@ async def dummy_task_package_invalid_manifest(testdata_path, tmp_path) -> Path:
     MANIFEST_PATH = f"{SOURCE_PATH}/__FRACTAL_MANIFEST__.json"
     with open(MANIFEST_PATH, "r") as fin:
         manifest = json.load(fin)
-    task_list = manifest["task_list"]
-    task_list[0].pop("default_args")
-    manifest["task_list"] = task_list
+    manifest["version"] = -10
     with open(MANIFEST_PATH, "w") as fout:
         json.dump(manifest, fout)
 
