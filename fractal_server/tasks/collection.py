@@ -148,7 +148,10 @@ def load_manifest(
 
     task_list = []
     if str(manifest_dict["manifest_version"]) == "1":
-        manifest = ManifestV1(**manifest_dict)
+        try:
+            manifest = ManifestV1(**manifest_dict)
+        except Exception as e:
+            raise ValueError("Manifest loading failed", str(e))
 
         for t in manifest.task_list:
             task_executable = package_root / t.executable
