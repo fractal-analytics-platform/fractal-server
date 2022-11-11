@@ -15,6 +15,7 @@ from typing import Optional
 from typing import Tuple
 
 from pydantic import root_validator
+from pydantic import ValidationError
 
 from ..app.schemas import ManifestV1
 from ..app.schemas import TaskCollectPip
@@ -150,8 +151,10 @@ def load_manifest(
     if str(manifest_dict["manifest_version"]) == "1":
         try:
             manifest = ManifestV1(**manifest_dict)
-        except Exception as e:
-            raise ValueError("Manifest loading failed", str(e))
+        except ValidationError as e:
+            raise ValidationError(
+                f"Invalid manifest in {manifest_file}", str(e)
+            )
 
         for t in manifest.task_list:
             task_executable = package_root / t.executable
