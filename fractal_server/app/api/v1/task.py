@@ -9,6 +9,7 @@ from fastapi import BackgroundTasks
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
+from pydantic import ValidationError
 from sqlmodel import select
 
 from ....config import get_settings
@@ -39,9 +40,15 @@ router = APIRouter()
 async def _background_collect_pip(
     venv_path: Path, task_pkg: _TaskCollectPip, db: AsyncSession
 ) -> List[Task]:
-    task_list = await create_package_environment_pip(
-        venv_path=venv_path, task_pkg=task_pkg
-    )
+    try:
+        task_list = await create_package_environment_pip(
+            venv_path=venv_path, task_pkg=task_pkg
+        )
+    except ValidationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid manifest. Original error: {e}",
+        )
     tasks = await _insert_tasks(task_list=task_list, db=db)
     collection_path = get_collection_path(venv_path)
     logger = set_logger(logger_name="fractal")
