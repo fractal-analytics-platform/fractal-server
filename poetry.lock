@@ -709,6 +709,28 @@ Markdown = ">=3.3"
 mkdocs = ">=1.1"
 
 [[package]]
+name = "mkdocs-gen-files"
+version = "0.4.0"
+description = "MkDocs plugin to programmatically generate documentation pages during the build"
+category = "dev"
+optional = false
+python-versions = ">=3.7,<4.0"
+
+[package.dependencies]
+mkdocs = ">=1.0.3,<2.0.0"
+
+[[package]]
+name = "mkdocs-literate-nav"
+version = "0.5.0"
+description = "MkDocs plugin to specify the navigation in Markdown instead of YAML"
+category = "dev"
+optional = false
+python-versions = ">=3.6,<4.0"
+
+[package.dependencies]
+mkdocs = ">=1.0.3,<2.0.0"
+
+[[package]]
 name = "mkdocs-material"
 version = "8.5.9"
 description = "Documentation that simply works"
@@ -732,6 +754,17 @@ description = "Extension pack for Python Markdown and MkDocs Material."
 category = "dev"
 optional = false
 python-versions = ">=3.7"
+
+[[package]]
+name = "mkdocs-section-index"
+version = "0.3.4"
+description = "MkDocs plugin to allow clickable sections that lead to an index page"
+category = "dev"
+optional = false
+python-versions = ">=3.6,<4.0"
+
+[package.dependencies]
+mkdocs = ">=1.1,<2.0"
 
 [[package]]
 name = "mkdocstrings"
@@ -1603,7 +1636,7 @@ postgres = ["asyncpg", "psycopg2"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "d9b111f65019c65ede4bc6568e087011d7f508914a0af31728f13d91f5a9732b"
+content-hash = "b6da2cc5379be7fbfe9c70d8f41710da65004d872a9b3e32f7ec5543ae1d6467"
 
 [metadata.files]
 aiosqlite = [
@@ -2110,6 +2143,14 @@ mkdocs-autorefs = [
     {file = "mkdocs-autorefs-0.4.1.tar.gz", hash = "sha256:70748a7bd025f9ecd6d6feeba8ba63f8e891a1af55f48e366d6d6e78493aba84"},
     {file = "mkdocs_autorefs-0.4.1-py3-none-any.whl", hash = "sha256:a2248a9501b29dc0cc8ba4c09f4f47ff121945f6ce33d760f145d6f89d313f5b"},
 ]
+mkdocs-gen-files = [
+    {file = "mkdocs-gen-files-0.4.0.tar.gz", hash = "sha256:377bff8ee8e93515916689f483d971643f83a94eed7e92318854da8f344f0163"},
+    {file = "mkdocs_gen_files-0.4.0-py3-none-any.whl", hash = "sha256:3241a4c947ecd11763ca77cc645015305bf71a0e1b9b886801c114fcf9971e71"},
+]
+mkdocs-literate-nav = [
+    {file = "mkdocs-literate-nav-0.5.0.tar.gz", hash = "sha256:c63d4385bb2b520baede25badad2d0936acebff3da175922c600d0a91902d8ff"},
+    {file = "mkdocs_literate_nav-0.5.0-py3-none-any.whl", hash = "sha256:b41149172af38c1a1df5e8d63292cbe7ed2a1431cd5daf884289036f2a9c7cca"},
+]
 mkdocs-material = [
     {file = "mkdocs_material-8.5.9-py3-none-any.whl", hash = "sha256:143ea55843b3747b640e1110824d91e8a4c670352380e166e64959f9abe98862"},
     {file = "mkdocs_material-8.5.9.tar.gz", hash = "sha256:45eeabb23d2caba8fa3b85c91d9ec8e8b22add716e9bba8faf16d56af8aa5622"},
@@ -2117,6 +2158,10 @@ mkdocs-material = [
 mkdocs-material-extensions = [
     {file = "mkdocs_material_extensions-1.1-py3-none-any.whl", hash = "sha256:bcc2e5fc70c0ec50e59703ee6e639d87c7e664c0c441c014ea84461a90f1e902"},
     {file = "mkdocs_material_extensions-1.1.tar.gz", hash = "sha256:96ca979dae66d65c2099eefe189b49d5ac62f76afb59c38e069ffc7cf3c131ec"},
+]
+mkdocs-section-index = [
+    {file = "mkdocs-section-index-0.3.4.tar.gz", hash = "sha256:050151bfe7c0e374f197335e0ecb19c45b53dbafc0f817aa203f0cc24bcf7d10"},
+    {file = "mkdocs_section_index-0.3.4-py3-none-any.whl", hash = "sha256:214f7a6df9d35a5772e9577f3899ff3edd90044064589e6dd4d84615b72a8024"},
 ]
 mkdocstrings = [
     {file = "mkdocstrings-0.19.0-py3-none-any.whl", hash = "sha256:3217d510d385c961f69385a670b2677e68e07b5fea4a504d86bf54c006c87c7d"},

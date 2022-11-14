@@ -7,7 +7,8 @@ theme:
   name: "material"
 
 nav:
-  - reference.md
+  - Code reference: reference/
+
 
 watch:
   - fractal_server
@@ -15,6 +16,12 @@ watch:
 
 plugins:
   - search
+  - gen-files:
+      scripts:
+        - docs/gen_ref_pages.py
+  - literate-nav:
+      nav_file: SUMMARY.md
+  - section-index
   - mkdocstrings:
       handlers:
         python:
