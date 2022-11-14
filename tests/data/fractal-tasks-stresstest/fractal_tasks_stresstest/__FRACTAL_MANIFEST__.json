@@ -1,0 +1,18 @@
+{
+  "manifest_version": 1,
+  "task_list": [
+    {
+      "name": "prepare_metadata",
+      "executable": "prepare_metadata.py",
+      "input_type": "Any",
+      "output_type": "Any"
+    },
+    {
+      "name": "sleep_task",
+      "executable": "sleep_task.py",
+      "input_type": "Any",
+      "output_type": "Any",
+      "meta": {"parallelization_level": "component"}
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "fractal-tasks-stresstest"
+version = "0.2.0"
+description = ""
+authors = ["Tommaso Comparin <tommaso.comparin@exact-lab.it>"]
+packages = [{include = "fractal_tasks_stresstest"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+pydantic = "^1.10.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
