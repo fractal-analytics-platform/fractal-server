@@ -8,11 +8,10 @@ theme:
 
 nav:
   - Code reference: reference/
-
+  - Coverage: coverage
 
 watch:
   - fractal_server
-
 
 plugins:
   - search
@@ -27,3 +26,6 @@ plugins:
         python:
           selection:
             filters: []
+  - coverage:
+      page_name: coverage
+      html_report_dir: htmlcov
