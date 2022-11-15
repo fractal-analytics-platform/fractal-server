@@ -1,6 +1,5 @@
 import asyncio
 import json
-import logging
 from functools import partial
 from functools import wraps
 from json import JSONEncoder
@@ -13,6 +12,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
+from ...utils import close_logger as close_job_logger  # noqa F401
 from ..models import Dataset
 from ..models import Project
 from ..models.task import Task
@@ -108,15 +108,6 @@ def validate_workflow_compatibility(
     return output_path
 
 
-def close_job_logger(logger: logging.Logger) -> None:
-    """
-    Close all FileHandles of `logger`
-    """
-    for handle in logger.handlers:
-        if isinstance(handle, logging.FileHandler):
-            handle.close()
-
-
 def async_wrap(func: Callable) -> Callable:
     """
     See issue #140 and https://stackoverflow.com/q/43241221/19085332
@@ -140,4 +131,4 @@ def async_wrap(func: Callable) -> Callable:
 
 def write_args_file(args: Dict[str, Any], path: Path):
     with path.open("w") as f:
-        json.dump(args, f, cls=TaskParameterEncoder)
+        json.dump(args, f, cls=TaskParameterEncoder, indent=4)
