@@ -17,6 +17,12 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Download data
+        uses: actions/download-artifact@v3
+        with:
+          name: html-report
+          path: htmlcov
+
       - name: Deploy docs
         uses: mhausenblas/mkdocs-deploy-gh-pages@master
         env:
