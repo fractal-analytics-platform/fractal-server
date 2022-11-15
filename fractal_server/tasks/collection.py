@@ -272,23 +272,16 @@ async def _create_venv_install_package(
     path: Path,
     logger_name: str,
 ) -> Tuple[Path, Path]:
-    """
-    Create venv and install package
+    """Create venv and install package
 
-    Parameters
-    ----------
-    path : Path
-        the directory in which to create the environment
-    task_pkg : _TaskCollectPip
-        object containing the different metadata required to install the
-        package
+    Args:
+        path: the directory in which to create the environment
+        task_pkg: object containing the different metadata required to install
+            the package
 
-    Return
-    ------
-    python_bin: Path
-        path to venv's python interpreter
-    package_root : Path
-        the location of the package manifest
+    Returns:
+        python_bin: path to venv's python interpreter
+        package_root: the location of the package manifest
     """
     python_bin = await _init_venv(
         path=path,

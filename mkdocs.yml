@@ -5,6 +5,8 @@ repo_name: fractal-server@github
 
 theme:
   name: "material"
+  features:
+  - content.code.annotate
 
 nav:
   - Code reference: reference/
