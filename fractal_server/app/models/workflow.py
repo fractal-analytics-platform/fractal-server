@@ -11,9 +11,9 @@ from sqlalchemy.types import JSON
 from sqlmodel import Field
 from sqlmodel import Relationship
 
-from ..db import AsyncSession
 from ...common.schemas.workflow import _WorkflowBase
 from ...common.schemas.workflow import _WorkflowTaskBase
+from ..db import AsyncSession
 from .task import Task
 
 
