@@ -6,7 +6,7 @@ from sqlalchemy import Column
 from sqlalchemy.types import JSON
 from sqlmodel import Field
 
-from ..schemas.task import _TaskBase
+from ...common.schemas.task import _TaskBase
 
 
 class Task(_TaskBase, table=True):  # type: ignore

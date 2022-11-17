@@ -231,7 +231,6 @@ async def project_factory(db):
         defaults = dict(
             name="project",
             project_dir="/tmp/",
-            slug="slug",
         )
         defaults.update(kwargs)
         project = Project(**defaults)
