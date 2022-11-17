@@ -11,9 +11,9 @@ from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
-from ..schemas.project import _DatasetBase
-from ..schemas.project import _ProjectBase
-from ..schemas.project import _ResourceBase
+from ...common.schemas.project import _DatasetBase
+from ...common.schemas.project import _ProjectBase
+from ...common.schemas.project import _ResourceBase
 from .security import UserOAuth as User
 from .workflow import Workflow
 
@@ -45,7 +45,6 @@ class Dataset(_DatasetBase, table=True):
 
 class Project(_ProjectBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    slug: Optional[str] = Field()
 
     user_member_list: List[User] = Relationship(
         link_model=LinkUserProject,
