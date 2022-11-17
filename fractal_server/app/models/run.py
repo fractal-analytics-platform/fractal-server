@@ -8,10 +8,10 @@ from sqlalchemy.types import DateTime
 from sqlmodel import Field
 from sqlmodel import Relationship
 
+from ...common.schemas import ApplyWorkflowBase
 from ...config import get_settings
 from ...syringe import Inject
 from ...utils import get_timestamp
-from ...common.schemas import ApplyWorkflowBase
 from .project import Dataset
 from .project import Project
 from .workflow import Workflow
