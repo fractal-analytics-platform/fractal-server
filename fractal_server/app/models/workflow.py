@@ -12,8 +12,8 @@ from sqlmodel import Field
 from sqlmodel import Relationship
 
 from ..db import AsyncSession
-from ..schemas.workflow import _WorkflowBase
-from ..schemas.workflow import _WorkflowTaskBase
+from ...common.schemas.workflow import _WorkflowBase
+from ...common.schemas.workflow import _WorkflowTaskBase
 from .task import Task
 
 
