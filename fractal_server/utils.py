@@ -47,10 +47,6 @@ def warn(message):
         raise RuntimeError(message)
 
 
-def slugify(value: str):
-    return value.lower().replace(" ", "_")
-
-
 def set_logger(
     *,
     logger_name: Optional[str] = None,
