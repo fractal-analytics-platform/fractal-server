@@ -28,6 +28,7 @@ parsl = {extras = ["monitoring"], git="https://github.com/fractal-analytics-plat
 
 asyncpg = { version = "^0.27.0", optional = true }
 psycopg2 = { version = "^2.9.5", optional = true }
+clusterfutures = "^0.4"
 
 [tool.poetry.extras]
 parsl = ["parsl"]
