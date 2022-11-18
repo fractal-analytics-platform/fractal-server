@@ -165,7 +165,9 @@ async def collect_tasks_pip(
                 shell_copy(task_pkg.package_path, tmpdir)
                 pkg_path = Path(tmpdir) / task_pkg.package_path.name
             else:
-                pkg_path = download_package(task_pkg=task_pkg, dest=tmpdir)
+                pkg_path = await download_package(
+                    task_pkg=task_pkg, dest=tmpdir
+                )
 
             version_manifest = inspect_package(pkg_path)
 
