@@ -386,7 +386,9 @@ async def _pip_install(
         pip_install_str = f"{task_pkg.package}{extras}{version_string}"
 
     cmd_install = f"{pip} install {pip_install_str}"
-    cmd_inspect = f"{pip} show {task_pkg.package}"
+    tmp_json = "inspect.json"
+    cmd_list = f"{pip} list -v --format json > {tmp_json}"
+    cmd_rm = f"rm {tmp_json}"
 
     await execute_command(
         cwd=venv_path,
@@ -397,18 +399,25 @@ async def _pip_install(
         cwd=venv_path, command=cmd_install, logger_name=logger_name
     )
 
-    # Extract package installation path from `pip show`
-    stdout_inspect = await execute_command(
-        cwd=venv_path, command=cmd_inspect, logger_name=logger_name
+    # Extract package installation path from `pip list`
+    await execute_command(
+        cwd=venv_path, command=cmd_list, logger_name=logger_name
+    )
+    with open(tmp_json) as f:
+        package_list = json.load(f)
+    # Remove json file
+    await execute_command(
+        cwd=venv_path, command=cmd_rm, logger_name=logger_name
     )
 
     location = Path(
         next(
-            line.split()[-1]
-            for line in stdout_inspect.split("\n")
-            if line.startswith("Location:")
+            package["location"]
+            for package in package_list
+            if package["name"] == "devtools"
         )
     )
+
     package_root = location / task_pkg.package.replace("-", "_")
     if not package_root.exists():
         raise RuntimeError(
