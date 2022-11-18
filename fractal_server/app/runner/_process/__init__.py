@@ -7,6 +7,7 @@ from typing import Optional
 
 from ...models import Workflow
 from .._common import recursive_task_submission
+from ..common import async_wrap
 from ..common import TaskParameters
 
 
@@ -21,7 +22,7 @@ Incidentally, it represents the reference implementation for a backend.
 """
 
 
-async def process_workflow(
+def _process_workflow(
     *,
     workflow: Workflow,
     input_paths: List[Path],
@@ -57,4 +58,30 @@ async def process_workflow(
         )
     output_task_pars = output_task_pars_fut.result()
     output_dataset_metadata = output_task_pars.metadata
+    return output_dataset_metadata
+
+
+async def process_workflow(
+    *,
+    workflow: Workflow,
+    input_paths: List[Path],
+    output_path: Path,
+    input_metadata: Dict[str, Any],
+    logger_name: str,
+    workflow_dir: Path,
+    username: str = None,
+    worker_init: Optional[
+        str
+    ] = None,  # this is only to match to _parsl interface
+) -> Dict[str, Any]:
+    output_dataset_metadata = await async_wrap(_process_workflow)(
+        workflow=workflow,
+        input_paths=input_paths,
+        output_path=output_path,
+        input_metadata=input_metadata,
+        logger_name=logger_name,
+        workflow_dir=workflow_dir,
+        username=username,
+        worker_init=worker_init,
+    )
     return output_dataset_metadata
