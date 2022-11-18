@@ -173,6 +173,28 @@ python-versions = ">=3.7"
 colorama = {version = "*", markers = "platform_system == \"Windows\""}
 
 [[package]]
+name = "cloudpickle"
+version = "2.2.0"
+description = "Extended pickling support for Python objects"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[[package]]
+name = "clusterfutures"
+version = "0.4"
+description = "futures for remote execution on clusters"
+category = "main"
+optional = false
+python-versions = ">=3.5"
+
+[package.dependencies]
+cloudpickle = "*"
+
+[package.extras]
+test = ["pytest", "testpath (>=0.5)"]
+
+[[package]]
 name = "colorama"
 version = "0.4.6"
 description = "Cross-platform colored terminal text."
@@ -1416,7 +1438,7 @@ postgres = ["asyncpg", "psycopg2"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "1119f43046bc87fc4490118dfb5f76cc69344dfa6f59878cf43427720c48a1ae"
+content-hash = "c8f87e51d1dc62b5360dc48b3ff78ad84826826b5f15af49ee3f366deb59e033"
 
 [metadata.files]
 aiosqlite = [
@@ -1589,6 +1611,14 @@ charset-normalizer = [
 click = [
     {file = "click-8.1.3-py3-none-any.whl", hash = "sha256:bb4d8133cb15a609f44e8213d9b391b0809795062913b383c62be0ee95b1db48"},
     {file = "click-8.1.3.tar.gz", hash = "sha256:7682dc8afb30297001674575ea00d1814d808d6a36af415a82bd481d37ba7b8e"},
+]
+cloudpickle = [
+    {file = "cloudpickle-2.2.0-py3-none-any.whl", hash = "sha256:7428798d5926d8fcbfd092d18d01a2a03daf8237d8fcdc8095d256b8490796f0"},
+    {file = "cloudpickle-2.2.0.tar.gz", hash = "sha256:3f4219469c55453cfe4737e564b67c2a149109dabf7f242478948b895f61106f"},
+]
+clusterfutures = [
+    {file = "clusterfutures-0.4-py3-none-any.whl", hash = "sha256:b46c0569a76f3e66f226b8feecd0d3d91ab1fcdf9a1e26ca3caf3b37db3df485"},
+    {file = "clusterfutures-0.4.tar.gz", hash = "sha256:5b416fbae6847b2bebfc00e10ff1f2999f58f49e61b90cd7e9e1027ca454f804"},
 ]
 colorama = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
