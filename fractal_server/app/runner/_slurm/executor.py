@@ -18,8 +18,17 @@ OUTFILE_FMT = local_filename("slurmpy.stdout.{}.log")
 
 
 def submit_sbatch(sbatch_script: str, submit_pre_command: str = "") -> int:
-    """Submits a Slurm job represented as a job file string. Returns
-    the job ID.
+    """
+    Submit a Slurm job script
+
+    Write the batch script in a temporary file and submit it with `sbatch`.
+
+    Args:
+        sbatch_script:
+            the string representing the full job
+        submit_pre_command:
+            command that is prefixed to `sbatch`
+
     """
     filename = local_filename("_temp_{}.sh".format(random_string()))
     with open(filename, "w") as f:
@@ -50,8 +59,16 @@ def compose_sbatch_script(
 
 
 class FractalSlurmExecutor(SlurmExecutor):
-    def __init__(self, user: Optional[str] = None, *args, **kwargs):
+    def __init__(self, username: Optional[str] = None, *args, **kwargs):
+        """
+        Fractal slurm executor
+
+        Args:
+            username:
+                shell username that runs the `sbatch` command
+        """
         super().__init__(*args, **kwargs)
+        self.username = username
 
     def _start(self, workerid, additional_setup_lines):
         if additional_setup_lines is None:
@@ -61,5 +78,9 @@ class FractalSlurmExecutor(SlurmExecutor):
             cmdline=f"{sys.executable} -m cfut.remote {workerid}",
             additional_setup_lines=additional_setup_lines,
         )
-        job_id = submit_sbatch(sbatch_script)
+
+        if self.user:
+            pre_cmd = f"sudo --non-interactive -u {self.username}"
+
+        job_id = submit_sbatch(sbatch_script, submit_pre_command=pre_cmd)
         return job_id
