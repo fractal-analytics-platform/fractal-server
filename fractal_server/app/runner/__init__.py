@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import Dict
 from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,8 +16,9 @@ from .common import auto_output_dataset  # noqa: F401
 from .common import close_job_logger
 from .common import validate_workflow_compatibility  # noqa: F401
 
+
 _backends = {}
-_backend_errors = {}
+_backend_errors: Dict[str, Exception] = {}
 
 _backends["process"] = process_process_workflow
 
@@ -27,6 +29,14 @@ try:
 except ModuleNotFoundError as e:
     _backend_errors["parsl"] = e
 
+
+try:
+    from ._slurm import process_workflow as slurm_process_workflow
+
+    _backends["slurm"] = slurm_process_workflow
+except ModuleNotFoundError as e:
+    _backend_errors["slurm"] = e
+
 # FIXME
 # We need to wrap the use of Inject so as to make it lazy, otherwise the import
 # will likely happen before any dependency override
@@ -35,12 +45,7 @@ _settings = Inject(get_settings)
 try:
     process_workflow = _backends[_settings.RUNNER_BACKEND]
 except KeyError:
-    from ...config import DeploymentType
-
-    if _settings.DEPLOYMENT_TYPE in [
-        DeploymentType.TESTING,
-        DeploymentType.DEVELOPMENT,
-    ]:
+    if _settings.DEPLOYMENT_TYPE in ["testing", "development"]:
         raise _backend_errors.get(_settings.RUNNER_BACKEND)
     else:
 
