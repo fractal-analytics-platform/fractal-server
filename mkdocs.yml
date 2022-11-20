@@ -1,14 +1,48 @@
-site_name: Fractal Analytics Platform - Server Component
+site_name: Fractal Analytics Platform
 
 repo_url: https://github.com/fractal-analytics-platform/fractal-server
 repo_name: fractal-server@github
+
+extra_css:
+  - css/mkdocstrings.css
+
+markdown_extensions:
+- admonition
+  #- callouts
+- pymdownx.details
+- pymdownx.emoji
+- pymdownx.magiclink
+- pymdownx.snippets:
+    check_paths: true
+- pymdownx.superfences
+- pymdownx.tabbed:
+    alternate_style: true
+- pymdownx.tasklist
+- toc:
+    permalink: "¤"
 
 theme:
   name: "material"
   features:
   - content.code.annotate
+  palette:
+  - media: "(prefers-color-scheme: light)"
+    scheme: default
+    primary: teal
+    accent: purple
+    toggle:
+      icon: material/weather-sunny
+      name: Switch to dark mode
+  - media: "(prefers-color-scheme: dark)"
+    scheme: slate
+    primary: black
+    accent: lime
+    toggle:
+      icon: material/weather-night
+      name: Switch to light mode
 
 nav:
+  - Server: server/
   - Code reference: reference/
   - Coverage: coverage
 
@@ -17,6 +51,7 @@ watch:
 
 plugins:
   - search
+  - autorefs
   - gen-files:
       scripts:
         - docs/gen_ref_pages.py
