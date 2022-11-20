@@ -6,7 +6,7 @@ import pytest
 from devtools import debug
 
 from fractal_server import tasks as tasks_package
-from fractal_server.app.schemas.manifest import ManifestV1
+from fractal_server.common.schemas.manifest import ManifestV1
 from fractal_server.tasks import dummy as dummy_module
 from fractal_server.tasks.dummy import dummy
 from fractal_server.tasks.dummy_parallel import dummy_parallel
