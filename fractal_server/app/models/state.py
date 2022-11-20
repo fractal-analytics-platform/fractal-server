@@ -7,12 +7,12 @@ from sqlalchemy import Column
 from sqlalchemy.types import DateTime
 from sqlalchemy.types import JSON
 from sqlmodel import Field
-from sqlmodel import SQLModel
 
+from ...common.schemas import _StateBase
 from ...utils import get_timestamp
 
 
-class State(SQLModel, table=True):
+class State(_StateBase, table=True):
     """
     Store arbitrary data in the database
 
@@ -29,6 +29,3 @@ class State(SQLModel, table=True):
         nullable=False,
         sa_column=Column(DateTime(timezone=True)),
     )
-
-    class Config:
-        arbitrary_types_allowed = True
