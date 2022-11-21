@@ -1,16 +1,19 @@
+import logging
 import os
 import shlex
-import sys
+import subprocess  # nosec
 from pathlib import Path
 from typing import List
 from typing import Optional
 
 from cfut import SlurmExecutor  # type: ignore
-from cfut.util import chcall  # type: ignore
 from cfut.util import random_string
 
 from ....config import get_settings
 from ....syringe import Inject
+
+logger = logging.getLogger("fractal")
+logger.setLevel(logging.DEBUG)
 
 
 def local_filename(filename=""):
@@ -18,7 +21,12 @@ def local_filename(filename=""):
 
 
 LOG_FILE = local_filename("slurmpy.log")
-OUTFILE_FMT = local_filename("slurmpy.stdout.{}.log")
+
+
+def get_out_filename() -> str:
+    settings = Inject(get_settings)
+    script_dir = settings.RUNNER_ROOT_DIR / "slurm_backend"  # type: ignore
+    return script_dir.as_posix() + "/slurmpy.stdout.{}.log"
 
 
 def submit_sbatch(
@@ -51,21 +59,25 @@ def submit_sbatch(
     with filename.open("w") as f:
         f.write(sbatch_script)
     submit_command = f"sbatch --parsable {filename}"
-    jobid, _ = chcall(
-        shlex.join(
-            shlex.split(submit_pre_command) + shlex.split(submit_command)
-        )
+    full_cmd = shlex.join(
+        shlex.split(submit_pre_command) + shlex.split(submit_command)
     )
-    filename.unlink()
+    output = subprocess.run(full_cmd, capture_output=True, check=True)  # nosec
+    logger.debug(output)
+    jobid = output.stdout
+    # NOTE after debugging this can be uncommented
+    # filename.unlink()
     return int(jobid)
 
 
 def compose_sbatch_script(
     cmdline: List[str],
     # NOTE: In SLURM, `%j` is the placeholder for the job_id.
-    outpat: str = OUTFILE_FMT.format("%j"),
+    outpat: Optional[str] = None,
     additional_setup_lines=[],
 ) -> str:
+    if outpat is None:
+        get_out_filename().format("%j")
     script_lines = [
         "#!/bin/sh",
         "#SBATCH --output={}".format(outpat),
@@ -99,7 +111,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             additional_setup_lines = self.additional_setup_lines
 
         sbatch_script = compose_sbatch_script(
-            cmdline=shlex.split(f"{sys.executable} -m cfut.remote {workerid}"),
+            cmdline=shlex.split(f"python3 -m cfut.remote {workerid}"),
             additional_setup_lines=additional_setup_lines,
         )
 
