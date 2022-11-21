@@ -79,7 +79,8 @@ class FractalSlurmExecutor(SlurmExecutor):
             additional_setup_lines=additional_setup_lines,
         )
 
-        if self.user:
+        pre_cmd = ""
+        if self.username:
             pre_cmd = f"sudo --non-interactive -u {self.username}"
 
         job_id = submit_sbatch(sbatch_script, submit_pre_command=pre_cmd)

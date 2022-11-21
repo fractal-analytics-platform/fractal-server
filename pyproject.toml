@@ -47,6 +47,7 @@ pytest-mock = "^3.8.1"
 pre-commit = "^2.19.0"
 coverage = {extras = ["toml"], version = "^6.4.4"}
 mypy = "^0.982"
+pytest-subprocess = "^1.4.2"
 
 
 [build-system]
