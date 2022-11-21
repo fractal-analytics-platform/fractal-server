@@ -1057,6 +1057,22 @@ pytest = ">=5.0"
 dev = ["pre-commit", "pytest-asyncio", "tox"]
 
 [[package]]
+name = "pytest-subprocess"
+version = "1.4.2"
+description = "A plugin to fake subprocess for pytest"
+category = "dev"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+pytest = ">=4.0.0"
+
+[package.extras]
+dev = ["changelogd", "nox"]
+docs = ["changelogd", "furo", "sphinx", "sphinx-autodoc-typehints", "sphinxcontrib-napoleon"]
+test = ["Pygments (>=2.0)", "anyio", "coverage", "docutils (>=0.12)", "pytest (>=4.0)", "pytest-asyncio (>=0.15.1)", "pytest-rerunfailures"]
+
+[[package]]
 name = "python-daemon"
 version = "2.3.2"
 description = "Library to implement a well-behaved Unix daemon process."
@@ -1436,7 +1452,7 @@ slurm = ["clusterfutures"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "8ec4a8499cd1e27c7b9717d0f4d99ac7763727c8a8544fbed3361ab9faba4f72"
+content-hash = "1711c2075af8dd5e184305fe26a09206aeabfe5d645e20dbcf9d85aeb29fb120"
 
 [metadata.files]
 aiosqlite = [
@@ -2231,6 +2247,10 @@ pytest-asyncio = [
 pytest-mock = [
     {file = "pytest-mock-3.10.0.tar.gz", hash = "sha256:fbbdb085ef7c252a326fd8cdcac0aa3b1333d8811f131bdcc701002e1be7ed4f"},
     {file = "pytest_mock-3.10.0-py3-none-any.whl", hash = "sha256:f4c973eeae0282963eb293eb173ce91b091a79c1334455acfac9ddee8a1c784b"},
+]
+pytest-subprocess = [
+    {file = "pytest-subprocess-1.4.2.tar.gz", hash = "sha256:3edccde14da6f65860d55891df37a1ec86fcf83db880512f856a77cfb521d1e1"},
+    {file = "pytest_subprocess-1.4.2-py3-none-any.whl", hash = "sha256:b072da330c64e238f25a14ed9410bf8882b276e64d823f651b33e91406899cee"},
 ]
 python-daemon = [
     {file = "python-daemon-2.3.2.tar.gz", hash = "sha256:3deeb808e72b6b89f98611889e11cc33754f5b2c1517ecfa1aaf25f402051fb5"},
