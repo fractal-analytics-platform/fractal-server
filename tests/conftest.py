@@ -1,6 +1,13 @@
+import asyncio
 from pathlib import Path
 
 import pytest
+
+
+@pytest.fixture(scope="session")
+def event_loop():
+    _event_loop = asyncio.new_event_loop()
+    yield _event_loop
 
 
 @pytest.fixture(scope="session")
@@ -11,3 +18,4 @@ async def testdata_path() -> Path:
 
 from .fixtures_server import *  # noqa F403
 from .fixtures_tasks import *  # noqa F403
+from .fixtures_slurm import *  # noqa F403
