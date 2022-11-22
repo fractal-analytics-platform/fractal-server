@@ -42,6 +42,25 @@ def get_out_filename(arg) -> Path:
     return get_slurm_script_dir() / f"cfut.out.{arg}.pickle"
 
 
+def write_batch_script(
+    sbatch_script: str, script_dir: Optional[Path] = None
+) -> Path:
+    """
+    Write batch script
+
+    Returns:
+        batch_script_path:
+            The path to the batch script
+    """
+    if not script_dir:
+        script_dir = get_slurm_script_dir()
+
+    batch_script_path = script_dir / f"_temp_{random_string()}.sh"
+    with batch_script_path.open("w") as f:
+        f.write(sbatch_script)
+    return batch_script_path
+
+
 def submit_sbatch(
     sbatch_script: str,
     submit_pre_command: str = "",
@@ -64,12 +83,9 @@ def submit_sbatch(
         jobid:
             integer job id as returned by `sbatch` submission
     """
-    if not script_dir:
-        script_dir = get_slurm_script_dir()
-
-    filename = script_dir / f"_temp_{random_string()}.sh"
-    with filename.open("w") as f:
-        f.write(sbatch_script)
+    filename = write_batch_script(
+        sbatch_script=sbatch_script, script_dir=script_dir
+    )
     submit_command = f"sbatch --parsable {filename}"
     full_cmd = shlex.join(
         shlex.split(submit_pre_command) + shlex.split(submit_command)

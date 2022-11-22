@@ -36,18 +36,41 @@ def test_submit_pre_command(fake_process, username, tmp_path):
         assert f"sudo --non-interactive -u {username}" in call
 
 
+def test_unit_sbatch_script_readable(monkey_slurm, tmp777_path):
+    """
+    GIVEN a batch script written to file by the slurm executor
+    WHEN a differnt user tries to read it
+    THEN it has all the permissions needed
+    """
+    from fractal_server.app.runner._slurm.executor import write_batch_script
+    import subprocess
+    import shlex
+
+    SBATCH_SCRIPT = "test"
+    f = write_batch_script(SBATCH_SCRIPT, script_dir=tmp777_path)
+
+    out = subprocess.run(
+        # f"sudo --non-interactive -u test01 cat {f}",
+        shlex.split(f"sudo --non-interactive -u test01 cat {f}"),
+        capture_output=True,
+        text=True,
+    )
+    debug(out.stderr)
+    assert out.returncode == 0
+    debug(out)
+    assert out.stdout == SBATCH_SCRIPT
+
+
 @pytest.mark.parametrize("username", [None, "test01"])
-def test_slurm_executor(username, monkey_slurm, tmp_path):
+def test_slurm_executor(username, monkey_slurm, tmp777_path):
     """
     GIVEN a slurm cluster in a docker container
     WHEN a function is submitted to the cluster executor, as a given user
     THEN the result is correctly computed
     """
 
-    tmp_path.chmod(0o777)
-    tmp_path.parent.chmod(0o777)
     with FractalSlurmExecutor(
-        script_dir=tmp_path, username=username
+        script_dir=tmp777_path, username=username
     ) as executor:
         res = executor.submit(lambda: 42)
     assert res.result() == 42
