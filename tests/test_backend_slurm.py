@@ -46,6 +46,8 @@ def test_slurm_executor(username, monkey_slurm, tmp_path):
 
     tmp_path.chmod(0o777)
     tmp_path.parent.chmod(0o777)
-    with FractalSlurmExecutor(script_dir=tmp_path, username=username) as executor:
+    with FractalSlurmExecutor(
+        script_dir=tmp_path, username=username
+    ) as executor:
         res = executor.submit(lambda: 42)
     assert res.result() == 42
