@@ -33,6 +33,9 @@ def tmp777_session_path(tmp_path_factory):
 @pytest.fixture
 def tmp777_path(tmp_path):
     tmp_path.chmod(0o777)
+    for parent in tmp_path.parents:
+        if "pytest" in parent.as_posix():
+            parent.chmod(0o777)
     yield tmp_path
 
 
