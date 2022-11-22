@@ -62,9 +62,8 @@ def get_patched_settings(temp_path: Path):
 
 
 @pytest.fixture(scope="session", autouse=True)
-def override_settings(tmp_path_factory):
-    tmp_path = tmp_path_factory.mktemp("fractal_root")
-    tmp_path.chmod(0o777)
+def override_settings(tmp777_session_path):
+    tmp_path = tmp777_session_path("fractal_root")
 
     def _get_settings():
         return get_patched_settings(tmp_path)
