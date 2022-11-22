@@ -36,12 +36,16 @@ def test_submit_pre_command(fake_process, username, tmp_path):
         assert f"sudo --non-interactive -u {username}" in call
 
 
-def test_slurm_executor(monkey_slurm, tmp_path):
+@pytest.mark.parametrize("username", [None, "test01"])
+def test_slurm_executor(username, monkey_slurm, tmp_path):
     """
     GIVEN a slurm cluster in a docker container
-    WHEN a function is submitted to the cluster executor
+    WHEN a function is submitted to the cluster executor, as a given user
     THEN the result is correctly computed
     """
-    with FractalSlurmExecutor(script_dir=tmp_path) as executor:
+
+    tmp_path.chmod(0o777)
+    tmp_path.parent.chmod(0o777)
+    with FractalSlurmExecutor(script_dir=tmp_path, username=username) as executor:
         res = executor.submit(lambda: 42)
     assert res.result() == 42
