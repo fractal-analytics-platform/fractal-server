@@ -12,7 +12,6 @@ Institute for Biomedical Research and Pelkmans Lab from the University of
 Zurich.
 """
 import logging
-import shutil
 
 import pytest
 from devtools import debug
@@ -25,32 +24,26 @@ from fractal_server.tasks import dummy
 from fractal_server.tasks import dummy_parallel
 from fractal_server.utils import set_logger
 
-SBATCH_EXECUTABLE = shutil.which("sbatch")
 
 backends_available = list(_backends.keys())
-for i, b in enumerate(backends_available):
-    if b == "slurm" and not SBATCH_EXECUTABLE:
-        backends_available[i] = pytest.param(
-            b,
-            marks=pytest.mark.xfail(
-                reason="`sbatch` command does not seem to be available"
-            ),
-        )
-
-debug(backends_available)
 
 
 @pytest.mark.parametrize(
     "backend",
     backends_available,
 )
-async def test_runner(db, project_factory, MockCurrentUser, tmp_path, backend):
+async def test_runner(
+    db, project_factory, MockCurrentUser, tmp_path, backend, request
+):
     """
     GIVEN a non-trivial workflow
     WHEN the workflow is processed
     THEN the tasks are correctly executed
     """
     debug(f"Testing with {backend=}")
+    if backend == "slurm":
+        request.getfixturevalue("monkey_slurm")
+
     process_workflow = _backends[backend]
 
     async with MockCurrentUser(persist=True) as user:
