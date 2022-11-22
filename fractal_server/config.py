@@ -152,6 +152,7 @@ class Settings(BaseSettings):
     RUNNER_ROOT_DIR: Optional[Path]
     FRACTAL_LOGGING_LEVEL: int = logging.WARNING
     FRACTAL_PUBLIC_TASK_SUBDIR: str = ".fractal"
+    SLURM_PYTHON_WORKER_INTERPRETER: Optional[str] = None
 
     RUNNER_CONFIG: str = "local"
     RUNNER_DEFAULT_EXECUTOR: str = "cpu-low"

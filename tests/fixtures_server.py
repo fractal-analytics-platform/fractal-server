@@ -57,6 +57,11 @@ def get_patched_settings(temp_path: Path):
     settings.RUNNER_ROOT_DIR.mkdir(parents=True, exist_ok=True)
     settings.RUNNER_ROOT_DIR.chmod(0o777)
 
+    # NOTE:
+    # This variable is set to work with the system interpreter within a docker
+    # container. If left unset it defaults to `sys.executor`
+    settings.SLURM_PYTHON_WORKER_INTERPRETER = "python3"
+
     settings.FRACTAL_LOGGING_LEVEL = logging.DEBUG
     return settings
 
