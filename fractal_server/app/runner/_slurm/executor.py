@@ -204,8 +204,15 @@ class FractalSlurmExecutor(SlurmExecutor):
         if additional_setup_lines is None:
             additional_setup_lines = self.additional_setup_lines
 
+        settings = Inject(get_settings)
+        python_worker_interpreter = (
+            settings.SLURM_PYTHON_WORKER_INTERPRETER or sys.executable
+        )
+
         sbatch_script = compose_sbatch_script(
-            cmdline=shlex.split(f"python3 -m cfut.remote {workerid}"),
+            cmdline=shlex.split(
+                f"{python_worker_interpreter} -m cfut.remote {workerid}"
+            ),
             additional_setup_lines=additional_setup_lines,
         )
 
