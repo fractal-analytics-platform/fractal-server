@@ -96,4 +96,4 @@ def test_slurm_executor(monkey_popen, tmp_path):
     """
     with FractalSlurmExecutor(script_dir=tmp_path) as executor:
         res = executor.submit(lambda: 42)
-    assert res == 42
+    assert res.result() == 42
