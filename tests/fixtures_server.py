@@ -55,6 +55,7 @@ def get_patched_settings(temp_path: Path):
 
     settings.FRACTAL_ROOT = temp_path
     settings.RUNNER_ROOT_DIR = temp_path / "artifacts"
+    settings.RUNNER_ROOT_DIR.mkdir(parents=True, exist_ok=True)
     settings.FRACTAL_LOGGING_LEVEL = logging.DEBUG
     return settings
 
