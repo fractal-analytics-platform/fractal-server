@@ -20,7 +20,7 @@ async def slurm_container() -> str:
         container_name = slurm_master.split()[-1]
         debug(container_name)
         return container_name
-    except RuntimeError:
+    except (RuntimeError, StopIteration):
         pytest.xfail(reason="No Slurm master container found")
 
 
@@ -54,12 +54,23 @@ def test_submit_pre_command(fake_process, username, tmp_path):
 
 
 @pytest.fixture
-def monkey_popen(slurm_container, monkeypatch):
+def monkey_slurm(monkeypatch, request):
+    """
+    Monkeypatch Popen to execute overridden command in container
+
+    If not present on the host, intercept Popen calls and redirect to the
+    container.
+    """
     import subprocess
+    import shutil
 
     OrigPopen = subprocess.Popen
 
     OVERRIDE_CMD = ["sbatch", "env"]
+    OVERRIDE_CMD = [c for c in OVERRIDE_CMD if not shutil.which(c)]
+
+    if OVERRIDE_CMD:
+        slurm_container = request.getfixturevalue("slurm_container")
 
     class PopenLog:
         calls: List[OrigPopen] = []
@@ -88,7 +99,7 @@ def monkey_popen(slurm_container, monkeypatch):
     return PopenLog
 
 
-def test_slurm_executor(monkey_popen, tmp_path):
+def test_slurm_executor(monkey_slurm, tmp_path):
     """
     GIVEN a slurm cluster in a docker container
     WHEN a function is submitted to the cluster executor
