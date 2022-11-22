@@ -7,11 +7,13 @@ from devtools import debug
 
 @pytest.fixture
 def slurm_container(event_loop) -> str:
+    """
+    Return the name of the container running `slurm-docker-master`
+    """
     import subprocess
 
     try:
         out = subprocess.run(["docker", "ps"], check=True, capture_output=True)
-        # output = await execute_command("docker ps")
         output = out.stdout.decode("utf-8")
         slurm_master = next(
             ln for ln in output.splitlines() if "slurm-docker-master" in ln
@@ -28,16 +30,18 @@ def monkey_slurm(monkeypatch, request):
     """
     Monkeypatch Popen to execute overridden command in container
 
-    If not present on the host, intercept Popen calls and redirect to the
-    container.
+    If not present on the host or inserted in the `NO_HOST_CMD` list, intercept
+    Popen calls and redirect to the container.
     """
     import subprocess
     import shutil
 
     OrigPopen = subprocess.Popen
 
-    OVERRIDE_CMD = ["sbatch", "env"]
+    NO_HOST_CMD = ["sudo"]
+    OVERRIDE_CMD = ["sbatch"]
     OVERRIDE_CMD = [c for c in OVERRIDE_CMD if not shutil.which(c)]
+    OVERRIDE_CMD.extend(NO_HOST_CMD)
 
     if OVERRIDE_CMD:
         slurm_container = request.getfixturevalue("slurm_container")
