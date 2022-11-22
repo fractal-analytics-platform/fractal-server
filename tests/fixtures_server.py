@@ -31,9 +31,7 @@ from fractal_server.config import Settings
 from fractal_server.syringe import Inject
 
 
-DB_ENGINE = "sqlite"
 DB_ENGINE = "postgres"
-
 
 
 def get_patched_settings(temp_path: Path):
