@@ -48,6 +48,7 @@ def _process_workflow(
         debug=True,
         keep_logs=True,
         additional_setup_lines=("#SBATCH --partition=main",),
+        username=username,
     ) as executor:
         output_task_pars_fut = recursive_task_submission(
             executor=executor,
