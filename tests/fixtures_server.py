@@ -10,7 +10,6 @@ This file is part of Fractal and was originally developed by eXact lab S.r.l.
 Institute for Biomedical Research and Pelkmans Lab from the University of
 Zurich.
 """
-import asyncio
 import logging
 from dataclasses import dataclass
 from dataclasses import field
@@ -100,12 +99,6 @@ def unset_deployment_type():
         Inject.pop(get_settings)
         if previous:
             Inject.override(get_settings, previous)
-
-
-@pytest.fixture(scope="session")
-def event_loop():
-    _event_loop = asyncio.new_event_loop()
-    yield _event_loop
 
 
 @pytest.fixture
