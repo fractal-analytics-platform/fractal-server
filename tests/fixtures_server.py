@@ -31,7 +31,9 @@ from fractal_server.config import Settings
 from fractal_server.syringe import Inject
 
 
+DB_ENGINE = "sqlite"
 DB_ENGINE = "postgres"
+
 
 
 def get_patched_settings(temp_path: Path):
@@ -55,6 +57,8 @@ def get_patched_settings(temp_path: Path):
     settings.FRACTAL_ROOT = temp_path
     settings.RUNNER_ROOT_DIR = temp_path / "artifacts"
     settings.RUNNER_ROOT_DIR.mkdir(parents=True, exist_ok=True)
+    settings.RUNNER_ROOT_DIR.chmod(0o777)
+
     settings.FRACTAL_LOGGING_LEVEL = logging.DEBUG
     return settings
 
@@ -62,6 +66,7 @@ def get_patched_settings(temp_path: Path):
 @pytest.fixture(scope="session", autouse=True)
 def override_settings(tmp_path_factory):
     tmp_path = tmp_path_factory.mktemp("fractal_root")
+    tmp_path.chmod(0o777)
 
     def _get_settings():
         return get_patched_settings(tmp_path)
