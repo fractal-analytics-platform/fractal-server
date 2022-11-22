@@ -4,7 +4,6 @@
 # License: MIT
 #
 # Copyright 2022 Jacopo Nepsolo <jacopo.nespolo@exact-lab.it>
-import logging
 import shlex
 import subprocess  # nosec
 import sys
@@ -22,9 +21,7 @@ from cfut.util import random_string
 
 from ....config import get_settings
 from ....syringe import Inject
-
-logger = logging.getLogger("fractal")
-logger.setLevel(logging.DEBUG)
+from ....utils import set_logger
 
 
 def get_slurm_script_dir() -> Path:
@@ -68,8 +65,7 @@ def submit_sbatch(
             integer job id as returned by `sbatch` submission
     """
     if not script_dir:
-        settings = Inject(get_settings)
-        script_dir = settings.RUNNER_ROOT_DIR / "slurm_backend"  # type: ignore
+        script_dir = get_slurm_script_dir()
 
     filename = script_dir / f"_temp_{random_string()}.sh"
     with filename.open("w") as f:
@@ -78,8 +74,14 @@ def submit_sbatch(
     full_cmd = shlex.join(
         shlex.split(submit_pre_command) + shlex.split(submit_command)
     )
-    output = subprocess.run(full_cmd, capture_output=True, check=True)  # nosec
-    logger.debug(output)
+    try:
+        output = subprocess.run(  # nosec
+            full_cmd, capture_output=True, check=True
+        )
+    except subprocess.CalledProcessError as e:
+        logger = set_logger(logger_name="slurm_runner")
+        logger.error(e.stderr)
+        raise e
     jobid = output.stdout
     # NOTE after debugging this can be uncommented
     # filename.unlink()
