@@ -57,9 +57,7 @@ async def test_init_venv(tmp_path):
     venv_path.mkdir(exist_ok=True, parents=True)
     logger_name = "fractal"
 
-    python_bin = await _init_venv(
-        path=venv_path, python_version="3.8", logger_name=logger_name
-    )
+    python_bin = await _init_venv(path=venv_path, logger_name=logger_name)
 
     assert venv_path.exists()
     assert (venv_path / "venv").exists()
