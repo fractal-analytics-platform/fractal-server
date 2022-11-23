@@ -113,25 +113,34 @@ async def dummy_task_package_invalid_manifest(testdata_path, tmp_path) -> Path:
     yield wheel_path
 
 
-@pytest.fixture
-async def collect_packages(db, dummy_task_package):
-    from fractal_server.app.api.v1.task import _TaskCollectPip
-    from fractal_server.app.api.v1.task import _background_collect_pip
-    from fractal_server.app.api.v1.task import create_package_dir_pip
-    from fractal_server.app.api.v1.task import TaskCollectStatus
-    from fractal_server.app.models import State
+@pytest.fixture(scope="function")
+async def install_dummy_packages(tmp_path_factory, dummy_task_package):
+    from fractal_server.tasks.collection import (
+        _create_venv_install_package,
+        load_manifest,
+    )
+    from fractal_server.tasks.collection import _TaskCollectPip
 
+    venv_path = tmp_path_factory.mktemp("dummy")
+    venv_path.mkdir(exist_ok=True, parents=True)
     task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())
-    venv_path = create_package_dir_pip(task_pkg=task_pkg, user=None)
-    collection_status = TaskCollectStatus(
-        status="pending", venv_path=venv_path, package=task_pkg.package
+
+    python_bin, package_root = await _create_venv_install_package(
+        path=venv_path,
+        task_pkg=task_pkg,
+        logger_name="test",
     )
-    collection_status_dict = collection_status.sanitised_dict()
-    state = State(data=collection_status_dict)
-    db.add(state)
-    await db.commit()
-    await db.refresh(state)
-    tasks = await _background_collect_pip(
-        state=state, venv_path=venv_path, task_pkg=task_pkg, db=db
+    task_list = load_manifest(
+        package_root=package_root,
+        python_bin=python_bin,
+        source="test_source",
     )
+    return task_list
+
+
+@pytest.fixture(scope="function")
+async def collect_packages(db, install_dummy_packages):
+    from fractal_server.app.api.v1.task import _insert_tasks
+
+    tasks = await _insert_tasks(task_list=install_dummy_packages, db=db)
     return tasks
