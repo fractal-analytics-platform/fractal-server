@@ -7,6 +7,8 @@ from typing import Optional
 import pytest
 from pydantic import BaseModel
 
+from .fixtures_server import HAS_LOCAL_SBATCH
+
 
 class MockTask(BaseModel):
     name: str
@@ -153,9 +155,8 @@ def relink_python_interpreter(collect_packages):
     """
     import os
     import logging
-    import shutil
 
-    if not shutil.which("sbatch"):
+    if not HAS_LOCAL_SBATCH:
         logger = logging.getLogger("RELINK")
         logger.setLevel(logging.INFO)
 
