@@ -30,20 +30,17 @@ def monkey_slurm(monkeypatch, request):
     """
     Monkeypatch Popen to execute overridden command in container
 
-    If not present on the host or inserted in the `NO_HOST_CMD` list, intercept
-    Popen calls and redirect to the container.
+    If sbatch is not present on the host machine, check if there is a
+    containerised installation and redirect commands there. If no slurm
+    container is present, xfail.
     """
     import subprocess
     import shutil
 
     OrigPopen = subprocess.Popen
 
-    NO_HOST_CMD = ["sudo"]
-    OVERRIDE_CMD = ["sbatch"]
-    OVERRIDE_CMD = [c for c in OVERRIDE_CMD if not shutil.which(c)]
-    OVERRIDE_CMD.extend(NO_HOST_CMD)
-
-    if OVERRIDE_CMD:
+    if not shutil.which("sbatch"):
+        OVERRIDE_CMD = ["sudo", "sbatch"]
         slurm_container = request.getfixturevalue("slurm_container")
 
     class PopenLog:
