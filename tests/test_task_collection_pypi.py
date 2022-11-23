@@ -80,9 +80,7 @@ async def test_pip_install(tmp_path):
     venv_path.mkdir(exist_ok=True, parents=True)
     logger_name = "fractal"
 
-    await _init_venv(
-        path=venv_path, python_version="3.8", logger_name=logger_name
-    )
+    await _init_venv(path=venv_path, logger_name=logger_name)
     location = await _pip_install(
         venv_path=venv_path,
         task_pkg=_TaskCollectPip(package=PACKAGE, version=VERSION),
