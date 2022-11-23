@@ -57,8 +57,8 @@ async def execute_command(cmd, **kwargs):
     return stdout.decode("UTF-8").strip()
 
 
-@pytest.fixture
-async def dummy_task_package(testdata_path, tmp_path) -> Path:
+@pytest.fixture(scope="session")
+async def dummy_task_package(testdata_path, tmp_path_factory) -> Path:
     """
     Yields
     ------
@@ -68,15 +68,15 @@ async def dummy_task_package(testdata_path, tmp_path) -> Path:
     from fractal_server import tasks as task_package
 
     PACKAGE_TEMPLATE_PATH = testdata_path / "fractal-tasks-dummy"
-    PACKAGE_PATH = tmp_path / "fractal-tasks-dummy"
+    PACKAGE_PATH = tmp_path_factory.mktemp("fractal-tasks-dummy")
     SOURCE_PATH = PACKAGE_PATH / "fractal_tasks_dummy"
     DUMMY_PACKAGE = Path(task_package.__file__).parent
 
     # copy template to temp
-    await execute_command(f"cp -r {PACKAGE_TEMPLATE_PATH} {PACKAGE_PATH}")
+    await execute_command(f"cp -r {PACKAGE_TEMPLATE_PATH}/* {PACKAGE_PATH}")
     # copy content of task_package to PACKAGE_PATH
     await execute_command(f"cp {DUMMY_PACKAGE}/*.* {SOURCE_PATH}")
-    await execute_command("poetry build", cwd=PACKAGE_PATH)
+    await execute_command("poetry build", cwd=SOURCE_PATH)
     wheel_relative = await execute_command("ls dist/*.whl", cwd=PACKAGE_PATH)
     wheel_path = PACKAGE_PATH / wheel_relative
     yield wheel_path
@@ -113,7 +113,7 @@ async def dummy_task_package_invalid_manifest(testdata_path, tmp_path) -> Path:
     yield wheel_path
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 async def install_dummy_packages(tmp_path_factory, dummy_task_package):
     from fractal_server.tasks.collection import (
         _create_venv_install_package,
