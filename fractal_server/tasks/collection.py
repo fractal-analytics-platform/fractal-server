@@ -241,22 +241,27 @@ async def create_package_environment_pip(
         log_file_path=get_log_path(venv_path),
         level=logging.DEBUG,
     )
-    logger.debug("Creating venv and installing package")
+    try:
+        logger.debug("Creating venv and installing package")
 
-    python_bin, package_root = await _create_venv_install_package(
-        path=venv_path,
-        task_pkg=task_pkg,
-        logger_name=logger_name,
-    )
+        python_bin, package_root = await _create_venv_install_package(
+            path=venv_path,
+            task_pkg=task_pkg,
+            logger_name=logger_name,
+        )
 
-    logger.debug("loading manifest")
+        logger.debug("loading manifest")
 
-    task_list = load_manifest(
-        package_root=package_root,
-        python_bin=python_bin,
-        source=task_pkg.source,
-    )
-    logger.debug("manifest loaded")
+        task_list = load_manifest(
+            package_root=package_root,
+            python_bin=python_bin,
+            source=task_pkg.source,
+        )
+        logger.debug("manifest loaded")
+    except Exception:
+        # Make sure the logger is closed correctly
+        close_logger(logger)
+        raise
     close_logger(logger)
     return task_list
 
