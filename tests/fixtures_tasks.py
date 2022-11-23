@@ -175,3 +175,5 @@ def relink_python_interpreter(collect_packages):
         logger.warning(
             f"RELINK: tear down {python=} -> {os.readlink(python.as_posix())}"
         )
+    else:
+        yield
