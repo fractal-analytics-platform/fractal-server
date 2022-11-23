@@ -44,6 +44,8 @@ def monkey_slurm(monkeypatch, request):
     if not shutil.which("sbatch"):
         OVERRIDE_CMD = ["sudo", "sbatch"]
         slurm_container = request.getfixturevalue("slurm_container")
+    else:
+        OVERRIDE_CMD = []
 
     class PopenLog:
         calls: List[OrigPopen] = []
