@@ -50,15 +50,14 @@ def test_unit_sbatch_script_readable(monkey_slurm, tmp777_path):
     f = write_batch_script(SBATCH_SCRIPT, script_dir=tmp777_path)
 
     out = subprocess.run(
-        # f"sudo --non-interactive -u test01 cat {f}",
-        shlex.split(f"sudo --non-interactive -u test01 cat {f}"),
+        shlex.split(f"sudo --non-interactive -u test01 sbatch {f}"),
         capture_output=True,
         text=True,
     )
     debug(out.stderr)
-    assert out.returncode == 0
-    debug(out)
-    assert out.stdout == SBATCH_SCRIPT
+    assert out.returncode == 1
+    assert "Unable to open file" not in out.stderr
+    assert "This does not look like a batch script" in out.stderr
 
 
 @pytest.mark.parametrize("username", [None, "test01"])
