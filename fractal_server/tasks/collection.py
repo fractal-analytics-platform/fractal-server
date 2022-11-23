@@ -10,6 +10,7 @@
 # Zurich.
 import json
 import logging
+import sys
 from io import IOBase
 from pathlib import Path
 from typing import List
@@ -167,7 +168,11 @@ async def download_package(
     """
     Download package to destination
     """
-    interpreter = f"python{task_pkg.python_version}"
+    interpreter = (
+        f"python{task_pkg.python_version}"
+        if task_pkg.python_version
+        else sys.executable
+    )
     pip = f"{interpreter} -m pip"
     cmd = (
         f"{pip} download --no-deps {task_pkg.pip_package_version} "
@@ -336,7 +341,7 @@ async def _create_venv_install_package(
 async def _init_venv(
     *,
     path: Path,
-    python_version: str = "3.8",
+    python_version: Optional[str] = None,
     logger_name: str,
 ) -> Path:
     """
@@ -346,7 +351,7 @@ async def _init_venv(
     ----------
     path : Path
         path to directory in which to set up the virtual environment
-    python_version : str, default='3.8'
+    python_version : default=None
         Python version the virtual environment will be based upon
 
     Return
@@ -354,7 +359,10 @@ async def _init_venv(
     python_bin : Path
         path to python interpreter
     """
-    interpreter = f"python{python_version}"
+    if python_version:
+        interpreter = f"python{python_version}"
+    else:
+        interpreter = sys.executable
     await execute_command(
         cwd=path, command=f"{interpreter} -m venv venv", logger_name="fractal"
     )
