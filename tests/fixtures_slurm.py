@@ -23,6 +23,8 @@ def slurm_container(event_loop) -> str:
         return container_name
     except (RuntimeError, StopIteration):
         pytest.xfail(reason="No Slurm master container found")
+    except FileNotFoundError:
+        pytest.xfail(reason="Docker not found on host")
 
 
 @pytest.fixture
