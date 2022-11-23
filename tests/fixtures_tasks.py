@@ -153,20 +153,24 @@ def relink_python_interpreter(collect_packages):
     """
     import os
     import logging
+    import shutil
 
-    logger = logging.getLogger("RELINK")
-    logger.setLevel(logging.INFO)
+    if not shutil.which("sbatch"):
+        logger = logging.getLogger("RELINK")
+        logger.setLevel(logging.INFO)
 
-    task = collect_packages[0]
-    python = Path(task.command.split()[0])
-    orig_python = os.readlink(python)
-    logger.warning(f"RELINK: {python=} -> {orig_python}")
-    python.unlink()
-    python.symlink_to("/usr/bin/python3")
-    logger.warning(f"RELINK: {python=} -> {os.readlink(python.as_posix())}")
-    yield
-    python.unlink()
-    python.symlink_to(orig_python)
-    logger.warning(
-        f"RELINK: tear down {python=} -> {os.readlink(python.as_posix())}"
-    )
+        task = collect_packages[0]
+        python = Path(task.command.split()[0])
+        orig_python = os.readlink(python)
+        logger.warning(f"RELINK: {python=} -> {orig_python}")
+        python.unlink()
+        python.symlink_to("/usr/bin/python3")
+        logger.warning(
+            f"RELINK: {python=} -> {os.readlink(python.as_posix())}"
+        )
+        yield
+        python.unlink()
+        python.symlink_to(orig_python)
+        logger.warning(
+            f"RELINK: tear down {python=} -> {os.readlink(python.as_posix())}"
+        )
