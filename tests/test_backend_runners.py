@@ -46,6 +46,7 @@ async def test_runner(
     debug(f"Testing with {backend=}")
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
+        request.getfixturevalue("relink_python_interpreter")
 
     process_workflow = _backends[backend]
 

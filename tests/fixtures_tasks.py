@@ -144,3 +144,18 @@ async def collect_packages(db, install_dummy_packages):
 
     tasks = await _insert_tasks(task_list=install_dummy_packages, db=db)
     return tasks
+
+
+@pytest.fixture(scope="function")
+def relink_python_interpreter(collect_packages):
+    """
+    Rewire python executable in tasks
+    """
+    task = collect_packages[0]
+    orig_python = task.command.split()[0]
+    python = Path(orig_python)
+    python.unlink()
+    python.symlink_to("/usr/bin/python3")
+    yield
+    python.unlink()
+    python.symlink_to(orig_python)
