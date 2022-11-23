@@ -14,11 +14,8 @@ from .executor import FractalSlurmExecutor
 """
 Slurm Bakend
 
-This backend runs fractal workflows as separate processes using a python
-thread process pool, where each thread is responsible for running a single
-task in a subprocess.
-
-Incidentally, it represents the reference implementation for a backend.
+This backend runs fractal workflows in a SLURM cluster using Clusterfutures
+Executor objects.
 """
 
 

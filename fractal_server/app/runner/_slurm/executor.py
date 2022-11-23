@@ -99,8 +99,7 @@ def submit_sbatch(
         logger.error(e.stderr)
         raise e
     jobid = output.stdout
-    # NOTE after debugging this can be uncommented
-    # filename.unlink()
+    filename.unlink()
     return int(jobid)
 
 

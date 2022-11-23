@@ -62,7 +62,7 @@ def get_patched_settings(temp_path: Path):
 
     # NOTE:
     # This variable is set to work with the system interpreter within a docker
-    # container. If left unset it defaults to `sys.executor`
+    # container. If left unset it defaults to `sys.executable`
     if not HAS_LOCAL_SBATCH:
         settings.SLURM_PYTHON_WORKER_INTERPRETER = "python3"
 
