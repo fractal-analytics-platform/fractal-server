@@ -11,6 +11,7 @@ Institute for Biomedical Research and Pelkmans Lab from the University of
 Zurich.
 """
 import logging
+import shutil
 from dataclasses import dataclass
 from dataclasses import field
 from pathlib import Path
@@ -32,6 +33,8 @@ from fractal_server.syringe import Inject
 
 
 DB_ENGINE = "postgres"
+
+HAS_LOCAL_SBATCH = bool(shutil.which("sbatch"))
 
 
 def get_patched_settings(temp_path: Path):
@@ -60,7 +63,8 @@ def get_patched_settings(temp_path: Path):
     # NOTE:
     # This variable is set to work with the system interpreter within a docker
     # container. If left unset it defaults to `sys.executor`
-    settings.SLURM_PYTHON_WORKER_INTERPRETER = "python3"
+    if not HAS_LOCAL_SBATCH:
+        settings.SLURM_PYTHON_WORKER_INTERPRETER = "python3"
 
     settings.FRACTAL_LOGGING_LEVEL = logging.DEBUG
     return settings
