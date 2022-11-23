@@ -254,7 +254,6 @@ def recursive_task_submission(
 
     # step n => step n+1
     logger.debug(f"submitting task {this_task.order=}")
-    # parallelization_level = this_task.task.parallelization_level
 
     task_pars_depend_future = recursive_task_submission(
         executor=executor,

@@ -8,6 +8,19 @@ import pytest
 environ["PYTHONASYNCIODEBUG"] = "1"
 
 
+def check_basetemp(tpath: Path):
+    """
+    Check that root temporary directory contains `pytest` in its name.
+
+    This is necessary because some tests use the directory name as a
+    discriminant to set and test permissions.
+    """
+    if "pytest" not in tpath.as_posix():
+        raise ValueError(
+            "`basetemp` must contain `pytest` in its name. Got {tpath.parent}"
+        )
+
+
 @pytest.fixture(scope="session")
 def event_loop():
     _event_loop = asyncio.new_event_loop()
@@ -30,6 +43,7 @@ def tmp777_session_path(tmp_path_factory):
     def _tmp_path_factory(relative_path: str):
         tmp = tmp_path_factory.mktemp(relative_path)
         tmp.chmod(0o777)
+        check_basetemp(tmp.parent)
         return tmp
 
     yield _tmp_path_factory
@@ -37,6 +51,7 @@ def tmp777_session_path(tmp_path_factory):
 
 @pytest.fixture
 def tmp777_path(tmp_path):
+    check_basetemp(tmp_path)
     tmp_path.chmod(0o777)
     for parent in tmp_path.parents:
         if "pytest" in parent.as_posix():
