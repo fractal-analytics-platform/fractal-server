@@ -4,6 +4,7 @@ from shutil import which as shutil_which
 import pytest
 from devtools import debug
 
+from .fixtures_tasks import execute_command
 from fractal_server.app.api.v1.task import _background_collect_pip
 from fractal_server.app.api.v1.task import _TaskCollectPip
 from fractal_server.app.api.v1.task import create_package_dir_pip
@@ -176,6 +177,10 @@ async def test_collection_api(
         full_path = settings.FRACTAL_ROOT / venv_path
         assert get_collection_path(full_path).exists()
         assert get_log_path(full_path).exists()
+        if python_version:
+            python_bin = data["task_list"][0]["command"].split()[0]
+            version = await execute_command(f"{python_bin} --version")
+            assert python_version in version
 
         # collect again
         res = await client.post(
