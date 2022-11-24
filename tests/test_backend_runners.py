@@ -16,64 +16,61 @@ import logging
 import pytest
 from devtools import debug
 
-from fractal_server.app.models import Task
 from fractal_server.app.models import Workflow
 from fractal_server.app.runner import _backends
 from fractal_server.app.runner.common import close_job_logger
-from fractal_server.tasks import dummy
-from fractal_server.tasks import dummy_parallel
 from fractal_server.utils import set_logger
+
+
+backends_available = list(_backends.keys())
 
 
 @pytest.mark.parametrize(
     "backend",
-    list(_backends.keys()),
+    backends_available,
 )
-async def test_runner(db, project_factory, MockCurrentUser, tmp_path, backend):
+async def test_runner(
+    db,
+    project_factory,
+    MockCurrentUser,
+    collect_packages,
+    tmp_path,
+    backend,
+    request,
+):
     """
     GIVEN a non-trivial workflow
     WHEN the workflow is processed
     THEN the tasks are correctly executed
     """
     debug(f"Testing with {backend=}")
+    if backend == "slurm":
+        request.getfixturevalue("monkey_slurm")
+        request.getfixturevalue("relink_python_interpreter")
+
     process_workflow = _backends[backend]
 
     async with MockCurrentUser(persist=True) as user:
         prj = await project_factory(user=user)
 
     # Add dummy task as a Task
-    tk = Task(
-        name="dummy",
-        command=f"python {dummy.__file__}",
-        source=dummy.__file__,
-        input_type="Any",
-        output_type="Any",
-    )
-
-    tp = Task(
-        name="dummy_parallel",
-        command=f"python {dummy_parallel.__file__}",
-        source=dummy.__file__,
-        input_type="Any",
-        output_type="Any",
-        meta=dict(parallelization_level="index"),
-    )
+    tk_dummy = collect_packages[0]
+    tk_dummy_parallel = collect_packages[1]
 
     # Create a workflow with the dummy task as member
     wf = Workflow(name="wf", project_id=prj.id)
 
-    db.add_all([tk, tp, wf])
+    db.add(wf)
     await db.commit()
-    await db.refresh(tk)
-    await db.refresh(tp)
     await db.refresh(wf)
 
-    await wf.insert_task(tk.id, db=db, args=dict(message="task 0"))
-    await wf.insert_task(tk.id, db=db, args=dict(message="task 1"))
-    await wf.insert_task(tp.id, db=db, args=dict(message="task 2"))
+    await wf.insert_task(tk_dummy.id, db=db, args=dict(message="task 0"))
+    await wf.insert_task(tk_dummy.id, db=db, args=dict(message="task 1"))
+    await wf.insert_task(
+        tk_dummy_parallel.id, db=db, args=dict(message="task 2")
+    )
     await db.refresh(wf)
 
-    debug(tk)
     debug(wf)
 
     # process workflow
@@ -96,7 +93,7 @@ async def test_runner(db, project_factory, MockCurrentUser, tmp_path, backend):
     assert "dummy" in metadata
     assert "dummy" in metadata
     assert metadata["history"] == [
-        tk.name,
-        tk.name,
-        f"{tp.name}: ['0', '1', '2']",
+        tk_dummy.name,
+        tk_dummy.name,
+        f"{tk_dummy_parallel.name}: ['0', '1', '2']",
     ]

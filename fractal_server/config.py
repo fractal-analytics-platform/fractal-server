@@ -153,6 +153,13 @@ class Settings(BaseSettings):
     FRACTAL_LOGGING_LEVEL: int = logging.WARNING
     FRACTAL_PUBLIC_TASK_SUBDIR: str = ".fractal"
 
+    """
+    It may be necessary to have that the Python interpreter used within a SLURM
+    cluster be different from the interpreter that runs the server. This
+    variable allows to choose a different interpreter.
+    """
+    SLURM_PYTHON_WORKER_INTERPRETER: Optional[str] = None
+
     RUNNER_CONFIG: str = "local"
     RUNNER_DEFAULT_EXECUTOR: str = "cpu-low"
 
