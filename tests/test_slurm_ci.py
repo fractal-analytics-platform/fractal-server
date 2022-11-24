@@ -9,7 +9,7 @@ from requests.exceptions import ConnectionError
 @pytest.fixture(scope="session")
 def docker_compose_file(pytestconfig):
     return os.path.join(
-        Path().absolute(), "tests/slurm_images", "docker-compose.yml"
+        Path().absolute(), "tests/slurm_docker_images", "docker-compose.yml"
     )
 
 
