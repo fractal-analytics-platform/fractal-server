@@ -11,6 +11,7 @@ Institute for Biomedical Research and Pelkmans Lab from the University of
 Zurich.
 """
 import logging
+import shutil
 from dataclasses import dataclass
 from dataclasses import field
 from pathlib import Path
@@ -33,6 +34,8 @@ from fractal_server.syringe import Inject
 
 DB_ENGINE = "postgres"
 
+HAS_LOCAL_SBATCH = bool(shutil.which("sbatch"))
+
 
 def get_patched_settings(temp_path: Path):
     settings = Settings()
@@ -54,13 +57,22 @@ def get_patched_settings(temp_path: Path):
 
     settings.FRACTAL_ROOT = temp_path
     settings.RUNNER_ROOT_DIR = temp_path / "artifacts"
+    settings.RUNNER_ROOT_DIR.mkdir(parents=True, exist_ok=True)
+    settings.RUNNER_ROOT_DIR.chmod(0o777)
+
+    # NOTE:
+    # This variable is set to work with the system interpreter within a docker
+    # container. If left unset it defaults to `sys.executable`
+    if not HAS_LOCAL_SBATCH:
+        settings.SLURM_PYTHON_WORKER_INTERPRETER = "python3"
+
     settings.FRACTAL_LOGGING_LEVEL = logging.DEBUG
     return settings
 
 
 @pytest.fixture(scope="session", autouse=True)
-def override_settings(tmp_path_factory):
-    tmp_path = tmp_path_factory.mktemp("fractal_root")
+def override_settings(tmp777_session_path):
+    tmp_path = tmp777_session_path("fractal_root")
 
     def _get_settings():
         return get_patched_settings(tmp_path)
