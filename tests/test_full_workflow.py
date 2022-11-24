@@ -39,6 +39,7 @@ async def collect_tasks(MockCurrentUser, client, dummy_task_package):
     return task_list
 
 
+@pytest.mark.slow
 async def test_full_workflow(
     client,
     MockCurrentUser,
