@@ -17,7 +17,7 @@ def check_basetemp(tpath: Path):
     """
     if "pytest" not in tpath.as_posix():
         raise ValueError(
-            "`basetemp` must contain `pytest` in its name. Got {tpath.parent}"
+            f"`basetemp` must contain `pytest` in its name. Got {tpath.parent}"
         )
 
 
