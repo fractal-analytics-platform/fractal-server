@@ -47,7 +47,7 @@ def get_python_interpreter(version: Optional[str] = None) -> str:
 
     Raises:
         ValueError:
-            If the python version requestsed is not available on the host.
+            If the python version requested is not available on the host.
 
     Returns:
         interpreter:
