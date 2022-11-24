@@ -1,18 +1,20 @@
+import json
 from pathlib import Path
 from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
 
+from pydantic import BaseModel
+
+from ....config import get_settings
+from ....syringe import Inject
 from ...models import Workflow
+from ...models import WorkflowTask
 from .._common import recursive_task_submission
 from ..common import async_wrap
 from ..common import TaskParameters
 from .executor import FractalSlurmExecutor
-from pydantic import BaseModel
-from ....syringe import Inject
-from ....config import get_settings
-import json
 
 
 """
@@ -30,7 +32,7 @@ class SlurmConfig(BaseModel):
     NOTE: We avoid calling it executor to avoid confusion with
     `concurrent.futures.Executor`
     """
-    name: str
+
     partition: str
     time: Optional[str]
     mem: Optional[str]
@@ -42,7 +44,7 @@ class SlurmConfig(BaseModel):
     extra_lines: Optional[List[str]] = None
 
     def to_sbatch(self, prefix="#SBATCH "):
-        dic = self.dict(exclude_none=True, exclude={"name"})
+        dic = self.dict(exclude_none=True)
         sbatch_lines = []
         for k, v in dic.items():
             sbatch_lines.append(f"{prefix}--{k.replace('_', '-')}={v}")
@@ -51,15 +53,45 @@ class SlurmConfig(BaseModel):
         return sbatch_lines
 
 
-def load_slurm_config(config_path: Path) -> Dict[str, SlurmConfig]:
+def load_slurm_config(
+    config_path: Optional[Path] = None,
+) -> Dict[str, SlurmConfig]:
     """
     Parse slurm configuration
     """
-    settings = Inject(get_settings)
-    with settings.FRACTAL_SLURM_CONFIG_FILE.open("r") as f:
-        raw_data = json.load(f)
-    config_list = {item["name"]: SlurmConfig(**item) for item in raw_data}
-    return config_list
+    if not config_path:
+        settings = Inject(get_settings)
+        config_path = settings.FRACTAL_SLURM_CONFIG_FILE
+    try:
+        with config_path.open("r") as f:
+            raw_data = json.load(f)
+
+        # coerce
+        config_dict = {}
+        for config_key in raw_data:
+            config_dict[config_key] = SlurmConfig(**raw_data[config_key])
+    except FileNotFoundError:
+        raise SlurmConfigError(f"Configuration file not found: {config_path}")
+    except Exception as e:
+        raise SlurmConfigError(
+            f"Could not read slurm configuration file: {config_path}"
+            f"\nOriginal error: {repr(e)}"
+        )
+    return config_dict
+
+
+class SlurmConfigError(ValueError):
+    pass
+
+
+def set_slurm_config(task: WorkflowTask) -> Dict[str, Any]:
+    config_dict = load_slurm_config()
+    try:
+        config = config_dict[task.executor]
+    except KeyError:
+        raise SlurmConfigError(f"Configuration not found: {task.executor}")
+
+    return dict(additional_setup_lines=config.to_sbatch())
 
 
 def _process_workflow(
@@ -97,6 +129,7 @@ def _process_workflow(
                 output_path=output_path,
                 metadata=input_metadata,
                 logger_name=logger_name,
+                submit_setup_call=set_slurm_config,
             ),
             workflow_dir=workflow_dir,
         )
