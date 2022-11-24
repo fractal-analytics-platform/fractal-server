@@ -99,7 +99,13 @@ async def test_background_collection_failure(db, dummy_task_package):
     assert not venv_path.exists()
 
 
-async def test_collection_api(client, dummy_task_package, MockCurrentUser):
+@pytest.mark.parametrize(
+    ("slurm_user", "python_version"),
+    [("user00", None), ("user01", None)],
+)
+async def test_collection_api(
+    client, dummy_task_package, MockCurrentUser, slurm_user, python_version
+):
     """
     GIVEN a package in a format that `pip` understands
     WHEN the api to collect tasks from that package is called
@@ -113,9 +119,11 @@ async def test_collection_api(client, dummy_task_package, MockCurrentUser):
     """
     PREFIX = "/api/v1/task"
 
-    task_collection = dict(package=dummy_task_package.as_posix())
+    task_collection = dict(
+        package=dummy_task_package.as_posix(), python_version=python_version
+    )
 
-    async with MockCurrentUser(persist=True):
+    async with MockCurrentUser(user_kwargs=dict(slurm_user=slurm_user)):
         # NOTE: collecting private tasks so that they are assigned to user and
         # written in a non-default folder. Bypass for non stateless
         # FRACTAL_ROOT in test suite.
