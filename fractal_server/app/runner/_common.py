@@ -181,7 +181,7 @@ def call_parallel_task(
     task: WorkflowTask,
     task_pars_depend_future: Future,  # py3.9 Future[TaskParameters],
     workflow_dir: Path,
-    extra_submit_dict: Optional[Dict[str, Any]],
+    extra_submit_dict: Optional[Dict[str, Any]] = None,
 ) -> Future:  # py3.9 Future[TaskParameters]:
     """
     AKA collect results
@@ -196,6 +196,8 @@ def call_parallel_task(
         task_pars=task_pars_depend,
         workflow_dir=workflow_dir,
     )
+    if extra_submit_dict is None:
+        extra_submit_dict = {}
     map_iter = executor.map(
         partial_call_task, component_list, **extra_submit_dict
     )

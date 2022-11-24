@@ -142,7 +142,7 @@ def test_sbatch_script_slurm_config(
     task_pars = TaskParameters(
         input_paths=[tmp_path],
         output_path=tmp_path,
-        metadata={},
+        metadata={"index": ["a", "b"]},
         logger_name=logger_name,
     )
 
