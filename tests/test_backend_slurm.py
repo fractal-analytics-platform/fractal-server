@@ -5,6 +5,7 @@ import pytest
 from devtools import debug
 
 from fractal_server.app.runner._slurm.executor import FractalSlurmExecutor
+from fractal_server.app.runner._slurm import SlurmConfig
 
 
 def submit(executor: Executor, fun: Callable, *args, **kwargs):
@@ -73,3 +74,19 @@ def test_slurm_executor(username, monkey_slurm, tmp777_path):
     ) as executor:
         res = executor.submit(lambda: 42)
     assert res.result() == 42
+
+
+def test_unit_slurm_config():
+    """
+    GIVEN a Slurm configuration object
+    WHEN the `to_sbatch()` method is called
+    THEN
+        * the object's attributes are correctly returned as a list of strings
+        * the `name` attribute is not included
+    """
+    sc = SlurmConfig(name="name", partition="partition")
+    sbatch_lines = sc.to_sbatch()
+    debug(sbatch_lines)
+    for line in sbatch_lines:
+        assert line.startswith("#SBATCH")
+        assert "name" not in line
