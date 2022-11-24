@@ -20,6 +20,7 @@ class MockWorkflowTask(BaseModel):
     order: int = 0
     task: MockTask
     arguments: Dict = {}
+    executor: Optional[str] = "default"
 
     @property
     def is_parallel(self) -> bool:

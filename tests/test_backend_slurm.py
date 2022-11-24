@@ -92,25 +92,32 @@ def test_unit_slurm_config():
         assert "name" not in line
 
 
-def test_sbatch_script(tmp_path):
+@pytest.mark.parametrize("slurm_config_key", ["default", "low"])
+def test_sbatch_script_slurm_config(tmp_path, slurm_config, slurm_config_key):
     """
-    GIVEN a workflow submitted via `recursive_task_submission``
+    GIVEN
+        * a workflow submitted via `recursive_task_submission`
+        * a valid slurm configuration file` defining `default` and `low`
+          configurations
     WHEN a `submit_setup_call` is set`that customises each task's configuration
-    THEN the sbatch script contains the custom configuration options
+    THEN the configuration options are correctly set in the sbatch script
     """
     from .fixtures_tasks import MockWorkflowTask, MockTask
     from fractal_server.app.runner.common import TaskParameters
     from fractal_server.app.runner._common import recursive_task_submission
     from fractal_server.tasks import dummy as dummy_module
+    from fractal_server.app.runner._slurm import set_slurm_config
 
     INDEX = 666
     task_list = [
         MockWorkflowTask(
             task=MockTask(
-                name="task0", command=f"python {dummy_module.__file__}"
+                name="task0",
+                command=f"python {dummy_module.__file__}",
             ),
             arguments=dict(message="test", index=INDEX),
             order=0,
+            executor=slurm_config_key,
         )
     ]
     logger_name = "job_logger_recursive_task_submission_step0"
@@ -130,11 +137,17 @@ def test_sbatch_script(tmp_path):
                 task_list=task_list,
                 task_pars=task_pars,
                 workflow_dir=tmp_path,
+                submit_setup_call=set_slurm_config,
             )
         except FileNotFoundError as e:
             sbatch_file = str(e).split()[-1].strip("'")
         with open(sbatch_file, "r") as f:
-            sbatch_script = f.read()
-            debug(sbatch_script)
+            sbatch_script_lines = f.readlines()
+            debug(sbatch_script_lines)
 
-        assert False
+        expected_mem = f"mem={slurm_config[slurm_config_key]['mem']}"
+        debug(expected_mem)
+        assert next(
+            (line for line in sbatch_script_lines if expected_mem in line),
+            False,
+        )
