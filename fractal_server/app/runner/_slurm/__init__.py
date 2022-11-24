@@ -1,4 +1,3 @@
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 from typing import Dict
@@ -9,16 +8,14 @@ from ...models import Workflow
 from .._common import recursive_task_submission
 from ..common import async_wrap
 from ..common import TaskParameters
+from .executor import FractalSlurmExecutor
 
 
 """
-Process Bakend
+Slurm Bakend
 
-This backend runs fractal workflows as separate processes using a python
-thread process pool, where each thread is responsible for running a single
-task in a subprocess.
-
-Incidentally, it represents the reference implementation for a backend.
+This backend runs fractal workflows in a SLURM cluster using Clusterfutures
+Executor objects.
 """
 
 
@@ -44,7 +41,12 @@ def _process_workflow(
         the output metadata
     """
 
-    with ThreadPoolExecutor() as executor:
+    with FractalSlurmExecutor(
+        debug=True,
+        keep_logs=True,
+        additional_setup_lines=("#SBATCH --partition=main",),
+        username=username,
+    ) as executor:
         output_task_pars_fut = recursive_task_submission(
             executor=executor,
             task_list=workflow.task_list,

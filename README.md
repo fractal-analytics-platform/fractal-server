@@ -91,4 +91,10 @@ S.r.l.](https://exact-lab.it).
 
 ## License
 
-Fractal is released according to a BSD 3-Clause License. See `LICENSE`.
+Unless otherwise stated in each individual module, Fractal is released
+according to a BSD 3-Clause License. See `LICENSE`.
+
+The SLURM compatibility layer is based on
+[`clusterfutures`](https://github.com/sampsyo/clusterfutures), by
+[@sampsyo](https://github.com/sampsyo) and collaborators, and it is released
+under the terms of the MIT license.
