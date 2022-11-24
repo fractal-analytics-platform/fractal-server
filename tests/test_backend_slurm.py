@@ -4,8 +4,8 @@ from typing import Callable
 import pytest
 from devtools import debug
 
-from fractal_server.app.runner._slurm.executor import FractalSlurmExecutor
 from fractal_server.app.runner._slurm import SlurmConfig
+from fractal_server.app.runner._slurm.executor import FractalSlurmExecutor
 
 
 def submit(executor: Executor, fun: Callable, *args, **kwargs):
@@ -90,3 +90,51 @@ def test_unit_slurm_config():
     for line in sbatch_lines:
         assert line.startswith("#SBATCH")
         assert "name" not in line
+
+
+def test_sbatch_script(tmp_path):
+    """
+    GIVEN a workflow submitted via `recursive_task_submission``
+    WHEN a `submit_setup_call` is set`that customises each task's configuration
+    THEN the sbatch script contains the custom configuration options
+    """
+    from .fixtures_tasks import MockWorkflowTask, MockTask
+    from fractal_server.app.runner.common import TaskParameters
+    from fractal_server.app.runner._common import recursive_task_submission
+    from fractal_server.tasks import dummy as dummy_module
+
+    INDEX = 666
+    task_list = [
+        MockWorkflowTask(
+            task=MockTask(
+                name="task0", command=f"python {dummy_module.__file__}"
+            ),
+            arguments=dict(message="test", index=INDEX),
+            order=0,
+        )
+    ]
+    logger_name = "job_logger_recursive_task_submission_step0"
+    task_pars = TaskParameters(
+        input_paths=[tmp_path],
+        output_path=tmp_path,
+        metadata={},
+        logger_name=logger_name,
+    )
+
+    # Assign a non existent username so that the sudo call will fail with a
+    # FileNotFoundError. This will allow inspection of the sbatch script file.
+    with FractalSlurmExecutor(username="NO_USER") as executor:
+        try:
+            recursive_task_submission(
+                executor=executor,
+                task_list=task_list,
+                task_pars=task_pars,
+                workflow_dir=tmp_path,
+            )
+        except FileNotFoundError as e:
+            sbatch_file = str(e).split()[-1].strip("'")
+        with open(sbatch_file, "r") as f:
+            sbatch_script = f.read()
+            debug(sbatch_script)
+
+        assert False
