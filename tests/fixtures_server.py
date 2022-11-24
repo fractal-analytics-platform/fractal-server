@@ -17,6 +17,7 @@ from dataclasses import field
 from pathlib import Path
 from typing import Any
 from typing import AsyncGenerator
+from typing import Dict
 from typing import List
 from typing import Optional
 from uuid import uuid4
@@ -31,8 +32,12 @@ from fractal_server.config import get_settings
 from fractal_server.config import Settings
 from fractal_server.syringe import Inject
 
+try:
+    import asyncpg  # noqa: F401
 
-DB_ENGINE = "postgres"
+    DB_ENGINE = "postgres"
+except ModuleNotFoundError:
+    DB_ENGINE = "sqlite"
 
 HAS_LOCAL_SBATCH = bool(shutil.which("sbatch"))
 
@@ -176,21 +181,24 @@ async def MockCurrentUser(app, db):
         """
 
         name: str = "User Name"
+        user_kwargs: Optional[Dict[str, Any]] = None
         scopes: Optional[List[str]] = field(
             default_factory=lambda: ["project"]
         )
         email: Optional[str] = field(
             default_factory=lambda: f"{uuid4()}@exact-lab.it"
         )
-        persist: Optional[bool] = False
+        persist: Optional[bool] = True
 
         def _create_user(self):
-            self.user = User(
-                name=self.name,
+            defaults = dict(
                 email=self.email,
                 hashed_password="fake_hashed_password",
                 slurm_user="slurm_user",
             )
+            if self.user_kwargs:
+                defaults.update(self.user_kwargs)
+            self.user = User(name=self.name, **defaults)
 
         def current_active_user_override(self):
             def __current_active_user_override():
