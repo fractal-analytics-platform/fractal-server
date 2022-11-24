@@ -154,6 +154,55 @@ class FractalSlurmExecutor(SlurmExecutor):
         self.username = username
         self.script_dir = script_dir
 
+    def map(
+        self,
+        fn: Callable[..., Any],
+        *iterables,
+        timeout: Optional[float] = None,
+        chunksize: int = 1,
+        additional_setup_lines: Optional[List[str]] = None,
+    ):
+        """
+        Returns an iterator equivalent to map(fn, iter), passing
+        parameters to submit
+
+        This function overrides PSL's
+        `concurrent.futures.Executor.map` so that extra parameters
+        can be passed to `Executor.submi`.
+        """
+        import time
+        from concurrent.futures._base import _result_or_cancel
+
+        if timeout is not None:
+            end_time = timeout + time.monotonic()
+
+        fs = [
+            self.submit(
+                fn, *args, additional_setup_lines=additional_setup_lines
+            )
+            for args in zip(*iterables)
+        ]
+
+        # Yield must be hidden in closure so that the futures are submitted
+        # before the first iterator value is required.
+        def result_iterator():
+            try:
+                # reverse to keep finishing order
+                fs.reverse()
+                while fs:
+                    # Careful not to keep a reference to the popped future
+                    if timeout is None:
+                        yield _result_or_cancel(fs.pop())
+                    else:
+                        yield _result_or_cancel(
+                            fs.pop(), end_time - time.monotonic()
+                        )
+            finally:
+                for future in fs:
+                    future.cancel()
+
+        return result_iterator()
+
     def submit(
         self,
         fun: Callable[..., Any],
