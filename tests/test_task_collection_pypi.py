@@ -74,8 +74,8 @@ async def test_init_venv(tmp_path, python_version):
     assert (venv_path / "venv/bin/pip").exists()
     assert python_bin.exists()
     assert python_bin == venv_path / "venv/bin/python"
-    version = await execute_command(f"{python_bin} --version")
     if python_version:
+        version = await execute_command(f"{python_bin} --version")
         assert python_version in version
 
 
