@@ -1,4 +1,5 @@
 from pathlib import Path
+from shutil import which as shutil_which
 
 import pytest
 from devtools import debug
@@ -101,7 +102,16 @@ async def test_background_collection_failure(db, dummy_task_package):
 
 @pytest.mark.parametrize(
     ("slurm_user", "python_version"),
-    [("user00", None), ("user01", None)],
+    [
+        ("user00", None),
+        pytest.param(
+            "user01",
+            "3.10",
+            marks=pytest.mark.skipif(
+                not shutil_which("python3.10"), reason="No python3.10 on host"
+            ),
+        ),
+    ],
 )
 async def test_collection_api(
     client, dummy_task_package, MockCurrentUser, slurm_user, python_version
