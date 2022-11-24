@@ -71,6 +71,8 @@ def get_patched_settings(temp_path: Path):
     if not HAS_LOCAL_SBATCH:
         settings.SLURM_PYTHON_WORKER_INTERPRETER = "python3"
 
+    settings.FRACTAL_SLURM_CONFIG_FILE = temp_path / "slurm_config.json"
+
     settings.FRACTAL_LOGGING_LEVEL = logging.DEBUG
     return settings
 
@@ -79,12 +81,14 @@ def get_patched_settings(temp_path: Path):
 def override_settings(tmp777_session_path):
     tmp_path = tmp777_session_path("fractal_root")
 
+    settings = get_patched_settings(tmp_path)
+
     def _get_settings():
-        return get_patched_settings(tmp_path)
+        return settings
 
     Inject.override(get_settings, _get_settings)
     try:
-        yield
+        yield settings
     finally:
         Inject.pop(get_settings)
 

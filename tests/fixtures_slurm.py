@@ -1,8 +1,21 @@
+import json
 import shlex
 from typing import List
 
 import pytest
 from devtools import debug
+
+
+@pytest.fixture(scope="session")
+def slurm_config(override_settings):
+    config = {
+        "default": dict(partition="main", mem="1024"),
+        "low": dict(partition="main", mem="128"),
+    }
+
+    with override_settings.FRACTAL_SLURM_CONFIG_FILE.open("w") as f:
+        json.dump(config, f)
+    return config
 
 
 @pytest.fixture
