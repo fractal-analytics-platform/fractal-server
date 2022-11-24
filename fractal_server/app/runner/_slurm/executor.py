@@ -21,6 +21,7 @@ from cfut.util import random_string
 
 from ....config import get_settings
 from ....syringe import Inject
+from ....utils import close_logger
 from ....utils import set_logger
 
 
@@ -97,8 +98,19 @@ def submit_sbatch(
     except subprocess.CalledProcessError as e:
         logger = set_logger(logger_name="slurm_runner")
         logger.error(e.stderr)
+        close_logger(logger)
         raise e
-    jobid = output.stdout
+    try:
+        jobid = int(output.stdout)
+    except ValueError as e:
+        logger = set_logger(logger_name="slurm_runner")
+        logger.error(
+            f'submit_command="{submit_command}" returned '
+            f'"{output.stdout}", which cannot be cast to an integer '
+            "job ID"
+        )
+        close_logger(logger)
+        raise e
     filename.unlink()
     return int(jobid)
 
