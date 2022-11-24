@@ -1,11 +1,16 @@
 from concurrent.futures import Executor
+from itertools import product
 from typing import Callable
 
 import pytest
 from devtools import debug
 
+from .fixtures_tasks import MockTask
+from .fixtures_tasks import MockWorkflowTask
 from fractal_server.app.runner._slurm import SlurmConfig
 from fractal_server.app.runner._slurm.executor import FractalSlurmExecutor
+from fractal_server.tasks import dummy as dummy_module
+from fractal_server.tasks import dummy_parallel as dummy_parallel_module
 
 
 def submit(executor: Executor, fun: Callable, *args, **kwargs):
@@ -92,8 +97,26 @@ def test_unit_slurm_config():
         assert "name" not in line
 
 
-@pytest.mark.parametrize("slurm_config_key", ["default", "low"])
-def test_sbatch_script_slurm_config(tmp_path, slurm_config, slurm_config_key):
+@pytest.mark.parametrize(
+    ("slurm_config_key", "task"),
+    product(
+        ("default", "low"),
+        (
+            MockTask(
+                name="task_serial",
+                command=f"python {dummy_module.__file__}",
+            ),
+            MockTask(
+                name="task_parallel",
+                command=f"python {dummy_parallel_module.__file__}",
+                parallelization_level="index",
+            ),
+        ),
+    ),
+)
+def test_sbatch_script_slurm_config(
+    tmp_path, slurm_config, slurm_config_key, task
+):
     """
     GIVEN
         * a workflow submitted via `recursive_task_submission`
@@ -102,19 +125,14 @@ def test_sbatch_script_slurm_config(tmp_path, slurm_config, slurm_config_key):
     WHEN a `submit_setup_call` is set`that customises each task's configuration
     THEN the configuration options are correctly set in the sbatch script
     """
-    from .fixtures_tasks import MockWorkflowTask, MockTask
     from fractal_server.app.runner.common import TaskParameters
     from fractal_server.app.runner._common import recursive_task_submission
-    from fractal_server.tasks import dummy as dummy_module
     from fractal_server.app.runner._slurm import set_slurm_config
 
     INDEX = 666
     task_list = [
         MockWorkflowTask(
-            task=MockTask(
-                name="task0",
-                command=f"python {dummy_module.__file__}",
-            ),
+            task=task,
             arguments=dict(message="test", index=INDEX),
             order=0,
             executor=slurm_config_key,
