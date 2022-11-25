@@ -11,6 +11,7 @@ def slurm_config(override_settings):
     config = {
         "default": dict(partition="main", mem="1024"),
         "low": dict(partition="main", mem="128"),
+        "cpu-low": dict(partition="main"),
     }
 
     with override_settings.FRACTAL_SLURM_CONFIG_FILE.open("w") as f:

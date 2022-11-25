@@ -156,9 +156,9 @@ def _process_workflow(
                 output_path=output_path,
                 metadata=input_metadata,
                 logger_name=logger_name,
-                submit_setup_call=set_slurm_config,
             ),
             workflow_dir=workflow_dir,
+            submit_setup_call=set_slurm_config,
         )
     output_task_pars = output_task_pars_fut.result()
     output_dataset_metadata = output_task_pars.metadata
