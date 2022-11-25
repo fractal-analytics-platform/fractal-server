@@ -51,7 +51,11 @@ class WorkflowFiles:
         else:
             component_safe = ""
 
-        self.prefix = f"{self.task_order or 'task'}{component_safe}"
+        if self.task_order is not None:
+            order = str(self.task_order)
+        else:
+            order = "task"
+        self.prefix = f"{order}{component_safe}"
         self.args = self.workflow_dir / f"{self.prefix}.args.json"
         self.out = self.workflow_dir / f"{self.prefix}.out"
         self.err = self.workflow_dir / f"{self.prefix}.err"
