@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 
 import pytest
-import requests
 from requests.exceptions import ConnectionError
 
 
@@ -13,34 +12,37 @@ def docker_compose_file(pytestconfig):
     )
 
 
-def is_responsive(url):
+def is_responsive(container_name):
     try:
-        response = requests.get(url)
-        if response.status_code == 200:
+        import subprocess
+
+        exec_cmd = ["docker", "ps", "-f", f"name={container_name}"]
+        out = subprocess.run(exec_cmd, check=True, capture_output=True)
+        if out.stdout.decode("utf-8") is not None:
             return True
     except ConnectionError:
         return False
 
 
-@pytest.fixture(scope="session")
-def http_service(docker_ip, docker_services):
-    """Ensure that HTTP service is up and responsive."""
-
-    # `port_for` takes a container port and returns the corresponding host port
-    port = docker_services.port_for("httpbin", 80)
-    url = "http://{}:{}".format(docker_ip, port)
+def test_status_code(docker_services, docker_compose_project_name):
     docker_services.wait_until_responsive(
-        timeout=30.0, pause=0.1, check=lambda: is_responsive(url)
+        timeout=20.0,
+        pause=0.5,
+        check=lambda: is_responsive(
+            docker_compose_project_name + "_slurmmaster_1"
+        ),
     )
-    return url
+    import subprocess
 
+    exec_cmd = [
+        "docker",
+        "exec",
+        docker_compose_project_name + "_slurmmaster_1",
+        "bash",
+        "-c",
+    ]
+    sbatch_cmd = 'sbatch --parsable --wrap "pwd"'
+    exec_cmd.append(sbatch_cmd)
+    out = subprocess.run(exec_cmd, check=True, capture_output=True)
 
-def test_status_code(http_service):
-    status = 418
-    response = requests.get(http_service + "/status/{}".format(status))
-
-    assert response.status_code == status
-
-
-def do_nothing():
-    pass
+    assert int(out.stdout.decode("utf-8")) == 2
