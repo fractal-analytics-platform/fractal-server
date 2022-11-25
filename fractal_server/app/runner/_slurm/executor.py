@@ -3,7 +3,11 @@
 # Copyright 2021 Adrian Sampson <asampson@cs.washington.edu>
 # License: MIT
 #
-# Copyright 2022 Jacopo Nepsolo <jacopo.nespolo@exact-lab.it>
+# Modified by:
+# Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
+#
+# Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
+# University of Zurich
 import shlex
 import subprocess  # nosec
 import sys
@@ -166,12 +170,32 @@ class FractalSlurmExecutor(SlurmExecutor):
         Returns an iterator equivalent to map(fn, iter), passing
         parameters to submit
 
-        This function overrides PSL's
-        `concurrent.futures.Executor.map` so that extra parameters
-        can be passed to `Executor.submi`.
+        Overrides the PSL's `concurrent.futures.Executor.map` so that extra
+        parameters can be passed to `Executor.submit`.
+
+        This function is copied from PSL==3.11
+
+        Original Copyright 2009 Brian Quinlan. All Rights Reserved.
+        Licensed to PSF under a Contributor Agreement.
         """
         import time
-        from concurrent.futures._base import _result_or_cancel
+
+        def _result_or_cancel(fut, timeout=None):
+            """
+            This function is copied from PSL ==3.11
+
+            Copyright 2009 Brian Quinlan. All Rights Reserved.
+            Licensed to PSF under a Contributor Agreement.
+            """
+            try:
+                try:
+                    return fut.result(timeout)
+                finally:
+                    fut.cancel()
+            finally:
+                # Break a reference cycle with the exception in
+                # self._exception
+                del fut
 
         if timeout is not None:
             end_time = timeout + time.monotonic()

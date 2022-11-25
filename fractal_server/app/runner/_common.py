@@ -230,8 +230,8 @@ def recursive_task_submission(
     task_list: List[WorkflowTask],
     task_pars: TaskParameters,
     workflow_dir: Path,
-    submit_setup_call: Optional[
-        Callable[[WorkflowTask], Dict[str, Any]]
+    submit_setup_call: Callable[
+        [WorkflowTask], Dict[str, Any]
     ] = lambda task: {},
 ) -> Future:
     """
@@ -283,6 +283,7 @@ def recursive_task_submission(
             task=this_task,
             task_pars_depend_future=task_pars_depend_future,
             workflow_dir=workflow_dir,
+            extra_submit_dict=extra_setup,
         )
     else:
         this_future = executor.submit(
