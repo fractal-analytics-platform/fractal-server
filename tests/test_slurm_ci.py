@@ -45,4 +45,6 @@ def test_status_code(docker_services, docker_compose_project_name):
     exec_cmd.append(sbatch_cmd)
     out = subprocess.run(exec_cmd, check=True, capture_output=True)
 
-    assert int(out.stdout.decode("utf-8")) == 2
+    assert (
+        int(out.stdout.decode("utf-8")) == 2
+    )  # first job submit has always ID 2
