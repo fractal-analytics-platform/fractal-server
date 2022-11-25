@@ -6,7 +6,11 @@ from concurrent.futures import Future
 from functools import partial
 from pathlib import Path
 from shlex import split as shlex_split
+from typing import Any
+from typing import Callable
+from typing import Dict
 from typing import List
+from typing import Optional
 
 from ..models import WorkflowTask
 from .common import TaskParameterEncoder
@@ -177,6 +181,7 @@ def call_parallel_task(
     task: WorkflowTask,
     task_pars_depend_future: Future,  # py3.9 Future[TaskParameters],
     workflow_dir: Path,
+    extra_submit_dict: Optional[Dict[str, Any]] = None,
 ) -> Future:  # py3.9 Future[TaskParameters]:
     """
     AKA collect results
@@ -191,7 +196,11 @@ def call_parallel_task(
         task_pars=task_pars_depend,
         workflow_dir=workflow_dir,
     )
-    map_iter = executor.map(partial_call_task, component_list)
+    if extra_submit_dict is None:
+        extra_submit_dict = {}
+    map_iter = executor.map(
+        partial_call_task, component_list, **extra_submit_dict
+    )
     # Wait for execution of all parallel (this explicitly calls .result()
     # on each parallel task)
     for _ in map_iter:
@@ -221,6 +230,9 @@ def recursive_task_submission(
     task_list: List[WorkflowTask],
     task_pars: TaskParameters,
     workflow_dir: Path,
+    submit_setup_call: Callable[
+        [WorkflowTask, TaskParameters, Path], Dict[str, Any]
+    ] = lambda task, task_pars, workflow_dir: {},
 ) -> Future:
     """
     Recursively submit a list of task
@@ -241,6 +253,8 @@ def recursive_task_submission(
     this_future (Future[TaskParameters]):
         a future that results to the task parameters which constitute the
         input of the following task in the list.
+
+    TODO document submit_setup_call.
     """
     try:
         *dependencies, this_task = task_list
@@ -260,7 +274,10 @@ def recursive_task_submission(
         task_list=dependencies,
         task_pars=task_pars,
         workflow_dir=workflow_dir,
+        submit_setup_call=submit_setup_call,
     )
+
+    extra_setup = submit_setup_call(this_task, task_pars, workflow_dir)
 
     if this_task.is_parallel:
         this_future = call_parallel_task(
@@ -268,6 +285,7 @@ def recursive_task_submission(
             task=this_task,
             task_pars_depend_future=task_pars_depend_future,
             workflow_dir=workflow_dir,
+            extra_submit_dict=extra_setup,
         )
     else:
         this_future = executor.submit(
@@ -275,5 +293,6 @@ def recursive_task_submission(
             task=this_task,
             task_pars=task_pars_depend_future.result(),
             workflow_dir=workflow_dir,
+            **extra_setup,
         )
     return this_future

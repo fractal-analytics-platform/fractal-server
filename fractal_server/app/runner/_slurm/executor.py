@@ -3,7 +3,11 @@
 # Copyright 2021 Adrian Sampson <asampson@cs.washington.edu>
 # License: MIT
 #
-# Copyright 2022 Jacopo Nepsolo <jacopo.nespolo@exact-lab.it>
+# Modified by:
+# Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
+#
+# Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
+# University of Zurich
 import shlex
 import subprocess  # nosec
 import sys
@@ -153,6 +157,75 @@ class FractalSlurmExecutor(SlurmExecutor):
         super().__init__(*args, **kwargs)
         self.username = username
         self.script_dir = script_dir
+
+    def map(
+        self,
+        fn: Callable[..., Any],
+        *iterables,
+        timeout: Optional[float] = None,
+        chunksize: int = 1,
+        additional_setup_lines: Optional[List[str]] = None,
+    ):
+        """
+        Returns an iterator equivalent to map(fn, iter), passing
+        parameters to submit
+
+        Overrides the PSL's `concurrent.futures.Executor.map` so that extra
+        parameters can be passed to `Executor.submit`.
+
+        This function is copied from PSL==3.11
+
+        Original Copyright 2009 Brian Quinlan. All Rights Reserved.
+        Licensed to PSF under a Contributor Agreement.
+        """
+        import time
+
+        def _result_or_cancel(fut, timeout=None):
+            """
+            This function is copied from PSL ==3.11
+
+            Copyright 2009 Brian Quinlan. All Rights Reserved.
+            Licensed to PSF under a Contributor Agreement.
+            """
+            try:
+                try:
+                    return fut.result(timeout)
+                finally:
+                    fut.cancel()
+            finally:
+                # Break a reference cycle with the exception in
+                # self._exception
+                del fut
+
+        if timeout is not None:
+            end_time = timeout + time.monotonic()
+
+        fs = [
+            self.submit(
+                fn, *args, additional_setup_lines=additional_setup_lines
+            )
+            for args in zip(*iterables)
+        ]
+
+        # Yield must be hidden in closure so that the futures are submitted
+        # before the first iterator value is required.
+        def result_iterator():
+            try:
+                # reverse to keep finishing order
+                fs.reverse()
+                while fs:
+                    # Careful not to keep a reference to the popped future
+                    if timeout is None:
+                        yield _result_or_cancel(fs.pop())
+                    else:
+                        yield _result_or_cancel(
+                            fs.pop(), end_time - time.monotonic()
+                        )
+            finally:
+                for future in fs:
+                    future.cancel()
+
+        return result_iterator()
 
     def submit(
         self,
