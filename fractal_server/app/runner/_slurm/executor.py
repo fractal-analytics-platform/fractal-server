@@ -101,7 +101,7 @@ def submit_sbatch(
         )
     except subprocess.CalledProcessError as e:
         logger = set_logger(logger_name="slurm_runner")
-        logger.error(e.stderr)
+        logger.error(e.stderr.decode("utf-8"))
         close_logger(logger)
         raise e
     try:

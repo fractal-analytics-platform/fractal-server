@@ -34,7 +34,7 @@ async def test_runner(
     project_factory,
     MockCurrentUser,
     collect_packages,
-    tmp_path,
+    tmp777_path,
     backend,
     request,
 ):
@@ -78,16 +78,16 @@ async def test_runner(
     logger_name = "job_logger"
     logger = set_logger(
         logger_name=logger_name,
-        log_file_path=tmp_path / "job.log",
+        log_file_path=tmp777_path / "job.log",
         level=logging.DEBUG,
     )
     metadata = await process_workflow(
         workflow=wf,
-        input_paths=[tmp_path / "*.txt"],
-        output_path=tmp_path / "out.json",
+        input_paths=[tmp777_path / "*.txt"],
+        output_path=tmp777_path / "out.json",
         input_metadata={},
         logger_name=logger_name,
-        workflow_dir=tmp_path,
+        workflow_dir=tmp777_path,
     )
     close_job_logger(logger)
     debug(metadata)
