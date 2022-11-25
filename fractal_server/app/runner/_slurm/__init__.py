@@ -27,8 +27,6 @@ Executor objects.
 
 class SlurmConfig(BaseModel):
     """
-    `name` maps on `Task.executor`.
-
     NOTE: We avoid calling it executor to avoid confusion with
     `concurrent.futures.Executor`
     """
@@ -39,7 +37,6 @@ class SlurmConfig(BaseModel):
     nodes: Optional[str]
     ntasks_per_node: Optional[str]
     cpus_per_task: Optional[str]
-    nodes: Optional[str]
     account: Optional[str]
     extra_lines: Optional[List[str]] = None
 
@@ -63,7 +60,7 @@ def load_slurm_config(
         settings = Inject(get_settings)
         config_path = settings.FRACTAL_SLURM_CONFIG_FILE
     try:
-        with config_path.open("r") as f:
+        with config_path.open("r") as f:  # type: ignore
             raw_data = json.load(f)
 
         # coerce
