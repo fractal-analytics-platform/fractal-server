@@ -88,7 +88,11 @@ def set_slurm_config(task: WorkflowTask) -> Dict[str, Any]:
     except KeyError:
         raise SlurmConfigError(f"Configuration not found: {task.executor}")
 
-    return dict(additional_setup_lines=config.to_sbatch())
+    additional_setup_lines = config.to_sbatch()
+    additional_setup_lines.append(
+        f"#SBATCH --job-name {task.task.name.replace(' ', '_')}"
+    )
+    return dict(additional_setup_lines=additional_setup_lines)
 
 
 def _process_workflow(

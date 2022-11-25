@@ -89,12 +89,11 @@ def test_unit_slurm_config():
         * the object's attributes are correctly returned as a list of strings
         * the `name` attribute is not included
     """
-    sc = SlurmConfig(name="name", partition="partition")
+    sc = SlurmConfig(partition="partition")
     sbatch_lines = sc.to_sbatch()
     debug(sbatch_lines)
     for line in sbatch_lines:
         assert line.startswith("#SBATCH")
-        assert "name" not in line
 
 
 @pytest.mark.parametrize(
@@ -103,11 +102,11 @@ def test_unit_slurm_config():
         ("default", "low"),
         (
             MockTask(
-                name="task_serial",
+                name="task serial",
                 command=f"python {dummy_module.__file__}",
             ),
             MockTask(
-                name="task_parallel",
+                name="task parallel",
                 command=f"python {dummy_parallel_module.__file__}",
                 parallelization_level="index",
             ),
@@ -168,3 +167,10 @@ def test_sbatch_script_slurm_config(
             (line for line in sbatch_script_lines if expected_mem in line),
             False,
         )
+
+        job_name = next(
+            (line for line in sbatch_script_lines if "--job-name" in line),
+            False,
+        )
+        assert job_name
+        assert len(job_name.split()[-1]) == len(task.name)
