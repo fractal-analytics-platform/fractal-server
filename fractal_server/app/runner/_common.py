@@ -3,7 +3,6 @@ import logging
 import subprocess  # nosec
 from concurrent.futures import Executor
 from concurrent.futures import Future
-from dataclasses import dataclass
 from functools import lru_cache
 from functools import partial
 from pathlib import Path
@@ -28,7 +27,6 @@ def sanitize_component(value: str) -> str:
     return value.replace(" ", "_").replace("/", "_").replace(".", "_")
 
 
-@dataclass
 class WorkflowFiles:
     """
     Group all file paths pertaining to a workflow
@@ -38,15 +36,22 @@ class WorkflowFiles:
     task_order: Optional[int] = None
     component: Optional[str] = None
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(self, *args, **kwargs)
+    def __init__(
+        self,
+        workflow_dir: Path,
+        task_order: Optional[int] = None,
+        component: Optional[str] = None,
+    ):
+        self.workflow_dir = workflow_dir
+        self.task_order = task_order
+        self.component = component
 
         if self.component:
             component_safe = f"_par_{sanitize_component(self.component)}"
         else:
             component_safe = ""
 
-        self.prefix = f"{self.task_order}{component_safe}"
+        self.prefix = f"{self.task_order or 'task'}{component_safe}"
         self.args = self.workflow_dir / f"{self.prefix}.args.json"
         self.out = self.workflow_dir / f"{self.prefix}.out"
         self.err = self.workflow_dir / f"{self.prefix}.err"
@@ -138,9 +143,9 @@ def call_single_task(
 
     logger = logging.getLogger(task_pars.logger_name)
 
-    stdout_file = workflow_dir / f"{task.order}.out"
-    stderr_file = workflow_dir / f"{task.order}.err"
-    metadata_diff_file = workflow_dir / f"{task.order}.metadiff.json"
+    workflow_files = get_workflow_file_paths(
+        workflow_dir=workflow_dir, task_order=task.order
+    )
 
     # assemble full args
     args_dict = task.assemble_args(extra=task_pars.dict())
@@ -152,16 +157,18 @@ def call_single_task(
     # assemble full command
     cmd = (
         f"{task.task.command} -j {args_file_path} "
-        f"--metadata-out {metadata_diff_file}"
+        f"--metadata-out {workflow_files.metadiff}"
     )
 
     logger.debug(f"executing task {task.order=}")
-    _call_command_wrapper(cmd, stdout=stdout_file, stderr=stderr_file)
+    _call_command_wrapper(
+        cmd, stdout=workflow_files.out, stderr=workflow_files.err
+    )
 
     # NOTE:
     # This assumes that the new metadata is printed to stdout
     # and nothing else outputs to stdout
-    with metadata_diff_file.open("r") as f_metadiff:
+    with workflow_files.metadiff.open("r") as f_metadiff:
         diff_metadata = json.load(f_metadiff)
     updated_metadata = task_pars.metadata.copy()
     updated_metadata.update(diff_metadata)
