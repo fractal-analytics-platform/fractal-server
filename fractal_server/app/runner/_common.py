@@ -3,6 +3,8 @@ import logging
 import subprocess  # nosec
 from concurrent.futures import Executor
 from concurrent.futures import Future
+from dataclasses import dataclass
+from functools import lru_cache
 from functools import partial
 from pathlib import Path
 from shlex import split as shlex_split
@@ -24,6 +26,51 @@ def sanitize_component(value: str) -> str:
     'plate.zarr/B/03/0' to 'plate_zarr_B_03_0'.
     """
     return value.replace(" ", "_").replace("/", "_").replace(".", "_")
+
+
+@dataclass
+class WorkflowFiles:
+    """
+    Group all file paths pertaining to a workflow
+    """
+
+    workflow_dir: Path
+    task_order: Optional[int] = None
+    component: Optional[str] = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(self, *args, **kwargs)
+
+        if self.component:
+            component_safe = f"_par_{sanitize_component(self.component)}"
+        else:
+            component_safe = ""
+
+        self.prefix = f"{self.task_order}{component_safe}"
+        self.args = self.workflow_dir / f"{self.prefix}.args.json"
+        self.out = self.workflow_dir / f"{self.prefix}.out"
+        self.err = self.workflow_dir / f"{self.prefix}.err"
+        self.metadiff = self.workflow_dir / f"{self.prefix}.metadiff.json"
+        # self.slurm_submit = self.workflow_dir / f"{prefix}.slurm.submit"
+        # self.slurm_out = self.workflow_dir / f"{self.prefix}.slurm.out"
+        # self.slurm_err = self.workflow_dir / f"{self.prefix}.slurm.err"
+
+
+@lru_cache()
+def get_workflow_file_paths(
+    workflow_dir: Path,
+    task_order: Optional[int] = None,
+    component: Optional[str] = None,
+) -> WorkflowFiles:
+    """
+    Return the corrisponding WorkflowFiles object
+
+    This function is mainly used as a cache to avoid instantiating needless
+    objects.
+    """
+    return WorkflowFiles(
+        workflow_dir=workflow_dir, task_order=task_order, component=component
+    )
 
 
 class TaskExecutionError(RuntimeError):
