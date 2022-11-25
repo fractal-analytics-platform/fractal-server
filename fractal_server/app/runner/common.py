@@ -129,6 +129,20 @@ def async_wrap(func: Callable) -> Callable:
     return run
 
 
-def write_args_file(args: Dict[str, Any], path: Path):
+def write_args_file(*args: Dict[str, Any], path: Path):
+    """
+    Merge arbitrary dictionaries and write to file
+
+    Args:
+        *args:
+            One or more dictionaries that will be merged into one respecting
+            the order with which they are passed in, i.e., last in overrides
+            previous ones.
+        path:
+            Destination for serialised file.
+    """
+    out = {}
+    for d in args:
+        out.update(d)
     with path.open("w") as f:
-        json.dump(args, f, cls=TaskParameterEncoder, indent=4)
+        json.dump(out, f, cls=TaskParameterEncoder, indent=4)

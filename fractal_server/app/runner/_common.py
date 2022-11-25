@@ -14,7 +14,6 @@ from typing import List
 from typing import Optional
 
 from ..models import WorkflowTask
-from .common import TaskParameterEncoder
 from .common import TaskParameters
 from .common import write_args_file
 
@@ -155,7 +154,7 @@ def call_single_task(
     args_dict = task.assemble_args(extra=task_pars.dict())
 
     # write args file
-    write_args_file(args=args_dict, path=workflow_files.args)
+    write_args_file(args_dict, path=workflow_files.args)
 
     # assemble full command
     cmd = (
@@ -208,17 +207,13 @@ def call_single_parallel_task(
     )
 
     logger.debug(f"calling task {task.order=} on {component=}")
-    # FIXME refactor with `write_args_file` and `task.assemble_args`
     # assemble full args
-    args_dict = task_pars.dict()
-    args_dict.update(task.arguments)
-    args_dict["component"] = component
-
-    # write args file
-    # args_file_path = workflow_dir / f"{prefix}.args.json"
-    with open(workflow_files.args, "w") as f:
-        json.dump(args_dict, f, cls=TaskParameterEncoder, indent=4)
-    # FIXME: UP TO HERE
+    write_args_file(
+        task_pars.dict(),
+        task.arguments,
+        dict(component=component),
+        path=workflow_files.args,
+    )
 
     # assemble full command
     cmd = (
