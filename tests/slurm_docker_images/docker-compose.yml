@@ -2,14 +2,9 @@ version: '3'
 
 services:
 
-  httpbin:
-    image: "kennethreitz/httpbin"
-    ports:
-      - "8000:80"
-
   slurmmaster:
         build:
-          context: ./node
+          context: ./master
           dockerfile: Dockerfile
         hostname: slurmmaster
         user: admin
