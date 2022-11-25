@@ -231,8 +231,8 @@ def recursive_task_submission(
     task_pars: TaskParameters,
     workflow_dir: Path,
     submit_setup_call: Callable[
-        [WorkflowTask], Dict[str, Any]
-    ] = lambda task: {},
+        [WorkflowTask, TaskParameters, Path], Dict[str, Any]
+    ] = lambda task, task_pars, workflow_dir: {},
 ) -> Future:
     """
     Recursively submit a list of task
@@ -253,6 +253,8 @@ def recursive_task_submission(
     this_future (Future[TaskParameters]):
         a future that results to the task parameters which constitute the
         input of the following task in the list.
+
+    TODO document submit_setup_call.
     """
     try:
         *dependencies, this_task = task_list
@@ -275,7 +277,7 @@ def recursive_task_submission(
         submit_setup_call=submit_setup_call,
     )
 
-    extra_setup = submit_setup_call(this_task)
+    extra_setup = submit_setup_call(this_task, task_pars, workflow_dir)
 
     if this_task.is_parallel:
         this_future = call_parallel_task(
