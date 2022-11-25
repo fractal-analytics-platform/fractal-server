@@ -117,14 +117,14 @@ async def dummy_task_package_invalid_manifest(testdata_path, tmp_path) -> Path:
 
 
 @pytest.fixture(scope="session")
-async def install_dummy_packages(tmp_path_factory, dummy_task_package):
+async def install_dummy_packages(tmp777_session_path, dummy_task_package):
     from fractal_server.tasks.collection import (
         _create_venv_install_package,
         load_manifest,
     )
     from fractal_server.tasks.collection import _TaskCollectPip
 
-    venv_path = tmp_path_factory.mktemp("dummy")
+    venv_path = tmp777_session_path("dummy")
     venv_path.mkdir(exist_ok=True, parents=True)
     task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())
 
