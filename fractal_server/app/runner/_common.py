@@ -155,12 +155,11 @@ def call_single_task(
     args_dict = task.assemble_args(extra=task_pars.dict())
 
     # write args file
-    args_file_path = workflow_dir / f"{task.order}.args.json"
-    write_args_file(args=args_dict, path=args_file_path)
+    write_args_file(args=args_dict, path=workflow_files.args)
 
     # assemble full command
     cmd = (
-        f"{task.task.command} -j {args_file_path} "
+        f"{task.task.command} -j {workflow_files.args} "
         f"--metadata-out {workflow_files.metadiff}"
     )
 
@@ -204,11 +203,9 @@ def call_single_parallel_task(
         raise RuntimeError
     logger = logging.getLogger(task_pars.logger_name)
 
-    component_safe = sanitize_component(component)
-    prefix = f"{task.order}_par_{component_safe}"
-    stdout_file = workflow_dir / f"{prefix}.out"
-    stderr_file = workflow_dir / f"{prefix}.err"
-    metadata_diff_file = workflow_dir / f"{prefix}.metadiff.json"
+    workflow_files = get_workflow_file_paths(
+        workflow_dir=workflow_dir, task_order=task.order, component=component
+    )
 
     logger.debug(f"calling task {task.order=} on {component=}")
     # FIXME refactor with `write_args_file` and `task.assemble_args`
@@ -218,19 +215,21 @@ def call_single_parallel_task(
     args_dict["component"] = component
 
     # write args file
-    args_file_path = workflow_dir / f"{prefix}.args.json"
-    with open(args_file_path, "w") as f:
+    # args_file_path = workflow_dir / f"{prefix}.args.json"
+    with open(workflow_files.args, "w") as f:
         json.dump(args_dict, f, cls=TaskParameterEncoder, indent=4)
     # FIXME: UP TO HERE
 
     # assemble full command
     cmd = (
-        f"{task.task.command} -j {args_file_path} "
-        f"--metadata-out {metadata_diff_file}"
+        f"{task.task.command} -j {workflow_files.args} "
+        f"--metadata-out {workflow_files.metadiff}"
     )
 
     logger.debug(f"executing task {task.order=}")
-    _call_command_wrapper(cmd, stdout=stdout_file, stderr=stderr_file)
+    _call_command_wrapper(
+        cmd, stdout=workflow_files.out, stderr=workflow_files.err
+    )
 
 
 def call_parallel_task(
