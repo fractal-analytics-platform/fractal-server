@@ -81,7 +81,33 @@ class SlurmConfigError(ValueError):
     pass
 
 
-def set_slurm_config(task: WorkflowTask) -> Dict[str, Any]:
+def set_slurm_config(
+    task: WorkflowTask,
+    task_pars: TaskParameters,
+    workflow_dir: Path,
+) -> Dict[str, Any]:
+    """
+    Collect slurm configuration parameters
+
+    For now, this is the reference implementation for argument
+    `submit_setup_call` of `runner._common.recursive_task_submission`
+
+    Args:
+        task:
+            The task for which the sbatch script is to be assembled
+        task_pars:
+            The task parameters to be passed to the task
+        workflow_dir:
+            The directory in which the executor should store input / output /
+            errors from task execution, as well as meta files from the
+            submission process.
+
+    Returns:
+        submit_setup_dict:
+            A dictionary that will be passed on to
+            `FractalSlurmExecutor.submit` and `FractalSlurmExecutor.map`, so
+            as to set extra options in the sbatch script.
+    """
     config_dict = load_slurm_config()
     try:
         config = config_dict[task.executor]
