@@ -129,11 +129,10 @@ def test_sbatch_script_slurm_config(
     from fractal_server.app.runner._common import recursive_task_submission
     from fractal_server.app.runner._slurm import set_slurm_config
 
-    INDEX = 666
     task_list = [
         MockWorkflowTask(
             task=task,
-            arguments=dict(message="test", index=INDEX),
+            arguments=dict(message="test"),
             order=0,
             executor=slurm_config_key,
         )
