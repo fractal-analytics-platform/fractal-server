@@ -252,7 +252,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         funcser = cloudpickle.dumps((fun, args, kwargs))
         with job.slurm_input.open("wb") as f:
             f.write(funcser)
-        jobid = self._start(job.workerid, additional_setup_lines)
+        jobid = self._start(job, additional_setup_lines)
 
         if self.debug:
             print("job submitted: %i" % jobid, file=sys.stderr)
@@ -291,7 +291,9 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         self._cleanup(jobid)
 
-    def _start(self, workerid, additional_setup_lines):
+    def _start(
+        self, job: SlurmJob, additional_setup_lines: Optional[List[str]] = None
+    ):
         if additional_setup_lines is None:
             additional_setup_lines = self.additional_setup_lines
 
@@ -302,7 +304,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         sbatch_script = self.compose_sbatch_script(
             cmdline=shlex.split(
-                f"{python_worker_interpreter} -m cfut.remote {workerid}"
+                f"{python_worker_interpreter} -m cfut.remote {job.workerid}"
             ),
             additional_setup_lines=additional_setup_lines,
         )
