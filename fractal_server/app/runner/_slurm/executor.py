@@ -47,6 +47,11 @@ def get_out_filename(arg) -> Path:
     return get_slurm_script_dir() / f"cfut.out.{arg}.pickle"
 
 
+class SlurmJob:
+    def __init__(self):
+        self.workerid = random_string()
+
+
 class FractalSlurmExecutor(SlurmExecutor):
     def __init__(
         self,
@@ -240,33 +245,33 @@ class FractalSlurmExecutor(SlurmExecutor):
         fut: futures.Future = futures.Future()
 
         # Start the job.
-        workerid = random_string()
+        job = SlurmJob()
         funcser = cloudpickle.dumps((fun, args, kwargs))
-        with get_in_filename(workerid).open("wb") as f:
+        with get_in_filename(job.workerid).open("wb") as f:
             f.write(funcser)
-        jobid = self._start(workerid, additional_setup_lines)
+        jobid = self._start(job.workerid, additional_setup_lines)
 
         if self.debug:
             print("job submitted: %i" % jobid, file=sys.stderr)
 
         # Thread will wait for it to finish.
-        self.wait_thread.wait(get_out_filename(workerid).as_posix(), jobid)
+        self.wait_thread.wait(get_out_filename(job.workerid).as_posix(), jobid)
 
         with self.jobs_lock:
-            self.jobs[jobid] = (fut, workerid)
+            self.jobs[jobid] = (fut, job)
         return fut
 
     def _completion(self, jobid):
         """Called whenever a job finishes."""
         with self.jobs_lock:
-            fut, workerid = self.jobs.pop(jobid)
+            fut, job = self.jobs.pop(jobid)
             if not self.jobs:
                 self.jobs_empty_cond.notify_all()
         if self.debug:
             print("job completed: %i" % jobid, file=sys.stderr)
 
-        out_path = get_out_filename(workerid)
-        in_path = get_in_filename(workerid)
+        out_path = get_out_filename(job.workerid)
+        in_path = get_in_filename(job.workerid)
 
         with out_path.open("rb") as f:
             outdata = f.read()
