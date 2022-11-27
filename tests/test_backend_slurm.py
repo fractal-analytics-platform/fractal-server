@@ -146,7 +146,9 @@ def test_sbatch_script_slurm_config(
 
     # Assign a non existent username so that the sudo call will fail with a
     # FileNotFoundError. This will allow inspection of the sbatch script file.
-    with FractalSlurmExecutor(username="NO_USER") as executor:
+    with FractalSlurmExecutor(
+        username="NO_USER", script_dir=tmp_path
+    ) as executor:
         try:
             recursive_task_submission(
                 executor=executor,
@@ -157,6 +159,7 @@ def test_sbatch_script_slurm_config(
             )
         except FileNotFoundError as e:
             sbatch_file = str(e).split()[-1].strip("'")
+            debug(sbatch_file)
         with open(sbatch_file, "r") as f:
             sbatch_script_lines = f.readlines()
             debug(sbatch_script_lines)

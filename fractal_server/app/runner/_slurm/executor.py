@@ -302,10 +302,15 @@ class FractalSlurmExecutor(SlurmExecutor):
             settings.SLURM_PYTHON_WORKER_INTERPRETER or sys.executable
         )
 
+        if not hasattr(job, "stdout"):
+            job.stdout = get_stdout_filename()
+        if hasattr(job, "stderr"):
+            additional_setup_lines.append(f"#SBATCH --error={job.stderr}")
         sbatch_script = self.compose_sbatch_script(
             cmdline=shlex.split(
                 f"{python_worker_interpreter} -m cfut.remote {job.workerid}"
             ),
+            outpat=job.stdout,
             additional_setup_lines=additional_setup_lines,
         )
 
