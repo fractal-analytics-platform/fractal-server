@@ -246,8 +246,11 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         # Start the job.
         job = SlurmJob()
+        job.slurm_input = get_in_filename(job.workerid)
+        job.slurm_output = get_out_filename(job.workerid)
+
         funcser = cloudpickle.dumps((fun, args, kwargs))
-        with get_in_filename(job.workerid).open("wb") as f:
+        with job.slurm_input.open("wb") as f:
             f.write(funcser)
         jobid = self._start(job.workerid, additional_setup_lines)
 
@@ -255,7 +258,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             print("job submitted: %i" % jobid, file=sys.stderr)
 
         # Thread will wait for it to finish.
-        self.wait_thread.wait(get_out_filename(job.workerid).as_posix(), jobid)
+        self.wait_thread.wait(job.slurm_output.as_posix(), jobid)
 
         with self.jobs_lock:
             self.jobs[jobid] = (fut, job)
