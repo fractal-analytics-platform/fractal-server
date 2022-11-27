@@ -47,98 +47,6 @@ def get_out_filename(arg) -> Path:
     return get_slurm_script_dir() / f"cfut.out.{arg}.pickle"
 
 
-def write_batch_script(
-    sbatch_script: str, script_dir: Optional[Path] = None
-) -> Path:
-    """
-    Write batch script
-
-    Returns:
-        batch_script_path:
-            The path to the batch script
-    """
-    if not script_dir:
-        script_dir = get_slurm_script_dir()
-
-    batch_script_path = script_dir / f"_temp_{random_string()}.sh"
-    with batch_script_path.open("w") as f:
-        f.write(sbatch_script)
-    return batch_script_path
-
-
-def submit_sbatch(
-    sbatch_script: str,
-    submit_pre_command: str = "",
-    script_dir: Optional[Path] = None,
-) -> int:
-    """
-    Submit a Slurm job script
-
-    Write the batch script in a temporary file and submit it with `sbatch`.
-
-    Args:
-        sbatch_script:
-            the string representing the full job
-        submit_pre_command:
-            command that is prefixed to `sbatch`
-        script_dir:
-            destination of temporary script files
-
-    Returns:
-        jobid:
-            integer job id as returned by `sbatch` submission
-    """
-    filename = write_batch_script(
-        sbatch_script=sbatch_script, script_dir=script_dir
-    )
-    submit_command = f"sbatch --parsable {filename}"
-    full_cmd = shlex.join(
-        shlex.split(submit_pre_command) + shlex.split(submit_command)
-    )
-    try:
-        output = subprocess.run(  # nosec
-            full_cmd, capture_output=True, check=True
-        )
-    except subprocess.CalledProcessError as e:
-        logger = set_logger(logger_name="slurm_runner")
-        logger.error(e.stderr.decode("utf-8"))
-        close_logger(logger)
-        raise e
-    try:
-        jobid = int(output.stdout)
-    except ValueError as e:
-        logger = set_logger(logger_name="slurm_runner")
-        logger.error(
-            f'submit_command="{submit_command}" returned '
-            f'"{output.stdout}", which cannot be cast to an integer '
-            "job ID"
-        )
-        close_logger(logger)
-        raise e
-    filename.unlink()
-    return int(jobid)
-
-
-def compose_sbatch_script(
-    cmdline: List[str],
-    # NOTE: In SLURM, `%j` is the placeholder for the job_id.
-    outpat: Optional[Path] = None,
-    additional_setup_lines=[],
-) -> str:
-    if outpat is None:
-        outpat = get_stdout_filename()
-    script_lines = [
-        "#!/bin/sh",
-        f"#SBATCH --output={outpat}",
-        *additional_setup_lines,
-        # Export the slurm script directory so that nodes can find the pickled
-        # payload
-        f"export CFUT_DIR={get_slurm_script_dir()}",
-        shlex.join(["srun", *cmdline]),
-    ]
-    return "\n".join(script_lines)
-
-
 class FractalSlurmExecutor(SlurmExecutor):
     def __init__(
         self,
@@ -157,6 +65,97 @@ class FractalSlurmExecutor(SlurmExecutor):
         super().__init__(*args, **kwargs)
         self.username = username
         self.script_dir = script_dir
+
+    def write_batch_script(
+        self, sbatch_script: str, script_dir: Optional[Path] = None
+    ) -> Path:
+        """
+        Write batch script
+
+        Returns:
+            batch_script_path:
+                The path to the batch script
+        """
+        if not script_dir:
+            script_dir = get_slurm_script_dir()
+
+        batch_script_path = script_dir / f"_temp_{random_string()}.sh"
+        with batch_script_path.open("w") as f:
+            f.write(sbatch_script)
+        return batch_script_path
+
+    def submit_sbatch(
+        self,
+        sbatch_script: str,
+        submit_pre_command: str = "",
+        script_dir: Optional[Path] = None,
+    ) -> int:
+        """
+        Submit a Slurm job script
+
+        Write the batch script in a temporary file and submit it with `sbatch`.
+
+        Args:
+            sbatch_script:
+                the string representing the full job
+            submit_pre_command:
+                command that is prefixed to `sbatch`
+            script_dir:
+                destination of temporary script files
+
+        Returns:
+            jobid:
+                integer job id as returned by `sbatch` submission
+        """
+        filename = self.write_batch_script(
+            sbatch_script=sbatch_script, script_dir=script_dir
+        )
+        submit_command = f"sbatch --parsable {filename}"
+        full_cmd = shlex.join(
+            shlex.split(submit_pre_command) + shlex.split(submit_command)
+        )
+        try:
+            output = subprocess.run(  # nosec
+                full_cmd, capture_output=True, check=True
+            )
+        except subprocess.CalledProcessError as e:
+            logger = set_logger(logger_name="slurm_runner")
+            logger.error(e.stderr.decode("utf-8"))
+            close_logger(logger)
+            raise e
+        try:
+            jobid = int(output.stdout)
+        except ValueError as e:
+            logger = set_logger(logger_name="slurm_runner")
+            logger.error(
+                f'submit_command="{submit_command}" returned '
+                f'"{output.stdout}", which cannot be cast to an integer '
+                "job ID"
+            )
+            close_logger(logger)
+            raise e
+        filename.unlink()
+        return int(jobid)
+
+    def compose_sbatch_script(
+        self,
+        cmdline: List[str],
+        # NOTE: In SLURM, `%j` is the placeholder for the job_id.
+        outpat: Optional[Path] = None,
+        additional_setup_lines=[],
+    ) -> str:
+        if outpat is None:
+            outpat = get_stdout_filename()
+        script_lines = [
+            "#!/bin/sh",
+            f"#SBATCH --output={outpat}",
+            *additional_setup_lines,
+            # Export the slurm script directory so that nodes can find the
+            # pickled payload
+            f"export CFUT_DIR={get_slurm_script_dir()}",
+            shlex.join(["srun", *cmdline]),
+        ]
+        return "\n".join(script_lines)
 
     def map(
         self,
@@ -293,7 +292,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             settings.SLURM_PYTHON_WORKER_INTERPRETER or sys.executable
         )
 
-        sbatch_script = compose_sbatch_script(
+        sbatch_script = self.compose_sbatch_script(
             cmdline=shlex.split(
                 f"{python_worker_interpreter} -m cfut.remote {workerid}"
             ),
@@ -304,7 +303,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         if self.username:
             pre_cmd = f"sudo --non-interactive -u {self.username}"
 
-        job_id = submit_sbatch(
+        job_id = self.submit_sbatch(
             sbatch_script,
             submit_pre_command=pre_cmd,
             script_dir=self.script_dir,

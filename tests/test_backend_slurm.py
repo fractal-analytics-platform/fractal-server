@@ -48,12 +48,12 @@ def test_unit_sbatch_script_readable(monkey_slurm, tmp777_path):
     WHEN a differnt user tries to read it
     THEN it has all the permissions needed
     """
-    from fractal_server.app.runner._slurm.executor import write_batch_script
     import subprocess
     import shlex
 
     SBATCH_SCRIPT = "test"
-    f = write_batch_script(SBATCH_SCRIPT, script_dir=tmp777_path)
+    with FractalSlurmExecutor() as executor:
+        f = executor.write_batch_script(SBATCH_SCRIPT, script_dir=tmp777_path)
 
     out = subprocess.run(
         shlex.split(f"sudo --non-interactive -u test01 sbatch {f}"),
