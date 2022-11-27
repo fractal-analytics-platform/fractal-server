@@ -233,7 +233,9 @@ def call_parallel_task(
     task: WorkflowTask,
     task_pars_depend_future: Future,  # py3.9 Future[TaskParameters],
     workflow_dir: Path,
-    extra_submit_dict: Optional[Dict[str, Any]] = None,
+    submit_setup_call: Callable[
+        [WorkflowTask, TaskParameters, Path], Dict[str, Any]
+    ] = lambda task, task_pars, workflow_dir: {},
 ) -> Future:  # py3.9 Future[TaskParameters]:
     """
     AKA collect results
@@ -248,11 +250,10 @@ def call_parallel_task(
         task_pars=task_pars_depend,
         workflow_dir=workflow_dir,
     )
-    if extra_submit_dict is None:
-        extra_submit_dict = {}
-    map_iter = executor.map(
-        partial_call_task, component_list, **extra_submit_dict
-    )
+
+    extra_setup = submit_setup_call(task, task_pars_depend, workflow_dir)
+
+    map_iter = executor.map(partial_call_task, component_list, **extra_setup)
     # Wait for execution of all parallel (this explicitly calls .result()
     # on each parallel task)
     for _ in map_iter:
@@ -329,17 +330,16 @@ def recursive_task_submission(
         submit_setup_call=submit_setup_call,
     )
 
-    extra_setup = submit_setup_call(this_task, task_pars, workflow_dir)
-
     if this_task.is_parallel:
         this_future = call_parallel_task(
             executor=executor,
             task=this_task,
             task_pars_depend_future=task_pars_depend_future,
             workflow_dir=workflow_dir,
-            extra_submit_dict=extra_setup,
+            submit_setup_call=submit_setup_call,
         )
     else:
+        extra_setup = submit_setup_call(this_task, task_pars, workflow_dir)
         this_future = executor.submit(
             call_single_task,
             task=this_task,
