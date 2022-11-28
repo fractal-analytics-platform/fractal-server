@@ -147,6 +147,7 @@ def _process_workflow(
         debug=True,
         keep_logs=True,
         username=username,
+        script_dir=workflow_dir,
     ) as executor:
         output_task_pars_fut = recursive_task_submission(
             executor=executor,
