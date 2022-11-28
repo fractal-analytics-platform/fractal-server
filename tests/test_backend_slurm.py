@@ -160,7 +160,9 @@ def test_sbatch_script_slurm_config(
                 submit_setup_call=set_slurm_config,
             )
         except subprocess.CalledProcessError as e:
-            assert "unknown user NO_USER" in e.stderr.decode("utf-8")
+            assert "unknown user NO_USER" in e.stderr.decode(
+                "utf-8"
+            ) or "unknown user: NO_USER" in e.stderr.decode("utf-8")
             sbatch_file = e.cmd[-1]
             debug(sbatch_file)
         with open(sbatch_file, "r") as f:
