@@ -1,11 +1,12 @@
-import os
 import json
+import os
 import shlex
 from pathlib import Path
 from typing import List
 
 import pytest
 from devtools import debug
+
 
 def is_responsive(container_name):
     try:
@@ -24,7 +25,8 @@ def docker_compose_file(pytestconfig):
     return os.path.join(
         Path().absolute(), "tests/slurm_docker_images", "docker-compose.yml"
     )
-    
+
+
 @pytest.fixture(scope="session")
 def slurm_config(override_settings):
     config = {
