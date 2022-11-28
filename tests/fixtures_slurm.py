@@ -1,11 +1,11 @@
 import os
+import json
 import shlex
 from pathlib import Path
 from typing import List
 
 import pytest
 from devtools import debug
-
 
 def is_responsive(container_name):
     try:
@@ -24,6 +24,18 @@ def docker_compose_file(pytestconfig):
     return os.path.join(
         Path().absolute(), "tests/slurm_docker_images", "docker-compose.yml"
     )
+    
+@pytest.fixture(scope="session")
+def slurm_config(override_settings):
+    config = {
+        "default": dict(partition="main", mem="1024"),
+        "low": dict(partition="main", mem="128"),
+        "cpu-low": dict(partition="main"),
+    }
+
+    with override_settings.FRACTAL_SLURM_CONFIG_FILE.open("w") as f:
+        json.dump(config, f)
+    return config
 
 
 @pytest.fixture
@@ -61,8 +73,7 @@ def monkey_slurm(monkeypatch, docker_compose_project_name, docker_services):
     class _MockPopen(OrigPopen):
         def __init__(self, *args, **kwargs):
             cmd = args[0]
-            if not isinstance(cmd, list):
-                cmd = shlex.split(cmd)
+            assert isinstance(cmd, list)
 
             container_cmd = [" ".join(str(c) for c in cmd)]
             cmd = [

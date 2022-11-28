@@ -152,6 +152,7 @@ class Settings(BaseSettings):
     RUNNER_ROOT_DIR: Optional[Path]
     FRACTAL_LOGGING_LEVEL: int = logging.WARNING
     FRACTAL_PUBLIC_TASK_SUBDIR: str = ".fractal"
+    FRACTAL_SLURM_CONFIG_FILE: Optional[Path]
 
     """
     It may be necessary to have that the Python interpreter used within a SLURM
@@ -198,6 +199,10 @@ class Settings(BaseSettings):
 
             FRACTAL_ROOT: Path
             RUNNER_ROOT_DIR: Path
+
+            RUNNER_BACKEND: str = Field()
+            if RUNNER_BACKEND == "slurm":
+                FRACTAL_SLURM_CONFIG_FILE: Path
 
         StrictSettings(**self.dict())
 

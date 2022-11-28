@@ -12,6 +12,7 @@ Zurich.
 """
 from os import environ
 
+import pytest
 from devtools import debug
 
 PREFIX = "/api/v1"
@@ -19,6 +20,7 @@ PREFIX = "/api/v1"
 environ["RUNNER_MONITORING"] = "0"
 
 
+@pytest.mark.slow
 async def test_full_workflow(
     client,
     MockCurrentUser,
