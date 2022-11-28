@@ -176,7 +176,7 @@ def test_recursive_parallel_task_submission_step0(tmp_path):
             data = json.load(fin)
         safe_component = data["component"].replace(" ", "_")
         safe_component = safe_component.replace(".", "_").replace("/", "_")
-        assert output_file.name == f"{safe_component}.json"
+        assert output_file.name == f"{safe_component}.result.json"
         assert data["message"] == MESSAGE
 
 
