@@ -182,3 +182,16 @@ def test_sbatch_script_slurm_config(
         )
         assert job_name
         assert len(job_name.split()[-1]) == len(task.name)
+
+        sbatch_script = "".join(sbatch_script_lines)
+        debug(sbatch_script)
+        if "task_parallel" in sbatch_script:
+            output_line = next(
+                (line for line in sbatch_script_lines if "--output" in line),
+                False,
+            ).strip()
+
+            # output and error filenames for parallel tasks should contain the
+            # `{task_order}_par_{component}` tag
+            debug(output_line)
+            assert "_par_" in output_line
