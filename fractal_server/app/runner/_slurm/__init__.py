@@ -158,7 +158,6 @@ def _process_workflow(
                 metadata=input_metadata,
                 logger_name=logger_name,
             ),
-            submit_setup_call=set_slurm_config,
             workflow_dir=workflow_dir,
             submit_setup_call=set_slurm_config,
         )
