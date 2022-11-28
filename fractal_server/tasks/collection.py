@@ -10,6 +10,7 @@
 # Zurich.
 import json
 import logging
+import shutil
 import sys
 from io import IOBase
 from pathlib import Path
@@ -34,6 +35,34 @@ from ..utils import set_logger
 
 class TaskCollectionError(RuntimeError):
     pass
+
+
+def get_python_interpreter(version: Optional[str] = None) -> str:
+    """
+    Return the path to the python interpreter
+
+    Args:
+        version:
+            Python version
+
+    Raises:
+        ValueError:
+            If the python version requested is not available on the host.
+
+    Returns:
+        interpreter:
+            string representing the python executable or its path
+    """
+    if version:
+        interpreter = shutil.which(f"python{version}")
+        if not interpreter:
+            raise ValueError(
+                f"Python version {version} not available on host."
+            )
+    else:
+        interpreter = sys.executable
+
+    return interpreter
 
 
 def get_absolute_venv_path(venv_path: Path) -> Path:
@@ -168,11 +197,7 @@ async def download_package(
     """
     Download package to destination
     """
-    interpreter = (
-        f"python{task_pkg.python_version}"
-        if task_pkg.python_version
-        else sys.executable
-    )
+    interpreter = get_python_interpreter(version=task_pkg.python_version)
     pip = f"{interpreter} -m pip"
     cmd = (
         f"{pip} download --no-deps {task_pkg.pip_package_version} "
@@ -364,10 +389,7 @@ async def _init_venv(
     python_bin : Path
         path to python interpreter
     """
-    if python_version:
-        interpreter = f"python{python_version}"
-    else:
-        interpreter = sys.executable
+    interpreter = get_python_interpreter(version=python_version)
     await execute_command(
         cwd=path, command=f"{interpreter} -m venv venv", logger_name="fractal"
     )
