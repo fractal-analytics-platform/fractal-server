@@ -29,7 +29,7 @@ def test_status_code(docker_services, docker_compose_project_name):
         timeout=20.0,
         pause=0.5,
         check=lambda: is_responsive(
-            docker_compose_project_name + "_slurmmaster_1"
+            docker_compose_project_name + "_slurm-docker-master_1"
         ),
     )
     import subprocess
@@ -37,7 +37,7 @@ def test_status_code(docker_services, docker_compose_project_name):
     exec_cmd = [
         "docker",
         "exec",
-        docker_compose_project_name + "_slurmmaster_1",
+        docker_compose_project_name + "_slurm-docker-master_1",
         "bash",
         "-c",
     ]

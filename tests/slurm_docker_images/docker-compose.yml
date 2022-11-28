@@ -2,11 +2,11 @@ version: '3'
 
 services:
 
-  slurmmaster:
+  slurm-docker-master:
         build:
           context: ./master
           dockerfile: Dockerfile
-        hostname: slurmmaster
+        hostname: slurm-docker-master
         user: admin
         volumes:
           - /tmp:/tmp:rw
@@ -20,7 +20,7 @@ services:
 
   slurmnode1:
         depends_on:
-          - "slurmmaster"
+          - "slurm-docker-master"
         build:
           context: ./node
           dockerfile: Dockerfile
@@ -32,4 +32,4 @@ services:
                 - SLURM_NODENAME=slurmnode1
                 - SLURM_CPUS_ON_NODE=1
         links:
-                - slurmmaster
+                - slurm-docker-master
