@@ -75,8 +75,7 @@ def monkey_slurm(monkeypatch, request):
     class _MockPopen(OrigPopen):
         def __init__(self, *args, **kwargs):
             cmd = args[0]
-            if not isinstance(cmd, list):
-                cmd = shlex.split(cmd)
+            assert isinstance(cmd, list)
 
             if cmd[0] in OVERRIDE_CMD:
                 cmd = ["docker", "exec", slurm_container] + cmd

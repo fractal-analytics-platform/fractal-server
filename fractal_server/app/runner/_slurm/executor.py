@@ -103,8 +103,8 @@ class FractalSlurmExecutor(SlurmExecutor):
         """
         filename = self.write_batch_script(sbatch_script=sbatch_script)
         submit_command = f"sbatch --parsable {filename}"
-        full_cmd = shlex.join(
-            shlex.split(submit_pre_command) + shlex.split(submit_command)
+        full_cmd = shlex.split(submit_pre_command) + shlex.split(
+            submit_command
         )
         try:
             output = subprocess.run(  # nosec
