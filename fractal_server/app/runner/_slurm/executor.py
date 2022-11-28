@@ -29,24 +29,6 @@ from ....utils import close_logger
 from ....utils import set_logger
 
 
-def get_slurm_script_dir() -> Path:
-    settings = Inject(get_settings)
-    script_dir = settings.RUNNER_ROOT_DIR  # type: ignore
-    return script_dir  # type: ignore
-
-
-def get_stdout_filename(arg: str = "%j") -> Path:
-    return get_slurm_script_dir() / f"slurmpy.stdout.{arg}.log"
-
-
-def get_in_filename(arg) -> Path:
-    return get_slurm_script_dir() / f"cfut.in.{arg}.pickle"
-
-
-def get_out_filename(arg) -> Path:
-    return get_slurm_script_dir() / f"cfut.out.{arg}.pickle"
-
-
 class SlurmJob:
     def __init__(self):
         self.workerid = random_string()
@@ -69,11 +51,21 @@ class FractalSlurmExecutor(SlurmExecutor):
         """
         super().__init__(*args, **kwargs)
         self.username = username
-        self.script_dir = script_dir
+        if not script_dir:
+            settings = Inject(get_settings)
+            script_dir = settings.RUNNER_ROOT_DIR  # type: ignore
+        self.script_dir: Path = script_dir  # type: ignore
 
-    def write_batch_script(
-        self, sbatch_script: str, script_dir: Optional[Path] = None
-    ) -> Path:
+    def get_stdout_filename(self, arg: str = "%j") -> Path:
+        return self.script_dir / f"slurmpy.stdout.{arg}.log"
+
+    def get_in_filename(self, arg) -> Path:
+        return self.script_dir / f"cfut.in.{arg}.pickle"
+
+    def get_out_filename(self, arg) -> Path:
+        return self.script_dir / f"cfut.out.{arg}.pickle"
+
+    def write_batch_script(self, sbatch_script: str) -> Path:
         """
         Write batch script
 
@@ -81,10 +73,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             batch_script_path:
                 The path to the batch script
         """
-        if not script_dir:
-            script_dir = get_slurm_script_dir()
-
-        batch_script_path = script_dir / f"_temp_{random_string()}.sh"
+        batch_script_path = self.script_dir / f"_temp_{random_string()}.sh"
         with batch_script_path.open("w") as f:
             f.write(sbatch_script)
         return batch_script_path
@@ -112,9 +101,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             jobid:
                 integer job id as returned by `sbatch` submission
         """
-        filename = self.write_batch_script(
-            sbatch_script=sbatch_script, script_dir=script_dir
-        )
+        filename = self.write_batch_script(sbatch_script=sbatch_script)
         submit_command = f"sbatch --parsable {filename}"
         full_cmd = shlex.join(
             shlex.split(submit_pre_command) + shlex.split(submit_command)
@@ -133,13 +120,14 @@ class FractalSlurmExecutor(SlurmExecutor):
         except ValueError as e:
             logger = set_logger(logger_name="slurm_runner")
             logger.error(
-                f'submit_command="{submit_command}" returned '
-                f'"{output.stdout}", which cannot be cast to an integer '
-                "job ID"
+                f"Submit ommand `{submit_command}` returned "
+                f"`{output.stdout.decode('utf-8')}`, which cannot be cast "
+                "to an integer job ID."
             )
             close_logger(logger)
             raise e
-        filename.unlink()
+        # TODO: unlink
+        # filename.unlink()
         return int(jobid)
 
     def compose_sbatch_script(
@@ -150,14 +138,14 @@ class FractalSlurmExecutor(SlurmExecutor):
         additional_setup_lines=[],
     ) -> str:
         if outpat is None:
-            outpat = get_stdout_filename()
+            outpat = self.get_stdout_filename()
         script_lines = [
             "#!/bin/sh",
             f"#SBATCH --output={outpat}",
             *additional_setup_lines,
             # Export the slurm script directory so that nodes can find the
             # pickled payload
-            f"export CFUT_DIR={get_slurm_script_dir()}",
+            f"export CFUT_DIR={self.script_dir}",
             shlex.join(["srun", *cmdline]),
         ]
         return "\n".join(script_lines)
@@ -246,8 +234,8 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         # Start the job.
         job = SlurmJob()
-        job.slurm_input = get_in_filename(job.workerid)
-        job.slurm_output = get_out_filename(job.workerid)
+        job.slurm_input = self.get_in_filename(job.workerid)
+        job.slurm_output = self.get_out_filename(job.workerid)
 
         funcser = cloudpickle.dumps((fun, args, kwargs))
         with job.slurm_input.open("wb") as f:
@@ -273,8 +261,8 @@ class FractalSlurmExecutor(SlurmExecutor):
         if self.debug:
             print("job completed: %i" % jobid, file=sys.stderr)
 
-        out_path = get_out_filename(job.workerid)
-        in_path = get_in_filename(job.workerid)
+        out_path = self.get_out_filename(job.workerid)
+        in_path = self.get_in_filename(job.workerid)
 
         with out_path.open("rb") as f:
             outdata = f.read()
@@ -303,7 +291,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         )
 
         if not hasattr(job, "stdout"):
-            job.stdout = get_stdout_filename()
+            job.stdout = self.get_stdout_filename()
         if hasattr(job, "stderr"):
             additional_setup_lines.append(f"#SBATCH --error={job.stderr}")
         sbatch_script = self.compose_sbatch_script(
