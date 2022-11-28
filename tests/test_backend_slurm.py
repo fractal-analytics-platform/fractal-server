@@ -48,12 +48,12 @@ def test_unit_sbatch_script_readable(monkey_slurm, tmp777_path):
     WHEN a differnt user tries to read it
     THEN it has all the permissions needed
     """
-    from fractal_server.app.runner._slurm.executor import write_batch_script
     import subprocess
     import shlex
 
     SBATCH_SCRIPT = "test"
-    f = write_batch_script(SBATCH_SCRIPT, script_dir=tmp777_path)
+    with FractalSlurmExecutor() as executor:
+        f = executor.write_batch_script(SBATCH_SCRIPT, script_dir=tmp777_path)
 
     out = subprocess.run(
         shlex.split(f"sudo --non-interactive -u test01 sbatch {f}"),
@@ -146,7 +146,9 @@ def test_sbatch_script_slurm_config(
 
     # Assign a non existent username so that the sudo call will fail with a
     # FileNotFoundError. This will allow inspection of the sbatch script file.
-    with FractalSlurmExecutor(username="NO_USER") as executor:
+    with FractalSlurmExecutor(
+        username="NO_USER", script_dir=tmp_path
+    ) as executor:
         try:
             recursive_task_submission(
                 executor=executor,
@@ -157,6 +159,7 @@ def test_sbatch_script_slurm_config(
             )
         except FileNotFoundError as e:
             sbatch_file = str(e).split()[-1].strip("'")
+            debug(sbatch_file)
         with open(sbatch_file, "r") as f:
             sbatch_script_lines = f.readlines()
             debug(sbatch_script_lines)

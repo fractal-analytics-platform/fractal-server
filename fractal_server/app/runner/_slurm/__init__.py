@@ -147,6 +147,7 @@ def _process_workflow(
         debug=True,
         keep_logs=True,
         username=username,
+        script_dir=workflow_dir,
     ) as executor:
         output_task_pars_fut = recursive_task_submission(
             executor=executor,
@@ -159,6 +160,7 @@ def _process_workflow(
             ),
             submit_setup_call=set_slurm_config,
             workflow_dir=workflow_dir,
+            submit_setup_call=set_slurm_config,
         )
     output_task_pars = output_task_pars_fut.result()
     output_dataset_metadata = output_task_pars.metadata

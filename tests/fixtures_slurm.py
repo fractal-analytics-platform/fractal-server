@@ -11,6 +11,7 @@ def slurm_config(override_settings):
     config = {
         "default": dict(partition="main", mem="1024"),
         "low": dict(partition="main", mem="128"),
+        "cpu-low": dict(partition="main"),
     }
 
     with override_settings.FRACTAL_SLURM_CONFIG_FILE.open("w") as f:
@@ -21,7 +22,7 @@ def slurm_config(override_settings):
 @pytest.fixture
 def slurm_container(event_loop) -> str:
     """
-    Return the name of the container running `slurm-docker-master`
+    Return the name of the container running `*slurmmaster`
     """
     import subprocess
 
@@ -29,7 +30,7 @@ def slurm_container(event_loop) -> str:
         out = subprocess.run(["docker", "ps"], check=True, capture_output=True)
         output = out.stdout.decode("utf-8")
         slurm_master = next(
-            ln for ln in output.splitlines() if "slurm-docker-master" in ln
+            ln for ln in output.splitlines() if "slurmmaster" in ln
         )
         container_name = slurm_master.split()[-1]
         debug(container_name)

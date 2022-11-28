@@ -3,6 +3,7 @@ import logging
 import subprocess  # nosec
 from concurrent.futures import Executor
 from concurrent.futures import Future
+from functools import lru_cache
 from functools import partial
 from pathlib import Path
 from shlex import split as shlex_split
@@ -13,7 +14,6 @@ from typing import List
 from typing import Optional
 
 from ..models import WorkflowTask
-from .common import TaskParameterEncoder
 from .common import TaskParameters
 from .common import write_args_file
 
@@ -24,6 +24,61 @@ def sanitize_component(value: str) -> str:
     'plate.zarr/B/03/0' to 'plate_zarr_B_03_0'.
     """
     return value.replace(" ", "_").replace("/", "_").replace(".", "_")
+
+
+class WorkflowFiles:
+    """
+    Group all file paths pertaining to a workflow
+    """
+
+    workflow_dir: Path
+    task_order: Optional[int] = None
+    component: Optional[str] = None
+
+    def __init__(
+        self,
+        workflow_dir: Path,
+        task_order: Optional[int] = None,
+        component: Optional[str] = None,
+    ):
+        self.workflow_dir = workflow_dir
+        self.task_order = task_order
+        self.component = component
+
+        if self.component:
+            component_safe = f"_par_{sanitize_component(self.component)}"
+        else:
+            component_safe = ""
+
+        if self.task_order is not None:
+            order = str(self.task_order)
+        else:
+            order = "task"
+        self.prefix = f"{order}{component_safe}"
+        self.args = self.workflow_dir / f"{self.prefix}.args.json"
+        self.out = self.workflow_dir / f"{self.prefix}.out"
+        self.err = self.workflow_dir / f"{self.prefix}.err"
+        self.metadiff = self.workflow_dir / f"{self.prefix}.metadiff.json"
+        # self.slurm_submit = self.workflow_dir / f"{prefix}.slurm.submit"
+        # self.slurm_out = self.workflow_dir / f"{self.prefix}.slurm.out"
+        # self.slurm_err = self.workflow_dir / f"{self.prefix}.slurm.err"
+
+
+@lru_cache()
+def get_workflow_file_paths(
+    workflow_dir: Path,
+    task_order: Optional[int] = None,
+    component: Optional[str] = None,
+) -> WorkflowFiles:
+    """
+    Return the corrisponding WorkflowFiles object
+
+    This function is mainly used as a cache to avoid instantiating needless
+    objects.
+    """
+    return WorkflowFiles(
+        workflow_dir=workflow_dir, task_order=task_order, component=component
+    )
 
 
 class TaskExecutionError(RuntimeError):
@@ -91,30 +146,31 @@ def call_single_task(
 
     logger = logging.getLogger(task_pars.logger_name)
 
-    stdout_file = workflow_dir / f"{task.order}.out"
-    stderr_file = workflow_dir / f"{task.order}.err"
-    metadata_diff_file = workflow_dir / f"{task.order}.metadiff.json"
+    workflow_files = get_workflow_file_paths(
+        workflow_dir=workflow_dir, task_order=task.order
+    )
 
     # assemble full args
     args_dict = task.assemble_args(extra=task_pars.dict())
 
     # write args file
-    args_file_path = workflow_dir / f"{task.order}.args.json"
-    write_args_file(args=args_dict, path=args_file_path)
+    write_args_file(args_dict, path=workflow_files.args)
 
     # assemble full command
     cmd = (
-        f"{task.task.command} -j {args_file_path} "
-        f"--metadata-out {metadata_diff_file}"
+        f"{task.task.command} -j {workflow_files.args} "
+        f"--metadata-out {workflow_files.metadiff}"
     )
 
     logger.debug(f"executing task {task.order=}")
-    _call_command_wrapper(cmd, stdout=stdout_file, stderr=stderr_file)
+    _call_command_wrapper(
+        cmd, stdout=workflow_files.out, stderr=workflow_files.err
+    )
 
     # NOTE:
     # This assumes that the new metadata is printed to stdout
     # and nothing else outputs to stdout
-    with metadata_diff_file.open("r") as f_metadiff:
+    with workflow_files.metadiff.open("r") as f_metadiff:
         diff_metadata = json.load(f_metadiff)
     updated_metadata = task_pars.metadata.copy()
     updated_metadata.update(diff_metadata)
@@ -146,33 +202,29 @@ def call_single_parallel_task(
         raise RuntimeError
     logger = logging.getLogger(task_pars.logger_name)
 
-    component_safe = sanitize_component(component)
-    prefix = f"{task.order}_par_{component_safe}"
-    stdout_file = workflow_dir / f"{prefix}.out"
-    stderr_file = workflow_dir / f"{prefix}.err"
-    metadata_diff_file = workflow_dir / f"{prefix}.metadiff.json"
+    workflow_files = get_workflow_file_paths(
+        workflow_dir=workflow_dir, task_order=task.order, component=component
+    )
 
     logger.debug(f"calling task {task.order=} on {component=}")
-    # FIXME refactor with `write_args_file` and `task.assemble_args`
     # assemble full args
-    args_dict = task_pars.dict()
-    args_dict.update(task.arguments)
-    args_dict["component"] = component
-
-    # write args file
-    args_file_path = workflow_dir / f"{prefix}.args.json"
-    with open(args_file_path, "w") as f:
-        json.dump(args_dict, f, cls=TaskParameterEncoder, indent=4)
-    # FIXME: UP TO HERE
+    write_args_file(
+        task_pars.dict(),
+        task.arguments,
+        dict(component=component),
+        path=workflow_files.args,
+    )
 
     # assemble full command
     cmd = (
-        f"{task.task.command} -j {args_file_path} "
-        f"--metadata-out {metadata_diff_file}"
+        f"{task.task.command} -j {workflow_files.args} "
+        f"--metadata-out {workflow_files.metadiff}"
     )
 
     logger.debug(f"executing task {task.order=}")
-    _call_command_wrapper(cmd, stdout=stdout_file, stderr=stderr_file)
+    _call_command_wrapper(
+        cmd, stdout=workflow_files.out, stderr=workflow_files.err
+    )
 
 
 def call_parallel_task(
@@ -181,7 +233,9 @@ def call_parallel_task(
     task: WorkflowTask,
     task_pars_depend_future: Future,  # py3.9 Future[TaskParameters],
     workflow_dir: Path,
-    extra_submit_dict: Optional[Dict[str, Any]] = None,
+    submit_setup_call: Callable[
+        [WorkflowTask, TaskParameters, Path], Dict[str, Any]
+    ] = lambda task, task_pars, workflow_dir: {},
 ) -> Future:  # py3.9 Future[TaskParameters]:
     """
     AKA collect results
@@ -196,11 +250,10 @@ def call_parallel_task(
         task_pars=task_pars_depend,
         workflow_dir=workflow_dir,
     )
-    if extra_submit_dict is None:
-        extra_submit_dict = {}
-    map_iter = executor.map(
-        partial_call_task, component_list, **extra_submit_dict
-    )
+
+    extra_setup = submit_setup_call(task, task_pars_depend, workflow_dir)
+
+    map_iter = executor.map(partial_call_task, component_list, **extra_setup)
     # Wait for execution of all parallel (this explicitly calls .result()
     # on each parallel task)
     for _ in map_iter:
@@ -277,17 +330,16 @@ def recursive_task_submission(
         submit_setup_call=submit_setup_call,
     )
 
-    extra_setup = submit_setup_call(this_task, task_pars, workflow_dir)
-
     if this_task.is_parallel:
         this_future = call_parallel_task(
             executor=executor,
             task=this_task,
             task_pars_depend_future=task_pars_depend_future,
             workflow_dir=workflow_dir,
-            extra_submit_dict=extra_setup,
+            submit_setup_call=submit_setup_call,
         )
     else:
+        extra_setup = submit_setup_call(this_task, task_pars, workflow_dir)
         this_future = executor.submit(
             call_single_task,
             task=this_task,
