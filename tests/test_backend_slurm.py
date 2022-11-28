@@ -1,3 +1,5 @@
+import shlex
+import subprocess
 from concurrent.futures import Executor
 from itertools import product
 from typing import Callable
@@ -39,7 +41,7 @@ def test_submit_pre_command(fake_process, username, tmp_path):
     call = fake_process.calls.pop()
     assert "sbatch" in call
     if username:
-        assert f"sudo --non-interactive -u {username}" in call
+        assert f"sudo --non-interactive -u {username}" in shlex.join(call)
 
 
 def test_unit_sbatch_script_readable(monkey_slurm, tmp777_path):
@@ -52,8 +54,8 @@ def test_unit_sbatch_script_readable(monkey_slurm, tmp777_path):
     import shlex
 
     SBATCH_SCRIPT = "test"
-    with FractalSlurmExecutor() as executor:
-        f = executor.write_batch_script(SBATCH_SCRIPT, script_dir=tmp777_path)
+    with FractalSlurmExecutor(script_dir=tmp777_path) as executor:
+        f = executor.write_batch_script(SBATCH_SCRIPT)
 
     out = subprocess.run(
         shlex.split(f"sudo --non-interactive -u test01 sbatch {f}"),
@@ -157,8 +159,11 @@ def test_sbatch_script_slurm_config(
                 workflow_dir=tmp_path,
                 submit_setup_call=set_slurm_config,
             )
-        except FileNotFoundError as e:
-            sbatch_file = str(e).split()[-1].strip("'")
+        except subprocess.CalledProcessError as e:
+            assert "unknown user NO_USER" in e.stderr.decode(
+                "utf-8"
+            ) or "unknown user: NO_USER" in e.stderr.decode("utf-8")
+            sbatch_file = e.cmd[-1]
             debug(sbatch_file)
         with open(sbatch_file, "r") as f:
             sbatch_script_lines = f.readlines()
