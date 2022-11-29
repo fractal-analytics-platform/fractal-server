@@ -1,8 +1,10 @@
 from pathlib import Path
+from shutil import which as shutil_which
 
 import pytest
 from devtools import debug
 
+from .fixtures_tasks import execute_command
 from fractal_server.app.api.v1.task import _background_collect_pip
 from fractal_server.app.api.v1.task import _TaskCollectPip
 from fractal_server.app.api.v1.task import create_package_dir_pip
@@ -99,7 +101,22 @@ async def test_background_collection_failure(db, dummy_task_package):
     assert not venv_path.exists()
 
 
-async def test_collection_api(client, dummy_task_package, MockCurrentUser):
+@pytest.mark.parametrize(
+    ("slurm_user", "python_version"),
+    [
+        ("user00", None),
+        pytest.param(
+            "user01",
+            "3.10",
+            marks=pytest.mark.skipif(
+                not shutil_which("python3.10"), reason="No python3.10 on host"
+            ),
+        ),
+    ],
+)
+async def test_collection_api(
+    client, dummy_task_package, MockCurrentUser, slurm_user, python_version
+):
     """
     GIVEN a package in a format that `pip` understands
     WHEN the api to collect tasks from that package is called
@@ -113,9 +130,11 @@ async def test_collection_api(client, dummy_task_package, MockCurrentUser):
     """
     PREFIX = "/api/v1/task"
 
-    task_collection = dict(package=dummy_task_package.as_posix())
+    task_collection = dict(
+        package=dummy_task_package.as_posix(), python_version=python_version
+    )
 
-    async with MockCurrentUser(persist=True):
+    async with MockCurrentUser(user_kwargs=dict(slurm_user=slurm_user)):
         # NOTE: collecting private tasks so that they are assigned to user and
         # written in a non-default folder. Bypass for non stateless
         # FRACTAL_ROOT in test suite.
@@ -158,6 +177,10 @@ async def test_collection_api(client, dummy_task_package, MockCurrentUser):
         full_path = settings.FRACTAL_ROOT / venv_path
         assert get_collection_path(full_path).exists()
         assert get_log_path(full_path).exists()
+        if python_version:
+            python_bin = data["task_list"][0]["command"].split()[0]
+            version = await execute_command(f"{python_bin} --version")
+            assert python_version in version
 
         # collect again
         res = await client.post(

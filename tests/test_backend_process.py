@@ -20,7 +20,7 @@ from devtools import debug
 from .fixtures_tasks import MockTask
 from .fixtures_tasks import MockWorkflowTask
 from fractal_server.app.runner._common import _call_command_wrapper
-from fractal_server.app.runner._process import call_single_task
+from fractal_server.app.runner._common import call_single_task
 from fractal_server.app.runner._process import recursive_task_submission
 from fractal_server.app.runner.common import close_job_logger
 from fractal_server.app.runner.common import TaskParameters
@@ -176,7 +176,7 @@ def test_recursive_parallel_task_submission_step0(tmp_path):
             data = json.load(fin)
         safe_component = data["component"].replace(" ", "_")
         safe_component = safe_component.replace(".", "_").replace("/", "_")
-        assert output_file.name == f"{safe_component}.json"
+        assert output_file.name == f"{safe_component}.result.json"
         assert data["message"] == MESSAGE
 
 

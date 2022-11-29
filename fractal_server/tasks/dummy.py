@@ -83,7 +83,7 @@ def dummy(
         output_path.parent.mkdir()
 
     if not output_path.as_posix().endswith(".json"):
-        filename_out = f"{index}.json"
+        filename_out = f"{index}.result.json"
         out_fullpath = output_path / filename_out
     else:
         out_fullpath = output_path

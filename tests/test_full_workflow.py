@@ -20,31 +20,13 @@ PREFIX = "/api/v1"
 environ["RUNNER_MONITORING"] = "0"
 
 
-@pytest.fixture
-async def collect_tasks(MockCurrentUser, client, dummy_task_package):
-    async with MockCurrentUser(persist=True):
-        # COLLECT DUMMY TASKS
-        res = await client.post(
-            f"{PREFIX}/task/collect/pip/",
-            json=dict(package=dummy_task_package.as_posix()),
-        )
-        state = res.json()
-        data = state["data"]
-
-        res = await client.get(f"{PREFIX}/task/collect/{state['id']}")
-        assert res.status_code == 200
-        state = res.json()
-        data = state["data"]
-        task_list = data["task_list"]
-    return task_list
-
-
+@pytest.mark.slow
 async def test_full_workflow(
     client,
     MockCurrentUser,
     testdata_path,
     tmp_path,
-    collect_tasks,
+    collect_packages,
     project_factory,
     dataset_factory,
 ):
@@ -119,7 +101,7 @@ async def test_full_workflow(
         # Add a dummy task
         res = await client.post(
             f"{PREFIX}/workflow/{workflow_id}/add-task/",
-            json=dict(task_id=collect_tasks[0]["id"]),
+            json=dict(task_id=collect_packages[0].id),
         )
         debug(res.json())
         assert res.status_code == 201
@@ -127,7 +109,7 @@ async def test_full_workflow(
         # Add another (identical) dummy task, to make sure that this is allowed
         res = await client.post(
             f"{PREFIX}/workflow/{workflow_id}/add-task/",
-            json=dict(task_id=collect_tasks[0]["id"]),
+            json=dict(task_id=collect_packages[0].id),
         )
         debug(res.json())
         assert res.status_code == 201
@@ -135,7 +117,7 @@ async def test_full_workflow(
         # Add a dummy_parallel task
         res = await client.post(
             f"{PREFIX}/workflow/{workflow_id}/add-task/",
-            json=dict(task_id=collect_tasks[1]["id"]),
+            json=dict(task_id=collect_packages[1].id),
         )
         debug(res.json())
         assert res.status_code == 201

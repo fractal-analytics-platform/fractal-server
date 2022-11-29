@@ -11,11 +11,13 @@ Institute for Biomedical Research and Pelkmans Lab from the University of
 Zurich.
 """
 import logging
+import shutil
 from dataclasses import dataclass
 from dataclasses import field
 from pathlib import Path
 from typing import Any
 from typing import AsyncGenerator
+from typing import Dict
 from typing import List
 from typing import Optional
 from uuid import uuid4
@@ -30,8 +32,14 @@ from fractal_server.config import get_settings
 from fractal_server.config import Settings
 from fractal_server.syringe import Inject
 
+try:
+    import asyncpg  # noqa: F401
 
-DB_ENGINE = "postgres"
+    DB_ENGINE = "postgres"
+except ModuleNotFoundError:
+    DB_ENGINE = "sqlite"
+
+HAS_LOCAL_SBATCH = bool(shutil.which("sbatch"))
 
 
 def get_patched_settings(temp_path: Path):
@@ -54,20 +62,33 @@ def get_patched_settings(temp_path: Path):
 
     settings.FRACTAL_ROOT = temp_path
     settings.RUNNER_ROOT_DIR = temp_path / "artifacts"
+    settings.RUNNER_ROOT_DIR.mkdir(parents=True, exist_ok=True)
+    settings.RUNNER_ROOT_DIR.chmod(0o777)
+
+    # NOTE:
+    # This variable is set to work with the system interpreter within a docker
+    # container. If left unset it defaults to `sys.executable`
+    if not HAS_LOCAL_SBATCH:
+        settings.SLURM_PYTHON_WORKER_INTERPRETER = "python3"
+
+    settings.FRACTAL_SLURM_CONFIG_FILE = temp_path / "slurm_config.json"
+
     settings.FRACTAL_LOGGING_LEVEL = logging.DEBUG
     return settings
 
 
 @pytest.fixture(scope="session", autouse=True)
-def override_settings(tmp_path_factory):
-    tmp_path = tmp_path_factory.mktemp("fractal_root")
+def override_settings(tmp777_session_path):
+    tmp_path = tmp777_session_path("fractal_root")
+
+    settings = get_patched_settings(tmp_path)
 
     def _get_settings():
-        return get_patched_settings(tmp_path)
+        return settings
 
     Inject.override(get_settings, _get_settings)
     try:
-        yield
+        yield settings
     finally:
         Inject.pop(get_settings)
 
@@ -164,21 +185,24 @@ async def MockCurrentUser(app, db):
         """
 
         name: str = "User Name"
+        user_kwargs: Optional[Dict[str, Any]] = None
         scopes: Optional[List[str]] = field(
             default_factory=lambda: ["project"]
         )
         email: Optional[str] = field(
             default_factory=lambda: f"{uuid4()}@exact-lab.it"
         )
-        persist: Optional[bool] = False
+        persist: Optional[bool] = True
 
         def _create_user(self):
-            self.user = User(
-                name=self.name,
+            defaults = dict(
                 email=self.email,
                 hashed_password="fake_hashed_password",
                 slurm_user="slurm_user",
             )
+            if self.user_kwargs:
+                defaults.update(self.user_kwargs)
+            self.user = User(name=self.name, **defaults)
 
         def current_active_user_override(self):
             def __current_active_user_override():

@@ -10,6 +10,8 @@
 # Zurich.
 import json
 import logging
+import shutil
+import sys
 from io import IOBase
 from pathlib import Path
 from typing import List
@@ -33,6 +35,34 @@ from ..utils import set_logger
 
 class TaskCollectionError(RuntimeError):
     pass
+
+
+def get_python_interpreter(version: Optional[str] = None) -> str:
+    """
+    Return the path to the python interpreter
+
+    Args:
+        version:
+            Python version
+
+    Raises:
+        ValueError:
+            If the python version requested is not available on the host.
+
+    Returns:
+        interpreter:
+            string representing the python executable or its path
+    """
+    if version:
+        interpreter = shutil.which(f"python{version}")
+        if not interpreter:
+            raise ValueError(
+                f"Python version {version} not available on host."
+            )
+    else:
+        interpreter = sys.executable
+
+    return interpreter
 
 
 def get_absolute_venv_path(venv_path: Path) -> Path:
@@ -167,7 +197,7 @@ async def download_package(
     """
     Download package to destination
     """
-    interpreter = f"python{task_pkg.python_version}"
+    interpreter = get_python_interpreter(version=task_pkg.python_version)
     pip = f"{interpreter} -m pip"
     cmd = (
         f"{pip} download --no-deps {task_pkg.pip_package_version} "
@@ -236,22 +266,27 @@ async def create_package_environment_pip(
         log_file_path=get_log_path(venv_path),
         level=logging.DEBUG,
     )
-    logger.debug("Creating venv and installing package")
+    try:
+        logger.debug("Creating venv and installing package")
 
-    python_bin, package_root = await _create_venv_install_package(
-        path=venv_path,
-        task_pkg=task_pkg,
-        logger_name=logger_name,
-    )
+        python_bin, package_root = await _create_venv_install_package(
+            path=venv_path,
+            task_pkg=task_pkg,
+            logger_name=logger_name,
+        )
 
-    logger.debug("loading manifest")
+        logger.debug("loading manifest")
 
-    task_list = load_manifest(
-        package_root=package_root,
-        python_bin=python_bin,
-        source=task_pkg.source,
-    )
-    logger.debug("manifest loaded")
+        task_list = load_manifest(
+            package_root=package_root,
+            python_bin=python_bin,
+            source=task_pkg.source,
+        )
+        logger.debug("manifest loaded")
+    except Exception:
+        # Make sure the logger is closed correctly
+        close_logger(logger)
+        raise
     close_logger(logger)
     return task_list
 
@@ -329,7 +364,7 @@ async def _create_venv_install_package(
 async def _init_venv(
     *,
     path: Path,
-    python_version: str = "3.8",
+    python_version: Optional[str] = None,
     logger_name: str,
 ) -> Path:
     """
@@ -339,7 +374,7 @@ async def _init_venv(
     ----------
     path : Path
         path to directory in which to set up the virtual environment
-    python_version : str, default='3.8'
+    python_version : default=None
         Python version the virtual environment will be based upon
 
     Return
@@ -347,7 +382,7 @@ async def _init_venv(
     python_bin : Path
         path to python interpreter
     """
-    interpreter = f"python{python_version}"
+    interpreter = get_python_interpreter(version=python_version)
     await execute_command(
         cwd=path, command=f"{interpreter} -m venv venv", logger_name="fractal"
     )

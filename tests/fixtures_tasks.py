@@ -7,6 +7,8 @@ from typing import Optional
 import pytest
 from pydantic import BaseModel
 
+from .fixtures_server import HAS_LOCAL_SBATCH
+
 
 class MockTask(BaseModel):
     name: str
@@ -18,6 +20,7 @@ class MockWorkflowTask(BaseModel):
     order: int = 0
     task: MockTask
     arguments: Dict = {}
+    executor: Optional[str] = "default"
 
     @property
     def is_parallel(self) -> bool:
@@ -57,8 +60,8 @@ async def execute_command(cmd, **kwargs):
     return stdout.decode("UTF-8").strip()
 
 
-@pytest.fixture
-async def dummy_task_package(testdata_path, tmp_path) -> Path:
+@pytest.fixture(scope="session")
+async def dummy_task_package(testdata_path, tmp_path_factory) -> Path:
     """
     Yields
     ------
@@ -68,15 +71,15 @@ async def dummy_task_package(testdata_path, tmp_path) -> Path:
     from fractal_server import tasks as task_package
 
     PACKAGE_TEMPLATE_PATH = testdata_path / "fractal-tasks-dummy"
-    PACKAGE_PATH = tmp_path / "fractal-tasks-dummy"
+    PACKAGE_PATH = tmp_path_factory.mktemp("fractal-tasks-dummy")
     SOURCE_PATH = PACKAGE_PATH / "fractal_tasks_dummy"
     DUMMY_PACKAGE = Path(task_package.__file__).parent
 
     # copy template to temp
-    await execute_command(f"cp -r {PACKAGE_TEMPLATE_PATH} {PACKAGE_PATH}")
+    await execute_command(f"cp -r {PACKAGE_TEMPLATE_PATH}/* {PACKAGE_PATH}")
     # copy content of task_package to PACKAGE_PATH
     await execute_command(f"cp {DUMMY_PACKAGE}/*.* {SOURCE_PATH}")
-    await execute_command("poetry build", cwd=PACKAGE_PATH)
+    await execute_command("poetry build", cwd=SOURCE_PATH)
     wheel_relative = await execute_command("ls dist/*.whl", cwd=PACKAGE_PATH)
     wheel_path = PACKAGE_PATH / wheel_relative
     yield wheel_path
@@ -111,3 +114,78 @@ async def dummy_task_package_invalid_manifest(testdata_path, tmp_path) -> Path:
     wheel_relative = await execute_command("ls dist/*.whl", cwd=PACKAGE_PATH)
     wheel_path = PACKAGE_PATH / wheel_relative
     yield wheel_path
+
+
+@pytest.fixture(scope="session")
+async def install_dummy_packages(tmp777_session_path, dummy_task_package):
+    """
+    NOTE that the system python3 on the slurm containers (AKA /usr/bin/python3)
+    is 3.8, and relink_python_interpreter will map to it. Therefore this
+    fixture must always install dummy_task_package with this version.
+    """
+
+    from fractal_server.tasks.collection import (
+        _create_venv_install_package,
+        load_manifest,
+    )
+    from fractal_server.tasks.collection import _TaskCollectPip
+
+    venv_path = tmp777_session_path("dummy")
+    venv_path.mkdir(exist_ok=True, parents=True)
+    task_pkg = _TaskCollectPip(
+        package=dummy_task_package.as_posix(), python_version="3.8"
+    )
+
+    python_bin, package_root = await _create_venv_install_package(
+        path=venv_path,
+        task_pkg=task_pkg,
+        logger_name="test",
+    )
+    task_list = load_manifest(
+        package_root=package_root,
+        python_bin=python_bin,
+        source="test_source",
+    )
+    return task_list
+
+
+@pytest.fixture(scope="function")
+async def collect_packages(db, install_dummy_packages):
+    from fractal_server.app.api.v1.task import _insert_tasks
+
+    tasks = await _insert_tasks(task_list=install_dummy_packages, db=db)
+    return tasks
+
+
+@pytest.fixture(scope="function")
+def relink_python_interpreter(collect_packages):
+    """
+    Rewire python executable in tasks
+    """
+    import os
+    import logging
+
+    if not HAS_LOCAL_SBATCH:
+        logger = logging.getLogger("RELINK")
+        logger.setLevel(logging.INFO)
+
+        task = collect_packages[0]
+        python = Path(task.command.split()[0])
+        orig_python = os.readlink(python)
+        logger.warning(f"RELINK: Original status: {python=} -> {orig_python}")
+        python.unlink()
+        python.symlink_to("/usr/bin/python3")
+
+        logger.warning(
+            f"RELINK: Updated status: {python=} -> "
+            f"{os.readlink(python.as_posix())}"
+        )
+        yield
+        python.unlink()
+        python.symlink_to(orig_python)
+        logger.warning(
+            f"RELINK: Final status: {python=} -> "
+            f"{os.readlink(python.as_posix())}"
+        )
+    else:
+        yield
