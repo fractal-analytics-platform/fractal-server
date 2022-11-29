@@ -118,6 +118,12 @@ async def dummy_task_package_invalid_manifest(testdata_path, tmp_path) -> Path:
 
 @pytest.fixture(scope="session")
 async def install_dummy_packages(tmp777_session_path, dummy_task_package):
+    """
+    NOTE that the system python3 on the slurm containers (AKA /usr/bin/python3)
+    is 3.8, and relink_python_interpreter will map to it. Therefore this
+    fixture must always install dummy_task_package with this version.
+    """
+
     from fractal_server.tasks.collection import (
         _create_venv_install_package,
         load_manifest,
@@ -126,7 +132,9 @@ async def install_dummy_packages(tmp777_session_path, dummy_task_package):
 
     venv_path = tmp777_session_path("dummy")
     venv_path.mkdir(exist_ok=True, parents=True)
-    task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())
+    task_pkg = _TaskCollectPip(
+        package=dummy_task_package.as_posix(), python_version="3.8"
+    )
 
     python_bin, package_root = await _create_venv_install_package(
         path=venv_path,
@@ -164,17 +172,20 @@ def relink_python_interpreter(collect_packages):
         task = collect_packages[0]
         python = Path(task.command.split()[0])
         orig_python = os.readlink(python)
-        logger.warning(f"RELINK: {python=} -> {orig_python}")
+        logger.warning(f"RELINK: Original status: {python=} -> {orig_python}")
         python.unlink()
         python.symlink_to("/usr/bin/python3")
+
         logger.warning(
-            f"RELINK: {python=} -> {os.readlink(python.as_posix())}"
+            f"RELINK: Updated status: {python=} -> "
+            f"{os.readlink(python.as_posix())}"
         )
         yield
         python.unlink()
         python.symlink_to(orig_python)
         logger.warning(
-            f"RELINK: tear down {python=} -> {os.readlink(python.as_posix())}"
+            f"RELINK: Final status: {python=} -> "
+            f"{os.readlink(python.as_posix())}"
         )
     else:
         yield
