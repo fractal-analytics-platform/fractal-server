@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 from devtools import debug
 
+from .fixtures_tasks import execute_command
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 from fractal_server.tasks.collection import _init_venv
@@ -47,7 +48,8 @@ def test_task_collect_model(dummy_task_package):
     assert tc.package_path == dummy_task_package
 
 
-async def test_init_venv(tmp_path):
+@pytest.mark.parametrize("python_version", [None, "3.10"])
+async def test_init_venv(tmp_path, python_version):
     """
     GIVEN a path and a python version
     WHEN _init_venv() is called
@@ -57,9 +59,14 @@ async def test_init_venv(tmp_path):
     venv_path.mkdir(exist_ok=True, parents=True)
     logger_name = "fractal"
 
-    python_bin = await _init_venv(
-        path=venv_path, python_version="3.8", logger_name=logger_name
-    )
+    try:
+        python_bin = await _init_venv(
+            path=venv_path,
+            logger_name=logger_name,
+            python_version=python_version,
+        )
+    except ValueError as e:
+        pytest.xfail(reason=str(e))
 
     assert venv_path.exists()
     assert (venv_path / "venv").exists()
@@ -67,6 +74,9 @@ async def test_init_venv(tmp_path):
     assert (venv_path / "venv/bin/pip").exists()
     assert python_bin.exists()
     assert python_bin == venv_path / "venv/bin/python"
+    if python_version:
+        version = await execute_command(f"{python_bin} --version")
+        assert python_version in version
 
 
 async def test_pip_install(tmp_path):
@@ -82,9 +92,7 @@ async def test_pip_install(tmp_path):
     venv_path.mkdir(exist_ok=True, parents=True)
     logger_name = "fractal"
 
-    await _init_venv(
-        path=venv_path, python_version="3.8", logger_name=logger_name
-    )
+    await _init_venv(path=venv_path, logger_name=logger_name)
     location = await _pip_install(
         venv_path=venv_path,
         task_pkg=_TaskCollectPip(package=PACKAGE, version=VERSION),

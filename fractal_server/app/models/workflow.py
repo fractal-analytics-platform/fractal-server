@@ -13,6 +13,8 @@ from sqlmodel import Relationship
 
 from ...common.schemas.workflow import _WorkflowBase
 from ...common.schemas.workflow import _WorkflowTaskBase
+from ...config import get_settings
+from ...syringe import Inject
 from ..db import AsyncSession
 from .task import Task
 
@@ -83,10 +85,15 @@ class WorkflowTask(_WorkflowTaskBase, table=True):
         return self.task.parallelization_level
 
     @property
-    def executor(self) -> Union[str, None]:
-        if "executor" in (self.meta or {}):
-            return self.meta["executor"]
-        return self.task.executor
+    def executor(self) -> str:
+        try:
+            return self.meta["executor"]  # type: ignore
+        except (KeyError, TypeError):
+            if self.task.executor:
+                return self.task.executor
+            else:
+                settings = Inject(get_settings)
+                return settings.RUNNER_DEFAULT_EXECUTOR
 
     def assemble_args(self, extra: Dict[str, Any] = None):
         """
