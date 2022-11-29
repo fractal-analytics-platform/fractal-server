@@ -126,7 +126,9 @@ async def install_dummy_packages(tmp777_session_path, dummy_task_package):
 
     venv_path = tmp777_session_path("dummy")
     venv_path.mkdir(exist_ok=True, parents=True)
-    task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())
+    task_pkg = _TaskCollectPip(
+        package=dummy_task_package.as_posix(), python_version="3.8"
+    )
 
     python_bin, package_root = await _create_venv_install_package(
         path=venv_path,
