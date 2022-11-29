@@ -15,12 +15,21 @@ from os import environ
 import pytest
 from devtools import debug
 
+from fractal_server.app.runner import _backends
+
+
 PREFIX = "/api/v1"
 
 environ["RUNNER_MONITORING"] = "0"
 
+backends_available = list(_backends.keys())
+
 
 @pytest.mark.slow
+@pytest.mark.parametrize(
+    "backend",
+    backends_available,
+)
 async def test_full_workflow(
     client,
     MockCurrentUser,
@@ -29,7 +38,15 @@ async def test_full_workflow(
     collect_packages,
     project_factory,
     dataset_factory,
+    backend,
+    request,
 ):
+
+    debug(f"Testing with {backend=}")
+    if backend == "slurm":
+        request.getfixturevalue("monkey_slurm")
+        request.getfixturevalue("relink_python_interpreter")
+        request.getfixturevalue("slurm_config")
 
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
@@ -89,6 +106,19 @@ async def test_full_workflow(
         project_dict = res.json()
 
         # CREATE WORKFLOW
+
+        # Workaround: for one backend, create a dummy workflow, so that the
+        # actual one will have ID=2 (rather than 1). In this way, the workflow
+        # folders for the two test runs (with the two different backends) won't
+        # have the same name
+        if backend == "slurm":
+            _ = await client.post(
+                f"{PREFIX}/workflow/",
+                json=dict(
+                    name="this workflow is just created as a workaround",
+                    project_id=project_dict["id"],
+                ),
+            )
         res = await client.post(
             f"{PREFIX}/workflow/",
             json=dict(name="test workflow", project_id=project_dict["id"]),
