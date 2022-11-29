@@ -204,7 +204,7 @@ def relink_python_interpreter(collect_packages, tmp_path: Path):
         task_python.unlink()
         task_python.symlink_to(orig_python)
         logger.warning(
-            f"RELINK: Final status: {task_python=} -> "
+            f"RELINK: Restore original: {task_python=} -> "
             f"{os.readlink(task_python.as_posix())}"
         )
     else:
