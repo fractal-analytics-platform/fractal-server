@@ -1,9 +1,30 @@
 import json
+import os
 import shlex
+from pathlib import Path
 from typing import List
 
 import pytest
 from devtools import debug
+
+
+def is_responsive(container_name):
+    try:
+        import subprocess
+
+        exec_cmd = ["docker", "ps", "-f", f"name={container_name}"]
+        out = subprocess.run(exec_cmd, check=True, capture_output=True)
+        if out.stdout.decode("utf-8") is not None:
+            return True
+    except ConnectionError:
+        return False
+
+
+@pytest.fixture(scope="session")
+def docker_compose_file(pytestconfig):
+    return os.path.join(
+        Path().absolute(), "tests/slurm_docker_images", "docker-compose.yml"
+    )
 
 
 @pytest.fixture(scope="session")
@@ -20,29 +41,7 @@ def slurm_config(override_settings):
 
 
 @pytest.fixture
-def slurm_container(event_loop) -> str:
-    """
-    Return the name of the container running `*slurmmaster`
-    """
-    import subprocess
-
-    try:
-        out = subprocess.run(["docker", "ps"], check=True, capture_output=True)
-        output = out.stdout.decode("utf-8")
-        slurm_master = next(
-            ln for ln in output.splitlines() if "slurmmaster" in ln
-        )
-        container_name = slurm_master.split()[-1]
-        debug(container_name)
-        return container_name
-    except (RuntimeError, StopIteration):
-        pytest.xfail(reason="No Slurm master container found")
-    except FileNotFoundError:
-        pytest.xfail(reason="Docker not found on host")
-
-
-@pytest.fixture
-def monkey_slurm(monkeypatch, request):
+def monkey_slurm(monkeypatch, docker_compose_project_name, docker_services):
     """
     Monkeypatch Popen to execute overridden command in container
 
@@ -51,15 +50,16 @@ def monkey_slurm(monkeypatch, request):
     container is present, xfail.
     """
     import subprocess
-    import shutil
 
     OrigPopen = subprocess.Popen
 
-    if not shutil.which("sbatch"):
-        OVERRIDE_CMD = ["sudo", "sbatch"]
-        slurm_container = request.getfixturevalue("slurm_container")
-    else:
-        OVERRIDE_CMD = []
+    slurm_container = docker_compose_project_name + "_slurm-docker-master_1"
+
+    docker_services.wait_until_responsive(
+        timeout=20.0,
+        pause=0.5,
+        check=lambda: is_responsive(slurm_container),
+    )
 
     class PopenLog:
         calls: List[OrigPopen] = []
@@ -77,8 +77,14 @@ def monkey_slurm(monkeypatch, request):
             cmd = args[0]
             assert isinstance(cmd, list)
 
-            if cmd[0] in OVERRIDE_CMD:
-                cmd = ["docker", "exec", slurm_container] + cmd
+            container_cmd = [" ".join(str(c) for c in cmd)]
+            cmd = [
+                "docker",
+                "exec",
+                slurm_container,
+                "bash",
+                "-c",
+            ] + container_cmd
             super().__init__(cmd, *args[1:], **kwargs)
             debug(shlex.join(self.args))
             PopenLog.add_call(self)

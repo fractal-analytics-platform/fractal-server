@@ -80,7 +80,7 @@ def test_unit_serial_task_assembly(tmp_path):
 
     assert data["dummy"] == f"dummy {INDEX}"
     # output file exists
-    output_file = tmp_path / f"{INDEX}.json"
+    output_file = tmp_path / f"{INDEX}.result.json"
     with output_file.open("r") as fout:
         data = json.load(fout)
 

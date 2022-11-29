@@ -48,6 +48,7 @@ pre-commit = "^2.19.0"
 coverage = {extras = ["toml"], version = "^6.4.4"}
 mypy = "^0.982"
 pytest-subprocess = "^1.4.2"
+pytest-docker = {extras = ["docker-compose-v1"], version = "^1.0.1"}
 
 
 [build-system]
