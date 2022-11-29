@@ -15,7 +15,10 @@ from os import environ
 import pytest
 from devtools import debug
 
+from .fixtures_server import get_patched_settings
 from fractal_server.app.runner import _backends
+from fractal_server.config import get_settings
+from fractal_server.syringe import Inject
 
 
 PREFIX = "/api/v1"
@@ -26,10 +29,7 @@ backends_available = list(_backends.keys())
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize(
-    "backend",
-    backends_available,
-)
+@pytest.mark.parametrize("backend", backends_available)
 async def test_full_workflow(
     client,
     MockCurrentUser,
@@ -41,6 +41,19 @@ async def test_full_workflow(
     backend,
     request,
 ):
+
+    # Override RUNNER_BACKEND variable
+    settings = get_patched_settings(tmp_path)
+    settings.RUNNER_BACKEND = backend
+    if backend == "slurm":
+        settings.FRACTAL_SLURM_CONFIG_FILE = (
+            testdata_path / "slurm_config.json"
+        )
+
+    def _get_settings():
+        return settings
+
+    Inject.override(get_settings, _get_settings)
 
     debug(f"Testing with {backend=}")
     if backend == "slurm":
@@ -105,20 +118,21 @@ async def test_full_workflow(
         debug(res.json())
         project_dict = res.json()
 
-        # CREATE WORKFLOW
-
         # Workaround: for one backend, create a dummy workflow, so that the
         # actual one will have ID=2 (rather than 1). In this way, the workflow
         # folders for the two test runs (with the two different backends) won't
         # have the same name
-        if backend == "slurm":
+        num_empty_workflows = backends_available.index(backend)
+        for ind in range(num_empty_workflows):
             _ = await client.post(
                 f"{PREFIX}/workflow/",
                 json=dict(
-                    name="this workflow is just created as a workaround",
+                    name=f"workaround - {ind}",
                     project_id=project_dict["id"],
                 ),
             )
+
+        # CREATE WORKFLOW
         res = await client.post(
             f"{PREFIX}/workflow/",
             json=dict(name="test workflow", project_id=project_dict["id"]),
