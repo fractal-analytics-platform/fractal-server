@@ -148,6 +148,8 @@ def _process_workflow(
     output_dataset_metadata (Dict):
         the output metadata
     """
+    if isinstance(worker_init, str):
+        worker_init = worker_init.split("\n")
 
     with FractalSlurmExecutor(
         debug=True,
@@ -182,9 +184,7 @@ async def process_workflow(
     logger_name: str,
     workflow_dir: Path,
     username: str = None,
-    worker_init: Optional[
-        str
-    ] = None,  # this is only to match to _parsl interface
+    worker_init: Optional[str] = None,
 ) -> Dict[str, Any]:
     output_dataset_metadata = await async_wrap(_process_workflow)(
         workflow=workflow,
