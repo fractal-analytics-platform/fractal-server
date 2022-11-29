@@ -167,6 +167,16 @@ def relink_python_interpreter(collect_packages):
         logger.warning(f"RELINK: {python=} -> {orig_python}")
         python.unlink()
         python.symlink_to("/usr/bin/python3")
+
+        # FIXME start debugging block
+        import subprocess
+
+        result = subprocess.check_output(
+            "ls -asl /usr/bin/python3", shell=True
+        )
+        logger.warning(f"FIXME {result}")
+        # End debugging block
+
         logger.warning(
             f"RELINK: {python=} -> {os.readlink(python.as_posix())}"
         )
