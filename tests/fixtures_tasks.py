@@ -164,32 +164,20 @@ def relink_python_interpreter(collect_packages):
         task = collect_packages[0]
         python = Path(task.command.split()[0])
         orig_python = os.readlink(python)
-        logger.warning(f"RELINK: {python=} -> {orig_python}")
+        logger.warning(f"RELINK: Original status: {python=} -> {orig_python}")
         python.unlink()
         python.symlink_to("/usr/bin/python3")
 
-        # FIXME start debugging block
-        import subprocess
-
-        result = subprocess.check_output(
-            ["ls", "-asl", "/usr/bin/python3"], shell=True
-        )
-        logger.warning(f"FIXME {result}")
-
-        result2 = subprocess.check_output(
-            ["/usr/bin/python3", "-c", "'import pydantic'"], shell=True
-        )
-        logger.warning(f"FIXME {result2}")
-        # End debugging block
-
         logger.warning(
-            f"RELINK: {python=} -> {os.readlink(python.as_posix())}"
+            f"RELINK: Updated status: {python=} -> "
+            f"{os.readlink(python.as_posix())}"
         )
         yield
         python.unlink()
         python.symlink_to(orig_python)
         logger.warning(
-            f"RELINK: tear down {python=} -> {os.readlink(python.as_posix())}"
+            f"RELINK: Final status: {python=} -> "
+            f"{os.readlink(python.as_posix())}"
         )
     else:
         yield
