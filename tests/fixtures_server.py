@@ -229,7 +229,7 @@ async def MockCurrentUser(app, db):
             defaults = dict(
                 email=self.email,
                 hashed_password="fake_hashed_password",
-                slurm_user="slurm_user",
+                slurm_user="test01",
             )
             if self.user_kwargs:
                 defaults.update(self.user_kwargs)
