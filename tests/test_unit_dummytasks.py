@@ -146,7 +146,7 @@ def test_dummy_parallel_direct_call(tmp_path):
     for out_file in out_files:
         with out_file.open("r") as fin:
             data = json.load(fin)
-        assert out_file.name == f'{data["component"]}.json'
+        assert out_file.name == f'{data["component"]}.result.json'
         assert data["message"] == FIRST_TEST_MESSAGE
 
 

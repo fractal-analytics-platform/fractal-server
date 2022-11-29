@@ -11,6 +11,7 @@ from ....config import get_settings
 from ....syringe import Inject
 from ...models import Workflow
 from ...models import WorkflowTask
+from .._common import get_workflow_file_paths
 from .._common import recursive_task_submission
 from ..common import async_wrap
 from ..common import TaskParameters
@@ -118,7 +119,14 @@ def set_slurm_config(
     additional_setup_lines.append(
         f"#SBATCH --job-name {task.task.name.replace(' ', '_')}"
     )
-    return dict(additional_setup_lines=additional_setup_lines)
+
+    workflow_files = get_workflow_file_paths(
+        workflow_dir=workflow_dir, task_order=task.order
+    )
+    return dict(
+        additional_setup_lines=additional_setup_lines,
+        job_file_fmt=workflow_files.component_file_fmt,
+    )
 
 
 def _process_workflow(
