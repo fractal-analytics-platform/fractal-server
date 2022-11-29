@@ -48,6 +48,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         self,
         username: Optional[str] = None,
         script_dir: Optional[Path] = None,
+        common_script_lines: Optional[List[str]] = None,
         *args,
         **kwargs,
     ):
@@ -57,9 +58,13 @@ class FractalSlurmExecutor(SlurmExecutor):
         Args:
             username:
                 shell username that runs the `sbatch` command
+            common_script_lines:
+                arbitrary script lines that will always be included in the
+                sbatch script
         """
         super().__init__(*args, **kwargs)
         self.username = username
+        self.common_script_lines = common_script_lines or []
         if not script_dir:
             settings = Inject(get_settings)
             script_dir = settings.RUNNER_ROOT_DIR  # type: ignore
@@ -151,20 +156,30 @@ class FractalSlurmExecutor(SlurmExecutor):
         # NOTE: In SLURM, `%j` is the placeholder for the job_id.
         outpath: Optional[Path] = None,
         errpath: Optional[Path] = None,
-        additional_setup_lines=[],
+        additional_setup_lines=None,
     ) -> str:
+        additional_setup_lines = additional_setup_lines or []
         outpath = outpath or self.get_stdout_filename()
         errpath = errpath or self.get_stderr_filename()
-        script_lines = [
-            "#!/bin/sh",
+
+        sbatch_lines = [
             f"#SBATCH --output={outpath}",
             f"#SBATCH --error={errpath}",
-            *additional_setup_lines,
-            # Export the slurm script directory so that nodes can find the
-            # pickled payload
-            f"export CFUT_DIR={self.script_dir}",
-            shlex.join(["srun", *cmdline]),
+        ] + [
+            ln
+            for ln in additional_setup_lines + self.common_script_lines
+            if ln.startswith("#SBATCH")
         ]
+
+        non_sbatch_lines = [
+            ln
+            for ln in additional_setup_lines + self.common_script_lines
+            if not ln.startswith("#SBATCH")
+        ] + [f"export CFUT_DIR={self.script_dir}"]
+
+        cmd = [shlex.join(["srun", *cmdline])]
+
+        script_lines = ["#!/bin/sh"] + sbatch_lines + non_sbatch_lines + cmd
         return "\n".join(script_lines)
 
     def map(

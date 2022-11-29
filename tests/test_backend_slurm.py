@@ -148,9 +148,16 @@ def test_sbatch_script_slurm_config(
 
     # Assign a non existent username so that the sudo call will fail with a
     # FileNotFoundError. This will allow inspection of the sbatch script file.
+    sbatch_init_lines = [
+        "export FOO=bar",
+        "#SBATCH --common-non-existent-option",
+    ]
     with FractalSlurmExecutor(
-        username="NO_USER", script_dir=tmp_path
+        username="NO_USER",
+        script_dir=tmp_path,
+        common_script_lines=sbatch_init_lines,
     ) as executor:
+
         try:
             recursive_task_submission(
                 executor=executor,
@@ -166,7 +173,7 @@ def test_sbatch_script_slurm_config(
             sbatch_file = e.cmd[-1]
             debug(sbatch_file)
         with open(sbatch_file, "r") as f:
-            sbatch_script_lines = f.readlines()
+            sbatch_script_lines = f.read().split("\n")
             debug(sbatch_script_lines)
 
         expected_mem = f"mem={slurm_config[slurm_config_key]['mem']}"
@@ -184,6 +191,8 @@ def test_sbatch_script_slurm_config(
         assert len(job_name.split()[-1]) == len(task.name)
 
         sbatch_script = "".join(sbatch_script_lines)
+        for line in sbatch_init_lines:
+            assert line in sbatch_script_lines
         debug(sbatch_script)
         if "task_parallel" in sbatch_script:
             output_line = next(
