@@ -125,9 +125,7 @@ def set_slurm_config(
     )
     return dict(
         additional_setup_lines=additional_setup_lines,
-        job_file_fmt=workflow_files.component_file_fmt,
-        job_stdout=workflow_files.out,
-        job_stderr=workflow_files.err,
+        job_file_prefix=workflow_files.file_prefix,
     )
 
 

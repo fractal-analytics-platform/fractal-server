@@ -59,9 +59,7 @@ class WorkflowFiles:
         self.out = self.workflow_dir / f"{self.prefix}.out"
         self.err = self.workflow_dir / f"{self.prefix}.err"
         self.metadiff = self.workflow_dir / f"{self.prefix}.metadiff.json"
-        self.component_file_fmt = self.workflow_dir.as_posix() + (
-            f"/{self.task_order}_par_{{args}}{{suffix}}"
-        )
+        self.file_prefix = str(self.task_order)
 
 
 @lru_cache()
