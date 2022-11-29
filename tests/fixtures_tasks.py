@@ -7,6 +7,7 @@ from typing import Optional
 import pytest
 from pydantic import BaseModel
 
+from .fixtures_server import check_python_has_venv
 from .fixtures_server import HAS_LOCAL_SBATCH
 
 
@@ -122,6 +123,9 @@ async def install_dummy_packages(tmp777_session_path, dummy_task_package):
     NOTE that the system python3 on the slurm containers (AKA /usr/bin/python3)
     is 3.8, and relink_python_interpreter will map to it. Therefore this
     fixture must always install dummy_task_package with this version.
+
+    Also note that the check_python_has_venv function will verify that
+    python3.8 (to be used for the tasks environment) has the venv module.
     """
 
     from fractal_server.tasks.collection import (
@@ -129,6 +133,10 @@ async def install_dummy_packages(tmp777_session_path, dummy_task_package):
         load_manifest,
     )
     from fractal_server.tasks.collection import _TaskCollectPip
+
+    python_test_path = tmp777_session_path("check_python_has_venv")
+    python_test_path.mkdir(exist_ok=True, parents=True)
+    check_python_has_venv("python3.8", python_test_path)
 
     venv_path = tmp777_session_path("dummy")
     venv_path.mkdir(exist_ok=True, parents=True)
@@ -158,7 +166,7 @@ async def collect_packages(db, install_dummy_packages):
 
 
 @pytest.fixture(scope="function")
-def relink_python_interpreter(collect_packages):
+def relink_python_interpreter(collect_packages, tmp_path: Path):
     """
     Rewire python executable in tasks
     """
@@ -166,6 +174,9 @@ def relink_python_interpreter(collect_packages):
     import logging
 
     if not HAS_LOCAL_SBATCH:
+
+        check_python_has_venv("/usr/bin/python3", tmp_path)
+
         logger = logging.getLogger("RELINK")
         logger.setLevel(logging.INFO)
 
