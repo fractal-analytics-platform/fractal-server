@@ -190,6 +190,10 @@ class FractalSlurmExecutor(SlurmExecutor):
         chunksize: int = 1,
         additional_setup_lines: Optional[List[str]] = None,
         job_file_fmt: Optional[str] = None,
+        # NOTE: the following parameters are here only for compatibility of
+        # the interface, but should never be used.
+        job_stderr=None,
+        job_stdout=None,
     ):
         """
         Returns an iterator equivalent to map(fn, iter), passing
