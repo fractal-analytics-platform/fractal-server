@@ -118,6 +118,12 @@ async def dummy_task_package_invalid_manifest(testdata_path, tmp_path) -> Path:
 
 @pytest.fixture(scope="session")
 async def install_dummy_packages(tmp777_session_path, dummy_task_package):
+    """
+    NOTE that the system python3 on the slurm containers (AKA /usr/bin/python3)
+    is 3.8, and relink_python_interpreter will map to it. Therefore this
+    fixture must always install dummy_task_package with this version.
+    """
+
     from fractal_server.tasks.collection import (
         _create_venv_install_package,
         load_manifest,
