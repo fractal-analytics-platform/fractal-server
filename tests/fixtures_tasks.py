@@ -149,6 +149,7 @@ async def install_dummy_packages(tmp777_session_path, dummy_task_package):
         task_pkg=task_pkg,
         logger_name="test",
     )
+
     task_list = load_manifest(
         package_root=package_root,
         python_bin=python_bin,
@@ -175,28 +176,32 @@ def relink_python_interpreter(collect_packages, tmp_path: Path):
 
     if not HAS_LOCAL_SBATCH:
 
-        check_python_has_venv("/usr/bin/python3", tmp_path)
-
         logger = logging.getLogger("RELINK")
         logger.setLevel(logging.INFO)
 
         task = collect_packages[0]
-        python = Path(task.command.split()[0])
-        orig_python = os.readlink(python)
-        logger.warning(f"RELINK: Original status: {python=} -> {orig_python}")
-        python.unlink()
-        python.symlink_to("/usr/bin/python3")
-
+        task_python = Path(task.command.split()[0])
+        orig_python = os.readlink(task_python)
         logger.warning(
-            f"RELINK: Updated status: {python=} -> "
-            f"{os.readlink(python.as_posix())}"
+            f"RELINK: Original status: {task_python=} -> {orig_python}"
         )
-        yield
-        python.unlink()
-        python.symlink_to(orig_python)
+        task_python.unlink()
+        task_python.symlink_to("/usr/bin/python3")
         logger.warning(
-            f"RELINK: Final status: {python=} -> "
-            f"{os.readlink(python.as_posix())}"
+            f"RELINK: Updated status: {task_python=} -> "
+            f"{os.readlink(task_python.as_posix())}"
+        )
+
+        check_python_has_venv(
+            os.readlink(task_python), tmp_path / "check_python_has_venv"
+        )
+
+        yield
+        task_python.unlink()
+        task_python.symlink_to(orig_python)
+        logger.warning(
+            f"RELINK: Final status: {task_python=} -> "
+            f"{os.readlink(task_python.as_posix())}"
         )
     else:
         yield
