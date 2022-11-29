@@ -190,8 +190,13 @@ def test_sbatch_script_slurm_config(
                 (line for line in sbatch_script_lines if "--output" in line),
                 False,
             ).strip()
+            error_line = next(
+                (line for line in sbatch_script_lines if "--error" in line),
+                False,
+            ).strip()
 
             # output and error filenames for parallel tasks should contain the
             # `{task_order}_par_{component}` tag
             debug(output_line)
             assert "_par_" in output_line
+            assert "_par_" in error_line
