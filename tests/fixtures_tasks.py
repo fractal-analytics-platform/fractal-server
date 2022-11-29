@@ -170,6 +170,7 @@ async def collect_packages(db, install_dummy_packages):
 def relink_python_interpreter(collect_packages, tmp_path: Path):
     """
     Rewire python executable in tasks
+
     """
     import os
     import logging
@@ -186,7 +187,10 @@ def relink_python_interpreter(collect_packages, tmp_path: Path):
             f"RELINK: Original status: {task_python=} -> {orig_python}"
         )
         task_python.unlink()
-        task_python.symlink_to("/usr/bin/python3")
+        # NOTE that the docker container in the CI only has python3.8
+        # installed, therefore we explicitly hardcode this version here, to
+        # make debugging easier
+        task_python.symlink_to("/usr/bin/python3.8")
         logger.warning(
             f"RELINK: Updated status: {task_python=} -> "
             f"{os.readlink(task_python.as_posix())}"
