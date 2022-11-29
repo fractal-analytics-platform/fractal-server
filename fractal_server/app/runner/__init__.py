@@ -37,27 +37,6 @@ try:
 except ModuleNotFoundError as e:
     _backend_errors["slurm"] = e
 
-# FIXME
-# We need to wrap the use of Inject so as to make it lazy, otherwise the import
-# will likely happen before any dependency override
-_settings = Inject(get_settings)
-
-try:
-    process_workflow = _backends[_settings.RUNNER_BACKEND]
-except KeyError:
-    if _settings.DEPLOYMENT_TYPE in ["testing", "development"]:
-        raise _backend_errors.get(_settings.RUNNER_BACKEND)
-    else:
-
-        def no_function(*args, **kwarsg):
-            error = _backend_errors.get(_settings.RUNNER_BACKEND)
-            raise NotImplementedError(
-                f"Runner backend {_settings.RUNNER_BACKEND} not implemented"
-                f"\n{error}"
-            )
-
-        process_workflow = no_function
-
 
 async def submit_workflow(
     *,
@@ -83,6 +62,27 @@ async def submit_workflow(
         exist, a new dataset with that name is created and within it a new
         resource with the same name.
     """
+
+    # FIXME
+    # We need to wrap the use of Inject so as to make it lazy, otherwise the
+    # import will likely happen before any dependency override
+    _settings = Inject(get_settings)
+
+    try:
+        process_workflow = _backends[_settings.RUNNER_BACKEND]
+    except KeyError:
+        if _settings.DEPLOYMENT_TYPE in ["testing", "development"]:
+            raise _backend_errors.get(_settings.RUNNER_BACKEND)
+        else:
+
+            def no_function(*args, **kwarsg):
+                error = _backend_errors.get(_settings.RUNNER_BACKEND)
+                raise NotImplementedError(
+                    f"Runner backend {_settings.RUNNER_BACKEND} not"
+                    f"implemented\n{error}"
+                )
+
+            process_workflow = no_function
 
     input_paths = input_dataset.paths
     output_path = output_dataset.paths[0]
