@@ -222,7 +222,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                     args=sanitize_string(args[0]), suffix=".out"
                 ),
                 job_stderr=job_file_fmt.format(
-                    args=sanitize_string(args[0]), suffix=".out"
+                    args=sanitize_string(args[0]), suffix=".err"
                 ),
             )
             for args in zip(*iterables)
