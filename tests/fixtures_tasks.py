@@ -172,12 +172,12 @@ def relink_python_interpreter(collect_packages):
         import subprocess
 
         result = subprocess.check_output(
-            "ls -asl /usr/bin/python3", shell=True
+            ["ls", "-asl", "/usr/bin/python3"], shell=True
         )
         logger.warning(f"FIXME {result}")
 
         result2 = subprocess.check_output(
-            "/usr/bin/python3 -c 'import pydantic'", shell=True
+            ["/usr/bin/python3", "-c", "'import pydantic'"], shell=True
         )
         logger.warning(f"FIXME {result2}")
         # End debugging block
