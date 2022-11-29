@@ -85,7 +85,7 @@ def dummy_parallel(
     # Write output to out_fullpath
     safe_component = component.replace(" ", "_").replace("/", "_")
     safe_component = safe_component.replace(".", "_")
-    out_fullpath = output_path.parent / f"{safe_component}.json"
+    out_fullpath = output_path.parent / f"{safe_component}.result.json"
     with open(out_fullpath, "w") as fout:
         json.dump(payload, fout, indent=2, sort_keys=True)
 

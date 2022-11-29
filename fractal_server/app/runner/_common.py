@@ -59,9 +59,9 @@ class WorkflowFiles:
         self.out = self.workflow_dir / f"{self.prefix}.out"
         self.err = self.workflow_dir / f"{self.prefix}.err"
         self.metadiff = self.workflow_dir / f"{self.prefix}.metadiff.json"
-        # self.slurm_submit = self.workflow_dir / f"{prefix}.slurm.submit"
-        # self.slurm_out = self.workflow_dir / f"{self.prefix}.slurm.out"
-        # self.slurm_err = self.workflow_dir / f"{self.prefix}.slurm.err"
+        self.component_file_fmt = self.workflow_dir.as_posix() + (
+            f"/{self.task_order}_par_{{args}}{{suffix}}"
+        )
 
 
 @lru_cache()
