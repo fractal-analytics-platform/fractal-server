@@ -24,6 +24,7 @@ from uuid import uuid4
 
 import pytest
 from asgi_lifespan import LifespanManager
+from devtools import debug
 from fastapi import FastAPI
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -40,6 +41,33 @@ except ModuleNotFoundError:
     DB_ENGINE = "sqlite"
 
 HAS_LOCAL_SBATCH = bool(shutil.which("sbatch"))
+
+
+def check_python_has_venv(python_path: str, temp_path: Path):
+    """
+    This function checks that we can safely use a certain python interpreter,
+    namely
+    1. It exists;
+    2. It has the venv module installed.
+    """
+
+    import subprocess
+    import shlex
+
+    cmd = f"{python_path} -m venv {temp_path.as_posix()}"
+    p = subprocess.run(
+        shlex.split(cmd),
+        capture_output=True,
+    )
+    if p.returncode != 0:
+        debug(cmd)
+        debug(p.stdout.decode("UTF-8"))
+        debug(p.stderr.decode("UTF-8"))
+        raise RuntimeError(
+            p.stderr.decode("UTF-8"),
+            f"Hint: is the venv module installed for {python_path}? "
+            f'Try running "{cmd}".',
+        )
 
 
 def get_patched_settings(temp_path: Path):
@@ -69,7 +97,10 @@ def get_patched_settings(temp_path: Path):
     # This variable is set to work with the system interpreter within a docker
     # container. If left unset it defaults to `sys.executable`
     if not HAS_LOCAL_SBATCH:
-        settings.SLURM_PYTHON_WORKER_INTERPRETER = "python3"
+        settings.SLURM_PYTHON_WORKER_INTERPRETER = "/usr/bin/python3"
+        check_python_has_venv(
+            "/usr/bin/python3", temp_path / "check_python_has_venv"
+        )
 
     settings.FRACTAL_SLURM_CONFIG_FILE = temp_path / "slurm_config.json"
 
