@@ -49,7 +49,6 @@ async def test_full_workflow(
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
-        # request.getfixturevalue("slurm_config")
 
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
