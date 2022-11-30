@@ -134,11 +134,14 @@ def override_settings(tmp777_session_path):
 
 @pytest.fixture(scope="function")
 def override_settings_factory():
-    get_settings_orig = Inject.pop(get_settings)
+    # NOTE: using a mutable variable so that we can modify it from within the
+    # inner function
+    get_settings_orig = []
 
     def _overrride_settings_factory(**kwargs):
-
+        # NOTE: extract patched settings *before* popping out the patch!
         settings = Inject(get_settings)
+        get_settings_orig.append(Inject.pop(get_settings))
         for k, v in kwargs.items():
             setattr(settings, k, v)
 
@@ -147,8 +150,11 @@ def override_settings_factory():
 
         Inject.override(get_settings, _get_settings)
 
-    yield _overrride_settings_factory
-    Inject.override(get_settings, get_settings_orig)
+    try:
+        yield _overrride_settings_factory
+    finally:
+        if get_settings_orig:
+            Inject.override(get_settings, get_settings_orig[0])
 
 
 @pytest.fixture
