@@ -18,6 +18,10 @@ from .common import TaskParameters
 from .common import write_args_file
 
 
+class TaskExecutionError(RuntimeError):
+    pass
+
+
 def sanitize_component(value: str) -> str:
     """
     Remove {" ", "/", "."} form a string, e.g. going from
@@ -77,10 +81,6 @@ def get_workflow_file_paths(
     return WorkflowFiles(
         workflow_dir=workflow_dir, task_order=task_order, component=component
     )
-
-
-class TaskExecutionError(RuntimeError):
-    pass
 
 
 def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
