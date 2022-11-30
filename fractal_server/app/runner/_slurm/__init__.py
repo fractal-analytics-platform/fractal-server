@@ -125,7 +125,7 @@ def set_slurm_config(
     )
     return dict(
         additional_setup_lines=additional_setup_lines,
-        job_file_fmt=workflow_files.component_file_fmt,
+        job_file_prefix=workflow_files.file_prefix,
     )
 
 
@@ -138,9 +138,7 @@ def _process_workflow(
     logger_name: str,
     workflow_dir: Path,
     username: str = None,
-    worker_init: Optional[
-        str
-    ] = None,  # this is only to match to _parsl interface
+    worker_init: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     TODO:
@@ -150,12 +148,15 @@ def _process_workflow(
     output_dataset_metadata (Dict):
         the output metadata
     """
+    if isinstance(worker_init, str):
+        worker_init = worker_init.split("\n")
 
     with FractalSlurmExecutor(
         debug=True,
         keep_logs=True,
         username=username,
         script_dir=workflow_dir,
+        common_script_lines=worker_init,
     ) as executor:
         output_task_pars_fut = recursive_task_submission(
             executor=executor,
@@ -183,9 +184,7 @@ async def process_workflow(
     logger_name: str,
     workflow_dir: Path,
     username: str = None,
-    worker_init: Optional[
-        str
-    ] = None,  # this is only to match to _parsl interface
+    worker_init: Optional[str] = None,
 ) -> Dict[str, Any]:
     output_dataset_metadata = await async_wrap(_process_workflow)(
         workflow=workflow,
