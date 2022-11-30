@@ -71,17 +71,11 @@ def check_python_has_venv(python_path: str, temp_path: Path):
         logging.warning(
             "check_python_has_venv({python_path=}, {temp_path=}) failed."
         )
-        if "ensurepip" in p.stdout.decode("UTF-8"):
-            raise RuntimeError(
-                p.stderr.decode("UTF-8"),
-                f"Hint: is the venv module installed for {python_path}? "
-                f'Try running "{cmd}".',
-            )
-        else:
-            # This failed for other reasons (likely some permission error), but
-            # not because of the missing venv module (which is what is being
-            # tested here).
-            pass
+        raise RuntimeError(
+            p.stderr.decode("UTF-8"),
+            f"Hint: is the venv module installed for {python_path}? "
+            f'Try running "{cmd}".',
+        )
 
 
 def get_patched_settings(temp_path: Path):
@@ -102,7 +96,10 @@ def get_patched_settings(temp_path: Path):
     else:
         raise ValueError
 
-    settings.FRACTAL_ROOT = temp_path
+    settings.FRACTAL_ROOT = temp_path / "fractal_root"
+    settings.FRACTAL_ROOT.mkdir(parents=True, exist_ok=True)
+    debug(settings.FRACTAL_ROOT)
+    settings.FRACTAL_ROOT.chmod(0o777)
     settings.RUNNER_ROOT_DIR = temp_path / "artifacts"
     settings.RUNNER_ROOT_DIR.mkdir(parents=True, exist_ok=True)
     settings.RUNNER_ROOT_DIR.chmod(0o777)
@@ -124,7 +121,7 @@ def get_patched_settings(temp_path: Path):
 
 @pytest.fixture(scope="session", autouse=True)
 def override_settings(tmp777_session_path):
-    tmp_path = tmp777_session_path("fractal_root")
+    tmp_path = tmp777_session_path("server_folder")
 
     settings = get_patched_settings(tmp_path)
 
@@ -136,6 +133,31 @@ def override_settings(tmp777_session_path):
         yield settings
     finally:
         Inject.pop(get_settings)
+
+
+@pytest.fixture(scope="function")
+def override_settings_factory():
+    # NOTE: using a mutable variable so that we can modify it from within the
+    # inner function
+    get_settings_orig = []
+
+    def _overrride_settings_factory(**kwargs):
+        # NOTE: extract patched settings *before* popping out the patch!
+        settings = Inject(get_settings)
+        get_settings_orig.append(Inject.pop(get_settings))
+        for k, v in kwargs.items():
+            setattr(settings, k, v)
+
+        def _get_settings():
+            return settings
+
+        Inject.override(get_settings, _get_settings)
+
+    try:
+        yield _overrride_settings_factory
+    finally:
+        if get_settings_orig:
+            Inject.override(get_settings, get_settings_orig[0])
 
 
 @pytest.fixture
