@@ -71,17 +71,11 @@ def check_python_has_venv(python_path: str, temp_path: Path):
         logging.warning(
             "check_python_has_venv({python_path=}, {temp_path=}) failed."
         )
-        if "ensurepip" in p.stdout.decode("UTF-8"):
-            raise RuntimeError(
-                p.stderr.decode("UTF-8"),
-                f"Hint: is the venv module installed for {python_path}? "
-                f'Try running "{cmd}".',
-            )
-        else:
-            # This failed for other reasons (likely some permission error), but
-            # not because of the missing venv module (which is what is being
-            # tested here).
-            pass
+        raise RuntimeError(
+            p.stderr.decode("UTF-8"),
+            f"Hint: is the venv module installed for {python_path}? "
+            f'Try running "{cmd}".',
+        )
 
 
 def get_patched_settings(temp_path: Path):
