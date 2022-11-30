@@ -1,28 +1,14 @@
 {
     "cpu-low": {
-        "partition": "main",
-        "mem": "1g",
-        "nodes": "1",
-        "ntasks-per-node": "1",
-        "cpus-per-task": "1"
+        "partition": "main"
     },
     "cpu-mid": {
-        "partition": "main",
-        "mem": "15g",
-        "nodes": "1",
-        "ntasks-per-node": "4",
-        "cpus-per-task": "1"
+        "partition": "main"
     },
     "cpu-high": {
-        "partition": "main",
-        "mem": "61g",
-        "nodes": "1",
-        "ntasks-per-node": "16",
-        "cpus-per-task": "1"
+        "partition": "main"
     },
     "gpu": {
-        "partition": "gpu",
-        "mem": "61g",
-        "nodes": "1"
+        "partition": "gpu"
     }
 }
