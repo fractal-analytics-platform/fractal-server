@@ -167,7 +167,7 @@ async def collect_packages(db, install_dummy_packages):
 
 
 @pytest.fixture(scope="function")
-def relink_python_interpreter(collect_packages, tmp_path: Path):
+def relink_python_interpreter(collect_packages):
     """
     Rewire python executable in tasks
 
