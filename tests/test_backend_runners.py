@@ -98,3 +98,14 @@ async def test_runner(
         tk_dummy.name,
         f"{tk_dummy_parallel.name}: ['0', '1', '2']",
     ]
+
+    # Check that the correct files are present in workflow_dir
+    files = [f.name for f in tmp777_path.glob("*")]
+    assert "0.args.json" in files
+    assert "0.err" in files
+    assert "0.out" in files
+    assert "0.metadiff.json" in files
+    if backend == "slurm":
+        slurm_job_id = 2  # This may change if you change the test
+        assert f"0.slurm.{slurm_job_id}.err" in files
+        assert f"0.slurm.{slurm_job_id}.out" in files
