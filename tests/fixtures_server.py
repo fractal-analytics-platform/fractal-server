@@ -55,7 +55,7 @@ def check_python_has_venv(python_path: str, temp_path: Path):
     import shlex
     import os
 
-    os.chmod(temp_path.as_posix(), 0o777)
+    os.chmod(temp_path.parent.as_posix(), 0o777)
 
     cmd = f"{python_path} -m venv {temp_path.as_posix()}"
     p = subprocess.run(
