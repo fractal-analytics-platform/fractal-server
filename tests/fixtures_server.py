@@ -53,11 +53,9 @@ def check_python_has_venv(python_path: str, temp_path: Path):
 
     import subprocess
     import shlex
-    import os
 
-    current_umask = os.umask(0)
-    temp_path.mkdir(parents=True, mode=0o777, exist_ok=True)
-    _ = os.umask(current_umask)
+    temp_path.mkdir(parents=True, exist_ok=True)
+    temp_path.chmod(0o777)
 
     cmd = f"{python_path} -m venv {temp_path.as_posix()}"
     p = subprocess.run(
