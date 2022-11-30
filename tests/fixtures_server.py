@@ -132,6 +132,25 @@ def override_settings(tmp777_session_path):
         Inject.pop(get_settings)
 
 
+@pytest.fixture(scope="function")
+def override_settings_factory():
+    get_settings_orig = Inject.pop(get_settings)
+
+    def _overrride_settings_factory(**kwargs):
+
+        settings = Inject(get_settings)
+        for k, v in kwargs.items():
+            setattr(settings, k, v)
+
+        def _get_settings():
+            return settings
+
+        Inject.override(get_settings, _get_settings)
+
+    yield _overrride_settings_factory
+    Inject.override(get_settings, get_settings_orig)
+
+
 @pytest.fixture
 def unset_deployment_type():
     """
