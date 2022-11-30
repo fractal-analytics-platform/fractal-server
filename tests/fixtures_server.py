@@ -55,8 +55,8 @@ def check_python_has_venv(python_path: str, temp_path: Path):
     import shlex
 
     temp_path.parent.mkdir(parents=True, exist_ok=True)
-    temp_path.mkdir(parents=True, exist_ok=True)
     temp_path.parent.chmod(0o777)
+    temp_path.mkdir(parents=True, exist_ok=True)
     temp_path.chmod(0o777)
 
     cmd = f"{python_path} -m venv {temp_path.as_posix()}"
@@ -68,11 +68,20 @@ def check_python_has_venv(python_path: str, temp_path: Path):
         debug(cmd)
         debug(p.stdout.decode("UTF-8"))
         debug(p.stderr.decode("UTF-8"))
-        raise RuntimeError(
-            p.stderr.decode("UTF-8"),
-            f"Hint: is the venv module installed for {python_path}? "
-            f'Try running "{cmd}".',
+        logging.warning(
+            "check_python_has_venv({python_path=}, {temp_path=}) failed."
         )
+        if "ensurepip" in p.stdout.decode("UTF-8"):
+            raise RuntimeError(
+                p.stderr.decode("UTF-8"),
+                f"Hint: is the venv module installed for {python_path}? "
+                f'Try running "{cmd}".',
+            )
+        else:
+            # This failed for other reasons (likely some permission error), but
+            # not because of the missing venv module (which is what is being
+            # tested here).
+            pass
 
 
 def get_patched_settings(temp_path: Path):
