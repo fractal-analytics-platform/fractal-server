@@ -37,27 +37,20 @@ try:
 except ModuleNotFoundError as e:
     _backend_errors["slurm"] = e
 
-try:
-    process_workflow = _backends[Inject(get_settings).RUNNER_BACKEND]
-except KeyError:
-    if Inject(get_settings).DEPLOYMENT_TYPE in ["testing", "development"]:
+
+def get_process_workflow():
+    settings = Inject(get_settings)
+    try:
+        process_workflow = _backends[settings.RUNNER_BACKEND]
+    except KeyError:
         raise _backend_errors.get(
-            Inject(get_settings).RUNNER_BACKEND,
+            settings.RUNNER_BACKEND,
             RuntimeError(
                 "Unknown error during collection of backend "
-                f"`{Inject(get_settings).RUNNER_BACKEND}`"
+                f"`{settings.RUNNER_BACKEND}`"
             ),
         )
-    else:
-
-        def no_function(*args, **kwarsg):
-            error = _backend_errors.get(Inject(get_settings).RUNNER_BACKEND)
-            raise NotImplementedError(
-                f"Runner backend {Inject(get_settings).RUNNER_BACKEND} "
-                f"not implemented\n{error}"
-            )
-
-        process_workflow = no_function
+    return process_workflow
 
 
 async def submit_workflow(
@@ -108,6 +101,7 @@ async def submit_workflow(
         formatter=logging.Formatter("%(asctime)s; %(levelname)s; %(message)s"),
     )
 
+    process_workflow = get_process_workflow()
     logger.info(f"fractal_server.__VERSION__: {__VERSION__}")
     logger.info(f"RUNNER_BACKEND: {settings.RUNNER_BACKEND}")
     logger.info(f"worker_init: {worker_init}")
