@@ -84,11 +84,11 @@ class FractalSlurmExecutor(SlurmExecutor):
 
     def get_in_filename(self, arg: str, prefix: Optional[str] = None) -> Path:
         prefix = prefix or "cfut"
-        return self.script_dir / f"{prefix}.slurm.in.{arg}.pickle"
+        return self.script_dir / f"{prefix}.in.{arg}.pickle"
 
     def get_out_filename(self, arg: str, prefix: Optional[str] = None) -> Path:
         prefix = prefix or "cfut"
-        return self.script_dir / f"{prefix}.slurm.out.{arg}.pickle"
+        return self.script_dir / f"{prefix}.out.{arg}.pickle"
 
     def get_slurm_script_filename(
         self, arg: str, prefix: Optional[str] = None
