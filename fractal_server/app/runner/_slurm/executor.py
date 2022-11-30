@@ -101,7 +101,9 @@ class FractalSlurmExecutor(SlurmExecutor):
         Write batch script
 
         Returns:
-            batch_script_path:
+            sbatch_script:
+                The content of the batch script
+            dest:
                 The path to the batch script
         """
         with dest.open("w") as f:
