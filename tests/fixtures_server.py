@@ -96,7 +96,10 @@ def get_patched_settings(temp_path: Path):
     else:
         raise ValueError
 
-    settings.FRACTAL_ROOT = temp_path
+    settings.FRACTAL_ROOT = temp_path / "fractal_root"
+    settings.FRACTAL_ROOT.mkdir(parents=True, exist_ok=True)
+    debug(settings.FRACTAL_ROOT)
+    settings.FRACTAL_ROOT.chmod(0o777)
     settings.RUNNER_ROOT_DIR = temp_path / "artifacts"
     settings.RUNNER_ROOT_DIR.mkdir(parents=True, exist_ok=True)
     settings.RUNNER_ROOT_DIR.chmod(0o777)
@@ -118,7 +121,7 @@ def get_patched_settings(temp_path: Path):
 
 @pytest.fixture(scope="session", autouse=True)
 def override_settings(tmp777_session_path):
-    tmp_path = tmp777_session_path("fractal_root")
+    tmp_path = tmp777_session_path("server_folder")
 
     settings = get_patched_settings(tmp_path)
 
