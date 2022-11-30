@@ -24,6 +24,7 @@ from uuid import uuid4
 
 import pytest
 from asgi_lifespan import LifespanManager
+from devtools import debug
 from fastapi import FastAPI
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -40,6 +41,47 @@ except ModuleNotFoundError:
     DB_ENGINE = "sqlite"
 
 HAS_LOCAL_SBATCH = bool(shutil.which("sbatch"))
+
+
+def check_python_has_venv(python_path: str, temp_path: Path):
+    """
+    This function checks that we can safely use a certain python interpreter,
+    namely
+    1. It exists;
+    2. It has the venv module installed.
+    """
+
+    import subprocess
+    import shlex
+
+    temp_path.parent.mkdir(parents=True, exist_ok=True)
+    temp_path.parent.chmod(0o777)
+    temp_path.mkdir(parents=True, exist_ok=True)
+    temp_path.chmod(0o777)
+
+    cmd = f"{python_path} -m venv {temp_path.as_posix()}"
+    p = subprocess.run(
+        shlex.split(cmd),
+        capture_output=True,
+    )
+    if p.returncode != 0:
+        debug(cmd)
+        debug(p.stdout.decode("UTF-8"))
+        debug(p.stderr.decode("UTF-8"))
+        logging.warning(
+            "check_python_has_venv({python_path=}, {temp_path=}) failed."
+        )
+        if "ensurepip" in p.stdout.decode("UTF-8"):
+            raise RuntimeError(
+                p.stderr.decode("UTF-8"),
+                f"Hint: is the venv module installed for {python_path}? "
+                f'Try running "{cmd}".',
+            )
+        else:
+            # This failed for other reasons (likely some permission error), but
+            # not because of the missing venv module (which is what is being
+            # tested here).
+            pass
 
 
 def get_patched_settings(temp_path: Path):
@@ -69,7 +111,10 @@ def get_patched_settings(temp_path: Path):
     # This variable is set to work with the system interpreter within a docker
     # container. If left unset it defaults to `sys.executable`
     if not HAS_LOCAL_SBATCH:
-        settings.SLURM_PYTHON_WORKER_INTERPRETER = "python3"
+        settings.SLURM_PYTHON_WORKER_INTERPRETER = "/usr/bin/python3"
+        check_python_has_venv(
+            "/usr/bin/python3", temp_path / "check_python_has_venv"
+        )
 
     settings.FRACTAL_SLURM_CONFIG_FILE = temp_path / "slurm_config.json"
 
@@ -198,7 +243,7 @@ async def MockCurrentUser(app, db):
             defaults = dict(
                 email=self.email,
                 hashed_password="fake_hashed_password",
-                slurm_user="slurm_user",
+                slurm_user="test01",
             )
             if self.user_kwargs:
                 defaults.update(self.user_kwargs)
