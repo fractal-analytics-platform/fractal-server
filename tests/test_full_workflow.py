@@ -45,6 +45,10 @@ async def test_full_workflow(
     # Override RUNNER_BACKEND variable
     settings = get_patched_settings(tmp777_path)
     settings.RUNNER_BACKEND = backend
+    if backend == "slurm":
+        settings.FRACTAL_SLURM_CONFIG_FILE = (
+            testdata_path / "slurm_config.json"
+        )
 
     def _get_settings():
         return settings
@@ -55,7 +59,7 @@ async def test_full_workflow(
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
-        request.getfixturevalue("slurm_config")
+        # request.getfixturevalue("slurm_config")
 
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
