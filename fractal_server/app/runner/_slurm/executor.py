@@ -242,9 +242,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         else:
             job_file_fmt = f"_temp_{random_string()}"
 
-        from devtools import debug
-
-        debug(job_file_fmt)
         fs = [
             self.submit(
                 fn,
