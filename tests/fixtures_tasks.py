@@ -196,10 +196,6 @@ def relink_python_interpreter(collect_packages, tmp_path: Path):
             f"{os.readlink(task_python.as_posix())}"
         )
 
-        check_python_has_venv(
-            os.readlink(task_python), tmp_path / "check_python_has_venv"
-        )
-
         yield
         task_python.unlink()
         task_python.symlink_to(orig_python)
