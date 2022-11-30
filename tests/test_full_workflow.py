@@ -45,10 +45,6 @@ async def test_full_workflow(
     # Override RUNNER_BACKEND variable
     settings = get_patched_settings(tmp777_path)
     settings.RUNNER_BACKEND = backend
-    if backend == "slurm":
-        settings.FRACTAL_SLURM_CONFIG_FILE = (
-            testdata_path / "slurm_config.json"
-        )
 
     def _get_settings():
         return settings
