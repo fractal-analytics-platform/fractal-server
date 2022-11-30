@@ -74,27 +74,27 @@ class FractalSlurmExecutor(SlurmExecutor):
         self, arg: str = "%j", prefix: Optional[str] = None
     ) -> Path:
         prefix = prefix or "slurmpy.stdout"
-        return self.script_dir / f"{prefix}.{arg}.out"
+        return self.script_dir / f"{prefix}.slurm.{arg}.out"
 
     def get_stderr_filename(
         self, arg: str = "%j", prefix: Optional[str] = None
     ) -> Path:
         prefix = prefix or "slurmpy.stdout"
-        return self.script_dir / f"{prefix}.{arg}.err"
+        return self.script_dir / f"{prefix}.slurm.{arg}.err"
 
     def get_in_filename(self, arg: str, prefix: Optional[str] = None) -> Path:
         prefix = prefix or "cfut"
-        return self.script_dir / f"{prefix}.in.{arg}.pickle"
+        return self.script_dir / f"{prefix}.slurm.in.{arg}.pickle"
 
     def get_out_filename(self, arg: str, prefix: Optional[str] = None) -> Path:
         prefix = prefix or "cfut"
-        return self.script_dir / f"{prefix}.out.{arg}.pickle"
+        return self.script_dir / f"{prefix}.slurm.out.{arg}.pickle"
 
     def get_slurm_script_filename(
         self, arg: str, prefix: Optional[str] = None
     ) -> Path:
         prefix = prefix or "_temp"
-        return self.script_dir / f"{prefix}.{arg}.sbatch"
+        return self.script_dir / f"{prefix}.slurm.{arg}.sbatch"
 
     def write_batch_script(self, sbatch_script: str, dest: Path) -> Path:
         """
