@@ -137,13 +137,15 @@ def override_settings(tmp777_session_path):
 
 @pytest.fixture(scope="function")
 def override_settings_factory():
+    from fractal_server.config import Settings
+
     # NOTE: using a mutable variable so that we can modify it from within the
     # inner function
     get_settings_orig = []
 
     def _overrride_settings_factory(**kwargs):
         # NOTE: extract patched settings *before* popping out the patch!
-        settings = Inject(get_settings)
+        settings = Settings(**Inject(get_settings).dict())
         get_settings_orig.append(Inject.pop(get_settings))
         for k, v in kwargs.items():
             setattr(settings, k, v)
