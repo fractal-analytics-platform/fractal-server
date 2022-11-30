@@ -34,7 +34,7 @@ async def test_full_workflow(
     client,
     MockCurrentUser,
     testdata_path,
-    tmp_path,
+    tmp777_path,
     collect_packages,
     project_factory,
     dataset_factory,
@@ -43,7 +43,7 @@ async def test_full_workflow(
 ):
 
     # Override RUNNER_BACKEND variable
-    settings = get_patched_settings(tmp_path)
+    settings = get_patched_settings(tmp777_path)
     settings.RUNNER_BACKEND = backend
     if backend == "slurm":
         settings.FRACTAL_SLURM_CONFIG_FILE = (
@@ -107,7 +107,7 @@ async def test_full_workflow(
 
         res = await client.post(
             f"{PREFIX}/project/{project_id}/{output_dataset['id']}",
-            json=dict(path=tmp_path.as_posix(), glob_pattern="out.json"),
+            json=dict(path=tmp777_path.as_posix(), glob_pattern="out.json"),
         )
         out_resource = res.json()
         debug(out_resource)
