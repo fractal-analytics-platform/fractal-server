@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter
 from fastapi import Depends
 
@@ -17,7 +19,7 @@ async def get_job(
     job_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-) -> ApplyWorkflow:
+) -> Optional[ApplyWorkflow]:
     # FIXME acl
 
     job = await db.get(ApplyWorkflow, job_id)
