@@ -179,3 +179,105 @@ async def test_full_workflow(
         data = res.json()
         debug(data)
         assert "dummy" in data["meta"]
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("backend", backends_available)
+async def test_failing_workflow(
+    client,
+    MockCurrentUser,
+    testdata_path,
+    tmp777_path,
+    collect_packages,
+    project_factory,
+    dataset_factory,
+    backend,
+    request,
+    override_settings_factory,
+):
+
+    override_settings_factory(
+        RUNNER_BACKEND=backend,
+        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
+    )
+
+    debug(f"Testing with {backend=}")
+    if backend == "slurm":
+        request.getfixturevalue("monkey_slurm")
+        request.getfixturevalue("relink_python_interpreter")
+
+    async with MockCurrentUser(persist=True) as user:
+        project = await project_factory(user)
+        debug(project)
+        project_id = project.id
+        input_dataset = await dataset_factory(
+            project, name="input", type="image", read_only=True
+        )
+        input_dataset_id = input_dataset.id
+
+        # CREATE OUTPUT DATASET AND RESOURCE
+
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/",
+            json=dict(
+                name="output dataset",
+                type="json",
+            ),
+        )
+        debug(res.json())
+        assert res.status_code == 201
+        output_dataset = res.json()
+        output_dataset_id = output_dataset["id"]
+
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/{output_dataset['id']}",
+            json=dict(path=tmp777_path.as_posix(), glob_pattern="out.json"),
+        )
+        out_resource = res.json()
+        debug(out_resource)
+        assert res.status_code == 201
+
+        # CREATE WORKFLOW
+        res = await client.post(
+            f"{PREFIX}/workflow/",
+            json=dict(name="test workflow", project_id=project.id),
+        )
+        debug(res.json())
+        assert res.status_code == 201
+        workflow_dict = res.json()
+        workflow_id = workflow_dict["id"]
+
+        # Add a dummy task
+        res = await client.post(
+            f"{PREFIX}/workflow/{workflow_id}/add-task/",
+            json=dict(
+                task_id=collect_packages[0].id, args={"raise_error": True}
+            ),
+        )
+        debug(res.json())
+        assert res.status_code == 201
+
+        # EXECUTE WORKFLOW
+
+        payload = dict(
+            project_id=project_id,
+            input_dataset_id=input_dataset_id,
+            output_dataset_id=output_dataset_id,
+            workflow_id=workflow_id,
+            overwrite_input=False,
+        )
+        debug(payload)
+        res = await client.post(
+            f"{PREFIX}/project/apply/",
+            json=payload,
+        )
+        job_data = res.json()
+        debug(job_data)
+        assert res.status_code == 202
+        job_id = job_data["id"]
+
+        res = await client.get(f"{PREFIX}/job/{job_id}")
+        assert res.status_code == 200
+        debug(res)
+
+    assert False
