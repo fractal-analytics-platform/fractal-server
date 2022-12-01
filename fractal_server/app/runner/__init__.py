@@ -9,11 +9,14 @@ from ... import __VERSION__
 from ...config import get_settings
 from ...syringe import Inject
 from ...utils import set_logger
+from ..models import ApplyWorkflow
 from ..models import Dataset
+from ..models import JobStatusType
 from ..models import Workflow
 from ._process import process_workflow as process_process_workflow
 from .common import auto_output_dataset  # noqa: F401
 from .common import close_job_logger
+from .common import TaskExecutionError
 from .common import validate_workflow_compatibility  # noqa: F401
 
 
@@ -62,7 +65,7 @@ async def submit_workflow(
     job_id: int,
     username: Optional[str] = None,
     worker_init: Optional[str] = None,
-):
+) -> None:
     """
     Prepares a workflow and applies it to a dataset
 
@@ -77,6 +80,9 @@ async def submit_workflow(
         exist, a new dataset with that name is created and within it a new
         resource with the same name.
     """
+    job: ApplyWorkflow = await db.get(ApplyWorkflow, job_id)  # type: ignore
+    if not job:
+        raise ValueError("Cannot fetch job")
 
     input_paths = input_dataset.paths
     output_path = output_dataset.paths[0]
@@ -110,19 +116,29 @@ async def submit_workflow(
     logger.info(f"output_path: {output_path}")
     logger.info(f"input metadata: {input_dataset.meta}")
     logger.info(f"START workflow {workflow.name}")
-    output_dataset.meta = await process_workflow(
-        workflow=workflow,
-        input_paths=input_paths,
-        output_path=output_path,
-        input_metadata=input_dataset.meta,
-        username=username,
-        workflow_dir=WORKFLOW_DIR,
-        logger_name=logger_name,
-        worker_init=worker_init,
-    )
+    job.status = JobStatusType.RUNNING
+    await db.merge(job)
+    try:
+        output_dataset.meta = await process_workflow(
+            workflow=workflow,
+            input_paths=input_paths,
+            output_path=output_path,
+            input_metadata=input_dataset.meta,
+            username=username,
+            workflow_dir=WORKFLOW_DIR,
+            logger_name=logger_name,
+            worker_init=worker_init,
+        )
 
-    logger.info(f'END workflow "{workflow.name}"')
-    close_job_logger(logger)
-    db.add(output_dataset)
+        logger.info(f'END workflow "{workflow.name}"')
+        close_job_logger(logger)
+        db.add(output_dataset)
 
-    await db.commit()
+        job.status = JobStatusType.DONE
+        await db.merge(job)
+        await db.commit()
+
+    except TaskExecutionError:
+        job.status = JobStatusType.FAILED
+        await db.merge(job)
+        await db.commit()

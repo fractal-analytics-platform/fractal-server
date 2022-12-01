@@ -17,10 +17,11 @@ from .project import Project
 from .workflow import Workflow
 
 
-class StatusType(str, Enum):
+class JobStatusType(str, Enum):
     SUBMITTED = "submitted"
-    PENDING = "pending"
+    RUNNING = "running"
     DONE = "done"
+    FAILED = "failed"
 
 
 class ApplyWorkflow(ApplyWorkflowBase, table=True):
@@ -50,7 +51,7 @@ class ApplyWorkflow(ApplyWorkflowBase, table=True):
         nullable=False,
         sa_column=Column(DateTime(timezone=True)),
     )
-    status: StatusType = StatusType.SUBMITTED
+    status: JobStatusType = JobStatusType.SUBMITTED
 
     @property
     def job_root_path(self) -> Path:
