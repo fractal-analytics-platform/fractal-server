@@ -52,6 +52,7 @@ class ApplyWorkflow(ApplyWorkflowBase, table=True):
         sa_column=Column(DateTime(timezone=True)),
     )
     status: JobStatusType = JobStatusType.SUBMITTED
+    log: Optional[str] = None
 
     @property
     def job_root_path(self) -> Path:

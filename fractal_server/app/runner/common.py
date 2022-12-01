@@ -19,7 +19,8 @@ from ..models.task import Task
 
 
 class TaskExecutionError(RuntimeError):
-    pass
+    task_id: Optional[int] = None
+    task_order: Optional[int] = None
 
 
 class TaskParameterEncoder(JSONEncoder):

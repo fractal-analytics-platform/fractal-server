@@ -158,9 +158,15 @@ def call_single_task(
     )
 
     logger.debug(f"executing task {task.order=}")
-    _call_command_wrapper(
-        cmd, stdout=workflow_files.out, stderr=workflow_files.err
-    )
+
+    try:
+        _call_command_wrapper(
+            cmd, stdout=workflow_files.out, stderr=workflow_files.err
+        )
+    except TaskExecutionError as e:
+        e.task_order = task.order
+        e.task_id = task.task.id
+        raise e
 
     # NOTE:
     # This assumes that the new metadata is printed to stdout
@@ -217,9 +223,15 @@ def call_single_parallel_task(
     )
 
     logger.debug(f"executing task {task.order=}")
-    _call_command_wrapper(
-        cmd, stdout=workflow_files.out, stderr=workflow_files.err
-    )
+
+    try:
+        _call_command_wrapper(
+            cmd, stdout=workflow_files.out, stderr=workflow_files.err
+        )
+    except TaskExecutionError as e:
+        e.task_order = task.order
+        e.task_id = task.task.id
+        raise e
 
 
 def call_parallel_task(
