@@ -138,7 +138,11 @@ async def submit_workflow(
         await db.merge(job)
         await db.commit()
 
-    except TaskExecutionError:
+    except TaskExecutionError as e:
         job.status = JobStatusType.FAILED
+        job.log = (
+            f"TASK ERROR: Task id: {e.task_id}, {e.task_order=}\n"
+            f"TRACEBACK:\n{str(e)}"
+        )
         await db.merge(job)
         await db.commit()
