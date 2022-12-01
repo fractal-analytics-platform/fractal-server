@@ -278,6 +278,6 @@ async def test_failing_workflow(
 
         res = await client.get(f"{PREFIX}/job/{job_id}")
         assert res.status_code == 200
-        debug(res)
-
-    assert False
+        job_status_data = res.json()
+        debug(job_status_data)
+        assert job_status_data["status"] == "failed"
