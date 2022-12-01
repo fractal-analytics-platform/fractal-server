@@ -28,6 +28,7 @@ backends_available = list(_backends.keys())
 @pytest.mark.slow
 @pytest.mark.parametrize("backend", backends_available)
 async def test_full_workflow(
+    db,
     client,
     MockCurrentUser,
     testdata_path,
@@ -156,7 +157,6 @@ async def test_full_workflow(
         assert res.status_code == 201
 
         # EXECUTE WORKFLOW
-
         payload = dict(
             project_id=project_id,
             input_dataset_id=input_dataset_id,
@@ -169,8 +169,15 @@ async def test_full_workflow(
             f"{PREFIX}/project/apply/",
             json=payload,
         )
-        debug(res.json())
+        job_data = res.json()
+        debug(job_data)
         assert res.status_code == 202
+
+        res = await client.get(f"{PREFIX}/job/{job_data['id']}")
+        assert res.status_code == 200
+        job_status_data = res.json()
+        debug(job_status_data)
+        assert job_status_data["status"] == "done"
 
         # Verify output
         res = await client.get(
