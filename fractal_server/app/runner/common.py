@@ -22,6 +22,17 @@ class TaskExecutionError(RuntimeError):
     task_id: Optional[int] = None
     task_order: Optional[int] = None
 
+    def __init__(
+        self,
+        *args,
+        task_id: Optional[int] = None,
+        task_order: Optional[int] = None,
+        **kwargs,
+    ):
+        super().__init__(self, *args, **kwargs)
+        self.task_id = task_id
+        self.task_order = task_order
+
 
 class TaskParameterEncoder(JSONEncoder):
     def default(self, value):
