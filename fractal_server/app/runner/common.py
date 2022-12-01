@@ -18,6 +18,10 @@ from ..models import Project
 from ..models.task import Task
 
 
+class TaskExecutionError(RuntimeError):
+    pass
+
+
 class TaskParameterEncoder(JSONEncoder):
     def default(self, value):
         if isinstance(value, Path):

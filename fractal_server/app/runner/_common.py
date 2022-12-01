@@ -14,12 +14,9 @@ from typing import List
 from typing import Optional
 
 from ..models import WorkflowTask
+from .common import TaskExecutionError
 from .common import TaskParameters
 from .common import write_args_file
-
-
-class TaskExecutionError(RuntimeError):
-    pass
 
 
 def sanitize_component(value: str) -> str:
