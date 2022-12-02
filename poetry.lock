@@ -255,7 +255,7 @@ name = "dill"
 version = "0.3.6"
 description = "serialize all of python"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.7"
 
 [package.extras]
@@ -458,7 +458,7 @@ name = "globus-sdk"
 version = "3.14.0"
 description = "Globus SDK for Python"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6"
 
 [package.dependencies]
@@ -728,7 +728,7 @@ name = "parsl"
 version = "2022.11.28"
 description = "Simple data dependent workflows in Python"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.7.0"
 
 [package.dependencies]
@@ -842,7 +842,7 @@ name = "psutil"
 version = "5.9.4"
 description = "Cross-platform lib for process and system monitoring in Python."
 category = "main"
-optional = false
+optional = true
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [package.extras]
@@ -861,7 +861,7 @@ name = "py"
 version = "1.11.0"
 description = "library with cross-python path, ini-parsing, io, code, log facilities"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
@@ -1062,7 +1062,7 @@ name = "pyzmq"
 version = "24.0.1"
 description = "Python bindings for 0MQ"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6"
 
 [package.dependencies]
@@ -1106,7 +1106,7 @@ name = "setproctitle"
 version = "1.3.2"
 description = "A Python module to customize the process title"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.7"
 
 [package.extras]
@@ -1242,7 +1242,7 @@ name = "tblib"
 version = "1.7.0"
 description = "Traceback serialization library."
 category = "main"
-optional = false
+optional = true
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
@@ -1274,7 +1274,7 @@ name = "typeguard"
 version = "2.13.3"
 description = "Run-time type checker for Python"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.5.3"
 
 [package.extras]
@@ -1365,7 +1365,7 @@ slurm = ["clusterfutures"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "ac7f24fdc81ad7930343aa6ef0a40e4474c80e9812c1c7c1659f11a918efe2cd"
+content-hash = "edaeeee389105afa321c80b4f36632738e5bf2cfc2e468f8db9ebbafa25b23ff"
 
 [metadata.files]
 aiosqlite = [
