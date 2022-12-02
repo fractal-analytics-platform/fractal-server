@@ -1,20 +1,26 @@
 """
-parsl-based runner backend for fractal-server
-
-This backend (originally developed to integrate SlurmProvider and
-HighThroughputExecutor from parsl) is currently not supported. Here are some
-notes in case we want to add it to fractal-server in the future (e.g. to make
-use of other providers):
-    1. Official parsl cannot be used in production (at least not with
-    HighThroughputExecutor), because of an issue related to
-    uvicorn+multiprocessing. More details at
-    https://github.com/fractal-analytics-platform/fractal-server/issues/94. The
-    workaround for us was to use our own parsl fork.
-    2. If work on the line of https://github.com/Parsl/parsl/pull/2459
-    progresses, it would be interesting to try to use parsl executors as
-    executors conforming to the standard interface (which are already mostly
-    supported as drop-in options in our runner).
+(deprecated) parsl-based runner backend for fractal-server
 """
+
+raise NotImplementedError(
+    "This backend (originally developed to integrate SlurmProvider and "
+    "HighThroughputExecutor from parsl) is currently not supported. Here "
+    "are some notes in case we want to add it to fractal-server in the "
+    "future (e.g. to make use of other providers):\n1. Official parsl "
+    "cannot be used in production (at least not with "
+    "HighThroughputExecutor), because of an issue related to "
+    "uvicorn+multiprocessing. More details at https://github.com/fractal-"
+    "analytics-platform/fractal-server/issues/94. The workaround for us "
+    "was to use our own parsl fork.\n2. A parsl-backend-based stress test "
+    "of fractal-server failed, and we never explored the reasons. Details "
+    "at https://github.com/fractal-analytics-platform/fractal-server/"
+    "issues/224.\n3. If work on the line of https://github.com/Parsl/parsl"
+    "/pull/2459 progresses, it would be interesting to try to use parsl "
+    "executors as executors conforming to the standard interface (which "
+    "are already mostly supported as drop-in options in our runner)."
+)
+
+
 import logging
 from concurrent.futures import Future
 from pathlib import Path
@@ -41,11 +47,6 @@ from ..common import TaskParameters
 from ._functions import _collect_results_and_assemble_history
 from ._functions import _this_parallel_component
 from ._setup import load_parsl_config
-
-
-raise NotImplementedError(
-    "parsl backend is not supported (more details in " "module docstring"
-)
 
 
 def get_app_future_result(app_future: AppFuture):
