@@ -280,4 +280,5 @@ async def test_failing_workflow(
         job_status_data = res.json()
         debug(job_status_data)
         assert job_status_data["status"] == "failed"
+        assert "id: None" not in job_status_data["log"]
         # TODO add check on log content.
