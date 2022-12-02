@@ -22,19 +22,20 @@ def is_responsive(container_name):
 @pytest.fixture(scope="session")
 def docker_compose_file(pytestconfig, testdata_path: Path):
 
-    from fractal_server.config import get_settings
+    import fractal_server
     import tarfile
-    import os.path
 
-    def make_tarfile(output_filename, source_dir):
-        with tarfile.open(output_filename, "w:gz") as tar:
-            tar.add(source_dir, arcname=os.path.basename(source_dir))
-
-    settings = get_settings()
-    make_tarfile(
-        testdata_path / "slurm_docker_images/node/fractal_server_local.tar.gz",
-        settings.FRACTAL_ROOT,
+    # This same path is hardocded in the Dockerfile of the SLURM node.
+    CODE_ROOT = Path(fractal_server.__file__).parent.parent
+    TAR_FILE = (
+        testdata_path / "slurm_docker_images/node/fractal_server_local.tar.gz"
     )
+    TAR_ROOT = CODE_ROOT.name
+    with tarfile.open(TAR_FILE, "w:gz") as tar:
+        tar.add(CODE_ROOT, arcname=TAR_ROOT, recursive=False)
+        for name in ["pyproject.toml", "fractal_server"]:
+            f = CODE_ROOT / name
+            tar.add(f, arcname=f.relative_to(CODE_ROOT.parent))
 
     return str(testdata_path / "slurm_docker_images/docker-compose.yml")
 
