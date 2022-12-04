@@ -14,6 +14,7 @@ from ...models import WorkflowTask
 from .._common import get_workflow_file_paths
 from .._common import recursive_task_submission
 from ..common import async_wrap
+from ..common import TaskExecutionError
 from ..common import TaskParameters
 from .executor import FractalSlurmExecutor
 
@@ -170,7 +171,13 @@ def _process_workflow(
             workflow_dir=workflow_dir,
             submit_setup_call=set_slurm_config,
         )
-    output_task_pars = output_task_pars_fut.result()
+    try:
+        output_task_pars = output_task_pars_fut.result()
+    except Exception as e:
+        from devtools import debug
+
+        debug(e)
+        raise TaskExecutionError(*e.args)
     output_dataset_metadata = output_task_pars.metadata
     return output_dataset_metadata
 

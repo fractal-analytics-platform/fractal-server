@@ -351,7 +351,9 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         sbatch_script = self.compose_sbatch_script(
             cmdline=shlex.split(
-                f"{python_worker_interpreter} -m cfut.remote {job.workerid}"
+                f"{python_worker_interpreter}"
+                " -m fractal_server.app.runner._slurm.remote "
+                f"{job.slurm_input}"
             ),
             outpath=job.stdout,
             errpath=job.stderr,
