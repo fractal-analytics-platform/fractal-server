@@ -14,10 +14,20 @@ python code received via pickled files on a cluster node.
 """
 import os
 import sys
-from pickle import PicklingError
 from typing import Optional
 
 import cloudpickle
+
+
+class ExceptionProxy:
+    def __init__(self, exc_type, tb, *args, **kwargs):
+        self.exc_type = exc_type
+        self.tb = tb
+        self.args = args
+        self.kwargs = kwargs
+
+    def to_exception(self):
+        return self.exc_type(self.tb, *self.args, **self.kwargs)
 
 
 def worker(in_fname: str, extra_import_paths: Optional[str] = None):
@@ -33,11 +43,19 @@ def worker(in_fname: str, extra_import_paths: Optional[str] = None):
         result = True, fun(*args, **kwargs)
         out = cloudpickle.dumps(result)
     except Exception as e:
-        try:
-            result = False, e
-            out = cloudpickle.dumps(result)
-        except PicklingError:
-            result = False, e.__traceback__
+        import traceback
+
+        typ, value, tb = sys.exc_info()
+        tb = tb.tb_next
+        exc_proxy = ExceptionProxy(
+            typ,
+            traceback.format_exception(typ, value, tb),
+            e.args,
+            **e.__dict__
+        )
+
+        result = False, exc_proxy
+        out = cloudpickle.dumps(result)
 
     out_fname = in_fname.replace(".in.", ".out.")
     tempfile = out_fname + ".tmp"
