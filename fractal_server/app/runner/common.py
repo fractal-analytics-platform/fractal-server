@@ -29,7 +29,7 @@ class TaskExecutionError(RuntimeError):
         task_order: Optional[int] = None,
         **kwargs,
     ):
-        super().__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.task_id = task_id
         self.task_order = task_order
 
