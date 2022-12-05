@@ -67,16 +67,25 @@ async def submit_workflow(
     """
     Prepares a workflow and applies it to a dataset
 
-    Arguments
-    ---------
-    db: (AsyncSession):
-        Asynchronous database session
-    output_dataset (Dataset | str) :
-        the destination dataset of the workflow. If not provided, overwriting
-        of the input dataset is implied and an error is raised if the dataset
-        is in read only mode. If a string is passed and the dataset does not
-        exist, a new dataset with that name is created and within it a new
-        resource with the same name.
+    Args:
+        workflow:
+            Workflow being applied
+        input_dataset:
+            Input dataset
+        output_dataset:
+            the destination dataset of the workflow. If not provided,
+            overwriting of the input dataset is implied and an error is raised
+            if the dataset is in read only mode. If a string is passed and the
+            dataset does not exist, a new dataset with that name is created and
+            within it a new resource with the same name.
+        job_id:
+            Id of the job record which stores the state for the current
+            workflow application.
+        username:
+            The username to impersonate for the workflow execution.
+        worker_init:
+            Custom executor parameters that get parsed before the execution of
+            each task.
     """
     db_sync = next(DB.get_sync_db())
     job: ApplyWorkflow = db_sync.get(ApplyWorkflow, job_id)  # type: ignore
