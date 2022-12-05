@@ -43,6 +43,23 @@ class JobStatusType(str, Enum):
 
 
 class ApplyWorkflow(ApplyWorkflowBase, table=True):
+    """
+    Represent a workflow being apply
+
+    This table is responsible for storing the state of a workflow execution in
+    the DB.
+
+    Attributes:
+        ...:
+            Workflow submission parameters
+        status:
+            Workflow status
+        log:
+            forward of the workflow logs. Usually this attribute is only
+            populated upon failure.
+
+    """
+
     id: Optional[int] = Field(default=None, primary_key=True)
     project_id: int = Field(foreign_key="project.id")
     input_dataset_id: int = Field(foreign_key="dataset.id")
