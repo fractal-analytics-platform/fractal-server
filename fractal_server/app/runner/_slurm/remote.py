@@ -20,6 +20,14 @@ import cloudpickle
 
 
 class ExceptionProxy:
+    """
+    Proxy class to serialise exceptions
+
+    In general exceptions are not serialisable. This proxy class saves the
+    serialisable content of an exception and allow reconstructing it with
+    `to_exception()` method.
+    """
+
     def __init__(self, exc_type, tb, *args, **kwargs):
         self.exc_type = exc_type
         self.tb = tb
