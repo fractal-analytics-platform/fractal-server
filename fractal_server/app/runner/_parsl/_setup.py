@@ -137,7 +137,7 @@ def generate_parsl_config(
 
     allowed_configs = ["minimal", "local", "pelkmanslab", "fmi", "custom"]
     settings = Inject(get_settings)
-    config = settings.RUNNER_CONFIG
+    config = settings.FRACTAL_RUNNER_PARSL_CONFIG
     if config not in allowed_configs:
         raise ValueError(f"{config=} not in {allowed_configs=}")
     if config == "custom":
@@ -359,7 +359,7 @@ def load_parsl_config(
     logger = logging.getLogger(logger_name)
 
     if enable_monitoring is None:
-        enable_monitoring = settings.RUNNER_MONITORING
+        enable_monitoring = settings.FRACTAL_RUNNER_PARSL_MONITORING
 
     if not parsl_config:
         parsl_config = generate_parsl_config(

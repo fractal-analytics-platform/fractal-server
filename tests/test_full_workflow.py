@@ -10,8 +10,6 @@ This file is part of Fractal and was originally developed by eXact lab S.r.l.
 Institute for Biomedical Research and Pelkmans Lab from the University of
 Zurich.
 """
-from os import environ
-
 import pytest
 from devtools import debug
 
@@ -20,7 +18,6 @@ from fractal_server.app.runner import _backends
 
 PREFIX = "/api/v1"
 
-environ["RUNNER_MONITORING"] = "0"
 
 backends_available = list(_backends.keys())
 
