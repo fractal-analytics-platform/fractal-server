@@ -151,7 +151,8 @@ async def submit_workflow(
         job.status = JobStatusType.FAILED
         job.log = (
             f"TASK ERROR:"
-            f"Task id: {e.task_id}, {e.task_order=}\n"
+            f"Task id: {e.workflow_task_id} ({e.task_name}), "
+            f"{e.workflow_task_order=}\n"
             f"TRACEBACK:\n{str(e)}"
         )
         db_sync.merge(job)
