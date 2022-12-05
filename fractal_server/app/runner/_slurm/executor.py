@@ -19,7 +19,6 @@ from typing import List
 from typing import Optional
 
 import cloudpickle
-from cfut import RemoteException
 from cfut import SlurmExecutor
 from cfut.util import random_string
 
@@ -330,7 +329,8 @@ class FractalSlurmExecutor(SlurmExecutor):
         if success:
             fut.set_result(result)
         else:
-            fut.set_exception(RemoteException(result))
+            exc = result.to_exception()
+            fut.set_exception(exc)
 
         # Clean up communication files.
         in_path.unlink()
