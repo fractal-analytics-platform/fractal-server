@@ -163,10 +163,10 @@ def call_single_task(
         _call_command_wrapper(
             cmd, stdout=workflow_files.out, stderr=workflow_files.err
         )
-    except Exception as e:
-        raise TaskExecutionError(
-            *e.args, task_order=task.order, task_id=task.id
-        )
+    except TaskExecutionError as e:
+        e.task_order = task.order
+        e.task_id = task.id
+        raise e
 
     # NOTE:
     # This assumes that the new metadata is printed to stdout
@@ -228,10 +228,10 @@ def call_single_parallel_task(
         _call_command_wrapper(
             cmd, stdout=workflow_files.out, stderr=workflow_files.err
         )
-    except Exception as e:
-        raise TaskExecutionError(
-            *e.args, task_order=task.order, task_id=task.id
-        )
+    except TaskExecutionError as e:
+        e.task_order = task.order
+        e.task_id = task.id
+        raise e
 
 
 def call_parallel_task(
