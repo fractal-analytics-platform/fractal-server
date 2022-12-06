@@ -18,6 +18,24 @@ from ..models import Project
 from ..models.task import Task
 
 
+class TaskExecutionError(RuntimeError):
+    task_id: Optional[int] = None
+    task_order: Optional[int] = None
+
+    def __init__(
+        self,
+        *args,
+        workflow_task_id: Optional[int] = None,
+        workflow_task_order: Optional[int] = None,
+        task_name: Optional[str] = None,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+        self.workflow_task_id = workflow_task_id
+        self.workflow_task_order = workflow_task_order
+        self.task_name = task_name
+
+
 class TaskParameterEncoder(JSONEncoder):
     def default(self, value):
         if isinstance(value, Path):

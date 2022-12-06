@@ -1,7 +1,6 @@
 FROM rancavil/slurm-master:19.05.5-1
 
 RUN apt-get update
-RUN apt-get install -y openssh-server
 RUN sudo apt-get install python3-venv -y
 
 COPY slurm.conf /etc/slurm-llnl/
