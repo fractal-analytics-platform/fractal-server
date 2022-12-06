@@ -108,10 +108,8 @@ def get_patched_settings(temp_path: Path):
     # This variable is set to work with the system interpreter within a docker
     # container. If left unset it defaults to `sys.executable`
     if not HAS_LOCAL_SBATCH:
-        settings.SLURM_PYTHON_WORKER_INTERPRETER = "/usr/bin/python3"
-        check_python_has_venv(
-            "/usr/bin/python3", temp_path / "check_python_has_venv"
-        )
+        settings.SLURM_PYTHON_WORKER_INTERPRETER = "python3"
+        check_python_has_venv("python3", temp_path / "check_python_has_venv")
 
     settings.FRACTAL_SLURM_CONFIG_FILE = temp_path / "slurm_config.json"
 
