@@ -3,12 +3,11 @@ import os
 from typing import Dict
 from typing import Optional
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from ... import __VERSION__
 from ...config import get_settings
 from ...syringe import Inject
 from ...utils import set_logger
+from ..db import DB
 from ..models import ApplyWorkflow
 from ..models import Dataset
 from ..models import JobStatusType
@@ -58,7 +57,6 @@ def get_process_workflow():
 
 async def submit_workflow(
     *,
-    db: AsyncSession,
     workflow: Workflow,
     input_dataset: Dataset,
     output_dataset: Dataset,
@@ -69,18 +67,28 @@ async def submit_workflow(
     """
     Prepares a workflow and applies it to a dataset
 
-    Arguments
-    ---------
-    db: (AsyncSession):
-        Asynchronous database session
-    output_dataset (Dataset | str) :
-        the destination dataset of the workflow. If not provided, overwriting
-        of the input dataset is implied and an error is raised if the dataset
-        is in read only mode. If a string is passed and the dataset does not
-        exist, a new dataset with that name is created and within it a new
-        resource with the same name.
+    Args:
+        workflow:
+            Workflow being applied
+        input_dataset:
+            Input dataset
+        output_dataset:
+            the destination dataset of the workflow. If not provided,
+            overwriting of the input dataset is implied and an error is raised
+            if the dataset is in read only mode. If a string is passed and the
+            dataset does not exist, a new dataset with that name is created and
+            within it a new resource with the same name.
+        job_id:
+            Id of the job record which stores the state for the current
+            workflow application.
+        username:
+            The username to impersonate for the workflow execution.
+        worker_init:
+            Custom executor parameters that get parsed before the execution of
+            each task.
     """
-    job: ApplyWorkflow = await db.get(ApplyWorkflow, job_id)  # type: ignore
+    db_sync = next(DB.get_sync_db())
+    job: ApplyWorkflow = db_sync.get(ApplyWorkflow, job_id)  # type: ignore
     if not job:
         raise ValueError("Cannot fetch job")
 
@@ -116,8 +124,10 @@ async def submit_workflow(
     logger.info(f"output_path: {output_path}")
     logger.info(f"input metadata: {input_dataset.meta}")
     logger.info(f"START workflow {workflow.name}")
+    job.working_dir = WORKFLOW_DIR.as_posix()
     job.status = JobStatusType.RUNNING
-    await db.merge(job)
+    db_sync.merge(job)
+    db_sync.commit()
     try:
         output_dataset.meta = await process_workflow(
             workflow=workflow,
@@ -132,17 +142,19 @@ async def submit_workflow(
 
         logger.info(f'END workflow "{workflow.name}"')
         close_job_logger(logger)
-        db.add(output_dataset)
+        db_sync.merge(output_dataset)
 
         job.status = JobStatusType.DONE
-        await db.merge(job)
-        await db.commit()
+        db_sync.merge(job)
 
     except TaskExecutionError as e:
         job.status = JobStatusType.FAILED
         job.log = (
-            f"TASK ERROR: Task id: {e.task_id}, {e.task_order=}\n"
+            f"TASK ERROR:"
+            f"Task id: {e.workflow_task_id} ({e.task_name}), "
+            f"{e.workflow_task_order=}\n"
             f"TRACEBACK:\n{str(e)}"
         )
-        await db.merge(job)
-        await db.commit()
+        db_sync.merge(job)
+    finally:
+        db_sync.commit()

@@ -161,13 +161,12 @@ class Settings(BaseSettings):
     """
     SLURM_PYTHON_WORKER_INTERPRETER: Optional[str] = None
 
-    RUNNER_CONFIG: str = "local"
     RUNNER_DEFAULT_EXECUTOR: str = "cpu-low"
 
-    # NOTE: we currently set RUNNER_MONITORING to False, due to
+    # NOTE: we currently set FRACTAL_PARSL_MONITORING to False, due to
     # https://github.com/fractal-analytics-platform/fractal-server/issues/148
-    # RUNNER_MONITORING: bool = int(getenv("RUNNER_MONITORING", 1))
-    RUNNER_MONITORING: bool = False
+    FRACTAL_PARSL_MONITORING: bool = False
+    FRACTAL_PARSL_CONFIG: str = "local"
 
     ###########################################################################
     # BUSINESS LOGIC

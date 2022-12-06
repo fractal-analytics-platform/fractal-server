@@ -164,8 +164,9 @@ def call_single_task(
             cmd, stdout=workflow_files.out, stderr=workflow_files.err
         )
     except TaskExecutionError as e:
-        e.task_order = task.order
-        e.task_id = task.task.id
+        e.workflow_task_order = task.order
+        e.workflow_task_id = task.id
+        e.task_name = task.task.name
         raise e
 
     # NOTE:
@@ -229,8 +230,9 @@ def call_single_parallel_task(
             cmd, stdout=workflow_files.out, stderr=workflow_files.err
         )
     except TaskExecutionError as e:
-        e.task_order = task.order
-        e.task_id = task.task.id
+        e.workflow_task_order = task.order
+        e.workflow_task_id = task.id
+        e.task_name = task.task.name
         raise e
 
 
