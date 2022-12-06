@@ -26,6 +26,7 @@ from ....config import get_settings
 from ....syringe import Inject
 from ....utils import close_logger
 from ....utils import set_logger
+from ..common import TaskExecutionError
 
 
 class SlurmJob:
@@ -329,7 +330,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         if success:
             fut.set_result(result)
         else:
-            exc = result.to_exception()
+            exc = TaskExecutionError(result.tb, *result.args, **result.kwargs)
             fut.set_exception(exc)
 
         # Clean up communication files.
