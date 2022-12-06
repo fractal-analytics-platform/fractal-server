@@ -152,7 +152,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         except ValueError as e:
             logger = set_logger(logger_name="slurm_runner")
             logger.error(
-                f"Submit ommand `{submit_command}` returned "
+                f"Submit command `{submit_command}` returned "
                 f"`{output.stdout.decode('utf-8')}`, which cannot be cast "
                 "to an integer job ID."
             )
