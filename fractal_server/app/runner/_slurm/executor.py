@@ -19,7 +19,6 @@ from typing import List
 from typing import Optional
 
 import cloudpickle
-from cfut import RemoteException
 from cfut import SlurmExecutor
 from cfut.util import random_string
 
@@ -27,6 +26,7 @@ from ....config import get_settings
 from ....syringe import Inject
 from ....utils import close_logger
 from ....utils import set_logger
+from ..common import TaskExecutionError
 
 
 class SlurmJob:
@@ -153,7 +153,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         except ValueError as e:
             logger = set_logger(logger_name="slurm_runner")
             logger.error(
-                f"Submit ommand `{submit_command}` returned "
+                f"Submit command `{submit_command}` returned "
                 f"`{output.stdout.decode('utf-8')}`, which cannot be cast "
                 "to an integer job ID."
             )
@@ -330,7 +330,8 @@ class FractalSlurmExecutor(SlurmExecutor):
         if success:
             fut.set_result(result)
         else:
-            fut.set_exception(RemoteException(result))
+            exc = TaskExecutionError(result.tb, *result.args, **result.kwargs)
+            fut.set_exception(exc)
 
         # Clean up communication files.
         in_path.unlink()
@@ -351,7 +352,9 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         sbatch_script = self.compose_sbatch_script(
             cmdline=shlex.split(
-                f"{python_worker_interpreter} -m cfut.remote {job.workerid}"
+                f"{python_worker_interpreter}"
+                " -m fractal_server.app.runner._slurm.remote "
+                f"{job.slurm_input}"
             ),
             outpath=job.stdout,
             errpath=job.stderr,

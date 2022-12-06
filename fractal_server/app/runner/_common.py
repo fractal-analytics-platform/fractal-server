@@ -14,6 +14,7 @@ from typing import List
 from typing import Optional
 
 from ..models import WorkflowTask
+from .common import TaskExecutionError
 from .common import TaskParameters
 from .common import write_args_file
 
@@ -77,10 +78,6 @@ def get_workflow_file_paths(
     return WorkflowFiles(
         workflow_dir=workflow_dir, task_order=task_order, component=component
     )
-
-
-class TaskExecutionError(RuntimeError):
-    pass
 
 
 def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
@@ -161,9 +158,16 @@ def call_single_task(
     )
 
     logger.debug(f"executing task {task.order=}")
-    _call_command_wrapper(
-        cmd, stdout=workflow_files.out, stderr=workflow_files.err
-    )
+
+    try:
+        _call_command_wrapper(
+            cmd, stdout=workflow_files.out, stderr=workflow_files.err
+        )
+    except TaskExecutionError as e:
+        e.workflow_task_order = task.order
+        e.workflow_task_id = task.id
+        e.task_name = task.task.name
+        raise e
 
     # NOTE:
     # This assumes that the new metadata is printed to stdout
@@ -220,9 +224,16 @@ def call_single_parallel_task(
     )
 
     logger.debug(f"executing task {task.order=}")
-    _call_command_wrapper(
-        cmd, stdout=workflow_files.out, stderr=workflow_files.err
-    )
+
+    try:
+        _call_command_wrapper(
+            cmd, stdout=workflow_files.out, stderr=workflow_files.err
+        )
+    except TaskExecutionError as e:
+        e.workflow_task_order = task.order
+        e.workflow_task_id = task.id
+        e.task_name = task.task.name
+        raise e
 
 
 def call_parallel_task(
