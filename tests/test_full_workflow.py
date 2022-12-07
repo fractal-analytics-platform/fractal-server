@@ -10,6 +10,9 @@ This file is part of Fractal and was originally developed by eXact lab S.r.l.
 Institute for Biomedical Research and Pelkmans Lab from the University of
 Zurich.
 """
+import os
+from pathlib import Path
+
 import pytest
 from devtools import debug
 
@@ -183,6 +186,16 @@ async def test_full_workflow(
         data = res.json()
         debug(data)
         assert "dummy" in data["meta"]
+
+        # check that all artifacts are rw by the user running the server
+        workflow_path = Path(job_status_data["working_dir"])
+        no_access = []
+        for f in workflow_path.glob("*"):
+            has_access = os.access(f, os.R_OK | os.W_OK)
+            if not has_access:
+                no_access.append(f)
+        debug(no_access)
+        assert len(no_access) == 0
 
 
 @pytest.mark.slow
