@@ -137,7 +137,7 @@ async def test_collection_api(
     async with MockCurrentUser(user_kwargs=dict(slurm_user=slurm_user)):
         # NOTE: collecting private tasks so that they are assigned to user and
         # written in a non-default folder. Bypass for non stateless
-        # FRACTAL_ROOT in test suite.
+        # FRACTAL_TASKS_DIR in test suite.
         res = await client.post(
             f"{PREFIX}/collect/pip/?public=false", json=task_collection
         )
@@ -174,7 +174,7 @@ async def test_collection_api(
         assert data["log"] is not None
 
         settings = Inject(get_settings)
-        full_path = settings.FRACTAL_ROOT / venv_path
+        full_path = settings.FRACTAL_TASKS_DIR / venv_path
         assert get_collection_path(full_path).exists()
         assert get_log_path(full_path).exists()
         if python_version:
@@ -210,7 +210,7 @@ async def test_collection_api_invalid_manifest(
     async with MockCurrentUser(persist=True):
         # NOTE: collecting private tasks so that they are assigned to user and
         # written in a non-default folder. Bypass for non stateless
-        # FRACTAL_ROOT in test suite.
+        # FRACTAL_TASKS_DIR in test suite.
         res = await client.post(
             f"{PREFIX}/collect/pip/?public=false", json=task_collection
         )

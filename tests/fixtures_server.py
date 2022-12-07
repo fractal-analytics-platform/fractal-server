@@ -96,10 +96,10 @@ def get_patched_settings(temp_path: Path):
     else:
         raise ValueError
 
-    settings.FRACTAL_ROOT = temp_path / "fractal_root"
-    settings.FRACTAL_ROOT.mkdir(parents=True, exist_ok=True)
-    debug(settings.FRACTAL_ROOT)
-    settings.FRACTAL_ROOT.chmod(0o777)
+    settings.FRACTAL_TASKS_DIR = temp_path / "fractal_root"
+    settings.FRACTAL_TASKS_DIR.mkdir(parents=True, exist_ok=True)
+    debug(settings.FRACTAL_TASKS_DIR)
+    settings.FRACTAL_TASKS_DIR.chmod(0o777)
     settings.RUNNER_ROOT_DIR = temp_path / "artifacts"
     settings.RUNNER_ROOT_DIR.mkdir(parents=True, exist_ok=True)
     settings.RUNNER_ROOT_DIR.chmod(0o777)

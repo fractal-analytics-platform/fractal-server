@@ -194,7 +194,7 @@ async def collect_tasks_pip(
 
     settings = Inject(get_settings)
 
-    full_venv_path = venv_path.relative_to(settings.FRACTAL_ROOT)
+    full_venv_path = venv_path.relative_to(settings.FRACTAL_TASKS_DIR)
     collection_status = TaskCollectStatus(
         status="pending", venv_path=full_venv_path, package=task_pkg.package
     )

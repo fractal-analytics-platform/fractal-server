@@ -202,7 +202,11 @@ class Settings(BaseSettings):
     ###########################################################################
     # FRACTAL SPECIFIC
     ###########################################################################
-    FRACTAL_ROOT: Optional[Path]
+    FRACTAL_TASKS_DIR: Optional[Path]
+    """
+    Directory under which all the tasks will be saved.
+    """
+
     RUNNER_BACKEND: str = "process"
     RUNNER_ROOT_DIR: Optional[Path]
     FRACTAL_LOGGING_LEVEL: int = logging.WARNING
@@ -251,7 +255,7 @@ class Settings(BaseSettings):
             elif DB_ENGINE == "sqlite":
                 SQLITE_PATH: str
 
-            FRACTAL_ROOT: Path
+            FRACTAL_TASKS_DIR: Path
             RUNNER_ROOT_DIR: Path
 
             RUNNER_BACKEND: str = Field()
