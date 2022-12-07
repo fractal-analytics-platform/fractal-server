@@ -219,16 +219,24 @@ class Settings(BaseSettings):
     """
 
     FRACTAL_LOGGING_LEVEL: int = logging.WARNING
-    FRACTAL_SLURM_CONFIG_FILE: Optional[Path]
 
+    FRACTAL_SLURM_CONFIG_FILE: Optional[Path]
     """
     It may be necessary to have that the Python interpreter used within a SLURM
     cluster be different from the interpreter that runs the server. This
     variable allows to choose a different interpreter.
     """
-    SLURM_PYTHON_WORKER_INTERPRETER: Optional[str] = None
 
     FRACTAL_RUNNER_DEFAULT_EXECUTOR: str = "cpu-low"
+    """
+    Used by some runner backends to configure the parameters to run jobs with.
+    """
+
+    FRACTAL_SLURM_WORKER_PYTHON: Optional[str] = None
+    """
+    Path to Python interpreter that will run the jobs on the SLURM nodes. If
+    not specified, the interpreter that runs the server is used.
+    """
 
     # NOTE: we currently set FRACTAL_PARSL_MONITORING to False, due to
     # https://github.com/fractal-analytics-platform/fractal-server/issues/148
