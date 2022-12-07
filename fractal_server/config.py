@@ -228,7 +228,7 @@ class Settings(BaseSettings):
     """
     SLURM_PYTHON_WORKER_INTERPRETER: Optional[str] = None
 
-    RUNNER_DEFAULT_EXECUTOR: str = "cpu-low"
+    FRACTAL_RUNNER_DEFAULT_EXECUTOR: str = "cpu-low"
 
     # NOTE: we currently set FRACTAL_PARSL_MONITORING to False, due to
     # https://github.com/fractal-analytics-platform/fractal-server/issues/148
