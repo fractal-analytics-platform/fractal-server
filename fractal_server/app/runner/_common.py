@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 import subprocess  # nosec
 from concurrent.futures import Executor
 from concurrent.futures import Future
@@ -14,6 +13,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
+from ...utils import file_opener
 from ..models import WorkflowTask
 from .common import TaskExecutionError
 from .common import TaskParameters
@@ -21,13 +21,6 @@ from .common import write_args_file
 
 
 METADATA_FILENAME = "metadata.json"
-
-
-def file_opener(path, flags):
-    orig_umask = os.umask(0)
-    fd = os.open(path, flags, mode=0o777)
-    os.umask(orig_umask)
-    return fd
 
 
 def sanitize_component(value: str) -> str:
@@ -95,8 +88,8 @@ def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
     """
     Call command and return stdout, stderr, retcode
     """
-    fp_stdout = stdout.open("w")
-    fp_stderr = stderr.open("w")
+    fp_stdout = open(stdout, "w", opener=file_opener)
+    fp_stderr = open(stderr, "w", opener=file_opener)
     try:
         result = subprocess.run(  # nosec
             shlex_split(cmd),

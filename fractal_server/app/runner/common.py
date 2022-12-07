@@ -13,6 +13,7 @@ from typing import Optional
 from pydantic import BaseModel
 
 from ...utils import close_logger as close_job_logger  # noqa F401
+from ...utils import file_opener
 from ..models import Dataset
 from ..models import Project
 from ..models.task import Task
@@ -162,5 +163,5 @@ def write_args_file(*args: Dict[str, Any], path: Path):
     out = {}
     for d in args:
         out.update(d)
-    with path.open("w") as f:
+    with open(path, "w", opener=file_opener) as f:
         json.dump(out, f, cls=TaskParameterEncoder, indent=4)

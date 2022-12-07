@@ -12,15 +12,42 @@ Zurich.
 """
 import asyncio
 import logging
+import os
 from datetime import datetime
 from datetime import timezone
 from pathlib import Path
 from shlex import split as shlex_split
 from typing import Optional
+from typing import Union
 from warnings import warn as _warn
 
 from .config import get_settings
 from .syringe import Inject
+
+
+def file_opener(path: Union[str, Path], flags: int, mode=0o777):
+    """
+    Custom file opener with umask=0
+
+    Returns a file descriptor with a custom mode set. To achieve this, the
+    umask if first set to 0 and then restored.
+
+    Args:
+        path:
+            The path for which the file descriptor is needed.
+        flags:
+            The file opening flags to be applied (`rwbt+`).
+        mode:
+            The mode to apply
+
+    Returns:
+        fd:
+            File descriptor
+    """
+    orig_umask = os.umask(0)
+    fd = os.open(path, flags, mode=mode)
+    os.umask(orig_umask)
+    return fd
 
 
 def close_logger(logger: logging.Logger) -> None:
