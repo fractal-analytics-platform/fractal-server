@@ -1,15 +1,15 @@
-"""
-Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
-University of Zurich
-
-Original authors:
-Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
-
-This file is part of Fractal and was originally developed by eXact lab S.r.l.
-<exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
-Institute for Biomedical Research and Pelkmans Lab from the University of
-Zurich.
-"""
+# Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
+# University of Zurich
+#
+# Original authors:
+# Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
+# Tommaso Comparin <tommaso.comparin@exact-lab.it>
+# Marco Franzon <marco.franzon@exact-lab.it>
+#
+# This file is part of Fractal and was originally developed by eXact lab S.r.l.
+# <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
+# Institute for Biomedical Research and Pelkmans Lab from the University of
+# Zurich.
 import logging
 from os import environ
 from os import getenv
@@ -36,6 +36,31 @@ load_dotenv(".fractal_server.env")
 
 
 class OAuthClient(BaseModel):
+    """
+    OAuth Client Model
+
+    This model wraps the variables that define a client against an Identity
+    Provider. As some providers are supported by the libraries used within the
+    server, some attributes are optional.
+
+    Attributes:
+        CLIENT_NAME:
+            The name of the client
+        CLIENT_ID:
+            ID of client
+        CLIENT_SECRET:
+            Secret to authorise against the identity provider
+
+        AUTHORIZE_ENDPOINT:
+            Authorization endpoint
+        ACCESS_TOKEN_ENDPOINT:
+            Token endpoint
+        REFRESH_TOKEN_ENDPOINT:
+            Refresh token endpoint
+        REVOKE_TOKEN_ENDPOINT:
+            Revoke token endpoint
+    """
+
     CLIENT_NAME: str
     CLIENT_ID: str
     CLIENT_SECRET: str
@@ -47,6 +72,19 @@ class OAuthClient(BaseModel):
 
 
 class Settings(BaseSettings):
+    """
+    Contains all the configuration variables for Fractal Server
+
+    Attributes of this class are set from the environtment.
+
+
+    Attributes:
+        DEPLOYMENT_TYPE:
+            The deployment type of the server installation. It is important
+            that production deployments be marked as such to trigger server
+            hardening.
+    """
+
     class Config:
         case_sensitive = True
 
@@ -71,6 +109,23 @@ class Settings(BaseSettings):
 
     @root_validator(pre=True)
     def collect_oauth_clients(cls, values):
+        """
+        Automatic collection of OAuth Clients
+
+        This method collects the environment variables relative to a single
+        OAuth client and saves them within the `Settings` object in the form
+        of an `OAuthClient` instance.
+
+        Fractal can support an arbitrary number of OAuth providers, which are
+        automatically detected by parsing the environment variable names. In
+        particular, to set the provider `FOO`, one must specify the variables
+
+            OAUTH_FOO_CLIENT_ID
+            OAUTH_FOO_CLIENT_SECRET
+            ...
+
+        etc (cf. OAuthClient).
+        """
         oauth_env_variable_keys = [
             key for key in environ.keys() if "OAUTH" in key
         ]
