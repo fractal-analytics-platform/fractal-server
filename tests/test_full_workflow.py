@@ -15,21 +15,40 @@ from os import environ
 import pytest
 from devtools import debug
 
+from fractal_server.app.runner import _backends
+
+
 PREFIX = "/api/v1"
 
 environ["RUNNER_MONITORING"] = "0"
 
+backends_available = list(_backends.keys())
+
 
 @pytest.mark.slow
+@pytest.mark.parametrize("backend", backends_available)
 async def test_full_workflow(
     client,
     MockCurrentUser,
     testdata_path,
-    tmp_path,
+    tmp777_path,
     collect_packages,
     project_factory,
     dataset_factory,
+    backend,
+    request,
+    override_settings_factory,
 ):
+
+    override_settings_factory(
+        RUNNER_BACKEND=backend,
+        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
+    )
+
+    debug(f"Testing with {backend=}")
+    if backend == "slurm":
+        request.getfixturevalue("monkey_slurm")
+        request.getfixturevalue("relink_python_interpreter")
 
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
@@ -77,7 +96,7 @@ async def test_full_workflow(
 
         res = await client.post(
             f"{PREFIX}/project/{project_id}/{output_dataset['id']}",
-            json=dict(path=tmp_path.as_posix(), glob_pattern="out.json"),
+            json=dict(path=tmp777_path.as_posix(), glob_pattern="out.json"),
         )
         out_resource = res.json()
         debug(out_resource)
@@ -87,6 +106,20 @@ async def test_full_workflow(
         res = await client.get(f"{PREFIX}/project/{project_id}")
         debug(res.json())
         project_dict = res.json()
+
+        # Workaround: for one backend, create a dummy workflow, so that the
+        # actual one will have ID=2 (rather than 1). In this way, the workflow
+        # folders for the two test runs (with the two different backends) won't
+        # have the same name
+        num_empty_workflows = backends_available.index(backend)
+        for ind in range(num_empty_workflows):
+            _ = await client.post(
+                f"{PREFIX}/workflow/",
+                json=dict(
+                    name=f"workaround - {ind}",
+                    project_id=project_dict["id"],
+                ),
+            )
 
         # CREATE WORKFLOW
         res = await client.post(

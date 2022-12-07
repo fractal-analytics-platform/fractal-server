@@ -7,6 +7,7 @@ from typing import Optional
 import pytest
 from pydantic import BaseModel
 
+from .fixtures_server import check_python_has_venv
 from .fixtures_server import HAS_LOCAL_SBATCH
 
 
@@ -122,6 +123,9 @@ async def install_dummy_packages(tmp777_session_path, dummy_task_package):
     NOTE that the system python3 on the slurm containers (AKA /usr/bin/python3)
     is 3.8, and relink_python_interpreter will map to it. Therefore this
     fixture must always install dummy_task_package with this version.
+
+    Also note that the check_python_has_venv function will verify that
+    python3.8 (to be used for the tasks environment) has the venv module.
     """
 
     from fractal_server.tasks.collection import (
@@ -129,6 +133,10 @@ async def install_dummy_packages(tmp777_session_path, dummy_task_package):
         load_manifest,
     )
     from fractal_server.tasks.collection import _TaskCollectPip
+
+    python_test_path = tmp777_session_path("check_python_has_venv")
+    python_test_path.mkdir(exist_ok=True, parents=True)
+    check_python_has_venv("python3.8", python_test_path)
 
     venv_path = tmp777_session_path("dummy")
     venv_path.mkdir(exist_ok=True, parents=True)
@@ -141,6 +149,7 @@ async def install_dummy_packages(tmp777_session_path, dummy_task_package):
         task_pkg=task_pkg,
         logger_name="test",
     )
+
     task_list = load_manifest(
         package_root=package_root,
         python_bin=python_bin,
@@ -161,31 +170,38 @@ async def collect_packages(db, install_dummy_packages):
 def relink_python_interpreter(collect_packages):
     """
     Rewire python executable in tasks
+
     """
     import os
     import logging
 
     if not HAS_LOCAL_SBATCH:
+
         logger = logging.getLogger("RELINK")
         logger.setLevel(logging.INFO)
 
         task = collect_packages[0]
-        python = Path(task.command.split()[0])
-        orig_python = os.readlink(python)
-        logger.warning(f"RELINK: Original status: {python=} -> {orig_python}")
-        python.unlink()
-        python.symlink_to("/usr/bin/python3")
-
+        task_python = Path(task.command.split()[0])
+        orig_python = os.readlink(task_python)
         logger.warning(
-            f"RELINK: Updated status: {python=} -> "
-            f"{os.readlink(python.as_posix())}"
+            f"RELINK: Original status: {task_python=} -> {orig_python}"
         )
-        yield
-        python.unlink()
-        python.symlink_to(orig_python)
+        task_python.unlink()
+        # NOTE that the docker container in the CI only has python3.8
+        # installed, therefore we explicitly hardcode this version here, to
+        # make debugging easier
+        task_python.symlink_to("/usr/bin/python3.8")
         logger.warning(
-            f"RELINK: Final status: {python=} -> "
-            f"{os.readlink(python.as_posix())}"
+            f"RELINK: Updated status: {task_python=} -> "
+            f"{os.readlink(task_python.as_posix())}"
+        )
+
+        yield
+        task_python.unlink()
+        task_python.symlink_to(orig_python)
+        logger.warning(
+            f"RELINK: Restore original: {task_python=} -> "
+            f"{os.readlink(task_python.as_posix())}"
         )
     else:
         yield
