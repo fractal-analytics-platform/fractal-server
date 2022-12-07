@@ -1,3 +1,5 @@
+import json
+from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter
@@ -9,6 +11,7 @@ from ...db import AsyncSession
 from ...db import get_db
 from ...models import ApplyWorkflow
 from ...models import ApplyWorkflowRead
+from ...runner._common import METADATA_FILENAME
 from ...security import current_active_user
 from ...security import User
 from .project import get_project_check_owner
@@ -32,4 +35,14 @@ async def get_job(
         project_id=job.project_id, user_id=user.id, db=db
     )
 
-    return job
+    job_read = ApplyWorkflowRead(**job.dict())
+
+    try:
+        metadata_file = Path(job_read.working_dir) / METADATA_FILENAME
+        with metadata_file.open("r") as f:
+            metadata = json.load(f)
+        job_read.history = metadata["history"]
+    except (KeyError, FileNotFoundError):
+        pass
+
+    return job_read
