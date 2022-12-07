@@ -43,13 +43,13 @@ except ModuleNotFoundError as e:
 def get_process_workflow():
     settings = Inject(get_settings)
     try:
-        process_workflow = _backends[settings.RUNNER_BACKEND]
+        process_workflow = _backends[settings.FRACTAL_RUNNER_BACKEND]
     except KeyError:
         raise _backend_errors.get(
-            settings.RUNNER_BACKEND,
+            settings.FRACTAL_RUNNER_BACKEND,
             RuntimeError(
                 "Unknown error during collection of backend "
-                f"`{settings.RUNNER_BACKEND}`"
+                f"`{settings.FRACTAL_RUNNER_BACKEND}`"
             ),
         )
     return process_workflow
@@ -99,7 +99,7 @@ async def submit_workflow(
 
     settings = Inject(get_settings)
     WORKFLOW_DIR = (
-        settings.RUNNER_ROOT_DIR  # type: ignore
+        settings.FRACTAL_RUNNER_WORKING_BASE_DIR  # type: ignore
         / f"workflow_{workflow_id:06d}_job_{job_id:06d}"
     ).resolve()
     if not WORKFLOW_DIR.exists():
@@ -117,7 +117,7 @@ async def submit_workflow(
 
     process_workflow = get_process_workflow()
     logger.info(f"fractal_server.__VERSION__: {__VERSION__}")
-    logger.info(f"RUNNER_BACKEND: {settings.RUNNER_BACKEND}")
+    logger.info(f"FRACTAL_RUNNER_BACKEND: {settings.FRACTAL_RUNNER_BACKEND}")
     logger.info(f"worker_init: {worker_init}")
     logger.info(f"username: {username}")
     logger.info(f"input_paths: {input_paths}")

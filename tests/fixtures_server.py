@@ -96,19 +96,19 @@ def get_patched_settings(temp_path: Path):
     else:
         raise ValueError
 
-    settings.FRACTAL_ROOT = temp_path / "fractal_root"
-    settings.FRACTAL_ROOT.mkdir(parents=True, exist_ok=True)
-    debug(settings.FRACTAL_ROOT)
-    settings.FRACTAL_ROOT.chmod(0o777)
-    settings.RUNNER_ROOT_DIR = temp_path / "artifacts"
-    settings.RUNNER_ROOT_DIR.mkdir(parents=True, exist_ok=True)
-    settings.RUNNER_ROOT_DIR.chmod(0o777)
+    settings.FRACTAL_TASKS_DIR = temp_path / "fractal_root"
+    settings.FRACTAL_TASKS_DIR.mkdir(parents=True, exist_ok=True)
+    debug(settings.FRACTAL_TASKS_DIR)
+    settings.FRACTAL_TASKS_DIR.chmod(0o777)
+    settings.FRACTAL_RUNNER_WORKING_BASE_DIR = temp_path / "artifacts"
+    settings.FRACTAL_RUNNER_WORKING_BASE_DIR.mkdir(parents=True, exist_ok=True)
+    settings.FRACTAL_RUNNER_WORKING_BASE_DIR.chmod(0o777)
 
     # NOTE:
     # This variable is set to work with the system interpreter within a docker
     # container. If left unset it defaults to `sys.executable`
     if not HAS_LOCAL_SBATCH:
-        settings.SLURM_PYTHON_WORKER_INTERPRETER = "/usr/bin/python3"
+        settings.FRACTAL_SLURM_WORKER_PYTHON = "/usr/bin/python3"
         check_python_has_venv(
             "/usr/bin/python3", temp_path / "check_python_has_venv"
         )

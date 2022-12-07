@@ -93,7 +93,7 @@ class WorkflowTask(_WorkflowTaskBase, table=True):
                 return self.task.executor
             else:
                 settings = Inject(get_settings)
-                return settings.RUNNER_DEFAULT_EXECUTOR
+                return settings.FRACTAL_RUNNER_DEFAULT_EXECUTOR
 
     def assemble_args(self, extra: Dict[str, Any] = None):
         """
