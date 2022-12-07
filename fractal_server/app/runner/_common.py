@@ -88,8 +88,8 @@ def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
     """
     Call command and return stdout, stderr, retcode
     """
-    fp_stdout = stdout.open("w")
-    fp_stderr = stderr.open("w")
+    fp_stdout = open(stdout, "w", opener=file_opener)
+    fp_stderr = open(stderr, "w", opener=file_opener)
     try:
         result = subprocess.run(  # nosec
             shlex_split(cmd),
