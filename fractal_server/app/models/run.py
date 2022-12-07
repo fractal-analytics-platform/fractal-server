@@ -92,7 +92,7 @@ class ApplyWorkflow(ApplyWorkflowBase, table=True):
     @property
     def job_root_path(self) -> Path:
         settings = Inject(get_settings)
-        return settings.RUNNER_ROOT_DIR / f"job_{self.id:06d}"
+        return settings.FRACTAL_RUNNER_WORKING_BASE_DIR / f"job_{self.id:06d}"
 
     @property
     def log_path(self) -> Path:

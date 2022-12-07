@@ -39,7 +39,7 @@ async def test_full_workflow(
 ):
 
     override_settings_factory(
-        RUNNER_BACKEND=backend,
+        FRACTAL_RUNNER_BACKEND=backend,
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
     )
 
@@ -201,7 +201,7 @@ async def test_failing_workflow(
 ):
 
     override_settings_factory(
-        RUNNER_BACKEND=backend,
+        FRACTAL_RUNNER_BACKEND=backend,
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
     )
 

@@ -162,7 +162,7 @@ def recursive_task_assembly(
             raise ValueError(msg)
         executors = [this_task.executor] if this_task.executor else "all"
     else:
-        executors = [settings.RUNNER_DEFAULT_EXECUTOR]
+        executors = [settings.FRACTAL_RUNNER_DEFAULT_EXECUTOR]
 
     # step n => step n+1
     logger.debug(f"submitting task {this_task.order=} to {executors=}")

@@ -203,10 +203,10 @@ def test_create_pkg_dir(task_pkg, user, expected_path):
     THEN the path is the one expected
 
     NOTE:
-        expected_path relative to FRACTAL_ROOT
+        expected_path relative to FRACTAL_TASKS_DIR
     """
     settings = Inject(get_settings)
-    check = settings.FRACTAL_ROOT / expected_path
+    check = settings.FRACTAL_TASKS_DIR / expected_path
 
     venv_path = create_package_dir_pip(task_pkg=task_pkg, user=user)
     assert venv_path == check
