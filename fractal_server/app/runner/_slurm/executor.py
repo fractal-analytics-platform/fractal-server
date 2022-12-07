@@ -347,7 +347,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         settings = Inject(get_settings)
         python_worker_interpreter = (
-            settings.SLURM_PYTHON_WORKER_INTERPRETER or sys.executable
+            settings.FRACTAL_SLURM_WORKER_PYTHON or sys.executable
         )
 
         sbatch_script = self.compose_sbatch_script(
