@@ -231,7 +231,6 @@ async def apply_workflow(
 
     background_tasks.add_task(
         submit_workflow,
-        db=db,
         workflow=workflow,
         input_dataset=input_dataset,
         output_dataset=output_dataset,
