@@ -183,17 +183,16 @@ class FractalSlurmExecutor(SlurmExecutor):
             if ln.startswith("#SBATCH")
         ]
 
-        non_sbatch_lines = (
-            ["umask 0"]
-            + [
-                ln
-                for ln in additional_setup_lines + self.common_script_lines
-                if not ln.startswith("#SBATCH")
-            ]
-            + [f"export CFUT_DIR={self.script_dir}"]
-        )
+        non_sbatch_lines = [
+            ln
+            for ln in additional_setup_lines + self.common_script_lines
+            if not ln.startswith("#SBATCH")
+        ] + [f"export CFUT_DIR={self.script_dir}"]
 
-        cmd = [shlex.join(["srun", *cmdline])]
+        cmd = [
+            shlex.join(["srun", *cmdline]),
+            f"chmod 777 {outpath.parent / '*'}",
+        ]
 
         script_lines = ["#!/bin/sh"] + sbatch_lines + non_sbatch_lines + cmd
         return "\n".join(script_lines)
