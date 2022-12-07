@@ -25,6 +25,7 @@ from cfut.util import random_string
 from ....config import get_settings
 from ....syringe import Inject
 from ....utils import close_logger
+from ....utils import file_opener
 from ....utils import set_logger
 from ..common import TaskExecutionError
 
@@ -106,7 +107,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             dest:
                 The path to the batch script
         """
-        with dest.open("w") as f:
+        with open(dest, "w", opener=file_opener) as f:
             f.write(sbatch_script)
         return dest
 
@@ -182,11 +183,15 @@ class FractalSlurmExecutor(SlurmExecutor):
             if ln.startswith("#SBATCH")
         ]
 
-        non_sbatch_lines = [
-            ln
-            for ln in additional_setup_lines + self.common_script_lines
-            if not ln.startswith("#SBATCH")
-        ] + [f"export CFUT_DIR={self.script_dir}"]
+        non_sbatch_lines = (
+            ["umask 0"]
+            + [
+                ln
+                for ln in additional_setup_lines + self.common_script_lines
+                if not ln.startswith("#SBATCH")
+            ]
+            + [f"export CFUT_DIR={self.script_dir}"]
+        )
 
         cmd = [shlex.join(["srun", *cmdline])]
 
@@ -302,7 +307,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         job.stderr = self.get_stderr_filename(prefix=job_file_prefix)
 
         funcser = cloudpickle.dumps((fun, args, kwargs))
-        with job.slurm_input.open("wb") as f:
+        with open(job.slurm_input, "wb", opener=file_opener) as f:
             f.write(funcser)
         jobid = self._start(job, additional_setup_lines)
 

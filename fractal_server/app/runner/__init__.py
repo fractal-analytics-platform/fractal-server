@@ -102,10 +102,9 @@ async def submit_workflow(
         settings.FRACTAL_RUNNER_WORKING_BASE_DIR  # type: ignore
         / f"workflow_{workflow_id:06d}_job_{job_id:06d}"
     ).resolve()
+    orig_umask = os.umask(0)
     if not WORKFLOW_DIR.exists():
-        old_umask = os.umask(0)
         WORKFLOW_DIR.mkdir(parents=True, mode=0o777)
-        os.umask(old_umask)
 
     logger_name = f"WF{workflow_id}_job{job_id}"
     logger = set_logger(
@@ -158,3 +157,4 @@ async def submit_workflow(
         db_sync.merge(job)
     finally:
         db_sync.commit()
+        os.umask(orig_umask)
