@@ -210,7 +210,6 @@ class Settings(BaseSettings):
     RUNNER_BACKEND: str = "process"
     RUNNER_ROOT_DIR: Optional[Path]
     FRACTAL_LOGGING_LEVEL: int = logging.WARNING
-    FRACTAL_PUBLIC_TASK_SUBDIR: str = ".fractal"
     FRACTAL_SLURM_CONFIG_FILE: Optional[Path]
 
     """

@@ -8,6 +8,13 @@
 # <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
 # Institute for Biomedical Research and Pelkmans Lab from the University of
 # Zurich.
+"""
+This module takes care of installing tasks so that fractal can execute them
+
+Tasks can be private or public. Private tasks are installed under
+`Settings.FRACTAL_TASKS_DIR/{username}`. For public tasks, `username =
+.fractal`.
+"""
 import json
 import logging
 import shutil
@@ -31,6 +38,9 @@ from ..syringe import Inject
 from ..utils import close_logger
 from ..utils import execute_command
 from ..utils import set_logger
+
+
+FRACTAL_PUBLIC_TASK_SUBDIR = ".fractal"
 
 
 class TaskCollectionError(RuntimeError):
@@ -179,7 +189,7 @@ def create_package_dir_pip(
     **_,
 ) -> Path:
     settings = Inject(get_settings)
-    user = user or settings.FRACTAL_PUBLIC_TASK_SUBDIR
+    user = user or FRACTAL_PUBLIC_TASK_SUBDIR
 
     package_dir = f"{task_pkg.package}{task_pkg.version or ''}"
     venv_path = settings.FRACTAL_TASKS_DIR / user / package_dir  # type: ignore
