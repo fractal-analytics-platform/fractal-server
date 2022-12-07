@@ -70,16 +70,16 @@ def get_absolute_venv_path(venv_path: Path) -> Path:
     Note:
     In Python 3.9 it would be safer to do:
 
-        if venv_path.is_relative_to(settings.FRACTAL_ROOT):  # type: ignore
+        if venv_path.is_relative_to(settings.FRACTAL_TASKS_DIR):
             package_path = venv_path
         else:
-            package_path = settings.FRACTAL_ROOT / venv_path  # type: ignore
+            package_path = settings.FRACTAL_TASKS_DIR / venv_path
     """
     if venv_path.is_absolute():
         package_path = venv_path
     else:
         settings = Inject(get_settings)
-        package_path = settings.FRACTAL_ROOT / venv_path  # type: ignore
+        package_path = settings.FRACTAL_TASKS_DIR / venv_path  # type: ignore
     return package_path
 
 
@@ -182,7 +182,7 @@ def create_package_dir_pip(
     user = user or settings.FRACTAL_PUBLIC_TASK_SUBDIR
 
     package_dir = f"{task_pkg.package}{task_pkg.version or ''}"
-    venv_path = settings.FRACTAL_ROOT / user / package_dir  # type: ignore
+    venv_path = settings.FRACTAL_TASKS_DIR / user / package_dir  # type: ignore
     # TODO check the access right of the venv_path and subdirs
     if create:
         venv_path.mkdir(exist_ok=False, parents=True)

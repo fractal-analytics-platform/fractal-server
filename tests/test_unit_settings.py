@@ -28,7 +28,7 @@ def test_settings_injection(override_settings):
                 DEPLOYMENT_TYPE="development",
                 JWT_SECRET_KEY="secret",
                 SQLITE_PATH="path",
-                FRACTAL_ROOT=Path("/tmp"),
+                FRACTAL_TASKS_DIR=Path("/tmp"),
                 RUNNER_ROOT_DIR=Path("/tmp"),
             ),
             False,
