@@ -55,7 +55,9 @@ def test_unit_sbatch_script_readable(monkey_slurm, tmp777_path):
 
     SBATCH_SCRIPT = "test"
     with FractalSlurmExecutor(script_dir=tmp777_path) as executor:
-        f = executor.write_batch_script(SBATCH_SCRIPT)
+        f = executor.write_batch_script(
+            SBATCH_SCRIPT, dest=tmp777_path / "script.sbatch"
+        )
 
     out = subprocess.run(
         shlex.split(f"sudo --non-interactive -u test01 sbatch {f}"),

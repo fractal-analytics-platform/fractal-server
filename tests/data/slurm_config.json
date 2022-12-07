@@ -1,0 +1,14 @@
+{
+    "cpu-low": {
+        "partition": "main"
+    },
+    "cpu-mid": {
+        "partition": "main"
+    },
+    "cpu-high": {
+        "partition": "main"
+    },
+    "gpu": {
+        "partition": "gpu"
+    }
+}
