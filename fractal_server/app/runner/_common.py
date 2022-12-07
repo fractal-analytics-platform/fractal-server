@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import subprocess  # nosec
 from concurrent.futures import Executor
 from concurrent.futures import Future
@@ -17,6 +18,16 @@ from ..models import WorkflowTask
 from .common import TaskExecutionError
 from .common import TaskParameters
 from .common import write_args_file
+
+
+METADATA_FILENAME = "metadata.json"
+
+
+def file_opener(path, flags):
+    orig_umask = os.umask(0)
+    fd = os.open(path, flags, mode=0o777)
+    os.umask(orig_umask)
+    return fd
 
 
 def sanitize_component(value: str) -> str:
@@ -190,6 +201,8 @@ def call_single_task(
         metadata=updated_metadata,
         logger_name=task_pars.logger_name,
     )
+    with open(workflow_dir / METADATA_FILENAME, "w", opener=file_opener) as f:
+        json.dump(updated_metadata, f, indent=2)
     return out_task_parameters
 
 
@@ -282,6 +295,9 @@ def call_parallel_task(
         metadata=task_pars_depend.metadata,
         logger_name=task_pars_depend.logger_name,
     )
+
+    with open(workflow_dir / METADATA_FILENAME, "w", opener=file_opener) as f:
+        json.dump(task_pars_depend.metadata, f, indent=2)
     this_future.set_result(out_task_parameters)
     return this_future
 
