@@ -219,6 +219,9 @@ class Settings(BaseSettings):
     """
 
     FRACTAL_LOGGING_LEVEL: int = logging.WARNING
+    """
+    Logging verbosity for main Fractal logger.
+    """
 
     FRACTAL_SLURM_CONFIG_FILE: Optional[Path]
     """
