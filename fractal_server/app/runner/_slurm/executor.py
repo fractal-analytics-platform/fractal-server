@@ -67,7 +67,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         self.common_script_lines = common_script_lines or []
         if not script_dir:
             settings = Inject(get_settings)
-            script_dir = settings.RUNNER_ROOT_DIR  # type: ignore
+            script_dir = settings.FRACTAL_RUNNER_WORKING_BASE_DIR
         self.script_dir: Path = script_dir  # type: ignore
 
     def get_stdout_filename(

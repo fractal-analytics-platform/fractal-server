@@ -99,7 +99,7 @@ async def submit_workflow(
 
     settings = Inject(get_settings)
     WORKFLOW_DIR = (
-        settings.RUNNER_ROOT_DIR  # type: ignore
+        settings.FRACTAL_RUNNER_WORKING_BASE_DIR  # type: ignore
         / f"workflow_{workflow_id:06d}_job_{job_id:06d}"
     ).resolve()
     if not WORKFLOW_DIR.exists():
