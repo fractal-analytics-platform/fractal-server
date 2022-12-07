@@ -261,8 +261,8 @@ class Settings(BaseSettings):
             FRACTAL_TASKS_DIR: Path
             RUNNER_ROOT_DIR: Path
 
-            RUNNER_BACKEND: str = Field()
-            if RUNNER_BACKEND == "slurm":
+            FRACTAL_RUNNER_BACKEND: str = Field()
+            if FRACTAL_RUNNER_BACKEND == "slurm":
                 FRACTAL_SLURM_CONFIG_FILE: Path
 
         StrictSettings(**self.dict())
