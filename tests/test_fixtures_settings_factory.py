@@ -12,16 +12,16 @@ new_runner_backend = "pippo"
 
 def test0(override_settings_factory):
     settings = Inject(get_settings)
-    orig_runner_backend = settings.RUNNER_BACKEND
+    orig_runner_backend = settings.FRACTAL_RUNNER_BACKEND
     debug(orig_runner_backend)
 
-    override_settings_factory(RUNNER_BACKEND=new_runner_backend)
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=new_runner_backend)
     settings = Inject(get_settings)
-    assert settings.RUNNER_BACKEND == new_runner_backend
+    assert settings.FRACTAL_RUNNER_BACKEND == new_runner_backend
     debug("test0 done")
 
 
 def test1():
     settings = Inject(get_settings)
-    orig_runner_backend = settings.RUNNER_BACKEND
+    orig_runner_backend = settings.FRACTAL_RUNNER_BACKEND
     assert orig_runner_backend != new_runner_backend

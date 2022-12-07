@@ -207,7 +207,11 @@ class Settings(BaseSettings):
     Directory under which all the tasks will be saved.
     """
 
-    RUNNER_BACKEND: str = "process"
+    FRACTAL_RUNNER_BACKEND: Literal["process", "slurm", "parsl"] = "process"
+    """
+    Select which runner backend to use.
+    """
+
     RUNNER_ROOT_DIR: Optional[Path]
     FRACTAL_LOGGING_LEVEL: int = logging.WARNING
     FRACTAL_SLURM_CONFIG_FILE: Optional[Path]
