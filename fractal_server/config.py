@@ -212,7 +212,12 @@ class Settings(BaseSettings):
     Select which runner backend to use.
     """
 
-    RUNNER_ROOT_DIR: Optional[Path]
+    FRACTAL_RUNNER_WORKING_BASE_DIR: Optional[Path]
+    """
+    Base directory for running jobs / workflows. All artifacts required to set
+    up, run and tear down jobs are placed in subdirs of this directory.
+    """
+
     FRACTAL_LOGGING_LEVEL: int = logging.WARNING
     FRACTAL_SLURM_CONFIG_FILE: Optional[Path]
 
@@ -259,7 +264,7 @@ class Settings(BaseSettings):
                 SQLITE_PATH: str
 
             FRACTAL_TASKS_DIR: Path
-            RUNNER_ROOT_DIR: Path
+            FRACTAL_RUNNER_WORKING_BASE_DIR: Path
 
             FRACTAL_RUNNER_BACKEND: str = Field()
             if FRACTAL_RUNNER_BACKEND == "slurm":
