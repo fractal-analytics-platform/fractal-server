@@ -1,3 +1,30 @@
+# Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
+# University of Zurich
+#
+# Original authors:
+# Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
+#
+# This file is part of Fractal and was originally developed by eXact lab S.r.l.
+# <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
+# Institute for Biomedical Research and Pelkmans Lab from the University of
+# Zurich.
+"""
+Auth subsystem
+
+This module implements the authorisation/authentication subsystem of the
+Fractal Server. It is based on the
+[FastAPI Users](https://fastapi-users.github.io/fastapi-users/)
+library with
+[support](https://github.com/fastapi-users/fastapi-users-db-sqlmodel) for the
+SQLModel database adapter.
+
+In particular, this module links the appropriate database models, sets up
+FastAPIUsers with Barer Token and cookie transports and register local routes.
+Then, for each OAuth client defined in the Fractal Settings configuration, it
+registers the client and the relative routes.
+
+All routes are registerd under the `auth/` prefix.
+"""
 import uuid
 from typing import AsyncGenerator
 from typing import Optional
@@ -48,7 +75,7 @@ cookie_transport = CookieTransport(cookie_samesite="none")
 def get_jwt_strategy() -> JWTStrategy:
     settings = Inject(get_settings)
     return JWTStrategy(
-        secret=settings.JWT_SECRET_KEY,
+        secret=settings.JWT_SECRET_KEY,  # type: ignore
         lifetime_seconds=settings.JWT_EXPIRE_SECONDS,
     )
 
@@ -56,7 +83,7 @@ def get_jwt_strategy() -> JWTStrategy:
 def get_jwt_cookie_strategy() -> JWTStrategy:
     settings = Inject(get_settings)
     return JWTStrategy(
-        secret=settings.JWT_SECRET_KEY,
+        secret=settings.JWT_SECRET_KEY,  # type: ignore
         lifetime_seconds=settings.COOKIE_EXPIRE_SECONDS,
     )
 
@@ -109,6 +136,10 @@ auth_router.include_router(
 
 
 # OAUTH CLIENTS
+# FIXME:
+# Dependency injection should be wrapped within a function call to make it
+# truly lazy. This function could then be called on startup of the FastAPI app
+# (cf. fractal_server.main)
 settings = Inject(get_settings)
 for client in settings.OAUTH_CLIENTS:
     # INIT CLIENTS
@@ -145,7 +176,7 @@ for client in settings.OAUTH_CLIENTS:
         fastapi_users.get_oauth_router(
             _client,
             cookie_backend,
-            settings.JWT_SECRET_KEY,
+            settings.JWT_SECRET_KEY,  # type: ignore
             # WARNING:
             # associate_by_email=True exposes to security risks if the OAuth
             # provider does not verify emails.
@@ -155,7 +186,7 @@ for client in settings.OAUTH_CLIENTS:
     )
     auth_router.include_router(
         fastapi_users.get_oauth_associate_router(
-            _client, UserRead, settings.JWT_SECRET_KEY
+            _client, UserRead, settings.JWT_SECRET_KEY  # type: ignore
         ),
         prefix=f"/{client_name}/associate",
     )

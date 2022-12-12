@@ -20,7 +20,10 @@ and swapping the `Executor` in the [public interface](#public-interface)
 coroutine.
 
 For this reason, both `Process` and `SLURM` backends largely build up on the
-same set of common internal utilities and routines, c.f., [public](#common-utilities-public-api) and [private](#common-utilities-private-api) common backend APIs.
+same set of common internal utilities and routines, c.f.,
+[public](../../reference/fractal_server/app/runner/common/) and
+[private](../../reference/fractal_server/app/runner/_common/) common backend
+APIs.
 
 ## Public interface
 
@@ -30,15 +33,3 @@ The backends need to implement the following common public interface.
     options:
         members:
             - process_workflow
-
-## Common utilities (public API)
-
-::: fractal_server.app.runner.common
-    options:
-        heading_level: 3
-
-## Common utilities (private API)
-
-::: fractal_server.app.runner._common
-    options:
-        heading_level: 3

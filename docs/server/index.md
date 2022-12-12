@@ -13,8 +13,8 @@ takes care of
 
 Please refer to
 
-* [Installation](server/installation.md)
-* [Configuration](server/configuration.md)
+* [Installation](./installation.md)
+* [Configuration](./configuration.md)
 
 ## Fractal Server internals
 
@@ -22,5 +22,5 @@ The server has a modular structure with several subsystem
 
 * task collection
 * [runner backends](runners/index.md)
-* API Auth
+* [API Auth](./auth.md)
 * database interface
