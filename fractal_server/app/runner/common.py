@@ -129,10 +129,9 @@ async def auto_output_dataset(
             Whether it is allowed to overwrite the input dataset with the
             output data.
 
-    Raise:
-        ValueError:
-            If the input dataset is to be overwritten and it provides more
-            than one path.
+    Raises:
+        ValueError: If the input dataset is to be overwritten and it provides
+        more than one path.
 
     Returns:
         output_dataset:
