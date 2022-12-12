@@ -9,7 +9,14 @@ takes care of
 * running workflows on projects
 * expose web API to clients
 
-## Server modules
+## Installation
+
+Please refer to
+
+* [Installation](server/installation.md)
+* [Configuration](server/configuration.md)
+
+## Fractal Server internals
 
 The server has a modular structure with several subsystem
 
