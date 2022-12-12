@@ -13,6 +13,9 @@ tasks on your data. Fractal currently supports two backends:
 
 ## Public interface
 
-The backends need to implement a common public interface.
+The backends need to implement the following common public interface.
 
 ::: fractal_server.app.runner._process
+    options:
+        members:
+            - process_workflow
