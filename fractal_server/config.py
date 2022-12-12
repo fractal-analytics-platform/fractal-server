@@ -75,14 +75,7 @@ class Settings(BaseSettings):
     """
     Contains all the configuration variables for Fractal Server
 
-    Attributes of this class are set from the environtment.
-
-
-    Attributes:
-        DEPLOYMENT_TYPE:
-            The deployment type of the server installation. It is important
-            that production deployments be marked as such to trigger server
-            hardening.
+    The attributes of this class are set from the environtment.
     """
 
     class Config:
@@ -93,6 +86,10 @@ class Settings(BaseSettings):
     DEPLOYMENT_TYPE: Optional[
         Literal["production", "staging", "testing", "development"]
     ]
+    """
+    The deployment type of the server installation. It is important that
+    production deployments be marked as such to trigger server hardening.
+    """
 
     ###########################################################################
     # AUTH
