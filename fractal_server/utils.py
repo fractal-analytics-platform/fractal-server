@@ -1,14 +1,17 @@
+# Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
+# University of Zurich
+#
+# Original authors:
+# Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
+# Tommaso Comparin <tommaso.comparin@exact-lab.it>
+#
+# This file is part of Fractal and was originally developed by eXact lab S.r.l.
+# <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
+# Institute for Biomedical Research and Pelkmans Lab from the University of
+# Zurich.
 """
-Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
-University of Zurich
-
-Original authors:
-Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
-
-This file is part of Fractal and was originally developed by eXact lab S.r.l.
-<exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
-Institute for Biomedical Research and Pelkmans Lab from the University of
-Zurich.
+This module provides general purpose utilities that are not specific to any
+subsystem.
 """
 import asyncio
 import logging
@@ -52,7 +55,7 @@ def file_opener(path: Union[str, Path], flags: int, mode=0o777):
 
 def close_logger(logger: logging.Logger) -> None:
     """
-    Close all FileHandles of `logger`
+    Close all FileHandles of a logger, if any.
     """
     for handle in logger.handlers:
         if isinstance(handle, logging.FileHandler):
@@ -60,12 +63,21 @@ def close_logger(logger: logging.Logger) -> None:
 
 
 def get_timestamp() -> datetime:
+    """
+    Get timezone aware timestamp.
+    """
     return datetime.now(tz=timezone.utc)
 
 
 def warn(message):
     """
-    Make sure that warnings do not make their way to staing and production
+    Custom warning that becomes an error in staging and production deployments
+
+    This works towards assuring that warnings do not make their way to staing
+    and production.
+
+    Raises:
+        RuntimeError: if the deployment type is not `testing` or `development`.
     """
     settings = Inject(get_settings)
     if settings.DEPLOYMENT_TYPE in ["testing", "development"]:
@@ -83,6 +95,20 @@ def set_logger(
 ) -> logging.Logger:
     """
     Set up and return a logger
+
+    Args:
+        logger_name:
+            The identifier of the logger.
+        log_file_path:
+            Path to the log file.
+        level:
+            Logging level of this logger.
+        formatter:
+            Custom formatter.
+
+    Returns:
+        logger:
+            The logger, as configured by the arguments.
     """
     if not level:
         settings = Inject(get_settings)
@@ -108,17 +134,19 @@ async def execute_command(
     If the command returns a return code different from zero, a RuntimeError
     containing the stderr is raised.
 
-    Parameters
-    ----------
-    cwd : Path
-        the working directory for the command execution
-    command : str
-        the command to execute
+    Args:
+        cwd:
+            The working directory for the command execution.
+        command:
+            The command to execute.
 
-    Return
-    ------
-    stdout : str
-        the stdout from the command execution
+    Returns:
+        stdout:
+            The stdout from the command execution.
+
+    Raises:
+        RuntimeError: if the process exited with non-zero status. The error
+            string is set to the `stderr` of the process.
     """
     command_split = shlex_split(command)
     cmd, *args = command_split
