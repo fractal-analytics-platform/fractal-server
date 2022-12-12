@@ -17,13 +17,49 @@ from .project import Project
 from .workflow import Workflow
 
 
-class StatusType(str, Enum):
+class JobStatusType(str, Enum):
+    """
+    Define the job status available
+
+    Attributes:
+        SUBMITTED:
+            The workflow has been applied but not yet scheduled with an
+            executor. In this phase, due diligence takes place, such as
+            creating working directory, assemblying arguments, etc.
+        RUNNING:
+            The workflow was scheduled with an executor. Note that it might not
+            yet be running within the executor, e.g., jobs could still be
+            pending within a SLURM executor.
+        DONE:
+            The workflow was applied successfully
+        FAILED:
+            The workflow terminated with an error.
+    """
+
     SUBMITTED = "submitted"
-    PENDING = "pending"
+    RUNNING = "running"
     DONE = "done"
+    FAILED = "failed"
 
 
 class ApplyWorkflow(ApplyWorkflowBase, table=True):
+    """
+    Represent a workflow being apply
+
+    This table is responsible for storing the state of a workflow execution in
+    the DB.
+
+    Attributes:
+        ...:
+            Workflow submission parameters
+        status:
+            Workflow status
+        log:
+            forward of the workflow logs. Usually this attribute is only
+            populated upon failure.
+
+    """
+
     id: Optional[int] = Field(default=None, primary_key=True)
     project_id: int = Field(foreign_key="project.id")
     input_dataset_id: int = Field(foreign_key="dataset.id")
@@ -50,12 +86,13 @@ class ApplyWorkflow(ApplyWorkflowBase, table=True):
         nullable=False,
         sa_column=Column(DateTime(timezone=True)),
     )
-    status: StatusType = StatusType.SUBMITTED
+    status: JobStatusType = JobStatusType.SUBMITTED
+    log: Optional[str] = None
 
     @property
     def job_root_path(self) -> Path:
         settings = Inject(get_settings)
-        return settings.RUNNER_ROOT_DIR / f"job_{self.id:06d}"
+        return settings.FRACTAL_RUNNER_WORKING_BASE_DIR / f"job_{self.id:06d}"
 
     @property
     def log_path(self) -> Path:

@@ -10,7 +10,8 @@ This file is part of Fractal and was originally developed by eXact lab S.r.l.
 Institute for Biomedical Research and Pelkmans Lab from the University of
 Zurich.
 """
-from os import environ
+import os
+from pathlib import Path
 
 import pytest
 from devtools import debug
@@ -20,7 +21,6 @@ from fractal_server.app.runner import _backends
 
 PREFIX = "/api/v1"
 
-environ["RUNNER_MONITORING"] = "0"
 
 backends_available = list(_backends.keys())
 
@@ -28,6 +28,7 @@ backends_available = list(_backends.keys())
 @pytest.mark.slow
 @pytest.mark.parametrize("backend", backends_available)
 async def test_full_workflow(
+    db,
     client,
     MockCurrentUser,
     testdata_path,
@@ -41,7 +42,7 @@ async def test_full_workflow(
 ):
 
     override_settings_factory(
-        RUNNER_BACKEND=backend,
+        FRACTAL_RUNNER_BACKEND=backend,
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
     )
 
@@ -156,7 +157,6 @@ async def test_full_workflow(
         assert res.status_code == 201
 
         # EXECUTE WORKFLOW
-
         payload = dict(
             project_id=project_id,
             input_dataset_id=input_dataset_id,
@@ -169,8 +169,15 @@ async def test_full_workflow(
             f"{PREFIX}/project/apply/",
             json=payload,
         )
-        debug(res.json())
+        job_data = res.json()
+        debug(job_data)
         assert res.status_code == 202
+
+        res = await client.get(f"{PREFIX}/job/{job_data['id']}")
+        assert res.status_code == 200
+        job_status_data = res.json()
+        debug(job_status_data)
+        assert job_status_data["status"] == "done"
 
         # Verify output
         res = await client.get(
@@ -179,3 +186,109 @@ async def test_full_workflow(
         data = res.json()
         debug(data)
         assert "dummy" in data["meta"]
+
+        # check that all artifacts are rw by the user running the server
+        workflow_path = Path(job_status_data["working_dir"])
+        no_access = []
+        for f in workflow_path.glob("*"):
+            has_access = os.access(f, os.R_OK | os.W_OK)
+            if not has_access:
+                no_access.append(f)
+        debug(no_access)
+        assert len(no_access) == 0
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("backend", backends_available)
+async def test_failing_workflow(
+    client,
+    MockCurrentUser,
+    testdata_path,
+    tmp777_path,
+    collect_packages,
+    project_factory,
+    dataset_factory,
+    backend,
+    request,
+    override_settings_factory,
+):
+
+    override_settings_factory(
+        FRACTAL_RUNNER_BACKEND=backend,
+        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
+    )
+
+    debug(f"Testing with {backend=}")
+    if backend == "slurm":
+        request.getfixturevalue("monkey_slurm")
+        request.getfixturevalue("relink_python_interpreter")
+
+    async with MockCurrentUser(persist=True) as user:
+        project = await project_factory(user)
+        project_id = project.id
+        input_dataset = await dataset_factory(
+            project, name="input", type="image", read_only=True
+        )
+        input_dataset_id = input_dataset.id
+
+        # CREATE OUTPUT DATASET AND RESOURCE
+
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/",
+            json=dict(
+                name="output dataset",
+                type="json",
+            ),
+        )
+        assert res.status_code == 201
+        output_dataset = res.json()
+        output_dataset_id = output_dataset["id"]
+
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/{output_dataset['id']}",
+            json=dict(path=tmp777_path.as_posix(), glob_pattern="out.json"),
+        )
+        assert res.status_code == 201
+
+        # CREATE WORKFLOW
+        res = await client.post(
+            f"{PREFIX}/workflow/",
+            json=dict(name="test workflow", project_id=project.id),
+        )
+        assert res.status_code == 201
+        workflow_dict = res.json()
+        workflow_id = workflow_dict["id"]
+
+        # Add a dummy task
+        res = await client.post(
+            f"{PREFIX}/workflow/{workflow_id}/add-task/",
+            json=dict(
+                task_id=collect_packages[0].id, args={"raise_error": True}
+            ),
+        )
+        assert res.status_code == 201
+
+        # EXECUTE WORKFLOW
+
+        payload = dict(
+            project_id=project_id,
+            input_dataset_id=input_dataset_id,
+            output_dataset_id=output_dataset_id,
+            workflow_id=workflow_id,
+            overwrite_input=False,
+        )
+        res = await client.post(
+            f"{PREFIX}/project/apply/",
+            json=payload,
+        )
+        job_data = res.json()
+        assert res.status_code == 202
+        job_id = job_data["id"]
+
+        res = await client.get(f"{PREFIX}/job/{job_id}")
+        assert res.status_code == 200
+        job_status_data = res.json()
+        debug(job_status_data)
+        assert job_status_data["status"] == "failed"
+        assert "id: None" not in job_status_data["log"]
+        # TODO add check on log content.

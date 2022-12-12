@@ -13,9 +13,28 @@ from typing import Optional
 from pydantic import BaseModel
 
 from ...utils import close_logger as close_job_logger  # noqa F401
+from ...utils import file_opener
 from ..models import Dataset
 from ..models import Project
 from ..models.task import Task
+
+
+class TaskExecutionError(RuntimeError):
+    task_id: Optional[int] = None
+    task_order: Optional[int] = None
+
+    def __init__(
+        self,
+        *args,
+        workflow_task_id: Optional[int] = None,
+        workflow_task_order: Optional[int] = None,
+        task_name: Optional[str] = None,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+        self.workflow_task_id = workflow_task_id
+        self.workflow_task_order = workflow_task_order
+        self.task_name = task_name
 
 
 class TaskParameterEncoder(JSONEncoder):
@@ -144,5 +163,5 @@ def write_args_file(*args: Dict[str, Any], path: Path):
     out = {}
     for d in args:
         out.update(d)
-    with path.open("w") as f:
+    with open(path, "w", opener=file_opener) as f:
         json.dump(out, f, cls=TaskParameterEncoder, indent=4)

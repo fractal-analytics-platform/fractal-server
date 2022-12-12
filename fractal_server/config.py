@@ -1,15 +1,15 @@
-"""
-Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
-University of Zurich
-
-Original authors:
-Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
-
-This file is part of Fractal and was originally developed by eXact lab S.r.l.
-<exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
-Institute for Biomedical Research and Pelkmans Lab from the University of
-Zurich.
-"""
+# Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
+# University of Zurich
+#
+# Original authors:
+# Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
+# Tommaso Comparin <tommaso.comparin@exact-lab.it>
+# Marco Franzon <marco.franzon@exact-lab.it>
+#
+# This file is part of Fractal and was originally developed by eXact lab S.r.l.
+# <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
+# Institute for Biomedical Research and Pelkmans Lab from the University of
+# Zurich.
 import logging
 from os import environ
 from os import getenv
@@ -36,6 +36,31 @@ load_dotenv(".fractal_server.env")
 
 
 class OAuthClient(BaseModel):
+    """
+    OAuth Client Model
+
+    This model wraps the variables that define a client against an Identity
+    Provider. As some providers are supported by the libraries used within the
+    server, some attributes are optional.
+
+    Attributes:
+        CLIENT_NAME:
+            The name of the client
+        CLIENT_ID:
+            ID of client
+        CLIENT_SECRET:
+            Secret to authorise against the identity provider
+
+        AUTHORIZE_ENDPOINT:
+            Authorization endpoint
+        ACCESS_TOKEN_ENDPOINT:
+            Token endpoint
+        REFRESH_TOKEN_ENDPOINT:
+            Refresh token endpoint
+        REVOKE_TOKEN_ENDPOINT:
+            Revoke token endpoint
+    """
+
     CLIENT_NAME: str
     CLIENT_ID: str
     CLIENT_SECRET: str
@@ -47,6 +72,19 @@ class OAuthClient(BaseModel):
 
 
 class Settings(BaseSettings):
+    """
+    Contains all the configuration variables for Fractal Server
+
+    Attributes of this class are set from the environtment.
+
+
+    Attributes:
+        DEPLOYMENT_TYPE:
+            The deployment type of the server installation. It is important
+            that production deployments be marked as such to trigger server
+            hardening.
+    """
+
     class Config:
         case_sensitive = True
 
@@ -71,6 +109,23 @@ class Settings(BaseSettings):
 
     @root_validator(pre=True)
     def collect_oauth_clients(cls, values):
+        """
+        Automatic collection of OAuth Clients
+
+        This method collects the environment variables relative to a single
+        OAuth client and saves them within the `Settings` object in the form
+        of an `OAuthClient` instance.
+
+        Fractal can support an arbitrary number of OAuth providers, which are
+        automatically detected by parsing the environment variable names. In
+        particular, to set the provider `FOO`, one must specify the variables
+
+            OAUTH_FOO_CLIENT_ID
+            OAUTH_FOO_CLIENT_SECRET
+            ...
+
+        etc (cf. OAuthClient).
+        """
         oauth_env_variable_keys = [
             key for key in environ.keys() if "OAUTH" in key
         ]
@@ -147,27 +202,49 @@ class Settings(BaseSettings):
     ###########################################################################
     # FRACTAL SPECIFIC
     ###########################################################################
-    FRACTAL_ROOT: Optional[Path]
-    RUNNER_BACKEND: str = "process"
-    RUNNER_ROOT_DIR: Optional[Path]
-    FRACTAL_LOGGING_LEVEL: int = logging.WARNING
-    FRACTAL_PUBLIC_TASK_SUBDIR: str = ".fractal"
-    FRACTAL_SLURM_CONFIG_FILE: Optional[Path]
+    FRACTAL_TASKS_DIR: Optional[Path]
+    """
+    Directory under which all the tasks will be saved.
+    """
 
+    FRACTAL_RUNNER_BACKEND: Literal["process", "slurm", "parsl"] = "process"
+    """
+    Select which runner backend to use.
+    """
+
+    FRACTAL_RUNNER_WORKING_BASE_DIR: Optional[Path]
+    """
+    Base directory for running jobs / workflows. All artifacts required to set
+    up, run and tear down jobs are placed in subdirs of this directory.
+    """
+
+    FRACTAL_LOGGING_LEVEL: int = logging.WARNING
+    """
+    Logging verbosity for main Fractal logger.
+    """
+
+    FRACTAL_SLURM_CONFIG_FILE: Optional[Path]
     """
     It may be necessary to have that the Python interpreter used within a SLURM
     cluster be different from the interpreter that runs the server. This
     variable allows to choose a different interpreter.
     """
-    SLURM_PYTHON_WORKER_INTERPRETER: Optional[str] = None
 
-    RUNNER_CONFIG: str = "local"
-    RUNNER_DEFAULT_EXECUTOR: str = "cpu-low"
+    FRACTAL_RUNNER_DEFAULT_EXECUTOR: str = "cpu-low"
+    """
+    Used by some runner backends to configure the parameters to run jobs with.
+    """
 
-    # NOTE: we currently set RUNNER_MONITORING to False, due to
+    FRACTAL_SLURM_WORKER_PYTHON: Optional[str] = None
+    """
+    Path to Python interpreter that will run the jobs on the SLURM nodes. If
+    not specified, the interpreter that runs the server is used.
+    """
+
+    # NOTE: we currently set FRACTAL_PARSL_MONITORING to False, due to
     # https://github.com/fractal-analytics-platform/fractal-server/issues/148
-    # RUNNER_MONITORING: bool = int(getenv("RUNNER_MONITORING", 1))
-    RUNNER_MONITORING: bool = False
+    FRACTAL_PARSL_MONITORING: bool = False
+    FRACTAL_PARSL_CONFIG: str = "local"
 
     ###########################################################################
     # BUSINESS LOGIC
@@ -197,11 +274,11 @@ class Settings(BaseSettings):
             elif DB_ENGINE == "sqlite":
                 SQLITE_PATH: str
 
-            FRACTAL_ROOT: Path
-            RUNNER_ROOT_DIR: Path
+            FRACTAL_TASKS_DIR: Path
+            FRACTAL_RUNNER_WORKING_BASE_DIR: Path
 
-            RUNNER_BACKEND: str = Field()
-            if RUNNER_BACKEND == "slurm":
+            FRACTAL_RUNNER_BACKEND: str = Field()
+            if FRACTAL_RUNNER_BACKEND == "slurm":
                 FRACTAL_SLURM_CONFIG_FILE: Path
 
         StrictSettings(**self.dict())

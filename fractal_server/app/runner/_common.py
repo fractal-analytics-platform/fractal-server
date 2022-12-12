@@ -13,9 +13,14 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
+from ...utils import file_opener
 from ..models import WorkflowTask
+from .common import TaskExecutionError
 from .common import TaskParameters
 from .common import write_args_file
+
+
+METADATA_FILENAME = "metadata.json"
 
 
 def sanitize_component(value: str) -> str:
@@ -79,16 +84,12 @@ def get_workflow_file_paths(
     )
 
 
-class TaskExecutionError(RuntimeError):
-    pass
-
-
 def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
     """
     Call command and return stdout, stderr, retcode
     """
-    fp_stdout = stdout.open("w")
-    fp_stderr = stderr.open("w")
+    fp_stdout = open(stdout, "w", opener=file_opener)
+    fp_stderr = open(stderr, "w", opener=file_opener)
     try:
         result = subprocess.run(  # nosec
             shlex_split(cmd),
@@ -161,9 +162,16 @@ def call_single_task(
     )
 
     logger.debug(f"executing task {task.order=}")
-    _call_command_wrapper(
-        cmd, stdout=workflow_files.out, stderr=workflow_files.err
-    )
+
+    try:
+        _call_command_wrapper(
+            cmd, stdout=workflow_files.out, stderr=workflow_files.err
+        )
+    except TaskExecutionError as e:
+        e.workflow_task_order = task.order
+        e.workflow_task_id = task.id
+        e.task_name = task.task.name
+        raise e
 
     # NOTE:
     # This assumes that the new metadata is printed to stdout
@@ -186,6 +194,8 @@ def call_single_task(
         metadata=updated_metadata,
         logger_name=task_pars.logger_name,
     )
+    with open(workflow_dir / METADATA_FILENAME, "w", opener=file_opener) as f:
+        json.dump(updated_metadata, f, indent=2)
     return out_task_parameters
 
 
@@ -220,9 +230,16 @@ def call_single_parallel_task(
     )
 
     logger.debug(f"executing task {task.order=}")
-    _call_command_wrapper(
-        cmd, stdout=workflow_files.out, stderr=workflow_files.err
-    )
+
+    try:
+        _call_command_wrapper(
+            cmd, stdout=workflow_files.out, stderr=workflow_files.err
+        )
+    except TaskExecutionError as e:
+        e.workflow_task_order = task.order
+        e.workflow_task_id = task.id
+        e.task_name = task.task.name
+        raise e
 
 
 def call_parallel_task(
@@ -271,6 +288,9 @@ def call_parallel_task(
         metadata=task_pars_depend.metadata,
         logger_name=task_pars_depend.logger_name,
     )
+
+    with open(workflow_dir / METADATA_FILENAME, "w", opener=file_opener) as f:
+        json.dump(task_pars_depend.metadata, f, indent=2)
     this_future.set_result(out_task_parameters)
     return this_future
 

@@ -19,14 +19,15 @@ from typing import List
 from typing import Optional
 
 import cloudpickle
-from cfut import RemoteException
 from cfut import SlurmExecutor
 from cfut.util import random_string
 
 from ....config import get_settings
 from ....syringe import Inject
 from ....utils import close_logger
+from ....utils import file_opener
 from ....utils import set_logger
+from ..common import TaskExecutionError
 
 
 class SlurmJob:
@@ -67,7 +68,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         self.common_script_lines = common_script_lines or []
         if not script_dir:
             settings = Inject(get_settings)
-            script_dir = settings.RUNNER_ROOT_DIR  # type: ignore
+            script_dir = settings.FRACTAL_RUNNER_WORKING_BASE_DIR
         self.script_dir: Path = script_dir  # type: ignore
 
     def get_stdout_filename(
@@ -106,7 +107,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             dest:
                 The path to the batch script
         """
-        with dest.open("w") as f:
+        with open(dest, "w", opener=file_opener) as f:
             f.write(sbatch_script)
         return dest
 
@@ -153,7 +154,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         except ValueError as e:
             logger = set_logger(logger_name="slurm_runner")
             logger.error(
-                f"Submit ommand `{submit_command}` returned "
+                f"Submit command `{submit_command}` returned "
                 f"`{output.stdout.decode('utf-8')}`, which cannot be cast "
                 "to an integer job ID."
             )
@@ -188,7 +189,10 @@ class FractalSlurmExecutor(SlurmExecutor):
             if not ln.startswith("#SBATCH")
         ] + [f"export CFUT_DIR={self.script_dir}"]
 
-        cmd = [shlex.join(["srun", *cmdline])]
+        cmd = [
+            shlex.join(["srun", *cmdline]),
+            f"chmod 777 {outpath.parent / '*'}",
+        ]
 
         script_lines = ["#!/bin/sh"] + sbatch_lines + non_sbatch_lines + cmd
         return "\n".join(script_lines)
@@ -302,7 +306,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         job.stderr = self.get_stderr_filename(prefix=job_file_prefix)
 
         funcser = cloudpickle.dumps((fun, args, kwargs))
-        with job.slurm_input.open("wb") as f:
+        with open(job.slurm_input, "wb", opener=file_opener) as f:
             f.write(funcser)
         jobid = self._start(job, additional_setup_lines)
 
@@ -330,7 +334,8 @@ class FractalSlurmExecutor(SlurmExecutor):
         if success:
             fut.set_result(result)
         else:
-            fut.set_exception(RemoteException(result))
+            exc = TaskExecutionError(result.tb, *result.args, **result.kwargs)
+            fut.set_exception(exc)
 
         # Clean up communication files.
         in_path.unlink()
@@ -346,12 +351,14 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         settings = Inject(get_settings)
         python_worker_interpreter = (
-            settings.SLURM_PYTHON_WORKER_INTERPRETER or sys.executable
+            settings.FRACTAL_SLURM_WORKER_PYTHON or sys.executable
         )
 
         sbatch_script = self.compose_sbatch_script(
             cmdline=shlex.split(
-                f"{python_worker_interpreter} -m cfut.remote {job.workerid}"
+                f"{python_worker_interpreter}"
+                " -m fractal_server.app.runner._slurm.remote "
+                f"{job.slurm_input}"
             ),
             outpath=job.stdout,
             errpath=job.stderr,
