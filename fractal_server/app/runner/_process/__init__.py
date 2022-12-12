@@ -1,3 +1,12 @@
+"""
+Process Bakend
+
+This backend runs fractal workflows as separate processes using a python
+thread process pool, where each thread is responsible for running a single
+task in a subprocess.
+
+Incidentally, it represents the reference implementation for a backend.
+"""
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
@@ -9,17 +18,6 @@ from ...models import Workflow
 from .._common import recursive_task_submission
 from ..common import async_wrap
 from ..common import TaskParameters
-
-
-"""
-Process Bakend
-
-This backend runs fractal workflows as separate processes using a python
-thread process pool, where each thread is responsible for running a single
-task in a subprocess.
-
-Incidentally, it represents the reference implementation for a backend.
-"""
 
 
 def _process_workflow(
