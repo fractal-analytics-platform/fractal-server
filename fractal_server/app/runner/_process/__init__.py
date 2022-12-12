@@ -74,6 +74,44 @@ async def process_workflow(
         str
     ] = None,  # this is only to match to _parsl interface
 ) -> Dict[str, Any]:
+    """
+    Process workflow
+
+    This function is responsible for running a workflow on some input data,
+    saving the output and taking care of any exception raised during the run.
+
+    NOTE: This is the `process` backend's public interface, which also works as
+    a reference implementation for other backends.
+
+    Args:
+        workflow:
+            The workflow to be run
+        input_paths:
+            The paths to the input files to pass to the first task of the
+            workflow
+        output_path:
+            The destination path for the last task of the workflow
+        input_metadata:
+            Initial metadata, passed to the first task
+        logger_name:
+            Name of the logger to log information on the run to
+        workflow_dir:
+            Working directory for this run
+        username:
+            Username to impersonate to run the workflow
+        worker_init:
+            Any additional, usually backend specific, information to be passed
+            to the backend executor.
+
+    Raises:
+        TaskExecutionError:
+            Wrapper for errors raised by the tasks' executors.
+
+    Returns:
+        output_dataset_metadata:
+            The updated metadata for the dataset, as returned by the last task
+            of the workflow
+    """
     output_dataset_metadata = await async_wrap(_process_workflow)(
         workflow=workflow,
         input_paths=input_paths,
