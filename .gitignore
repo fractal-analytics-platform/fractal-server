@@ -28,3 +28,4 @@ nohup.out
 parsl_executors.log
 fractal.log
 logs
+tests/data/slurm_docker_images/node/fractal_server_local.tar.gz
