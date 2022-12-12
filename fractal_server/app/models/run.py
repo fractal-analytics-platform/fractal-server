@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import Enum
-from pathlib import Path
 from typing import Optional
 
 from sqlalchemy import Column
@@ -9,8 +8,6 @@ from sqlmodel import Field
 from sqlmodel import Relationship
 
 from ...common.schemas import ApplyWorkflowBase
-from ...config import get_settings
-from ...syringe import Inject
 from ...utils import get_timestamp
 from .project import Dataset
 from .project import Project
@@ -88,17 +85,3 @@ class ApplyWorkflow(ApplyWorkflowBase, table=True):
     )
     status: JobStatusType = JobStatusType.SUBMITTED
     log: Optional[str] = None
-
-    @property
-    def job_root_path(self) -> Path:
-        settings = Inject(get_settings)
-        return settings.FRACTAL_RUNNER_WORKING_BASE_DIR / f"job_{self.id:06d}"
-
-    @property
-    def log_path(self) -> Path:
-        return self.job_root_path / "job.log"
-
-    def make_job_dir(self):
-        _path = self.job_root_path
-        if not _path.is_dir():
-            _path.mkdir(exists_ok=True, parents=True)
