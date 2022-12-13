@@ -34,12 +34,12 @@ def _process_workflow(
     ] = None,  # this is only to match to _parsl interface
 ) -> Dict[str, Any]:
     """
-    TODO:
-    in case of failure we must return the most recent clean metadata
+    Internal processing routine
 
-    Returns:
-    output_dataset_metadata (Dict):
-        the output metadata
+    Schedules the workflow using a ThreadPoolExecutor.
+
+    Cf. [process_workflow][fractal_server.app.runner._process.process_workflow]
+    for the call signature.
     """
 
     with ThreadPoolExecutor() as executor:
