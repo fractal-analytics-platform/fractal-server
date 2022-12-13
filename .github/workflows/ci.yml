@@ -139,7 +139,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: openapi-schema
-          path: "docs/openapi.json"
+          path: "docs/"
 
       - name: Deploy docs
         uses: mhausenblas/mkdocs-deploy-gh-pages@master
