@@ -123,7 +123,9 @@ def set_slurm_config(
     workflow_dir: Path,
 ) -> Dict[str, Any]:
     """
-    Collect slurm configuration parameters
+    Collect SLURM configuration parameters
+
+    Inject SLURM configuration for single task execution.
 
     For now, this is the reference implementation for argument
     `submit_setup_call` of

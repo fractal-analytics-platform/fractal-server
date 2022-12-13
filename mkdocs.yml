@@ -45,6 +45,7 @@ nav:
   - Server: server/
   - Code reference: reference/
   - Coverage: coverage
+  - OpenAPI: openapi.md
 
 watch:
   - fractal_server
@@ -66,3 +67,4 @@ plugins:
   - coverage:
       page_name: coverage
       html_report_dir: htmlcov
+  - render_swagger
