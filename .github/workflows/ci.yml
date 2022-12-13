@@ -67,6 +67,22 @@ jobs:
           name: coverage-data
           path: ".coverage*"
 
+      - name: extract openapi schema
+        env:
+          DEPLOYMENT_TYPE=development
+          JWT_SECRET_KEY=1234
+          DATA_DIR_ROOT=/tmp/fractal-server/
+          FRACTAL_TASKS_DIR=/tmp/fractal-server/tasks/
+          FRACTAL_RUNNER_WORKING_BASE_DIR=/tmp/fractal-server/artifacts/
+        run: poetry run openapi
+
+      - name: Upload openapi schema
+        uses: actions/upload-artifact@v3
+        with:
+          name: openapi-schema
+          path: "openapi.json"
+
+
   coverage:
     name: Coverage
     runs-on: ubuntu-20.04
@@ -118,6 +134,12 @@ jobs:
         with:
           name: html-report
           path: htmlcov
+
+      - name: Download openapi schema
+        uses: actions/download-artifact@v3
+        with:
+          name: openapi-schema
+          path: "docs/openapi.json"
 
       - name: Deploy docs
         uses: mhausenblas/mkdocs-deploy-gh-pages@master

@@ -56,6 +56,7 @@ mkdocs-gen-files = "^0.4.0"
 mkdocs-literate-nav = "^0.5.0"
 mkdocs-section-index = "^0.3.4"
 mkdocs-coverage = "^0.2.6"
+mkdocs-render-swagger-plugin = "^0.0.4"
 
 
 [build-system]
@@ -83,6 +84,7 @@ push = true
 
 [tool.poetry.scripts]
 fractal-server = "fractal_server.__main__:run"
+openapi = "fractal_server.__main__:save_openapi"
 
 [tool.coverage.run]
 branch = true

@@ -19,5 +19,16 @@ def run():
     )
 
 
+def save_openapi():
+    from fractal_server.main import start_application
+    import json
+
+    app = start_application()
+    openapi_schema = app.openapi()
+
+    with open("openapi.json", "w") as f:
+        json.dump(openapi_schema, f)
+
+
 if __name__ == "__main__":
     run()
