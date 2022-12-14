@@ -6,7 +6,7 @@ Type=simple
 Restart=always
 RestartSec=1
 User=fractal
-EnvironmentFile=/etc/systemd/system/fractal.config
+EnvironmentFile=/etc/systemd/system/fractal.d/fractal.config
 ExecStart=/path/to/gunicorn fractal_server.main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 127.0.0.1:8010 --access-logfile -
 [Install]
 WantedBy=multi-user.target
