@@ -787,6 +787,17 @@ optional = false
 python-versions = ">=3.7"
 
 [[package]]
+name = "mkdocs-render-swagger-plugin"
+version = "0.0.4"
+description = "MKDocs plugin for rendering swagger & openapi files."
+category = "dev"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+mkdocs = "*"
+
+[[package]]
 name = "mkdocs-section-index"
 version = "0.3.4"
 description = "MkDocs plugin to allow clickable sections that lead to an index page"
@@ -1499,7 +1510,7 @@ slurm = ["clusterfutures"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "017460c988c5f59ff40d359e0a1190d61b5b5597b244c6dae40cb758998ef2e2"
+content-hash = "f51091d22b2caae7284b78c2f20adb4a480a4faf1813703900810e861e98a643"
 
 [metadata.files]
 aiosqlite = [
@@ -2023,6 +2034,10 @@ mkdocs-material = [
 mkdocs-material-extensions = [
     {file = "mkdocs_material_extensions-1.1.1-py3-none-any.whl", hash = "sha256:e41d9f38e4798b6617ad98ca8f7f1157b1e4385ac1459ca1e4ea219b556df945"},
     {file = "mkdocs_material_extensions-1.1.1.tar.gz", hash = "sha256:9c003da71e2cc2493d910237448c672e00cefc800d3d6ae93d2fc69979e3bd93"},
+]
+mkdocs-render-swagger-plugin = [
+    {file = "mkdocs-render-swagger-plugin-0.0.4.tar.gz", hash = "sha256:0d7880076de624640d6f9e2bf4689a484db0597d43c5d6cd1b2ccad0dfe469c2"},
+    {file = "mkdocs_render_swagger_plugin-0.0.4-py3-none-any.whl", hash = "sha256:5936889a0405947ff5c9e2b5c4393fe26dbd3dd1e2d03ec8a38ff826ee105866"},
 ]
 mkdocs-section-index = [
     {file = "mkdocs-section-index-0.3.4.tar.gz", hash = "sha256:050151bfe7c0e374f197335e0ecb19c45b53dbafc0f817aa203f0cc24bcf7d10"},
