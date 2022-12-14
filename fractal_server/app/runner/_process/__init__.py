@@ -1,3 +1,12 @@
+"""
+Process Bakend
+
+This backend runs fractal workflows as separate processes using a python
+thread process pool, where each thread is responsible for running a single
+task in a subprocess.
+
+Incidentally, it represents the reference implementation for a backend.
+"""
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
@@ -9,17 +18,6 @@ from ...models import Workflow
 from .._common import recursive_task_submission
 from ..common import async_wrap
 from ..common import TaskParameters
-
-
-"""
-Process Bakend
-
-This backend runs fractal workflows as separate processes using a python
-thread process pool, where each thread is responsible for running a single
-task in a subprocess.
-
-Incidentally, it represents the reference implementation for a backend.
-"""
 
 
 def _process_workflow(
@@ -36,12 +34,12 @@ def _process_workflow(
     ] = None,  # this is only to match to _parsl interface
 ) -> Dict[str, Any]:
     """
-    TODO:
-    in case of failure we must return the most recent clean metadata
+    Internal processing routine
 
-    Returns:
-    output_dataset_metadata (Dict):
-        the output metadata
+    Schedules the workflow using a ThreadPoolExecutor.
+
+    Cf. [process_workflow][fractal_server.app.runner._process.process_workflow]
+    for the call signature.
     """
 
     with ThreadPoolExecutor() as executor:
@@ -74,6 +72,44 @@ async def process_workflow(
         str
     ] = None,  # this is only to match to _parsl interface
 ) -> Dict[str, Any]:
+    """
+    Process workflow
+
+    This function is responsible for running a workflow on some input data,
+    saving the output and taking care of any exception raised during the run.
+
+    NOTE: This is the `process` backend's public interface, which also works as
+    a reference implementation for other backends.
+
+    Args:
+        workflow:
+            The workflow to be run
+        input_paths:
+            The paths to the input files to pass to the first task of the
+            workflow
+        output_path:
+            The destination path for the last task of the workflow
+        input_metadata:
+            Initial metadata, passed to the first task
+        logger_name:
+            Name of the logger to log information on the run to
+        workflow_dir:
+            Working directory for this run
+        username:
+            Username to impersonate to run the workflow
+        worker_init:
+            Any additional, usually backend specific, information to be passed
+            to the backend executor.
+
+    Raises:
+        TaskExecutionError:
+            Wrapper for errors raised by the tasks' executors.
+
+    Returns:
+        output_dataset_metadata:
+            The updated metadata for the dataset, as returned by the last task
+            of the workflow
+    """
     output_dataset_metadata = await async_wrap(_process_workflow)(
         workflow=workflow,
         input_paths=input_paths,
