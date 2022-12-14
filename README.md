@@ -2,7 +2,6 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/fractal-server?color=gree)](https://pypi.org/project/fractal-server/)
 [![CI Status](https://github.com/fractal-analytics-platform/fractal-server/actions/workflows/ci.yml/badge.svg)](https://github.com/fractal-analytics-platform/fractal-server/actions/workflows/ci.yml)
-[![Documentation status](https://github.com/fractal-analytics-platform/fractal-server/actions/workflows/pages/pages-build-deployment/badge.svg)](https://fractal-analytics-platform.github.io/fractal-server)
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 Fractal is a framework to process high content imaging data at scale and prepare it for interactive visualization.
