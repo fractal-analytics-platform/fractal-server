@@ -78,23 +78,11 @@ the test suite by invoking
 poetry run pytest
 ```
 
-## Contributors
 
-Fractal was conceived in the Liberali Lab at the Friedrich Miescher Institute
-for Biomedical Research and in the Pelkmans Lab at the University of Zurich
-(both in Switzerland). The project lead is with
-[@gusqgm](https://github.com/gusqgm) & [@jluethi](https://github.com/jluethi).
-The core development is done under contract by
-[@mfranzon](https://github.com/mfranzon), [@tcompa](https://github.com/tcompa)
-& [@jacopo-exact](https://github.com/jacopo-exact) from [eXact lab
-S.r.l.](https://exact-lab.it).
+# Contributors and license
 
-## License
+Unless otherwise stated in each individual module, all Fractal components are released according to a BSD 3-Clause License, and Copyright is with Friedrich Miescher Institute for Biomedical Research and University of Zurich.
 
-Unless otherwise stated in each individual module, Fractal is released
-according to a BSD 3-Clause License. See `LICENSE`.
+The SLURM compatibility layer is based on [`clusterfutures`](https://github.com/sampsyo/clusterfutures), by [@sampsyo](https://github.com/sampsyo) and collaborators, and it is released under the terms of the MIT license.
 
-The SLURM compatibility layer is based on
-[`clusterfutures`](https://github.com/sampsyo/clusterfutures), by
-[@sampsyo](https://github.com/sampsyo) and collaborators, and it is released
-under the terms of the MIT license.
+Fractal was conceived in the Liberali Lab at the Friedrich Miescher Institute for Biomedical Research and in the Pelkmans Lab at the University of Zurich (both in Switzerland). The project lead is with [@gusqgm](https://github.com/gusqgm) & [@jluethi](https://github.com/jluethi). The core development is done under contract by [@mfranzon](https://github.com/mfranzon), [@tcompa](https://github.com/tcompa) & [@jacopo-exact](https://github.com/jacopo-exact) from [eXact lab S.r.l.](exact-lab.it).
