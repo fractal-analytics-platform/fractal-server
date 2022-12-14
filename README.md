@@ -11,6 +11,10 @@ Fractal is a framework to process high content imaging data at scale and prepare
 This is the server component of the fractal analytics platform. If you are interested in the client component, please refer to the [main
 repository](https://github.com/fractal-analytics-platform/fractal). If you are interested in the fractal tasks, please refer to [the tasks repository](https://github.com/fractal-analytics-platform/fractal-tasks-core).
 
+
+## Documentation
+Please refer to the [official documentation](https://fractal-analytics-platform.github.io/fractal-server/).
+
 ## Installation
 
 You may
