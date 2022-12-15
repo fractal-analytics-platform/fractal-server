@@ -1,3 +1,21 @@
+# Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
+# University of Zurich
+#
+# Original authors:
+# Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
+# Tommaso Comparin <tommaso.comparin@exact-lab.it>
+#
+# This file is part of Fractal and was originally developed by eXact lab S.r.l.
+# <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
+# Institute for Biomedical Research and Pelkmans Lab from the University of
+# Zurich.
+"""
+Runner backend subsystem root
+
+This module is the single entry point to the runner backend subsystem. Other
+subystems should only import this module and not its submodules or the
+individual backends.
+"""
 import logging
 import os
 from typing import Dict

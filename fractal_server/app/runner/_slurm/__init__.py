@@ -1,11 +1,30 @@
+# Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
+# University of Zurich
+#
+# Original authors:
+# Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
+# Tommaso Comparin <tommaso.comparin@exact-lab.it>
+#
+# This file is part of Fractal and was originally developed by eXact lab S.r.l.
+# <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
+# Institute for Biomedical Research and Pelkmans Lab from the University of
+# Zurich.
+"""
+Slurm Bakend
+
+This backend runs fractal workflows in a SLURM cluster using Clusterfutures
+Executor objects.
+"""
 import json
 from pathlib import Path
 from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Union
 
 from pydantic import BaseModel
+from pydantic import Field
 
 from ....config import get_settings
 from ....syringe import Inject
@@ -18,44 +37,72 @@ from ..common import TaskParameters
 from .executor import FractalSlurmExecutor
 
 
-"""
-Slurm Bakend
-
-This backend runs fractal workflows in a SLURM cluster using Clusterfutures
-Executor objects.
-"""
-
-
 class SlurmConfig(BaseModel):
     """
-    NOTE: We avoid calling it executor to avoid confusion with
-    `concurrent.futures.Executor`
+    Abstraction for SLURM executor parameters
+
+    This class wraps options for the `sbatch` command. Attribute `xxx` maps to
+    the `--xxx` option of `sbatch`.
+    Cf. [sbatch documentation](https://slurm.schedmd.com/sbatch.html)
+
+    Note: options containing hyphens ('-') need be aliased to attribute names
+        with underscores ('-').
     """
+
+    class Config:
+        allow_population_by_field_name = True
 
     partition: str
     time: Optional[str]
     mem: Optional[str]
     nodes: Optional[str]
-    ntasks_per_node: Optional[str]
-    cpus_per_task: Optional[str]
+    ntasks_per_node: Optional[str] = Field(alias="ntasks-per-node")
+    cpus_per_task: Optional[str] = Field(alias="cpus-per-task")
     account: Optional[str]
-    extra_lines: Optional[List[str]] = None
+    extra_lines: Optional[List[str]] = Field(default_factory=list)
 
     def to_sbatch(self, prefix="#SBATCH "):
-        dic = self.dict(exclude_none=True)
+        dic = self.dict(
+            exclude_none=True, by_alias=True, exclude={"extra_lines"}
+        )
         sbatch_lines = []
         for k, v in dic.items():
-            sbatch_lines.append(f"{prefix}--{k.replace('_', '-')}={v}")
-        if self.extra_lines:
-            sbatch_lines.extend(self.extra_lines)
+            sbatch_lines.append(f"{prefix}--{k}={v}")
+        sbatch_lines.extend(self.extra_lines)
         return sbatch_lines
+
+
+class SlurmConfigError(ValueError):
+    """
+    Slurm configuration error
+    """
+
+    pass
 
 
 def load_slurm_config(
     config_path: Optional[Path] = None,
 ) -> Dict[str, SlurmConfig]:
     """
-    Parse slurm configuration
+    Parse slurm configuration file
+
+    The configuration file can contain multiple SLURM configurations in JSON
+    format. This functions deserialises all the configurations and returns
+    them in the form of SlurmConfig objects.
+
+    Args:
+        config_path:
+            The path to the configuration file. If not provided, it is read
+            from Fractal settings.
+
+    Raises:
+        SlurmConfigError: if any exeception was raised in reading or
+            deserialising the configuration file.
+
+    Returns:
+        config_dict:
+            Dictionary whose keys are the configuration identifiers and whose
+            values are SlurmConfig objects.
     """
     if not config_path:
         settings = Inject(get_settings)
@@ -65,9 +112,10 @@ def load_slurm_config(
             raw_data = json.load(f)
 
         # coerce
-        config_dict = {}
-        for config_key in raw_data:
-            config_dict[config_key] = SlurmConfig(**raw_data[config_key])
+        config_dict = {
+            config_key: SlurmConfig(**raw_data[config_key])
+            for config_key in raw_data
+        }
     except FileNotFoundError:
         raise SlurmConfigError(f"Configuration file not found: {config_path}")
     except Exception as e:
@@ -78,20 +126,19 @@ def load_slurm_config(
     return config_dict
 
 
-class SlurmConfigError(ValueError):
-    pass
-
-
 def set_slurm_config(
     task: WorkflowTask,
     task_pars: TaskParameters,
     workflow_dir: Path,
 ) -> Dict[str, Any]:
     """
-    Collect slurm configuration parameters
+    Collect SLURM configuration parameters
+
+    Inject SLURM configuration for single task execution.
 
     For now, this is the reference implementation for argument
-    `submit_setup_call` of `runner._common.recursive_task_submission`
+    `submit_setup_call` of
+    [fractal_server.app.runner._common.recursive_task_submission][]
 
     Args:
         task:
@@ -102,6 +149,10 @@ def set_slurm_config(
             The directory in which the executor should store input / output /
             errors from task execution, as well as meta files from the
             submission process.
+
+    Raises:
+        SlurmConfigError: if the slurm configuration file does not contain the
+        tasks requires.
 
     Returns:
         submit_setup_dict:
@@ -138,15 +189,16 @@ def _process_workflow(
     logger_name: str,
     workflow_dir: Path,
     username: str = None,
-    worker_init: Optional[str] = None,
+    worker_init: Optional[Union[str, List[str]]] = None,
 ) -> Dict[str, Any]:
     """
-    TODO:
-    in case of failure we must return the most recent clean metadata
+    Internal processing routine for the SLURM backend
 
-    Returns:
-    output_dataset_metadata (Dict):
-        the output metadata
+    This function initialises the a FractalSlurmExecutor, setting logging,
+    workflow working dir and user to impersonate. It then schedules the
+    workflow tasks and returns the output dataset metadata.
+
+    Cf. [process_workflow][fractal_server.app.runner._process.process_workflow]
     """
     if isinstance(worker_init, str):
         worker_init = worker_init.split("\n")
@@ -186,6 +238,11 @@ async def process_workflow(
     username: str = None,
     worker_init: Optional[str] = None,
 ) -> Dict[str, Any]:
+    """
+    Process workflow (SLURM backend public interface)
+
+    Cf. [process_workflow][fractal_server.app.runner._process.process_workflow]
+    """
     output_dataset_metadata = await async_wrap(_process_workflow)(
         workflow=workflow,
         input_paths=input_paths,

@@ -1,3 +1,10 @@
+"""
+Common utilities and routines for runner backends (public API)
+
+This module includes utilities and routines that are of use to implement
+runner backends but that should also be exposed to the other components of
+`Fractal Server`.
+"""
 import asyncio
 import json
 from functools import partial
@@ -20,8 +27,25 @@ from ..models.task import Task
 
 
 class TaskExecutionError(RuntimeError):
-    task_id: Optional[int] = None
-    task_order: Optional[int] = None
+    """
+    Forwards any error occurred within the execution of a task
+
+    This error wraps and forwards errors occurred during the execution of
+    tasks, together with information that is useful to track down the failing
+    task within a workflow.
+
+    Attributes:
+        workflow_task_id:
+            ID of the workflow task that failed.
+        workflow_task_order:
+            Order of the task within the workflow.
+        task_name:
+            Human readable name of the failing task.
+    """
+
+    workflow_task_id: Optional[int] = None
+    workflow_task_order: Optional[int] = None
+    task_name: Optional[str] = None
 
     def __init__(
         self,
@@ -38,6 +62,10 @@ class TaskExecutionError(RuntimeError):
 
 
 class TaskParameterEncoder(JSONEncoder):
+    """
+    Convenience JSONEncoder that serialises `Path`s as strings
+    """
+
     def default(self, value):
         if isinstance(value, Path):
             return value.as_posix()
@@ -45,6 +73,26 @@ class TaskParameterEncoder(JSONEncoder):
 
 
 class TaskParameters(BaseModel):
+    """
+    Wrapper for task input parameters
+
+    Instances of this class are used to pass parameters from the output of a
+    task to the input of the next one.
+
+    Attributes:
+        input_paths:
+            Input paths as derived by the input dataset.
+        output_paths:
+            Output path as derived from the output dataset.
+        metadata:
+            Dataset metadata, as found in the input dataset or as updated by
+            the previous task.
+        logger_name:
+            Identifier of the workflow logger.
+        username:
+            User to impersonate to run the workflow.
+    """
+
     input_paths: List[Path]
     output_path: Path
     metadata: Dict[str, Any]
@@ -68,10 +116,26 @@ async def auto_output_dataset(
 
     Only datasets containing exactly one path can be used as output.
 
-    Returns
-    -------
-    output_dataset (Dataset):
-        the output dataset
+    Note: This routine is still a stub.
+
+    Args:
+        project:
+            The project that contains the input and output datasets.
+        input_dataset:
+            The input dataset.
+        workflow:
+            The workflow to be applied to the input dataset.
+        overwrite_input:
+            Whether it is allowed to overwrite the input dataset with the
+            output data.
+
+    Raises:
+        ValueError: If the input dataset is to be overwritten and it provides
+        more than one path.
+
+    Returns:
+        output_dataset:
+            the output dataset
     """
     if overwrite_input and not input_dataset.read_only:
         input_paths = input_dataset.paths
@@ -129,23 +193,25 @@ def validate_workflow_compatibility(
 
 def async_wrap(func: Callable) -> Callable:
     """
-    See issue #140 and https://stackoverflow.com/q/43241221/19085332
+    Wrap a synchronous callable in an async task
 
-    By replacing
-        .. = final_metadata.result()
-    with
-        .. = await async_wrap(get_app_future_result)(app_future=final_metadata)
-    we avoid a (long) blocking statement.
-    """
+    Ref: [issue #140](https://github.com/fractal-analytics-platform/fractal-server/issues/140)
+    and [this StackOverflow answer](https://stackoverflow.com/q/43241221/19085332).
+
+    Returns:
+        async_wrapper:
+            A factory that allows wrapping a blocking callable within a
+            coroutine.
+    """  # noqa: E501
 
     @wraps(func)
-    async def run(*args, loop=None, executor=None, **kwargs):
+    async def async_wrapper(*args, loop=None, executor=None, **kwargs):
         if loop is None:
             loop = asyncio.get_event_loop()
         pfunc = partial(func, *args, **kwargs)
         return await loop.run_in_executor(executor, pfunc)
 
-    return run
+    return async_wrapper
 
 
 def write_args_file(*args: Dict[str, Any], path: Path):

@@ -28,10 +28,12 @@ clusterfutures = { version = "^0.4", optional = true }
 
 asyncpg = { version = "^0.27.0", optional = true }
 psycopg2 = { version = "^2.9.5", optional = true }
+gunicorn = { version = "^20.1.0", optional = true }
 
 [tool.poetry.extras]
 slurm = ["clusterfutures"]
 postgres = ["asyncpg", "psycopg2"]
+gunicorn = ["gunicorn"]
 
 [tool.poetry.group.dev.dependencies]
 asgi-lifespan = "^1.0.1"
@@ -56,6 +58,7 @@ mkdocs-gen-files = "^0.4.0"
 mkdocs-literate-nav = "^0.5.0"
 mkdocs-section-index = "^0.3.4"
 mkdocs-coverage = "^0.2.6"
+mkdocs-render-swagger-plugin = "^0.0.4"
 
 
 [build-system]
@@ -83,6 +86,7 @@ push = true
 
 [tool.poetry.scripts]
 fractal-server = "fractal_server.__main__:run"
+openapi = "fractal_server.__main__:save_openapi"
 
 [tool.coverage.run]
 branch = true

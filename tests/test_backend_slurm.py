@@ -87,17 +87,31 @@ def test_slurm_executor(username, monkey_slurm, tmp777_path):
 
 def test_unit_slurm_config():
     """
-    GIVEN a Slurm configuration object
-    WHEN the `to_sbatch()` method is called
+    GIVEN the Slurm configuration class
+    WHEN it is instantiated with a mix of attribute names and attribute aliases
     THEN
+        * The object is correctly instantiated, regardless of whether the
+          parameters were passed by attribute name or by alias
+
+        Furthermore, when `to_sbatch()` is called
         * the object's attributes are correctly returned as a list of strings
         * the `name` attribute is not included
     """
-    sc = SlurmConfig(partition="partition")
+    ARGS = {
+        "partition": "partition",
+        "cpus-per-task": 4,
+        "ntasks_per_node": 3,
+        "extra_lines": ["#SBATCH extra line 0", "#SBATCH extra line 1"],
+    }
+    sc = SlurmConfig(**ARGS)
+    debug(sc)
     sbatch_lines = sc.to_sbatch()
+    assert len(sbatch_lines) == len(ARGS) + 1
     debug(sbatch_lines)
     for line in sbatch_lines:
         assert line.startswith("#SBATCH")
+        # check that '_' in field names is never used, but changed to '_'
+        assert "_" not in line
 
 
 @pytest.mark.parametrize(

@@ -1,3 +1,10 @@
+"""
+Common utilities and routines for runner backends (private API)
+
+This module includes utilities and routines that are of use to implement
+runner backends and that should not be exposed outside of the runner
+subsystem.
+"""
 import json
 import logging
 import subprocess  # nosec
@@ -39,6 +46,13 @@ class WorkflowFiles:
     workflow_dir: Path
     task_order: Optional[int] = None
     component: Optional[str] = None
+
+    prefix: str
+    file_prefix: str
+    args: Path
+    out: Path
+    err: Path
+    metadiff: Path
 
     def __init__(
         self,
@@ -116,29 +130,34 @@ def call_single_task(
     """
     Call a single task
 
-    This assemble the runner (input_paths, output_path, ...) and task
-    arguments (arguments that are specific to the task, such as message or
-    index in the dummy task), writes them to file, call the task executable
-    command passing the arguments file as an input and assembles the output
+    This assembles the runner arguments (input_paths, output_path, ...) and
+    task arguments (i.e., arguments that are specific to the task, such as
+    message or index in the dummy task), writes them to file, call the task
+    executable command passing the arguments file as an input and assembles
+    the output.
 
-    Attributes
-    ----------
-    task (WorkflowTask):
-        the workflow task to be called. This includes task specific arguments
-        via the task.task.arguments attribute.
-    task_pars (TaskParameters):
-        the parameters required to run the task which are not specific to the
-        task, e.g., I/O paths.
-    workflow_dir (Path):
-        the directory in which the execution takes place, and where all
-        artifacts are written.
+    Args:
+        task:
+            the workflow task to be called. This includes task specific
+            arguments via the task.task.arguments attribute.
+        task_pars:
+            the parameters required to run the task which are not specific to
+            the task, e.g., I/O paths.
+        workflow_dir:
+            the directory in which the execution takes place, and where all
+            artifacts are written.
 
-    Return
-    ------
-    out_task_parameters (TaskParameters):
-        a TaskParameters in which the previous output becomes the input and
-        where metadata is the metadata dictionary returned by the task being
-        called.
+    Returns:
+        out_task_parameters (TaskParameters):
+            a TaskParameters in which the previous output becomes the input
+            and where metadata is the metadata dictionary returned by the task
+            being called.
+
+    Raises:
+        TaskExecutionError: If the wrapped task raises an error. This function
+            is responsible of adding debugging information to the
+            TaskExecutionError, such as task order and name.
+        RuntimeError: If the `workflow_dir` is falsy.
     """
     if not workflow_dir:
         raise RuntimeError
@@ -206,6 +225,29 @@ def call_single_parallel_task(
     task_pars: TaskParameters,
     workflow_dir: Path = None,
 ) -> None:
+    """
+    Call a single instance of a parallel task
+
+    Parallel tasks need to run in several instances across the parallelisation
+    parameters. This function is responsible of running each single one of
+    those instances.
+
+    Args:
+        component:
+            The parallelisation parameter.
+        task:
+            The task to execute.
+        task_pars:
+            The parameters to pass on to the task.
+        workflow_dir:
+            The workflow working directory.
+
+    Raises:
+        TaskExecutionError: If the wrapped task raises an error. This function
+            is responsible of adding debugging information to the
+            TaskExecutionError, such as task order and name.
+        RuntimeError: If the `workflow_dir` is falsy.
+    """
     if not workflow_dir:
         raise RuntimeError
     logger = logging.getLogger(task_pars.logger_name)
@@ -253,7 +295,31 @@ def call_parallel_task(
     ] = lambda task, task_pars, workflow_dir: {},
 ) -> Future:  # py3.9 Future[TaskParameters]:
     """
-    AKA collect results
+    Join results from the parallel instances of a parallel task
+
+    AKA Collect results. This function merges all the results of single calls
+    of a parallel task and return a single future with the TaskParameters to
+    be passed on to the next task.
+
+    Args:
+        executor:
+            The `concurrent.futures.Executor`-compatible executor that will
+            run the task.
+        task:
+            The parallel task to run.
+        task_pars_depend_future:
+            A future that will resolve in the task parameters to be passed on
+            to the parallel task.
+        workflow_dir:
+            The workflow working directory.
+        submit_setup_call:
+            An optional function that computes configuration parameters for
+            the executor.
+
+    Returns:
+        out_future:
+            A future that resolves in the output task parameters of the
+            parallel task execution, ready to be passed on to the next task.
     """
     task_pars_depend = task_pars_depend_future.result()
     component_list = task_pars_depend.metadata[task.parallelization_level]
@@ -281,7 +347,6 @@ def call_parallel_task(
     except KeyError:
         task_pars_depend.metadata["history"] = [history]
 
-    this_future: Future = Future()
     out_task_parameters = TaskParameters(
         input_paths=[task_pars_depend.output_path],
         output_path=task_pars_depend.output_path,
@@ -291,8 +356,9 @@ def call_parallel_task(
 
     with open(workflow_dir / METADATA_FILENAME, "w", opener=file_opener) as f:
         json.dump(task_pars_depend.metadata, f, indent=2)
-    this_future.set_result(out_task_parameters)
-    return this_future
+    out_future: Future = Future()
+    out_future.set_result(out_task_parameters)
+    return out_future
 
 
 def recursive_task_submission(
@@ -306,26 +372,39 @@ def recursive_task_submission(
     ] = lambda task, task_pars, workflow_dir: {},
 ) -> Future:
     """
-    Recursively submit a list of task
+    Recursively submit a list of tasks
 
-    Each following task depends on the future.result() of the previous one,
-    thus assuring the dependency chain.
+    This recursive function schedules a workflow task list in the correct
+    order, making sure to resolve dependency before proceeding to the next
+    task: each following task depends on the future.result() of the previous
+    one, thus assuring the dependency chain.
 
-    Induction process
-    -----------------
-    0: return a future which results in the task parameters necessary for the
-       first task of the list
+    Induction process:
 
-    n -> n+1: use output resulting from step `n` as task parameters to submit
-       task `n+1`
+    `0`: return a future which resolves in the task parameters necessary for
+        the first task of the list.
 
-    Return
-    ------
-    this_future (Future[TaskParameters]):
-        a future that results to the task parameters which constitute the
-        input of the following task in the list.
+    `n => n+1`: use output resulting from step `n` as input for the first task
+        in the list, i.e., the `n+1`st task.
 
-    TODO document submit_setup_call.
+    Args:
+        executor:
+            The `concurrent.futures.Executor`-compatible executor that will
+            run the task.
+        task_list:
+            The list of tasks to be run
+        task_pars:
+            The task parameters to be passed on to the first task of the list.
+        workflow_dir:
+            The workflow working directory.
+        submit_setup_call:
+            An optional function that computes configuration parameters for
+            the executor.
+
+    Returns:
+        this_task_future:
+            a future that results to the task parameters which constitute the
+            input of the following task in the list.
     """
     try:
         *dependencies, this_task = task_list
@@ -349,7 +428,7 @@ def recursive_task_submission(
     )
 
     if this_task.is_parallel:
-        this_future = call_parallel_task(
+        this_task_future = call_parallel_task(
             executor=executor,
             task=this_task,
             task_pars_depend_future=task_pars_depend_future,
@@ -358,11 +437,11 @@ def recursive_task_submission(
         )
     else:
         extra_setup = submit_setup_call(this_task, task_pars, workflow_dir)
-        this_future = executor.submit(
+        this_task_future = executor.submit(
             call_single_task,
             task=this_task,
             task_pars=task_pars_depend_future.result(),
             workflow_dir=workflow_dir,
             **extra_setup,
         )
-    return this_future
+    return this_task_future
