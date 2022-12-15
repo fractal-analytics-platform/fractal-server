@@ -14,7 +14,8 @@ NTASKS_PER_NODE = "1"
 CPUS_PER_TASK = "1"
 
 
-def test_SlurmConfig(tmp_path: Path):
+def test_load_slurm_config(tmp_path: Path):
+    # Write the expected config to a JSON file
     expected_config = {
         EXECUTOR: {
             "partition": PARTITION,
@@ -25,15 +26,17 @@ def test_SlurmConfig(tmp_path: Path):
         }
     }
     expected_executor_config = expected_config[EXECUTOR]
+    debug(expected_executor_config)
     config_path = tmp_path / "slurm_config.json"
     with config_path.open("w") as f:
         json.dump(expected_config, f)
 
+    # Load the config through load_slurm_config
     config = load_slurm_config(config_path=config_path)
-    executor_config = config[EXECUTOR]
-    debug(expected_executor_config)
-    debug(executor_config.dict())
+    executor_config = config[EXECUTOR].dict()
+    debug(executor_config)
 
+    # Assert that all expected attributes are present in the loaded config
     for key, value in expected_executor_config.items():
         key_slug = key.replace("-", "_")
         assert executor_config.dict()[key_slug] == value
