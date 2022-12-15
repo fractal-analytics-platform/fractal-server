@@ -62,11 +62,11 @@ class SlurmConfig(BaseModel):
     extra_lines: Optional[List[str]] = None
 
     def to_sbatch(self, prefix="#SBATCH "):
-        dic = self.dict(exclude_none=True, by_alias=True)
+        dic = self.dict(
+            exclude_none=True, by_alias=True, exclude={"extra_lines"}
+        )
         sbatch_lines = []
         for k, v in dic.items():
-            if k == "extra_lines":
-                continue
             sbatch_lines.append(f"{prefix}--{k}={v}")
         sbatch_lines.extend(self.extra_lines)
         return sbatch_lines
