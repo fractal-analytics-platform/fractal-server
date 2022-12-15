@@ -42,10 +42,13 @@ theme:
       name: Switch to light mode
 
 nav:
-  - Server: server/
+  - Installation: installation.md
+  - Configuration: configuration.md
+  - Internals: server/
   - Code reference: reference/
+  - Contributing: contributing/
   - Coverage: coverage
-  - OpenAPI: openapi.md
+  - Web API: openapi.md
 
 watch:
   - fractal_server
