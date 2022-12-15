@@ -39,4 +39,4 @@ def test_load_slurm_config(tmp_path: Path):
     # Assert that all expected attributes are present in the loaded config
     for key, value in expected_executor_config.items():
         key_slug = key.replace("-", "_")
-        assert executor_config.dict()[key_slug] == value
+        assert executor_config[key_slug] == value
