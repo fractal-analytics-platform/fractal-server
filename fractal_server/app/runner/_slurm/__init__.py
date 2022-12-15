@@ -72,6 +72,18 @@ class SlurmConfigError(ValueError):
     pass
 
 
+def slugify_dict_keys(d: Dict[str, str]) -> Dict[str, str]:
+    """
+    Replace hyphens with underscores in all dictionary keys.
+    """
+
+    new_d = {}
+    for key, val in d.items():
+        new_key = key.replace("-", "_")
+        new_d[new_key] = val
+    return new_d
+
+
 def load_slurm_config(
     config_path: Optional[Path] = None,
 ) -> Dict[str, SlurmConfig]:
@@ -106,7 +118,10 @@ def load_slurm_config(
         # coerce
         config_dict = {}
         for config_key in raw_data:
-            config_dict[config_key] = SlurmConfig(**raw_data[config_key])
+            config_with_slugified_keys = slugify_dict_keys(
+                raw_data[config_key]
+            )
+            config_dict[config_key] = SlurmConfig(**config_with_slugified_keys)
     except FileNotFoundError:
         raise SlurmConfigError(f"Configuration file not found: {config_path}")
     except Exception as e:
