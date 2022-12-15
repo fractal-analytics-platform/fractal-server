@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fractal-server"
-version = "1.0.0b5"
+version = "1.0.0b6"
 description = "Server component of the Fractal analytics platform"
 authors = [
     "Jacopo Nespolo <jacopo.nespolo@exact-lab.it>",
@@ -69,7 +69,7 @@ build-backend = "poetry.core.masonry.api"
 asyncio_mode = "auto"
 
 [tool.bumpver]
-current_version = "1.0.0b5"
+current_version = "1.0.0b6"
 version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true
