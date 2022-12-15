@@ -43,6 +43,8 @@ class SlurmConfig(BaseModel):
     This class wraps options for the `sbatch` command. Attribute `xxx` maps to
     the `--xxx` option of `sbatch`.
     Cf. [sbatch documentation](https://slurm.schedmd.com/sbatch.html)
+    Note: underscores (`_`) in the SlurmConfig attributes map are
+    converted to hyphens (`-`) in sbatch options.
     """
 
     partition: str
