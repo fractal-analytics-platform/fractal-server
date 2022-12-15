@@ -1,6 +1,7 @@
 {
     "cpu-low": {
-        "partition": "main"
+        "partition": "main",
+        "cpus-per-task": 1
     },
     "cpu-mid": {
         "partition": "main"
