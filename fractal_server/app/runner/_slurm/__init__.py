@@ -59,7 +59,7 @@ class SlurmConfig(BaseModel):
     ntasks_per_node: Optional[str] = Field(alias="ntasks-per-node")
     cpus_per_task: Optional[str] = Field(alias="cpus-per-task")
     account: Optional[str]
-    extra_lines: Optional[List[str]] = None
+    extra_lines: Optional[List[str]] = Field(default_factory=list)
 
     def to_sbatch(self, prefix="#SBATCH "):
         dic = self.dict(
