@@ -24,6 +24,7 @@ from typing import Optional
 from typing import Union
 
 from pydantic import BaseModel
+from pydantic import Field
 
 from ....config import get_settings
 from ....syringe import Inject
@@ -43,26 +44,31 @@ class SlurmConfig(BaseModel):
     This class wraps options for the `sbatch` command. Attribute `xxx` maps to
     the `--xxx` option of `sbatch`.
     Cf. [sbatch documentation](https://slurm.schedmd.com/sbatch.html)
-    Note: underscores (`_`) in the SlurmConfig attributes map are
-    converted to hyphens (`-`) in sbatch options.
+
+    Note: options containing hyphens ('-') need be aliased to attribute names
+        with underscores ('-').
     """
+
+    class Config:
+        allow_population_by_field_name = True
 
     partition: str
     time: Optional[str]
     mem: Optional[str]
     nodes: Optional[str]
-    ntasks_per_node: Optional[str]
-    cpus_per_task: Optional[str]
+    ntasks_per_node: Optional[str] = Field(alias="ntasks-per-node")
+    cpus_per_task: Optional[str] = Field(alias="cpus-per-task")
     account: Optional[str]
     extra_lines: Optional[List[str]] = None
 
     def to_sbatch(self, prefix="#SBATCH "):
-        dic = self.dict(exclude_none=True)
+        dic = self.dict(exclude_none=True, by_alias=True)
         sbatch_lines = []
         for k, v in dic.items():
-            sbatch_lines.append(f"{prefix}--{k.replace('_', '-')}={v}")
-        if self.extra_lines:
-            sbatch_lines.extend(self.extra_lines)
+            if k == "extra_lines":
+                continue
+            sbatch_lines.append(f"{prefix}--{k}={v}")
+        sbatch_lines.extend(self.extra_lines)
         return sbatch_lines
 
 
@@ -72,18 +78,6 @@ class SlurmConfigError(ValueError):
     """
 
     pass
-
-
-def slugify_dict_keys(d: Dict[str, str]) -> Dict[str, str]:
-    """
-    Replace hyphens with underscores in all dictionary keys.
-    """
-
-    new_d = {}
-    for key, val in d.items():
-        new_key = key.replace("-", "_")
-        new_d[new_key] = val
-    return new_d
 
 
 def load_slurm_config(
@@ -118,12 +112,10 @@ def load_slurm_config(
             raw_data = json.load(f)
 
         # coerce
-        config_dict = {}
-        for config_key in raw_data:
-            config_with_slugified_keys = slugify_dict_keys(
-                raw_data[config_key]
-            )
-            config_dict[config_key] = SlurmConfig(**config_with_slugified_keys)
+        config_dict = {
+            config_key: SlurmConfig(**raw_data[config_key])
+            for config_key in raw_data
+        }
     except FileNotFoundError:
         raise SlurmConfigError(f"Configuration file not found: {config_path}")
     except Exception as e:
