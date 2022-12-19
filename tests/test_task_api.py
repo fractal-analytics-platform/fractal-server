@@ -173,6 +173,12 @@ async def test_collection_api(
         assert res.status_code == 200
         assert data["log"] is not None
 
+        # check status of non-existing collection
+        invalid_state_id = 99999
+        res = await client.get(f"{PREFIX}/collect/{invalid_state_id}")
+        debug(res)
+        assert res.status_code == 404
+
         settings = Inject(get_settings)
         full_path = settings.FRACTAL_TASKS_DIR / venv_path
         assert get_collection_path(full_path).exists()
