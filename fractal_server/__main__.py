@@ -54,6 +54,7 @@ def set_db():
     alembic_ini = Path(fractal_server.__file__).parent / "alembic.ini"
     alembic_args = ["-c", alembic_ini.as_posix(), "upgrade", "head"]
 
+    print(f"Run alembic.config, with argv={alembic_args}")
     alembic.config.main(argv=alembic_args)
 
 
