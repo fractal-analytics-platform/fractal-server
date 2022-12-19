@@ -55,8 +55,6 @@ class SlurmConfig(BaseModel):
     partition: str
     time: Optional[str]
     mem: Optional[str]
-    nodes: Optional[str]
-    ntasks_per_node: Optional[str] = Field(alias="ntasks-per-node")
     cpus_per_task: Optional[str] = Field(alias="cpus-per-task")
     account: Optional[str]
     extra_lines: Optional[List[str]] = Field(default_factory=list)
