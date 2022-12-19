@@ -176,6 +176,7 @@ async def test_collection_api(
         # check status of non-existing collection
         invalid_state_id = 99999
         res = await client.get(f"{PREFIX}/collect/{invalid_state_id}")
+        debug(res)
         assert res.status_code == 404
 
         settings = Inject(get_settings)
