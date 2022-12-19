@@ -169,6 +169,15 @@ def set_slurm_config(
         f"#SBATCH --job-name {task.task.name.replace(' ', '_')}"
     )
 
+    # From https://slurm.schedmd.com/sbatch.html: Beginning with 22.05, srun
+    # will not inherit the --cpus-per-task value requested by salloc or sbatch.
+    # It must be requested again with the call to srun or set with the
+    # SRUN_CPUS_PER_TASK environment variable if desired for the task(s).
+    if config.cpus_per_task:
+        additional_setup_lines.append(
+            f"export SRUN_CPUS_PER_TASK={config.cpus_per_task}"
+        )
+
     workflow_files = get_workflow_file_paths(
         workflow_dir=workflow_dir, task_order=task.order
     )
