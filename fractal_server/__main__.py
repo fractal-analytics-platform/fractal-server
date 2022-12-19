@@ -4,13 +4,16 @@ from sys import argv
 import uvicorn
 
 parser = ap.ArgumentParser()
-parser.add_argument("--host", default="127.0.0.1")
-parser.add_argument("-p", "--port", default=8000, type=int)
-parser.add_argument("--reload", default=False, action="store_true")
 
-subparsers = parser.add_subparsers(title="Commands", dest="cmd")
-subparsers.add_parser("start", help="Start the server (default behaviour)")
+subparsers = parser.add_subparsers(title="Commands", dest="cmd", required=True)
 
+# fractalctl start
+startserver = subparsers.add_parser("start", help="Start the server")
+startserver.add_argument("--host", default="127.0.0.1")
+startserver.add_argument("-p", "--port", default=8000, type=int)
+startserver.add_argument("--reload", default=False, action="store_true")
+
+# fractalctl openapi
 openapi_parser = subparsers.add_parser(
     "openapi", help="Save the `openapi.json` file"
 )
@@ -21,25 +24,8 @@ openapi_parser.add_argument(
     default="openapi.json",
 )
 
+# fractalctl set-db
 subparsers.add_parser("set-db", help="Initialise the database")
-
-
-def run():
-    args = parser.parse_args(argv[1:])
-    from devtools import debug
-
-    debug(args)
-    if args.cmd == "openapi":
-        save_openapi(dest=args.openapi_file)
-    elif args.cmd == "set-db":
-        set_db()
-    else:
-        uvicorn.run(
-            "fractal_server.main:app",
-            host=args.host,
-            port=args.port,
-            reload=args.reload,
-        )
 
 
 def save_openapi(dest="openapi.json"):
@@ -69,6 +55,22 @@ def set_db():
     alembic_args = ["-c", alembic_ini.as_posix(), "upgrade", "head"]
 
     alembic.config.main(argv=alembic_args)
+
+
+def run():
+    args = parser.parse_args(argv[1:])
+
+    if args.cmd == "openapi":
+        save_openapi(dest=args.openapi_file)
+    elif args.cmd == "set-db":
+        set_db()
+    else:
+        uvicorn.run(
+            "fractal_server.main:app",
+            host=args.host,
+            port=args.port,
+            reload=args.reload,
+        )
 
 
 if __name__ == "__main__":
