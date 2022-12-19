@@ -85,8 +85,7 @@ push = true
 ]
 
 [tool.poetry.scripts]
-fractal-server = "fractal_server.__main__:run"
-openapi = "fractal_server.__main__:save_openapi"
+fractalctl = "fractal_server.__main__:run"
 
 [tool.coverage.run]
 branch = true
