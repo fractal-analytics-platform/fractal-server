@@ -92,9 +92,10 @@ class FractalSlurmExecutor(SlurmExecutor):
         return self.script_dir / f"{prefix}.out.{arg}.pickle"
 
     def get_slurm_script_filename(
-        self, arg: str, prefix: Optional[str] = None
+        self, arg: Optional[str] = None, prefix: Optional[str] = None
     ) -> Path:
         prefix = prefix or "_temp"
+        arg = arg or "submit"
         return self.script_dir / f"{prefix}.slurm.{arg}.sbatch"
 
     def write_batch_script(self, sbatch_script: str, dest: Path) -> Path:
@@ -299,7 +300,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         job.slurm_input = self.get_in_filename(job.workerid)
         job.slurm_output = self.get_out_filename(job.workerid)
         job.slurm_script = self.get_slurm_script_filename(
-            random_string(), prefix=job_file_prefix
+            prefix=job_file_prefix
         )
 
         job.stdout = self.get_stdout_filename(prefix=job_file_prefix)
