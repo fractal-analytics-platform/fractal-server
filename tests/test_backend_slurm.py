@@ -100,7 +100,6 @@ def test_unit_slurm_config():
     ARGS = {
         "partition": "partition",
         "cpus-per-task": 4,
-        "ntasks_per_node": 3,
         "extra_lines": ["#SBATCH extra line 0", "#SBATCH extra line 1"],
     }
     sc = SlurmConfig(**ARGS)
