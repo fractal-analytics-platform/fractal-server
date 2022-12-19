@@ -236,12 +236,12 @@ async def check_collection_status(
     logger = set_logger(logger_name="fractal")
     logger.info("querying state")
     state = await db.get(State, state_id)
-    data = TaskCollectStatus(**state.data)
     if not state:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No task collection info with id={state_id}",
         )
+    data = TaskCollectStatus(**state.data)
 
     # collection_path = get_collection_path(package_path)
     if verbose:
