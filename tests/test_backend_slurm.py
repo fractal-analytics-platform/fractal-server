@@ -70,6 +70,15 @@ def test_unit_sbatch_script_readable(monkey_slurm, tmp777_path):
     assert "This does not look like a batch script" in out.stderr
 
 
+def test_unit_slurm_poll_interval(tmp777_path):
+    VALUE = 12345
+    executor = FractalSlurmExecutor(
+        script_dir=tmp777_path, slurm_poll_interval=VALUE
+    )
+    debug(executor.wait_thread.slurm_poll_interval)
+    assert executor.wait_thread.slurm_poll_interval == VALUE
+
+
 @pytest.mark.parametrize("username", [None, "test01"])
 def test_slurm_executor(username, monkey_slurm, tmp777_path):
     """
