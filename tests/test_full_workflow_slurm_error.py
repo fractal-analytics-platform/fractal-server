@@ -111,18 +111,18 @@ async def test_failing_workflow_slurm_error(
             f"{PREFIX}/project/apply/",
             json=payload,
         )
-        # job_data = res.json()
-        # assert res.status_code == 202
-        # job_id = job_data["id"]
+        job_data = res.json()
+        assert res.status_code == 202
+        job_id = job_data["id"]
 
         time.sleep(1)
         debug("NOW SCANCEL")
-        subprocess.run("scancel 2")
+        subprocess.run(["scancel", "2"])
 
-        # res = await client.get(f"{PREFIX}/job/{job_id}")
-        # assert res.status_code == 200
-        # job_status_data = res.json()
-        # debug(job_status_data)
-        # assert job_status_data["status"] == "failed"
-        # assert "id: None" not in job_status_data["log"]
+        res = await client.get(f"{PREFIX}/job/{job_id}")
+        assert res.status_code == 200
+        job_status_data = res.json()
+        debug(job_status_data)
+        assert job_status_data["status"] == "failed"
+        assert "id: None" not in job_status_data["log"]
         # TODO add check on log content.
