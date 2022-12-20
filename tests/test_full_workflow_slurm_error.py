@@ -92,7 +92,7 @@ async def test_failing_workflow_slurm_error(
             f"{PREFIX}/workflow/{workflow_id}/add-task/",
             json=dict(
                 task_id=collect_packages[0].id,
-                args={"raise_error": False, "sleep_time": 130},
+                args={"raise_error": False, "sleep_time": 100},
                 meta={"executor": "cpu-low-1-sec"},
             ),
         )
@@ -111,13 +111,17 @@ async def test_failing_workflow_slurm_error(
             f"{PREFIX}/project/apply/",
             json=payload,
         )
-        job_data = res.json()
         assert res.status_code == 202
+        job_data = res.json()
+        debug(job_data)
         job_id = job_data["id"]
 
+        # FIXME: how do we know that job ID is 2?
         time.sleep(1)
         debug("NOW SCANCEL")
-        subprocess.run(["scancel", "2"])
+        subprocess.run(
+            ["sudo", "--non-interactive", "-u test01", "scancel", "2"]
+        )
 
         res = await client.get(f"{PREFIX}/job/{job_id}")
         assert res.status_code == 200
