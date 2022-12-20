@@ -375,9 +375,9 @@ test = ["pytest", "testpath (>=0.5)"]
 
 [package.source]
 type = "git"
-url = "https://github.com/takluyver/clusterfutures.git"
-reference = "poll-slurm"
-resolved_reference = "68d429b79bd83baf7ae35daa8b96aee9ceb43837"
+url = "https://github.com/tcompa/clusterfutures.git"
+reference = "poll-slurm-mod"
+resolved_reference = "ff488d05c2391733a67c72c241f9a9dc32f75b92"
 
 [[package]]
 name = "colorama"
@@ -2518,4 +2518,4 @@ slurm = []
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "3cdd8aba65daa897ad4b0060eb61a896d8d4d44db1c2dda7220c58a063b8d098"
+content-hash = "d96c7232c2add603c73e93730475d96157c62271d5240854b09f5152c2fc50e9"
