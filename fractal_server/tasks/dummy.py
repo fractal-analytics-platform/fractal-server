@@ -102,8 +102,10 @@ def dummy(
     # Update metadata
     metadata_update = dict(dummy=f"dummy {index}", index=["0", "1", "2"])
 
-    logger.info(f"Now sleeping for {sleep_time} seconds")
+    logger.info(f"{time.perf_counter()=}")
+    logger.info(f"I will now sleep for {sleep_time} seconds")
     time.sleep(sleep_time)
+    logger.info(f"{time.perf_counter()=}")
 
     logger.info("EXITING dummy task")
 
