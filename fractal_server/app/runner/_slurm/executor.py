@@ -340,10 +340,10 @@ class FractalSlurmExecutor(SlurmExecutor):
         except Exception as e:
             fut.set_exception(
                 JobDied(
-                    f"Cluster job {jobid} finished without writing a result"
+                    f"Cluster job {jobid} finished without writing a result\n"
+                    f"Original error: {str(e)}"
                 )
             )
-            raise e
         else:
             success, result = cloudpickle.loads(outdata)
 
