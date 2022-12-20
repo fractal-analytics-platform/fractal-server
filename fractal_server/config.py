@@ -238,7 +238,7 @@ class Settings(BaseSettings):
     not specified, the interpreter that runs the server is used.
     """
 
-    FRACTAL_SLURM_POLL_INTERVAL: Optional[str] = None
+    FRACTAL_SLURM_POLL_INTERVAL: Optional[int] = None
     """
     FIXME
     """

@@ -70,7 +70,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         if not slurm_poll_interval:
             settings = Inject(get_settings)
-            slurm_poll_interval = int(settings.FRACTAL_SLURM_POLL_INTERVAL)
+            slurm_poll_interval = settings.FRACTAL_SLURM_POLL_INTERVAL
         if slurm_poll_interval:
             self.wait_thread.slurm_poll_interval = slurm_poll_interval
 
