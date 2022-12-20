@@ -3,6 +3,10 @@
         "partition": "main",
         "cpus-per-task": 1
     },
+    "cpu-low-1-sec": {
+        "partition": "main",
+        "time": "00:00:01"
+    },
     "cpu-mid": {
         "partition": "main"
     },
