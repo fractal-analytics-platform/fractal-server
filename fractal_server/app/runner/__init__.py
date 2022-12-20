@@ -173,6 +173,11 @@ async def submit_workflow(
             f"TRACEBACK:\n{str(e)}"
         )
         db_sync.merge(job)
+    except Exception as e:
+        job.status = JobStatusType.FAILED
+        job.log = f"GENERIC ERROR:" f"TRACEBACK:\n{str(e)}"
+        db_sync.merge(job)
+
     finally:
         db_sync.commit()
         os.umask(orig_umask)
