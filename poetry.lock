@@ -377,7 +377,7 @@ test = ["pytest", "testpath (>=0.5)"]
 type = "git"
 url = "https://github.com/tcompa/clusterfutures.git"
 reference = "poll-slurm-mod"
-resolved_reference = "ff488d05c2391733a67c72c241f9a9dc32f75b92"
+resolved_reference = "6b1a35a22995ad9223bdd56069a10de1ef247ca0"
 
 [[package]]
 name = "colorama"
