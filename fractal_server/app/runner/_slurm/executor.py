@@ -340,7 +340,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         except Exception as e:
             fut.set_exception(
                 JobDied(
-                    f"Cluster job {jobid} finished without writing a result\n"
+                    f"Cluster job {jobid} finished without writing a result; "
                     f"Original error: {str(e)}"
                 )
             )
@@ -355,9 +355,10 @@ class FractalSlurmExecutor(SlurmExecutor):
                 )
                 fut.set_exception(exc)
 
-        # Clean up communication files.
+            # Remove out_path (if it was created)
+            out_path.unlink()
+        # Remove in_path (always)
         in_path.unlink()
-        out_path.unlink()
 
         self._cleanup(jobid)
 
