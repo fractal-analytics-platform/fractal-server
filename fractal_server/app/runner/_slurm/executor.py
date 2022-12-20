@@ -30,6 +30,10 @@ from ....utils import set_logger
 from ..common import TaskExecutionError
 
 
+class JobDied(Exception):
+    pass
+
+
 class SlurmJob:
     workerid: str
 
@@ -63,7 +67,9 @@ class FractalSlurmExecutor(SlurmExecutor):
                 arbitrary script lines that will always be included in the
                 sbatch script
         """
+
         super().__init__(*args, **kwargs)
+
         self.username = username
         self.common_script_lines = common_script_lines or []
         if not script_dir:
@@ -328,15 +334,26 @@ class FractalSlurmExecutor(SlurmExecutor):
         out_path = self.get_out_filename(job.workerid)
         in_path = self.get_in_filename(job.workerid)
 
-        with out_path.open("rb") as f:
-            outdata = f.read()
-        success, result = cloudpickle.loads(outdata)
-
-        if success:
-            fut.set_result(result)
+        try:
+            with out_path.open("rb") as f:
+                outdata = f.read()
+        except Exception as e:
+            fut.set_exception(
+                JobDied(
+                    f"Cluster job {jobid} finished without writing a result"
+                )
+            )
+            raise e
         else:
-            exc = TaskExecutionError(result.tb, *result.args, **result.kwargs)
-            fut.set_exception(exc)
+            success, result = cloudpickle.loads(outdata)
+
+            if success:
+                fut.set_result(result)
+            else:
+                exc = TaskExecutionError(
+                    result.tb, *result.args, **result.kwargs
+                )
+                fut.set_exception(exc)
 
         # Clean up communication files.
         in_path.unlink()
