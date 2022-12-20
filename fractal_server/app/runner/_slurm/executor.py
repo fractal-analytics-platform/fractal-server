@@ -27,11 +27,8 @@ from ....syringe import Inject
 from ....utils import close_logger
 from ....utils import file_opener
 from ....utils import set_logger
+from ..common import JobExecutionError
 from ..common import TaskExecutionError
-
-
-class JobDied(Exception):
-    pass
 
 
 class SlurmJob:
@@ -54,6 +51,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         username: Optional[str] = None,
         script_dir: Optional[Path] = None,
         common_script_lines: Optional[List[str]] = None,
+        slurm_poll_interval: int = None,
         *args,
         **kwargs,
     ):
@@ -69,6 +67,9 @@ class FractalSlurmExecutor(SlurmExecutor):
         """
 
         super().__init__(*args, **kwargs)
+
+        if slurm_poll_interval:
+            self.wait_thread.slurm_poll_interval = slurm_poll_interval
 
         self.username = username
         self.common_script_lines = common_script_lines or []
@@ -337,13 +338,20 @@ class FractalSlurmExecutor(SlurmExecutor):
         try:
             with out_path.open("rb") as f:
                 outdata = f.read()
-        except Exception as e:
-            fut.set_exception(
-                JobDied(
-                    f"Cluster job {jobid} finished without writing a result; "
-                    f"Original error: {str(e)}"
-                )
+        except FileNotFoundError:
+            # FIXME replace hard-coded values
+            job_status = "JOB_STATUS"
+            task_stderr = ("TASK_STDERR",)
+            slurm_stderr = ("SLURM_STDERR",)
+            exc = JobExecutionError(
+                f"SLURM job {jobid} finished without writing {str(outdata)}.",
+                job_status=job_status,
+                task_stderr=task_stderr,
+                slurm_stderr=slurm_stderr,
             )
+            fut.set_exception(exc)
+        except Exception as e:
+            fut.set_exception(e)
         else:
             success, result = cloudpickle.loads(outdata)
 
@@ -357,6 +365,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
             # Remove out_path (if it was created)
             out_path.unlink()
+
         # Remove in_path (always)
         in_path.unlink()
 
