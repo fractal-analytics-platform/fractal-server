@@ -455,3 +455,18 @@ async def get_workflow_list(
     res = await db.execute(stm)
     workflow_list = res.scalars().all()
     return workflow_list
+
+
+@router.get("/{project_id}/jobs/", response_model=List[ApplyWorkflowRead])
+async def get_job_list(
+    project_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await get_project_check_owner(
+        project_id=project_id, user_id=user.id, db=db
+    )
+    stm = select(ApplyWorkflow).where(ApplyWorkflow.project_id == project_id)
+    res = await db.execute(stm)
+    job_list = res.scalars().all()
+    return job_list
