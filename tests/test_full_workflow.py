@@ -179,12 +179,6 @@ async def test_full_workflow(
         debug(job_status_data)
         assert job_status_data["status"] == "done"
 
-        # Verify download logss
-        res = await client.get(f"{PREFIX}/job/download/{job_data['id']}")
-        assert (
-            res.headers.get("content-type") == "application/x-zip-compressed"
-        )
-
         # Verify output
         res = await client.get(
             f"{PREFIX}/dataset/{project_id}/{output_dataset_id}"
