@@ -278,7 +278,9 @@ async def test_delete_dataset(
         assert prj_dict["dataset_list"][0]["id"] == ds1.id
 
 
-async def test_job_list(client, MockCurrentUser, project_factory, job_factory):
+async def test_job_list(
+    client, MockCurrentUser, project_factory, dataset_factory, job_factory
+):
     async with MockCurrentUser(persist=True) as user:
         prj = await project_factory(user)
 
@@ -288,8 +290,16 @@ async def test_job_list(client, MockCurrentUser, project_factory, job_factory):
         debug(res.json())
         assert len(res.json()) == 0
 
-        # Add one job to the db
-        job = await job_factory(project=prj)
+        # Create all needed objects in the database
+
+        input_dataset = await dataset_factory(prj, name="input")
+        output_dataset = await dataset_factory(prj, name="input")
+
+        job = await job_factory(
+            project=prj,
+            input_dataset_id=input_dataset.id,
+            output_dataset_id=output_dataset.id,
+        )
         debug(job)
 
         # Test that the endpoint returns a list with the new job
