@@ -279,7 +279,12 @@ async def test_delete_dataset(
 
 
 async def test_job_list(
-    client, MockCurrentUser, project_factory, dataset_factory, job_factory
+    client,
+    MockCurrentUser,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    job_factory,
 ):
     async with MockCurrentUser(persist=True) as user:
         prj = await project_factory(user)
@@ -291,12 +296,12 @@ async def test_job_list(
         assert len(res.json()) == 0
 
         # Create all needed objects in the database
-
         input_dataset = await dataset_factory(prj, name="input")
-        output_dataset = await dataset_factory(prj, name="input")
-
+        output_dataset = await dataset_factory(prj, name="output")
+        workflow = await workflow_factory(project_id=prj.id)
         job = await job_factory(
-            project=prj,
+            project_id=prj.id,
+            workflow_id=workflow.id,
             input_dataset_id=input_dataset.id,
             output_dataset_id=output_dataset.id,
         )
