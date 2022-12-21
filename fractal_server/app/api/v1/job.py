@@ -67,15 +67,17 @@ async def download_job_logs(
         project_id=job.project_id, user_id=user.id, db=db
     )
 
-    byte_stream = BytesIO()
-    LOG_DIR = job.dict()["working_dir"]
-    PREFIX_ZIP = job.dict()["working_dir"].split("/")[-1]
+    # Extract job's working_dir attribute
+    working_dir_str = job.dict()["working_dir"]
+    working_dir_path = Path(working_dir_str)
 
+    # Create zip byte stream
+    PREFIX_ZIP = working_dir_path.name
     zip_filename = f"{PREFIX_ZIP}_archive.zip"
-    log_path = Path(LOG_DIR)
-    with ZipFile(byte_stream, mode="w", compression=ZIP_DEFLATED) as zip:
-        for fpath in log_path.glob("*"):
-            zip.write(fpath)
+    byte_stream = BytesIO()
+    with ZipFile(byte_stream, mode="w", compression=ZIP_DEFLATED) as zipfile:
+        for fpath in working_dir_path.glob("*"):
+            zipfile.write(fpath)
 
     return StreamingResponse(
         iter([byte_stream.getvalue()]),
