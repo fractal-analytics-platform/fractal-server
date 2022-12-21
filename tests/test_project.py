@@ -276,3 +276,41 @@ async def test_delete_dataset(
         prj_dict = res.json()
         assert len(prj_dict["dataset_list"]) == 1
         assert prj_dict["dataset_list"][0]["id"] == ds1.id
+
+
+async def test_job_list(
+    client,
+    MockCurrentUser,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    job_factory,
+):
+    async with MockCurrentUser(persist=True) as user:
+        prj = await project_factory(user)
+
+        # Test that the endpoint returns an empty job list
+        res = await client.get(f"{PREFIX}/{prj.id}/jobs/")
+        assert res.status_code == 200
+        debug(res.json())
+        assert len(res.json()) == 0
+
+        # Create all needed objects in the database
+        input_dataset = await dataset_factory(prj, name="input")
+        output_dataset = await dataset_factory(prj, name="output")
+        workflow = await workflow_factory(project_id=prj.id)
+        job = await job_factory(
+            project_id=prj.id,
+            workflow_id=workflow.id,
+            input_dataset_id=input_dataset.id,
+            output_dataset_id=output_dataset.id,
+        )
+        debug(job)
+
+        # Test that the endpoint returns a list with the new job
+        res = await client.get(f"{PREFIX}/{prj.id}/jobs/")
+        assert res.status_code == 200
+        debug(res.json())
+        assert len(res.json()) == 1
+        assert res.json()[0]["project_id"] == prj.id
+        assert res.json()[0]["id"] == job.id
