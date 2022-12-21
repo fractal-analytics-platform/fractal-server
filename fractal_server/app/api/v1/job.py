@@ -77,7 +77,7 @@ async def download_job_logs(
     byte_stream = BytesIO()
     with ZipFile(byte_stream, mode="w", compression=ZIP_DEFLATED) as zipfile:
         for fpath in working_dir_path.glob("*"):
-            zipfile.write(fpath)
+            zipfile.write(filename=str(fpath), arcname=str(fpath.name))
 
     return StreamingResponse(
         iter([byte_stream.getvalue()]),
