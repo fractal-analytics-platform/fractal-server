@@ -390,3 +390,53 @@ async def task_factory(db: AsyncSession):
         return t
 
     return __task_factory
+
+
+@pytest.fixture
+async def job_factory(db: AsyncSession):
+    """
+    Insert job in db
+    """
+    from fractal_server.app.models import ApplyWorkflow
+
+    async def __job_factory(db: AsyncSession = db, **kwargs):
+        defaults = dict(
+            project_id=1,
+            input_dataset_id=1,
+            output_dataset_id=2,
+            workflow_id=1,
+            overwrite_input=False,
+            worker_init="WORKER_INIT string",
+        )
+        args = dict(**defaults)
+        args.update(kwargs)
+        j = ApplyWorkflow(**args)
+        db.add(j)
+        await db.commit()
+        await db.refresh(j)
+        return j
+
+    return __job_factory
+
+
+@pytest.fixture
+async def workflow_factory(db: AsyncSession):
+    """
+    Insert workflow in db
+    """
+    from fractal_server.app.models import Workflow
+
+    async def __workflow_factory(db: AsyncSession = db, **kwargs):
+        defaults = dict(
+            name="my workflow",
+            project_id=1,
+        )
+        args = dict(**defaults)
+        args.update(kwargs)
+        w = Workflow(**args)
+        db.add(w)
+        await db.commit()
+        await db.refresh(w)
+        return w
+
+    return __workflow_factory
