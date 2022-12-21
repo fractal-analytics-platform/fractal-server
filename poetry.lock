@@ -351,7 +351,7 @@ name = "cloudpickle"
 version = "2.2.0"
 description = "Extended pickling support for Python objects"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6"
 files = [
     {file = "cloudpickle-2.2.0-py3-none-any.whl", hash = "sha256:7428798d5926d8fcbfd092d18d01a2a03daf8237d8fcdc8095d256b8490796f0"},
@@ -363,7 +363,7 @@ name = "clusterfutures"
 version = "0.4"
 description = "futures for remote execution on clusters"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6"
 files = []
 develop = false
@@ -2514,9 +2514,9 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [extras]
 gunicorn = ["gunicorn"]
 postgres = ["asyncpg", "psycopg2"]
-slurm = []
+slurm = ["clusterfutures"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "3cdd8aba65daa897ad4b0060eb61a896d8d4d44db1c2dda7220c58a063b8d098"
+content-hash = "7ebcd65b3939d26df7b5245f311f903433d191e72cb1ddb8f863e14f1065741f"
