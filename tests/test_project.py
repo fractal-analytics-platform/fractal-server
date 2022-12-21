@@ -288,6 +288,7 @@ async def test_job_list(
     dataset_factory,
     workflow_factory,
     job_factory,
+    tmp_path,
 ):
     async with MockCurrentUser(persist=True) as user:
         prj = await project_factory(user)
@@ -305,6 +306,7 @@ async def test_job_list(
         job = await job_factory(
             project_id=prj.id,
             workflow_id=workflow.id,
+            working_dir=(tmp_path / "some_working_dir").as_posix(),
             input_dataset_id=input_dataset.id,
             output_dataset_id=output_dataset.id,
         )
