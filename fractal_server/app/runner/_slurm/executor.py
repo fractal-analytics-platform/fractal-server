@@ -74,6 +74,10 @@ class FractalSlurmExecutor(SlurmExecutor):
         if slurm_poll_interval:
             self.wait_thread.slurm_poll_interval = slurm_poll_interval
 
+        from devtools import debug
+
+        debug(self.wait_thread.slurm_poll_interval)
+
         self.username = username
         self.common_script_lines = common_script_lines or []
         if not script_dir:

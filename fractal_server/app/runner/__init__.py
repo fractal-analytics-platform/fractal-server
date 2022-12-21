@@ -182,6 +182,8 @@ async def submit_workflow(
             f"TRACEBACK:\n{str(e)}"
         )
         db_sync.merge(job)
+    except Exception as e:
+        raise e
     # FIXME Handle generic errors?
     finally:
         db_sync.commit()
