@@ -90,27 +90,14 @@ def monkey_slurm(monkeypatch, docker_compose_project_name, docker_services):
             cmd = args[0]
             assert isinstance(cmd, list)
 
-            # NOTE: As per discussion in
-            # https://github.com/sampsyo/clusterfutures/pull/19, there is an
-            # issue with commands like squeue --format=%i %T, which is solved
-            # by adding double quotes around the {%i %T} block. We patch this
-            # behavior here.
-            if cmd[0] == "squeue":
-                for ind, subcmd in enumerate(cmd):
-                    if subcmd.startswith("--format="):
-                        if subcmd.startswith('"') and subcmd.endswith('"'):
-                            continue
-                        subcmd_arg = subcmd.split("--format=")[-1]
-                        cmd[ind] = f'--format="{subcmd_arg}"'
-
-            container_cmd = [" ".join(str(c) for c in cmd)]
+            container_cmd = cmd[:]
             cmd = [
                 "docker",
                 "exec",
                 slurm_container,
-                "bash",
-                "-c",
             ] + container_cmd
+            debug(cmd)
+            debug(shlex.join(cmd))
             super().__init__(cmd, *args[1:], **kwargs)
             debug(shlex.join(self.args))
             PopenLog.add_call(self)
