@@ -29,7 +29,7 @@ async def get_job(
     job = await db.get(ApplyWorkflow, job_id)
     if not job:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Job not found"
         )
     await get_project_check_owner(
         project_id=job.project_id, user_id=user.id, db=db
