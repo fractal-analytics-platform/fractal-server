@@ -399,7 +399,9 @@ async def job_factory(db: AsyncSession):
     """
     from fractal_server.app.models import ApplyWorkflow
 
-    async def __job_factory(db: AsyncSession = db, **kwargs):
+    async def __job_factory(
+        working_dir: Path, db: AsyncSession = db, **kwargs
+    ):
         defaults = dict(
             project_id=1,
             input_dataset_id=1,
@@ -407,6 +409,7 @@ async def job_factory(db: AsyncSession):
             workflow_id=1,
             overwrite_input=False,
             worker_init="WORKER_INIT string",
+            working_dir=working_dir,
         )
         args = dict(**defaults)
         args.update(kwargs)
