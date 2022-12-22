@@ -24,14 +24,16 @@ alembic = "^1.8.0"
 uvicorn = "^0.18.2"
 SQLAlchemy-Utils = "^0.38.3"
 
-clusterfutures = { version = "^0.4", optional = true }
+#clusterfutures = { version = "^0.4", optional = true }
+clusterfutures = {git = "https://github.com/takluyver/clusterfutures.git", branch="poll-slurm", optional=false}
 
 asyncpg = { version = "^0.27.0", optional = true }
 psycopg2 = { version = "^2.9.5", optional = true }
 gunicorn = { version = "^20.1.0", optional = true }
 
 [tool.poetry.extras]
-slurm = ["clusterfutures"]
+#slurm = ["clusterfutures"]
+slurm = []
 postgres = ["asyncpg", "psycopg2"]
 gunicorn = ["gunicorn"]
 
