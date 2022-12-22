@@ -27,6 +27,7 @@ from ....syringe import Inject
 from ....utils import close_logger
 from ....utils import file_opener
 from ....utils import set_logger
+from ..common import JobExecutionError
 from ..common import TaskExecutionError
 
 
@@ -50,6 +51,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         username: Optional[str] = None,
         script_dir: Optional[Path] = None,
         common_script_lines: Optional[List[str]] = None,
+        slurm_poll_interval: int = None,
         *args,
         **kwargs,
     ):
@@ -63,7 +65,19 @@ class FractalSlurmExecutor(SlurmExecutor):
                 arbitrary script lines that will always be included in the
                 sbatch script
         """
+
         super().__init__(*args, **kwargs)
+
+        if not slurm_poll_interval:
+            settings = Inject(get_settings)
+            slurm_poll_interval = settings.FRACTAL_SLURM_POLL_INTERVAL
+        if slurm_poll_interval:
+            self.wait_thread.slurm_poll_interval = slurm_poll_interval
+
+        from devtools import debug
+
+        debug(self.wait_thread.slurm_poll_interval)
+
         self.username = username
         self.common_script_lines = common_script_lines or []
         if not script_dir:
@@ -328,19 +342,39 @@ class FractalSlurmExecutor(SlurmExecutor):
         out_path = self.get_out_filename(job.workerid)
         in_path = self.get_in_filename(job.workerid)
 
-        with out_path.open("rb") as f:
-            outdata = f.read()
-        success, result = cloudpickle.loads(outdata)
-
-        if success:
-            fut.set_result(result)
-        else:
-            exc = TaskExecutionError(result.tb, *result.args, **result.kwargs)
+        try:
+            with out_path.open("rb") as f:
+                outdata = f.read()
+        except FileNotFoundError:
+            # FIXME replace hard-coded values
+            job_status = "JOB_STATUS"
+            task_stderr = ("TASK_STDERR",)
+            slurm_stderr = ("SLURM_STDERR",)
+            exc = JobExecutionError(
+                f"SLURM job {jobid} finished without writing {str(outdata)}.",
+                job_status=job_status,
+                task_stderr=task_stderr,
+                slurm_stderr=slurm_stderr,
+            )
             fut.set_exception(exc)
+        except Exception as e:
+            fut.set_exception(e)
+        else:
+            success, result = cloudpickle.loads(outdata)
 
-        # Clean up communication files.
+            if success:
+                fut.set_result(result)
+            else:
+                exc = TaskExecutionError(
+                    result.tb, *result.args, **result.kwargs
+                )
+                fut.set_exception(exc)
+
+            # Remove out_path (if it was created)
+            out_path.unlink()
+
+        # Remove in_path (always)
         in_path.unlink()
-        out_path.unlink()
 
         self._cleanup(jobid)
 

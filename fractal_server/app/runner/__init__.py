@@ -33,6 +33,7 @@ from ..models import Workflow
 from ._process import process_workflow as process_process_workflow
 from .common import auto_output_dataset  # noqa: F401
 from .common import close_job_logger
+from .common import JobExecutionError
 from .common import TaskExecutionError
 from .common import validate_workflow_compatibility  # noqa: F401
 
@@ -167,12 +168,23 @@ async def submit_workflow(
     except TaskExecutionError as e:
         job.status = JobStatusType.FAILED
         job.log = (
-            f"TASK ERROR:"
-            f"Task id: {e.workflow_task_id} ({e.task_name}), "
-            f"{e.workflow_task_order=}\n"
+            f"TASK ERROR:\n"
+            f"Task id: {e.workflow_task_id} ({e.task_name})\n"
+            f"Task order in workflow: {e.workflow_task_order=}\n"
             f"TRACEBACK:\n{str(e)}"
         )
         db_sync.merge(job)
+    except JobExecutionError as e:
+        job.status = JobStatusType.FAILED
+        job.log = (
+            f"JOB ERROR:\n"
+            f"Job status: {e.job_status}\n"
+            f"TRACEBACK:\n{str(e)}"
+        )
+        db_sync.merge(job)
+    except Exception as e:
+        raise e
+    # FIXME Handle generic errors?
     finally:
         db_sync.commit()
         os.umask(orig_umask)
