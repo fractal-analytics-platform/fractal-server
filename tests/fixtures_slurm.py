@@ -1,5 +1,4 @@
 import json
-import shlex
 from pathlib import Path
 from typing import List
 
@@ -90,16 +89,14 @@ def monkey_slurm(monkeypatch, docker_compose_project_name, docker_services):
             cmd = args[0]
             assert isinstance(cmd, list)
 
-            container_cmd = [" ".join(str(c) for c in cmd)]
+            container_cmd = cmd[:]
             cmd = [
                 "docker",
                 "exec",
                 slurm_container,
-                "bash",
-                "-c",
             ] + container_cmd
+            debug(cmd)
             super().__init__(cmd, *args[1:], **kwargs)
-            debug(shlex.join(self.args))
             PopenLog.add_call(self)
 
     monkeypatch.setattr(subprocess, "Popen", _MockPopen)
