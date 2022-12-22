@@ -90,7 +90,7 @@ def monkey_slurm(monkeypatch, docker_compose_project_name, docker_services):
             cmd = args[0]
             assert isinstance(cmd, list)
 
-            container_cmd = shlex.join(cmd)
+            container_cmd = [shlex.join(cmd)]
             cmd = [
                 "docker",
                 "exec",
