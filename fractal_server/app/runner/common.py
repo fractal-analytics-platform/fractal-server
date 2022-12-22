@@ -61,31 +61,6 @@ class TaskExecutionError(RuntimeError):
         self.task_name = task_name
 
 
-class JobExecutionError(RuntimeError):
-    """
-    Forwards any error occurred within the job execution on a given executor
-
-    FIXME docstring
-
-    This error wraps and forwards errors occurred during the execution of tasks
-    on a given executor (e.g. a SLURM executor), together with information that
-    is useful to track down the failing task within a workflow.
-
-    FIXME docstring
-    """
-
-    job_status: Optional[int] = None
-
-    def __init__(
-        self,
-        *args,
-        job_status: Optional[int] = None,
-        **kwargs,
-    ):
-        super().__init__(*args, **kwargs)
-        self.job_status = job_status
-
-
 class TaskParameterEncoder(JSONEncoder):
     """
     Convenience JSONEncoder that serialises `Path`s as strings
