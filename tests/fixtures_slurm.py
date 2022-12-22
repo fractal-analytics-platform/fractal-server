@@ -90,16 +90,17 @@ def monkey_slurm(monkeypatch, docker_compose_project_name, docker_services):
             cmd = args[0]
             assert isinstance(cmd, list)
 
-            container_cmd = cmd[:]
+            container_cmd = shlex.join(cmd)
             cmd = [
                 "docker",
                 "exec",
                 slurm_container,
+                "bash",
+                "-c",
             ] + container_cmd
             debug(cmd)
             debug(shlex.join(cmd))
             super().__init__(cmd, *args[1:], **kwargs)
-            debug(shlex.join(self.args))
             PopenLog.add_call(self)
 
     monkeypatch.setattr(subprocess, "Popen", _MockPopen)
