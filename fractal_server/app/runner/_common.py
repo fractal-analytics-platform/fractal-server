@@ -180,7 +180,7 @@ def call_single_task(
         f"--metadata-out {workflow_files.metadiff}"
     )
 
-    logger.debug(f"executing task {task.order=}")
+    logger.info(f"executing task {task.order=}")
 
     try:
         _call_command_wrapper(
@@ -417,7 +417,10 @@ def recursive_task_submission(
     logger = logging.getLogger(task_pars.logger_name)
 
     # step n => step n+1
-    logger.debug(f"submitting task {this_task.order=}")
+    logger.info(
+        f"Now submitting {this_task.order}-th task "
+        f'(name="{this_task.task.name}", executor={this_task.executor}).'
+    )
 
     task_pars_depend_future = recursive_task_submission(
         executor=executor,
