@@ -1,4 +1,5 @@
 import asyncio
+from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -55,7 +56,7 @@ async def get_dataset(
     dataset_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Optional[DatasetRead]:
 
     dataset = await get_dataset_check_owner(
         project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
