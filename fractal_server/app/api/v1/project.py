@@ -2,6 +2,7 @@ import asyncio
 import logging
 from pathlib import Path
 from typing import List
+from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
@@ -95,7 +96,7 @@ async def get_project(
     project_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Optional[ProjectRead]:
     project = await get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
@@ -107,7 +108,7 @@ async def delete_project(
     project_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Response:
     project = await get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
@@ -121,7 +122,7 @@ async def create_project(
     project: ProjectCreate,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Optional[ProjectRead]:
     """
     Create new poject
     """
@@ -169,7 +170,7 @@ async def apply_workflow(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
     db_sync: DBSyncSession = Depends(get_sync_db),
-):
+) -> Optional[ApplyWorkflowRead]:
     stm = (
         select(Project, Dataset)
         .join(Dataset)
@@ -252,7 +253,7 @@ async def add_dataset(
     dataset: DatasetCreate,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Optional[DatasetRead]:
     """
     Add new dataset to current project
     """
@@ -273,7 +274,7 @@ async def delete_dataset(
     dataset_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Response:
     await get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
@@ -299,7 +300,7 @@ async def get_resource(
     dataset_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Optional[List[ResourceRead]]:
     """
     Get resources from a dataset
     """
@@ -319,7 +320,7 @@ async def delete_resource(
     resource_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Response:
     project = await get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
@@ -347,7 +348,7 @@ async def add_resource(
     resource: ResourceCreate,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Optional[ResourceRead]:
     """
     Add resource to an existing dataset
     """
@@ -388,7 +389,7 @@ async def edit_resource(
     resource_update: ResourceUpdate,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Optional[ResourceRead]:
     project = await get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
@@ -423,7 +424,7 @@ async def patch_dataset(
     dataset_update: DatasetUpdate,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Optional[DatasetRead]:
     project = await get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
@@ -447,7 +448,7 @@ async def get_workflow_list(
     project_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Optional[List[WorkflowRead]]:
     await get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
@@ -462,7 +463,7 @@ async def get_job_list(
     project_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Optional[List[ApplyWorkflowRead]]:
     await get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
