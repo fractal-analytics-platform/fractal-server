@@ -6,6 +6,7 @@ from shutil import copy as shell_copy
 from shutil import rmtree as shell_rmtree
 from tempfile import TemporaryDirectory
 from typing import List
+from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
@@ -254,7 +255,7 @@ async def check_collection_status(
 async def get_list_task(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> List[TaskRead]:
     stm = select(Task)
     res = await db.execute(stm)
     task_list = res.scalars().unique().fetchall()
@@ -267,7 +268,7 @@ def get_task(
     task_id: int,
     user: User = Depends(current_active_user),
     db_sync: DBSyncSession = Depends(get_sync_db),
-):
+) -> TaskRead:
     task = db_sync.get(Task, task_id)
     return task
 
@@ -278,7 +279,7 @@ async def patch_task(
     task_update: TaskUpdate,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Optional[TaskRead]:
 
     # FIXME add user-owned tasks
 
