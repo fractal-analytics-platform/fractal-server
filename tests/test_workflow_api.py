@@ -188,7 +188,7 @@ async def test_post_newtask(
         assert workflow.task_list[3].args == last_task["args"]
 
 
-async def test_delete_task(
+async def test_delete_workflow_task(
     db, client, MockCurrentUser, project_factory, task_factory
 ):
     """
