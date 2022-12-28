@@ -57,6 +57,11 @@ async def get_workflow_check_owner(
     """
 
     workflow = await db.get(Workflow, workflow_id)
+    if not workflow:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Workflow not found"
+        )
+
     project, link_user_project = await asyncio.gather(
         db.get(Project, workflow.project_id),
         db.get(LinkUserProject, (workflow.project_id, user_id)),
@@ -65,10 +70,6 @@ async def get_workflow_check_owner(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
         )
-    if not workflow:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Workflow not found"
-        )
     if not link_user_project:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -76,6 +77,46 @@ async def get_workflow_check_owner(
         )
 
     return workflow
+
+
+async def get_workflow_task_check_owner(
+    *,
+    workflow_id: int,
+    workflow_task_id: int,
+    user_id: UUID4,
+    db: AsyncSession = Depends(get_db),
+) -> Workflow:
+    """
+    Check that user has rights to access a Workflow and a WorkflowTask and
+    return the WorkflowTask
+
+    Raise 404_NOT_FOUND if the WorkflowTask does not exist
+    Raise 422_UNPROCESSABLE_ENTITY if the WorkflowTask is not associated to the
+        workflow
+    """
+
+    workflow_task = await db.get(WorkflowTask, workflow_task_id)
+
+    # If WorkflowTask is not in the db, exit
+    if not workflow_task:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="WorkflowTask not found",
+        )
+
+    # Access control for workflow
+    workflow = await get_workflow_check_owner(  # noqa: F841
+        workflow_id=workflow_id, user_id=user_id, db=db
+    )
+
+    # If WorkflowTask is not part of the expected Workflow, exit
+    if workflow_id != workflow_task.workflow_id:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid {workflow_id=} for {workflow_task_id=}",
+        )
+
+    return workflow_task, workflow
 
 
 @router.post(
@@ -181,26 +222,12 @@ async def patch_workflow_task(
     db: AsyncSession = Depends(get_db),
 ) -> Optional[WorkflowTaskRead]:
 
-    db_workflow = await get_workflow_check_owner(  # noqa: F841
-        workflow_id=_id, user_id=user.id, db=db
+    db_workflow_task, db_workflow = await get_workflow_task_check_owner(
+        workflow_task_id=workflow_task_id,
+        workflow_id=_id,
+        user_id=user.id,
+        db=db,
     )
-
-    # If WorkflowTask is not part of Workflow.task_list, exit
-    if workflow_task_id not in [
-        wf_task.id for wf_task in db_workflow.task_list
-    ]:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="WorkflowTask not found in Workflow.task_list",
-        )
-
-    db_workflow_task = await db.get(WorkflowTask, workflow_task_id)
-
-    if not db_workflow_task:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="WorkflowTask not found",
-        )
 
     for key, value in workflow_task_update.dict(exclude_unset=True).items():
         if key == "args":
@@ -232,16 +259,18 @@ async def delete_task_from_workflow(
     db: AsyncSession = Depends(get_db),
 ) -> Response:
 
-    workflow = await get_workflow_check_owner(
-        workflow_id=_id, user_id=user.id, db=db
+    db_workflow_task, db_workflow = await get_workflow_task_check_owner(
+        workflow_task_id=workflow_task_id,
+        workflow_id=_id,
+        user_id=user.id,
+        db=db,
     )
 
-    to_delete = await db.get(WorkflowTask, workflow_task_id)
-    await db.delete(to_delete)
+    await db.delete(db_workflow_task)
     await db.commit()
 
-    await db.refresh(workflow)
-    workflow.task_list.reorder()
+    await db.refresh(db_workflow)
+    db_workflow.task_list.reorder()
     await db.commit()
     return
 
