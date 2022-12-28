@@ -416,12 +416,8 @@ def recursive_task_submission(
 
     logger = logging.getLogger(task_pars.logger_name)
 
-    # step n => step n+1
-    logger.info(
-        f"Now submitting {this_task.order}-th task "
-        f'(name="{this_task.task.name}", executor={this_task.executor}).'
-    )
-
+    # step n => step n+1 (NOTE: in this recursive call we wait for the end of
+    # execution of all dependencies)
     task_pars_depend_future = recursive_task_submission(
         executor=executor,
         task_list=dependencies,
@@ -430,6 +426,10 @@ def recursive_task_submission(
         submit_setup_call=submit_setup_call,
     )
 
+    logger.info(
+        f"START {this_task.order}-th task "
+        f'(name="{this_task.task.name}", executor={this_task.executor}).'
+    )
     if this_task.is_parallel:
         this_task_future = call_parallel_task(
             executor=executor,
@@ -447,4 +447,9 @@ def recursive_task_submission(
             workflow_dir=workflow_dir,
             **extra_setup,
         )
+    logger.info(
+        f"END   {this_task.order}-th task "
+        f'(name="{this_task.task.name}", executor={this_task.executor}).'
+    )
+
     return this_task_future
