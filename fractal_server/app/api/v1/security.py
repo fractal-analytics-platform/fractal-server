@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -18,7 +20,7 @@ router = APIRouter()
 @router.post("/token", response_model=Token)
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
-):
+) -> Optional[Token]:
     try:
         return await token_authentication_login(
             form_data.username, form_data.password
@@ -33,5 +35,5 @@ async def login_for_access_token(
 @router.get("/me", response_model=User)
 async def who_am_i(
     current_user: User = Security(get_current_user, scopes=["profile"])
-):
+) -> User:
     return current_user
