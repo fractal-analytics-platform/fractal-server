@@ -11,6 +11,7 @@ Institute for Biomedical Research and Pelkmans Lab from the University of
 Zurich.
 """
 from copy import deepcopy
+from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -43,7 +44,7 @@ async def create_workflow(
     workflow: WorkflowCreate,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Optional[WorkflowRead]:
     await get_project_check_owner(
         project_id=workflow.project_id,
         user_id=user.id,
@@ -75,7 +76,7 @@ async def delete_workflow(
     _id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Response:
     workflow = await db.get(Workflow, _id)
     if not workflow:
         raise HTTPException(
@@ -97,7 +98,7 @@ async def get_workflow(
     _id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Optional[WorkflowRead]:
     workflow = await db.get(Workflow, _id)
     if not workflow:
         raise HTTPException(
@@ -122,7 +123,7 @@ async def add_task_to_workflow(
     new_task: WorkflowTaskCreate,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Optional[WorkflowRead]:
     # TODO move check autorization as first thing (issue #171)
     workflow = await db.get(Workflow, _id)
     if not workflow:
@@ -155,7 +156,7 @@ async def patch_workflow_task(
     workflow_task_update: WorkflowTaskUpdate,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Optional[WorkflowTaskRead]:
 
     # FIXME add user-owned workflowtasks
 
@@ -206,7 +207,7 @@ async def delete_task_from_workflow(
     workflow_task_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Response:
     # TODO move check autorization as first thing (issue #171)
     workflow = await db.get(Workflow, _id)
     if not workflow:
@@ -235,7 +236,7 @@ async def patch_workflow(
     patch: WorkflowUpdate,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Optional[WorkflowRead]:
     # TODO move check autorization as first thing (issue #171)
     workflow = await db.get(Workflow, _id)
     if not workflow:
