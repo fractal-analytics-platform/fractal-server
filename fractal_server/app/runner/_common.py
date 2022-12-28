@@ -162,8 +162,6 @@ def call_single_task(
     if not workflow_dir:
         raise RuntimeError
 
-    logger = logging.getLogger(task_pars.logger_name)
-
     workflow_files = get_workflow_file_paths(
         workflow_dir=workflow_dir, task_order=task.order
     )
@@ -179,8 +177,6 @@ def call_single_task(
         f"{task.task.command} -j {workflow_files.args} "
         f"--metadata-out {workflow_files.metadiff}"
     )
-
-    logger.info(f"executing task {task.order=}")
 
     try:
         _call_command_wrapper(
@@ -250,13 +246,11 @@ def call_single_parallel_task(
     """
     if not workflow_dir:
         raise RuntimeError
-    logger = logging.getLogger(task_pars.logger_name)
 
     workflow_files = get_workflow_file_paths(
         workflow_dir=workflow_dir, task_order=task.order, component=component
     )
 
-    logger.debug(f"calling task {task.order=} on {component=}")
     # assemble full args
     write_args_file(
         task_pars.dict(),
@@ -270,8 +264,6 @@ def call_single_parallel_task(
         f"{task.task.command} -j {workflow_files.args} "
         f"--metadata-out {workflow_files.metadiff}"
     )
-
-    logger.debug(f"executing task {task.order=}")
 
     try:
         _call_command_wrapper(
