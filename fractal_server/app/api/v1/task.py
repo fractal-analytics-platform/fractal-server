@@ -293,7 +293,10 @@ async def patch_task(
             current_default_args.update(value)
             setattr(db_task, key, current_default_args)
         else:
-            raise Exception("patch_task endpoint cannot set {key=}")
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="patch_task endpoint cannot set {key=}",
+            )
 
     await db.commit()
     await db.refresh(db_task)
