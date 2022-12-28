@@ -119,7 +119,7 @@ async def delete_workflow(
     db: AsyncSession = Depends(get_db),
 ) -> Response:
 
-    workflow = get_workflow_check_owner(workflow_id=_id, user_id=user.id)
+    workflow = await get_workflow_check_owner(workflow_id=_id, user_id=user.id)
 
     await db.delete(workflow)
     await db.commit()
@@ -134,7 +134,7 @@ async def get_workflow(
     db: AsyncSession = Depends(get_db),
 ) -> Optional[WorkflowRead]:
 
-    workflow = get_workflow_check_owner(workflow_id=_id, user_id=user.id)
+    workflow = await get_workflow_check_owner(workflow_id=_id, user_id=user.id)
 
     return workflow
 
@@ -151,7 +151,7 @@ async def add_task_to_workflow(
     db: AsyncSession = Depends(get_db),
 ) -> Optional[WorkflowRead]:
 
-    workflow = get_workflow_check_owner(workflow_id=_id, user_id=user.id)
+    workflow = await get_workflow_check_owner(workflow_id=_id, user_id=user.id)
 
     await workflow.insert_task(
         **new_task.dict(exclude={"workflow_id"}),
@@ -177,7 +177,7 @@ async def patch_workflow_task(
 
     # FIXME add user-owned workflowtasks
 
-    db_workflow = get_workflow_check_owner(  # noqa: F841
+    db_workflow = await get_workflow_check_owner(  # noqa: F841
         workflow_id=_id, user_id=user.id
     )
     db_workflow_task = await db.get(WorkflowTask, workflow_task_id)
@@ -218,7 +218,7 @@ async def delete_task_from_workflow(
     db: AsyncSession = Depends(get_db),
 ) -> Response:
 
-    workflow = get_workflow_check_owner(workflow_id=_id, user_id=user.id)
+    workflow = await get_workflow_check_owner(workflow_id=_id, user_id=user.id)
 
     to_delete = await db.get(WorkflowTask, workflow_task_id)
     await db.delete(to_delete)
@@ -238,7 +238,7 @@ async def patch_workflow(
     db: AsyncSession = Depends(get_db),
 ) -> Optional[WorkflowRead]:
 
-    workflow = get_workflow_check_owner(workflow_id=_id, user_id=user.id)
+    workflow = await get_workflow_check_owner(workflow_id=_id, user_id=user.id)
 
     for key, value in patch.dict(exclude_unset=True).items():
         setattr(workflow, key, value)
