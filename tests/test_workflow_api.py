@@ -188,7 +188,7 @@ async def test_post_newtask(
         assert workflow.task_list[3].args == last_task["args"]
 
 
-async def test_delete_task(
+async def test_delete_workflow_task(
     db, client, MockCurrentUser, project_factory, task_factory
 ):
     """
@@ -344,10 +344,73 @@ async def test_patch_workflow_task(
         assert patched_workflow_task_up["args"] == dict(
             a=dict(c=43), b=123, d=321
         )
+
+
+async def test_patch_workflow_task_failures(
+    db, client, MockCurrentUser, project_factory, task_factory
+):
+    """
+    GIVEN a WorkflowTask
+    WHEN the endpoint to PATCH a WorkflowTask is called with invalid arguments
+    THEN the correct status code is returned
+    """
+    async with MockCurrentUser(persist=True) as user:
+
+        # Prepare two workflows, with one task each
+        project = await project_factory(user)
+        workflow1 = {"name": "WF1", "project_id": project.id}
+        res = await client.post("api/v1/workflow/", json=workflow1)
+        wf1_id = res.json()["id"]
+        workflow2 = {"name": "WF2", "project_id": project.id}
+        res = await client.post("api/v1/workflow/", json=workflow2)
+        wf2_id = res.json()["id"]
+        workflow1 = await db.get(Workflow, wf1_id)
+        workflow2 = await db.get(Workflow, wf2_id)
+        task1 = await task_factory()
+        task2 = await task_factory()
+        assert task1.id != task2.id
+        await workflow1.insert_task(task1.id, db=db)
+        await workflow2.insert_task(task2.id, db=db)
+        await db.refresh(workflow1)
+        await db.refresh(workflow2)
+        workflow_task_1 = workflow1.task_list[0]
+        workflow_task_2 = workflow2.task_list[0]
+
+        # Modify parallelization_level
         payload = dict(meta={"parallelization_level": "XXX"})
         res = await client.patch(
-            f"api/v1/workflow/{workflow.id}/"
-            f"edit-task/{workflow.task_list[0].id}",
+            f"api/v1/workflow/{workflow1.id}/"
+            f"edit-task/{workflow_task_1.id}",
             json=payload,
         )
+        assert res.status_code == 422
+
+        # Edit a WorkflowTask for a missing Workflow
+        WORKFLOW_ID = 999
+        WORKFLOW_TASK_ID = 1
+        res = await client.patch(
+            f"api/v1/workflow/{WORKFLOW_ID}/edit-task/{WORKFLOW_TASK_ID}",
+            json={"args": {"a": 123, "d": 321}},
+        )
+        debug(res.content)
+        assert res.status_code == 404
+
+        # Edit a missing WorkflowTask
+        WORKFLOW_ID = 1
+        WORKFLOW_TASK_ID = 999
+        res = await client.patch(
+            f"api/v1/workflow/{WORKFLOW_ID}/edit-task/{WORKFLOW_TASK_ID}",
+            json={"args": {"a": 123, "d": 321}},
+        )
+        debug(res.content)
+        assert res.status_code == 404
+
+        # Edit a valid WorkflowTask without specifying the right Workflow
+        WORKFLOW_ID = workflow1.id
+        WORKFLOW_TASK_ID = workflow_task_2.id
+        res = await client.patch(
+            f"api/v1/workflow/{WORKFLOW_ID}/edit-task/{WORKFLOW_TASK_ID}",
+            json={"args": {"a": 123, "d": 321}},
+        )
+        debug(res.content)
         assert res.status_code == 422
