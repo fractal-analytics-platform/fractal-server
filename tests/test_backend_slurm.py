@@ -85,6 +85,37 @@ def test_slurm_executor(username, monkey_slurm, tmp777_path):
     assert res.result() == 42
 
 
+@pytest.mark.parametrize("username", [None, "test01"])
+def test_slurm_executor_scancel(username, monkey_slurm, tmp777_path):
+    """
+    FIXME
+    """
+
+    import time
+
+    def wait_and_return():
+        time.sleep(10)
+        return 42
+
+    with FractalSlurmExecutor(
+        script_dir=tmp777_path, username=username
+    ) as executor:
+        res = executor.submit(wait_and_return)
+        username = username or "fractal"
+        subprocess.run(
+            [
+                "sudo",
+                "--non-interactive",
+                "-u",
+                username,
+                "scancel",
+                "-u",
+                username,
+            ]
+        )
+    assert False
+
+
 def test_unit_slurm_config():
     """
     GIVEN the Slurm configuration class
