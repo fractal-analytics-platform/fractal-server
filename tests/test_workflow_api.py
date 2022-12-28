@@ -389,7 +389,7 @@ async def test_patch_workflow_task_failures(
         WORKFLOW_ID = 999
         WORKFLOW_TASK_ID = 1
         res = await client.patch(
-            f"api/v1/workflow/{WORKFLOW_ID}/" f"edit-task/{WORKFLOW_TASK_ID}",
+            f"api/v1/workflow/{WORKFLOW_ID}/edit-task/{WORKFLOW_TASK_ID}",
             json={"args": {"a": 123, "d": 321}},
         )
         debug(res.content)
@@ -399,7 +399,7 @@ async def test_patch_workflow_task_failures(
         WORKFLOW_ID = 1
         WORKFLOW_TASK_ID = 999
         res = await client.patch(
-            f"api/v1/workflow/{WORKFLOW_ID}/" f"edit-task/{WORKFLOW_TASK_ID}",
+            f"api/v1/workflow/{WORKFLOW_ID}/edit-task/{WORKFLOW_TASK_ID}",
             json={"args": {"a": 123, "d": 321}},
         )
         debug(res.content)
@@ -409,7 +409,7 @@ async def test_patch_workflow_task_failures(
         WORKFLOW_ID = workflow1.id
         WORKFLOW_TASK_ID = workflow_task_2.id
         res = await client.patch(
-            f"api/v1/workflow/{WORKFLOW_ID}/" f"edit-task/{WORKFLOW_TASK_ID}",
+            f"api/v1/workflow/{WORKFLOW_ID}/edit-task/{WORKFLOW_TASK_ID}",
             json={"args": {"a": 123, "d": 321}},
         )
         debug(res.content)
