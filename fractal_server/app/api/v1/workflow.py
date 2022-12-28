@@ -4,12 +4,15 @@ University of Zurich
 
 Original author(s):
 Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
+Marco Franzon <marco.franzon@exact-lab.it>
+Tommaso Comparin <tommaso.comparin@exact-lab.it>
 
 This file is part of Fractal and was originally developed by eXact lab S.r.l.
 <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
 Institute for Biomedical Research and Pelkmans Lab from the University of
 Zurich.
 """
+import asyncio
 from copy import deepcopy
 from typing import Optional
 
@@ -18,10 +21,13 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from pydantic import UUID4
 from sqlmodel import select
 
 from ...db import AsyncSession
 from ...db import get_db
+from ...models import LinkUserProject
+from ...models import Project
 from ...models import Workflow
 from ...models import WorkflowCreate
 from ...models import WorkflowRead
@@ -35,6 +41,41 @@ from ...security import User
 from .project import get_project_check_owner
 
 router = APIRouter()
+
+
+async def get_workflow_check_owner(
+    *,
+    workflow_id: int,
+    user_id: UUID4,
+    db: AsyncSession = Depends(get_db),
+) -> Workflow:
+    """
+    Check that user is a member of a workflow's project and return
+
+    Raise 403_FORBIDDEN if the user is not a member
+    Raise 404_NOT_FOUND if the project or workflow do not exist
+    """
+
+    workflow = await db.get(Workflow, workflow_id)
+    project, link_user_project = await asyncio.gather(
+        db.get(Project, workflow.project_id),
+        db.get(LinkUserProject, (workflow.project_id, user_id)),
+    )
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
+        )
+    if not workflow:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Workflow not found"
+        )
+    if not link_user_project:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Not allowed on project {workflow.project_id}",
+        )
+
+    return workflow
 
 
 @router.post(
@@ -77,16 +118,9 @@ async def delete_workflow(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
-    workflow = await db.get(Workflow, _id)
-    if not workflow:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Workflow not found"
-        )
-    await get_project_check_owner(
-        project_id=workflow.project_id,
-        user_id=user.id,
-        db=db,
-    )
+
+    workflow = get_workflow_check_owner(workflow_id=_id, user_id=user.id)
+
     await db.delete(workflow)
     await db.commit()
 
@@ -99,17 +133,9 @@ async def get_workflow(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[WorkflowRead]:
-    workflow = await db.get(Workflow, _id)
-    if not workflow:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Workflow not found"
-        )
-    # check autorization
-    await get_project_check_owner(
-        project_id=workflow.project_id,
-        user_id=user.id,
-        db=db,
-    )
+
+    workflow = get_workflow_check_owner(workflow_id=_id, user_id=user.id)
+
     return workflow
 
 
@@ -124,18 +150,9 @@ async def add_task_to_workflow(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[WorkflowRead]:
-    # TODO move check autorization as first thing (issue #171)
-    workflow = await db.get(Workflow, _id)
-    if not workflow:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Workflow not found"
-        )
-    # check autorization
-    await get_project_check_owner(
-        project_id=workflow.project_id,
-        user_id=user.id,
-        db=db,
-    )
+
+    workflow = get_workflow_check_owner(workflow_id=_id, user_id=user.id)
+
     await workflow.insert_task(
         **new_task.dict(exclude={"workflow_id"}),
         db=db,
@@ -160,16 +177,8 @@ async def patch_workflow_task(
 
     # FIXME add user-owned workflowtasks
 
-    db_workflow = await db.get(Workflow, _id)
-    if not db_workflow:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Workflow not found"
-        )
-    # check autorization
-    await get_project_check_owner(
-        project_id=db_workflow.project_id,
-        user_id=user.id,
-        db=db,
+    db_workflow = get_workflow_check_owner(  # noqa: F841
+        workflow_id=_id, user_id=user.id
     )
     db_workflow_task = await db.get(WorkflowTask, workflow_task_id)
 
@@ -208,18 +217,9 @@ async def delete_task_from_workflow(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
-    # TODO move check autorization as first thing (issue #171)
-    workflow = await db.get(Workflow, _id)
-    if not workflow:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Workflow not found"
-        )
-    # check autorization
-    await get_project_check_owner(
-        project_id=workflow.project_id,
-        user_id=user.id,
-        db=db,
-    )
+
+    workflow = get_workflow_check_owner(workflow_id=_id, user_id=user.id)
+
     to_delete = await db.get(WorkflowTask, workflow_task_id)
     await db.delete(to_delete)
     await db.commit()
@@ -237,18 +237,9 @@ async def patch_workflow(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[WorkflowRead]:
-    # TODO move check autorization as first thing (issue #171)
-    workflow = await db.get(Workflow, _id)
-    if not workflow:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Workflow not found"
-        )
-    # check autorization
-    await get_project_check_owner(
-        project_id=workflow.project_id,
-        user_id=user.id,
-        db=db,
-    )
+
+    workflow = get_workflow_check_owner(workflow_id=_id, user_id=user.id)
+
     for key, value in patch.dict(exclude_unset=True).items():
         setattr(workflow, key, value)
     await db.commit()
