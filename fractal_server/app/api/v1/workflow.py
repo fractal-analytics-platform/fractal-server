@@ -181,17 +181,25 @@ async def patch_workflow_task(
     db: AsyncSession = Depends(get_db),
 ) -> Optional[WorkflowTaskRead]:
 
-    # FIXME add user-owned workflowtasks
-
     db_workflow = await get_workflow_check_owner(  # noqa: F841
         workflow_id=_id, user_id=user.id, db=db
     )
+
+    # If WorkflowTask is not part of Workflow.task_list, exit
+    if workflow_task_id not in [
+        wf_task.id for wf_task in db_workflow.task_list
+    ]:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="WorkflowTask not found in Workflow.task_list",
+        )
+
     db_workflow_task = await db.get(WorkflowTask, workflow_task_id)
 
     if not db_workflow_task:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Workflow Task not found",
+            detail="WorkflowTask not found",
         )
 
     for key, value in workflow_task_update.dict(exclude_unset=True).items():
