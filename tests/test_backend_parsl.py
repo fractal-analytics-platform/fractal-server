@@ -60,7 +60,7 @@ def test_unit_serial_task_assembly(tmp_path):
         workflow_id=42,  # here
         workflow_name="workflow_name",  # here
         workflow_dir=tmp_path,
-        username=None,
+        slurm_user=None,
         logger_name=logger_name,
     ) as dfk:
         out = _serial_task_assembly(

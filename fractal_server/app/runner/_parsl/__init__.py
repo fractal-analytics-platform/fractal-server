@@ -204,7 +204,7 @@ async def process_workflow(
     input_metadata: Dict[str, Any],
     logger_name: str,
     workflow_dir: Path,
-    username: str = None,
+    slurm_user: str = None,
     worker_init: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
@@ -224,7 +224,7 @@ async def process_workflow(
         workflow_id=workflow.id,  # here
         workflow_name=workflow.name,  # here
         workflow_dir=workflow_dir,
-        username=username,
+        slurm_user=slurm_user,
         logger_name=logger_name,
         worker_init=worker_init,
     ) as dfk:
