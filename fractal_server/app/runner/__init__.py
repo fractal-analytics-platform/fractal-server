@@ -79,7 +79,7 @@ async def submit_workflow(
     input_dataset: Dataset,
     output_dataset: Dataset,
     job_id: int,
-    username: Optional[str] = None,
+    slurm_user: Optional[str] = None,
     worker_init: Optional[str] = None,
 ) -> None:
     """
@@ -99,7 +99,7 @@ async def submit_workflow(
         job_id:
             Id of the job record which stores the state for the current
             workflow application.
-        username:
+        slurm_user:
             The username to impersonate for the workflow execution.
         worker_init:
             Custom executor parameters that get parsed before the execution of
@@ -140,7 +140,7 @@ async def submit_workflow(
 
     logger.info(f"fractal_server.__VERSION__: {__VERSION__}")
     logger.info(f"FRACTAL_RUNNER_BACKEND: {settings.FRACTAL_RUNNER_BACKEND}")
-    logger.info(f"username: {username}")
+    logger.info(f"slurm_user: {slurm_user}")
     logger.info(f"worker_init: {worker_init}")
     logger.info(f"input metadata: {input_dataset.meta}")
     logger.info(f"input_paths: {input_paths}")
@@ -154,7 +154,7 @@ async def submit_workflow(
             input_paths=input_paths,
             output_path=output_path,
             input_metadata=input_dataset.meta,
-            username=username,
+            slurm_user=slurm_user,
             workflow_dir=WORKFLOW_DIR,
             logger_name=logger_name,
             worker_init=worker_init,
