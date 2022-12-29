@@ -2,6 +2,11 @@ from pathlib import Path
 from zipfile import ZipFile
 
 from devtools import debug
+from sqlmodel import select
+
+from fractal_server.app.models import Dataset
+from fractal_server.app.models import Project
+from fractal_server.app.models import Resource
 
 
 PREFIX = "/api/v1/project"
@@ -203,7 +208,7 @@ async def test_add_dataset_local_path_error(app, client, MockCurrentUser, db):
         assert res.status_code == 422
 
 
-async def test_delete_project(client, MockCurrentUser):
+async def test_delete_project(client, MockCurrentUser, db):
 
     async with MockCurrentUser(persist=True):
         res = await client.get(f"{PREFIX}/")
@@ -223,9 +228,19 @@ async def test_delete_project(client, MockCurrentUser):
         assert res.status_code == 200
         assert len(data) == 1
 
+        # Verify that the project has a dataset
+        stm = select(Dataset).join(Project).where(Project.id == p["id"])
+        res = await db.execute(stm)
+        assert len([r for r in res]) == 1
+
         # DELETE PRJ
         res = await client.delete(f"{PREFIX}/{p['id']}")
         assert res.status_code == 204
+
+        # Verify that datasets with the deleted project id
+        # are deleted
+        res = await db.execute(stm)
+        assert len([r for r in res]) == 0
 
         # GET LIST again and check that it is empty
         res = await client.get(f"{PREFIX}/")
@@ -257,7 +272,7 @@ async def test_edit_resource(
 
 
 async def test_delete_dataset(
-    client, MockCurrentUser, project_factory, dataset_factory
+    client, MockCurrentUser, project_factory, dataset_factory, db
 ):
     async with MockCurrentUser(persist=True) as user:
         prj = await project_factory(user)
@@ -272,8 +287,26 @@ async def test_delete_dataset(
         assert prj_dict["dataset_list"][0]["id"] in ds_ids
         assert prj_dict["dataset_list"][1]["id"] in ds_ids
 
+        # Add a resource to verify that the cascade works
+        payload = dict(path="/some/absolute/path", glob_pattern="*.png")
+        res = await client.post(
+            f"{PREFIX}/{prj.id}/{ds0.id}",
+            json=payload,
+        )
+        stm = select(Resource).where(Dataset.id == ds0.id)
+
+        # Verify that the dataset contains a resource
+        res = await db.execute(stm)
+        assert len([r for r in res]) == 1
+
+        # DELETE THE DATASET
         res = await client.delete(f"{PREFIX}/{prj.id}/{ds0.id}")
         assert res.status_code == 204
+
+        # Verify that the resources with the deleted
+        # dataset id are deleted
+        res = await db.execute(stm)
+        assert len([r for r in res]) == 0
 
         res = await client.get(f"{PREFIX}/{prj.id}")
         prj_dict = res.json()

@@ -31,7 +31,10 @@ class Dataset(_DatasetBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     project_id: int = Field(foreign_key="project.id")
     resource_list: List["Resource"] = Relationship(
-        sa_relationship_kwargs={"lazy": "selectin"}
+        sa_relationship_kwargs={
+            "lazy": "selectin",
+            "cascade": "all, delete-orphan",
+        }
     )
     meta: Dict[str, Any] = Field(sa_column=Column(JSON), default={})
 
