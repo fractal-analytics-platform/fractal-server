@@ -9,6 +9,8 @@ from devtools import debug
 
 from .fixtures_tasks import MockTask
 from .fixtures_tasks import MockWorkflowTask
+from .trivial_functions import function_42
+from .trivial_functions import function_none
 from fractal_server.app.runner._slurm import SlurmConfig
 from fractal_server.app.runner._slurm.executor import FractalSlurmExecutor
 from fractal_server.tasks import dummy as dummy_module
@@ -35,7 +37,7 @@ def test_submit_pre_command(fake_process, slurm_user, tmp_path):
     with FractalSlurmExecutor(
         slurm_user=slurm_user, script_dir=tmp_path
     ) as executor:
-        submit(executor, lambda: None)
+        submit(executor, function_none)
 
     debug(fake_process.calls)
     call = fake_process.calls.pop()
@@ -81,7 +83,7 @@ def test_slurm_executor(slurm_user, monkey_slurm, tmp777_path):
     with FractalSlurmExecutor(
         script_dir=tmp777_path, slurm_user=slurm_user
     ) as executor:
-        res = executor.submit(lambda: 42)
+        res = executor.submit(function_42)
     assert res.result() == 42
 
 
