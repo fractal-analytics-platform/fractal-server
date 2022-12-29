@@ -13,10 +13,9 @@ This module provides a simple self-standing script that executes arbitrary
 python code received via pickled files on a cluster node.
 """
 import os
+import pickle
 import sys
 from typing import Optional
-
-import cloudpickle
 
 
 class ExceptionProxy:
@@ -44,9 +43,9 @@ def worker(in_fname: str, extra_import_paths: Optional[str] = None):
     try:
         with open(in_fname, "rb") as f:
             indata = f.read()
-        fun, args, kwargs = cloudpickle.loads(indata)
+        fun, args, kwargs = pickle.loads(indata)
         result = True, fun(*args, **kwargs)
-        out = cloudpickle.dumps(result)
+        out = pickle.dumps(result)
     except Exception as e:
         import traceback
 
@@ -60,7 +59,7 @@ def worker(in_fname: str, extra_import_paths: Optional[str] = None):
         )
 
         result = False, exc_proxy
-        out = cloudpickle.dumps(result)
+        out = pickle.dumps(result)
 
     out_fname = in_fname.replace(".in.", ".out.")
     tempfile = out_fname + ".tmp"

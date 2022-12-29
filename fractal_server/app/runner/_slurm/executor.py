@@ -8,6 +8,7 @@
 #
 # Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
 # University of Zurich
+import pickle
 import shlex
 import subprocess  # nosec
 import sys
@@ -18,7 +19,6 @@ from typing import Callable
 from typing import List
 from typing import Optional
 
-import cloudpickle
 from cfut import SlurmExecutor
 from cfut.util import random_string
 
@@ -306,7 +306,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         job.stdout = self.get_stdout_filename(prefix=job_file_prefix)
         job.stderr = self.get_stderr_filename(prefix=job_file_prefix)
 
-        funcser = cloudpickle.dumps((fun, args, kwargs))
+        funcser = pickle.dumps((fun, args, kwargs))
         with open(job.slurm_input, "wb", opener=file_opener) as f:
             f.write(funcser)
         jobid = self._start(job, additional_setup_lines)
@@ -330,7 +330,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         with out_path.open("rb") as f:
             outdata = f.read()
-        success, result = cloudpickle.loads(outdata)
+        success, result = pickle.loads(outdata)
 
         if success:
             fut.set_result(result)
