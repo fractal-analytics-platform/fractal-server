@@ -22,26 +22,26 @@ def submit(executor: Executor, fun: Callable, *args, **kwargs):
         debug(e)
 
 
-@pytest.mark.parametrize(("username"), [None, "my_user"])
-def test_submit_pre_command(fake_process, username, tmp_path):
+@pytest.mark.parametrize(("slurm_user"), [None, "my_user"])
+def test_submit_pre_command(fake_process, slurm_user, tmp_path):
     """
     GIVEN a FractalSlurmExecutor
-    WHEN it is initialised with / without a username
+    WHEN it is initialised with / without a slurm_user
     THEN the sbatch call contains / does not contain the sudo pre-command
     """
     fake_process.register(["sbatch", fake_process.any()])
     fake_process.register(["sudo", fake_process.any()])
 
     with FractalSlurmExecutor(
-        username=username, script_dir=tmp_path
+        slurm_user=slurm_user, script_dir=tmp_path
     ) as executor:
         submit(executor, lambda: None)
 
     debug(fake_process.calls)
     call = fake_process.calls.pop()
     assert "sbatch" in call
-    if username:
-        assert f"sudo --non-interactive -u {username}" in shlex.join(call)
+    if slurm_user:
+        assert f"sudo --non-interactive -u {slurm_user}" in shlex.join(call)
 
 
 def test_unit_sbatch_script_readable(monkey_slurm, tmp777_path):
@@ -70,8 +70,8 @@ def test_unit_sbatch_script_readable(monkey_slurm, tmp777_path):
     assert "This does not look like a batch script" in out.stderr
 
 
-@pytest.mark.parametrize("username", [None, "test01"])
-def test_slurm_executor(username, monkey_slurm, tmp777_path):
+@pytest.mark.parametrize("slurm_user", [None, "test01"])
+def test_slurm_executor(slurm_user, monkey_slurm, tmp777_path):
     """
     GIVEN a slurm cluster in a docker container
     WHEN a function is submitted to the cluster executor, as a given user
@@ -79,7 +79,7 @@ def test_slurm_executor(username, monkey_slurm, tmp777_path):
     """
 
     with FractalSlurmExecutor(
-        script_dir=tmp777_path, username=username
+        script_dir=tmp777_path, slurm_user=slurm_user
     ) as executor:
         res = executor.submit(lambda: 42)
     assert res.result() == 42
@@ -161,14 +161,14 @@ def test_sbatch_script_slurm_config(
         logger_name=logger_name,
     )
 
-    # Assign a non existent username so that the sudo call will fail with a
+    # Assign a non existent slurm_user so that the sudo call will fail with a
     # FileNotFoundError. This will allow inspection of the sbatch script file.
     sbatch_init_lines = [
         "export FOO=bar",
         "#SBATCH --common-non-existent-option",
     ]
     with FractalSlurmExecutor(
-        username="NO_USER",
+        slurm_user="NO_USER",
         script_dir=tmp_path,
         common_script_lines=sbatch_init_lines,
     ) as executor:
