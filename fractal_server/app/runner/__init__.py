@@ -46,7 +46,7 @@ try:
     from ._parsl import process_workflow as parsl_process_workflow
 
     _backends["parsl"] = parsl_process_workflow
-except ModuleNotFoundError as e:
+except (ModuleNotFoundError, NotImplementedError) as e:
     _backend_errors["parsl"] = e
 
 
