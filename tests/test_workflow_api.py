@@ -65,7 +65,7 @@ async def test_post_workflow(db, client, MockCurrentUser, project_factory):
 
 
 async def test_delete_workflow(
-    db, client, MockCurrentUser, project_factory, task_factory
+    db, client, MockCurrentUser, project_factory, collect_packages
 ):
     """
     GIVEN a Workflow with two Tasks
@@ -87,10 +87,30 @@ async def test_delete_workflow(
         )
         wf_id = res.json()["id"]
 
+        # Add a dummy task
+        res = await client.post(
+            f"api/v1/workflow/{wf_id}/add-task/",
+            json=dict(task_id=collect_packages[0].id),
+        )
+        debug(res.json())
+
+        # Verify that the WorkflowTask is correctly insert
+        # into the workflow
+        stm = (
+            select(WorkflowTask)
+            .join(Workflow)
+            .where(WorkflowTask.workflow_id == wf_id)
+        )
+        res = await db.execute(stm)
+        assert len([r for r in res]) == 1
+
+        # DELETE THE WORKFLOW
         res = await client.delete(f"api/v1/workflow/{wf_id}")
         assert res.status_code == 204
 
-        # TODO add tasks with API and test cascade delete
+        # Check if the WorkflowTask is deleted
+        res = await db.execute(stm)
+        assert len([r for r in res]) == 0
 
         assert not await db.get(Workflow, wf_id)
 
