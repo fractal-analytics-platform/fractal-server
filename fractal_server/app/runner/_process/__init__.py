@@ -28,7 +28,7 @@ def _process_workflow(
     input_metadata: Dict[str, Any],
     logger_name: str,
     workflow_dir: Path,
-    username: str = None,
+    slurm_user: str = None,
     worker_init: Optional[
         str
     ] = None,  # this is only to match to _parsl interface
@@ -67,7 +67,7 @@ async def process_workflow(
     input_metadata: Dict[str, Any],
     logger_name: str,
     workflow_dir: Path,
-    username: str = None,
+    slurm_user: str = None,
     worker_init: Optional[
         str
     ] = None,  # this is only to match to _parsl interface
@@ -95,7 +95,7 @@ async def process_workflow(
             Name of the logger to log information on the run to
         workflow_dir:
             Working directory for this run
-        username:
+        slurm_user:
             Username to impersonate to run the workflow
         worker_init:
             Any additional, usually backend specific, information to be passed
@@ -117,7 +117,7 @@ async def process_workflow(
         input_metadata=input_metadata,
         logger_name=logger_name,
         workflow_dir=workflow_dir,
-        username=username,
+        slurm_user=slurm_user,
         worker_init=worker_init,
     )
     return output_dataset_metadata

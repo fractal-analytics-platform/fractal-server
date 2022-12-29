@@ -89,7 +89,7 @@ class TaskParameters(BaseModel):
             the previous task.
         logger_name:
             Identifier of the workflow logger.
-        username:
+        slurm_user:
             User to impersonate to run the workflow.
     """
 
@@ -97,7 +97,7 @@ class TaskParameters(BaseModel):
     output_path: Path
     metadata: Dict[str, Any]
     logger_name: Optional[str] = None
-    username: Optional[str] = None
+    slurm_user: Optional[str] = None
 
     class Config:
         arbitrary_types_allowed = True
