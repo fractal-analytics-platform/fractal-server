@@ -58,19 +58,17 @@ except ModuleNotFoundError as e:
     _backend_errors["slurm"] = e
 
 
-def get_process_workflow():
-    settings = Inject(get_settings)
-    try:
-        process_workflow = _backends[settings.FRACTAL_RUNNER_BACKEND]
-    except KeyError:
-        raise _backend_errors.get(
-            settings.FRACTAL_RUNNER_BACKEND,
-            RuntimeError(
-                "Unknown error during collection of backend "
-                f"`{settings.FRACTAL_RUNNER_BACKEND}`"
-            ),
-        )
-    return process_workflow
+settings = Inject(get_settings)
+try:
+    process_workflow = _backends[settings.FRACTAL_RUNNER_BACKEND]
+except KeyError:
+    raise _backend_errors.get(
+        settings.FRACTAL_RUNNER_BACKEND,
+        RuntimeError(
+            "Unknown error during collection of backend "
+            f"`{settings.FRACTAL_RUNNER_BACKEND}`"
+        ),
+    )
 
 
 async def submit_workflow(
@@ -115,7 +113,6 @@ async def submit_workflow(
 
     workflow_id = workflow.id
 
-    settings = Inject(get_settings)
     WORKFLOW_DIR = (
         settings.FRACTAL_RUNNER_WORKING_BASE_DIR  # type: ignore
         / f"workflow_{workflow_id:06d}_job_{job_id:06d}"
@@ -128,7 +125,6 @@ async def submit_workflow(
     job.status = JobStatusType.RUNNING
     db_sync.merge(job)
     db_sync.commit()
-    process_workflow = get_process_workflow()
 
     logger_name = f"WF{workflow_id}_job{job_id}"
     logger = set_logger(
