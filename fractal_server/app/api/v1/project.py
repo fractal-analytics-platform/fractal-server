@@ -112,6 +112,15 @@ async def delete_project(
     project = await get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
+    # stm = (
+    #     select(Dataset)
+    #     .where(Dataset.project_id == project_id)
+    # )
+    # datasets = await db.execute(stm)
+    # from devtools import debug
+    # debug([d for d in datasets])
+    # datasets_after = await db.execute(stm)
+    # debug([d for d in datasets_after])
     await db.delete(project)
     await db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
