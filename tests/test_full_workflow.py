@@ -181,7 +181,7 @@ async def test_full_workflow(
 
         # Verify output
         res = await client.get(
-            f"{PREFIX}/dataset/{project_id}/{output_dataset_id}"
+            f"{PREFIX}/project/{project_id}/{output_dataset_id}"
         )
         data = res.json()
         debug(data)
