@@ -215,37 +215,40 @@ async def test_delete_project(client, MockCurrentUser, db):
         data = res.json()
         assert len(data) == 0
 
-        # CREATE A PRJ
+        # Create a project
         res = await client.post(
             f"{PREFIX}/", json=dict(name="name", project_dir="project dir")
         )
         p = res.json()
 
+        # Verify that the project was created
         res = await client.get(f"{PREFIX}/")
         data = res.json()
         debug(data)
-
         assert res.status_code == 200
         assert len(data) == 1
 
         # Verify that the project has a dataset
         stm = select(Dataset).join(Project).where(Project.id == p["id"])
         res = await db.execute(stm)
-        assert len([r for r in res]) == 1
+        res = list(res)
+        debug(res)
+        assert len(res) == 1
 
-        # DELETE PRJ
+        # Delete the project
         res = await client.delete(f"{PREFIX}/{p['id']}")
         assert res.status_code == 204
 
-        # Verify that datasets with the deleted project id
-        # are deleted
-        res = await db.execute(stm)
-        assert len([r for r in res]) == 0
-
-        # GET LIST again and check that it is empty
+        # Check that the project was deleted
         res = await client.get(f"{PREFIX}/")
         data = res.json()
         assert len(data) == 0
+
+        # Check that project-related datasets were deleted
+        res = await db.execute(stm)
+        res = list(res)
+        debug(res)
+        assert len(res) == 0
 
 
 async def test_edit_resource(
