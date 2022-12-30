@@ -40,8 +40,8 @@ from ....syringe import Inject
 
 
 class FractalLocalChannel(LocalChannel):
-    def __init__(self, *args, username: str = None, **kwargs):
-        self.username: Optional[str] = username
+    def __init__(self, *args, slurm_user: str = None, **kwargs):
+        self.slurm_user: Optional[str] = slurm_user
         super().__init__(*args, **kwargs)
 
     def makedirs(self, path, mode=0o777, exist_ok=False):
@@ -56,19 +56,19 @@ class FractalLocalChannel(LocalChannel):
         return f"Create {path} dir"
 
     def execute_wait(self, cmd, *args, **kwargs):
-        if self.username is None:
+        if self.slurm_user is None:
             return super().execute_wait(cmd, *args, **kwargs)
         else:
             if cmd.startswith(("/bin/bash -c '", "ps", "kill")):
                 msg = (
-                    f"The attribute username={self.username} is explicitly set"
-                    " but will be ignored, since we are currently using parsl "
-                    "LocalProvider."
+                    f"The attribute slurm_user={self.slurm_user} is explicitly"
+                    " set but will be ignored, since we are currently using "
+                    "parsl LocalProvider."
                 )
                 warnings.warn(msg)
                 new_cmd = cmd
             elif cmd.startswith(("sbatch", "scancel")):
-                new_cmd = f"sudo --non-interactive -u {self.username} {cmd}"
+                new_cmd = f"sudo --non-interactive -u {self.slurm_user} {cmd}"
             elif cmd.startswith("squeue"):
                 new_cmd = cmd
             else:
@@ -122,7 +122,7 @@ def generate_parsl_config(
     workflow_name: str,
     workflow_dir: Path,
     enable_monitoring: bool = True,
-    username: str = None,
+    slurm_user: str = None,
     worker_init: str = None,
     logger_name: str,
 ) -> ParslConfig:
@@ -156,8 +156,8 @@ def generate_parsl_config(
     channel_args: Dict[str, Any] = dict(script_dir=script_dir)
 
     # Set additional parameters for channel/provider
-    if username is not None:
-        channel_args["username"] = username
+    if slurm_user is not None:
+        channel_args["slurm_user"] = slurm_user
     if worker_init is None:
         worker_init = ""
 
@@ -352,7 +352,7 @@ def load_parsl_config(
     workflow_dir: Path,
     parsl_config: ParslConfig = None,
     enable_monitoring: bool = None,
-    username: str = None,
+    slurm_user: str = None,
     worker_init: str = None,
 ):
     settings = Inject(get_settings)
@@ -367,7 +367,7 @@ def load_parsl_config(
             workflow_id=workflow_id,
             workflow_name=workflow_name,
             workflow_dir=workflow_dir,
-            username=username,
+            slurm_user=slurm_user,
             worker_init=worker_init,
             logger_name=logger_name,
         )

@@ -2,6 +2,7 @@ import asyncio
 import logging
 from pathlib import Path
 from typing import List
+from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
@@ -72,6 +73,38 @@ async def get_project_check_owner(
     return project
 
 
+async def get_dataset_check_owner(
+    *,
+    project_id: int,
+    dataset_id: int,
+    user_id: UUID4,
+    db: AsyncSession = Depends(get_db),
+) -> Project:
+    """
+    Check that user is a member of project and return
+    Raise 403_FORBIDDEN if the user is not a member
+    Raise 404_NOT_FOUND if the project does not exist
+    """
+    project, dataset, link_user_project = await asyncio.gather(
+        db.get(Project, project_id),
+        db.get(Dataset, dataset_id),
+        db.get(LinkUserProject, (project_id, user_id)),
+    )
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
+        )
+    if not link_user_project:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Not allowed on project {project_id}",
+        )
+    return dataset
+
+
+# Main endpoints (no ID required)
+
+
 @router.get("/", response_model=List[ProjectRead])
 async def get_list_project(
     user: User = Depends(current_active_user),
@@ -90,38 +123,12 @@ async def get_list_project(
     return project_list
 
 
-@router.get("/{project_id}", response_model=ProjectRead)
-async def get_project(
-    project_id: int,
-    user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
-):
-    project = await get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
-    )
-    return project
-
-
-@router.delete("/{project_id}", status_code=204)
-async def delete_project(
-    project_id: int,
-    user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
-):
-    project = await get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
-    )
-    await db.delete(project)
-    await db.commit()
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
 @router.post("/", response_model=ProjectRead, status_code=201)
 async def create_project(
     project: ProjectCreate,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Optional[ProjectRead]:
     """
     Create new poject
     """
@@ -169,7 +176,7 @@ async def apply_workflow(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
     db_sync: DBSyncSession = Depends(get_sync_db),
-):
+) -> Optional[ApplyWorkflowRead]:
     stm = (
         select(Project, Dataset)
         .join(Dataset)
@@ -235,11 +242,40 @@ async def apply_workflow(
         input_dataset=input_dataset,
         output_dataset=output_dataset,
         job_id=job.id,
-        username=user.slurm_user,
+        slurm_user=user.slurm_user,
         worker_init=apply_workflow.worker_init,
     )
 
     return job
+
+
+# Project endpoints ("/{project_id}")
+
+
+@router.get("/{project_id}", response_model=ProjectRead)
+async def get_project(
+    project_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[ProjectRead]:
+    project = await get_project_check_owner(
+        project_id=project_id, user_id=user.id, db=db
+    )
+    return project
+
+
+@router.delete("/{project_id}", status_code=204)
+async def delete_project(
+    project_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    project = await get_project_check_owner(
+        project_id=project_id, user_id=user.id, db=db
+    )
+    await db.delete(project)
+    await db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post(
@@ -252,7 +288,7 @@ async def add_dataset(
     dataset: DatasetCreate,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Optional[DatasetRead]:
     """
     Add new dataset to current project
     """
@@ -267,13 +303,87 @@ async def add_dataset(
     return db_dataset
 
 
+@router.get("/{project_id}/workflows/", response_model=List[WorkflowRead])
+async def get_workflow_list(
+    project_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[List[WorkflowRead]]:
+    await get_project_check_owner(
+        project_id=project_id, user_id=user.id, db=db
+    )
+    stm = select(Workflow).where(Workflow.project_id == project_id)
+    res = await db.execute(stm)
+    workflow_list = res.scalars().all()
+    return workflow_list
+
+
+@router.get("/{project_id}/jobs/", response_model=List[ApplyWorkflowRead])
+async def get_job_list(
+    project_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[List[ApplyWorkflowRead]]:
+    await get_project_check_owner(
+        project_id=project_id, user_id=user.id, db=db
+    )
+    stm = select(ApplyWorkflow).where(ApplyWorkflow.project_id == project_id)
+    res = await db.execute(stm)
+    job_list = res.scalars().all()
+    return job_list
+
+
+# Dataset endpoints ("/{project_id}/{dataset_id}")
+
+
+@router.get("/{project_id}/{dataset_id}", response_model=DatasetRead)
+async def get_dataset(
+    project_id: int,
+    dataset_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[DatasetRead]:
+
+    dataset = await get_dataset_check_owner(
+        project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
+    )
+
+    return dataset
+
+
+@router.patch("/{project_id}/{dataset_id}", response_model=DatasetRead)
+async def patch_dataset(
+    project_id: int,
+    dataset_id: int,
+    dataset_update: DatasetUpdate,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[DatasetRead]:
+    project = await get_project_check_owner(
+        project_id=project_id, user_id=user.id, db=db
+    )
+    db_dataset = await db.get(Dataset, dataset_id)
+    if db_dataset not in project.dataset_list:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Dataset {dataset_id} is not part of project {project_id}",
+        )
+
+    for key, value in dataset_update.dict(exclude_unset=True).items():
+        setattr(db_dataset, key, value)
+
+    await db.commit()
+    await db.refresh(db_dataset)
+    return db_dataset
+
+
 @router.delete("/{project_id}/{dataset_id}", status_code=204)
 async def delete_dataset(
     project_id: int,
     dataset_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Response:
     await get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
@@ -290,52 +400,6 @@ async def delete_dataset(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.get(
-    "/{project_id}/{dataset_id}",
-    response_model=List[ResourceRead],
-)
-async def get_resource(
-    project_id: int,
-    dataset_id: int,
-    user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
-):
-    """
-    Get resources from a dataset
-    """
-    await get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
-    )
-    stm = select(Resource).where(Resource.dataset_id == dataset_id)
-    res = await db.execute(stm)
-    resource_list = res.scalars().all()
-    return resource_list
-
-
-@router.delete("/{project_id}/{dataset_id}/{resource_id}", status_code=204)
-async def delete_resource(
-    project_id: int,
-    dataset_id: int,
-    resource_id: int,
-    user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
-):
-    project = await get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
-    )
-    resource = await db.get(Resource, resource_id)
-    if not resource or resource.dataset_id not in (
-        ds.id for ds in project.dataset_list
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Resource does not exist or does not belong to project",
-        )
-    await db.delete(resource)
-    await db.commit()
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
 @router.post(
     "/{project_id}/{dataset_id}",
     response_model=ResourceRead,
@@ -347,14 +411,13 @@ async def add_resource(
     resource: ResourceCreate,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Optional[ResourceRead]:
     """
     Add resource to an existing dataset
     """
 
     # Check that path is absolute, which is needed for when the server submits
     # tasks as a different user
-
     if not Path(resource.path).is_absolute():
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -378,6 +441,55 @@ async def add_resource(
     return db_resource
 
 
+@router.get(
+    "/{project_id}/{dataset_id}/resources/",
+    response_model=List[ResourceRead],
+)
+async def get_resource(
+    project_id: int,
+    dataset_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[List[ResourceRead]]:
+    """
+    Get resources from a dataset
+    """
+    await get_project_check_owner(
+        project_id=project_id, user_id=user.id, db=db
+    )
+    stm = select(Resource).where(Resource.dataset_id == dataset_id)
+    res = await db.execute(stm)
+    resource_list = res.scalars().all()
+    return resource_list
+
+
+# Resource endpoints ("/{project_id}/{dataset_id}/{resource_id}")
+
+
+@router.delete("/{project_id}/{dataset_id}/{resource_id}", status_code=204)
+async def delete_resource(
+    project_id: int,
+    dataset_id: int,
+    resource_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    project = await get_project_check_owner(
+        project_id=project_id, user_id=user.id, db=db
+    )
+    resource = await db.get(Resource, resource_id)
+    if not resource or resource.dataset_id not in (
+        ds.id for ds in project.dataset_list
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Resource does not exist or does not belong to project",
+        )
+    await db.delete(resource)
+    await db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 @router.patch(
     "/{project_id}/{dataset_id}/{resource_id}", response_model=ResourceRead
 )
@@ -388,7 +500,7 @@ async def edit_resource(
     resource_update: ResourceUpdate,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Optional[ResourceRead]:
     project = await get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
@@ -414,59 +526,3 @@ async def edit_resource(
     await db.commit()
     await db.refresh(orig_resource)
     return orig_resource
-
-
-@router.patch("/{project_id}/{dataset_id}", response_model=DatasetRead)
-async def patch_dataset(
-    project_id: int,
-    dataset_id: int,
-    dataset_update: DatasetUpdate,
-    user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
-):
-    project = await get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
-    )
-    db_dataset = await db.get(Dataset, dataset_id)
-    if db_dataset not in project.dataset_list:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Dataset {dataset_id} is not part of project {project_id}",
-        )
-
-    for key, value in dataset_update.dict(exclude_unset=True).items():
-        setattr(db_dataset, key, value)
-
-    await db.commit()
-    await db.refresh(db_dataset)
-    return db_dataset
-
-
-@router.get("/{project_id}/workflows/", response_model=List[WorkflowRead])
-async def get_workflow_list(
-    project_id: int,
-    user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
-):
-    await get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
-    )
-    stm = select(Workflow).where(Workflow.project_id == project_id)
-    res = await db.execute(stm)
-    workflow_list = res.scalars().all()
-    return workflow_list
-
-
-@router.get("/{project_id}/jobs/", response_model=List[ApplyWorkflowRead])
-async def get_job_list(
-    project_id: int,
-    user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
-):
-    await get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
-    )
-    stm = select(ApplyWorkflow).where(ApplyWorkflow.project_id == project_id)
-    res = await db.execute(stm)
-    job_list = res.scalars().all()
-    return job_list

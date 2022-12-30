@@ -195,7 +195,7 @@ def _process_workflow(
     input_metadata: Dict[str, Any],
     logger_name: str,
     workflow_dir: Path,
-    username: str = None,
+    slurm_user: str = None,
     worker_init: Optional[Union[str, List[str]]] = None,
 ) -> Dict[str, Any]:
     """
@@ -213,7 +213,7 @@ def _process_workflow(
     with FractalSlurmExecutor(
         debug=True,
         keep_logs=True,
-        username=username,
+        slurm_user=slurm_user,
         script_dir=workflow_dir,
         common_script_lines=worker_init,
     ) as executor:
@@ -242,7 +242,7 @@ async def process_workflow(
     input_metadata: Dict[str, Any],
     logger_name: str,
     workflow_dir: Path,
-    username: str = None,
+    slurm_user: str = None,
     worker_init: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
@@ -257,7 +257,7 @@ async def process_workflow(
         input_metadata=input_metadata,
         logger_name=logger_name,
         workflow_dir=workflow_dir,
-        username=username,
+        slurm_user=slurm_user,
         worker_init=worker_init,
     )
     return output_dataset_metadata
