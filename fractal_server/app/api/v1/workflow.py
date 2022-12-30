@@ -272,7 +272,8 @@ async def delete_task_from_workflow(
     await db.refresh(db_workflow)
     db_workflow.task_list.reorder()
     await db.commit()
-    return
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.patch("/{_id}", response_model=WorkflowRead)
