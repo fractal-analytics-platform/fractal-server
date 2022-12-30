@@ -73,6 +73,8 @@ async def test_delete_workflow(
     THEN the Workflow and its associated WorkflowTasks are removed from the db
     """
     async with MockCurrentUser(persist=True) as user:
+
+        # Create project
         project = await project_factory(user)
         p_id = project.id
         workflow = {
@@ -80,20 +82,22 @@ async def test_delete_workflow(
             "project_id": p_id,
         }
 
+        # Create workflow
         res = await client.post(
             "api/v1/workflow/",
             json=workflow,
         )
         wf_id = res.json()["id"]
 
-        # Add a dummy task
+        # Add a dummy task to workflow
         res = await client.post(
             f"api/v1/workflow/{wf_id}/add-task/",
             json=dict(task_id=collect_packages[0].id),
         )
+        assert res.status_code == 201
         debug(res.json())
 
-        # Verify that the WorkflowTask is correctly inserted into the Workflow
+        # Verify that the WorkflowTask was correctly inserted into the Workflow
         stm = (
             select(WorkflowTask)
             .join(Workflow)
