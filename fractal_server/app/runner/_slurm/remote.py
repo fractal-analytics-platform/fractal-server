@@ -17,6 +17,9 @@ import sys
 from typing import Optional
 
 import cloudpickle
+from cfut import __version__ as cfut_v_remote
+
+from fractal_server import __VERSION__ as fractal_v_remote
 
 
 class ExceptionProxy:
@@ -44,7 +47,16 @@ def worker(in_fname: str, extra_import_paths: Optional[str] = None):
     try:
         with open(in_fname, "rb") as f:
             indata = f.read()
-        fun, args, kwargs = cloudpickle.loads(indata)
+        fun, args, kwargs, cfut_v, fractal_v = cloudpickle.loads(indata)
+        if cfut_v != cfut_v_remote or fractal_v != fractal_v_remote:
+            raise RuntimeError(
+                "Version mismatch"
+                "\nRemote-worker versions: "
+                f"cfut={cfut_v_remote}, fractal_server={fractal_v_remote}"
+                f"\nVersions in {in_fname}:"
+                f"cfut={cfut_v}, fractal_server={fractal_v}"
+            )
+
         result = True, fun(*args, **kwargs)
         out = cloudpickle.dumps(result)
     except Exception as e:
@@ -56,7 +68,7 @@ def worker(in_fname: str, extra_import_paths: Optional[str] = None):
             typ,
             traceback.format_exception(typ, value, tb),
             e.args,
-            **e.__dict__
+            **e.__dict__,
         )
 
         result = False, exc_proxy

@@ -19,6 +19,7 @@ from typing import List
 from typing import Optional
 
 import cloudpickle
+from cfut import __version__ as cfut_v
 from cfut import SlurmExecutor
 from cfut.util import random_string
 
@@ -28,6 +29,7 @@ from ....utils import close_logger
 from ....utils import file_opener
 from ....utils import set_logger
 from ..common import TaskExecutionError
+from fractal_server import __VERSION__ as fractal_v
 
 
 class SlurmJob:
@@ -306,7 +308,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         job.stdout = self.get_stdout_filename(prefix=job_file_prefix)
         job.stderr = self.get_stderr_filename(prefix=job_file_prefix)
 
-        funcser = cloudpickle.dumps((fun, args, kwargs))
+        funcser = cloudpickle.dumps((fun, args, kwargs, cfut_v, fractal_v))
         with open(job.slurm_input, "wb", opener=file_opener) as f:
             f.write(funcser)
         jobid = self._start(job, additional_setup_lines)
