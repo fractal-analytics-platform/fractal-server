@@ -83,7 +83,7 @@ async def get_dataset_check_owner(
     """
     Check that user is a member of project and return
     Raise 403_FORBIDDEN if the user is not a member
-    Raise 404_NOT_FOUND if the project does not exist
+    Raise 404_NOT_FOUND if the project or dataset does not exist
     """
     project, dataset, link_user_project = await asyncio.gather(
         db.get(Project, project_id),
@@ -98,6 +98,10 @@ async def get_dataset_check_owner(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Not allowed on project {project_id}",
+        )
+    if not dataset:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Dataset not found"
         )
     return dataset
 
