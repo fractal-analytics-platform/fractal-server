@@ -102,7 +102,7 @@ async def get_dataset_check_owner(
     return dataset
 
 
-# End of internal functions
+# Main endpoints (no ID required)
 
 
 @router.get("/", response_model=List[ProjectRead])
@@ -121,9 +121,6 @@ async def get_list_project(
     res = await db.execute(stm)
     project_list = res.scalars().all()
     return project_list
-
-
-# Main endpoints (no ID required)
 
 
 @router.post("/", response_model=ProjectRead, status_code=201)
