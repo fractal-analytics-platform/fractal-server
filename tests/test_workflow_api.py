@@ -115,7 +115,7 @@ async def test_delete_workflow(
         res = await db.execute(stm)
         res = list(res)
         debug(res)
-        assert len(res) == 1
+        assert len(res) == 0
 
 
 async def test_get_workflow(
