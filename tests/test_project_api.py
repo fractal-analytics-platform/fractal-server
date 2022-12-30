@@ -149,6 +149,41 @@ async def test_add_dataset(app, client, MockCurrentUser, db):
         assert resource["path"] == payload["path"]
 
 
+async def test_dataset_get(app, client, MockCurrentUser, db):
+
+    async with MockCurrentUser(persist=True):
+
+        # Create a project
+        res = await client.post(
+            f"{PREFIX}/",
+            json=dict(
+                name="test project",
+                project_dir="/tmp/",
+            ),
+        )
+        assert res.status_code == 201
+        project = res.json()
+        debug(project)
+        project_id = project["id"]
+        dataset_id = project["dataset_list"][0]["id"]
+
+        # Show existing dataset
+        res = await client.get(
+            f"{PREFIX}/{project_id}/{dataset_id}",
+        )
+        assert res.status_code == 200
+        dataset = res.json()
+        debug(dataset)
+        assert dataset["project_id"] == project_id
+
+        # Show missing dataset
+        invalid_dataset_id = 999
+        res = await client.get(
+            f"{PREFIX}/{project_id}/{invalid_dataset_id}",
+        )
+        assert res.status_code == 404
+
+
 async def test_add_dataset_local_path_error(app, client, MockCurrentUser, db):
 
     async with MockCurrentUser(persist=True):
