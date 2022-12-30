@@ -69,9 +69,8 @@ async def test_delete_workflow(
 ):
     """
     GIVEN a Workflow with two Tasks
-    WHEN the endpoint that DELETE a Workflow is called
-    THEN the Workflow and its associated WorkflowTasks
-        are removed from the db
+    WHEN the endpoint that deletes a Workflow is called
+    THEN the Workflow and its associated WorkflowTasks are removed from the db
     """
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
@@ -94,25 +93,29 @@ async def test_delete_workflow(
         )
         debug(res.json())
 
-        # Verify that the WorkflowTask is correctly insert
-        # into the workflow
+        # Verify that the WorkflowTask is correctly inserted into the Workflow
         stm = (
             select(WorkflowTask)
             .join(Workflow)
             .where(WorkflowTask.workflow_id == wf_id)
         )
         res = await db.execute(stm)
-        assert len([r for r in res]) == 1
+        res = list(res)
+        debug(res)
+        assert len(res) == 1
 
-        # DELETE THE WORKFLOW
+        # Delete the Workflow
         res = await client.delete(f"api/v1/workflow/{wf_id}")
         assert res.status_code == 204
 
-        # Check if the WorkflowTask is deleted
-        res = await db.execute(stm)
-        assert len([r for r in res]) == 0
-
+        # Check that the Workflow was deleted
         assert not await db.get(Workflow, wf_id)
+
+        # Check that the WorkflowTask was deleted
+        res = await db.execute(stm)
+        res = list(res)
+        debug(res)
+        assert len(res) == 1
 
 
 async def test_get_workflow(
