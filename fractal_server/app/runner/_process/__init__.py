@@ -102,8 +102,7 @@ async def process_workflow(
             to the backend executor.
 
     Raises:
-        TaskExecutionError:
-            Wrapper for errors raised by the tasks' executors.
+        TaskExecutionError: wrapper for errors raised by the tasks' executors.
 
     Returns:
         output_dataset_metadata:

@@ -52,16 +52,14 @@ def get_python_interpreter(version: Optional[str] = None) -> str:
     Return the path to the python interpreter
 
     Args:
-        version:
-            Python version
+        version: Python version
 
     Raises:
-        ValueError:
-            If the python version requested is not available on the host.
+        ValueError: If the python version requested is not available on the
+                    host.
 
     Returns:
-        interpreter:
-            string representing the python executable or its path
+        interpreter: string representing the python executable or its path
     """
     if version:
         interpreter = shutil.which(f"python{version}")
@@ -220,19 +218,18 @@ async def download_package(
     return Path(pkg_file)
 
 
-def inspect_package(path: Path):
+def inspect_package(path: Path) -> dict:
     """
     Inspect task package for version and manifest
 
-    Parameters:
-    path: Path
-        the path in which the package is saved
+    Args:
+        path: Path
+            the path in which the package is saved
 
-    Return
-    ------
-    version_manifest: dict
-        A dictionary containing `version`, the version of the pacakge, and
-        `manifest`, the Fractal manifest object relative to the tasks.
+    Returns:
+        version_manifest: A dictionary containing `version`, the version of the
+        pacakge, and `manifest`, the Fractal manifest object relative to the
+        tasks.
     """
     if "whl" in path.as_posix():
         # it is simply a zip file
@@ -380,17 +377,15 @@ async def _init_venv(
     """
     Set a virtual environment at `path/venv`
 
-    Parameters
-    ----------
-    path : Path
-        path to directory in which to set up the virtual environment
-    python_version : default=None
-        Python version the virtual environment will be based upon
+    Args:
+        path : Path
+            path to directory in which to set up the virtual environment
+        python_version : default=None
+            Python version the virtual environment will be based upon
 
-    Return
-    ------
-    python_bin : Path
-        path to python interpreter
+    Returns:
+        python_bin : Path
+            path to python interpreter
     """
     interpreter = get_python_interpreter(version=python_version)
     await execute_command(
@@ -407,10 +402,9 @@ async def _pip_install(
     """
     Install package in venv
 
-    Return
-    ------
-    package_root : Path
-        the location of the package manifest
+    Returns:
+        package_root : Path
+            the location of the package manifest
     """
     pip = venv_path / "venv/bin/pip"
 

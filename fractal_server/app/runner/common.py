@@ -110,7 +110,7 @@ async def auto_output_dataset(
     input_dataset: Dataset,
     workflow: Task,
     overwrite_input: bool = False,
-):
+) -> Dataset:
     """
     Determine the output dataset if it was not provided explicitly
 
@@ -131,7 +131,7 @@ async def auto_output_dataset(
 
     Raises:
         ValueError: If the input dataset is to be overwritten and it provides
-        more than one path.
+                    more than one path.
 
     Returns:
         output_dataset:

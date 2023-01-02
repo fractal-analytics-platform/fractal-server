@@ -149,8 +149,8 @@ def set_slurm_config(
             submission process.
 
     Raises:
-        SlurmConfigError: if the slurm configuration file does not contain the
-        tasks requires.
+        SlurmConfigError: if the slurm-configuration file does not contain the
+                          required config
 
     Returns:
         submit_setup_dict:
