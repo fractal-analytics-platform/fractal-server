@@ -68,10 +68,11 @@ Preliminary check-list
 
 * The `main` branch is checked out.
 * You reviewed dependencies, and the lock file is up to date with ``pyproject.toml``.
-* The current HEAD of the `main` branch passes all the tests (note: make sure that you are using the poetry-installed local package).
+* The current HEAD of the `main` branch passes all the tests (note: make sure
+  that you are using the poetry-installed local package).
 * You updated the changelog (note: this is not yet in-place).
 
-Actual release:
+Actual **release instructions**:
 
 1. Use:
 ```
@@ -94,29 +95,44 @@ git push && git push --tags
 ```
 poetry publish --dry-run
 ```
-replacing ``--dry-run`` with ``--username YOUR_USERNAME --password YOUR_PASSWORD`` when you made sure that everything looks good.
+replacing ``--dry-run`` with ``--username YOUR_USERNAME --password
+YOUR_PASSWORD`` when you made sure that everything looks good.
 
 
-## Testing
-
-### Setup docker
-
-### Run tests
+## Run tests
 
 Unit and integration testing of Fractal Server uses the
 [pytest](https://docs.pytest.org/en/7.1.x/) testing framework.
 
+To test the SLURM backend, we use a custom version of a [Docker local SLURM
+cluster](https://github.com/rancavil/slurm-cluster). The pytest plugin
+[pytest-docker](https://github.com/avast/pytest-docker) is then used to spin up
+the Docker containers for the duration of the tests.
+
+**Important**: this requires docker being installed on the development system,
+and the current user being in the `docker` group. A simple check for this
+requirement is to run a command like `docker ps`, and verify that it does not
+raise any permission-related error. Note that also `docker-compose` must be
+available, but this package is installed as a dependency of `pytest-docker`
+(when it is installed with the extra `docker-compose-v1`, as in the case of
+Fractal Server).
+
+
 If you installed the development dependencies, you may run
 the test suite by invoking
-
 ```
 poetry run pytest
 ```
+from the main directory of the `fractal-server` repository. It is sometimes
+useful to specify additional arguments, e.g.
+```
+poetry run pytest -s -vvv --log-cli-level info --full-trace
+```
 
-Some runner backends and database engines may benefit from dummy services
-(such as a database or a virtual SLURM cluster). These are automatically set
-up using `pytest-docker`, which relies on `docker` and `docker-compose` being
-installed on the development system.
+Tests are also run as part of [GitHub Actions Continuous
+Integration](https://github.com/fractal-analytics-platform/fractal-server/actions/workflows/ci.yml)
+for the `fractal-server` repository.
+
 
 ## Documentation
 
