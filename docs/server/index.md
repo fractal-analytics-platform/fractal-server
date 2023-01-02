@@ -13,8 +13,8 @@ takes care of
 
 Please refer to
 
-* [Installation](./installation.md)
-* [Configuration](./configuration.md)
+* [Installation](../installation.md)
+* [Configuration](../configuration.md)
 
 ## Fractal Server internals
 
