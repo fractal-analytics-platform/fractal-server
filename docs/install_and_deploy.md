@@ -95,9 +95,9 @@ usage: fractalctl start [-h] [--host HOST] [-p PORT] [--reload]
 
 options:
   -h, --help            show this help message and exit
-  --host HOST
-  -p PORT, --port PORT
-  --reload
+  --host HOST           bind socket to this host
+  -p PORT, --port PORT  bind socket to this port
+  --reload              enable auto-reload
 ```
 
 Notice that you could also use more explicit startup commands, e.g. see below
