@@ -100,8 +100,9 @@ options:
   --reload              enable auto-reload
 ```
 
-Notice that you could also use more explicit startup commands, e.g. see below
-for the gunicorn ones.
+Notice that you could also use more explicit startup commands, see
+[below](/install_and_deploy/#serving-fractal-server-via-gunicorn) for an
+example based on Gunicorn.
 
 ### Ports
 
