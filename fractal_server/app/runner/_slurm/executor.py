@@ -8,6 +8,8 @@
 #
 # Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
 # University of Zurich
+import io
+import pickle
 import shlex
 import subprocess  # nosec
 import sys
@@ -28,6 +30,22 @@ from ....utils import close_logger
 from ....utils import file_opener
 from ....utils import set_logger
 from ..common import TaskExecutionError
+
+
+class RestrictedUnpickler(pickle.Unpickler):
+    def find_class(self, module, name):
+        # Only allow some custom classes
+        if (module == "common" and name == "TaskParameters") or (
+            module == "remote" and name == "ExceptionProxy"
+        ):
+            return getattr(module, name)
+        # Forbid everything else.
+        raise pickle.UnpicklingError("'%s.%s' is forbidden" % (module, name))
+
+
+def restricted_pickle_loads(s):
+    """Helper function analogous to pickle.loads()."""
+    return RestrictedUnpickler(io.BytesIO(s)).load()
 
 
 class SlurmJob:
@@ -330,7 +348,8 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         with out_path.open("rb") as f:
             outdata = f.read()
-        success, result = cloudpickle.loads(outdata)
+        # success, result = cloudpickle.loads(outdata)
+        success, result = restricted_pickle_loads(outdata)
 
         if success:
             fut.set_result(result)
