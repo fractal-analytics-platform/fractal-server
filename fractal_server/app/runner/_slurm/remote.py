@@ -18,6 +18,8 @@ from typing import Optional
 
 import cloudpickle
 
+from .pickling_utils import restricted_pickle_loads
+
 
 class ExceptionProxy:
     """
@@ -44,7 +46,8 @@ def worker(in_fname: str, extra_import_paths: Optional[str] = None):
     try:
         with open(in_fname, "rb") as f:
             indata = f.read()
-        fun, args, kwargs = cloudpickle.loads(indata)
+        fun, args, kwargs = restricted_pickle_loads(indata)
+        # fun, args, kwargs = cloudpickle.loads(indata)
         result = True, fun(*args, **kwargs)
         out = cloudpickle.dumps(result)
     except Exception as e:
