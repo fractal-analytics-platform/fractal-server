@@ -45,8 +45,16 @@ class SlurmConfig(BaseModel):
     the `--xxx` option of `sbatch`.
     Cf. [sbatch documentation](https://slurm.schedmd.com/sbatch.html)
 
-    Note: options containing hyphens ('-') need be aliased to attribute names
-        with underscores ('-').
+    Note that options containing hyphens ('-') need be aliased to attribute
+    names with underscores ('-').
+
+    Attributes:
+        partition: TBD
+        time: TBD
+        mem: TBD
+        cpus_per_task: TBD
+        account: TBD
+        extra_lines: TBD
     """
 
     class Config:
@@ -60,6 +68,10 @@ class SlurmConfig(BaseModel):
     extra_lines: Optional[List[str]] = Field(default_factory=list)
 
     def to_sbatch(self, prefix="#SBATCH "):
+        """
+        Transform the class attributes into the preamble block of a script to
+        be submitted via `sbatch`
+        """
         dic = self.dict(
             exclude_none=True, by_alias=True, exclude={"extra_lines"}
         )
@@ -206,6 +218,27 @@ def _process_workflow(
     workflow tasks and returns the output dataset metadata.
 
     Cf. [process_workflow][fractal_server.app.runner._process.process_workflow]
+
+    Args:
+        workflow:
+            TBD
+        input_paths:
+            TBD
+        output_path:
+            TBD
+        input_metadata:
+            TBD
+        logger_name:
+            TBD
+        workflow_dir:
+            TBD
+        slurm_user:
+            TBD
+        worker_init:
+            TBD
+
+    Returns:
+        output_dataset_metadata: Metadata of the output dataset
     """
     if isinstance(worker_init, str):
         worker_init = worker_init.split("\n")
