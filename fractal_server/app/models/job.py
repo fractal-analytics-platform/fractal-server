@@ -44,7 +44,7 @@ class ApplyWorkflow(ApplyWorkflowBase, table=True):
     Represent a workflow run
 
     This table is responsible for storing the state of a workflow execution in
-    the DB.
+    the database.
 
     Attributes:
         id:

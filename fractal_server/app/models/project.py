@@ -28,6 +28,22 @@ class LinkUserProject(SQLModel, table=True):
 
 
 class Dataset(_DatasetBase, table=True):
+    """
+    Represent a dataset
+
+    Attributes:
+        id:
+            Primary key
+        project_id:
+            ID of the project the workflow belongs to.
+        meta:
+            Metadata of the Dataset
+
+        resource_list:
+            (Mapper attribute)
+
+    """
+
     id: Optional[int] = Field(default=None, primary_key=True)
     project_id: int = Field(foreign_key="project.id")
     resource_list: List["Resource"] = Relationship(
