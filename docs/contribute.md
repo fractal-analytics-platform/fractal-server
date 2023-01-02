@@ -52,7 +52,6 @@ poetry install -E slurm -E postgres
 poetry install --all-extras
 ```
 
-
 It may sometimes be useful to use a different Python interpreter from the one
 installed in your system. To this end we suggest using
 [pyenv](https://github.com/pyenv/pyenv). In the project folder, invoking
@@ -62,6 +61,41 @@ poetry env use <version>
 ```
 will install Fractal in a development environment using an interpreter pinned
 at the version provided instead of the system interpreter.
+
+## Build and release
+
+Preliminary check-list
+
+* The `main` branch is checked out.
+* You reviewed dependencies, and the lock file is up to date with ``pyproject.toml``.
+* The current HEAD of the `main` branch passes all the tests (note: make sure that you are using the poetry-installed local package).
+* You updated the changelog (note: this is not yet in-place).
+
+Actual release:
+
+1. Use:
+```
+poetry run bumpver update --[tag-num|patch|minor] --tag-commit --commit --dry
+```
+to test updating the version bump.
+
+2. If the previous step looks good, remove `--dry` and re-run to actually bump the
+version and commit the changes locally.
+
+3. Test the build with:
+```
+poetry build
+```
+4. If the previous step was successful, push the version bump and tags:
+```
+git push && git push --tags
+```
+5. Finally, publish the updated package to PyPI with:
+```
+poetry publish --dry-run
+```
+replacing ``--dry-run`` with ``--username YOUR_USERNAME --password YOUR_PASSWORD`` when you made sure that everything looks good.
+
 
 ## Testing
 
