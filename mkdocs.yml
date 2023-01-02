@@ -65,7 +65,7 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          selection:
+          options:
             filters: []
   - coverage:
       page_name: coverage
