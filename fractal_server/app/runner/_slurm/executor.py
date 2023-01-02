@@ -331,14 +331,14 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         with out_path.open("rb") as f:
             outdata = f.read()
-        # success, result = cloudpickle.loads(outdata)
-        success, result = restricted_pickle_loads(
-            outdata,
-            [
-                ("common", "TaskParameters"),
-                ("exception_proxy", "ExceptionProxy"),
-            ],
-        )
+        success, result = cloudpickle.loads(outdata)
+        # success, result = restricted_pickle_loads(
+        #    outdata,
+        #    [
+        #        ("common", "TaskParameters"),
+        #        ("exception_proxy", "ExceptionProxy"),
+        #    ],
+        # )
 
         if success:
             fut.set_result(result)
