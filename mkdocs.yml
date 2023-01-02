@@ -19,7 +19,7 @@ markdown_extensions:
     alternate_style: true
 - pymdownx.tasklist
 - toc:
-    permalink: "¤"
+    permalink: true
 
 theme:
   name: "material"
