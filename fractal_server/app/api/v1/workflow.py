@@ -119,6 +119,9 @@ async def get_workflow_task_check_owner(
     return workflow_task, workflow
 
 
+# Main endpoints ("/")
+
+
 @router.post(
     "/", response_model=WorkflowRead, status_code=status.HTTP_201_CREATED
 )
@@ -153,6 +156,9 @@ async def create_workflow(
     return db_workflow
 
 
+# Workflow endpoints ("/{workflow_id}")
+
+
 @router.delete("/{_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_workflow(
     _id: int,
@@ -168,6 +174,25 @@ async def delete_workflow(
     await db.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.patch("/{_id}", response_model=WorkflowRead)
+async def patch_workflow(
+    _id: int,
+    patch: WorkflowUpdate,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[WorkflowRead]:
+
+    workflow = await get_workflow_check_owner(
+        workflow_id=_id, user_id=user.id, db=db
+    )
+
+    for key, value in patch.dict(exclude_unset=True).items():
+        setattr(workflow, key, value)
+    await db.commit()
+    await db.refresh(workflow)
+    return workflow
 
 
 @router.get("/{_id}", response_model=WorkflowRead)
@@ -209,6 +234,9 @@ async def add_task_to_workflow(
     await db.refresh(workflow)
 
     return workflow
+
+
+# WorkflowTask endpoints ("/{workflow_id}/../{workflow_task_id}"
 
 
 @router.patch(
@@ -274,22 +302,3 @@ async def delete_task_from_workflow(
     await db.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-@router.patch("/{_id}", response_model=WorkflowRead)
-async def patch_workflow(
-    _id: int,
-    patch: WorkflowUpdate,
-    user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
-) -> Optional[WorkflowRead]:
-
-    workflow = await get_workflow_check_owner(
-        workflow_id=_id, user_id=user.id, db=db
-    )
-
-    for key, value in patch.dict(exclude_unset=True).items():
-        setattr(workflow, key, value)
-    await db.commit()
-    await db.refresh(workflow)
-    return workflow
