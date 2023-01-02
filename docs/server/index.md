@@ -13,7 +13,7 @@ takes care of
 
 Please refer to
 
-* [Installation](../installation.md)
+* [Install and deploy](../install_and_deploy.md)
 * [Configuration](../configuration.md)
 
 ## Fractal Server internals

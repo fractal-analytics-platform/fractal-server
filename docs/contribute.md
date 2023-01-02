@@ -120,6 +120,12 @@ installed on the development system.
 
 ## Documentation
 
+The documentations is built with [mkdocs](https://www.mkdocs.org) and the
+[Material theme](https://squidfunk.github.io/mkdocs-material).  Whenever
+possible, docstrings should be formatted as in the [Google Python Style
+Guide](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings).
+
+
 To build the documentation
 
 1. Setup a python environment and install the requirements from
