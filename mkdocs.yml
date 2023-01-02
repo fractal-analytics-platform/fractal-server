@@ -42,11 +42,13 @@ theme:
       name: Switch to light mode
 
 nav:
-  - Installation: installation.md
+  - Home page: index.md
+  - Install and deploy: installation_deployment.md
+  - Contribute: development.md
   - Configuration: configuration.md
   - Internals: server/
   - Code reference: reference/
-  - Contributing: contributing/
+    #- Contributing: contributing/
   - Coverage: coverage
   - Web API: openapi.md
 
