@@ -9,8 +9,9 @@ your data. Fractal currently supports two backends:
     server is installed..
 * [SLURM](slurm.md):
     Run tasks by scheduling them on a SLURM cluster.
-* PARSL (deprecated):
-    Run tasks through [Parsl](http://parsl-project.org/) executors.
+* PARSL:
+    Run tasks through [Parsl](http://parsl-project.org) executors (**currently
+    not supported**).
 
 Both `Process` and `SLURM` backends leverage on Python's
 [concurrent.futures](https://docs.python.org/3/library/concurrent.futures.html)
@@ -21,8 +22,8 @@ coroutine.
 
 For this reason, both `Process` and `SLURM` backends largely build up on the
 same set of common internal utilities and routines, c.f.,
-[public](../../reference/fractal_server/app/runner/common/) and
-[private](../../reference/fractal_server/app/runner/_common/) common backend
+[public](/reference/fractal_server/app/runner/common/) and
+[private](/reference/fractal_server/app/runner/_common/) common backend
 APIs.
 
 ## Public interface

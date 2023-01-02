@@ -8,10 +8,25 @@ parser = ap.ArgumentParser()
 subparsers = parser.add_subparsers(title="Commands", dest="cmd", required=True)
 
 # fractalctl start
-startserver = subparsers.add_parser("start", help="Start the server")
-startserver.add_argument("--host", default="127.0.0.1")
-startserver.add_argument("-p", "--port", default=8000, type=int)
-startserver.add_argument("--reload", default=False, action="store_true")
+startserver = subparsers.add_parser(
+    "start", help="Start the server (with uvicorn)"
+)
+startserver.add_argument(
+    "--host",
+    default="127.0.0.1",
+    type=str,
+    help="bind socket to this host (default: 127.0.0.1)",
+)
+startserver.add_argument(
+    "-p",
+    "--port",
+    default=8000,
+    type=int,
+    help="bind socket to this port (default: 8000)",
+)
+startserver.add_argument(
+    "--reload", default=False, action="store_true", help="enable auto-reload"
+)
 
 # fractalctl openapi
 openapi_parser = subparsers.add_parser(
@@ -20,6 +35,7 @@ openapi_parser = subparsers.add_parser(
 openapi_parser.add_argument(
     "-f",
     "--openapi-file",
+    type=str,
     help="Filename for OpenAPI schema dump",
     default="openapi.json",
 )
