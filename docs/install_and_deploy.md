@@ -95,8 +95,8 @@ usage: fractalctl start [-h] [--host HOST] [-p PORT] [--reload]
 
 options:
   -h, --help            show this help message and exit
-  --host HOST           bind socket to this host
-  -p PORT, --port PORT  bind socket to this port
+  --host HOST           bind socket to this host (default: 127.0.0.1)
+  -p PORT, --port PORT  bind socket to this port (default: 8000)
   --reload              enable auto-reload
 ```
 
