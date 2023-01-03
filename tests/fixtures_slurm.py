@@ -101,6 +101,10 @@ def cfut_jobs_finished(monkeypatch):
                 for line in res.stdout.splitlines()
             ]
         )
+        import logging
+
+        logging.basicConfig(format="%(asctime)s; %(levelname)s; %(message)s")
+        logging.warning(id_to_state)
         # Finished jobs only stay in squeue for a few mins (configurable). If
         # a job ID isn't there, we'll assume it's finished.
         return {
