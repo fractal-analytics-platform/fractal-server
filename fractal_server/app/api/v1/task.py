@@ -163,7 +163,7 @@ async def collect_tasks_pip(
     with TemporaryDirectory() as tmpdir:
         try:
             if task_pkg.is_local_package:
-                shell_copy(task_pkg.package_path, tmpdir)
+                shell_copy(task_pkg.package_path.as_posix(), tmpdir)
                 pkg_path = Path(tmpdir) / task_pkg.package_path.name
             else:
                 pkg_path = await download_package(
