@@ -331,13 +331,13 @@ async def test_delete_dataset(
             f"{PREFIX}/{prj.id}/{ds0.id}",
             json=payload,
         )
-        stm = select(Resource).where(Dataset.id == ds0.id)
 
         # Verify that the dataset contains a resource
+        stm = select(Resource).join(Dataset).where(Dataset.id == ds0.id)
         res = await db.execute(stm)
         assert len([r for r in res]) == 1
 
-        # DELETE THE DATASET
+        # Delete dataset
         res = await client.delete(f"{PREFIX}/{prj.id}/{ds0.id}")
         assert res.status_code == 204
 
