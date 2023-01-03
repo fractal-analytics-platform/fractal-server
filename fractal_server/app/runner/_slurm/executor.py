@@ -320,6 +320,11 @@ class FractalSlurmExecutor(SlurmExecutor):
 
     def _completion(self, jobid):
         """Called whenever a job finishes."""
+
+        import logging
+
+        logging.basicConfig(format="%(asctime)s; %(levelname)s; %(message)s")
+        logging.warning(f"_completion {jobid=}")
         with self.jobs_lock:
             fut, job = self.jobs.pop(jobid)
             if not self.jobs:
@@ -327,21 +332,35 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         out_path = self.get_out_filename(job.workerid)
         in_path = self.get_in_filename(job.workerid)
+        logging.warning(f"_completion {out_path=}")
 
-        with out_path.open("rb") as f:
-            outdata = f.read()
-        success, result = cloudpickle.loads(outdata)
+        if out_path.exists():
+            logging.warning(f"_completion {out_path=} exists")
+            with out_path.open("rb") as f:
+                outdata = f.read()
+            success, result = cloudpickle.loads(outdata)
+            logging.warning(f"_completion {success=}")
 
-        if success:
-            fut.set_result(result)
+            if success:
+                fut.set_result(result)
+            else:
+                exc = TaskExecutionError(
+                    result.tb, *result.args, **result.kwargs
+                )
+                fut.set_exception(exc)
+
+            out_path.unlink()
         else:
-            exc = TaskExecutionError(result.tb, *result.args, **result.kwargs)
+            logging.warning(f"_completion {out_path=} missing")
+            exc = TaskExecutionError(
+                f"Something went wrong, missing file {str(out_path)}"
+            )
             fut.set_exception(exc)
 
         # Clean up communication files.
         in_path.unlink()
-        out_path.unlink()
 
+        logging.warning(f"_completion cleanup {jobid=}")
         self._cleanup(jobid)
 
     def _start(
