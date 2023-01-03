@@ -40,8 +40,10 @@ def test_submit_pre_command(fake_process, slurm_user, tmp_path):
     ) as executor:
         submit_and_ignore_exceptions(executor, lambda: None)
 
+    # Convert from deque to list, and apply shlex.join
     call_strings = [shlex.join(call) for call in fake_process.calls]
     debug(call_strings)
+
     assert any(["sbatch" in call for call in call_strings])
     if slurm_user:
         target = f"sudo --non-interactive -u {slurm_user}"
@@ -51,7 +53,7 @@ def test_submit_pre_command(fake_process, slurm_user, tmp_path):
 def test_unit_sbatch_script_readable(monkey_slurm, tmp777_path):
     """
     GIVEN a batch script written to file by the slurm executor
-    WHEN a differnt user tries to read it
+    WHEN a different user tries to read it
     THEN it has all the permissions needed
     """
     import subprocess
