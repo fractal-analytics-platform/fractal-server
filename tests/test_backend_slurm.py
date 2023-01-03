@@ -15,11 +15,13 @@ from fractal_server.tasks import dummy as dummy_module
 from fractal_server.tasks import dummy_parallel as dummy_parallel_module
 
 
-def submit(executor: Executor, fun: Callable, *args, **kwargs):
+def submit_and_ignore_exceptions(
+    executor: Executor, fun: Callable, *args, **kwargs
+):
     try:
         return executor.submit(fun, *args, **kwargs)
     except Exception as e:
-        debug(e)
+        debug(f"Ignored exception: {str(e)}")
 
 
 @pytest.mark.parametrize(("slurm_user"), [None, "my_user"])
@@ -31,17 +33,19 @@ def test_submit_pre_command(fake_process, slurm_user, tmp_path):
     """
     fake_process.register(["sbatch", fake_process.any()])
     fake_process.register(["sudo", fake_process.any()])
+    fake_process.register(["squeue", fake_process.any()])
 
     with FractalSlurmExecutor(
         slurm_user=slurm_user, script_dir=tmp_path
     ) as executor:
-        submit(executor, lambda: None)
+        submit_and_ignore_exceptions(executor, lambda: None)
 
-    debug(fake_process.calls)
-    call = fake_process.calls.pop()
-    assert "sbatch" in call
+    call_strings = [shlex.join(call) for call in fake_process.calls]
+    debug(call_strings)
+    assert any(["sbatch" in call for call in call_strings])
     if slurm_user:
-        assert f"sudo --non-interactive -u {slurm_user}" in shlex.join(call)
+        target = f"sudo --non-interactive -u {slurm_user}"
+        assert any([target in call for call in call_strings])
 
 
 def test_unit_sbatch_script_readable(monkey_slurm, tmp777_path):
@@ -113,6 +117,7 @@ def test_slurm_executor_scancel(username, monkey_slurm, tmp777_path):
                 username,
             ]
         )
+        debug(res)
     assert False
 
 
