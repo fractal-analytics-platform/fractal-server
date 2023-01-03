@@ -3,13 +3,13 @@ from sys import argv
 
 import uvicorn
 
-parser = ap.ArgumentParser()
+parser = ap.ArgumentParser(description="fractal-server commands")
 
 subparsers = parser.add_subparsers(title="Commands", dest="cmd", required=True)
 
 # fractalctl start
 startserver = subparsers.add_parser(
-    "start", help="Start the server (with uvicorn)"
+    "start", description="Start the server (with uvicorn)"
 )
 startserver.add_argument(
     "--host",
@@ -30,7 +30,7 @@ startserver.add_argument(
 
 # fractalctl openapi
 openapi_parser = subparsers.add_parser(
-    "openapi", help="Save the `openapi.json` file"
+    "openapi", description="Save the `openapi.json` file"
 )
 openapi_parser.add_argument(
     "-f",
@@ -41,7 +41,7 @@ openapi_parser.add_argument(
 )
 
 # fractalctl set-db
-subparsers.add_parser("set-db", help="Initialise the database")
+subparsers.add_parser("set-db", description="Initialise the database")
 
 
 def save_openapi(dest="openapi.json"):
