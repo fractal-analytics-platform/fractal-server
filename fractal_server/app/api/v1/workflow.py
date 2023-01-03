@@ -209,7 +209,7 @@ async def get_workflow(
 
 @router.post(
     "/{_id}/add-task/",
-    response_model=WorkflowTask,
+    response_model=WorkflowTaskRead,
     status_code=status.HTTP_201_CREATED,
 )
 async def add_task_to_workflow(
@@ -231,7 +231,10 @@ async def add_task_to_workflow(
     await db.commit()
     await db.refresh(workflow)
 
-    return workflow_task
+    # FIXME
+    db_workflow_task = WorkflowTask.from_orm(workflow_task)
+
+    return db_workflow_task
 
 
 # WorkflowTask endpoints ("/{workflow_id}/../{workflow_task_id}"
