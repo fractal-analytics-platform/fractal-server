@@ -53,6 +53,66 @@ def slurm_config(override_settings):
 
 
 @pytest.fixture
+def cfut_jobs_finished(monkeypatch):
+    """
+    This fixture is a workaround to add quotes around the --format argument of
+    squeue, see discussion in
+    https://github.com/sampsyo/clusterfutures/pull/19. The code of
+    _jobs_finished is a copy of the function proposed via that PR.
+    """
+
+    import cfut
+    import subprocess
+
+    def _jobs_finished(job_ids):
+
+        STATES_FINISHED = {  # https://slurm.schedmd.com/squeue.html#lbAG
+            "BOOT_FAIL",
+            "CANCELLED",
+            "COMPLETED",
+            "DEADLINE",
+            "FAILED",
+            "NODE_FAIL",
+            "OUT_OF_MEMORY",
+            "PREEMPTED",
+            "SPECIAL_EXIT",
+            "TIMEOUT",
+        }
+
+        res = subprocess.run(
+            [
+                "squeue",
+                "--noheader",
+                # The next line is the one that gets changed via this fixture
+                '--format="%i %T"',
+                "--jobs",
+                ",".join([str(j) for j in job_ids]),
+                "--states=all",
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            encoding="utf-8",
+            check=True,
+        )
+        id_to_state = dict(
+            [
+                line.strip().partition(" ")[::2]
+                for line in res.stdout.splitlines()
+            ]
+        )
+        # Finished jobs only stay in squeue for a few mins (configurable). If
+        # a job ID isn't there, we'll assume it's finished.
+        return {
+            j
+            for j in job_ids
+            if id_to_state.get(j, "COMPLETED") in STATES_FINISHED
+        }
+
+    # Replace the jobs_finished function (from cfut.slurm) with our custom one
+    monkeypatch.setattr(cfut.slurm, "jobs_finished", _jobs_finished)
+
+
+@pytest.fixture
 def monkey_slurm(monkeypatch, docker_compose_project_name, docker_services):
     """
     Monkeypatch Popen to execute overridden command in container

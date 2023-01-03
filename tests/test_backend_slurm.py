@@ -25,7 +25,9 @@ def submit_and_ignore_exceptions(
 
 
 @pytest.mark.parametrize(("slurm_user"), [None, "my_user"])
-def test_submit_pre_command(fake_process, slurm_user, tmp_path):
+def test_submit_pre_command(
+    fake_process, slurm_user, tmp_path, cfut_jobs_finished
+):
     """
     GIVEN a FractalSlurmExecutor
     WHEN it is initialised with / without a slurm_user
@@ -50,7 +52,9 @@ def test_submit_pre_command(fake_process, slurm_user, tmp_path):
         assert any([target in call for call in call_strings])
 
 
-def test_unit_sbatch_script_readable(monkey_slurm, tmp777_path):
+def test_unit_sbatch_script_readable(
+    monkey_slurm, tmp777_path, cfut_jobs_finished
+):
     """
     GIVEN a batch script written to file by the slurm executor
     WHEN a different user tries to read it
@@ -77,7 +81,9 @@ def test_unit_sbatch_script_readable(monkey_slurm, tmp777_path):
 
 
 @pytest.mark.parametrize("slurm_user", [None, "test01"])
-def test_slurm_executor(slurm_user, monkey_slurm, tmp777_path):
+def test_slurm_executor(
+    slurm_user, monkey_slurm, tmp777_path, cfut_jobs_finished
+):
     """
     GIVEN a docker slurm cluster and a FractalSlurmExecutor executor
     WHEN a function is submitted to the executor, as a given user
@@ -93,7 +99,9 @@ def test_slurm_executor(slurm_user, monkey_slurm, tmp777_path):
 
 @pytest.mark.xfail(reason="Not yet fully implemented")
 @pytest.mark.parametrize("slurm_user", [None, "test01"])
-def test_slurm_executor_scancel(slurm_user, monkey_slurm, tmp777_path):
+def test_slurm_executor_scancel(
+    slurm_user, monkey_slurm, tmp777_path, cfut_jobs_finished
+):
     """
     GIVEN a docker slurm cluster and a FractalSlurmExecutor executor
     WHEN a function is submitted to the executor, as a given user, and then the
