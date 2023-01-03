@@ -200,7 +200,7 @@ def create_package_dir_pip(
 async def download_package(
     *,
     task_pkg: _TaskCollectPip,
-    dest: Path,
+    dest: Union[str, Path],
 ):
     """
     Download package to destination
