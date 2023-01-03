@@ -93,6 +93,8 @@ different port) as in
 ```
 usage: fractalctl start [-h] [--host HOST] [-p PORT] [--reload]
 
+Start the server (with uvicorn)
+
 options:
   -h, --help            show this help message and exit
   --host HOST           bind socket to this host (default: 127.0.0.1)
