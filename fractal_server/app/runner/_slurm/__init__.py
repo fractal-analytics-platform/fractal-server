@@ -45,8 +45,16 @@ class SlurmConfig(BaseModel):
     the `--xxx` option of `sbatch`.
     Cf. [sbatch documentation](https://slurm.schedmd.com/sbatch.html)
 
-    Note: options containing hyphens ('-') need be aliased to attribute names
-        with underscores ('-').
+    Note that options containing hyphens ('-') need be aliased to attribute
+    names with underscores ('-').
+
+    Attributes:
+        partition: TBD
+        time: TBD
+        mem: TBD
+        cpus_per_task: TBD
+        account: TBD
+        extra_lines: TBD
     """
 
     class Config:
@@ -60,6 +68,10 @@ class SlurmConfig(BaseModel):
     extra_lines: Optional[List[str]] = Field(default_factory=list)
 
     def to_sbatch(self, prefix="#SBATCH "):
+        """
+        Transform the class attributes into the preamble block of a script to
+        be submitted via `sbatch`
+        """
         dic = self.dict(
             exclude_none=True, by_alias=True, exclude={"extra_lines"}
         )
@@ -149,8 +161,8 @@ def set_slurm_config(
             submission process.
 
     Raises:
-        SlurmConfigError: if the slurm configuration file does not contain the
-        tasks requires.
+        SlurmConfigError: if the slurm-configuration file does not contain the
+                          required config
 
     Returns:
         submit_setup_dict:
@@ -195,7 +207,7 @@ def _process_workflow(
     input_metadata: Dict[str, Any],
     logger_name: str,
     workflow_dir: Path,
-    username: str = None,
+    slurm_user: str = None,
     worker_init: Optional[Union[str, List[str]]] = None,
 ) -> Dict[str, Any]:
     """
@@ -206,6 +218,27 @@ def _process_workflow(
     workflow tasks and returns the output dataset metadata.
 
     Cf. [process_workflow][fractal_server.app.runner._process.process_workflow]
+
+    Args:
+        workflow:
+            TBD
+        input_paths:
+            TBD
+        output_path:
+            TBD
+        input_metadata:
+            TBD
+        logger_name:
+            TBD
+        workflow_dir:
+            TBD
+        slurm_user:
+            TBD
+        worker_init:
+            TBD
+
+    Returns:
+        output_dataset_metadata: Metadata of the output dataset
     """
     if isinstance(worker_init, str):
         worker_init = worker_init.split("\n")
@@ -213,7 +246,7 @@ def _process_workflow(
     with FractalSlurmExecutor(
         debug=True,
         keep_logs=True,
-        username=username,
+        slurm_user=slurm_user,
         script_dir=workflow_dir,
         common_script_lines=worker_init,
     ) as executor:
@@ -242,7 +275,7 @@ async def process_workflow(
     input_metadata: Dict[str, Any],
     logger_name: str,
     workflow_dir: Path,
-    username: str = None,
+    slurm_user: str = None,
     worker_init: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
@@ -257,7 +290,7 @@ async def process_workflow(
         input_metadata=input_metadata,
         logger_name=logger_name,
         workflow_dir=workflow_dir,
-        username=username,
+        slurm_user=slurm_user,
         worker_init=worker_init,
     )
     return output_dataset_metadata

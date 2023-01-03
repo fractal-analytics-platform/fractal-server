@@ -1,3 +1,7 @@
+"""
+`db` module, loosely adapted from
+https://testdriven.io/blog/fastapi-sqlmodel/#async-sqlmodel
+"""
 from typing import AsyncGenerator
 from typing import Generator
 from warnings import warn
@@ -11,12 +15,12 @@ from sqlalchemy.orm import sessionmaker
 from ...config import get_settings
 from ...syringe import Inject
 
-"""
-Losely adapted from https://testdriven.io/blog/fastapi-sqlmodel/#async-sqlmodel
-"""
-
 
 class DB:
+    """
+    DB class
+    """
+
     @classmethod
     def engine_async(cls):
         try:

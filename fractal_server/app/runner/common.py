@@ -89,7 +89,7 @@ class TaskParameters(BaseModel):
             the previous task.
         logger_name:
             Identifier of the workflow logger.
-        username:
+        slurm_user:
             User to impersonate to run the workflow.
     """
 
@@ -97,7 +97,7 @@ class TaskParameters(BaseModel):
     output_path: Path
     metadata: Dict[str, Any]
     logger_name: Optional[str] = None
-    username: Optional[str] = None
+    slurm_user: Optional[str] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -110,7 +110,7 @@ async def auto_output_dataset(
     input_dataset: Dataset,
     workflow: Task,
     overwrite_input: bool = False,
-):
+) -> Dataset:
     """
     Determine the output dataset if it was not provided explicitly
 
@@ -131,7 +131,7 @@ async def auto_output_dataset(
 
     Raises:
         ValueError: If the input dataset is to be overwritten and it provides
-        more than one path.
+                    more than one path.
 
     Returns:
         output_dataset:

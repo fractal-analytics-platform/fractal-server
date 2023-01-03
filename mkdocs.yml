@@ -19,10 +19,11 @@ markdown_extensions:
     alternate_style: true
 - pymdownx.tasklist
 - toc:
-    permalink: "¤"
+    permalink: true
 
 theme:
   name: "material"
+  custom_dir: "docs/overrides"
   features:
   - content.code.annotate
   palette:
@@ -42,11 +43,12 @@ theme:
       name: Switch to light mode
 
 nav:
-  - Installation: installation.md
+  - Home page: index.md
+  - Install and deploy: install_and_deploy.md
+  - Contribute: contribute.md
   - Configuration: configuration.md
   - Internals: server/
   - Code reference: reference/
-  - Contributing: contributing/
   - Coverage: coverage
   - Web API: openapi.md
 
@@ -65,7 +67,7 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          selection:
+          options:
             filters: []
   - coverage:
       page_name: coverage

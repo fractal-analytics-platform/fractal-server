@@ -162,8 +162,6 @@ def call_single_task(
     if not workflow_dir:
         raise RuntimeError
 
-    logger = logging.getLogger(task_pars.logger_name)
-
     workflow_files = get_workflow_file_paths(
         workflow_dir=workflow_dir, task_order=task.order
     )
@@ -179,8 +177,6 @@ def call_single_task(
         f"{task.task.command} -j {workflow_files.args} "
         f"--metadata-out {workflow_files.metadiff}"
     )
-
-    logger.debug(f"executing task {task.order=}")
 
     try:
         _call_command_wrapper(
@@ -250,13 +246,11 @@ def call_single_parallel_task(
     """
     if not workflow_dir:
         raise RuntimeError
-    logger = logging.getLogger(task_pars.logger_name)
 
     workflow_files = get_workflow_file_paths(
         workflow_dir=workflow_dir, task_order=task.order, component=component
     )
 
-    logger.debug(f"calling task {task.order=} on {component=}")
     # assemble full args
     write_args_file(
         task_pars.dict(),
@@ -270,8 +264,6 @@ def call_single_parallel_task(
         f"{task.task.command} -j {workflow_files.args} "
         f"--metadata-out {workflow_files.metadiff}"
     )
-
-    logger.debug(f"executing task {task.order=}")
 
     try:
         _call_command_wrapper(
@@ -416,9 +408,8 @@ def recursive_task_submission(
 
     logger = logging.getLogger(task_pars.logger_name)
 
-    # step n => step n+1
-    logger.debug(f"submitting task {this_task.order=}")
-
+    # step n => step n+1 (NOTE: in this recursive call we wait for the end of
+    # execution of all dependencies)
     task_pars_depend_future = recursive_task_submission(
         executor=executor,
         task_list=dependencies,
@@ -427,6 +418,10 @@ def recursive_task_submission(
         submit_setup_call=submit_setup_call,
     )
 
+    logger.info(
+        f"START {this_task.order}-th task "
+        f'(name="{this_task.task.name}", executor={this_task.executor}).'
+    )
     if this_task.is_parallel:
         this_task_future = call_parallel_task(
             executor=executor,
@@ -444,4 +439,9 @@ def recursive_task_submission(
             workflow_dir=workflow_dir,
             **extra_setup,
         )
+    logger.info(
+        f"END   {this_task.order}-th task "
+        f'(name="{this_task.task.name}", executor={this_task.executor}).'
+    )
+
     return this_task_future
