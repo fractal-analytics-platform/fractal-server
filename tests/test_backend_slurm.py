@@ -91,8 +91,8 @@ def test_slurm_executor(slurm_user, monkey_slurm, tmp777_path):
     assert res.result() == 42
 
 
-@pytest.mark.parametrize("username", [None, "test01"])
-def test_slurm_executor_scancel(username, monkey_slurm, tmp777_path):
+@pytest.mark.parametrize("slurm_user", [None, "test01"])
+def test_slurm_executor_scancel(slurm_user, monkey_slurm, tmp777_path):
     """
     FIXME
     """
@@ -104,19 +104,20 @@ def test_slurm_executor_scancel(username, monkey_slurm, tmp777_path):
         return 42
 
     with FractalSlurmExecutor(
-        script_dir=tmp777_path, username=username
+        script_dir=tmp777_path,
+        slurm_user=slurm_user,
     ) as executor:
         res = executor.submit(wait_and_return)
-        username = username or "fractal"
+        slurm_user = slurm_user or "fractal"
         subprocess.run(
             [
                 "sudo",
                 "--non-interactive",
                 "-u",
-                username,
+                slurm_user,
                 "scancel",
                 "-u",
-                username,
+                slurm_user,
             ]
         )
         debug(res)
