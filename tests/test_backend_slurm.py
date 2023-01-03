@@ -79,8 +79,8 @@ def test_unit_sbatch_script_readable(monkey_slurm, tmp777_path):
 @pytest.mark.parametrize("slurm_user", [None, "test01"])
 def test_slurm_executor(slurm_user, monkey_slurm, tmp777_path):
     """
-    GIVEN a slurm cluster in a docker container
-    WHEN a function is submitted to the cluster executor, as a given user
+    GIVEN a docker slurm cluster and a FractalSlurmExecutor executor
+    WHEN a function is submitted to the executor, as a given user
     THEN the result is correctly computed
     """
 
@@ -95,7 +95,10 @@ def test_slurm_executor(slurm_user, monkey_slurm, tmp777_path):
 @pytest.mark.parametrize("slurm_user", [None, "test01"])
 def test_slurm_executor_scancel(slurm_user, monkey_slurm, tmp777_path):
     """
-    FIXME
+    GIVEN a docker slurm cluster and a FractalSlurmExecutor executor
+    WHEN a function is submitted to the executor, as a given user, and then the
+         SLURM job is immediately canceled
+    THEN the error is correctly captured
     """
 
     import time
@@ -108,20 +111,21 @@ def test_slurm_executor_scancel(slurm_user, monkey_slurm, tmp777_path):
         script_dir=tmp777_path,
         slurm_user=slurm_user,
     ) as executor:
-        res = executor.submit(wait_and_return)
-        slurm_user = slurm_user or "fractal"
-        subprocess.run(
-            [
-                "sudo",
-                "--non-interactive",
-                "-u",
-                slurm_user,
-                "scancel",
-                "-u",
-                slurm_user,
-            ]
-        )
-        debug(res)
+        executor.submit(wait_and_return)
+
+    time.sleep(1)
+    slurm_user = slurm_user or "fractal"
+    subprocess.run(
+        [
+            "sudo",
+            "--non-interactive",
+            "-u",
+            slurm_user,
+            "scancel",
+            "-u",
+            slurm_user,
+        ]
+    )
     assert False
 
 
