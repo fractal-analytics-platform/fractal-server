@@ -14,6 +14,7 @@ python code received via pickled files on a cluster node.
 """
 import os
 import sys
+from typing import List
 from typing import Optional
 
 import cloudpickle
