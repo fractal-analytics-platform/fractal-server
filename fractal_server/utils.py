@@ -28,7 +28,7 @@ from .config import get_settings
 from .syringe import Inject
 
 
-def file_opener(path: Union[str, Path], flags: int, mode=0o777):
+def file_opener(path: Union[str, Path], flags: int, mode=0o777) -> int:
     """
     Custom file opener with umask=0
 

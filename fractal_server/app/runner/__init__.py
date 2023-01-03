@@ -79,7 +79,7 @@ async def submit_workflow(
     input_dataset: Dataset,
     output_dataset: Dataset,
     job_id: int,
-    username: Optional[str] = None,
+    slurm_user: Optional[str] = None,
     worker_init: Optional[str] = None,
 ) -> None:
     """
@@ -99,7 +99,7 @@ async def submit_workflow(
         job_id:
             Id of the job record which stores the state for the current
             workflow application.
-        username:
+        slurm_user:
             The username to impersonate for the workflow execution.
         worker_init:
             Custom executor parameters that get parsed before the execution of
@@ -124,6 +124,12 @@ async def submit_workflow(
     if not WORKFLOW_DIR.exists():
         WORKFLOW_DIR.mkdir(parents=True, mode=0o777)
 
+    job.working_dir = WORKFLOW_DIR.as_posix()
+    job.status = JobStatusType.RUNNING
+    db_sync.merge(job)
+    db_sync.commit()
+    process_workflow = get_process_workflow()
+
     logger_name = f"WF{workflow_id}_job{job_id}"
     logger = set_logger(
         logger_name=logger_name,
@@ -132,26 +138,23 @@ async def submit_workflow(
         formatter=logging.Formatter("%(asctime)s; %(levelname)s; %(message)s"),
     )
 
-    process_workflow = get_process_workflow()
     logger.info(f"fractal_server.__VERSION__: {__VERSION__}")
     logger.info(f"FRACTAL_RUNNER_BACKEND: {settings.FRACTAL_RUNNER_BACKEND}")
+    logger.info(f"slurm_user: {slurm_user}")
     logger.info(f"worker_init: {worker_init}")
-    logger.info(f"username: {username}")
+    logger.info(f"input metadata: {input_dataset.meta}")
     logger.info(f"input_paths: {input_paths}")
     logger.info(f"output_path: {output_path}")
-    logger.info(f"input metadata: {input_dataset.meta}")
-    logger.info(f"START workflow {workflow.name}")
-    job.working_dir = WORKFLOW_DIR.as_posix()
-    job.status = JobStatusType.RUNNING
-    db_sync.merge(job)
-    db_sync.commit()
+    logger.info(f"job.id: {job.id}")
+    logger.info(f"job.working_dir: {WORKFLOW_DIR}")
+    logger.info(f'START workflow "{workflow.name}"')
     try:
         output_dataset.meta = await process_workflow(
             workflow=workflow,
             input_paths=input_paths,
             output_path=output_path,
             input_metadata=input_dataset.meta,
-            username=username,
+            slurm_user=slurm_user,
             workflow_dir=WORKFLOW_DIR,
             logger_name=logger_name,
             worker_init=worker_init,
@@ -159,12 +162,16 @@ async def submit_workflow(
 
         logger.info(f'END workflow "{workflow.name}"')
         close_job_logger(logger)
-        db_sync.merge(output_dataset)
 
+        db_sync.merge(output_dataset)
         job.status = JobStatusType.DONE
         db_sync.merge(job)
 
     except TaskExecutionError as e:
+
+        logger.info(f'FAILED workflow "{workflow.name}"')
+        close_job_logger(logger)
+
         job.status = JobStatusType.FAILED
         job.log = (
             f"TASK ERROR:"

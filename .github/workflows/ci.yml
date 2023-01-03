@@ -114,6 +114,7 @@ jobs:
           path: htmlcov
 
   docs:
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     name: Deploy docs
     runs-on: ubuntu-latest
     needs: coverage

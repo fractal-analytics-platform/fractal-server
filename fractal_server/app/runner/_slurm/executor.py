@@ -47,7 +47,7 @@ class SlurmJob:
 class FractalSlurmExecutor(SlurmExecutor):
     def __init__(
         self,
-        username: Optional[str] = None,
+        slurm_user: Optional[str] = None,
         script_dir: Optional[Path] = None,
         common_script_lines: Optional[List[str]] = None,
         *args,
@@ -57,14 +57,14 @@ class FractalSlurmExecutor(SlurmExecutor):
         Fractal slurm executor
 
         Args:
-            username:
+            slurm_user:
                 shell username that runs the `sbatch` command
             common_script_lines:
                 arbitrary script lines that will always be included in the
                 sbatch script
         """
         super().__init__(*args, **kwargs)
-        self.username = username
+        self.slurm_user = slurm_user
         self.common_script_lines = common_script_lines or []
         if not script_dir:
             settings = Inject(get_settings)
@@ -367,8 +367,8 @@ class FractalSlurmExecutor(SlurmExecutor):
         )
 
         pre_cmd = ""
-        if self.username:
-            pre_cmd = f"sudo --non-interactive -u {self.username}"
+        if self.slurm_user:
+            pre_cmd = f"sudo --non-interactive -u {self.slurm_user}"
 
         job_id = self.submit_sbatch(
             sbatch_script,
