@@ -25,26 +25,6 @@ PREFIX = "/api/v1"
 backends_available = list(_backends.keys())
 
 
-async def add_dummy_workflows(backend, client, project_id):
-    """
-    Add dummy workflows to project
-
-    This is a workaround, to make sure that when testing the i-th backend the
-    workflow has ID i. In this way, the workflow folders for each one of the
-    test (with a specific backend) will have different names.
-    """
-
-    num_empty_workflows = backends_available.index(backend)
-    for ind in range(num_empty_workflows):
-        _ = await client.post(
-            f"{PREFIX}/workflow/",
-            json=dict(
-                name=f"workaround - {ind}",
-                project_id=project_id,
-            ),
-        )
-
-
 @pytest.mark.slow
 @pytest.mark.parametrize("backend", backends_available)
 async def test_full_workflow(
@@ -64,6 +44,7 @@ async def test_full_workflow(
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=backend,
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
+        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
     )
 
     debug(f"Testing with {backend=}")
@@ -128,7 +109,6 @@ async def test_full_workflow(
         debug(res.json())
 
         # CREATE WORKFLOW
-        await add_dummy_workflows(backend, client, project_id)
         res = await client.post(
             f"{PREFIX}/workflow/",
             json=dict(name="test workflow", project_id=project_id),
@@ -222,6 +202,7 @@ async def test_failing_workflow(
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=backend,
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
+        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
     )
 
     debug(f"Testing with {backend=}")
@@ -257,7 +238,6 @@ async def test_failing_workflow(
         assert res.status_code == 201
 
         # CREATE WORKFLOW
-        await add_dummy_workflows(backend, client, project_id)
         res = await client.post(
             f"{PREFIX}/workflow/",
             json=dict(name="test workflow", project_id=project.id),
