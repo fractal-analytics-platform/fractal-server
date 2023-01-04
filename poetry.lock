@@ -360,14 +360,14 @@ files = [
 
 [[package]]
 name = "clusterfutures"
-version = "0.4"
+version = "0.5"
 description = "futures for remote execution on clusters"
 category = "main"
 optional = false
-python-versions = ">=3.5"
+python-versions = ">=3.7"
 files = [
-    {file = "clusterfutures-0.4-py3-none-any.whl", hash = "sha256:b46c0569a76f3e66f226b8feecd0d3d91ab1fcdf9a1e26ca3caf3b37db3df485"},
-    {file = "clusterfutures-0.4.tar.gz", hash = "sha256:5b416fbae6847b2bebfc00e10ff1f2999f58f49e61b90cd7e9e1027ca454f804"},
+    {file = "clusterfutures-0.5-py3-none-any.whl", hash = "sha256:391c9258da445366b7e859ac8ed2883aecfd26de364959fc1910e1a7c63bb933"},
+    {file = "clusterfutures-0.5.tar.gz", hash = "sha256:261e82c44b500e39b71e3a2c41db66d9777e9674d58449cb90aa83a1955e9453"},
 ]
 
 [package.dependencies]
@@ -2518,4 +2518,4 @@ slurm = []
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "7561e75689a0b45a84ee7705e4e21632ac78012df9928dba04468d74a6c14525"
+content-hash = "97a581e58279656034c7ae08b4dd08520c156493e66e45709bfe1e33260f50c8"
