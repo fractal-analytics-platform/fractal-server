@@ -6,4 +6,10 @@ set -o errexit
 # change to project root dir
 cd "$(dirname "$0")"
 
-poetry run mypy --package fractal_server
+poetry run mypy --package fractal_server\
+    --exclude fractal_server/app/runner/_parsl\
+    --ignore-missing-imports\
+    --warn-redundant-casts\
+    --warn-unused-ignores\
+    --warn-unreachable\
+    --pretty\

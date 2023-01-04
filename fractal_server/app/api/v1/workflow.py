@@ -1,20 +1,19 @@
-"""
-Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
-University of Zurich
-
-Original author(s):
-Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
-Marco Franzon <marco.franzon@exact-lab.it>
-Tommaso Comparin <tommaso.comparin@exact-lab.it>
-
-This file is part of Fractal and was originally developed by eXact lab S.r.l.
-<exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
-Institute for Biomedical Research and Pelkmans Lab from the University of
-Zurich.
-"""
+# Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
+# University of Zurich
+#
+# Original author(s):
+# Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
+# Marco Franzon <marco.franzon@exact-lab.it>
+# Tommaso Comparin <tommaso.comparin@exact-lab.it>
+#
+# This file is part of Fractal and was originally developed by eXact lab S.r.l.
+# <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
+# Institute for Biomedical Research and Pelkmans Lab from the University of
+# Zurich.
 import asyncio
 from copy import deepcopy
 from typing import Optional
+from typing import Tuple
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -85,7 +84,7 @@ async def get_workflow_task_check_owner(
     workflow_task_id: int,
     user_id: UUID4,
     db: AsyncSession = Depends(get_db),
-) -> Workflow:
+) -> Tuple[WorkflowTask, Workflow]:
     """
     Check that user has rights to access a Workflow and a WorkflowTask and
     return the WorkflowTask
@@ -117,6 +116,9 @@ async def get_workflow_task_check_owner(
         )
 
     return workflow_task, workflow
+
+
+# Main endpoints ("/")
 
 
 @router.post(
@@ -153,6 +155,9 @@ async def create_workflow(
     return db_workflow
 
 
+# Workflow endpoints ("/{workflow_id}")
+
+
 @router.delete("/{_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_workflow(
     _id: int,
@@ -168,6 +173,25 @@ async def delete_workflow(
     await db.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.patch("/{_id}", response_model=WorkflowRead)
+async def patch_workflow(
+    _id: int,
+    patch: WorkflowUpdate,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[WorkflowRead]:
+
+    workflow = await get_workflow_check_owner(
+        workflow_id=_id, user_id=user.id, db=db
+    )
+
+    for key, value in patch.dict(exclude_unset=True).items():
+        setattr(workflow, key, value)
+    await db.commit()
+    await db.refresh(workflow)
+    return workflow
 
 
 @router.get("/{_id}", response_model=WorkflowRead)
@@ -209,6 +233,9 @@ async def add_task_to_workflow(
     await db.refresh(workflow)
 
     return workflow
+
+
+# WorkflowTask endpoints ("/{workflow_id}/../{workflow_task_id}"
 
 
 @router.patch(
@@ -272,23 +299,5 @@ async def delete_task_from_workflow(
     await db.refresh(db_workflow)
     db_workflow.task_list.reorder()
     await db.commit()
-    return
 
-
-@router.patch("/{_id}", response_model=WorkflowRead)
-async def patch_workflow(
-    _id: int,
-    patch: WorkflowUpdate,
-    user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
-) -> Optional[WorkflowRead]:
-
-    workflow = await get_workflow_check_owner(
-        workflow_id=_id, user_id=user.id, db=db
-    )
-
-    for key, value in patch.dict(exclude_unset=True).items():
-        setattr(workflow, key, value)
-    await db.commit()
-    await db.refresh(workflow)
-    return workflow
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
