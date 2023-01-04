@@ -79,7 +79,7 @@ async def get_dataset_check_owner(
     dataset_id: int,
     user_id: UUID4,
     db: AsyncSession = Depends(get_db),
-) -> Project:
+) -> Dataset:
     """
     Check that user is a member of project and return
     Raise 403_FORBIDDEN if the user is not a member
