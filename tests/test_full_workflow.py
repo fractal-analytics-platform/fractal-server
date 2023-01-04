@@ -25,6 +25,26 @@ PREFIX = "/api/v1"
 backends_available = list(_backends.keys())
 
 
+async def add_dummy_workflows(backend, client, project_id):
+    """
+    Add dummy workflows to project
+
+    This is a workaround, to make sure that when testing the i-th backend the
+    workflow has ID i. In this way, the workflow folders for each one of the
+    test (with a specific backend) will have different names.
+    """
+
+    num_empty_workflows = backends_available.index(backend)
+    for ind in range(num_empty_workflows):
+        _ = await client.post(
+            f"{PREFIX}/workflow/",
+            json=dict(
+                name=f"workaround - {ind}",
+                project_id=project_id,
+            ),
+        )
+
+
 @pytest.mark.slow
 @pytest.mark.parametrize("backend", backends_available)
 async def test_full_workflow(
@@ -106,26 +126,12 @@ async def test_full_workflow(
         # CHECK WHERE WE ARE AT
         res = await client.get(f"{PREFIX}/project/{project_id}")
         debug(res.json())
-        project_dict = res.json()
-
-        # Workaround: for one backend, create a dummy workflow, so that the
-        # actual one will have ID=2 (rather than 1). In this way, the workflow
-        # folders for the two test runs (with the two different backends) won't
-        # have the same name
-        num_empty_workflows = backends_available.index(backend)
-        for ind in range(num_empty_workflows):
-            _ = await client.post(
-                f"{PREFIX}/workflow/",
-                json=dict(
-                    name=f"workaround - {ind}",
-                    project_id=project_dict["id"],
-                ),
-            )
 
         # CREATE WORKFLOW
+        await add_dummy_workflows(backend, client, project_id)
         res = await client.post(
             f"{PREFIX}/workflow/",
-            json=dict(name="test workflow", project_id=project_dict["id"]),
+            json=dict(name="test workflow", project_id=project_id),
         )
         debug(res.json())
         assert res.status_code == 201
@@ -251,6 +257,7 @@ async def test_failing_workflow(
         assert res.status_code == 201
 
         # CREATE WORKFLOW
+        await add_dummy_workflows(backend, client, project_id)
         res = await client.post(
             f"{PREFIX}/workflow/",
             json=dict(name="test workflow", project_id=project.id),
@@ -291,4 +298,4 @@ async def test_failing_workflow(
         debug(job_status_data)
         assert job_status_data["status"] == "failed"
         assert "id: None" not in job_status_data["log"]
-        # TODO add check on log content.
+        assert "ValueError" in job_status_data["log"]
