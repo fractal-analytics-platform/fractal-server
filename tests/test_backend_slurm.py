@@ -11,8 +11,16 @@ from .fixtures_tasks import MockTask
 from .fixtures_tasks import MockWorkflowTask
 from fractal_server.app.runner._slurm import SlurmConfig
 from fractal_server.app.runner._slurm.executor import FractalSlurmExecutor
+from fractal_server.app.runner.common import TaskExecutionError
 from fractal_server.tasks import dummy as dummy_module
 from fractal_server.tasks import dummy_parallel as dummy_parallel_module
+
+
+def current_squeue():
+    res = subprocess.run(["squeue"], capture_output=True, encoding="utf-8")
+    assert res.returncode == 0
+    assert not res.stderr
+    return res.stdout
 
 
 def submit_and_ignore_exceptions(
@@ -97,16 +105,13 @@ def test_slurm_executor(
     assert res.result() == 42
 
 
-# @pytest.mark.parametrize("slurm_user", [None, "test01"])
-
-
-@pytest.mark.parametrize("slurm_user", [None])
+@pytest.mark.parametrize("slurm_user", [None, "test01"])
 def test_slurm_executor_scancel(
     slurm_user, monkey_slurm, tmp777_path, cfut_jobs_finished
 ):
     """
     GIVEN a docker slurm cluster and a FractalSlurmExecutor executor
-    WHEN a function is submitted to the executor, as a given user, and then the
+    WHEN a function is submitted to the executor (as a given user) and then the
          SLURM job is immediately canceled
     THEN the error is correctly captured
     """
@@ -117,30 +122,42 @@ def test_slurm_executor_scancel(
         time.sleep(60)
         return 42
 
-    with FractalSlurmExecutor(
-        script_dir=tmp777_path,
-        slurm_user=slurm_user,
-    ) as executor:
-        res = executor.submit(wait_and_return)
-        debug(res)
+    with pytest.raises(TaskExecutionError):
+        with FractalSlurmExecutor(
+            script_dir=tmp777_path,
+            slurm_user=slurm_user,
+        ) as executor:
+            fut = executor.submit(wait_and_return)
+            debug(fut)
 
-        time.sleep(1)
-        slurm_user = slurm_user or "fractal"
-        subprocess.run(
-            [
-                "sudo",
-                "--non-interactive",
-                "-u",
-                slurm_user,
-                "scancel",
-                "-u",
-                slurm_user,
-            ]
-        )
+            time.sleep(1)
+            slurm_user = slurm_user or "admin"
 
-        debug(res)
-        time.sleep(1)
-        debug(res.result())
+            debug(current_squeue())
+            res = subprocess.run(
+                [
+                    "sudo",
+                    "--non-interactive",
+                    "-u",
+                    slurm_user,
+                    "scancel",
+                    "-u",
+                    slurm_user,
+                    "-v",
+                ],
+                capture_output=True,
+                encoding="utf-8",
+            )
+            assert res.returncode == 0
+            if res.stdout:
+                debug(res.stdout)
+            if res.stderr:
+                debug(res.stderr)
+            debug(current_squeue())
+
+            # Call .result() to force waiting for the result (which can also
+            # raise an exception)
+            fut.result()
 
 
 def test_unit_slurm_config():
