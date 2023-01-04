@@ -227,7 +227,6 @@ async def add_task_to_workflow(
             **new_task.dict(exclude={"workflow_id"}),
             db=db,
         )
-        await db.refresh(workflow_task)
 
     return workflow_task
 
