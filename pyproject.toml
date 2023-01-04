@@ -25,7 +25,7 @@ uvicorn = "^0.18.2"
 SQLAlchemy-Utils = "^0.38.3"
 
 #clusterfutures = { version = "^0.4", optional = true }
-clusterfutures = {git = "https://github.com/takluyver/clusterfutures.git", branch="poll-slurm", optional=false}
+clusterfutures = {git = "https://github.com/sampsyo/clusterfutures.git", optional=false}
 
 asyncpg = { version = "^0.27.0", optional = true }
 psycopg2 = { version = "^2.9.5", optional = true }
