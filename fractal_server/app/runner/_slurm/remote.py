@@ -14,6 +14,7 @@ python code received via pickled files on a cluster node.
 """
 import os
 import sys
+from typing import List
 from typing import Optional
 
 import cloudpickle
@@ -28,9 +29,9 @@ class ExceptionProxy:
     to reconstruct a TaskExecutionError.
     """
 
-    def __init__(self, exc_type, tb, *args, **kwargs):
-        self.exc_type_name = exc_type.__name__
-        self.tb = tb
+    def __init__(self, exc_type: type, tb: List[str], *args, **kwargs):
+        self.exc_type_name: str = exc_type.__name__
+        self.tb: List[str] = tb
         self.args = args
         self.kwargs = kwargs
 
