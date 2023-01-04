@@ -205,7 +205,11 @@ async def test_post_newtask(
         )
         assert res.status_code == 201
 
+        # Get back workflow
+        res = await client.get(f"api/v1/workflow/{wf_id}")
+        assert res.status_code == 200
         workflow = WorkflowRead(**res.json())
+        debug(workflow)
 
         assert len(workflow.task_list) == 4
         assert workflow.task_list[0].task == TaskRead(**t0.dict())
