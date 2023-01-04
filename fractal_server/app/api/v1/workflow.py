@@ -210,7 +210,7 @@ async def get_workflow(
 
 @router.post(
     "/{_id}/add-task/",
-    response_model=WorkflowRead,
+    response_model=WorkflowTaskRead,
     status_code=status.HTTP_201_CREATED,
 )
 async def add_task_to_workflow(
@@ -218,21 +218,18 @@ async def add_task_to_workflow(
     new_task: WorkflowTaskCreate,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-) -> Optional[WorkflowRead]:
+) -> Optional[WorkflowTaskRead]:
 
     workflow = await get_workflow_check_owner(
         workflow_id=_id, user_id=user.id, db=db
     )
+    async with db:
+        workflow_task = await workflow.insert_task(
+            **new_task.dict(exclude={"workflow_id"}),
+            db=db,
+        )
 
-    await workflow.insert_task(
-        **new_task.dict(exclude={"workflow_id"}),
-        db=db,
-    )
-
-    await db.commit()
-    await db.refresh(workflow)
-
-    return workflow
+    return workflow_task
 
 
 # WorkflowTask endpoints ("/{workflow_id}/../{workflow_task_id}"
