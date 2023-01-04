@@ -223,18 +223,13 @@ async def add_task_to_workflow(
         workflow_id=_id, user_id=user.id, db=db
     )
     async with db:
-        w_task = await workflow.insert_task(
+        workflow_task = await workflow.insert_task(
             **new_task.dict(exclude={"workflow_id"}),
             db=db,
-            commit=False,
         )
+        await db.refresh(workflow_task)
 
-    await db.commit()
-    # await db.refresh(workflow)
-    from devtools import debug
-
-    debug(w_task)
-    return w_task
+    return workflow_task
 
 
 # WorkflowTask endpoints ("/{workflow_id}/../{workflow_task_id}"
