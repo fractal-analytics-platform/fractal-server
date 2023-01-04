@@ -97,8 +97,10 @@ def test_slurm_executor(
     assert res.result() == 42
 
 
-@pytest.mark.xfail(reason="Not yet fully implemented")
-@pytest.mark.parametrize("slurm_user", [None, "test01"])
+# @pytest.mark.parametrize("slurm_user", [None, "test01"])
+
+
+@pytest.mark.parametrize("slurm_user", [None])
 def test_slurm_executor_scancel(
     slurm_user, monkey_slurm, tmp777_path, cfut_jobs_finished
 ):
@@ -112,29 +114,33 @@ def test_slurm_executor_scancel(
     import time
 
     def wait_and_return():
-        time.sleep(10)
+        time.sleep(60)
         return 42
 
     with FractalSlurmExecutor(
         script_dir=tmp777_path,
         slurm_user=slurm_user,
     ) as executor:
-        executor.submit(wait_and_return)
+        res = executor.submit(wait_and_return)
+        debug(res)
 
-    time.sleep(1)
-    slurm_user = slurm_user or "fractal"
-    subprocess.run(
-        [
-            "sudo",
-            "--non-interactive",
-            "-u",
-            slurm_user,
-            "scancel",
-            "-u",
-            slurm_user,
-        ]
-    )
-    assert False
+        time.sleep(1)
+        slurm_user = slurm_user or "fractal"
+        subprocess.run(
+            [
+                "sudo",
+                "--non-interactive",
+                "-u",
+                slurm_user,
+                "scancel",
+                "-u",
+                slurm_user,
+            ]
+        )
+
+        debug(res)
+        time.sleep(1)
+        debug(res.result())
 
 
 def test_unit_slurm_config():
