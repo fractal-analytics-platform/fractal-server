@@ -364,21 +364,17 @@ version = "0.4"
 description = "futures for remote execution on clusters"
 category = "main"
 optional = false
-python-versions = ">=3.6"
-files = []
-develop = false
+python-versions = ">=3.5"
+files = [
+    {file = "clusterfutures-0.4-py3-none-any.whl", hash = "sha256:b46c0569a76f3e66f226b8feecd0d3d91ab1fcdf9a1e26ca3caf3b37db3df485"},
+    {file = "clusterfutures-0.4.tar.gz", hash = "sha256:5b416fbae6847b2bebfc00e10ff1f2999f58f49e61b90cd7e9e1027ca454f804"},
+]
 
 [package.dependencies]
 cloudpickle = "*"
 
 [package.extras]
 test = ["pytest", "testpath (>=0.5)"]
-
-[package.source]
-type = "git"
-url = "https://github.com/sampsyo/clusterfutures.git"
-reference = "HEAD"
-resolved_reference = "5dc223c07872dfb9ae8b53e24e127aa26c002c43"
 
 [[package]]
 name = "colorama"
@@ -934,14 +930,14 @@ socks = ["socksio (>=1.0.0,<2.0.0)"]
 
 [[package]]
 name = "httpx"
-version = "0.23.2"
+version = "0.23.3"
 description = "The next generation HTTP client."
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "httpx-0.23.2-py3-none-any.whl", hash = "sha256:106cded342a44e443060fab70ef327139248c61939e77d73964560c8d8b57069"},
-    {file = "httpx-0.23.2.tar.gz", hash = "sha256:e824a6fa18ffaa6423c6f3a32d5096fc15bd8dff43663a223f06242fc69451a8"},
+    {file = "httpx-0.23.3-py3-none-any.whl", hash = "sha256:a211fcce9b1254ea24f0cd6af9869b3d29aba40154e947d2a07bb499b3e310d6"},
+    {file = "httpx-0.23.3.tar.gz", hash = "sha256:9818458eb565bb54898ccb9b8b251a28785dd4a55afbc23d0eb410754fe7d0f9"},
 ]
 
 [package.dependencies]
@@ -2522,4 +2518,4 @@ slurm = []
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "c4eb253e844ab75169ae465ac6e50eb6251bbc4ba6559a439d217d371a314675"
+content-hash = "7561e75689a0b45a84ee7705e4e21632ac78012df9928dba04468d74a6c14525"
