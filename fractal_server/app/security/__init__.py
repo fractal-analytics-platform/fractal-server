@@ -136,11 +136,17 @@ auth_router.include_router(
 
 
 # OAUTH CLIENTS
-# FIXME:
-# Dependency injection should be wrapped within a function call to make it
-# truly lazy. This function could then be called on startup of the FastAPI app
-# (cf. fractal_server.main)
+
+# NOTE: settings.OAUTH_CLIENTS are collected by
+# Settings.collect_oauth_clients(). If no specific client is specified in the
+# environment variables (e.g. by setting OAUTH_FOO_CLIENT_ID and
+# OAUTH_FOO_CLIENT_SECRET), this list is empty
+
+# FIXME:Dependency injection should be wrapped within a function call to make
+# it truly lazy. This function could then be called on startup of the FastAPI
+# app (cf. fractal_server.main)
 settings = Inject(get_settings)
+
 for client in settings.OAUTH_CLIENTS:
     # INIT CLIENTS
     client_name = client.CLIENT_NAME.lower()
