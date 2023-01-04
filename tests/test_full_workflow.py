@@ -44,6 +44,7 @@ async def test_full_workflow(
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=backend,
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
+        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
     )
 
     debug(f"Testing with {backend=}")
@@ -106,26 +107,11 @@ async def test_full_workflow(
         # CHECK WHERE WE ARE AT
         res = await client.get(f"{PREFIX}/project/{project_id}")
         debug(res.json())
-        project_dict = res.json()
-
-        # Workaround: for one backend, create a dummy workflow, so that the
-        # actual one will have ID=2 (rather than 1). In this way, the workflow
-        # folders for the two test runs (with the two different backends) won't
-        # have the same name
-        num_empty_workflows = backends_available.index(backend)
-        for ind in range(num_empty_workflows):
-            _ = await client.post(
-                f"{PREFIX}/workflow/",
-                json=dict(
-                    name=f"workaround - {ind}",
-                    project_id=project_dict["id"],
-                ),
-            )
 
         # CREATE WORKFLOW
         res = await client.post(
             f"{PREFIX}/workflow/",
-            json=dict(name="test workflow", project_id=project_dict["id"]),
+            json=dict(name="test workflow", project_id=project_id),
         )
         debug(res.json())
         assert res.status_code == 201
@@ -216,6 +202,7 @@ async def test_failing_workflow(
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=backend,
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
+        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
     )
 
     debug(f"Testing with {backend=}")
@@ -291,4 +278,4 @@ async def test_failing_workflow(
         debug(job_status_data)
         assert job_status_data["status"] == "failed"
         assert "id: None" not in job_status_data["log"]
-        # TODO add check on log content.
+        assert "ValueError" in job_status_data["log"]
