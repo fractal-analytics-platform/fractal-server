@@ -4,9 +4,9 @@ RUN apt-get update
 RUN sudo apt-get install python3-venv -y
 
 COPY slurm.conf /etc/slurm-llnl/
+ADD sudoers /etc/sudoers
 RUN useradd -m test01 -s /usr/bin/bash -d /home/test01 && echo "test01:test01" | chpasswd
 RUN useradd -m fractal -s /usr/bin/bash -d /home/fractal && echo "fractal:fractal" | chpasswd
 
 EXPOSE 50097
-
 ENTRYPOINT ["/etc/slurm-llnl/docker-entrypoint.sh"]

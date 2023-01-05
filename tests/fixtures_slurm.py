@@ -94,6 +94,8 @@ def monkey_slurm(monkeypatch, docker_compose_project_name, docker_services):
             cmd = [
                 "docker",
                 "exec",
+                "--user",
+                "fractal",
                 slurm_container,
                 "bash",
                 "-c",
