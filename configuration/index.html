@@ -1,0 +1,2707 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../contribute/">
+      
+      
+        <link rel="next" href="../server/">
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.1">
+    
+    
+      
+        <title>Configuration - Fractal Analytics Platform</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.3bd4f189.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.2505c338.min.css">
+      
+      
+
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../css/mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="purple">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#fractal_server.config" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Fractal Analytics Platform" class="md-header__button md-logo" aria-label="Fractal Analytics Platform" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Fractal Analytics Platform
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Configuration
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      <form class="md-header__option" data-md-component="palette">
+        
+          
+          <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+          
+            <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5c-.84 0-1.65.15-2.39.42L12 2M3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29L3.34 7m.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14L3.36 17M20.65 7l-1.77 3.79a7.023 7.023 0 0 0-2.38-4.15l4.15.36m-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29L20.64 17M12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44L12 22Z"/></svg>
+            </label>
+          
+        
+          
+          <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="lime"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+          
+            <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3 3.19.09m3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95 2.06.05m-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31Z"/></svg>
+            </label>
+          
+        
+      </form>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/fractal-analytics-platform/fractal-server" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    fractal-server@github
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Fractal Analytics Platform" class="md-nav__button md-logo" aria-label="Fractal Analytics Platform" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    Fractal Analytics Platform
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/fractal-analytics-platform/fractal-server" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    fractal-server@github
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Home page
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../install_and_deploy/" class="md-nav__link">
+        Install and deploy
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contribute/" class="md-nav__link">
+        Contribute
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Configuration
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Configuration
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#fractal_server.config" class="md-nav__link">
+    fractal_server.config
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fractal_server.config.OAuthClient" class="md-nav__link">
+    OAuthClient
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fractal_server.config.Settings" class="md-nav__link">
+    Settings
+  </a>
+  
+    <nav class="md-nav" aria-label="Settings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fractal_server.config.Settings.DEPLOYMENT_TYPE" class="md-nav__link">
+    DEPLOYMENT_TYPE
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fractal_server.config.Settings.FRACTAL_LOGGING_LEVEL" class="md-nav__link">
+    FRACTAL_LOGGING_LEVEL
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fractal_server.config.Settings.FRACTAL_RUNNER_BACKEND" class="md-nav__link">
+    FRACTAL_RUNNER_BACKEND
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fractal_server.config.Settings.FRACTAL_RUNNER_DEFAULT_EXECUTOR" class="md-nav__link">
+    FRACTAL_RUNNER_DEFAULT_EXECUTOR
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fractal_server.config.Settings.FRACTAL_RUNNER_WORKING_BASE_DIR" class="md-nav__link">
+    FRACTAL_RUNNER_WORKING_BASE_DIR
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fractal_server.config.Settings.FRACTAL_SLURM_CONFIG_FILE" class="md-nav__link">
+    FRACTAL_SLURM_CONFIG_FILE
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fractal_server.config.Settings.FRACTAL_SLURM_WORKER_PYTHON" class="md-nav__link">
+    FRACTAL_SLURM_WORKER_PYTHON
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fractal_server.config.Settings.FRACTAL_TASKS_DIR" class="md-nav__link">
+    FRACTAL_TASKS_DIR
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fractal_server.config.Settings.check" class="md-nav__link">
+    check()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fractal_server.config.Settings.collect_oauth_clients" class="md-nav__link">
+    collect_oauth_clients()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
+      
+      
+      
+      
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../server/">Internals</a>
+          
+            <label for="__nav_5">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
+          
+        </div>
+      
+      <nav class="md-nav" aria-label="Internals" data-md-level="1">
+        <label class="md-nav__title" for="__nav_5">
+          <span class="md-nav__icon md-icon"></span>
+          Internals
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../server/auth/" class="md-nav__link">
+        Auth subsystem
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5_2" type="checkbox" id="__nav_5_2" >
+      
+      
+      
+      
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../server/runners/">Runners</a>
+          
+            <label for="__nav_5_2">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
+          
+        </div>
+      
+      <nav class="md-nav" aria-label="Runners" data-md-level="2">
+        <label class="md-nav__title" for="__nav_5_2">
+          <span class="md-nav__icon md-icon"></span>
+          Runners
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../server/runners/process/" class="md-nav__link">
+        Process
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../server/runners/slurm/" class="md-nav__link">
+        SLURM
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6">
+          Code reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Code reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_6">
+          <span class="md-nav__icon md-icon"></span>
+          Code reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_1" type="checkbox" id="__nav_6_1" >
+      
+      
+      
+      
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../reference/fractal_server/">fractal_server</a>
+          
+            <label for="__nav_6_1">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
+          
+        </div>
+      
+      <nav class="md-nav" aria-label="fractal_server" data-md-level="2">
+        <label class="md-nav__title" for="__nav_6_1">
+          <span class="md-nav__icon md-icon"></span>
+          fractal_server
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_1_1" type="checkbox" id="__nav_6_1_1" >
+      
+      
+      
+      
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../reference/fractal_server/app/">app</a>
+          
+            <label for="__nav_6_1_1">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
+          
+        </div>
+      
+      <nav class="md-nav" aria-label="app" data-md-level="3">
+        <label class="md-nav__title" for="__nav_6_1_1">
+          <span class="md-nav__icon md-icon"></span>
+          app
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_1_1_1" type="checkbox" id="__nav_6_1_1_1" >
+      
+      
+      
+      
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../reference/fractal_server/app/api/">api</a>
+          
+            <label for="__nav_6_1_1_1">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
+          
+        </div>
+      
+      <nav class="md-nav" aria-label="api" data-md-level="4">
+        <label class="md-nav__title" for="__nav_6_1_1_1">
+          <span class="md-nav__icon md-icon"></span>
+          api
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_1_1_1_1" type="checkbox" id="__nav_6_1_1_1_1" >
+      
+      
+      
+      
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../reference/fractal_server/app/api/v1/">v1</a>
+          
+            <label for="__nav_6_1_1_1_1">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
+          
+        </div>
+      
+      <nav class="md-nav" aria-label="v1" data-md-level="5">
+        <label class="md-nav__title" for="__nav_6_1_1_1_1">
+          <span class="md-nav__icon md-icon"></span>
+          v1
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/app/api/v1/job/" class="md-nav__link">
+        job
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/app/api/v1/project/" class="md-nav__link">
+        project
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/app/api/v1/task/" class="md-nav__link">
+        task
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/app/api/v1/workflow/" class="md-nav__link">
+        workflow
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/app/db/" class="md-nav__link">
+        db
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_1_1_3" type="checkbox" id="__nav_6_1_1_3" >
+      
+      
+      
+      
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../reference/fractal_server/app/models/">models</a>
+          
+            <label for="__nav_6_1_1_3">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
+          
+        </div>
+      
+      <nav class="md-nav" aria-label="models" data-md-level="4">
+        <label class="md-nav__title" for="__nav_6_1_1_3">
+          <span class="md-nav__icon md-icon"></span>
+          models
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/app/models/job/" class="md-nav__link">
+        job
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/app/models/project/" class="md-nav__link">
+        project
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/app/models/security/" class="md-nav__link">
+        security
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/app/models/state/" class="md-nav__link">
+        state
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/app/models/task/" class="md-nav__link">
+        task
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/app/models/workflow/" class="md-nav__link">
+        workflow
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_1_1_4" type="checkbox" id="__nav_6_1_1_4" >
+      
+      
+      
+      
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../reference/fractal_server/app/runner/">runner</a>
+          
+            <label for="__nav_6_1_1_4">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
+          
+        </div>
+      
+      <nav class="md-nav" aria-label="runner" data-md-level="4">
+        <label class="md-nav__title" for="__nav_6_1_1_4">
+          <span class="md-nav__icon md-icon"></span>
+          runner
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/app/runner/_common/" class="md-nav__link">
+        _common
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_1_1_4_2" type="checkbox" id="__nav_6_1_1_4_2" >
+      
+      
+      
+      
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../reference/fractal_server/app/runner/_parsl/">_parsl</a>
+          
+            <label for="__nav_6_1_1_4_2">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
+          
+        </div>
+      
+      <nav class="md-nav" aria-label="_parsl" data-md-level="5">
+        <label class="md-nav__title" for="__nav_6_1_1_4_2">
+          <span class="md-nav__icon md-icon"></span>
+          _parsl
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/app/runner/_parsl/_functions/" class="md-nav__link">
+        _functions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/app/runner/_parsl/_setup/" class="md-nav__link">
+        _setup
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/app/runner/_process/" class="md-nav__link">
+        _process
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_1_1_4_4" type="checkbox" id="__nav_6_1_1_4_4" >
+      
+      
+      
+      
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../reference/fractal_server/app/runner/_slurm/">_slurm</a>
+          
+            <label for="__nav_6_1_1_4_4">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
+          
+        </div>
+      
+      <nav class="md-nav" aria-label="_slurm" data-md-level="5">
+        <label class="md-nav__title" for="__nav_6_1_1_4_4">
+          <span class="md-nav__icon md-icon"></span>
+          _slurm
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/app/runner/_slurm/executor/" class="md-nav__link">
+        executor
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/app/runner/_slurm/remote/" class="md-nav__link">
+        remote
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/app/runner/common/" class="md-nav__link">
+        common
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/app/security/" class="md-nav__link">
+        security
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_1_2" type="checkbox" id="__nav_6_1_2" >
+      
+      
+      
+      
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../reference/fractal_server/common/">common</a>
+          
+            <label for="__nav_6_1_2">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
+          
+        </div>
+      
+      <nav class="md-nav" aria-label="common" data-md-level="3">
+        <label class="md-nav__title" for="__nav_6_1_2">
+          <span class="md-nav__icon md-icon"></span>
+          common
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_1_2_1" type="checkbox" id="__nav_6_1_2_1" >
+      
+      
+      
+      
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../reference/fractal_server/common/schemas/">schemas</a>
+          
+            <label for="__nav_6_1_2_1">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
+          
+        </div>
+      
+      <nav class="md-nav" aria-label="schemas" data-md-level="4">
+        <label class="md-nav__title" for="__nav_6_1_2_1">
+          <span class="md-nav__icon md-icon"></span>
+          schemas
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/common/schemas/manifest/" class="md-nav__link">
+        manifest
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/common/schemas/project/" class="md-nav__link">
+        project
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/common/schemas/state/" class="md-nav__link">
+        state
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/common/schemas/task/" class="md-nav__link">
+        task
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/common/schemas/workflow/" class="md-nav__link">
+        workflow
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/config/" class="md-nav__link">
+        config
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/main/" class="md-nav__link">
+        main
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/syringe/" class="md-nav__link">
+        syringe
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_1_6" type="checkbox" id="__nav_6_1_6" >
+      
+      
+      
+      
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../reference/fractal_server/tasks/">tasks</a>
+          
+            <label for="__nav_6_1_6">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
+          
+        </div>
+      
+      <nav class="md-nav" aria-label="tasks" data-md-level="3">
+        <label class="md-nav__title" for="__nav_6_1_6">
+          <span class="md-nav__icon md-icon"></span>
+          tasks
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/tasks/collection/" class="md-nav__link">
+        collection
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/tasks/dummy/" class="md-nav__link">
+        dummy
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/tasks/dummy_parallel/" class="md-nav__link">
+        dummy_parallel
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fractal_server/utils/" class="md-nav__link">
+        utils
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../coverage" class="md-nav__link">
+        Coverage
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../openapi/" class="md-nav__link">
+        Web API
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#fractal_server.config" class="md-nav__link">
+    fractal_server.config
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fractal_server.config.OAuthClient" class="md-nav__link">
+    OAuthClient
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fractal_server.config.Settings" class="md-nav__link">
+    Settings
+  </a>
+  
+    <nav class="md-nav" aria-label="Settings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fractal_server.config.Settings.DEPLOYMENT_TYPE" class="md-nav__link">
+    DEPLOYMENT_TYPE
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fractal_server.config.Settings.FRACTAL_LOGGING_LEVEL" class="md-nav__link">
+    FRACTAL_LOGGING_LEVEL
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fractal_server.config.Settings.FRACTAL_RUNNER_BACKEND" class="md-nav__link">
+    FRACTAL_RUNNER_BACKEND
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fractal_server.config.Settings.FRACTAL_RUNNER_DEFAULT_EXECUTOR" class="md-nav__link">
+    FRACTAL_RUNNER_DEFAULT_EXECUTOR
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fractal_server.config.Settings.FRACTAL_RUNNER_WORKING_BASE_DIR" class="md-nav__link">
+    FRACTAL_RUNNER_WORKING_BASE_DIR
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fractal_server.config.Settings.FRACTAL_SLURM_CONFIG_FILE" class="md-nav__link">
+    FRACTAL_SLURM_CONFIG_FILE
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fractal_server.config.Settings.FRACTAL_SLURM_WORKER_PYTHON" class="md-nav__link">
+    FRACTAL_SLURM_WORKER_PYTHON
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fractal_server.config.Settings.FRACTAL_TASKS_DIR" class="md-nav__link">
+    FRACTAL_TASKS_DIR
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fractal_server.config.Settings.check" class="md-nav__link">
+    check()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fractal_server.config.Settings.collect_oauth_clients" class="md-nav__link">
+    collect_oauth_clients()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+
+  <h1>Configuration</h1>
+
+<p>To configure the Fractal Server one must define some environment variables.
+Some of them are mandatory, and for security reasons the server will not start
+unless they are set. Some are optional and sensible defaults are provided.</p>
+
+
+<div class="doc doc-object doc-module">
+
+
+<a id="fractal_server.config"></a>
+  <div class="doc doc-contents first">
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="fractal_server.config.OAuthClient" class="doc doc-heading">
+        <code>OAuthClient</code>
+
+
+<a href="#fractal_server.config.OAuthClient" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-contents ">
+      <p class="doc doc-class-bases">
+        Bases: <code><span title="pydantic.BaseModel">BaseModel</span></code></p>
+
+  
+      <p>OAuth Client Model</p>
+<p>This model wraps the variables that define a client against an Identity
+Provider. As some providers are supported by the libraries used within the
+server, some attributes are optional.</p>
+
+  <p><strong>Attributes:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>CLIENT_NAME</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>The name of the client</p></td>
+        </tr>
+        <tr>
+          <td><code>CLIENT_ID</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>ID of client</p></td>
+        </tr>
+        <tr>
+          <td><code>CLIENT_SECRET</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>Secret to authorise against the identity provider</p></td>
+        </tr>
+        <tr>
+          <td><code>AUTHORIZE_ENDPOINT</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>Authorization endpoint</p></td>
+        </tr>
+        <tr>
+          <td><code>ACCESS_TOKEN_ENDPOINT</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>Token endpoint</p></td>
+        </tr>
+        <tr>
+          <td><code>REFRESH_TOKEN_ENDPOINT</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>Refresh token endpoint</p></td>
+        </tr>
+        <tr>
+          <td><code>REVOKE_TOKEN_ENDPOINT</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>Revoke token endpoint</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+
+        <details class="quote">
+          <summary>Source code in <code>fractal_server/config.py</code></summary>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">OAuthClient</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    OAuth Client Model</span>
+
+<span class="sd">    This model wraps the variables that define a client against an Identity</span>
+<span class="sd">    Provider. As some providers are supported by the libraries used within the</span>
+<span class="sd">    server, some attributes are optional.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        CLIENT_NAME:</span>
+<span class="sd">            The name of the client</span>
+<span class="sd">        CLIENT_ID:</span>
+<span class="sd">            ID of client</span>
+<span class="sd">        CLIENT_SECRET:</span>
+<span class="sd">            Secret to authorise against the identity provider</span>
+
+<span class="sd">        AUTHORIZE_ENDPOINT:</span>
+<span class="sd">            Authorization endpoint</span>
+<span class="sd">        ACCESS_TOKEN_ENDPOINT:</span>
+<span class="sd">            Token endpoint</span>
+<span class="sd">        REFRESH_TOKEN_ENDPOINT:</span>
+<span class="sd">            Refresh token endpoint</span>
+<span class="sd">        REVOKE_TOKEN_ENDPOINT:</span>
+<span class="sd">            Revoke token endpoint</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">CLIENT_NAME</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">CLIENT_ID</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">CLIENT_SECRET</span><span class="p">:</span> <span class="nb">str</span>
+
+    <span class="n">AUTHORIZE_ENDPOINT</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">ACCESS_TOKEN_ENDPOINT</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">REFRESH_TOKEN_ENDPOINT</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">REVOKE_TOKEN_ENDPOINT</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+</code></pre></div></td></tr></table></div>
+        </details>
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="fractal_server.config.Settings" class="doc doc-heading">
+        <code>Settings</code>
+
+
+<a href="#fractal_server.config.Settings" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-contents ">
+      <p class="doc doc-class-bases">
+        Bases: <code><span title="pydantic.BaseSettings">BaseSettings</span></code></p>
+
+  
+      <p>Contains all the configuration variables for Fractal Server</p>
+<p>The attributes of this class are set from the environtment.</p>
+
+
+        <details class="quote">
+          <summary>Source code in <code>fractal_server/config.py</code></summary>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Settings</span><span class="p">(</span><span class="n">BaseSettings</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Contains all the configuration variables for Fractal Server</span>
+
+<span class="sd">    The attributes of this class are set from the environtment.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
+        <span class="n">case_sensitive</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="n">PROJECT_NAME</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Fractal Server&quot;</span>
+    <span class="n">PROJECT_VERSION</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">fractal_server</span><span class="o">.</span><span class="n">__VERSION__</span>
+    <span class="n">DEPLOYMENT_TYPE</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
+        <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;production&quot;</span><span class="p">,</span> <span class="s2">&quot;staging&quot;</span><span class="p">,</span> <span class="s2">&quot;testing&quot;</span><span class="p">,</span> <span class="s2">&quot;development&quot;</span><span class="p">]</span>
+    <span class="p">]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The deployment type of the server installation. It is important that</span>
+<span class="sd">    production deployments be marked as such to trigger server hardening.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">###########################################################################</span>
+    <span class="c1"># AUTH</span>
+    <span class="c1">###########################################################################</span>
+
+    <span class="n">OAUTH_CLIENTS</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">OAuthClient</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+
+    <span class="c1"># JWT TOKEN</span>
+    <span class="n">JWT_EXPIRE_SECONDS</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">180</span>
+    <span class="n">JWT_SECRET_KEY</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+
+    <span class="c1"># COOKIE TOKEN</span>
+    <span class="n">COOKIE_EXPIRE_SECONDS</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">86400</span>
+
+    <span class="nd">@root_validator</span><span class="p">(</span><span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">collect_oauth_clients</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Automatic collection of OAuth Clients</span>
+
+<span class="sd">        This method collects the environment variables relative to a single</span>
+<span class="sd">        OAuth client and saves them within the `Settings` object in the form</span>
+<span class="sd">        of an `OAuthClient` instance.</span>
+
+<span class="sd">        Fractal can support an arbitrary number of OAuth providers, which are</span>
+<span class="sd">        automatically detected by parsing the environment variable names. In</span>
+<span class="sd">        particular, to set the provider `FOO`, one must specify the variables</span>
+
+<span class="sd">            OAUTH_FOO_CLIENT_ID</span>
+<span class="sd">            OAUTH_FOO_CLIENT_SECRET</span>
+<span class="sd">            ...</span>
+
+<span class="sd">        etc (cf. OAuthClient).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">oauth_env_variable_keys</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">environ</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="s2">&quot;OAUTH&quot;</span> <span class="ow">in</span> <span class="n">key</span>
+        <span class="p">]</span>
+        <span class="n">clients_available</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">var</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">oauth_env_variable_keys</span>
+        <span class="p">}</span>
+
+        <span class="n">values</span><span class="p">[</span><span class="s2">&quot;OAUTH_CLIENTS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">client</span> <span class="ow">in</span> <span class="n">clients_available</span><span class="p">:</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;OAUTH_</span><span class="si">{</span><span class="n">client</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">oauth_client</span> <span class="o">=</span> <span class="n">OAuthClient</span><span class="p">(</span>
+                <span class="n">CLIENT_NAME</span><span class="o">=</span><span class="n">client</span><span class="p">,</span>
+                <span class="n">CLIENT_ID</span><span class="o">=</span><span class="n">getenv</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_CLIENT_ID&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                <span class="n">CLIENT_SECRET</span><span class="o">=</span><span class="n">getenv</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_CLIENT_SECRET&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                <span class="n">AUTHORIZE_ENDPOINT</span><span class="o">=</span><span class="n">getenv</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_AUTHORIZE_ENDPOINT&quot;</span><span class="p">,</span> <span class="kc">None</span>
+                <span class="p">),</span>
+                <span class="n">ACCESS_TOKEN_ENDPOINT</span><span class="o">=</span><span class="n">getenv</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_ACCESS_TOKEN_ENDPOINT&quot;</span><span class="p">,</span> <span class="kc">None</span>
+                <span class="p">),</span>
+                <span class="n">REFRESH_TOKEN_ENDPOINT</span><span class="o">=</span><span class="n">getenv</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_REFRESH_TOKEN_ENDPOINT&quot;</span><span class="p">,</span> <span class="kc">None</span>
+                <span class="p">),</span>
+                <span class="n">REVOKE_TOKEN_ENDPOINT</span><span class="o">=</span><span class="n">getenv</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_REVOKE_TOKEN_ENDPOINT&quot;</span><span class="p">,</span> <span class="kc">None</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+            <span class="n">values</span><span class="p">[</span><span class="s2">&quot;OAUTH_CLIENTS&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">oauth_client</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">values</span>
+
+    <span class="c1">###########################################################################</span>
+    <span class="c1"># DATABASE</span>
+    <span class="c1">###########################################################################</span>
+    <span class="n">DB_ENGINE</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;sqlite&quot;</span><span class="p">,</span> <span class="s2">&quot;postgres&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;sqlite&quot;</span>
+    <span class="n">DB_ECHO</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="n">POSTGRES_USER</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">POSTGRES_PASSWORD</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">POSTGRES_SERVER</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;localhost&quot;</span>
+    <span class="n">POSTGRES_PORT</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;5432&quot;</span>
+    <span class="n">POSTGRES_DB</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+
+    <span class="n">SQLITE_PATH</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">DATABASE_URL</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">DB_ENGINE</span> <span class="o">==</span> <span class="s2">&quot;sqlite&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">SQLITE_PATH</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;SQLITE_PATH path cannot be None&quot;</span><span class="p">)</span>
+            <span class="n">sqlite_path</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">abspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SQLITE_PATH</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">SQLITE_PATH</span>
+                <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">SQLITE_PATH</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;sqlite+aiosqlite:///</span><span class="si">{</span><span class="n">sqlite_path</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">elif</span> <span class="s2">&quot;postgres&quot;</span><span class="p">:</span>
+            <span class="n">pg_uri</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;postgresql+asyncpg://&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">POSTGRES_USER</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">POSTGRES_PASSWORD</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;@</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">POSTGRES_SERVER</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">POSTGRES_PORT</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">POSTGRES_DB</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">pg_uri</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">DATABASE_SYNC_URL</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">DB_ENGINE</span> <span class="o">==</span> <span class="s2">&quot;sqlite&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">SQLITE_PATH</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;SQLITE_PATH path cannot be None&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">DATABASE_URL</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;aiosqlite&quot;</span><span class="p">,</span> <span class="s2">&quot;pysqlite&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">DB_ENGINE</span> <span class="o">==</span> <span class="s2">&quot;postgres&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">DATABASE_URL</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;asyncpg&quot;</span><span class="p">,</span> <span class="s2">&quot;psycopg2&quot;</span><span class="p">)</span>
+
+    <span class="c1">###########################################################################</span>
+    <span class="c1"># FRACTAL SPECIFIC</span>
+    <span class="c1">###########################################################################</span>
+    <span class="n">FRACTAL_TASKS_DIR</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Directory under which all the tasks will be saved.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">FRACTAL_RUNNER_BACKEND</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;process&quot;</span><span class="p">,</span> <span class="s2">&quot;slurm&quot;</span><span class="p">,</span> <span class="s2">&quot;parsl&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;process&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Select which runner backend to use.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">FRACTAL_RUNNER_WORKING_BASE_DIR</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base directory for running jobs / workflows. All artifacts required to set</span>
+<span class="sd">    up, run and tear down jobs are placed in subdirs of this directory.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">FRACTAL_LOGGING_LEVEL</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Logging verbosity for main Fractal logger.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">FRACTAL_SLURM_CONFIG_FILE</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    It may be necessary to have that the Python interpreter used within a SLURM</span>
+<span class="sd">    cluster be different from the interpreter that runs the server. This</span>
+<span class="sd">    variable allows to choose a different interpreter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">FRACTAL_RUNNER_DEFAULT_EXECUTOR</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;cpu-low&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Used by some runner backends to configure the parameters to run jobs with.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">FRACTAL_SLURM_WORKER_PYTHON</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Path to Python interpreter that will run the jobs on the SLURM nodes. If</span>
+<span class="sd">    not specified, the interpreter that runs the server is used.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># NOTE: we currently set FRACTAL_PARSL_MONITORING to False, due to</span>
+    <span class="c1"># https://github.com/fractal-analytics-platform/fractal-server/issues/148</span>
+    <span class="n">FRACTAL_PARSL_MONITORING</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">FRACTAL_PARSL_CONFIG</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;local&quot;</span>
+
+    <span class="c1">###########################################################################</span>
+    <span class="c1"># BUSINESS LOGIC</span>
+    <span class="c1">###########################################################################</span>
+
+    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make sure that mandatory variables are set</span>
+
+<span class="sd">        This method must be called before the server starts</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">class</span> <span class="nc">StrictSettings</span><span class="p">(</span><span class="n">BaseSettings</span><span class="p">):</span>
+            <span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
+                <span class="n">extra</span> <span class="o">=</span> <span class="s2">&quot;allow&quot;</span>
+
+            <span class="n">DEPLOYMENT_TYPE</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span>
+                <span class="s2">&quot;production&quot;</span><span class="p">,</span> <span class="s2">&quot;staging&quot;</span><span class="p">,</span> <span class="s2">&quot;testing&quot;</span><span class="p">,</span> <span class="s2">&quot;development&quot;</span>
+            <span class="p">]</span>
+            <span class="n">JWT_SECRET_KEY</span><span class="p">:</span> <span class="nb">str</span>
+            <span class="n">DB_ENGINE</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">DB_ENGINE</span> <span class="o">==</span> <span class="s2">&quot;postgres&quot;</span><span class="p">:</span>
+                <span class="n">POSTGRES_USER</span><span class="p">:</span> <span class="nb">str</span>
+                <span class="n">POSTGRES_PASSWORD</span><span class="p">:</span> <span class="nb">str</span>
+                <span class="n">POSTGRES_DB</span><span class="p">:</span> <span class="nb">str</span>
+            <span class="k">elif</span> <span class="n">DB_ENGINE</span> <span class="o">==</span> <span class="s2">&quot;sqlite&quot;</span><span class="p">:</span>
+                <span class="n">SQLITE_PATH</span><span class="p">:</span> <span class="nb">str</span>
+
+            <span class="n">FRACTAL_TASKS_DIR</span><span class="p">:</span> <span class="n">Path</span>
+            <span class="n">FRACTAL_RUNNER_WORKING_BASE_DIR</span><span class="p">:</span> <span class="n">Path</span>
+
+            <span class="n">FRACTAL_RUNNER_BACKEND</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">FRACTAL_RUNNER_BACKEND</span> <span class="o">==</span> <span class="s2">&quot;slurm&quot;</span><span class="p">:</span>
+                <span class="n">FRACTAL_SLURM_CONFIG_FILE</span><span class="p">:</span> <span class="n">Path</span>
+
+        <span class="n">StrictSettings</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">())</span>
+</code></pre></div></td></tr></table></div>
+        </details>
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="fractal_server.config.Settings.DEPLOYMENT_TYPE" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">DEPLOYMENT_TYPE</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;production&#39;</span><span class="p">,</span> <span class="s1">&#39;staging&#39;</span><span class="p">,</span> <span class="s1">&#39;testing&#39;</span><span class="p">,</span> <span class="s1">&#39;development&#39;</span><span class="p">]]</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+  </span>
+
+<a href="#fractal_server.config.Settings.DEPLOYMENT_TYPE" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>The deployment type of the server installation. It is important that
+production deployments be marked as such to trigger server hardening.</p>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="fractal_server.config.Settings.FRACTAL_LOGGING_LEVEL" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">FRACTAL_LOGGING_LEVEL</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+  </span>
+
+<a href="#fractal_server.config.Settings.FRACTAL_LOGGING_LEVEL" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Logging verbosity for main Fractal logger.</p>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="fractal_server.config.Settings.FRACTAL_RUNNER_BACKEND" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">FRACTAL_RUNNER_BACKEND</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;process&#39;</span><span class="p">,</span> <span class="s1">&#39;slurm&#39;</span><span class="p">,</span> <span class="s1">&#39;parsl&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;process&#39;</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+  </span>
+
+<a href="#fractal_server.config.Settings.FRACTAL_RUNNER_BACKEND" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Select which runner backend to use.</p>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="fractal_server.config.Settings.FRACTAL_RUNNER_DEFAULT_EXECUTOR" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">FRACTAL_RUNNER_DEFAULT_EXECUTOR</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;cpu-low&#39;</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+  </span>
+
+<a href="#fractal_server.config.Settings.FRACTAL_RUNNER_DEFAULT_EXECUTOR" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Used by some runner backends to configure the parameters to run jobs with.</p>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="fractal_server.config.Settings.FRACTAL_RUNNER_WORKING_BASE_DIR" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">FRACTAL_RUNNER_WORKING_BASE_DIR</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+  </span>
+
+<a href="#fractal_server.config.Settings.FRACTAL_RUNNER_WORKING_BASE_DIR" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Base directory for running jobs / workflows. All artifacts required to set
+up, run and tear down jobs are placed in subdirs of this directory.</p>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="fractal_server.config.Settings.FRACTAL_SLURM_CONFIG_FILE" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">FRACTAL_SLURM_CONFIG_FILE</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+  </span>
+
+<a href="#fractal_server.config.Settings.FRACTAL_SLURM_CONFIG_FILE" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>It may be necessary to have that the Python interpreter used within a SLURM
+cluster be different from the interpreter that runs the server. This
+variable allows to choose a different interpreter.</p>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="fractal_server.config.Settings.FRACTAL_SLURM_WORKER_PYTHON" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">FRACTAL_SLURM_WORKER_PYTHON</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+  </span>
+
+<a href="#fractal_server.config.Settings.FRACTAL_SLURM_WORKER_PYTHON" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Path to Python interpreter that will run the jobs on the SLURM nodes. If
+not specified, the interpreter that runs the server is used.</p>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="fractal_server.config.Settings.FRACTAL_TASKS_DIR" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">FRACTAL_TASKS_DIR</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+  </span>
+
+<a href="#fractal_server.config.Settings.FRACTAL_TASKS_DIR" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Directory under which all the tasks will be saved.</p>
+  </div>
+
+</div>
+
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="fractal_server.config.Settings.check" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">check</span><span class="p">()</span></code>
+
+<a href="#fractal_server.config.Settings.check" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Make sure that mandatory variables are set</p>
+<p>This method must be called before the server starts</p>
+
+      <details class="quote">
+        <summary>Source code in <code>fractal_server/config.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Make sure that mandatory variables are set</span>
+
+<span class="sd">    This method must be called before the server starts</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">class</span> <span class="nc">StrictSettings</span><span class="p">(</span><span class="n">BaseSettings</span><span class="p">):</span>
+        <span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
+            <span class="n">extra</span> <span class="o">=</span> <span class="s2">&quot;allow&quot;</span>
+
+        <span class="n">DEPLOYMENT_TYPE</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span>
+            <span class="s2">&quot;production&quot;</span><span class="p">,</span> <span class="s2">&quot;staging&quot;</span><span class="p">,</span> <span class="s2">&quot;testing&quot;</span><span class="p">,</span> <span class="s2">&quot;development&quot;</span>
+        <span class="p">]</span>
+        <span class="n">JWT_SECRET_KEY</span><span class="p">:</span> <span class="nb">str</span>
+        <span class="n">DB_ENGINE</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">DB_ENGINE</span> <span class="o">==</span> <span class="s2">&quot;postgres&quot;</span><span class="p">:</span>
+            <span class="n">POSTGRES_USER</span><span class="p">:</span> <span class="nb">str</span>
+            <span class="n">POSTGRES_PASSWORD</span><span class="p">:</span> <span class="nb">str</span>
+            <span class="n">POSTGRES_DB</span><span class="p">:</span> <span class="nb">str</span>
+        <span class="k">elif</span> <span class="n">DB_ENGINE</span> <span class="o">==</span> <span class="s2">&quot;sqlite&quot;</span><span class="p">:</span>
+            <span class="n">SQLITE_PATH</span><span class="p">:</span> <span class="nb">str</span>
+
+        <span class="n">FRACTAL_TASKS_DIR</span><span class="p">:</span> <span class="n">Path</span>
+        <span class="n">FRACTAL_RUNNER_WORKING_BASE_DIR</span><span class="p">:</span> <span class="n">Path</span>
+
+        <span class="n">FRACTAL_RUNNER_BACKEND</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">FRACTAL_RUNNER_BACKEND</span> <span class="o">==</span> <span class="s2">&quot;slurm&quot;</span><span class="p">:</span>
+            <span class="n">FRACTAL_SLURM_CONFIG_FILE</span><span class="p">:</span> <span class="n">Path</span>
+
+    <span class="n">StrictSettings</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">())</span>
+</code></pre></div></td></tr></table></div>
+      </details>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="fractal_server.config.Settings.collect_oauth_clients" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">collect_oauth_clients</span><span class="p">(</span><span class="n">values</span><span class="p">)</span></code>
+
+<a href="#fractal_server.config.Settings.collect_oauth_clients" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Automatic collection of OAuth Clients</p>
+<p>This method collects the environment variables relative to a single
+OAuth client and saves them within the <code>Settings</code> object in the form
+of an <code>OAuthClient</code> instance.</p>
+<p>Fractal can support an arbitrary number of OAuth providers, which are
+automatically detected by parsing the environment variable names. In
+particular, to set the provider <code>FOO</code>, one must specify the variables</p>
+<pre><code>OAUTH_FOO_CLIENT_ID
+OAUTH_FOO_CLIENT_SECRET
+...
+</code></pre>
+<p>etc (cf. OAuthClient).</p>
+
+      <details class="quote">
+        <summary>Source code in <code>fractal_server/config.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@root_validator</span><span class="p">(</span><span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">collect_oauth_clients</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Automatic collection of OAuth Clients</span>
+
+<span class="sd">    This method collects the environment variables relative to a single</span>
+<span class="sd">    OAuth client and saves them within the `Settings` object in the form</span>
+<span class="sd">    of an `OAuthClient` instance.</span>
+
+<span class="sd">    Fractal can support an arbitrary number of OAuth providers, which are</span>
+<span class="sd">    automatically detected by parsing the environment variable names. In</span>
+<span class="sd">    particular, to set the provider `FOO`, one must specify the variables</span>
+
+<span class="sd">        OAUTH_FOO_CLIENT_ID</span>
+<span class="sd">        OAUTH_FOO_CLIENT_SECRET</span>
+<span class="sd">        ...</span>
+
+<span class="sd">    etc (cf. OAuthClient).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">oauth_env_variable_keys</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">environ</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="s2">&quot;OAUTH&quot;</span> <span class="ow">in</span> <span class="n">key</span>
+    <span class="p">]</span>
+    <span class="n">clients_available</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">var</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">oauth_env_variable_keys</span>
+    <span class="p">}</span>
+
+    <span class="n">values</span><span class="p">[</span><span class="s2">&quot;OAUTH_CLIENTS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">client</span> <span class="ow">in</span> <span class="n">clients_available</span><span class="p">:</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;OAUTH_</span><span class="si">{</span><span class="n">client</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">oauth_client</span> <span class="o">=</span> <span class="n">OAuthClient</span><span class="p">(</span>
+            <span class="n">CLIENT_NAME</span><span class="o">=</span><span class="n">client</span><span class="p">,</span>
+            <span class="n">CLIENT_ID</span><span class="o">=</span><span class="n">getenv</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_CLIENT_ID&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+            <span class="n">CLIENT_SECRET</span><span class="o">=</span><span class="n">getenv</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_CLIENT_SECRET&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+            <span class="n">AUTHORIZE_ENDPOINT</span><span class="o">=</span><span class="n">getenv</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_AUTHORIZE_ENDPOINT&quot;</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="p">),</span>
+            <span class="n">ACCESS_TOKEN_ENDPOINT</span><span class="o">=</span><span class="n">getenv</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_ACCESS_TOKEN_ENDPOINT&quot;</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="p">),</span>
+            <span class="n">REFRESH_TOKEN_ENDPOINT</span><span class="o">=</span><span class="n">getenv</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_REFRESH_TOKEN_ENDPOINT&quot;</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="p">),</span>
+            <span class="n">REVOKE_TOKEN_ENDPOINT</span><span class="o">=</span><span class="n">getenv</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_REVOKE_TOKEN_ENDPOINT&quot;</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">values</span><span class="p">[</span><span class="s2">&quot;OAUTH_CLIENTS&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">oauth_client</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">values</span>
+</code></pre></div></td></tr></table></div>
+      </details>
+  </div>
+
+</div>
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["content.code.annotate"], "search": "../assets/javascripts/workers/search.12658920.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.5cf534bf.min.js"></script>
+      
+    
+  </body>
+</html>
