@@ -351,7 +351,7 @@ name = "cloudpickle"
 version = "2.2.0"
 description = "Extended pickling support for Python objects"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6"
 files = [
     {file = "cloudpickle-2.2.0-py3-none-any.whl", hash = "sha256:7428798d5926d8fcbfd092d18d01a2a03daf8237d8fcdc8095d256b8490796f0"},
@@ -363,7 +363,7 @@ name = "clusterfutures"
 version = "0.5"
 description = "futures for remote execution on clusters"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "clusterfutures-0.5-py3-none-any.whl", hash = "sha256:391c9258da445366b7e859ac8ed2883aecfd26de364959fc1910e1a7c63bb933"},
@@ -857,14 +857,14 @@ test = ["faulthandler", "objgraph", "psutil"]
 
 [[package]]
 name = "griffe"
-version = "0.25.2"
+version = "0.25.3"
 description = "Signatures for entire Python programs. Extract the structure, the frame, the skeleton of your project, to generate API documentation or find breaking changes in your API."
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "griffe-0.25.2-py3-none-any.whl", hash = "sha256:0868da415c5f43fe186705c041d98b69523c24a6504e841031373eacfdd7ec05"},
-    {file = "griffe-0.25.2.tar.gz", hash = "sha256:555707b3417355e015d837845522cb38ee4ffcec485427868648eafacabe142e"},
+    {file = "griffe-0.25.3-py3-none-any.whl", hash = "sha256:c98e8471a4fc7675a7989f45563a9f7ccbfdfb1713725526d69dec1bbdcda74a"},
+    {file = "griffe-0.25.3.tar.gz", hash = "sha256:a71f156851649b3f0bdad6eb6bf7d7ac70e720a30da9f2d5a60e042480e92c03"},
 ]
 
 [package.dependencies]
@@ -1390,14 +1390,14 @@ python-legacy = ["mkdocstrings-python-legacy (>=0.2.1)"]
 
 [[package]]
 name = "mkdocstrings-python"
-version = "0.8.2"
+version = "0.8.3"
 description = "A Python handler for mkdocstrings."
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "mkdocstrings-python-0.8.2.tar.gz", hash = "sha256:b22528b7a7a0589d007eced019d97ad14de4eba4b2b9ba6a013bb66edc74ab43"},
-    {file = "mkdocstrings_python-0.8.2-py3-none-any.whl", hash = "sha256:213d9592e66e084a9bd2fa4956d6294a3487c6dc9cc45164058d6317249b7b6e"},
+    {file = "mkdocstrings-python-0.8.3.tar.gz", hash = "sha256:9ae473f6dc599339b09eee17e4d2b05d6ac0ec29860f3fc9b7512d940fc61adf"},
+    {file = "mkdocstrings_python-0.8.3-py3-none-any.whl", hash = "sha256:4e6e1cd6f37a785de0946ced6eb846eb2f5d891ac1cc2c7b832943d3529087a7"},
 ]
 
 [package.dependencies]
@@ -2513,9 +2513,9 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [extras]
 gunicorn = ["gunicorn"]
 postgres = ["asyncpg", "psycopg2"]
-slurm = []
+slurm = ["clusterfutures"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "97a581e58279656034c7ae08b4dd08520c156493e66e45709bfe1e33260f50c8"
+content-hash = "cb2eb6a1490e8b2dbe1a25a5ed1e6eea0b048aaf862227fce0d38ad1a467345d"
