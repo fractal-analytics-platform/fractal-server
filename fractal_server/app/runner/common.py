@@ -61,6 +61,16 @@ class TaskExecutionError(RuntimeError):
         self.task_name = task_name
 
 
+class JobExecutionError(RuntimeError):
+    """
+    Forwards any error occurred within the execution of a job
+
+    FIXME: this is specific for some backends
+    """
+
+    pass
+
+
 class TaskParameterEncoder(JSONEncoder):
     """
     Convenience JSONEncoder that serialises `Path`s as strings
