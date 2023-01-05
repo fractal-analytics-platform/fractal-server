@@ -29,6 +29,7 @@ from ....syringe import Inject
 from ....utils import close_logger
 from ....utils import file_opener
 from ....utils import set_logger
+from ..common import JobExecutionError
 from ..common import TaskExecutionError
 
 
@@ -384,9 +385,9 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         Important: This function is executed on a different thread (the
         self.wait_thread one), so that its failures may not be captured by the
-        main thread running the FractalSlurmExecutor. The correct way to handle
-        an exception in this function (such that this exception is then raised
-        in the main thread) is to use fut.set_exception().
+        main thread running the FractalSlurmExecutor. A reasonable way to
+        handle an exception in this function (such that this exception is then
+        raised in the main thread) is to use fut.set_exception().
         """
 
         import logging
@@ -416,7 +417,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         )
 
         # Proceed normally if the output pickle file exists, otherwise set an
-        # appropriate TaskExecutionError exception
+        # appropriate TaskExecutionError or JobExecutionError exception
         if out_path.exists():
             # Unpickle and load output pickle file
             with out_path.open("rb") as f:
@@ -439,13 +440,12 @@ class FractalSlurmExecutor(SlurmExecutor):
             slurm_stdout_content = _read_slurm_file(slurm_stdout_file)
             slurm_stderr_content = _read_slurm_file(slurm_stderr_file)
             error_message = (
-                "TaskExecutionError\n"
-                "FIXME"
+                "JobExecutionError\n"
                 f"SLURM stdout:\n{slurm_stdout_content}\n"
                 f"SLURM stderr:\n{slurm_stderr_content}"
             )
             logging.warning(error_message)
-            exc = TaskExecutionError(error_message)
+            exc = JobExecutionError(error_message)
             fut.set_exception(exc)
 
         # Clean up communication files.

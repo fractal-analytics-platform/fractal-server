@@ -11,7 +11,7 @@ from .fixtures_tasks import MockTask
 from .fixtures_tasks import MockWorkflowTask
 from fractal_server.app.runner._slurm import SlurmConfig
 from fractal_server.app.runner._slurm.executor import FractalSlurmExecutor
-from fractal_server.app.runner.common import TaskExecutionError
+from fractal_server.app.runner.common import JobExecutionError
 from fractal_server.tasks import dummy as dummy_module
 from fractal_server.tasks import dummy_parallel as dummy_parallel_module
 
@@ -122,7 +122,7 @@ def test_slurm_executor_scancel(
         time.sleep(60)
         return 42
 
-    with pytest.raises(TaskExecutionError):
+    with pytest.raises(JobExecutionError):
         with FractalSlurmExecutor(
             script_dir=tmp777_path,
             slurm_user=slurm_user,
