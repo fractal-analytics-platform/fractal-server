@@ -7,6 +7,7 @@ from typing import Callable
 import pytest
 from devtools import debug
 
+from .fixtures_slurm import scancel_all_jobs_of_a_slurm_user
 from .fixtures_tasks import MockTask
 from .fixtures_tasks import MockWorkflowTask
 from fractal_server.app.runner._slurm import SlurmConfig
@@ -14,13 +15,6 @@ from fractal_server.app.runner._slurm.executor import FractalSlurmExecutor
 from fractal_server.app.runner.common import JobExecutionError
 from fractal_server.tasks import dummy as dummy_module
 from fractal_server.tasks import dummy_parallel as dummy_parallel_module
-
-
-def current_squeue():
-    res = subprocess.run(["squeue"], capture_output=True, encoding="utf-8")
-    assert res.returncode == 0
-    assert not res.stderr
-    return res.stdout
 
 
 def submit_and_ignore_exceptions(
@@ -68,7 +62,6 @@ def test_unit_sbatch_script_readable(
     WHEN a different user tries to read it
     THEN it has all the permissions needed
     """
-    import subprocess
     import shlex
 
     SBATCH_SCRIPT = "test"
@@ -122,7 +115,7 @@ def test_slurm_executor_scancel(
         time.sleep(60)
         return 42
 
-    with pytest.raises(JobExecutionError):
+    with pytest.raises(JobExecutionError) as e:
         with FractalSlurmExecutor(
             script_dir=tmp777_path,
             slurm_user=slurm_user,
@@ -130,34 +123,21 @@ def test_slurm_executor_scancel(
             fut = executor.submit(wait_and_return)
             debug(fut)
 
-            time.sleep(1)
+            # FIXME: explain why
+            time.sleep(2)
             slurm_user = slurm_user or "fractal"
 
-            debug(current_squeue())
-            res = subprocess.run(
-                [
-                    "sudo",
-                    "--non-interactive",
-                    "-u",
-                    slurm_user,
-                    "scancel",
-                    "-u",
-                    slurm_user,
-                    "-v",
-                ],
-                capture_output=True,
-                encoding="utf-8",
+            scancel_all_jobs_of_a_slurm_user(
+                slurm_user=slurm_user, show_squeue=True
             )
-            assert res.returncode == 0
-            if res.stdout:
-                debug(res.stdout)
-            if res.stderr:
-                debug(res.stderr)
-            debug(current_squeue())
 
-            # Call .result() to force waiting for the result (which can also
-            # raise an exception)
+            # Calling result() forces waiting for the result, which in this
+            # test raises an exception
             fut.result()
+
+    debug(str(e.type))
+    debug(str(e.value))
+    debug(str(e.traceback))
 
 
 def test_unit_slurm_config():
