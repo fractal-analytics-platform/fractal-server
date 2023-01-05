@@ -363,14 +363,16 @@ class FractalSlurmExecutor(SlurmExecutor):
         # replacing the %j placeholder with jobid
         slurm_stdout_file = job.stdout.as_posix().replace("%j", str(jobid))
         slurm_stderr_file = job.stderr.as_posix().replace("%j", str(jobid))
+        slurm_script_file = job.slurm_script.as_posix()
         self.map_jobid_to_slurm_out_err[jobid] = (
+            slurm_script_file,
             slurm_stdout_file,
             slurm_stderr_file,
         )
-        logging.warning(
-            f"[map_jobid_to_slurm_out_err] STORE {jobid} -> "
-            f"({slurm_stdout_file}, {slurm_stderr_file})"
-        )
+        # logging.warning(
+        #    f"[map_jobid_to_slurm_out_err] STORE {jobid} -> "
+        #    f"({slurm_stdout_file}, {slurm_stderr_file})"
+        # )
 
         # Thread will wait for it to finish.
         self.wait_thread.wait(job.slurm_output.as_posix(), jobid)
@@ -408,13 +410,15 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         # Extract SLURM out/err file paths from map_jobid_to_slurm_out_err
         logging.warning(f"[map_jobid_to_slurm_out_err] Try GET {jobid}")
-        slurm_stdout_file, slurm_stderr_file = self.map_jobid_to_slurm_out_err[
-            jobid
-        ]
-        logging.warning(
-            f"[map_jobid_to_slurm_out_err] GET {jobid} "
-            f"({slurm_stdout_file}, {slurm_stderr_file})"
-        )
+        (
+            slurm_script_file,
+            slurm_stdout_file,
+            slurm_stderr_file,
+        ) = self.map_jobid_to_slurm_out_err[jobid]
+        # logging.warning(
+        #    f"[map_jobid_to_slurm_out_err] GET {jobid} "
+        #    f"({slurm_stdout_file}, {slurm_stderr_file})"
+        # )
 
         # Proceed normally if the output pickle file exists, otherwise set an
         # appropriate TaskExecutionError or JobExecutionError exception
@@ -437,10 +441,12 @@ class FractalSlurmExecutor(SlurmExecutor):
         else:
             logging.warning(f"_completion {out_path=} missing")
             # Load SLURM out/err files
+            slurm_script_content = _read_slurm_file(slurm_script_file)
             slurm_stdout_content = _read_slurm_file(slurm_stdout_file)
             slurm_stderr_content = _read_slurm_file(slurm_stderr_file)
             error_message = (
                 "JobExecutionError\n"
+                f"SLURM submission script:\n{slurm_script_content}\n"
                 f"SLURM stdout:\n{slurm_stdout_content}\n"
                 f"SLURM stderr:\n{slurm_stderr_content}"
             )
