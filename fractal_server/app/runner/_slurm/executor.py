@@ -66,6 +66,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         slurm_user: Optional[str] = None,
         script_dir: Optional[Path] = None,
         common_script_lines: Optional[List[str]] = None,
+        slurm_poll_interval: Optional[int] = None,
         *args,
         **kwargs,
     ):
@@ -83,6 +84,13 @@ class FractalSlurmExecutor(SlurmExecutor):
             script_dir = settings.FRACTAL_RUNNER_WORKING_BASE_DIR
         self.script_dir: Path = script_dir  # type: ignore
         self.map_jobid_to_slurm_out_err: dict = {}
+
+        # Set the attribute slurm_poll_interval for self.wait_thread (see
+        # cfut.SlurmWaitThread)
+        if not slurm_poll_interval:
+            settings = Inject(get_settings)
+            slurm_poll_interval = settings.FRACTAL_SLURM_POLL_INTERVAL
+        self.wait_thread.slurm_poll_interval = slurm_poll_interval
 
     def get_stdout_filename(
         self, arg: str = "%j", prefix: Optional[str] = None
