@@ -10,6 +10,7 @@
 #
 # Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
 # University of Zurich
+import logging
 import os
 import shlex
 import subprocess  # nosec
@@ -53,8 +54,22 @@ def _read_slurm_file(filepath: str) -> str:
     Read a slurm {script,stdout,stderr} file, and handle the missing-file case
     """
     if os.path.exists(filepath):
+
+        # DEBUGGING BLOCK # FIXME REMOVE
+        cmd = ["cat", filepath]
+        logging.warning(f"{cmd=}")
+        res = subprocess.run(
+            cmd, capture_output=True, check=True, encoding="utf-8"
+        )
+        logging.warning(f"{res.returncode=}")
+        logging.warning(f"{res.stdout=}")
+        logging.warning(f"{res.stderr=}")
+        # END DEBUGGING BLOCK
+
         with open(filepath, "r") as f:
             content = f.read()
+            if not content:
+                content = f"Empty file: {filepath}\n"
     else:
         content = f"Missing file: {filepath}\n"
     return content
@@ -420,17 +435,23 @@ class FractalSlurmExecutor(SlurmExecutor):
             out_path.unlink()
         else:
             # Read SLURM files
-            slurm_script_content = _read_slurm_file(slurm_script_file)
-            slurm_stdout_content = _read_slurm_file(slurm_stdout_file)
-            slurm_stderr_content = _read_slurm_file(slurm_stderr_file)
-            error_message = (
-                "JobExecutionError\n"
-                f"SLURM submission script:\n{slurm_script_content}\n"
-                f"SLURM stdout:\n{slurm_stdout_content}\n"
-                f"SLURM stderr:\n{slurm_stderr_content}"
-            )
-            exc = JobExecutionError(error_message)
-            fut.set_exception(exc)
+            try:  # FIXME: remove this try/except
+                logging.warning("NOW READING FILES")
+                slurm_script_content = _read_slurm_file(slurm_script_file)
+                slurm_stdout_content = _read_slurm_file(slurm_stdout_file)
+                slurm_stderr_content = _read_slurm_file(slurm_stderr_file)
+                logging.warning(f"{slurm_stderr_file=}")
+                logging.warning(f"{slurm_stderr_content=}")
+                error_message = (
+                    "JobExecutionError\n\n"
+                    f"SLURM submission script:\n{slurm_script_content}\n\n"
+                    f"SLURM stdout:\n{slurm_stdout_content}\n\n"
+                    f"SLURM stderr:\n{slurm_stderr_content}\n"
+                )
+                exc = JobExecutionError(error_message)
+                fut.set_exception(exc)
+            except Exception as e:
+                fut.set_exception(e)
 
         # Clean up communication files.
         in_path.unlink()
