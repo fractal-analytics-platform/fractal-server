@@ -180,6 +180,7 @@ class Workflow(_WorkflowBase, table=True):
         self.task_list.reorder()  # type: ignore
         if commit:
             await db.commit()
+            await db.refresh(wf_task)
         return wf_task
 
     @property
