@@ -238,6 +238,12 @@ class Settings(BaseSettings):
     not specified, the interpreter that runs the server is used.
     """
 
+    FRACTAL_SLURM_POLL_INTERVAL: Optional[int] = 30
+    """
+    Interval to wait (in seconds) before checking that unfinished job status
+    are still running.
+    """
+
     # NOTE: we currently set FRACTAL_PARSL_MONITORING to False, due to
     # https://github.com/fractal-analytics-platform/fractal-server/issues/148
     FRACTAL_PARSL_MONITORING: bool = False
