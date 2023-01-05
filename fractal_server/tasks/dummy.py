@@ -12,6 +12,7 @@
 # Zurich.
 import json
 import logging
+import time
 from datetime import datetime
 from datetime import timezone
 from json.decoder import JSONDecodeError
@@ -43,6 +44,7 @@ def dummy(
     message: str,
     index: int = 0,
     raise_error: bool = False,
+    sleep_time: int = 0,
 ) -> Dict[str, Any]:
     """
     Dummy task
@@ -99,6 +101,10 @@ def dummy(
     with open(out_fullpath, "w") as fout:
         json.dump(data, fout, indent=2)
 
+    # Sleep
+    logger.info(f"Now starting {sleep_time}-seconds sleep")
+    time.sleep(sleep_time)
+
     # Update metadata
     metadata_update = dict(dummy=f"dummy {index}", index=["0", "1", "2"])
 
@@ -124,6 +130,7 @@ if __name__ == "__main__":
         message: str
         index: int = 0
         raise_error: bool = False
+        sleep_time: int = 0
 
     parser = ArgumentParser()
     parser.add_argument("-j", "--json", help="Read parameters from json file")
