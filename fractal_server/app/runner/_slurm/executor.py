@@ -46,6 +46,21 @@ class SlurmJob:
 
 
 class FractalSlurmExecutor(SlurmExecutor):
+    """
+    FractalSlurmExecutor (inherits from cfut.SlurmExecutor)
+
+    Attributes:
+        slurm_user:
+            shell username that runs the `sbatch` command
+        common_script_lines:
+            arbitrary script lines that will always be included in the
+            sbatch script
+        script_dir:
+            directory for both the cfut/SLURM and fractal-server files and logs
+        map_jobid_to_slurm_out_err:
+            dictionary with paths of slurm out/err files for active jobs
+    """
+
     def __init__(
         self,
         slurm_user: Optional[str] = None,
@@ -55,14 +70,10 @@ class FractalSlurmExecutor(SlurmExecutor):
         **kwargs,
     ):
         """
-        Fractal slurm executor
+        Init method for FractalSlurmExecutor
 
         Args:
-            slurm_user:
-                shell username that runs the `sbatch` command
-            common_script_lines:
-                arbitrary script lines that will always be included in the
-                sbatch script
+
         """
         super().__init__(*args, **kwargs)
         self.slurm_user = slurm_user
@@ -71,8 +82,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             settings = Inject(get_settings)
             script_dir = settings.FRACTAL_RUNNER_WORKING_BASE_DIR
         self.script_dir: Path = script_dir  # type: ignore
-
-        self.map_jobid_to_slurm_out_err = {}
+        self.map_jobid_to_slurm_out_err: dict = {}
 
     def get_stdout_filename(
         self, arg: str = "%j", prefix: Optional[str] = None
@@ -291,8 +301,10 @@ class FractalSlurmExecutor(SlurmExecutor):
         additional_setup_lines: List[str] = None,
         job_file_prefix: Optional[str] = None,
         **kwargs,
-    ):
-        """Submit a job to the pool.
+    ) -> futures.Future:
+        """
+        Submit a job to the pool.
+
         If additional_setup_lines is passed, it overrides the lines given
         when creating the executor.
         """
@@ -305,13 +317,15 @@ class FractalSlurmExecutor(SlurmExecutor):
         job.slurm_script = self.get_slurm_script_filename(
             prefix=job_file_prefix
         )
-
         job.stdout = self.get_stdout_filename(prefix=job_file_prefix)
         job.stderr = self.get_stderr_filename(prefix=job_file_prefix)
 
+        # Dump serialized function+args+kwargs to pickle file
         funcser = cloudpickle.dumps((fun, args, kwargs))
         with open(job.slurm_input, "wb", opener=file_opener) as f:
             f.write(funcser)
+
+        # Submit job to SLURM, and get jobid
         jobid = self._start(job, additional_setup_lines)
 
         # Update self.map_jobid_to_slurm_out_err
@@ -334,7 +348,15 @@ class FractalSlurmExecutor(SlurmExecutor):
         return fut
 
     def _completion(self, jobid):
-        """Called whenever a job finishes."""
+        """
+        Callback function to be executed whenever a job finishes.
+
+        Important: This function is executed on a different thread (the
+        self.wait_thread one), so that its failures may not be captured by the
+        main thread running the FractalSlurmExecutor. The correct way to handle
+        an exception in this function (such that this exception is then raised
+        in the main thread) is to use fut.set_exception().
+        """
 
         import logging
 
@@ -405,7 +427,11 @@ class FractalSlurmExecutor(SlurmExecutor):
 
     def _start(
         self, job: SlurmJob, additional_setup_lines: Optional[List[str]] = None
-    ):
+    ) -> int:
+        """
+        Submit function for execution on a SLURM cluster
+        """
+
         if additional_setup_lines is None:
             additional_setup_lines = self.additional_setup_lines
 
@@ -414,6 +440,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             settings.FRACTAL_SLURM_WORKER_PYTHON or sys.executable
         )
 
+        # Prepare script to be submitted via sbatch
         sbatch_script = self.compose_sbatch_script(
             cmdline=shlex.split(
                 f"{python_worker_interpreter}"
@@ -425,13 +452,14 @@ class FractalSlurmExecutor(SlurmExecutor):
             additional_setup_lines=additional_setup_lines,
         )
 
+        # Submit job via sbatch, and retrieve jobid
         pre_cmd = ""
         if self.slurm_user:
             pre_cmd = f"sudo --non-interactive -u {self.slurm_user}"
-
-        job_id = self.submit_sbatch(
+        jobid = self.submit_sbatch(
             sbatch_script,
             submit_pre_command=pre_cmd,
             script_path=job.slurm_script,
         )
-        return job_id
+
+        return jobid
