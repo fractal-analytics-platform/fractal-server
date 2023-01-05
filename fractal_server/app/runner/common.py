@@ -23,7 +23,7 @@ from ...utils import close_logger as close_job_logger  # noqa F401
 from ...utils import file_opener
 from ..models import Dataset
 from ..models import Project
-from ..models.task import Task
+from ..models.workflow import Workflow
 
 
 class TaskExecutionError(RuntimeError):
@@ -108,9 +108,9 @@ async def auto_output_dataset(
     *,
     project: Project,
     input_dataset: Dataset,
-    workflow: Task,
+    workflow: Workflow,
     overwrite_input: bool = False,
-):
+) -> Dataset:
     """
     Determine the output dataset if it was not provided explicitly
 
@@ -131,7 +131,7 @@ async def auto_output_dataset(
 
     Raises:
         ValueError: If the input dataset is to be overwritten and it provides
-        more than one path.
+                    more than one path.
 
     Returns:
         output_dataset:
@@ -151,7 +151,7 @@ async def auto_output_dataset(
 def validate_workflow_compatibility(
     *,
     input_dataset: Dataset,
-    workflow: Task,
+    workflow: Workflow,
     output_dataset: Optional[Dataset] = None,
 ):
     """

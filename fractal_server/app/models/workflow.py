@@ -27,9 +27,24 @@ class WorkflowTask(_WorkflowTaskBase, table=True):
     foreign keys, it allows for parameter overriding and keeps the order
     within the list of tasks of the workflow.
 
-    Attributes
-    ----------
-    TODO
+
+    Attributes:
+        id:
+            Primary key
+        workflow_id:
+            ID of the `Workflow` the `WorkflowTask` belongs to
+        task_id:
+            ID of the task corresponding to the `WorkflowTask`
+        order:
+            Positional order of the `WorkflowTask` in `Workflow.task_list`
+        meta:
+            Additional parameters useful for execution
+        args:
+            Additional task arguments, overriding the ones in
+            `WorkflowTask.task.args`
+        task:
+            `Task` object associated with the current `WorkflowTask`
+
     """
 
     class Config:
@@ -99,11 +114,10 @@ class WorkflowTask(_WorkflowTaskBase, table=True):
         """
         Merge of `extra` arguments and `self.arguments`.
 
-        Return
-        ------
-        full_arsgs (Dict):
-            A dictionary consisting of the merge of `extra` and
-            self.arguments.
+        Returns
+            full_arsgs (Dict):
+                A dictionary consisting of the merge of `extra` and
+                self.arguments.
         """
         full_args = {}
         if extra:
@@ -116,10 +130,13 @@ class Workflow(_WorkflowBase, table=True):
     """
     Workflow
 
-    Attributes
-    ----------
-    task_list: List(LinkTaskWorkflow)
-        List of associations to tasks.
+    Attributes:
+        id:
+            Primary key
+        project_id:
+            ID of the project the workflow belongs to.
+        task_list:
+            List of associations to tasks.
     """
 
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -144,6 +161,17 @@ class Workflow(_WorkflowBase, table=True):
         db: AsyncSession,
         commit: bool = True,
     ) -> WorkflowTask:
+        """
+        Insert a new WorkflowTask into Workflow.task_list
+
+        Args:
+            task_id: TBD
+            args: TBD
+            meta: TBD
+            order: TBD
+            db: TBD
+            commit: TBD
+        """
         if order is None:
             order = len(self.task_list)
         wf_task = WorkflowTask(task_id=task_id, args=args, meta=meta)
@@ -152,6 +180,7 @@ class Workflow(_WorkflowBase, table=True):
         self.task_list.reorder()  # type: ignore
         if commit:
             await db.commit()
+            await db.refresh(wf_task)
         return wf_task
 
     @property
