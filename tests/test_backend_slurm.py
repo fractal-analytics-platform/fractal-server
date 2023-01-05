@@ -131,7 +131,7 @@ def test_slurm_executor_scancel(
             debug(fut)
 
             time.sleep(1)
-            slurm_user = slurm_user or "admin"
+            slurm_user = slurm_user or "admin"  # FIXME: replace with fractal
 
             debug(current_squeue())
             res = subprocess.run(

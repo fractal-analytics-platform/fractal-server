@@ -8,6 +8,7 @@
 #
 # Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
 # University of Zurich
+import logging
 import shlex
 import subprocess  # nosec
 import sys
@@ -70,6 +71,8 @@ class FractalSlurmExecutor(SlurmExecutor):
             settings = Inject(get_settings)
             script_dir = settings.FRACTAL_RUNNER_WORKING_BASE_DIR
         self.script_dir: Path = script_dir  # type: ignore
+
+        self.map_jobid_to_slurm_out_err = {}
 
     def get_stdout_filename(
         self, arg: str = "%j", prefix: Optional[str] = None
@@ -311,6 +314,18 @@ class FractalSlurmExecutor(SlurmExecutor):
             f.write(funcser)
         jobid = self._start(job, additional_setup_lines)
 
+        # Update self.map_jobid_to_slurm_out_err
+        job_stdout_path = job.stdout.as_posix().replace("%j", str(jobid))
+        job_stderr_path = job.stderr.as_posix().replace("%j", str(jobid))
+        self.map_jobid_to_slurm_out_err[jobid] = (
+            job_stdout_path,
+            job_stderr_path,
+        )
+        logging.warning(
+            f"[map_jobid_to_slurm_out_err] STORE {jobid} -> "
+            f"({job_stdout_path, {job_stderr_path}})"
+        )
+
         # Thread will wait for it to finish.
         self.wait_thread.wait(job.slurm_output.as_posix(), jobid)
 
@@ -330,9 +345,18 @@ class FractalSlurmExecutor(SlurmExecutor):
             if not self.jobs:
                 self.jobs_empty_cond.notify_all()
 
-        out_path = self.get_out_filename(job.workerid)
         in_path = self.get_in_filename(job.workerid)
+        out_path = self.get_out_filename(job.workerid)
         logging.warning(f"_completion {out_path=}")
+        logging.warning(f"_completion {self.map_jobid_to_slurm_out_err=}")
+        logging.warning(f"_completion {jobid=}")
+        logging.warning(f"_completion {type(jobid)=}")
+
+        job_stdout, job_stderr = self.map_jobid_to_slurm_out_err.pop(jobid)
+        logging.warning(
+            f"[map_jobid_to_slurm_out_err] POP {jobid} "
+            f"-> ({job_stdout}, {job_stderr})"
+        )
 
         if out_path.exists():
             logging.warning(f"_completion {out_path=} exists")
@@ -352,9 +376,25 @@ class FractalSlurmExecutor(SlurmExecutor):
             out_path.unlink()
         else:
             logging.warning(f"_completion {out_path=} missing")
-            exc = TaskExecutionError(
-                f"Something went wrong, missing file {str(out_path)}"
+            """
+            if os.path.isfile(job_stdout):
+                with open(job_stdout, "r") as f:
+                    slurm_stdout = f.readlines()
+            else:
+                slurm_stdout = ""
+            if os.path.isfile(job_stderr):
+                with open(job_stderr, "r") as f:
+                    slurm_stderr = f.readlines()
+            else:
+                slurm_stderr = ""
+            """
+            error_message = (
+                "TaskExecutionError\n"
+                "FIXME"
+                # f"SLURM stdout:\n{slurm_stdout}\n"
+                # f"SLURM stderr:\n{slrum_stderr}"
             )
+            exc = TaskExecutionError(error_message)
             fut.set_exception(exc)
 
         # Clean up communication files.
