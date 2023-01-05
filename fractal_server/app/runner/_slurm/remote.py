@@ -19,21 +19,8 @@ from typing import Optional
 
 import cloudpickle
 
-
-class ExceptionProxy:
-    """
-    Proxy class to serialise exceptions
-
-    In general exceptions are not serialisable. This proxy class saves the
-    serialisable content of an exception. On the receiving end, it can be used
-    to reconstruct a TaskExecutionError.
-    """
-
-    def __init__(self, exc_type: type, tb: List[str], *args, **kwargs):
-        self.exc_type_name: str = exc_type.__name__
-        self.tb: List[str] = tb
-        self.args = args
-        self.kwargs = kwargs
+from .exception_proxy import ExceptionProxy
+from .pickling_tools import restricted_pickle_loads
 
 
 def worker(in_fname: str, extra_import_paths: Optional[str] = None):
@@ -45,6 +32,9 @@ def worker(in_fname: str, extra_import_paths: Optional[str] = None):
     try:
         with open(in_fname, "rb") as f:
             indata = f.read()
+        # fun, args, kwargs = restricted_pickle_loads(
+        #    indata, [("common", "TaskParameters")]
+        # )
         fun, args, kwargs = cloudpickle.loads(indata)
         result = True, fun(*args, **kwargs)
         out = cloudpickle.dumps(result)
