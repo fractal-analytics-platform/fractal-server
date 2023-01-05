@@ -9,6 +9,7 @@
 # Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
 # University of Zurich
 import logging
+import os
 import shlex
 import subprocess  # nosec
 import sys
@@ -45,6 +46,21 @@ class SlurmJob:
         self.workerid = random_string()
 
 
+def _read_slurm_file(filepath: str) -> str:
+    logging.warning(f"[_read_slurm_file] {filepath} START")
+    logging.warning(f"{os.path.exists(filepath)=}")
+    if os.path.exists(filepath):
+        logging.warning(f"[_read_slurm_file] {filepath} exists")
+        with open(filepath, "r") as f:
+            content = f.read()
+    else:
+        logging.warning(f"[_read_slurm_file] {filepath} missing")
+        content = f"Missing file: {filepath}\n"
+    logging.warning(f"[_read_slurm_file] {filepath}\n{content}")
+    logging.warning(f"[_read_slurm_file] {filepath} END")
+    return content
+
+
 class FractalSlurmExecutor(SlurmExecutor):
     """
     FractalSlurmExecutor (inherits from cfut.SlurmExecutor)
@@ -72,11 +88,10 @@ class FractalSlurmExecutor(SlurmExecutor):
     ):
         """
         Init method for FractalSlurmExecutor
-
-        Args:
-
         """
+
         super().__init__(*args, **kwargs)
+
         self.slurm_user = slurm_user
         self.common_script_lines = common_script_lines or []
         if not script_dir:
@@ -91,6 +106,13 @@ class FractalSlurmExecutor(SlurmExecutor):
             settings = Inject(get_settings)
             slurm_poll_interval = settings.FRACTAL_SLURM_POLL_INTERVAL
         self.wait_thread.slurm_poll_interval = slurm_poll_interval
+
+    def _cleanup(self, jobid):
+        """
+        Given a job ID as returned by _start, perform any necessary
+        cleanup after the job has finished.
+        """
+        self.map_jobid_to_slurm_out_err.pop(jobid)
 
     def get_stdout_filename(
         self, arg: str = "%j", prefix: Optional[str] = None
@@ -336,16 +358,17 @@ class FractalSlurmExecutor(SlurmExecutor):
         # Submit job to SLURM, and get jobid
         jobid = self._start(job, additional_setup_lines)
 
-        # Update self.map_jobid_to_slurm_out_err
-        job_stdout_path = job.stdout.as_posix().replace("%j", str(jobid))
-        job_stderr_path = job.stderr.as_posix().replace("%j", str(jobid))
+        # Add the SLURM out/err paths to map_jobid_to_slurm_out_err, aftering
+        # replacing the %j placeholder with jobid
+        slurm_stdout_file = job.stdout.as_posix().replace("%j", str(jobid))
+        slurm_stderr_file = job.stderr.as_posix().replace("%j", str(jobid))
         self.map_jobid_to_slurm_out_err[jobid] = (
-            job_stdout_path,
-            job_stderr_path,
+            slurm_stdout_file,
+            slurm_stderr_file,
         )
         logging.warning(
             f"[map_jobid_to_slurm_out_err] STORE {jobid} -> "
-            f"({job_stdout_path, {job_stderr_path}})"
+            f"({slurm_stdout_file}, {slurm_stderr_file})"
         )
 
         # Thread will wait for it to finish.
@@ -382,19 +405,25 @@ class FractalSlurmExecutor(SlurmExecutor):
         logging.warning(f"_completion {jobid=}")
         logging.warning(f"_completion {type(jobid)=}")
 
-        job_stdout, job_stderr = self.map_jobid_to_slurm_out_err.pop(jobid)
+        # Extract SLURM out/err file paths from map_jobid_to_slurm_out_err
+        logging.warning(f"[map_jobid_to_slurm_out_err] Try GET {jobid}")
+        slurm_stdout_file, slurm_stderr_file = self.map_jobid_to_slurm_out_err[
+            jobid
+        ]
         logging.warning(
-            f"[map_jobid_to_slurm_out_err] POP {jobid} "
-            f"-> ({job_stdout}, {job_stderr})"
+            f"[map_jobid_to_slurm_out_err] GET {jobid} "
+            f"({slurm_stdout_file}, {slurm_stderr_file})"
         )
 
+        # Proceed normally if the output pickle file exists, otherwise set an
+        # appropriate TaskExecutionError exception
         if out_path.exists():
-            logging.warning(f"_completion {out_path=} exists")
+            # Unpickle and load output pickle file
             with out_path.open("rb") as f:
                 outdata = f.read()
             success, result = cloudpickle.loads(outdata)
             logging.warning(f"_completion {success=}")
-
+            # Update the future (with set_result or set_exception)
             if success:
                 fut.set_result(result)
             else:
@@ -402,28 +431,20 @@ class FractalSlurmExecutor(SlurmExecutor):
                     result.tb, *result.args, **result.kwargs
                 )
                 fut.set_exception(exc)
-
+            # Remove output pickle file
             out_path.unlink()
         else:
             logging.warning(f"_completion {out_path=} missing")
-            """
-            if os.path.isfile(job_stdout):
-                with open(job_stdout, "r") as f:
-                    slurm_stdout = f.readlines()
-            else:
-                slurm_stdout = ""
-            if os.path.isfile(job_stderr):
-                with open(job_stderr, "r") as f:
-                    slurm_stderr = f.readlines()
-            else:
-                slurm_stderr = ""
-            """
+            # Load SLURM out/err files
+            slurm_stdout_content = _read_slurm_file(slurm_stdout_file)
+            slurm_stderr_content = _read_slurm_file(slurm_stderr_file)
             error_message = (
                 "TaskExecutionError\n"
                 "FIXME"
-                # f"SLURM stdout:\n{slurm_stdout}\n"
-                # f"SLURM stderr:\n{slrum_stderr}"
+                f"SLURM stdout:\n{slurm_stdout_content}\n"
+                f"SLURM stderr:\n{slurm_stderr_content}"
             )
+            logging.warning(error_message)
             exc = TaskExecutionError(error_message)
             fut.set_exception(exc)
 
