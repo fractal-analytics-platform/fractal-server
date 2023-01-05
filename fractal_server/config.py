@@ -240,8 +240,8 @@ class Settings(BaseSettings):
 
     FRACTAL_SLURM_POLL_INTERVAL: Optional[int] = 60
     """
-    Interval to wait (in seconds) before checking that unfinished job status
-    are still running.
+    Interval to wait (in seconds) before checking whether unfinished job are
+    still running on SLURM.
     """
 
     # NOTE: we currently set FRACTAL_PARSL_MONITORING to False, due to
