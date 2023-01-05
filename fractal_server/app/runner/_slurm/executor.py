@@ -406,6 +406,12 @@ class FractalSlurmExecutor(SlurmExecutor):
             if not self.jobs:
                 self.jobs_empty_cond.notify_all()
 
+        # FIXME: remove logging and sleep
+        logging.warning(f"Now call _completion for {jobid=}")
+        import time #FIXME
+        time.sleep(60) #FIXME
+        logging.warning(f"Now call _completion for {jobid=}, I slept 60 seconds")
+
         in_path = self.get_in_filename(job.workerid)
         out_path = self.get_out_filename(job.workerid)
 
