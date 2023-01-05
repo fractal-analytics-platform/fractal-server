@@ -7,6 +7,7 @@ from typing import Callable
 import pytest
 from devtools import debug
 
+from .fixtures_slurm import run_squeue
 from .fixtures_slurm import scancel_all_jobs_of_a_slurm_user
 from .fixtures_tasks import MockTask
 from .fixtures_tasks import MockWorkflowTask
@@ -123,10 +124,18 @@ def test_slurm_executor_scancel(
             fut = executor.submit(wait_and_return)
             debug(fut)
 
-            # FIXME: explain why
-            time.sleep(2)
-            slurm_user = slurm_user or "fractal"
+            # Wait until the SLURM job goes from PENDING to RUNNING
+            while True:
+                squeue_output = run_squeue(
+                    squeue_format="%i %u %T", header=False
+                )
+                debug(squeue_output)
+                if "RUNNING" in squeue_output:
+                    break
+                time.sleep(1)
 
+            # Scancel all jobs of the current SLURM user
+            slurm_user = slurm_user or "fractal"
             scancel_all_jobs_of_a_slurm_user(
                 slurm_user=slurm_user, show_squeue=True
             )
@@ -138,6 +147,11 @@ def test_slurm_executor_scancel(
     debug(str(e.type))
     debug(str(e.value))
     debug(str(e.traceback))
+
+    assert "CANCELLED" in str(e.value)
+    # Since we waited for the job to be RUNNING, both the SLURM stdout and
+    # stderr files should exist
+    assert "Missing file" not in str(e.value)
 
 
 def test_unit_slurm_config():

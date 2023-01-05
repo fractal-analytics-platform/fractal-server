@@ -173,8 +173,15 @@ def monkey_slurm(monkeypatch, docker_compose_project_name, docker_services):
     return PopenLog
 
 
-def _current_squeue():
-    res = subprocess.run(["squeue"], capture_output=True, encoding="utf-8")
+def run_squeue(squeue_format=None, header=True):
+    cmd = ["squeue"]
+    if not header:
+        cmd.append("--noheader")
+    if squeue_format:
+        cmd.append(f'--format "{squeue_format}"')
+    res = subprocess.run(cmd, capture_output=True, encoding="utf-8")
+    if res.returncode != 0:
+        debug(res.stderr)
     assert res.returncode == 0
     assert not res.stderr
     return res.stdout
@@ -187,7 +194,7 @@ def scancel_all_jobs_of_a_slurm_user(
     Call scancel for all jobs of a given SLURM user
     """
     if show_squeue:
-        debug(_current_squeue())
+        debug(run_squeue())
     res = subprocess.run(
         [
             "sudo",
@@ -209,4 +216,4 @@ def scancel_all_jobs_of_a_slurm_user(
         debug(res.stderr)
 
     if show_squeue:
-        debug(_current_squeue())
+        debug(run_squeue())
