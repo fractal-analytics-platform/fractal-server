@@ -5,10 +5,11 @@
 #
 # Modified by:
 # Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
+# Tommaso Comparin <tommaso.comparin@exact-lab.it>
+# Marco Franzon <marco.franzon@exact-lab.it>
 #
 # Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
 # University of Zurich
-import logging
 import os
 import shlex
 import subprocess  # nosec
@@ -48,17 +49,14 @@ class SlurmJob:
 
 
 def _read_slurm_file(filepath: str) -> str:
-    logging.warning(f"[_read_slurm_file] {filepath} START")
-    logging.warning(f"{os.path.exists(filepath)=}")
+    """
+    Read a slurm {script,stdout,stderr} file, and handle the missing-file case
+    """
     if os.path.exists(filepath):
-        logging.warning(f"[_read_slurm_file] {filepath} exists")
         with open(filepath, "r") as f:
             content = f.read()
     else:
-        logging.warning(f"[_read_slurm_file] {filepath} missing")
         content = f"Missing file: {filepath}\n"
-    logging.warning(f"[_read_slurm_file] {filepath}\n{content}")
-    logging.warning(f"[_read_slurm_file] {filepath} END")
     return content
 
 
@@ -74,7 +72,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             sbatch script
         script_dir:
             directory for both the cfut/SLURM and fractal-server files and logs
-        map_jobid_to_slurm_out_err:
+        map_jobid_to_slurm_files:
             dictionary with paths of slurm out/err files for active jobs
     """
 
@@ -99,7 +97,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             settings = Inject(get_settings)
             script_dir = settings.FRACTAL_RUNNER_WORKING_BASE_DIR
         self.script_dir: Path = script_dir  # type: ignore
-        self.map_jobid_to_slurm_out_err: dict = {}
+        self.map_jobid_to_slurm_files: dict = {}
 
         # Set the attribute slurm_poll_interval for self.wait_thread (see
         # cfut.SlurmWaitThread)
@@ -113,7 +111,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         Given a job ID as returned by _start, perform any necessary
         cleanup after the job has finished.
         """
-        self.map_jobid_to_slurm_out_err.pop(jobid)
+        self.map_jobid_to_slurm_files.pop(jobid)
 
     def get_stdout_filename(
         self, arg: str = "%j", prefix: Optional[str] = None
@@ -359,20 +357,16 @@ class FractalSlurmExecutor(SlurmExecutor):
         # Submit job to SLURM, and get jobid
         jobid = self._start(job, additional_setup_lines)
 
-        # Add the SLURM out/err paths to map_jobid_to_slurm_out_err, aftering
-        # replacing the %j placeholder with jobid
+        # Add the SLURM script/out/err paths to map_jobid_to_slurm_files,
+        # after replacing the %j placeholder with jobid when needed
+        slurm_script_file = job.slurm_script.as_posix()
         slurm_stdout_file = job.stdout.as_posix().replace("%j", str(jobid))
         slurm_stderr_file = job.stderr.as_posix().replace("%j", str(jobid))
-        slurm_script_file = job.slurm_script.as_posix()
-        self.map_jobid_to_slurm_out_err[jobid] = (
+        self.map_jobid_to_slurm_files[jobid] = (
             slurm_script_file,
             slurm_stdout_file,
             slurm_stderr_file,
         )
-        # logging.warning(
-        #    f"[map_jobid_to_slurm_out_err] STORE {jobid} -> "
-        #    f"({slurm_stdout_file}, {slurm_stderr_file})"
-        # )
 
         # Thread will wait for it to finish.
         self.wait_thread.wait(job.slurm_output.as_posix(), jobid)
@@ -392,10 +386,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         raised in the main thread) is to use fut.set_exception().
         """
 
-        import logging
-
-        logging.basicConfig(format="%(asctime)s; %(levelname)s; %(message)s")
-        logging.warning(f"_completion {jobid=}")
         with self.jobs_lock:
             fut, job = self.jobs.pop(jobid)
             if not self.jobs:
@@ -403,22 +393,13 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         in_path = self.get_in_filename(job.workerid)
         out_path = self.get_out_filename(job.workerid)
-        logging.warning(f"_completion {out_path=}")
-        logging.warning(f"_completion {self.map_jobid_to_slurm_out_err=}")
-        logging.warning(f"_completion {jobid=}")
-        logging.warning(f"_completion {type(jobid)=}")
 
-        # Extract SLURM out/err file paths from map_jobid_to_slurm_out_err
-        logging.warning(f"[map_jobid_to_slurm_out_err] Try GET {jobid}")
+        # Extract SLURM file paths from map_jobid_to_slurm_files
         (
             slurm_script_file,
             slurm_stdout_file,
             slurm_stderr_file,
-        ) = self.map_jobid_to_slurm_out_err[jobid]
-        # logging.warning(
-        #    f"[map_jobid_to_slurm_out_err] GET {jobid} "
-        #    f"({slurm_stdout_file}, {slurm_stderr_file})"
-        # )
+        ) = self.map_jobid_to_slurm_files[jobid]
 
         # Proceed normally if the output pickle file exists, otherwise set an
         # appropriate TaskExecutionError or JobExecutionError exception
@@ -427,7 +408,6 @@ class FractalSlurmExecutor(SlurmExecutor):
             with out_path.open("rb") as f:
                 outdata = f.read()
             success, result = cloudpickle.loads(outdata)
-            logging.warning(f"_completion {success=}")
             # Update the future (with set_result or set_exception)
             if success:
                 fut.set_result(result)
@@ -439,8 +419,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             # Remove output pickle file
             out_path.unlink()
         else:
-            logging.warning(f"_completion {out_path=} missing")
-            # Load SLURM out/err files
+            # Read SLURM files
             slurm_script_content = _read_slurm_file(slurm_script_file)
             slurm_stdout_content = _read_slurm_file(slurm_stdout_file)
             slurm_stderr_content = _read_slurm_file(slurm_stderr_file)
@@ -450,14 +429,12 @@ class FractalSlurmExecutor(SlurmExecutor):
                 f"SLURM stdout:\n{slurm_stdout_content}\n"
                 f"SLURM stderr:\n{slurm_stderr_content}"
             )
-            logging.warning(error_message)
             exc = JobExecutionError(error_message)
             fut.set_exception(exc)
 
         # Clean up communication files.
         in_path.unlink()
 
-        logging.warning(f"_completion cleanup {jobid=}")
         self._cleanup(jobid)
 
     def _start(
