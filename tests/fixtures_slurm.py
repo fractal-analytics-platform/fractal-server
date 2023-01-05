@@ -1,5 +1,6 @@
 import json
 import shlex
+import subprocess
 from pathlib import Path
 from typing import List
 
@@ -170,3 +171,42 @@ def monkey_slurm(monkeypatch, docker_compose_project_name, docker_services):
 
     monkeypatch.setattr(subprocess, "Popen", _MockPopen)
     return PopenLog
+
+
+def _current_squeue():
+    res = subprocess.run(["squeue"], capture_output=True, encoding="utf-8")
+    assert res.returncode == 0
+    assert not res.stderr
+    return res.stdout
+
+
+def scancel_all_jobs_of_a_slurm_user(
+    slurm_user: str, show_squeue: bool = True
+):
+    """
+    Call scancel for all jobs of a given SLURM user
+    """
+    if show_squeue:
+        debug(_current_squeue())
+    res = subprocess.run(
+        [
+            "sudo",
+            "--non-interactive",
+            "-u",
+            slurm_user,
+            "scancel",
+            "-u",
+            slurm_user,
+            "-v",
+        ],
+        capture_output=True,
+        encoding="utf-8",
+    )
+    assert res.returncode == 0
+    if res.stdout:
+        debug(res.stdout)
+    if res.stderr:
+        debug(res.stderr)
+
+    if show_squeue:
+        debug(_current_squeue())
