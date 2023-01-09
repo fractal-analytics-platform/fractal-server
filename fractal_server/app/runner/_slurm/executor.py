@@ -10,11 +10,10 @@
 #
 # Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
 # University of Zurich
-import logging
-import os
 import shlex
 import subprocess  # nosec
 import sys
+import time
 from concurrent import futures
 from pathlib import Path
 from typing import Any
@@ -47,32 +46,6 @@ class SlurmJob:
 
     def __init__(self):
         self.workerid = random_string()
-
-
-def _read_slurm_file(filepath: str) -> str:
-    """
-    Read a slurm {script,stdout,stderr} file, and handle the missing-file case
-    """
-    if os.path.exists(filepath):
-
-        # DEBUGGING BLOCK # FIXME REMOVE
-        cmd = ["cat", filepath]
-        logging.warning(f"{cmd=}")
-        res = subprocess.run(  # nosec
-            cmd, capture_output=True, check=True, encoding="utf-8"
-        )
-        logging.warning(f"{res.returncode=}")
-        logging.warning(f"{res.stdout=}")
-        logging.warning(f"{res.stderr=}")
-        # END DEBUGGING BLOCK
-
-        with open(filepath, "r") as f:
-            content = f.read()
-            if not content:
-                content = f"Empty file: {filepath}\n"
-    else:
-        content = f"Missing file: {filepath}\n"
-    return content
 
 
 class FractalSlurmExecutor(SlurmExecutor):
@@ -394,6 +367,8 @@ class FractalSlurmExecutor(SlurmExecutor):
         """
         Callback function to be executed whenever a job finishes.
 
+        FIXME: update docstring
+
         Important: This function is executed on a different thread (the
         self.wait_thread one), so that its failures may not be captured by the
         main thread running the FractalSlurmExecutor. A reasonable way to
@@ -406,66 +381,58 @@ class FractalSlurmExecutor(SlurmExecutor):
             if not self.jobs:
                 self.jobs_empty_cond.notify_all()
 
-        # FIXME: remove logging and sleep
-        logging.warning(f"Now call _completion for {jobid=}")
-        import time  # FIXME
-
-        time.sleep(60)  # FIXME
-        logging.warning(
-            f"Now call _completion for {jobid=}, I slept 60 seconds"
-        )
-
         in_path = self.get_in_filename(job.workerid)
         out_path = self.get_out_filename(job.workerid)
 
-        # Extract SLURM file paths from map_jobid_to_slurm_files
-        (
-            slurm_script_file,
-            slurm_stdout_file,
-            slurm_stderr_file,
-        ) = self.map_jobid_to_slurm_files[jobid]
-
-        # Proceed normally if the output pickle file exists, otherwise set an
-        # appropriate TaskExecutionError or JobExecutionError exception
-        if out_path.exists():
-            # Unpickle and load output pickle file
-            with out_path.open("rb") as f:
-                outdata = f.read()
-            success, result = cloudpickle.loads(outdata)
-            # Update the future (with set_result or set_exception)
-            if success:
-                fut.set_result(result)
+        # Handle all uncaught exceptions in this try/except block, in order to
+        # use them in a fut.set_exception().
+        try:
+            # Proceed normally if the output pickle file exists, otherwise set
+            # a JobExecutionError exception
+            if out_path.exists():
+                # Unpickle and load output pickle file
+                with out_path.open("rb") as f:
+                    outdata = f.read()
+                success, result = cloudpickle.loads(outdata)
+                # Update the future (with set_result or set_exception)
+                if success:
+                    fut.set_result(result)
+                else:
+                    exc = TaskExecutionError(
+                        result.tb, *result.args, **result.kwargs
+                    )
+                    fut.set_exception(exc)
+                # Remove output pickle file
+                out_path.unlink()
             else:
-                exc = TaskExecutionError(
-                    result.tb, *result.args, **result.kwargs
+                # Wait FRACTAL_SLURM_KILLWAIT_INTERVAL seconds before
+                # proceeding, so that SLURM has time to complete the job
+                # cancellation
+                settings = Inject(get_settings)
+                settings.FRACTAL_SLURM_KILLWAIT_INTERVAL
+                time.sleep(settings.FRACTAL_SLURM_KILLWAIT_INTERVAL)
+
+                # Extract SLURM file paths from map_jobid_to_slurm_files
+                (
+                    slurm_script_file,
+                    slurm_stdout_file,
+                    slurm_stderr_file,
+                ) = self.map_jobid_to_slurm_files[jobid]
+
+                exc = JobExecutionError(
+                    cmd_file=slurm_script_file,
+                    stdout_file=slurm_stdout_file,
+                    stderr_file=slurm_stderr_file,
                 )
                 fut.set_exception(exc)
-            # Remove output pickle file
-            out_path.unlink()
-        else:
-            # Read SLURM files
-            try:  # FIXME: remove this try/except
-                logging.warning("NOW READING FILES")
-                slurm_script_content = _read_slurm_file(slurm_script_file)
-                slurm_stdout_content = _read_slurm_file(slurm_stdout_file)
-                slurm_stderr_content = _read_slurm_file(slurm_stderr_file)
-                logging.warning(f"{slurm_stderr_file=}")
-                logging.warning(f"{slurm_stderr_content=}")
-                error_message = (
-                    "JobExecutionError\n\n"
-                    f"SLURM submission script:\n{slurm_script_content}\n\n"
-                    f"SLURM stdout:\n{slurm_stdout_content}\n\n"
-                    f"SLURM stderr:\n{slurm_stderr_content}\n"
-                )
-                exc = JobExecutionError(error_message)
-                fut.set_exception(exc)
-            except Exception as e:
-                fut.set_exception(e)
 
-        # Clean up communication files.
-        in_path.unlink()
+            # Clean up input pickle file
+            in_path.unlink()
 
-        self._cleanup(jobid)
+            self._cleanup(jobid)
+
+        except Exception as e:
+            fut.set_exception(e)
 
     def _start(
         self, job: SlurmJob, additional_setup_lines: Optional[List[str]] = None
