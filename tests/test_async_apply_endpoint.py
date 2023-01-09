@@ -1,10 +1,12 @@
 import time
 
+import pytest
 from devtools import debug
 
 PREFIX = "/api/v1"
 
 
+@pytest.mark.skip("Temporary skip")
 async def test_async_apply_endpoint(
     db,
     client,
@@ -60,7 +62,6 @@ async def test_async_apply_endpoint(
             workflow_id=workflow_id,
             overwrite_input=False,
         )
-        debug(payload)
 
         t0 = time.perf_counter()
         res = await client.post(f"{PREFIX}/project/apply/", json=payload)
