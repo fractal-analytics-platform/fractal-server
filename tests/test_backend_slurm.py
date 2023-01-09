@@ -120,6 +120,8 @@ def test_slurm_executor_scancel(
         with FractalSlurmExecutor(
             script_dir=tmp777_path,
             slurm_user=slurm_user,
+            debug=True,
+            keep_logs=True,
         ) as executor:
             fut = executor.submit(wait_and_return)
             debug(fut)
