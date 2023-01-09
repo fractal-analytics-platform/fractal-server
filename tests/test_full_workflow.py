@@ -208,6 +208,57 @@ async def test_full_workflow(
         assert len(no_access) == 0
 
 
+import threading
+import asyncio
+import logging
+
+"""
+class scancel_thread(threading.Thread):
+    def __init__(self, *, slurm_user: str, sleep_time: int):
+        threading.Thread.__init__(self)
+        self.thread_name = f"scancel-{slurm_user}"
+        self.slurm_user = slurm_user
+        self.sleep_time = sleep_time
+
+    async def run(self):
+        logging.warning(f"[scancel_thread] run START {time.perf_counter()=}")
+
+        #loop = asyncio.new_event_loop()
+        #asyncio.set_event_loop(loop)
+        #loop.run_until_complete(
+
+        # Wait a couple of seconds, to let the SLURM job pass from PENDING
+        # to RUNNING
+        await asyncio.sleep(sleep_time)
+
+        # Scancel all jobs of the current SLURM user
+        logging.warning(f"[scancel_thread] run SCANCEL {time.perf_counter()=}")
+        scancel_all_jobs_of_a_slurm_user(
+            slurm_user=slurm_user, show_squeue=True
+            )
+        logging.warning(f"[scancel_thread] run END {time.perf_counter()=}")
+"""
+
+
+async def scancel_function(slurm_user, sleep_time):
+    logging.warning(f"[scancel_thread] run START {time.perf_counter()=}")
+    # Wait a couple of seconds, to let the SLURM job pass from PENDING
+    # to RUNNING
+    time.sleep(sleep_time)
+
+    # Scancel all jobs of the current SLURM user
+    logging.warning(f"[scancel_thread] run SCANCEL {time.perf_counter()=}")
+    scancel_all_jobs_of_a_slurm_user(slurm_user=slurm_user, show_squeue=True)
+    logging.warning(f"[scancel_thread] run END {time.perf_counter()=}")
+
+
+def between_callback(slurm_user, sleep_time):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(scancel_function(slurm_user, sleep_time))
+    loop.close()
+
+
 @pytest.mark.slow
 @pytest.mark.parametrize("backend", backends_available)
 async def test_failing_workflow(
@@ -277,8 +328,7 @@ async def test_failing_workflow(
             f"{PREFIX}/workflow/{workflow_id}/add-task/",
             json=dict(
                 task_id=collect_packages[0].id,
-                args={"raise_error": False, "sleep_time": 20}
-                # task_id=collect_packages[0].id, args={"raise_error": True}
+                args={"raise_error": True},
             ),
         )
         assert res.status_code == 201
@@ -286,7 +336,6 @@ async def test_failing_workflow(
         debug(workflow_task_id)
 
         # EXECUTE WORKFLOW
-
         payload = dict(
             project_id=project_id,
             input_dataset_id=input_dataset_id,
@@ -299,8 +348,6 @@ async def test_failing_workflow(
             f"{PREFIX}/project/apply/",
             json=payload,
         )
-        debug("POST apply")
-        assert False
         job_data = res.json()
         assert res.status_code == 202
         job_id = job_data["id"]
@@ -325,6 +372,20 @@ async def test_failing_workflow(
             debug(res.json())
             assert res.status_code == 200
 
+            # Prepare scancel_thread_instance
+
+            # https://stackoverflow.com/questions/59645272/how-do-i-pass-an-async-function-to-a-thread-target-in-python
+            scancel_sleep_time = 8
+            slurm_user = "test01"
+            logging.warning(f"PRE THREAD START {time.perf_counter()=}")
+
+            _thread = threading.Thread(
+                target=between_callback, args=(slurm_user, scancel_sleep_time)
+            )
+            # _thread = threading.Thread(target=asyncio.run, args=(scancel_function(slurm_user, scancel_sleep_time)))
+            _thread.start()
+            logging.warning(f"POST THREAD START {time.perf_counter()=}")
+
             # Re-submit the modified workflow
             payload = dict(
                 project_id=project_id,
@@ -337,20 +398,9 @@ async def test_failing_workflow(
                 f"{PREFIX}/project/apply/",
                 json=payload,
             )
-            assert False
-
             job_data = res.json()
             assert res.status_code == 202
             job_id = job_data["id"]
-
-            # Wait a couple of seconds, to let the SLURM job pass from PENDING
-            # to RUNNING
-            time.sleep(10)
-
-            # Scancel all jobs of the current SLURM user
-            scancel_all_jobs_of_a_slurm_user(
-                slurm_user="test01", show_squeue=True
-            )
 
             # Query status of the job
             res = await client.get(f"{PREFIX}/job/{job_id}")
@@ -361,3 +411,4 @@ async def test_failing_workflow(
             assert job_status_data["status"] == "failed"
             assert "id: None" not in job_status_data["log"]
             assert "JOB ERROR" in job_status_data["log"]
+            assert "CANCELLED" in job_status_data["log"]
