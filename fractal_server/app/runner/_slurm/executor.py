@@ -94,7 +94,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             slurm_poll_interval = settings.FRACTAL_SLURM_POLL_INTERVAL
         self.wait_thread.slurm_poll_interval = slurm_poll_interval
 
-    def _cleanup(self, jobid):
+    def _cleanup(self, jobid: str):
         """
         Given a job ID as returned by _start, perform any necessary
         cleanup after the job has finished.
@@ -147,7 +147,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         sbatch_script: str,
         submit_pre_command: str = "",
         script_path: Optional[Path] = None,
-    ) -> int:
+    ) -> str:
         """
         Submit a Slurm job script
 
@@ -191,12 +191,12 @@ class FractalSlurmExecutor(SlurmExecutor):
             )
             close_logger(logger)
             raise e
-        return int(jobid)
+        return str(jobid)
 
     def compose_sbatch_script(
         self,
         cmdline: List[str],
-        # NOTE: In SLURM, `%j` is the placeholder for the job_id.
+        # NOTE: In SLURM, `%j` is the placeholder for the job ID.
         outpath: Optional[Path] = None,
         errpath: Optional[Path] = None,
         additional_setup_lines=None,
@@ -348,8 +348,8 @@ class FractalSlurmExecutor(SlurmExecutor):
         # Add the SLURM script/out/err paths to map_jobid_to_slurm_files,
         # after replacing the %j placeholder with jobid when needed
         slurm_script_file = job.slurm_script.as_posix()
-        slurm_stdout_file = job.stdout.as_posix().replace("%j", str(jobid))
-        slurm_stderr_file = job.stderr.as_posix().replace("%j", str(jobid))
+        slurm_stdout_file = job.stdout.as_posix().replace("%j", jobid)
+        slurm_stderr_file = job.stderr.as_posix().replace("%j", jobid)
         self.map_jobid_to_slurm_files[jobid] = (
             slurm_script_file,
             slurm_stdout_file,
@@ -363,7 +363,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             self.jobs[jobid] = (fut, job)
         return fut
 
-    def _completion(self, jobid):
+    def _completion(self, jobid: str):
         """
         Callback function to be executed whenever a job finishes.
 
