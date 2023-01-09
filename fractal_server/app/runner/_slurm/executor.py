@@ -58,7 +58,7 @@ def _read_slurm_file(filepath: str) -> str:
         # DEBUGGING BLOCK # FIXME REMOVE
         cmd = ["cat", filepath]
         logging.warning(f"{cmd=}")
-        res = subprocess.run(
+        res = subprocess.run(  # nosec
             cmd, capture_output=True, check=True, encoding="utf-8"
         )
         logging.warning(f"{res.returncode=}")
@@ -408,9 +408,12 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         # FIXME: remove logging and sleep
         logging.warning(f"Now call _completion for {jobid=}")
-        import time #FIXME
-        time.sleep(60) #FIXME
-        logging.warning(f"Now call _completion for {jobid=}, I slept 60 seconds")
+        import time  # FIXME
+
+        time.sleep(60)  # FIXME
+        logging.warning(
+            f"Now call _completion for {jobid=}, I slept 60 seconds"
+        )
 
         in_path = self.get_in_filename(job.workerid)
         out_path = self.get_out_filename(job.workerid)
