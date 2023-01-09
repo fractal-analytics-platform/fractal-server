@@ -5,7 +5,6 @@ This module includes utilities and routines that are of use to implement
 runner backends but that should also be exposed to the other components of
 `Fractal Server`.
 """
-import asyncio
 import json
 from functools import partial
 from functools import wraps
@@ -189,29 +188,6 @@ def validate_workflow_compatibility(
         else:
             output_path = output_dataset.paths[0]
     return output_path
-
-
-def async_wrap(func: Callable) -> Callable:
-    """
-    Wrap a synchronous callable in an async task
-
-    Ref: [issue #140](https://github.com/fractal-analytics-platform/fractal-server/issues/140)
-    and [this StackOverflow answer](https://stackoverflow.com/q/43241221/19085332).
-
-    Returns:
-        async_wrapper:
-            A factory that allows wrapping a blocking callable within a
-            coroutine.
-    """  # noqa: E501
-
-    @wraps(func)
-    async def async_wrapper(*args, loop=None, executor=None, **kwargs):
-        if loop is None:
-            loop = asyncio.get_event_loop()
-        pfunc = partial(func, *args, **kwargs)
-        return await loop.run_in_executor(executor, pfunc)
-
-    return async_wrapper
 
 
 def write_args_file(*args: Dict[str, Any], path: Path):

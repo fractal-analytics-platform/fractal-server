@@ -32,7 +32,6 @@ from ...models import Workflow
 from ...models import WorkflowTask
 from .._common import get_workflow_file_paths
 from .._common import recursive_task_submission
-from ..common import async_wrap
 from ..common import TaskParameters
 from .executor import FractalSlurmExecutor
 
@@ -267,7 +266,7 @@ def _process_workflow(
     return output_dataset_metadata
 
 
-async def process_workflow(
+def process_workflow(
     *,
     workflow: Workflow,
     input_paths: List[Path],
@@ -283,7 +282,7 @@ async def process_workflow(
 
     Cf. [process_workflow][fractal_server.app.runner._process.process_workflow]
     """
-    output_dataset_metadata = await async_wrap(_process_workflow)(
+    output_dataset_metadata = _process_workflow(
         workflow=workflow,
         input_paths=input_paths,
         output_path=output_path,

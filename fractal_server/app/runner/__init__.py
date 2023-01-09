@@ -73,7 +73,7 @@ def get_process_workflow():
     return process_workflow
 
 
-async def submit_workflow(
+def submit_workflow(
     *,
     workflow: Workflow,
     input_dataset: Dataset,
@@ -148,8 +148,13 @@ async def submit_workflow(
     logger.info(f"job.id: {job.id}")
     logger.info(f"job.working_dir: {WORKFLOW_DIR}")
     logger.info(f'START workflow "{workflow.name}"')
+
+    import time
+
+    time.sleep(20)
+
     try:
-        output_dataset.meta = await process_workflow(
+        output_dataset.meta = process_workflow(
             workflow=workflow,
             input_paths=input_paths,
             output_path=output_path,

@@ -16,7 +16,6 @@ from typing import Optional
 
 from ...models import Workflow
 from .._common import recursive_task_submission
-from ..common import async_wrap
 from ..common import TaskParameters
 
 
@@ -59,7 +58,7 @@ def _process_workflow(
     return output_dataset_metadata
 
 
-async def process_workflow(
+def process_workflow(
     *,
     workflow: Workflow,
     input_paths: List[Path],
@@ -109,7 +108,7 @@ async def process_workflow(
             The updated metadata for the dataset, as returned by the last task
             of the workflow
     """
-    output_dataset_metadata = await async_wrap(_process_workflow)(
+    output_dataset_metadata = _process_workflow(
         workflow=workflow,
         input_paths=input_paths,
         output_path=output_path,

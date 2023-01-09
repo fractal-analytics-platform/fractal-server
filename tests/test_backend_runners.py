@@ -81,7 +81,7 @@ async def test_runner(
         log_file_path=tmp777_path / "job.log",
         level=logging.DEBUG,
     )
-    metadata = await process_workflow(
+    metadata = process_workflow(
         workflow=wf,
         input_paths=[tmp777_path / "*.txt"],
         output_path=tmp777_path / "out.json",

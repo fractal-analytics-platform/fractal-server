@@ -264,10 +264,13 @@ async def test_failing_workflow(
             workflow_id=workflow_id,
             overwrite_input=False,
         )
+        debug("PRE APPLY")
         res = await client.post(
             f"{PREFIX}/project/apply/",
             json=payload,
         )
+        debug("POST APPLY")
+        assert False
         job_data = res.json()
         assert res.status_code == 202
         job_id = job_data["id"]
