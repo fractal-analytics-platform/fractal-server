@@ -170,7 +170,7 @@ async def submit_workflow(
 
     except TaskExecutionError as e:
 
-        logger.info(f'FAILED workflow "{workflow.name}"')
+        logger.info(f'FAILED workflow "{workflow.name}", TaskExecutionError.')
         close_job_logger(logger)
 
         job.status = JobStatusType.FAILED
@@ -184,11 +184,21 @@ async def submit_workflow(
 
     except JobExecutionError as e:
 
-        logger.info(f'FAILED workflow "{workflow.name}"')
+        logger.info(f'FAILED workflow "{workflow.name}", JobExecutionError.')
         close_job_logger(logger)
 
         job.status = JobStatusType.FAILED
-        job.log = f"JOB ERROR:" f"TRACEBACK:\n{str(e)}"
+        error = e.assemble_error()
+        job.log = f"JOB ERROR:\nTRACEBACK:\n{error}"
+        db_sync.merge(job)
+
+    except Exception as e:
+
+        logger.info(f'FAILED workflow "{workflow.name}", unknown error.')
+        close_job_logger(logger)
+
+        job.status = JobStatusType.FAILED
+        job.log = f"UNKNOWN ERROR\nOriginal error: {str(e)}"
         db_sync.merge(job)
 
     finally:
