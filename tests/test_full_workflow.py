@@ -4,6 +4,7 @@ University of Zurich
 
 Original author(s):
 Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
+Tommaso Comparin <tommaso.comparin@exact-lab.it>
 
 This file is part of Fractal and was originally developed by eXact lab S.r.l.
 <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
@@ -11,11 +12,13 @@ Institute for Biomedical Research and Pelkmans Lab from the University of
 Zurich.
 """
 import os
+import time
 from pathlib import Path
 
 import pytest
 from devtools import debug
 
+from .fixtures_slurm import scancel_all_jobs_of_a_slurm_user
 from fractal_server.app.runner import _backends
 
 
@@ -218,6 +221,7 @@ async def test_failing_workflow(
     backend,
     request,
     override_settings_factory,
+    cfut_jobs_finished,
 ):
 
     override_settings_factory(
@@ -272,10 +276,14 @@ async def test_failing_workflow(
         res = await client.post(
             f"{PREFIX}/workflow/{workflow_id}/add-task/",
             json=dict(
-                task_id=collect_packages[0].id, args={"raise_error": True}
+                task_id=collect_packages[0].id,
+                args={"raise_error": False, "sleep_time": 20}
+                # task_id=collect_packages[0].id, args={"raise_error": True}
             ),
         )
         assert res.status_code == 201
+        workflow_task_id = res.json()["id"]
+        debug(workflow_task_id)
 
         # EXECUTE WORKFLOW
 
@@ -286,10 +294,13 @@ async def test_failing_workflow(
             workflow_id=workflow_id,
             overwrite_input=False,
         )
+        debug("PRE apply")
         res = await client.post(
             f"{PREFIX}/project/apply/",
             json=payload,
         )
+        debug("POST apply")
+        assert False
         job_data = res.json()
         assert res.status_code == 202
         job_id = job_data["id"]
@@ -301,3 +312,52 @@ async def test_failing_workflow(
         assert job_status_data["status"] == "failed"
         assert "id: None" not in job_status_data["log"]
         assert "ValueError" in job_status_data["log"]
+        assert "TASK ERROR" in job_status_data["log"]
+
+        # For SLURM backend, a job could also fail with a JobExecutionError
+        if backend == "slurm":
+
+            # Modify the existing WorkflowTask, so that it does not raise an exception
+            res = await client.patch(
+                f"{PREFIX}/workflow/{workflow_id}/edit-task/{workflow_task_id}",
+                json=dict(args={"raise_error": False, "sleep_time": 200}),
+            )
+            debug(res.json())
+            assert res.status_code == 200
+
+            # Re-submit the modified workflow
+            payload = dict(
+                project_id=project_id,
+                input_dataset_id=input_dataset_id,
+                output_dataset_id=output_dataset_id,
+                workflow_id=workflow_id,
+                overwrite_input=False,
+            )
+            res = await client.post(
+                f"{PREFIX}/project/apply/",
+                json=payload,
+            )
+            assert False
+
+            job_data = res.json()
+            assert res.status_code == 202
+            job_id = job_data["id"]
+
+            # Wait a couple of seconds, to let the SLURM job pass from PENDING
+            # to RUNNING
+            time.sleep(10)
+
+            # Scancel all jobs of the current SLURM user
+            scancel_all_jobs_of_a_slurm_user(
+                slurm_user="test01", show_squeue=True
+            )
+
+            # Query status of the job
+            res = await client.get(f"{PREFIX}/job/{job_id}")
+            assert res.status_code == 200
+            job_status_data = res.json()
+            debug(job_status_data)
+            print(job_status_data["log"])
+            assert job_status_data["status"] == "failed"
+            assert "id: None" not in job_status_data["log"]
+            assert "JOB ERROR" in job_status_data["log"]
