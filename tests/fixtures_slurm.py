@@ -3,6 +3,7 @@ import shlex
 import subprocess
 from pathlib import Path
 from typing import List
+from typing import Sequence
 
 import pytest
 from devtools import debug
@@ -66,7 +67,7 @@ def cfut_jobs_finished(monkeypatch):
     import cfut
     import subprocess
 
-    def _jobs_finished(job_ids):
+    def _jobs_finished(job_ids: Sequence[str]):
 
         STATES_FINISHED = {  # https://slurm.schedmd.com/squeue.html#lbAG
             "BOOT_FAIL",
@@ -105,14 +106,16 @@ def cfut_jobs_finished(monkeypatch):
         import logging
 
         logging.basicConfig(format="%(asctime)s; %(levelname)s; %(message)s")
-        logging.warning(id_to_state)
+        logging.warning(f"[_jobs_finished] {id_to_state=}")
         # Finished jobs only stay in squeue for a few mins (configurable). If
         # a job ID isn't there, we'll assume it's finished.
-        return {
+        ret = {
             j
-            for j in job_ids
+            for j in map(str, job_ids)
             if id_to_state.get(j, "COMPLETED") in STATES_FINISHED
         }
+        logging.warning(f"[_jobs_finished] {ret=}")
+        return ret
 
     # Replace the jobs_finished function (from cfut.slurm) with our custom one
     monkeypatch.setattr(cfut.slurm, "jobs_finished", _jobs_finished)
@@ -195,17 +198,25 @@ def scancel_all_jobs_of_a_slurm_user(
     """
     if show_squeue:
         debug(run_squeue())
+
+    import logging
+
+    logging.basicConfig(format="%(asctime)s; %(levelname)s; %(message)s")
+    cmd = [
+        "sudo",
+        "--non-interactive",
+        "-u",
+        slurm_user,
+        "scancel",
+        "-u",
+        slurm_user,
+        "-v",
+    ]
+    logging.warning(
+        f"Now running scancel_all_jobs_of_a_slurm_user with {cmd=}"
+    )
     res = subprocess.run(
-        [
-            "sudo",
-            "--non-interactive",
-            "-u",
-            slurm_user,
-            "scancel",
-            "-u",
-            slurm_user,
-            "-v",
-        ],
+        cmd,
         capture_output=True,
         encoding="utf-8",
     )
@@ -217,3 +228,6 @@ def scancel_all_jobs_of_a_slurm_user(
 
     if show_squeue:
         debug(run_squeue())
+    logging.warning(
+        f"Now completed scancel_all_jobs_of_a_slurm_user with {cmd=}"
+    )
