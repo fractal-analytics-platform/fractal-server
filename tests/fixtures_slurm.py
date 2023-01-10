@@ -236,6 +236,7 @@ def scancel_all_jobs_of_a_slurm_user(
         "-u",
         slurm_user,
         "scancel",
+        "-f",
         "-u",
         slurm_user,
         "-v",
