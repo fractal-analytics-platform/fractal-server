@@ -1,4 +1,5 @@
 import json
+import logging
 import shlex
 import subprocess
 from pathlib import Path
@@ -69,6 +70,17 @@ def cfut_jobs_finished(monkeypatch):
 
     def _jobs_finished(job_ids: Sequence[str]):
 
+        import logging
+
+        logging.warning(f"[_jobs_finished] START {job_ids=}")
+        if job_ids:
+            assert type(list(job_ids)[0]) == str
+        if not job_ids:
+            logging.warning(
+                "[_jobs_finished] NO JOBS TO CHECK, RETURN EMPTY SET"
+            )
+            return set()
+
         STATES_FINISHED = {  # https://slurm.schedmd.com/squeue.html#lbAG
             "BOOT_FAIL",
             "CANCELLED",
@@ -89,7 +101,7 @@ def cfut_jobs_finished(monkeypatch):
                 # The next line is the one that gets changed via this fixture
                 '--format="%i %T"',
                 "--jobs",
-                ",".join([str(j) for j in job_ids]),
+                ",".join([j for j in job_ids]),
                 "--states=all",
             ],
             stdout=subprocess.PIPE,
@@ -103,19 +115,33 @@ def cfut_jobs_finished(monkeypatch):
                 for line in res.stdout.splitlines()
             ]
         )
-        import logging
 
         logging.basicConfig(format="%(asctime)s; %(levelname)s; %(message)s")
-        logging.warning(f"[_jobs_finished] {id_to_state=}")
+        logging.warning(f"[_jobs_finished] FROM SQUEUE: {id_to_state=}")
+
+        finished_jobs = {
+            j for j in job_ids if id_to_state.get(j, None) in STATES_FINISHED
+        }
+        logging.warning(f"[_jobs_finished] FROM SQUEUE {finished_jobs=}")
         # Finished jobs only stay in squeue for a few mins (configurable). If
         # a job ID isn't there, we'll assume it's finished.
-        ret = {
-            j
-            for j in map(str, job_ids)
-            if id_to_state.get(j, "COMPLETED") in STATES_FINISHED
-        }
-        logging.warning(f"[_jobs_finished] {ret=}")
-        return ret
+        for job_id in job_ids:
+            if (
+                job_id not in finished_jobs
+                and job_id not in id_to_state.keys()
+            ):
+                finished_jobs.add(job_id)
+        logging.warning(
+            f"[_jobs_finished] INCLUDING MISSING ONES {finished_jobs=}"
+        )
+
+        # ret = {
+        #    j
+        #    for j in map(str, job_ids)
+        #    if id_to_state.get(j, "COMPLETED") in STATES_FINISHED
+        # }
+        # logging.warning(f"[_jobs_finished] {ret=}")
+        return finished_jobs
 
     # Replace the jobs_finished function (from cfut.slurm) with our custom one
     monkeypatch.setattr(cfut.slurm, "jobs_finished", _jobs_finished)
@@ -135,6 +161,8 @@ def monkey_slurm(monkeypatch, docker_compose_project_name, docker_services):
     OrigPopen = subprocess.Popen
 
     slurm_container = docker_compose_project_name + "_slurm-docker-master_1"
+    logging.warning(f"{docker_compose_project_name=}")
+    logging.warning(f"{slurm_container=}")
 
     docker_services.wait_until_responsive(
         timeout=20.0,
