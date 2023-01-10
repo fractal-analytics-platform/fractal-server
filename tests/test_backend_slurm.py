@@ -93,7 +93,7 @@ def test_slurm_executor(
     """
 
     with FractalSlurmExecutor(
-        script_dir=tmp777_path, slurm_user=slurm_user
+        script_dir=tmp777_path, slurm_user=slurm_user, slurm_poll_interval=4
     ) as executor:
         res = executor.submit(lambda: 42)
     assert res.result() == 42
@@ -122,6 +122,7 @@ def test_slurm_executor_scancel(
             slurm_user=slurm_user,
             debug=True,
             keep_logs=True,
+            slurm_poll_interval=4,
         ) as executor:
             fut = executor.submit(wait_and_return)
             debug(fut)
