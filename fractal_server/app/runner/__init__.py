@@ -33,6 +33,7 @@ from ..models import Workflow
 from ._process import process_workflow as process_process_workflow
 from .common import auto_output_dataset  # noqa: F401
 from .common import close_job_logger
+from .common import JobExecutionError
 from .common import TaskExecutionError
 from .common import validate_workflow_compatibility  # noqa: F401
 
@@ -169,7 +170,7 @@ async def submit_workflow(
 
     except TaskExecutionError as e:
 
-        logger.info(f'FAILED workflow "{workflow.name}"')
+        logger.info(f'FAILED workflow "{workflow.name}", TaskExecutionError.')
         close_job_logger(logger)
 
         job.status = JobStatusType.FAILED
@@ -180,6 +181,26 @@ async def submit_workflow(
             f"TRACEBACK:\n{str(e)}"
         )
         db_sync.merge(job)
+
+    except JobExecutionError as e:
+
+        logger.info(f'FAILED workflow "{workflow.name}", JobExecutionError.')
+        close_job_logger(logger)
+
+        job.status = JobStatusType.FAILED
+        error = e.assemble_error()
+        job.log = f"JOB ERROR:\nTRACEBACK:\n{error}"
+        db_sync.merge(job)
+
+    except Exception as e:
+
+        logger.info(f'FAILED workflow "{workflow.name}", unknown error.')
+        close_job_logger(logger)
+
+        job.status = JobStatusType.FAILED
+        job.log = f"UNKNOWN ERROR\nOriginal error: {str(e)}"
+        db_sync.merge(job)
+
     finally:
         db_sync.commit()
         os.umask(orig_umask)

@@ -22,6 +22,7 @@ from typing import Optional
 
 from ...utils import file_opener
 from ..models import WorkflowTask
+from .common import JobExecutionError
 from .common import TaskExecutionError
 from .common import TaskParameters
 from .common import write_args_file
@@ -115,10 +116,15 @@ def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
     finally:
         fp_stdout.close()
         fp_stderr.close()
-    if result.returncode != 0:
+
+    if result.returncode > 0:
         with stderr.open("r") as fp_stderr:
             err = fp_stderr.read()
         raise TaskExecutionError(err)
+    elif result.returncode < 0:
+        raise JobExecutionError(
+            f"Task failed with returncode={result.returncode}"
+        )
 
 
 def call_single_task(

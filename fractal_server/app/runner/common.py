@@ -7,6 +7,7 @@ runner backends but that should also be exposed to the other components of
 """
 import asyncio
 import json
+import os
 from functools import partial
 from functools import wraps
 from json import JSONEncoder
@@ -59,6 +60,71 @@ class TaskExecutionError(RuntimeError):
         self.workflow_task_id = workflow_task_id
         self.workflow_task_order = workflow_task_order
         self.task_name = task_name
+
+
+class JobExecutionError(RuntimeError):
+    """
+    Forwards any error occurred within the execution of a job
+
+    FIXME: this is specific for some backends
+
+    Attributes:
+        cmd_file:
+            TBD
+        stdout_file:
+            TBD
+        stderr_file:
+            TBD
+    """
+
+    cmd_file: Optional[str] = None
+    stdout_file: Optional[str] = None
+    stderr_file: Optional[str] = None
+
+    def __init__(
+        self,
+        *args,
+        cmd_file: Optional[str] = None,
+        stdout_file: Optional[str] = None,
+        stderr_file: Optional[str] = None,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+        self.cmd_file = cmd_file
+        self.stdout_file = stdout_file
+        self.stderr_file = stderr_file
+
+    def _read_file(self, filepath: str) -> str:
+        if os.path.exists(filepath):
+            with open(filepath, "r") as f:
+                content = f.read()
+                if not content:
+                    content = f"Empty file: {filepath}\n"
+        else:
+            content = f"Missing file: {filepath}\n"
+
+        return f"{filepath}\n{content}"
+
+    def assemble_error(self) -> str:
+        # FIXME: clean up function
+
+        message = ""
+        if self.cmd_file:
+            content = self._read_file(self.cmd_file)
+            message += f"COMMAND:\n{content}\n\n"
+        if self.stdout_file:
+            content = self._read_file(self.stdout_file)
+            message += f"STDOUT:\n{content}\n\n"
+        if self.stderr_file:
+            content = self._read_file(self.stderr_file)
+            message += f"STDERR:\n{content}\n\n"
+
+        if not message:
+            message = str(self)
+
+        message = f"JobExecutionError\n\n{message}"
+
+        return message
 
 
 class TaskParameterEncoder(JSONEncoder):

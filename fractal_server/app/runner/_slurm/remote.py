@@ -16,6 +16,7 @@ import os
 import sys
 from typing import List
 from typing import Optional
+from typing import Type
 
 import cloudpickle
 
@@ -29,7 +30,9 @@ class ExceptionProxy:
     to reconstruct a TaskExecutionError.
     """
 
-    def __init__(self, exc_type: type, tb: List[str], *args, **kwargs):
+    def __init__(
+        self, exc_type: Type[BaseException], tb: List[str], *args, **kwargs
+    ):
         self.exc_type_name: str = exc_type.__name__
         self.tb: List[str] = tb
         self.args = args
