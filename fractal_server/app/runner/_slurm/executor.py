@@ -422,7 +422,6 @@ class FractalSlurmExecutor(SlurmExecutor):
                 # FIXME: make it clear that result can also be an
                 # ExceptionProxy
                 success, result = cloudpickle.loads(outdata)
-                return
                 if success:
                     fut.set_result(result)
                 else:
