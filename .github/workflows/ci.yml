@@ -55,7 +55,9 @@ jobs:
         run: poetry install --with dev --no-interaction -E slurm
 
       - name: Test with pytest
-        run: poetry run coverage run -m pytest --log-cli-level warning
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: poetry run coverage run -m pytest --basetemp /tmp/tmp-pytest-${PYTHON_VERSION} --log-cli-level warning
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
