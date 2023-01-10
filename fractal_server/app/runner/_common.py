@@ -8,7 +8,6 @@ subsystem.
 import json
 import logging
 import subprocess  # nosec
-import sys
 from concurrent.futures import Executor
 from concurrent.futures import Future
 from functools import lru_cache
@@ -23,6 +22,7 @@ from typing import Optional
 
 from ...utils import file_opener
 from ..models import WorkflowTask
+from .common import JobExecutionError
 from .common import TaskExecutionError
 from .common import TaskParameters
 from .common import write_args_file
@@ -103,10 +103,6 @@ def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
     """
     Call command and return stdout, stderr, retcode
     """
-    import logging
-
-    logging.error("[_call_command_wrapper] START")
-    logging.error(f"[_call_command_wrapper] {cmd=}")
     fp_stdout = open(stdout, "w", opener=file_opener)
     fp_stderr = open(stderr, "w", opener=file_opener)
     try:
@@ -120,21 +116,6 @@ def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
     finally:
         fp_stdout.close()
         fp_stderr.close()
-    logging.error("[_call_command_wrapper] end of subprocess")
-    logging.error(f"[_call_command_wrapper] {result.returncode=}")
-    with stdout.open("r") as fp_stdout:
-        out = fp_stdout.read()
-        logging.error(f"[_call_command_wrapper] {out=}")
-    with stderr.open("r") as fp_stderr:
-        err = fp_stderr.read()
-        logging.error(f"[_call_command_wrapper] {err=}")
-
-    logging.error(f"[_call_command_wrapper] {result.returncode=}")
-    # logging.error("[_call_command_wrapper] now sleep 10 seconds")
-    # import time
-    #
-    # time.sleep(10)
-    # logging.error("[_call_command_wrapper] now I slept 10 seconds")
 
     if result.returncode > 0:
         with stderr.open("r") as fp_stderr:
@@ -142,7 +123,9 @@ def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
             err += f"\n{result.returncode=}\n"
         raise TaskExecutionError(err)
     elif result.returncode < 0:
-        sys.exit()
+        raise JobExecutionError(
+            f"Task failed with returncode={result.returncode}"
+        )
 
 
 def call_single_task(
