@@ -106,8 +106,9 @@ class JobExecutionError(RuntimeError):
         return f"{filepath}\n{content}"
 
     def assemble_error(self) -> str:
-        message = "JobExecutionError\n\n"
+        # FIXME: clean up function
 
+        message = ""
         if self.cmd_file:
             content = self._read_file(self.cmd_file)
             message += f"COMMAND:\n{content}\n\n"
@@ -117,6 +118,11 @@ class JobExecutionError(RuntimeError):
         if self.stderr_file:
             content = self._read_file(self.stderr_file)
             message += f"STDERR:\n{content}\n\n"
+
+        if not message:
+            message = str(self)
+
+        message = f"JobExecutionError\n\n{message}"
 
         return message
 
