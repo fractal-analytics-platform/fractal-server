@@ -11,7 +11,10 @@ This file is part of Fractal and was originally developed by eXact lab S.r.l.
 Institute for Biomedical Research and Pelkmans Lab from the University of
 Zurich.
 """
+import asyncio
+import logging
 import os
+import threading
 import time
 from pathlib import Path
 
@@ -208,44 +211,11 @@ async def test_full_workflow(
         assert len(no_access) == 0
 
 
-import threading
-import asyncio
-import logging
-
-"""
-class scancel_thread(threading.Thread):
-    def __init__(self, *, slurm_user: str, sleep_time: int):
-        threading.Thread.__init__(self)
-        self.thread_name = f"scancel-{slurm_user}"
-        self.slurm_user = slurm_user
-        self.sleep_time = sleep_time
-
-    async def run(self):
-        logging.warning(f"[scancel_thread] run START {time.perf_counter()=}")
-
-        #loop = asyncio.new_event_loop()
-        #asyncio.set_event_loop(loop)
-        #loop.run_until_complete(
-
-        # Wait a couple of seconds, to let the SLURM job pass from PENDING
-        # to RUNNING
-        await asyncio.sleep(sleep_time)
-
-        # Scancel all jobs of the current SLURM user
-        logging.warning(f"[scancel_thread] run SCANCEL {time.perf_counter()=}")
-        scancel_all_jobs_of_a_slurm_user(
-            slurm_user=slurm_user, show_squeue=True
-            )
-        logging.warning(f"[scancel_thread] run END {time.perf_counter()=}")
-"""
-
-
 async def scancel_function(slurm_user, sleep_time):
     logging.warning(f"[scancel_thread] run START {time.perf_counter()=}")
-    # Wait a couple of seconds, to let the SLURM job pass from PENDING
+    # Wait `scancel_sleep_time` seconds, to let the SLURM job pass from PENDING
     # to RUNNING
     time.sleep(sleep_time)
-
     # Scancel all jobs of the current SLURM user
     logging.warning(f"[scancel_thread] run SCANCEL {time.perf_counter()=}")
     scancel_all_jobs_of_a_slurm_user(slurm_user=slurm_user, show_squeue=True)
@@ -253,6 +223,7 @@ async def scancel_function(slurm_user, sleep_time):
 
 
 def between_callback(slurm_user, sleep_time):
+    # FIXME: rename
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(scancel_function(slurm_user, sleep_time))
@@ -364,25 +335,27 @@ async def test_failing_workflow(
         # For SLURM backend, a job could also fail with a JobExecutionError
         if backend == "slurm":
 
-            # Modify the existing WorkflowTask, so that it does not raise an exception
+            # Modify the existing WorkflowTask, so that it does not raise an
+            # exception
             res = await client.patch(
-                f"{PREFIX}/workflow/{workflow_id}/edit-task/{workflow_task_id}",
+                (
+                    f"{PREFIX}/workflow/{workflow_id}/"
+                    f"edit-task/{workflow_task_id}"
+                ),
                 json=dict(args={"raise_error": False, "sleep_time": 200}),
             )
             debug(res.json())
             assert res.status_code == 200
 
             # Prepare scancel_thread_instance
-
-            # https://stackoverflow.com/questions/59645272/how-do-i-pass-an-async-function-to-a-thread-target-in-python
-            scancel_sleep_time = 8
+            # https://stackoverflow.com/a/59645689/19085332
+            scancel_sleep_time = 12
             slurm_user = "test01"
             logging.warning(f"PRE THREAD START {time.perf_counter()=}")
 
             _thread = threading.Thread(
                 target=between_callback, args=(slurm_user, scancel_sleep_time)
             )
-            # _thread = threading.Thread(target=asyncio.run, args=(scancel_function(slurm_user, scancel_sleep_time)))
             _thread.start()
             logging.warning(f"POST THREAD START {time.perf_counter()=}")
 
