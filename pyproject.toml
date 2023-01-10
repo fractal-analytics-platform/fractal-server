@@ -37,18 +37,18 @@ gunicorn = ["gunicorn"]
 
 [tool.poetry.group.dev.dependencies]
 asgi-lifespan = "^1.0.1"
-pytest = "^7.1.2"
-httpx = "^0.23.0"
+pytest = ">=7.2"
+httpx = ">=0.23.0"
 devtools = "^0.8.0"
-pytest-asyncio = "^0.18.3"
+pytest-asyncio = ">=0.19"
 bumpver = "^2022.1116"
 Pillow = "^9.1.1"
-pytest-mock = "^3.8.1"
+pytest-mock = ">=3.8.1"
 pre-commit = "^2.19.0"
 coverage = {extras = ["toml"], version = "^6.4.4"}
 mypy = "^0.982"
-pytest-subprocess = "^1.4.2"
-pytest-docker = {extras = ["docker-compose-v1"], version = "^1.0.1"}
+pytest-subprocess = ">=1.4.2"
+pytest-docker = {extras = ["docker-compose-v1"], version = ">=1.0.1"}
 
 [tool.poetry.group.doc.dependencies]
 mkdocs = "^1.4.2"
