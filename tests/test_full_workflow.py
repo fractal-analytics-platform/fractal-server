@@ -39,7 +39,6 @@ async def add_dummy_workflows(backend, client, project_id):
     workflow has ID i. In this way, the workflow folders for each one of the
     test (with a specific backend) will have different names.
     """
-
     num_empty_workflows = backends_available.index(backend)
     for ind in range(num_empty_workflows):
         _ = await client.post(
@@ -249,7 +248,8 @@ async def test_failing_workflow_TaskExecutionError(
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=backend,
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
-        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
+        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path
+        / "artifacts-test_failing_workflow_TaskExecutionError",
     )
 
     debug(f"Testing with {backend=}")
@@ -352,7 +352,8 @@ async def test_failing_workflow_JobExecutionError(
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND="slurm",
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
-        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
+        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path
+        / "artifacts-test_failing_workflow_JobExecutionError",
     )
 
     async with MockCurrentUser(persist=True) as user:
@@ -383,7 +384,6 @@ async def test_failing_workflow_JobExecutionError(
         assert res.status_code == 201
 
         # CREATE WORKFLOW
-        await add_dummy_workflows("slurm", client, project_id)
         res = await client.post(
             f"{PREFIX}/workflow/",
             json=dict(name="test workflow", project_id=project.id),
