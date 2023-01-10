@@ -8,6 +8,7 @@ subsystem.
 import json
 import logging
 import subprocess  # nosec
+import sys
 from concurrent.futures import Executor
 from concurrent.futures import Future
 from functools import lru_cache
@@ -135,11 +136,13 @@ def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
     # time.sleep(10)
     # logging.error("[_call_command_wrapper] now I slept 10 seconds")
 
-    if result.returncode != 0:
+    if result.returncode > 0:
         with stderr.open("r") as fp_stderr:
             err = fp_stderr.read()
             err += f"\n{result.returncode=}\n"
         raise TaskExecutionError(err)
+    elif result.returncode < 0:
+        sys.exit()
 
 
 def call_single_task(
