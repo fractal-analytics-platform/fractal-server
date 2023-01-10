@@ -102,6 +102,7 @@ def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
     """
     Call command and return stdout, stderr, retcode
     """
+    logging.error("[_call_command_wrapper] START")
     fp_stdout = open(stdout, "w", opener=file_opener)
     fp_stderr = open(stderr, "w", opener=file_opener)
     try:
@@ -115,6 +116,15 @@ def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
     finally:
         fp_stdout.close()
         fp_stderr.close()
+    logging.error("[_call_command_wrapper] end of subprocess")
+    logging.error(f"[_call_command_wrapper] {result.returncode=}")
+    with stdout.open("r") as fp_stdout:
+        out = fp_stdout.read()
+        logging.error(f"[_call_command_wrapper] {out=}")
+    with stderr.open("r") as fp_stderr:
+        err = fp_stderr.read()
+        logging.error(f"[_call_command_wrapper] {err=}")
+
     if result.returncode != 0:
         with stderr.open("r") as fp_stderr:
             err = fp_stderr.read()
