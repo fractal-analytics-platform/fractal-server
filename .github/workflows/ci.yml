@@ -47,17 +47,15 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: "poetry"
 
-      #- name: Run pre-commit
-      #  if: ${{ matrix.python-version == '3.10' }}
-      #  uses: pre-commit/action@v3.0.0
+      - name: Run pre-commit
+        if: ${{ matrix.python-version == '3.10' }}
+        uses: pre-commit/action@v3.0.0
 
       - name: Install dependencies
         run: poetry install --with dev --no-interaction -E slurm
 
       - name: Test with pytest
-        env:
-          PYTHON_VERSION: ${{ matrix.python-version }}
-        run: poetry run coverage run -m pytest --basetemp /tmp/tmp-pytest-${PYTHON_VERSION} --log-cli-level warning tests/test_full_workflow.py::test_failing_workflow_JobExecutionError
+        run: poetry run coverage run -m pytest
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
