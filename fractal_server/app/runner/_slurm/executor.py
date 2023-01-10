@@ -432,11 +432,11 @@ class FractalSlurmExecutor(SlurmExecutor):
                         fut.set_exception(exc)
                     elif result.exc_type_name == "JobExecutionError":
                         job_exc = self._prepare_JobExecutionError(jobid)
-                        fut.set_exception(job_exc, jobid)
+                        fut.set_exception(job_exc)
                 out_path.unlink()
             else:
                 job_exc = self._prepare_JobExecutionError(jobid)
-                fut.set_exception(job_exc, jobid)
+                fut.set_exception(job_exc)
             # Clean up input pickle file
             in_path.unlink()
             self._cleanup(jobid)
