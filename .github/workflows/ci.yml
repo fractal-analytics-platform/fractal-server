@@ -52,7 +52,7 @@ jobs:
       #  uses: pre-commit/action@v3.0.0
 
       - name: Install dependencies
-        run: poetry install --with dev --no-interaction --all-extras
+        run: poetry install --with dev --no-interaction -E slurm
 
       - name: Test with pytest
         run: poetry run coverage run -m pytest
