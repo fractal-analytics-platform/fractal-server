@@ -131,7 +131,7 @@ def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
     if result.returncode != 0:
         with stderr.open("r") as fp_stderr:
             err = fp_stderr.read()
-            err += f"\n{result.retcode=}\n"
+            err += f"\n{result.returncode=}\n"
         raise TaskExecutionError(err)
 
 
