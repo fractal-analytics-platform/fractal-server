@@ -64,6 +64,7 @@ async def test_full_workflow(
     backend,
     request,
     override_settings_factory,
+    cfut_jobs_finished,
 ):
 
     override_settings_factory(
