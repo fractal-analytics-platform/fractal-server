@@ -363,17 +363,21 @@ class FractalSlurmExecutor(SlurmExecutor):
             self.jobs[jobid] = (fut, job)
         return fut
 
-    def _completion(self, jobid: str):
+    def _completion(self, jobid: str) -> None:
         """
         Callback function to be executed whenever a job finishes.
 
-        FIXME: update docstring
+        This function is executed by self.wait_thread (triggered by either
+        finding an existing output pickle file `out_path` or finding that the
+        SLURM job is over). Since this takes place on a different thread,
+        failures may not be captured by the main thread running the
+        FractalSlurmExecutor. For this reason we use a broad try/except block,
+        so that exceptions that are not treated by us will still be reported to
+        the main thread via `fut.set_exception()`.
 
-        Important: This function is executed on a different thread (the
-        self.wait_thread one), so that its failures may not be captured by the
-        main thread running the FractalSlurmExecutor. A reasonable way to
-        handle an exception in this function (such that this exception is then
-        raised in the main thread) is to use fut.set_exception().
+        Arguments:
+            jobid:
+                ID of the SLURM job
         """
 
         with self.jobs_lock:
@@ -381,20 +385,16 @@ class FractalSlurmExecutor(SlurmExecutor):
             if not self.jobs:
                 self.jobs_empty_cond.notify_all()
 
+        # Names of the input/output pickle files
         in_path = self.get_in_filename(job.workerid)
         out_path = self.get_out_filename(job.workerid)
 
-        # Handle all uncaught exceptions in this try/except block, in order to
-        # use them in a fut.set_exception().
+        # Handle all uncaught exceptions in this broad try/except block
         try:
-            # Proceed normally if the output pickle file exists, otherwise set
-            # a JobExecutionError exception
             if out_path.exists():
-                # Unpickle and load output pickle file
                 with out_path.open("rb") as f:
                     outdata = f.read()
                 success, result = cloudpickle.loads(outdata)
-                # Update the future (with set_result or set_exception)
                 if success:
                     fut.set_result(result)
                 else:
@@ -402,7 +402,6 @@ class FractalSlurmExecutor(SlurmExecutor):
                         result.tb, *result.args, **result.kwargs
                     )
                     fut.set_exception(exc)
-                # Remove output pickle file
                 out_path.unlink()
             else:
                 # Wait FRACTAL_SLURM_KILLWAIT_INTERVAL seconds before
@@ -411,32 +410,28 @@ class FractalSlurmExecutor(SlurmExecutor):
                 settings = Inject(get_settings)
                 settings.FRACTAL_SLURM_KILLWAIT_INTERVAL
                 time.sleep(settings.FRACTAL_SLURM_KILLWAIT_INTERVAL)
-
                 # Extract SLURM file paths from map_jobid_to_slurm_files
                 (
                     slurm_script_file,
                     slurm_stdout_file,
                     slurm_stderr_file,
                 ) = self.map_jobid_to_slurm_files[jobid]
-
-                exc = JobExecutionError(
+                # Construct and set JobExecutionError exception
+                job_exc = JobExecutionError(
                     cmd_file=slurm_script_file,
                     stdout_file=slurm_stdout_file,
                     stderr_file=slurm_stderr_file,
                 )
-                fut.set_exception(exc)
-
+                fut.set_exception(job_exc)
             # Clean up input pickle file
             in_path.unlink()
-
             self._cleanup(jobid)
-
         except Exception as e:
             fut.set_exception(e)
 
     def _start(
         self, job: SlurmJob, additional_setup_lines: Optional[List[str]] = None
-    ) -> int:
+    ) -> str:
         """
         Submit function for execution on a SLURM cluster
         """
