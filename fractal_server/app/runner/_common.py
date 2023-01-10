@@ -102,6 +102,8 @@ def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
     """
     Call command and return stdout, stderr, retcode
     """
+    import logging
+
     logging.error("[_call_command_wrapper] START")
     logging.error(f"[_call_command_wrapper] {cmd=}")
     fp_stdout = open(stdout, "w", opener=file_opener)
