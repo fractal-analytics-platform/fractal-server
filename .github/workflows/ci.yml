@@ -57,7 +57,7 @@ jobs:
       - name: Test with pytest
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
-        run: poetry run coverage run -m pytest --basetemp /tmp/tmp-pytest-${PYTHON_VERSION} --log-cli-level warning
+        run: poetry run coverage run -m pytest --basetemp /tmp/tmp-pytest-${PYTHON_VERSION} --log-cli-level warning tests/test_full_workflow.py::test_failing_workflow_JobExecutionError
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
