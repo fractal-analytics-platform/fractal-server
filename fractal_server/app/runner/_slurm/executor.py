@@ -222,7 +222,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         cmd = [
             shlex.join(["srun", *cmdline]),
-            f"chmod 777 {outpath.parent / '*'}",
+            f"chmod -f 777 {outpath.parent / '*'}",
         ]
 
         script_lines = ["#!/bin/sh"] + sbatch_lines + non_sbatch_lines + cmd
