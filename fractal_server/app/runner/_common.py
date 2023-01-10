@@ -128,6 +128,13 @@ def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
         err = fp_stderr.read()
         logging.error(f"[_call_command_wrapper] {err=}")
 
+    logging.error(f"[_call_command_wrapper] {result.returncode=}")
+    logging.error("[_call_command_wrapper] now sleep 10 seconds")
+    import time
+
+    time.sleep(10)
+    logging.error("[_call_command_wrapper] now I slept 10 seconds")
+
     if result.returncode != 0:
         with stderr.open("r") as fp_stderr:
             err = fp_stderr.read()
