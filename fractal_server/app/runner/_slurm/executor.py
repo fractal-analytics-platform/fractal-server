@@ -363,6 +363,31 @@ class FractalSlurmExecutor(SlurmExecutor):
             self.jobs[jobid] = (fut, job)
         return fut
 
+    def _prepare_JobExecutionError(self, jobid: str) -> JobExecutionError:
+        """
+        FIXME add docstring
+        """
+
+        # Wait FRACTAL_SLURM_KILLWAIT_INTERVAL seconds before
+        # proceeding, so that SLURM has time to complete the job
+        # cancellation
+        settings = Inject(get_settings)
+        settings.FRACTAL_SLURM_KILLWAIT_INTERVAL
+        time.sleep(settings.FRACTAL_SLURM_KILLWAIT_INTERVAL)
+        # Extract SLURM file paths from map_jobid_to_slurm_files
+        (
+            slurm_script_file,
+            slurm_stdout_file,
+            slurm_stderr_file,
+        ) = self.map_jobid_to_slurm_files[jobid]
+        # Construct and set JobExecutionError exception
+        job_exc = JobExecutionError(
+            cmd_file=slurm_script_file,
+            stdout_file=slurm_stdout_file,
+            stderr_file=slurm_stderr_file,
+        )
+        return job_exc
+
     def _completion(self, jobid: str) -> None:
         """
         Callback function to be executed whenever a job finishes.
@@ -394,35 +419,25 @@ class FractalSlurmExecutor(SlurmExecutor):
             if out_path.exists():
                 with out_path.open("rb") as f:
                     outdata = f.read()
+                # FIXME: make it clear that result can also be an
+                # ExceptionProxy
                 success, result = cloudpickle.loads(outdata)
+                return
                 if success:
                     fut.set_result(result)
                 else:
-                    exc = TaskExecutionError(
-                        result.tb, *result.args, **result.kwargs
-                    )
-                    fut.set_exception(exc)
+                    if result.exc_type_name == "TaskExecutionError":
+                        exc = TaskExecutionError(
+                            result.tb, *result.args, **result.kwargs
+                        )
+                        fut.set_exception(exc)
+                    elif result.exc_type_name == "JobExecutionError":
+                        job_exc = self._prepare_JobExecutionError()
+                        fut.set_exception(job_exc, jobid)
                 out_path.unlink()
             else:
-                # Wait FRACTAL_SLURM_KILLWAIT_INTERVAL seconds before
-                # proceeding, so that SLURM has time to complete the job
-                # cancellation
-                settings = Inject(get_settings)
-                settings.FRACTAL_SLURM_KILLWAIT_INTERVAL
-                time.sleep(settings.FRACTAL_SLURM_KILLWAIT_INTERVAL)
-                # Extract SLURM file paths from map_jobid_to_slurm_files
-                (
-                    slurm_script_file,
-                    slurm_stdout_file,
-                    slurm_stderr_file,
-                ) = self.map_jobid_to_slurm_files[jobid]
-                # Construct and set JobExecutionError exception
-                job_exc = JobExecutionError(
-                    cmd_file=slurm_script_file,
-                    stdout_file=slurm_stdout_file,
-                    stderr_file=slurm_stderr_file,
-                )
-                fut.set_exception(job_exc)
+                job_exc = self._prepare_JobExecutionError()
+                fut.set_exception(job_exc, jobid)
             # Clean up input pickle file
             in_path.unlink()
             self._cleanup(jobid)
