@@ -211,25 +211,6 @@ async def test_full_workflow(
         assert len(no_access) == 0
 
 
-async def scancel_function(slurm_user, sleep_time):
-    logging.warning(f"[scancel_thread] run START {time.perf_counter()=}")
-    # Wait `scancel_sleep_time` seconds, to let the SLURM job pass from PENDING
-    # to RUNNING
-    time.sleep(sleep_time)
-    # Scancel all jobs of the current SLURM user
-    logging.warning(f"[scancel_thread] run SCANCEL {time.perf_counter()=}")
-    scancel_all_jobs_of_a_slurm_user(slurm_user=slurm_user, show_squeue=True)
-    logging.warning(f"[scancel_thread] run END {time.perf_counter()=}")
-
-
-def between_callback(slurm_user, sleep_time):
-    # FIXME: rename
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(scancel_function(slurm_user, sleep_time))
-    loop.close()
-
-
 @pytest.mark.slow
 @pytest.mark.parametrize("backend", backends_available)
 async def test_failing_workflow_TaskExecutionError(
@@ -334,6 +315,28 @@ async def test_failing_workflow_TaskExecutionError(
         assert "TASK ERROR" in job_status_data["log"]
 
 
+async def _auxiliary_scancel(slurm_user, sleep_time):
+    # The _auxiliary_scancel and _auxiliary_run functions are used as in
+    # https://stackoverflow.com/a/59645689/19085332
+    logging.warning(f"[scancel_thread] run START {time.perf_counter()=}")
+    # Wait `scancel_sleep_time` seconds, to let the SLURM job pass from PENDING
+    # to RUNNING
+    time.sleep(sleep_time)
+    # Scancel all jobs of the current SLURM user
+    logging.warning(f"[scancel_thread] run SCANCEL {time.perf_counter()=}")
+    scancel_all_jobs_of_a_slurm_user(slurm_user=slurm_user, show_squeue=True)
+    logging.warning(f"[scancel_thread] run END {time.perf_counter()=}")
+
+
+def _auxiliary_run(slurm_user, sleep_time):
+    # The _auxiliary_scancel and _auxiliary_run functions are used as in
+    # https://stackoverflow.com/a/59645689/19085332
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(_auxiliary_scancel(slurm_user, sleep_time))
+    loop.close()
+
+
 @pytest.mark.slow
 async def test_failing_workflow_JobExecutionError(
     client,
@@ -412,7 +415,7 @@ async def test_failing_workflow_JobExecutionError(
         logging.warning(f"PRE THREAD START {time.perf_counter()=}")
 
         _thread = threading.Thread(
-            target=between_callback, args=(slurm_user, scancel_sleep_time)
+            target=_auxiliary_run, args=(slurm_user, scancel_sleep_time)
         )
         _thread.start()
         logging.warning(f"POST THREAD START {time.perf_counter()=}")
