@@ -101,7 +101,14 @@ def get_workflow_file_paths(
 
 def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
     """
-    Call command and return stdout, stderr, retcode
+    Call a command and write its stdout and stderr to files
+
+    Raises:
+        TaskExecutionError:
+            If the `subprocess.run` call returns a positive exit code
+        JobExecutionError:
+            If the `subprocess.run` call returns a negative exit code (e.g. due
+            to the subprocess receiving a TERM or KILL signal)
     """
     fp_stdout = open(stdout, "w", opener=file_opener)
     fp_stderr = open(stderr, "w", opener=file_opener)
