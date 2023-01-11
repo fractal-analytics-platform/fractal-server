@@ -156,7 +156,7 @@ def test_slurm_executor_scancel(
     assert "CANCELLED" in e.value.assemble_error()
     # Since we waited for the job to be RUNNING, both the SLURM stdout and
     # stderr files should exist
-    assert "Missing file" not in e.value.assemble_error()
+    assert "missing" not in e.value.assemble_error()
 
 
 def test_unit_slurm_config():
