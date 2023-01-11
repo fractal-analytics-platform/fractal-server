@@ -257,10 +257,10 @@ def _process_workflow(
                 input_paths=input_paths,
                 output_path=output_path,
                 metadata=input_metadata,
-                logger_name=logger_name,
             ),
             workflow_dir=workflow_dir,
             submit_setup_call=set_slurm_config,
+            logger_name=logger_name,
         )
     output_task_pars = output_task_pars_fut.result()
     output_dataset_metadata = output_task_pars.metadata
