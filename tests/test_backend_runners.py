@@ -109,3 +109,8 @@ async def test_runner(
         slurm_job_id = 2  # This may change if you change the test
         assert f"0.slurm.{slurm_job_id}.err" in files
         assert f"0.slurm.{slurm_job_id}.out" in files
+    with (tmp777_path / "0.args.json").open("r") as f:
+        debug(tmp777_path / "0.args.json")
+        args = f.read()
+        debug(args)
+        assert "logger_name" not in args

@@ -232,7 +232,6 @@ def test_sbatch_script_slurm_config(
         input_paths=[tmp_path],
         output_path=tmp_path,
         metadata={"index": ["a", "b"]},
-        logger_name=logger_name,
     )
 
     # Assign a non existent slurm_user so that the sudo call will fail with a
@@ -254,6 +253,7 @@ def test_sbatch_script_slurm_config(
                 task_pars=task_pars,
                 workflow_dir=tmp_path,
                 submit_setup_call=set_slurm_config,
+                logger_name=logger_name,
             )
         except subprocess.CalledProcessError as e:
             assert "unknown user NO_USER" in e.stderr.decode(
