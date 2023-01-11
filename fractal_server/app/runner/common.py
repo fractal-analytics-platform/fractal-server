@@ -174,14 +174,11 @@ class TaskParameters(BaseModel):
         metadata:
             Dataset metadata, as found in the input dataset or as updated by
             the previous task.
-        logger_name:
-            Identifier of the workflow logger.
     """
 
     input_paths: List[Path]
     output_path: Path
     metadata: Dict[str, Any]
-    logger_name: Optional[str] = None
 
     class Config:
         arbitrary_types_allowed = True
