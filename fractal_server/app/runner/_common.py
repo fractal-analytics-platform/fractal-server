@@ -104,11 +104,11 @@ def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
     Call a command and write its stdout and stderr to files
 
     Raises:
-        TaskExecutionError:
-            If the `subprocess.run` call returns a positive exit code
-        JobExecutionError:
-            If the `subprocess.run` call returns a negative exit code (e.g. due
-            to the subprocess receiving a TERM or KILL signal)
+        TaskExecutionError: If the `subprocess.run` call returns a positive
+                            exit code
+        JobExecutionError:  If the `subprocess.run` call returns a negative
+                            exit code (e.g. due to the subprocess receiving a
+                            TERM or KILL signal)
     """
     fp_stdout = open(stdout, "w", opener=file_opener)
     fp_stderr = open(stderr, "w", opener=file_opener)
@@ -167,14 +167,12 @@ def call_single_task(
             being called.
 
     Raises:
-        TaskExecutionError:
-            If the wrapped task raises a task-related error. This function is
-            responsible of adding debugging information to the
-            TaskExecutionError, such as task order and name.
-        JobExecutionError:
-            If the wrapped task raises a job-related error.
-        RuntimeError:
-            If the `workflow_dir` is falsy.
+        TaskExecutionError: If the wrapped task raises a task-related error.
+                            This function is responsible of adding debugging
+                            information to the TaskExecutionError, such as task
+                            order and name.
+        JobExecutionError: If the wrapped task raises a job-related error.
+        RuntimeError: If the `workflow_dir` is falsy.
     """
     if not workflow_dir:
         raise RuntimeError
@@ -256,14 +254,12 @@ def call_single_parallel_task(
             The workflow working directory.
 
     Raises:
-        TaskExecutionError:
-            If the wrapped task raises a task-related error. This function is
-            responsible of adding debugging information to the
-            TaskExecutionError, such as task order and name.
-        JobExecutionError:
-            If the wrapped task raises a job-related error.
-        RuntimeError:
-            If the `workflow_dir` is falsy.
+        TaskExecutionError: If the wrapped task raises a task-related error.
+                            This function is responsible of adding debugging
+                            information to the TaskExecutionError, such as task
+                            order and name.
+        JobExecutionError: If the wrapped task raises a job-related error.
+        RuntimeError: If the `workflow_dir` is falsy.
     """
     if not workflow_dir:
         raise RuntimeError

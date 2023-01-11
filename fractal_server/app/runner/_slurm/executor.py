@@ -61,7 +61,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         script_dir:
             directory for both the cfut/SLURM and fractal-server files and logs
         map_jobid_to_slurm_files:
-            dictionary with paths of slurm out/err files for active jobs
+            dictionary with paths of slurm-related files for active jobs
     """
 
     def __init__(
@@ -220,9 +220,14 @@ class FractalSlurmExecutor(SlurmExecutor):
             if not ln.startswith("#SBATCH")
         ] + [f"export CFUT_DIR={self.script_dir}"]
 
+        # TODO: the chmod command always fails, because not all files belong to
+        # the user (some are owned by fractal). For this reason, the SLURM job
+        # may appear as FAILED at some point (even if the task ran through).
+        # This behavior will change as soon as we change the
+        # ownership/permissions of the workflow folder and log files.
         cmd = [
             shlex.join(["srun", *cmdline]),
-            f"chmod -f 777 {outpath.parent / '*'}",
+            f"chmod 777 {outpath.parent / '*'}",
         ]
 
         script_lines = ["#!/bin/sh"] + sbatch_lines + non_sbatch_lines + cmd
