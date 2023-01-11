@@ -110,12 +110,12 @@ class WorkflowTask(_WorkflowTaskBase, table=True):
                 settings = Inject(get_settings)
                 return settings.FRACTAL_RUNNER_DEFAULT_EXECUTOR
 
-    def assemble_args(self, extra: Dict[str, Any] = None):
+    def assemble_args(self, extra: Dict[str, Any] = None) -> dict:
         """
         Merge of `extra` arguments and `self.arguments`.
 
         Returns
-            full_arsgs (Dict):
+            full_args:
                 A dictionary consisting of the merge of `extra` and
                 self.arguments.
         """
