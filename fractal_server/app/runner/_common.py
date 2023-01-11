@@ -144,26 +144,30 @@ def call_single_task(
 
     Args:
         task:
-            the workflow task to be called. This includes task specific
+            The workflow task to be called. This includes task specific
             arguments via the task.task.arguments attribute.
         task_pars:
-            the parameters required to run the task which are not specific to
+            The parameters required to run the task which are not specific to
             the task, e.g., I/O paths.
         workflow_dir:
-            the directory in which the execution takes place, and where all
+            The directory in which the execution takes place, and where all
             artifacts are written.
 
     Returns:
-        out_task_parameters (TaskParameters):
-            a TaskParameters in which the previous output becomes the input
+        out_task_parameters:
+            A TaskParameters in which the previous output becomes the input
             and where metadata is the metadata dictionary returned by the task
             being called.
 
     Raises:
-        TaskExecutionError: If the wrapped task raises an error. This function
-            is responsible of adding debugging information to the
+        TaskExecutionError:
+            If the wrapped task raises a task-related error. This function is
+            responsible of adding debugging information to the
             TaskExecutionError, such as task order and name.
-        RuntimeError: If the `workflow_dir` is falsy.
+        JobExecutionError:
+            If the wrapped task raises a job-related error.
+        RuntimeError:
+            If the `workflow_dir` is falsy.
     """
     if not workflow_dir:
         raise RuntimeError
@@ -245,10 +249,14 @@ def call_single_parallel_task(
             The workflow working directory.
 
     Raises:
-        TaskExecutionError: If the wrapped task raises an error. This function
-            is responsible of adding debugging information to the
+        TaskExecutionError:
+            If the wrapped task raises a task-related error. This function is
+            responsible of adding debugging information to the
             TaskExecutionError, such as task order and name.
-        RuntimeError: If the `workflow_dir` is falsy.
+        JobExecutionError:
+            If the wrapped task raises a job-related error.
+        RuntimeError:
+            If the `workflow_dir` is falsy.
     """
     if not workflow_dir:
         raise RuntimeError
