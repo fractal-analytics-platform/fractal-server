@@ -7,6 +7,7 @@ runner backends but that should also be exposed to the other components of
 """
 import asyncio
 import json
+import os
 from functools import partial
 from functools import wraps
 from json import JSONEncoder
@@ -28,11 +29,12 @@ from ..models.workflow import Workflow
 
 class TaskExecutionError(RuntimeError):
     """
-    Forwards any error occurred within the execution of a task
+    Forwards errors occurred during the execution of a task
 
     This error wraps and forwards errors occurred during the execution of
-    tasks, together with information that is useful to track down the failing
-    task within a workflow.
+    tasks, when the exit code is larger than 0 (i.e. the error took place
+    within the task). This error also adds information that is useful to track
+    down and debug the failing task within a workflow.
 
     Attributes:
         workflow_task_id:
@@ -61,6 +63,91 @@ class TaskExecutionError(RuntimeError):
         self.task_name = task_name
 
 
+class JobExecutionError(RuntimeError):
+    """
+    Forwards errors in the execution of a task that are due to external factors
+
+    This error wraps and forwards errors occurred during the execution of
+    tasks, but related to external factors like:
+
+    1. A negative exit code (e.g. because the task received a TERM or KILL
+       signal);
+    2. An error on the executor side (e.g. the SLURM executor could not
+       find the pickled file with task output).
+
+    This error also adds information that is useful to track down and debug the
+    failing task within a workflow.
+
+    Attributes:
+        cmd_file:
+            Path to the file of the command that was executed (e.g. a SLURM
+            submission script).
+        stdout_file:
+            Path to the file with the command stdout
+        stderr_file:
+            Path to the file with the command stderr
+    """
+
+    cmd_file: Optional[str] = None
+    stdout_file: Optional[str] = None
+    stderr_file: Optional[str] = None
+
+    def __init__(
+        self,
+        *args,
+        cmd_file: Optional[str] = None,
+        stdout_file: Optional[str] = None,
+        stderr_file: Optional[str] = None,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+        self.cmd_file = cmd_file
+        self.stdout_file = stdout_file
+        self.stderr_file = stderr_file
+
+    def _read_file(self, filepath: str) -> str:
+        """
+        Return the content of a text file, and handle the cases where it is
+        empty or missing
+        """
+        if os.path.exists(filepath):
+            with open(filepath, "r") as f:
+                content = f.read()
+                if content:
+                    return f"Content of {filepath}:\n{content}"
+                else:
+                    return f"File {filepath} is empty\n"
+        else:
+            return f"File {filepath} is missing\n"
+
+    def assemble_error(self) -> str:
+        """
+        Read the files that are specified in attributes, and combine them in an
+        error message.
+        """
+        if self.cmd_file:
+            content = self._read_file(self.cmd_file)
+            cmd_content = f"COMMAND:\n{content}\n\n"
+        else:
+            cmd_content = ""
+        if self.stdout_file:
+            content = self._read_file(self.stdout_file)
+            out_content = f"STDOUT:\n{content}\n\n"
+        else:
+            out_content = ""
+        if self.stderr_file:
+            content = self._read_file(self.stderr_file)
+            err_content = f"STDERR:\n{content}\n\n"
+        else:
+            err_content = ""
+
+        content = f"{cmd_content}{out_content}{err_content}"
+        if not content:
+            content = str(self)
+        message = f"JobExecutionError\n\n{content}"
+        return message
+
+
 class TaskParameterEncoder(JSONEncoder):
     """
     Convenience JSONEncoder that serialises `Path`s as strings
@@ -87,17 +174,11 @@ class TaskParameters(BaseModel):
         metadata:
             Dataset metadata, as found in the input dataset or as updated by
             the previous task.
-        logger_name:
-            Identifier of the workflow logger.
-        slurm_user:
-            User to impersonate to run the workflow.
     """
 
     input_paths: List[Path]
     output_path: Path
     metadata: Dict[str, Any]
-    logger_name: Optional[str] = None
-    slurm_user: Optional[str] = None
 
     class Config:
         arbitrary_types_allowed = True

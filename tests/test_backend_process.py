@@ -61,7 +61,6 @@ def test_call_single_task(tmp_path):
         input_paths=[tmp_path],
         output_path=tmp_path,
         metadata={},
-        logger_name=logger_name,
     )
 
     debug(task)
@@ -102,7 +101,6 @@ def test_recursive_task_submission_step0(tmp_path):
         input_paths=[tmp_path],
         output_path=tmp_path,
         metadata={},
-        logger_name=logger_name,
     )
 
     with ThreadPoolExecutor() as executor:
@@ -111,6 +109,7 @@ def test_recursive_task_submission_step0(tmp_path):
             task_list=task_list,
             task_pars=task_pars,
             workflow_dir=tmp_path,
+            logger_name=logger_name,
         )
         debug(res.result())
         assert res.result().metadata["dummy"] == f"dummy {INDEX}"
@@ -148,7 +147,6 @@ def test_recursive_parallel_task_submission_step0(tmp_path):
         input_paths=[tmp_path],
         output_path=output_path,
         metadata={"index": LIST_INDICES},
-        logger_name=logger_name,
     )
 
     debug(task_list)
@@ -160,6 +158,7 @@ def test_recursive_parallel_task_submission_step0(tmp_path):
             task_list=task_list,
             task_pars=task_pars,
             workflow_dir=tmp_path,
+            logger_name=logger_name,
         )
         debug(res.result())
         assert MOCKPARALLELTASK_NAME in res.result().metadata["history"][0]
@@ -218,7 +217,6 @@ def test_recursive_task_submission_inductive_step(tmp_path):
         input_paths=[tmp_path],
         output_path=tmp_path / "output.json",
         metadata=METADATA_0,
-        logger_name=logger_name,
     )
 
     with ThreadPoolExecutor() as executor:
@@ -227,6 +225,7 @@ def test_recursive_task_submission_inductive_step(tmp_path):
             task_list=task_list,
             task_pars=task_pars,
             workflow_dir=tmp_path,
+            logger_name=logger_name,
         )
     close_job_logger(job_logger)
 
