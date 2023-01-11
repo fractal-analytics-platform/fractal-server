@@ -45,6 +45,8 @@ def docker_compose_file(pytestconfig, testdata_path: Path):
 
 @pytest.fixture(scope="session")
 def slurm_config(override_settings):
+    # NOTE: override_settings also loads all environment variables from
+    # get_patched_settings
     config = {
         "default": dict(partition="main", mem="1024"),
         "low": dict(partition="main", mem="128"),
