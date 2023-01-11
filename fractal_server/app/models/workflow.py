@@ -61,9 +61,12 @@ class WorkflowTask(_WorkflowTaskBase, table=True):
     task: Task = Relationship(sa_relationship_kwargs=dict(lazy="selectin"))
 
     @validator("args")
-    def validate_args(cls, value):
+    def validate_args(cls, value: dict = None):
         """
         Prevent fractal task reserved parameter names from entering args
+
+        Forbidden argument names are `input_paths`, `output_path`, `metadata`,
+        `component`.
         """
         if value is None:
             return
@@ -117,7 +120,7 @@ class WorkflowTask(_WorkflowTaskBase, table=True):
         Returns
             full_args:
                 A dictionary consisting of the merge of `extra` and
-                self.arguments.
+                `self.arguments`.
         """
         full_args = {}
         if extra:

@@ -222,7 +222,6 @@ def call_single_task(
         input_paths=[task_pars.output_path],
         output_path=task_pars.output_path,
         metadata=updated_metadata,
-        logger_name=task_pars.logger_name,
     )
     with open(workflow_dir / METADATA_FILENAME, "w", opener=file_opener) as f:
         json.dump(updated_metadata, f, indent=2)
@@ -360,7 +359,6 @@ def call_parallel_task(
         input_paths=[task_pars_depend.output_path],
         output_path=task_pars_depend.output_path,
         metadata=task_pars_depend.metadata,
-        logger_name=task_pars_depend.logger_name,
     )
 
     with open(workflow_dir / METADATA_FILENAME, "w", opener=file_opener) as f:
@@ -379,6 +377,7 @@ def recursive_task_submission(
     submit_setup_call: Callable[
         [WorkflowTask, TaskParameters, Path], Dict[str, Any]
     ] = lambda task, task_pars, workflow_dir: {},
+    logger_name: str,
 ) -> Future:
     """
     Recursively submit a list of tasks
@@ -409,6 +408,8 @@ def recursive_task_submission(
         submit_setup_call:
             An optional function that computes configuration parameters for
             the executor.
+        logger_name:
+            Name of the logger
 
     Returns:
         this_task_future:
@@ -423,7 +424,7 @@ def recursive_task_submission(
         pseudo_future.set_result(task_pars)
         return pseudo_future
 
-    logger = logging.getLogger(task_pars.logger_name)
+    logger = logging.getLogger(logger_name)
 
     # step n => step n+1 (NOTE: in this recursive call we wait for the end of
     # execution of all dependencies)
@@ -433,6 +434,7 @@ def recursive_task_submission(
         task_pars=task_pars,
         workflow_dir=workflow_dir,
         submit_setup_call=submit_setup_call,
+        logger_name=logger_name,
     )
 
     logger.info(
