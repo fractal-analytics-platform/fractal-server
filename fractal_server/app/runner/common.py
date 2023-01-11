@@ -106,35 +106,45 @@ class JobExecutionError(RuntimeError):
         self.stderr_file = stderr_file
 
     def _read_file(self, filepath: str) -> str:
+        """
+        Return the content of a text file, and handle the cases where it is
+        empty or missing
+        """
         if os.path.exists(filepath):
             with open(filepath, "r") as f:
                 content = f.read()
-                if not content:
-                    content = f"Empty file: {filepath}\n"
+                if content:
+                    return f"Content of {filepath}:\n{content}"
+                else:
+                    return f"File {filepath} is empty\n"
         else:
-            content = f"Missing file: {filepath}\n"
-
-        return f"{filepath}\n{content}"
+            return f"File {filepath} is missing\n"
 
     def assemble_error(self) -> str:
-        # FIXME: clean up function
-
-        message = ""
+        """
+        Read the files that are specified in attributes, and combine them in an
+        error message.
+        """
         if self.cmd_file:
             content = self._read_file(self.cmd_file)
-            message += f"COMMAND:\n{content}\n\n"
+            cmd_content = f"COMMAND:\n{content}\n\n"
+        else:
+            cmd_content = ""
         if self.stdout_file:
             content = self._read_file(self.stdout_file)
-            message += f"STDOUT:\n{content}\n\n"
+            out_content = f"STDOUT:\n{content}\n\n"
+        else:
+            out_content = ""
         if self.stderr_file:
             content = self._read_file(self.stderr_file)
-            message += f"STDERR:\n{content}\n\n"
+            err_content = f"STDERR:\n{content}\n\n"
+        else:
+            err_content = ""
 
-        if not message:
-            message = str(self)
-
-        message = f"JobExecutionError\n\n{message}"
-
+        content = f"{cmd_content}{out_content}{err_content}"
+        if not content:
+            content = str(self)
+        message = f"JobExecutionError\n\n{content}"
         return message
 
 
