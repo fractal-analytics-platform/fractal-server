@@ -72,14 +72,12 @@ def cfut_jobs_finished(monkeypatch):
 
         import logging
 
+        logging.basicConfig(format="%(asctime)s; %(levelname)s; %(message)s")
         logging.warning(f"[_jobs_finished] START {job_ids=}")
+
+        # Note: this check is only useful for debugging
         if job_ids:
             assert type(list(job_ids)[0]) == str
-        if not job_ids:
-            logging.warning(
-                "[_jobs_finished] NO JOBS TO CHECK, RETURN EMPTY SET"
-            )
-            return set()
 
         STATES_FINISHED = {  # https://slurm.schedmd.com/squeue.html#lbAG
             "BOOT_FAIL",
@@ -116,7 +114,6 @@ def cfut_jobs_finished(monkeypatch):
             ]
         )
 
-        logging.basicConfig(format="%(asctime)s; %(levelname)s; %(message)s")
         logging.warning(f"[_jobs_finished] FROM SQUEUE: {id_to_state=}")
 
         finished_jobs = {
@@ -135,12 +132,6 @@ def cfut_jobs_finished(monkeypatch):
             f"[_jobs_finished] INCLUDING MISSING ONES {finished_jobs=}"
         )
 
-        # ret = {
-        #    j
-        #    for j in map(str, job_ids)
-        #    if id_to_state.get(j, "COMPLETED") in STATES_FINISHED
-        # }
-        # logging.warning(f"[_jobs_finished] {ret=}")
         return finished_jobs
 
     # Replace the jobs_finished function (from cfut.slurm) with our custom one
