@@ -22,6 +22,7 @@ from typing import Optional
 
 from ...utils import file_opener
 from ..models import WorkflowTask
+from .common import JobExecutionError
 from .common import TaskExecutionError
 from .common import TaskParameters
 from .common import write_args_file
@@ -100,7 +101,14 @@ def get_workflow_file_paths(
 
 def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
     """
-    Call command and return stdout, stderr, retcode
+    Call a command and write its stdout and stderr to files
+
+    Raises:
+        TaskExecutionError: If the `subprocess.run` call returns a positive
+                            exit code
+        JobExecutionError:  If the `subprocess.run` call returns a negative
+                            exit code (e.g. due to the subprocess receiving a
+                            TERM or KILL signal)
     """
     fp_stdout = open(stdout, "w", opener=file_opener)
     fp_stderr = open(stderr, "w", opener=file_opener)
@@ -115,10 +123,15 @@ def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
     finally:
         fp_stdout.close()
         fp_stderr.close()
-    if result.returncode != 0:
+
+    if result.returncode > 0:
         with stderr.open("r") as fp_stderr:
             err = fp_stderr.read()
         raise TaskExecutionError(err)
+    elif result.returncode < 0:
+        raise JobExecutionError(
+            f"Task failed with returncode={result.returncode}"
+        )
 
 
 def call_single_task(
@@ -138,25 +151,27 @@ def call_single_task(
 
     Args:
         task:
-            the workflow task to be called. This includes task specific
+            The workflow task to be called. This includes task specific
             arguments via the task.task.arguments attribute.
         task_pars:
-            the parameters required to run the task which are not specific to
+            The parameters required to run the task which are not specific to
             the task, e.g., I/O paths.
         workflow_dir:
-            the directory in which the execution takes place, and where all
+            The directory in which the execution takes place, and where all
             artifacts are written.
 
     Returns:
-        out_task_parameters (TaskParameters):
-            a TaskParameters in which the previous output becomes the input
+        out_task_parameters:
+            A TaskParameters in which the previous output becomes the input
             and where metadata is the metadata dictionary returned by the task
             being called.
 
     Raises:
-        TaskExecutionError: If the wrapped task raises an error. This function
-            is responsible of adding debugging information to the
-            TaskExecutionError, such as task order and name.
+        TaskExecutionError: If the wrapped task raises a task-related error.
+                            This function is responsible of adding debugging
+                            information to the TaskExecutionError, such as task
+                            order and name.
+        JobExecutionError: If the wrapped task raises a job-related error.
         RuntimeError: If the `workflow_dir` is falsy.
     """
     if not workflow_dir:
@@ -239,9 +254,11 @@ def call_single_parallel_task(
             The workflow working directory.
 
     Raises:
-        TaskExecutionError: If the wrapped task raises an error. This function
-            is responsible of adding debugging information to the
-            TaskExecutionError, such as task order and name.
+        TaskExecutionError: If the wrapped task raises a task-related error.
+                            This function is responsible of adding debugging
+                            information to the TaskExecutionError, such as task
+                            order and name.
+        JobExecutionError: If the wrapped task raises a job-related error.
         RuntimeError: If the `workflow_dir` is falsy.
     """
     if not workflow_dir:

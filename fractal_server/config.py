@@ -238,6 +238,19 @@ class Settings(BaseSettings):
     not specified, the interpreter that runs the server is used.
     """
 
+    FRACTAL_SLURM_POLL_INTERVAL: Optional[int] = 60
+    """
+    Interval to wait (in seconds) before checking whether unfinished job are
+    still running on SLURM.
+    """
+
+    FRACTAL_SLURM_KILLWAIT_INTERVAL: Optional[int] = 45
+    """
+    Interval to wait when a SLURM job is completed but did not write its output
+    (must be larger than SLURM KillWait timer, to make sure that stdout/stderr
+    files have been written).
+    """
+
     # NOTE: we currently set FRACTAL_PARSL_MONITORING to False, due to
     # https://github.com/fractal-analytics-platform/fractal-server/issues/148
     FRACTAL_PARSL_MONITORING: bool = False

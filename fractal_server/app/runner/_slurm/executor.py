@@ -5,12 +5,15 @@
 #
 # Modified by:
 # Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
+# Tommaso Comparin <tommaso.comparin@exact-lab.it>
+# Marco Franzon <marco.franzon@exact-lab.it>
 #
 # Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
 # University of Zurich
 import shlex
 import subprocess  # nosec
 import sys
+import time
 from concurrent import futures
 from pathlib import Path
 from typing import Any
@@ -27,6 +30,7 @@ from ....syringe import Inject
 from ....utils import close_logger
 from ....utils import file_opener
 from ....utils import set_logger
+from ..common import JobExecutionError
 from ..common import TaskExecutionError
 
 
@@ -45,31 +49,57 @@ class SlurmJob:
 
 
 class FractalSlurmExecutor(SlurmExecutor):
+    """
+    FractalSlurmExecutor (inherits from cfut.SlurmExecutor)
+
+    Attributes:
+        slurm_user:
+            shell username that runs the `sbatch` command
+        common_script_lines:
+            arbitrary script lines that will always be included in the
+            sbatch script
+        script_dir:
+            directory for both the cfut/SLURM and fractal-server files and logs
+        map_jobid_to_slurm_files:
+            dictionary with paths of slurm-related files for active jobs
+    """
+
     def __init__(
         self,
         slurm_user: Optional[str] = None,
         script_dir: Optional[Path] = None,
         common_script_lines: Optional[List[str]] = None,
+        slurm_poll_interval: Optional[int] = None,
         *args,
         **kwargs,
     ):
         """
-        Fractal slurm executor
-
-        Args:
-            slurm_user:
-                shell username that runs the `sbatch` command
-            common_script_lines:
-                arbitrary script lines that will always be included in the
-                sbatch script
+        Init method for FractalSlurmExecutor
         """
+
         super().__init__(*args, **kwargs)
+
         self.slurm_user = slurm_user
         self.common_script_lines = common_script_lines or []
         if not script_dir:
             settings = Inject(get_settings)
             script_dir = settings.FRACTAL_RUNNER_WORKING_BASE_DIR
         self.script_dir: Path = script_dir  # type: ignore
+        self.map_jobid_to_slurm_files: dict = {}
+
+        # Set the attribute slurm_poll_interval for self.wait_thread (see
+        # cfut.SlurmWaitThread)
+        if not slurm_poll_interval:
+            settings = Inject(get_settings)
+            slurm_poll_interval = settings.FRACTAL_SLURM_POLL_INTERVAL
+        self.wait_thread.slurm_poll_interval = slurm_poll_interval
+
+    def _cleanup(self, jobid: str):
+        """
+        Given a job ID as returned by _start, perform any necessary
+        cleanup after the job has finished.
+        """
+        self.map_jobid_to_slurm_files.pop(jobid)
 
     def get_stdout_filename(
         self, arg: str = "%j", prefix: Optional[str] = None
@@ -117,7 +147,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         sbatch_script: str,
         submit_pre_command: str = "",
         script_path: Optional[Path] = None,
-    ) -> int:
+    ) -> str:
         """
         Submit a Slurm job script
 
@@ -161,12 +191,12 @@ class FractalSlurmExecutor(SlurmExecutor):
             )
             close_logger(logger)
             raise e
-        return int(jobid)
+        return str(jobid)
 
     def compose_sbatch_script(
         self,
         cmdline: List[str],
-        # NOTE: In SLURM, `%j` is the placeholder for the job_id.
+        # NOTE: In SLURM, `%j` is the placeholder for the job ID.
         outpath: Optional[Path] = None,
         errpath: Optional[Path] = None,
         additional_setup_lines=None,
@@ -190,6 +220,11 @@ class FractalSlurmExecutor(SlurmExecutor):
             if not ln.startswith("#SBATCH")
         ] + [f"export CFUT_DIR={self.script_dir}"]
 
+        # TODO: the chmod command always fails, because not all files belong to
+        # the user (some are owned by fractal). For this reason, the SLURM job
+        # may appear as FAILED at some point (even if the task ran through).
+        # This behavior will change as soon as we change the
+        # ownership/permissions of the workflow folder and log files.
         cmd = [
             shlex.join(["srun", *cmdline]),
             f"chmod 777 {outpath.parent / '*'}",
@@ -288,8 +323,10 @@ class FractalSlurmExecutor(SlurmExecutor):
         additional_setup_lines: List[str] = None,
         job_file_prefix: Optional[str] = None,
         **kwargs,
-    ):
-        """Submit a job to the pool.
+    ) -> futures.Future:
+        """
+        Submit a job to the pool.
+
         If additional_setup_lines is passed, it overrides the lines given
         when creating the executor.
         """
@@ -302,14 +339,27 @@ class FractalSlurmExecutor(SlurmExecutor):
         job.slurm_script = self.get_slurm_script_filename(
             prefix=job_file_prefix
         )
-
         job.stdout = self.get_stdout_filename(prefix=job_file_prefix)
         job.stderr = self.get_stderr_filename(prefix=job_file_prefix)
 
+        # Dump serialized function+args+kwargs to pickle file
         funcser = cloudpickle.dumps((fun, args, kwargs))
         with open(job.slurm_input, "wb", opener=file_opener) as f:
             f.write(funcser)
+
+        # Submit job to SLURM, and get jobid
         jobid = self._start(job, additional_setup_lines)
+
+        # Add the SLURM script/out/err paths to map_jobid_to_slurm_files,
+        # after replacing the %j placeholder with jobid when needed
+        slurm_script_file = job.slurm_script.as_posix()
+        slurm_stdout_file = job.stdout.as_posix().replace("%j", jobid)
+        slurm_stderr_file = job.stderr.as_posix().replace("%j", jobid)
+        self.map_jobid_to_slurm_files[jobid] = (
+            slurm_script_file,
+            slurm_stdout_file,
+            slurm_stderr_file,
+        )
 
         # Thread will wait for it to finish.
         self.wait_thread.wait(job.slurm_output.as_posix(), jobid)
@@ -318,35 +368,103 @@ class FractalSlurmExecutor(SlurmExecutor):
             self.jobs[jobid] = (fut, job)
         return fut
 
-    def _completion(self, jobid):
-        """Called whenever a job finishes."""
+    def _prepare_JobExecutionError(self, jobid: str) -> JobExecutionError:
+        """
+        Prepare the JobExecutionError for a given job
+
+            1. Wait for `FRACTAL_SLURM_KILLWAIT_INTERVAL` seconds, so that
+               SLURM has time to complete the job cancellation.
+            2. Assign the SLURM-related file names as attributes of the
+               JobExecutionError instance.
+
+        Arguments:
+            jobid:
+                ID of the SLURM job.
+        """
+        # Wait FRACTAL_SLURM_KILLWAIT_INTERVAL seconds
+        settings = Inject(get_settings)
+        settings.FRACTAL_SLURM_KILLWAIT_INTERVAL
+        time.sleep(settings.FRACTAL_SLURM_KILLWAIT_INTERVAL)
+        # Extract SLURM file paths
+        (
+            slurm_script_file,
+            slurm_stdout_file,
+            slurm_stderr_file,
+        ) = self.map_jobid_to_slurm_files[jobid]
+        # Construct JobExecutionError exception
+        job_exc = JobExecutionError(
+            cmd_file=slurm_script_file,
+            stdout_file=slurm_stdout_file,
+            stderr_file=slurm_stderr_file,
+        )
+        return job_exc
+
+    def _completion(self, jobid: str) -> None:
+        """
+        Callback function to be executed whenever a job finishes.
+
+        This function is executed by self.wait_thread (triggered by either
+        finding an existing output pickle file `out_path` or finding that the
+        SLURM job is over). Since this takes place on a different thread,
+        failures may not be captured by the main thread; we use a broad
+        try/except block, so that those exceptions are reported to the main
+        thread via `fut.set_exception(...)`.
+
+        Arguments:
+            jobid:
+                ID of the SLURM job
+        """
+
         with self.jobs_lock:
             fut, job = self.jobs.pop(jobid)
             if not self.jobs:
                 self.jobs_empty_cond.notify_all()
 
-        out_path = self.get_out_filename(job.workerid)
+        # Input/output pickle files
         in_path = self.get_in_filename(job.workerid)
+        out_path = self.get_out_filename(job.workerid)
 
-        with out_path.open("rb") as f:
-            outdata = f.read()
-        success, result = cloudpickle.loads(outdata)
-
-        if success:
-            fut.set_result(result)
-        else:
-            exc = TaskExecutionError(result.tb, *result.args, **result.kwargs)
-            fut.set_exception(exc)
-
-        # Clean up communication files.
-        in_path.unlink()
-        out_path.unlink()
-
-        self._cleanup(jobid)
+        # Handle all uncaught exceptions in this broad try/except block
+        try:
+            if out_path.exists():
+                # Output pickle file exists
+                with out_path.open("rb") as f:
+                    outdata = f.read()
+                # Note: output can be either the task result (typically a
+                # dictionary) or an ExceptionProxy object; in the latter case,
+                # the ExceptionProxy definition is also part of the pickle file
+                # (thanks to cloudpickle.dumps).
+                success, output = cloudpickle.loads(outdata)
+                if success:
+                    fut.set_result(output)
+                else:
+                    proxy = output
+                    if proxy.exc_type_name == "TaskExecutionError":
+                        exc = TaskExecutionError(
+                            proxy.tb, *proxy.args, **proxy.kwargs
+                        )
+                        fut.set_exception(exc)
+                    elif proxy.exc_type_name == "JobExecutionError":
+                        job_exc = self._prepare_JobExecutionError(jobid)
+                        fut.set_exception(job_exc)
+                out_path.unlink()
+            else:
+                # Output pickle file is missing
+                job_exc = self._prepare_JobExecutionError(jobid)
+                fut.set_exception(job_exc)
+            # Clean up input pickle file
+            in_path.unlink()
+            self._cleanup(jobid)
+        except Exception as e:
+            fut.set_exception(e)
 
     def _start(
         self, job: SlurmJob, additional_setup_lines: Optional[List[str]] = None
-    ):
+    ) -> str:
+        """
+        Submit function for execution on a SLURM cluster
+        """
+
         if additional_setup_lines is None:
             additional_setup_lines = self.additional_setup_lines
 
@@ -355,6 +473,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             settings.FRACTAL_SLURM_WORKER_PYTHON or sys.executable
         )
 
+        # Prepare script to be submitted via sbatch
         sbatch_script = self.compose_sbatch_script(
             cmdline=shlex.split(
                 f"{python_worker_interpreter}"
@@ -366,13 +485,14 @@ class FractalSlurmExecutor(SlurmExecutor):
             additional_setup_lines=additional_setup_lines,
         )
 
+        # Submit job via sbatch, and retrieve jobid
         pre_cmd = ""
         if self.slurm_user:
             pre_cmd = f"sudo --non-interactive -u {self.slurm_user}"
-
-        job_id = self.submit_sbatch(
+        jobid = self.submit_sbatch(
             sbatch_script,
             submit_pre_command=pre_cmd,
             script_path=job.slurm_script,
         )
-        return job_id
+
+        return jobid
