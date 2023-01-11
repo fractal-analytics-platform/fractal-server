@@ -4,18 +4,25 @@ University of Zurich
 
 Original author(s):
 Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
+Tommaso Comparin <tommaso.comparin@exact-lab.it>
+Marco Franzon <marco.franzon@exact-lab.it>
 
 This file is part of Fractal and was originally developed by eXact lab S.r.l.
 <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
 Institute for Biomedical Research and Pelkmans Lab from the University of
 Zurich.
 """
+import asyncio
+import logging
 import os
+import threading
+import time
 from pathlib import Path
 
 import pytest
 from devtools import debug
 
+from .fixtures_slurm import scancel_all_jobs_of_a_slurm_user
 from fractal_server.app.runner import _backends
 
 
@@ -39,12 +46,13 @@ async def test_full_workflow(
     backend,
     request,
     override_settings_factory,
+    cfut_jobs_finished,
 ):
 
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=backend,
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
-        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
+        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
     )
 
     debug(f"Testing with {backend=}")
@@ -186,7 +194,7 @@ async def test_full_workflow(
 
 @pytest.mark.slow
 @pytest.mark.parametrize("backend", backends_available)
-async def test_failing_workflow(
+async def test_failing_workflow_TaskExecutionError(
     client,
     MockCurrentUser,
     testdata_path,
@@ -197,12 +205,14 @@ async def test_failing_workflow(
     backend,
     request,
     override_settings_factory,
+    cfut_jobs_finished,
 ):
 
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=backend,
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
-        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
+        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path
+        / f"artifacts-{backend}-test_failing_workflow_TaskExecutionError",
     )
 
     debug(f"Testing with {backend=}")
@@ -250,13 +260,15 @@ async def test_failing_workflow(
         res = await client.post(
             f"{PREFIX}/workflow/{workflow_id}/add-task/",
             json=dict(
-                task_id=collect_packages[0].id, args={"raise_error": True}
+                task_id=collect_packages[0].id,
+                args={"raise_error": True},
             ),
         )
         assert res.status_code == 201
+        workflow_task_id = res.json()["id"]
+        debug(workflow_task_id)
 
         # EXECUTE WORKFLOW
-
         payload = dict(
             project_id=project_id,
             input_dataset_id=input_dataset_id,
@@ -279,3 +291,142 @@ async def test_failing_workflow(
         assert job_status_data["status"] == "failed"
         assert "id: None" not in job_status_data["log"]
         assert "ValueError" in job_status_data["log"]
+        assert "TASK ERROR" in job_status_data["log"]
+
+
+async def _auxiliary_scancel(slurm_user, sleep_time):
+    # The _auxiliary_scancel and _auxiliary_run functions are used as in
+    # https://stackoverflow.com/a/59645689/19085332
+    logging.warning(f"[scancel_thread] run START {time.perf_counter()=}")
+    # Wait `scancel_sleep_time` seconds, to let the SLURM job pass from PENDING
+    # to RUNNING
+    time.sleep(sleep_time)
+    # Scancel all jobs of the current SLURM user
+    logging.warning(f"[scancel_thread] run SCANCEL {time.perf_counter()=}")
+    scancel_all_jobs_of_a_slurm_user(slurm_user=slurm_user, show_squeue=True)
+    logging.warning(f"[scancel_thread] run END {time.perf_counter()=}")
+
+
+def _auxiliary_run(slurm_user, sleep_time):
+    # The _auxiliary_scancel and _auxiliary_run functions are used as in
+    # https://stackoverflow.com/a/59645689/19085332
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(_auxiliary_scancel(slurm_user, sleep_time))
+    loop.close()
+
+
+@pytest.mark.slow
+async def test_failing_workflow_JobExecutionError(
+    client,
+    MockCurrentUser,
+    testdata_path,
+    tmp777_path,
+    collect_packages,
+    project_factory,
+    dataset_factory,
+    request,
+    override_settings_factory,
+    monkey_slurm,
+    relink_python_interpreter,
+    cfut_jobs_finished,
+):
+
+    override_settings_factory(
+        FRACTAL_RUNNER_BACKEND="slurm",
+        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
+        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path
+        / "artifacts-test_failing_workflow_JobExecutionError",
+    )
+
+    async with MockCurrentUser(persist=True) as user:
+        project = await project_factory(user)
+        project_id = project.id
+        input_dataset = await dataset_factory(
+            project, name="input", type="image", read_only=True
+        )
+        input_dataset_id = input_dataset.id
+
+        # CREATE OUTPUT DATASET AND RESOURCE
+
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/",
+            json=dict(
+                name="output dataset",
+                type="json",
+            ),
+        )
+        assert res.status_code == 201
+        output_dataset = res.json()
+        output_dataset_id = output_dataset["id"]
+
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/{output_dataset['id']}",
+            json=dict(path=tmp777_path.as_posix(), glob_pattern="out.json"),
+        )
+        assert res.status_code == 201
+
+        # CREATE WORKFLOW
+        res = await client.post(
+            f"{PREFIX}/workflow/",
+            json=dict(name="test workflow", project_id=project.id),
+        )
+        assert res.status_code == 201
+        workflow_dict = res.json()
+        workflow_id = workflow_dict["id"]
+
+        # Add a dummy task
+        res = await client.post(
+            f"{PREFIX}/workflow/{workflow_id}/add-task/",
+            json=dict(
+                task_id=collect_packages[0].id,
+                args={"raise_error": False, "sleep_time": 200},
+            ),
+        )
+        assert res.status_code == 201
+        workflow_task_id = res.json()["id"]
+        debug(workflow_task_id)
+
+        # NOTE: the client.post call below is blocking, due to the way we are
+        # running tests. For this reason, we call the scancel functionfrom a
+        # different thread, so that we can make it happen during the workflow
+        # execution
+        # The following block is based on
+        # https://stackoverflow.com/a/59645689/19085332
+        scancel_sleep_time = 10
+        slurm_user = "test01"
+        logging.warning(f"PRE THREAD START {time.perf_counter()=}")
+        _thread = threading.Thread(
+            target=_auxiliary_run, args=(slurm_user, scancel_sleep_time)
+        )
+        _thread.start()
+        logging.warning(f"POST THREAD START {time.perf_counter()=}")
+
+        # Re-submit the modified workflow
+        payload = dict(
+            project_id=project_id,
+            input_dataset_id=input_dataset_id,
+            output_dataset_id=output_dataset_id,
+            workflow_id=workflow_id,
+            overwrite_input=False,
+        )
+        res_second_apply = await client.post(
+            f"{PREFIX}/project/apply/",
+            json=payload,
+        )
+        job_data = res_second_apply.json()
+        debug(job_data)
+        assert res_second_apply.status_code == 202
+        job_id = job_data["id"]
+        debug(job_id)
+
+        # Query status of the job
+        res = await client.get(f"{PREFIX}/job/{job_id}")
+        assert res.status_code == 200
+        job_status_data = res.json()
+        debug(job_status_data)
+        print(job_status_data["log"])
+        assert job_status_data["status"] == "failed"
+        assert "id: None" not in job_status_data["log"]
+        assert "JOB ERROR" in job_status_data["log"]
+        assert "CANCELLED" in job_status_data["log"]

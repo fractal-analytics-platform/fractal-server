@@ -8,6 +8,7 @@
       "output_type": "Any",
       "default_args": {
         "message": "default message",
+        "sleep_time": 0,
         "index": 0,
         "raise_error": false
       }

@@ -7,23 +7,30 @@ from typing import Callable
 import pytest
 from devtools import debug
 
+from .fixtures_slurm import run_squeue
+from .fixtures_slurm import scancel_all_jobs_of_a_slurm_user
 from .fixtures_tasks import MockTask
 from .fixtures_tasks import MockWorkflowTask
 from fractal_server.app.runner._slurm import SlurmConfig
 from fractal_server.app.runner._slurm.executor import FractalSlurmExecutor
+from fractal_server.app.runner.common import JobExecutionError
 from fractal_server.tasks import dummy as dummy_module
 from fractal_server.tasks import dummy_parallel as dummy_parallel_module
 
 
-def submit(executor: Executor, fun: Callable, *args, **kwargs):
+def submit_and_ignore_exceptions(
+    executor: Executor, fun: Callable, *args, **kwargs
+):
     try:
         return executor.submit(fun, *args, **kwargs)
     except Exception as e:
-        debug(e)
+        debug(f"Ignored exception: {str(e)}")
 
 
 @pytest.mark.parametrize(("slurm_user"), [None, "my_user"])
-def test_submit_pre_command(fake_process, slurm_user, tmp_path):
+def test_submit_pre_command(
+    fake_process, slurm_user, tmp_path, cfut_jobs_finished
+):
     """
     GIVEN a FractalSlurmExecutor
     WHEN it is initialised with / without a slurm_user
@@ -31,26 +38,31 @@ def test_submit_pre_command(fake_process, slurm_user, tmp_path):
     """
     fake_process.register(["sbatch", fake_process.any()])
     fake_process.register(["sudo", fake_process.any()])
+    fake_process.register(["squeue", fake_process.any()])
 
     with FractalSlurmExecutor(
         slurm_user=slurm_user, script_dir=tmp_path
     ) as executor:
-        submit(executor, lambda: None)
+        submit_and_ignore_exceptions(executor, lambda: None)
 
-    debug(fake_process.calls)
-    call = fake_process.calls.pop()
-    assert "sbatch" in call
+    # Convert from deque to list, and apply shlex.join
+    call_strings = [shlex.join(call) for call in fake_process.calls]
+    debug(call_strings)
+
+    assert any(["sbatch" in call for call in call_strings])
     if slurm_user:
-        assert f"sudo --non-interactive -u {slurm_user}" in shlex.join(call)
+        target = f"sudo --non-interactive -u {slurm_user}"
+        assert any([target in call for call in call_strings])
 
 
-def test_unit_sbatch_script_readable(monkey_slurm, tmp777_path):
+def test_unit_sbatch_script_readable(
+    monkey_slurm, tmp777_path, cfut_jobs_finished
+):
     """
     GIVEN a batch script written to file by the slurm executor
-    WHEN a differnt user tries to read it
+    WHEN a different user tries to read it
     THEN it has all the permissions needed
     """
-    import subprocess
     import shlex
 
     SBATCH_SCRIPT = "test"
@@ -71,18 +83,80 @@ def test_unit_sbatch_script_readable(monkey_slurm, tmp777_path):
 
 
 @pytest.mark.parametrize("slurm_user", [None, "test01"])
-def test_slurm_executor(slurm_user, monkey_slurm, tmp777_path):
+def test_slurm_executor(
+    slurm_user, monkey_slurm, tmp777_path, cfut_jobs_finished
+):
     """
-    GIVEN a slurm cluster in a docker container
-    WHEN a function is submitted to the cluster executor, as a given user
+    GIVEN a docker slurm cluster and a FractalSlurmExecutor executor
+    WHEN a function is submitted to the executor, as a given user
     THEN the result is correctly computed
     """
 
     with FractalSlurmExecutor(
-        script_dir=tmp777_path, slurm_user=slurm_user
+        script_dir=tmp777_path, slurm_user=slurm_user, slurm_poll_interval=4
     ) as executor:
         res = executor.submit(lambda: 42)
     assert res.result() == 42
+
+
+@pytest.mark.parametrize("slurm_user", [None, "test01"])
+def test_slurm_executor_scancel(
+    slurm_user, monkey_slurm, tmp777_path, cfut_jobs_finished
+):
+    """
+    GIVEN a docker slurm cluster and a FractalSlurmExecutor executor
+    WHEN a function is submitted to the executor (as a given user) and then the
+         SLURM job is immediately canceled
+    THEN the error is correctly captured
+    """
+
+    import time
+
+    def wait_and_return():
+        time.sleep(60)
+        return 42
+
+    with pytest.raises(JobExecutionError) as e:
+        with FractalSlurmExecutor(
+            script_dir=tmp777_path,
+            slurm_user=slurm_user,
+            debug=True,
+            keep_logs=True,
+            slurm_poll_interval=4,
+        ) as executor:
+            fut = executor.submit(wait_and_return)
+            debug(fut)
+
+            # Wait until the SLURM job goes from PENDING to RUNNING
+            while True:
+                squeue_output = run_squeue(
+                    squeue_format="%i %u %T", header=False
+                )
+                debug(squeue_output)
+                if "RUNNING" in squeue_output:
+                    break
+                time.sleep(1)
+
+            # Scancel all jobs of the current SLURM user
+            slurm_user = slurm_user or "fractal"
+            scancel_all_jobs_of_a_slurm_user(
+                slurm_user=slurm_user, show_squeue=True
+            )
+
+            # Calling result() forces waiting for the result, which in this
+            # test raises an exception
+            fut.result()
+
+    debug(str(e.type))
+    debug(str(e.value))
+    debug(str(e.traceback))
+
+    debug(e.value.assemble_error())
+
+    assert "CANCELLED" in e.value.assemble_error()
+    # Since we waited for the job to be RUNNING, both the SLURM stdout and
+    # stderr files should exist
+    assert "missing" not in e.value.assemble_error()
 
 
 def test_unit_slurm_config():

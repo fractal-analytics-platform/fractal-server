@@ -107,7 +107,7 @@ def load_slurm_config(
 
     Raises:
         SlurmConfigError: if any exeception was raised in reading or
-            deserialising the configuration file.
+                          deserialising the configuration file.
 
     Returns:
         config_dict:
