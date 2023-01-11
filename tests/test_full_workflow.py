@@ -276,7 +276,6 @@ async def test_failing_workflow_TaskExecutionError(
             workflow_id=workflow_id,
             overwrite_input=False,
         )
-        debug("PRE apply")
         res = await client.post(
             f"{PREFIX}/project/apply/",
             json=payload,
@@ -388,12 +387,15 @@ async def test_failing_workflow_JobExecutionError(
         workflow_task_id = res.json()["id"]
         debug(workflow_task_id)
 
-        # Prepare scancel_thread_instance
+        # NOTE: the client.post call below is blocking, due to the way we are
+        # running tests. For this reason, we call the scancel functionfrom a
+        # different thread, so that we can make it happen during the workflow
+        # execution
+        # The following block is based on
         # https://stackoverflow.com/a/59645689/19085332
-        scancel_sleep_time = 12
+        scancel_sleep_time = 10
         slurm_user = "test01"
         logging.warning(f"PRE THREAD START {time.perf_counter()=}")
-
         _thread = threading.Thread(
             target=_auxiliary_run, args=(slurm_user, scancel_sleep_time)
         )
