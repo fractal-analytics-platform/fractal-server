@@ -365,22 +365,28 @@ class FractalSlurmExecutor(SlurmExecutor):
 
     def _prepare_JobExecutionError(self, jobid: str) -> JobExecutionError:
         """
-        FIXME add docstring
-        """
+        Prepare the JobExecutionError for a given job
 
-        # Wait FRACTAL_SLURM_KILLWAIT_INTERVAL seconds before
-        # proceeding, so that SLURM has time to complete the job
-        # cancellation
+            1. Wait for `FRACTAL_SLURM_KILLWAIT_INTERVAL` seconds, so that
+               SLURM has time to complete the job cancellation.
+            2. Assign the SLURM-related file names as attributes of the
+               JobExecutionError instance.
+
+        Arguments:
+            jobid:
+                ID of the SLURM job.
+        """
+        # Wait FRACTAL_SLURM_KILLWAIT_INTERVAL seconds
         settings = Inject(get_settings)
         settings.FRACTAL_SLURM_KILLWAIT_INTERVAL
         time.sleep(settings.FRACTAL_SLURM_KILLWAIT_INTERVAL)
-        # Extract SLURM file paths from map_jobid_to_slurm_files
+        # Extract SLURM file paths
         (
             slurm_script_file,
             slurm_stdout_file,
             slurm_stderr_file,
         ) = self.map_jobid_to_slurm_files[jobid]
-        # Construct and set JobExecutionError exception
+        # Construct JobExecutionError exception
         job_exc = JobExecutionError(
             cmd_file=slurm_script_file,
             stdout_file=slurm_stdout_file,
@@ -395,10 +401,9 @@ class FractalSlurmExecutor(SlurmExecutor):
         This function is executed by self.wait_thread (triggered by either
         finding an existing output pickle file `out_path` or finding that the
         SLURM job is over). Since this takes place on a different thread,
-        failures may not be captured by the main thread running the
-        FractalSlurmExecutor. For this reason we use a broad try/except block,
-        so that exceptions that are not treated by us will still be reported to
-        the main thread via `fut.set_exception()`.
+        failures may not be captured by the main thread; we use a broad
+        try/except block, so that those exceptions are reported to the main
+        thread via `fut.set_exception(...)`.
 
         Arguments:
             jobid:
@@ -410,31 +415,36 @@ class FractalSlurmExecutor(SlurmExecutor):
             if not self.jobs:
                 self.jobs_empty_cond.notify_all()
 
-        # Names of the input/output pickle files
+        # Input/output pickle files
         in_path = self.get_in_filename(job.workerid)
         out_path = self.get_out_filename(job.workerid)
 
         # Handle all uncaught exceptions in this broad try/except block
         try:
             if out_path.exists():
+                # Output pickle file exists
                 with out_path.open("rb") as f:
                     outdata = f.read()
-                # FIXME: make it clear that result can also be an
-                # ExceptionProxy
-                success, result = cloudpickle.loads(outdata)
+                # Note: output can be either the task result (typically a
+                # dictionary) or an ExceptionProxy object; in the latter case,
+                # the ExceptionProxy definition is also part of the pickle file
+                # (thanks to cloudpickle.dumps).
+                success, output = cloudpickle.loads(outdata)
                 if success:
-                    fut.set_result(result)
+                    fut.set_result(output)
                 else:
-                    if result.exc_type_name == "TaskExecutionError":
+                    proxy = output
+                    if proxy.exc_type_name == "TaskExecutionError":
                         exc = TaskExecutionError(
-                            result.tb, *result.args, **result.kwargs
+                            proxy.tb, *proxy.args, **proxy.kwargs
                         )
                         fut.set_exception(exc)
-                    elif result.exc_type_name == "JobExecutionError":
+                    elif proxy.exc_type_name == "JobExecutionError":
                         job_exc = self._prepare_JobExecutionError(jobid)
                         fut.set_exception(job_exc)
                 out_path.unlink()
             else:
+                # Output pickle file is missing
                 job_exc = self._prepare_JobExecutionError(jobid)
                 fut.set_exception(job_exc)
             # Clean up input pickle file

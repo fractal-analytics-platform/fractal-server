@@ -29,11 +29,12 @@ from ..models.workflow import Workflow
 
 class TaskExecutionError(RuntimeError):
     """
-    Forwards any error occurred within the execution of a task
+    Forwards errors occurred during the execution of a task
 
     This error wraps and forwards errors occurred during the execution of
-    tasks, together with information that is useful to track down the failing
-    task within a workflow.
+    tasks, when the exit code is larger than 0 (i.e. the error took place
+    within the task). This error also adds information that is useful to track
+    down and debug the failing task within a workflow.
 
     Attributes:
         workflow_task_id:
@@ -64,17 +65,27 @@ class TaskExecutionError(RuntimeError):
 
 class JobExecutionError(RuntimeError):
     """
-    Forwards any error occurred within the execution of a job
+    Forwards errors in the execution of a task that are due to external factors
 
-    FIXME: this is specific for some backends
+    This error wraps and forwards errors occurred during the execution of
+    tasks, but related to external factors like:
+
+        1. A negative exit code (e.g. because the task received a TERM or KILL
+           signal);
+        2. An error on the executor side (e.g. the SLURM executor could not
+           find the pickled file with task output).
+
+    This error also adds information that is useful to track down and debug the
+    failing task within a workflow.
 
     Attributes:
         cmd_file:
-            TBD
+            Path to the file of the command that was executed (e.g. a SLURM
+            submission script).
         stdout_file:
-            TBD
+            Path to the file with the command stdout
         stderr_file:
-            TBD
+            Path to the file with the command stderr
     """
 
     cmd_file: Optional[str] = None

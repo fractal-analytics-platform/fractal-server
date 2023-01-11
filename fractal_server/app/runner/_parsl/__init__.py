@@ -217,9 +217,8 @@ async def process_workflow(
     """
     logger = logging.getLogger(logger_name)
 
-    # FIXME
-    # in the following we most likely want a unique run id rather than the
-    # generic name and id of the workflow
+    # NOTE: in the following we most likely want a unique run id rather than
+    # the generic name and id of the workflow
     with load_parsl_config(
         workflow_id=workflow.id,  # here
         workflow_name=workflow.name,  # here
