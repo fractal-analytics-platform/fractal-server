@@ -47,7 +47,7 @@ nav:
   - Install and deploy: install_and_deploy.md
   - Contribute: contribute.md
   - Configuration: configuration.md
-  - Internals: server/
+  - Internals: internals/
   - Code reference: reference/
   - Coverage: coverage
   - Web API: openapi.md
@@ -67,6 +67,9 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
+          rendering:
+            show_signature_annotations: false
+            docstring_section_style: "table"
           options:
             filters: []
   - coverage:

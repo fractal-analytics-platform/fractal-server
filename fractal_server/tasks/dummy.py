@@ -10,6 +10,9 @@
 # <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
 # Institute for Biomedical Research and Pelkmans Lab from the University of
 # Zurich.
+"""
+This module only contains a dummy task, to be used in tests of fractal-server
+"""
 import json
 import logging
 import time
@@ -54,20 +57,29 @@ def dummy(
 
     Incidentally, this task defines the reference interface of a task.
 
-    Arguments
-    ---------
-    input_paths (iterable of Path) :
-        The paths to fetch data from
-    output_path (Path) :
-        The output path, pointing either to a file or to a directory in which
-        the task will write its output files.
-    metadata (Dict or None) :
-        Optional metadata about the input the task may need
+    Arguments:
+        input_paths:
+            The paths to fetch data from
+        output_path:
+            The output path, pointing either to a file or to a directory in
+            which the task will write its output files.
+        metadata:
+            Optional metadata about the input the task may need
 
-    Retrun
-    ------
-    metadata_update (Dict[str, Any]) :
-        a dictionary that will update the metadata
+        message:
+            A message to be printed in the output file or in the raised error
+        index: TBD
+        raise_error:
+            If `True`, raise an error
+        sleep_time:
+            Interval (in seconds) to be waited with a `time.sleep` statement
+
+    Raises:
+        ValueError: If `raise_error` is `True`
+
+    Returns:
+        metadata_update:
+            A dictionary that will update the metadata
     """
     logger.info("ENTERING dummy task")
 

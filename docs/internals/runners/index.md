@@ -22,8 +22,8 @@ coroutine.
 
 For this reason, both `Process` and `SLURM` backends largely build up on the
 same set of common internal utilities and routines, c.f.,
-[public](/reference/fractal_server/app/runner/common/) and
-[private](/reference/fractal_server/app/runner/_common/) common backend
+[public](../../reference/fractal_server/app/runner/common/) and
+[private](../../reference/fractal_server/app/runner/_common/) common backend
 APIs.
 
 ## Public interface
