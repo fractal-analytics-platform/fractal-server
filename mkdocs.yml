@@ -67,8 +67,9 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          show_signature: true
-          show_signature_annotations: true
+          rendering:
+            show_signature_annotations: true
+            docstring_section_style: "table"
           options:
             filters: []
   - coverage:
