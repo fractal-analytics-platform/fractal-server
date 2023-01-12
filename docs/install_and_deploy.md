@@ -7,17 +7,20 @@ Running Fractal Server assumes that
 1. It has access to a shared filesystem on which it can read and write.
 2. It has access to a database (currently supported: `postgres` (recommended)
    and `sqlite`).
-3. It has access to one or more [computational backends](../server/runners/).
+3. It has access to one of the supported [computational backends](../server/runners/).
 
-The current standard deployment of Fractal Server also requires that
+These requirements are sufficient to use the [Process
+backend](../server/runners/process/), while the following additional
+requirements are needed to use the [SLURM backend](../server/runners/slurm):
 
 <ol start="4">
-<li> It is installed on a SLURM client node, configured to submit and manage
-jobs. </li>
-<li> It is run by a user who has appropriate `sudo` privilege, e.g. to run
-`sbatch` for other users. </li>
-<li> The machine exposes a port (possibly only visible from a private network)
-for communicating with the Fractal client. </li>
+<li> Fractal Server is installed on a SLURM client node, configured to submit
+and manage jobs. </li>
+<li> The user who runs Fractal Server has appropriate `sudo` privileges, e.g.
+to run `sbatch` for other users. </li>
+<li> The machine where Fractal Server runs exposes a port (possibly only
+visible from a private network) for communicating with the Fractal client.
+</li>
 </ol>
 
 ## How to install
