@@ -67,6 +67,8 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
+          show_signature: true
+          show_signature_annotations: true
           options:
             filters: []
   - coverage:
