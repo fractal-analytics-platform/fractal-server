@@ -7,7 +7,7 @@ Running Fractal Server assumes that
 1. It has access to a shared filesystem on which it can read and write.
 2. It has access to a database (currently supported: `postgres` (recommended)
    and `sqlite`).
-3. It has access to one or more [computational backends](/server/runners/).
+3. It has access to one or more [computational backends](../server/runners/).
 
 The current standard deployment of Fractal Server also requires that
 
@@ -43,7 +43,7 @@ be available on the system (e.g. through an `apt`-like package manager):
 
 
 For details on how to install Fractal Server in a development environment, see
-the [Contribute](/contribute) page.
+the [Contribute](../contribute) page.
 
 ## How to deploy
 
@@ -67,7 +67,7 @@ FRACTAL_RUNNER_BACKEND=slurm
 FRACTAL_SLURM_CONFIG_FILE=/some/path/to/slurm_config.json
 ```
 
-More details (including default values) are available in the [Configuration](/configuration/) page.
+More details (including default values) are available in the [Configuration](../configuration/) page.
 
 
 #### 2. Set up the database
@@ -103,7 +103,7 @@ options:
 ```
 
 Notice that you could also use more explicit startup commands, see
-[below](/install_and_deploy/#serving-fractal-server-via-gunicorn) for an
+[below](../install_and_deploy/#serving-fractal-server-via-gunicorn) for an
 example based on Gunicorn.
 
 ### Ports
