@@ -30,6 +30,9 @@ async def get_job(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[ApplyWorkflow]:
+    """
+    Return info on an existing job
+    """
     job = await db.get(ApplyWorkflow, job_id)
     if not job:
         raise HTTPException(
@@ -58,6 +61,9 @@ async def download_job_logs(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> StreamingResponse:
+    """
+    Download job folder
+    """
     job = await db.get(ApplyWorkflow, job_id)
     if not job:
         raise HTTPException(
