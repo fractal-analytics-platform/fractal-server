@@ -10,7 +10,6 @@
 # <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
 # Institute for Biomedical Research and Pelkmans Lab from the University of
 # Zurich.
-import logging
 from os import environ
 from os import getenv
 from os.path import abspath
@@ -204,7 +203,7 @@ class Settings(BaseSettings):
     Directory under which all the tasks will be saved.
     """
 
-    FRACTAL_RUNNER_BACKEND: Literal["process", "slurm", "parsl"] = "process"
+    FRACTAL_RUNNER_BACKEND: Literal["process", "slurm"] = "process"
     """
     Select which runner backend to use.
     """
@@ -215,16 +214,16 @@ class Settings(BaseSettings):
     up, run and tear down jobs are placed in subdirs of this directory.
     """
 
-    FRACTAL_LOGGING_LEVEL: int = logging.WARNING
+    FRACTAL_LOGGING_LEVEL: int = 30
     """
-    Logging verbosity for main Fractal logger.
+    Logging verbosity for main Fractal logger (`30` means `WARNING` - see
+    [logging
+    levels](https://docs.python.org/3/library/logging.html#logging-levels)).
     """
 
     FRACTAL_SLURM_CONFIG_FILE: Optional[Path]
     """
-    It may be necessary to have that the Python interpreter used within a SLURM
-    cluster be different from the interpreter that runs the server. This
-    variable allows to choose a different interpreter.
+    Path of JSON file with configuration for the SLURM backend.
     """
 
     FRACTAL_RUNNER_DEFAULT_EXECUTOR: str = "cpu-low"
@@ -235,20 +234,22 @@ class Settings(BaseSettings):
     FRACTAL_SLURM_WORKER_PYTHON: Optional[str] = None
     """
     Path to Python interpreter that will run the jobs on the SLURM nodes. If
-    not specified, the interpreter that runs the server is used.
+    not specified, the same interpreter that runs the server is used.
     """
 
     FRACTAL_SLURM_POLL_INTERVAL: Optional[int] = 60
     """
     Interval to wait (in seconds) before checking whether unfinished job are
-    still running on SLURM.
+    still running on SLURM (see `SlurmWaitThread` in
+    [`clusterfutures`](https://github.com/sampsyo/clusterfutures/blob/master/cfut/__init__.py)).
     """
 
     FRACTAL_SLURM_KILLWAIT_INTERVAL: Optional[int] = 45
     """
-    Interval to wait when a SLURM job is completed but did not write its output
-    (must be larger than SLURM KillWait timer, to make sure that stdout/stderr
-    files have been written).
+    Interval to wait when the execution of a SLURM-backend job failed, before
+    raising a `JobExecutionError`. Must be larger than [SLURM `KillWait`
+    timer](https://slurm.schedmd.com/slurm.conf.html#OPT_KillWait), to make
+    sure that stdout/stderr files have been written).
     """
 
     # NOTE: we currently set FRACTAL_PARSL_MONITORING to False, due to
