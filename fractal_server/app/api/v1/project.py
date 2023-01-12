@@ -269,6 +269,9 @@ async def get_project(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[ProjectRead]:
+    """
+    Return info on an existing project
+    """
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
@@ -281,6 +284,9 @@ async def delete_project(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
+    """
+    Delete project
+    """
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
@@ -320,6 +326,9 @@ async def get_workflow_list(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[List[WorkflowRead]]:
+    """
+    Get list of workflows associated to the current project
+    """
     await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
@@ -335,6 +344,9 @@ async def get_job_list(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[List[ApplyWorkflowRead]]:
+    """
+    Get list of jobs associated to the current project
+    """
     await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
@@ -354,11 +366,12 @@ async def get_dataset(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[DatasetRead]:
-
+    """
+    Get info on a dataset associated to the current project
+    """
     dataset = await _get_dataset_check_owner(
         project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
     )
-
     return dataset
 
 
@@ -370,6 +383,9 @@ async def patch_dataset(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[DatasetRead]:
+    """
+    Edit a dataset associated to the current project
+    """
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
@@ -395,6 +411,9 @@ async def delete_dataset(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
+    """
+    Delete a dataset associated to the current project
+    """
     await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
@@ -485,6 +504,9 @@ async def delete_resource(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
+    """
+    Delete a resource of a dataset
+    """
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
@@ -512,6 +534,9 @@ async def edit_resource(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[ResourceRead]:
+    """
+    Edit a resource of a dataset
+    """
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )

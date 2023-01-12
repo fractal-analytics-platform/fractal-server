@@ -51,8 +51,11 @@ async def _get_workflow_check_owner(
     """
     Check that user is a member of a workflow's project and return
 
-    Raise 403_FORBIDDEN if the user is not a member
-    Raise 404_NOT_FOUND if the project or workflow do not exist
+    Raises:
+        HTTPException(status_code=403_FORBIDDEN): If the user is not a
+                                                  member of the project
+        HTTPException(status_code=404_NOT_FOUND): If the project or workflow do
+                                                  not exist
     """
 
     workflow = await db.get(Workflow, workflow_id)
@@ -89,9 +92,13 @@ async def _get_workflow_task_check_owner(
     Check that user has rights to access a Workflow and a WorkflowTask and
     return the WorkflowTask
 
-    Raise 404_NOT_FOUND if the WorkflowTask does not exist
-    Raise 422_UNPROCESSABLE_ENTITY if the WorkflowTask is not associated to the
-        workflow
+    Raises:
+        HTTPException(status_code=404_NOT_FOUND): If the WorkflowTask does not
+                                                  exist
+        HTTPException(status_code=422_UNPROCESSABLE_ENTITY): If the
+                                                             WorkflowTask is
+                                                             not associated to
+                                                             the Workflow
     """
 
     workflow_task = await db.get(WorkflowTask, workflow_task_id)
@@ -129,6 +136,9 @@ async def create_workflow(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[WorkflowRead]:
+    """
+    Create a workflow, associate to a project
+    """
     await _get_project_check_owner(
         project_id=workflow.project_id,
         user_id=user.id,
@@ -164,6 +174,9 @@ async def delete_workflow(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
+    """
+    Delte a workflow
+    """
 
     workflow = await _get_workflow_check_owner(
         workflow_id=_id, user_id=user.id, db=db
@@ -182,6 +195,9 @@ async def patch_workflow(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[WorkflowRead]:
+    """
+    Edit a workflow
+    """
 
     workflow = await _get_workflow_check_owner(
         workflow_id=_id, user_id=user.id, db=db
@@ -200,6 +216,9 @@ async def get_workflow(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[WorkflowRead]:
+    """
+    Get info on an existing workflow
+    """
 
     workflow = await _get_workflow_check_owner(
         workflow_id=_id, user_id=user.id, db=db
@@ -219,6 +238,9 @@ async def add_task_to_workflow(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[WorkflowTaskRead]:
+    """
+    Add a WorkflowTask to a Workflow
+    """
 
     workflow = await _get_workflow_check_owner(
         workflow_id=_id, user_id=user.id, db=db
@@ -245,6 +267,9 @@ async def patch_workflow_task(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[WorkflowTaskRead]:
+    """
+    Edit a WorkflowTask of a Workflow
+    """
 
     db_workflow_task, db_workflow = await _get_workflow_task_check_owner(
         workflow_task_id=workflow_task_id,
@@ -282,6 +307,9 @@ async def delete_task_from_workflow(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
+    """
+    Delete a WorkflowTask of a Workflow
+    """
 
     db_workflow_task, db_workflow = await _get_workflow_task_check_owner(
         workflow_task_id=workflow_task_id,
