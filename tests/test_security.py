@@ -17,7 +17,7 @@ async def test_me_known(client):
     )
 
     data_login = dict(
-        username="test@test.com", password="123", lurm_user="test"
+        username="test@test.com", password="123", slurm_user="test"
     )
     res = await client.post(f"{PREFIX}/register", json=data_register)
     res = await client.post(f"{PREFIX}/token/login", data=data_login)
