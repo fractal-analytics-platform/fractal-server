@@ -1,3 +1,7 @@
+"""
+Adapted from
+https://github.com/fastapi-users/fastapi-users-db-sqlmodel/blob/main/tests/conftest.py
+"""
 import uuid
 from typing import List
 from typing import Optional
@@ -10,13 +14,6 @@ from sqlalchemy_utils import UUIDType
 from sqlmodel import Column
 from sqlmodel import Field
 from sqlmodel import Relationship
-
-
-"""
-Adapted from
-    https://github.com/fastapi-users/fastapi-users-db-sqlmodel/
-        blob/main/tests/conftest.py
-"""
 
 
 class UserOAuth(SQLModelBaseUserDB, table=True):

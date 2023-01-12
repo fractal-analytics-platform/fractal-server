@@ -20,6 +20,11 @@ class State(_StateBase, table=True):
     arbitrary data for later retrieval. This is particuarly important for long
     background tasks, in which it is not possible to return a meaningful
     response to the client within a single request lifespan.
+
+    Attributes:
+        id: Primary key
+        data: Content of the `State`
+        timestamp: Timestap of the `State`
     """
 
     id: Optional[int] = Field(default=None, primary_key=True)
