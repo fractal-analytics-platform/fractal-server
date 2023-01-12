@@ -10,6 +10,15 @@ from ...common.schemas.task import _TaskBase
 
 
 class Task(_TaskBase, table=True):  # type: ignore
+    """
+    Task model
+
+    Attributes:
+        id: Primary key
+        default_args: TBD
+        meta: TBD
+    """
+
     id: Optional[int] = Field(default=None, primary_key=True)
     default_args: Optional[Dict[str, Any]] = Field(
         sa_column=Column(JSON), default={}
@@ -24,7 +33,7 @@ class Task(_TaskBase, table=True):  # type: ignore
             return None
 
     @property
-    def is_parallel(self):
+    def is_parallel(self) -> bool:
         return bool(self.parallelization_level)
 
     @property
