@@ -45,7 +45,7 @@ from ...security import User
 router = APIRouter()
 
 
-async def get_project_check_owner(
+async def _get_project_check_owner(
     *,
     project_id: int,
     user_id: UUID4,
@@ -54,8 +54,11 @@ async def get_project_check_owner(
     """
     Check that user is a member of project and return
 
-    Raise 403_FORBIDDEN if the user is not a member
-    Raise 404_NOT_FOUND if the project does not exist
+    Raises:
+        HTTPException(status_code=403_FORBIDDEN): If the user is not a
+                                                  member of the project
+        HTTPException(status_code=404_NOT_FOUND): If the project does not
+                                                  exist
     """
     project, link_user_project = await asyncio.gather(
         db.get(Project, project_id),
@@ -73,7 +76,7 @@ async def get_project_check_owner(
     return project
 
 
-async def get_dataset_check_owner(
+async def _get_dataset_check_owner(
     *,
     project_id: int,
     dataset_id: int,
@@ -82,8 +85,12 @@ async def get_dataset_check_owner(
 ) -> Dataset:
     """
     Check that user is a member of project and return
-    Raise 403_FORBIDDEN if the user is not a member
-    Raise 404_NOT_FOUND if the project or dataset does not exist
+
+    Raises:
+        HTTPException(status_code=403_FORBIDDEN): If the user is not a
+                                                         member of the project
+        HTTPException(status_code=404_NOT_FOUND): If the dataset or project do
+                                                  not exist
     """
     project, dataset, link_user_project = await asyncio.gather(
         db.get(Project, project_id),
@@ -262,7 +269,7 @@ async def get_project(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[ProjectRead]:
-    project = await get_project_check_owner(
+    project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
     return project
@@ -274,7 +281,7 @@ async def delete_project(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
-    project = await get_project_check_owner(
+    project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
     await db.delete(project)
@@ -296,7 +303,7 @@ async def add_dataset(
     """
     Add new dataset to current project
     """
-    project = await get_project_check_owner(
+    project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
     dataset.project_id = project.id
@@ -313,7 +320,7 @@ async def get_workflow_list(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[List[WorkflowRead]]:
-    await get_project_check_owner(
+    await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
     stm = select(Workflow).where(Workflow.project_id == project_id)
@@ -328,7 +335,7 @@ async def get_job_list(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[List[ApplyWorkflowRead]]:
-    await get_project_check_owner(
+    await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
     stm = select(ApplyWorkflow).where(ApplyWorkflow.project_id == project_id)
@@ -348,7 +355,7 @@ async def get_dataset(
     db: AsyncSession = Depends(get_db),
 ) -> Optional[DatasetRead]:
 
-    dataset = await get_dataset_check_owner(
+    dataset = await _get_dataset_check_owner(
         project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
     )
 
@@ -363,7 +370,7 @@ async def patch_dataset(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[DatasetRead]:
-    project = await get_project_check_owner(
+    project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
     db_dataset = await db.get(Dataset, dataset_id)
@@ -388,7 +395,7 @@ async def delete_dataset(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
-    await get_project_check_owner(
+    await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
     stm = (
@@ -428,7 +435,7 @@ async def add_resource(
             detail=f"Path `{resource.path}` is not absolute.",
         )
 
-    project = await get_project_check_owner(
+    project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
     dataset = await db.get(Dataset, dataset_id)
@@ -458,7 +465,7 @@ async def get_resource(
     """
     Get resources from a dataset
     """
-    await get_project_check_owner(
+    await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
     stm = select(Resource).where(Resource.dataset_id == dataset_id)
@@ -478,7 +485,7 @@ async def delete_resource(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
-    project = await get_project_check_owner(
+    project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
     resource = await db.get(Resource, resource_id)
@@ -505,7 +512,7 @@ async def edit_resource(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[ResourceRead]:
-    project = await get_project_check_owner(
+    project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
     dataset = await db.get(Dataset, dataset_id)
