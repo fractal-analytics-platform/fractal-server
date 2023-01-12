@@ -67,10 +67,9 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          rendering:
+          options:
             show_signature_annotations: false
             docstring_section_style: "table"
-          options:
             filters: []
   - coverage:
       page_name: coverage
