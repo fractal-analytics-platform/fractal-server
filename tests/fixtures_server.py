@@ -246,7 +246,7 @@ async def client(
 
 
 @pytest.fixture
-async def client_register(
+async def registered_client(
     app: FastAPI, register_routers, db
 ) -> AsyncGenerator[AsyncClient, Any]:
     async with AsyncClient(
