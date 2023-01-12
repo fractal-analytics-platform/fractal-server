@@ -7,11 +7,11 @@ Running Fractal Server assumes that
 1. It has access to a shared filesystem on which it can read and write.
 2. It has access to a database (currently supported: `postgres` (recommended)
    and `sqlite`).
-3. It has access to one of the supported [computational backends](../server/runners/).
+3. It has access to one of the supported [computational backends](../internals/runners/).
 
 These requirements are sufficient to use the [Process
-backend](../server/runners/process/), while the following additional
-requirements are needed to use the [SLURM backend](../server/runners/slurm):
+backend](../internals/runners/process/), while the following additional
+requirements are needed to use the [SLURM backend](../internals/runners/slurm):
 
 <ol start="4">
 <li> Fractal Server is installed on a SLURM client node, configured to submit
