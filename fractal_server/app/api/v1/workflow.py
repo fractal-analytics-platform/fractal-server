@@ -42,7 +42,7 @@ from .project import _get_project_check_owner
 router = APIRouter()
 
 
-async def get_workflow_check_owner(
+async def _get_workflow_check_owner(
     *,
     workflow_id: int,
     user_id: UUID4,
@@ -78,7 +78,7 @@ async def get_workflow_check_owner(
     return workflow
 
 
-async def get_workflow_task_check_owner(
+async def _get_workflow_task_check_owner(
     *,
     workflow_id: int,
     workflow_task_id: int,
@@ -104,7 +104,7 @@ async def get_workflow_task_check_owner(
         )
 
     # Access control for workflow
-    workflow = await get_workflow_check_owner(  # noqa: F841
+    workflow = await _get_workflow_check_owner(  # noqa: F841
         workflow_id=workflow_id, user_id=user_id, db=db
     )
 
@@ -165,7 +165,7 @@ async def delete_workflow(
     db: AsyncSession = Depends(get_db),
 ) -> Response:
 
-    workflow = await get_workflow_check_owner(
+    workflow = await _get_workflow_check_owner(
         workflow_id=_id, user_id=user.id, db=db
     )
 
@@ -183,7 +183,7 @@ async def patch_workflow(
     db: AsyncSession = Depends(get_db),
 ) -> Optional[WorkflowRead]:
 
-    workflow = await get_workflow_check_owner(
+    workflow = await _get_workflow_check_owner(
         workflow_id=_id, user_id=user.id, db=db
     )
 
@@ -201,7 +201,7 @@ async def get_workflow(
     db: AsyncSession = Depends(get_db),
 ) -> Optional[WorkflowRead]:
 
-    workflow = await get_workflow_check_owner(
+    workflow = await _get_workflow_check_owner(
         workflow_id=_id, user_id=user.id, db=db
     )
 
@@ -220,7 +220,7 @@ async def add_task_to_workflow(
     db: AsyncSession = Depends(get_db),
 ) -> Optional[WorkflowTaskRead]:
 
-    workflow = await get_workflow_check_owner(
+    workflow = await _get_workflow_check_owner(
         workflow_id=_id, user_id=user.id, db=db
     )
     async with db:
@@ -246,7 +246,7 @@ async def patch_workflow_task(
     db: AsyncSession = Depends(get_db),
 ) -> Optional[WorkflowTaskRead]:
 
-    db_workflow_task, db_workflow = await get_workflow_task_check_owner(
+    db_workflow_task, db_workflow = await _get_workflow_task_check_owner(
         workflow_task_id=workflow_task_id,
         workflow_id=_id,
         user_id=user.id,
@@ -283,7 +283,7 @@ async def delete_task_from_workflow(
     db: AsyncSession = Depends(get_db),
 ) -> Response:
 
-    db_workflow_task, db_workflow = await get_workflow_task_check_owner(
+    db_workflow_task, db_workflow = await _get_workflow_task_check_owner(
         workflow_task_id=workflow_task_id,
         workflow_id=_id,
         user_id=user.id,
