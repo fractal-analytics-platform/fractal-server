@@ -31,6 +31,7 @@ from ..models import Dataset
 from ..models import JobStatusType
 from ..models import Workflow
 from ._process import process_workflow as process_process_workflow
+from .acl_utils import mkdir_with_acl
 from .common import auto_output_dataset  # noqa: F401
 from .common import close_job_logger
 from .common import JobExecutionError
@@ -122,8 +123,8 @@ async def submit_workflow(
         / f"workflow_{workflow_id:06d}_job_{job_id:06d}"
     ).resolve()
     orig_umask = os.umask(0)
-    if not WORKFLOW_DIR.exists():
-        WORKFLOW_DIR.mkdir(parents=True, mode=0o777)
+
+    mkdir_with_acl(WORKFLOW_DIR)
 
     job.working_dir = WORKFLOW_DIR.as_posix()
     job.status = JobStatusType.RUNNING
