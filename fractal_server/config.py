@@ -266,9 +266,11 @@ class Settings(BaseSettings):
     # BUSINESS LOGIC
     ###########################################################################
 
-    def check(self):
+    def check(self) -> None:
         """
         Make sure that mandatory variables are set
+
+        FIXME: add here some check on ACL commands being available
 
         This method must be called before the server starts
         """
