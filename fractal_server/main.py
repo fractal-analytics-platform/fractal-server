@@ -73,9 +73,7 @@ async def __on_startup() -> None:
     check_settings()
 
 
-async def _create_user(
-    email: str, password: str, slurm_user: str, is_superuser: bool = False
-):
+async def _create_user(email: str, password: str, is_superuser: bool = False):
     """
     Private method for default fractal super-user at start-up.
 
@@ -92,7 +90,6 @@ async def _create_user(
                         UserCreate(
                             email=email,
                             password=password,
-                            slurm_user=slurm_user,
                             is_superuser=is_superuser,
                         )
                     )
@@ -100,8 +97,7 @@ async def _create_user(
                     print(
                         f"| User created:                  |\n"
                         f"|   email: {user.email}      |\n"
-                        f"|   password: 1234               |\n"
-                        f"|   slurm_user: test             |"
+                        f"|   password: 1234               |"
                     )
                     print("|--------------------------------|")
 
@@ -152,5 +148,5 @@ async def on_startup() -> None:
 
     If the calls raise any error, the application startup is aborted.
     """
-    await _create_user("admin@fractal.xy", "1234", "slurm", True)
+    await _create_user("admin@fractal.xy", "1234", True)
     await __on_startup()
