@@ -257,6 +257,11 @@ class Settings(BaseSettings):
     FRACTAL_PARSL_MONITORING: bool = False
     FRACTAL_PARSL_CONFIG: str = "local"
 
+    FRACTAL_ACL_OPTIONS: Literal["none", "standard", "nfs4"] = "none"
+    """
+    FIXME: add docstring
+    """
+
     ###########################################################################
     # BUSINESS LOGIC
     ###########################################################################
