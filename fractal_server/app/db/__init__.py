@@ -74,6 +74,9 @@ class DB:
 
     @classmethod
     async def get_db(cls) -> AsyncGenerator[AsyncSession, None]:
+        """
+        Get async database session
+        """
         try:
             session_maker = cls._async_session_maker()
         except AttributeError:
@@ -84,6 +87,9 @@ class DB:
 
     @classmethod
     def get_sync_db(cls) -> Generator[DBSyncSession, None, None]:
+        """
+        Get sync database session
+        """
         with cls._sync_session_maker() as sync_session:
             yield sync_session
 
