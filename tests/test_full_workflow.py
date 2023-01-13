@@ -59,6 +59,7 @@ async def test_full_workflow(
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
+        override_settings_factory(FRACTAL_ACL_OPTIONS="standard")
 
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
@@ -186,6 +187,10 @@ async def test_full_workflow(
         no_access = []
         for f in workflow_path.glob("*"):
             has_access = os.access(f, os.R_OK | os.W_OK)
+            debug(f)
+            debug(os.access(f, os.R_OK))
+            debug(os.access(f, os.W_OK))
+            assert has_access
             if not has_access:
                 no_access.append(f)
         debug(no_access)
@@ -219,6 +224,7 @@ async def test_failing_workflow_TaskExecutionError(
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
+        override_settings_factory(FRACTAL_ACL_OPTIONS="standard")
 
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
@@ -337,6 +343,7 @@ async def test_failing_workflow_JobExecutionError(
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path
         / "artifacts-test_failing_workflow_JobExecutionError",
+        FRACTAL_ACL_OPTIONS="standard",
     )
 
     async with MockCurrentUser(persist=True) as user:

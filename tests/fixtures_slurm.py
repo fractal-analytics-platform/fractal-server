@@ -149,6 +149,7 @@ def monkey_slurm(monkeypatch, docker_compose_project_name, docker_services):
     containerised installation and redirect commands there. If no slurm
     container is present, xfail.
     """
+
     import subprocess
 
     OrigPopen = subprocess.Popen
