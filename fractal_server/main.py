@@ -96,7 +96,15 @@ async def _create_user(
                             is_superuser=is_superuser,
                         )
                     )
-                    print(f"User created {user.email=}")
+                    print("|--------------------------------|")
+                    print(
+                        f"| User created:                  |\n"
+                        f"|   email: {user.email}      |\n"
+                        f"|   password: 1234               |\n"
+                        f"|   slurm_user: test             |"
+                    )
+                    print("|--------------------------------|")
+
     except UserAlreadyExists:
         print("Default user already exists")
 
