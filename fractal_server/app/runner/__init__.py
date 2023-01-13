@@ -124,7 +124,8 @@ async def submit_workflow(
     ).resolve()
     orig_umask = os.umask(0)
 
-    mkdir_with_acl(WORKFLOW_DIR)
+    mkdir_with_acl(WORKFLOW_DIR, user=slurm_user)
+    assert os.path.isdir(WORKFLOW_DIR.as_posix())
 
     job.working_dir = WORKFLOW_DIR.as_posix()
     job.status = JobStatusType.RUNNING
