@@ -18,7 +18,7 @@ from ...models import ApplyWorkflowRead
 from ...runner._common import METADATA_FILENAME
 from ...security import current_active_user
 from ...security import User
-from .project import get_project_check_owner
+from .project import _get_project_check_owner
 
 
 router = APIRouter()
@@ -30,12 +30,15 @@ async def get_job(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[ApplyWorkflow]:
+    """
+    Return info on an existing job
+    """
     job = await db.get(ApplyWorkflow, job_id)
     if not job:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Job not found"
         )
-    await get_project_check_owner(
+    await _get_project_check_owner(
         project_id=job.project_id, user_id=user.id, db=db
     )
 
@@ -58,12 +61,15 @@ async def download_job_logs(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> StreamingResponse:
+    """
+    Download job folder
+    """
     job = await db.get(ApplyWorkflow, job_id)
     if not job:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Job not found"
         )
-    await get_project_check_owner(
+    await _get_project_check_owner(
         project_id=job.project_id, user_id=user.id, db=db
     )
 

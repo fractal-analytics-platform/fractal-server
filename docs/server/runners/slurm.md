@@ -1,3 +1,0 @@
-# SLURM
-
-Work-in-progress
