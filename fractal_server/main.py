@@ -3,6 +3,7 @@
 #
 # Original authors:
 # Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
+# Marco Franzon <marco.franzon@exact-lab.it>
 #
 # This file is part of Fractal and was originally developed by eXact lab S.r.l.
 # <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
@@ -13,11 +14,22 @@
 
 This module sets up the FastAPI application that serves the Fractal Server.
 """
+import contextlib
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi_users.exceptions import UserAlreadyExists
 
+from .app.db import get_db
+from .app.security import get_user_db
+from .app.security import get_user_manager
+from .app.security import UserCreate
 from .config import get_settings
 from .syringe import Inject
+
+get_async_session_context = contextlib.asynccontextmanager(get_db)
+get_user_db_context = contextlib.asynccontextmanager(get_user_db)
+get_user_manager_context = contextlib.asynccontextmanager(get_user_manager)
 
 
 def collect_routers(app: FastAPI) -> None:
@@ -59,6 +71,34 @@ async def __on_startup() -> None:
     callable.
     """
     check_settings()
+
+
+async def _create_user(
+    email: str, password: str, slurm_user: str, is_superuser: bool = False
+):
+    """
+    Private method for default fractal super-user at start-up.
+
+    It creates a default users with default arguments and return
+    a message with the relevant informations. If the user alredy exists,
+    for example after a restart, it returns a message
+    to inform that user already exists.
+    """
+    try:
+        async with get_async_session_context() as session:
+            async with get_user_db_context(session) as user_db:
+                async with get_user_manager_context(user_db) as user_manager:
+                    user = await user_manager.create(
+                        UserCreate(
+                            email=email,
+                            password=password,
+                            slurm_user=slurm_user,
+                            is_superuser=is_superuser,
+                        )
+                    )
+                    print(f"User created {user.email=}")
+    except UserAlreadyExists:
+        print("Default user already exists")
 
 
 def start_application() -> FastAPI:
@@ -104,4 +144,5 @@ async def on_startup() -> None:
 
     If the calls raise any error, the application startup is aborted.
     """
+    await _create_user("admin@fractal.xy", "1234", "slurm", True)
     await __on_startup()
