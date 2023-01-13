@@ -163,6 +163,7 @@ async def execute_command(
     logger.debug(f"Subprocess call to: {command}")
     logger.debug(stdout.decode("utf-8"))
     logger.debug(stderr.decode("utf-8"))
+    close_logger(logger)
     if proc.returncode != 0:
         raise RuntimeError(stderr.decode("utf-8"))
     return stdout.decode("utf-8")
