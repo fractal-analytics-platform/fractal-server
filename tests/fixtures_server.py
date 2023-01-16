@@ -266,6 +266,29 @@ async def registered_client(
 
 
 @pytest.fixture
+async def registered_superuser_client(
+    app: FastAPI, register_routers, db
+) -> AsyncGenerator[AsyncClient, Any]:
+    """
+    FIXME: this fixture does not actually return a superuser
+    """
+    EMAIL = "admin@fractal.xy"
+    PWD = "1234"
+
+    async with AsyncClient(
+        app=app, base_url="http://test"
+    ) as client, LifespanManager(app):
+        data_register = dict(email=EMAIL, password=PWD, is_superuser=True)
+        data_login = dict(username=EMAIL, password=PWD)
+        res = await client.post("auth/register", json=data_register)
+        res = await client.post("auth/token/login", data=data_login)
+        token = res.json()["access_token"]
+        client.headers["Authorization"] = f"Bearer {token}"
+        res = await client.patch("auth/users/me", json=dict(is_superuser=True))
+        yield client
+
+
+@pytest.fixture
 async def MockCurrentUser(app, db):
     from fractal_server.app.security import current_active_user
     from fractal_server.app.security import User
