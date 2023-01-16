@@ -15,6 +15,7 @@
 This module sets up the FastAPI application that serves the Fractal Server.
 """
 import contextlib
+import logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -73,7 +74,9 @@ async def __on_startup() -> None:
     check_settings()
 
 
-async def _create_user(email: str, password: str, is_superuser: bool = False):
+async def _create_user(
+    email: str, password: str, is_superuser: bool = False
+) -> None:
     """
     Private method for default fractal super-user at start-up.
 
@@ -93,13 +96,7 @@ async def _create_user(email: str, password: str, is_superuser: bool = False):
                             is_superuser=is_superuser,
                         )
                     )
-                    print("|--------------------------------|")
-                    print(
-                        f"| User created:                  |\n"
-                        f"|   email: {user.email}      |\n"
-                        f"|   password: 1234               |"
-                    )
-                    print("|--------------------------------|")
+                    logging.info(f"User {user.email} created")
 
     except UserAlreadyExists:
         print("Default user already exists")
