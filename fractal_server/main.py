@@ -16,6 +16,7 @@ This module sets up the FastAPI application that serves the Fractal Server.
 """
 import contextlib
 import logging
+from typing import Optional
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -75,31 +76,41 @@ async def __on_startup() -> None:
 
 
 async def _create_user(
-    email: str, password: str, is_superuser: bool = False
+    email: str,
+    password: str,
+    is_superuser: bool = False,
+    slurm_user: Optional[str] = None,
 ) -> None:
     """
-    Private method for default fractal super-user at start-up.
+    Private method to create a fractal user
 
-    It creates a default users with default arguments and return
+    Create a user with the given default arguments and return
     a message with the relevant informations. If the user alredy exists,
     for example after a restart, it returns a message
     to inform that user already exists.
+
+    Arguments:
+        email: New user's email
+        password: New user's password
+        is_superuser: `True` if the new user is a superuser
+        slurm_user: SLURM username associated to the new user
     """
     try:
         async with get_async_session_context() as session:
             async with get_user_db_context(session) as user_db:
                 async with get_user_manager_context(user_db) as user_manager:
-                    user = await user_manager.create(
-                        UserCreate(
-                            email=email,
-                            password=password,
-                            is_superuser=is_superuser,
-                        )
+                    kwargs = dict(
+                        email=email,
+                        password=password,
+                        is_superuser=is_superuser,
                     )
+                    if slurm_user:
+                        kwargs["slurm_user"] = slurm_user
+                    user = await user_manager.create(UserCreate(**kwargs))
                     logging.info(f"User {user.email} created")
 
     except UserAlreadyExists:
-        print("Default user already exists")
+        logging.warning(f"User {user.email} already exists")
 
 
 def start_application() -> FastAPI:
