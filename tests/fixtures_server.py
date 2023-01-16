@@ -246,6 +246,26 @@ async def client(
 
 
 @pytest.fixture
+async def registered_client(
+    app: FastAPI, register_routers, db
+) -> AsyncGenerator[AsyncClient, Any]:
+    async with AsyncClient(
+        app=app, base_url="http://test"
+    ) as client, LifespanManager(app):
+        data_register = dict(
+            email="test@test.com", slurm_user="test", password="123"
+        )
+        data_login = dict(
+            username="test@test.com", password="123", slurm_user="test"
+        )
+        res = await client.post("auth/register", json=data_register)
+        res = await client.post("auth/token/login", data=data_login)
+        token = res.json()["access_token"]
+        client.headers["Authorization"] = f"Bearer {token}"
+        yield client
+
+
+@pytest.fixture
 async def MockCurrentUser(app, db):
     from fractal_server.app.security import current_active_user
     from fractal_server.app.security import User
