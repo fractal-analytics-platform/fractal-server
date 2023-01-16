@@ -40,7 +40,7 @@ class UserRead(schemas.BaseUser[uuid.UUID]):
 
 
 class UserUpdate(schemas.BaseUserUpdate):
-    pass
+    slurm_user: Optional[str]
 
 
 class UserCreate(schemas.BaseUserCreate):
