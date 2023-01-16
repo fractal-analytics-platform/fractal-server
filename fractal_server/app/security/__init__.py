@@ -158,19 +158,12 @@ async def whoami(
 
 @auth_router.get("/userlist", response_model=List[User])
 async def list_users(
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_db),
 ):
     """
     Return list of all users
     """
-    if not user.is_superuser:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only superusers can list users",
-        )
-
-    # user_list = await db.get(User, ident=).scalars().all()
     stm = select(User)
     res = await db.execute(stm)
     user_list = res.scalars().all()
