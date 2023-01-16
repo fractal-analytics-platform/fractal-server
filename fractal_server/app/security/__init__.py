@@ -27,11 +27,14 @@ All routes are registerd under the `auth/` prefix.
 """
 import uuid
 from typing import AsyncGenerator
+from typing import List
 from typing import Optional
 from typing import Union
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import status
 from fastapi_users import BaseUserManager
 from fastapi_users import FastAPIUsers
 from fastapi_users import UUIDIDMixin
@@ -41,6 +44,7 @@ from fastapi_users.authentication import CookieTransport
 from fastapi_users.authentication import JWTStrategy
 from fastapi_users_db_sqlmodel import SQLModelUserDatabaseAsync
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
 
 from ...config import get_settings
 from ...syringe import Inject
@@ -106,7 +110,15 @@ fastapi_users = FastAPIUsers[User, uuid.UUID](
 )
 
 
+# Create dependencies for active user and for superuser
 current_active_user = fastapi_users.current_user(active=True)
+
+
+async def current_active_superuser(user=Depends(current_active_user)):
+    # See https://github.com/fastapi-users/fastapi-users/discussions/454
+    if not user.is_superuser:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+    return user
 
 
 # AUTH ROUTES
@@ -122,6 +134,7 @@ auth_router.include_router(
 )
 auth_router.include_router(
     fastapi_users.get_register_router(UserRead, UserCreate),
+    dependencies=[Depends(current_active_superuser)],
 )
 auth_router.include_router(
     fastapi_users.get_reset_password_router(),
@@ -132,7 +145,36 @@ auth_router.include_router(
 auth_router.include_router(
     fastapi_users.get_users_router(UserRead, UserUpdate),
     prefix="/users",
+    dependencies=[Depends(current_active_superuser)],
 )
+
+
+@auth_router.get("/whoami", response_model=User)
+async def whoami(
+    user: User = Depends(current_active_user),
+):
+    return user
+
+
+@auth_router.get("/userlist", response_model=List[User])
+async def list_users(
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Return list of all users
+    """
+    if not user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only superusers can list users",
+        )
+
+    # user_list = await db.get(User, ident=).scalars().all()
+    stm = select(User)
+    res = await db.execute(stm)
+    user_list = res.scalars().all()
+    return user_list
 
 
 # OAUTH CLIENTS
