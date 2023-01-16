@@ -275,16 +275,16 @@ async def registered_superuser_client(
     EMAIL = "admin@fractal.xy"
     PWD = "1234"
 
+    from fractal_server.main import _create_user
+
+    await _create_user(email=EMAIL, password=PWD, is_superuser=True)
     async with AsyncClient(
         app=app, base_url="http://test"
     ) as client, LifespanManager(app):
-        data_register = dict(email=EMAIL, password=PWD, is_superuser=True)
         data_login = dict(username=EMAIL, password=PWD)
-        res = await client.post("auth/register", json=data_register)
         res = await client.post("auth/token/login", data=data_login)
         token = res.json()["access_token"]
         client.headers["Authorization"] = f"Bearer {token}"
-        res = await client.patch("auth/users/me", json=dict(is_superuser=True))
         yield client
 
 
