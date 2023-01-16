@@ -126,6 +126,27 @@ async def test_edit_user(registered_client, registered_superuser_client):
     assert res.json()["slurm_user"] == "my_slurm_user"
 
 
+async def test_add_superuser(registered_superuser_client):
+
+    # Create non-superuser user
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/register",
+        json=dict(email="future_superuser@asd.asd", password="12"),
+    )
+    debug(res.json())
+    user_id = res.json()["id"]
+    assert res.status_code == 201
+    assert not res.json()["is_superuser"]
+
+    # Make user a superuser
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user_id}", json=dict(is_superuser=True)
+    )
+    debug(res.json())
+    assert res.status_code == 200
+    assert res.json()["is_superuser"]
+
+
 async def test_delete_user(registered_client, registered_superuser_client):
     """
     Check that DELETE/{user_id} returns some of the correct responses:
