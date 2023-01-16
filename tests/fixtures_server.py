@@ -31,6 +31,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from fractal_server.config import get_settings
 from fractal_server.config import Settings
+from fractal_server.main import _create_user
 from fractal_server.syringe import Inject
 
 try:
@@ -249,16 +250,18 @@ async def client(
 async def registered_client(
     app: FastAPI, register_routers, db
 ) -> AsyncGenerator[AsyncClient, Any]:
+
+    EMAIL = "test@test.com"
+    PWD = "123"
+    await _create_user(email=EMAIL, password=PWD, is_superuser=False)
+
     async with AsyncClient(
         app=app, base_url="http://test"
     ) as client, LifespanManager(app):
-        data_register = dict(
-            email="test@test.com", slurm_user="test", password="123"
-        )
         data_login = dict(
-            username="test@test.com", password="123", slurm_user="test"
+            username=EMAIL,
+            password=PWD,
         )
-        res = await client.post("auth/register", json=data_register)
         res = await client.post("auth/token/login", data=data_login)
         token = res.json()["access_token"]
         client.headers["Authorization"] = f"Bearer {token}"
@@ -269,14 +272,8 @@ async def registered_client(
 async def registered_superuser_client(
     app: FastAPI, register_routers, db
 ) -> AsyncGenerator[AsyncClient, Any]:
-    """
-    FIXME: this fixture does not actually return a superuser
-    """
-    EMAIL = "admin@fractal.xy"
-    PWD = "1234"
-
-    from fractal_server.main import _create_user
-
+    EMAIL = "some-admin@fractal.xy"
+    PWD = "some-admin-password"
     await _create_user(email=EMAIL, password=PWD, is_superuser=True)
     async with AsyncClient(
         app=app, base_url="http://test"
