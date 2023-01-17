@@ -36,12 +36,12 @@ class OAuthAccount(SQLModelBaseOAuthAccount, table=True):
 
 
 class UserRead(schemas.BaseUser[uuid.UUID]):
-    slurm_user: str
+    slurm_user: Optional[str]
 
 
 class UserUpdate(schemas.BaseUserUpdate):
-    pass
+    slurm_user: Optional[str]
 
 
 class UserCreate(schemas.BaseUserCreate):
-    slurm_user: str
+    slurm_user: Optional[str]
