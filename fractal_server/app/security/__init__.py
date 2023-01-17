@@ -154,6 +154,9 @@ auth_router.include_router(
 async def whoami(
     user: User = Depends(current_active_user),
 ):
+    """
+    Return current user
+    """
     return user
 
 

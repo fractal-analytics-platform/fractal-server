@@ -84,10 +84,12 @@ async def _create_user(
     """
     Private method to create a fractal user
 
-    Create a user with the given default arguments and return
-    a message with the relevant informations. If the user alredy exists,
-    for example after a restart, it returns a message
-    to inform that user already exists.
+    Create a user with the given default arguments and return a message with
+    the relevant informations. If the user alredy exists, for example after a
+    restart, it returns a message to inform that user already exists.
+
+    See [fastapi_users docs](https://fastapi-users.github.io/fastapi-users/
+    10.2/cookbook/create-user-programmatically)
 
     Arguments:
         email: New user's email
