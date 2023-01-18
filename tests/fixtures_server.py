@@ -31,6 +31,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from fractal_server.config import get_settings
 from fractal_server.config import Settings
+from fractal_server.main import _create_user
 from fractal_server.syringe import Inject
 
 try:
@@ -242,6 +243,45 @@ async def client(
     async with AsyncClient(
         app=app, base_url="http://test"
     ) as client, LifespanManager(app):
+        yield client
+
+
+@pytest.fixture
+async def registered_client(
+    app: FastAPI, register_routers, db
+) -> AsyncGenerator[AsyncClient, Any]:
+
+    EMAIL = "test@test.com"
+    PWD = "123"
+    await _create_user(email=EMAIL, password=PWD, is_superuser=False)
+
+    async with AsyncClient(
+        app=app, base_url="http://test"
+    ) as client, LifespanManager(app):
+        data_login = dict(
+            username=EMAIL,
+            password=PWD,
+        )
+        res = await client.post("auth/token/login", data=data_login)
+        token = res.json()["access_token"]
+        client.headers["Authorization"] = f"Bearer {token}"
+        yield client
+
+
+@pytest.fixture
+async def registered_superuser_client(
+    app: FastAPI, register_routers, db
+) -> AsyncGenerator[AsyncClient, Any]:
+    EMAIL = "some-admin@fractal.xy"
+    PWD = "some-admin-password"
+    await _create_user(email=EMAIL, password=PWD, is_superuser=True)
+    async with AsyncClient(
+        app=app, base_url="http://test"
+    ) as client, LifespanManager(app):
+        data_login = dict(username=EMAIL, password=PWD)
+        res = await client.post("auth/token/login", data=data_login)
+        token = res.json()["access_token"]
+        client.headers["Authorization"] = f"Bearer {token}"
         yield client
 
 

@@ -10,6 +10,10 @@
 # <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
 # Institute for Biomedical Research and Pelkmans Lab from the University of
 # Zurich.
+"""
+This module only contains a dummy task (to be executed in parallel over several
+components), to be used in tests of fractal-server
+"""
 import json
 import logging
 from datetime import datetime
@@ -42,29 +46,34 @@ def dummy_parallel(
     raise_error: bool = False,
 ) -> Dict[str, Any]:
     """
-    Dummy task
+    Dummy task to be run in parallel
 
     This task writes its arguments to to a JSON file named `component`.json (in
     the `output_path` parent folder); mapping this task over a list of
     `component`s produces a corresponding list of files that can be parsed in
     tests.
 
-    Arguments
-    ---------
-    input_paths (iterable of Path) :
-        The paths to fetch data from
-    output_path (Path) :
-        The output path, pointing either to a file or to a directory in which
-        the task will write its output files.
-    component (str) :
-        The component to process, e.g. component="1"
-    metadata (Dict or None) :
-        Optional metadata about the input the task may need
+    Arguments:
+        input_paths:
+            The paths to fetch data from
+        output_path:
+            The output path, pointing either to a file or to a directory in
+            which the task will write its output files.
+        component:
+            The component to process, e.g. component="1"
+        metadata:
+            Optional metadata about the input the task may need
+        message:
+            A message to be printed in the output file or in the raised error
+        raise_error:
+            If `True`, raise an error
 
-    Retrun
-    ------
-    metadata_update (Dict[str, Any]) :
-        a dictionary that will update the metadata
+    Raises:
+        ValueError: If `raise_error` is `True`
+
+    Returns:
+        metadata_update:
+            A dictionary that will update the metadata
     """
     logger.info("ENTERING dummy_parallel task")
     if raise_error:

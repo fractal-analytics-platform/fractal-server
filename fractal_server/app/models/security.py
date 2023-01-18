@@ -1,8 +1,11 @@
+"""
+Adapted from
+https://github.com/fastapi-users/fastapi-users-db-sqlmodel/blob/main/tests/conftest.py
+"""
 import uuid
 from typing import List
 from typing import Optional
 
-from fastapi_users import schemas
 from fastapi_users_db_sqlmodel import SQLModelBaseOAuthAccount
 from fastapi_users_db_sqlmodel import SQLModelBaseUserDB
 from pydantic import UUID4
@@ -10,13 +13,6 @@ from sqlalchemy_utils import UUIDType
 from sqlmodel import Column
 from sqlmodel import Field
 from sqlmodel import Relationship
-
-
-"""
-Adapted from
-    https://github.com/fastapi-users/fastapi-users-db-sqlmodel/
-        blob/main/tests/conftest.py
-"""
 
 
 class UserOAuth(SQLModelBaseUserDB, table=True):
@@ -36,15 +32,3 @@ class UserOAuth(SQLModelBaseUserDB, table=True):
 class OAuthAccount(SQLModelBaseOAuthAccount, table=True):
     user_id: UUID4 = Field(foreign_key="user_oauth.id", nullable=False)
     user: Optional[UserOAuth] = Relationship(back_populates="oauth_accounts")
-
-
-class UserRead(schemas.BaseUser[uuid.UUID]):
-    slurm_user: str
-
-
-class UserUpdate(schemas.BaseUserUpdate):
-    pass
-
-
-class UserCreate(schemas.BaseUserCreate):
-    slurm_user: str
