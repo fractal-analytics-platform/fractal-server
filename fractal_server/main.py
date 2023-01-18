@@ -25,7 +25,7 @@ from fastapi_users.exceptions import UserAlreadyExists
 from .app.db import get_db
 from .app.security import get_user_db
 from .app.security import get_user_manager
-from .app.security import UserCreate
+from .common.schemas.user import UserCreate
 from .config import get_settings
 from .syringe import Inject
 

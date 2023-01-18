@@ -47,14 +47,14 @@ from fastapi_users_db_sqlmodel import SQLModelUserDatabaseAsync
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
+from ...common.schemas.user import UserCreate
+from ...common.schemas.user import UserRead
+from ...common.schemas.user import UserUpdate
 from ...config import get_settings
 from ...syringe import Inject
 from ..db import get_db
 from ..models.security import OAuthAccount
-from ..models.security import UserCreate
 from ..models.security import UserOAuth as User
-from ..models.security import UserRead
-from ..models.security import UserUpdate
 
 
 async def get_user_db(
@@ -150,7 +150,7 @@ auth_router.include_router(
 )
 
 
-@auth_router.get("/whoami", response_model=User)
+@auth_router.get("/whoami", response_model=UserRead)
 async def whoami(
     user: User = Depends(current_active_user),
 ):
@@ -160,7 +160,7 @@ async def whoami(
     return user
 
 
-@auth_router.get("/userlist", response_model=List[User])
+@auth_router.get("/userlist", response_model=List[UserRead])
 async def list_users(
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_db),
