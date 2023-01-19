@@ -130,7 +130,7 @@ def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
         raise TaskExecutionError(err)
     elif result.returncode < 0:
         raise JobExecutionError(
-            f"Task failed with returncode={result.returncode}"
+            info=f"Task failed with returncode={result.returncode}"
         )
 
 
@@ -438,7 +438,7 @@ def recursive_task_submission(
     )
 
     logger.info(
-        f"START {this_task.order}-th task "
+        f"SUBMIT {this_task.order}-th task "
         f'(name="{this_task.task.name}", executor={this_task.executor}).'
     )
     if this_task.is_parallel:
@@ -459,7 +459,7 @@ def recursive_task_submission(
             **extra_setup,
         )
     logger.info(
-        f"END   {this_task.order}-th task "
+        f"END    {this_task.order}-th task "
         f'(name="{this_task.task.name}", executor={this_task.executor}).'
     )
 

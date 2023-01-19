@@ -246,10 +246,18 @@ class Settings(BaseSettings):
 
     FRACTAL_SLURM_KILLWAIT_INTERVAL: Optional[int] = 45
     """
-    Interval to wait when the execution of a SLURM-backend job failed, before
-    raising a `JobExecutionError`. Must be larger than [SLURM `KillWait`
-    timer](https://slurm.schedmd.com/slurm.conf.html#OPT_KillWait), to make
-    sure that stdout/stderr files have been written).
+    Interval to wait (in seconds) when the execution of a SLURM-backend job
+    failed, before raising a `JobExecutionError`. Must be larger than [SLURM
+    `KillWait` timer](https://slurm.schedmd.com/slurm.conf.html#OPT_KillWait),
+    to make sure that stdout/stderr files have been written).
+    """
+
+    FRACTAL_SLURM_OUTPUT_FILE_GRACE_TIME: Optional[int] = 4
+    """
+    Interval to wait (in seconds) when the SLURM backend does not find an
+    output pickle file, which could be for multiple reasons (the SLURM job was
+    cancelled, or writing the file is taking long). After this interval, the
+    file is considered as missing.
     """
 
     # NOTE: we currently set FRACTAL_PARSL_MONITORING to False, due to
