@@ -321,7 +321,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         self,
         fun: Callable[..., Any],
         *args,
-        additional_setup_lines: List[str] = None,
+        additional_setup_lines: Optional[List[str]] = None,
         job_file_prefix: Optional[str] = None,
         **kwargs,
     ) -> futures.Future:
@@ -456,7 +456,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                         fut.set_exception(exc)
                     elif proxy.exc_type_name == "JobExecutionError":
                         job_exc = self._prepare_JobExecutionError(
-                            jobid, info=proxy.info
+                            jobid, info=proxy.kwargs["info"]
                         )
                         fut.set_exception(job_exc)
                 out_path.unlink()
