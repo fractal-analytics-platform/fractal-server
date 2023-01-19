@@ -320,7 +320,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         self,
         fun: Callable[..., Any],
         *args,
-        additional_setup_lines: List[str] = None,
+        additional_setup_lines: Optional[List[str]] = None,
         job_file_prefix: Optional[str] = None,
         **kwargs,
     ) -> futures.Future:
