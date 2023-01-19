@@ -430,13 +430,13 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         # Handle all uncaught exceptions in this broad try/except block
         try:
-            # FIXME: remove this debugging block
-            if out_path.exists() != os.path.exists(str(out_path)):
-                info = f"{out_path.exists()=}\n"
-                info += f"{os.path.exists(str(out_path))=}\n"
-                job_exc = self._prepare_JobExecutionError(jobid, info=info)
-                fut.set_exception(job_exc)
-                return
+            # The output pickle file may be missing because of some slow
+            # filesystem operation; wait some time before considering it as
+            # missing
+            if not out_path.exists():
+                settings = Inject(get_settings)
+                time.sleep(settings.FRACTAL_SLURM_OUTPUT_FILE_GRACE_TIME)
+
             if out_path.exists():
                 # Output pickle file exists
                 with out_path.open("rb") as f:
