@@ -5,6 +5,7 @@
 #
 # Modified by:
 # Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
+# Tommaso Comparin <tommaso.comparin@exact-lab.it>
 #
 # Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
 # University of Zurich
@@ -14,6 +15,7 @@ python code received via pickled files on a cluster node.
 """
 import os
 import sys
+from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Type
@@ -28,6 +30,12 @@ class ExceptionProxy:
     In general exceptions are not serialisable. This proxy class saves the
     serialisable content of an exception. On the receiving end, it can be used
     to reconstruct a TaskExecutionError.
+
+    Attributes:
+        exc_type_name: TBD
+        tb: TBD
+        args: TBD
+        kwargs: TBD
     """
 
     def __init__(
@@ -36,11 +44,18 @@ class ExceptionProxy:
         self.exc_type_name: str = exc_type.__name__
         self.tb: List[str] = tb
         self.args = args
-        self.kwargs = kwargs
+        self.kwargs: Dict = kwargs
 
 
-def worker(in_fname: str, extra_import_paths: Optional[str] = None):
-    """Called to execute a job on a remote host."""
+def worker(in_fname: str, extra_import_paths: Optional[str] = None) -> None:
+    """
+    Called to execute a job on a remote host.
+
+    Arguments:
+        in_fname: TBD
+        extra_import_paths: TBD
+
+    """
     if extra_import_paths:
         _extra_import_paths = extra_import_paths.split(":")
         sys.path[:0] = _extra_import_paths
