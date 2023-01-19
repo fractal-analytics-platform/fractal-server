@@ -112,7 +112,7 @@ async def _create_user(
                     logging.info(f"User {user.email} created")
 
     except UserAlreadyExists:
-        logging.warning(f"User {user.email} already exists")
+        logging.warning(f"User {email} already exists")
 
 
 def start_application() -> FastAPI:
