@@ -20,6 +20,7 @@ from typing import Any
 from typing import Callable
 from typing import List
 from typing import Optional
+import os
 
 import cloudpickle
 from cfut import SlurmExecutor
@@ -429,6 +430,12 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         # Handle all uncaught exceptions in this broad try/except block
         try:
+            if out_path.exists() != os.path.exists(str(out_path)):
+                info = f"{out_path.exists()=}\n"
+                info += f"{os.path.exists(str(out_path))=}\n"
+                job_exc = self._prepare_JobExecutionError(jobid, info=info)
+                fut.set_exception(job_exc)
+                return
             if out_path.exists():
                 # Output pickle file exists
                 with out_path.open("rb") as f:
