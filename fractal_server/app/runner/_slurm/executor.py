@@ -462,7 +462,19 @@ class FractalSlurmExecutor(SlurmExecutor):
                 out_path.unlink()
             else:
                 # Output pickle file is missing
-                info = f"Output pickle file {str(out_path)} not found.\n"
+                info = (
+                    "Output pickle file of the FractalSlurmExecutor job not "
+                    "found.\n"
+                    f"File path: {str(out_path)}.\n"
+                    "Here are some possible reasons:\n"
+                    "1. The SLURM job was scanceled, either by the user or "
+                    "due to an error (e.g. an out-of-memory or timeout "
+                    "error). Note that if the scancel took place before "
+                    "the job started running, the SLURM out/err files will "
+                    "be empty.\n"
+                    "2. Some error occurred upon writing the file to disk "
+                    "(e.g. due to an overloaded NFS filesystem).\n"
+                )
                 job_exc = self._prepare_JobExecutionError(jobid, info=info)
                 fut.set_exception(job_exc)
             # Clean up input pickle file
