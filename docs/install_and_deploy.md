@@ -105,6 +105,10 @@ options:
   --reload              enable auto-reload
 ```
 
+Now the server is up, and depending on the intended use case you may have to
+create/edit some users - see [the Users page](./users.md).
+
+
 Notice that you could also use more explicit startup commands, see
 [below](../install_and_deploy/#serving-fractal-server-via-gunicorn) for an
 example based on Gunicorn.
