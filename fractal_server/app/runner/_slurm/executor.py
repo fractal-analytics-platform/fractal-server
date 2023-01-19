@@ -320,7 +320,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         self,
         fun: Callable[..., Any],
         *args,
-        additional_setup_lines: List[str] = None,
+        additional_setup_lines: Optional[List[str]] = None,
         job_file_prefix: Optional[str] = None,
         **kwargs,
     ) -> futures.Future:
@@ -368,7 +368,9 @@ class FractalSlurmExecutor(SlurmExecutor):
             self.jobs[jobid] = (fut, job)
         return fut
 
-    def _prepare_JobExecutionError(self, jobid: str) -> JobExecutionError:
+    def _prepare_JobExecutionError(
+        self, jobid: str, info: str
+    ) -> JobExecutionError:
         """
         Prepare the JobExecutionError for a given job
 
@@ -396,6 +398,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             cmd_file=slurm_script_file,
             stdout_file=slurm_stdout_file,
             stderr_file=slurm_stderr_file,
+            info=info,
         )
         return job_exc
 
@@ -426,6 +429,13 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         # Handle all uncaught exceptions in this broad try/except block
         try:
+            # The output pickle file may be missing because of some slow
+            # filesystem operation; wait some time before considering it as
+            # missing
+            if not out_path.exists():
+                settings = Inject(get_settings)
+                time.sleep(settings.FRACTAL_SLURM_OUTPUT_FILE_GRACE_TIME)
+
             if out_path.exists():
                 # Output pickle file exists
                 with out_path.open("rb") as f:
@@ -445,12 +455,31 @@ class FractalSlurmExecutor(SlurmExecutor):
                         )
                         fut.set_exception(exc)
                     elif proxy.exc_type_name == "JobExecutionError":
-                        job_exc = self._prepare_JobExecutionError(jobid)
+                        job_exc = self._prepare_JobExecutionError(
+                            jobid, info=proxy.kwargs.get("info", None)
+                        )
                         fut.set_exception(job_exc)
                 out_path.unlink()
             else:
                 # Output pickle file is missing
-                job_exc = self._prepare_JobExecutionError(jobid)
+                info = (
+                    "Output pickle file of the FractalSlurmExecutor job not "
+                    "found.\n"
+                    f"Expected file path: {str(out_path)}.\n"
+                    "Here are some possible reasons:\n"
+                    "1. The SLURM job was scancel-ed, either by the user or "
+                    "due to an error (e.g. an out-of-memory or timeout "
+                    "error). Note that if the scancel took place before "
+                    "the job started running, the SLURM out/err files will "
+                    "be empty.\n"
+                    "2. Some error occurred upon writing the file to disk "
+                    "(e.g. due to an overloaded NFS filesystem). "
+                    "Note that the server configuration has "
+                    "FRACTAL_SLURM_OUTPUT_FILE_GRACE_TIME="
+                    f"{settings.FRACTAL_SLURM_OUTPUT_FILE_GRACE_TIME} "
+                    "seconds.\n"
+                )
+                job_exc = self._prepare_JobExecutionError(jobid, info=info)
                 fut.set_exception(job_exc)
             # Clean up input pickle file
             in_path.unlink()
