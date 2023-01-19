@@ -368,7 +368,9 @@ class FractalSlurmExecutor(SlurmExecutor):
             self.jobs[jobid] = (fut, job)
         return fut
 
-    def _prepare_JobExecutionError(self, jobid: str) -> JobExecutionError:
+    def _prepare_JobExecutionError(
+        self, jobid: str, info: str
+    ) -> JobExecutionError:
         """
         Prepare the JobExecutionError for a given job
 
@@ -396,6 +398,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             cmd_file=slurm_script_file,
             stdout_file=slurm_stdout_file,
             stderr_file=slurm_stderr_file,
+            info=info,
         )
         return job_exc
 
@@ -445,12 +448,17 @@ class FractalSlurmExecutor(SlurmExecutor):
                         )
                         fut.set_exception(exc)
                     elif proxy.exc_type_name == "JobExecutionError":
-                        job_exc = self._prepare_JobExecutionError(jobid)
+                        job_exc = self._prepare_JobExecutionError(
+                            jobid, info=proxy.info
+                        )
                         fut.set_exception(job_exc)
                 out_path.unlink()
             else:
                 # Output pickle file is missing
-                job_exc = self._prepare_JobExecutionError(jobid)
+                job_exc = self._prepare_JobExecutionError(
+                    jobid,
+                    info=f"Output pickle file {str(out_path)} not found.",
+                )
                 fut.set_exception(job_exc)
             # Clean up input pickle file
             in_path.unlink()

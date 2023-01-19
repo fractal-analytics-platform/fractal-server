@@ -79,6 +79,8 @@ class JobExecutionError(RuntimeError):
     failing task within a workflow.
 
     Attributes:
+        info:
+            A free field for additional information
         cmd_file:
             Path to the file of the command that was executed (e.g. a SLURM
             submission script).
@@ -91,6 +93,7 @@ class JobExecutionError(RuntimeError):
     cmd_file: Optional[str] = None
     stdout_file: Optional[str] = None
     stderr_file: Optional[str] = None
+    info: Optional[str] = None
 
     def __init__(
         self,
@@ -98,12 +101,14 @@ class JobExecutionError(RuntimeError):
         cmd_file: Optional[str] = None,
         stdout_file: Optional[str] = None,
         stderr_file: Optional[str] = None,
+        info: Optional[str] = None,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self.cmd_file = cmd_file
         self.stdout_file = stdout_file
         self.stderr_file = stderr_file
+        self.info = info
 
     def _read_file(self, filepath: str) -> str:
         """
@@ -142,6 +147,9 @@ class JobExecutionError(RuntimeError):
             err_content = ""
 
         content = f"{cmd_content}{out_content}{err_content}"
+        if self.info:
+            content = f"{content}ADDITIONAL INFO:\n{self.info}\n\n"
+
         if not content:
             content = str(self)
         message = f"JobExecutionError\n\n{content}"

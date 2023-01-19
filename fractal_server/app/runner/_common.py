@@ -130,7 +130,7 @@ def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
         raise TaskExecutionError(err)
     elif result.returncode < 0:
         raise JobExecutionError(
-            f"Task failed with returncode={result.returncode}"
+            info=f"Task failed with returncode={result.returncode}"
         )
 
 
