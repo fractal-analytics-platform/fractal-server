@@ -462,9 +462,13 @@ class FractalSlurmExecutor(SlurmExecutor):
                 out_path.unlink()
             else:
                 # Output pickle file is missing
+                info = f"Output pickle file {str(out_path)} not found.\n"
+                info += "Reality check:\n"
+                info += f"{out_path.exists()=}\n"
+                info += f"{os.path.exists(str(out_path))=}\n"
                 job_exc = self._prepare_JobExecutionError(
                     jobid,
-                    info=f"Output pickle file {str(out_path)} not found.",
+                    info=info,
                 )
                 fut.set_exception(job_exc)
             # Clean up input pickle file
