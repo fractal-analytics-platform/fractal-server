@@ -449,7 +449,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                         fut.set_exception(exc)
                     elif proxy.exc_type_name == "JobExecutionError":
                         job_exc = self._prepare_JobExecutionError(
-                            jobid, info=proxy.info
+                            jobid, info=proxy.kwargs["info"]
                         )
                         fut.set_exception(job_exc)
                 out_path.unlink()
