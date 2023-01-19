@@ -438,7 +438,7 @@ def recursive_task_submission(
     )
 
     logger.info(
-        f"START {this_task.order}-th task "
+        f"SUBMIT {this_task.order}-th task "
         f'(name="{this_task.task.name}", executor={this_task.executor}).'
     )
     if this_task.is_parallel:
