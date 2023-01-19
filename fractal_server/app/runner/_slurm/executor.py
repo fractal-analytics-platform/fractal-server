@@ -465,7 +465,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                 info = (
                     "Output pickle file of the FractalSlurmExecutor job not "
                     "found.\n"
-                    f"File path: {str(out_path)}.\n"
+                    f"Expected file path: {str(out_path)}.\n"
                     "Here are some possible reasons:\n"
                     "1. The SLURM job was scancel-ed, either by the user or "
                     "due to an error (e.g. an out-of-memory or timeout "
