@@ -459,7 +459,7 @@ def recursive_task_submission(
             **extra_setup,
         )
     logger.info(
-        f"END   {this_task.order}-th task "
+        f"END    {this_task.order}-th task "
         f'(name="{this_task.task.name}", executor={this_task.executor}).'
     )
 
