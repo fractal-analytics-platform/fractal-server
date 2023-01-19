@@ -10,6 +10,7 @@
 #
 # Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
 # University of Zurich
+import os
 import shlex
 import subprocess  # nosec
 import sys
@@ -20,7 +21,6 @@ from typing import Any
 from typing import Callable
 from typing import List
 from typing import Optional
-import os
 
 import cloudpickle
 from cfut import SlurmExecutor
