@@ -467,13 +467,17 @@ class FractalSlurmExecutor(SlurmExecutor):
                     "found.\n"
                     f"File path: {str(out_path)}.\n"
                     "Here are some possible reasons:\n"
-                    "1. The SLURM job was scanceled, either by the user or "
+                    "1. The SLURM job was scancel-ed, either by the user or "
                     "due to an error (e.g. an out-of-memory or timeout "
                     "error). Note that if the scancel took place before "
                     "the job started running, the SLURM out/err files will "
                     "be empty.\n"
                     "2. Some error occurred upon writing the file to disk "
-                    "(e.g. due to an overloaded NFS filesystem).\n"
+                    "(e.g. due to an overloaded NFS filesystem). "
+                    "Note that the server configuration has "
+                    "FRACTAL_SLURM_OUTPUT_FILE_GRACE_TIME="
+                    f"{settings.FRACTAL_SLURM_OUTPUT_FILE_GRACE_TIME} "
+                    "seconds.\n"
                 )
                 job_exc = self._prepare_JobExecutionError(jobid, info=info)
                 fut.set_exception(job_exc)
