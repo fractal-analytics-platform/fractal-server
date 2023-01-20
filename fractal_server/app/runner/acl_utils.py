@@ -1,3 +1,4 @@
+import getpass
 import os
 import shlex
 import subprocess
@@ -57,8 +58,12 @@ def mkdir_with_acl(
     if acl_options == "none":
         return
     elif acl_options == "posix":
+        current_user = getpass.getuser()
+        debug(current_user)
+        current_user = os.getlogin()
+        debug(current_user)
         _wrap_posix_setfacl(
-            folder, current_user=os.getlogin(), workflow_user=workflow_user
+            folder, current_user=current_user, workflow_user=workflow_user
         )
     else:
         raise ValueError(f"{acl_options=} not supported")
