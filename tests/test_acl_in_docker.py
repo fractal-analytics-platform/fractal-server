@@ -41,7 +41,7 @@ def docker_ready(docker_compose_project_name, docker_services):
     return slurm_container
 
 
-def test_unit_docker_commands(docker_ready, tmp_path):
+def test_mkdir_with_acl(docker_ready, tmp_path):
 
     # Check the UID of test01
     res = run_as_user_on_docker(
