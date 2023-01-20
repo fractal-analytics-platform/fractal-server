@@ -47,10 +47,10 @@ def test_mkdir_with_acl(docker_ready, tmp_path):
 
     # Check the UID of test01
     res = run_as_user_on_docker(
-        user="test01", cmd="id", container=docker_ready
+        user=None, cmd="id -u test01", container=docker_ready
     )
-    UID_test01 = "1002"
-    assert UID_test01 in res.stdout
+    UID_test01 = res.stdout.strip("\n")
+    debug(UID_test01)
 
     # Create folder, owned by current_user and with correct ACL
     folder = tmp_path / "job_dir"
