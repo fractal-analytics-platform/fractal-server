@@ -55,7 +55,7 @@ jobs:
         run: poetry install --with dev --no-interaction --all-extras
 
       - name: Test with pytest
-        run: poetry run coverage run -m pytest tests/test_acl_in_docker.py
+        run: poetry run coverage run -m pytest tests/test_acl_in_docker.py --log-cli-level info
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
