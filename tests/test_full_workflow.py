@@ -59,7 +59,7 @@ async def test_full_workflow(
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
-        override_settings_factory(FRACTAL_ACL_OPTIONS="standard")
+        override_settings_factory(FRACTAL_ACL_OPTIONS="posix")
 
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
