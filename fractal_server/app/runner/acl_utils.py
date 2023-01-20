@@ -1,4 +1,3 @@
-import getpass
 import logging
 import os
 import shlex
@@ -59,8 +58,6 @@ def mkdir_with_acl(
     if acl_options == "none":
         return
     elif acl_options == "posix":
-        current_user = getpass.getuser()
-        logging.info(f"{current_user=}")
         current_user = str(os.getuid())
         logging.info(f"{current_user=}")
         _wrap_posix_setfacl(
