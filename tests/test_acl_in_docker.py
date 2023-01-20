@@ -1,5 +1,6 @@
 import logging
 import os
+import pwd
 import shlex
 import subprocess
 
@@ -83,7 +84,8 @@ def test_mkdir_with_acl(docker_ready, tmp_path):
     assert res.returncode == 0
 
     # Create file in folder, as current_user
-    current_user = os.getlogin()
+
+    current_user = pwd.getpwuid(os.getuid())[0]
     with (folder / f"log-{current_user}.txt").open("w") as f:
         f.write(f"This is written by {current_user}\n")
 
