@@ -3,6 +3,7 @@ import os
 import pwd
 import shlex
 import subprocess
+from typing import Optional
 
 import pytest
 from devtools import debug
@@ -11,16 +12,16 @@ from .fixtures_slurm import is_responsive
 from fractal_server.app.runner.acl_utils import mkdir_with_acl
 
 
-def run_as_user_on_docker(*, user: str, cmd, container: str):
+def run_as_user_on_docker(
+    *, cmd: str, container: str, user: Optional[str] = None
+):
     docker_cmd = [
         "docker",
         "exec",
-        "--user",
-        user,
-        container,
-        "bash",
-        "-c",
-    ] + [cmd]
+    ]
+    if user:
+        docker_cmd += ["--user", user]
+    docker_cmd += [container, "bash", "-c", cmd]
 
     debug(shlex.join(docker_cmd))
     res = subprocess.run(docker_cmd, encoding="utf-8", capture_output=True)
@@ -68,9 +69,9 @@ def test_mkdir_with_acl(docker_ready, tmp_path):
     print()
     assert res.returncode == 0
 
-    # View ACL from container / admin
-    debug("View ACL from container / admin")
-    res = run_as_user_on_docker(cmd=cmd, user="admin", container=docker_ready)
+    # View ACL from container / default user
+    debug("View ACL from container / default user")
+    res = run_as_user_on_docker(cmd=cmd, user=None, container=docker_ready)
     print(res.stdout)
     print()
     assert res.returncode == 0
