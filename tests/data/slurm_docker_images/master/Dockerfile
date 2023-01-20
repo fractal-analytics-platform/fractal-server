@@ -3,6 +3,7 @@ FROM rancavil/slurm-master:19.05.5-1
 RUN apt-get update
 RUN sudo apt-get install python3-venv -y
 RUN sudo apt-get install acl -y
+RUN sudo apt-get install glibc-source #needed to use os.getlogin()
 
 COPY slurm.conf /etc/slurm-llnl/
 ADD sudoers /etc/sudoers
