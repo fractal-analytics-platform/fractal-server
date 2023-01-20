@@ -1,4 +1,5 @@
 import logging
+import os
 import shlex
 import subprocess
 
@@ -74,27 +75,27 @@ def test_unit_docker_commands(docker_ready, tmp_path):
     assert res.returncode == 0
 
     # View ACL from container / test01
+    # FIXME: this currently fails
     debug("View ACL from container / test01")
     res = run_as_user_on_docker(cmd=cmd, user="test01", container=docker_ready)
     print(res.stdout)
     print()
     assert res.returncode == 0
 
-    """
     # Create file in folder, as current_user
-    import os
     current_user = os.getlogin()
     with (folder / f"log-{current_user}.txt").open("w") as f:
         f.write(f"This is written by {current_user}\n")
 
     # Create file in folder, as test01 container user
+    # FIXME: this currently fails
     res = run_as_user_on_docker(
-            cmd=f"touch {folder}/log-test01.txt",
-            user="test01",
-            container=docker_ready)
+        cmd=f"touch {folder}/log-test01.txt",
+        user="test01",
+        container=docker_ready,
+    )
     debug(res)
     assert res.returncode == 0
-    """
 
 
 @pytest.mark.skip
