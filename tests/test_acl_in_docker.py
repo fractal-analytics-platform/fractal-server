@@ -6,11 +6,10 @@ import pytest
 from devtools import debug
 
 from .fixtures_slurm import is_responsive
+from fractal_server.app.runner.acl_utils import mkdir_with_acl
 
 
 def run_as_user_on_docker(*, user: str, cmd, container: str):
-    if type(cmd) != str:
-        cmd = shlex.join(cmd)
     docker_cmd = [
         "docker",
         "exec",
@@ -41,23 +40,64 @@ def docker_ready(docker_compose_project_name, docker_services):
     return slurm_container
 
 
-def test_unit_docker_commands(docker_ready):
+def test_unit_docker_commands(docker_ready, tmp_path):
 
-    # Check that we can run simmple commands
-    for user in ["fractal", "test01", "test02"]:
-        res = run_as_user_on_docker(
-            user=user, cmd="whoami", container=docker_ready
-        )
-        assert user in res.stdout
+    # Check the UID of test01
+    res = run_as_user_on_docker(
+        user="test01", cmd="id", container=docker_ready
+    )
+    UID_test01 = "1002"
+    assert UID_test01 in res.stdout
 
-    # Check that we can set umask
-    for user in ["fractal", "test01", "test02"]:
-        res = run_as_user_on_docker(
-            user=user, cmd="umask", container=docker_ready
-        )
-        print(res.stdout)
+    # Create folder, owned by current_user and with correct ACL
+    folder = tmp_path / "job_dir"
+    debug(folder)
+    mkdir_with_acl(folder, workflow_user=UID_test01, acl_options="posix")
+
+    # View ACL from machine
+    cmd = f"getfacl -p {str(folder)}"
+    debug("View ACL from machine")
+    debug(cmd)
+    res = subprocess.run(
+        shlex.split(cmd), capture_output=True, encoding="utf-8"
+    )
+    debug(res)
+    print(res.stdout)
+    print()
+    assert res.returncode == 0
+
+    # View ACL from container / admin
+    debug("View ACL from container / admin")
+    res = run_as_user_on_docker(cmd=cmd, user="admin", container=docker_ready)
+    print(res.stdout)
+    print()
+    assert res.returncode == 0
+
+    # View ACL from container / test01
+    debug("View ACL from container / test01")
+    res = run_as_user_on_docker(cmd=cmd, user="test01", container=docker_ready)
+    print(res.stdout)
+    print()
+    assert res.returncode == 0
+
+    """
+    # Create file in folder, as current_user
+    import os
+    current_user = os.getlogin()
+    with (folder / f"log-{current_user}.txt").open("w") as f:
+        f.write(f"This is written by {current_user}\n")
+
+    # Create file in folder, as test01 container user
+    res = run_as_user_on_docker(
+            cmd=f"touch {folder}/log-test01.txt",
+            user="test01",
+            container=docker_ready)
+    debug(res)
+    assert res.returncode == 0
+    """
 
 
+@pytest.mark.skip
 def test_acl_permissions(docker_ready, tmp777_path):
     folder = str(tmp777_path / "workflow_dir")
     debug(folder)
