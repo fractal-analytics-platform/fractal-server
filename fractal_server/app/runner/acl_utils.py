@@ -28,6 +28,11 @@ def _execute_command(cmd: str):
 def _wrap_posix_setfacl(folder: Path, current_user: str, workflow_user: str):
     _execute_command(f"setfacl -b {folder}")
     _execute_command(
+        "setfacl --recursive --modify "
+        f"user:{current_user}:rwx,user:{workflow_user}:rwx,"
+        f"group::---,other::--- {folder}"
+    )
+    _execute_command(
         "setfacl --default --recursive --modify "
         f"user:{current_user}:rwx,user:{workflow_user}:rwx,"
         f"group::---,other::--- {folder}"
@@ -48,8 +53,8 @@ def mkdir_with_acl(
     if folder.exists():
         raise ValueError(f"{str(folder)} already exists.")
 
-    # Create the folder, and make it 711
-    folder.mkdir(parents=True, mode=0o711)
+    # Create the folder, and make it 700
+    folder.mkdir(parents=True, mode=0o700)
 
     # Apply permissions
     if not acl_options:
