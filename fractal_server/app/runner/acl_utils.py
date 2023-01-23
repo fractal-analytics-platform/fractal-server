@@ -31,7 +31,7 @@ def _execute_command(cmd: str):
 
 def _wrap_posix_setfacl(folder: Path, current_user: str, workflow_user: str):
     """
-    TBD
+    Set ACL for a folder to be rwx-accessible to only two users
 
     Arguments:
         folder: TBD
@@ -39,9 +39,6 @@ def _wrap_posix_setfacl(folder: Path, current_user: str, workflow_user: str):
         workflow_user: TBD
 
     """
-
-    _execute_command(f"setfacl -b {folder}")
-
     acl_set = (
         f"user:{current_user}:rwx,"
         f"default:user:{current_user}:rwx,"
@@ -51,6 +48,7 @@ def _wrap_posix_setfacl(folder: Path, current_user: str, workflow_user: str):
         "other::---,default:other::---,"
         "mask::rwx,default:mask::rwx"
     )
+    _execute_command(f"setfacl -b {folder}")
     _execute_command(f"setfacl --recursive --modify {acl_set} {folder}")
 
 
@@ -67,6 +65,10 @@ def mkdir_with_acl(
     # Preliminary check
     if folder.exists():
         raise ValueError(f"{str(folder)} already exists.")
+
+    # FIXME if needed, create parent
+    if not folder.parent.exists():
+        folder.parent.mkdir(parents=True, mode=0o711)
 
     # Create the folder, and make it 700
     folder.mkdir(mode=0o700)
