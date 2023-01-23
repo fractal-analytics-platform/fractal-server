@@ -48,8 +48,8 @@ def mkdir_with_acl(
     if folder.exists():
         raise ValueError(f"{str(folder)} already exists.")
 
-    # Create the folder, and make it 700
-    folder.mkdir(parents=True, mode=0o700)
+    # Create the folder, and make it 711
+    folder.mkdir(parents=True, mode=0o711)
 
     # Apply permissions
     if not acl_options:
