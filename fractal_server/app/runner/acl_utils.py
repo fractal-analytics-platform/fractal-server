@@ -23,23 +23,23 @@ def _execute_command(cmd: str):
     print()
     if res.returncode != 0:
         raise RuntimeError(str(res))
+    return res.stdout
 
 
 def _wrap_posix_setfacl(folder: Path, current_user: str, workflow_user: str):
 
-    current_umask = os.umask(0)
     _execute_command(f"setfacl -b {folder}")
-    _execute_command(
-        "setfacl --recursive --modify "
-        f"user:{current_user}:rwx,user:{workflow_user}:rwx,"
-        f"group::---,other::--- {folder}"
+
+    acl_set = (
+        f"user:{current_user}:rwx,"
+        f"default:user:{current_user}:rwx,"
+        f"user:{workflow_user}:rwx,"
+        f"default:user:{workflow_user}:rwx,"
+        "group::---,default:group::---,"
+        "other::---,default:other::---,"
+        "mask::rwx,default:mask::rwx"
     )
-    _execute_command(
-        "setfacl --default --recursive --modify "
-        f"user:{current_user}:rwx,user:{workflow_user}:rwx,"
-        f"group::---,other::--- {folder}"
-    )
-    os.umask(current_umask)
+    _execute_command(f"setfacl --recursive --modify {acl_set} {folder}")
 
 
 def _wrap_nfs_setfacl(folder: Path, user: str):
