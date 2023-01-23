@@ -66,7 +66,6 @@ as_user testuser1 "umask 0002 && getfacl -p $JOBDIR"
 echo
 
 as_user testuser2 "umask 0002 && getfacl -p $JOBDIR"
-exit
 
 # Define some files in $JOBDIR
 FILE1=${JOBDIR}/file-of-testuser1.txt

@@ -26,6 +26,10 @@ def _execute_command(cmd: str):
 
 
 def _wrap_posix_setfacl(folder: Path, current_user: str, workflow_user: str):
+
+    current_umask = os.umask(0)
+    os.umask(current_umask)
+    logging.info(f"{current_umask=}")
     _execute_command(f"setfacl -b {folder}")
     _execute_command(
         "setfacl --recursive --modify "
