@@ -27,9 +27,6 @@ def _execute_command(cmd: str):
 
 def _wrap_posix_setfacl(folder: Path, current_user: str, workflow_user: str):
 
-    current_umask = os.umask(0)
-    os.umask(current_umask)
-    logging.info(f"{current_umask=}")
     _execute_command(f"setfacl -b {folder}")
     _execute_command(
         "setfacl --recursive --modify "
@@ -58,7 +55,10 @@ def mkdir_with_acl(
         raise ValueError(f"{str(folder)} already exists.")
 
     # Create the folder, and make it 700
+    current_umask = os.umask(0)
+    logging.info(f"{current_umask=}")
     folder.mkdir(parents=True, mode=0o700)
+    os.umask(current_umask)
 
     # Apply permissions
     if not acl_options:
