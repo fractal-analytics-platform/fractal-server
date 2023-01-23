@@ -14,7 +14,10 @@ from ...syringe import Inject
 def _execute_command(cmd: str):
     debug(cmd)
     res = subprocess.run(
-        shlex.split(cmd), encoding="utf-8", capture_output=True
+        shlex.split(cmd),
+        encoding="utf-8",
+        capture_output=True,
+        # check=True, #FIXME: put this back, after debugging
     )
     debug(res)
     print(res.stdout)
@@ -27,6 +30,15 @@ def _execute_command(cmd: str):
 
 
 def _wrap_posix_setfacl(folder: Path, current_user: str, workflow_user: str):
+    """
+    TBD
+
+    Arguments:
+        folder: TBD
+        current_user: TBD
+        workflow_user: TBD
+
+    """
 
     _execute_command(f"setfacl -b {folder}")
 
@@ -57,10 +69,7 @@ def mkdir_with_acl(
         raise ValueError(f"{str(folder)} already exists.")
 
     # Create the folder, and make it 700
-    current_umask = os.umask(0)
-    logging.info(f"{current_umask=}")
-    folder.mkdir(parents=True, mode=0o700)
-    os.umask(current_umask)
+    folder.mkdir(mode=0o700)
 
     # Apply permissions
     if not acl_options:
