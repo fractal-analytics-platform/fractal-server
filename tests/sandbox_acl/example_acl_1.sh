@@ -52,10 +52,19 @@ echo
 
 # Set ACL for $JOBDIR
 run_as_user fractal "setfacl -b $JOB_DIR"
-run_as_user fractal "setfacl -k $JOB_DIR"
-ACL="user:fractal:rwx,user:test01:rwx,group::---,other::---"
+ACL="\
+user:fractal:rwx,\
+default:user:fractal:rwx,\
+user:test01:rwx,\
+default:user:test01:rwx,\
+group::---,\
+default:group::---,\
+other::---,\
+default:other::---,\
+mask::rwx,\
+default:mask::rwx\
+"
 run_as_user fractal "setfacl --recursive --modify $ACL $JOB_DIR"
-run_as_user fractal "setfacl --default --recursive --modify $ACL $JOB_DIR"
 run_as_user fractal "getfacl -p $JOB_DIR"
 echo
 
