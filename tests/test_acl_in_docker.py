@@ -43,7 +43,7 @@ def docker_ready(docker_compose_project_name, docker_services):
     return slurm_container
 
 
-def test_mkdir_with_acl(docker_ready, tmp_path):
+def test_mkdir_with_acl(docker_ready, tmp711_path):
 
     # Check the UID of test01
     res = run_as_user_on_docker(
@@ -53,8 +53,13 @@ def test_mkdir_with_acl(docker_ready, tmp_path):
     debug(UID_test01)
 
     # Create folder, owned by current_user and with correct ACL
-    folder = tmp_path / "job_dir"
+    artifacts_folder = tmp711_path / "artifacts"
+    folder = artifacts_folder / "workflow_000001_job_000001"
     debug(folder)
+
+    mkdir_with_acl(
+        artifacts_folder, workflow_user=UID_test01, acl_options="posix"
+    )
     mkdir_with_acl(folder, workflow_user=UID_test01, acl_options="posix")
 
     # View ACL from machine
