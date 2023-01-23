@@ -45,7 +45,14 @@ def docker_ready(docker_compose_project_name, docker_services):
 
 def test_mkdir_with_acl(docker_ready, tmp711_path):
 
-    # Check the UID of test01
+    # Check UIDs
+
+    res = run_as_user_on_docker(
+        user=None, cmd="id -u fractal", container=docker_ready
+    )
+    UID_fractal = res.stdout.strip("\n")
+    debug(UID_fractal)
+
     res = run_as_user_on_docker(
         user=None, cmd="id -u test01", container=docker_ready
     )
@@ -74,15 +81,7 @@ def test_mkdir_with_acl(docker_ready, tmp711_path):
     print()
     assert res.returncode == 0
 
-    # View ACL from container / default user
-    debug("View ACL from container / default user")
-    res = run_as_user_on_docker(cmd=cmd, user=None, container=docker_ready)
-    print(res.stdout)
-    print()
-    assert res.returncode == 0
-
-    # View ACL from container / test01
-    # FIXME: this currently fails
+    # View ACL from container / as test01
     debug("View ACL from container / test01")
     res = run_as_user_on_docker(cmd=cmd, user="test01", container=docker_ready)
     print(res.stdout)
@@ -90,7 +89,6 @@ def test_mkdir_with_acl(docker_ready, tmp711_path):
     assert res.returncode == 0
 
     # Create file in folder, as current_user
-
     current_user = pwd.getpwuid(os.getuid())[0]
     with (folder / f"log-{current_user}.txt").open("w") as f:
         f.write(f"This is written by {current_user}\n")
