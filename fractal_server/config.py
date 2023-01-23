@@ -198,6 +198,17 @@ class Settings(BaseSettings):
     ###########################################################################
     # FRACTAL SPECIFIC
     ###########################################################################
+
+    FRACTAL_ADMIN_USERNAME: str = "admin@fractal.xy"
+    """
+    Admin username, default value is used if it is not specified in the .env
+    """
+
+    FRACTAL_ADMIN_PASSWORD: str = "1234"
+    """
+    Admin password, default value is used if it is not specified in the .env
+    """
+
     FRACTAL_TASKS_DIR: Optional[Path]
     """
     Directory under which all the tasks will be saved.
