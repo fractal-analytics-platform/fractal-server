@@ -17,6 +17,7 @@ from shlex import split as shlex_split
 from typing import Any
 from typing import Callable
 from typing import Dict
+from typing import Generator
 from typing import List
 from typing import Optional
 
@@ -41,7 +42,7 @@ def sanitize_component(value: str) -> str:
     return value.replace(" ", "_").replace("/", "_").replace(".", "_")
 
 
-def _split_into_chunks(mylist: List, *, chunksize: int) -> List:
+def _get_list_chunks(mylist: List, *, chunksize: int) -> Generator:
     """
     Split a list into several chunks of maximum size `chunksize`
 
@@ -49,16 +50,9 @@ def _split_into_chunks(mylist: List, *, chunksize: int) -> List:
         mylist: The list to be splitted
         chunksize: The maximum size of each chunk
     """
-    num_chunks = len(mylist) // chunksize
-    if len(mylist) % chunksize > 0:
-        num_chunks += 1
-    chunks = [
-        mylist[
-            ind_chunk * chunksize : (ind_chunk + 1) * chunksize  # noqa: E203
-        ]
-        for ind_chunk in range(num_chunks)
-    ]
-    return chunks
+
+    for ind_chunk in range(0, len(mylist), chunksize):
+        yield mylist[ind_chunk : ind_chunk + chunksize]  # noqa: E203
 
 
 class WorkflowFiles:
@@ -377,7 +371,7 @@ def call_parallel_task(
         for _ in map_iter:
             pass  # noqa: 701
     else:
-        component_chunks = _split_into_chunks(
+        component_chunks = _get_list_chunks(
             component_list, chunksize=FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW
         )
         for component_chunk in component_chunks:
