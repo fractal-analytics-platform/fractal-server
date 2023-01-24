@@ -1,11 +1,10 @@
 """
-Process Bakend
+Local Bakend
 
-This backend runs fractal workflows as separate processes using a python
-thread process pool, where each thread is responsible for running a single
-task in a subprocess.
-
-Incidentally, it represents the reference implementation for a backend.
+This backend runs Fractal workflows using python
+[ThreadPoolExecutor](https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor)
+to run tasks in several threads. Incidentally, it represents the reference
+implementation for a backend.
 """
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -38,7 +37,7 @@ def _process_workflow(
 
     Schedules the workflow using a ThreadPoolExecutor.
 
-    Cf. [process_workflow][fractal_server.app.runner._process.process_workflow]
+    Cf. [process_workflow][fractal_server.app.runner._local.process_workflow]
     for the call signature.
     """
 
@@ -78,7 +77,7 @@ async def process_workflow(
     This function is responsible for running a workflow on some input data,
     saving the output and taking care of any exception raised during the run.
 
-    NOTE: This is the `process` backend's public interface, which also works as
+    NOTE: This is the `local` backend's public interface, which also works as
     a reference implementation for other backends.
 
     Args:

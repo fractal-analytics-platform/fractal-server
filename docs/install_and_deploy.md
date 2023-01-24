@@ -9,8 +9,8 @@ Running Fractal Server assumes that
    and `sqlite`).
 3. It has access to one of the supported [computational backends](../internals/runners/).
 
-These requirements are sufficient to use the [Process
-backend](../internals/runners/process/), while the following additional
+These requirements are sufficient to use the [local
+backend](../internals/runners/local/), while the following additional
 requirements are needed to use the [SLURM backend](../internals/runners/slurm):
 
 <ol start="4">
