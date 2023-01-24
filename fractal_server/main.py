@@ -160,6 +160,8 @@ async def on_startup() -> None:
     """
     settings = Inject(get_settings)
     await _create_user(
-        settings.FRACTAL_ADMIN_USERNAME, settings.FRACTAL_ADMIN_PASSWORD, True
+        settings.FRACTAL_DEFAULT_ADMIN,
+        settings.FRACTAL_DEFAULT_ADMIN_PASSWORD,
+        True,
     )
     await __on_startup()
