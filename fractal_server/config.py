@@ -222,7 +222,7 @@ class Settings(BaseSettings):
     Directory under which all the tasks will be saved.
     """
 
-    FRACTAL_RUNNER_BACKEND: Literal["process", "slurm"] = "process"
+    FRACTAL_RUNNER_BACKEND: Literal["local", "slurm"] = "local"
     """
     Select which runner backend to use.
     """
