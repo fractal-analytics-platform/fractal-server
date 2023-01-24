@@ -3,9 +3,8 @@ Local Bakend
 
 This backend runs Fractal workflows using python
 [ThreadPoolExecutor](https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor)
-to run tasks in several threads.
-
-Incidentally, it represents the reference implementation for a backend.
+to run tasks in several threads. Incidentally, it represents the reference
+implementation for a backend.
 """
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
