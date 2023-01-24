@@ -1,9 +1,9 @@
 """
 Local Bakend
 
-This backend runs fractal workflows as separate processes using a python
-thread process pool, where each thread is responsible for running a single
-task in a subprocess.
+This backend runs Fractal workflows using python
+[ThreadPoolExecutor](https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor)
+to run tasks in several threads.
 
 Incidentally, it represents the reference implementation for a backend.
 """
