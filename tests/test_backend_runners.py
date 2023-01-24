@@ -117,6 +117,7 @@ async def test_runner(
         assert "logger_name" not in args
 
 
+@pytest.mark.skip(reason="Skip in favor of test_call_parallel_task_max_tasks")
 @pytest.mark.parametrize("max_tasks", [None, 1])
 async def test_runner_max_number_tasks(
     db,
