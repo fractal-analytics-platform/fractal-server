@@ -30,7 +30,7 @@ from ..models import ApplyWorkflow
 from ..models import Dataset
 from ..models import JobStatusType
 from ..models import Workflow
-from ._process import process_workflow as process_process_workflow
+from ._local import process_workflow as local_process_workflow
 from .common import auto_output_dataset  # noqa: F401
 from .common import close_job_logger
 from .common import JobExecutionError
@@ -41,7 +41,7 @@ from .common import validate_workflow_compatibility  # noqa: F401
 _backends = {}
 _backend_errors: Dict[str, Exception] = {}
 
-_backends["process"] = process_process_workflow
+_backends["local"] = local_process_workflow
 
 try:
     from ._parsl import process_workflow as parsl_process_workflow

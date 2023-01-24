@@ -7,7 +7,7 @@ use cases are:
    [SLURM backend](../internals/runners/slurm), and it has multiple users - who
    are also associated to SLURM users.
 2. The server is used by a single user on their own machine, with the
-   [Process backend](../internals/runners/process/).
+   [local backend](../internals/runners/local/).
 
 
 In all cases, the server startup automatically creates a default user, who also
