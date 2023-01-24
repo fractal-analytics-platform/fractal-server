@@ -44,14 +44,6 @@ _backend_errors: Dict[str, Exception] = {}
 _backends["local"] = local_process_workflow
 
 try:
-    from ._parsl import process_workflow as parsl_process_workflow
-
-    _backends["parsl"] = parsl_process_workflow
-except ModuleNotFoundError as e:
-    _backend_errors["parsl"] = e
-
-
-try:
     from ._slurm import process_workflow as slurm_process_workflow
 
     _backends["slurm"] = slurm_process_workflow
