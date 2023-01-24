@@ -240,6 +240,12 @@ class Settings(BaseSettings):
     levels](https://docs.python.org/3/library/logging.html#logging-levels)).
     """
 
+    FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW: Optional[int] = None
+    """
+    Maximum number of parallel task that can run simultaneously, for a given
+    workflow.
+    """
+
     FRACTAL_SLURM_CONFIG_FILE: Optional[Path]
     """
     Path of JSON file with configuration for the SLURM backend.

@@ -20,6 +20,8 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
+from ...config import get_settings
+from ...syringe import Inject
 from ...utils import file_opener
 from ..models import WorkflowTask
 from .common import JobExecutionError
@@ -37,6 +39,26 @@ def sanitize_component(value: str) -> str:
     'plate.zarr/B/03/0' to 'plate_zarr_B_03_0'.
     """
     return value.replace(" ", "_").replace("/", "_").replace(".", "_")
+
+
+def _split_into_chunks(mylist: List, *, chunksize: int) -> List:
+    """
+    Split a list into several chunks of maximum size `chunksize`
+
+    Arguments:
+        mylist: The list to be splitted
+        chunksize: The maximum size of each chunk
+    """
+    num_chunks = len(mylist) // chunksize
+    if len(mylist) % chunksize > 0:
+        num_chunks += 1
+    chunks = [
+        mylist[
+            ind_chunk * chunksize : (ind_chunk + 1) * chunksize  # noqa: E203
+        ]
+        for ind_chunk in range(num_chunks)
+    ]
+    return chunks
 
 
 class WorkflowFiles:
@@ -342,11 +364,30 @@ def call_parallel_task(
 
     extra_setup = submit_setup_call(task, task_pars_depend, workflow_dir)
 
-    map_iter = executor.map(partial_call_task, component_list, **extra_setup)
-    # Wait for execution of all parallel (this explicitly calls .result()
-    # on each parallel task)
-    for _ in map_iter:
-        pass  # noqa: 701
+    settings = Inject(get_settings)
+    FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW = (
+        settings.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW
+    )
+    if FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW is None:
+        map_iter = executor.map(
+            partial_call_task, component_list, **extra_setup
+        )
+        # Wait for execution of all parallel (this explicitly calls .result()
+        # on each parallel task)
+        for _ in map_iter:
+            pass  # noqa: 701
+    else:
+        component_chunks = _split_into_chunks(
+            component_list, chunksize=FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW
+        )
+        for component_chunk in component_chunks:
+            map_iter = executor.map(
+                partial_call_task, component_chunk, **extra_setup
+            )
+            # Wait for execution of all parallel (this explicitly calls
+            # .result() on each parallel task)
+            for _ in map_iter:
+                pass  # noqa: 701
 
     # Assemble a Future[TaskParameter]
     history = f"{task.task.name}: {component_list}"
