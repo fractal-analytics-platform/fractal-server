@@ -199,14 +199,22 @@ class Settings(BaseSettings):
     # FRACTAL SPECIFIC
     ###########################################################################
 
-    FRACTAL_ADMIN_USERNAME: str = "admin@fractal.xy"
+    FRACTAL_DEFAULT_ADMIN_EMAIL: str = "admin@fractal.xy"
     """
-    Admin username, default value is used if it is not specified in the .env
+    Admin default email, used upon creation of the first superuser during
+    server startup.
+
+    **IMPORTANT**: After the server startup, you should always edit the default
+    admin credentials.
     """
 
-    FRACTAL_ADMIN_PASSWORD: str = "1234"
+    FRACTAL_DEFAULT_ADMIN_PASSWORD: str = "1234"
     """
-    Admin password, default value is used if it is not specified in the .env
+    Admin default password, used upon creation of the first superuser during
+    server startup.
+
+    **IMPORTANT**: After the server startup, you should always edit the default
+    admin credentials.
     """
 
     FRACTAL_TASKS_DIR: Optional[Path]
