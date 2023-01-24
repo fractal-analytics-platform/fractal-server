@@ -158,5 +158,10 @@ async def on_startup() -> None:
 
     If the calls raise any error, the application startup is aborted.
     """
-    await _create_user("admin@fractal.xy", "1234", True)
+    settings = Inject(get_settings)
+    await _create_user(
+        settings.FRACTAL_DEFAULT_ADMIN,
+        settings.FRACTAL_DEFAULT_ADMIN_PASSWORD,
+        True,
+    )
     await __on_startup()
