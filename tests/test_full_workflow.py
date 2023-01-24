@@ -39,7 +39,7 @@ async def test_full_workflow(
     client,
     MockCurrentUser,
     testdata_path,
-    tmp777_path,
+    tmp711_path,
     collect_packages,
     project_factory,
     dataset_factory,
@@ -52,7 +52,7 @@ async def test_full_workflow(
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=backend,
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
-        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
+        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp711_path / f"artifacts-{backend}",
     )
 
     debug(f"Testing with {backend=}")
@@ -107,7 +107,7 @@ async def test_full_workflow(
 
         res = await client.post(
             f"{PREFIX}/project/{project_id}/{output_dataset['id']}",
-            json=dict(path=tmp777_path.as_posix(), glob_pattern="out.json"),
+            json=dict(path=tmp711_path.as_posix(), glob_pattern="out.json"),
         )
         out_resource = res.json()
         debug(out_resource)
@@ -203,7 +203,7 @@ async def test_failing_workflow_TaskExecutionError(
     client,
     MockCurrentUser,
     testdata_path,
-    tmp777_path,
+    tmp711_path,
     collect_packages,
     project_factory,
     dataset_factory,
@@ -216,7 +216,7 @@ async def test_failing_workflow_TaskExecutionError(
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=backend,
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
-        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path
+        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp711_path
         / f"artifacts-{backend}-test_failing_workflow_TaskExecutionError",
     )
 
@@ -249,7 +249,7 @@ async def test_failing_workflow_TaskExecutionError(
 
         res = await client.post(
             f"{PREFIX}/project/{project_id}/{output_dataset['id']}",
-            json=dict(path=tmp777_path.as_posix(), glob_pattern="out.json"),
+            json=dict(path=tmp711_path.as_posix(), glob_pattern="out.json"),
         )
         assert res.status_code == 201
 
@@ -327,7 +327,7 @@ async def test_failing_workflow_JobExecutionError(
     client,
     MockCurrentUser,
     testdata_path,
-    tmp777_path,
+    tmp711_path,
     collect_packages,
     project_factory,
     dataset_factory,
@@ -341,7 +341,7 @@ async def test_failing_workflow_JobExecutionError(
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND="slurm",
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
-        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path
+        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp711_path
         / "artifacts-test_failing_workflow_JobExecutionError",
         FRACTAL_ACL_OPTIONS="standard",
     )
@@ -369,7 +369,7 @@ async def test_failing_workflow_JobExecutionError(
 
         res = await client.post(
             f"{PREFIX}/project/{project_id}/{output_dataset['id']}",
-            json=dict(path=tmp777_path.as_posix(), glob_pattern="out.json"),
+            json=dict(path=tmp711_path.as_posix(), glob_pattern="out.json"),
         )
         assert res.status_code == 201
 
