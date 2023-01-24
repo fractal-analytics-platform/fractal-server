@@ -49,6 +49,7 @@ nav:
   - Users: users.md
   - Internals: internals/
   - Code reference: reference/
+  - Changelog: changelog.md
   - Coverage: coverage
   - Web API: openapi.md
   - Contribute: contribute.md
