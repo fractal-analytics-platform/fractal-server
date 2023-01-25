@@ -1,4 +1,4 @@
-# 1.0.2 (unreleased)
+# 1.0.2
 
 * Add `FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW` configuration variable (\#469).
 
