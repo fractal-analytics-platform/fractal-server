@@ -319,11 +319,13 @@ def call_parallel_task(
     ] = lambda task, task_pars, workflow_dir: {},
 ) -> Future:  # py3.9 Future[TaskParameters]:
     """
-    Join results from the parallel instances of a parallel task
+    Collect results from the parallel instances of a parallel task
 
-    AKA Collect results. This function merges all the results of single calls
-    of a parallel task and return a single future with the TaskParameters to
-    be passed on to the next task.
+    Prepare and submit for execution all the single calls of a parallel task,
+    and return a single future with the TaskParameters to be passed on to the
+    next task.  Note that the configuration variable
+    [`FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW`](../../../../../configuration/#fractal_server.config.Settings.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW)
+    may affect the internal behavior of this function.
 
     Args:
         executor:
