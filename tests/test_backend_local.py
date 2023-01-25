@@ -11,15 +11,19 @@ This file is part of Fractal and was originally developed by eXact lab S.r.l.
 Institute for Biomedical Research and Pelkmans Lab from the University of
 Zurich.
 """
+import datetime
 import json
 import logging
+from concurrent.futures import Future
 from concurrent.futures import ThreadPoolExecutor
 
+import pytest
 from devtools import debug
 
 from .fixtures_tasks import MockTask
 from .fixtures_tasks import MockWorkflowTask
 from fractal_server.app.runner._common import _call_command_wrapper
+from fractal_server.app.runner._common import call_parallel_task
 from fractal_server.app.runner._common import call_single_task
 from fractal_server.app.runner._common import recursive_task_submission
 from fractal_server.app.runner.common import close_job_logger
@@ -237,3 +241,89 @@ def test_recursive_task_submission_inductive_step(tmp_path):
     assert len(data) == 2
     assert data[0]["metadata"] == METADATA_0
     assert data[1]["metadata"] == METADATA_1
+
+
+@pytest.mark.parametrize("max_tasks", [None, 1])
+def test_call_parallel_task_max_tasks(
+    tmp_path,
+    max_tasks,
+    override_settings_factory,
+):
+    """
+    GIVEN A single task, parallelized over two components
+    WHEN This task is executed on a ThreadPoolExecutor via call_parallel_task
+    THEN The FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW env variable is used
+         correctly
+    """
+
+    # Reset environment variable
+    debug(max_tasks)
+    override_settings_factory(FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW=max_tasks)
+
+    # Prepare task
+    SLEEP_TIME = 1
+    task = MockWorkflowTask(
+        task=MockTask(
+            name="task0",
+            command=f"python {dummy_parallel_module.__file__}",
+            parallelization_level="index",
+        ),
+        arguments=dict(message="message", sleep_time=SLEEP_TIME),
+        order=0,
+    )
+    debug(task)
+
+    # Prepare task arguments (both as TaskParameters and as a dummy Future)
+    task_pars = TaskParameters(
+        input_paths=[tmp_path],
+        output_path=tmp_path,
+        metadata=dict(index=["0", "1"]),
+    )
+    debug(task_pars)
+    task_pars_future = Future()
+    task_pars_future.set_result(task_pars)
+    debug(task_pars_future)
+
+    # Execute task
+    with ThreadPoolExecutor() as executor:
+        future_metadata = call_parallel_task(
+            executor=executor,
+            task=task,
+            task_pars_depend_future=task_pars_future,
+            workflow_dir=tmp_path,
+        )
+    debug(tmp_path)
+    debug(future_metadata)
+    out = future_metadata.result()
+    debug(out)
+    assert isinstance(out, TaskParameters)
+
+    # Check that the two tasks were submitted at the appropriate time,
+    # depending on FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW. NOTE: the log parsing
+    # and log-to-datetime conversion may easily break if we change the logs
+    # format
+    with (tmp_path / "0_par_0.err").open("r") as f:
+        first_log_task_0 = f.readlines()[0]
+    with (tmp_path / "0_par_1.err").open("r") as f:
+        first_log_task_1 = f.readlines()[0]
+    debug(first_log_task_0)
+    debug(first_log_task_1)
+    assert "; INFO; ENTERING" in first_log_task_0
+    assert "; INFO; ENTERING" in first_log_task_1
+    # Parse times
+    fmt = "%Y-%m-%d %H:%M:%S,%f"
+    time_start_task_0 = datetime.datetime.strptime(
+        first_log_task_0.split("; INFO; ENTERING")[0], fmt
+    )
+    time_start_task_1 = datetime.datetime.strptime(
+        first_log_task_1.split("; INFO; ENTERING")[0], fmt
+    )
+    debug(time_start_task_0)
+    debug(time_start_task_1)
+    # Check time difference
+    diff = (time_start_task_1 - time_start_task_0).total_seconds()
+    debug(diff)
+    if max_tasks == 1:
+        assert diff >= SLEEP_TIME
+    else:
+        assert diff < SLEEP_TIME

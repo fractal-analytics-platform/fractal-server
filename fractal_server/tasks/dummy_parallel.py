@@ -16,6 +16,7 @@ components), to be used in tests of fractal-server
 """
 import json
 import logging
+import time
 from datetime import datetime
 from datetime import timezone
 from pathlib import Path
@@ -44,6 +45,7 @@ def dummy_parallel(
     # arguments of this task
     message: str,
     raise_error: bool = False,
+    sleep_time: Optional[int] = None,
 ) -> Dict[str, Any]:
     """
     Dummy task to be run in parallel
@@ -67,6 +69,8 @@ def dummy_parallel(
             A message to be printed in the output file or in the raised error
         raise_error:
             If `True`, raise an error
+        sleep_time:
+            Interval to sleep, in seconds.
 
     Raises:
         ValueError: If `raise_error` is `True`
@@ -88,6 +92,10 @@ def dummy_parallel(
         component=component,
         message=message,
     )
+
+    if sleep_time:
+        logger.info(f"Now let's sleep {sleep_time=} seconds")
+        time.sleep(sleep_time)
 
     # Create folder, if missing
     output_path.parent.mkdir(exist_ok=True)
@@ -123,6 +131,7 @@ if __name__ == "__main__":
         component: str
         message: str
         raise_error: bool = False
+        sleep_time: Optional[int] = None
 
     parser = ArgumentParser()
     parser.add_argument("-j", "--json", help="Read parameters from json file")

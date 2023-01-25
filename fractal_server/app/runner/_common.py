@@ -17,9 +17,12 @@ from shlex import split as shlex_split
 from typing import Any
 from typing import Callable
 from typing import Dict
+from typing import Generator
 from typing import List
 from typing import Optional
 
+from ...config import get_settings
+from ...syringe import Inject
 from ...utils import file_opener
 from ..models import WorkflowTask
 from .common import JobExecutionError
@@ -37,6 +40,22 @@ def sanitize_component(value: str) -> str:
     'plate.zarr/B/03/0' to 'plate_zarr_B_03_0'.
     """
     return value.replace(" ", "_").replace("/", "_").replace(".", "_")
+
+
+def _get_list_chunks(mylist: List, *, chunksize: Optional[int]) -> Generator:
+    """
+    Split a list into several chunks of maximum size `chunksize`. If
+    `chunksize` is `None`, return a single chunk with the whole list.
+
+    Arguments:
+        mylist: The list to be splitted
+        chunksize: The maximum size of each chunk
+    """
+    if chunksize is None:
+        yield mylist
+    else:
+        for ind_chunk in range(0, len(mylist), chunksize):
+            yield mylist[ind_chunk : ind_chunk + chunksize]  # noqa: E203
 
 
 class WorkflowFiles:
@@ -303,11 +322,13 @@ def call_parallel_task(
     ] = lambda task, task_pars, workflow_dir: {},
 ) -> Future:  # py3.9 Future[TaskParameters]:
     """
-    Join results from the parallel instances of a parallel task
+    Collect results from the parallel instances of a parallel task
 
-    AKA Collect results. This function merges all the results of single calls
-    of a parallel task and return a single future with the TaskParameters to
-    be passed on to the next task.
+    Prepare and submit for execution all the single calls of a parallel task,
+    and return a single future with the TaskParameters to be passed on to the
+    next task.  Note that the configuration variable
+    [`FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW`](../../../../../configuration/#fractal_server.config.Settings.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW)
+    may affect the internal behavior of this function.
 
     Args:
         executor:
@@ -332,21 +353,36 @@ def call_parallel_task(
     task_pars_depend = task_pars_depend_future.result()
     component_list = task_pars_depend.metadata[task.parallelization_level]
 
-    # Submit all tasks (one per component)
+    # Preliminary steps
     partial_call_task = partial(
         call_single_parallel_task,
         task=task,
         task_pars=task_pars_depend,
         workflow_dir=workflow_dir,
     )
-
     extra_setup = submit_setup_call(task, task_pars_depend, workflow_dir)
 
-    map_iter = executor.map(partial_call_task, component_list, **extra_setup)
-    # Wait for execution of all parallel (this explicitly calls .result()
-    # on each parallel task)
-    for _ in map_iter:
-        pass  # noqa: 701
+    # Depending on FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW, either submit all
+    # tasks at once or in smaller chunks.  Note that `for _ in map_iter: pass`
+    # explicitly calls the .result() method for each future, and therefore is
+    # blocking until the task are complete.
+    settings = Inject(get_settings)
+    FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW = (
+        settings.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW
+    )
+    # Prepare generator of component chunks (this is just a single item if
+    # FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW is None)
+    component_chunks_generator = _get_list_chunks(
+        component_list, chunksize=FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW
+    )
+    for component_chunk in component_chunks_generator:
+        # Submit this chunk of tasks for execution
+        map_iter = executor.map(
+            partial_call_task, component_chunk, **extra_setup
+        )
+        # Wait for execution of this chunk of tasks
+        for _ in map_iter:
+            pass  # noqa: 701
 
     # Assemble a Future[TaskParameter]
     history = f"{task.task.name}: {component_list}"
