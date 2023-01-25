@@ -348,26 +348,29 @@ def call_parallel_task(
     task_pars_depend = task_pars_depend_future.result()
     component_list = task_pars_depend.metadata[task.parallelization_level]
 
-    # Submit all tasks (one per component)
+    # Preliminary steps
     partial_call_task = partial(
         call_single_parallel_task,
         task=task,
         task_pars=task_pars_depend,
         workflow_dir=workflow_dir,
     )
-
     extra_setup = submit_setup_call(task, task_pars_depend, workflow_dir)
 
+    # Depending on FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW, either submit all
+    # tasks at once or in smaller chunks.  Note that `for _ in map_iter: pass`
+    # explicitly calls the .result() method for each future, and therefore is
+    # blocking until the task are complete.
     settings = Inject(get_settings)
     FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW = (
         settings.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW
     )
     if FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW is None:
+        # Submit all tasks for execution
         map_iter = executor.map(
             partial_call_task, component_list, **extra_setup
         )
-        # Wait for execution of all parallel (this explicitly calls .result()
-        # on each parallel task)
+        # Wait for execution of all tasks
         for _ in map_iter:
             pass  # noqa: 701
     else:
@@ -375,11 +378,11 @@ def call_parallel_task(
             component_list, chunksize=FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW
         )
         for component_chunk in component_chunks:
+            # Submit this chunk of tasks for execution
             map_iter = executor.map(
                 partial_call_task, component_chunk, **extra_setup
             )
-            # Wait for execution of all parallel (this explicitly calls
-            # .result() on each parallel task)
+            # Wait for execution of this chunk of tasks
             for _ in map_iter:
                 pass  # noqa: 701
 
