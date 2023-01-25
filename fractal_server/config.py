@@ -242,8 +242,18 @@ class Settings(BaseSettings):
 
     FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW: Optional[int] = None
     """
-    Maximum number of parallel task that can run simultaneously, for a given
-    workflow.
+    Maximum number of components that a parallel task may process
+    simultaneously. If `None`, no limit is set.
+
+    Intended use cases:
+
+        1. When using the [local backend](../internals/runners/local/), reduce
+        memory requirements by capping the number of tasks running
+        simultaneously.
+        2. When using the [SLURM backend](../internals/runners/slurm/), reduce
+        the number of SLURM jobs that are submitted at the same time, e.g. to
+        avoid reaching the [`MaxSubmitJobs` SLURM
+        limit](https://slurm.schedmd.com/resource_limits.html#assoc).
     """
 
     FRACTAL_SLURM_CONFIG_FILE: Optional[Path]
