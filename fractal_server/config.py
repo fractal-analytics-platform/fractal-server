@@ -28,6 +28,10 @@ from pydantic import root_validator
 import fractal_server
 
 
+class FractalConfigurationError(RuntimeError):
+    pass
+
+
 T = TypeVar("T")
 
 
@@ -341,6 +345,14 @@ class Settings(BaseSettings):
                 FRACTAL_SLURM_CONFIG_FILE: Path
 
         StrictSettings(**self.dict())
+
+        # Check that some variables are allowed
+        if isinstance(self.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW, int):
+            if self.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW < 1:
+                raise FractalConfigurationError(
+                    f"{self.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW=} "
+                    "not allowed"
+                )
 
 
 def get_settings(settings=Settings()) -> Settings:
