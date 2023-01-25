@@ -4,6 +4,7 @@ import pytest
 from devtools import debug
 from pydantic import ValidationError
 
+from fractal_server.config import FractalConfigurationError
 from fractal_server.config import Settings
 from fractal_server.syringe import Inject
 
@@ -41,4 +42,38 @@ def test_settings_check(settings: Settings, raises: bool):
         with pytest.raises(ValidationError):
             settings.check()
     else:
+        settings.check()
+
+
+def test_FractalConfigurationError():
+    """
+    Stub test to verify some expected behaviors of Settings.check() method
+    """
+
+    settings = Settings(
+        DEPLOYMENT_TYPE="development",
+        JWT_SECRET_KEY="secret",
+        SQLITE_PATH="path",
+        FRACTAL_TASKS_DIR=Path("/tmp"),
+        FRACTAL_RUNNER_WORKING_BASE_DIR=Path("/tmp"),
+    )
+    debug(settings)
+    settings.check()
+
+    settings.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW = None
+    debug(settings)
+    settings.check()
+
+    settings.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW = 1
+    debug(settings)
+    settings.check()
+
+    settings.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW = 0
+    debug(settings)
+    with pytest.raises(FractalConfigurationError):
+        settings.check()
+
+    settings.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW = -123
+    debug(settings)
+    with pytest.raises(FractalConfigurationError):
         settings.check()
