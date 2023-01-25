@@ -42,17 +42,20 @@ def sanitize_component(value: str) -> str:
     return value.replace(" ", "_").replace("/", "_").replace(".", "_")
 
 
-def _get_list_chunks(mylist: List, *, chunksize: int) -> Generator:
+def _get_list_chunks(mylist: List, *, chunksize: Optional[int]) -> Generator:
     """
-    Split a list into several chunks of maximum size `chunksize`
+    Split a list into several chunks of maximum size `chunksize`. If
+    `chunksize` is `None`, return a single chunk with the whole list.
 
     Arguments:
         mylist: The list to be splitted
         chunksize: The maximum size of each chunk
     """
-
-    for ind_chunk in range(0, len(mylist), chunksize):
-        yield mylist[ind_chunk : ind_chunk + chunksize]  # noqa: E203
+    if chunksize is None:
+        yield mylist
+    else:
+        for ind_chunk in range(0, len(mylist), chunksize):
+            yield mylist[ind_chunk : ind_chunk + chunksize]  # noqa: E203
 
 
 class WorkflowFiles:
@@ -367,26 +370,19 @@ def call_parallel_task(
     FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW = (
         settings.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW
     )
-    if FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW is None:
-        # Submit all tasks for execution
+    # Prepare generator of component chunks (this is just a single item if
+    # FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW is None)
+    component_chunks_generator = _get_list_chunks(
+        component_list, chunksize=FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW
+    )
+    for component_chunk in component_chunks_generator:
+        # Submit this chunk of tasks for execution
         map_iter = executor.map(
-            partial_call_task, component_list, **extra_setup
+            partial_call_task, component_chunk, **extra_setup
         )
-        # Wait for execution of all tasks
+        # Wait for execution of this chunk of tasks
         for _ in map_iter:
             pass  # noqa: 701
-    else:
-        component_chunks = _get_list_chunks(
-            component_list, chunksize=FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW
-        )
-        for component_chunk in component_chunks:
-            # Submit this chunk of tasks for execution
-            map_iter = executor.map(
-                partial_call_task, component_chunk, **extra_setup
-            )
-            # Wait for execution of this chunk of tasks
-            for _ in map_iter:
-                pass  # noqa: 701
 
     # Assemble a Future[TaskParameter]
     history = f"{task.task.name}: {component_list}"
