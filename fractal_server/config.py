@@ -28,6 +28,10 @@ from pydantic import root_validator
 import fractal_server
 
 
+class FractalConfigurationError(RuntimeError):
+    pass
+
+
 T = TypeVar("T")
 
 
@@ -240,6 +244,27 @@ class Settings(BaseSettings):
     levels](https://docs.python.org/3/library/logging.html#logging-levels)).
     """
 
+    FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW: Optional[int] = None
+    """
+    Maximum number of components that a parallel task may process
+    simultaneously. If `None`, no limit is set.
+
+    Note: this limit concerns a single task in a single workflow execution, but
+    it does **not** limit the global (i.e. across workflow executions) number
+    of components processed simultaneously.
+
+    Intended use cases:
+
+    1. When using the [local backend](../internals/runners/local/), reduce
+    memory requirements of a workflow by capping the number of tasks running in
+    parallel.
+    2. When using the [SLURM backend](../internals/runners/slurm/), reduce the
+    number of SLURM jobs that are submitted at the same time for a given
+    workflow; this is e.g. to avoid `AssocMaxSubmitJobLimit` errors related to
+    the [`MaxSubmitJobs` SLURM
+    limit](https://slurm.schedmd.com/resource_limits.html#assoc).
+    """
+
     FRACTAL_SLURM_CONFIG_FILE: Optional[Path]
     """
     Path of JSON file with configuration for the SLURM backend.
@@ -320,6 +345,14 @@ class Settings(BaseSettings):
                 FRACTAL_SLURM_CONFIG_FILE: Path
 
         StrictSettings(**self.dict())
+
+        # Check that some variables are allowed
+        if isinstance(self.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW, int):
+            if self.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW < 1:
+                raise FractalConfigurationError(
+                    f"{self.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW=} "
+                    "not allowed"
+                )
 
 
 def get_settings(settings=Settings()) -> Settings:
