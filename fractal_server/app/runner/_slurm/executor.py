@@ -58,7 +58,9 @@ class FractalSlurmExecutor(SlurmExecutor):
         common_script_lines:
             arbitrary script lines that will always be included in the
             sbatch script
-        script_dir:
+        working_dir:
+            directory for both the cfut/SLURM and fractal-server files and logs
+        working_dir_user:
             directory for both the cfut/SLURM and fractal-server files and logs
         map_jobid_to_slurm_files:
             dictionary with paths of slurm-related files for active jobs
@@ -67,7 +69,8 @@ class FractalSlurmExecutor(SlurmExecutor):
     def __init__(
         self,
         slurm_user: Optional[str] = None,
-        script_dir: Optional[Path] = None,
+        working_dir: Optional[Path] = None,
+        working_dir_user: Optional[Path] = None,
         common_script_lines: Optional[List[str]] = None,
         slurm_poll_interval: Optional[int] = None,
         *args,
@@ -81,10 +84,16 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         self.slurm_user = slurm_user
         self.common_script_lines = common_script_lines or []
-        if not script_dir:
+        if not working_dir:
             settings = Inject(get_settings)
-            script_dir = settings.FRACTAL_RUNNER_WORKING_BASE_DIR
-        self.script_dir: Path = script_dir  # type: ignore
+            working_dir = settings.FRACTAL_RUNNER_WORKING_BASE_DIR
+        self.working_dir: Path = working_dir  # type: ignore
+        if not working_dir_user:
+            if self.slurm_user:
+                raise RuntimeError(f"{self.slurm_user=}, {working_dir_user=}")
+            else:
+                working_dir_user = working_dir
+        self.working_dir_user: Path = working_dir_user  # type: ignore
         self.map_jobid_to_slurm_files: dict = {}
 
         # Set the attribute slurm_poll_interval for self.wait_thread (see
@@ -105,28 +114,28 @@ class FractalSlurmExecutor(SlurmExecutor):
         self, arg: str = "%j", prefix: Optional[str] = None
     ) -> Path:
         prefix = prefix or "slurmpy.stdout"
-        return self.script_dir / f"{prefix}.slurm.{arg}.out"
+        return self.working_dir_user / f"{prefix}.slurm.{arg}.out"
 
     def get_stderr_filename(
         self, arg: str = "%j", prefix: Optional[str] = None
     ) -> Path:
         prefix = prefix or "slurmpy.stdout"
-        return self.script_dir / f"{prefix}.slurm.{arg}.err"
+        return self.working_dir_user / f"{prefix}.slurm.{arg}.err"
 
     def get_in_filename(self, arg: str, prefix: Optional[str] = None) -> Path:
         prefix = prefix or "cfut"
-        return self.script_dir / f"{prefix}.in.{arg}.pickle"
+        return self.working_dir / f"{prefix}.in.{arg}.pickle"
 
     def get_out_filename(self, arg: str, prefix: Optional[str] = None) -> Path:
         prefix = prefix or "cfut"
-        return self.script_dir / f"{prefix}.out.{arg}.pickle"
+        return self.working_dir_user / f"{prefix}.out.{arg}.pickle"
 
     def get_slurm_script_filename(
         self, arg: Optional[str] = None, prefix: Optional[str] = None
     ) -> Path:
         prefix = prefix or "_temp"
         arg = arg or "submit"
-        return self.script_dir / f"{prefix}.slurm.{arg}.sbatch"
+        return self.working_dir / f"{prefix}.slurm.{arg}.sbatch"
 
     def write_batch_script(self, sbatch_script: str, dest: Path) -> Path:
         """
@@ -218,7 +227,8 @@ class FractalSlurmExecutor(SlurmExecutor):
             ln
             for ln in additional_setup_lines + self.common_script_lines
             if not ln.startswith("#SBATCH")
-        ] + [f"export CFUT_DIR={self.script_dir}"]
+        ] + [f"export CFUT_DIR={self.working_dir}"]
+        # FIXME: do we need CFUT_DIR? If yes, where?
 
         # TODO: the chmod command always fails, because not all files belong to
         # the user (some are owned by fractal). For this reason, the SLURM job
