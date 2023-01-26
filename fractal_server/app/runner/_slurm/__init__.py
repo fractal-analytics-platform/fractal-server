@@ -140,6 +140,7 @@ def set_slurm_config(
     task: WorkflowTask,
     task_pars: TaskParameters,
     workflow_dir: Path,
+    workflow_dir_user: Path,
 ) -> Dict[str, Any]:
     """
     Collect SLURM configuration parameters
@@ -159,6 +160,8 @@ def set_slurm_config(
             The directory in which the executor should store input / output /
             errors from task execution, as well as meta files from the
             submission process.
+        workflow_dir_user:
+            FIXME
 
     Raises:
         SlurmConfigError: if the slurm-configuration file does not contain the
@@ -191,7 +194,9 @@ def set_slurm_config(
         )
 
     workflow_files = get_workflow_file_paths(
-        workflow_dir=workflow_dir, task_order=task.order
+        workflow_dir=workflow_dir,
+        workflow_dir_user=workflow_dir_user,
+        task_order=task.order,
     )
     return dict(
         additional_setup_lines=additional_setup_lines,
@@ -207,7 +212,7 @@ def _process_workflow(
     input_metadata: Dict[str, Any],
     logger_name: str,
     workflow_dir: Path,
-    workflow_dir_user: Optional[Path] = None,
+    workflow_dir_user: Path,
     slurm_user: Optional[str] = None,
     worker_init: Optional[Union[str, List[str]]] = None,
 ) -> Dict[str, Any]:
@@ -250,7 +255,8 @@ def _process_workflow(
         debug=True,
         keep_logs=True,
         slurm_user=slurm_user,
-        script_dir=workflow_dir,
+        working_dir=workflow_dir,
+        working_dir_user=workflow_dir_user,
         common_script_lines=worker_init,
     ) as executor:
         output_task_pars_fut = recursive_task_submission(
@@ -262,6 +268,7 @@ def _process_workflow(
                 metadata=input_metadata,
             ),
             workflow_dir=workflow_dir,
+            workflow_dir_user=workflow_dir_user,
             submit_setup_call=set_slurm_config,
             logger_name=logger_name,
         )
