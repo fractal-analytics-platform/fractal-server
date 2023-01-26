@@ -18,6 +18,7 @@ individual backends.
 """
 import logging
 import os
+from pathlib import Path
 from typing import Dict
 from typing import Optional
 
@@ -72,6 +73,7 @@ async def submit_workflow(
     input_dataset: Dataset,
     output_dataset: Dataset,
     job_id: int,
+    project_dir: str,
     slurm_user: Optional[str] = None,
     worker_init: Optional[str] = None,
 ) -> None:
@@ -92,6 +94,8 @@ async def submit_workflow(
         job_id:
             Id of the job record which stores the state for the current
             workflow application.
+        project_dir:
+            FIXME
         slurm_user:
             The username to impersonate for the workflow execution.
         worker_init:
@@ -113,11 +117,19 @@ async def submit_workflow(
         settings.FRACTAL_RUNNER_WORKING_BASE_DIR  # type: ignore
         / f"workflow_{workflow_id:06d}_job_{job_id:06d}"
     ).resolve()
+
+    if settings.FRACTAL_RUNNER_BACKEND == "local":
+        WORKFLOW_DIR_USER = WORKFLOW_DIR
+    else:
+        WORKFLOW_DIR_USER = (Path(project_dir) / WORKFLOW_DIR.name).resolve()
+
     orig_umask = os.umask(0)
     if not WORKFLOW_DIR.exists():
         WORKFLOW_DIR.mkdir(parents=True, mode=0o777)
 
     job.working_dir = WORKFLOW_DIR.as_posix()
+    # FIXME: do we need WORKFLOW_DIR_USER as a model field? Likely so.
+
     job.status = JobStatusType.RUNNING
     db_sync.merge(job)
     db_sync.commit()
@@ -140,6 +152,7 @@ async def submit_workflow(
     logger.info(f"output_path: {output_path}")
     logger.info(f"job.id: {job.id}")
     logger.info(f"job.working_dir: {WORKFLOW_DIR}")
+    logger.info(f"job.working_dir: {WORKFLOW_DIR}")
     logger.info(f'START workflow "{workflow.name}"')
     try:
         output_dataset.meta = await process_workflow(
@@ -149,7 +162,7 @@ async def submit_workflow(
             input_metadata=input_dataset.meta,
             slurm_user=slurm_user,
             workflow_dir=WORKFLOW_DIR,
-            workflow_dir_user=WORKFLOW_DIR,  # FIXME
+            workflow_dir_user=WORKFLOW_DIR_USER,
             logger_name=logger_name,
             worker_init=worker_init,
         )
