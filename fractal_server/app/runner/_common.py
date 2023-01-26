@@ -61,9 +61,15 @@ def _get_list_chunks(mylist: List, *, chunksize: Optional[int]) -> Generator:
 class WorkflowFiles:
     """
     Group all file paths pertaining to a workflow
+
+    FIXME: clarify workflow_dir vs workflow_dir_user
+
+    Attributes:
+        TBD: TBD
     """
 
     workflow_dir: Path
+    workflow_dir_user: Path
     task_order: Optional[int] = None
     component: Optional[str] = None
 
@@ -77,10 +83,12 @@ class WorkflowFiles:
     def __init__(
         self,
         workflow_dir: Path,
+        workflow_dir_user: Path,
         task_order: Optional[int] = None,
         component: Optional[str] = None,
     ):
         self.workflow_dir = workflow_dir
+        self.workflow_dir_user = workflow_dir_user
         self.task_order = task_order
         self.component = component
 
@@ -95,15 +103,16 @@ class WorkflowFiles:
             order = "task"
         self.prefix = f"{order}{component_safe}"
         self.args = self.workflow_dir / f"{self.prefix}.args.json"
-        self.out = self.workflow_dir / f"{self.prefix}.out"
-        self.err = self.workflow_dir / f"{self.prefix}.err"
-        self.metadiff = self.workflow_dir / f"{self.prefix}.metadiff.json"
+        self.out = self.workflow_dir_user / f"{self.prefix}.out"
+        self.err = self.workflow_dir_user / f"{self.prefix}.err"
+        self.metadiff = self.workflow_dir_user / f"{self.prefix}.metadiff.json"
         self.file_prefix = str(self.task_order)
 
 
 @lru_cache()
 def get_workflow_file_paths(
     workflow_dir: Path,
+    workflow_dir_user: Path,
     task_order: Optional[int] = None,
     component: Optional[str] = None,
 ) -> WorkflowFiles:
@@ -114,7 +123,10 @@ def get_workflow_file_paths(
     objects.
     """
     return WorkflowFiles(
-        workflow_dir=workflow_dir, task_order=task_order, component=component
+        workflow_dir=workflow_dir,
+        workflow_dir_user=workflow_dir_user,
+        task_order=task_order,
+        component=component,
     )
 
 
@@ -157,7 +169,8 @@ def call_single_task(
     *,
     task: WorkflowTask,
     task_pars: TaskParameters,
-    workflow_dir: Path = None,
+    workflow_dir: Path,
+    workflow_dir_user: Optional[Path] = None,
 ) -> TaskParameters:
     """
     Call a single task
@@ -178,6 +191,8 @@ def call_single_task(
         workflow_dir:
             The directory in which the execution takes place, and where all
             artifacts are written.
+        workflow_dir_user:
+            FIXME
 
     Returns:
         out_task_parameters:
@@ -195,9 +210,13 @@ def call_single_task(
     """
     if not workflow_dir:
         raise RuntimeError
+    if not workflow_dir_user:
+        workflow_dir_user = workflow_dir
 
     workflow_files = get_workflow_file_paths(
-        workflow_dir=workflow_dir, task_order=task.order
+        workflow_dir=workflow_dir,
+        workflow_dir_user=workflow_dir_user,
+        task_order=task.order,
     )
 
     # assemble full args
@@ -242,7 +261,9 @@ def call_single_task(
         output_path=task_pars.output_path,
         metadata=updated_metadata,
     )
-    with open(workflow_dir / METADATA_FILENAME, "w", opener=file_opener) as f:
+    with open(
+        workflow_dir_user / METADATA_FILENAME, "w", opener=file_opener
+    ) as f:
         json.dump(updated_metadata, f, indent=2)
     return out_task_parameters
 
@@ -252,7 +273,8 @@ def call_single_parallel_task(
     *,
     task: WorkflowTask,
     task_pars: TaskParameters,
-    workflow_dir: Path = None,
+    workflow_dir: Path,
+    workflow_dir_user: Optional[Path] = None,
 ) -> None:
     """
     Call a single instance of a parallel task
@@ -270,6 +292,8 @@ def call_single_parallel_task(
             The parameters to pass on to the task.
         workflow_dir:
             The workflow working directory.
+        workflow_dir:
+            FIXME
 
     Raises:
         TaskExecutionError: If the wrapped task raises a task-related error.
@@ -281,9 +305,14 @@ def call_single_parallel_task(
     """
     if not workflow_dir:
         raise RuntimeError
+    if not workflow_dir_user:
+        workflow_dir_user = workflow_dir
 
     workflow_files = get_workflow_file_paths(
-        workflow_dir=workflow_dir, task_order=task.order, component=component
+        workflow_dir=workflow_dir,
+        workflow_dir_user=workflow_dir_user,
+        task_order=task.order,
+        component=component,
     )
 
     # assemble full args
@@ -317,9 +346,10 @@ def call_parallel_task(
     task: WorkflowTask,
     task_pars_depend_future: Future,  # py3.9 Future[TaskParameters],
     workflow_dir: Path,
+    workflow_dir_user: Optional[Path] = None,
     submit_setup_call: Callable[
-        [WorkflowTask, TaskParameters, Path], Dict[str, Any]
-    ] = lambda task, task_pars, workflow_dir: {},
+        [WorkflowTask, TaskParameters, Path, Path], Dict[str, Any]
+    ] = lambda task, task_pars, workflow_dir, workflow_dir_user: {},
 ) -> Future:  # py3.9 Future[TaskParameters]:
     """
     Collect results from the parallel instances of a parallel task
@@ -341,6 +371,8 @@ def call_parallel_task(
             to the parallel task.
         workflow_dir:
             The workflow working directory.
+        workflow_dir_user:
+            FIXME
         submit_setup_call:
             An optional function that computes configuration parameters for
             the executor.
@@ -350,6 +382,10 @@ def call_parallel_task(
             A future that resolves in the output task parameters of the
             parallel task execution, ready to be passed on to the next task.
     """
+
+    if not workflow_dir_user:
+        workflow_dir_user = workflow_dir
+
     task_pars_depend = task_pars_depend_future.result()
     component_list = task_pars_depend.metadata[task.parallelization_level]
 
@@ -359,8 +395,11 @@ def call_parallel_task(
         task=task,
         task_pars=task_pars_depend,
         workflow_dir=workflow_dir,
+        workflow_dir_user=workflow_dir_user,
     )
-    extra_setup = submit_setup_call(task, task_pars_depend, workflow_dir)
+    extra_setup = submit_setup_call(
+        task, task_pars_depend, workflow_dir, workflow_dir_user
+    )
 
     # Depending on FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW, either submit all
     # tasks at once or in smaller chunks.  Note that `for _ in map_iter: pass`
@@ -397,7 +436,9 @@ def call_parallel_task(
         metadata=task_pars_depend.metadata,
     )
 
-    with open(workflow_dir / METADATA_FILENAME, "w", opener=file_opener) as f:
+    with open(
+        workflow_dir_user / METADATA_FILENAME, "w", opener=file_opener
+    ) as f:
         json.dump(task_pars_depend.metadata, f, indent=2)
     out_future: Future = Future()
     out_future.set_result(out_task_parameters)
@@ -410,9 +451,10 @@ def recursive_task_submission(
     task_list: List[WorkflowTask],
     task_pars: TaskParameters,
     workflow_dir: Path,
+    workflow_dir_user: Optional[Path] = None,  # FIXME currently not used
     submit_setup_call: Callable[
-        [WorkflowTask, TaskParameters, Path], Dict[str, Any]
-    ] = lambda task, task_pars, workflow_dir: {},
+        [WorkflowTask, TaskParameters, Path, Path], Dict[str, Any]
+    ] = lambda task, task_pars, workflow_dir, workflow_dir_user: {},
     logger_name: str,
 ) -> Future:
     """
@@ -441,6 +483,8 @@ def recursive_task_submission(
             The task parameters to be passed on to the first task of the list.
         workflow_dir:
             The workflow working directory.
+        workflow_dir_user:
+            FIXME
         submit_setup_call:
             An optional function that computes configuration parameters for
             the executor.
@@ -452,6 +496,10 @@ def recursive_task_submission(
             a future that results to the task parameters which constitute the
             input of the following task in the list.
     """
+
+    if not workflow_dir_user:
+        workflow_dir_user = workflow_dir
+
     try:
         *dependencies, this_task = task_list
     except ValueError:
@@ -469,6 +517,7 @@ def recursive_task_submission(
         task_list=dependencies,
         task_pars=task_pars,
         workflow_dir=workflow_dir,
+        workflow_dir_user=workflow_dir_user,
         submit_setup_call=submit_setup_call,
         logger_name=logger_name,
     )
@@ -483,15 +532,19 @@ def recursive_task_submission(
             task=this_task,
             task_pars_depend_future=task_pars_depend_future,
             workflow_dir=workflow_dir,
+            workflow_dir_user=workflow_dir_user,
             submit_setup_call=submit_setup_call,
         )
     else:
-        extra_setup = submit_setup_call(this_task, task_pars, workflow_dir)
+        extra_setup = submit_setup_call(
+            this_task, task_pars, workflow_dir, workflow_dir_user
+        )
         this_task_future = executor.submit(
             call_single_task,
             task=this_task,
             task_pars=task_pars_depend_future.result(),
             workflow_dir=workflow_dir,
+            workflow_dir_user=workflow_dir_user,
             **extra_setup,
         )
     logger.info(
