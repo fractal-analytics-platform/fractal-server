@@ -1,3 +1,4 @@
+import os
 import shlex
 import subprocess
 from concurrent.futures import Executor
@@ -98,6 +99,38 @@ def test_slurm_executor(
         slurm_user=slurm_user,
         working_dir=tmp777_path,
         working_dir_user=tmp777_path,
+        slurm_poll_interval=4,
+    ) as executor:
+        res = executor.submit(lambda: 42)
+    assert res.result() == 42
+
+
+@pytest.mark.parametrize("slurm_user", [None, "test01"])
+def test_slurm_executor_separate_folders(
+    slurm_user, monkey_slurm, tmp777_path, cfut_jobs_finished
+):
+    """
+    FIXME
+
+
+    THIS IS THE BROKEN TEST THAT WE NEED TO ADDRESS FIRST
+    """
+
+    server_working_dir = tmp777_path / "server"
+    user_working_dir = tmp777_path / "user"
+    debug(server_working_dir)
+    debug(user_working_dir)
+    umask = os.umask(0)
+    server_working_dir.mkdir(parents=True)
+    user_working_dir.mkdir(parents=True)
+    server_working_dir.chmod(0o777)
+    user_working_dir.chmod(0o777)
+    os.umask(umask)
+
+    with FractalSlurmExecutor(
+        slurm_user=slurm_user,
+        working_dir=server_working_dir,
+        working_dir_user=user_working_dir,
         slurm_poll_interval=4,
     ) as executor:
         res = executor.submit(lambda: 42)
@@ -259,6 +292,7 @@ def test_sbatch_script_slurm_config(
                 task_list=task_list,
                 task_pars=task_pars,
                 workflow_dir=tmp_path,
+                workflow_dir_user=tmp_path,
                 submit_setup_call=set_slurm_config,
                 logger_name=logger_name,
             )
