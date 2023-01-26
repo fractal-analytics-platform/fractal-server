@@ -120,7 +120,7 @@ async def submit_workflow(
 
     if settings.FRACTAL_RUNNER_BACKEND == "local":
         WORKFLOW_DIR_USER = WORKFLOW_DIR
-    else:
+    else:  # FIXME set slurm
         WORKFLOW_DIR_USER = (Path(project_dir) / WORKFLOW_DIR.name).resolve()
 
     orig_umask = os.umask(0)
