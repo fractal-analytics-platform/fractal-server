@@ -149,6 +149,7 @@ async def submit_workflow(
             input_metadata=input_dataset.meta,
             slurm_user=slurm_user,
             workflow_dir=WORKFLOW_DIR,
+            workflow_dir_user=WORKFLOW_DIR,  # FIXME
             logger_name=logger_name,
             worker_init=worker_init,
         )
