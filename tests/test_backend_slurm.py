@@ -41,7 +41,9 @@ def test_submit_pre_command(
     fake_process.register(["squeue", fake_process.any()])
 
     with FractalSlurmExecutor(
-        slurm_user=slurm_user, script_dir=tmp_path
+        slurm_user=slurm_user,
+        working_dir=tmp_path,
+        working_dir_user=tmp_path,
     ) as executor:
         submit_and_ignore_exceptions(executor, lambda: None)
 
@@ -56,7 +58,7 @@ def test_submit_pre_command(
 
 
 def test_unit_sbatch_script_readable(
-    monkey_slurm, tmp777_path, cfut_jobs_finished
+    monkey_slurm, tmp755_path, cfut_jobs_finished
 ):
     """
     GIVEN a batch script written to file by the slurm executor
@@ -66,9 +68,9 @@ def test_unit_sbatch_script_readable(
     import shlex
 
     SBATCH_SCRIPT = "test"
-    with FractalSlurmExecutor(script_dir=tmp777_path) as executor:
+    with FractalSlurmExecutor(working_dir=tmp755_path) as executor:
         f = executor.write_batch_script(
-            SBATCH_SCRIPT, dest=tmp777_path / "script.sbatch"
+            SBATCH_SCRIPT, dest=tmp755_path / "script.sbatch"
         )
 
     out = subprocess.run(
@@ -93,7 +95,10 @@ def test_slurm_executor(
     """
 
     with FractalSlurmExecutor(
-        script_dir=tmp777_path, slurm_user=slurm_user, slurm_poll_interval=4
+        slurm_user=slurm_user,
+        working_dir=tmp777_path,
+        working_dir_user=tmp777_path,
+        slurm_poll_interval=4,
     ) as executor:
         res = executor.submit(lambda: 42)
     assert res.result() == 42
@@ -118,8 +123,9 @@ def test_slurm_executor_scancel(
 
     with pytest.raises(JobExecutionError) as e:
         with FractalSlurmExecutor(
-            script_dir=tmp777_path,
             slurm_user=slurm_user,
+            working_dir=tmp777_path,
+            working_dir_user=tmp777_path,
             debug=True,
             keep_logs=True,
             slurm_poll_interval=4,
@@ -242,7 +248,8 @@ def test_sbatch_script_slurm_config(
     ]
     with FractalSlurmExecutor(
         slurm_user="NO_USER",
-        script_dir=tmp_path,
+        working_dir=tmp_path,
+        working_dir_user=tmp_path,
         common_script_lines=sbatch_init_lines,
     ) as executor:
 
