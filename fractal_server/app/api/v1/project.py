@@ -198,6 +198,10 @@ async def apply_workflow(
     )
     project, input_dataset = (await db.execute(stm)).one()
 
+    from devtools import debug  # FIXME
+
+    debug(project)  # FIXME
+
     # TODO check that user is allowed to use this task
 
     workflow = db_sync.get(Workflow, apply_workflow.workflow_id)
@@ -246,6 +250,9 @@ async def apply_workflow(
     db.add(job)
     await db.commit()
     await db.refresh(job)
+
+    debug(project)  # FIXME
+    debug(project.project_dir)  # FIXME
 
     background_tasks.add_task(
         submit_workflow,
