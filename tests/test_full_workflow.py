@@ -61,7 +61,16 @@ async def test_full_workflow(
         request.getfixturevalue("relink_python_interpreter")
 
     async with MockCurrentUser(persist=True) as user:
-        project = await project_factory(user)
+        project = await project_factory(
+            user, project_dir=str(tmp777_path / "project_dir")
+        )
+
+        # FIXME: this block should not be needed
+        if not os.path.exists(project.project_dir):
+            current_umask = os.umask(0)
+            Path(project.project_dir).mkdir(parents=True, mode=0o777)
+            os.umask(current_umask)
+
         debug(project)
         project_id = project.id
         input_dataset = await dataset_factory(
