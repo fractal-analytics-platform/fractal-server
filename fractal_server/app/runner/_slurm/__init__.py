@@ -207,7 +207,8 @@ def _process_workflow(
     input_metadata: Dict[str, Any],
     logger_name: str,
     workflow_dir: Path,
-    slurm_user: str = None,
+    workflow_dir_user: Optional[Path] = None,
+    slurm_user: Optional[str] = None,
     worker_init: Optional[Union[str, List[str]]] = None,
 ) -> Dict[str, Any]:
     """
@@ -231,6 +232,8 @@ def _process_workflow(
         logger_name:
             TBD
         workflow_dir:
+            TBD
+        workflow_dir_user:
             TBD
         slurm_user:
             TBD
@@ -275,7 +278,8 @@ async def process_workflow(
     input_metadata: Dict[str, Any],
     logger_name: str,
     workflow_dir: Path,
-    slurm_user: str = None,
+    workflow_dir_user: Optional[Path] = None,
+    slurm_user: Optional[str] = None,
     worker_init: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
@@ -290,6 +294,7 @@ async def process_workflow(
         input_metadata=input_metadata,
         logger_name=logger_name,
         workflow_dir=workflow_dir,
+        workflow_dir_user=workflow_dir_user,
         slurm_user=slurm_user,
         worker_init=worker_init,
     )
