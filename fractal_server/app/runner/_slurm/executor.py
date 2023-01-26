@@ -230,14 +230,10 @@ class FractalSlurmExecutor(SlurmExecutor):
         ] + [f"export CFUT_DIR={self.working_dir}"]
         # FIXME: do we need CFUT_DIR? If yes, where?
 
-        # TODO: the chmod command always fails, because not all files belong to
-        # the user (some are owned by fractal). For this reason, the SLURM job
-        # may appear as FAILED at some point (even if the task ran through).
-        # This behavior will change as soon as we change the
-        # ownership/permissions of the workflow folder and log files.
         cmd = [
+            f"mkdir -p {self.working_dir_user}",  # FIXME
             shlex.join(["srun", *cmdline]),
-            f"chmod 777 {outpath.parent / '*'}",
+            f"chmod 777 {outpath.parent / '*'}",  # FIXME remove this
         ]
 
         script_lines = ["#!/bin/sh"] + sbatch_lines + non_sbatch_lines + cmd
