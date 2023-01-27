@@ -4,7 +4,6 @@ import shlex
 import subprocess
 from pathlib import Path
 from typing import List
-from typing import Sequence
 
 import pytest
 from devtools import debug
@@ -63,24 +62,27 @@ def cfut_jobs_finished(monkeypatch):
     """
     This fixture is a workaround to add quotes around the --format argument of
     squeue, see discussion in
-    https://github.com/sampsyo/clusterfutures/pull/19. The code of
-    _jobs_finished is a copy of the function proposed via that PR.
+    https://github.com/sampsyo/clusterfutures/pull/19.
+
+    The code of _jobs_finished, below, is a copy of the function from
+    https://github.com/sampsyo/clusterfutures/blob/09792479c2b5d3fb27d840cbd76138fae6d802a1/cfut/slurm.py#L37-L54,
+    with changes marked via # CHANGED comments.
     """
 
     import cfut
-    import subprocess
+    from subprocess import run, PIPE
 
-    def _jobs_finished(job_ids: Sequence[str]):
+    def _jobs_finished(job_ids):
+        """Check which ones of the given Slurm jobs already finished"""
 
+        # CHANGED -- start
         import logging
 
         logging.basicConfig(format="%(asctime)s; %(levelname)s; %(message)s")
         logging.warning(f"[_jobs_finished] START {job_ids=}")
+        # CHANGED -- end
 
-        # Note: this check is only useful for debugging
-        if job_ids:
-            assert type(list(job_ids)[0]) == str
-
+        # CHANGED -- start
         STATES_FINISHED = {  # https://slurm.schedmd.com/squeue.html#lbAG
             "BOOT_FAIL",
             "CANCELLED",
@@ -93,19 +95,28 @@ def cfut_jobs_finished(monkeypatch):
             "SPECIAL_EXIT",
             "TIMEOUT",
         }
+        # CHANGED -- end
 
-        res = subprocess.run(
+        # CHANGED -- start (only useful for debugging)
+        if job_ids:
+            assert type(list(job_ids)[0]) == str
+        # CHANGED -- end
+
+        # If there is no Slurm job to check, return right away
+        if not job_ids:
+            return set()
+
+        res = run(
             [
                 "squeue",
                 "--noheader",
-                # The next line is the one that gets changed via this fixture
-                '--format="%i %T"',
+                '--format="%i %T"',  # CHANGED
                 "--jobs",
-                ",".join([j for j in job_ids]),
+                ",".join([str(j) for j in job_ids]),
                 "--states=all",
             ],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            stdout=PIPE,
+            stderr=PIPE,
             encoding="utf-8",
             check=True,
         )
@@ -116,25 +127,23 @@ def cfut_jobs_finished(monkeypatch):
             ]
         )
 
+        # CHANGED -- start
         logging.warning(f"[_jobs_finished] FROM SQUEUE: {id_to_state=}")
+        # CHANGED -- end
 
-        finished_jobs = {
-            j for j in job_ids if id_to_state.get(j, None) in STATES_FINISHED
-        }
-        logging.warning(f"[_jobs_finished] FROM SQUEUE {finished_jobs=}")
         # Finished jobs only stay in squeue for a few mins (configurable). If
         # a job ID isn't there, we'll assume it's finished.
-        for job_id in job_ids:
-            if (
-                job_id not in finished_jobs
-                and job_id not in id_to_state.keys()
-            ):
-                finished_jobs.add(job_id)
+        # CHANGED -- start (print output before returning
+        finished_jobs = {
+            j
+            for j in job_ids
+            if id_to_state.get(j, "COMPLETED") in STATES_FINISHED
+        }
         logging.warning(
             f"[_jobs_finished] INCLUDING MISSING ONES {finished_jobs=}"
         )
-
         return finished_jobs
+        # CHANGED -- end
 
     # Replace the jobs_finished function (from cfut.slurm) with our custom one
     monkeypatch.setattr(cfut.slurm, "jobs_finished", _jobs_finished)
