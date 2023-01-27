@@ -513,7 +513,8 @@ class FractalSlurmExecutor(SlurmExecutor):
             cmdline=shlex.split(
                 f"{python_worker_interpreter}"
                 " -m fractal_server.app.runner._slurm.remote "
-                f"{job.slurm_input}"
+                f"--input-file {job.slurm_input} "
+                f"--output-file {job.slurm_output}"
             ),
             outpath=job.stdout,
             errpath=job.stderr,
