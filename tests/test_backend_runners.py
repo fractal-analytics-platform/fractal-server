@@ -12,6 +12,7 @@ Institute for Biomedical Research and Pelkmans Lab from the University of
 Zurich.
 """
 import logging
+import os
 
 import pytest
 from devtools import debug
@@ -50,10 +51,16 @@ async def test_runner(
         request.getfixturevalue("slurm_config")
         request.getfixturevalue("cfut_jobs_finished")
 
+    # FIXME: this will have to be removed, once we add the sudo-cat mechanism
+    project_dir = tmp777_path / "project_dir"
+    umask = os.umask(0)
+    project_dir.mkdir(parents=True, mode=0o777)
+    os.umask(umask)
+
     process_workflow = _backends[backend]
 
     async with MockCurrentUser(persist=True) as user:
-        prj = await project_factory(user=user)
+        prj = await project_factory(user=user, project_dir=str(project_dir))
 
     # Add dummy task as a Task
     tk_dummy = collect_packages[0]
