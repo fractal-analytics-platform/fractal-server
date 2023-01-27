@@ -236,7 +236,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         ]
 
         script_lines = ["#!/bin/sh"] + sbatch_lines + non_sbatch_lines + cmd
-        return "\n".join(script_lines)
+        return "\n".join(script_lines) + "\n"
 
     def map(
         self,
