@@ -152,7 +152,7 @@ async def submit_workflow(
     logger.info(f"output_path: {output_path}")
     logger.info(f"job.id: {job.id}")
     logger.info(f"job.working_dir: {WORKFLOW_DIR}")
-    logger.info(f"job.working_dir: {WORKFLOW_DIR}")
+    logger.info(f"{WORKFLOW_DIR_USER=}")  # FIXME: add it to db model
     logger.info(f'START workflow "{workflow.name}"')
     try:
         output_dataset.meta = await process_workflow(

@@ -464,7 +464,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                             jobid, info=proxy.kwargs.get("info", None)
                         )
                         fut.set_exception(job_exc)
-                out_path.unlink()
+                # out_path.unlink()  # FIXME: uncomment this line
             else:
                 # Output pickle file is missing
                 info = (
@@ -487,7 +487,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                 job_exc = self._prepare_JobExecutionError(jobid, info=info)
                 fut.set_exception(job_exc)
             # Clean up input pickle file
-            in_path.unlink()
+            # in_path.unlink() # FIXME uncomment this line
             self._cleanup(jobid)
         except Exception as e:
             fut.set_exception(e)
