@@ -60,10 +60,14 @@ async def test_full_workflow(
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
 
+    # FIXME: this will have to be removed, once we add the sudo-cat mechanism
+    project_dir = tmp777_path / f"project_dir-{backend}"
+    umask = os.umask(0)
+    project_dir.mkdir(parents=True, mode=0o777)
+    os.umask(umask)
+
     async with MockCurrentUser(persist=True) as user:
-        project = await project_factory(
-            user, project_dir=str(tmp777_path / "project_dir")
-        )
+        project = await project_factory(user, project_dir=str(project_dir))
 
         # FIXME: this block should not be needed
         if not os.path.exists(project.project_dir):
