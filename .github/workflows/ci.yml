@@ -55,7 +55,7 @@ jobs:
         run: poetry install --with dev --no-interaction --all-extras
 
       - name: Test with pytest
-        run: poetry run coverage run -m pytest tests/test_backend_* -s -vv --log-cli-level warning
+        run: poetry run coverage run -m pytest
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
