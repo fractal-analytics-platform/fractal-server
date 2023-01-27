@@ -205,7 +205,7 @@ def test_unit_slurm_config():
     ),
 )
 def test_sbatch_script_slurm_config(
-    tmp_path, slurm_config, slurm_config_key, task
+    tmp_path, slurm_config, slurm_config_key, task, cfut_jobs_finished
 ):
     """
     GIVEN

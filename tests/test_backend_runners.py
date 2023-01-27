@@ -48,6 +48,7 @@ async def test_runner(
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
         request.getfixturevalue("slurm_config")
+        request.getfixturevalue("cfut_jobs_finished")
 
     process_workflow = _backends[backend]
 
