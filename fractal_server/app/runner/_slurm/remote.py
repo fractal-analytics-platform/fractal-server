@@ -49,9 +49,9 @@ class ExceptionProxy:
 
 
 def worker(
-    in_fname: str,
     *,
-    out_fname: Optional[str] = None,
+    in_fname: str,
+    out_fname: str,
     extra_import_paths: Optional[str] = None,
 ) -> None:
     """
@@ -120,8 +120,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output-file",
         type=str,
-        help='Path of output pickle file (if not provided, defaults to `in_name.replace(".in.", ".out.")`).',
-        required=False,
+        help="Path of output pickle file",
+        required=True,
     )
     parser.add_argument(
         "--extra-import-paths",
@@ -134,9 +134,9 @@ if __name__ == "__main__":
 
     logging.warning(f"{parsed_args=}")
 
-    kwargs = dict(in_fname=parsed_args.input_file)
-    if parsed_args.output_file:
-        kwargs["out_fname"] = parsed_args.output_file
+    kwargs = dict(
+        in_fname=parsed_args.input_file, out_fname=parsed_args.output_file
+    )
     if parsed_args.extra_import_paths:
         kwargs["extra_import_paths"] = parsed_args.extra_import_paths
     worker(**kwargs)
