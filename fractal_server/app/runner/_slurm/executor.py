@@ -226,7 +226,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         # This behavior will change as soon as we change the
         # ownership/permissions of the workflow folder and log files.
         cmd = [
-            shlex.join(["srun", *cmdline]),
+            shlex.join(cmdline),
             f"chmod 777 {outpath.parent / '*'}",
         ]
 
