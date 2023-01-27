@@ -68,7 +68,10 @@ def worker(
 
     out_dir = os.path.dirname(out_fname)
     if not os.path.exists(out_dir):
-        os.mkdir(out_dir)
+        # FIXME: remove this 777 parts, later on when we introduce sudo-cat
+        umask = os.umask(0)
+        os.mkdir(out_dir, mode=0o777)
+        os.umask(umask)
 
     # FIXME: remove logging
     import logging
