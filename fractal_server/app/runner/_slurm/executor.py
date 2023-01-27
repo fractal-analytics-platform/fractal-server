@@ -232,7 +232,8 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         cmd = [
             f"mkdir -p {self.working_dir_user}",  # FIXME
-            shlex.join(["srun", *cmdline]),
+            # shlex.join(["srun", *cmdline]), #FIXME
+            shlex.join(cmdline),
             f"chmod 777 {outpath.parent / '*'}",  # FIXME remove this
         ]
 
