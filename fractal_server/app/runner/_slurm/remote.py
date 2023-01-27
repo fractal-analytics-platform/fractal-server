@@ -13,6 +13,7 @@
 This module provides a simple self-standing script that executes arbitrary
 python code received via pickled files on a cluster node.
 """
+import argparse
 import os
 import sys
 from typing import Dict
@@ -47,15 +48,21 @@ class ExceptionProxy:
         self.kwargs: Dict = kwargs
 
 
-def worker(in_fname: str, extra_import_paths: Optional[str] = None) -> None:
+def worker(
+    in_fname: str,
+    *,
+    out_fname: Optional[str] = None,
+    extra_import_paths: Optional[str] = None,
+) -> None:
     """
     Called to execute a job on a remote host.
 
     Arguments:
         in_fname: TBD
+        out_fname: TBD
         extra_import_paths: TBD
-
     """
+
     if extra_import_paths:
         _extra_import_paths = extra_import_paths.split(":")
         sys.path[:0] = _extra_import_paths
@@ -75,13 +82,20 @@ def worker(in_fname: str, extra_import_paths: Optional[str] = None) -> None:
             typ,
             traceback.format_exception(typ, value, tb),
             e.args,
-            **e.__dict__
+            **e.__dict__,
         )
 
         result = False, exc_proxy
         out = cloudpickle.dumps(result)
 
-    out_fname = in_fname.replace(".in.", ".out.")
+    import logging
+
+    if not out_fname:
+        out_fname = in_fname.replace(".in.", ".out.")
+
+    logging.warning(f"{in_fname=}")
+    logging.warning(f"{out_fname=}")
+
     tempfile = out_fname + ".tmp"
     with open(tempfile, "wb") as f:
         f.write(out)
@@ -89,4 +103,34 @@ def worker(in_fname: str, extra_import_paths: Optional[str] = None) -> None:
 
 
 if __name__ == "__main__":
-    worker(*sys.argv[1:])
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--input-file",
+        type=str,
+        help="Path of input pickle file",
+        required=True,
+    )
+    parser.add_argument(
+        "--output-file",
+        type=str,
+        help='Path of output pickle file (if not provided, defaults to `in_name.replace(".in.", ".out.")`).',
+        required=False,
+    )
+    parser.add_argument(
+        "--extra-import-paths",
+        type=str,
+        help="Extra import paths",
+        required=False,
+    )
+    parsed_args = parser.parse_args()
+    import logging
+
+    logging.warning(f"{parsed_args=}")
+
+    kwargs = dict(in_fname=parsed_args.input_file)
+    if parsed_args.output_file:
+        kwargs["out_fname"] = parsed_args.output_file
+    if parsed_args.extra_import_paths:
+        kwargs["extra_import_paths"] = parsed_args.extra_import_paths
+    worker(**kwargs)
