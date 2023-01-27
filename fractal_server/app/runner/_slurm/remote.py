@@ -68,7 +68,7 @@ def worker(
 
     out_dir = os.path.dirname(out_fname)
     if not os.path.exists(out_dir):
-        os.path.mkdir(out_dir)
+        os.mkdir(out_dir)
 
     # FIXME: remove logging
     import logging
