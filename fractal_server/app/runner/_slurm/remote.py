@@ -63,6 +63,20 @@ def worker(
         extra_import_paths: TBD
     """
 
+    if not out_fname:
+        out_fname = in_fname.replace(".in.", ".out.")
+
+    out_dir = os.path.dirname(out_fname)
+    if not os.path.exists(out_dir):
+        os.path.mkdir(out_dir)
+
+    # FIXME: remove logging
+    import logging
+
+    logging.warning(f"{in_fname=}")
+    logging.warning(f"{out_fname=}")
+    logging.warning(f"{out_dir=}")
+
     if extra_import_paths:
         _extra_import_paths = extra_import_paths.split(":")
         sys.path[:0] = _extra_import_paths
@@ -87,14 +101,6 @@ def worker(
 
         result = False, exc_proxy
         out = cloudpickle.dumps(result)
-
-    import logging
-
-    if not out_fname:
-        out_fname = in_fname.replace(".in.", ".out.")
-
-    logging.warning(f"{in_fname=}")
-    logging.warning(f"{out_fname=}")
 
     tempfile = out_fname + ".tmp"
     with open(tempfile, "wb") as f:

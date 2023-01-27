@@ -231,7 +231,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         # FIXME: do we need CFUT_DIR? If yes, where?
 
         cmd = [
-            f"mkdir -p {self.working_dir_user}",  # FIXME
             shlex.join(["srun", *cmdline]),
             f"chmod 777 {outpath.parent / '*'}",  # FIXME remove this
         ]
