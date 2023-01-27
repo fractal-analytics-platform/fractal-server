@@ -214,9 +214,17 @@ class FractalSlurmExecutor(SlurmExecutor):
         outpath = outpath or self.get_stdout_filename()
         errpath = errpath or self.get_stderr_filename()
 
+        # FIXME put back the original variables:
+        #    f"#SBATCH --output={outpath}",
+        #    f"#SBATCH --error={errpath}",
+        import logging
+
+        logging.critical("FIXME: slurm out/err is now going to /tmp!")
+        new_outpath = f"/tmp/{outpath.name}"
+        new_errpath = f"/tmp/{errpath.name}"
         sbatch_lines = [
-            f"#SBATCH --output={outpath}",
-            f"#SBATCH --error={errpath}",
+            f"#SBATCH --output={new_outpath}",  # FIXME
+            f"#SBATCH --error={new_errpath}",  # FIXME
         ] + [
             ln
             for ln in additional_setup_lines + self.common_script_lines
