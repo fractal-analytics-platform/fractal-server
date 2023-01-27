@@ -110,10 +110,8 @@ def test_slurm_executor_separate_folders(
     slurm_user, monkey_slurm, tmp777_path, cfut_jobs_finished
 ):
     """
-    FIXME
-
-
-    THIS IS THE BROKEN TEST THAT WE NEED TO ADDRESS FIRST
+    FIXME: this will need to work with a tmp755 server dir and user-owned 700
+    user dir
     """
 
     server_working_dir = tmp777_path / "server"
