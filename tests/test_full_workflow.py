@@ -22,6 +22,7 @@ from pathlib import Path
 import pytest
 from devtools import debug
 
+from .fixtures_slurm import _create_folder_as_user
 from .fixtures_slurm import scancel_all_jobs_of_a_slurm_user
 from fractal_server.app.runner import _backends
 
@@ -58,22 +59,18 @@ async def test_full_workflow(
     debug(f"Testing with {backend=}")
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
+        monkey_slurm_user = request.getfixturevalue("monkey_slurm_user")
         request.getfixturevalue("relink_python_interpreter")
 
     # FIXME: this will have to be removed, once we add the sudo-cat mechanism
     project_dir = tmp777_path / f"project_dir-{backend}"
-    umask = os.umask(0)
-    project_dir.mkdir(parents=True, mode=0o777)
-    os.umask(umask)
+    _create_folder_as_user(path=str(project_dir), user=monkey_slurm_user)
+    # umask = os.umask(0)
+    # project_dir.mkdir(parents=True, mode=0o777)
+    # os.umask(umask)
 
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user, project_dir=str(project_dir))
-
-        # FIXME: this block should not be needed
-        if not os.path.exists(project.project_dir):
-            current_umask = os.umask(0)
-            Path(project.project_dir).mkdir(parents=True, mode=0o777)
-            os.umask(current_umask)
 
         debug(project)
         project_id = project.id
