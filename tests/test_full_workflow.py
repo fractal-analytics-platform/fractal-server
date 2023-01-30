@@ -341,6 +341,7 @@ async def test_failing_workflow_JobExecutionError(
     request,
     override_settings_factory,
     monkey_slurm,
+    monkey_slurm_user,
     relink_python_interpreter,
     cfut_jobs_finished,
 ):
@@ -407,7 +408,7 @@ async def test_failing_workflow_JobExecutionError(
         # The following block is based on
         # https://stackoverflow.com/a/59645689/19085332
         scancel_sleep_time = 10
-        slurm_user = "test01"
+        slurm_user = monkey_slurm_user
         logging.warning(f"PRE THREAD START {time.perf_counter()=}")
         _thread = threading.Thread(
             target=_auxiliary_run, args=(slurm_user, scancel_sleep_time)

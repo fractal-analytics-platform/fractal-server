@@ -150,6 +150,11 @@ def cfut_jobs_finished(monkeypatch):
 
 
 @pytest.fixture
+def monkey_slurm_user():
+    return "test01"
+
+
+@pytest.fixture
 def monkey_slurm(monkeypatch, docker_compose_project_name, docker_services):
     """
     Monkeypatch Popen to execute overridden command in container
