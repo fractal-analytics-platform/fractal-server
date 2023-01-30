@@ -18,6 +18,8 @@ individual backends.
 """
 import logging
 import os
+import shlex
+import subprocess
 from pathlib import Path
 from typing import Dict
 from typing import Optional
@@ -107,12 +109,15 @@ async def submit_workflow(
     if not job:
         raise ValueError("Cannot fetch job")
 
+    settings = Inject(get_settings)
+    if settings.FRACTAL_RUNNER_BACKEND == "slurm" and not slurm_user:
+        raise ValueError("FIXME: missing slurm_user")
+
     input_paths = input_dataset.paths
     output_path = output_dataset.paths[0]
 
     workflow_id = workflow.id
 
-    settings = Inject(get_settings)
     WORKFLOW_DIR = (
         settings.FRACTAL_RUNNER_WORKING_BASE_DIR  # type: ignore
         / f"workflow_{workflow_id:06d}_job_{job_id:06d}"
@@ -122,6 +127,18 @@ async def submit_workflow(
         WORKFLOW_DIR_USER = WORKFLOW_DIR
     else:  # FIXME set slurm
         WORKFLOW_DIR_USER = (Path(project_dir) / WORKFLOW_DIR.name).resolve()
+        logging.critical(f"Now creating {str(WORKFLOW_DIR_USER)}")
+        res = subprocess.run(
+            shlex.split(
+                f"sudo -u {slurm_user} mkdir -p {str(WORKFLOW_DIR_USER)}"
+            ),
+            check=True,
+            capture_output=True,
+            encoding="utf-8",
+        )
+        logging.critical(res.returncode)
+        logging.critical(res.stdout)
+        logging.critical(res.stderr)
 
     orig_umask = os.umask(0)
     if not WORKFLOW_DIR.exists():
