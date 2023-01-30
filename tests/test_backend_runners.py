@@ -82,6 +82,10 @@ async def test_runner(
 
     debug(wf)
 
+    # FIXME: this should change, for the slurm backend
+    workflow_dir = tmp777_path
+    workflow_dir_user = tmp777_path
+
     # process workflow
     logger_name = "job_logger"
     logger = set_logger(
@@ -95,7 +99,8 @@ async def test_runner(
         output_path=tmp777_path / "out.json",
         input_metadata={},
         logger_name=logger_name,
-        workflow_dir=tmp777_path,
+        workflow_dir=workflow_dir,
+        workflow_dir_user=workflow_dir_user,
     )
     close_job_logger(logger)
     debug(metadata)
