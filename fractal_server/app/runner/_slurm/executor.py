@@ -10,6 +10,7 @@
 #
 # Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
 # University of Zurich
+import logging
 import shlex
 import subprocess  # nosec
 import sys
@@ -38,8 +39,8 @@ from .wait_thread import FractalSlurmWaitThread
 class SlurmJob:
     workerid: str
 
-    slurm_input: Path
-    slurm_output: Path
+    input_pickle_file: Path
+    output_pickle_file: Path
     slurm_script: Path
 
     stdout: Path
@@ -122,32 +123,36 @@ class FractalSlurmExecutor(SlurmExecutor):
         """
         self.map_jobid_to_slurm_files.pop(jobid)
 
-    def get_stdout_filename(
-        self, arg: str = "%j", prefix: Optional[str] = None
+    def get_input_pickle_file_path(
+        self, arg: str, prefix: Optional[str] = None
     ) -> Path:
-        prefix = prefix or "slurmpy.stdout"
-        return self.working_dir_user / f"{prefix}.slurm.{arg}.out"
-
-    def get_stderr_filename(
-        self, arg: str = "%j", prefix: Optional[str] = None
-    ) -> Path:
-        prefix = prefix or "slurmpy.stdout"
-        return self.working_dir_user / f"{prefix}.slurm.{arg}.err"
-
-    def get_in_filename(self, arg: str, prefix: Optional[str] = None) -> Path:
         prefix = prefix or "cfut"
         return self.working_dir / f"{prefix}.in.{arg}.pickle"
 
-    def get_out_filename(self, arg: str, prefix: Optional[str] = None) -> Path:
+    def get_output_pickle_file_path(
+        self, arg: str, prefix: Optional[str] = None
+    ) -> Path:
         prefix = prefix or "cfut"
         return self.working_dir_user / f"{prefix}.out.{arg}.pickle"
 
-    def get_slurm_script_filename(
+    def get_slurm_script_file_path(
         self, arg: Optional[str] = None, prefix: Optional[str] = None
     ) -> Path:
         prefix = prefix or "_temp"
         arg = arg or "submit"
         return self.working_dir / f"{prefix}.slurm.{arg}.sbatch"
+
+    def get_slurm_stdout_file_path(
+        self, arg: str = "%j", prefix: Optional[str] = None
+    ) -> Path:
+        prefix = prefix or "slurmpy.stdout"
+        return self.working_dir_user / f"{prefix}.slurm.{arg}.out"
+
+    def get_slurm_stderr_file_path(
+        self, arg: str = "%j", prefix: Optional[str] = None
+    ) -> Path:
+        prefix = prefix or "slurmpy.stderr"
+        return self.working_dir_user / f"{prefix}.slurm.{arg}.err"
 
     def write_batch_script(self, sbatch_script: str, dest: Path) -> Path:
         """
@@ -184,7 +189,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             jobid:
                 integer job id as returned by `sbatch` submission
         """
-        script_path = script_path or self.get_slurm_script_filename(
+        script_path = script_path or self.get_slurm_script_file_path(
             random_string()
         )
         self.write_batch_script(sbatch_script=sbatch_script, dest=script_path)
@@ -223,12 +228,12 @@ class FractalSlurmExecutor(SlurmExecutor):
         additional_setup_lines=None,
     ) -> str:
         additional_setup_lines = additional_setup_lines or []
-        outpath = outpath or self.get_stdout_filename()
-        errpath = errpath or self.get_stderr_filename()
+        slurm_stdout_file = outpath or self.get_slurm_stdout_file_path()
+        slurm_stderr_file = errpath or self.get_slurm_stderr_file_path()
 
         sbatch_lines = [
-            f"#SBATCH --output={outpath}",
-            f"#SBATCH --error={errpath}",
+            f"#SBATCH --output={slurm_stdout_file}",
+            f"#SBATCH --error={slurm_stderr_file}",
         ] + [
             ln
             for ln in additional_setup_lines + self.common_script_lines
@@ -244,7 +249,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         cmd = [
             shlex.join(["srun", *cmdline]),
-            f"chmod 777 {outpath.parent / '*'}",  # FIXME remove this
+            f"chmod 777 {slurm_stdout_file.parent / '*'}",  # FIXME remove this
         ]
 
         script_lines = ["#!/bin/sh"] + sbatch_lines + non_sbatch_lines + cmd
@@ -301,6 +306,16 @@ class FractalSlurmExecutor(SlurmExecutor):
         else:
             job_file_fmt = f"_temp_{random_string()}"
 
+        logging.critical("FROM WITHIN MAP")
+        logging.critical(f"{job_file_prefix=}")
+        logging.critical(f"{iterables=}")
+        for args in zip(*iterables):
+            logging.critical(f"{args=}")
+            job_file_prefix = job_file_prefix = job_file_fmt.format(
+                args=sanitize_string(args[0])
+            )
+            logging.critical(f"{job_file_prefix=}")
+
         fs = [
             self.submit(
                 fn,
@@ -349,19 +364,20 @@ class FractalSlurmExecutor(SlurmExecutor):
         """
         fut: futures.Future = futures.Future()
 
-        # Start the job.
+        # Define slurm-job-related files
         job = SlurmJob()
-        job.slurm_input = self.get_in_filename(job.workerid)
-        job.slurm_output = self.get_out_filename(job.workerid)
-        job.slurm_script = self.get_slurm_script_filename(
+        job.input_pickle_file = self.get_input_pickle_file_path(job.workerid)
+        job.output_pickle_file = self.get_output_pickle_file_path(job.workerid)
+        job.slurm_script = self.get_slurm_script_file_path(
             prefix=job_file_prefix
         )
-        job.stdout = self.get_stdout_filename(prefix=job_file_prefix)
-        job.stderr = self.get_stderr_filename(prefix=job_file_prefix)
+        job.stdout = self.get_slurm_stdout_file_path(prefix=job_file_prefix)
+        job.stderr = self.get_slurm_stderr_file_path(prefix=job_file_prefix)
+        logging.critical(f"{vars(job)=}")
 
         # Dump serialized function+args+kwargs to pickle file
         funcser = cloudpickle.dumps((fun, args, kwargs))
-        with open(job.slurm_input, "wb", opener=file_opener) as f:
+        with open(job.input_pickle_file, "wb", opener=file_opener) as f:
             f.write(funcser)
 
         # Submit job to SLURM, and get jobid
@@ -379,7 +395,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         )
 
         # Thread will wait for it to finish.
-        self.wait_thread.wait(job.slurm_output.as_posix(), jobid)
+        self.wait_thread.wait(job.output_pickle_file.as_posix(), jobid)
 
         with self.jobs_lock:
             self.jobs[jobid] = (fut, job)
@@ -441,8 +457,8 @@ class FractalSlurmExecutor(SlurmExecutor):
                 self.jobs_empty_cond.notify_all()
 
         # Input/output pickle files
-        in_path = self.get_in_filename(job.workerid)
-        out_path = self.get_out_filename(job.workerid)
+        in_path = self.get_input_pickle_file_path(job.workerid)
+        out_path = self.get_output_pickle_file_path(job.workerid)
 
         # Handle all uncaught exceptions in this broad try/except block
         try:
@@ -501,6 +517,27 @@ class FractalSlurmExecutor(SlurmExecutor):
             # Clean up input pickle file
             in_path.unlink()
             self._cleanup(jobid)
+
+            # Copy all new files in working_dir_user to working_dir
+            logging.critical(f"{vars(job)=}")
+            for (
+                filename
+            ) in []:  # job.output_pickle_file, job.stdout, job.stderr]:
+                source_file_path = str(self.working_dir_user / filename)
+                dest_file_path = str(self.working_dir / filename)
+                res = subprocess.run(
+                    shlex.split(
+                        f"sudo -u {self.slurm_user} cat {source_file_path}"
+                        f" > {dest_file_path}"
+                    ),
+                    capture_output=True,
+                    encoding="utf-8",
+                )
+                logging.critical(f"{res.returncode=}")
+                logging.critical(f"{res.stdout=}")
+                logging.critical(f"{res.stderr=}")
+                assert res.returncode == 0
+
         except Exception as e:
             fut.set_exception(e)
 
@@ -524,8 +561,8 @@ class FractalSlurmExecutor(SlurmExecutor):
             cmdline=shlex.split(
                 f"{python_worker_interpreter}"
                 " -m fractal_server.app.runner._slurm.remote "
-                f"--input-file {job.slurm_input} "
-                f"--output-file {job.slurm_output}"
+                f"--input-file {job.input_pickle_file} "
+                f"--output-file {job.output_pickle_file}"
             ),
             outpath=job.stdout,
             errpath=job.stderr,
