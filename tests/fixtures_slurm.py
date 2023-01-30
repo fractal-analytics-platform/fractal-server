@@ -266,3 +266,21 @@ def scancel_all_jobs_of_a_slurm_user(
     logging.warning(
         f"Now completed scancel_all_jobs_of_a_slurm_user with {cmd=}"
     )
+
+
+def _create_folder_as_user(*, path: str, user: str, mode: int = None):
+    res = subprocess.run(
+        shlex.split(f"sudo -u {user} mkdir {path}"),
+        encoding="utf-8",
+        capture_output=True,
+    )
+    debug(res)
+    assert res.returncode == 0
+    if mode:
+        res = subprocess.run(
+            shlex.split(f"sudo -u {user} chmod {mode} {path}"),
+            encoding="utf-8",
+            capture_output=True,
+        )
+        debug(res)
+        assert res.returncode == 0
