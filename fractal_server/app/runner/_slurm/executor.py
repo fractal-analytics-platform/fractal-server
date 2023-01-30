@@ -41,8 +41,8 @@ class SlurmJob:
 
     input_pickle_file: Path
     output_pickle_file: Path
-    slurm_script: Path
 
+    slurm_script: Path
     stdout: Path
     stderr: Path
 
@@ -521,23 +521,28 @@ class FractalSlurmExecutor(SlurmExecutor):
             self._cleanup(jobid)
 
             # Copy all new files in working_dir_user to working_dir
-            logging.critical(f"{vars(job)=}")
-            for (
-                filename
-            ) in []:  # job.output_pickle_file, job.stdout, job.stderr]:
+            filenames_to_copy = [
+                f.name for f in self.working_dir_user.glob("*")
+            ]
+            # FIXME: this copies all files, including the ones related to previous tasks
+            # FIXME: one should only iterate over a certain set of files, somehow
+            logging.critical(f"{filenames_to_copy=}")
+            for filename in filenames_to_copy:
                 source_file_path = str(self.working_dir_user / filename)
                 dest_file_path = str(self.working_dir / filename)
+                cmd = (
+                    f"sudo -u {self.slurm_user} cat {source_file_path}"
+                    f" > {dest_file_path}"
+                )
+                logging.warning(f"{cmd=}")
                 res = subprocess.run(
-                    shlex.split(
-                        f"sudo -u {self.slurm_user} cat {source_file_path}"
-                        f" > {dest_file_path}"
-                    ),
+                    shlex.split(cmd),
                     capture_output=True,
                     encoding="utf-8",
                 )
-                logging.critical(f"{res.returncode=}")
-                logging.critical(f"{res.stdout=}")
-                logging.critical(f"{res.stderr=}")
+                logging.warning(f"{res.returncode=}")
+                logging.warning(f"{res.stdout=}")
+                logging.warning(f"{res.stderr=}")
                 assert res.returncode == 0
 
         except Exception as e:
