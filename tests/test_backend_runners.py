@@ -13,12 +13,11 @@ Zurich.
 """
 import logging
 import os
-import shlex
-import subprocess
 
 import pytest
 from devtools import debug
 
+from .fixtures_slurm import _create_folder_as_user
 from fractal_server.app.models import Workflow
 from fractal_server.app.runner import _backends
 from fractal_server.app.runner.common import close_job_logger
@@ -83,19 +82,16 @@ async def test_runner(
     workflow_dir_user = tmp777_path / "user"
     umask = os.umask(0)
     workflow_dir.mkdir(parents=True, mode=0o777)
-    if backend == "local":
-        workflow_dir_user.mkdir(parents=True, mode=0o777)
     os.umask(umask)
+
+    if backend == "local":
+        umask = os.umask(0)
+        workflow_dir_user.mkdir(parents=True, mode=0o777)
+        os.umask(umask)
     if backend == "slurm":
-        res = subprocess.run(
-            shlex.split(
-                f"sudo -u {monkey_slurm_user} mkdir {str(workflow_dir_user)}"
-            ),
-            encoding="utf-8",
-            capture_output=True,
+        _create_folder_as_user(
+            path=str(workflow_dir_user), user=monkey_slurm_user
         )
-        debug(res)
-        assert res.returncode == 0
 
     # Prepare backend-specific arguments
     logger_name = "job_logger"
