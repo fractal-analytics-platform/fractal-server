@@ -64,7 +64,8 @@ async def test_full_workflow(
         request.getfixturevalue("relink_python_interpreter")
         monkey_slurm_user = request.getfixturevalue("monkey_slurm_user")
 
-    # FIXME: this will have to be removed, once we add the sudo-cat mechanism
+    # FIXME: this will have to be cleaned up, once we add the sudo-cat
+    # mechanism
     project_dir = tmp777_path / f"project_dir-{backend}"
     if backend == "local":
         umask = os.umask(0)
@@ -236,16 +237,27 @@ async def test_failing_workflow_TaskExecutionError(
         FRACTAL_RUNNER_BACKEND=backend,
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path
-        / f"artifacts-{backend}-test_failing_workflow_TaskExecutionError",
+        / f"artifacts-{backend}-TaskExecutionError",
     )
 
     debug(f"Testing with {backend=}")
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
+        monkey_slurm_user = request.getfixturevalue("monkey_slurm_user")
         request.getfixturevalue("relink_python_interpreter")
 
+    # FIXME: this will have to be cleaned up, once we add the sudo-cat
+    # mechanism
+    project_dir = tmp777_path / f"project_dir-{backend}-TaskExecutionError"
+    if backend == "local":
+        umask = os.umask(0)
+        project_dir.mkdir(parents=True, mode=0o777)
+        os.umask(umask)
+    elif backend == "slurm":
+        _create_folder_as_user(path=str(project_dir), user=monkey_slurm_user)
+
     async with MockCurrentUser(persist=True) as user:
-        project = await project_factory(user)
+        project = await project_factory(user, project_dir=str(project_dir))
         project_id = project.id
         input_dataset = await dataset_factory(
             project, name="input", type="image", read_only=True
@@ -364,8 +376,13 @@ async def test_failing_workflow_JobExecutionError(
         / "artifacts-test_failing_workflow_JobExecutionError",
     )
 
+    # FIXME: this will have to be cleaned up, once we add the sudo-cat
+    # mechanism
+    project_dir = tmp777_path / "project_dir-JobExecutionError"
+    _create_folder_as_user(path=str(project_dir), user=monkey_slurm_user)
+
     async with MockCurrentUser(persist=True) as user:
-        project = await project_factory(user)
+        project = await project_factory(user, project_dir=str(project_dir))
         project_id = project.id
         input_dataset = await dataset_factory(
             project, name="input", type="image", read_only=True
