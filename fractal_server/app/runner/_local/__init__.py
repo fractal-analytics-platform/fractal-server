@@ -27,6 +27,7 @@ def _process_workflow(
     input_metadata: Dict[str, Any],
     logger_name: str,
     workflow_dir: Path,
+    workflow_dir_user: Path,
 ) -> Dict[str, Any]:
     """
     Internal processing routine
@@ -47,6 +48,7 @@ def _process_workflow(
                 metadata=input_metadata,
             ),
             workflow_dir=workflow_dir,
+            workflow_dir_user=workflow_dir_user,
             logger_name=logger_name,
         )
     output_task_pars = output_task_pars_fut.result()
@@ -114,5 +116,6 @@ async def process_workflow(
         input_metadata=input_metadata,
         logger_name=logger_name,
         workflow_dir=workflow_dir,
+        workflow_dir_user=workflow_dir_user,  # FIXME
     )
     return output_dataset_metadata
