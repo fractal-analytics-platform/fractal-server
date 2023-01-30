@@ -18,8 +18,6 @@ individual backends.
 """
 import logging
 import os
-import shlex
-import subprocess
 from pathlib import Path
 from typing import Dict
 from typing import Optional
@@ -122,30 +120,20 @@ async def submit_workflow(
         settings.FRACTAL_RUNNER_WORKING_BASE_DIR  # type: ignore
         / f"workflow_{workflow_id:06d}_job_{job_id:06d}"
     ).resolve()
-
-    if settings.FRACTAL_RUNNER_BACKEND == "local":
-        WORKFLOW_DIR_USER = WORKFLOW_DIR
-    else:  # FIXME set slurm
-        WORKFLOW_DIR_USER = (Path(project_dir) / WORKFLOW_DIR.name).resolve()
-        logging.critical(f"Now creating {str(WORKFLOW_DIR_USER)}")
-        res = subprocess.run(
-            shlex.split(
-                f"sudo -u {slurm_user} mkdir -p {str(WORKFLOW_DIR_USER)}"
-            ),
-            check=True,
-            capture_output=True,
-            encoding="utf-8",
-        )
-        logging.critical(res.returncode)
-        logging.critical(res.stdout)
-        logging.critical(res.stderr)
-
     orig_umask = os.umask(0)
     if not WORKFLOW_DIR.exists():
         WORKFLOW_DIR.mkdir(parents=True, mode=0o777)
 
+    if settings.FRACTAL_RUNNER_BACKEND == "local":
+        WORKFLOW_DIR_USER = WORKFLOW_DIR
+    elif settings.FRACTAL_RUNNER_BACKEND == "slurm":
+        from ._slurm._subprocess_run_as_user import _mkdir_as_user
+
+        WORKFLOW_DIR_USER = (Path(project_dir) / WORKFLOW_DIR.name).resolve()
+        _mkdir_as_user(folder=str(WORKFLOW_DIR_USER), user=slurm_user)
+
     job.working_dir = WORKFLOW_DIR.as_posix()
-    # FIXME: do we need WORKFLOW_DIR_USER as a model field? Likely so.
+    # FIXME: do we need WORKFLOW_DIR_USER as a job-model field? Likely so.
 
     job.status = JobStatusType.RUNNING
     db_sync.merge(job)
