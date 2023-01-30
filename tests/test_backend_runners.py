@@ -13,6 +13,8 @@ Zurich.
 """
 import logging
 import os
+import shlex
+import subprocess
 
 import pytest
 from devtools import debug
@@ -50,17 +52,12 @@ async def test_runner(
         request.getfixturevalue("relink_python_interpreter")
         request.getfixturevalue("slurm_config")
         request.getfixturevalue("cfut_jobs_finished")
-
-    # FIXME: this will have to be removed, once we add the sudo-cat mechanism
-    project_dir = tmp777_path / "project_dir"
-    umask = os.umask(0)
-    project_dir.mkdir(parents=True, mode=0o777)
-    os.umask(umask)
+        monkey_slurm_user = request.getfixturevalue("monkey_slurm_user")
 
     process_workflow = _backends[backend]
 
     async with MockCurrentUser(persist=True) as user:
-        prj = await project_factory(user=user, project_dir=str(project_dir))
+        prj = await project_factory(user=user)
 
     # Add dummy task as a Task
     tk_dummy = collect_packages[0]
@@ -83,25 +80,46 @@ async def test_runner(
     debug(wf)
 
     # FIXME: this should change, for the slurm backend
-    workflow_dir = tmp777_path
-    workflow_dir_user = tmp777_path
+    workflow_dir = tmp777_path / "server"
+    workflow_dir_user = tmp777_path / "user"
+    umask = os.umask(0)
+    workflow_dir.mkdir(parents=True, mode=0o777)
+    if backend == "local":
+        workflow_dir_user.mkdir(parents=True, mode=0o777)
+    os.umask(umask)
+    if backend == "slurm":
+        res = subprocess.run(
+            shlex.split(
+                f"sudo -u {monkey_slurm_user} mkdir {str(workflow_dir_user)}"
+            ),
+            encoding="utf-8",
+            capture_output=True,
+        )
+        debug(res)
+        assert res.returncode == 0
 
-    # process workflow
+    # Prepare backend-specific arguments
     logger_name = "job_logger"
     logger = set_logger(
         logger_name=logger_name,
-        log_file_path=tmp777_path / "job.log",
+        log_file_path=workflow_dir / "job.log",
         level=logging.DEBUG,
     )
-    metadata = await process_workflow(
+    kwargs = dict(
         workflow=wf,
-        input_paths=[tmp777_path / "*.txt"],
-        output_path=tmp777_path / "out.json",
+        input_paths=[workflow_dir / "*.txt"],
+        output_path=workflow_dir / "out.json",
         input_metadata={},
         logger_name=logger_name,
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
     )
+    if backend == "slurm":
+        kwargs["slurm_user"] = monkey_slurm_user
+
+    # process workflow
+    metadata = await process_workflow(**kwargs)
+
     close_job_logger(logger)
     debug(metadata)
     assert "dummy" in metadata
@@ -113,17 +131,20 @@ async def test_runner(
     ]
 
     # Check that the correct files are present in workflow_dir
-    files = [f.name for f in tmp777_path.glob("*")]
+    files = [f.name for f in workflow_dir.glob("*")] + [
+        f.name for f in workflow_dir_user.glob("*")
+    ]
     assert "0.args.json" in files
     assert "0.err" in files
     assert "0.out" in files
     assert "0.metadiff.json" in files
+
+    with (workflow_dir / "0.args.json").open("r") as f:
+        debug(workflow_dir / "0.args.json")
+        args = f.read()
+        debug(args)
+        assert "logger_name" not in args
     if backend == "slurm":
         slurm_job_id = 2  # This may change if you change the test
         assert f"0.slurm.{slurm_job_id}.err" in files
         assert f"0.slurm.{slurm_job_id}.out" in files
-    with (tmp777_path / "0.args.json").open("r") as f:
-        debug(tmp777_path / "0.args.json")
-        args = f.read()
-        debug(args)
-        assert "logger_name" not in args
