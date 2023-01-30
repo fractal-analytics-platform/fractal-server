@@ -63,22 +63,18 @@ def worker(
         extra_import_paths: TBD
     """
 
+    # FIXME: make logging more precise and less verbose
+
     if not out_fname:
         out_fname = in_fname.replace(".in.", ".out.")
-
     out_dir = os.path.dirname(out_fname)
+
     if not os.path.exists(out_dir):
+        logging.warning(f"NOW CREATING {out_dir=}")
         # FIXME: remove this 777 parts, later on when we introduce sudo-cat
         umask = os.umask(0)
         os.mkdir(out_dir, mode=0o777)
         os.umask(umask)
-
-    # FIXME: remove logging
-    import logging
-
-    logging.warning(f"{in_fname=}")
-    logging.warning(f"{out_fname=}")
-    logging.warning(f"{out_dir=}")
 
     if extra_import_paths:
         _extra_import_paths = extra_import_paths.split(":")
