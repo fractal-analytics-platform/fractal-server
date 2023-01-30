@@ -492,7 +492,9 @@ class FractalSlurmExecutor(SlurmExecutor):
                             jobid, info=proxy.kwargs.get("info", None)
                         )
                         fut.set_exception(job_exc)
-                out_path.unlink()
+                # FIXME: this unlink operation is not allowed for the fractal
+                # user, since out_path is owned by the user
+                # out_path.unlink()
             else:
                 # Output pickle file is missing
                 info = (
