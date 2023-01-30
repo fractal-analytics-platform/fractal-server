@@ -32,6 +32,7 @@ from ....utils import file_opener
 from ....utils import set_logger
 from ..common import JobExecutionError
 from ..common import TaskExecutionError
+from .wait_thread import FractalSlurmWaitThread
 
 
 class SlurmJob:
@@ -66,9 +67,11 @@ class FractalSlurmExecutor(SlurmExecutor):
             dictionary with paths of slurm-related files for active jobs
     """
 
+    wait_thread_cls = FractalSlurmWaitThread
+
     def __init__(
         self,
-        slurm_user: Optional[str] = None,
+        slurm_user: str,
         working_dir: Optional[Path] = None,
         working_dir_user: Optional[Path] = None,
         common_script_lines: Optional[List[str]] = None,
@@ -79,6 +82,11 @@ class FractalSlurmExecutor(SlurmExecutor):
         """
         Init method for FractalSlurmExecutor
         """
+
+        if not slurm_user:
+            raise RuntimeError(
+                "Missing attribute FractalSlurmExecutor.slurm_user"
+            )
 
         super().__init__(*args, **kwargs)
 
@@ -93,6 +101,9 @@ class FractalSlurmExecutor(SlurmExecutor):
                 raise RuntimeError(f"{self.slurm_user=}, {working_dir_user=}")
             else:
                 working_dir_user = working_dir
+        if not working_dir_user.exists():
+            raise RuntimeError(f"Missing folder {working_dir_user=}")
+
         self.working_dir_user: Path = working_dir_user  # type: ignore
         self.map_jobid_to_slurm_files: dict = {}
 
@@ -102,6 +113,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             settings = Inject(get_settings)
             slurm_poll_interval = settings.FRACTAL_SLURM_POLL_INTERVAL
         self.wait_thread.slurm_poll_interval = slurm_poll_interval
+        self.wait_thread.slurm_user = slurm_user
 
     def _cleanup(self, jobid: str):
         """
@@ -214,11 +226,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         outpath = outpath or self.get_stdout_filename()
         errpath = errpath or self.get_stderr_filename()
 
-        import logging
-
-        logging.critical(f"{self.get_stdout_filename()=}")
-        logging.critical(f"{outpath=}")
-        logging.critical(f"{outpath.name=}")
         sbatch_lines = [
             f"#SBATCH --output={outpath}",
             f"#SBATCH --error={errpath}",
