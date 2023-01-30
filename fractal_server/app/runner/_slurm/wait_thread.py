@@ -16,9 +16,9 @@ def _does_file_exist(filepath: str, *, slurm_user: str) -> bool:
     res = subprocess.run(
         shlex.split(cmd), capture_output=True, encoding="utf-8"
     )
-    logging.warning(res.returncode)
-    logging.warning(res.stdout)
-    logging.warning(res.stderr)
+    logging.warning(f"{res.returncode=}")
+    logging.warning(f"{res.stdout=}")
+    logging.warning(f"{res.stderr=}")
     if res.returncode == 0:
         return True
     else:
