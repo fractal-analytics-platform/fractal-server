@@ -214,17 +214,14 @@ class FractalSlurmExecutor(SlurmExecutor):
         outpath = outpath or self.get_stdout_filename()
         errpath = errpath or self.get_stderr_filename()
 
-        # FIXME put back the original variables:
-        #    f"#SBATCH --output={outpath}",
-        #    f"#SBATCH --error={errpath}",
         import logging
 
-        logging.critical("FIXME: slurm out/err is now going to /tmp!")
-        new_outpath = f"/tmp/{outpath.name}"
-        new_errpath = f"/tmp/{errpath.name}"
+        logging.critical(f"{self.get_stdout_filename()=}")
+        logging.critical(f"{outpath=}")
+        logging.critical(f"{outpath.name=}")
         sbatch_lines = [
-            f"#SBATCH --output={new_outpath}",  # FIXME
-            f"#SBATCH --error={new_errpath}",  # FIXME
+            f"#SBATCH --output={outpath}",
+            f"#SBATCH --error={errpath}",
         ] + [
             ln
             for ln in additional_setup_lines + self.common_script_lines
@@ -472,7 +469,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                             jobid, info=proxy.kwargs.get("info", None)
                         )
                         fut.set_exception(job_exc)
-                # out_path.unlink()  # FIXME: uncomment this line
+                out_path.unlink()
             else:
                 # Output pickle file is missing
                 info = (
@@ -495,7 +492,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                 job_exc = self._prepare_JobExecutionError(jobid, info=info)
                 fut.set_exception(job_exc)
             # Clean up input pickle file
-            # in_path.unlink() # FIXME uncomment this line
+            in_path.unlink()
             self._cleanup(jobid)
         except Exception as e:
             fut.set_exception(e)
