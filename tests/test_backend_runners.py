@@ -76,10 +76,9 @@ async def test_runner(
         tk_dummy_parallel.id, db=db, args=dict(message="task 2")
     )
     await db.refresh(wf)
-
     debug(wf)
 
-    # FIXME: this should change, for the slurm backend
+    # Create working folder(s)
     workflow_dir = tmp777_path / "server"
     workflow_dir_user = tmp777_path / "user"
     umask = os.umask(0)
