@@ -59,15 +59,17 @@ async def test_full_workflow(
     debug(f"Testing with {backend=}")
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
-        monkey_slurm_user = request.getfixturevalue("monkey_slurm_user")
         request.getfixturevalue("relink_python_interpreter")
+        monkey_slurm_user = request.getfixturevalue("monkey_slurm_user")
 
     # FIXME: this will have to be removed, once we add the sudo-cat mechanism
     project_dir = tmp777_path / f"project_dir-{backend}"
-    _create_folder_as_user(path=str(project_dir), user=monkey_slurm_user)
-    # umask = os.umask(0)
-    # project_dir.mkdir(parents=True, mode=0o777)
-    # os.umask(umask)
+    if backend == "local":
+        umask = os.umask(0)
+        project_dir.mkdir(parents=True, mode=0o777)
+        os.umask(umask)
+    elif backend == "slurm":
+        _create_folder_as_user(path=str(project_dir), user=monkey_slurm_user)
 
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user, project_dir=str(project_dir))
