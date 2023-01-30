@@ -33,6 +33,7 @@ from ....utils import file_opener
 from ....utils import set_logger
 from ..common import JobExecutionError
 from ..common import TaskExecutionError
+from ._subprocess_run_as_user import _run_command_as_user
 from .wait_thread import FractalSlurmWaitThread
 
 
@@ -247,10 +248,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         ] + [f"export CFUT_DIR={self.working_dir}"]
         # FIXME: do we need CFUT_DIR? If yes, where?
 
-        cmd = [
-            shlex.join(["srun", *cmdline]),
-            f"chmod 777 {slurm_stdout_file.parent / '*'}",  # FIXME remove this
-        ]
+        cmd = [shlex.join(["srun", *cmdline])]
 
         script_lines = ["#!/bin/sh"] + sbatch_lines + non_sbatch_lines + cmd
         return "\n".join(script_lines) + "\n"
@@ -305,16 +303,6 @@ class FractalSlurmExecutor(SlurmExecutor):
             job_file_fmt = job_file_prefix + "_par_{args}"
         else:
             job_file_fmt = f"_temp_{random_string()}"
-
-        logging.critical("FROM WITHIN MAP")
-        logging.critical(f"{job_file_prefix=}")
-        logging.critical(f"{iterables=}")
-        for args in zip(*iterables):
-            logging.critical(f"{args=}")
-            job_file_prefix = job_file_prefix = job_file_fmt.format(
-                args=sanitize_string(args[0])
-            )
-            logging.critical(f"{job_file_prefix=}")
 
         fs = [
             self.submit(
@@ -373,7 +361,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         )
         job.stdout = self.get_slurm_stdout_file_path(prefix=job_file_prefix)
         job.stderr = self.get_slurm_stderr_file_path(prefix=job_file_prefix)
-        logging.critical(f"{vars(job)=}")
 
         # Dump serialized function+args+kwargs to pickle file
         funcser = cloudpickle.dumps((fun, args, kwargs))
@@ -521,29 +508,25 @@ class FractalSlurmExecutor(SlurmExecutor):
             self._cleanup(jobid)
 
             # Copy all new files in working_dir_user to working_dir
-            filenames_to_copy = [
-                f.name for f in self.working_dir_user.glob("*")
-            ]
-            # FIXME: this copies all files, including the ones related to previous tasks
-            # FIXME: one should only iterate over a certain set of files, somehow
-            logging.critical(f"{filenames_to_copy=}")
-            for filename in filenames_to_copy:
-                source_file_path = str(self.working_dir_user / filename)
-                dest_file_path = str(self.working_dir / filename)
-                cmd = (
-                    f"sudo -u {self.slurm_user} cat {source_file_path}"
-                    f" > {dest_file_path}"
-                )
-                logging.warning(f"{cmd=}")
-                res = subprocess.run(
-                    shlex.split(cmd),
-                    capture_output=True,
-                    encoding="utf-8",
-                )
-                logging.warning(f"{res.returncode=}")
-                logging.warning(f"{res.stdout=}")
-                logging.warning(f"{res.stderr=}")
-                assert res.returncode == 0
+            if self.working_dir_user != self.working_dir:
+                filenames_to_copy = [
+                    f.name for f in self.working_dir_user.glob("*")
+                ]
+                # FIXME: this copies all files, including the ones related to
+                # previous tasks
+                # FIXME: one should only iterate over a certain set of files,
+                # somehow
+                logging.critical(f"{filenames_to_copy=}")
+                for filename in filenames_to_copy:
+                    source_file_path = str(self.working_dir_user / filename)
+                    dest_file_path = str(self.working_dir / filename)
+                    cmd = f"cat {source_file_path} > {dest_file_path}"
+                    res = _run_command_as_user(cmd=cmd, user=self.slurm_user)
+                    if res.returncode != 0:
+                        logging.error(f"{res.returncode=}")
+                        logging.error(f"{res.stdout=}")
+                        logging.error(f"{res.stderr=}")
+                    assert res.returncode == 0
 
         except Exception as e:
             fut.set_exception(e)

@@ -1,24 +1,18 @@
 import logging
-import shlex
-import subprocess
 import traceback
 
 from cfut import FileWaitThread
 from cfut import slurm
+
+from ._subprocess_run_as_user import _run_command_as_user
 
 
 def _does_file_exist(filepath: str, *, slurm_user: str) -> bool:
     """
     FIXME
     """
-    cmd = f"sudo -u {slurm_user} ls {filepath}"
-    logging.warning(cmd)
-    res = subprocess.run(
-        shlex.split(cmd), capture_output=True, encoding="utf-8"
-    )
-    logging.warning(f"{res.returncode=}")
-    logging.warning(f"{res.stdout=}")
-    logging.warning(f"{res.stderr=}")
+    cmd = f"ls {filepath}"
+    res = _run_command_as_user(cmd=cmd, user=slurm_user)
     if res.returncode == 0:
         return True
     else:
@@ -39,11 +33,11 @@ class FractalFileWaitThread(FileWaitThread):
         The i parameter allows subclasses like SlurmWaitThread to do something
         on every Nth check.
         """
-        logging.warning("FractalFileWaitThread.check")
+        logging.info("FractalFileWaitThread.check")
         # Poll for each file.
         for filename in list(self.waiting):
             if _does_file_exist(filename, slurm_user=self.slurm_user):
-                logging.warning(f"{filename} exists")
+                logging.info(f"{filename} exists")
                 self.callback(self.waiting[filename])
                 del self.waiting[filename]
 
@@ -56,7 +50,7 @@ class FractalSlurmWaitThread(FractalFileWaitThread):
     slurm_poll_interval = 30
 
     def check(self, i):
-        logging.warning("FractalSlurmWaitThread.check")
+        logging.info("FractalSlurmWaitThread.check")
         super().check(i)
         if i % (self.slurm_poll_interval // self.interval) == 0:
             try:
