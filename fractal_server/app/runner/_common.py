@@ -23,7 +23,6 @@ from typing import Optional
 
 from ...config import get_settings
 from ...syringe import Inject
-from ...utils import file_opener
 from ..models import WorkflowTask
 from .common import JobExecutionError
 from .common import TaskExecutionError
@@ -102,7 +101,7 @@ class WorkflowFiles:
         else:
             order = "task"
         self.prefix = f"{order}{component_safe}"
-        self.args = self.workflow_dir / f"{self.prefix}.args.json"
+        self.args = self.workflow_dir_user / f"{self.prefix}.args.json"
         self.out = self.workflow_dir_user / f"{self.prefix}.out"
         self.err = self.workflow_dir_user / f"{self.prefix}.err"
         self.metadiff = self.workflow_dir_user / f"{self.prefix}.metadiff.json"
@@ -180,6 +179,9 @@ def call_single_task(
     message or index in the dummy task), writes them to file, call the task
     executable command passing the arguments file as an input and assembles
     the output.
+
+    FIXME: When used in a multi-user executor, this function is run by the
+    user.
 
     Args:
         task:
@@ -262,7 +264,8 @@ def call_single_task(
         metadata=updated_metadata,
     )
     with open(
-        workflow_dir_user / METADATA_FILENAME, "w", opener=file_opener
+        workflow_dir_user / METADATA_FILENAME,
+        "w",
     ) as f:
         json.dump(updated_metadata, f, indent=2)
     return out_task_parameters
@@ -282,6 +285,9 @@ def call_single_parallel_task(
     Parallel tasks need to run in several instances across the parallelisation
     parameters. This function is responsible of running each single one of
     those instances.
+
+    FIXME: When used in a multi-user executor, this function is run by the
+    user.
 
     Args:
         component:
@@ -360,6 +366,9 @@ def call_parallel_task(
     [`FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW`](../../../../../configuration/#fractal_server.config.Settings.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW)
     may affect the internal behavior of this function.
 
+    FIXME: When used in a multi-user executor, this function is run by the
+    admin.
+
     Args:
         executor:
             The `concurrent.futures.Executor`-compatible executor that will
@@ -436,11 +445,21 @@ def call_parallel_task(
         metadata=task_pars_depend.metadata,
     )
 
-    with open(
-        workflow_dir_user / METADATA_FILENAME, "w", opener=file_opener
-    ) as f:
-        json.dump(task_pars_depend.metadata, f, indent=2)
     out_future: Future = Future()
+    # FIXME: this file is written by fractal, so it should go to workflow_dir
+    # FIXME: this is very confusing, it should be made more explicit
+    # FIXME: current CI error: at some point this file was written by fractal
+    # (in docker, through sudo-cat), and now the current machine user cannot
+    # replace it
+    try:
+        logging.critical(f"Now write {str(workflow_dir / METADATA_FILENAME)=}")
+        with open(workflow_dir / METADATA_FILENAME, "w") as f:
+            json.dump(task_pars_depend.metadata, f, indent=2)
+        logging.critical("File writing OK")
+    except Exception as e:
+        logging.error("File writing failed")
+        out_future.set_exception(e)
+
     out_future.set_result(out_task_parameters)
     return out_future
 
