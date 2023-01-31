@@ -124,7 +124,7 @@ async def submit_workflow(
     ).resolve()
     if not WORKFLOW_DIR.exists():
         original_umask = os.umask(0)
-        WORKFLOW_DIR.mkdir(parents=True, mode=0o777)  # FIXME: make this 755
+        WORKFLOW_DIR.mkdir(parents=True, mode=0o755)
         os.umask(original_umask)
 
     # Define and create user-side working folder, if needed
