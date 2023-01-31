@@ -66,7 +66,7 @@ def worker(
     # Create output folder, if missing
     out_dir = os.path.dirname(out_fname)
     if not os.path.exists(out_dir):
-        logging.warning(f"_slurm.remote.worker: create {out_dir=}")
+        logging.debug(f"_slurm.remote.worker: create {out_dir=}")
         os.mkdir(out_dir)
 
     if extra_import_paths:
@@ -126,7 +126,7 @@ if __name__ == "__main__":
     parsed_args = parser.parse_args()
     import logging
 
-    logging.warning(f"{parsed_args=}")
+    logging.debug(f"{parsed_args=}")
 
     kwargs = dict(
         in_fname=parsed_args.input_file, out_fname=parsed_args.output_file
