@@ -49,7 +49,6 @@ async def test_full_workflow(
     backend,
     request,
     override_settings_factory,
-    cfut_jobs_finished,
 ):
 
     override_settings_factory(
@@ -63,6 +62,8 @@ async def test_full_workflow(
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
         monkey_slurm_user = request.getfixturevalue("monkey_slurm_user")
+        request.getfixturevalue("patch_copy_method")
+        request.getfixturevalue("cfut_jobs_finished")
 
     # FIXME: this will have to be cleaned up, once we add the sudo-cat
     # mechanism
@@ -231,7 +232,6 @@ async def test_failing_workflow_TaskExecutionError(
     backend,
     request,
     override_settings_factory,
-    cfut_jobs_finished,
 ):
 
     override_settings_factory(
@@ -246,6 +246,8 @@ async def test_failing_workflow_TaskExecutionError(
         request.getfixturevalue("monkey_slurm")
         monkey_slurm_user = request.getfixturevalue("monkey_slurm_user")
         request.getfixturevalue("relink_python_interpreter")
+        request.getfixturevalue("cfut_jobs_finished")
+        request.getfixturevalue("patch_copy_method")
 
     # FIXME: this will have to be cleaned up, once we add the sudo-cat
     # mechanism
@@ -369,6 +371,7 @@ async def test_failing_workflow_JobExecutionError(
     monkey_slurm_user,
     relink_python_interpreter,
     cfut_jobs_finished,
+    patch_copy_method,
 ):
 
     override_settings_factory(

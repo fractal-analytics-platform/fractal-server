@@ -65,7 +65,11 @@ def test_submit_pre_command(fake_process, tmp_path, cfut_jobs_finished):
 
 
 def test_unit_sbatch_script_readable(
-    monkey_slurm, monkey_slurm_user, tmp755_path, cfut_jobs_finished
+    monkey_slurm,
+    monkey_slurm_user,
+    tmp755_path,
+    cfut_jobs_finished,
+    patch_copy_method,
 ):
     """
     GIVEN a batch script written to file by the slurm executor
@@ -98,7 +102,11 @@ def test_unit_sbatch_script_readable(
 
 
 def test_slurm_executor(
-    monkey_slurm, monkey_slurm_user, tmp777_path, cfut_jobs_finished
+    monkey_slurm,
+    monkey_slurm_user,
+    tmp777_path,
+    cfut_jobs_finished,
+    patch_copy_method,
 ):
     """
     GIVEN a docker slurm cluster and a FractalSlurmExecutor executor
@@ -117,7 +125,11 @@ def test_slurm_executor(
 
 
 def test_slurm_executor_separate_folders(
-    monkey_slurm, monkey_slurm_user, tmp777_path, cfut_jobs_finished
+    monkey_slurm,
+    monkey_slurm_user,
+    tmp777_path,
+    cfut_jobs_finished,
+    patch_copy_method,
 ):
     """
     FIXME: this will need to work with a tmp755 server dir and user-owned 700
@@ -146,7 +158,11 @@ def test_slurm_executor_separate_folders(
 
 
 def test_slurm_executor_scancel(
-    monkey_slurm, monkey_slurm_user, tmp777_path, cfut_jobs_finished
+    monkey_slurm,
+    monkey_slurm_user,
+    tmp777_path,
+    cfut_jobs_finished,
+    patch_copy_method,
 ):
     """
     GIVEN a docker slurm cluster and a FractalSlurmExecutor executor
@@ -250,7 +266,12 @@ def test_unit_slurm_config():
     ),
 )
 def test_sbatch_script_slurm_config(
-    tmp_path, slurm_config, slurm_config_key, task, cfut_jobs_finished
+    tmp_path,
+    slurm_config,
+    slurm_config_key,
+    task,
+    cfut_jobs_finished,
+    patch_copy_method,
 ):
     """
     GIVEN
