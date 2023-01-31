@@ -477,8 +477,9 @@ class FractalSlurmExecutor(SlurmExecutor):
                             jobid, info=proxy.kwargs.get("info", None)
                         )
                         fut.set_exception(job_exc)
-                # FIXME: this unlink operation is not allowed for the fractal
-                # user, since out_path is owned by the user
+                # NOTE: the fractal user cannot remove out_path, which belongs
+                # to self.slurm_user. See
+                # https://github.com/fractal-analytics-platform/fractal-server/issues/474.
                 # out_path.unlink()
             else:
                 # Output pickle file is missing
