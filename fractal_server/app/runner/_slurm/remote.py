@@ -69,12 +69,8 @@ def worker(
         out_fname = in_fname.replace(".in.", ".out.")
     out_dir = os.path.dirname(out_fname)
 
-    if not os.path.exists(out_dir):
-        logging.warning(f"NOW CREATING {out_dir=}")
-        # FIXME: remove this 777 parts, later on when we introduce sudo-cat
-        umask = os.umask(0)
-        os.mkdir(out_dir, mode=0o777)
-        os.umask(umask)
+    logging.warning(f"NOW CREATING {out_dir=}, if it does not exist")
+    os.mkdir(out_dir, exists_ok=True)
 
     if extra_import_paths:
         _extra_import_paths = extra_import_paths.split(":")
