@@ -286,10 +286,9 @@ def call_single_task(
         output_path=task_pars.output_path,
         metadata=updated_metadata,
     )
-    with open(
-        workflow_dir_user / METADATA_FILENAME,
-        "w",
-    ) as f:
+    # NOTE: this function is run by the user, thus METADATA_FILENAME is written
+    # in workflow_dir_user
+    with open(workflow_dir_user / METADATA_FILENAME, "w") as f:
         json.dump(updated_metadata, f, indent=2)
     return out_task_parameters
 
@@ -474,15 +473,15 @@ def call_parallel_task(
     )
 
     out_future: Future = Future()
-    # FIXME: this file is written by fractal, so it should go to workflow_dir
-    # FIXME: this is very confusing, it should be made more explicit
+    # NOTE: this function is run by the server user, thus METADATA_FILENAME
+    # is written in workflow_dir
     try:
-        logging.critical(f"Now write {str(workflow_dir / METADATA_FILENAME)=}")
         with open(workflow_dir / METADATA_FILENAME, "w") as f:
             json.dump(task_pars_depend.metadata, f, indent=2)
-        logging.critical("File writing OK")
     except Exception as e:
-        logging.error("File writing failed")
+        logging.error(
+            f"Writing of {str(workflow_dir / METADATA_FILENAME)=} failed"
+        )
         out_future.set_exception(e)
 
     out_future.set_result(out_task_parameters)
