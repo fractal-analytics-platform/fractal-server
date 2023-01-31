@@ -74,6 +74,16 @@ class TaskFiles:
         component:
             Specific component to run the task for (relevant for tasks that
             will be executed in parallel over many components).
+        file_prefix:
+            Prefix for all task-related files.
+        args:
+            Path for input json file.
+        metadiff:
+            Path for output json file with metadata update.
+        out:
+            Path for task-execution stdout.
+        err:
+            Path for task-execution stderr.
     """
 
     workflow_dir: Path
@@ -189,8 +199,14 @@ def call_single_task(
     executable command passing the arguments file as an input and assembles
     the output.
 
-    FIXME: When used in a multi-user executor, this function is run by the
-    user.
+    Note:
+        This function is directly submitted to a
+        `concurrent.futures`-compatible executor, as in
+
+            some_future = executor.submit(call_single_task, ...)
+
+        If the executor then impersonates another user (as in the
+        `FractalSlurmExecutor`), this function is run by that user.
 
     Args:
         task:
@@ -200,11 +216,11 @@ def call_single_task(
             The parameters required to run the task which are not specific to
             the task, e.g., I/O paths.
         workflow_dir:
-            The directory in which the execution takes place, and where all
-            artifacts are written.
+            The server-side working directory for workflow execution.
         workflow_dir_user:
-            FIXME
-
+            The user-side working directory for workflow execution (only
+            relevant for multi-user executors). If `None`, it is set to be
+            equal to `workflow_dir`.
     Returns:
         out_task_parameters:
             A TaskParameters in which the previous output becomes the input
@@ -219,8 +235,6 @@ def call_single_task(
         JobExecutionError: If the wrapped task raises a job-related error.
         RuntimeError: If the `workflow_dir` is falsy.
     """
-    if not workflow_dir:
-        raise RuntimeError
     if not workflow_dir_user:
         workflow_dir_user = workflow_dir
 
@@ -295,8 +309,14 @@ def call_single_parallel_task(
     parameters. This function is responsible of running each single one of
     those instances.
 
-    FIXME: When used in a multi-user executor, this function is run by the
-    user.
+    Note:
+        This function is directly submitted to a
+        `concurrent.futures`-compatible executor, roughly as in
+
+            some_future = executor.map(call_single_parallel_task, ...)
+
+        If the executor then impersonates another user (as in the
+        `FractalSlurmExecutor`), this function is run by that user.
 
     Args:
         component:
@@ -306,9 +326,10 @@ def call_single_parallel_task(
         task_pars:
             The parameters to pass on to the task.
         workflow_dir:
-            The workflow working directory.
-        workflow_dir:
-            FIXME
+            The server-side working directory for workflow execution.
+        workflow_dir_user:
+            The user-side working directory for workflow execution (only
+            relevant for multi-user executors).
 
     Raises:
         TaskExecutionError: If the wrapped task raises a task-related error.
@@ -375,9 +396,6 @@ def call_parallel_task(
     [`FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW`](../../../../../configuration/#fractal_server.config.Settings.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW)
     may affect the internal behavior of this function.
 
-    FIXME: When used in a multi-user executor, this function is run by the
-    admin.
-
     Args:
         executor:
             The `concurrent.futures.Executor`-compatible executor that will
@@ -388,9 +406,10 @@ def call_parallel_task(
             A future that will resolve in the task parameters to be passed on
             to the parallel task.
         workflow_dir:
-            The workflow working directory.
+            The server-side working directory for workflow execution.
         workflow_dir_user:
-            FIXME
+            The user-side working directory for workflow execution (only
+            relevant for multi-user executors).
         submit_setup_call:
             An optional function that computes configuration parameters for
             the executor.
@@ -457,9 +476,6 @@ def call_parallel_task(
     out_future: Future = Future()
     # FIXME: this file is written by fractal, so it should go to workflow_dir
     # FIXME: this is very confusing, it should be made more explicit
-    # FIXME: current CI error: at some point this file was written by fractal
-    # (in docker, through sudo-cat), and now the current machine user cannot
-    # replace it
     try:
         logging.critical(f"Now write {str(workflow_dir / METADATA_FILENAME)=}")
         with open(workflow_dir / METADATA_FILENAME, "w") as f:
@@ -479,7 +495,7 @@ def recursive_task_submission(
     task_list: List[WorkflowTask],
     task_pars: TaskParameters,
     workflow_dir: Path,
-    workflow_dir_user: Optional[Path] = None,  # FIXME currently not used
+    workflow_dir_user: Optional[Path] = None,
     submit_setup_call: Callable[
         [WorkflowTask, TaskParameters, Path, Path], Dict[str, Any]
     ] = lambda task, task_pars, workflow_dir, workflow_dir_user: {},
@@ -510,9 +526,11 @@ def recursive_task_submission(
         task_pars:
             The task parameters to be passed on to the first task of the list.
         workflow_dir:
-            The workflow working directory.
+            The server-side working directory for workflow execution.
         workflow_dir_user:
-            FIXME
+            The user-side working directory for workflow execution (only
+            relevant for multi-user executors). If `None`, it is set to be
+            equal to `workflow_dir`.
         submit_setup_call:
             An optional function that computes configuration parameters for
             the executor.
@@ -524,7 +542,6 @@ def recursive_task_submission(
             a future that results to the task parameters which constitute the
             input of the following task in the list.
     """
-
     if not workflow_dir_user:
         workflow_dir_user = workflow_dir
 
