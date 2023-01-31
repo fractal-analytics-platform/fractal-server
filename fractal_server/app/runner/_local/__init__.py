@@ -3,7 +3,7 @@ Local Bakend
 
 This backend runs Fractal workflows using python
 [ThreadPoolExecutor](https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor)
-to run tasks in several threads. Incidentally, it represents the reference
+to run tasks in several threads. Incidentally, it also represents the reference
 implementation for a backend.
 """
 from concurrent.futures import ThreadPoolExecutor
@@ -27,7 +27,6 @@ def _process_workflow(
     input_metadata: Dict[str, Any],
     logger_name: str,
     workflow_dir: Path,
-    workflow_dir_user: Path,
 ) -> Dict[str, Any]:
     """
     Internal processing routine
@@ -48,7 +47,7 @@ def _process_workflow(
                 metadata=input_metadata,
             ),
             workflow_dir=workflow_dir,
-            workflow_dir_user=workflow_dir_user,
+            workflow_dir_user=workflow_dir,
             logger_name=logger_name,
         )
     output_task_pars = output_task_pars_fut.result()
@@ -69,7 +68,7 @@ async def process_workflow(
     worker_init: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
-    Process workflow
+    Run a workflow
 
     This function is responsible for running a workflow on some input data,
     saving the output and taking care of any exception raised during the run.
@@ -90,25 +89,39 @@ async def process_workflow(
         logger_name:
             Name of the logger to log information on the run to
         workflow_dir:
-            Working directory for this run
-        user_workflow_dir:
-            FIXME (only used because this is the standard interface)
+            Working directory for this run.
+        workflow_dir_user:
+            Working directory for this run, on the user side. This argument is
+            present for compatibility with the standard backend interface, but
+            for the `local` backend it cannot be different from `workflow_dir`.
         slurm_user:
-            Username to impersonate to run the workflow
-            FIXME (only used because this is the standard interface)
+            Username to impersonate to run the workflow. This argument is
+            present for compatibility with the standard backend interface, but
+            is ignored in the `local` backend.
         worker_init:
             Any additional, usually backend specific, information to be passed
-            to the backend executor.
-            FIXME (only used because this is the standard interface)
+            to the backend executor. This argument is present for compatibility
+            with the standard backend interface, but is ignored in the `local`
+            backend.
 
     Raises:
-        TaskExecutionError: wrapper for errors raised by the tasks' executors.
+        TaskExecutionError: wrapper for errors raised during tasks' execution
+                            (positive exit codes).
+        JobExecutionError: wrapper for errors raised by the tasks' executors
+                           (negative exit codes).
 
     Returns:
         output_dataset_metadata:
             The updated metadata for the dataset, as returned by the last task
             of the workflow
     """
+
+    if workflow_dir_user and (workflow_dir_user != workflow_dir):
+        raise NotImplementedError(
+            "Local backend does not support different directories "
+            f"{workflow_dir=} and {workflow_dir_user=}"
+        )
+
     output_dataset_metadata = await async_wrap(_process_workflow)(
         workflow=workflow,
         input_paths=input_paths,
@@ -116,6 +129,5 @@ async def process_workflow(
         input_metadata=input_metadata,
         logger_name=logger_name,
         workflow_dir=workflow_dir,
-        workflow_dir_user=workflow_dir_user,  # FIXME
     )
     return output_dataset_metadata
