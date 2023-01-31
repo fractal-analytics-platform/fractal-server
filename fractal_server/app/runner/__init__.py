@@ -105,41 +105,47 @@ async def submit_workflow(
     db_sync = next(DB.get_sync_db())
     job: ApplyWorkflow = db_sync.get(ApplyWorkflow, job_id)  # type: ignore
     if not job:
-        raise ValueError("Cannot fetch job")
+        raise ValueError("Cannot fetch job from database")
 
+    # Select backend
     settings = Inject(get_settings)
-    if settings.FRACTAL_RUNNER_BACKEND == "slurm" and not slurm_user:
-        raise ValueError("FIXME: missing slurm_user")
+    FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
+    process_workflow = get_process_workflow()
 
+    # Prepare some of process_workflow arguments
     input_paths = input_dataset.paths
     output_path = output_dataset.paths[0]
-
     workflow_id = workflow.id
 
+    # Define and create server-side working folder
     WORKFLOW_DIR = (
         settings.FRACTAL_RUNNER_WORKING_BASE_DIR  # type: ignore
         / f"workflow_{workflow_id:06d}_job_{job_id:06d}"
     ).resolve()
-    orig_umask = os.umask(0)
     if not WORKFLOW_DIR.exists():
-        WORKFLOW_DIR.mkdir(parents=True, mode=0o777)
+        original_umask = os.umask(0)
+        WORKFLOW_DIR.mkdir(parents=True, mode=0o777)  # FIXME: make this 755
+        os.umask(original_umask)
 
-    if settings.FRACTAL_RUNNER_BACKEND == "local":
+    # Define and create user-side working folder, if needed
+    if FRACTAL_RUNNER_BACKEND == "local":
         WORKFLOW_DIR_USER = WORKFLOW_DIR
-    elif settings.FRACTAL_RUNNER_BACKEND == "slurm":
+    elif FRACTAL_RUNNER_BACKEND == "slurm":
         from ._slurm._subprocess_run_as_user import _mkdir_as_user
 
         WORKFLOW_DIR_USER = (Path(project_dir) / WORKFLOW_DIR.name).resolve()
         _mkdir_as_user(folder=str(WORKFLOW_DIR_USER), user=slurm_user)
+    else:
+        raise ValueError(f"{FRACTAL_RUNNER_BACKEND=} not supported")
 
+    # Update db
     job.working_dir = WORKFLOW_DIR.as_posix()
-    # FIXME: do we need WORKFLOW_DIR_USER as a job-model field? Likely so.
-
+    job.working_dir_user = WORKFLOW_DIR_USER.as_posix()
     job.status = JobStatusType.RUNNING
     db_sync.merge(job)
     db_sync.commit()
-    process_workflow = get_process_workflow()
 
+    # Write logs
     logger_name = f"WF{workflow_id}_job{job_id}"
     logger = set_logger(
         logger_name=logger_name,
@@ -147,18 +153,18 @@ async def submit_workflow(
         level=logging.INFO,
         formatter=logging.Formatter("%(asctime)s; %(levelname)s; %(message)s"),
     )
-
     logger.info(f"fractal_server.__VERSION__: {__VERSION__}")
-    logger.info(f"FRACTAL_RUNNER_BACKEND: {settings.FRACTAL_RUNNER_BACKEND}")
+    logger.info(f"FRACTAL_RUNNER_BACKEND: {FRACTAL_RUNNER_BACKEND}")
     logger.info(f"slurm_user: {slurm_user}")
     logger.info(f"worker_init: {worker_init}")
     logger.info(f"input metadata: {input_dataset.meta}")
     logger.info(f"input_paths: {input_paths}")
     logger.info(f"output_path: {output_path}")
     logger.info(f"job.id: {job.id}")
-    logger.info(f"job.working_dir: {WORKFLOW_DIR}")
-    logger.info(f"{WORKFLOW_DIR_USER=}")  # FIXME: add it to db model
+    logger.info(f"job.working_dir: {str(WORKFLOW_DIR)}")
+    logger.info(f"job.workflow_dir_user: {str(WORKFLOW_DIR_USER)}")
     logger.info(f'START workflow "{workflow.name}"')
+
     try:
         output_dataset.meta = await process_workflow(
             workflow=workflow,
@@ -214,4 +220,3 @@ async def submit_workflow(
 
     finally:
         db_sync.commit()
-        os.umask(orig_umask)
