@@ -4,9 +4,12 @@ import subprocess
 from devtools import debug
 
 
-def test__subprocess_run_ls(tmp_path):
-    # Test a trivial _subprocess_run_ls, in view of its use within fractal
-    # (with a sudo -u in front)
+def test_subprocess_run_ls(tmp_path):
+    """
+    Test a trivial _subprocess_run_ls, in view of its use within fractal (with
+    a sudo -u in front). Note that this test is meant as an example of the
+    expected behavior, but it does test any codepath from fractal-server.
+    """
 
     def _subprocess_run_ls(path: str):
         debug(path)
