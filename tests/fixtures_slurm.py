@@ -292,6 +292,12 @@ def _create_folder_as_user(*, path: str, user: str, mode: int = None):
 
 @pytest.fixture
 def patch_copy_method(monkeypatch):
+    raise RuntimeError(
+        "The patch_copy_method fixture is currently not needed, as of "
+        + "54b626edb578e8542a9ed08ffb9ff9d6b37a5fd0. We will wait a bit "
+        + "before removing it, since it may be useful in other cases."
+    )
+
     """
     This fixture is needed because of the two-users CI issue:
     * In real life, there is a single user running the server (typically named
