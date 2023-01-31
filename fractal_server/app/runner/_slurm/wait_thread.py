@@ -7,45 +7,58 @@ from cfut import slurm
 from ._subprocess_run_as_user import _run_command_as_user
 
 
-def _does_file_exist(filepath: str, *, slurm_user: str) -> bool:
-    """
-    FIXME
-    """
-    cmd = f"ls {filepath}"
-    res = _run_command_as_user(cmd=cmd, user=slurm_user)
-    if res.returncode == 0:
-        return True
-    else:
-        return False
-
-
 class FractalFileWaitThread(FileWaitThread):
     """
-    FIXME
+    Overrides the original clusterfutures.FileWaitThread, so that the
+    file-existence check can be replaced with the custom `_does_file_exist`
+    method.
+
+    The function is copied from clusterfutures 0.5. Original Copyright: 2022
+    Adrian Sampson, released under the MIT licence
     """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.slurm_user: str = "asdasa"
+        self.slurm_user: str
 
     def check(self, i):
-        """Do one check for completed jobs
-        The i parameter allows subclasses like SlurmWaitThread to do something
-        on every Nth check.
+        """
+        Do one check for completed jobs
+
+        The `i` parameter allows subclasses like `SlurmWaitThread` to do
+        something on every Nth check.
         """
         # Poll for each file.
         for filename in list(self.waiting):
-            if _does_file_exist(filename, slurm_user=self.slurm_user):
+            if self._does_file_exist(filename):
                 logging.info(
                     f"[FractalFileWaitThread.check] {filename} exists"
                 )
                 self.callback(self.waiting[filename])
                 del self.waiting[filename]
 
+    def _does_file_exist(self, filepath: str) -> bool:
+        """
+        Impersonate `self.slurm_user` and check if `filepath` exists via `ls`
+
+        Arguments:
+            filepath: Absolute file path
+        """
+        cmd = f"ls {filepath}"
+        res = _run_command_as_user(cmd=cmd, user=self.slurm_user)
+        if res.returncode == 0:
+            return True
+        else:
+            return False
+
 
 class FractalSlurmWaitThread(FractalFileWaitThread):
     """
-    FIXME: can we get rid of this and only have a single custom class?
+    Replaces the original clusterfutures.SlurmWaitThread, to inherit from
+    FractalFileWaitThread instead of FileWaitThread.
+
+    The function is copied from clusterfutures 0.5. Original Copyright: 2022
+    Adrian Sampson, released under the MIT licence
     """
 
     slurm_poll_interval = 30
