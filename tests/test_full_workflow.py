@@ -14,7 +14,6 @@ Zurich.
 """
 import asyncio
 import logging
-import os
 import shlex
 import subprocess
 import threading
@@ -24,7 +23,6 @@ from pathlib import Path
 import pytest
 from devtools import debug
 
-from .fixtures_slurm import _create_folder_as_user
 from .fixtures_slurm import scancel_all_jobs_of_a_slurm_user
 from fractal_server.app.runner import _backends
 
@@ -61,22 +59,11 @@ async def test_full_workflow(
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
-        monkey_slurm_user = request.getfixturevalue("monkey_slurm_user")
         request.getfixturevalue("patch_copy_method")
         request.getfixturevalue("cfut_jobs_finished")
 
-    # FIXME: this will have to be cleaned up, once we add the sudo-cat
-    # mechanism
-    # FIXME: folders should be created within submit_process
-    project_dir = tmp777_path / f"project_dir-{backend}"
-    if backend == "local":
-        umask = os.umask(0)
-        project_dir.mkdir(parents=True, mode=0o777)
-        os.umask(umask)
-    elif backend == "slurm":
-        _create_folder_as_user(path=str(project_dir), user=monkey_slurm_user)
-
     async with MockCurrentUser(persist=True) as user:
+        project_dir = tmp777_path / f"project_dir-{backend}"
         project = await project_factory(user, project_dir=str(project_dir))
 
         debug(project)
@@ -244,23 +231,12 @@ async def test_failing_workflow_TaskExecutionError(
     debug(f"Testing with {backend=}")
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
-        monkey_slurm_user = request.getfixturevalue("monkey_slurm_user")
         request.getfixturevalue("relink_python_interpreter")
         request.getfixturevalue("cfut_jobs_finished")
         request.getfixturevalue("patch_copy_method")
 
-    # FIXME: this will have to be cleaned up, once we add the sudo-cat
-    # mechanism
-    # FIXME: folders should be created within submit_process
-    project_dir = tmp777_path / f"project_dir-{backend}-TaskExecutionError"
-    if backend == "local":
-        umask = os.umask(0)
-        project_dir.mkdir(parents=True, mode=0o777)
-        os.umask(umask)
-    elif backend == "slurm":
-        _create_folder_as_user(path=str(project_dir), user=monkey_slurm_user)
-
     async with MockCurrentUser(persist=True) as user:
+        project_dir = tmp777_path / f"project_dir-{backend}-TaskExecutionError"
         project = await project_factory(user, project_dir=str(project_dir))
         project_id = project.id
         input_dataset = await dataset_factory(
@@ -381,12 +357,8 @@ async def test_failing_workflow_JobExecutionError(
         / "artifacts-test_failing_workflow_JobExecutionError",
     )
 
-    # FIXME: this will have to be cleaned up, once we add the sudo-cat
-    # mechanism
-    project_dir = tmp777_path / "project_dir-JobExecutionError"
-    _create_folder_as_user(path=str(project_dir), user=monkey_slurm_user)
-
     async with MockCurrentUser(persist=True) as user:
+        project_dir = tmp777_path / "project_dir-JobExecutionError"
         project = await project_factory(user, project_dir=str(project_dir))
         project_id = project.id
         input_dataset = await dataset_factory(
