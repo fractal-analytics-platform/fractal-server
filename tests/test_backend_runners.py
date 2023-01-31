@@ -52,6 +52,7 @@ async def test_runner(
         request.getfixturevalue("slurm_config")
         request.getfixturevalue("cfut_jobs_finished")
         monkey_slurm_user = request.getfixturevalue("monkey_slurm_user")
+        request.getfixturevalue("patch_copy_method")
 
     process_workflow = _backends[backend]
 
@@ -134,8 +135,8 @@ async def test_runner(
     assert "0.out" in files
     assert "0.metadiff.json" in files
 
-    with (workflow_dir / "0.args.json").open("r") as f:
-        debug(workflow_dir / "0.args.json")
+    with (workflow_dir_user / "0.args.json").open("r") as f:
+        debug(workflow_dir_user / "0.args.json")
         args = f.read()
         debug(args)
         assert "logger_name" not in args
