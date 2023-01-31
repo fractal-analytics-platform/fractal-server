@@ -69,8 +69,9 @@ def worker(
         out_fname = in_fname.replace(".in.", ".out.")
     out_dir = os.path.dirname(out_fname)
 
-    logging.warning(f"NOW CREATING {out_dir=}, if it does not exist")
-    os.mkdir(out_dir, exists_ok=True)
+    if not os.path.exists(out_dir):
+        logging.warning(f"NOW CREATING {out_dir=}")
+        os.mkdir(out_dir)
 
     if extra_import_paths:
         _extra_import_paths = extra_import_paths.split(":")
