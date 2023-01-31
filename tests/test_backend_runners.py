@@ -17,7 +17,6 @@ import os
 import pytest
 from devtools import debug
 
-from .fixtures_slurm import _create_folder_as_user
 from fractal_server.app.models import Workflow
 from fractal_server.app.runner import _backends
 from fractal_server.app.runner.common import close_job_logger
@@ -78,20 +77,18 @@ async def test_runner(
     debug(wf)
 
     # Create working folder(s)
-    workflow_dir = tmp777_path / "server"
-    workflow_dir_user = tmp777_path / "user"
-    umask = os.umask(0)
-    workflow_dir.mkdir(parents=True, mode=0o777)
-    os.umask(umask)
-
     if backend == "local":
+        workflow_dir = tmp777_path / "server"  # OK 777 here
+        workflow_dir_user = tmp777_path / "user"  # OK 777 here
         umask = os.umask(0)
-        workflow_dir_user.mkdir(parents=True, mode=0o777)
+        workflow_dir.mkdir(parents=True, mode=0o700)
+        workflow_dir_user.mkdir(parents=True, mode=0o700)
         os.umask(umask)
-    if backend == "slurm":
-        _create_folder_as_user(
-            path=str(workflow_dir_user), user=monkey_slurm_user
-        )
+    elif backend == "slurm":
+        from .test_backend_slurm import _define_and_create_folders
+
+        folders = _define_and_create_folders(tmp777_path, monkey_slurm_user)
+        workflow_dir, workflow_dir_user = folders[:]
 
     # Prepare backend-specific arguments
     logger_name = "job_logger"
@@ -103,7 +100,7 @@ async def test_runner(
     kwargs = dict(
         workflow=wf,
         input_paths=[workflow_dir / "*.txt"],
-        output_path=workflow_dir / "out.json",
+        output_path=tmp777_path / "out.json",  # OK 777 here
         input_metadata={},
         logger_name=logger_name,
         workflow_dir=workflow_dir,
