@@ -21,6 +21,7 @@ from typing import Any
 from typing import Callable
 from typing import List
 from typing import Optional
+from typing import Tuple
 
 import cloudpickle
 from cfut import SlurmExecutor
@@ -37,17 +38,30 @@ from .wait_thread import FractalSlurmWaitThread
 
 
 class SlurmJob:
-    workerid: str
+    """
+    Collect a few relevant information related to a FractalSlurmExecutor job
 
+    Attributes:
+        file_prefix: Prefix for all files handled by FractalSlurmExecutor.
+        workerid: Random string that enters the input/output pickle-file names.
+        input_pickle_file: Input pickle file.
+        output_pickle_file: Output pickle file.
+        slurm_script: Script to be submitted via `sbatch` command.
+        stdout: SLURM stdout file.
+        stderr: SLURM stderr file.
+    """
+
+    workerid: str
+    file_prefix: str
     input_pickle_file: Path
     output_pickle_file: Path
-
     slurm_script: Path
     stdout: Path
     stderr: Path
 
-    def __init__(self):
+    def __init__(self, file_prefix: Optional[str] = None):
         self.workerid = random_string()
+        self.file_prefix = file_prefix or "default_prefix"
 
 
 class FractalSlurmExecutor(SlurmExecutor):
@@ -351,14 +365,18 @@ class FractalSlurmExecutor(SlurmExecutor):
         fut: futures.Future = futures.Future()
 
         # Define slurm-job-related files
-        job = SlurmJob()
-        job.input_pickle_file = self.get_input_pickle_file_path(job.workerid)
-        job.output_pickle_file = self.get_output_pickle_file_path(job.workerid)
-        job.slurm_script = self.get_slurm_script_file_path(
-            prefix=job_file_prefix
+        job = SlurmJob(file_prefix=job_file_prefix)
+        job.input_pickle_file = self.get_input_pickle_file_path(
+            job.workerid, prefix=job.file_prefix
         )
-        job.stdout = self.get_slurm_stdout_file_path(prefix=job_file_prefix)
-        job.stderr = self.get_slurm_stderr_file_path(prefix=job_file_prefix)
+        job.output_pickle_file = self.get_output_pickle_file_path(
+            job.workerid, prefix=job.file_prefix
+        )
+        job.slurm_script = self.get_slurm_script_file_path(
+            prefix=job.file_prefix
+        )
+        job.stdout = self.get_slurm_stdout_file_path(prefix=job.file_prefix)
+        job.stderr = self.get_slurm_stderr_file_path(prefix=job.file_prefix)
 
         # Dump serialized function+args+kwargs to pickle file
         funcser = cloudpickle.dumps((fun, args, kwargs))
@@ -366,17 +384,15 @@ class FractalSlurmExecutor(SlurmExecutor):
             f.write(funcser)
 
         # Submit job to SLURM, and get jobid
-        jobid = self._start(job, additional_setup_lines)
+        jobid, job = self._start(job, additional_setup_lines)
 
-        # Add the SLURM script/out/err paths to map_jobid_to_slurm_files,
-        # after replacing the %j placeholder with jobid when needed
-        slurm_script_file = job.slurm_script.as_posix()
-        slurm_stdout_file = job.stdout.as_posix().replace("%j", jobid)
-        slurm_stderr_file = job.stderr.as_posix().replace("%j", jobid)
+        # Add the SLURM script/out/err paths to map_jobid_to_slurm_files (this
+        # must be after self._start(job), so that "%j" has already been
+        # replaced with the job ID)
         self.map_jobid_to_slurm_files[jobid] = (
-            slurm_script_file,
-            slurm_stdout_file,
-            slurm_stderr_file,
+            job.slurm_script.as_posix(),
+            job.stdout.as_posix(),
+            job.stderr.as_posix(),
         )
 
         # Thread will wait for it to finish.
@@ -396,6 +412,11 @@ class FractalSlurmExecutor(SlurmExecutor):
                SLURM has time to complete the job cancellation.
             2. Assign the SLURM-related file names as attributes of the
                JobExecutionError instance.
+
+        Note: this function should be called after values in
+        `self.map_jobid_to_slurm_files` have been updated, so that they point
+        to `self.working_dir` files which are readable for the user running
+        fractal-server.  by the server
 
         Arguments:
             jobid:
@@ -432,8 +453,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         thread via `fut.set_exception(...)`.
 
         Arguments:
-            jobid:
-                ID of the SLURM job
+            jobid: ID of the SLURM job
         """
 
         with self.jobs_lock:
@@ -441,12 +461,42 @@ class FractalSlurmExecutor(SlurmExecutor):
             if not self.jobs:
                 self.jobs_empty_cond.notify_all()
 
-        # Input/output pickle files
-        in_path = self.get_input_pickle_file_path(job.workerid)
-        out_path = self.get_output_pickle_file_path(job.workerid)
-
         # Handle all uncaught exceptions in this broad try/except block
         try:
+
+            # Copy all relevant files from self.working_dir_user to
+            # self.working_dir
+            self._copy_files_from_user_to_server(job)
+
+            # Input/output pickle files
+            in_path = self.get_input_pickle_file_path(
+                job.workerid, prefix=job.file_prefix
+            )
+            out_path = self.get_output_pickle_file_path(
+                job.workerid, prefix=job.file_prefix
+            )
+
+            # Update the paths to use the files in self.working_dir (rather
+            # than the user's ones in self.working_dir_user)
+            out_path = self.working_dir / out_path.name
+            self.map_jobid_to_slurm_files[jobid]
+            (
+                slurm_script_file,
+                slurm_stdout_file,
+                slurm_stderr_file,
+            ) = self.map_jobid_to_slurm_files[jobid]
+            new_slurm_stdout_file = str(
+                self.working_dir / Path(slurm_stdout_file).name
+            )
+            new_slurm_stderr_file = str(
+                self.working_dir / Path(slurm_stderr_file).name
+            )
+            self.map_jobid_to_slurm_files[jobid] = (
+                slurm_script_file,
+                new_slurm_stdout_file,
+                new_slurm_stderr_file,
+            )
+
             # The output pickle file may be missing because of some slow
             # filesystem operation; wait some time before considering it as
             # missing
@@ -477,10 +527,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                             jobid, info=proxy.kwargs.get("info", None)
                         )
                         fut.set_exception(job_exc)
-                # NOTE: the fractal user cannot remove out_path, which belongs
-                # to self.slurm_user. See
-                # https://github.com/fractal-analytics-platform/fractal-server/issues/474.
-                # out_path.unlink()
+                out_path.unlink()
             else:
                 # Output pickle file is missing
                 info = (
@@ -506,63 +553,57 @@ class FractalSlurmExecutor(SlurmExecutor):
             in_path.unlink()
             self._cleanup(jobid)
 
-            # Copy all new files in working_dir_user to working_dir
-            try:
-                self._copy_files_from_user_to_server()
-            except JobExecutionError as e:
-                fut.set_exception(e)
-
         except Exception as e:
-            self._copy_files_from_user_to_server()
             fut.set_exception(e)
 
-    def _copy_files_from_user_to_server(self):
+    def _copy_files_from_user_to_server(self, job: SlurmJob):
         """
-        FIXME: fix docstring and logs
-        FIXME: only copy task-related files
-        Impersonate the user and copy files from working_dir_user to
-        working_dir, making them available to the server
+        Impersonate the user and copy task-related files
+
+        For all files in `self.working_dir_user` that start with
+        `job.file_prefix`, read them (with `sudo -u` impersonation) and write
+        them to `self.working_dir`.
+
+        Arguments:
+            job: `SlurmJob` object (needed for its `file_prefix` attribute)
 
         Raises:
-            JobExecutionError: FIXME
+            JobExecutionError: If a `cat` command fails.
         """
-
-        logging.info("Enter _copy_files_from_user_to_server")
-
+        logging.debug("Enter _copy_files_from_user_to_server")
         if self.working_dir_user == self.working_dir:
             return
 
-        filenames_to_copy = [f.name for f in self.working_dir_user.glob("*")]
-        # FIXME: this copies all files, including the ones related to
-        # previous tasks, while one should only iterate over a certain
-        # set of files
-        # NOTE: By setting encoding=None, we handle bytes instead of strings.
-        # This is needed to also handle pickle files
-        for filename in filenames_to_copy:
-            # Read source_file_path (requires sudo)
-            source_file_path = str(self.working_dir_user / filename)
-            cmd = f"cat {source_file_path}"
-            res = _run_command_as_user(
-                cmd=cmd, user=self.slurm_user, encoding=None
-            )
-            if res.returncode != 0:
-                info = (
-                    f'Running cmd="{cmd}" as {self.slurm_user=} failed\n\n'
-                    f"{res.returncode=}\n\n"
-                    f"{res.stdout=}\n\n{res.stderr=}\n"
+        # NOTE: By setting encoding=None, we read/write bytes instead of
+        # strings. This is needed to also handle pickle files
+        files_to_copy_gen = self.working_dir_user.glob(f"{job.file_prefix}*")
+        for source_file_path in files_to_copy_gen:
+            if source_file_path.exists():
+                # Read source_file_path (requires sudo)
+                cmd = f"cat {str(source_file_path)}"
+                res = _run_command_as_user(
+                    cmd=cmd, user=self.slurm_user, encoding=None
                 )
-                logging.error(info)
-                raise JobExecutionError(info)
-            # Write to dest_file_path
-            dest_file_path = str(self.working_dir / filename)
-            with open(dest_file_path, "wb") as f:
-                f.write(res.stdout)
-
-        logging.info("Exit _copy_files_from_user_to_server")
+                if res.returncode != 0:
+                    info = (
+                        f'Running cmd="{cmd}" as {self.slurm_user=} failed\n\n'
+                        f"{res.returncode=}\n\n"
+                        f"{res.stdout=}\n\n{res.stderr=}\n"
+                    )
+                    logging.error(info)
+                    raise JobExecutionError(info)
+                # Write to dest_file_path (including empty files)
+                dest_file_path = str(self.working_dir / source_file_path.name)
+                with open(dest_file_path, "wb") as f:
+                    f.write(res.stdout)
+            else:
+                logging.debug(f"Skip missing file {str(source_file_path)}")
+                continue
+        logging.debug("Exit _copy_files_from_user_to_server")
 
     def _start(
         self, job: SlurmJob, additional_setup_lines: Optional[List[str]] = None
-    ) -> str:
+    ) -> Tuple[str, SlurmJob]:
         """
         Submit function for execution on a SLURM cluster
         """
@@ -598,4 +639,8 @@ class FractalSlurmExecutor(SlurmExecutor):
             script_path=job.slurm_script,
         )
 
-        return jobid
+        # Plug SLURM id in stdout/stderr file paths
+        job.stdout = Path(job.stdout.as_posix().replace("%j", jobid))
+        job.stderr = Path(job.stderr.as_posix().replace("%j", jobid))
+
+        return jobid, job
