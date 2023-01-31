@@ -153,15 +153,16 @@ def set_slurm_config(
 
     Args:
         task:
-            The task for which the sbatch script is to be assembled
+            Task for which the sbatch script is to be assembled
         task_pars:
-            The task parameters to be passed to the task
+            Task parameters to be passed to the task
         workflow_dir:
-            The directory in which the executor should store input / output /
-            errors from task execution, as well as meta files from the
-            submission process.
+            Server-owned directory to store all task-execution-related relevant
+            files (inputs, outputs, errors, and all meta files related to the
+            job execution). Note: users cannot write directly to this folder.
         workflow_dir_user:
-            FIXME
+            User-side directory with the same scope as `workflow_dir`, and
+            where a user can write.
 
     Raises:
         SlurmConfigError: if the slurm-configuration file does not contain the
@@ -224,26 +225,6 @@ def _process_workflow(
     workflow tasks and returns the output dataset metadata.
 
     Cf. [process_workflow][fractal_server.app.runner._local.process_workflow]
-
-    Args:
-        workflow:
-            TBD
-        input_paths:
-            TBD
-        output_path:
-            TBD
-        input_metadata:
-            TBD
-        logger_name:
-            TBD
-        workflow_dir:
-            TBD
-        workflow_dir_user:
-            TBD
-        slurm_user:
-            TBD
-        worker_init:
-            TBD
 
     Returns:
         output_dataset_metadata: Metadata of the output dataset
