@@ -29,7 +29,6 @@ from cfut.util import random_string
 from ....config import get_settings
 from ....syringe import Inject
 from ....utils import close_logger
-from ....utils import file_opener
 from ....utils import set_logger
 from ..common import JobExecutionError
 from ..common import TaskExecutionError
@@ -165,7 +164,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             dest:
                 The path to the batch script
         """
-        with open(dest, "w", opener=file_opener) as f:
+        with open(dest, "w") as f:
             f.write(sbatch_script)
         return dest
 
@@ -364,7 +363,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         # Dump serialized function+args+kwargs to pickle file
         funcser = cloudpickle.dumps((fun, args, kwargs))
-        with open(job.input_pickle_file, "wb", opener=file_opener) as f:
+        with open(job.input_pickle_file, "wb") as f:
             f.write(funcser)
 
         # Submit job to SLURM, and get jobid
