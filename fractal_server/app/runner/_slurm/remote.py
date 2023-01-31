@@ -33,7 +33,7 @@ class ExceptionProxy:
     to reconstruct a TaskExecutionError.
 
     Attributes:
-        exc_type_name: TBD
+        exc_type_name: Name of the exception type
         tb: TBD
         args: TBD
         kwargs: TBD
@@ -55,28 +55,25 @@ def worker(
     extra_import_paths: Optional[str] = None,
 ) -> None:
     """
-    Called to execute a job on a remote host.
+    Execute a job, possibly on a remote node.
 
     Arguments:
-        in_fname: TBD
-        out_fname: TBD
-        extra_import_paths: TBD
+        in_fname: Absolute path to the input pickle file (must be readable).
+        out_fname: Absolute path of the output pickle file (must be writeable).
+        extra_import_paths: Additional import paths
     """
 
-    # FIXME: make logging more precise and less verbose
-
-    if not out_fname:
-        out_fname = in_fname.replace(".in.", ".out.")
+    # Create output folder, if missing
     out_dir = os.path.dirname(out_fname)
-
     if not os.path.exists(out_dir):
-        logging.warning(f"NOW CREATING {out_dir=}")
+        logging.warning(f"_slurm.remote.worker: create {out_dir=}")
         os.mkdir(out_dir)
 
     if extra_import_paths:
         _extra_import_paths = extra_import_paths.split(":")
         sys.path[:0] = _extra_import_paths
 
+    # Execute the job and catpure exceptions
     try:
         with open(in_fname, "rb") as f:
             indata = f.read()
@@ -98,6 +95,7 @@ def worker(
         result = False, exc_proxy
         out = cloudpickle.dumps(result)
 
+    # Write the output pickle file
     tempfile = out_fname + ".tmp"
     with open(tempfile, "wb") as f:
         f.write(out)
