@@ -150,8 +150,9 @@ def test_slurm_executor_separate_folders(
     cfut_jobs_finished,
 ):
     """
-    FIXME: this will need to work with a tmp755 server dir and user-owned 700
-    user dir
+    Same as test_slurm_executor, but with two folders:
+    * server_working_dir is owned by the server user and has 755 permissions
+    * user_working_dir is owned the user and had default permissions
     """
 
     folders = _define_and_create_folders(tmp777_path, monkey_slurm_user)
