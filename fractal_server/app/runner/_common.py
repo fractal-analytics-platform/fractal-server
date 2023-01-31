@@ -57,14 +57,23 @@ def _get_list_chunks(mylist: List, *, chunksize: Optional[int]) -> Generator:
             yield mylist[ind_chunk : ind_chunk + chunksize]  # noqa: E203
 
 
-class WorkflowFiles:
+class TaskFiles:
     """
-    Group all file paths pertaining to a workflow
-
-    FIXME: clarify workflow_dir vs workflow_dir_user
+    Group all file paths pertaining to a task
 
     Attributes:
-        TBD: TBD
+        workflow_dir:
+            Server-owned directory to store all task-execution-related relevant
+            files (inputs, outputs, errors, and all meta files related to the
+            job execution). Note: users cannot write directly to this folder.
+        workflow_dir_user:
+            User-side directory with the same scope as `workflow_dir`, and
+            where a user can write.
+        task_order:
+            Positional order of the task within a workflow.
+        component:
+            Specific component to run the task for (relevant for tasks that
+            will be executed in parallel over many components).
     """
 
     workflow_dir: Path
@@ -72,7 +81,6 @@ class WorkflowFiles:
     task_order: Optional[int] = None
     component: Optional[str] = None
 
-    prefix: str
     file_prefix: str
     args: Path
     out: Path
@@ -100,28 +108,29 @@ class WorkflowFiles:
             order = str(self.task_order)
         else:
             order = "task"
-        self.prefix = f"{order}{component_safe}"
-        self.args = self.workflow_dir_user / f"{self.prefix}.args.json"
-        self.out = self.workflow_dir_user / f"{self.prefix}.out"
-        self.err = self.workflow_dir_user / f"{self.prefix}.err"
-        self.metadiff = self.workflow_dir_user / f"{self.prefix}.metadiff.json"
-        self.file_prefix = str(self.task_order)
+        self.file_prefix = f"{order}{component_safe}"
+        self.args = self.workflow_dir_user / f"{self.file_prefix}.args.json"
+        self.out = self.workflow_dir_user / f"{self.file_prefix}.out"
+        self.err = self.workflow_dir_user / f"{self.file_prefix}.err"
+        self.metadiff = (
+            self.workflow_dir_user / f"{self.file_prefix}.metadiff.json"
+        )
 
 
 @lru_cache()
-def get_workflow_file_paths(
+def get_task_file_paths(
     workflow_dir: Path,
     workflow_dir_user: Path,
     task_order: Optional[int] = None,
     component: Optional[str] = None,
-) -> WorkflowFiles:
+) -> TaskFiles:
     """
-    Return the corrisponding WorkflowFiles object
+    Return the corrisponding TaskFiles object
 
     This function is mainly used as a cache to avoid instantiating needless
     objects.
     """
-    return WorkflowFiles(
+    return TaskFiles(
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
         task_order=task_order,
@@ -215,7 +224,7 @@ def call_single_task(
     if not workflow_dir_user:
         workflow_dir_user = workflow_dir
 
-    workflow_files = get_workflow_file_paths(
+    workflow_files = get_task_file_paths(
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
         task_order=task.order,
@@ -314,7 +323,7 @@ def call_single_parallel_task(
     if not workflow_dir_user:
         workflow_dir_user = workflow_dir
 
-    workflow_files = get_workflow_file_paths(
+    workflow_files = get_task_file_paths(
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
         task_order=task.order,

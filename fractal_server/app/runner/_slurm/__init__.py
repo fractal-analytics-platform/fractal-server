@@ -30,7 +30,7 @@ from ....config import get_settings
 from ....syringe import Inject
 from ...models import Workflow
 from ...models import WorkflowTask
-from .._common import get_workflow_file_paths
+from .._common import get_task_file_paths
 from .._common import recursive_task_submission
 from ..common import async_wrap
 from ..common import TaskParameters
@@ -194,14 +194,14 @@ def set_slurm_config(
             f"export SRUN_CPUS_PER_TASK={config.cpus_per_task}"
         )
 
-    workflow_files = get_workflow_file_paths(
+    task_files = get_task_file_paths(
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
         task_order=task.order,
     )
     return dict(
         additional_setup_lines=additional_setup_lines,
-        job_file_prefix=workflow_files.file_prefix,
+        job_file_prefix=task_files.file_prefix,
     )
 
 
