@@ -79,10 +79,9 @@ async def test_runner(
     # Create working folder(s)
     if backend == "local":
         workflow_dir = tmp777_path / "server"  # OK 777 here
-        workflow_dir_user = tmp777_path / "user"  # OK 777 here
+        workflow_dir_user = workflow_dir
         umask = os.umask(0)
         workflow_dir.mkdir(parents=True, mode=0o700)
-        workflow_dir_user.mkdir(parents=True, mode=0o700)
         os.umask(umask)
     elif backend == "slurm":
         from .test_backend_slurm import _define_and_create_folders
