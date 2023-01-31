@@ -244,8 +244,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             ln
             for ln in additional_setup_lines + self.common_script_lines
             if not ln.startswith("#SBATCH")
-        ] + [f"export CFUT_DIR={self.working_dir}"]
-        # FIXME: do we need CFUT_DIR? If yes, where?
+        ]
 
         cmd = [shlex.join(["srun", *cmdline])]
 
