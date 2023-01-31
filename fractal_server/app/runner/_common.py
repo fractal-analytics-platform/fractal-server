@@ -141,8 +141,8 @@ def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
                             exit code (e.g. due to the subprocess receiving a
                             TERM or KILL signal)
     """
-    fp_stdout = open(stdout, "w", opener=file_opener)
-    fp_stderr = open(stderr, "w", opener=file_opener)
+    fp_stdout = open(stdout, "w")
+    fp_stderr = open(stderr, "w")
     try:
         result = subprocess.run(  # nosec
             shlex_split(cmd),
