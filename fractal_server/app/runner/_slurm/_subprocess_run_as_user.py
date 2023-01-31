@@ -24,6 +24,10 @@ def _mkdir_as_user(*, folder: str, user: str):
     """
     Create a folder as a different user
     """
+
+    if not user:
+        raise RuntimeError("{user=} not allowed in _mkdir_as_user")
+
     cmd = f"mkdir {folder}"
     res = _run_command_as_user(cmd=cmd, user=user)
     if not res.returncode == 0:
