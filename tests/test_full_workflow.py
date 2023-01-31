@@ -59,7 +59,6 @@ async def test_full_workflow(
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
-        request.getfixturevalue("patch_copy_method")
         request.getfixturevalue("cfut_jobs_finished")
 
     async with MockCurrentUser(persist=True) as user:
@@ -233,7 +232,6 @@ async def test_failing_workflow_TaskExecutionError(
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
         request.getfixturevalue("cfut_jobs_finished")
-        request.getfixturevalue("patch_copy_method")
 
     async with MockCurrentUser(persist=True) as user:
         project_dir = tmp777_path / f"project_dir-{backend}-TaskExecutionError"
@@ -347,7 +345,6 @@ async def test_failing_workflow_JobExecutionError(
     monkey_slurm_user,
     relink_python_interpreter,
     cfut_jobs_finished,
-    patch_copy_method,
 ):
 
     override_settings_factory(
