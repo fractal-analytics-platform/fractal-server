@@ -33,11 +33,12 @@ class FractalFileWaitThread(FileWaitThread):
         The i parameter allows subclasses like SlurmWaitThread to do something
         on every Nth check.
         """
-        logging.info("FractalFileWaitThread.check")
         # Poll for each file.
         for filename in list(self.waiting):
             if _does_file_exist(filename, slurm_user=self.slurm_user):
-                logging.info(f"{filename} exists")
+                logging.info(
+                    f"[FractalFileWaitThread.check] {filename} exists"
+                )
                 self.callback(self.waiting[filename])
                 del self.waiting[filename]
 
@@ -50,7 +51,6 @@ class FractalSlurmWaitThread(FractalFileWaitThread):
     slurm_poll_interval = 30
 
     def check(self, i):
-        logging.info("FractalSlurmWaitThread.check")
         super().check(i)
         if i % (self.slurm_poll_interval // self.interval) == 0:
             try:
