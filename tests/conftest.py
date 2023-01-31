@@ -66,16 +66,6 @@ def tmp777_path(tmp_path):
     yield tmp_path
 
 
-@pytest.fixture
-def tmp755_path(tmp_path):
-    check_basetemp(tmp_path)
-    tmp_path.chmod(0o755)
-    for parent in tmp_path.parents:
-        if "pytest" in parent.as_posix():
-            parent.chmod(0o755)
-    yield tmp_path
-
-
 from .fixtures_server import *  # noqa F403
 from .fixtures_tasks import *  # noqa F403
 from .fixtures_slurm import *  # noqa F403
