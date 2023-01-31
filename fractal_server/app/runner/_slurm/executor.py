@@ -507,32 +507,50 @@ class FractalSlurmExecutor(SlurmExecutor):
             self._cleanup(jobid)
 
             # Copy all new files in working_dir_user to working_dir
-            if self.working_dir_user != self.working_dir:
-                filenames_to_copy = [
-                    f.name for f in self.working_dir_user.glob("*")
-                ]
-                # FIXME: this copies all files, including the ones related to
-                # previous tasks, while one should only iterate over a certain
-                # set of files,
-                logging.critical(f"{filenames_to_copy=}")
-                for filename in filenames_to_copy:
-                    source_file_path = str(self.working_dir_user / filename)
-                    dest_file_path = str(self.working_dir / filename)
-                    cmd = f"cat {source_file_path} > {dest_file_path}"
-                    res = _run_command_as_user(cmd=cmd, user=self.slurm_user)
-                    if res.returncode != 0:
-                        info = (
-                            f'Running cmd="{cmd}" as {self.slurm_user=}\n\n'
-                            f"{res.returncode=}\n\n"
-                            f"{res.stdout=}\n\n{res.stderr=}\n"
-                        )
-                        logging.error(info)
-                        job_exc = JobExecutionError(info)
-                        fut.set_exception(job_exc)
+            try:
+                self._copy_files_from_user_to_server()
+            except JobExecutionError as e:
+                fut.set_exception(e)
 
         except Exception as e:
-            # FIXME: WHEN SOMETHING GOES WRONG, WE SHOULD STILL COPY ALL FILES
+            self._copy_files_from_user_to_server()
             fut.set_exception(e)
+
+    def _copy_files_from_user_to_server(self):
+        """
+        FIXME: fix docstring and logs
+        FIXME: only copy task-related files
+        Impersonate the user and copy files from working_dir_user to
+        working_dir, making them available to the server
+
+        Raises:
+            JobExecutionError: FIXME
+        """
+
+        logging.info("Enter _copy_files_from_user_to_server")
+
+        if self.working_dir_user == self.working_dir:
+            return
+
+        filenames_to_copy = [f.name for f in self.working_dir_user.glob("*")]
+        # FIXME: this copies all files, including the ones related to
+        # previous tasks, while one should only iterate over a certain
+        # set of files
+        for filename in filenames_to_copy:
+            source_file_path = str(self.working_dir_user / filename)
+            dest_file_path = str(self.working_dir / filename)
+            cmd = f"cat {source_file_path} > {dest_file_path}"
+            res = _run_command_as_user(cmd=cmd, user=self.slurm_user)
+            if res.returncode != 0:
+                info = (
+                    f'Running cmd="{cmd}" as {self.slurm_user=}\n\n'
+                    f"{res.returncode=}\n\n"
+                    f"{res.stdout=}\n\n{res.stderr=}\n"
+                )
+                logging.error(info)
+                raise JobExecutionError(info)
+
+        logging.info("Exit _copy_files_from_user_to_server")
 
     def _start(
         self, job: SlurmJob, additional_setup_lines: Optional[List[str]] = None
