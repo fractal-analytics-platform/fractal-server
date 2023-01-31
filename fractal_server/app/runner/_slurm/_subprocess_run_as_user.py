@@ -6,13 +6,19 @@ from typing import Optional
 
 def _run_command_as_user(
     *, cmd: str, user: str, encoding: Optional[str] = "utf-8"
-):
+) -> subprocess.CompletedProcess:
     """
-    Use `sudo -u` to impersonate another user and run a command
+    Use `sudo` to impersonate another user and run a command
 
-    FIXME docstring
+    Arguments:
+        cmd: Command to be run
+        user: User to be impersonated
+        encoding: Argument for `subprocess.run`. Note that this must be `None`
+                  to have stdout/stderr as bytes.
+
+    Returns:
+        res: The return value from `subprocess.run`.
     """
-    # FIXME: turn INFO into DEBUG
     logging.debug(f'[_run_command_as_user] {user=}, cmd="{cmd}"')
     res = subprocess.run(  # nosec
         shlex.split(f"sudo --non-interactive -u {user} {cmd}"),
@@ -25,11 +31,18 @@ def _run_command_as_user(
     return res
 
 
-def _mkdir_as_user(*, folder: str, user: str):
+def _mkdir_as_user(*, folder: str, user: str) -> None:
     """
     Create a folder as a different user
-    """
 
+    Arguments:
+        folder: Absolute path to the folder
+        user: User to be impersonated
+
+    Raises:
+        RuntimeError: if `user` is not correctly defined, or if subprocess
+                      returncode is not 0.
+    """
     if not user:
         raise RuntimeError("{user=} not allowed in _mkdir_as_user")
 
