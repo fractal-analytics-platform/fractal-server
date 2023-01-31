@@ -66,6 +66,7 @@ async def test_full_workflow(
 
     # FIXME: this will have to be cleaned up, once we add the sudo-cat
     # mechanism
+    # FIXME: folders should be created within submit_process
     project_dir = tmp777_path / f"project_dir-{backend}"
     if backend == "local":
         umask = os.umask(0)
@@ -248,6 +249,7 @@ async def test_failing_workflow_TaskExecutionError(
 
     # FIXME: this will have to be cleaned up, once we add the sudo-cat
     # mechanism
+    # FIXME: folders should be created within submit_process
     project_dir = tmp777_path / f"project_dir-{backend}-TaskExecutionError"
     if backend == "local":
         umask = os.umask(0)
