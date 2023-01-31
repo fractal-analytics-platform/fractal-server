@@ -537,10 +537,12 @@ class FractalSlurmExecutor(SlurmExecutor):
         # previous tasks, while one should only iterate over a certain
         # set of files
         for filename in filenames_to_copy:
+            # Read source_file_path (requires sudo)
             source_file_path = str(self.working_dir_user / filename)
-            dest_file_path = str(self.working_dir / filename)
-            cmd = f"cat {source_file_path} > {dest_file_path}"
-            res = _run_command_as_user(cmd=cmd, user=self.slurm_user)
+            cmd = f"cat {source_file_path}"
+            res = _run_command_as_user(
+                cmd=cmd, user=self.slurm_user, encoding=None
+            )
             if res.returncode != 0:
                 info = (
                     f'Running cmd="{cmd}" as {self.slurm_user=}\n\n'
@@ -549,6 +551,10 @@ class FractalSlurmExecutor(SlurmExecutor):
                 )
                 logging.error(info)
                 raise JobExecutionError(info)
+            # Write to dest_file_path
+            dest_file_path = str(self.working_dir / filename)
+            with open(dest_file_path, "wb") as f:
+                f.write(res.stdout)
 
         logging.info("Exit _copy_files_from_user_to_server")
 
