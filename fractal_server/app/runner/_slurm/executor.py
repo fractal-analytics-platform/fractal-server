@@ -536,6 +536,8 @@ class FractalSlurmExecutor(SlurmExecutor):
         # FIXME: this copies all files, including the ones related to
         # previous tasks, while one should only iterate over a certain
         # set of files
+        # NOTE: By setting encoding=None, we handle bytes instead of strings.
+        # This is needed to also handle pickle files
         for filename in filenames_to_copy:
             # Read source_file_path (requires sudo)
             source_file_path = str(self.working_dir_user / filename)
@@ -545,7 +547,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             )
             if res.returncode != 0:
                 info = (
-                    f'Running cmd="{cmd}" as {self.slurm_user=}\n\n'
+                    f'Running cmd="{cmd}" as {self.slurm_user=} failed\n\n'
                     f"{res.returncode=}\n\n"
                     f"{res.stdout=}\n\n{res.stderr=}\n"
                 )
