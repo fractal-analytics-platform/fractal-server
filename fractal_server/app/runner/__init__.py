@@ -80,6 +80,9 @@ async def submit_workflow(
     """
     Prepares a workflow and applies it to a dataset
 
+    This function wraps the process_workflow one, which is different for each
+    backend (e.g. local or slurm backend).
+
     Args:
         workflow:
             Workflow being applied
@@ -95,7 +98,9 @@ async def submit_workflow(
             Id of the job record which stores the state for the current
             workflow application.
         project_dir:
-            FIXME
+            Project directory (namely a path where the user can write). For the
+            slurm backend, this is used as a base directory for
+            `job.working_dir_user`.
         slurm_user:
             The username to impersonate for the workflow execution.
         worker_init:
