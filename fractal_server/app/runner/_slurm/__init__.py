@@ -248,6 +248,12 @@ def _process_workflow(
     Returns:
         output_dataset_metadata: Metadata of the output dataset
     """
+
+    if not slurm_user:
+        raise RuntimeError(
+            "slurm_user argument is required, for slurm backend"
+        )
+
     if isinstance(worker_init, str):
         worker_init = worker_init.split("\n")
 
