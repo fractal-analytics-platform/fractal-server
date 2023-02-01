@@ -199,14 +199,15 @@ def call_single_task(
     executable command passing the arguments file as an input and assembles
     the output.
 
-    Note:
-        This function is directly submitted to a
-        `concurrent.futures`-compatible executor, as in
+    **Note**: This function is directly submitted to a
+    `concurrent.futures`-compatible executor, as in
 
-            some_future = executor.submit(call_single_task, ...)
+        some_future = executor.submit(call_single_task, ...)
 
-        If the executor then impersonates another user (as in the
-        `FractalSlurmExecutor`), this function is run by that user.
+    If the executor then impersonates another user (as in the
+    `FractalSlurmExecutor`), this function is run by that user.  For this
+    reason, it should not write any file to workflow_dir, or it may yield
+    permission errors.
 
     Args:
         task:
@@ -286,10 +287,7 @@ def call_single_task(
         output_path=task_pars.output_path,
         metadata=updated_metadata,
     )
-    # NOTE: this function is run by the user, thus METADATA_FILENAME is written
-    # in workflow_dir_user
-    with open(workflow_dir_user / METADATA_FILENAME, "w") as f:
-        json.dump(updated_metadata, f, indent=2)
+
     return out_task_parameters
 
 
@@ -379,7 +377,7 @@ def call_parallel_task(
     *,
     executor: Executor,
     task: WorkflowTask,
-    task_pars_depend_future: Future,  # py3.9 Future[TaskParameters],
+    task_pars_depend: TaskParameters,
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
     submit_setup_call: Callable[
@@ -395,6 +393,12 @@ def call_parallel_task(
     [`FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW`](../../../../../configuration/#fractal_server.config.Settings.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW)
     may affect the internal behavior of this function.
 
+    **Note**: This function returns a future which already has
+    `out_future.done()` is `True` (that is, this function is blocking and it
+    returns only after the task is over). The reason for returning a future
+    instead of a `TaskParameter` object is for compatibility with the output of
+    `executor.submit(call_single_task, ...)`.
+
     Args:
         executor:
             The `concurrent.futures.Executor`-compatible executor that will
@@ -402,8 +406,7 @@ def call_parallel_task(
         task:
             The parallel task to run.
         task_pars_depend_future:
-            A future that will resolve in the task parameters to be passed on
-            to the parallel task.
+            The task parameters to be passed on to the parallel task.
         workflow_dir:
             The server-side working directory for workflow execution.
         workflow_dir_user:
@@ -422,7 +425,6 @@ def call_parallel_task(
     if not workflow_dir_user:
         workflow_dir_user = workflow_dir
 
-    task_pars_depend = task_pars_depend_future.result()
     component_list = task_pars_depend.metadata[task.parallelization_level]
 
     # Preliminary steps
@@ -473,17 +475,6 @@ def call_parallel_task(
     )
 
     out_future: Future = Future()
-    # NOTE: this function is run by the server user, thus METADATA_FILENAME
-    # is written in workflow_dir
-    try:
-        with open(workflow_dir / METADATA_FILENAME, "w") as f:
-            json.dump(task_pars_depend.metadata, f, indent=2)
-    except Exception as e:
-        logging.error(
-            f"Writing of {str(workflow_dir / METADATA_FILENAME)=} failed"
-        )
-        out_future.set_exception(e)
-
     out_future.set_result(out_task_parameters)
     return out_future
 
@@ -510,13 +501,16 @@ def recursive_task_submission(
 
     Induction process:
 
-    `0`: return a future which resolves in the task parameters necessary for
-        the first task of the list.
+    * `0`: return a future which resolves in the task parameters necessary for
+      the first task of the list.
+    * `n => n+1`: use output resulting from step `n` as input for the first
+      task in the list, i.e., the `n+1`st task.
 
-    `n => n+1`: use output resulting from step `n` as input for the first task
-        in the list, i.e., the `n+1`st task.
+    **Note:** At the end of each task, write current metadata to `working_dir /
+    METADATA_FILENAME`, so that they can be read as part of the [`get_job`
+    endpoint](../../api/v1/job/#fractal_server.app.api.v1.job.get_job).
 
-    Args:
+    Arguments:
         executor:
             The `concurrent.futures.Executor`-compatible executor that will
             run the task.
@@ -554,8 +548,7 @@ def recursive_task_submission(
 
     logger = logging.getLogger(logger_name)
 
-    # step n => step n+1 (NOTE: in this recursive call we wait for the end of
-    # execution of all dependencies)
+    # step n => step n+1
     task_pars_depend_future = recursive_task_submission(
         executor=executor,
         task_list=dependencies,
@@ -565,35 +558,49 @@ def recursive_task_submission(
         submit_setup_call=submit_setup_call,
         logger_name=logger_name,
     )
+    # Wait for dependencies to be complete (NOTE: this is not necessary if we
+    # explicitly wait for the result of executor.submit(call_single_task, ...),
+    # see below
+    task_pars_depend = task_pars_depend_future.result()
 
     logger.info(
         f"SUBMIT {this_task.order}-th task "
         f'(name="{this_task.task.name}", executor={this_task.executor}).'
     )
     if this_task.is_parallel:
+        # NOTE: call_parallel_task is blocking, i.e. the returned future always
+        # has `this_task_future.done() = True`
         this_task_future = call_parallel_task(
             executor=executor,
             task=this_task,
-            task_pars_depend_future=task_pars_depend_future,
+            task_pars_depend=task_pars_depend,
             workflow_dir=workflow_dir,
             workflow_dir_user=workflow_dir_user,
             submit_setup_call=submit_setup_call,
         )
     else:
+        # NOTE: executor.submit(call_single_task, ...) is non-blocking, i.e.
+        # the returned future may have `this_task_future.done() = False`
         extra_setup = submit_setup_call(
             this_task, task_pars, workflow_dir, workflow_dir_user
         )
         this_task_future = executor.submit(
             call_single_task,
             task=this_task,
-            task_pars=task_pars_depend_future.result(),
+            task_pars=task_pars_depend,
             workflow_dir=workflow_dir,
             workflow_dir_user=workflow_dir_user,
             **extra_setup,
         )
+        # Wait for the future result (blocking)
+        this_task_future.result()
     logger.info(
         f"END    {this_task.order}-th task "
         f'(name="{this_task.task.name}", executor={this_task.executor}).'
     )
+
+    # Write most recent metadata to METADATA_FILENAME
+    with open(workflow_dir / METADATA_FILENAME, "w") as f:
+        json.dump(this_task_future.result().metadata, f, indent=2)
 
     return this_task_future
