@@ -14,8 +14,7 @@ Zurich.
 """
 import asyncio
 import logging
-import shlex
-import subprocess
+import os
 import threading
 import time
 from pathlib import Path
@@ -184,25 +183,17 @@ async def test_full_workflow(
         debug(data)
         assert "dummy" in data["meta"]
 
-        # Check that all artifacts are rw fo the user running the server.
-        # NOTE: by using subprocess.run, the command is run with
-        #     $ docker exec --user fractal ...
-        if backend == "slurm":
-            workflow_path = Path(job_status_data["working_dir"])
-            files_no_access = []
-            for f in workflow_path.glob("*"):
-                cmd = f"stat --format %a {str(f)}"  # output is like "755\n"
-                res = subprocess.run(
-                    shlex.split(cmd),
-                    capture_output=True,
-                    encoding="utf-8",
-                    check=True,
-                )
-                permissions = res.stdout.strip()
-                debug((str(f), permissions))
-                if not permissions[0] in ["6", "7"]:
-                    files_no_access.append((str(f), permissions))
-            assert len(files_no_access) == 0
+        # Check that all files in working_dir are RW for the user running the
+        # server. Note that the same is **not** true for files in
+        # working_dir_user.
+        workflow_path = Path(job_status_data["working_dir"])
+        no_access = []
+        for f in workflow_path.glob("*"):
+            has_access = os.access(f, os.R_OK | os.W_OK)
+            if not has_access:
+                no_access.append(f)
+        debug(no_access)
+        assert len(no_access) == 0
 
 
 @pytest.mark.slow
