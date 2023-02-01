@@ -9,12 +9,14 @@ from typing import Callable
 import pytest
 from devtools import debug
 
-from .fixtures_slurm import _create_folder_as_user
 from .fixtures_slurm import run_squeue
 from .fixtures_slurm import scancel_all_jobs_of_a_slurm_user
 from .fixtures_tasks import MockTask
 from .fixtures_tasks import MockWorkflowTask
 from fractal_server.app.runner._slurm import SlurmConfig
+from fractal_server.app.runner._slurm._subprocess_run_as_user import (
+    _mkdir_as_user,
+)
 from fractal_server.app.runner._slurm.executor import FractalSlurmExecutor
 from fractal_server.app.runner.common import JobExecutionError
 from fractal_server.tasks import dummy as dummy_module
@@ -33,7 +35,7 @@ def _define_and_create_folders(root_path: Path, user: str):
     os.umask(umask)
 
     # Create user working folder
-    _create_folder_as_user(path=str(user_working_dir), user=user)
+    _mkdir_as_user(folder=str(user_working_dir), user=user)
 
     return (server_working_dir, user_working_dir)
 
