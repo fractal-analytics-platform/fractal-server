@@ -394,7 +394,7 @@ def call_parallel_task(
     may affect the internal behavior of this function.
 
     **Note**: This function returns a future which already has
-    `out_future.done()` is `True` (that is, this function is blocking and it
+    `out_future.done()=True` (that is, this function is blocking and it
     returns only after the task is over). The reason for returning a future
     instead of a `TaskParameter` object is for compatibility with the output of
     `executor.submit(call_single_task, ...)`.
