@@ -315,9 +315,7 @@ async def patch_task(
     return db_task
 
 
-@router.post(
-    "/", response_model=TaskRead, status_code=status.HTTP_201_CREATED
-)
+@router.post("/", response_model=TaskRead, status_code=status.HTTP_201_CREATED)
 async def create_task(
     task: TaskCreate,
     user: User = Depends(current_active_user),

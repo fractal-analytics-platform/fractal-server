@@ -11,6 +11,7 @@ from fractal_server.app.api.v1.task import create_package_dir_pip
 from fractal_server.app.api.v1.task import TaskCollectionError
 from fractal_server.app.api.v1.task import TaskCollectStatus
 from fractal_server.app.models import State
+from fractal_server.common.schemas.task import TaskCreate
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 from fractal_server.tasks.collection import get_collection_path
@@ -222,3 +223,32 @@ async def test_collection_api_invalid_manifest(
         )
         debug(res.json())
         assert res.status_code == 422
+
+
+async def test_post_task(client, MockCurrentUser):
+    async with MockCurrentUser(persist=True):
+        task = TaskCreate(
+            name="task_name",
+            command="task_command",
+            source="task_source",
+            input_type="task_input_type",
+            output_type="task_output_type",
+        )
+        res = await client.post("api/v1/task/", json=dict(task))
+        assert res.status_code == 201
+        debug(res.json())
+
+        new_task = TaskCreate(
+            name="new_task_name",
+            command="new_task_command",
+            source="task_source",  # same source as `task`
+            input_type="new_task_input_type",
+            output_type="new_task_output_type",
+        )
+        res = await client.post("api/v1/task/", json=dict(new_task))
+        assert res.status_code == 422
+        debug(res.json())
+
+        res = await client.post("api/v1/task/")  # request without body
+        assert res.status_code == 422
+        debug(res.json())
