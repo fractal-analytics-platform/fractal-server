@@ -71,6 +71,7 @@ Preliminary check-list
 * The current HEAD of the `main` branch passes all the tests (note: make sure
   that you are using the poetry-installed local package).
 * You updated the `CHANGELOG.md` file.
+* **You updated the schema version, if needed** (more details: TBD).
 
 Actual **release instructions**:
 
