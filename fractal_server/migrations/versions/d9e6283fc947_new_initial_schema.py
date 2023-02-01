@@ -1,8 +1,8 @@
-"""Initial schema
+"""New initial schema
 
-Revision ID: fff40bbc0dc0
+Revision ID: d9e6283fc947
 Revises:
-Create Date: 2022-12-15 14:08:32.043490
+Create Date: 2023-02-01 16:03:16.138102
 
 """
 import sqlalchemy as sa
@@ -12,7 +12,7 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = "fff40bbc0dc0"
+revision = "d9e6283fc947"
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -34,6 +34,26 @@ def upgrade() -> None:
         "state",
         sa.Column("data", sa.JSON(), nullable=True),
         sa.Column("timestamp", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_table(
+        "task",
+        sa.Column("default_args", sa.JSON(), nullable=True),
+        sa.Column("meta", sa.JSON(), nullable=True),
+        sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column(
+            "command", sqlmodel.sql.sqltypes.AutoString(), nullable=False
+        ),
+        sa.Column(
+            "source", sqlmodel.sql.sqltypes.AutoString(), nullable=False
+        ),
+        sa.Column(
+            "input_type", sqlmodel.sql.sqltypes.AutoString(), nullable=False
+        ),
+        sa.Column(
+            "output_type", sqlmodel.sql.sqltypes.AutoString(), nullable=False
+        ),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -126,31 +146,6 @@ def upgrade() -> None:
         unique=False,
     )
     op.create_table(
-        "task",
-        sa.Column("default_args", sa.JSON(), nullable=True),
-        sa.Column("meta", sa.JSON(), nullable=True),
-        sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column(
-            "command", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column(
-            "source", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column(
-            "input_type", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column(
-            "output_type", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("project_id", sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["project_id"],
-            ["project.id"],
-        ),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_table(
         "workflow",
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("project_id", sa.Integer(), nullable=False),
@@ -176,6 +171,11 @@ def upgrade() -> None:
         ),
         sa.Column(
             "working_dir", sqlmodel.sql.sqltypes.AutoString(), nullable=True
+        ),
+        sa.Column(
+            "working_dir_user",
+            sqlmodel.sql.sqltypes.AutoString(),
+            nullable=True,
         ),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column(
@@ -241,7 +241,6 @@ def downgrade() -> None:
     op.drop_table("resource")
     op.drop_table("applyworkflow")
     op.drop_table("workflow")
-    op.drop_table("task")
     op.drop_index(
         op.f("ix_oauthaccount_oauth_name"), table_name="oauthaccount"
     )
@@ -253,6 +252,7 @@ def downgrade() -> None:
     op.drop_table("dataset")
     op.drop_index(op.f("ix_user_oauth_email"), table_name="user_oauth")
     op.drop_table("user_oauth")
+    op.drop_table("task")
     op.drop_table("state")
     op.drop_table("project")
     # ### end Alembic commands ###
