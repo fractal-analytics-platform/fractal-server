@@ -574,9 +574,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         if self.working_dir_user == self.working_dir:
             return
 
-        # FIXME warning, some files may be missing! (for sure the
-        # METADATA_FILENAME one!)
-
         # NOTE: By setting encoding=None, we read/write bytes instead of
         # strings. This is needed to also handle pickle files
         files_to_copy_gen = self.working_dir_user.glob(f"{job.file_prefix}*")
