@@ -2,15 +2,11 @@ import json
 import logging
 import shlex
 import subprocess
-from copy import copy
 from pathlib import Path
 from typing import List
 
 import pytest
 from devtools import debug
-
-import fractal_server
-from fractal_server.app.runner._slurm import FractalSlurmExecutor
 
 
 def is_responsive(container_name):
@@ -288,64 +284,3 @@ def _create_folder_as_user(*, path: str, user: str, mode: int = None):
         )
         debug(res)
         assert res.returncode == 0
-
-
-@pytest.fixture
-def patch_copy_method(monkeypatch):
-    raise RuntimeError(
-        "The patch_copy_method fixture is currently not needed, as of "
-        + "54b626edb578e8542a9ed08ffb9ff9d6b37a5fd0. We will wait a bit "
-        + "before removing it, since it may be useful in other cases."
-    )
-
-    """
-    This fixture is needed because of the two-users CI issue:
-    * In real life, there is a single user running the server (typically named
-      "fractal").
-    * In the CI, there is the machine user running the server via pytest, and
-      then there is the docker-container user named "fractal" (UID 2000, in
-      docker) who runs the subprocess commands (thanks to the monkeypatch
-      defined in the monkey_slurm fixture). The latter is also the user who has
-      sudo privileges (within docker containers).
-
-    Some files in the server working dir are owned by fractal (docker-container
-    user), who created them via a command like
-
-        sudo -u test01 cat /some/file > /some/path
-
-    Therefore the machine user (who is running pytest and fractal-server)
-    cannot overwrite them. This is only an issue within the CI, and we address
-    it with the workaround of making all the relevant files broadly (777)
-    accessible.
-    """
-
-    # Store a copy of the non-patched method, to avoid a recursion error in the
-    # patched method
-    original_method = copy(
-        FractalSlurmExecutor._copy_files_from_user_to_server
-    )
-
-    def patched_method(self):
-        logging.warning("Enter patched _copy_files_from_user_to_server")
-
-        # Run original method, which iterates commands like `sudo -u test01 cat
-        # /some/thing > /some/where` over many files, effectively copying them
-        # from self.working_dir_user to self.working_dir
-        original_method(self)
-
-        # Make all destination files broadly accessible
-        cmd = f"chmod 777 {str(self.working_dir)}/*"
-        subprocess.run(shlex.split(cmd), capture_output=True, encoding="utf-8")
-
-        # NOTE: res.returncode is typically != 0, because some files in that
-        # folder belong to the machine user and not to the docker-container
-        # fractal user. This is harmless, since the command will still act on
-        # the fractal-owned files and leave the other ones untouched.
-
-        logging.warning("Exit patched _copy_files_from_user_to_server")
-
-    monkeypatch.setattr(
-        fractal_server.app.runner._slurm.FractalSlurmExecutor,
-        "_copy_files_from_user_to_server",
-        patched_method,
-    )
