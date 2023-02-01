@@ -14,7 +14,6 @@ Zurich.
 import datetime
 import json
 import logging
-from concurrent.futures import Future
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
@@ -280,16 +279,13 @@ def test_call_parallel_task_max_tasks(
         metadata=dict(index=["0", "1"]),
     )
     debug(task_pars)
-    task_pars_future = Future()
-    task_pars_future.set_result(task_pars)
-    debug(task_pars_future)
 
     # Execute task
     with ThreadPoolExecutor() as executor:
         future_metadata = call_parallel_task(
             executor=executor,
             task=task,
-            task_pars_depend_future=task_pars_future,
+            task_pars_depend=task_pars,
             workflow_dir=tmp_path,
         )
     debug(tmp_path)
