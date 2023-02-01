@@ -15,6 +15,10 @@ class FractalFileWaitThread(FileWaitThread):
 
     The function is copied from clusterfutures 0.5. Original Copyright: 2022
     Adrian Sampson, released under the MIT licence
+
+    Note: in principle we could avoid the definition of
+    `FractalFileWaitThread`, and pack all this code in
+    `FractalSlurmWaitThread`.
     """
 
     def __init__(self, *args, **kwargs):
