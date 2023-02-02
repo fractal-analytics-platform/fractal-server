@@ -44,7 +44,7 @@ def _mkdir_as_user(*, folder: str, user: str) -> None:
                       returncode is not 0.
     """
     if not user:
-        raise RuntimeError("{user=} not allowed in _mkdir_as_user")
+        raise RuntimeError(f"{user=} not allowed in _mkdir_as_user")
 
     cmd = f"mkdir -p {folder}"
     res = _run_command_as_user(cmd=cmd, user=user)
