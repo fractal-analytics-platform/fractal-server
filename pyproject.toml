@@ -92,7 +92,7 @@ fractalctl = "fractal_server.__main__:run"
 [tool.coverage.run]
 branch = true
 parallel = true
-omit = ["tests/test_*"]
+omit = ["tests/*", "fractal_server/app/runner/_parsl/*"]
 
 [[tool.mypy.overrides]]
 module = ["devtools", "uvicorn", "sqlalchemy_utils"]
