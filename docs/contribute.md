@@ -62,6 +62,26 @@ poetry env use <version>
 will install Fractal in a development environment using an interpreter pinned
 at the version provided instead of the system interpreter.
 
+## Update database schema
+
+Whenever the models are modified (either in
+[`app/models`](../reference/fractal_server/app/models/) or in
+[`common/schemas`](../reference/fractal_server/common/schemas)), you should
+update them via a migration. The simplest procedure is to use `alembic
+--autogenerate` to create an incremental migration script, as in the following
+```
+$ export SQLITE_PATH=some-test.db
+$ rm some-test.db
+$ poetry run fractalctl set-db
+$ poetry run alembic revision --autogenerate -m "Some migration message"
+
+# UserWarning: SQLite is partially supported but discouraged in production environment.SQLite offers partial support for ForeignKey constraints. As such, consistency of the database cannot be guaranteed.
+# INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+# INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+# INFO  [alembic.autogenerate.compare] Detected added column 'task.x'
+#   Generating /some/path/fractal_server/migrations/versions/155de544c342_.py ...  done
+```
+
 ## Build and release
 
 Preliminary check-list
@@ -71,7 +91,8 @@ Preliminary check-list
 * The current HEAD of the `main` branch passes all the tests (note: make sure
   that you are using the poetry-installed local package).
 * You updated the `CHANGELOG.md` file.
-* **You updated the schema version, if needed** (more details: TBD).
+* You [updated the schema
+  version](./#generate-database-migration-script) (if needed).
 
 Actual **release instructions**:
 
