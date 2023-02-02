@@ -227,6 +227,8 @@ async def test_collection_api_invalid_manifest(
 
 async def test_post_task(client, MockCurrentUser):
     async with MockCurrentUser(persist=True):
+
+        # Successful task creation
         task = TaskCreate(
             name="task_name",
             command="task_command",
@@ -235,9 +237,10 @@ async def test_post_task(client, MockCurrentUser):
             output_type="task_output_type",
         )
         res = await client.post("api/v1/task/", json=dict(task))
-        assert res.status_code == 201
         debug(res.json())
+        assert res.status_code == 201
 
+        # Fail for repeated task.source
         new_task = TaskCreate(
             name="new_task_name",
             command="new_task_command",
@@ -246,9 +249,10 @@ async def test_post_task(client, MockCurrentUser):
             output_type="new_task_output_type",
         )
         res = await client.post("api/v1/task/", json=dict(new_task))
-        assert res.status_code == 422
         debug(res.json())
+        assert res.status_code == 422
 
+        # Fail for wrong payload
         res = await client.post("api/v1/task/")  # request without body
-        assert res.status_code == 422
         debug(res.json())
+        assert res.status_code == 422
