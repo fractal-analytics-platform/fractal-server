@@ -12,6 +12,7 @@ Institute for Biomedical Research and Pelkmans Lab from the University of
 Zurich.
 """
 import logging
+import os
 
 import pytest
 from devtools import debug
@@ -49,6 +50,7 @@ async def test_runner(
         request.getfixturevalue("relink_python_interpreter")
         request.getfixturevalue("slurm_config")
         request.getfixturevalue("cfut_jobs_finished")
+        monkey_slurm_user = request.getfixturevalue("monkey_slurm_user")
 
     process_workflow = _backends[backend]
 
@@ -72,24 +74,43 @@ async def test_runner(
         tk_dummy_parallel.id, db=db, args=dict(message="task 2")
     )
     await db.refresh(wf)
-
     debug(wf)
 
-    # process workflow
+    # Create working folder(s)
+    if backend == "local":
+        workflow_dir = tmp777_path / "server"  # OK 777 here
+        workflow_dir_user = workflow_dir
+        umask = os.umask(0)
+        workflow_dir.mkdir(parents=True, mode=0o700)
+        os.umask(umask)
+    elif backend == "slurm":
+        from .test_backend_slurm import _define_and_create_folders
+
+        folders = _define_and_create_folders(tmp777_path, monkey_slurm_user)
+        workflow_dir, workflow_dir_user = folders[:]
+
+    # Prepare backend-specific arguments
     logger_name = "job_logger"
     logger = set_logger(
         logger_name=logger_name,
-        log_file_path=tmp777_path / "job.log",
+        log_file_path=workflow_dir / "job.log",
         level=logging.DEBUG,
     )
-    metadata = await process_workflow(
+    kwargs = dict(
         workflow=wf,
-        input_paths=[tmp777_path / "*.txt"],
-        output_path=tmp777_path / "out.json",
+        input_paths=[workflow_dir / "*.txt"],
+        output_path=tmp777_path / "out.json",  # OK 777 here
         input_metadata={},
         logger_name=logger_name,
-        workflow_dir=tmp777_path,
+        workflow_dir=workflow_dir,
+        workflow_dir_user=workflow_dir_user,
     )
+    if backend == "slurm":
+        kwargs["slurm_user"] = monkey_slurm_user
+
+    # process workflow
+    metadata = await process_workflow(**kwargs)
+
     close_job_logger(logger)
     debug(metadata)
     assert "dummy" in metadata
@@ -101,17 +122,20 @@ async def test_runner(
     ]
 
     # Check that the correct files are present in workflow_dir
-    files = [f.name for f in tmp777_path.glob("*")]
+    files = [f.name for f in workflow_dir.glob("*")] + [
+        f.name for f in workflow_dir_user.glob("*")
+    ]
     assert "0.args.json" in files
     assert "0.err" in files
     assert "0.out" in files
     assert "0.metadiff.json" in files
+
+    with (workflow_dir_user / "0.args.json").open("r") as f:
+        debug(workflow_dir_user / "0.args.json")
+        args = f.read()
+        debug(args)
+        assert "logger_name" not in args
     if backend == "slurm":
         slurm_job_id = 2  # This may change if you change the test
         assert f"0.slurm.{slurm_job_id}.err" in files
         assert f"0.slurm.{slurm_job_id}.out" in files
-    with (tmp777_path / "0.args.json").open("r") as f:
-        debug(tmp777_path / "0.args.json")
-        args = f.read()
-        debug(args)
-        assert "logger_name" not in args

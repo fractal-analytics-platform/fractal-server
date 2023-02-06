@@ -255,6 +255,7 @@ async def apply_workflow(
         job_id=job.id,
         slurm_user=user.slurm_user,
         worker_init=apply_workflow.worker_init,
+        project_dir=project.project_dir,
     )
 
     return job

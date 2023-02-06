@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fractal-server"
-version = "1.0.4"
+version = "1.0.5a0"
 description = "Server component of the Fractal analytics platform"
 authors = [
     "Jacopo Nespolo <jacopo.nespolo@exact-lab.it>",
@@ -50,6 +50,7 @@ coverage = {extras = ["toml"], version = "^6.4.4"}
 mypy = "^0.982"
 pytest-subprocess = "^1.4"
 pytest-docker = {extras = ["docker-compose-v1"], version = "^1.0"}
+pytest-pretty = "^1.0.1"
 
 [tool.poetry.group.doc.dependencies]
 mkdocs = "^1.4.2"
@@ -70,7 +71,7 @@ build-backend = "poetry.core.masonry.api"
 asyncio_mode = "auto"
 
 [tool.bumpver]
-current_version = "1.0.4"
+current_version = "1.0.5a0"
 version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true
@@ -91,7 +92,7 @@ fractalctl = "fractal_server.__main__:run"
 [tool.coverage.run]
 branch = true
 parallel = true
-omit = ["tests/test_*"]
+omit = ["tests/*", "fractal_server/app/runner/_parsl/*"]
 
 [[tool.mypy.overrides]]
 module = ["devtools", "uvicorn", "sqlalchemy_utils"]
