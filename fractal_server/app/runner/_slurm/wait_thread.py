@@ -34,7 +34,7 @@ class FractalFileWaitThread(FileWaitThread):
         """
         # Poll for each file.
         for filename in list(self.waiting):
-            if _path_exists_as_user(filename, user=self.slurm_user):
+            if _path_exists_as_user(path=filename, user=self.slurm_user):
                 logging.info(
                     f"[FractalFileWaitThread.check] {filename} exists"
                 )
