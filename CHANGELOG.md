@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 1.0.3
 
 * Separate workflow-execution folder into two (server- and user-owned) folders, to avoid permission issues (\#475).
 * Explicitly pin sqlalchemy to v1 (\#480).
