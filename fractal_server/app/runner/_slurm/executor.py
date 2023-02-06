@@ -33,6 +33,8 @@ from ....utils import close_logger
 from ....utils import set_logger
 from ..common import JobExecutionError
 from ..common import TaskExecutionError
+from ._subprocess_run_as_user import _glob_as_user
+from ._subprocess_run_as_user import _path_exists_as_user
 from ._subprocess_run_as_user import _run_command_as_user
 from .wait_thread import FractalSlurmWaitThread
 
@@ -116,7 +118,9 @@ class FractalSlurmExecutor(SlurmExecutor):
                 raise RuntimeError(f"{self.slurm_user=}, {working_dir_user=}")
             else:
                 working_dir_user = working_dir
-        if not working_dir_user.exists():
+        if not _path_exists_as_user(
+            path=str(working_dir_user), user=self.slurm_user
+        ):
             raise RuntimeError(f"Missing folder {working_dir_user=}")
 
         self.working_dir_user: Path = working_dir_user  # type: ignore
@@ -574,31 +578,41 @@ class FractalSlurmExecutor(SlurmExecutor):
         if self.working_dir_user == self.working_dir:
             return
 
+        files_to_copy = _glob_as_user(
+            folder=str(self.working_dir_user),
+            user=self.slurm_user,
+            startswith=job.file_prefix,
+        )
+
         # NOTE: By setting encoding=None, we read/write bytes instead of
         # strings. This is needed to also handle pickle files
-        files_to_copy_gen = self.working_dir_user.glob(f"{job.file_prefix}*")
-        for source_file_path in files_to_copy_gen:
-            if source_file_path.exists():
-                # Read source_file_path (requires sudo)
-                cmd = f"cat {str(source_file_path)}"
-                res = _run_command_as_user(
-                    cmd=cmd, user=self.slurm_user, encoding=None
+        for source_file_name in files_to_copy:
+            source_file_path = str(self.working_dir_user / source_file_name)
+
+            if not _path_exists_as_user(
+                path=source_file_path, user=self.slurm_user
+            ):
+                raise RuntimeError(
+                    f"Trying to `cat` missing path {source_file_path}"
                 )
-                if res.returncode != 0:
-                    info = (
-                        f'Running cmd="{cmd}" as {self.slurm_user=} failed\n\n'
-                        f"{res.returncode=}\n\n"
-                        f"{res.stdout=}\n\n{res.stderr=}\n"
-                    )
-                    logging.error(info)
-                    raise JobExecutionError(info)
-                # Write to dest_file_path (including empty files)
-                dest_file_path = str(self.working_dir / source_file_path.name)
-                with open(dest_file_path, "wb") as f:
-                    f.write(res.stdout)
-            else:
-                logging.debug(f"Skip missing file {str(source_file_path)}")
-                continue
+
+            # Read source_file_path (requires sudo)
+            cmd = f"cat {str(source_file_path)}"
+            res = _run_command_as_user(
+                cmd=cmd, user=self.slurm_user, encoding=None
+            )
+            if res.returncode != 0:
+                info = (
+                    f'Running cmd="{cmd}" as {self.slurm_user=} failed\n\n'
+                    f"{res.returncode=}\n\n"
+                    f"{res.stdout=}\n\n{res.stderr=}\n"
+                )
+                logging.error(info)
+                raise JobExecutionError(info)
+            # Write to dest_file_path (including empty files)
+            dest_file_path = str(self.working_dir / source_file_path.name)
+            with open(dest_file_path, "wb") as f:
+                f.write(res.stdout)
         logging.debug("Exit _copy_files_from_user_to_server")
 
     def _start(
