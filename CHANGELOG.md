@@ -1,6 +1,10 @@
-# Unreleased
+# 1.0.4
 
 * Add new POST endpoint to create new Task (\#486).
+
+# 1.0.3
+
+Missing due to releasing error.
 
 # 1.0.2
 
