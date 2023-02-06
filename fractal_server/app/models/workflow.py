@@ -13,6 +13,7 @@ from sqlmodel import Relationship
 
 from ...common.schemas.workflow import _WorkflowBase
 from ...common.schemas.workflow import _WorkflowTaskBase
+from ...common.schemas.workflow import WorkflowRead
 from ...config import get_settings
 from ...syringe import Inject
 from ..db import AsyncSession
@@ -189,3 +190,17 @@ class Workflow(_WorkflowBase, table=True):
     @property
     def input_type(self):
         return self.task_list[0].task.input_type
+
+    def dict_with_relationships_but_no_ids(self) -> dict:
+        """
+        FIXME
+        """
+        wf = WorkflowRead(**self.__dict__)
+        wf_dict = wf.dict(exclude={"id", "project_id"})
+        for ind, wf_task in enumerate(wf_dict["task_list"]):
+            wf_task.pop("id")
+            wf_task.pop("task_id")
+            wf_task.pop("workflow_id")
+            wf_task["task"].pop("id")
+            wf_dict["task_list"][ind] = wf_task
+        return wf_dict
