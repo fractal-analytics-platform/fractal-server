@@ -313,3 +313,26 @@ async def patch_task(
     await db.commit()
     await db.refresh(db_task)
     return db_task
+
+
+@router.post("/", response_model=TaskRead, status_code=status.HTTP_201_CREATED)
+async def create_task(
+    task: TaskCreate,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[TaskRead]:
+    """
+    Create a new task
+    """
+    stm = select(Task).where(Task.source == task.source)
+    res = await db.execute(stm)
+    if res.scalars().all():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Task with source={task.source} already in use",
+        )
+    db_task = Task.from_orm(task)
+    db.add(db_task)
+    await db.commit()
+    await db.refresh(db_task)
+    return db_task
