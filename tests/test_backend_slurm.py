@@ -1,7 +1,9 @@
+import os
 import shlex
 import subprocess
 from concurrent.futures import Executor
 from itertools import product
+from pathlib import Path
 from typing import Callable
 
 import pytest
@@ -12,10 +14,30 @@ from .fixtures_slurm import scancel_all_jobs_of_a_slurm_user
 from .fixtures_tasks import MockTask
 from .fixtures_tasks import MockWorkflowTask
 from fractal_server.app.runner._slurm import SlurmConfig
+from fractal_server.app.runner._slurm._subprocess_run_as_user import (
+    _mkdir_as_user,
+)
 from fractal_server.app.runner._slurm.executor import FractalSlurmExecutor
 from fractal_server.app.runner.common import JobExecutionError
 from fractal_server.tasks import dummy as dummy_module
 from fractal_server.tasks import dummy_parallel as dummy_parallel_module
+
+
+def _define_and_create_folders(root_path: Path, user: str):
+
+    # Define working folders
+    server_working_dir = root_path / "server"
+    user_working_dir = root_path / "user"
+
+    # Create server working folder
+    umask = os.umask(0)
+    server_working_dir.mkdir(parents=True, mode=0o755)
+    os.umask(umask)
+
+    # Create user working folder
+    _mkdir_as_user(folder=str(user_working_dir), user=user)
+
+    return (server_working_dir, user_working_dir)
 
 
 def submit_and_ignore_exceptions(
@@ -27,21 +49,29 @@ def submit_and_ignore_exceptions(
         debug(f"Ignored exception: {str(e)}")
 
 
-@pytest.mark.parametrize(("slurm_user"), [None, "my_user"])
-def test_submit_pre_command(
-    fake_process, slurm_user, tmp_path, cfut_jobs_finished
-):
+def test_missing_slurm_user():
+    with pytest.raises(TypeError):
+        FractalSlurmExecutor()
+    with pytest.raises(RuntimeError):
+        FractalSlurmExecutor(slurm_user=None)
+
+
+def test_submit_pre_command(fake_process, tmp_path, cfut_jobs_finished):
     """
     GIVEN a FractalSlurmExecutor
-    WHEN it is initialised with / without a slurm_user
-    THEN the sbatch call contains / does not contain the sudo pre-command
+    WHEN it is initialised with a slurm_user
+    THEN the sbatch call contains the sudo pre-command
     """
     fake_process.register(["sbatch", fake_process.any()])
     fake_process.register(["sudo", fake_process.any()])
     fake_process.register(["squeue", fake_process.any()])
 
+    slurm_user = "some-fake-user"
+
     with FractalSlurmExecutor(
-        slurm_user=slurm_user, script_dir=tmp_path
+        slurm_user=slurm_user,
+        working_dir=tmp_path,
+        working_dir_user=tmp_path,
     ) as executor:
         submit_and_ignore_exceptions(executor, lambda: None)
 
@@ -49,30 +79,45 @@ def test_submit_pre_command(
     call_strings = [shlex.join(call) for call in fake_process.calls]
     debug(call_strings)
 
-    assert any(["sbatch" in call for call in call_strings])
-    if slurm_user:
-        target = f"sudo --non-interactive -u {slurm_user}"
-        assert any([target in call for call in call_strings])
+    # The first subprocess command in FractalSlurmExecutor (which fails, and
+    # then stops the execution via submit_and_ignore_exceptions) is an `ls`
+    # command to check that a certain folder exists. This will change if we
+    # remove this check from FractalSlurmExecutor, or if another subprocess
+    # command is called before the `ls` one.
+    target = f"sudo --non-interactive -u {slurm_user} ls"
+    debug([target in call for call in call_strings])
+    assert any([target in call for call in call_strings])
 
 
 def test_unit_sbatch_script_readable(
-    monkey_slurm, tmp777_path, cfut_jobs_finished
+    monkey_slurm,
+    monkey_slurm_user,
+    tmp777_path,
+    cfut_jobs_finished,
 ):
     """
     GIVEN a batch script written to file by the slurm executor
     WHEN a different user tries to read it
     THEN it has all the permissions needed
     """
-    import shlex
+
+    folders = _define_and_create_folders(tmp777_path, monkey_slurm_user)
+    server_working_dir, user_working_dir = folders[:]
 
     SBATCH_SCRIPT = "test"
-    with FractalSlurmExecutor(script_dir=tmp777_path) as executor:
+    with FractalSlurmExecutor(
+        working_dir=server_working_dir,
+        working_dir_user=user_working_dir,
+        slurm_user=monkey_slurm_user,
+    ) as executor:
         f = executor.write_batch_script(
-            SBATCH_SCRIPT, dest=tmp777_path / "script.sbatch"
+            SBATCH_SCRIPT, dest=server_working_dir / "script.sbatch"
         )
 
     out = subprocess.run(
-        shlex.split(f"sudo --non-interactive -u test01 sbatch {f}"),
+        shlex.split(
+            f"sudo --non-interactive -u {monkey_slurm_user} sbatch {f}"
+        ),
         capture_output=True,
         text=True,
     )
@@ -82,9 +127,11 @@ def test_unit_sbatch_script_readable(
     assert "This does not look like a batch script" in out.stderr
 
 
-@pytest.mark.parametrize("slurm_user", [None, "test01"])
 def test_slurm_executor(
-    slurm_user, monkey_slurm, tmp777_path, cfut_jobs_finished
+    monkey_slurm,
+    monkey_slurm_user,
+    tmp777_path,
+    cfut_jobs_finished,
 ):
     """
     GIVEN a docker slurm cluster and a FractalSlurmExecutor executor
@@ -93,15 +140,45 @@ def test_slurm_executor(
     """
 
     with FractalSlurmExecutor(
-        script_dir=tmp777_path, slurm_user=slurm_user, slurm_poll_interval=4
+        slurm_user=monkey_slurm_user,
+        working_dir=tmp777_path,
+        working_dir_user=tmp777_path,
+        slurm_poll_interval=4,
     ) as executor:
         res = executor.submit(lambda: 42)
     assert res.result() == 42
 
 
-@pytest.mark.parametrize("slurm_user", [None, "test01"])
+def test_slurm_executor_separate_folders(
+    monkey_slurm,
+    monkey_slurm_user,
+    tmp777_path,
+    cfut_jobs_finished,
+):
+    """
+    Same as test_slurm_executor, but with two folders:
+    * server_working_dir is owned by the server user and has 755 permissions
+    * user_working_dir is owned the user and had default permissions
+    """
+
+    folders = _define_and_create_folders(tmp777_path, monkey_slurm_user)
+    server_working_dir, user_working_dir = folders[:]
+
+    with FractalSlurmExecutor(
+        slurm_user=monkey_slurm_user,
+        working_dir=server_working_dir,
+        working_dir_user=user_working_dir,
+        slurm_poll_interval=4,
+    ) as executor:
+        res = executor.submit(lambda: 42)
+    assert res.result() == 42
+
+
 def test_slurm_executor_scancel(
-    slurm_user, monkey_slurm, tmp777_path, cfut_jobs_finished
+    monkey_slurm,
+    monkey_slurm_user,
+    tmp777_path,
+    cfut_jobs_finished,
 ):
     """
     GIVEN a docker slurm cluster and a FractalSlurmExecutor executor
@@ -116,10 +193,14 @@ def test_slurm_executor_scancel(
         time.sleep(60)
         return 42
 
+    folders = _define_and_create_folders(tmp777_path, monkey_slurm_user)
+    server_working_dir, user_working_dir = folders[:]
+
     with pytest.raises(JobExecutionError) as e:
         with FractalSlurmExecutor(
-            script_dir=tmp777_path,
-            slurm_user=slurm_user,
+            slurm_user=monkey_slurm_user,
+            working_dir=server_working_dir,
+            working_dir_user=user_working_dir,
             debug=True,
             keep_logs=True,
             slurm_poll_interval=4,
@@ -138,9 +219,8 @@ def test_slurm_executor_scancel(
                 time.sleep(1)
 
             # Scancel all jobs of the current SLURM user
-            slurm_user = slurm_user or "fractal"
             scancel_all_jobs_of_a_slurm_user(
-                slurm_user=slurm_user, show_squeue=True
+                slurm_user=monkey_slurm_user, show_squeue=True
             )
 
             # Calling result() forces waiting for the result, which in this
@@ -205,7 +285,11 @@ def test_unit_slurm_config():
     ),
 )
 def test_sbatch_script_slurm_config(
-    tmp_path, slurm_config, slurm_config_key, task, cfut_jobs_finished
+    tmp_path,
+    slurm_config,
+    slurm_config_key,
+    task,
+    cfut_jobs_finished,
 ):
     """
     GIVEN
@@ -242,7 +326,8 @@ def test_sbatch_script_slurm_config(
     ]
     with FractalSlurmExecutor(
         slurm_user="NO_USER",
-        script_dir=tmp_path,
+        working_dir=tmp_path,
+        working_dir_user=tmp_path,
         common_script_lines=sbatch_init_lines,
     ) as executor:
 
@@ -252,6 +337,7 @@ def test_sbatch_script_slurm_config(
                 task_list=task_list,
                 task_pars=task_pars,
                 workflow_dir=tmp_path,
+                workflow_dir_user=tmp_path,
                 submit_setup_call=set_slurm_config,
                 logger_name=logger_name,
             )

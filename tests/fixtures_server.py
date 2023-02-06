@@ -56,9 +56,9 @@ def check_python_has_venv(python_path: str, temp_path: Path):
     import shlex
 
     temp_path.parent.mkdir(parents=True, exist_ok=True)
-    temp_path.parent.chmod(0o777)
+    temp_path.parent.chmod(0o755)
     temp_path.mkdir(parents=True, exist_ok=True)
-    temp_path.chmod(0o777)
+    temp_path.chmod(0o755)
 
     cmd = f"{python_path} -m venv {temp_path.as_posix()}"
     p = subprocess.run(
@@ -100,10 +100,10 @@ def get_patched_settings(temp_path: Path):
     settings.FRACTAL_TASKS_DIR = temp_path / "fractal_root"
     settings.FRACTAL_TASKS_DIR.mkdir(parents=True, exist_ok=True)
     debug(settings.FRACTAL_TASKS_DIR)
-    settings.FRACTAL_TASKS_DIR.chmod(0o777)
+    settings.FRACTAL_TASKS_DIR.chmod(0o755)
     settings.FRACTAL_RUNNER_WORKING_BASE_DIR = temp_path / "artifacts"
     settings.FRACTAL_RUNNER_WORKING_BASE_DIR.mkdir(parents=True, exist_ok=True)
-    settings.FRACTAL_RUNNER_WORKING_BASE_DIR.chmod(0o777)
+    settings.FRACTAL_RUNNER_WORKING_BASE_DIR.chmod(0o755)
 
     # NOTE:
     # This variable is set to work with the system interpreter within a docker

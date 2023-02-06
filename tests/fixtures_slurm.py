@@ -150,6 +150,11 @@ def cfut_jobs_finished(monkeypatch):
 
 
 @pytest.fixture
+def monkey_slurm_user():
+    return "test01"
+
+
+@pytest.fixture
 def monkey_slurm(monkeypatch, docker_compose_project_name, docker_services):
     """
     Monkeypatch Popen to execute overridden command in container
@@ -199,7 +204,7 @@ def monkey_slurm(monkeypatch, docker_compose_project_name, docker_services):
                 "-c",
             ] + container_cmd
             super().__init__(cmd, *args[1:], **kwargs)
-            debug(shlex.join(self.args))
+            logging.critical(shlex.join(self.args))
             PopenLog.add_call(self)
 
     monkeypatch.setattr(subprocess, "Popen", _MockPopen)

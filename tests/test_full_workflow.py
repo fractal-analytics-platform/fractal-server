@@ -46,7 +46,6 @@ async def test_full_workflow(
     backend,
     request,
     override_settings_factory,
-    cfut_jobs_finished,
 ):
 
     override_settings_factory(
@@ -59,9 +58,12 @@ async def test_full_workflow(
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
+        request.getfixturevalue("cfut_jobs_finished")
 
     async with MockCurrentUser(persist=True) as user:
-        project = await project_factory(user)
+        project_dir = tmp777_path / f"project_dir-{backend}"
+        project = await project_factory(user, project_dir=str(project_dir))
+
         debug(project)
         project_id = project.id
         input_dataset = await dataset_factory(
@@ -181,7 +183,9 @@ async def test_full_workflow(
         debug(data)
         assert "dummy" in data["meta"]
 
-        # check that all artifacts are rw by the user running the server
+        # Check that all files in working_dir are RW for the user running the
+        # server. Note that the same is **not** true for files in
+        # working_dir_user.
         workflow_path = Path(job_status_data["working_dir"])
         no_access = []
         for f in workflow_path.glob("*"):
@@ -205,23 +209,24 @@ async def test_failing_workflow_TaskExecutionError(
     backend,
     request,
     override_settings_factory,
-    cfut_jobs_finished,
 ):
 
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=backend,
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path
-        / f"artifacts-{backend}-test_failing_workflow_TaskExecutionError",
+        / f"artifacts-{backend}-TaskExecutionError",
     )
 
     debug(f"Testing with {backend=}")
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
+        request.getfixturevalue("cfut_jobs_finished")
 
     async with MockCurrentUser(persist=True) as user:
-        project = await project_factory(user)
+        project_dir = tmp777_path / f"project_dir-{backend}-TaskExecutionError"
+        project = await project_factory(user, project_dir=str(project_dir))
         project_id = project.id
         input_dataset = await dataset_factory(
             project, name="input", type="image", read_only=True
@@ -328,6 +333,7 @@ async def test_failing_workflow_JobExecutionError(
     request,
     override_settings_factory,
     monkey_slurm,
+    monkey_slurm_user,
     relink_python_interpreter,
     cfut_jobs_finished,
 ):
@@ -340,7 +346,8 @@ async def test_failing_workflow_JobExecutionError(
     )
 
     async with MockCurrentUser(persist=True) as user:
-        project = await project_factory(user)
+        project_dir = tmp777_path / "project_dir-JobExecutionError"
+        project = await project_factory(user, project_dir=str(project_dir))
         project_id = project.id
         input_dataset = await dataset_factory(
             project, name="input", type="image", read_only=True
@@ -394,7 +401,7 @@ async def test_failing_workflow_JobExecutionError(
         # The following block is based on
         # https://stackoverflow.com/a/59645689/19085332
         scancel_sleep_time = 10
-        slurm_user = "test01"
+        slurm_user = monkey_slurm_user
         logging.warning(f"PRE THREAD START {time.perf_counter()=}")
         _thread = threading.Thread(
             target=_auxiliary_run, args=(slurm_user, scancel_sleep_time)

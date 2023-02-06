@@ -9,9 +9,6 @@ your data. Fractal currently supports two backends:
     server is installed.
 * [SLURM](slurm.md):
     Run tasks by scheduling them on a SLURM cluster.
-* PARSL:
-    Run tasks through [Parsl](http://parsl-project.org) executors (**currently
-    not supported**).
 
 Both `local` and `SLURM` backends leverage on Python's
 [concurrent.futures](https://docs.python.org/3/library/concurrent.futures.html)

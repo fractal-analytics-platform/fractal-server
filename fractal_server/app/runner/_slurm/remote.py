@@ -13,6 +13,7 @@
 This module provides a simple self-standing script that executes arbitrary
 python code received via pickled files on a cluster node.
 """
+import argparse
 import os
 import sys
 from typing import Dict
@@ -32,7 +33,7 @@ class ExceptionProxy:
     to reconstruct a TaskExecutionError.
 
     Attributes:
-        exc_type_name: TBD
+        exc_type_name: Name of the exception type
         tb: TBD
         args: TBD
         kwargs: TBD
@@ -47,19 +48,32 @@ class ExceptionProxy:
         self.kwargs: Dict = kwargs
 
 
-def worker(in_fname: str, extra_import_paths: Optional[str] = None) -> None:
+def worker(
+    *,
+    in_fname: str,
+    out_fname: str,
+    extra_import_paths: Optional[str] = None,
+) -> None:
     """
-    Called to execute a job on a remote host.
+    Execute a job, possibly on a remote node.
 
     Arguments:
-        in_fname: TBD
-        extra_import_paths: TBD
-
+        in_fname: Absolute path to the input pickle file (must be readable).
+        out_fname: Absolute path of the output pickle file (must be writeable).
+        extra_import_paths: Additional import paths
     """
+
+    # Create output folder, if missing
+    out_dir = os.path.dirname(out_fname)
+    if not os.path.exists(out_dir):
+        logging.debug(f"_slurm.remote.worker: create {out_dir=}")
+        os.mkdir(out_dir)
+
     if extra_import_paths:
         _extra_import_paths = extra_import_paths.split(":")
         sys.path[:0] = _extra_import_paths
 
+    # Execute the job and catpure exceptions
     try:
         with open(in_fname, "rb") as f:
             indata = f.read()
@@ -75,13 +89,13 @@ def worker(in_fname: str, extra_import_paths: Optional[str] = None) -> None:
             typ,
             traceback.format_exception(typ, value, tb),
             e.args,
-            **e.__dict__
+            **e.__dict__,
         )
 
         result = False, exc_proxy
         out = cloudpickle.dumps(result)
 
-    out_fname = in_fname.replace(".in.", ".out.")
+    # Write the output pickle file
     tempfile = out_fname + ".tmp"
     with open(tempfile, "wb") as f:
         f.write(out)
@@ -89,4 +103,34 @@ def worker(in_fname: str, extra_import_paths: Optional[str] = None) -> None:
 
 
 if __name__ == "__main__":
-    worker(*sys.argv[1:])
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--input-file",
+        type=str,
+        help="Path of input pickle file",
+        required=True,
+    )
+    parser.add_argument(
+        "--output-file",
+        type=str,
+        help="Path of output pickle file",
+        required=True,
+    )
+    parser.add_argument(
+        "--extra-import-paths",
+        type=str,
+        help="Extra import paths",
+        required=False,
+    )
+    parsed_args = parser.parse_args()
+    import logging
+
+    logging.debug(f"{parsed_args=}")
+
+    kwargs = dict(
+        in_fname=parsed_args.input_file, out_fname=parsed_args.output_file
+    )
+    if parsed_args.extra_import_paths:
+        kwargs["extra_import_paths"] = parsed_args.extra_import_paths
+    worker(**kwargs)

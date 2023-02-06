@@ -30,7 +30,7 @@ from ....config import get_settings
 from ....syringe import Inject
 from ...models import Workflow
 from ...models import WorkflowTask
-from .._common import get_workflow_file_paths
+from .._common import get_task_file_paths
 from .._common import recursive_task_submission
 from ..common import async_wrap
 from ..common import TaskParameters
@@ -140,6 +140,7 @@ def set_slurm_config(
     task: WorkflowTask,
     task_pars: TaskParameters,
     workflow_dir: Path,
+    workflow_dir_user: Path,
 ) -> Dict[str, Any]:
     """
     Collect SLURM configuration parameters
@@ -152,13 +153,16 @@ def set_slurm_config(
 
     Args:
         task:
-            The task for which the sbatch script is to be assembled
+            Task for which the sbatch script is to be assembled
         task_pars:
-            The task parameters to be passed to the task
+            Task parameters to be passed to the task
         workflow_dir:
-            The directory in which the executor should store input / output /
-            errors from task execution, as well as meta files from the
-            submission process.
+            Server-owned directory to store all task-execution-related relevant
+            files (inputs, outputs, errors, and all meta files related to the
+            job execution). Note: users cannot write directly to this folder.
+        workflow_dir_user:
+            User-side directory with the same scope as `workflow_dir`, and
+            where a user can write.
 
     Raises:
         SlurmConfigError: if the slurm-configuration file does not contain the
@@ -190,12 +194,14 @@ def set_slurm_config(
             f"export SRUN_CPUS_PER_TASK={config.cpus_per_task}"
         )
 
-    workflow_files = get_workflow_file_paths(
-        workflow_dir=workflow_dir, task_order=task.order
+    task_files = get_task_file_paths(
+        workflow_dir=workflow_dir,
+        workflow_dir_user=workflow_dir_user,
+        task_order=task.order,
     )
     return dict(
         additional_setup_lines=additional_setup_lines,
-        job_file_prefix=workflow_files.file_prefix,
+        job_file_prefix=task_files.file_prefix,
     )
 
 
@@ -207,7 +213,8 @@ def _process_workflow(
     input_metadata: Dict[str, Any],
     logger_name: str,
     workflow_dir: Path,
-    slurm_user: str = None,
+    workflow_dir_user: Path,
+    slurm_user: Optional[str] = None,
     worker_init: Optional[Union[str, List[str]]] = None,
 ) -> Dict[str, Any]:
     """
@@ -219,27 +226,15 @@ def _process_workflow(
 
     Cf. [process_workflow][fractal_server.app.runner._local.process_workflow]
 
-    Args:
-        workflow:
-            TBD
-        input_paths:
-            TBD
-        output_path:
-            TBD
-        input_metadata:
-            TBD
-        logger_name:
-            TBD
-        workflow_dir:
-            TBD
-        slurm_user:
-            TBD
-        worker_init:
-            TBD
-
     Returns:
         output_dataset_metadata: Metadata of the output dataset
     """
+
+    if not slurm_user:
+        raise RuntimeError(
+            "slurm_user argument is required, for slurm backend"
+        )
+
     if isinstance(worker_init, str):
         worker_init = worker_init.split("\n")
 
@@ -247,7 +242,8 @@ def _process_workflow(
         debug=True,
         keep_logs=True,
         slurm_user=slurm_user,
-        script_dir=workflow_dir,
+        working_dir=workflow_dir,
+        working_dir_user=workflow_dir_user,
         common_script_lines=worker_init,
     ) as executor:
         output_task_pars_fut = recursive_task_submission(
@@ -259,6 +255,7 @@ def _process_workflow(
                 metadata=input_metadata,
             ),
             workflow_dir=workflow_dir,
+            workflow_dir_user=workflow_dir_user,
             submit_setup_call=set_slurm_config,
             logger_name=logger_name,
         )
@@ -275,7 +272,8 @@ async def process_workflow(
     input_metadata: Dict[str, Any],
     logger_name: str,
     workflow_dir: Path,
-    slurm_user: str = None,
+    workflow_dir_user: Optional[Path] = None,
+    slurm_user: Optional[str] = None,
     worker_init: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
@@ -290,6 +288,7 @@ async def process_workflow(
         input_metadata=input_metadata,
         logger_name=logger_name,
         workflow_dir=workflow_dir,
+        workflow_dir_user=workflow_dir_user,
         slurm_user=slurm_user,
         worker_init=worker_init,
     )
