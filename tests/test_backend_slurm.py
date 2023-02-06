@@ -79,10 +79,14 @@ def test_submit_pre_command(fake_process, tmp_path, cfut_jobs_finished):
     call_strings = [shlex.join(call) for call in fake_process.calls]
     debug(call_strings)
 
-    assert any(["sbatch" in call for call in call_strings])
-    if slurm_user:
-        target = f"sudo --non-interactive -u {slurm_user}"
-        assert any([target in call for call in call_strings])
+    # The first subprocess command in FractalSlurmExecutor (which fails, and
+    # then stops the execution via submit_and_ignore_exceptions) is an `ls`
+    # command to check that a certain folder exists. This will change if we
+    # remove this check from FractalSlurmExecutor, or if another subprocess
+    # command is called before the `ls` one.
+    target = f"sudo --non-interactive -u {slurm_user} ls"
+    debug([target in call for call in call_strings])
+    assert any([target in call for call in call_strings])
 
 
 def test_unit_sbatch_script_readable(
