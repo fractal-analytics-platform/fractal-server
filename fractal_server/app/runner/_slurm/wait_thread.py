@@ -4,7 +4,7 @@ import traceback
 from cfut import FileWaitThread
 from cfut import slurm
 
-from ._subprocess_run_as_user import _run_command_as_user
+from ._subprocess_run_as_user import _path_exists_as_user
 
 
 class FractalFileWaitThread(FileWaitThread):
@@ -34,26 +34,12 @@ class FractalFileWaitThread(FileWaitThread):
         """
         # Poll for each file.
         for filename in list(self.waiting):
-            if self._does_file_exist(filename):
+            if _path_exists_as_user(filename, user=self.slurm_user):
                 logging.info(
                     f"[FractalFileWaitThread.check] {filename} exists"
                 )
                 self.callback(self.waiting[filename])
                 del self.waiting[filename]
-
-    def _does_file_exist(self, filepath: str) -> bool:
-        """
-        Impersonate `self.slurm_user` and check if `filepath` exists via `ls`
-
-        Arguments:
-            filepath: Absolute file path
-        """
-        cmd = f"ls {filepath}"
-        res = _run_command_as_user(cmd=cmd, user=self.slurm_user)
-        if res.returncode == 0:
-            return True
-        else:
-            return False
 
 
 class FractalSlurmWaitThread(FractalFileWaitThread):
