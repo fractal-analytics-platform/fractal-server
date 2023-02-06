@@ -33,8 +33,11 @@ from ...models import Resource
 from ...models import ResourceCreate
 from ...models import ResourceRead
 from ...models import ResourceUpdate
+from ...models import Task
 from ...models import Workflow
+from ...models import WorkflowCreate
 from ...models import WorkflowRead
+from ...models import WorkflowTaskCreate
 from ...runner import auto_output_dataset
 from ...runner import submit_workflow
 from ...runner import validate_workflow_compatibility
@@ -563,3 +566,111 @@ async def edit_resource(
     await db.commit()
     await db.refresh(orig_resource)
     return orig_resource
+
+
+@router.post(
+    "/import-workflow",
+    response_model=WorkflowRead,
+    status_code=status.HTTP_201_CREATED,
+)
+async def import_workflow_into_project(
+    workflow: dict,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[WorkflowRead]:
+    """
+    Import an existing workflow into a project
+    """
+
+    # FIXME: this is a stub (including its path)
+
+    from devtools import debug  # FIXME
+
+    # (0) Check permission to act on this project
+    debug("START 0")
+    await _get_project_check_owner(
+        project_id=workflow["project_id"],
+        user_id=user.id,
+        db=db,
+    )
+
+    # (1) Check there is no workflow with same (name, project_id)
+    debug("START 1")
+    await _get_project_check_owner(
+        project_id=workflow["project_id"], user_id=user.id, db=db
+    )
+    stm = (
+        select(Workflow)
+        .where(Workflow.name == workflow["name"])
+        .where(Workflow.project_id == workflow["project_id"])
+    )
+    res = await db.execute(stm)
+    if res.scalars().all():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Workflow with name={workflow.name} and\
+                  project_id={workflow.project_id} already in use",
+        )
+
+    # (2) Check that all required tasks are available
+    debug("START 2")
+    wf_tasks = workflow["task_list"]
+    tasks = [wf_task["task"] for wf_task in wf_tasks]
+    # FIXME: by now we go through the pair (source, name), but maybe we should
+    # put all together - see issue #293.
+    sourcename_to_id = {}
+    for task in tasks:
+        source = task["source"]
+        name = task["name"]
+        if not (source, name) in sourcename_to_id.keys():
+            stm = (
+                select(Task)
+                .where(Task.name == name)
+                .where(Task.source == source)
+            )
+            res = await db.execute(stm)
+            current_task = res.scalars().all()
+            debug(current_task)
+            assert len(current_task) == 1
+            sourcename_to_id[(source, name)] = current_task[0].id
+    debug(sourcename_to_id)
+
+    # (3) Create Workflow
+    debug("START 3")
+    workflow_create = WorkflowCreate(**workflow)
+    db_workflow = Workflow.from_orm(workflow_create)
+    db.add(db_workflow)
+    await db.commit()
+    await db.refresh(db_workflow)
+    debug(db_workflow)
+
+    # (4) Insert tasks
+    debug("START 4")
+    for ind, wf_task in enumerate(wf_tasks):
+        debug(f"--------------- {ind}-th WorkflowTask ---------- START")
+        source = wf_task["task"]["source"]
+        name = wf_task["task"]["name"]
+        task_id = sourcename_to_id[(source, name)]
+        debug(task_id)
+        new_task = WorkflowTaskCreate(
+            **wf_task, workflow_id=db_workflow.id, task_id=task_id
+        )
+        debug(new_task)
+
+        async with db:
+            db_workflow_task = await db_workflow.insert_task(
+                # **new_task.dict(exclude={"workflow_id"}),
+                task_id=task_id,
+                db=db,
+            )
+            await db.refresh(db_workflow_task)
+            debug(db_workflow_task)
+        debug(f"--------------- {ind}-th WorkflowTask ---------- END")
+
+    await db.commit()
+    await db.refresh(db_workflow)
+    debug(db_workflow)
+
+    # await db.refresh(db_workflow)
+    debug(db_workflow)
+    return db_workflow
