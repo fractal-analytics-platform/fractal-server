@@ -1,3 +1,11 @@
+# 1.0.4
+
+* Add new POST endpoint to create new Task (\#486).
+
+# 1.0.3
+
+Missing due to releasing error.
+
 # 1.0.2
 
 * Add `FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW` configuration variable (\#469).
