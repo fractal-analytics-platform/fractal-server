@@ -121,7 +121,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         if not _path_exists_as_user(
             path=str(working_dir_user), user=self.slurm_user
         ):
-            raise RuntimeError(f"Missing folder {working_dir_user=}")
+            logging.info(f"Missing folder {working_dir_user=}")
 
         self.working_dir_user: Path = working_dir_user  # type: ignore
         self.map_jobid_to_slurm_files: dict = {}
