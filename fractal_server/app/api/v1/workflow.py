@@ -128,7 +128,7 @@ async def _get_workflow_task_check_owner(
     return workflow_task, workflow
 
 
-def _check_new_workflow_name_and_project_id(
+async def _check_new_workflow_name_and_project_id(
     *,
     name: str,
     project_id: int,
