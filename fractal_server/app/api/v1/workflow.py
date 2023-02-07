@@ -423,7 +423,7 @@ async def import_workflow_into_project(
             source = wf_task.task.source
             name = wf_task.task.name
             task_id = sourcename_to_id[(source, name)]
-            # Prepare new_task
+            # Prepare new_wf_task
             new_wf_task = WorkflowTaskCreate(
                 **wf_task.dict(exclude_none=True),
                 workflow_id=db_workflow.id,
