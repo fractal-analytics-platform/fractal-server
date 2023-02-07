@@ -404,7 +404,7 @@ async def import_workflow_into_project(
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                     detail=(
-                        f"Found {len(current_task)} tasks" f"with {source=}."
+                        f"Found {len(current_task)} tasks with {source=}."
                     ),
                 )
             sourcename_to_id[(source, name)] = current_task[0].id
