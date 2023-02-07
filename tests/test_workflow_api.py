@@ -502,6 +502,6 @@ async def test_import_export_workflow(
         new_command = wf_task["task"]["command"].replace(path_old, path_new)
         wf_old["task_list"][ind]["task"]["command"] = new_command
 
-    # Check that  the exported workflow matches with the one in the original
+    # Check that the exported workflow matches with the one in the original
     # JSON file
     assert wf_old == wf_new
