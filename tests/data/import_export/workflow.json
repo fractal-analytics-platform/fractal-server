@@ -29,16 +29,14 @@
             },
             "order": 1,
             "task": {
-                "command": "/SOME/PATH/dummy0/venv/bin/python /SOME/PATH/dummy0/venv/lib/python3.8/site-packages/fractal_tasks_dummy/dummy.py",
+                "command": "/SOME/PATH/dummy0/venv/bin/python /SOME/PATH/dummy0/venv/lib/python3.8/site-packages/fractal_tasks_dummy/dummy_parallel.py",
                 "default_args": {
-                    "index": 0,
                     "message": "default message",
-                    "raise_error": false,
-                    "sleep_time": 0
+                    "raise_error": false
                 },
                 "input_type": "Any",
-                "meta": {},
-                "name": "dummy",
+                "meta": {"parallelization_level": "index"},
+                "name": "dummy parallel",
                 "output_type": "Any",
                 "source": "test_source"
             }
