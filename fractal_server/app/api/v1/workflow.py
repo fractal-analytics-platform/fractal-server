@@ -128,7 +128,7 @@ async def _get_workflow_task_check_owner(
     return workflow_task, workflow
 
 
-async def _check_new_workflow_name_and_project_id(
+async def _check_workflow_exists(
     *,
     name: str,
     project_id: int,
@@ -179,7 +179,7 @@ async def create_workflow(
         user_id=user.id,
         db=db,
     )
-    await _check_new_workflow_name_and_project_id(
+    await _check_workflow_exists(
         name=workflow.name, project_id=workflow.project_id, db=db
     )
 
@@ -378,7 +378,7 @@ async def import_workflow_into_project(
         user_id=user.id,
         db=db,
     )
-    await _check_new_workflow_name_and_project_id(
+    await _check_workflow_exists(
         name=workflow.name,
         project_id=workflow.project_id,
         db=db,
