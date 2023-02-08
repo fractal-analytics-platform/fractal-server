@@ -354,7 +354,7 @@ async def delete_task_from_workflow(
 
 
 @router.post(
-    "/import",
+    "/import/",
     response_model=WorkflowRead,
     status_code=status.HTTP_201_CREATED,
 )
@@ -439,7 +439,7 @@ async def import_workflow_into_project(
 
 
 @router.get(
-    "/{workflow_id}/export",
+    "/{workflow_id}/export/",
     response_model=WorkflowExport,
 )
 async def export_worfklow(
