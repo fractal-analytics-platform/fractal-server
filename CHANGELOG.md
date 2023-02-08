@@ -1,5 +1,9 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# 1.0.6
+
+* Add new endpoints to import/export a workflow (\#490).
+
 # 1.0.5
 
 * Separate workflow-execution folder into two (server- and user-owned) folders, to avoid permission issues (\#475).
