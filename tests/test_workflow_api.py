@@ -471,7 +471,7 @@ async def test_import_export_workflow(
     payload = WorkflowImport(project_id=prj.id, **workflow_from_file).dict(
         exclude_none=True
     )
-    res = await client.post("/api/v1/workflow/import", json=payload)
+    res = await client.post("/api/v1/workflow/import/", json=payload)
     debug(res)
     assert res.status_code == 201
     workflow_imported = res.json()
@@ -482,7 +482,7 @@ async def test_import_export_workflow(
 
     # Export workflow
     workflow_id = workflow_imported["id"]
-    res = await client.get(f"/api/v1/workflow/{workflow_id}/export")
+    res = await client.get(f"/api/v1/workflow/{workflow_id}/export/")
     debug(res.status_code)
     workflow_exported = res.json()
     debug(workflow_exported)
