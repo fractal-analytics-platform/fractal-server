@@ -468,10 +468,10 @@ async def test_import_export_workflow(
         prj = await project_factory(user)
 
     # Import workflow into project
-    payload = WorkflowImport(project_id=prj.id, **workflow_from_file).dict(
-        exclude_none=True
+    payload = WorkflowImport(**workflow_from_file).dict(exclude_none=True)
+    res = await client.post(
+        f"/api/v1/project/{prj.id}/import-workflow/", json=payload
     )
-    res = await client.post("/api/v1/workflow/import/", json=payload)
     debug(res)
     assert res.status_code == 201
     workflow_imported = res.json()
@@ -486,6 +486,13 @@ async def test_import_export_workflow(
     debug(res.status_code)
     workflow_exported = res.json()
     debug(workflow_exported)
+    assert "id" not in workflow_exported
+    assert "project_id" not in workflow_exported
+    for wftask in workflow_exported["task_list"]:
+        assert "id" not in wftask
+        assert "task_id" not in wftask
+        assert "workflow_id" not in wftask
+        assert "id" not in wftask["task"]
     assert res.status_code == 200
 
     # Check that output can be cast to WorkflowExport

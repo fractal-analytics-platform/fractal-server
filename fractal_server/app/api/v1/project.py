@@ -33,8 +33,12 @@ from ...models import Resource
 from ...models import ResourceCreate
 from ...models import ResourceRead
 from ...models import ResourceUpdate
+from ...models import Task
 from ...models import Workflow
+from ...models import WorkflowCreate
+from ...models import WorkflowImport
 from ...models import WorkflowRead
+from ...models import WorkflowTaskCreate
 from ...runner import auto_output_dataset
 from ...runner import submit_workflow
 from ...runner import validate_workflow_compatibility
@@ -563,3 +567,96 @@ async def edit_resource(
     await db.commit()
     await db.refresh(orig_resource)
     return orig_resource
+
+
+@router.post(
+    "/{project_id}/import-workflow/",
+    response_model=WorkflowRead,
+    status_code=status.HTTP_201_CREATED,
+)
+async def import_workflow_into_project(
+    project_id: int,
+    workflow: WorkflowImport,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[WorkflowRead]:
+    """
+    Import an existing workflow into a project
+
+    Also create all required objects (i.e. Workflow and WorkflowTask's) along
+    the way.
+    """
+
+    # Preliminary checks
+    await _get_project_check_owner(
+        project_id=project_id,
+        user_id=user.id,
+        db=db,
+    )
+    stm = (
+        select(Workflow)
+        .where(Workflow.name == workflow.name)
+        .where(Workflow.project_id == project_id)
+    )
+    res = await db.execute(stm)
+    if res.scalars().all():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Workflow with name={workflow.name} and\
+                    {project_id=} already in use",
+        )
+
+    # Check that all required tasks are available
+    # NOTE: by now we go through the pair (source, name), but later on we may
+    # combine them into source -- see issue #293.
+    tasks = [wf_task.task for wf_task in workflow.task_list]
+    sourcename_to_id = {}
+    for task in tasks:
+        source = task.source
+        name = task.name
+        if not (source, name) in sourcename_to_id.keys():
+            stm = (
+                select(Task)
+                .where(Task.name == name)
+                .where(Task.source == source)
+            )
+            res = await db.execute(stm)
+            current_task = res.scalars().all()
+            if not len(current_task) == 1:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=(
+                        f"Found {len(current_task)} tasks with {source=}."
+                    ),
+                )
+            sourcename_to_id[(source, name)] = current_task[0].id
+
+    # Create new Workflow
+    workflow_create = WorkflowCreate(
+        project_id=project_id, **workflow.dict(exclude_none=True)
+    )
+    db_workflow = Workflow.from_orm(workflow_create)
+    db.add(db_workflow)
+    await db.commit()
+    await db.refresh(db_workflow)
+
+    # Insert tasks
+    async with db:
+        for _, wf_task in enumerate(workflow.task_list):
+            # Identify task_id
+            source = wf_task.task.source
+            name = wf_task.task.name
+            task_id = sourcename_to_id[(source, name)]
+            # Prepare new_wf_task
+            new_wf_task = WorkflowTaskCreate(
+                **wf_task.dict(exclude_none=True),
+                workflow_id=db_workflow.id,
+                task_id=task_id,
+            )
+            # Insert task
+            await db_workflow.insert_task(
+                **new_wf_task.dict(exclude={"workflow_id"}),
+                db=db,
+            )
+
+    return db_workflow
