@@ -326,7 +326,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                 *args,
                 additional_setup_lines=additional_setup_lines,
                 job_file_prefix=job_file_fmt.format(
-                    args=sanitize_string(args[0]),
+                    args=sanitize_string(str(args[0])),
                 ),
             )
             for args in zip(*iterables)
