@@ -127,7 +127,7 @@ def test_unit_sbatch_script_readable(
     assert "This does not look like a batch script" in out.stderr
 
 
-def test_slurm_executor(
+def test_slurm_executor_submit(
     monkey_slurm,
     monkey_slurm_user,
     tmp777_path,
@@ -149,7 +149,25 @@ def test_slurm_executor(
     assert res.result() == 42
 
 
-def test_slurm_executor_separate_folders(
+def test_slurm_executor_map(
+    monkey_slurm,
+    monkey_slurm_user,
+    tmp777_path,
+    cfut_jobs_finished,
+):
+    with FractalSlurmExecutor(
+        slurm_user=monkey_slurm_user,
+        working_dir=tmp777_path,
+        working_dir_user=tmp777_path,
+        slurm_poll_interval=4,
+    ) as executor:
+        result_generator = executor.map(lambda x: 2 * x, range(4))
+        results = list(result_generator)
+        debug(results)
+        assert results == [2 * x for x in range(4)]
+
+
+def test_slurm_executor_submit_separate_folders(
     monkey_slurm,
     monkey_slurm_user,
     tmp777_path,
@@ -174,7 +192,7 @@ def test_slurm_executor_separate_folders(
     assert res.result() == 42
 
 
-def test_slurm_executor_scancel(
+def test_slurm_executor_submit_and_scancel(
     monkey_slurm,
     monkey_slurm_user,
     tmp777_path,
