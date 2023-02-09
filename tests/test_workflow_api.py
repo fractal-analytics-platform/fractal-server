@@ -1,8 +1,12 @@
+import json
+
 from devtools import debug  # noqa
 from sqlmodel import select
 
 from fractal_server.app.models import TaskRead
 from fractal_server.app.models import Workflow
+from fractal_server.app.models import WorkflowExport
+from fractal_server.app.models import WorkflowImport
 from fractal_server.app.models import WorkflowRead
 from fractal_server.app.models import WorkflowTask
 
@@ -445,3 +449,59 @@ async def test_patch_workflow_task_failures(
         )
         debug(res.content)
         assert res.status_code == 422
+
+
+async def test_import_export_workflow(
+    client,
+    MockCurrentUser,
+    project_factory,
+    testdata_path,
+    collect_packages,
+):
+
+    # Load workflow to be imported into DB
+    with (testdata_path / "import_export/workflow.json").open("r") as f:
+        workflow_from_file = json.load(f)
+
+    # Create project
+    async with MockCurrentUser(persist=True) as user:
+        prj = await project_factory(user)
+
+    # Import workflow into project
+    payload = WorkflowImport(project_id=prj.id, **workflow_from_file).dict(
+        exclude_none=True
+    )
+    res = await client.post("/api/v1/workflow/import/", json=payload)
+    debug(res)
+    assert res.status_code == 201
+    workflow_imported = res.json()
+    debug(workflow_imported)
+
+    # Check that output can be cast to WorkflowRead
+    WorkflowRead(**workflow_imported)
+
+    # Export workflow
+    workflow_id = workflow_imported["id"]
+    res = await client.get(f"/api/v1/workflow/{workflow_id}/export/")
+    debug(res.status_code)
+    workflow_exported = res.json()
+    debug(workflow_exported)
+    assert res.status_code == 200
+
+    # Check that output can be cast to WorkflowExport
+    WorkflowExport(**workflow_exported)
+
+    # Before cheching that the exported workflow matches with the one in the
+    # original JSON file, we need to update the Workflow.task_list.Task.command
+    # attributes, since they depend on the server folders.
+    wf_old = WorkflowExport(**workflow_from_file).dict(exclude_none=True)
+    wf_new = WorkflowExport(**workflow_exported).dict(exclude_none=True)
+    path_old = "/SOME/PATH/"
+    path_new = collect_packages[0].command.split("dummy0")[0]
+    for ind, wf_task in enumerate(wf_old["task_list"]):
+        new_command = wf_task["task"]["command"].replace(path_old, path_new)
+        wf_old["task_list"][ind]["task"]["command"] = new_command
+
+    # Check that the exported workflow matches with the one in the original
+    # JSON file
+    assert wf_old == wf_new
