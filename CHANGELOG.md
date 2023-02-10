@@ -1,5 +1,9 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# 1.0.7
+
+* Update endpoints to import/export a workflow (\#495).
+
 # 1.0.6
 
 * Add new endpoints to import/export a workflow (\#490).
