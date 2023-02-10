@@ -27,11 +27,9 @@ from ...db import AsyncSession
 from ...db import get_db
 from ...models import LinkUserProject
 from ...models import Project
-from ...models import Task
 from ...models import Workflow
 from ...models import WorkflowCreate
 from ...models import WorkflowExport
-from ...models import WorkflowImport
 from ...models import WorkflowRead
 from ...models import WorkflowTask
 from ...models import WorkflowTaskCreate
@@ -353,91 +351,6 @@ async def delete_task_from_workflow(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.post(
-    "/import/",
-    response_model=WorkflowRead,
-    status_code=status.HTTP_201_CREATED,
-)
-async def import_workflow_into_project(
-    workflow: WorkflowImport,
-    user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
-) -> Optional[WorkflowRead]:
-    """
-    Import an existing workflow into a project
-
-    Also create all required objects (i.e. Workflow and WorkflowTask's) along
-    the way.
-    """
-
-    project_id = workflow.project_id
-
-    # Preliminary checks
-    await _get_project_check_owner(
-        project_id=project_id,
-        user_id=user.id,
-        db=db,
-    )
-    await _check_workflow_exists(
-        name=workflow.name,
-        project_id=workflow.project_id,
-        db=db,
-    )
-
-    # Check that all required tasks are available
-    # NOTE: by now we go through the pair (source, name), but later on we may
-    # combine them into source -- see issue #293.
-    tasks = [wf_task.task for wf_task in workflow.task_list]
-    sourcename_to_id = {}
-    for task in tasks:
-        source = task.source
-        name = task.name
-        if not (source, name) in sourcename_to_id.keys():
-            stm = (
-                select(Task)
-                .where(Task.name == name)
-                .where(Task.source == source)
-            )
-            res = await db.execute(stm)
-            current_task = res.scalars().all()
-            if not len(current_task) == 1:
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=(
-                        f"Found {len(current_task)} tasks with {source=}."
-                    ),
-                )
-            sourcename_to_id[(source, name)] = current_task[0].id
-
-    # Create new Workflow
-    workflow_create = WorkflowCreate(**workflow.dict(exclude_none=True))
-    db_workflow = Workflow.from_orm(workflow_create)
-    db.add(db_workflow)
-    await db.commit()
-    await db.refresh(db_workflow)
-
-    # Insert tasks
-    async with db:
-        for ind, wf_task in enumerate(workflow.task_list):
-            # Identify task_id
-            source = wf_task.task.source
-            name = wf_task.task.name
-            task_id = sourcename_to_id[(source, name)]
-            # Prepare new_wf_task
-            new_wf_task = WorkflowTaskCreate(
-                **wf_task.dict(exclude_none=True),
-                workflow_id=db_workflow.id,
-                task_id=task_id,
-            )
-            # Insert task
-            await db_workflow.insert_task(
-                **new_wf_task.dict(exclude={"workflow_id"}),
-                db=db,
-            )
-
-    return db_workflow
-
-
 @router.get(
     "/{workflow_id}/export/",
     response_model=WorkflowExport,
@@ -450,18 +363,7 @@ async def export_worfklow(
     """
     Export an existing workflow, after stripping all IDs
     """
-
     workflow = await _get_workflow_check_owner(
         workflow_id=workflow_id, user_id=user.id, db=db
     )
-    workflow_read = WorkflowExport(**workflow.__dict__)
-    wf_dict = workflow_read.dict(
-        exclude={"id", "project_id", "task_id", "workflow_id"},
-        exclude_none=True,
-    )
-    for ind, wf_task in enumerate(wf_dict["task_list"]):
-        wf_task.pop("task_id")
-        wf_task.pop("workflow_id")
-        wf_dict["task_list"][ind] = wf_task
-
-    return wf_dict
+    return workflow
