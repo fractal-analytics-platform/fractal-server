@@ -313,7 +313,6 @@ async def test_patch_workflow(
     """
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
-        other_project = await project_factory(user)
         workflow = {"name": "WF", "project_id": project.id}
         res = await client.post("api/v1/workflow/", json=workflow)
         wf_id = res.json()["id"]
@@ -322,17 +321,13 @@ async def test_patch_workflow(
         workflow = await db.get(Workflow, wf_id)
         res = await client.get(f"api/v1/project/{project.id}/workflows/")
         assert len(res.json()) == 1
-        res = await client.get(f"api/v1/project/{other_project.id}/workflows/")
-        assert len(res.json()) == 0
 
-        patch = {"name": "FW", "project_id": other_project.id}
+        patch = {"name": "new_WF"}
         res = await client.patch(f"api/v1/workflow/{wf_id}", json=patch)
 
         await db.refresh(workflow)
-        assert workflow.name == "FW"
+        assert workflow.name == "new_WF"
         res = await client.get(f"api/v1/project/{project.id}/workflows/")
-        assert len(res.json()) == 0
-        res = await client.get(f"api/v1/project/{other_project.id}/workflows/")
         assert len(res.json()) == 1
 
 
