@@ -3,18 +3,15 @@ Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
 University of Zurich
 
 Original author(s):
-Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
 Tommaso Comparin <tommaso.comparin@exact-lab.it>
-Marco Franzon <marco.franzon@exact-lab.it>
+Yuri Chiucconi <yuri.chiucconi@exact-lab.it>
 
 This file is part of Fractal and was originally developed by eXact lab S.r.l.
 <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
 Institute for Biomedical Research and Pelkmans Lab from the University of
 Zurich.
 """
-import os
 import sys
-from pathlib import Path
 
 from devtools import debug
 
@@ -40,10 +37,12 @@ async def test_full_workflow(
     )
 
     async with MockCurrentUser(persist=True) as user:
+        # add custom task
         task_path = f"{fractal_server.tasks.__path__[0]}/dummy.py"
         command = f"{sys.executable} {task_path}"
+        TASK_NAME = "dummy_custom"
         payload = dict(
-            name="task_name",
+            name=TASK_NAME,
             command=command,
             source="my_source",
             input_type="Any",
@@ -55,6 +54,24 @@ async def test_full_workflow(
 
         task_id = res.json()["id"]
 
+        # add custom parallel task
+        task_path = f"{fractal_server.tasks.__path__[0]}/dummy_parallel.py"
+        command = f"{sys.executable} {task_path}"
+        PARALLEL_TASK_NAME = "parallel_dummy_custom"
+        payload = dict(
+            name=PARALLEL_TASK_NAME,
+            command=command,
+            source="my_other_source",
+            input_type="Any",
+            output_type="Any",
+            meta={"parallelization_level": "index"},
+        )
+        res = await client.post(f"{PREFIX}/task/", json=payload)
+        debug(res.json())
+        assert res.status_code == 201
+
+        task_parallel_id = res.json()["id"]
+
         project = await project_factory(user)
         debug(project)
         project_id = project.id
@@ -62,15 +79,6 @@ async def test_full_workflow(
             project, name="input", type="image", read_only=True
         )
         input_dataset_id = input_dataset.id
-
-        # EDIT DEFAULT DATASET TO SET TYPE IMAGE
-
-        res = await client.patch(
-            f"{PREFIX}/project/{project_id}/{input_dataset_id}",
-            json={"type": "image", "read_only": True},
-        )
-        debug(res.json())
-        assert res.status_code == 200
 
         # ADD TEST IMAGES AS RESOURCE TO INPUT DATASET
 
@@ -106,10 +114,6 @@ async def test_full_workflow(
         debug(out_resource)
         assert res.status_code == 201
 
-        # CHECK WHERE WE ARE AT
-        res = await client.get(f"{PREFIX}/project/{project_id}")
-        debug(res.json())
-
         # CREATE WORKFLOW
         res = await client.post(
             f"{PREFIX}/workflow/",
@@ -123,18 +127,20 @@ async def test_full_workflow(
         # Add a dummy task
         res = await client.post(
             f"{PREFIX}/workflow/{workflow_id}/add-task/",
-            json=dict(task_id=task_id),
+            json=dict(task_id=task_id, args={"message": "my_message"}),
         )
         debug(res.json())
         assert res.status_code == 201
 
         # Add a dummy_parallel task
-        # res = await client.post(
-        #     f"{PREFIX}/workflow/{workflow_id}/add-task/",
-        #     json=dict(task_id=collect_packages[1].id),
-        # )
-        # debug(res.json())
-        # assert res.status_code == 201
+        res = await client.post(
+            f"{PREFIX}/workflow/{workflow_id}/add-task/",
+            json=dict(
+                task_id=task_parallel_id, args={"message": "my_message"}
+            ),
+        )
+        debug(res.json())
+        assert res.status_code == 201
 
         # EXECUTE WORKFLOW
         payload = dict(
@@ -166,15 +172,5 @@ async def test_full_workflow(
         data = res.json()
         debug(data)
         assert "dummy" in data["meta"]
-
-        # Check that all files in working_dir are RW for the user running the
-        # server. Note that the same is **not** true for files in
-        # working_dir_user.
-        workflow_path = Path(job_status_data["working_dir"])
-        no_access = []
-        for f in workflow_path.glob("*"):
-            has_access = os.access(f, os.R_OK | os.W_OK)
-            if not has_access:
-                no_access.append(f)
-        debug(no_access)
-        assert len(no_access) == 0
+        assert data["meta"]["history"][0] == TASK_NAME
+        assert data["meta"]["history"][1].startswith(PARALLEL_TASK_NAME)
