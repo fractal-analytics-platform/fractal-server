@@ -87,8 +87,8 @@ def worker(
         tb = tb.tb_next
         exc_proxy = ExceptionProxy(
             typ,
-            traceback.format_exception(typ, value, tb),
-            e.args,
+            "".join(traceback.format_exception(typ, value, tb)),
+            *e.args,
             **e.__dict__,
         )
 
