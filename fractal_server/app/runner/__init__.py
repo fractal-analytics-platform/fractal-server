@@ -196,11 +196,13 @@ async def submit_workflow(
         close_job_logger(logger)
 
         job.status = JobStatusType.FAILED
+
+        exception_args_string = "\n".join(e.args)
         job.log = (
             f"TASK ERROR:"
             f"Task id: {e.workflow_task_id} ({e.task_name}), "
             f"{e.workflow_task_order=}\n"
-            f"TRACEBACK:\n{str(e)}"
+            f"TRACEBACK:\n{exception_args_string}"
         )
         db_sync.merge(job)
 
