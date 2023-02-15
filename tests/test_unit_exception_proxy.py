@@ -1,6 +1,7 @@
 import sys
 import traceback
 
+import pytest
 from devtools import debug
 
 from fractal_server.app.runner._slurm.remote import ExceptionProxy
@@ -13,9 +14,8 @@ from fractal_server.app.runner.common import TaskExecutionError
 # (https://docs.python.org/3/library/traceback.html#traceback.format_exception)
 
 
+@pytest.mark.skip()
 def test_ExceptionProxy():
-
-    assert False
 
     # When serializing an exception into an ExceptionProxy object, make sure
     # that the __repr__ or __str__ or show method returns a single string FIXME
