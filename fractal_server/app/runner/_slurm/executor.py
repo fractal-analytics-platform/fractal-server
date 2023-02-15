@@ -525,8 +525,6 @@ class FractalSlurmExecutor(SlurmExecutor):
                         exc = TaskExecutionError(
                             proxy.tb, *proxy.args, **proxy.kwargs
                         )
-                        # FIXME: propagate traceback
-                        # https://docs.python.org/3/library/exceptions.html#BaseException.with_traceback
                         fut.set_exception(exc)
                     elif proxy.exc_type_name == "JobExecutionError":
                         job_exc = self._prepare_JobExecutionError(
