@@ -3,6 +3,7 @@
 # Unreleased
 
 * Add test for custom tasks (\#500).
+* Improve formatting of job logs (\#503).
 
 # 1.0.7
 
