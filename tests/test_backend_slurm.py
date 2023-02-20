@@ -20,6 +20,7 @@ from fractal_server.app.runner._slurm._subprocess_run_as_user import (
 )
 from fractal_server.app.runner._slurm.executor import FractalSlurmExecutor
 from fractal_server.app.runner.common import JobExecutionError
+from fractal_server.app.runner.common import TaskExecutionError
 from fractal_server.tasks import dummy as dummy_module
 from fractal_server.tasks import dummy_parallel as dummy_parallel_module
 
@@ -148,6 +149,33 @@ def test_slurm_executor_submit(
     ) as executor:
         res = executor.submit(lambda: 42)
     assert res.result() == 42
+
+
+def test_slurm_executor_submit_with_exception(
+    monkey_slurm,
+    monkey_slurm_user,
+    tmp777_path,
+    cfut_jobs_finished,
+):
+    """
+    GIVEN a docker slurm cluster and a FractalSlurmExecutor executor
+    WHEN a function is submitted to the executor and raises an exception
+    THEN the executor raises a TaskExecutionError
+    """
+
+    def raise_ValueError():
+        raise ValueError
+
+    with pytest.raises(TaskExecutionError) as e:
+        with FractalSlurmExecutor(
+            slurm_user=monkey_slurm_user,
+            working_dir=tmp777_path,
+            working_dir_user=tmp777_path,
+            slurm_poll_interval=2,
+        ) as executor:
+            fut = executor.submit(raise_ValueError)
+            debug(fut.result())
+    debug(e.value)
 
 
 def test_slurm_executor_map(
