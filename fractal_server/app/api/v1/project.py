@@ -114,7 +114,7 @@ async def _get_dataset_check_owner(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Dataset not found"
         )
-    return dataset
+    return dataset, project
 
 
 # Main endpoints (no ID required)
@@ -211,6 +211,11 @@ async def apply_workflow(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Workflow {apply_workflow.workflow_id} not found",
         )
+    if not workflow.task_list:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITYit,
+            detail=f"Workflow {apply_workflow.workflow_id} has emp",
+        )
 
     if apply_workflow.output_dataset_id:
         stm = (
@@ -277,7 +282,7 @@ async def get_project(
     """
     Return info on an existing project
     """
-    project = await _get_project_check_owner(
+    project, _ = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
     return project
