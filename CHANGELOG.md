@@ -2,9 +2,10 @@
 
 # Unreleased
 
+* Fix handling of parallel-tasks errors in `FractalSlurmExecutor` (\#497).
 * Add test for custom tasks (\#500).
 * Improve formatting of job logs (\#503).
-* Fix handling of parallel-tasks errors in `FractalSlurmExecutor` (\#497).
+* Improve error handling in workflow-execution server endpoint (\#515).
 
 # 1.0.7
 
