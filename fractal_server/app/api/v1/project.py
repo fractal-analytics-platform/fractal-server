@@ -193,15 +193,19 @@ async def apply_workflow(
     db_sync: DBSyncSession = Depends(get_sync_db),
 ) -> Optional[ApplyWorkflowRead]:
 
-    input_dataset, project = _get_dataset_check_owner(
+    input_dataset, project = await _get_dataset_check_owner(
         project_id=apply_workflow.project_id,
         dataset_id=apply_workflow.input_dataset_id,
         user_id=user.id,
         db=db,
     )
+    if not input_dataset:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Dataset {apply_workflow.dataset_id} not found",
+        )
 
     workflow = db_sync.get(Workflow, apply_workflow.workflow_id)
-
     if not workflow:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -210,8 +214,9 @@ async def apply_workflow(
     if not workflow.task_list:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Workflow {apply_workflow.workflow_id} has empty\
-                task list",
+            detail=(
+                f"Workflow {apply_workflow.workflow_id} has empty task list"
+            ),
         )
 
     if apply_workflow.output_dataset_id:
@@ -225,6 +230,11 @@ async def apply_workflow(
         output_dataset = await auto_output_dataset(
             project=project, input_dataset=input_dataset, workflow=workflow
         )
+    if not output_dataset:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Could not determine output dataset.",
+        )
 
     try:
         validate_workflow_compatibility(
@@ -235,17 +245,6 @@ async def apply_workflow(
     except TypeError as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)
-        )
-
-    if not input_dataset:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Dataset {apply_workflow.dataset_id} not found",
-        )
-    if not output_dataset:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Could not determine output dataset.",
         )
 
     job = ApplyWorkflow.from_orm(apply_workflow)
