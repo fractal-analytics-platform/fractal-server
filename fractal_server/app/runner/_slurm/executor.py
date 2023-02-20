@@ -528,8 +528,11 @@ class FractalSlurmExecutor(SlurmExecutor):
                             )
                             fut.set_exception(job_exc)
                         else:
-                            # This branch catches both TaskExecutionError's or
-                            # arbitrary exceptions
+                            # This branch catches both TaskExecutionError's
+                            # (coming from the typical fractal-server execution
+                            # of tasks) or arbitrary exceptions (coming from a
+                            # direct use of FractalSlurmExecutor, possibly
+                            # outside fractal-server)
                             exc = TaskExecutionError(
                                 proxy.tb, *proxy.args, **proxy.kwargs
                             )
