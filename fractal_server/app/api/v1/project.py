@@ -282,7 +282,7 @@ async def get_project(
     """
     Return info on an existing project
     """
-    project, _ = await _get_project_check_owner(
+    project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
     return project
@@ -379,7 +379,7 @@ async def get_dataset(
     """
     Get info on a dataset associated to the current project
     """
-    dataset = await _get_dataset_check_owner(
+    dataset, _ = await _get_dataset_check_owner(
         project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
     )
     return dataset
