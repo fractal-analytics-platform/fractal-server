@@ -114,6 +114,11 @@ async def _get_dataset_check_owner(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Dataset not found"
         )
+    if dataset.project_id != project_id:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid {project_id =} for {dataset_id =}",
+        )
     return dataset, project
 
 
@@ -199,11 +204,6 @@ async def apply_workflow(
         user_id=user.id,
         db=db,
     )
-    if not input_dataset:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Dataset {apply_workflow.dataset_id} not found",
-        )
 
     workflow = db_sync.get(Workflow, apply_workflow.workflow_id)
     if not workflow:
