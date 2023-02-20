@@ -192,17 +192,13 @@ async def apply_workflow(
     db: AsyncSession = Depends(get_db),
     db_sync: DBSyncSession = Depends(get_sync_db),
 ) -> Optional[ApplyWorkflowRead]:
-    stm = (
-        select(Project, Dataset)
-        .join(Dataset)
-        .join(LinkUserProject)
-        .where(LinkUserProject.user_id == user.id)
-        .where(Project.id == apply_workflow.project_id)
-        .where(Dataset.id == apply_workflow.input_dataset_id)
-    )
-    project, input_dataset = (await db.execute(stm)).one()
 
-    # TODO check that user is allowed to use this task
+    input_dataset, project = _get_dataset_check_owner(
+        project_id=apply_workflow.project_id,
+        dataset_id=apply_workflow.input_dataset_id,
+        user_id=user.id,
+        db=db,
+    )
 
     workflow = db_sync.get(Workflow, apply_workflow.workflow_id)
 
@@ -213,8 +209,9 @@ async def apply_workflow(
         )
     if not workflow.task_list:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITYit,
-            detail=f"Workflow {apply_workflow.workflow_id} has emp",
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Workflow {apply_workflow.workflow_id} has empty\
+                task list",
         )
 
     if apply_workflow.output_dataset_id:
