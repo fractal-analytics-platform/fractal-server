@@ -326,7 +326,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                 *args,
                 additional_setup_lines=additional_setup_lines,
                 job_file_prefix=job_file_fmt.format(
-                    args=sanitize_string(args[0]),
+                    args=sanitize_string(str(args[0])),
                 ),
             )
             for args in zip(*iterables)
@@ -517,21 +517,37 @@ class FractalSlurmExecutor(SlurmExecutor):
                 # the ExceptionProxy definition is also part of the pickle file
                 # (thanks to cloudpickle.dumps).
                 success, output = cloudpickle.loads(outdata)
-                if success:
-                    fut.set_result(output)
-                else:
-                    proxy = output
-                    if proxy.exc_type_name == "TaskExecutionError":
-                        exc = TaskExecutionError(
-                            proxy.tb, *proxy.args, **proxy.kwargs
-                        )
-                        fut.set_exception(exc)
-                    elif proxy.exc_type_name == "JobExecutionError":
-                        job_exc = self._prepare_JobExecutionError(
-                            jobid, info=proxy.kwargs.get("info", None)
-                        )
-                        fut.set_exception(job_exc)
-                out_path.unlink()
+                try:
+                    if success:
+                        fut.set_result(output)
+                    else:
+                        proxy = output
+                        if proxy.exc_type_name == "JobExecutionError":
+                            job_exc = self._prepare_JobExecutionError(
+                                jobid, info=proxy.kwargs.get("info", None)
+                            )
+                            fut.set_exception(job_exc)
+                        else:
+                            # This branch catches both TaskExecutionError's
+                            # (coming from the typical fractal-server execution
+                            # of tasks) or arbitrary exceptions (coming from a
+                            # direct use of FractalSlurmExecutor, possibly
+                            # outside fractal-server)
+                            exc = TaskExecutionError(
+                                proxy.tb, *proxy.args, **proxy.kwargs
+                            )
+                            fut.set_exception(exc)
+                    out_path.unlink()
+                except futures.InvalidStateError:
+                    logging.warning(
+                        f"Future {fut} (SLURM job ID: {jobid}) was already"
+                        " cancelled, exit from"
+                        " FractalSlurmExecutor._completion."
+                    )
+                    out_path.unlink()
+                    in_path.unlink()
+                    self._cleanup(jobid)
+                    return
             else:
                 # Output pickle file is missing
                 info = (
@@ -552,13 +568,31 @@ class FractalSlurmExecutor(SlurmExecutor):
                     "seconds.\n"
                 )
                 job_exc = self._prepare_JobExecutionError(jobid, info=info)
-                fut.set_exception(job_exc)
+                try:
+                    fut.set_exception(job_exc)
+                except futures.InvalidStateError:
+                    logging.warning(
+                        f"Future {fut} (SLURM job ID: {jobid}) was already"
+                        " cancelled, exit from"
+                        " FractalSlurmExecutor._completion."
+                    )
+                    in_path.unlink()
+                    self._cleanup(jobid)
+                    return
+
             # Clean up input pickle file
             in_path.unlink()
             self._cleanup(jobid)
 
         except Exception as e:
-            fut.set_exception(e)
+            try:
+                fut.set_exception(e)
+            except futures.InvalidStateError:
+                logging.warning(
+                    f"Future {fut} (SLURM job ID: {jobid}) was already"
+                    " cancelled, exit from"
+                    " FractalSlurmExecutor._completion."
+                )
 
     def _copy_files_from_user_to_server(self, job: SlurmJob):
         """
