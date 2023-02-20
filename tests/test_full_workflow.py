@@ -297,6 +297,7 @@ async def test_failing_workflow_TaskExecutionError(
         assert "id: None" not in job_status_data["log"]
         assert "ValueError" in job_status_data["log"]
         assert "TASK ERROR" in job_status_data["log"]
+        assert "\\n" not in job_status_data["log"]
 
 
 async def _auxiliary_scancel(slurm_user, sleep_time):
@@ -437,3 +438,4 @@ async def test_failing_workflow_JobExecutionError(
         assert "id: None" not in job_status_data["log"]
         assert "JOB ERROR" in job_status_data["log"]
         assert "CANCELLED" in job_status_data["log"]
+        assert "\\n" not in job_status_data["log"]
