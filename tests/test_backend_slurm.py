@@ -236,6 +236,7 @@ def test_slurm_executor_map_with_exception(
             result_generator = executor.map(_raise, range(4))
             for result in result_generator:
                 debug(f"While looping over results, I got to {result=}")
+            raise RuntimeError("We should never reach this line")
         except Exception as e:
             debug(e)
             debug(vars(e))
