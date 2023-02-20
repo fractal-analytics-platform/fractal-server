@@ -117,7 +117,7 @@ async def _get_dataset_check_owner(
     if dataset.project_id != project_id:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Invalid {project_id =} for {dataset_id =}",
+            detail=f"Invalid {project_id=} for {dataset_id=}",
         )
     return dataset, project
 
