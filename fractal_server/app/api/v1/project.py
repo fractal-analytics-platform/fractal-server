@@ -119,7 +119,7 @@ async def _get_dataset_check_owner(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Invalid {project_id=} for {dataset_id=}",
         )
-    return dataset, project
+    return dict(dataset=dataset, project=project)
 
 
 # Main endpoints (no ID required)
@@ -198,12 +198,14 @@ async def apply_workflow(
     db_sync: DBSyncSession = Depends(get_sync_db),
 ) -> Optional[ApplyWorkflowRead]:
 
-    input_dataset, project = await _get_dataset_check_owner(
+    output = await _get_dataset_check_owner(
         project_id=apply_workflow.project_id,
         dataset_id=apply_workflow.input_dataset_id,
         user_id=user.id,
         db=db,
     )
+    input_dataset = output["dataset"]
+    project = output["project"]
 
     workflow = db_sync.get(Workflow, apply_workflow.workflow_id)
     if not workflow:
@@ -225,12 +227,13 @@ async def apply_workflow(
         )
 
     if apply_workflow.output_dataset_id:
-        output_dataset, _ = await _get_dataset_check_owner(
+        output = await _get_dataset_check_owner(
             project_id=apply_workflow.project_id,
             dataset_id=apply_workflow.output_dataset_id,
             user_id=user.id,
             db=db,
         )
+        output_dataset = output["dataset"]
     else:
         try:
             output_dataset = await auto_output_dataset(
@@ -384,9 +387,10 @@ async def get_dataset(
     """
     Get info on a dataset associated to the current project
     """
-    dataset, _ = await _get_dataset_check_owner(
+    output = await _get_dataset_check_owner(
         project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
     )
+    dataset = output["dataset"]
     return dataset
 
 
