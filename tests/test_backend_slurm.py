@@ -209,11 +209,11 @@ def test_slurm_executor_map_with_exception(
     def _raise(n: int):
         if n == 1:
             if early_late == "late":
-                time.sleep(2)
+                time.sleep(1.5)
             raise ValueError
         else:
             if early_late == "early":
-                time.sleep(2)
+                time.sleep(1.5)
             return n
 
     with FractalSlurmExecutor(
@@ -223,7 +223,7 @@ def test_slurm_executor_map_with_exception(
         slurm_poll_interval=1,
     ) as executor:
 
-        with pytest.raises(JobExecutionError) as e:
+        with pytest.raises(TaskExecutionError) as e:
             result_generator = executor.map(_raise, range(4))
             for result in result_generator:
                 debug(f"While looping over results, I got to {result=}")
