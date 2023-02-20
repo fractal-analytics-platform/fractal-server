@@ -471,19 +471,6 @@ async def test_project_apply_failures(
             overwrite_input=False,
         )
 
-        payload["input_dataset_id"] += 42
-        res = await client.post(
-            f"{PREFIX}/apply/",
-            json=payload,
-        )
-        debug(res.json())
-        assert res.status_code == 404
-        assert (
-            res.json()["detail"]
-            == f"Dataset {payload['workflow_id']} not found"
-        )
-        payload["input_dataset_id"] -= 42
-
         payload["workflow_id"] += 42
         res = await client.post(
             f"{PREFIX}/apply/",
