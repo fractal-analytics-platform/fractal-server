@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import shlex
 import subprocess
 from pathlib import Path
@@ -7,6 +8,13 @@ from typing import List
 
 import pytest
 from devtools import debug
+
+from fractal_server.app.runner._slurm._subprocess_run_as_user import (
+    _mkdir_as_user,
+)
+from fractal_server.app.runner._slurm._subprocess_run_as_user import (
+    _run_command_as_user,
+)
 
 
 def is_responsive(container_name):
@@ -266,3 +274,33 @@ def scancel_all_jobs_of_a_slurm_user(
     logging.warning(
         f"Now completed scancel_all_jobs_of_a_slurm_user with {cmd=}"
     )
+
+
+@pytest.fixture
+def slurm_working_folders(
+    tmp777_path: Path,
+    monkey_slurm_user: str,
+):
+
+    root_path = tmp777_path
+    user = monkey_slurm_user
+
+    # Define working folders
+    server_working_dir = root_path / "server"
+    user_working_dir = root_path / "user"
+
+    # Create server working folder
+    umask = os.umask(0)
+    server_working_dir.mkdir(parents=True, mode=0o755)
+    os.umask(umask)
+
+    # Create user working folder
+    _mkdir_as_user(folder=str(user_working_dir), user=user)
+
+    yield (server_working_dir, user_working_dir)
+
+    logging.warning("[slurm_working_folders] Start cleanup")
+    _run_command_as_user(
+        cmd=f"chmod 777 {str(user_working_dir)}", user=user, check=True
+    )
+    logging.warning("[slurm_working_folders] End cleanup")
