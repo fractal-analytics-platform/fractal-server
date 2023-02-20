@@ -448,3 +448,69 @@ async def test_job_download_logs(
         with (unzipped_archived_path / LOG_FILE).open("r") as f:
             actual_logs = f.read()
         assert LOG_CONTENT in actual_logs
+
+
+async def test_project_apply_failures(
+    client,
+    MockCurrentUser,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+):
+    async with MockCurrentUser(persist=True) as user:
+        p = await project_factory(user)
+        input_dataset = await dataset_factory(p, name="input")
+        output_dataset = await dataset_factory(p, name="output")
+        workflow = await workflow_factory(project_id=p.id)
+
+        payload = dict(
+            project_id=p.id,
+            input_dataset_id=input_dataset.id,
+            output_dataset_id=output_dataset.id,
+            workflow_id=workflow.id,
+            overwrite_input=False,
+        )
+
+        payload["input_dataset_id"] += 42
+        res = await client.post(
+            f"{PREFIX}/apply/",
+            json=payload,
+        )
+        debug(res.json())
+        assert res.status_code == 404
+        assert (
+            res.json()["detail"]
+            == f"Dataset {payload['workflow_id']} not found"
+        )
+        payload["input_dataset_id"] -= 42
+
+        payload["workflow_id"] += 42
+        res = await client.post(
+            f"{PREFIX}/apply/",
+            json=payload,
+        )
+        assert res.status_code == 404
+        assert (
+            res.json()["detail"]
+            == f"Workflow {payload['workflow_id']} not found"
+        )
+        payload["workflow_id"] -= 42
+
+        res = await client.post(
+            f"{PREFIX}/apply/",
+            json=payload,
+        )
+        assert res.status_code == 422
+        assert (
+            res.json()["detail"]
+            == f"Workflow {payload['workflow_id']} has empty task list"
+        )
+
+        payload["output_dataset_id"] += 42
+        res = await client.post(
+            f"{PREFIX}/apply/",
+            json=payload,
+        )
+        assert res.status_code == 422
+        assert res.json()["detail"] == "Could not determine output dataset."
+        payload["output_dataset_id"] -= 42
