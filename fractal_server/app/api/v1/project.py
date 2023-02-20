@@ -214,7 +214,7 @@ async def apply_workflow(
     if workflow.project_id != project.id:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Invalid {workflow.project_id=} for {project.id=}",
+            detail=f"Error: {workflow.project_id=} differs from {project.id=}",
         )
     if not workflow.task_list:
         raise HTTPException(
@@ -225,21 +225,25 @@ async def apply_workflow(
         )
 
     if apply_workflow.output_dataset_id:
-        stm = (
-            select(Dataset)
-            .where(Dataset.project_id == project.id)
-            .where(Dataset.id == apply_workflow.output_dataset_id)
+        output_dataset, _ = await _get_dataset_check_owner(
+            project_id=apply_workflow.project_id,
+            dataset_id=apply_workflow.output_dataset_id,
+            user_id=user.id,
+            db=db,
         )
-        output_dataset = (await db.execute(stm)).scalars().one()
     else:
-        output_dataset = await auto_output_dataset(
-            project=project, input_dataset=input_dataset, workflow=workflow
-        )
-    if not output_dataset:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Could not determine output dataset.",
-        )
+        try:
+            output_dataset = await auto_output_dataset(
+                project=project, input_dataset=input_dataset, workflow=workflow
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    f"Could not determine output dataset. "
+                    f"Original error: {str(e)}."
+                ),
+            )
 
     try:
         validate_workflow_compatibility(

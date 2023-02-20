@@ -451,19 +451,26 @@ async def test_job_download_logs(
 
 
 async def test_project_apply_failures(
+    db,
     client,
     MockCurrentUser,
     project_factory,
     dataset_factory,
     workflow_factory,
+    task_factory,
 ):
     async with MockCurrentUser(persist=True) as user:
         project1 = await project_factory(user)
         project2 = await project_factory(user)
         input_dataset = await dataset_factory(project1, name="input")
-        output_dataset = await dataset_factory(project2, name="output")
+        output_dataset = await dataset_factory(project1, name="output")
+
         workflow1 = await workflow_factory(project_id=project1.id)
-        workflow2 = await workflow_factory(project_id=project2.id)
+        workflow2 = await workflow_factory(project_id=project1.id)
+        workflow3 = await workflow_factory(project_id=project2.id)
+
+        task = await task_factory()
+        await workflow1.insert_task(task.id, db=db)
 
         base_payload = dict(
             project_id=project1.id,
@@ -475,34 +482,50 @@ async def test_project_apply_failures(
 
         # Not existing workflow
         bug1 = base_payload.copy()
-        bug1["workflow_id"] += 123
+        bug1["workflow_id"] = 123
         res = await client.post(
             f"{PREFIX}/apply/",
             json=bug1,
         )
+        debug(res.json())
         assert res.status_code == 404
 
         # Workflow with wrong project_id
         bug2 = base_payload.copy()
-        bug2["workflow_id"] = workflow2.id
+        bug2["workflow_id"] = workflow3.id
         res = await client.post(
             f"{PREFIX}/apply/",
             json=bug2,
         )
-        assert res.status_code == 422
-
-        # Workflow without tasks
-        res = await client.post(
-            f"{PREFIX}/apply/",
-            json=base_payload,
-        )
+        debug(res.json())
         assert res.status_code == 422
 
         # Not existing output dataset
-        bug2 = base_payload.copy()
-        bug2["output_dataset_id"] += 123
+        bug3 = base_payload.copy()
+        bug3["output_dataset_id"] = 123
         res = await client.post(
             f"{PREFIX}/apply/",
-            json=bug2,
+            json=bug3,
         )
+        debug(res.json())
+        assert res.status_code == 404
+
+        # Failed auto_output_dataset
+        bug4 = base_payload.copy()
+        bug4.pop("output_dataset_id")
+        res = await client.post(
+            f"{PREFIX}/apply/",
+            json=bug4,
+        )
+        debug(res.json())
+        assert res.status_code == 422
+
+        # Workflow without tasks
+        bug5 = base_payload.copy()
+        bug5["workflow_id"] = workflow2.id
+        res = await client.post(
+            f"{PREFIX}/apply/",
+            json=bug5,
+        )
+        debug(res.json())
         assert res.status_code == 422
