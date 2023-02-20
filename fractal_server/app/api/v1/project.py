@@ -211,6 +211,11 @@ async def apply_workflow(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Workflow {apply_workflow.workflow_id} not found",
         )
+    if workflow.project_id != project.id:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid {workflow.project_id=} for {project.id=}",
+        )
     if not workflow.task_list:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
