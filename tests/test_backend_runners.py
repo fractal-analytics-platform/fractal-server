@@ -84,10 +84,9 @@ async def test_runner(
         workflow_dir.mkdir(parents=True, mode=0o700)
         os.umask(umask)
     elif backend == "slurm":
-        from .test_backend_slurm import _define_and_create_folders
-
-        folders = _define_and_create_folders(tmp777_path, monkey_slurm_user)
-        workflow_dir, workflow_dir_user = folders[:]
+        workflow_dir, workflow_dir_user = request.getfixturevalue(
+            "slurm_working_folders"
+        )  # noqa
 
     # Prepare backend-specific arguments
     logger_name = "job_logger"

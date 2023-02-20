@@ -1,9 +1,7 @@
-import os
 import shlex
 import subprocess
 from concurrent.futures import Executor
 from itertools import product
-from pathlib import Path
 from typing import Callable
 
 import pytest
@@ -14,30 +12,10 @@ from .fixtures_slurm import scancel_all_jobs_of_a_slurm_user
 from .fixtures_tasks import MockTask
 from .fixtures_tasks import MockWorkflowTask
 from fractal_server.app.runner._slurm import SlurmConfig
-from fractal_server.app.runner._slurm._subprocess_run_as_user import (
-    _mkdir_as_user,
-)
 from fractal_server.app.runner._slurm.executor import FractalSlurmExecutor
 from fractal_server.app.runner.common import JobExecutionError
 from fractal_server.tasks import dummy as dummy_module
 from fractal_server.tasks import dummy_parallel as dummy_parallel_module
-
-
-def _define_and_create_folders(root_path: Path, user: str):
-
-    # Define working folders
-    server_working_dir = root_path / "server"
-    user_working_dir = root_path / "user"
-
-    # Create server working folder
-    umask = os.umask(0)
-    server_working_dir.mkdir(parents=True, mode=0o755)
-    os.umask(umask)
-
-    # Create user working folder
-    _mkdir_as_user(folder=str(user_working_dir), user=user)
-
-    return (server_working_dir, user_working_dir)
 
 
 def submit_and_ignore_exceptions(
@@ -94,6 +72,7 @@ def test_unit_sbatch_script_readable(
     monkey_slurm_user,
     tmp777_path,
     cfut_jobs_finished,
+    slurm_working_folders,
 ):
     """
     GIVEN a batch script written to file by the slurm executor
@@ -101,8 +80,7 @@ def test_unit_sbatch_script_readable(
     THEN it has all the permissions needed
     """
 
-    folders = _define_and_create_folders(tmp777_path, monkey_slurm_user)
-    server_working_dir, user_working_dir = folders[:]
+    server_working_dir, user_working_dir = slurm_working_folders
 
     SBATCH_SCRIPT = "test"
     with FractalSlurmExecutor(
@@ -154,6 +132,7 @@ def test_slurm_executor_separate_folders(
     monkey_slurm_user,
     tmp777_path,
     cfut_jobs_finished,
+    slurm_working_folders,
 ):
     """
     Same as test_slurm_executor, but with two folders:
@@ -161,8 +140,7 @@ def test_slurm_executor_separate_folders(
     * user_working_dir is owned the user and had default permissions
     """
 
-    folders = _define_and_create_folders(tmp777_path, monkey_slurm_user)
-    server_working_dir, user_working_dir = folders[:]
+    server_working_dir, user_working_dir = slurm_working_folders
 
     with FractalSlurmExecutor(
         slurm_user=monkey_slurm_user,
@@ -179,6 +157,7 @@ def test_slurm_executor_scancel(
     monkey_slurm_user,
     tmp777_path,
     cfut_jobs_finished,
+    slurm_working_folders,
 ):
     """
     GIVEN a docker slurm cluster and a FractalSlurmExecutor executor
@@ -193,8 +172,7 @@ def test_slurm_executor_scancel(
         time.sleep(60)
         return 42
 
-    folders = _define_and_create_folders(tmp777_path, monkey_slurm_user)
-    server_working_dir, user_working_dir = folders[:]
+    server_working_dir, user_working_dir = slurm_working_folders
 
     with pytest.raises(JobExecutionError) as e:
         with FractalSlurmExecutor(
