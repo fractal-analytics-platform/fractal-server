@@ -114,7 +114,12 @@ async def _get_dataset_check_owner(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Dataset not found"
         )
-    return dataset
+    if dataset.project_id != project_id:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid {project_id=} for {dataset_id=}",
+        )
+    return dict(dataset=dataset, project=project)
 
 
 # Main endpoints (no ID required)
@@ -192,37 +197,56 @@ async def apply_workflow(
     db: AsyncSession = Depends(get_db),
     db_sync: DBSyncSession = Depends(get_sync_db),
 ) -> Optional[ApplyWorkflowRead]:
-    stm = (
-        select(Project, Dataset)
-        .join(Dataset)
-        .join(LinkUserProject)
-        .where(LinkUserProject.user_id == user.id)
-        .where(Project.id == apply_workflow.project_id)
-        .where(Dataset.id == apply_workflow.input_dataset_id)
-    )
-    project, input_dataset = (await db.execute(stm)).one()
 
-    # TODO check that user is allowed to use this task
+    output = await _get_dataset_check_owner(
+        project_id=apply_workflow.project_id,
+        dataset_id=apply_workflow.input_dataset_id,
+        user_id=user.id,
+        db=db,
+    )
+    input_dataset = output["dataset"]
+    project = output["project"]
 
     workflow = db_sync.get(Workflow, apply_workflow.workflow_id)
-
     if not workflow:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Workflow {apply_workflow.workflow_id} not found",
         )
+    if workflow.project_id != project.id:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Error: {workflow.project_id=} differs from {project.id=}",
+        )
+    if not workflow.task_list:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Workflow {apply_workflow.workflow_id} has empty task list"
+            ),
+        )
 
     if apply_workflow.output_dataset_id:
-        stm = (
-            select(Dataset)
-            .where(Dataset.project_id == project.id)
-            .where(Dataset.id == apply_workflow.output_dataset_id)
+        output = await _get_dataset_check_owner(
+            project_id=apply_workflow.project_id,
+            dataset_id=apply_workflow.output_dataset_id,
+            user_id=user.id,
+            db=db,
         )
-        output_dataset = (await db.execute(stm)).scalars().one()
+        output_dataset = output["dataset"]
     else:
-        output_dataset = await auto_output_dataset(
-            project=project, input_dataset=input_dataset, workflow=workflow
-        )
+        try:
+            output_dataset = await auto_output_dataset(
+                project=project, input_dataset=input_dataset, workflow=workflow
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    f"Could not determine output dataset. "
+                    f"Original error: {str(e)}."
+                ),
+            )
 
     try:
         validate_workflow_compatibility(
@@ -233,17 +257,6 @@ async def apply_workflow(
     except TypeError as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)
-        )
-
-    if not input_dataset:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Dataset {apply_workflow.dataset_id} not found",
-        )
-    if not output_dataset:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Could not determine output dataset.",
         )
 
     job = ApplyWorkflow.from_orm(apply_workflow)
@@ -374,9 +387,10 @@ async def get_dataset(
     """
     Get info on a dataset associated to the current project
     """
-    dataset = await _get_dataset_check_owner(
+    output = await _get_dataset_check_owner(
         project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
     )
+    dataset = output["dataset"]
     return dataset
 
 
