@@ -204,6 +204,16 @@ def test_slurm_executor_map_with_exception(
     tmp777_path,
     cfut_jobs_finished,
 ):
+
+    """
+    NOTE: Tasks submitted to FractalSlurmExecutor via fractal-server always
+    return either JobExecutionError or TaskExecutionError, while for functions
+    submitted directly to the executor (and raising arbitrary exceptions like a
+    ValueError) this is not true. Depending on the way the error is raised, in
+    this test, the resulting error could be a JobExecutionError or
+    TaskExecutionError; we accept both of them, here.
+    """
+
     debug(early_late)
 
     def _raise(n: int):
@@ -222,12 +232,14 @@ def test_slurm_executor_map_with_exception(
         working_dir_user=tmp777_path,
         slurm_poll_interval=1,
     ) as executor:
-
-        with pytest.raises(TaskExecutionError) as e:
+        try:
             result_generator = executor.map(_raise, range(4))
             for result in result_generator:
                 debug(f"While looping over results, I got to {result=}")
-        debug(e.value)
+        except Exception as e:
+            debug(e)
+            debug(vars(e))
+            assert type(e) in [TaskExecutionError, JobExecutionError]
 
 
 def test_slurm_executor_submit_separate_folders(
