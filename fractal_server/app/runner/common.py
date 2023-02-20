@@ -228,10 +228,16 @@ async def auto_output_dataset(
     if overwrite_input and not input_dataset.read_only:
         input_paths = input_dataset.paths
         if len(input_paths) != 1:
-            raise ValueError
+            raise ValueError(
+                "Cannot determine output dataset "
+                "with more than one input path."
+            )
         output_dataset = input_dataset
     else:
-        raise NotImplementedError
+        raise NotImplementedError(
+            "Cannot determine ouput dataset with "
+            f"{overwrite_input=} and {input_dataset.read_only=}"
+        )
 
     return output_dataset
 
