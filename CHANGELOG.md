@@ -1,5 +1,14 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Add test for custom tasks (\#500).
+* Improve formatting of job logs (\#503).
+
+# 1.0.7
+
+* Update endpoints to import/export a workflow (\#495).
+
 # 1.0.6
 
 * Add new endpoints to import/export a workflow (\#490).
