@@ -490,20 +490,9 @@ async def test_import_export_workflow(
         assert "id" not in wftask["task"]
     assert res.status_code == 200
 
-    # Check that output can be cast to WorkflowExport
-    WorkflowExport(**workflow_exported)
-
-    # Before cheching that the exported workflow matches with the one in the
-    # original JSON file, we need to update the Workflow.task_list.Task.command
-    # attributes, since they depend on the server folders.
-    wf_old = WorkflowExport(**workflow_from_file).dict(exclude_none=True)
-    wf_new = WorkflowExport(**workflow_exported).dict(exclude_none=True)
-    path_old = "/SOME/PATH/"
-    path_new = collect_packages[0].command.split("dummy0")[0]
-    for ind, wf_task in enumerate(wf_old["task_list"]):
-        new_command = wf_task["task"]["command"].replace(path_old, path_new)
-        wf_old["task_list"][ind]["task"]["command"] = new_command
-
     # Check that the exported workflow matches with the one in the original
     # JSON file
+    wf_old = WorkflowExport(**workflow_from_file).dict(exclude_none=True)
+    wf_new = WorkflowExport(**workflow_exported).dict(exclude_none=True)
+
     assert wf_old == wf_new
