@@ -6,6 +6,7 @@
 * Add test for custom tasks (\#500).
 * Improve formatting of job logs (\#503).
 * Improve error handling in workflow-execution server endpoint (\#515).
+* Update `_TaskBase` schema from fractal-common (\#517).
 
 # 1.0.7
 
