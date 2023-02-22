@@ -83,6 +83,11 @@ def dummy(
     """
     logger.info("ENTERING dummy task")
 
+    if True:
+        print("FIXME")
+    else:
+        print("NOT FIXME")
+
     if raise_error:
         raise ValueError(message)
 
