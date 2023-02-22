@@ -101,14 +101,16 @@ jobs:
         with:
           name: coverage-data
 
-      - name: Add coverage comment to Pull Requests
-        id: coverage_comment
-        uses: py-cov-action/python-coverage-comment-action@v3
+      - name: Combine coverage
+        run: |
+          python -m coverage combine
+          python -m coverage xml -o coverage.xml
+          python -m coverage report
+
+      - name: Code Coverage Summary Report
+        uses: irongut/CodeCoverageSummary@v1.3.0
         with:
-          GITHUB_TOKEN: ${{ github.token }}
-          MERGE_COVERAGE_FILES: true
-          MINIMUM_GREEN: 90
-          MINIMUM_ORANGE: 60
+          filename: coverage.xml
 
 
   docs:
