@@ -8,6 +8,7 @@ on:
 
 env:
   GIT_TRACE: 2
+  GIT_TRACE_PACK_ACCESS: true
 
 jobs:
 
