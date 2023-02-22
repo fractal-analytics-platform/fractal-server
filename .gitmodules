@@ -1,0 +1,3 @@
+[submodule "fractal_server/common"]
+	path = fractal_server/common
+	url = https://github.com/fractal-analytics-platform/fractal-common.git
