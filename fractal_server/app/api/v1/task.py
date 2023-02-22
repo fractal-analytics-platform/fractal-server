@@ -39,6 +39,7 @@ from ...db import get_db
 from ...db import get_sync_db
 from ...models import State
 from ...models import Task
+from ...security import current_active_superuser
 from ...security import current_active_user
 from ...security import User
 
@@ -286,20 +287,17 @@ def get_task(
 async def patch_task(
     task_id: int,
     task_update: TaskUpdate,
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[TaskRead]:
     """
     Edit a specific task
     """
 
-    if not user.is_superuser:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
-
     if task_update.source:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="path_task endpoint cannot set `source`",
+            detail="patch_task endpoint cannot set `source`",
         )
 
     db_task = await db.get(Task, task_id)
@@ -307,18 +305,17 @@ async def patch_task(
     for key, value in task_update.dict(exclude_unset=True).items():
         if isinstance(value, str):
             setattr(db_task, key, value)
-        # MISSING default_args AND meta
-        # elif key == "default_args":
-        #    current_default_args = deepcopy(db_task._arguments)
-        #    current_default_args.update(value)
-        #    setattr(db_task, key, current_default_args)
+        elif isinstance(value, dict):
+            current_dict = deepcopy(getattr(db_task, key))
+            current_dict.update(value)
+            setattr(db_task, key, current_dict)
         else:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"patch_task endpoint cannot set {key=}",
+                detail=f"Invalid {key=}",
             )
 
-    await db.merge(db_task)
+    await db.merge(db_task)  # TODO
     await db.commit()
     await db.refresh(db_task)
     return db_task
