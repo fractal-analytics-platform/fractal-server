@@ -12,10 +12,13 @@ from fractal_server.app.api.v1.task import TaskCollectionError
 from fractal_server.app.api.v1.task import TaskCollectStatus
 from fractal_server.app.models import State
 from fractal_server.common.schemas.task import TaskCreate
+from fractal_server.common.schemas.task import TaskUpdate
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 from fractal_server.tasks.collection import get_collection_path
 from fractal_server.tasks.collection import get_log_path
+
+PREFIX = "/api/v1/task"
 
 
 async def test_task_get_list(db, client, task_factory, MockCurrentUser):
@@ -24,7 +27,7 @@ async def test_task_get_list(db, client, task_factory, MockCurrentUser):
     t2 = await task_factory(index=2, subtask_list=[t0, t1])
 
     async with MockCurrentUser(persist=True):
-        res = await client.get("api/v1/task/")
+        res = await client.get(f"{PREFIX}/")
         data = res.json()
         assert res.status_code == 200
         debug(data)
@@ -129,7 +132,6 @@ async def test_collection_api(
           check the status of the background process
         * if called twice, the same tasks are returned without installing
     """
-    PREFIX = "/api/v1/task"
 
     task_collection = dict(
         package=dummy_task_package.as_posix(), python_version=python_version
@@ -208,7 +210,6 @@ async def test_collection_api_invalid_manifest(
     WHEN the api to collect tasks from that package is called
     THEN it returns 422 (Unprocessable Entity)
     """
-    PREFIX = "/api/v1/task"
 
     task_collection = dict(
         package=dummy_task_package_invalid_manifest.as_posix()
@@ -236,7 +237,7 @@ async def test_post_task(client, MockCurrentUser):
             input_type="task_input_type",
             output_type="task_output_type",
         )
-        res = await client.post("api/v1/task/", json=dict(task))
+        res = await client.post(f"{PREFIX}/", json=dict(task))
         debug(res.json())
         assert res.status_code == 201
 
@@ -248,11 +249,82 @@ async def test_post_task(client, MockCurrentUser):
             input_type="new_task_input_type",
             output_type="new_task_output_type",
         )
-        res = await client.post("api/v1/task/", json=dict(new_task))
+        res = await client.post(f"{PREFIX}/", json=dict(new_task))
         debug(res.json())
         assert res.status_code == 422
 
         # Fail for wrong payload
-        res = await client.post("api/v1/task/")  # request without body
+        res = await client.post(f"{PREFIX}/")  # request without body
         debug(res.json())
         assert res.status_code == 422
+
+
+async def test_patch_task(
+    db,
+    registered_client,
+    registered_superuser_client,
+    task_factory,
+    MockCurrentUser,
+):
+    task = await task_factory(name="task")
+    debug(task)
+    NEW_NAME = "new name"
+    NEW_INPUT_TYPE = "new input_type"
+    NEW_OUTPUT_TYPE = "new output_type"
+    NEW_COMMAND = "new command"
+    NEW_SOURCE = "new source"
+    NEW_DEFAULT_ARGS = {"key1": 1, "key2": 2}
+    NEW_META = {"key3": "3", "key4": "4"}
+    update = TaskUpdate(
+        name=NEW_NAME,
+        input_type=NEW_INPUT_TYPE,
+        output_type=NEW_OUTPUT_TYPE,
+        command=NEW_COMMAND,
+        source=NEW_SOURCE,
+        default_args=NEW_DEFAULT_ARGS,
+        meta=NEW_META,
+    )
+
+    res = await registered_client.patch(
+        f"{PREFIX}/{task.id}", json=update.dict()
+    )
+    debug(res, res.json())
+    assert res.status_code == 403
+
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/{task.id}", json=update.dict()
+    )
+    debug(res, res.json())
+    assert res.status_code == 422
+
+    update.source = None
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/{task.id}", json=update.dict()
+    )
+    debug(res, res.json())
+    assert res.status_code == 200
+    assert res.json()["name"] == NEW_NAME
+    assert res.json()["input_type"] == NEW_INPUT_TYPE
+    assert res.json()["output_type"] == NEW_OUTPUT_TYPE
+    assert res.json()["command"] == NEW_COMMAND
+    assert res.json()["default_args"] == NEW_DEFAULT_ARGS
+    assert res.json()["meta"] == NEW_META
+
+    OTHER_DEFAULT_ARGS = {"key1": 42, "key100": 100}
+    OTHER_META = {"key4": [4, 8, 15], "key0": [16, 23, 42]}
+
+    second_update = TaskUpdate(
+        default_args=OTHER_DEFAULT_ARGS,
+        meta=OTHER_META,
+    )
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/{task.id}", json=second_update.dict()
+    )
+    debug(res, res.json())
+    assert res.status_code == 200
+    assert res.json()["name"] == NEW_NAME
+    assert res.json()["input_type"] == NEW_INPUT_TYPE
+    assert res.json()["output_type"] == NEW_OUTPUT_TYPE
+    assert res.json()["command"] == NEW_COMMAND
+    assert len(res.json()["default_args"]) == 3
+    assert len(res.json()["meta"]) == 3

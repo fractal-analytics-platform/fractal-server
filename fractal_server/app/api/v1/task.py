@@ -302,7 +302,10 @@ async def patch_task(
 
     db_task = await db.get(Task, task_id)
 
-    for key, value in task_update.dict(exclude_unset=True).items():
+    update = {
+        k: v for k, v in task_update.dict().items() if v and (k != "source")
+    }
+    for key, value in update.items():
         if isinstance(value, str):
             setattr(db_task, key, value)
         elif isinstance(value, dict):
