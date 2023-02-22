@@ -110,7 +110,6 @@ jobs:
           MINIMUM_GREEN: 90
           MINIMUM_ORANGE: 60
           ANNOTATE_MISSING_LINES: true
-          ANNOTATION_TYPE: notice
 
 
   docs:
