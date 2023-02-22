@@ -1,6 +1,6 @@
 import asyncio
 import json
-from copy import deepcopy
+from copy import deepcopy  # noqa
 from pathlib import Path
 from shutil import copy as shell_copy
 from shutil import rmtree as shell_rmtree
@@ -293,23 +293,32 @@ async def patch_task(
     Edit a specific task
     """
 
-    # FIXME add user-owned tasks
+    if not user.is_superuser:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
+    if task_update.source:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="path_task endpoint cannot set `source`",
+        )
 
     db_task = await db.get(Task, task_id)
 
     for key, value in task_update.dict(exclude_unset=True).items():
-        if key == "name":
+        if isinstance(value, str):
             setattr(db_task, key, value)
-        elif key == "default_args":
-            current_default_args = deepcopy(db_task._arguments)
-            current_default_args.update(value)
-            setattr(db_task, key, current_default_args)
+        # MISSING default_args AND meta
+        # elif key == "default_args":
+        #    current_default_args = deepcopy(db_task._arguments)
+        #    current_default_args.update(value)
+        #    setattr(db_task, key, current_default_args)
         else:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="patch_task endpoint cannot set {key=}",
+                detail=f"patch_task endpoint cannot set {key=}",
             )
 
+    await db.merge(db_task)
     await db.commit()
     await db.refresh(db_task)
     return db_task
