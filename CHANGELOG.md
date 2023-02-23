@@ -2,6 +2,10 @@
 
 # Unreleased
 
+* Drop python 3.8 support (\#527).
+
+# 1.0.8
+
 * Fix handling of parallel-tasks errors in `FractalSlurmExecutor` (\#497).
 * Add test for custom tasks (\#500).
 * Improve formatting of job logs (\#503).
