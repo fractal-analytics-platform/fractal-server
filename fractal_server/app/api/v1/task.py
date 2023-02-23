@@ -293,6 +293,7 @@ async def patch_task(
     """
     Edit a specific task
     """
+    from devtools import debug
 
     if task_update.source:
         raise HTTPException(
@@ -301,10 +302,9 @@ async def patch_task(
         )
 
     db_task = await db.get(Task, task_id)
-
-    update = {
-        k: v for k, v in task_update.dict().items() if v and (k != "source")
-    }
+    debug(task_update)
+    update = task_update.dict(exclude_unset=True)
+    debug(update)
     for key, value in update.items():
         if isinstance(value, str):
             setattr(db_task, key, value)
@@ -318,7 +318,6 @@ async def patch_task(
                 detail=f"Invalid {key=}",
             )
 
-    await db.merge(db_task)  # TODO
     await db.commit()
     await db.refresh(db_task)
     return db_task
