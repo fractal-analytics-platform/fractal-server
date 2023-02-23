@@ -58,7 +58,7 @@ jobs:
         run: poetry install --with dev --no-interaction --all-extras
 
       - name: Test with pytest
-        run: poetry run coverage run -m pytest tests/test_alive.py > pytest-coverage.txt
+        run: poetry run coverage run -m pytest tests/test_alive.py > /tmp/pytest-coverage-${{ matrix.python-version}}.txt
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
@@ -107,7 +107,7 @@ jobs:
       - name: pytest-coverage-commentator
         uses: coroo/pytest-coverage-commentator@v1.0.2
         with:
-          pytest-coverage: pytest-coverage.txt
+          pytest-coverage: /tmp/pytest-coverage-3.10.txt
       # - name: Add coverage comment to Pull Requests
       #   id: coverage_comment
       #   uses: py-cov-action/python-coverage-comment-action@v3
