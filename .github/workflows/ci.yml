@@ -18,7 +18,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.8"] #, "3.9", "3.10"]
+        python-version: ["3.9", "3.10"]
 
 
     services:
@@ -43,6 +43,13 @@ jobs:
 
       - name: Install poetry
         run: pipx install poetry==1.3.2
+
+      - name: Set up Python 3.9 (only needed to avoid issue \#498)
+        if: ${{ matrix.python-version != '3.9' }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+          cache: "poetry"
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
