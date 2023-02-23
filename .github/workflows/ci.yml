@@ -59,12 +59,14 @@ jobs:
 
       - name: Test with pytest
         run: poetry run coverage run -m pytest tests/test_alive.py
+        env:
+          COVERAGE_FILE: ".coverage.${{ matrix.python_version }}"
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
         with:
           name: coverage-data
-          path: ".coverage*"
+          path: ".coverage.${{ matrix.python_version }}"
 
       - name: extract openapi schema
         env:
@@ -105,7 +107,7 @@ jobs:
           name: coverage-data
 
       - name: Convert .coverage in xml
-        run : coverage xml --data-file .coverage
+        run : coverage xml --data-file /home/runner/work/fractal-server/fractal-server/.coverage
 
       - name: pytest-coverage-commentator
         uses: orgoro/coverage@v3
