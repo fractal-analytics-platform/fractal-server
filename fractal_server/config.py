@@ -359,11 +359,11 @@ class Settings(BaseSettings):
             info = f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
             if not shutil.which("sbatch"):
                 raise FractalConfigurationError(
-                    f'{info}\nbut "sbatch" command not found.'
+                    f"{info}\nbut sbatch command not found."
                 )
             if not shutil.which("squeue"):
                 raise FractalConfigurationError(
-                    f'{info}\nbut "squeue" command not found.'
+                    f"{info}\nbut squeue command not found."
                 )
 
 
