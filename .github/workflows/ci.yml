@@ -58,7 +58,7 @@ jobs:
         run: poetry install --with dev --no-interaction --all-extras
 
       - name: Test with pytest
-        run: poetry run coverage run -m pytest tests/test_alive.py
+        run: poetry run coverage run -m pytest tests/test_alive.py > pytest-coverage.txt
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
@@ -104,14 +104,18 @@ jobs:
         with:
           name: coverage-data
 
-      - name: Add coverage comment to Pull Requests
-        id: coverage_comment
-        uses: py-cov-action/python-coverage-comment-action@v3
+      - name: pytest-coverage-commentator
+        uses: coroo/pytest-coverage-commentator@v1.0.2
         with:
-          GITHUB_TOKEN: ${{ github.token }}
-          MERGE_COVERAGE_FILES: true
-          MINIMUM_GREEN: 90
-          MINIMUM_ORANGE: 60
+        pytest-coverage: pytest-coverage.txt
+      # - name: Add coverage comment to Pull Requests
+      #   id: coverage_comment
+      #   uses: py-cov-action/python-coverage-comment-action@v3
+      #   with:
+      #     GITHUB_TOKEN: ${{ github.token }}
+      #     MERGE_COVERAGE_FILES: true
+      #     MINIMUM_GREEN: 90
+      #     MINIMUM_ORANGE: 60
 
 
   docs:
