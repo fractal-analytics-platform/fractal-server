@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 1.0.8
 
 * Fix handling of parallel-tasks errors in `FractalSlurmExecutor` (\#497).
 * Add test for custom tasks (\#500).
