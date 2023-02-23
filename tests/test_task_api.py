@@ -293,14 +293,14 @@ async def test_patch_task(
     debug(res, res.json())
     assert res.status_code == 403
 
-    # Test
+    # Test payload with `source`
     res = await registered_superuser_client.patch(
         f"{PREFIX}/{task.id}", json=update.dict(exclude_unset=True)
     )
     debug(res, res.json())
     assert res.status_code == 422
 
-    #
+    # Test successuful (superuser)
     res = await registered_superuser_client.patch(
         f"{PREFIX}/{task.id}",
         json=update.dict(exclude_unset=True, exclude={"source"}),
@@ -314,16 +314,16 @@ async def test_patch_task(
     assert res.json()["meta"] == NEW_META
     assert res.json()["source"] == old_source
 
+    # Test dictionaries update
     OTHER_DEFAULT_ARGS = {"key1": 42, "key100": 100}
     OTHER_META = {"key4": [4, 8, 15], "key0": [16, 23, 42]}
-
     second_update = TaskUpdate(
         default_args=OTHER_DEFAULT_ARGS,
         meta=OTHER_META,
     )
     res = await registered_superuser_client.patch(
         f"{PREFIX}/{task.id}",
-        json=second_update.dict(exclude_unset=True, exclude={"source"}),
+        json=second_update.dict(exclude_unset=True),
     )
     debug(res, res.json())
     assert res.status_code == 200
