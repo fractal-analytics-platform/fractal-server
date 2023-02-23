@@ -107,7 +107,7 @@ jobs:
       - name: pytest-coverage-commentator
         uses: coroo/pytest-coverage-commentator@v1.0.2
         with:
-        pytest-coverage: pytest-coverage.txt
+          pytest-coverage: pytest-coverage.txt
       # - name: Add coverage comment to Pull Requests
       #   id: coverage_comment
       #   uses: py-cov-action/python-coverage-comment-action@v3
