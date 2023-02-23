@@ -104,6 +104,9 @@ jobs:
         with:
           name: coverage-data
 
+      - name: Echo PWD
+        run : echo $PWD
+
       - name: Convert .coverage in xml
         run : coverage xml --data-file /home/runner/work/fractal-server/fractal-server/.coverage
 
