@@ -311,7 +311,7 @@ async def patch_task(
         else:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Invalid {key=}",
+                detail=f"Invalid {type(value)=} for {key=}",
             )
 
     await db.commit()
