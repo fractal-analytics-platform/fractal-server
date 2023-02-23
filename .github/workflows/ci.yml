@@ -96,7 +96,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 1
+          fetch-depth: 1000
           submodules: "recursive"
 
       - uses: actions/setup-python@v4
@@ -121,7 +121,7 @@ jobs:
           python -m coverage report
 
 
-      - name: coverage-data
+      - name: Coverage-data
         uses: orgoro/coverage@v3
         with:
             coverageFile: coverage.xml
