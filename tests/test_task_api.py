@@ -267,6 +267,7 @@ async def test_patch_task(
     MockCurrentUser,
 ):
     task = await task_factory(name="task")
+    old_source = task.source
     debug(task)
     NEW_NAME = "new name"
     NEW_INPUT_TYPE = "new input_type"
@@ -280,28 +281,30 @@ async def test_patch_task(
         input_type=NEW_INPUT_TYPE,
         output_type=NEW_OUTPUT_TYPE,
         command=NEW_COMMAND,
-        source=NEW_SOURCE,
         default_args=NEW_DEFAULT_ARGS,
         meta=NEW_META,
+        source=NEW_SOURCE,
     )
 
+    # Test non-superuser
     res = await registered_client.patch(
-        f"{PREFIX}/{task.id}", json=update.dict()
+        f"{PREFIX}/{task.id}", json=update.dict(exclude_unset=True)
     )
     debug(res, res.json())
     assert res.status_code == 403
 
+    # Test
     res = await registered_superuser_client.patch(
-        f"{PREFIX}/{task.id}", json=update.dict()
+        f"{PREFIX}/{task.id}", json=update.dict(exclude_unset=True)
     )
     debug(res, res.json())
     assert res.status_code == 422
 
-    update.source = None
+    #
     res = await registered_superuser_client.patch(
-        f"{PREFIX}/{task.id}", json=update.dict()
+        f"{PREFIX}/{task.id}",
+        json=update.dict(exclude_unset=True, exclude={"source"}),
     )
-    debug(res, res.json())
     assert res.status_code == 200
     assert res.json()["name"] == NEW_NAME
     assert res.json()["input_type"] == NEW_INPUT_TYPE
@@ -309,6 +312,7 @@ async def test_patch_task(
     assert res.json()["command"] == NEW_COMMAND
     assert res.json()["default_args"] == NEW_DEFAULT_ARGS
     assert res.json()["meta"] == NEW_META
+    assert res.json()["source"] == old_source
 
     OTHER_DEFAULT_ARGS = {"key1": 42, "key100": 100}
     OTHER_META = {"key4": [4, 8, 15], "key0": [16, 23, 42]}
@@ -318,7 +322,8 @@ async def test_patch_task(
         meta=OTHER_META,
     )
     res = await registered_superuser_client.patch(
-        f"{PREFIX}/{task.id}", json=second_update.dict()
+        f"{PREFIX}/{task.id}",
+        json=second_update.dict(exclude_unset=True, exclude={"source"}),
     )
     debug(res, res.json())
     assert res.status_code == 200
