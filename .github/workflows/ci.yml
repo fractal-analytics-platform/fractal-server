@@ -103,8 +103,9 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: coverage-data
+
       - name: Convert .coverage in xml
-        run : coverage xml --data-file coveraga-data
+        run : coverage xml --data-file coverage-data
 
       - name: pytest-coverage-commentator
         uses: orgoro/coverage@v3
