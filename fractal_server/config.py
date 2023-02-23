@@ -357,13 +357,23 @@ class Settings(BaseSettings):
 
         if self.FRACTAL_RUNNER_BACKEND == "slurm":
             info = f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
+
+            # Check that FRACTAL_SLURM_CONFIG_FILE exists
+            if not self.FRACTAL_SLURM_CONFIG_FILE.exists():
+                raise FractalConfigurationError(
+                    f"{info} but {str(self.FRACTAL_SLURM_CONFIG_FILE)} "
+                    "is missing"
+                )
+            # Check that sbatch command is available
             if not shutil.which("sbatch"):
                 raise FractalConfigurationError(
-                    f"{info}\nbut sbatch command not found."
+                    f"{info} but sbatch command not found."
                 )
+
+            # Check that squeue command is available
             if not shutil.which("squeue"):
                 raise FractalConfigurationError(
-                    f"{info}\nbut squeue command not found."
+                    f"{info} but squeue command not found."
                 )
 
 
