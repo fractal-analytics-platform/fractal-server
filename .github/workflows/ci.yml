@@ -96,7 +96,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 1000
+          fetch-depth: 1
           submodules: "recursive"
 
       - uses: actions/setup-python@v4
@@ -110,18 +110,6 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: coverage-data
-
-      # - name: Combine coverage
-      #   run: |
-      #     python -m coverage combine
-      #     python -m coverage xml
-      #     python -m coverage report
-
-      # - name: Coverage-data
-      #   uses: orgoro/coverage@v3
-      #   with:
-      #       coverageFile: coverage.xml
-      #       token: ${{ github.token }}
 
       - name: Add coverage comment to Pull Requests
         id: coverage_comment
