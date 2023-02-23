@@ -2,6 +2,7 @@
 
 # Unreleased
 
+* Update the endpoint to patch a `Task` (\#526).
 * Drop python 3.8 support (\#527).
 * If `FRACTAL_BACKEND_RUNNER=slurm`, include some configuration checks at server startup (\#529).
 
