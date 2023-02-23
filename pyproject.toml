@@ -13,7 +13,7 @@ license = "BSD-3-Clause"
 
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 python-dotenv = "^0.20.0"
 fastapi = "^0.89.1"
 sqlmodel = "^0.0.8"
