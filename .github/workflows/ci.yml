@@ -41,7 +41,7 @@ jobs:
       - name: Install poetry
         run: pipx install poetry==1.3.2
 
-      - name: Set up Python 3.9 (only needed to avoid issue \#498
+      - name: Set up Python 3.9 (only needed to avoid issue \#498)
         if: ${{ matrix.python-version != '3.9' }}
         uses: actions/setup-python@v4
         with:
