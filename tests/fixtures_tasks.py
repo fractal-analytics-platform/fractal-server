@@ -122,6 +122,11 @@ async def install_dummy_packages(tmp777_session_path, dummy_task_package):
     NOTE that the system python3 on the slurm containers (AKA /usr/bin/python3)
     is 3.9, and relink_python_interpreter will map to it. Therefore this
     fixture must always install dummy_task_package with this version.
+
+    FIXME: for how this is written, it requires that python3.9 and its venv
+    module are available on the machine that is running pytest (and then
+    fractal-server), see
+    https://github.com/fractal-analytics-platform/fractal-server/issues/498
     """
 
     from fractal_server.tasks.collection import (
