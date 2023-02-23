@@ -1,5 +1,9 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Drop python 3.8 support (\#527).
+
 # 1.0.8
 
 * Fix handling of parallel-tasks errors in `FractalSlurmExecutor` (\#497).
