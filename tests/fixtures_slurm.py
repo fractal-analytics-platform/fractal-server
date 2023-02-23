@@ -45,7 +45,6 @@ def docker_compose_file(pytestconfig, testdata_path: Path):
         tar.add(CODE_ROOT, arcname=TAR_ROOT, recursive=False)
         for name in [
             "pyproject.toml",
-            "poetry.lock",
             "README.md",
             "fractal_server",
         ]:
