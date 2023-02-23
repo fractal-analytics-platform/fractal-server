@@ -118,7 +118,10 @@ current_active_user = fastapi_users.current_user(active=True)
 async def current_active_superuser(user=Depends(current_active_user)):
     # See https://github.com/fastapi-users/fastapi-users/discussions/454
     if not user.is_superuser:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This action is restricted to superusers",
+        )
     return user
 
 
