@@ -121,11 +121,11 @@ async def dummy_task_package_invalid_manifest(testdata_path, tmp_path) -> Path:
 async def install_dummy_packages(tmp777_session_path, dummy_task_package):
     """
     NOTE that the system python3 on the slurm containers (AKA /usr/bin/python3)
-    is 3.8, and relink_python_interpreter will map to it. Therefore this
+    is 3.9, and relink_python_interpreter will map to it. Therefore this
     fixture must always install dummy_task_package with this version.
 
     Also note that the check_python_has_venv function will verify that
-    python3.8 (to be used for the tasks environment) has the venv module.
+    python3.9 (to be used for the tasks environment) has the venv module.
     """
 
     from fractal_server.tasks.collection import (
@@ -136,12 +136,12 @@ async def install_dummy_packages(tmp777_session_path, dummy_task_package):
 
     python_test_path = tmp777_session_path("check_python_has_venv")
     python_test_path.mkdir(exist_ok=True, parents=True)
-    check_python_has_venv("python3.8", python_test_path)
+    check_python_has_venv("python3.9", python_test_path)
 
     venv_path = tmp777_session_path("dummy")
     venv_path.mkdir(exist_ok=True, parents=True)
     task_pkg = _TaskCollectPip(
-        package=dummy_task_package.as_posix(), python_version="3.8"
+        package=dummy_task_package.as_posix(), python_version="3.9"
     )
 
     python_bin, package_root = await _create_venv_install_package(
@@ -187,10 +187,10 @@ def relink_python_interpreter(collect_packages):
             f"RELINK: Original status: {task_python=} -> {orig_python}"
         )
         task_python.unlink()
-        # NOTE that the docker container in the CI only has python3.8
+        # NOTE that the docker container in the CI only has python3.9
         # installed, therefore we explicitly hardcode this version here, to
         # make debugging easier
-        task_python.symlink_to("/usr/bin/python3.8")
+        task_python.symlink_to("/usr/bin/python3.9")
         logger.warning(
             f"RELINK: Updated status: {task_python=} -> "
             f"{os.readlink(task_python.as_posix())}"
