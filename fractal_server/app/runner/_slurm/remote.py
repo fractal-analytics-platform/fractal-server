@@ -18,10 +18,15 @@ import os
 import sys
 from typing import Dict
 from typing import List
+from typing import Literal
 from typing import Optional
+from typing import Tuple
 from typing import Type
+from typing import Union
 
 import cloudpickle
+
+from fractal_server import __VERSION__
 
 
 class ExceptionProxy:
@@ -46,6 +51,54 @@ class ExceptionProxy:
         self.tb: List[str] = tb
         self.args = args
         self.kwargs: Dict = kwargs
+
+
+class FractalVersionMismatch(RuntimeError):
+    """
+    Custom exception for version mismatch
+    """
+
+    pass
+
+
+def _check_versions_mismatch(
+    server_versions: Dict[
+        Literal["python", "fractal_server", "cloudpickle"],
+        Union[str, Tuple[int]],
+    ]
+):
+    """
+    Compare the server {python,cloudpickle,fractal_serve} versions with the
+    ones available to the current worker
+
+    Arguments:
+        server_versions:
+            The version used in the fractal-server instance that created the
+            cloudpickle file
+    """
+
+    server_python_version = server_versions["python"]
+    worker_python_version = sys.version_info[:3]
+    if worker_python_version != server_python_version:
+        raise FractalVersionMismatch(
+            f"{server_python_version=} but {worker_python_version=}"
+        )
+
+    server_cloudpickle_version = server_versions["cloudpickle"]
+    worker_cloudpickle_version = cloudpickle.__version__
+    if worker_cloudpickle_version != server_cloudpickle_version:
+        raise FractalVersionMismatch(
+            f"{server_cloudpickle_version=} but "
+            f"{worker_cloudpickle_version=}"
+        )
+
+    server_fractal_server_version = server_versions["fractal_server"]
+    worker_fractal_server_version = __VERSION__
+    if worker_fractal_server_version != server_fractal_server_version:
+        raise FractalVersionMismatch(
+            f"{server_fractal_server_version=} but "
+            f"{worker_fractal_server_version=}"
+        )
 
 
 def worker(
@@ -77,7 +130,9 @@ def worker(
     try:
         with open(in_fname, "rb") as f:
             indata = f.read()
-        fun, args, kwargs = cloudpickle.loads(indata)
+        server_versions, fun, args, kwargs = cloudpickle.loads(indata)
+        _check_versions_mismatch(server_versions)
+
         result = True, fun(*args, **kwargs)
         out = cloudpickle.dumps(result)
     except Exception as e:
