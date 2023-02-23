@@ -92,6 +92,7 @@ fractalctl = "fractal_server.__main__:run"
 [tool.coverage.run]
 branch = true
 parallel = true
+relative_files = true
 omit = ["tests/*", "fractal_server/app/runner/_parsl/*"]
 
 [[tool.mypy.overrides]]
