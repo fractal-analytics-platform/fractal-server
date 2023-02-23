@@ -59,14 +59,12 @@ jobs:
 
       - name: Test with pytest
         run: poetry run coverage run -m pytest tests/test_alive.py
-        env:
-          COVERAGE_FILE: ".coverage.${{ matrix.python-version }}"
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
         with:
           name: coverage-data
-          path: ".coverage.${{ matrix.python-version }}"
+          path: ".coverage*"
 
       - name: extract openapi schema
         env:
