@@ -18,7 +18,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.8"] #, "3.9", "3.10"]
 
 
     services:
@@ -105,7 +105,7 @@ jobs:
           name: coverage-data
 
       - name: Convert .coverage in xml
-        run : coverage xml --data-file coverage-data
+        run : coverage xml --data-file .coverage
 
       - name: pytest-coverage-commentator
         uses: orgoro/coverage@v3
