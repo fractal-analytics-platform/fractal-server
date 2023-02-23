@@ -369,7 +369,6 @@ class Settings(BaseSettings):
                 raise FractalConfigurationError(
                     f"{info} but sbatch command not found."
                 )
-
             # Check that squeue command is available
             if not shutil.which("squeue"):
                 raise FractalConfigurationError(
