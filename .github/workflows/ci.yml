@@ -38,7 +38,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 1000
+          fetch-depth: 1
           submodules: "recursive"
 
       - name: Install poetry
@@ -96,7 +96,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 1
+          fetch-depth: 1000
           submodules: "recursive"
 
       - uses: actions/setup-python@v4
