@@ -93,7 +93,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 1
+          fetch-depth: 1000
           submodules: "recursive"
 
       - uses: actions/setup-python@v4
@@ -108,17 +108,17 @@ jobs:
         with:
           name: coverage-data
 
-      - name: Combine coverage
-        run: |
-          python -m coverage combine
-          python -m coverage html --skip-covered --skip-empty
-          python -m coverage report
-
-      - name: Upload HTML report
-        uses: actions/upload-artifact@v3
+      - name: Add coverage comment to Pull Requests
+        id: coverage_comment
+        uses: py-cov-action/python-coverage-comment-action@v3
         with:
-          name: html-report
-          path: htmlcov
+          GITHUB_TOKEN: ${{ github.token }}
+          MERGE_COVERAGE_FILES: true
+          MINIMUM_GREEN: 90
+          MINIMUM_ORANGE: 60
+          ANNOTATE_MISSING_LINES: true
+          ANNOTATION_TYPE: notice
+
 
   docs:
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
@@ -132,12 +132,6 @@ jobs:
         with:
           fetch-depth: 1
           submodules: "recursive"
-
-      - name: Download data
-        uses: actions/download-artifact@v3
-        with:
-          name: html-report
-          path: htmlcov
 
       - name: Download openapi schema
         uses: actions/download-artifact@v3
