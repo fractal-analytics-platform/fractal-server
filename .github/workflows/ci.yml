@@ -6,8 +6,6 @@ on:
   pull_request:
     branches: ["main"]
 
-env:
-  GIT_TRACE: 2
 
 jobs:
 
@@ -18,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.9"] #, "3.10"]
+        python-version: ["3.9", "3.10"]
 
 
     services:
@@ -119,6 +117,8 @@ jobs:
           MERGE_COVERAGE_FILES: true
           MINIMUM_GREEN: 90
           MINIMUM_ORANGE: 60
+          ANNOTATE_MISSING_LINES: true
+          ANNOTATION_TYPE: notice
 
 
   docs:
