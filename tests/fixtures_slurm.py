@@ -43,7 +43,12 @@ def docker_compose_file(pytestconfig, testdata_path: Path):
     TAR_ROOT = CODE_ROOT.name
     with tarfile.open(TAR_FILE, "w:gz") as tar:
         tar.add(CODE_ROOT, arcname=TAR_ROOT, recursive=False)
-        for name in ["pyproject.toml", "README.md", "fractal_server"]:
+        for name in [
+            "pyproject.toml",
+            "poetry.lock",
+            "README.md",
+            "fractal_server",
+        ]:
             f = CODE_ROOT / name
             tar.add(f, arcname=f.relative_to(CODE_ROOT.parent))
 
