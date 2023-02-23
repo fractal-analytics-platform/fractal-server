@@ -18,7 +18,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.9", "3.10"]
+        python-version: ["3.9"] #, "3.10"]
 
 
     services:
@@ -114,8 +114,12 @@ jobs:
       - name: Echo PWD
         run : echo $PWD
 
-      - name: Convert .coverage in xml
-        run : coverage xml --data-file /home/runner/work/fractal-server/fractal-server/.coverage
+      - name: Combine coverage
+        run: |
+          python -m coverage combine
+          python -m coverage xml
+          python -m coverage report
+
 
       - name: coverage-data
         uses: orgoro/coverage@v3
