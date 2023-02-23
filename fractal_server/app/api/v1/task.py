@@ -293,8 +293,6 @@ async def patch_task(
     """
     Edit a specific task
     """
-    from devtools import debug
-
     if task_update.source:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -302,9 +300,7 @@ async def patch_task(
         )
 
     db_task = await db.get(Task, task_id)
-    debug(task_update)
     update = task_update.dict(exclude_unset=True)
-    debug(update)
     for key, value in update.items():
         if isinstance(value, str):
             setattr(db_task, key, value)
