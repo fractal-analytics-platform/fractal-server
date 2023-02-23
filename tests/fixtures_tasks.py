@@ -1,4 +1,5 @@
 import asyncio
+import sys
 from pathlib import Path
 from typing import Any
 from typing import Dict
@@ -125,7 +126,7 @@ async def install_dummy_packages(tmp777_session_path, dummy_task_package):
     fixture must always install dummy_task_package with this version.
 
     Also note that the check_python_has_venv function will verify that
-    python3.9 (to be used for the tasks environment) has the venv module.
+    sys.executable (to be used for the tasks environment) has the venv module.
     """
 
     from fractal_server.tasks.collection import (
@@ -136,12 +137,13 @@ async def install_dummy_packages(tmp777_session_path, dummy_task_package):
 
     python_test_path = tmp777_session_path("check_python_has_venv")
     python_test_path.mkdir(exist_ok=True, parents=True)
-    check_python_has_venv("python3.9", python_test_path)
+    check_python_has_venv(sys.executable, python_test_path)
 
     venv_path = tmp777_session_path("dummy")
     venv_path.mkdir(exist_ok=True, parents=True)
     task_pkg = _TaskCollectPip(
-        package=dummy_task_package.as_posix(), python_version="3.9"
+        package=dummy_task_package.as_posix(),
+        python_version=None,
     )
 
     python_bin, package_root = await _create_venv_install_package(
