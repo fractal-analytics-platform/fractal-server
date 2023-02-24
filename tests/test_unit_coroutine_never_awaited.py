@@ -18,7 +18,7 @@ async def test_fail_explicit_RuntimeWarning():
     This raises a "genunine" RuntimeWarning, which is included in
     filterwarnings and transformed into an error.
     """
-    raise RuntimeWarning("asd")
+    raise RuntimeWarning("Raised via raise RuntimeWarning")
 
 
 @pytest.mark.xfail()
