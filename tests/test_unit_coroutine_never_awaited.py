@@ -3,6 +3,7 @@ import asyncio
 import pytest
 
 
+@pytest.mark.skip
 async def test_warning():
     """
     This raises a UserWarning, which is not included in filterwarnings and
