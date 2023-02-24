@@ -14,6 +14,7 @@ This module provides a simple self-standing script that executes arbitrary
 python code received via pickled files on a cluster node.
 """
 import argparse
+import logging
 import os
 import sys
 from typing import Dict
@@ -80,8 +81,12 @@ def _check_versions_mismatch(
     server_python_version = server_versions["python"]
     worker_python_version = sys.version_info[:3]
     if worker_python_version != server_python_version:
-        raise FractalVersionMismatch(
-            f"{server_python_version=} but {worker_python_version=}"
+        # FIXME: turn this into an error, after fixing a broader CI issue, see
+        # https://github.com/fractal-analytics-platform/fractal-server/issues/375
+        logging.critical(
+            f"{server_python_version=} but {worker_python_version=}. "
+            "Note that cloudpickle is not guaranteed to correctly load "
+            "pickle files created with different python versions"
         )
 
     server_cloudpickle_version = server_versions["cloudpickle"]
@@ -179,8 +184,6 @@ if __name__ == "__main__":
         required=False,
     )
     parsed_args = parser.parse_args()
-    import logging
-
     logging.debug(f"{parsed_args=}")
 
     kwargs = dict(
