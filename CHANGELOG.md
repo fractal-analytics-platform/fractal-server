@@ -4,6 +4,7 @@
 
 * Drop python 3.8 support (\#527).
 * If `FRACTAL_BACKEND_RUNNER=slurm`, include some configuration checks at server startup (\#529).
+* Fail if `FRACTAL_SLURM_WORKER_PYTHON` has different versions of `fractal-server` or `cloudpickle` (\#533).
 
 # 1.0.8
 
