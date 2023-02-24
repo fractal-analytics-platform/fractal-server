@@ -37,6 +37,7 @@ from ._subprocess_run_as_user import _glob_as_user
 from ._subprocess_run_as_user import _path_exists_as_user
 from ._subprocess_run_as_user import _run_command_as_user
 from .wait_thread import FractalSlurmWaitThread
+from fractal_server import __VERSION__
 
 
 class SlurmJob:
@@ -382,8 +383,13 @@ class FractalSlurmExecutor(SlurmExecutor):
         job.stdout = self.get_slurm_stdout_file_path(prefix=job.file_prefix)
         job.stderr = self.get_slurm_stderr_file_path(prefix=job.file_prefix)
 
-        # Dump serialized function+args+kwargs to pickle file
-        funcser = cloudpickle.dumps((fun, args, kwargs))
+        # Dump serialized versions+function+args+kwargs to pickle file
+        versions = dict(
+            python=sys.version_info[:3],
+            cloudpickle=cloudpickle.__version__,
+            fractal_server=__VERSION__,
+        )
+        funcser = cloudpickle.dumps((versions, fun, args, kwargs))
         with open(job.input_pickle_file, "wb") as f:
             f.write(funcser)
 
