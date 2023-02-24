@@ -25,7 +25,7 @@
 | fractal\_server/app/runner/\_local/\_\_init\_\_.py                |       21 |        1 |        4 |        1 |     92% |       120 |
 | fractal\_server/app/runner/\_slurm/\_\_init\_\_.py                |       75 |        8 |       18 |        3 |     86% |117->120, 129-132, 180-181, 234, 239 |
 | fractal\_server/app/runner/\_slurm/\_subprocess\_run\_as\_user.py |       34 |        1 |       12 |        1 |     96% |        86 |
-| fractal\_server/app/runner/\_slurm/executor.py                    |      248 |       21 |       62 |        7 |     90% |113-114, 117-120, 229-237, 313, 346, 587-591, 629, 639-645, 682->684 |
+| fractal\_server/app/runner/\_slurm/executor.py                    |      250 |       21 |       62 |        7 |     90% |114-115, 118-121, 230-238, 314, 347, 593-597, 635, 645-651, 688->690 |
 | fractal\_server/app/runner/\_slurm/wait\_thread.py                |       31 |        3 |       12 |        0 |     93% |     61-64 |
 | fractal\_server/app/runner/common.py                              |      113 |       19 |       38 |       12 |     75% |125, 136, 141, 146, 149->152, 153, 166, 229-235, 242, 258, 265-276, 280, 303->305 |
 | fractal\_server/app/security/\_\_init\_\_.py                      |       79 |       13 |        8 |        1 |     79% |176-177, 194-235 |
@@ -46,7 +46,7 @@
 | fractal\_server/tasks/dummy.py                                    |       69 |       30 |       24 |        3 |     54% |99, 102-103, 129-179 |
 | fractal\_server/tasks/dummy\_parallel.py                          |       61 |       29 |       20 |        2 |     49% |97-98, 118-168 |
 | fractal\_server/utils.py                                          |       45 |        4 |       12 |        1 |     88% |34->33, 55-59 |
-|                                                         **TOTAL** | **2565** |  **341** |  **505** |   **88** | **83%** |           |
+|                                                         **TOTAL** | **2567** |  **341** |  **505** |   **88** | **83%** |           |
 
 
 ## Setup coverage badge
