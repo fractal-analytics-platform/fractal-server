@@ -10,6 +10,7 @@
 # <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
 # Institute for Biomedical Research and Pelkmans Lab from the University of
 # Zurich.
+import shutil
 from os import environ
 from os import getenv
 from os.path import abspath
@@ -352,6 +353,26 @@ class Settings(BaseSettings):
                 raise FractalConfigurationError(
                     f"{self.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW=} "
                     "not allowed"
+                )
+
+        if self.FRACTAL_RUNNER_BACKEND == "slurm":
+            info = f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
+
+            # Check that FRACTAL_SLURM_CONFIG_FILE exists
+            if not self.FRACTAL_SLURM_CONFIG_FILE.exists():
+                raise FractalConfigurationError(
+                    f"{info} but {str(self.FRACTAL_SLURM_CONFIG_FILE)} "
+                    "is missing"
+                )
+            # Check that sbatch command is available
+            if not shutil.which("sbatch"):
+                raise FractalConfigurationError(
+                    f"{info} but sbatch command not found."
+                )
+            # Check that squeue command is available
+            if not shutil.which("squeue"):
+                raise FractalConfigurationError(
+                    f"{info} but squeue command not found."
                 )
 
 

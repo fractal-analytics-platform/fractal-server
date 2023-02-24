@@ -50,7 +50,6 @@ nav:
   - Internals: internals/
   - Code reference: reference/
   - Changelog: changelog.md
-  - Coverage: coverage
   - Web API: openapi.md
   - Contribute: contribute.md
 
@@ -73,7 +72,4 @@ plugins:
             show_signature_annotations: false
             docstring_section_style: "table"
             filters: []
-  - coverage:
-      page_name: coverage
-      html_report_dir: htmlcov
   - render_swagger

@@ -1,6 +1,6 @@
 import asyncio
 import json
-from copy import deepcopy
+from copy import deepcopy  # noqa
 from pathlib import Path
 from shutil import copy as shell_copy
 from shutil import rmtree as shell_rmtree
@@ -39,6 +39,7 @@ from ...db import get_db
 from ...db import get_sync_db
 from ...models import State
 from ...models import Task
+from ...security import current_active_superuser
 from ...security import current_active_user
 from ...security import User
 
@@ -286,28 +287,31 @@ def get_task(
 async def patch_task(
     task_id: int,
     task_update: TaskUpdate,
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[TaskRead]:
     """
     Edit a specific task
     """
-
-    # FIXME add user-owned tasks
+    if task_update.source:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="patch_task endpoint cannot set `source`",
+        )
 
     db_task = await db.get(Task, task_id)
-
-    for key, value in task_update.dict(exclude_unset=True).items():
-        if key == "name":
+    update = task_update.dict(exclude_unset=True)
+    for key, value in update.items():
+        if isinstance(value, str):
             setattr(db_task, key, value)
-        elif key == "default_args":
-            current_default_args = deepcopy(db_task._arguments)
-            current_default_args.update(value)
-            setattr(db_task, key, current_default_args)
+        elif isinstance(value, dict):
+            current_dict = deepcopy(getattr(db_task, key))
+            current_dict.update(value)
+            setattr(db_task, key, current_dict)
         else:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="patch_task endpoint cannot set {key=}",
+                detail=f"Invalid {type(value)=} for {key=}",
             )
 
     await db.commit()
