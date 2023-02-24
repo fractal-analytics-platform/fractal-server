@@ -69,13 +69,17 @@ def _check_versions_mismatch(
     ]
 ):
     """
-    Compare the server {python,cloudpickle,fractal_serve} versions with the
+    Compare the server {python,cloudpickle,fractal_server} versions with the
     ones available to the current worker
 
     Arguments:
         server_versions:
             The version used in the fractal-server instance that created the
             cloudpickle file
+
+    Raises:
+        FractalVersionMismatch: If the cloudpickle or fractal_server versions
+                                do not match with the ones on the server
     """
 
     server_python_version = server_versions["python"]
