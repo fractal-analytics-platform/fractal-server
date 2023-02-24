@@ -1,6 +1,4 @@
 import asyncio
-import functools
-import warnings
 from os import environ
 from pathlib import Path
 
@@ -66,21 +64,6 @@ def tmp777_path(tmp_path):
         if "pytest" in parent.as_posix():
             parent.chmod(0o777)
     yield tmp_path
-
-
-def checkawait(my_test):
-    @functools.wraps(my_test)
-    async def wrapper(*args, **kwargs):
-        with pytest.warns(RuntimeWarning) as record:
-            await my_test(*args, **kwargs)
-            captured_warnings = record.list
-            if not captured_warnings:
-                warnings.warn("Harmless warning", RuntimeWarning)
-        for warning in captured_warnings:
-            if "never awaited" in warning.message.args[0]:
-                raise Exception(warning.message.args)
-
-    return wrapper
 
 
 from .fixtures_server import *  # noqa F403
