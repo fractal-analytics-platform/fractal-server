@@ -12,7 +12,7 @@ async def test_harmless_warning():
     warnings.warn("This is a dummy harmless warning, to be ignored")
 
 
-@pytest.mark.xfail()
+@pytest.mark.xfail(reason="This test must fail", strict=True)
 async def test_fail_explicit_RuntimeWarning():
     """
     This raises a "genunine" RuntimeWarning, which is included in
@@ -21,7 +21,7 @@ async def test_fail_explicit_RuntimeWarning():
     raise RuntimeWarning("Raised via raise RuntimeWarning")
 
 
-@pytest.mark.xfail()
+@pytest.mark.xfail(reason="This test must fail", strict=True)
 async def test_fail_implicit_RuntimeWarning():
     """
     This (indirectly) raises a RuntimeWarning because the coroutine 'sleep' was
