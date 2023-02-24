@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fractal-server"
-version = "1.0.7"
+version = "1.0.8"
 description = "Server component of the Fractal analytics platform"
 authors = [
     "Jacopo Nespolo <jacopo.nespolo@exact-lab.it>",
@@ -13,7 +13,7 @@ license = "BSD-3-Clause"
 
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 python-dotenv = "^0.20.0"
 fastapi = "^0.89.1"
 sqlmodel = "^0.0.8"
@@ -71,7 +71,7 @@ build-backend = "poetry.core.masonry.api"
 asyncio_mode = "auto"
 
 [tool.bumpver]
-current_version = "1.0.7"
+current_version = "1.0.8"
 version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true
@@ -92,6 +92,7 @@ fractalctl = "fractal_server.__main__:run"
 [tool.coverage.run]
 branch = true
 parallel = true
+relative_files = true
 omit = ["tests/*", "fractal_server/app/runner/_parsl/*"]
 
 [[tool.mypy.overrides]]
