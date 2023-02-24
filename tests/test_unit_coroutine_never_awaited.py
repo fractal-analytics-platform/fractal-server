@@ -1,15 +1,15 @@
 import asyncio
+import warnings
 
 import pytest
 
 
-@pytest.mark.skip
 async def test_warning():
     """
     This raises a UserWarning, which is not included in filterwarnings and
     therefore not transformed into an error.
     """
-    raise UserWarning("This is a dummy warning, to be ignored")
+    warnings.warn("This is a dummy warning, to be ignored")
 
 
 @pytest.mark.xfail()
