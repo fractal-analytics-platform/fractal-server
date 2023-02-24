@@ -4,12 +4,12 @@ import warnings
 import pytest
 
 
-async def test_warning():
+async def test_harmless_warning():
     """
     This raises a UserWarning, which is not included in filterwarnings and
     therefore not transformed into an error.
     """
-    warnings.warn("This is a dummy warning, to be ignored")
+    warnings.warn("This is a dummy harmless warning, to be ignored")
 
 
 @pytest.mark.xfail()
