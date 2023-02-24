@@ -86,7 +86,9 @@ def _check_versions_mismatch(
         logging.critical(
             f"{server_python_version=} but {worker_python_version=}. "
             "Note that cloudpickle is not guaranteed to correctly load "
-            "pickle files created with different python versions"
+            "pickle files created with different python versions. "
+            "Note, however, that if you reached this line it means that "
+            "the pickle file was likely loaded correctly."
         )
 
     server_cloudpickle_version = server_versions["cloudpickle"]
