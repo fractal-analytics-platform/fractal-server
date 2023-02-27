@@ -8,7 +8,6 @@ from fractal_server.app.models import Dataset
 from fractal_server.app.models import Project
 from fractal_server.app.models import Resource
 
-
 PREFIX = "/api/v1/project"
 
 
@@ -52,7 +51,7 @@ async def test_project_get(client, db, project_factory, MockCurrentUser):
 async def test_project_creation(app, client, MockCurrentUser, db):
     payload = dict(
         name="new project",
-        project_dir="/some/path/",
+        project_dir="/tmp",
     )
     res = await client.post(f"{PREFIX}/", json=payload)
     data = res.json()
@@ -72,7 +71,7 @@ async def test_project_creation_name_constraint(
 ):
     payload = dict(
         name="new project",
-        project_dir="/some/path/",
+        project_dir="/tmp",
     )
     res = await client.post(f"{PREFIX}/", json=payload)
     assert res.status_code == 401
@@ -252,7 +251,7 @@ async def test_delete_project(client, MockCurrentUser, db):
 
         # Create a project
         res = await client.post(
-            f"{PREFIX}/", json=dict(name="name", project_dir="project dir")
+            f"{PREFIX}/", json=dict(name="name", project_dir="/tmp")
         )
         p = res.json()
 
@@ -527,5 +526,43 @@ async def test_project_apply_failures(
             f"{PREFIX}/apply/",
             json=bug5,
         )
+        debug(res.json())
+        assert res.status_code == 422
+
+
+async def test_create_project(
+    db,
+    client,
+    MockCurrentUser,
+):
+    async with MockCurrentUser(persist=True):
+        # Payload without `project_dir`
+        wrong_payload = {"name": "project name"}
+        res = await client.post(f"{PREFIX}/", json=wrong_payload)
+        debug(res.json())
+        assert res.status_code == 422
+        # Payload without `name`
+        wrong_payload2 = {"project_dir": "/tmp"}
+        res = await client.post(f"{PREFIX}/", json=wrong_payload2)
+        debug(res.json())
+        assert res.status_code == 422
+        # Payload with abs path and existing dir
+        payload = {"name": "project name", "project_dir": "/tmp"}
+        res = await client.post(f"{PREFIX}/", json=payload)
+        debug(res.json())
+        assert res.status_code == 201
+        # Payload with non abs path
+        payload = {"name": "project name", "project_dir": "../tmp"}
+        res = await client.post(f"{PREFIX}/", json=payload)
+        debug(res.json())
+        assert res.status_code == 422
+        # Payload with abs path and non existing dir
+        payload = {"name": "project name", "project_dir": "/abc"}
+        res = await client.post(f"{PREFIX}/", json=payload)
+        debug(res.json())
+        assert res.status_code == 422
+        # Payload with abs path of a file
+        payload = {"name": "project name", "project_dir": "/bin/bash"}
+        res = await client.post(f"{PREFIX}/", json=payload)
         debug(res.json())
         assert res.status_code == 422
