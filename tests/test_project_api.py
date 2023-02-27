@@ -8,7 +8,6 @@ from fractal_server.app.models import Dataset
 from fractal_server.app.models import Project
 from fractal_server.app.models import Resource
 
-
 PREFIX = "/api/v1/project"
 
 
@@ -52,7 +51,7 @@ async def test_project_get(client, db, project_factory, MockCurrentUser):
 async def test_project_creation(app, client, MockCurrentUser, db):
     payload = dict(
         name="new project",
-        project_dir="/some/path/",
+        project_dir="/tmp",
     )
     res = await client.post(f"{PREFIX}/", json=payload)
     data = res.json()
@@ -72,7 +71,7 @@ async def test_project_creation_name_constraint(
 ):
     payload = dict(
         name="new project",
-        project_dir="/some/path/",
+        project_dir="/tmp",
     )
     res = await client.post(f"{PREFIX}/", json=payload)
     assert res.status_code == 401
@@ -252,7 +251,7 @@ async def test_delete_project(client, MockCurrentUser, db):
 
         # Create a project
         res = await client.post(
-            f"{PREFIX}/", json=dict(name="name", project_dir="project dir")
+            f"{PREFIX}/", json=dict(name="name", project_dir="/tmp")
         )
         p = res.json()
 
