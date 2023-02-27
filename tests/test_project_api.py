@@ -529,3 +529,41 @@ async def test_project_apply_failures(
         )
         debug(res.json())
         assert res.status_code == 422
+
+
+async def test_wrong_payload(
+    db,
+    client,
+    MockCurrentUser,
+):
+    async with MockCurrentUser(persist=True):
+        # Payload without `project_dir`
+        wrong_payload = {"name": "project name"}
+        res = await client.post(f"{PREFIX}/", json=wrong_payload)
+        debug(res.json())
+        assert res.status_code == 422
+        # Payload without `name`
+        wrong_payload2 = {"project_dir": "/tmp"}
+        res = await client.post(f"{PREFIX}/", json=wrong_payload2)
+        debug(res.json())
+        assert res.status_code == 422
+        # Payload with abs path and existing dir
+        payload = {"name": "project name", "project_dir": "/tmp"}
+        res = await client.post(f"{PREFIX}/", json=payload)
+        debug(res.json())
+        assert res.status_code == 201
+        # Payload with non abs path
+        payload = {"name": "project name", "project_dir": "../tmp"}
+        res = await client.post(f"{PREFIX}/", json=payload)
+        debug(res.json())
+        assert res.status_code == 422
+        # Payload with abs path and non existing dir
+        payload = {"name": "project name", "project_dir": "/abc"}
+        res = await client.post(f"{PREFIX}/", json=payload)
+        debug(res.json())
+        assert res.status_code == 422
+        # Payload with abs path of a file
+        payload = {"name": "project name", "project_dir": "/bin/bash"}
+        res = await client.post(f"{PREFIX}/", json=payload)
+        debug(res.json())
+        assert res.status_code == 422

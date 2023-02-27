@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 from pathlib import Path
 from typing import List
 from typing import Optional
@@ -152,6 +153,30 @@ async def create_project(
     """
     Create new poject
     """
+
+    # Check that project_dir is an absolute path
+    if not os.path.isabs(project.project_dir):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Project dir ({project.project_dir}) "
+                "is not an absolute path"
+            ),
+        )
+    # Check that project_dir is an existing path
+    if not os.path.exists(project.project_dir):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(f"Project dir ({project.project_dir}) does not exist"),
+        )
+    # Check that project_dir is directory path
+    if not os.path.isdir(project.project_dir):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Project dir ({project.project_dir}) " "is not a directory."
+            ),
+        )
 
     # Check that there is no project with the same user and name
     stm = (
