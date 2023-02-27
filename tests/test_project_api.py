@@ -531,7 +531,7 @@ async def test_project_apply_failures(
         assert res.status_code == 422
 
 
-async def test_wrong_payload(
+async def test_create_project(
     db,
     client,
     MockCurrentUser,

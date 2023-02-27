@@ -167,15 +167,13 @@ async def create_project(
     if not os.path.exists(project.project_dir):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(f"Project dir ({project.project_dir}) does not exist"),
+            detail=(f"Project dir {project.project_dir} does not exist"),
         )
     # Check that project_dir is directory path
     if not os.path.isdir(project.project_dir):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                f"Project dir ({project.project_dir}) " "is not a directory."
-            ),
+            detail=(f"Project dir {project.project_dir} is not a directory."),
         )
 
     # Check that there is no project with the same user and name
