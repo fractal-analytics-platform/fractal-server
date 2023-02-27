@@ -159,8 +159,7 @@ async def create_project(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
-                f"Project dir ({project.project_dir}) "
-                "is not an absolute path"
+                f"Project dir {project.project_dir} is not an absolute path"
             ),
         )
     # Check that project_dir is an existing path
