@@ -15,6 +15,7 @@ This module only contains a dummy task, to be used in tests of fractal-server
 """
 import json
 import logging
+import os
 import time
 from datetime import datetime
 from datetime import timezone
@@ -23,8 +24,6 @@ from pathlib import Path
 from sys import stdout
 from typing import Any
 from typing import Dict
-from typing import Iterable
-from typing import List
 from typing import Optional
 
 from pydantic import BaseModel
@@ -40,8 +39,8 @@ logger = logging.getLogger(__name__)
 
 def dummy(
     *,
-    input_paths: Iterable[Path],
-    output_path: Path,
+    input_paths: list[str],
+    output_path: str,
     metadata: Optional[Dict[str, Any]] = None,
     # arguments of this task
     message: str,
@@ -81,7 +80,9 @@ def dummy(
         metadata_update:
             A dictionary that will update the metadata
     """
-    logger.info("ENTERING dummy task")
+    logger.info("[dummy] ENTERING")
+    logger.info(f"[dummy] {input_paths=}")
+    logger.info(f"[dummy] {output_path=}")
 
     if raise_error:
         raise ValueError(message)
@@ -89,38 +90,35 @@ def dummy(
     payload = dict(
         task="DUMMY TASK",
         timestamp=datetime.now(timezone.utc).isoformat(),
-        input_paths=[p.as_posix() for p in input_paths],
-        output_path=output_path.as_posix(),
+        input_paths=input_paths,
+        output_path=output_path,
         metadata=metadata,
         message=message,
     )
 
-    if not output_path.parent.is_dir():
-        output_path.parent.mkdir()
-
-    if not output_path.as_posix().endswith(".json"):
-        filename_out = f"{index}.result.json"
-        out_fullpath = output_path / filename_out
-    else:
-        out_fullpath = output_path
+    # Create output folder and set output file path
+    if not os.path.isdir(output_path):
+        os.makedirs(output_path, exist_ok=True)
+    filename_out = f"{index}.result.json"
+    out_fullpath = Path(output_path) / filename_out
 
     try:
-        with open(out_fullpath, "r") as fin:
+        with out_fullpath.open("r") as fin:
             data = json.load(fin)
     except (JSONDecodeError, FileNotFoundError):
         data = []
     data.append(payload)
-    with open(out_fullpath, "w") as fout:
+    with out_fullpath.open("w") as fout:
         json.dump(data, fout, indent=2)
 
     # Sleep
-    logger.info(f"Now starting {sleep_time}-seconds sleep")
+    logger.info(f"[dummy] Now starting {sleep_time}-seconds sleep")
     time.sleep(sleep_time)
 
     # Update metadata
     metadata_update = dict(dummy=f"dummy {index}", index=["0", "1", "2"])
 
-    logger.info("EXITING dummy task")
+    logger.info("[dummy] EXITING")
 
     return metadata_update
 
@@ -136,8 +134,8 @@ if __name__ == "__main__":
         the correct type required by the task.
         """
 
-        input_paths: List[Path]
-        output_path: Path
+        input_paths: list[str]
+        output_path: str
         metadata: Optional[Dict[str, Any]] = None
         message: str
         index: int = 0
