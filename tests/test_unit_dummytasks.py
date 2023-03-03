@@ -2,7 +2,6 @@ import asyncio
 import json
 from pathlib import Path
 
-import pytest
 from devtools import debug
 
 from fractal_server import tasks as tasks_package
@@ -86,18 +85,6 @@ async def test_dummy_process_call(tmp_path):
     debug(data)
 
 
-def test_dummy_fail_direct_call(tmp_path):
-    out_path = tmp_path / "out.json"
-    with pytest.raises(ValueError):
-        dummy(
-            input_paths=[tmp_path],
-            output_path=out_path,
-            metadata={"before": "test"},
-            message=ERROR_MESSAGE,
-            raise_error=True,
-        )
-
-
 async def test_dummy_fail_process_call(tmp_path):
     out_path = tmp_path / "output"
     args = dict(
@@ -149,22 +136,6 @@ def test_dummy_parallel_direct_call(tmp_path):
             data = json.load(fin)
         assert out_file.name == f'{data["component"]}.result.json'
         assert data["message"] == FIRST_TEST_MESSAGE
-
-
-def test_dummy_parallel_fail_direct_call(tmp_path):
-    list_components = ["A", "B", "C"]
-    out_path = tmp_path / "output"
-
-    for component in list_components:
-        with pytest.raises(ValueError):
-            dummy_parallel(
-                input_paths=[str(tmp_path)],
-                output_path=str(out_path),
-                component=component,
-                metadata={"before": "test"},
-                message=ERROR_MESSAGE,
-                raise_error=True,
-            )
 
 
 def test_manifest_validation():
