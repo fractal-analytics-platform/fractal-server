@@ -33,7 +33,7 @@
 | fractal\_server/common/schemas/\_\_init\_\_.py                    |        8 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/common/schemas/applyworkflow.py                   |       26 |        3 |        0 |        0 |     88% |     51-53 |
 | fractal\_server/common/schemas/manifest.py                        |       29 |        1 |        2 |        1 |     94% |        95 |
-| fractal\_server/common/schemas/project.py                         |       57 |        4 |        4 |        1 |     89% |42-44, 100 |
+| fractal\_server/common/schemas/project.py                         |       46 |        3 |        2 |        0 |     90% |     41-43 |
 | fractal\_server/common/schemas/state.py                           |       18 |        3 |        0 |        0 |     83% |     34-36 |
 | fractal\_server/common/schemas/task.py                            |       66 |        2 |        6 |        2 |     94% |  113, 117 |
 | fractal\_server/common/schemas/user.py                            |       10 |        0 |        0 |        0 |    100% |           |
@@ -43,10 +43,10 @@
 | fractal\_server/syringe.py                                        |       30 |        2 |        2 |        0 |     94% |     94-95 |
 | fractal\_server/tasks/\_\_init\_\_.py                             |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/tasks/collection.py                               |      173 |        8 |       52 |       12 |     91% |143, 144->151, 170, 177-179, 215->exit, 234->258, 240->exit, 243->exit, 249->exit, 315, 333, 437->exit, 446 |
-| fractal\_server/tasks/dummy.py                                    |       69 |       30 |       24 |        3 |     54% |99, 102-103, 129-179 |
-| fractal\_server/tasks/dummy\_parallel.py                          |       61 |       29 |       20 |        2 |     49% |97-98, 118-168 |
+| fractal\_server/tasks/dummy.py                                    |       68 |       29 |       20 |        4 |     51% |88, 106->110, 107, 127-177 |
+| fractal\_server/tasks/dummy\_parallel.py                          |       63 |       30 |       20 |        3 |     48% |86, 99-100, 121-171 |
 | fractal\_server/utils.py                                          |       45 |        4 |       12 |        1 |     88% |34->33, 55-59 |
-|                                                         **TOTAL** | **2574** |  **341** |  **511** |   **88** | **83%** |           |
+|                                                         **TOTAL** | **2564** |  **340** |  **505** |   **89** | **83%** |           |
 
 
 ## Setup coverage badge
