@@ -2,6 +2,7 @@
 
 # Unreleased
 
+* **BREAKING**: Align with new tasks interface in `fractal-tasks-core>=0.8.0` (\#544).
 * Update the endpoint to patch a `Task` (\#526).
 * Drop python 3.8 support (\#527).
 * If `FRACTAL_BACKEND_RUNNER=slurm`, include some configuration checks at server startup (\#529).
