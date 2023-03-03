@@ -97,8 +97,8 @@ async def test_runner(
     )
     kwargs = dict(
         workflow=wf,
-        input_paths=[workflow_dir / "*.txt"],
-        output_path=tmp777_path / "out.json",  # OK 777 here
+        input_paths=[str(workflow_dir)],
+        output_path=str(tmp777_path),  # OK 777 here
         input_metadata={},
         logger_name=logger_name,
         workflow_dir=workflow_dir,

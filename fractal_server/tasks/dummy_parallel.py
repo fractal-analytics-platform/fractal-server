@@ -16,6 +16,7 @@ components), to be used in tests of fractal-server
 """
 import json
 import logging
+import os
 import time
 from datetime import datetime
 from datetime import timezone
@@ -23,8 +24,6 @@ from pathlib import Path
 from sys import stdout
 from typing import Any
 from typing import Dict
-from typing import Iterable
-from typing import List
 from typing import Optional
 
 from pydantic import BaseModel
@@ -38,8 +37,8 @@ logger = logging.getLogger(__name__)
 
 def dummy_parallel(
     *,
-    input_paths: Iterable[Path],
-    output_path: Path,
+    input_paths: list[str],
+    output_path: str,
     component: str,
     metadata: Optional[Dict[str, Any]] = None,
     # arguments of this task
@@ -79,35 +78,39 @@ def dummy_parallel(
         metadata_update:
             A dictionary that will update the metadata
     """
-    logger.info("ENTERING dummy_parallel task")
+    logger.info("[dummy_parallel] ENTERING")
+    logger.info(f"[dummy_parallel] {input_paths=}")
+    logger.info(f"[dummy_parallel] {output_path=}")
+
     if raise_error:
         raise ValueError(message)
 
     payload = dict(
         task="DUMMY TASK",
         timestamp=datetime.now(timezone.utc).isoformat(),
-        input_paths=[p.as_posix() for p in input_paths],
-        output_path=output_path.as_posix(),
+        input_paths=input_paths,
+        output_path=output_path,
         metadata=metadata,
         component=component,
         message=message,
     )
 
     if sleep_time:
-        logger.info(f"Now let's sleep {sleep_time=} seconds")
+        logger.info(f"[dummy_parallel] Now let's sleep {sleep_time=} seconds")
         time.sleep(sleep_time)
 
-    # Create folder, if missing
-    output_path.parent.mkdir(exist_ok=True)
-
-    # Write output to out_fullpath
+    # Create folder output and set output file path
+    if not os.path.isdir(output_path):
+        os.makedirs(output_path, exist_ok=True)
     safe_component = component.replace(" ", "_").replace("/", "_")
     safe_component = safe_component.replace(".", "_")
-    out_fullpath = output_path.parent / f"{safe_component}.result.json"
+    out_fullpath = str(Path(output_path) / f"{safe_component}.result.json")
+
+    # Write output
     with open(out_fullpath, "w") as fout:
         json.dump(payload, fout, indent=2, sort_keys=True)
 
-    logger.info("EXITING dummy_parallel task")
+    logger.info("[dummy_parallel] EXITING")
 
     # Return empty metadata, since the "history" will be filled by fractal
     metadata_update: Dict = {}
@@ -125,8 +128,8 @@ if __name__ == "__main__":
         the correct type required by the task.
         """
 
-        input_paths: List[Path]
-        output_path: Path
+        input_paths: list[str]
+        output_path: str
         metadata: Optional[Dict[str, Any]] = None
         component: str
         message: str
