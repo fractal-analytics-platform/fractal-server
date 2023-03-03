@@ -1,7 +1,8 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 1.1.0
 
+* Align with new tasks interface in `fractal-tasks-core>=0.8.0`, and remove `glob_pattern` column from `resource` database table (\#544).
 * Update the endpoint to patch a `Task` (\#526).
 * Drop python 3.8 support (\#527).
 * If `FRACTAL_BACKEND_RUNNER=slurm`, include some configuration checks at server startup (\#529).

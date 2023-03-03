@@ -59,7 +59,7 @@ class Dataset(_DatasetBase, table=True):
 
     @property
     def paths(self) -> List[Path]:
-        return [r.glob_path for r in self.resource_list]
+        return [r.path for r in self.resource_list]
 
 
 class Project(_ProjectBase, table=True):

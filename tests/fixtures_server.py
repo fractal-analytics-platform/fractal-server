@@ -397,9 +397,7 @@ async def resource_factory(db, testdata_path):
         """
         Add a new resorce to dataset
         """
-        defaults = dict(
-            path=(testdata_path / "png").as_posix(), glob_pattern="*.png"
-        )
+        defaults = dict(path=(testdata_path / "png").as_posix())
         defaults.update(kwargs)
         resource = Resource(dataset_id=dataset.id, **defaults)
         db.add(resource)
