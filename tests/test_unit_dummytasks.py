@@ -18,17 +18,18 @@ ERROR_MESSAGE = "This is an error message"
 
 
 def test_dummy_direct_call(tmp_path):
-    out_path = tmp_path / "out.json"
+    out_path = tmp_path / "output"
     metadata_update = dummy(
-        input_paths=[tmp_path],
-        output_path=out_path,
+        input_paths=[str(tmp_path)],
+        output_path=str(out_path),
         metadata={"before": "test"},
         message=FIRST_TEST_MESSAGE,
         index=0,
     )
     assert out_path.exists()
     assert metadata_update == {"dummy": "dummy 0", "index": ["0", "1", "2"]}
-    with open(out_path, "r") as f:
+    debug(out_path)
+    with (out_path / "0.result.json").open("r") as f:
         data = json.load(f)
     debug(data)
 
@@ -37,32 +38,32 @@ def test_dummy_direct_call(tmp_path):
 
     # Second call
     metadata_update = dummy(
-        input_paths=[tmp_path],
-        output_path=out_path,
+        input_paths=[str(tmp_path)],
+        output_path=str(out_path),
         metadata={"before": "test"},
         message=SECOND_TEST_MESSAGE,
         index=1,
     )
     assert metadata_update == {"dummy": "dummy 1", "index": ["0", "1", "2"]}
-    with open(out_path, "r") as f:
+    with (out_path / "1.result.json").open("r") as f:
         data = json.load(f)
     debug(data)
 
-    assert len(data) == 2
-    assert data[1]["message"] == SECOND_TEST_MESSAGE
+    assert len(data) == 1
+    assert data[0]["message"] == SECOND_TEST_MESSAGE
 
 
 async def test_dummy_process_call(tmp_path):
-    args_file = tmp_path / "args.json"
-    out_path = tmp_path / "out.json"
+    out_path = tmp_path / "output"
     args = dict(
-        input_paths=[tmp_path.as_posix()],
-        output_path=out_path.as_posix(),
+        input_paths=[str(tmp_path)],
+        output_path=str(out_path),
         metadata={"before": "test"},
         message=FIRST_TEST_MESSAGE,
         index=0,
     )
-    with open(args_file, "w") as fargs:
+    args_file = tmp_path / "args.json"
+    with args_file.open("w") as fargs:
         json.dump(args, fargs)
 
     cmd = f"python {dummy_module.__file__} -j {args_file}"
@@ -80,7 +81,7 @@ async def test_dummy_process_call(tmp_path):
 
     assert out_path.exists()
     assert metadata_update == {"dummy": "dummy 0", "index": ["0", "1", "2"]}
-    with open(out_path, "r") as f:
+    with (out_path / "0.result.json").open("r") as f:
         data = json.load(f)
     debug(data)
 
@@ -98,16 +99,16 @@ def test_dummy_fail_direct_call(tmp_path):
 
 
 async def test_dummy_fail_process_call(tmp_path):
-    args_file = tmp_path / "args.json"
-    out_path = tmp_path / "out.json"
+    out_path = tmp_path / "output"
     args = dict(
-        input_paths=[tmp_path.as_posix()],
-        output_path=out_path.as_posix(),
+        input_paths=[str(tmp_path)],
+        output_path=str(out_path),
         metadata={"before": "test"},
         message=ERROR_MESSAGE,
         raise_error=True,
     )
-    with open(args_file, "w") as fargs:
+    args_file = tmp_path / "args.json"
+    with args_file.open("w") as fargs:
         json.dump(args, fargs)
 
     cmd = f"python {dummy_module.__file__} -j {args_file}"
@@ -126,20 +127,20 @@ async def test_dummy_fail_process_call(tmp_path):
 
 def test_dummy_parallel_direct_call(tmp_path):
     list_components = ["A", "B", "C"]
-    out_path = tmp_path / "*.json"
+    out_path = tmp_path / "output"
 
     for component in list_components:
         metadata_update = dummy_parallel(
-            input_paths=[tmp_path],
-            output_path=out_path,
+            input_paths=[str(tmp_path)],
+            output_path=str(out_path),
             component=component,
             metadata={"before": "test"},
             message=FIRST_TEST_MESSAGE,
         )
         assert not metadata_update
 
-    assert out_path.parent.exists()
-    out_files = list(out_path.parent.glob("*"))
+    assert out_path.exists()
+    out_files = list(out_path.glob("*"))
     debug(out_files)
     assert len(out_files) == len(list_components)
 
@@ -152,13 +153,13 @@ def test_dummy_parallel_direct_call(tmp_path):
 
 def test_dummy_parallel_fail_direct_call(tmp_path):
     list_components = ["A", "B", "C"]
-    out_path = tmp_path / "*.json"
+    out_path = tmp_path / "output"
 
     for component in list_components:
         with pytest.raises(ValueError):
             dummy_parallel(
-                input_paths=[tmp_path],
-                output_path=out_path,
+                input_paths=[str(tmp_path)],
+                output_path=str(out_path),
                 component=component,
                 metadata={"before": "test"},
                 message=ERROR_MESSAGE,
