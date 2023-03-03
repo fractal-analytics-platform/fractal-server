@@ -61,8 +61,8 @@ def test_call_single_task(tmp_path):
         level=logging.DEBUG,
     )
     task_pars = TaskParameters(
-        input_paths=[tmp_path],
-        output_path=tmp_path,
+        input_paths=[str(tmp_path)],
+        output_path=str(tmp_path),
         metadata={},
     )
 
@@ -101,8 +101,8 @@ def test_recursive_task_submission_step0(tmp_path):
         level=logging.DEBUG,
     )
     task_pars = TaskParameters(
-        input_paths=[tmp_path],
-        output_path=tmp_path,
+        input_paths=[str(tmp_path)],
+        output_path=str(tmp_path),
         metadata={},
     )
 
@@ -145,10 +145,10 @@ def test_recursive_parallel_task_submission_step0(tmp_path):
         log_file_path=tmp_path / "job.log",
         level=logging.DEBUG,
     )
-    output_path = tmp_path / "output/*.json"
+    output_path = tmp_path / "output/"
     task_pars = TaskParameters(
-        input_paths=[tmp_path],
-        output_path=output_path,
+        input_paths=[str(tmp_path)],
+        output_path=str(output_path),
         metadata={"index": LIST_INDICES},
     )
 
@@ -168,8 +168,8 @@ def test_recursive_parallel_task_submission_step0(tmp_path):
     close_job_logger(job_logger)
 
     # Validate results
-    assert output_path.parent.exists()
-    output_files = list(output_path.parent.glob("*"))
+    assert output_path.exists()
+    output_files = list(output_path.glob("*"))
     debug(output_files)
     assert len(output_files) == len(LIST_INDICES)
 
@@ -217,8 +217,8 @@ def test_recursive_task_submission_inductive_step(tmp_path):
         level=logging.DEBUG,
     )
     task_pars = TaskParameters(
-        input_paths=[tmp_path],
-        output_path=tmp_path / "output.json",
+        input_paths=[str(tmp_path)],
+        output_path=str(tmp_path),
         metadata=METADATA_0,
     )
 
@@ -234,12 +234,14 @@ def test_recursive_task_submission_inductive_step(tmp_path):
 
     output = res.result()
     debug(output)
-    with open(output.output_path, "r") as f:
+    with (tmp_path / "0.result.json").open("r") as f:
         data = json.load(f)
-    debug(data)
-    assert len(data) == 2
-    assert data[0]["metadata"] == METADATA_0
-    assert data[1]["metadata"] == METADATA_1
+        debug(data)
+        assert data[0]["metadata"] == METADATA_0
+    with (tmp_path / "1.result.json").open("r") as f:
+        data = json.load(f)
+        debug(data)
+        assert data[0]["metadata"] == METADATA_1
 
 
 @pytest.mark.parametrize("max_tasks", [None, 1])
@@ -274,7 +276,7 @@ def test_call_parallel_task_max_tasks(
 
     # Prepare task arguments (both as TaskParameters and as a dummy Future)
     task_pars = TaskParameters(
-        input_paths=[tmp_path],
+        input_paths=[str(tmp_path)],
         output_path=tmp_path,
         metadata=dict(index=["0", "1"]),
     )
@@ -304,15 +306,17 @@ def test_call_parallel_task_max_tasks(
         first_log_task_1 = f.readlines()[0]
     debug(first_log_task_0)
     debug(first_log_task_1)
-    assert "; INFO; ENTERING" in first_log_task_0
-    assert "; INFO; ENTERING" in first_log_task_1
+    LOG_SEPARATOR = "INFO; [dummy_parallel] ENTERING"
+    assert LOG_SEPARATOR in first_log_task_0
+    assert LOG_SEPARATOR in first_log_task_1
     # Parse times
-    fmt = "%Y-%m-%d %H:%M:%S,%f"
+    fmt = "%Y-%m-%d %H:%M:%S,%f; "
+    debug(first_log_task_0.split(LOG_SEPARATOR)[0])
     time_start_task_0 = datetime.datetime.strptime(
-        first_log_task_0.split("; INFO; ENTERING")[0], fmt
+        first_log_task_0.split(LOG_SEPARATOR)[0], fmt
     )
     time_start_task_1 = datetime.datetime.strptime(
-        first_log_task_1.split("; INFO; ENTERING")[0], fmt
+        first_log_task_1.split(LOG_SEPARATOR)[0], fmt
     )
     debug(time_start_task_0)
     debug(time_start_task_1)

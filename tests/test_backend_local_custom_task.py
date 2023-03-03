@@ -86,7 +86,6 @@ async def test_full_workflow(
             f"{PREFIX}/project/{project_id}/{input_dataset_id}",
             json={
                 "path": (testdata_path / "png").as_posix(),
-                "glob_pattern": "*.png",
             },
         )
         debug(res.json())
@@ -108,7 +107,7 @@ async def test_full_workflow(
 
         res = await client.post(
             f"{PREFIX}/project/{project_id}/{output_dataset['id']}",
-            json=dict(path=tmp777_path.as_posix(), glob_pattern="out.json"),
+            json=dict(path=tmp777_path.as_posix()),
         )
         out_resource = res.json()
         debug(out_resource)

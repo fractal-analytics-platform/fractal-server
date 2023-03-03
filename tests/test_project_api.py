@@ -137,7 +137,7 @@ async def test_add_dataset(app, client, MockCurrentUser, db):
 
         # ADD RESOURCE TO DATASET
 
-        payload = dict(path="/some/absolute/path", glob_pattern="*.png")
+        payload = dict(path="/some/absolute/path")
         res = await client.post(
             f"{PREFIX}/{project_id}/{dataset['id']}",
             json=payload,
@@ -232,7 +232,7 @@ async def test_add_dataset_local_path_error(app, client, MockCurrentUser, db):
 
         # ADD WRONG RESOURCE TO DATASET
 
-        payload = dict(path="some/local/path", glob_pattern="*.png")
+        payload = dict(path="some/local/path")
         debug(payload["path"])
 
         res = await client.post(
@@ -325,7 +325,7 @@ async def test_delete_dataset(
         assert prj_dict["dataset_list"][1]["id"] in ds_ids
 
         # Add a resource to verify that the cascade works
-        payload = dict(path="/some/absolute/path", glob_pattern="*.png")
+        payload = dict(path="/some/absolute/path")
         res = await client.post(
             f"{PREFIX}/{prj.id}/{ds0.id}",
             json=payload,
