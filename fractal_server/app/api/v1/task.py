@@ -16,6 +16,7 @@ from fastapi import Response
 from fastapi import status
 from sqlmodel import select
 
+from ....common.schemas import StateRead
 from ....common.schemas import TaskCollectPip
 from ....common.schemas import TaskCollectStatus
 from ....common.schemas import TaskCreate
@@ -128,7 +129,7 @@ async def _insert_tasks(
 
 @router.post(
     "/collect/pip/",
-    response_model=State,
+    response_model=StateRead,
     responses={
         201: dict(
             description=(
@@ -150,7 +151,7 @@ async def collect_tasks_pip(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
     public: bool = True,
-) -> State:  # State[TaskCollectStatus]
+) -> StateRead:  # State[TaskCollectStatus]
     """
     Task collection endpoint
 
@@ -228,13 +229,13 @@ async def collect_tasks_pip(
     return state
 
 
-@router.get("/collect/{state_id}", response_model=State)
+@router.get("/collect/{state_id}", response_model=StateRead)
 async def check_collection_status(
     state_id: int,
     user: User = Depends(current_active_user),
     verbose: bool = False,
     db: AsyncSession = Depends(get_db),
-) -> State:  # State[TaskCollectStatus]
+) -> StateRead:  # State[TaskCollectStatus]
     """
     Check status of background task collection
     """
