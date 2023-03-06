@@ -15,6 +15,10 @@ for path in sorted(Path("fractal_server").rglob("*.py")):
 
     if "migrations" in parts:
         continue
+
+    if parts[1:3] == ["common", "tests"]:
+        continue
+
     if parts[-1] == "__init__":
         parts = parts[:-1]
         doc_path = doc_path.with_name("index.md")
