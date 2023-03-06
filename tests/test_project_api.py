@@ -109,7 +109,6 @@ async def test_add_dataset(app, client, MockCurrentUser, db):
 
         payload = dict(
             name="new dataset",
-            project_id=project_id,
             meta={"xy": 2},
         )
         res = await client.post(
@@ -119,7 +118,7 @@ async def test_add_dataset(app, client, MockCurrentUser, db):
         assert res.status_code == 201
         dataset = res.json()
         assert dataset["name"] == payload["name"]
-        assert dataset["project_id"] == payload["project_id"]
+        assert dataset["project_id"] == project_id
         assert dataset["meta"] == payload["meta"]
 
         # EDIT DATASET
@@ -204,7 +203,6 @@ async def test_add_dataset_local_path_error(app, client, MockCurrentUser, db):
 
         payload = dict(
             name="new dataset",
-            project_id=project_id,
             meta={"xy": 2},
         )
         res = await client.post(
@@ -214,7 +212,7 @@ async def test_add_dataset_local_path_error(app, client, MockCurrentUser, db):
         assert res.status_code == 201
         dataset = res.json()
         assert dataset["name"] == payload["name"]
-        assert dataset["project_id"] == payload["project_id"]
+        assert dataset["project_id"] == project_id
         assert dataset["meta"] == payload["meta"]
 
         # EDIT DATASET

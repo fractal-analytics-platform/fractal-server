@@ -191,9 +191,9 @@ async def create_workflow(
 # Workflow endpoints ("/{workflow_id}")
 
 
-@router.delete("/{_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{workflow_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_workflow(
-    _id: int,
+    workflow_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
@@ -202,7 +202,7 @@ async def delete_workflow(
     """
 
     workflow = await _get_workflow_check_owner(
-        workflow_id=_id, user_id=user.id, db=db
+        workflow_id=workflow_id, user_id=user.id, db=db
     )
 
     await db.delete(workflow)
@@ -211,9 +211,9 @@ async def delete_workflow(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.patch("/{_id}", response_model=WorkflowRead)
+@router.patch("/{workflow_id}", response_model=WorkflowRead)
 async def patch_workflow(
-    _id: int,
+    workflow_id: int,
     patch: WorkflowUpdate,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -223,7 +223,7 @@ async def patch_workflow(
     """
 
     workflow = await _get_workflow_check_owner(
-        workflow_id=_id, user_id=user.id, db=db
+        workflow_id=workflow_id, user_id=user.id, db=db
     )
 
     for key, value in patch.dict(exclude_unset=True).items():
@@ -233,9 +233,9 @@ async def patch_workflow(
     return workflow
 
 
-@router.get("/{_id}", response_model=WorkflowRead)
+@router.get("/{workflow_id}", response_model=WorkflowRead)
 async def get_workflow(
-    _id: int,
+    workflow_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[WorkflowRead]:
@@ -244,19 +244,19 @@ async def get_workflow(
     """
 
     workflow = await _get_workflow_check_owner(
-        workflow_id=_id, user_id=user.id, db=db
+        workflow_id=workflow_id, user_id=user.id, db=db
     )
 
     return workflow
 
 
 @router.post(
-    "/{_id}/add-task/",
+    "/{workflow_id}/add-task/",
     response_model=WorkflowTaskRead,
     status_code=status.HTTP_201_CREATED,
 )
 async def add_task_to_workflow(
-    _id: int,
+    workflow_id: int,
     new_task: WorkflowTaskCreate,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -266,11 +266,11 @@ async def add_task_to_workflow(
     """
 
     workflow = await _get_workflow_check_owner(
-        workflow_id=_id, user_id=user.id, db=db
+        workflow_id=workflow_id, user_id=user.id, db=db
     )
     async with db:
         workflow_task = await workflow.insert_task(
-            **new_task.dict(exclude={"workflow_id"}),
+            **new_task.dict(),
             db=db,
         )
 
@@ -281,10 +281,11 @@ async def add_task_to_workflow(
 
 
 @router.patch(
-    "/{_id}/edit-task/{workflow_task_id}", response_model=WorkflowTaskRead
+    "/{workflow_id}/edit-task/{workflow_task_id}",
+    response_model=WorkflowTaskRead,
 )
 async def patch_workflow_task(
-    _id: int,
+    workflow_id: int,
     workflow_task_id: int,
     workflow_task_update: WorkflowTaskUpdate,
     user: User = Depends(current_active_user),
@@ -296,7 +297,7 @@ async def patch_workflow_task(
 
     db_workflow_task, db_workflow = await _get_workflow_task_check_owner(
         workflow_task_id=workflow_task_id,
-        workflow_id=_id,
+        workflow_id=workflow_id,
         user_id=user.id,
         db=db,
     )
@@ -322,10 +323,11 @@ async def patch_workflow_task(
 
 
 @router.delete(
-    "/{_id}/rm-task/{workflow_task_id}", status_code=status.HTTP_204_NO_CONTENT
+    "/{workflow_id}/rm-task/{workflow_task_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_task_from_workflow(
-    _id: int,
+    workflow_id: int,
     workflow_task_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -336,7 +338,7 @@ async def delete_task_from_workflow(
 
     db_workflow_task, db_workflow = await _get_workflow_task_check_owner(
         workflow_task_id=workflow_task_id,
-        workflow_id=_id,
+        workflow_id=workflow_id,
         user_id=user.id,
         db=db,
     )

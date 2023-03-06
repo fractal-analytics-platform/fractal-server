@@ -349,11 +349,10 @@ async def add_dataset(
     """
     Add new dataset to current project
     """
-    project = await _get_project_check_owner(
+    await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
-    dataset.project_id = project.id
-    db_dataset = Dataset.from_orm(dataset)
+    db_dataset = Dataset(project_id=project_id, **dataset.dict())
     db.add(db_dataset)
     await db.commit()
     await db.refresh(db_dataset)
