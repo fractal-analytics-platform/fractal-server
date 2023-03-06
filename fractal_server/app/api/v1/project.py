@@ -352,10 +352,7 @@ async def add_dataset(
     await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
-    # FIXME: REMOVE THE exclude_none=True FLAG
-    db_dataset = Dataset(
-        project_id=project_id, **dataset.dict(exclude_none=True)
-    )
+    db_dataset = Dataset(project_id=project_id, **dataset.dict())
     db.add(db_dataset)
     await db.commit()
     await db.refresh(db_dataset)
