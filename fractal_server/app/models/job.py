@@ -82,6 +82,8 @@ class ApplyWorkflow(ApplyWorkflowBase, table=True):
     input_dataset_id: int = Field(foreign_key="dataset.id")
     output_dataset_id: int = Field(foreign_key="dataset.id")
     workflow_id: int = Field(foreign_key="workflow.id")
+    working_dir: Optional[str]
+    working_dir_user: Optional[str]
 
     project: Project = Relationship()
     input_dataset: Dataset = Relationship(
