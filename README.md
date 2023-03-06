@@ -9,12 +9,12 @@
 | fractal\_server/app/api/\_\_init\_\_.py                           |       17 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/api/v1/\_\_init\_\_.py                        |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/api/v1/job.py                                 |       50 |        4 |       10 |        0 |     87% |37-38, 68-69 |
-| fractal\_server/app/api/v1/project.py                             |      256 |       69 |       59 |       12 |     70% |106, 110, 119, 143-144, 186-196, 199-207, 279-280, 289-300, 335, 360, 377-378, 395-396, 435, 445, 468-469, 471, 503, 512, 528-534, 551-564, 588, 593, 605, 638-639, 649-654, 660-675, 680->681, 681->680, 683-687, 698 |
-| fractal\_server/app/api/v1/task.py                                |      181 |       33 |       26 |        1 |     78% |170, 212-228, 244-255, 268, 282-283, 303-312, 319, 333-339, 342 |
-| fractal\_server/app/api/v1/workflow.py                            |      113 |       18 |       22 |        4 |     79% |63-64, 73, 77, 108-109, 153-154, 184-185, 188, 211, 233, 277, 314, 321, 348, 351 |
+| fractal\_server/app/api/v1/project.py                             |      255 |       69 |       59 |       12 |     70% |106, 110, 119, 143-144, 186-196, 199-207, 279-280, 289-300, 335, 359, 376-377, 394-395, 434, 444, 467-468, 470, 502, 511, 527-533, 550-563, 587, 592, 604, 637-638, 648-653, 659-674, 679->680, 680->679, 682-686, 697 |
+| fractal\_server/app/api/v1/task.py                                |      182 |       33 |       26 |        1 |     78% |171, 213-229, 245-256, 269, 283-284, 304-313, 320, 334-340, 343 |
+| fractal\_server/app/api/v1/workflow.py                            |      113 |       18 |       22 |        4 |     79% |63-64, 73, 77, 108-109, 153-154, 184-185, 188, 211, 233, 277, 315, 322, 350, 353 |
 | fractal\_server/app/db/\_\_init\_\_.py                            |       49 |        9 |        6 |        1 |     82% |26-30, 45, 82-84 |
 | fractal\_server/app/models/\_\_init\_\_.py                        |        8 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/models/job.py                                 |       30 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/app/models/job.py                                 |       32 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/project.py                             |       37 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/app/models/security.py                            |       18 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/state.py                               |       14 |        0 |        0 |        0 |    100% |           |
@@ -31,13 +31,22 @@
 | fractal\_server/app/security/\_\_init\_\_.py                      |       79 |       13 |        8 |        1 |     79% |176-177, 194-235 |
 | fractal\_server/common/\_\_init\_\_.py                            |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/common/schemas/\_\_init\_\_.py                    |        8 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/common/schemas/applyworkflow.py                   |       26 |        3 |        0 |        0 |     88% |     51-53 |
-| fractal\_server/common/schemas/manifest.py                        |       29 |        1 |        2 |        1 |     94% |        95 |
-| fractal\_server/common/schemas/project.py                         |       46 |        3 |        2 |        0 |     90% |     41-43 |
-| fractal\_server/common/schemas/state.py                           |       18 |        3 |        0 |        0 |     83% |     34-36 |
-| fractal\_server/common/schemas/task.py                            |       66 |        2 |        6 |        2 |     94% |  113, 117 |
-| fractal\_server/common/schemas/user.py                            |       10 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/common/schemas/workflow.py                        |       46 |        0 |        2 |        0 |    100% |           |
+| fractal\_server/common/schemas/\_validators.py                    |       17 |        1 |        8 |        1 |     92% |         9 |
+| fractal\_server/common/schemas/applyworkflow.py                   |       33 |        3 |        0 |        0 |     91% |     70-72 |
+| fractal\_server/common/schemas/manifest.py                        |       29 |        0 |        2 |        0 |    100% |           |
+| fractal\_server/common/schemas/project.py                         |       47 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/common/schemas/state.py                           |       15 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/common/schemas/task.py                            |       78 |        2 |        6 |        2 |     95% |  137, 141 |
+| fractal\_server/common/schemas/user.py                            |       13 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/common/schemas/workflow.py                        |       54 |        0 |        2 |        0 |    100% |           |
+| fractal\_server/common/tests/conftest.py                          |        5 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/common/tests/test\_applyworkflow.py               |       19 |        0 |        4 |        0 |    100% |           |
+| fractal\_server/common/tests/test\_manifest.py                    |       11 |        0 |        2 |        0 |    100% |           |
+| fractal\_server/common/tests/test\_project.py                     |       34 |        0 |        8 |        0 |    100% |           |
+| fractal\_server/common/tests/test\_state.py                       |       16 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/common/tests/test\_task.py                        |       15 |        0 |        2 |        0 |    100% |           |
+| fractal\_server/common/tests/test\_user.py                        |       13 |        0 |        2 |        0 |    100% |           |
+| fractal\_server/common/tests/test\_workflow.py                    |       47 |        0 |       10 |        0 |    100% |           |
 | fractal\_server/config.py                                         |      134 |       22 |       36 |        9 |     76% |139-157, 177-184, 185->exit, 197-199, 200->exit, 335-337, 339, 346, 359-374 |
 | fractal\_server/main.py                                           |       51 |        9 |        8 |        1 |     83% |64-65, 75, 110, 114-115, 161-167 |
 | fractal\_server/syringe.py                                        |       30 |        2 |        2 |        0 |     94% |     94-95 |
@@ -46,7 +55,7 @@
 | fractal\_server/tasks/dummy.py                                    |       68 |       29 |       20 |        4 |     51% |88, 106->110, 107, 127-177 |
 | fractal\_server/tasks/dummy\_parallel.py                          |       63 |       30 |       20 |        3 |     48% |86, 99-100, 121-171 |
 | fractal\_server/utils.py                                          |       45 |        4 |       12 |        1 |     88% |34->33, 55-59 |
-|                                                         **TOTAL** | **2564** |  **340** |  **505** |   **89** | **83%** |           |
+|                                                         **TOTAL** | **2771** |  **334** |  **539** |   **89** | **85%** |           |
 
 
 ## Setup coverage badge
