@@ -54,7 +54,7 @@ pytest-pretty = "^1.0.1"
 
 [tool.poetry.group.doc.dependencies]
 mkdocs = "^1.4.2"
-mkdocstrings = {extras = ["python"], version = "^0.19.0"}
+mkdocstrings = {extras = ["python"], version = "^0.20"}
 mkdocs-material = "^8.5.9"
 mkdocs-gen-files = "^0.4.0"
 mkdocs-literate-nav = "^0.5.0"
