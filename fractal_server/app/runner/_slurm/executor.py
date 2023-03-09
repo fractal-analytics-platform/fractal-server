@@ -540,7 +540,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                             # direct use of FractalSlurmExecutor, possibly
                             # outside fractal-server)
                             exc = TaskExecutionError(
-                                proxy.tb, *proxy.args, **proxy.kwargs
+                                *proxy.args, **proxy.kwargs
                             )
                             fut.set_exception(exc)
                     out_path.unlink()
