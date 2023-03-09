@@ -54,9 +54,8 @@ class TaskExecutionError(RuntimeError):
         workflow_task_id: Optional[int] = None,
         workflow_task_order: Optional[int] = None,
         task_name: Optional[str] = None,
-        **kwargs,
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(*args)
         self.workflow_task_id = workflow_task_id
         self.workflow_task_order = workflow_task_order
         self.task_name = task_name
@@ -101,9 +100,8 @@ class JobExecutionError(RuntimeError):
         stdout_file: Optional[str] = None,
         stderr_file: Optional[str] = None,
         info: Optional[str] = None,
-        **kwargs,
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(*args)
         self.cmd_file = cmd_file
         self.stdout_file = stdout_file
         self.stderr_file = stderr_file
