@@ -536,12 +536,19 @@ class FractalSlurmExecutor(SlurmExecutor):
                         else:
                             # This branch catches both TaskExecutionError's
                             # (coming from the typical fractal-server execution
-                            # of tasks) or arbitrary exceptions (coming from a
+                            # of tasks, and with additional fractal-specific
+                            # kwargs) or arbitrary exceptions (coming from a
                             # direct use of FractalSlurmExecutor, possibly
                             # outside fractal-server)
-                            exc = TaskExecutionError(
-                                *proxy.args, **proxy.kwargs
-                            )
+                            kwargs = {}
+                            for key in [
+                                "workflow_task_id",
+                                "workflow_task_order",
+                                "task_name",
+                            ]:
+                                if key in proxy.kwargs.keys():
+                                    kwargs[key] = proxy.kwargs[key]
+                            exc = TaskExecutionError(proxy.tb, **kwargs)
                             fut.set_exception(exc)
                     out_path.unlink()
                 except futures.InvalidStateError:
