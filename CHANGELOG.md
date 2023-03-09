@@ -2,6 +2,7 @@
 
 # 1.1.0
 
+* Fix redundant task-error logs in slurm backend (\#552).
 * Improve validation of API request payloads (\#545).
 * Align with new tasks interface in `fractal-tasks-core>=0.8.0`, and remove `glob_pattern` column from `resource` database table (\#544).
 * Update the endpoint to patch a `Task` (\#526).
