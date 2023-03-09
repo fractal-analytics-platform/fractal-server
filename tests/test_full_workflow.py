@@ -261,11 +261,12 @@ async def test_failing_workflow_TaskExecutionError(
         workflow_id = workflow_dict["id"]
 
         # Add a dummy task
+        ERROR_MESSAGE = "this is a nice error"
         res = await client.post(
             f"{PREFIX}/workflow/{workflow_id}/add-task/",
             json=dict(
                 task_id=collect_packages[0].id,
-                args={"raise_error": True},
+                args={"raise_error": True, "message": ERROR_MESSAGE},
             ),
         )
         assert res.status_code == 201
@@ -295,9 +296,12 @@ async def test_failing_workflow_TaskExecutionError(
         assert job_status_data["status"] == "failed"
         assert "id: None" not in job_status_data["log"]
         assert "ValueError" in job_status_data["log"]
+        assert ERROR_MESSAGE in job_status_data["log"]
         assert "TASK ERROR" in job_status_data["log"]
         assert "\\n" not in job_status_data["log"]
         print(job_status_data["log"])
+        # Check that ERROR_MESSAGE only appears once in the logs:
+        assert len(job_status_data["log"].split(ERROR_MESSAGE)) == 2
 
 
 async def _auxiliary_scancel(slurm_user, sleep_time):
