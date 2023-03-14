@@ -43,10 +43,6 @@ from ..utils import set_logger
 FRACTAL_PUBLIC_TASK_SUBDIR = ".fractal"
 
 
-class TaskCollectionError(RuntimeError):
-    pass
-
-
 def get_python_interpreter(version: Optional[str] = None) -> str:
     """
     Return the path to the python interpreter
