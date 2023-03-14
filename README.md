@@ -34,7 +34,7 @@
 | fractal\_server/common/schemas/\_validators.py                    |       17 |        1 |        8 |        1 |     92% |         9 |
 | fractal\_server/common/schemas/applyworkflow.py                   |       33 |        3 |        0 |        0 |     91% |     70-72 |
 | fractal\_server/common/schemas/manifest.py                        |       29 |        0 |        2 |        0 |    100% |           |
-| fractal\_server/common/schemas/project.py                         |       47 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/common/schemas/project.py                         |       49 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/common/schemas/state.py                           |       15 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/common/schemas/task.py                            |       78 |        2 |        6 |        2 |     95% |  137, 141 |
 | fractal\_server/common/schemas/user.py                            |       13 |        0 |        0 |        0 |    100% |           |
@@ -47,7 +47,7 @@
 | fractal\_server/tasks/dummy.py                                    |       68 |       29 |       20 |        4 |     51% |88, 106->110, 107, 127-177 |
 | fractal\_server/tasks/dummy\_parallel.py                          |       63 |       30 |       20 |        3 |     48% |86, 99-100, 121-171 |
 | fractal\_server/utils.py                                          |       45 |        4 |       12 |        1 |     88% |34->33, 55-59 |
-|                                                         **TOTAL** | **2615** |  **334** |  **515** |   **89** | **84%** |           |
+|                                                         **TOTAL** | **2617** |  **334** |  **515** |   **89** | **84%** |           |
 
 
 ## Setup coverage badge
