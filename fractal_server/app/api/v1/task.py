@@ -32,7 +32,6 @@ from ....tasks.collection import get_collection_data
 from ....tasks.collection import get_collection_log
 from ....tasks.collection import get_collection_path
 from ....tasks.collection import inspect_package
-from ....tasks.collection import TaskCollectionError
 from ....utils import set_logger
 from ...db import AsyncSession
 from ...db import DBSyncSession
@@ -43,6 +42,8 @@ from ...models import Task
 from ...security import current_active_superuser
 from ...security import current_active_user
 from ...security import User
+
+# from ....tasks.collection import TaskCollectionError
 
 router = APIRouter()
 
@@ -100,7 +101,7 @@ async def _background_collect_pip(
         logger.info("background collection completed")
         return tasks
     except Exception as e:
-        err = TaskCollectionError(*e.args)
+        # err = TaskCollectionError(*e.args)
         data.status = "fail"
         data.info = f"Original error: {e}"
         data.log = get_collection_log(venv_path)
@@ -110,7 +111,7 @@ async def _background_collect_pip(
 
         # delete corrupted package dir
         shell_rmtree(venv_path)
-        raise err
+        logger.info(f"background collection failed. Original error: {e}")
 
 
 async def _insert_tasks(

@@ -351,7 +351,7 @@ async def test_task_collection_api_failure(
         assert res.json()["data"]["status"] == "pending"
         state = res.json()
         data = state["data"]
-        assert "fractal_tasks_dummy" in data["venv_path"]
+        assert "my_tasks_fail" in data["venv_path"]
         venv_path = Path(data["venv_path"])
 
         res = await client.get(f"{PREFIX}/collect/{state['id']}")
