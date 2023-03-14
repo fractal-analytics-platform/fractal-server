@@ -333,3 +333,72 @@ async def test_patch_task(
     assert res.json()["command"] == NEW_COMMAND
     assert len(res.json()["default_args"]) == 3
     assert len(res.json()["meta"]) == 3
+
+
+async def test_task_collection_api_failure(
+    client, MockCurrentUser, testdata_path
+):
+    path = str(
+        testdata_path
+        / "my-tasks-fail/dist/my_tasks_fail-0.1.0-py3-none-any.whl"
+    )
+    task_collection = dict(package=path)
+
+    async with MockCurrentUser():
+        res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
+        debug(res.json())
+        assert res.status_code == 201
+        assert res.json()["data"]["status"] == "pending"
+        state = res.json()
+        data = state["data"]
+        assert "fractal_tasks_dummy" in data["venv_path"]
+        venv_path = Path(data["venv_path"])
+
+        res = await client.get(f"{PREFIX}/collect/{state['id']}")
+        debug(res.json())
+        assert res.status_code == 200
+        state = res.json()
+        data = state["data"]
+
+        assert data["status"] == "OK"
+        task_list = data["task_list"]
+        assert data["log"] is None
+
+        task_names = (t["name"] for t in task_list)
+        assert len(task_list) == 2
+        assert "dummy" in task_names
+        assert "dummy parallel" in task_names
+
+        # using verbose option
+        res = await client.get(f"{PREFIX}/collect/{state['id']}?verbose=true")
+        debug(res.json())
+        state = res.json()
+        data = state["data"]
+        assert res.status_code == 200
+        assert data["log"] is not None
+
+        # check status of non-existing collection
+        invalid_state_id = 99999
+        res = await client.get(f"{PREFIX}/collect/{invalid_state_id}")
+        debug(res)
+        assert res.status_code == 404
+
+        settings = Inject(get_settings)
+        full_path = settings.FRACTAL_TASKS_DIR / venv_path
+        assert get_collection_path(full_path).exists()
+        assert get_log_path(full_path).exists()
+        python_version = None
+        if python_version:
+            python_bin = data["task_list"][0]["command"].split()[0]
+            version = await execute_command(f"{python_bin} --version")
+            assert python_version in version
+
+        # collect again
+        res = await client.post(
+            f"{PREFIX}/collect/pip/?public=false", json=task_collection
+        )
+        debug(res.json())
+        assert res.status_code == 200
+        state = res.json()
+        data = state["data"]
+        assert data["info"] == "Already installed"

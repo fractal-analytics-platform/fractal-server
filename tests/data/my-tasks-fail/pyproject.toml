@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "my-tasks-fail"
+version = "0.1.0"
+description = ""
+authors = ["Fractal Fractal <fractal@fractal.org>"]
+packages = [{include = "my_tasks_fail"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+pydantic = "^1.10.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
