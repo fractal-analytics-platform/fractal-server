@@ -123,16 +123,31 @@ async def test_add_dataset(app, client, MockCurrentUser, db):
 
         # EDIT DATASET
 
-        payload = dict(name="new dataset name", meta={})
+        payload1 = dict(name="new dataset name", meta={})
         res = await client.patch(
             f"{PREFIX}/{project_id}/{dataset['id']}",
-            json=payload,
+            json=payload1,
         )
         patched_dataset = res.json()
         debug(patched_dataset)
         assert res.status_code == 200
-        for k, v in payload.items():
-            assert patched_dataset[k] == payload[k]
+        for k, v in payload1.items():
+            assert patched_dataset[k] == payload1[k]
+        assert patched_dataset["type"] == dataset["type"]
+        assert patched_dataset["read_only"] == dataset["read_only"]
+
+        payload2 = dict(type="new type", read_only=(not dataset["read_only"]))
+        res = await client.patch(
+            f"{PREFIX}/{project_id}/{dataset['id']}",
+            json=payload2,
+        )
+        patched_dataset = res.json()
+        debug(patched_dataset)
+        assert res.status_code == 200
+        for k, v in payload2.items():
+            assert patched_dataset[k] == payload2[k]
+        assert patched_dataset["name"] == payload1["name"]
+        assert patched_dataset["meta"] == payload1["meta"]
 
         # ADD RESOURCE TO DATASET
 
