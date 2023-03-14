@@ -48,7 +48,7 @@ router = APIRouter()
 
 async def _background_collect_pip(
     state: State, venv_path: Path, task_pkg: _TaskCollectPip, db: AsyncSession
-) -> List[Task]:
+) -> None:
     """
     Install package and collect tasks
 
@@ -97,7 +97,6 @@ async def _background_collect_pip(
         await db.commit()
 
         logger.info("background collection completed")
-        return tasks
     except Exception as e:
         data.status = "fail"
         data.info = f"Original error: {e}"
