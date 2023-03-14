@@ -3,6 +3,7 @@ from shutil import which as shutil_which
 
 import pytest
 from devtools import debug
+from sqlmodel import select
 
 from .fixtures_tasks import execute_command
 from fractal_server.app.api.v1.task import _background_collect_pip
@@ -10,6 +11,7 @@ from fractal_server.app.api.v1.task import _TaskCollectPip
 from fractal_server.app.api.v1.task import create_package_dir_pip
 from fractal_server.app.api.v1.task import TaskCollectStatus
 from fractal_server.app.models import State
+from fractal_server.app.models import Task
 from fractal_server.common.schemas.task import TaskCreate
 from fractal_server.common.schemas.task import TaskUpdate
 from fractal_server.config import get_settings
@@ -55,14 +57,16 @@ async def test_background_collection(db, dummy_task_package):
     await db.commit()
     await db.refresh(state)
     debug(state)
-    tasks = await _background_collect_pip(
+    await _background_collect_pip(
         state=state, venv_path=venv_path, task_pkg=task_pkg, db=db
     )
-    debug(tasks)
-    assert tasks
     out_state = await db.get(State, state.id)
     debug(out_state)
     assert out_state.data["status"] == "OK"
+
+    task_list = (await db.execute(select(Task))).scalars().all()
+    debug(task_list)
+    assert len(task_list) == 2
 
 
 async def test_background_collection_failure(db, dummy_task_package):
