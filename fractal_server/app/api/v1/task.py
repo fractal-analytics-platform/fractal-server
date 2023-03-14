@@ -43,8 +43,6 @@ from ...security import current_active_superuser
 from ...security import current_active_user
 from ...security import User
 
-# from ....tasks.collection import TaskCollectionError
-
 router = APIRouter()
 
 
@@ -101,7 +99,6 @@ async def _background_collect_pip(
         logger.info("background collection completed")
         return tasks
     except Exception as e:
-        # err = TaskCollectionError(*e.args)
         data.status = "fail"
         data.info = f"Original error: {e}"
         data.log = get_collection_log(venv_path)

@@ -8,7 +8,6 @@ from .fixtures_tasks import execute_command
 from fractal_server.app.api.v1.task import _background_collect_pip
 from fractal_server.app.api.v1.task import _TaskCollectPip
 from fractal_server.app.api.v1.task import create_package_dir_pip
-from fractal_server.app.api.v1.task import TaskCollectionError
 from fractal_server.app.api.v1.task import TaskCollectStatus
 from fractal_server.app.models import State
 from fractal_server.common.schemas.task import TaskCreate
@@ -90,12 +89,10 @@ async def test_background_collection_failure(db, dummy_task_package):
 
     task_pkg.package = "__NO_PACKAGE"
     task_pkg.package_path = None
-    with pytest.raises(TaskCollectionError) as err:
-        await _background_collect_pip(
-            state=state, venv_path=venv_path, task_pkg=task_pkg, db=db
-        )
 
-    debug(err)
+    await _background_collect_pip(
+        state=state, venv_path=venv_path, task_pkg=task_pkg, db=db
+    )
 
     await db.refresh(state)
     debug(state)
@@ -352,53 +349,13 @@ async def test_task_collection_api_failure(
         state = res.json()
         data = state["data"]
         assert "my_tasks_fail" in data["venv_path"]
-        venv_path = Path(data["venv_path"])
 
         res = await client.get(f"{PREFIX}/collect/{state['id']}")
         debug(res.json())
+
         assert res.status_code == 200
         state = res.json()
         data = state["data"]
 
-        assert data["status"] == "OK"
-        task_list = data["task_list"]
-        assert data["log"] is None
-
-        task_names = (t["name"] for t in task_list)
-        assert len(task_list) == 2
-        assert "dummy" in task_names
-        assert "dummy parallel" in task_names
-
-        # using verbose option
-        res = await client.get(f"{PREFIX}/collect/{state['id']}?verbose=true")
-        debug(res.json())
-        state = res.json()
-        data = state["data"]
-        assert res.status_code == 200
-        assert data["log"] is not None
-
-        # check status of non-existing collection
-        invalid_state_id = 99999
-        res = await client.get(f"{PREFIX}/collect/{invalid_state_id}")
-        debug(res)
-        assert res.status_code == 404
-
-        settings = Inject(get_settings)
-        full_path = settings.FRACTAL_TASKS_DIR / venv_path
-        assert get_collection_path(full_path).exists()
-        assert get_log_path(full_path).exists()
-        python_version = None
-        if python_version:
-            python_bin = data["task_list"][0]["command"].split()[0]
-            version = await execute_command(f"{python_bin} --version")
-            assert python_version in version
-
-        # collect again
-        res = await client.post(
-            f"{PREFIX}/collect/pip/?public=false", json=task_collection
-        )
-        debug(res.json())
-        assert res.status_code == 200
-        state = res.json()
-        data = state["data"]
-        assert data["info"] == "Already installed"
+        assert "Cannot find executable" in data["info"]
+        assert data["status"] == "fail"
