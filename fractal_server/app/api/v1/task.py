@@ -180,8 +180,8 @@ async def collect_tasks_pip(
                 detail=f"Invalid package or manifest. Original error: {e}",
             )
 
-    pkg_user = None if public else user.slurm_user
     try:
+        pkg_user = None if public else user.slurm_user
         venv_path = create_package_dir_pip(task_pkg=task_pkg, user=pkg_user)
     except FileExistsError:
         venv_path = create_package_dir_pip(
