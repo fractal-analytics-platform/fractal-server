@@ -182,19 +182,28 @@ async def collect_tasks_pip(
                 detail=f"Invalid package or manifest. Original error: {e}",
             )
 
+    pkg_user = None if public else user.slurm_user
     try:
-        pkg_user = None if public else user.slurm_user
         venv_path = create_package_dir_pip(task_pkg=task_pkg, user=pkg_user)
     except FileExistsError:
         venv_path = create_package_dir_pip(
             task_pkg=task_pkg, user=pkg_user, create=False
         )
-        task_collect_status = get_collection_data(venv_path)
+        try:
+            task_collect_status = get_collection_data(venv_path)
+        except FileNotFoundError as e:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "Cannot collect package. Possible reason: another "
+                    "collection of the same package is in progress. "
+                    f"Original error: {e}"
+                ),
+            )
         task_collect_status.info = "Already installed"
         state = State(data=task_collect_status.sanitised_dict())
         response.status_code == status.HTTP_200_OK
         return state
-
     settings = Inject(get_settings)
 
     full_venv_path = venv_path.relative_to(settings.FRACTAL_TASKS_DIR)
