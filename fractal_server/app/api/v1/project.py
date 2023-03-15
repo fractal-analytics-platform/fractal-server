@@ -30,6 +30,7 @@ from ...models import LinkUserProject
 from ...models import Project
 from ...models import ProjectCreate
 from ...models import ProjectRead
+from ...models import ProjectUpdate
 from ...models import Resource
 from ...models import ResourceCreate
 from ...models import ResourceRead
@@ -336,7 +337,7 @@ async def delete_project(
 
 
 @router.post(
-    "/{project_id}/",
+    "/{project_id}",
     response_model=DatasetRead,
     status_code=status.HTTP_201_CREATED,
 )
@@ -393,6 +394,24 @@ async def get_job_list(
     res = await db.execute(stm)
     job_list = res.scalars().all()
     return job_list
+
+
+@router.patch("/{project_id}")
+async def edit_project(
+    project_id: int,
+    project_update: ProjectUpdate,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    project = await _get_project_check_owner(
+        project_id=project_id, user_id=user.id, db=db
+    )
+    for key, value in project_update.dict(exclude_unset=True).items():
+        setattr(project, key, value)
+
+    await db.commit()
+    await db.refresh(project)
+    return project
 
 
 # Dataset endpoints ("/{project_id}/{dataset_id}")
