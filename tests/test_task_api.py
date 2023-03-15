@@ -360,7 +360,7 @@ async def test_task_collection_api_failure(
         data = state["data"]
         assert "my_tasks_fail" in data["venv_path"]
 
-        res = await client.get(f"{PREFIX}/collect/{state['id']}")
+        res = await client.get(f"{PREFIX}/collect/{state['id']}?verbose=True")
         debug(res.json())
 
         assert res.status_code == 200
@@ -369,3 +369,5 @@ async def test_task_collection_api_failure(
 
         assert "Cannot find executable" in data["info"]
         assert data["status"] == "fail"
+        assert data["log"]  # This is because of verbose=True
+        assert "fail" in data["log"]
