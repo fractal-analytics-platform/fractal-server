@@ -2,17 +2,17 @@
 
 # 1.1.0
 
-* Fix redundant task-error logs in slurm backend (\#552).
-* Improve validation of API request payloads (\#545).
 * Align with new tasks interface in `fractal-tasks-core>=0.8.0`, and remove `glob_pattern` column from `resource` database table (\#544).
-* Update the endpoint to patch a `Task` (\#526).
 * Drop python 3.8 support (\#527).
+* Improve validation of API request payloads (\#545).
+* Improve request validation in project-creation endpoint (\#537).
+* Update the endpoint to patch a `Task` (\#526).
+* Add new project-update endpoint, and relax constraints on `project_dir` in new-project endpoint (\#563).
+* Update `DatasetUpdate` schema (\#558).
+* Fix redundant task-error logs in slurm backend (\#552).
+* Improve handling of task-collection errors (\#559).
 * If `FRACTAL_BACKEND_RUNNER=slurm`, include some configuration checks at server startup (\#529).
 * Fail if `FRACTAL_SLURM_WORKER_PYTHON` has different versions of `fractal-server` or `cloudpickle` (\#533).
-* Improve request validation in project-creation endpoint (\#537).
-* Update `DatasetUpdate` schema (\#558).
-* Improve handling of task-collection errors (\#559).
-* Add new project-update endpoint, and relax constraints on `project_dir` in new-project endpoint (\#563).
 
 # 1.0.8
 
