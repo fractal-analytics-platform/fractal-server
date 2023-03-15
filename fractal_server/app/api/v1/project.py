@@ -396,7 +396,7 @@ async def get_job_list(
     return job_list
 
 
-@router.patch("/{project_id}")
+@router.patch("/{project_id}", response_model=ProjectRead)
 async def edit_project(
     project_id: int,
     project_update: ProjectUpdate,
