@@ -1,6 +1,7 @@
 from pathlib import Path
 from zipfile import ZipFile
 
+import pytest
 from devtools import debug
 from sqlmodel import select
 
@@ -53,6 +54,8 @@ async def test_project_creation(app, client, MockCurrentUser, db):
         name="new project",
         project_dir="/tmp",
     )
+
+    # Fail for anonymous user
     res = await client.post(f"{PREFIX}/", json=payload)
     data = res.json()
     assert res.status_code == 401
@@ -86,6 +89,49 @@ async def test_project_creation_name_constraint(
         # fails with 422_UNPROCESSABLE_ENTITY
         res = await client.post(f"{PREFIX}/", json=payload)
         assert res.status_code == 422
+
+
+@pytest.mark.parametrize("new_name", (None, "new name"))
+@pytest.mark.parametrize("new_project_dir", (None, "/new/project/dir"))
+@pytest.mark.parametrize("new_read_only", (None, True, False))
+async def test_edit_project(
+    new_name,
+    new_project_dir,
+    new_read_only,
+    app,
+    client,
+    MockCurrentUser,
+    db,
+):
+    """
+    Test that the project can be patched correctly, with any possible
+    combination of set/unset attributes.
+    """
+    async with MockCurrentUser(persist=True):
+        # Create project
+        payload = dict(
+            name="old name",
+            project_dir="/old/project/dir",
+            read_only=True,
+        )
+        res = await client.post(f"{PREFIX}/", json=payload)
+        project_id = res.json()["id"]
+        assert res.status_code == 201
+
+        # Patch project
+        payload = {}
+        if new_name:
+            payload["name"] = new_name
+        if new_project_dir:
+            payload["project_dir"] = new_project_dir
+        if new_read_only:
+            payload["read_only"] = new_read_only
+        res = await client.patch(f"{PREFIX}/{project_id}", json=payload)
+        new_project = res.json()
+        debug(new_project)
+        assert res.status_code == 200
+        for key, value in payload.items():
+            assert new_project[key] == value
 
 
 async def test_add_dataset(app, client, MockCurrentUser, db):
