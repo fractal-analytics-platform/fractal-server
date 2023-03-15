@@ -115,7 +115,8 @@ async def test_edit_project(
             read_only=True,
         )
         res = await client.post(f"{PREFIX}/", json=payload)
-        project_id = res.json()["id"]
+        old_project = res.json()
+        project_id = old_project["id"]
         assert res.status_code == 201
 
         # Patch project
@@ -126,12 +127,16 @@ async def test_edit_project(
             payload["project_dir"] = new_project_dir
         if new_read_only:
             payload["read_only"] = new_read_only
+        debug(payload)
         res = await client.patch(f"{PREFIX}/{project_id}", json=payload)
         new_project = res.json()
         debug(new_project)
         assert res.status_code == 200
-        for key, value in payload.items():
-            assert new_project[key] == value
+        for key, value in new_project.items():
+            if key in payload.keys():
+                assert value == payload[key]
+            else:
+                assert value == old_project[key]
 
 
 async def test_add_dataset(app, client, MockCurrentUser, db):
