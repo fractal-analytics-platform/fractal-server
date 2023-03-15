@@ -32,6 +32,7 @@ from ....tasks.collection import get_collection_data
 from ....tasks.collection import get_collection_log
 from ....tasks.collection import get_collection_path
 from ....tasks.collection import inspect_package
+from ....utils import close_logger
 from ....utils import set_logger
 from ...db import AsyncSession
 from ...db import DBSyncSession
@@ -59,12 +60,13 @@ async def _background_collect_pip(
     directory.
     """
     logger = set_logger(logger_name="fractal")
+    logger.info("Start background task collection")
     data = TaskCollectStatus(**state.data)
     data.info = None
 
     try:
         # install
-        logger.info("installing")
+        logger.info("Status: installing")
         data.status = "installing"
 
         state.data = data.sanitised_dict()
@@ -75,7 +77,7 @@ async def _background_collect_pip(
         )
 
         # collect
-        logger.info("collecting")
+        logger.info("Status: collecting")
         data.status = "collecting"
         state.data = data.sanitised_dict()
         await db.merge(state)
@@ -83,7 +85,7 @@ async def _background_collect_pip(
         tasks = await _insert_tasks(task_list=task_list, db=db)
 
         # finalise
-        logger.info("finalising")
+        logger.info("Status: finalising")
         collection_path = get_collection_path(venv_path)
         data.task_list = tasks
         with collection_path.open("w") as f:
@@ -96,8 +98,12 @@ async def _background_collect_pip(
         await db.merge(state)
         await db.commit()
 
-        logger.info("background collection completed")
+        logger.info("Status: OK")
+        logger.info("Background task collection completed successfully")
+        close_logger(logger)
+
     except Exception as e:
+        logger.info("Status: fail")
         data.status = "fail"
         data.info = f"Original error: {e}"
         data.log = get_collection_log(venv_path)
@@ -105,9 +111,12 @@ async def _background_collect_pip(
         await db.merge(state)
         await db.commit()
 
-        # delete corrupted package dir
+        # Delete corrupted package dir
+        logger.info(f"Now removing folder {venv_path}")
         shell_rmtree(venv_path)
-        logger.info(f"background collection failed. Original error: {e}")
+
+        logger.info(f"Background collection failed. Original error: {e}")
+        close_logger(logger)
 
 
 async def _insert_tasks(
@@ -255,7 +264,6 @@ async def check_collection_status(
         )
     data = TaskCollectStatus(**state.data)
 
-    # collection_path = get_collection_path(package_path)
     if verbose:
         data.log = get_collection_log(data.venv_path)
         state.data = data.sanitised_dict()
