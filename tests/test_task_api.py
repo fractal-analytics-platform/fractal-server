@@ -339,6 +339,12 @@ async def test_patch_task(
 async def test_task_collection_api_failure(
     client, MockCurrentUser, testdata_path
 ):
+    """
+    Try to collect a task package which triggers an error (namely its manifests
+    includes a task for which there does not exist the python script), and
+    handle failure.
+    """
+
     path = str(
         testdata_path
         / "my-tasks-fail/dist/my_tasks_fail-0.1.0-py3-none-any.whl"
