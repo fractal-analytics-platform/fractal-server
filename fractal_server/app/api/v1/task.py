@@ -102,8 +102,8 @@ async def _background_collect_pip(
         with collection_path.open("w") as f:
             json.dump(data.sanitised_dict(), f)
 
+        # Update DB
         data.status = "OK"
-        data.task_list = tasks
         state.data = data.sanitised_dict()
         db.add(state)
         await db.merge(state)
