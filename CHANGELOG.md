@@ -12,6 +12,7 @@
 * Improve request validation in project-creation endpoint (\#537).
 * Update `DatasetUpdate` schema (\#558).
 * Improve handling of task-collection errors (\#559).
+* Add new project-update endpoint, and relax constraints on `project_dir` in new-project endpoint (\#563).
 
 # 1.0.8
 
