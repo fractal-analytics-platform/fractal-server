@@ -30,6 +30,7 @@ from ...models import LinkUserProject
 from ...models import Project
 from ...models import ProjectCreate
 from ...models import ProjectRead
+from ...models import ProjectUpdate
 from ...models import Resource
 from ...models import ResourceCreate
 from ...models import ResourceRead
@@ -161,18 +162,6 @@ async def create_project(
             detail=(
                 f"Project dir {project.project_dir} is not an absolute path"
             ),
-        )
-    # Check that project_dir is an existing path
-    if not os.path.exists(project.project_dir):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(f"Project dir {project.project_dir} does not exist"),
-        )
-    # Check that project_dir is directory path
-    if not os.path.isdir(project.project_dir):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(f"Project dir {project.project_dir} is not a directory."),
         )
 
     # Check that there is no project with the same user and name
@@ -393,6 +382,24 @@ async def get_job_list(
     res = await db.execute(stm)
     job_list = res.scalars().all()
     return job_list
+
+
+@router.patch("/{project_id}", response_model=ProjectRead)
+async def edit_project(
+    project_id: int,
+    project_update: ProjectUpdate,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    project = await _get_project_check_owner(
+        project_id=project_id, user_id=user.id, db=db
+    )
+    for key, value in project_update.dict(exclude_unset=True).items():
+        setattr(project, key, value)
+
+    await db.commit()
+    await db.refresh(project)
+    return project
 
 
 # Dataset endpoints ("/{project_id}/{dataset_id}")
