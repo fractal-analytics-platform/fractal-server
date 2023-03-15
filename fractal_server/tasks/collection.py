@@ -281,8 +281,9 @@ async def create_package_environment_pip(
             source=task_pkg.source,
         )
         logger.debug("manifest loaded")
-    except Exception:
-        raise
+    except Exception as e:
+        logger.debug("manifest loading failed")
+        raise e
     return task_list
 
 
