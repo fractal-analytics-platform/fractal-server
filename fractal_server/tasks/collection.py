@@ -35,16 +35,10 @@ from ..common.schemas import TaskCollectStatus
 from ..common.schemas import TaskCreate
 from ..config import get_settings
 from ..syringe import Inject
-from ..utils import close_logger
 from ..utils import execute_command
-from ..utils import set_logger
 
 
 FRACTAL_PUBLIC_TASK_SUBDIR = ".fractal"
-
-
-class TaskCollectionError(RuntimeError):
-    pass
 
 
 def get_python_interpreter(version: Optional[str] = None) -> str:
@@ -184,7 +178,8 @@ def create_package_dir_pip(
     task_pkg: _TaskCollectPip,
     user: Optional[str] = None,
     create: bool = True,
-    **_,
+    logger_name: Optional[str] = None,
+    **_,  # FIXME remove this catch-all argument
 ) -> Path:
     settings = Inject(get_settings)
     user = user or FRACTAL_PUBLIC_TASK_SUBDIR
@@ -263,16 +258,12 @@ async def create_package_environment_pip(
     *,
     task_pkg: _TaskCollectPip,
     venv_path: Path,
+    logger_name: str,
 ) -> List[TaskCreate]:
     """
     Create environment and install package
     """
-    logger_name = task_pkg.package
-    logger = set_logger(
-        logger_name=logger_name,
-        log_file_path=get_log_path(venv_path),
-        level=logging.DEBUG,
-    )
+    logger = logging.getLogger(logger_name)
     try:
         logger.debug("Creating venv and installing package")
 
@@ -290,11 +281,9 @@ async def create_package_environment_pip(
             source=task_pkg.source,
         )
         logger.debug("manifest loaded")
-    except Exception:
-        # Make sure the logger is closed correctly
-        close_logger(logger)
-        raise
-    close_logger(logger)
+    except Exception as e:
+        logger.debug("manifest loading failed")
+        raise e
     return task_list
 
 
@@ -389,7 +378,9 @@ async def _init_venv(
     """
     interpreter = get_python_interpreter(version=python_version)
     await execute_command(
-        cwd=path, command=f"{interpreter} -m venv venv", logger_name="fractal"
+        cwd=path,
+        command=f"{interpreter} -m venv venv",
+        logger_name=logger_name,
     )
     return path / "venv/bin/python"
 
