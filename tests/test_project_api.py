@@ -630,3 +630,27 @@ async def test_create_project(
         res = await client.post(f"{PREFIX}/", json=payload)
         debug(res.json())
         assert res.status_code == 422
+
+
+async def test_delete_and_create(
+    db,
+    client,
+    MockCurrentUser,
+):
+    """issue #560"""
+    payload = dict(
+        name="new project",
+        project_dir="/tmp",
+    )
+    async with MockCurrentUser(persist=True):
+        res = await client.post(f"{PREFIX}/", json=payload)
+        assert res.status_code == 201
+        data = res.json()
+        _id = data["id"]
+
+        res = await client.delete(f"{PREFIX}/{_id}")
+        assert res.status_code == 204
+
+        res = await client.post(f"{PREFIX}/", json=payload)
+        debug(res.json())
+        assert res.status_code == 201
