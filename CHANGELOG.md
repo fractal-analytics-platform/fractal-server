@@ -11,6 +11,7 @@
 * Fail if `FRACTAL_SLURM_WORKER_PYTHON` has different versions of `fractal-server` or `cloudpickle` (\#533).
 * Improve request validation in project-creation endpoint (\#537).
 * Update `DatasetUpdate` schema (\#558).
+* Improve handling of task-collection errors (\#559).
 
 # 1.0.8
 
