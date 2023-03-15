@@ -6,8 +6,6 @@ Create Date: 2023-03-15 14:40:10.458348
 
 """
 import sqlalchemy as sa
-import sqlalchemy_utils
-import sqlmodel
 from alembic import op
 
 
