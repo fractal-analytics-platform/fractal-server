@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 from copy import deepcopy  # noqa
 from pathlib import Path
 from shutil import copy as shell_copy
@@ -31,8 +32,9 @@ from ....tasks.collection import download_package
 from ....tasks.collection import get_collection_data
 from ....tasks.collection import get_collection_log
 from ....tasks.collection import get_collection_path
+from ....tasks.collection import get_log_path
 from ....tasks.collection import inspect_package
-from ....tasks.collection import TaskCollectionError
+from ....utils import close_logger
 from ....utils import set_logger
 from ...db import AsyncSession
 from ...db import DBSyncSession
@@ -49,7 +51,7 @@ router = APIRouter()
 
 async def _background_collect_pip(
     state: State, venv_path: Path, task_pkg: _TaskCollectPip, db: AsyncSession
-) -> List[Task]:
+) -> None:
     """
     Install package and collect tasks
 
@@ -59,24 +61,34 @@ async def _background_collect_pip(
     In case of error, copy the log into the state and delete the package
     directory.
     """
-    logger = set_logger(logger_name="fractal")
+    logger_name = task_pkg.package.replace("/", "_")
+    logger = set_logger(
+        logger_name=logger_name,
+        log_file_path=get_log_path(venv_path),
+        level=logging.DEBUG,
+    )
+
+    logger = set_logger(logger_name=logger_name)
+    logger.info("Start background task collection")
     data = TaskCollectStatus(**state.data)
     data.info = None
 
     try:
         # install
-        logger.info("installing")
+        logger.info("Status: installing")
         data.status = "installing"
 
         state.data = data.sanitised_dict()
         await db.merge(state)
         await db.commit()
         task_list = await create_package_environment_pip(
-            venv_path=venv_path, task_pkg=task_pkg
+            venv_path=venv_path,
+            task_pkg=task_pkg,
+            logger_name=logger_name,
         )
 
         # collect
-        logger.info("collecting")
+        logger.info("Status: collecting")
         data.status = "collecting"
         state.data = data.sanitised_dict()
         await db.merge(state)
@@ -84,23 +96,31 @@ async def _background_collect_pip(
         tasks = await _insert_tasks(task_list=task_list, db=db)
 
         # finalise
-        logger.info("finalising")
+        logger.info("Status: finalising")
         collection_path = get_collection_path(venv_path)
         data.task_list = tasks
         with collection_path.open("w") as f:
             json.dump(data.sanitised_dict(), f)
 
+        # Update DB
         data.status = "OK"
-        data.task_list = tasks
         state.data = data.sanitised_dict()
         db.add(state)
         await db.merge(state)
         await db.commit()
 
-        logger.info("background collection completed")
-        return tasks
+        # Write last logs to file
+        logger.info("Status: OK")
+        logger.info("Background task collection completed successfully")
+        close_logger(logger)
+
     except Exception as e:
-        err = TaskCollectionError(*e.args)
+        # Write last logs to file
+        logger.info("Status: fail")
+        logger.info(f"Background collection failed. Original error: {e}")
+        close_logger(logger)
+
+        # Update db
         data.status = "fail"
         data.info = f"Original error: {e}"
         data.log = get_collection_log(venv_path)
@@ -108,9 +128,8 @@ async def _background_collect_pip(
         await db.merge(state)
         await db.commit()
 
-        # delete corrupted package dir
+        # Delete corrupted package dir
         shell_rmtree(venv_path)
-        raise err
 
 
 async def _insert_tasks(
@@ -189,12 +208,21 @@ async def collect_tasks_pip(
         venv_path = create_package_dir_pip(
             task_pkg=task_pkg, user=pkg_user, create=False
         )
-        task_collect_status = get_collection_data(venv_path)
+        try:
+            task_collect_status = get_collection_data(venv_path)
+        except FileNotFoundError as e:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "Cannot collect package. Possible reason: another "
+                    "collection of the same package is in progress. "
+                    f"Original error: {e}"
+                ),
+            )
         task_collect_status.info = "Already installed"
         state = State(data=task_collect_status.sanitised_dict())
         response.status_code == status.HTTP_200_OK
         return state
-
     settings = Inject(get_settings)
 
     full_venv_path = venv_path.relative_to(settings.FRACTAL_TASKS_DIR)
@@ -249,8 +277,9 @@ async def check_collection_status(
         )
     data = TaskCollectStatus(**state.data)
 
-    # collection_path = get_collection_path(package_path)
-    if verbose:
+    # In some cases (i.e. a successful or ongoing task collection), data.log is
+    # not set; if so, we collect the current logs
+    if verbose and not data.log:
         data.log = get_collection_log(data.venv_path)
         state.data = data.sanitised_dict()
     return state
