@@ -8,7 +8,7 @@
 * Improve request validation in project-creation endpoint (\#537).
 * Update the endpoint to patch a `Task` (\#526).
 * Add new project-update endpoint, and relax constraints on `project_dir` in new-project endpoint (\#563).
-* Update `DatasetUpdate` schema (\#558).
+* Update `DatasetUpdate` schema (\#558 and \#564).
 * Fix redundant task-error logs in slurm backend (\#552).
 * Improve handling of task-collection errors (\#559).
 * If `FRACTAL_BACKEND_RUNNER=slurm`, include some configuration checks at server startup (\#529).
