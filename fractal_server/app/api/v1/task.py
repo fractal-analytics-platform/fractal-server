@@ -109,12 +109,18 @@ async def _background_collect_pip(
         await db.merge(state)
         await db.commit()
 
+        # Write last logs to file
         logger.info("Status: OK")
         logger.info("Background task collection completed successfully")
         close_logger(logger)
 
     except Exception as e:
+        # Write last logs to file
         logger.info("Status: fail")
+        logger.info(f"Background collection failed. Original error: {e}")
+        close_logger(logger)
+
+        # Update db
         data.status = "fail"
         data.info = f"Original error: {e}"
         data.log = get_collection_log(venv_path)
@@ -123,11 +129,7 @@ async def _background_collect_pip(
         await db.commit()
 
         # Delete corrupted package dir
-        logger.info(f"Now removing folder {venv_path}")
         shell_rmtree(venv_path)
-
-        logger.info(f"Background collection failed. Original error: {e}")
-        close_logger(logger)
 
 
 async def _insert_tasks(
@@ -275,8 +277,9 @@ async def check_collection_status(
         )
     data = TaskCollectStatus(**state.data)
 
-    if verbose:
-        data.log = get_collection_log(data.venv_path)
+    # state.data.log already contains logs, remove them if verbose is False
+    if not verbose:
+        data.log = None
         state.data = data.sanitised_dict()
     return state
 
