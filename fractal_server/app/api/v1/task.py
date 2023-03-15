@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 from copy import deepcopy  # noqa
 from pathlib import Path
 from shutil import copy as shell_copy
@@ -31,6 +32,7 @@ from ....tasks.collection import download_package
 from ....tasks.collection import get_collection_data
 from ....tasks.collection import get_collection_log
 from ....tasks.collection import get_collection_path
+from ....tasks.collection import get_log_path
 from ....tasks.collection import inspect_package
 from ....utils import close_logger
 from ....utils import set_logger
@@ -59,7 +61,14 @@ async def _background_collect_pip(
     In case of error, copy the log into the state and delete the package
     directory.
     """
-    logger = set_logger(logger_name="fractal")
+    logger_name = task_pkg.package.replace("/", "_")
+    logger = set_logger(
+        logger_name=logger_name,
+        log_file_path=get_log_path(venv_path),
+        level=logging.DEBUG,
+    )
+
+    logger = set_logger(logger_name=logger_name)
     logger.info("Start background task collection")
     data = TaskCollectStatus(**state.data)
     data.info = None
@@ -73,7 +82,9 @@ async def _background_collect_pip(
         await db.merge(state)
         await db.commit()
         task_list = await create_package_environment_pip(
-            venv_path=venv_path, task_pkg=task_pkg
+            venv_path=venv_path,
+            task_pkg=task_pkg,
+            logger_name=logger_name,
         )
 
         # collect
