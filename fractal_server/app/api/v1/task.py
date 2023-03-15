@@ -277,9 +277,10 @@ async def check_collection_status(
         )
     data = TaskCollectStatus(**state.data)
 
-    # state.data.log already contains logs, remove them if verbose is False
-    if not verbose:
-        data.log = None
+    # In some cases (i.e. a successful or ongoing task collection), data.log is
+    # not set; if so, we collect the current logs
+    if verbose and not data.log:
+        data.log = get_collection_log(data.venv_path)
         state.data = data.sanitised_dict()
     return state
 
