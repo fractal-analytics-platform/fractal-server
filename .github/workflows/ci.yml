@@ -62,7 +62,7 @@ jobs:
         run: poetry install --with dev --no-interaction --all-extras
 
       - name: Test with pytest
-        run: poetry run coverage run -m pytest
+        run: poetry run coverage run -m pytest -x -s -v tests/test_project_api.py::test_delete_and_create --log-cli-level debug
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
