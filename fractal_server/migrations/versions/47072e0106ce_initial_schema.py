@@ -1,8 +1,8 @@
-"""New initial schema
+"""Initial schema
 
-Revision ID: d9e6283fc947
+Revision ID: 47072e0106ce
 Revises:
-Create Date: 2023-02-01 16:03:16.138102
+Create Date: 2023-03-16 08:37:00.138811
 
 """
 import sqlalchemy as sa
@@ -12,7 +12,7 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = "d9e6283fc947"
+revision = "47072e0106ce"
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -43,10 +43,11 @@ def upgrade() -> None:
         sa.Column("meta", sa.JSON(), nullable=True),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column(
-            "command", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column(
             "source", sqlmodel.sql.sqltypes.AutoString(), nullable=False
+        ),
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column(
+            "command", sqlmodel.sql.sqltypes.AutoString(), nullable=False
         ),
         sa.Column(
             "input_type", sqlmodel.sql.sqltypes.AutoString(), nullable=False
@@ -54,7 +55,6 @@ def upgrade() -> None:
         sa.Column(
             "output_type", sqlmodel.sql.sqltypes.AutoString(), nullable=False
         ),
-        sa.Column("id", sa.Integer(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
@@ -83,10 +83,10 @@ def upgrade() -> None:
         "dataset",
         sa.Column("meta", sa.JSON(), nullable=True),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("project_id", sa.Integer(), nullable=False),
         sa.Column("type", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-        sa.Column("read_only", sa.Boolean(), nullable=True),
+        sa.Column("read_only", sa.Boolean(), nullable=False),
         sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("project_id", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
             ["project_id"],
             ["project.id"],
@@ -148,8 +148,8 @@ def upgrade() -> None:
     op.create_table(
         "workflow",
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("project_id", sa.Integer(), nullable=False),
         sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("project_id", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
             ["project_id"],
             ["project.id"],
@@ -169,6 +169,7 @@ def upgrade() -> None:
         sa.Column(
             "worker_init", sqlmodel.sql.sqltypes.AutoString(), nullable=True
         ),
+        sa.Column("id", sa.Integer(), nullable=False),
         sa.Column(
             "working_dir", sqlmodel.sql.sqltypes.AutoString(), nullable=True
         ),
@@ -177,7 +178,6 @@ def upgrade() -> None:
             sqlmodel.sql.sqltypes.AutoString(),
             nullable=True,
         ),
-        sa.Column("id", sa.Integer(), nullable=False),
         sa.Column(
             "status", sqlmodel.sql.sqltypes.AutoString(), nullable=False
         ),
@@ -203,9 +203,6 @@ def upgrade() -> None:
     op.create_table(
         "resource",
         sa.Column("path", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column(
-            "glob_pattern", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("dataset_id", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
@@ -218,10 +215,10 @@ def upgrade() -> None:
         "workflowtask",
         sa.Column("meta", sa.JSON(), nullable=True),
         sa.Column("args", sa.JSON(), nullable=True),
-        sa.Column("workflow_id", sa.Integer(), nullable=True),
-        sa.Column("task_id", sa.Integer(), nullable=True),
         sa.Column("order", sa.Integer(), nullable=True),
         sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("workflow_id", sa.Integer(), nullable=True),
+        sa.Column("task_id", sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(
             ["task_id"],
             ["task.id"],
