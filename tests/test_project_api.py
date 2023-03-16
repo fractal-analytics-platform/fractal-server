@@ -6,8 +6,10 @@ from devtools import debug
 from sqlmodel import select
 
 from fractal_server.app.models import Dataset
+from fractal_server.app.models import LinkUserProject
 from fractal_server.app.models import Project
 from fractal_server.app.models import Resource
+from fractal_server.app.models import User
 
 PREFIX = "/api/v1/project"
 
@@ -648,8 +650,27 @@ async def test_delete_and_create(
         data = res.json()
         _id = data["id"]
 
+        users = (await db.execute(select(User))).scalars().all()
+        debug(users)
+        projects = (await db.execute(select(Project))).scalars().all()
+        debug(projects)
+        debug(projects[0].user_member_list)
+        linkuserproject = (
+            (await db.execute(select(LinkUserProject))).scalars().all()
+        )
+        debug(linkuserproject)
+
         res = await client.delete(f"{PREFIX}/{_id}")
         assert res.status_code == 204
+
+        users = (await db.execute(select(User))).scalars().all()
+        debug(users)
+        projects = (await db.execute(select(Project))).scalars().all()
+        debug(projects)
+        linkuserproject = (
+            (await db.execute(select(LinkUserProject))).scalars().all()
+        )
+        debug(linkuserproject)
 
         res = await client.post(f"{PREFIX}/", json=payload)
         debug(res.json())
