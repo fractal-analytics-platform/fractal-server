@@ -1,6 +1,8 @@
 import glob
 import json
+import logging
 import math
+import multiprocessing
 import os
 import shlex
 import shutil
@@ -18,11 +20,13 @@ def write_script(
     list_args: list[int],
     num_tasks_max_running: int,
     mem_per_task_MB: int,
-    cpu_per_task: int,
+    cpus_per_task: int,
     logdir: str,
     command: str,
     sleep_time: float,
 ):
+
+    mem_per_job_MB = mem_per_task_MB * num_tasks_max_running
 
     script = "\n".join(
         (
@@ -30,8 +34,10 @@ def write_script(
             "#SBATCH --partition=main",
             f"#SBATCH --err={logdir}/err",
             f"#SBATCH --out={logdir}/out",
-            f"#SBATCH --cpus-per-task={cpu_per_task}",
+            f"#SBATCH --cpus-per-task={cpus_per_task}",
+            f"#SBATCH --mem={mem_per_job_MB}MB",
             "\n",
+            f'COMMAND="{command}"' "\n",
         )
     )
 
@@ -43,7 +49,7 @@ def write_script(
                 script += (
                     "srun --ntasks=1 --cpus-per-task=$SLURM_CPUS_PER_TASK "
                     f"--mem={mem_per_task_MB}MB "
-                    f"{command} {arg} {sleep_time} {logdir} &\n"
+                    f"$COMMAND {arg} {sleep_time} {logdir} &\n"
                 )
         script += "wait\n\n"
 
@@ -86,12 +92,12 @@ cases.append((10, 4, 3))
     "n_ftasks_tot,n_ftasks_per_script,n_parallel_ftasks_per_script",
     cases,
 )
-@pytest.mark.parametrize("cpu_per_task", [1, 3])
+@pytest.mark.parametrize("cpus_per_task", [1, 2])
 def test_slurm_script(
     n_ftasks_tot,
     n_ftasks_per_script,
     n_parallel_ftasks_per_script,
-    cpu_per_task,
+    cpus_per_task,
     monkey_slurm,
     monkey_slurm_user,
     tmp777_path,
@@ -128,7 +134,10 @@ def test_slurm_script(
             parallel
     """
 
-    # NOTE: by now we make everything 777
+    # Preliminary check
+    cpus = multiprocessing.cpu_count()
+    if cpus < cpus_per_task:
+        logging.warning(f"SKIPPED TEST BECAUSE {cpus=}<{cpus_per_task}")
 
     assert n_parallel_ftasks_per_script <= n_ftasks_per_script
     assert n_ftasks_per_script <= n_ftasks_tot
@@ -147,6 +156,7 @@ def test_slurm_script(
     task_path = str(tmp777_path / "fake_task_for_timing.py")
     shutil.copy(str(testdata_path / "fake_task_for_timing.py"), task_path)
     command = f"/usr/bin/python3 {task_path}"
+    debug(command)
     sleep_time = 1.0
     debug(sleep_time)
 
@@ -155,19 +165,20 @@ def test_slurm_script(
     logdirs = []
     for ind_batch, batch in enumerate(batches):
         debug(batch)
+        # Prepare script path and log folder (to be created, with 777 mode)
         sbatch_script_path = tmp777_path / f"submit_batch_{ind_batch}.sbatch"
         logdir = str(tmp777_path / f"logs_batch_{ind_batch}")
         umask = os.umask(0)
         os.mkdir(logdir, 0o777)
         _ = os.umask(umask)
         debug(sbatch_script_path)
-        debug(command)
+        # Construct and write to file the submission script
         with sbatch_script_path.open("w") as f:
             sbatch_script = write_script(
                 list_args=batch,
                 num_tasks_max_running=n_parallel_ftasks_per_script,
-                mem_per_task_MB=100,
-                cpu_per_task=cpu_per_task,
+                mem_per_task_MB=200,
+                cpus_per_task=cpus_per_task,
                 logdir=logdir,
                 command=command,
                 sleep_time=sleep_time,
@@ -196,7 +207,7 @@ def test_slurm_script(
     while True:
         squeue_list = run_squeue(
             header=True,
-            squeue_format="%.8i %.9P %.14j %.8T   %.7c %.4C   %.10M %.12l   %.6D  %R",  # noqa
+            squeue_format="%.8i %.9P %.14j %.8T %.7c %.4C %.10m  %.10M %.12l   %.6D  %R",  # noqa
         )
         print(squeue_list)
         # Break while loop when squeue output only includes the header
