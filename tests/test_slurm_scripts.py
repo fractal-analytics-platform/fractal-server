@@ -26,6 +26,12 @@ def write_script(
     sleep_time: float,
 ):
 
+    if len(list_args) < num_tasks_max_running:
+        logging.warning(
+            f"{len(list_args)=} is smaller than {num_tasks_max_running=}"
+        )
+    ntasks = min(len(list_args), num_tasks_max_running)
+
     mem_per_job_MB = mem_per_task_MB * num_tasks_max_running
 
     script = "\n".join(
@@ -35,6 +41,7 @@ def write_script(
             f"#SBATCH --err={logdir}/err",
             f"#SBATCH --out={logdir}/out",
             f"#SBATCH --cpus-per-task={cpus_per_task}",
+            f"#SBATCH --ntasks={ntasks}",
             f"#SBATCH --mem={mem_per_job_MB}MB",
             "\n",
             f'COMMAND="{command}"' "\n",
@@ -43,7 +50,7 @@ def write_script(
 
     tmp_list_args = copy(list_args)
     while tmp_list_args:
-        for ind in range(num_tasks_max_running):
+        for ind in range(ntasks):
             if tmp_list_args:
                 arg = tmp_list_args.pop(0)  # take first element
                 script += (
@@ -56,11 +63,13 @@ def write_script(
     return script
 
 
-# A case consists of:
+# (0) Define scheduling scenarios
+cases = []
+
+# Each case consists of:
 # * n_ftasks_tot
 # * n_ftasks_per_script
 # * n_parallel_ftasks_per_script
-cases = []
 
 # (1) Single script
 # (1a) No parallelism
@@ -136,8 +145,13 @@ def test_slurm_script(
 
     # Preliminary check
     cpus = multiprocessing.cpu_count()
-    if cpus < cpus_per_task:
-        logging.warning(f"SKIPPED TEST BECAUSE {cpus=}<{cpus_per_task}")
+    if cpus < cpus_per_task * n_parallel_ftasks_per_script:
+        msg = (
+            f"Error: ({cpus=})<"
+            f"({cpus_per_task=})*({n_parallel_ftasks_per_script=})"
+        )
+        logging.error(msg)
+        raise RuntimeError(msg)
 
     assert n_parallel_ftasks_per_script <= n_ftasks_per_script
     assert n_ftasks_per_script <= n_ftasks_tot
