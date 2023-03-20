@@ -32,7 +32,7 @@ def write_script(
         )
     ntasks = min(len(list_args), num_tasks_max_running)
 
-    mem_per_job_MB = mem_per_task_MB * num_tasks_max_running
+    mem_per_job_MB = mem_per_task_MB * ntasks
 
     script = "\n".join(
         (
