@@ -221,7 +221,6 @@ def test_slurm_script(
         start_times = []
         end_times = []
         for res_file in glob.glob(f"{logdir}/results_*.json"):
-            debug(res_file)
             with open(res_file, "r") as f:
                 results = json.load(f)
                 start_times.append(results["start_time_sec"])
@@ -229,19 +228,16 @@ def test_slurm_script(
         assert start_times
         assert end_times
 
-        # Compute expected total runtime factor for given slurm job
-        debug(len(batches[ind_batch]))
-        debug(n_parallel_ftasks_per_script)
+        # Compare expected actual runtimes for given slurm job
         runtime_factor = math.ceil(
             len(batches[ind_batch]) / n_parallel_ftasks_per_script
         )
-        debug(runtime_factor)
+        expected_runtime = sleep_time * runtime_factor
+        debug(expected_runtime)
         earliest_start_time = min(start_times)
         latest_end_time = max(end_times)
         total_runtime = latest_end_time - earliest_start_time
-        expected_runtime = sleep_time * runtime_factor
         debug(total_runtime)
-        debug(expected_runtime)
         assert math.isclose(
             total_runtime,
             expected_runtime,
