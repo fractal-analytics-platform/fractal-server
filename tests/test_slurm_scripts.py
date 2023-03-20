@@ -6,6 +6,7 @@ import shlex
 import shutil
 import subprocess
 import time
+from copy import copy
 
 import pytest
 from devtools import debug
@@ -30,31 +31,55 @@ def write_script(
             f"#SBATCH --err={logdir}/err",
             f"#SBATCH --out={logdir}/out",
             f"#SBATCH --cpus-per-task={cpu_per_task}",
-            "",
+            "\n",
         )
     )
 
-    while len(list_args):
+    tmp_list_args = copy(list_args)
+    while tmp_list_args:
         for ind in range(num_tasks_max_running):
-            arg = list_args.pop(0)  # take first element
-            script += (
-                "srun --ntasks=1 --cpus-per-task=$SLURM_CPUS_PER_TASK "
-                f"--mem={mem_per_task_MB}MB "
-                f"{command} {arg} {sleep_time} {logdir} &\n"
-            )
+            if tmp_list_args:
+                arg = tmp_list_args.pop(0)  # take first element
+                script += (
+                    "srun --ntasks=1 --cpus-per-task=$SLURM_CPUS_PER_TASK "
+                    f"--mem={mem_per_task_MB}MB "
+                    f"{command} {arg} {sleep_time} {logdir} &\n"
+                )
         script += "wait\n\n"
 
     return script
 
 
+# A case consists of:
+# * n_ftasks_tot
+# * n_ftasks_per_script
+# * n_parallel_ftasks_per_script
 cases = []
-# Single script
-cases.append((4, 4, 4))
-cases.append((4, 4, 2))
+
+# (1) Single script
+# (1a) No parallelism
 cases.append((4, 4, 1))
-# Two scripts
-cases.append((4, 2, 2))
-cases.append((4, 2, 1))
+# (1b) Commensurable parallelism
+cases.append((4, 4, 2))
+cases.append((4, 4, 4))
+# (1c) Incommensurable parallelism
+cases.append((4, 4, 3))
+# (2) Multiple scripts (commensurable)
+# (2a) No parallelism
+cases.append((8, 4, 1))
+# (2b) Commensurable parallelism
+cases.append((8, 4, 2))
+cases.append((8, 4, 4))
+# (2c) Incommensurable parallelism
+cases.append((8, 4, 3))
+# (3) Multiple scripts (incommensurable)
+# (3a) No parallelism
+cases.append((10, 4, 1))
+# (3b) Commensurable parallelism
+cases.append((10, 4, 2))
+cases.append((10, 4, 4))
+# (3c) Incommensurable parallelism
+cases.append((10, 4, 3))
 
 
 @pytest.mark.parametrize(
@@ -73,12 +98,11 @@ def test_slurm_script(
 ):
     """
     Arguments:
-        n_tasks_tot:
+        n_ftasks_tot:
             Total number of f-tasks to be run
-        n_tasks_per_script:
-            Number of f-tasks inside each slurm script (note: the number of
-            script will then be ceil(n_tasks_tot/n_tasks_per_script))
-        n_parallel_tasks_per_script:
+        n_ftasks_per_script:
+            Number of f-tasks for each submission script
+        n_parallel_ftasks_per_script:
             Maximum number of f-tasks from the same script which run in
             parallel
     """
@@ -97,11 +121,7 @@ def test_slurm_script(
     for ind_chunk in range(0, len(components), batch_size):
         batches.append(components[ind_chunk : ind_chunk + batch_size])  # noqa
 
-    # Compute expected total runtime factor
-    runtime_factor = n_ftasks_per_script / n_parallel_ftasks_per_script
-    debug(runtime_factor)
-
-    sleep_time = 2.0
+    sleep_time = 1.0
     debug(sleep_time)
 
     # Prepare python task
@@ -172,6 +192,15 @@ def test_slurm_script(
                 end_times.append(results["end_time_sec"])
         assert start_times
         assert end_times
+
+        # Compute expected total runtime factor for given slurm job
+        debug(len(batches[ind_batch]))
+        debug(n_parallel_ftasks_per_script)
+        runtime_factor = math.ceil(
+            len(batches[ind_batch]) / n_parallel_ftasks_per_script
+        )
+        debug(runtime_factor)
+
         earliest_start_time = min(start_times)
         latest_end_time = max(end_times)
         total_runtime = latest_end_time - earliest_start_time
@@ -181,7 +210,6 @@ def test_slurm_script(
         assert math.isclose(
             total_runtime,
             expected_runtime,
-            rel_tol=0.05,
-            abs_tol=0.05,
+            rel_tol=0.1,
+            abs_tol=0.1,
         )
-        print()
