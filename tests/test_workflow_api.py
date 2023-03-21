@@ -520,10 +520,6 @@ async def test_reorder_tasklist(
             workflow_task = (await db.execute(stm)).first()[0]
             assert workflow_task.order == i
 
-        id_to_order = {}
-        for wt in workflow.task_list:
-            id_to_order[wt.id] = wt.order
-        # {1: 0, 2: 1, 3: 2, 4: 3}
         payload = dict(order=0)
         res = await client.patch(
             f"api/v1/workflow/{workflow.id}/"
