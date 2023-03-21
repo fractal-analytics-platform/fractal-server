@@ -51,6 +51,13 @@ try:
 except ModuleNotFoundError as e:
     _backend_errors["slurm"] = e
 
+try:
+    from ._grouped_slurm import process_workflow as slurm_process_workflow
+
+    _backends["grouped_slurm"] = slurm_process_workflow
+except ModuleNotFoundError as e:
+    _backend_errors["grouped_slurm"] = e
+
 
 def get_process_workflow():
     settings = Inject(get_settings)
