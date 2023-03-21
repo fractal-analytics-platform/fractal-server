@@ -302,6 +302,7 @@ async def patch_workflow_task(
         db=db,
     )
 
+    order = False
     for key, value in workflow_task_update.dict(exclude_unset=True).items():
         if key == "args":
             current_args = deepcopy(db_workflow_task.args) or {}
@@ -311,6 +312,8 @@ async def patch_workflow_task(
             current_meta = deepcopy(db_workflow_task.meta) or {}
             current_meta.update(value)
             setattr(db_workflow_task, key, current_meta)
+        elif key == "order":
+            order = True
         else:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -319,6 +322,18 @@ async def patch_workflow_task(
 
     await db.commit()
     await db.refresh(db_workflow_task)
+
+    if order:
+        old = db_workflow_task.order
+        new = workflow_task_update.order
+        task = db_workflow.task_list.pop(old)
+        db_workflow.task_list.insert(new, task)
+        for i, task in enumerate(db_workflow.task_list):
+            db_workflow.task_list[i].order = i
+
+    await db.commit()
+    await db.refresh(db_workflow_task)
+
     return db_workflow_task
 
 
