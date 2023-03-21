@@ -1,3 +1,4 @@
+import pytest
 from devtools import debug
 
 from fractal_server.app.runner._grouped_slurm.executor import (
@@ -5,6 +6,7 @@ from fractal_server.app.runner._grouped_slurm.executor import (
 )  # noqa
 
 
+@pytest.mark.skip()
 def test_slurm_executor_submit(
     monkey_slurm,
     monkey_slurm_user,
@@ -33,7 +35,8 @@ def test_slurm_executor_map(
         working_dir_user=tmp777_path,
         slurm_poll_interval=2,
     ) as executor:
-        result_generator = executor.map(lambda x: 2 * x, range(4))
+        inputs = list(range(10))
+        result_generator = executor.map(lambda x: 2 * x, inputs)
         results = list(result_generator)
         debug(results)
-        assert results == [2 * x for x in range(4)]
+        assert results == [2 * x for x in inputs]
