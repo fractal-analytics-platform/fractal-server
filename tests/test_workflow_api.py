@@ -496,3 +496,38 @@ async def test_import_export_workflow(
     wf_new = WorkflowExport(**workflow_exported).dict(exclude_none=True)
 
     assert wf_old == wf_new
+
+
+async def test_reorder_tasklist(
+    client,
+    db,
+    MockCurrentUser,
+    project_factory,
+    task_factory,
+):
+    async with MockCurrentUser(persist=True) as user:
+        project = await project_factory(user)
+        workflow = {"name": "WF", "project_id": project.id}
+        res = await client.post("api/v1/workflow/", json=workflow)
+        wf_id = res.json()["id"]
+
+        workflow = await db.get(Workflow, wf_id)
+        for i in range(4):
+            t = await task_factory()
+            await workflow.insert_task(t.id, db=db)
+            await db.refresh(workflow)
+            stm = select(WorkflowTask).where(WorkflowTask.task_id == t.id)
+            workflow_task = (await db.execute(stm)).first()[0]
+            assert workflow_task.order == i
+
+        id_to_order = {}
+        for wt in workflow.task_list:
+            id_to_order[wt.id] = wt.order
+        # {1: 0, 2: 1, 3: 2, 4: 3}
+        payload = dict(order=0)
+        res = await client.patch(
+            f"api/v1/workflow/{workflow.id}/"
+            f"edit-task/{workflow.task_list[1].id}",
+            json=payload,
+        )
+        assert res.status_code == 200
