@@ -96,12 +96,33 @@ cases.append((10, 4, 4))
 # (3c) Incommensurable parallelism
 cases.append((10, 4, 3))
 
+# (4) Enlarge cases set by setting cpus_per_task
+list_cpus_per_task = [1, 2]
+cases_plus_cpus = []
+for cpus_per_task in list_cpus_per_task:
+    cases_plus_cpus.extend([c + (cpus_per_task,) for c in cases])
+
+# (5) Mark as xfail(strict=True) all cases where we would request more CPUs
+# than available
+available_cpus = multiprocessing.cpu_count()
+safe_cases = []
+for this_case in cases_plus_cpus:
+    n_parallel_ftasks_per_script, cpus_per_task = this_case[2:4]
+    if cpus_per_task * n_parallel_ftasks_per_script <= available_cpus:
+        safe_cases.append(this_case)
+    else:
+        safe_cases.append(
+            pytest.param(
+                *this_case,
+                marks=pytest.mark.xfail(strict=True),
+            ),
+        )
+
 
 @pytest.mark.parametrize(
-    "n_ftasks_tot,n_ftasks_per_script,n_parallel_ftasks_per_script",
-    cases,
+    "n_ftasks_tot,n_ftasks_per_script,n_parallel_ftasks_per_script,cpus_per_task",  # noqa
+    safe_cases,
 )
-@pytest.mark.parametrize("cpus_per_task", [1, 2])
 def test_slurm_script(
     n_ftasks_tot,
     n_ftasks_per_script,
@@ -147,11 +168,10 @@ def test_slurm_script(
     cpus = multiprocessing.cpu_count()
     if cpus < cpus_per_task * n_parallel_ftasks_per_script:
         msg = (
-            f"Error: ({cpus=})<"
+            f"({cpus=})<"
             f"({cpus_per_task=})*({n_parallel_ftasks_per_script=})"
         )
-        logging.error(msg)
-        raise RuntimeError(msg)
+        logging.warning(msg)
 
     assert n_parallel_ftasks_per_script <= n_ftasks_per_script
     assert n_ftasks_per_script <= n_ftasks_tot
