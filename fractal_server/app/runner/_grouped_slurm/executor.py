@@ -406,7 +406,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         )
 
         # Thread will wait for it to finish.
-        self.wait_thread.wait(job.output_pickle_file.as_posix(), jobid)
+        self.wait_thread.wait((job.output_pickle_file.as_posix(),), jobid)
 
         with self.jobs_lock:
             self.jobs[jobid] = (fut, job)
