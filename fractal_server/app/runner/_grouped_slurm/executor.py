@@ -11,6 +11,7 @@
 # Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
 # University of Zurich
 import logging
+import math
 import shlex
 import subprocess  # nosec
 import sys
@@ -24,6 +25,7 @@ from typing import Iterable
 from typing import List
 from typing import Optional
 from typing import Tuple
+from typing import Union
 
 import cloudpickle
 from cfut import SlurmExecutor
@@ -251,6 +253,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         script_path = script_path or self.get_slurm_script_file_path(
             random_string()
         )
+        debug(sbatch_script)
         self.write_batch_script(sbatch_script=sbatch_script, dest=script_path)
         submit_command = f"sbatch --parsable {script_path}"
         full_cmd = shlex.split(submit_pre_command) + shlex.split(
@@ -313,7 +316,7 @@ class FractalSlurmExecutor(SlurmExecutor):
     def map(
         self,
         fn: Callable[..., Any],
-        *iterables,
+        iterable: Iterable[Any],
         timeout: Optional[float] = None,
         chunksize: int = 1,
         additional_setup_lines: Optional[List[str]] = None,
@@ -322,6 +325,8 @@ class FractalSlurmExecutor(SlurmExecutor):
         """
         Returns an iterator equivalent to map(fn, iter), passing
         parameters to submit
+
+        # FIXME: we replaced iterables with iterable
 
         Overrides the PSL's `concurrent.futures.Executor.map` so that extra
         parameters can be passed to `Executor.submit`.
@@ -356,12 +361,68 @@ class FractalSlurmExecutor(SlurmExecutor):
         def sanitize_string(s):
             return s.replace(" ", "_").replace("/", "_").replace(".", "_")
 
-        if job_file_prefix:
-            job_file_fmt = job_file_prefix + "_par_{args}"
-        else:
-            job_file_fmt = f"_temp_{random_string()}"
+        if not job_file_prefix:
+            job_file_prefix = f"_temp_{random_string()}"
 
-        debug(iterables)
+        debug(iterable)
+
+        n_ftasks_per_script = 4
+        debug(n_ftasks_per_script)
+
+        list_args = iterable
+        n_ftasks_tot = len(list_args)
+        debug(list_args)
+
+        # Divide arguments in batches of size n_tasks_per_script
+        args_batches = []
+        batch_size = n_ftasks_per_script
+        for ind_chunk in range(0, len(list_args), batch_size):
+            args_batches.append(
+                list_args[ind_chunk : ind_chunk + batch_size]  # noqa
+            )
+        if len(args_batches) != math.ceil(n_ftasks_tot / n_ftasks_per_script):
+            raise RuntimeError("Something wrong here while batching tasks")
+
+        fs = [
+            self.submit_multitask(
+                fn,
+                list_list_args=[[x] for x in batch],  # FIXME
+                additional_setup_lines=additional_setup_lines,
+                job_file_prefix=f"{job_file_prefix}_batch_{ind_batch}",
+            )
+            for ind_batch, batch in enumerate(args_batches)
+        ]
+        debug(fs)
+
+        """
+        # Construct all sbatch scripts and corresponding folders
+        sbatch_scripts = []
+        logdirs = []
+            debug(batch)
+            # Prepare script path and log folder (to be created, with 777 mode)
+            sbatch_script_path = tmp777_path / f"submit_batch_{ind_batch}.sbatch"   # noqa
+            logdir = str(tmp777_path / f"logs_batch_{ind_batch}")
+            umask = os.umask(0)
+            os.mkdir(logdir, 0o777)
+            _ = os.umask(umask)
+            debug(sbatch_script_path)
+            # Construct and write to file the submission script
+            with sbatch_script_path.open("w") as f:
+                sbatch_script = write_script(
+                    list_args=batch,
+                    num_tasks_max_running=n_parallel_ftasks_per_script,
+                    mem_per_task_MB=200,
+                    cpus_per_task=cpus_per_task,
+                    logdir=logdir,
+                    command=command,
+                    sleep_time=sleep_time,
+                )
+                debug(sbatch_script)
+                f.write(sbatch_script)
+            sbatch_script_path.chmod(0o777)
+            sbatch_script_path = str(sbatch_script_path)
+            sbatch_scripts.append(sbatch_script_path)
+            logdirs.append(logdir)
 
         fs = [
             self.submit(
@@ -374,6 +435,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             )
             for args in zip(*iterables)
         ]
+        """
 
         # Yield must be hidden in closure so that the futures are submitted
         # before the first iterator value is required.
@@ -393,13 +455,17 @@ class FractalSlurmExecutor(SlurmExecutor):
                 for future in fs:
                     future.cancel()
 
-        return result_iterator()
+        results = []
+        for batch_res in result_iterator():
+            debug(batch_res)
+            results.extend(batch_res)
+
+        return results
 
     def submit_multitask(
         self,
         fun: Callable[..., Any],
-        list_args: Iterable[Any],
-        list_kwargs: Iterable[dict],
+        list_list_args: Iterable[Iterable[Any]],
         additional_setup_lines: Optional[List[str]] = None,
         job_file_prefix: Optional[str] = None,
     ) -> futures.Future:
@@ -410,9 +476,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         fut: futures.Future = futures.Future()
 
         # Define slurm-job-related files
-        num_tasks_tot = len(list_args)
-        if not len(list_kwargs) == num_tasks_tot:
-            raise ValueError
+        num_tasks_tot = len(list_list_args)
         job = SlurmMultiTaskJob(
             file_prefix=job_file_prefix,
             num_tasks_tot=num_tasks_tot,
@@ -424,7 +488,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             )
             for workerid in job.workerids
         )
-        job.input_pickle_files = tuple(
+        job.output_pickle_files = tuple(
             self.get_output_pickle_file_path(
                 workerid,
                 prefix=job.file_prefix,
@@ -443,10 +507,14 @@ class FractalSlurmExecutor(SlurmExecutor):
             cloudpickle=cloudpickle.__version__,
             fractal_server=__VERSION__,
         )
-        for ind_task, args in enumerate(list_args):
-            kwargs = list_kwargs or {}
-            funcser = cloudpickle.dumps((versions, fun, args, kwargs))
-            with open(job.input_pickle_file, "wb") as f:
+        debug(list_list_args)
+        for ind_task, args_list in enumerate(list_list_args):
+            debug(args_list)
+            kwargs_dict = {}
+            funcser = cloudpickle.dumps(
+                (versions, fun, args_list, kwargs_dict)
+            )
+            with open(job.input_pickle_files[ind_task], "wb") as f:
                 f.write(funcser)
 
         # Submit job to SLURM, and get jobid
@@ -567,6 +635,17 @@ class FractalSlurmExecutor(SlurmExecutor):
         )
         return job_exc
 
+    def _handle_single_task(self):
+        """
+        Needed:
+
+        in_path (clean)
+        out_path (clean)
+
+        return output, to be collected..
+        """
+        pass
+
     def _completion(self, jobid: str) -> None:
         """
         Callback function to be executed whenever a job finishes.
@@ -587,6 +666,8 @@ class FractalSlurmExecutor(SlurmExecutor):
             if not self.jobs:
                 self.jobs_empty_cond.notify_all()
 
+        debug(job)
+
         # Handle all uncaught exceptions in this broad try/except block
         try:
 
@@ -594,17 +675,8 @@ class FractalSlurmExecutor(SlurmExecutor):
             # self.working_dir
             self._copy_files_from_user_to_server(job)
 
-            # Input/output pickle files
-            in_path = self.get_input_pickle_file_path(
-                job.workerid, prefix=job.file_prefix
-            )
-            out_path = self.get_output_pickle_file_path(
-                job.workerid, prefix=job.file_prefix
-            )
-
             # Update the paths to use the files in self.working_dir (rather
             # than the user's ones in self.working_dir_user)
-            out_path = self.working_dir / out_path.name
             self.map_jobid_to_slurm_files[jobid]
             (
                 slurm_script_file,
@@ -623,39 +695,98 @@ class FractalSlurmExecutor(SlurmExecutor):
                 new_slurm_stderr_file,
             )
 
-            # The output pickle file may be missing because of some slow
-            # filesystem operation; wait some time before considering it as
-            # missing
-            if not out_path.exists():
-                settings = Inject(get_settings)
-                time.sleep(settings.FRACTAL_SLURM_OUTPUT_FILE_GRACE_TIME)
+            # FIXME: remove
+            in_paths: tuple[Path]
+            out_paths: tuple[Path]
 
-            if out_path.exists():
-                # Output pickle file exists
+            if isinstance(job, SlurmJob):
+                # Input/output pickle files
+                in_paths = (job.input_pickle_file,)
+                out_paths = (self.working_dir / job.output_pickle_file.name,)
+            elif isinstance(job, SlurmMultiTaskJob):
+                in_paths = job.input_pickle_files
+                out_paths = tuple(
+                    self.working_dir / f.name for f in job.output_pickle_files
+                )
+
+            # FIXME: remove
+            debug(out_paths)
+            debug(in_paths)
+
+            outputs = []
+            for ind_out_path, out_path in enumerate(out_paths):
+                in_path = in_paths[ind_out_path]
+
+                debug(out_path)
+
+                # The output pickle file may be missing because of some slow
+                # filesystem operation; wait some time before considering it as
+                # missing
+                if not out_path.exists():
+                    settings = Inject(get_settings)
+                    time.sleep(settings.FRACTAL_SLURM_OUTPUT_FILE_GRACE_TIME)
+                if not out_path.exists():
+                    # Output pickle file is missing
+                    info = (
+                        "Output pickle file of the FractalSlurmExecutor job "
+                        "not found.\n"
+                        f"Expected file path: {str(out_path)}.\n"
+                        "Here are some possible reasons:\n"
+                        "1. The SLURM job was scancel-ed, either by the user "
+                        "or due to an error (e.g. an out-of-memory or timeout "
+                        "error). Note that if the scancel took place before "
+                        "the job started running, the SLURM out/err files "
+                        "will be empty.\n"
+                        "2. Some error occurred upon writing the file to disk "
+                        "(e.g. due to an overloaded NFS filesystem). "
+                        "Note that the server configuration has "
+                        "FRACTAL_SLURM_OUTPUT_FILE_GRACE_TIME="
+                        f"{settings.FRACTAL_SLURM_OUTPUT_FILE_GRACE_TIME} "
+                        "seconds.\n"
+                    )
+                    job_exc = self._prepare_JobExecutionError(jobid, info=info)
+                    try:
+                        fut.set_exception(job_exc)
+                        return
+                    except futures.InvalidStateError:
+                        logging.warning(
+                            f"Future {fut} (SLURM job ID: {jobid}) was already"
+                            " cancelled, exit from"
+                            " FractalSlurmExecutor._completion."
+                        )
+                        in_path.unlink()
+                        self._cleanup(jobid)
+                        return
+
+                # Read the task output (note: we now know that out_path exists)
                 with out_path.open("rb") as f:
                     outdata = f.read()
                 # Note: output can be either the task result (typically a
-                # dictionary) or an ExceptionProxy object; in the latter case,
-                # the ExceptionProxy definition is also part of the pickle file
-                # (thanks to cloudpickle.dumps).
+                # dictionary) or an ExceptionProxy object; in the latter
+                # case, the ExceptionProxy definition is also part of the
+                # pickle file (thanks to cloudpickle.dumps).
+                debug(cloudpickle.loads(outdata))
                 success, output = cloudpickle.loads(outdata)
                 try:
                     if success:
-                        fut.set_result(output)
+                        outputs.append(output)
                     else:
                         proxy = output
+                        debug(vars(proxy))
                         if proxy.exc_type_name == "JobExecutionError":
                             job_exc = self._prepare_JobExecutionError(
                                 jobid, info=proxy.kwargs.get("info", None)
                             )
                             fut.set_exception(job_exc)
+                            return
                         else:
                             # This branch catches both TaskExecutionError's
-                            # (coming from the typical fractal-server execution
-                            # of tasks, and with additional fractal-specific
-                            # kwargs) or arbitrary exceptions (coming from a
-                            # direct use of FractalSlurmExecutor, possibly
-                            # outside fractal-server)
+                            # (coming from the typical fractal-server
+                            # execution of tasks, and with additional
+                            # fractal-specific kwargs) or arbitrary
+                            # exceptions (coming from a direct use of
+                            # FractalSlurmExecutor, possibly outside
+                            # fractal-server)
                             kwargs = {}
                             for key in [
                                 "workflow_task_id",
@@ -666,6 +797,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                                     kwargs[key] = proxy.kwargs[key]
                             exc = TaskExecutionError(proxy.tb, **kwargs)
                             fut.set_exception(exc)
+                            return
                     out_path.unlink()
                 except futures.InvalidStateError:
                     logging.warning(
@@ -674,48 +806,20 @@ class FractalSlurmExecutor(SlurmExecutor):
                         " FractalSlurmExecutor._completion."
                     )
                     out_path.unlink()
-                    in_path.unlink()
-                    self._cleanup(jobid)
-                    return
-            else:
-                # Output pickle file is missing
-                info = (
-                    "Output pickle file of the FractalSlurmExecutor job not "
-                    "found.\n"
-                    f"Expected file path: {str(out_path)}.\n"
-                    "Here are some possible reasons:\n"
-                    "1. The SLURM job was scancel-ed, either by the user or "
-                    "due to an error (e.g. an out-of-memory or timeout "
-                    "error). Note that if the scancel took place before "
-                    "the job started running, the SLURM out/err files will "
-                    "be empty.\n"
-                    "2. Some error occurred upon writing the file to disk "
-                    "(e.g. due to an overloaded NFS filesystem). "
-                    "Note that the server configuration has "
-                    "FRACTAL_SLURM_OUTPUT_FILE_GRACE_TIME="
-                    f"{settings.FRACTAL_SLURM_OUTPUT_FILE_GRACE_TIME} "
-                    "seconds.\n"
-                )
-                job_exc = self._prepare_JobExecutionError(jobid, info=info)
-                try:
-                    fut.set_exception(job_exc)
-                except futures.InvalidStateError:
-                    logging.warning(
-                        f"Future {fut} (SLURM job ID: {jobid}) was already"
-                        " cancelled, exit from"
-                        " FractalSlurmExecutor._completion."
-                    )
                     in_path.unlink()
                     self._cleanup(jobid)
                     return
 
-            # Clean up input pickle file
-            in_path.unlink()
+                # Clean up input pickle file
+                in_path.unlink()
             self._cleanup(jobid)
+            fut.set_result(outputs)
+            return
 
         except Exception as e:
             try:
                 fut.set_exception(e)
+                return
             except futures.InvalidStateError:
                 logging.warning(
                     f"Future {fut} (SLURM job ID: {jobid}) was already"
@@ -723,7 +827,10 @@ class FractalSlurmExecutor(SlurmExecutor):
                     " FractalSlurmExecutor._completion."
                 )
 
-    def _copy_files_from_user_to_server(self, job: SlurmJob):
+    def _copy_files_from_user_to_server(
+        self,
+        job: Union[SlurmJob, SlurmMultiTaskJob],
+    ):
         """
         Impersonate the user and copy task-related files
 
@@ -732,7 +839,8 @@ class FractalSlurmExecutor(SlurmExecutor):
         them to `self.working_dir`.
 
         Arguments:
-            job: `SlurmJob` object (needed for its `file_prefix` attribute)
+            job: `SlurmJob` or `SlurmMultiTaskJob` object (needed for its
+                 `file_prefix` attribute)
 
         Raises:
             JobExecutionError: If a `cat` command fails.
@@ -841,11 +949,12 @@ class FractalSlurmExecutor(SlurmExecutor):
         )
 
         cmdlines = []
+        debug(vars(job))
         for ind_task in range(job.num_tasks_tot):
             input_pickle_file = job.input_pickle_files[ind_task]
             output_pickle_file = job.output_pickle_files[ind_task]
             cmdlines.append(
-                shlex.split(
+                (
                     f"{python_worker_interpreter}"
                     " -m fractal_server.app.runner._slurm.remote "
                     f"--input-file {input_pickle_file} "
@@ -853,7 +962,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                 )
             )
 
-        sbatch_script = self.compose_sbatch_script(
+        sbatch_script = self.compose_sbatch_script_multitask(
             list_commands=cmdlines,
             num_tasks_max_running=2,
             mem_per_task_MB=300,
@@ -918,9 +1027,12 @@ class FractalSlurmExecutor(SlurmExecutor):
             for ind in range(ntasks):
                 if tmp_list_commands:
                     cmd = tmp_list_commands.pop(0)  # take first element
+                    debug(cmd)
                     script += (
                         "srun --ntasks=1 --cpus-per-task=$SLURM_CPUS_PER_TASK "
                         f"--mem={mem_per_task_MB}MB "
                         f"{cmd} &\n"
                     )
             script += "wait\n\n"
+
+        return script
