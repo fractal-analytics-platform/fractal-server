@@ -227,7 +227,25 @@ async def patch_workflow(
     )
 
     for key, value in patch.dict(exclude_unset=True).items():
-        setattr(workflow, key, value)
+        if key == "order_task_list":
+            current_ids = [wt.id for wt in workflow.task_list]
+            if set(value) != set(current_ids):
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=(
+                        "'order_task_list' must be a permutation of "
+                        f"{[wt.id for wt in workflow.task_list]} "
+                        f"(given {value})"
+                    ),
+                )
+            for i, id in enumerate(value):
+                for j, wt in enumerate(workflow.task_list):
+                    if wt.id == id:
+                        workflow.task_list[j].order = i
+                        break
+        else:
+            setattr(workflow, key, value)
+
     await db.commit()
     await db.refresh(workflow)
     return workflow
@@ -302,7 +320,6 @@ async def patch_workflow_task(
         db=db,
     )
 
-    order = False
     for key, value in workflow_task_update.dict(exclude_unset=True).items():
         if key == "args":
             current_args = deepcopy(db_workflow_task.args) or {}
@@ -312,24 +329,11 @@ async def patch_workflow_task(
             current_meta = deepcopy(db_workflow_task.meta) or {}
             current_meta.update(value)
             setattr(db_workflow_task, key, current_meta)
-        elif key == "order":
-            order = True
         else:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=f"patch_workflow_task endpoint cannot set {key=}",
             )
-
-    await db.commit()
-    await db.refresh(db_workflow_task)
-
-    if order:
-        old = db_workflow_task.order
-        new = workflow_task_update.order
-        task = db_workflow.task_list.pop(old)
-        db_workflow.task_list.insert(new, task)
-        for i, task in enumerate(db_workflow.task_list):
-            db_workflow.task_list[i].order = i
 
     await db.commit()
     await db.refresh(db_workflow_task)
