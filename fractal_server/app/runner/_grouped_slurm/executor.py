@@ -394,49 +394,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         ]
         debug(fs)
 
-        """
-        # Construct all sbatch scripts and corresponding folders
-        sbatch_scripts = []
-        logdirs = []
-            debug(batch)
-            # Prepare script path and log folder (to be created, with 777 mode)
-            sbatch_script_path = tmp777_path / f"submit_batch_{ind_batch}.sbatch"   # noqa
-            logdir = str(tmp777_path / f"logs_batch_{ind_batch}")
-            umask = os.umask(0)
-            os.mkdir(logdir, 0o777)
-            _ = os.umask(umask)
-            debug(sbatch_script_path)
-            # Construct and write to file the submission script
-            with sbatch_script_path.open("w") as f:
-                sbatch_script = write_script(
-                    list_args=batch,
-                    num_tasks_max_running=n_parallel_ftasks_per_script,
-                    mem_per_task_MB=200,
-                    cpus_per_task=cpus_per_task,
-                    logdir=logdir,
-                    command=command,
-                    sleep_time=sleep_time,
-                )
-                debug(sbatch_script)
-                f.write(sbatch_script)
-            sbatch_script_path.chmod(0o777)
-            sbatch_script_path = str(sbatch_script_path)
-            sbatch_scripts.append(sbatch_script_path)
-            logdirs.append(logdir)
-
-        fs = [
-            self.submit(
-                fn,
-                *args,
-                additional_setup_lines=additional_setup_lines,
-                job_file_prefix=job_file_fmt.format(
-                    args=sanitize_string(str(args[0])),
-                ),
-            )
-            for args in zip(*iterables)
-        ]
-        """
-
         # Yield must be hidden in closure so that the futures are submitted
         # before the first iterator value is required.
         def result_iterator():
