@@ -396,6 +396,9 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         # Yield must be hidden in closure so that the futures are submitted
         # before the first iterator value is required.
+        # NOTE: In this custom map() method, _result_or_cancel(fs.pop()) is an
+        # iterable of results (if successful), and we should yield its elements
+        # rather than the whole iterable.
         def result_iterator():
             try:
                 # reverse to keep finishing order
@@ -403,21 +406,20 @@ class FractalSlurmExecutor(SlurmExecutor):
                 while fs:
                     # Careful not to keep a reference to the popped future
                     if timeout is None:
-                        yield _result_or_cancel(fs.pop())
+                        results = _result_or_cancel(fs.pop())
+                        for res in results:
+                            yield res
                     else:
-                        yield _result_or_cancel(
+                        results = _result_or_cancel(
                             fs.pop(), end_time - time.monotonic()
                         )
+                        for res in results:
+                            yield res
             finally:
                 for future in fs:
                     future.cancel()
 
-        results = []
-        for batch_res in result_iterator():
-            debug(batch_res)
-            results.extend(batch_res)
-
-        return results
+        return result_iterator()
 
     def submit_multitask(
         self,
