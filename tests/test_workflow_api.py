@@ -515,7 +515,7 @@ async def test_reorder_tasklist(
 
         N_TASKS = 5
         for i in range(N_TASKS):
-            t = await task_factory()
+            t = await task_factory(name=f"task-{i}")
             await workflow.insert_task(t.id, db=db)
             await db.refresh(workflow)
             stm = select(WorkflowTask).where(WorkflowTask.task_id == t.id)
@@ -523,7 +523,6 @@ async def test_reorder_tasklist(
             assert workflow_task.order == i
 
         await db.refresh(workflow)
-        debug(workflow)
 
         OLD = 1
         NEW = 2
@@ -540,7 +539,12 @@ async def test_reorder_tasklist(
             f"api/v1/workflow/{workflow.id}/edit-task/{_id}", json=payload
         )
         assert res.status_code == 200
-        await db.refresh(workflow)
+
+        res = await client.get(
+            f"api/v1/workflow/{workflow.id}",
+        )
+        assert res.status_code == 200
+        workflow = WorkflowRead(**res.json())
         debug(workflow)
 
         for i, task in enumerate(workflow.task_list):
