@@ -228,15 +228,15 @@ async def patch_workflow(
 
     for key, value in patch.dict(exclude_unset=True).items():
         if key == "reordered_workflowtask_ids":
+            current_workflowtask_ids = [wt.id for wt in workflow.task_list]
             if len(value) != len(workflow.task_list) or set(value) != set(
-                workflow.task_list
+                current_workflowtask_ids
             ):
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                     detail=(
                         "`reordered_workflowtask_ids` must be a permutation of"
-                        f" {[wt.id for wt in workflow.task_list]} "
-                        f"(given {value})"
+                        f" {current_workflowtask_ids} (given {value})"
                     ),
                 )
             for i, wftask in enumerate(workflow.task_list):
