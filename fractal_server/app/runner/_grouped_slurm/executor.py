@@ -22,10 +22,7 @@ from pathlib import Path
 from typing import Any
 from typing import Callable
 from typing import Iterable
-from typing import List
 from typing import Optional
-from typing import Tuple
-from typing import Union
 
 import cloudpickle
 from cfut import SlurmExecutor
@@ -49,35 +46,13 @@ class SlurmJob:
     """
     Collect a few relevant information related to a FractalSlurmExecutor job
 
+    All jobs are defined as containing more than one task. Jobs coming from
+    `map` must have single_task_submission=False (even if num_tasks_tot=1),
+    while jobs coming from `submit` must have it set to True.
+
     Attributes:
+        single_task_submission: FIXME (describe and rename)
         file_prefix: Prefix for all files handled by FractalSlurmExecutor.
-        workerid: Random string that enters the input/output pickle-file names.
-        input_pickle_file: Input pickle file.
-        output_pickle_file: Output pickle file.
-        slurm_script: Script to be submitted via `sbatch` command.
-        stdout: SLURM stdout file.
-        stderr: SLURM stderr file.
-    """
-
-    workerid: str
-    file_prefix: str
-    input_pickle_file: Path
-    output_pickle_file: Path
-    slurm_script: Path
-    stdout: Path
-    stderr: Path
-
-    def __init__(self, file_prefix: Optional[str] = None):
-        self.workerid = random_string()
-        self.file_prefix = file_prefix or "default_prefix"
-
-
-class SlurmMultiTaskJob:
-    """
-    Collect a few relevant information related to a FractalSlurmExecutor job
-
-    Attributes:
-        file_prefixes: Prefix for all files handled by FractalSlurmExecutor.
         workerids: Random strings that enters the pickle-file names.
         input_pickle_files: Input pickle files.
         output_pickle_files: Output pickle files.
@@ -87,6 +62,7 @@ class SlurmMultiTaskJob:
     """
 
     num_tasks_tot: int
+    single_task_submission: bool
     workerids: tuple[str]
     input_pickle_files: tuple[Path]
     output_pickle_files: tuple[Path]
@@ -95,8 +71,16 @@ class SlurmMultiTaskJob:
     stdout: Path
     stderr: Path
 
-    def __init__(self, num_tasks_tot: int, file_prefix: Optional[str] = None):
+    def __init__(
+        self,
+        num_tasks_tot: int,
+        file_prefix: Optional[str] = None,
+        single_task_submission: bool = False,
+    ):
         self.num_tasks_tot = num_tasks_tot
+        self.single_task_submission = single_task_submission
+        if num_tasks_tot > 1:
+            self.single_task_submission = False
         self.workerids = tuple(
             random_string() for i in range(self.num_tasks_tot)
         )
@@ -134,7 +118,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         slurm_user: str,
         working_dir: Optional[Path] = None,
         working_dir_user: Optional[Path] = None,
-        common_script_lines: Optional[List[str]] = None,
+        common_script_lines: Optional[list[str]] = None,
         slurm_poll_interval: Optional[int] = None,
         *args,
         **kwargs,
@@ -283,7 +267,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
     def compose_sbatch_script(
         self,
-        cmdline: List[str],
+        cmdline: list[str],
         # NOTE: In SLURM, `%j` is the placeholder for the job ID.
         outpath: Optional[Path] = None,
         errpath: Optional[Path] = None,
@@ -319,7 +303,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         iterable: Iterable[Any],
         timeout: Optional[float] = None,
         chunksize: int = 1,
-        additional_setup_lines: Optional[List[str]] = None,
+        additional_setup_lines: Optional[list[str]] = None,
         job_file_prefix: Optional[str] = None,
     ):
         """
@@ -425,7 +409,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         self,
         fun: Callable[..., Any],
         list_list_args: Iterable[Iterable[Any]],
-        additional_setup_lines: Optional[List[str]] = None,
+        additional_setup_lines: Optional[list[str]] = None,
         job_file_prefix: Optional[str] = None,
     ) -> futures.Future:
         """
@@ -436,7 +420,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         # Define slurm-job-related files
         num_tasks_tot = len(list_list_args)
-        job = SlurmMultiTaskJob(
+        job = SlurmJob(
             file_prefix=job_file_prefix,
             num_tasks_tot=num_tasks_tot,
         )
@@ -499,7 +483,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         self,
         fun: Callable[..., Any],
         *args,
-        additional_setup_lines: Optional[List[str]] = None,
+        additional_setup_lines: Optional[list[str]] = None,
         job_file_prefix: Optional[str] = None,
         **kwargs,
     ) -> futures.Future:
@@ -512,12 +496,20 @@ class FractalSlurmExecutor(SlurmExecutor):
         fut: futures.Future = futures.Future()
 
         # Define slurm-job-related files
-        job = SlurmJob(file_prefix=job_file_prefix)
-        job.input_pickle_file = self.get_input_pickle_file_path(
-            job.workerid, prefix=job.file_prefix
+        job = SlurmJob(
+            num_tasks_tot=1,
+            single_task_submission=True,
+            file_prefix=job_file_prefix,
         )
-        job.output_pickle_file = self.get_output_pickle_file_path(
-            job.workerid, prefix=job.file_prefix
+        job.input_pickle_files = (
+            self.get_input_pickle_file_path(
+                job.workerids[0], prefix=job.file_prefix
+            ),
+        )
+        job.output_pickle_files = (
+            self.get_output_pickle_file_path(
+                job.workerids[0], prefix=job.file_prefix
+            ),
         )
         job.slurm_script = self.get_slurm_script_file_path(
             prefix=job.file_prefix
@@ -532,11 +524,11 @@ class FractalSlurmExecutor(SlurmExecutor):
             fractal_server=__VERSION__,
         )
         funcser = cloudpickle.dumps((versions, fun, args, kwargs))
-        with open(job.input_pickle_file, "wb") as f:
+        with open(job.input_pickle_files[0], "wb") as f:
             f.write(funcser)
 
         # Submit job to SLURM, and get jobid
-        jobid, job = self._start(job, additional_setup_lines)
+        jobid, job = self._start_multitask(job, additional_setup_lines)
 
         # Add the SLURM script/out/err paths to map_jobid_to_slurm_files (this
         # must be after self._start(job), so that "%j" has already been
@@ -548,7 +540,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         )
 
         # Thread will wait for it to finish.
-        self.wait_thread.wait((job.output_pickle_file.as_posix(),), jobid)
+        self.wait_thread.wait(job.get_clean_output_pickle_files(), jobid)
 
         with self.jobs_lock:
             self.jobs[jobid] = (fut, job)
@@ -592,17 +584,6 @@ class FractalSlurmExecutor(SlurmExecutor):
             info=info,
         )
         return job_exc
-
-    def _handle_single_task(self):
-        """
-        Needed:
-
-        in_path (clean)
-        out_path (clean)
-
-        return output, to be collected..
-        """
-        pass
 
     def _completion(self, jobid: str) -> None:
         """
@@ -657,15 +638,10 @@ class FractalSlurmExecutor(SlurmExecutor):
             in_paths: tuple[Path]
             out_paths: tuple[Path]
 
-            if isinstance(job, SlurmJob):
-                # Input/output pickle files
-                in_paths = (job.input_pickle_file,)
-                out_paths = (self.working_dir / job.output_pickle_file.name,)
-            elif isinstance(job, SlurmMultiTaskJob):
-                in_paths = job.input_pickle_files
-                out_paths = tuple(
-                    self.working_dir / f.name for f in job.output_pickle_files
-                )
+            in_paths = job.input_pickle_files
+            out_paths = tuple(
+                self.working_dir / f.name for f in job.output_pickle_files
+            )
 
             # FIXME: remove
             debug(out_paths)
@@ -730,6 +706,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                         outputs.append(output)
                     else:
                         proxy = output
+                        debug(proxy)
                         debug(vars(proxy))
                         if proxy.exc_type_name == "JobExecutionError":
                             job_exc = self._prepare_JobExecutionError(
@@ -771,9 +748,9 @@ class FractalSlurmExecutor(SlurmExecutor):
                 # Clean up input pickle file
                 in_path.unlink()
             self._cleanup(jobid)
-            if isinstance(job, SlurmJob):
+            if job.single_task_submission:
                 fut.set_result(outputs[0])
-            if isinstance(job, SlurmMultiTaskJob):
+            else:
                 fut.set_result(outputs)
             return
 
@@ -790,7 +767,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
     def _copy_files_from_user_to_server(
         self,
-        job: Union[SlurmJob, SlurmMultiTaskJob],
+        job: SlurmJob,
     ):
         """
         Impersonate the user and copy task-related files
@@ -800,7 +777,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         them to `self.working_dir`.
 
         Arguments:
-            job: `SlurmJob` or `SlurmMultiTaskJob` object (needed for its
+            job: `SlurmJob` object (needed for its
                  `file_prefix` attribute)
 
         Raises:
@@ -847,58 +824,16 @@ class FractalSlurmExecutor(SlurmExecutor):
                 f.write(res.stdout)
         logging.debug("Exit _copy_files_from_user_to_server")
 
-    def _start(
-        self, job: SlurmJob, additional_setup_lines: Optional[List[str]] = None
-    ) -> Tuple[str, SlurmJob]:
-        """
-        Submit function for execution on a SLURM cluster
-        """
-
-        if additional_setup_lines is None:
-            additional_setup_lines = self.additional_setup_lines
-
-        settings = Inject(get_settings)
-        python_worker_interpreter = (
-            settings.FRACTAL_SLURM_WORKER_PYTHON or sys.executable
-        )
-
-        # Prepare script to be submitted via sbatch
-        sbatch_script = self.compose_sbatch_script(
-            cmdline=shlex.split(
-                f"{python_worker_interpreter}"
-                " -m fractal_server.app.runner._slurm.remote "
-                f"--input-file {job.input_pickle_file} "
-                f"--output-file {job.output_pickle_file}"
-            ),
-            outpath=job.stdout,
-            errpath=job.stderr,
-            additional_setup_lines=additional_setup_lines,
-        )
-
-        # Submit job via sbatch, and retrieve jobid
-        pre_cmd = ""
-        if self.slurm_user:
-            pre_cmd = f"sudo --non-interactive -u {self.slurm_user}"
-        jobid = self.submit_sbatch(
-            sbatch_script,
-            submit_pre_command=pre_cmd,
-            script_path=job.slurm_script,
-        )
-
-        # Plug SLURM id in stdout/stderr file paths
-        job.stdout = Path(job.stdout.as_posix().replace("%j", jobid))
-        job.stderr = Path(job.stderr.as_posix().replace("%j", jobid))
-
-        return jobid, job
-
     def _start_multitask(
         self,
-        job: SlurmMultiTaskJob,
-        additional_setup_lines: Optional[List[str]] = None,
+        job: SlurmJob,
+        additional_setup_lines: Optional[list[str]] = None,
     ) -> tuple[str, SlurmJob]:
         """
         Submit function for execution on a SLURM cluster
         """
+
+        debug(job)
 
         if additional_setup_lines is None:
             additional_setup_lines = self.additional_setup_lines
@@ -923,6 +858,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                 )
             )
 
+        # FIXME: HARDCODED VARIABLES
         sbatch_script = self.compose_sbatch_script_multitask(
             list_commands=cmdlines,
             num_tasks_max_running=2,
@@ -930,7 +866,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             cpus_per_task=1,
             slurm_out_path=str(job.stdout),
             slurm_err_path=str(job.stderr),
-            # additional_setup_lines=additional_setup_lines,
+            # additional_setup_lines=additional_setup_lines,  # FIXME
         )
 
         # Submit job via sbatch, and retrieve jobid
