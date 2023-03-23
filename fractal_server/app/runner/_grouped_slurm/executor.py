@@ -60,8 +60,8 @@ class SlurmJob:
         input_pickle_files: Input pickle files.
         output_pickle_files: Output pickle files.
         slurm_script: Script to be submitted via `sbatch` command.
-        stdout: SLURM stdout file.
-        stderr: SLURM stderr file.
+        slurm_stdout: SLURM stdout file.
+        slurm_stderr: SLURM stderr file.
     """
 
     num_tasks_tot: int
@@ -71,8 +71,8 @@ class SlurmJob:
     output_pickle_files: tuple[Path]
     file_prefix: str
     slurm_script: Path
-    stdout: Path
-    stderr: Path
+    slurm_stdout: Path
+    slurm_stderr: Path
 
     def __init__(
         self,
@@ -448,8 +448,12 @@ class FractalSlurmExecutor(SlurmExecutor):
         job.slurm_script = self.get_slurm_script_file_path(
             prefix=job.file_prefix
         )
-        job.stdout = self.get_slurm_stdout_file_path(prefix=job.file_prefix)
-        job.stderr = self.get_slurm_stderr_file_path(prefix=job.file_prefix)
+        job.slurm_stdout = self.get_slurm_stdout_file_path(
+            prefix=job.file_prefix
+        )
+        job.slurm_stderr = self.get_slurm_stderr_file_path(
+            prefix=job.file_prefix
+        )
 
         # Dump serialized versions+function+args+kwargs to pickle file
         versions = dict(
@@ -475,8 +479,8 @@ class FractalSlurmExecutor(SlurmExecutor):
         # replaced with the job ID)
         self.map_jobid_to_slurm_files[jobid] = (
             job.slurm_script.as_posix(),
-            job.stdout.as_posix(),
-            job.stderr.as_posix(),
+            job.slurm_stdout.as_posix(),
+            job.slurm_stderr.as_posix(),
         )
 
         # Thread will wait for it to finish.
@@ -521,8 +525,12 @@ class FractalSlurmExecutor(SlurmExecutor):
         job.slurm_script = self.get_slurm_script_file_path(
             prefix=job.file_prefix
         )
-        job.stdout = self.get_slurm_stdout_file_path(prefix=job.file_prefix)
-        job.stderr = self.get_slurm_stderr_file_path(prefix=job.file_prefix)
+        job.slurm_stdout = self.get_slurm_stdout_file_path(
+            prefix=job.file_prefix
+        )
+        job.slurm_stderr = self.get_slurm_stderr_file_path(
+            prefix=job.file_prefix
+        )
 
         # Dump serialized versions+function+args+kwargs to pickle file
         versions = dict(
@@ -542,8 +550,8 @@ class FractalSlurmExecutor(SlurmExecutor):
         # replaced with the job ID)
         self.map_jobid_to_slurm_files[jobid] = (
             job.slurm_script.as_posix(),
-            job.stdout.as_posix(),
-            job.stderr.as_posix(),
+            job.slurm_stdout.as_posix(),
+            job.slurm_stderr.as_posix(),
         )
 
         # Thread will wait for it to finish.
@@ -862,6 +870,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                     " -m fractal_server.app.runner._slurm.remote "
                     f"--input-file {input_pickle_file} "
                     f"--output-file {output_pickle_file}"
+                    # FIXME: add here err/out redirection to specific files
                 )
             )
 
@@ -871,8 +880,8 @@ class FractalSlurmExecutor(SlurmExecutor):
             num_tasks_max_running=2,
             mem_per_task_MB=300,
             cpus_per_task=1,
-            slurm_out_path=str(job.stdout),
-            slurm_err_path=str(job.stderr),
+            slurm_out_path=str(job.slurm_stdout),
+            slurm_err_path=str(job.slurm_stderr),
             # additional_setup_lines=additional_setup_lines,  # FIXME
         )
 
@@ -886,9 +895,13 @@ class FractalSlurmExecutor(SlurmExecutor):
             script_path=job.slurm_script,
         )
 
-        # Plug SLURM id in stdout/stderr file paths
-        job.stdout = Path(job.stdout.as_posix().replace("%j", jobid))
-        job.stderr = Path(job.stderr.as_posix().replace("%j", jobid))
+        # Plug SLURM job id in stdout/stderr file paths
+        job.slurm_stdout = Path(
+            job.slurm_stdout.as_posix().replace("%j", jobid)
+        )
+        job.slurm_stderr = Path(
+            job.slurm_stderr.as_posix().replace("%j", jobid)
+        )
 
         return jobid, job
 
