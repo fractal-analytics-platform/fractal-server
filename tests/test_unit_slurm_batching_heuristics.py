@@ -7,22 +7,26 @@ from devtools import debug
 
 def heuristics(
     *,
-    n_ftasks_per_script: int | None,  # Optional WorkflowTask attribute
-    n_parallel_ftasks_per_script: int
-    | None,  # Optional WorkflowTask attribute  # noqa
-    n_ftasks_tot: int,  # Length of the component list, always known
-    cpus_per_task: int,  # Task requirements (multiple possible sources)
-    target_cpus_per_job: int,  # Fractal configuration variable (soft)
-    max_cpus_per_job: int,  # Fractal configuration variable (hard)
-    mem_per_task: int,  # Task requirements (multiple possible sources)
-    target_mem_per_job: int,  # Fractal configuration variable (soft)
-    max_mem_per_job: int,  # Fractal configuration variable (hard)
-    target_num_jobs: int,  # Fractal configuration variable (soft)
-    max_num_jobs: int,  # Fractal configuration variable (hard)
+    # Number of parallel componens (always known)
+    n_ftasks_tot: int,
+    # Optional WorkflowTask attributes:
+    n_ftasks_per_script: int | None,
+    n_parallel_ftasks_per_script: int | None,
+    # Task requirements (multiple possible sources):
+    cpus_per_task: int,
+    mem_per_task: int,
+    # Fractal configuration variables (soft/hard limits):
+    target_cpus_per_job: int,
+    max_cpus_per_job: int,
+    target_mem_per_job: int,
+    max_mem_per_job: int,
+    target_num_jobs: int,
+    max_num_jobs: int,
 ) -> tuple[int, int]:
 
     # TODO: memory may come as a string, with units. Here we should parse it,
     # and convert it to a given unit (say MB)
+    # (maybe this will happen somewhere else, and here we only deal with K..)
 
     # Branch 1
     if bool(n_ftasks_per_script) != bool(n_parallel_ftasks_per_script):
