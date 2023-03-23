@@ -277,10 +277,16 @@ class FractalSlurmExecutor(SlurmExecutor):
         errpath: Optional[Path] = None,
         additional_setup_lines=None,
     ) -> str:
+
+        raise RuntimeError(
+            "This function is replaced by compose_sbatch_script_multitask,"
+            " but we keep it here for the moment as a reference of how "
+            "SLURM variables could be set"
+        )
+
         additional_setup_lines = additional_setup_lines or []
         slurm_stdout_file = outpath or self.get_slurm_stdout_file_path()
         slurm_stderr_file = errpath or self.get_slurm_stderr_file_path()
-
         sbatch_lines = [
             f"#SBATCH --output={slurm_stdout_file}",
             f"#SBATCH --error={slurm_stderr_file}",
@@ -289,15 +295,12 @@ class FractalSlurmExecutor(SlurmExecutor):
             for ln in additional_setup_lines + self.common_script_lines
             if ln.startswith("#SBATCH")
         ]
-
         non_sbatch_lines = [
             ln
             for ln in additional_setup_lines + self.common_script_lines
             if not ln.startswith("#SBATCH")
         ]
-
         cmd = [shlex.join(["srun", *cmdline])]
-
         script_lines = ["#!/bin/sh"] + sbatch_lines + non_sbatch_lines + cmd
         return "\n".join(script_lines) + "\n"
 
@@ -889,7 +892,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         return jobid, job
 
-    def compose_sbatch_script_multitask(
+    def compose_sbatch_script_multitask(  # FIXME: rename
         self,
         *,
         list_commands: list[str],
