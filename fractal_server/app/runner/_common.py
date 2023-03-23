@@ -185,7 +185,7 @@ def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
 
 def call_single_task(
     *,
-    task: WorkflowTask,
+    wftask: WorkflowTask,
     task_pars: TaskParameters,
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
@@ -210,7 +210,7 @@ def call_single_task(
     permission errors.
 
     Args:
-        task:
+        wftask:
             The workflow task to be called. This includes task specific
             arguments via the task.task.arguments attribute.
         task_pars:
@@ -242,18 +242,18 @@ def call_single_task(
     task_files = get_task_file_paths(
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
-        task_order=task.order,
+        task_order=wftask.order,
     )
 
     # assemble full args
-    args_dict = task.assemble_args(extra=task_pars.dict())
+    args_dict = wftask.assemble_args(extra=task_pars.dict())
 
     # write args file
     write_args_file(args_dict, path=task_files.args)
 
     # assemble full command
     cmd = (
-        f"{task.task.command} -j {task_files.args} "
+        f"{wftask.task.command} -j {task_files.args} "
         f"--metadata-out {task_files.metadiff}"
     )
 
@@ -262,9 +262,9 @@ def call_single_task(
             cmd, stdout=task_files.out, stderr=task_files.err
         )
     except TaskExecutionError as e:
-        e.workflow_task_order = task.order
-        e.workflow_task_id = task.id
-        e.task_name = task.task.name
+        e.workflow_task_order = wftask.order
+        e.workflow_task_id = wftask.id
+        e.task_name = wftask.task.name
         raise e
 
     # NOTE:
@@ -276,7 +276,7 @@ def call_single_task(
     updated_metadata.update(diff_metadata)
 
     # Assemble a Future[TaskParameter]
-    history = f"{task.task.name}"
+    history = f"{wftask.task.name}"
     try:
         updated_metadata["history"].append(history)
     except KeyError:
@@ -294,7 +294,7 @@ def call_single_task(
 def call_single_parallel_task(
     component: str,
     *,
-    task: WorkflowTask,
+    wftask: WorkflowTask,
     task_pars: TaskParameters,
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
@@ -318,7 +318,7 @@ def call_single_parallel_task(
     Args:
         component:
             The parallelisation parameter.
-        task:
+        wftask:
             The task to execute.
         task_pars:
             The parameters to pass on to the task.
@@ -344,21 +344,21 @@ def call_single_parallel_task(
     task_files = get_task_file_paths(
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
-        task_order=task.order,
+        task_order=wftask.order,
         component=component,
     )
 
     # assemble full args
     write_args_file(
         task_pars.dict(),
-        task.arguments,
+        wftask.arguments,
         dict(component=component),
         path=task_files.args,
     )
 
     # assemble full command
     cmd = (
-        f"{task.task.command} -j {task_files.args} "
+        f"{wftask.task.command} -j {task_files.args} "
         f"--metadata-out {task_files.metadiff}"
     )
 
@@ -367,16 +367,16 @@ def call_single_parallel_task(
             cmd, stdout=task_files.out, stderr=task_files.err
         )
     except TaskExecutionError as e:
-        e.workflow_task_order = task.order
-        e.workflow_task_id = task.id
-        e.task_name = task.task.name
+        e.workflow_task_order = wftask.order
+        e.workflow_task_id = wftask.id
+        e.task_name = wftask.task.name
         raise e
 
 
 def call_parallel_task(
     *,
     executor: Executor,
-    task: WorkflowTask,
+    wftask: WorkflowTask,
     task_pars_depend: TaskParameters,
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
@@ -403,7 +403,7 @@ def call_parallel_task(
         executor:
             The `concurrent.futures.Executor`-compatible executor that will
             run the task.
-        task:
+        wftask:
             The parallel task to run.
         task_pars_depend_future:
             The task parameters to be passed on to the parallel task.
@@ -425,18 +425,18 @@ def call_parallel_task(
     if not workflow_dir_user:
         workflow_dir_user = workflow_dir
 
-    component_list = task_pars_depend.metadata[task.parallelization_level]
+    component_list = task_pars_depend.metadata[wftask.parallelization_level]
 
     # Preliminary steps
     partial_call_task = partial(
         call_single_parallel_task,
-        task=task,
+        wftask=wftask,
         task_pars=task_pars_depend,
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
     )
     extra_setup = submit_setup_call(
-        task, task_pars_depend, workflow_dir, workflow_dir_user
+        wftask, task_pars_depend, workflow_dir, workflow_dir_user
     )
 
     # Depending on FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW, either submit all
@@ -462,7 +462,7 @@ def call_parallel_task(
             pass  # noqa: 701
 
     # Assemble a Future[TaskParameter]
-    history = f"{task.task.name}: {component_list}"
+    history = f"{wftask.task.name}: {component_list}"
     try:
         task_pars_depend.metadata["history"].append(history)
     except KeyError:
