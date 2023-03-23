@@ -936,6 +936,6 @@ class FractalSlurmExecutor(SlurmExecutor):
                     f"--mem={mem_per_task_MB}MB "
                     f"{cmd} &\n"
                 )
-            script += "wait\n\n"
+        script += "wait\n\n"
 
         return script
