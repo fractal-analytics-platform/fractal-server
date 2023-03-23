@@ -254,14 +254,14 @@ class FractalSlurmExecutor(SlurmExecutor):
                 full_cmd, capture_output=True, check=True
             )
         except subprocess.CalledProcessError as e:
-            logger = set_logger(logger_name="slurm_runner")
+            logger = set_logger(logger_name="grouped_slurm_runner")
             logger.error(e.stderr.decode("utf-8"))
             close_logger(logger)
             raise e
         try:
             jobid = int(output.stdout)
         except ValueError as e:
-            logger = set_logger(logger_name="slurm_runner")
+            logger = set_logger(logger_name="grouped_slurm_runner")
             logger.error(
                 f"Submit command `{submit_command}` returned "
                 f"`{output.stdout.decode('utf-8')}`, which cannot be cast "
