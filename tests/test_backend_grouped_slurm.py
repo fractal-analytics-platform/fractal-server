@@ -1,4 +1,3 @@
-import pytest
 from devtools import debug
 
 from fractal_server.app.runner._grouped_slurm.executor import (
@@ -6,7 +5,6 @@ from fractal_server.app.runner._grouped_slurm.executor import (
 )  # noqa
 
 
-@pytest.mark.skip(reason="Not relevant for now")
 def test_slurm_executor_submit(
     monkey_slurm,
     monkey_slurm_user,
