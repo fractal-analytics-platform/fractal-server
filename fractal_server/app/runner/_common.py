@@ -341,7 +341,7 @@ def call_single_parallel_task(
     if not workflow_dir_user:
         workflow_dir_user = workflow_dir
 
-    workflow_files = get_task_file_paths(
+    task_files = get_task_file_paths(
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
         task_order=task.order,
@@ -353,18 +353,18 @@ def call_single_parallel_task(
         task_pars.dict(),
         task.arguments,
         dict(component=component),
-        path=workflow_files.args,
+        path=task_files.args,
     )
 
     # assemble full command
     cmd = (
-        f"{task.task.command} -j {workflow_files.args} "
-        f"--metadata-out {workflow_files.metadiff}"
+        f"{task.task.command} -j {task.args} "
+        f"--metadata-out {task_files.metadiff}"
     )
 
     try:
         _call_command_wrapper(
-            cmd, stdout=workflow_files.out, stderr=workflow_files.err
+            cmd, stdout=task_files.out, stderr=task_files.err
         )
     except TaskExecutionError as e:
         e.workflow_task_order = task.order
