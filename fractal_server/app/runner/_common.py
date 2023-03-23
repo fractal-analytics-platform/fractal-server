@@ -239,7 +239,7 @@ def call_single_task(
     if not workflow_dir_user:
         workflow_dir_user = workflow_dir
 
-    workflow_files = get_task_file_paths(
+    task_files = get_task_file_paths(
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
         task_order=task.order,
@@ -249,17 +249,17 @@ def call_single_task(
     args_dict = task.assemble_args(extra=task_pars.dict())
 
     # write args file
-    write_args_file(args_dict, path=workflow_files.args)
+    write_args_file(args_dict, path=task_files.args)
 
     # assemble full command
     cmd = (
-        f"{task.task.command} -j {workflow_files.args} "
-        f"--metadata-out {workflow_files.metadiff}"
+        f"{task.task.command} -j {task_files.args} "
+        f"--metadata-out {task_files.metadiff}"
     )
 
     try:
         _call_command_wrapper(
-            cmd, stdout=workflow_files.out, stderr=workflow_files.err
+            cmd, stdout=task_files.out, stderr=task_files.err
         )
     except TaskExecutionError as e:
         e.workflow_task_order = task.order
@@ -270,7 +270,7 @@ def call_single_task(
     # NOTE:
     # This assumes that the new metadata is printed to stdout
     # and nothing else outputs to stdout
-    with workflow_files.metadiff.open("r") as f_metadiff:
+    with task_files.metadiff.open("r") as f_metadiff:
         diff_metadata = json.load(f_metadiff)
     updated_metadata = task_pars.metadata.copy()
     updated_metadata.update(diff_metadata)
