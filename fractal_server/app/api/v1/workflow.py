@@ -232,7 +232,7 @@ async def patch_workflow(
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                     detail=(
-                        "'order_task_list' must be a permutation of "
+                        "'order_permutation' must be a permutation of "
                         f"{list(range(len(workflow.task_list)))} "
                         f"(given {value})"
                     ),
