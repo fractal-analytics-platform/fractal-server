@@ -620,6 +620,8 @@ async def test_reorder_task_list_fail(
         debug(res.json())
         assert "must be a permutation" in res.json()["detail"]
         assert res.status_code == 422
+
+        # Invalid payload (wrong values) leads to custom fractal-server error
         res = await client.patch(
             f"api/v1/workflow/{wf_id}",
             json=dict(reordered_workflowtask_ids=[2, 1, 33]),
