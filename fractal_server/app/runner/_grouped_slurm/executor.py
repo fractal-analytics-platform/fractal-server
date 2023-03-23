@@ -928,15 +928,14 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         tmp_list_commands = copy(list_commands)
         while tmp_list_commands:
-            for ind in range(ntasks):
-                if tmp_list_commands:
-                    cmd = tmp_list_commands.pop(0)  # take first element
-                    debug(cmd)
-                    script += (
-                        "srun --ntasks=1 --cpus-per-task=$SLURM_CPUS_PER_TASK "
-                        f"--mem={mem_per_task_MB}MB "
-                        f"{cmd} &\n"
-                    )
+            if tmp_list_commands:
+                cmd = tmp_list_commands.pop(0)  # take first element
+                debug(cmd)
+                script += (
+                    "srun --ntasks=1 --cpus-per-task=$SLURM_CPUS_PER_TASK "
+                    f"--mem={mem_per_task_MB}MB "
+                    f"{cmd} &\n"
+                )
             script += "wait\n\n"
 
         return script
