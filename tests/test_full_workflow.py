@@ -55,7 +55,7 @@ async def test_full_workflow(
     )
 
     debug(f"Testing with {backend=}")
-    if backend == "slurm":
+    if backend in ["slurm", "grouped_slurm"]:
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
         request.getfixturevalue("cfut_jobs_finished")

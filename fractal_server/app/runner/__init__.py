@@ -142,7 +142,7 @@ async def submit_workflow(
     # Define and create user-side working folder, if needed
     if FRACTAL_RUNNER_BACKEND == "local":
         WORKFLOW_DIR_USER = WORKFLOW_DIR
-    elif FRACTAL_RUNNER_BACKEND == "slurm":
+    elif FRACTAL_RUNNER_BACKEND in ["slurm", "grouped_slurm"]:
         from ._slurm._subprocess_run_as_user import _mkdir_as_user
 
         WORKFLOW_DIR_USER = (Path(project_dir) / WORKFLOW_DIR.name).resolve()
