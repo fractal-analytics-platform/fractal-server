@@ -477,7 +477,6 @@ class FractalSlurmExecutor(SlurmExecutor):
                 f.write(funcser)
 
         # Submit job to SLURM, and get jobid
-        # FIXME - got here..
         jobid, job = self._start_multitask(job, additional_setup_lines)
 
         # Add the SLURM script/out/err paths to map_jobid_to_slurm_files (this
@@ -772,7 +771,10 @@ class FractalSlurmExecutor(SlurmExecutor):
                 # Clean up input pickle file
                 in_path.unlink()
             self._cleanup(jobid)
-            fut.set_result(outputs)
+            if isinstance(job, SlurmJob):
+                fut.set_result(outputs[0])
+            if isinstance(job, SlurmMultiTaskJob):
+                fut.set_result(outputs)
             return
 
         except Exception as e:
