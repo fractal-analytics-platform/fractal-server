@@ -505,6 +505,7 @@ reorder_cases.append((2, [1, 0]))
 reorder_cases.append((3, [0, 1, 2]))
 reorder_cases.append((3, [2, 1, 0]))
 reorder_cases.append((3, [2, 0, 1]))
+reorder_cases.append((6, [3, 2, 4, 5, 0, 1]))
 
 
 @pytest.mark.parametrize("num_tasks,order_permutation", reorder_cases)
@@ -534,7 +535,7 @@ async def test_reorder_task_list(
         wf_id = res.json()["id"]
         workflow = await db.get(Workflow, wf_id)
         for i in range(num_tasks):
-            t = await task_factory(name=f"task-{i}-{order_permutation[i]}")
+            t = await task_factory(name=f"task-{i}")
             await workflow.insert_task(t.id, db=db)
             await db.refresh(workflow)
 
@@ -579,3 +580,51 @@ async def test_reorder_task_list(
         assert new_workflowtask_orders == list(range(num_tasks))
         assert new_workflowtask_ids == expected_workflowtask_ids
         assert new_task_ids == expected_task_ids
+
+
+async def test_reorder_task_list_fail(
+    client,
+    db,
+    MockCurrentUser,
+    project_factory,
+    task_factory,
+):
+    """
+    GIVEN a workflow with a task_list
+    WHEN we call its PATCH endpoint with the order_permutation attribute
+    THEN the task_list is reodered correctly, and possible errors are handled
+    """
+    num_tasks = 3
+
+    async with MockCurrentUser(persist=True) as user:
+        # Create project, workflow, tasks, workflowtasks
+        project = await project_factory(user)
+        workflow = {"name": "WF", "project_id": project.id}
+        res = await client.post("api/v1/workflow/", json=workflow)
+        wf_id = res.json()["id"]
+        workflow = await db.get(Workflow, wf_id)
+        for i in range(num_tasks):
+            t = await task_factory(name=f"task-{i}")
+            await workflow.insert_task(t.id, db=db)
+            await db.refresh(workflow)
+
+        # Invalid calls to PATCH endpoint to reorder the task_list
+
+        # Invalid payload (not a permutation) leads to pydantic validation
+        # error
+        res = await client.patch(
+            f"api/v1/workflow/{wf_id}",
+            json=dict(order_permutation=[0, 1, 3]),
+        )
+        debug(res.json())
+        assert res.json()["detail"][0]["type"] == "value_error"
+        assert res.status_code == 422
+
+        # Invalid payload (wrong length) leads to custom fractal-server error
+        res = await client.patch(
+            f"api/v1/workflow/{wf_id}",
+            json=dict(order_permutation=[0, 2, 1, 3]),
+        )
+        debug(res.json())
+        assert "must be a permutation" in res.json()["detail"]
+        assert res.status_code == 422
