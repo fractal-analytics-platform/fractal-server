@@ -505,7 +505,7 @@ reorder_cases.append([2, 1])
 reorder_cases.append([1, 2, 3])
 reorder_cases.append([1, 3, 2])
 reorder_cases.append([2, 1, 3])
-reorder_cases.append([2, 2, 1])
+reorder_cases.append([2, 3, 1])
 reorder_cases.append([3, 2, 1])
 reorder_cases.append([3, 1, 2])
 reorder_cases.append([4, 3, 5, 6, 1, 2])
@@ -552,7 +552,10 @@ async def test_reorder_task_list(
         # Call PATCH endpoint to reorder the task_list
         res = await client.patch(
             f"api/v1/workflow/{wf_id}",
-            json=dict(reordered_workflowtask_ids=reordered_workflowtask_ids),
+            json=dict(
+                name="foo",
+                reordered_workflowtask_ids=reordered_workflowtask_ids,
+            ),
         )
         debug(res.json())
         new_workflow = res.json()
