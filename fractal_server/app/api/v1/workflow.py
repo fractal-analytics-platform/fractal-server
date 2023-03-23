@@ -221,7 +221,6 @@ async def patch_workflow(
     """
     Edit a workflow
     """
-
     workflow = await _get_workflow_check_owner(
         workflow_id=workflow_id, user_id=user.id, db=db
     )
@@ -239,13 +238,14 @@ async def patch_workflow(
                         f" {current_workflowtask_ids} (given {value})"
                     ),
                 )
-            for i, wftask in enumerate(workflow.task_list):
-                workflow.task_list[i].order = value.index(wftask.id)
+            for i in range(len(workflow.task_list)):
+                new_order = value.index(workflow.task_list[i].id)
+                workflow.task_list[i].order = new_order
         else:
             setattr(workflow, key, value)
-
     await db.commit()
     await db.refresh(workflow)
+
     return workflow
 
 

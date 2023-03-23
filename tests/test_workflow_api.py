@@ -500,18 +500,20 @@ async def test_import_export_workflow(
 
 
 reorder_cases = []
-reorder_cases.append((2, [0, 1]))
-reorder_cases.append((2, [1, 0]))
-reorder_cases.append((3, [0, 1, 2]))
-reorder_cases.append((3, [2, 1, 0]))
-reorder_cases.append((3, [2, 0, 1]))
-reorder_cases.append((6, [3, 2, 4, 5, 0, 1]))
+reorder_cases.append([1, 2])
+reorder_cases.append([2, 1])
+reorder_cases.append([1, 2, 3])
+reorder_cases.append([1, 3, 2])
+reorder_cases.append([2, 1, 3])
+reorder_cases.append([2, 2, 1])
+reorder_cases.append([3, 2, 1])
+reorder_cases.append([3, 1, 2])
+reorder_cases.append([4, 3, 5, 6, 1, 2])
 
 
-@pytest.mark.parametrize("num_tasks,order_permutation", reorder_cases)
+@pytest.mark.parametrize("reordered_workflowtask_ids", reorder_cases)
 async def test_reorder_task_list(
-    num_tasks,
-    order_permutation,
+    reordered_workflowtask_ids,
     client,
     db,
     MockCurrentUser,
@@ -523,8 +525,8 @@ async def test_reorder_task_list(
     WHEN we call its PATCH endpoint with the order_permutation attribute
     THEN the task_list is reodered correctly
     """
-    debug(num_tasks)
-    debug(order_permutation)
+
+    num_tasks = len(reordered_workflowtask_ids)
 
     async with MockCurrentUser(persist=True) as user:
 
@@ -543,26 +545,17 @@ async def test_reorder_task_list(
         old_worfklowtask_orders = [wft.order for wft in workflow.task_list]
         old_worfklowtask_ids = [wft.id for wft in workflow.task_list]
         old_task_ids = [wft.task.id for wft in workflow.task_list]
-        debug(old_worfklowtask_orders)
-        debug(old_worfklowtask_ids)
-        debug(old_task_ids)
         assert old_worfklowtask_orders == list(range(num_tasks))
         assert old_worfklowtask_ids == list(range(1, num_tasks + 1))
         assert old_task_ids == list(range(1, num_tasks + 1))
 
-        # Prepare expected attribute lists, after reordering
-        expected_workflowtask_ids = [
-            old_worfklowtask_ids[ind] for ind in order_permutation
-        ]
-        expected_task_ids = [old_task_ids[ind] for ind in order_permutation]
-
         # Call PATCH endpoint to reorder the task_list
         res = await client.patch(
             f"api/v1/workflow/{wf_id}",
-            json=dict(order_permutation=order_permutation),
+            json=dict(reordered_workflowtask_ids=reordered_workflowtask_ids),
         )
+        debug(res.json())
         new_workflow = res.json()
-        # debug(new_workflow)
         assert res.status_code == 200
 
         # Extract new attribute lists
@@ -572,14 +565,9 @@ async def test_reorder_task_list(
         new_task_ids = [wft["task"]["id"] for wft in new_task_list]
 
         # Assert that new attributes list corresponds to expectations
-        debug(new_workflowtask_orders)
-        debug(new_workflowtask_ids)
-        debug(expected_workflowtask_ids)
-        debug(new_task_ids)
-        debug(expected_task_ids)
         assert new_workflowtask_orders == list(range(num_tasks))
-        assert new_workflowtask_ids == expected_workflowtask_ids
-        assert new_task_ids == expected_task_ids
+        assert new_workflowtask_ids == reordered_workflowtask_ids
+        assert new_task_ids == reordered_workflowtask_ids
 
 
 async def test_reorder_task_list_fail(
@@ -614,16 +602,24 @@ async def test_reorder_task_list_fail(
         # error
         res = await client.patch(
             f"api/v1/workflow/{wf_id}",
-            json=dict(order_permutation=[0, 1, 3]),
+            json=dict(reordered_workflowtask_ids=[2, 1, 3, 1]),
         )
         debug(res.json())
         assert res.json()["detail"][0]["type"] == "value_error"
+        assert "has repetitions" in res.json()["detail"][0]["msg"]
         assert res.status_code == 422
 
         # Invalid payload (wrong length) leads to custom fractal-server error
         res = await client.patch(
             f"api/v1/workflow/{wf_id}",
-            json=dict(order_permutation=[0, 2, 1, 3]),
+            json=dict(reordered_workflowtask_ids=[1, 2, 3, 4]),
+        )
+        debug(res.json())
+        assert "must be a permutation" in res.json()["detail"]
+        assert res.status_code == 422
+        res = await client.patch(
+            f"api/v1/workflow/{wf_id}",
+            json=dict(reordered_workflowtask_ids=[2, 1, 33]),
         )
         debug(res.json())
         assert "must be a permutation" in res.json()["detail"]
