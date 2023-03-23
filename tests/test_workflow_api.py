@@ -521,7 +521,7 @@ async def test_reorder_task_list(
     """
     GIVEN a workflow with a task_list
     WHEN we call its PATCH endpoint with the order_permutation attribute
-    THEN the task_list is reodered correctly, and possible errors are handled
+    THEN the task_list is reodered correctly
     """
     debug(num_tasks)
     debug(order_permutation)
@@ -591,8 +591,8 @@ async def test_reorder_task_list_fail(
 ):
     """
     GIVEN a workflow with a task_list
-    WHEN we call its PATCH endpoint with the order_permutation attribute
-    THEN the task_list is reodered correctly, and possible errors are handled
+    WHEN we call its PATCH endpoint with wrong payload
+    THEN the correct errors are raised
     """
     num_tasks = 3
 
