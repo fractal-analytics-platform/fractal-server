@@ -358,7 +358,7 @@ def call_single_parallel_task(
 
     # assemble full command
     cmd = (
-        f"{task.task.command} -j {task.args} "
+        f"{task.task.command} -j {task_files.args} "
         f"--metadata-out {task_files.metadiff}"
     )
 
