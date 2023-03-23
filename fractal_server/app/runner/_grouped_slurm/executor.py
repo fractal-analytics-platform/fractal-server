@@ -46,9 +46,12 @@ class SlurmJob:
     """
     Collect a few relevant information related to a FractalSlurmExecutor job
 
+    # FIXME: review and clean up SlurmJob class
+
     All jobs are defined as containing more than one task. Jobs coming from
     `map` must have single_task_submission=False (even if num_tasks_tot=1),
     while jobs coming from `submit` must have it set to True.
+
 
     Attributes:
         single_task_submission: FIXME (describe and rename)
@@ -88,7 +91,8 @@ class SlurmJob:
 
     def get_clean_output_pickle_files(self) -> tuple[str]:
         """
-        Transform pathlib.Path objects to strings
+        Transform all pathlib.Path objects in self.output_pickle_files to
+        strings
         """
         return tuple(str(f.as_posix()) for f in self.output_pickle_files)
 
