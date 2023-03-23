@@ -64,15 +64,17 @@ class SlurmJob:
         slurm_stderr: SLURM stderr file.
     """
 
+    # Job-related attributes
     num_tasks_tot: int
     single_task_submission: bool
-    workerids: tuple[str]
-    input_pickle_files: tuple[Path]
-    output_pickle_files: tuple[Path]
     file_prefix: str
     slurm_script: Path
     slurm_stdout: Path
     slurm_stderr: Path
+    # Per-task attributes
+    workerids: tuple[str]
+    input_pickle_files: tuple[Path]
+    output_pickle_files: tuple[Path]
 
     def __init__(
         self,
@@ -84,10 +86,10 @@ class SlurmJob:
         self.single_task_submission = single_task_submission
         if num_tasks_tot > 1:
             self.single_task_submission = False
+        self.file_prefix = file_prefix or "default_prefix"
         self.workerids = tuple(
             random_string() for i in range(self.num_tasks_tot)
         )
-        self.file_prefix = file_prefix or "default_prefix"
 
     def get_clean_output_pickle_files(self) -> tuple[str]:
         """
@@ -664,7 +666,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
             outputs = []
             for ind_out_path, out_path in enumerate(out_paths):
-                in_path = in_paths[ind_out_path]
+                # in_path = in_paths[ind_out_path]  # FIXME re-enable this
 
                 debug(out_path)
 
@@ -703,7 +705,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                             " cancelled, exit from"
                             " FractalSlurmExecutor._completion."
                         )
-                        in_path.unlink()
+                        # in_path.unlink()  # FIXME re-enable
                         self._cleanup(jobid)
                         return
 
@@ -748,20 +750,20 @@ class FractalSlurmExecutor(SlurmExecutor):
                             exc = TaskExecutionError(proxy.tb, **kwargs)
                             fut.set_exception(exc)
                             return
-                    out_path.unlink()
+                    # out_path.unlink()  # FIXME re-enable this
                 except futures.InvalidStateError:
                     logging.warning(
                         f"Future {fut} (SLURM job ID: {jobid}) was already"
                         " cancelled, exit from"
                         " FractalSlurmExecutor._completion."
                     )
-                    out_path.unlink()
-                    in_path.unlink()
+                    # out_path.unlink()  # FIXME re-enable this
+                    # in_path.unlink()  # FIXME re-enable this
                     self._cleanup(jobid)
                     return
 
                 # Clean up input pickle file
-                in_path.unlink()
+                # in_path.unlink()  # FIXME re-enable this
             self._cleanup(jobid)
             if job.single_task_submission:
                 fut.set_result(outputs[0])
