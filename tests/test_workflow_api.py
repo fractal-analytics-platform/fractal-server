@@ -499,13 +499,18 @@ async def test_import_export_workflow(
     assert wf_old == wf_new
 
 
-async def test_reorder_tasklist(
+async def test_reorder_task_list(
     client,
     db,
     MockCurrentUser,
     project_factory,
     task_factory,
 ):
+    """
+    GIVEN a workflow with a task_list
+    WHEN we call its PATCH endpoint with the order_permutation attribute
+    THEN the task_list is reodered correctly, and possible errors are handled
+    """
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
         workflow = {"name": "WF", "project_id": project.id}
