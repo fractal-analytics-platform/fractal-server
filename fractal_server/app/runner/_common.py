@@ -572,7 +572,7 @@ def recursive_task_submission(
         # has `this_task_future.done() = True`
         this_task_future = call_parallel_task(
             executor=executor,
-            task=this_task,
+            wftask=this_task,
             task_pars_depend=task_pars_depend,
             workflow_dir=workflow_dir,
             workflow_dir_user=workflow_dir_user,
@@ -586,7 +586,7 @@ def recursive_task_submission(
         )
         this_task_future = executor.submit(
             call_single_task,
-            task=this_task,
+            wftask=this_task,
             task_pars=task_pars_depend,
             workflow_dir=workflow_dir,
             workflow_dir_user=workflow_dir_user,
