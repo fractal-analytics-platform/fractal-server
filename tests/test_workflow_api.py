@@ -1,4 +1,5 @@
 import json
+from random import shuffle
 
 from devtools import debug  # noqa
 from sqlmodel import select
@@ -524,14 +525,10 @@ async def test_reorder_tasklist(
 
         await db.refresh(workflow)
 
-        old_task_list = workflow.task_list
-
-        OLD = 1
-        NEW = 2
-        assert (OLD < N_TASKS) and (NEW < N_TASKS) and (OLD != NEW)
-        payload = dict(order_permutation=list(range(N_TASKS)))
-        payload["order_permutation"][OLD] = NEW
-        payload["order_permutation"][NEW] = OLD
+        new_order = list(range(N_TASKS))
+        shuffle(new_order)
+        new_id_list = [workflow.task_list[i].id for i in new_order]
+        payload = dict(order_permutation=new_order)
 
         res = await client.patch(
             f"api/v1/workflow/{workflow.id}", json=payload
@@ -540,10 +537,7 @@ async def test_reorder_tasklist(
         assert res.status_code == 200
 
         new_task_list = res.json()["task_list"]
+
         for i, task in enumerate(new_task_list):
-            if not (i in [OLD, NEW]):
-                assert task["order"] == old_task_list[i].order
-            elif i == OLD:
-                assert task["id"] == old_task_list[NEW].id
-            elif i == NEW:
-                assert task["id"] == old_task_list[OLD].id
+            assert task["order"] == i
+            assert task["id"] == new_id_list[i]
