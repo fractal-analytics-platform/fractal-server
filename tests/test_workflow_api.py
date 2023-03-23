@@ -524,30 +524,26 @@ async def test_reorder_tasklist(
 
         await db.refresh(workflow)
 
+        old_task_list = workflow.task_list
+
         OLD = 1
         NEW = 2
         assert (OLD < N_TASKS) and (NEW < N_TASKS) and (OLD != NEW)
-        payload = dict(order=NEW)
-        _id = workflow.task_list[OLD].id
-
-        for i, task in enumerate(workflow.task_list):
-            assert task.order == i
-            if task.id == _id:
-                assert task.order != NEW
+        payload = dict(order_permutation=list(range(N_TASKS)))
+        payload["order_permutation"][OLD] = NEW
+        payload["order_permutation"][NEW] = OLD
 
         res = await client.patch(
-            f"api/v1/workflow/{workflow.id}/edit-task/{_id}", json=payload
+            f"api/v1/workflow/{workflow.id}", json=payload
         )
+        debug(res.json())
         assert res.status_code == 200
 
-        res = await client.get(
-            f"api/v1/workflow/{workflow.id}",
-        )
-        assert res.status_code == 200
-        workflow = WorkflowRead(**res.json())
-        debug(workflow)
-
-        for i, task in enumerate(workflow.task_list):
-            assert task.order == i
-            if task.id == _id:
-                assert task.order == NEW
+        new_task_list = res.json()["task_list"]
+        for i, task in enumerate(new_task_list):
+            if not (i in [OLD, NEW]):
+                assert task["order"] == old_task_list[i].order
+            elif i == OLD:
+                assert task["id"] == old_task_list[NEW].id
+            elif i == NEW:
+                assert task["id"] == old_task_list[OLD].id
