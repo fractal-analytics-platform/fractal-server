@@ -314,8 +314,8 @@ class FractalSlurmExecutor(SlurmExecutor):
         timeout: Optional[float] = None,
         chunksize: int = 1,
         additional_setup_lines: Optional[list[str]] = None,
-        wftask_file_prefix: Optional[str] = None,  # FIXME
-        wftask_order: Optional[str] = None,  # FIXME
+        wftask_order: Optional[str] = None,
+        wftask_file_prefix: Optional[str] = None,
     ):
         """
         Returns an iterator equivalent to map(fn, iter), passing
@@ -392,7 +392,9 @@ class FractalSlurmExecutor(SlurmExecutor):
             raise RuntimeError("Something wrong here while batching tasks")
 
         fs = []
+        current_index = 0
         for ind_batch, batch in enumerate(args_batches):
+            batch_size = len(batch)
             this_slurm_file_prefix = (
                 f"{general_slurm_file_prefix}_" f"batch_{ind_batch}"
             )
@@ -407,8 +409,12 @@ class FractalSlurmExecutor(SlurmExecutor):
                     additional_setup_lines=additional_setup_lines,
                     slurm_file_prefix=this_slurm_file_prefix,
                     wftask_file_prefix=wftask_file_prefix,
+                    component_indices=[
+                        current_index + ind for ind in range(batch_size)
+                    ],
                 )
             )
+            current_index += batch_size
         debug(fs)
 
         # Yield must be hidden in closure so that the futures are submitted
@@ -445,6 +451,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         slurm_file_prefix: str,
         wftask_file_prefix: str,
         additional_setup_lines: Optional[list[str]] = None,
+        component_indices: Optional[list[int]] = None,
     ) -> futures.Future:
         """
         Submit a multi-task job to the pool, where each task is handled via the
@@ -460,20 +467,33 @@ class FractalSlurmExecutor(SlurmExecutor):
             num_tasks_tot=num_tasks_tot,
         )
         debug(vars(job))
+
+        # If available, set a more granular prefix for each parallel component
+        if component_indices is not None:
+            prefixes = [
+                f"{job.wftask_file_prefix}_{component_indices[i]}"
+                for i in range(num_tasks_tot)
+            ]
+        else:
+            prefixes = [f"{job.wftask_file_prefix}"] * num_tasks_tot
+
+        # Define I/O pickle file names/paths
         job.input_pickle_files = tuple(
             self.get_input_pickle_file_path(
-                workerid,
-                prefix=job.wftask_file_prefix,
+                job.workerids[ind],
+                prefix=prefixes[ind],
             )
-            for workerid in job.workerids
+            for ind in range(job.num_tasks_tot)
         )
         job.output_pickle_files = tuple(
             self.get_output_pickle_file_path(
-                workerid,
-                prefix=job.wftask_file_prefix,
+                job.workerids[ind],
+                prefix=prefixes[ind],
             )
-            for workerid in job.workerids
+            for ind in range(job.num_tasks_tot)
         )
+
+        # Define SLURM-job file names/paths
         job.slurm_script = self.get_slurm_script_file_path(
             prefix=job.slurm_file_prefix
         )
