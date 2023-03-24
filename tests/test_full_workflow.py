@@ -198,7 +198,7 @@ async def test_full_workflow(
 @pytest.mark.slow
 @pytest.mark.parametrize("backend", backends_available)
 @pytest.mark.parametrize("failing_task", ["parallel", "non_parallel"])
-async def test_failing_workflow_TaskExecutionError_nonparallel(
+async def test_failing_workflow_TaskExecutionError(
     client,
     MockCurrentUser,
     testdata_path,
@@ -216,7 +216,7 @@ async def test_failing_workflow_TaskExecutionError_nonparallel(
         FRACTAL_RUNNER_BACKEND=backend,
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path
-        / f"artifacts-{backend}-TaskExecutionError",
+        / f"artifacts-{backend}-TaskExecutionError-{failing_task}",
     )
 
     debug(f"Testing with {backend=}")
@@ -265,7 +265,7 @@ async def test_failing_workflow_TaskExecutionError_nonparallel(
         # Prepare payloads for adding non-parallel and parallel dummy tasks
         payload_non_parallel = dict(task_id=collect_packages[0].id)
         payload_parallel = dict(task_id=collect_packages[1].id)
-        ERROR_MESSAGE = "this is a nice error for a {failing_task} task"
+        ERROR_MESSAGE = f"this is a nice error for a {failing_task} task"
         failing_args = {"raise_error": True, "message": ERROR_MESSAGE}
         if failing_task == "non_parallel":
             payload_non_parallel["args"] = failing_args
@@ -273,6 +273,7 @@ async def test_failing_workflow_TaskExecutionError_nonparallel(
             payload_parallel["args"] = failing_args
 
         # Add a (non-parallel) dummy task
+        debug(payload_non_parallel)
         res = await client.post(
             f"{PREFIX}/workflow/{workflow_id}/add-task/",
             json=payload_non_parallel,
@@ -281,6 +282,7 @@ async def test_failing_workflow_TaskExecutionError_nonparallel(
         assert res.status_code == 201
 
         # Add a (parallel) dummy_parallel task
+        debug(payload_parallel)
         res = await client.post(
             f"{PREFIX}/workflow/{workflow_id}/add-task/",
             json=payload_parallel,
