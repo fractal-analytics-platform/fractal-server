@@ -121,20 +121,18 @@ async def test_runner(
     ]
 
     # Check that the correct files are present in workflow_dir
-    files = [f.name for f in workflow_dir.glob("*")] + [
-        f.name for f in workflow_dir_user.glob("*")
-    ]
-    debug(sorted(files))
+    files_server = [f.name for f in workflow_dir.glob("*")]
+    debug(sorted(files_server))
 
     # Check some backend-independent files
-    assert "0.args.json" in files
-    assert "0.err" in files
-    assert "0.out" in files
-    assert "0.metadiff.json" in files
-    assert "2_par_0.args.json" in files
-    assert "2_par_0.err" in files
-    assert "2_par_0.out" in files
-    assert "2_par_0.metadiff.json" in files
+    assert "0.args.json" in files_server
+    assert "0.err" in files_server
+    assert "0.out" in files_server
+    assert "0.metadiff.json" in files_server
+    assert "2_par_0.args.json" in files_server
+    assert "2_par_0.err" in files_server
+    assert "2_par_0.out" in files_server
+    assert "2_par_0.metadiff.json" in files_server
     with (workflow_dir_user / "0.args.json").open("r") as f:
         debug(workflow_dir_user / "0.args.json")
         args = f.read()
@@ -142,18 +140,29 @@ async def test_runner(
         assert "logger_name" not in args
 
     # Check some backend-specific files
+    # NOTE: the logic to retrieve the job ID is not the most elegant, but
+    # it works (both for when a single or two SLURM backends are tested)
     if backend == "slurm":
         slurm_job_id = 2  # This may change if you change the test
-        assert f"0.slurm.{slurm_job_id}.err" in files
-        assert f"0.slurm.{slurm_job_id}.out" in files
+        assert f"0.slurm.{slurm_job_id}.err" in files_server
+        assert f"0.slurm.{slurm_job_id}.out" in files_server
     elif backend == "grouped_slurm":
         # Files related to (non-parallel) WorkflowTask 0
-        assert "0_slurm_submit.sbatch" in files
-        slurm_job_id = 2  # This may change if you change the test
-        assert f"0_slurm_{slurm_job_id}.err" in files
-        assert f"0_slurm_{slurm_job_id}.out" in files
+        assert "0_slurm_submit.sbatch" in files_server
+        # Find SLURM-job ID from filename
+        filename = next(
+            f
+            for f in files_server
+            if f.startswith("0_slurm_") and f.endswith(".err")
+        )
+        debug(filename)
+        assert filename
+        slurm_job_id = int(filename[8:-4])
+        assert slurm_job_id
+        assert f"0_slurm_{slurm_job_id}.err" in files_server
+        assert f"0_slurm_{slurm_job_id}.out" in files_server
         # Files related to (parallel) WorkflowTask 2
-        assert "2_batch_0_slurm_submit.sbatch" in files
-        slurm_job_id = 4  # This may change if you change the test
-        assert f"2_batch_0_slurm_{slurm_job_id}.err" in files
-        assert f"2_batch_0_slurm_{slurm_job_id}.out" in files
+        assert "2_batch_0_slurm_submit.sbatch" in files_server
+        slurm_job_id = slurm_job_id + 2
+        assert f"2_batch_0_slurm_{slurm_job_id}.err" in files_server
+        assert f"2_batch_0_slurm_{slurm_job_id}.out" in files_server
