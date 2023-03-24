@@ -3,6 +3,8 @@ import time
 import pytest
 from devtools import debug
 
+from .fixtures_slurm import run_squeue
+from .fixtures_slurm import scancel_all_jobs_of_a_slurm_user
 from fractal_server.app.runner._grouped_slurm.executor import (
     FractalSlurmExecutor,
 )  # noqa
@@ -113,3 +115,93 @@ def test_slurm_executor_map_with_exception(
             debug(e)
             debug(vars(e))
             assert type(e) in [TaskExecutionError, JobExecutionError]
+
+
+def test_slurm_executor_submit_separate_folders(
+    monkey_slurm,
+    monkey_slurm_user,
+    tmp777_path,
+    cfut_jobs_finished,
+    slurm_working_folders,
+):
+    """
+    Same as test_slurm_executor, but with two folders:
+    * server_working_dir is owned by the server user and has 755 permissions
+    * user_working_dir is owned the user and had default permissions
+    """
+
+    server_working_dir, user_working_dir = slurm_working_folders
+
+    with FractalSlurmExecutor(
+        slurm_user=monkey_slurm_user,
+        working_dir=server_working_dir,
+        working_dir_user=user_working_dir,
+        slurm_poll_interval=2,
+    ) as executor:
+        res = executor.submit(lambda: 42)
+    assert res.result() == 42
+
+
+def test_slurm_executor_submit_and_scancel(
+    monkey_slurm,
+    monkey_slurm_user,
+    tmp777_path,
+    cfut_jobs_finished,
+    slurm_working_folders,
+):
+    """
+    GIVEN a docker slurm cluster and a FractalSlurmExecutor executor
+    WHEN a function is submitted to the executor (as a given user) and then the
+         SLURM job is immediately canceled
+    THEN the error is correctly captured
+    """
+
+    import time
+
+    def wait_and_return():
+        time.sleep(60)
+        return 42
+
+    server_working_dir, user_working_dir = slurm_working_folders
+
+    with pytest.raises(JobExecutionError) as e:
+        with FractalSlurmExecutor(
+            slurm_user=monkey_slurm_user,
+            working_dir=server_working_dir,
+            working_dir_user=user_working_dir,
+            debug=True,
+            keep_logs=True,
+            slurm_poll_interval=2,
+        ) as executor:
+            fut = executor.submit(wait_and_return)
+            debug(fut)
+
+            # Wait until the SLURM job goes from PENDING to RUNNING
+            while True:
+                squeue_output = run_squeue(
+                    squeue_format="%i %u %T", header=False
+                )
+                debug(squeue_output)
+                if "RUNNING" in squeue_output:
+                    break
+                time.sleep(1)
+
+            # Scancel all jobs of the current SLURM user
+            scancel_all_jobs_of_a_slurm_user(
+                slurm_user=monkey_slurm_user, show_squeue=True
+            )
+
+            # Calling result() forces waiting for the result, which in this
+            # test raises an exception
+            fut.result()
+
+    debug(str(e.type))
+    debug(str(e.value))
+    debug(str(e.traceback))
+
+    debug(e.value.assemble_error())
+
+    assert "CANCELLED" in e.value.assemble_error()
+    # Since we waited for the job to be RUNNING, both the SLURM stdout and
+    # stderr files should exist
+    assert "missing" not in e.value.assemble_error()

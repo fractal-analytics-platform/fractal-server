@@ -872,7 +872,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                     " -m fractal_server.app.runner._slurm.remote "
                     f"--input-file {input_pickle_file} "
                     f"--output-file {output_pickle_file}"
-                    # FIXME: add here err/out redirection to specific files
+                    # FIXME: add here err/out redirection to specific files??
                 )
             )
 
