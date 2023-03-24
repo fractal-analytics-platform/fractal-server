@@ -530,18 +530,27 @@ async def test_reorder_task_list(
 
     async with MockCurrentUser(persist=True) as user:
 
-        # Create project, workflow, tasks, workflowtasks
+        # Create project and empty workflow
         project = await project_factory(user)
         workflow = {"name": "WF", "project_id": project.id}
         res = await client.post("api/v1/workflow/", json=workflow)
         wf_id = res.json()["id"]
         workflow = await db.get(Workflow, wf_id)
+
+        # Make no-op API call to reorder an empty task list
+        res = await client.patch(
+            f"api/v1/workflow/{wf_id}",
+            json=dict(reordered_workflowtask_ids=[]),
+        )
+        assert res.status_code == 200
+
+        # Create tasks and insert WorkflowTasks
         for i in range(num_tasks):
             t = await task_factory(name=f"task-{i}")
             await workflow.insert_task(t.id, db=db)
             await db.refresh(workflow)
 
-        # At this point, attributes are sorted in a predictable way
+        # At this point, all WorkflowTask attributes have a predictable order
         old_worfklowtask_orders = [wft.order for wft in workflow.task_list]
         old_worfklowtask_ids = [wft.id for wft in workflow.task_list]
         old_task_ids = [wft.task.id for wft in workflow.task_list]
@@ -549,17 +558,20 @@ async def test_reorder_task_list(
         assert old_worfklowtask_ids == list(range(1, num_tasks + 1))
         assert old_task_ids == list(range(1, num_tasks + 1))
 
-        # Call PATCH endpoint to reorder the task_list
+        # Call PATCH endpoint to reorder the task_list (and simultaneously
+        # update the name attribute)
+        NEW_WF_NAME = "new-wf-name"
         res = await client.patch(
             f"api/v1/workflow/{wf_id}",
             json=dict(
-                name="foo",
+                name=NEW_WF_NAME,
                 reordered_workflowtask_ids=reordered_workflowtask_ids,
             ),
         )
-        debug(res.json())
         new_workflow = res.json()
+        debug(new_workflow)
         assert res.status_code == 200
+        assert new_workflow["name"] == NEW_WF_NAME
 
         # Extract new attribute lists
         new_task_list = new_workflow["task_list"]
