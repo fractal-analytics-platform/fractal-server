@@ -313,7 +313,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         if timeout is not None:
             end_time = timeout + time.monotonic()
 
-        def sanitize_string(s):
+        def sanitize_string(s):  # FIXME: import this from ../_common.py
             return s.replace(" ", "_").replace("/", "_").replace(".", "_")
 
         if job_file_prefix:
