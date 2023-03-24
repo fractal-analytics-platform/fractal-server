@@ -362,9 +362,9 @@ class FractalSlurmExecutor(SlurmExecutor):
             general_slurm_file_prefix = f"_{random_string()}"
 
         # Set all kind of SLURM parameters
-        iterable = list(iterable)
-        n_ftasks_tot = len(iterable)
-        debug(iterable)
+        list_args = list(iterable)
+        n_ftasks_tot = len(list_args)
+        debug(list_args)
         n_ftasks_per_script = 4
         debug(n_ftasks_per_script)
 
