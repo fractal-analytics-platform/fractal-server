@@ -353,54 +353,39 @@ class FractalSlurmExecutor(SlurmExecutor):
         if timeout is not None:
             end_time = timeout + time.monotonic()
 
-        def sanitize_string(s):
-            return s.replace(" ", "_").replace("/", "_").replace(".", "_")
-
-        debug("iterable")
-        debug(iterable)
-
-        debug("wftask_file_prefix")
-        debug(wftask_file_prefix)
+        # Set file prefixes
         if wftask_file_prefix is None:
             wftask_file_prefix = f"_wftask_{random_string()}"
-        debug(wftask_file_prefix)
-
-        debug("wftask_order")
-        debug(wftask_order)
         if wftask_order is not None:
             general_slurm_file_prefix = str(wftask_order)
         else:
             general_slurm_file_prefix = f"_{random_string()}"
-        debug("general_slurm_file_prefix")
-        debug(general_slurm_file_prefix)
 
+        # Set all kind of SLURM parameters
+        iterable = list(iterable)
+        n_ftasks_tot = len(iterable)
+        debug(iterable)
         n_ftasks_per_script = 4
         debug(n_ftasks_per_script)
-
-        list_args = iterable
-        n_ftasks_tot = len(list_args)
-        debug(list_args)
 
         # Divide arguments in batches of size n_tasks_per_script
         args_batches = []
         batch_size = n_ftasks_per_script
-        for ind_chunk in range(0, len(list_args), batch_size):
+        for ind_chunk in range(0, n_ftasks_tot, batch_size):
             args_batches.append(
                 list_args[ind_chunk : ind_chunk + batch_size]  # noqa
             )
         if len(args_batches) != math.ceil(n_ftasks_tot / n_ftasks_per_script):
             raise RuntimeError("Something wrong here while batching tasks")
 
+        # Construct list of futures (one per SLURM job, i.e. one per batch)
         fs = []
-        current_index = 0
+        current_component_index = 0
         for ind_batch, batch in enumerate(args_batches):
             batch_size = len(batch)
             this_slurm_file_prefix = (
                 f"{general_slurm_file_prefix}_" f"batch_{ind_batch}"
             )
-            debug(ind_batch)
-            debug(this_slurm_file_prefix)
-            debug(wftask_file_prefix)
             fs.append(
                 self.submit_multitask(
                     fn,
@@ -409,12 +394,12 @@ class FractalSlurmExecutor(SlurmExecutor):
                     slurm_file_prefix=this_slurm_file_prefix,
                     wftask_file_prefix=wftask_file_prefix,
                     component_indices=[
-                        current_index + ind for ind in range(batch_size)
+                        current_component_index + _ind
+                        for _ind in range(batch_size)
                     ],
                 )
             )
-            current_index += batch_size
-        debug(fs)
+            current_component_index += batch_size
 
         # Yield must be hidden in closure so that the futures are submitted
         # before the first iterator value is required.
@@ -543,8 +528,8 @@ class FractalSlurmExecutor(SlurmExecutor):
         fun: Callable[..., Any],
         *args,
         additional_setup_lines: Optional[list[str]] = None,
-        wftask_file_prefix: Optional[str] = None,  # FIXME
-        wftask_order: Optional[str] = None,  # FIXME
+        wftask_file_prefix: Optional[str] = None,
+        wftask_order: Optional[str] = None,
         **kwargs,
     ) -> futures.Future:
         """
