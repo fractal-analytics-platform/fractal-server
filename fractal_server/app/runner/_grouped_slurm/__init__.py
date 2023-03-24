@@ -137,7 +137,7 @@ def load_slurm_config(
 
 
 def set_slurm_config(
-    task: WorkflowTask,
+    wftask: WorkflowTask,
     task_pars: TaskParameters,
     workflow_dir: Path,
     workflow_dir_user: Path,
@@ -176,13 +176,13 @@ def set_slurm_config(
     """
     config_dict = load_slurm_config()
     try:
-        config = config_dict[task.executor]
+        config = config_dict[wftask.executor]
     except KeyError:
-        raise SlurmConfigError(f"Configuration not found: {task.executor}")
+        raise SlurmConfigError(f"Configuration not found: {wftask.executor}")
 
     additional_setup_lines = config.to_sbatch()
     additional_setup_lines.append(
-        f"#SBATCH --job-name {task.task.name.replace(' ', '_')}"
+        f"#SBATCH --job-name {wftask.task.name.replace(' ', '_')}"
     )
 
     # From https://slurm.schedmd.com/sbatch.html: Beginning with 22.05, srun
@@ -197,12 +197,14 @@ def set_slurm_config(
     task_files = get_task_file_paths(
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
-        task_order=task.order,
+        task_order=wftask.order,
     )
-    return dict(
+    submit_setup_dict = dict(
         additional_setup_lines=additional_setup_lines,
-        job_file_prefix=task_files.file_prefix,
+        wftask_file_prefix=task_files.file_prefix,
+        wftask_order=wftask.order,
     )
+    return submit_setup_dict
 
 
 def _process_workflow(

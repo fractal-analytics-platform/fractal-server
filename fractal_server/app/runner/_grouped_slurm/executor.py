@@ -55,7 +55,8 @@ class SlurmJob:
 
     Attributes:
         single_task_submission: FIXME (describe and rename)
-        file_prefix: Prefix for all files handled by FractalSlurmExecutor.
+        file_prefix: # FIXME
+        # Prefix for all files handled by FractalSlurmExecutor.
         workerids: Random strings that enters the pickle-file names.
         input_pickle_files: Input pickle files.
         output_pickle_files: Output pickle files.
@@ -67,7 +68,8 @@ class SlurmJob:
     # Job-related attributes
     num_tasks_tot: int
     single_task_submission: bool
-    file_prefix: str
+    slurm_file_prefix: str
+    wftask_file_prefix: str
     slurm_script: Path
     slurm_stdout: Path
     slurm_stderr: Path
@@ -79,14 +81,17 @@ class SlurmJob:
     def __init__(
         self,
         num_tasks_tot: int,
-        file_prefix: Optional[str] = None,
+        workflow_task_file_prefix: Optional[str] = None,
+        slurm_file_prefix: Optional[str] = None,
+        wftask_file_prefix: Optional[str] = None,
         single_task_submission: bool = False,
     ):
         self.num_tasks_tot = num_tasks_tot
         self.single_task_submission = single_task_submission
         if num_tasks_tot > 1:
             self.single_task_submission = False
-        self.file_prefix = file_prefix or "default_prefix"
+        self.slurm_file_prefix = slurm_file_prefix or "default_slurm_prefix"
+        self.wftask_file_prefix = wftask_file_prefix or "default_wftask_prefix"
         self.workerids = tuple(
             random_string() for i in range(self.num_tasks_tot)
         )
@@ -178,32 +183,29 @@ class FractalSlurmExecutor(SlurmExecutor):
         self, arg: str, prefix: Optional[str] = None
     ) -> Path:
         prefix = prefix or "cfut"
-        return self.working_dir / f"{prefix}.in.{arg}.pickle"
+        return self.working_dir / f"{prefix}_in_{arg}.pickle"
 
     def get_output_pickle_file_path(
         self, arg: str, prefix: Optional[str] = None
     ) -> Path:
         prefix = prefix or "cfut"
-        return self.working_dir_user / f"{prefix}.out.{arg}.pickle"
+        return self.working_dir_user / f"{prefix}_out_{arg}.pickle"
 
-    def get_slurm_script_file_path(
-        self, arg: Optional[str] = None, prefix: Optional[str] = None
-    ) -> Path:
+    def get_slurm_script_file_path(self, prefix: Optional[str] = None) -> Path:
         prefix = prefix or "_temp"
-        arg = arg or "submit"
-        return self.working_dir / f"{prefix}.slurm.{arg}.sbatch"
+        return self.working_dir / f"{prefix}_slurm_submit.sbatch"
 
     def get_slurm_stdout_file_path(
         self, arg: str = "%j", prefix: Optional[str] = None
     ) -> Path:
         prefix = prefix or "slurmpy.stdout"
-        return self.working_dir_user / f"{prefix}.slurm.{arg}.out"
+        return self.working_dir_user / f"{prefix}_slurm_{arg}.out"
 
     def get_slurm_stderr_file_path(
         self, arg: str = "%j", prefix: Optional[str] = None
     ) -> Path:
         prefix = prefix or "slurmpy.stderr"
-        return self.working_dir_user / f"{prefix}.slurm.{arg}.err"
+        return self.working_dir_user / f"{prefix}_slurm_{arg}.err"
 
     def write_batch_script(self, sbatch_script: str, dest: Path) -> Path:
         """
@@ -221,9 +223,10 @@ class FractalSlurmExecutor(SlurmExecutor):
 
     def submit_sbatch(
         self,
+        *,
         sbatch_script: str,
+        script_path: Path,
         submit_pre_command: str = "",
-        script_path: Optional[Path] = None,
     ) -> str:
         """
         Submit a Slurm job script
@@ -240,9 +243,6 @@ class FractalSlurmExecutor(SlurmExecutor):
             jobid:
                 integer job id as returned by `sbatch` submission
         """
-        script_path = script_path or self.get_slurm_script_file_path(
-            random_string()
-        )
         debug(sbatch_script)
         self.write_batch_script(sbatch_script=sbatch_script, dest=script_path)
         submit_command = f"sbatch --parsable {script_path}"
@@ -310,10 +310,12 @@ class FractalSlurmExecutor(SlurmExecutor):
         self,
         fn: Callable[..., Any],
         iterable: Iterable[Any],
+        *,
         timeout: Optional[float] = None,
         chunksize: int = 1,
         additional_setup_lines: Optional[list[str]] = None,
-        job_file_prefix: Optional[str] = None,
+        wftask_file_prefix: Optional[str] = None,  # FIXME
+        wftask_order: Optional[str] = None,  # FIXME
     ):
         """
         Returns an iterator equivalent to map(fn, iter), passing
@@ -354,10 +356,23 @@ class FractalSlurmExecutor(SlurmExecutor):
         def sanitize_string(s):
             return s.replace(" ", "_").replace("/", "_").replace(".", "_")
 
-        if not job_file_prefix:
-            job_file_prefix = f"_temp_{random_string()}"
-
+        debug("iterable")
         debug(iterable)
+
+        debug("wftask_file_prefix")
+        debug(wftask_file_prefix)
+        if wftask_file_prefix is None:
+            wftask_file_prefix = f"_wftask_{random_string()}"
+        debug(wftask_file_prefix)
+
+        debug("wftask_order")
+        debug(wftask_order)
+        if wftask_order is not None:
+            general_slurm_file_prefix = str(wftask_order)
+        else:
+            general_slurm_file_prefix = f"_{random_string()}"
+        debug("general_slurm_file_prefix")
+        debug(general_slurm_file_prefix)
 
         n_ftasks_per_script = 4
         debug(n_ftasks_per_script)
@@ -376,15 +391,23 @@ class FractalSlurmExecutor(SlurmExecutor):
         if len(args_batches) != math.ceil(n_ftasks_tot / n_ftasks_per_script):
             raise RuntimeError("Something wrong here while batching tasks")
 
-        fs = [
-            self.submit_multitask(
-                fn,
-                list_list_args=[[x] for x in batch],  # FIXME
-                additional_setup_lines=additional_setup_lines,
-                job_file_prefix=f"{job_file_prefix}_batch_{ind_batch}",
+        fs = []
+        for ind_batch, batch in enumerate(args_batches):
+            this_slurm_file_prefix = (
+                f"{general_slurm_file_prefix}_" f"batch_{ind_batch}"
             )
-            for ind_batch, batch in enumerate(args_batches)
-        ]
+            debug(ind_batch)
+            debug(this_slurm_file_prefix)
+            debug(wftask_file_prefix)
+            fs.append(
+                self.submit_multitask(
+                    fn,
+                    list_list_args=[[x] for x in batch],  # FIXME
+                    additional_setup_lines=additional_setup_lines,
+                    slurm_file_prefix=this_slurm_file_prefix,
+                    wftask_file_prefix=wftask_file_prefix,
+                )
+            )
         debug(fs)
 
         # Yield must be hidden in closure so that the futures are submitted
@@ -418,8 +441,9 @@ class FractalSlurmExecutor(SlurmExecutor):
         self,
         fun: Callable[..., Any],
         list_list_args: Iterable[Iterable[Any]],
+        slurm_file_prefix: str,
+        wftask_file_prefix: str,
         additional_setup_lines: Optional[list[str]] = None,
-        job_file_prefix: Optional[str] = None,
     ) -> futures.Future:
         """
         Submit a multi-task job to the pool, where each task is handled via the
@@ -430,31 +454,33 @@ class FractalSlurmExecutor(SlurmExecutor):
         # Define slurm-job-related files
         num_tasks_tot = len(list_list_args)
         job = SlurmJob(
-            file_prefix=job_file_prefix,
+            slurm_file_prefix=slurm_file_prefix,
+            wftask_file_prefix=wftask_file_prefix,
             num_tasks_tot=num_tasks_tot,
         )
+        debug(vars(job))
         job.input_pickle_files = tuple(
             self.get_input_pickle_file_path(
                 workerid,
-                prefix=job.file_prefix,
+                prefix=job.wftask_file_prefix,
             )
             for workerid in job.workerids
         )
         job.output_pickle_files = tuple(
             self.get_output_pickle_file_path(
                 workerid,
-                prefix=job.file_prefix,
+                prefix=job.wftask_file_prefix,
             )
             for workerid in job.workerids
         )
         job.slurm_script = self.get_slurm_script_file_path(
-            prefix=job.file_prefix
+            prefix=job.slurm_file_prefix
         )
         job.slurm_stdout = self.get_slurm_stdout_file_path(
-            prefix=job.file_prefix
+            prefix=job.slurm_file_prefix
         )
         job.slurm_stderr = self.get_slurm_stderr_file_path(
-            prefix=job.file_prefix
+            prefix=job.slurm_file_prefix
         )
 
         # Dump serialized versions+function+args+kwargs to pickle file
@@ -497,7 +523,8 @@ class FractalSlurmExecutor(SlurmExecutor):
         fun: Callable[..., Any],
         *args,
         additional_setup_lines: Optional[list[str]] = None,
-        job_file_prefix: Optional[str] = None,
+        wftask_file_prefix: Optional[str] = None,  # FIXME
+        wftask_order: Optional[str] = None,  # FIXME
         **kwargs,
     ) -> futures.Future:
         """
@@ -508,30 +535,41 @@ class FractalSlurmExecutor(SlurmExecutor):
         """
         fut: futures.Future = futures.Future()
 
+        if wftask_file_prefix is not None:
+            wftask_file_prefix = f"_wftask_{random_string()}"
+        if wftask_order is not None:
+            slurm_file_prefix = str(wftask_order)
+        else:
+            slurm_file_prefix = f"_{random_string()}"
+
+        # FIXME: I guess all what follows in this method should go and be
+        # replaced by an appropriate call to submit_multitask
+
         # Define slurm-job-related files
         job = SlurmJob(
             num_tasks_tot=1,
             single_task_submission=True,
-            file_prefix=job_file_prefix,
+            slurm_file_prefix=slurm_file_prefix,
+            wftask_file_prefix=wftask_file_prefix,
         )
         job.input_pickle_files = (
             self.get_input_pickle_file_path(
-                job.workerids[0], prefix=job.file_prefix
+                job.workerids[0], prefix=job.wftask_file_prefix
             ),
         )
         job.output_pickle_files = (
             self.get_output_pickle_file_path(
-                job.workerids[0], prefix=job.file_prefix
+                job.workerids[0], prefix=job.wftask_file_prefix
             ),
         )
         job.slurm_script = self.get_slurm_script_file_path(
-            prefix=job.file_prefix
+            prefix=job.slurm_file_prefix
         )
         job.slurm_stdout = self.get_slurm_stdout_file_path(
-            prefix=job.file_prefix
+            prefix=job.slurm_file_prefix
         )
         job.slurm_stderr = self.get_slurm_stderr_file_path(
-            prefix=job.file_prefix
+            prefix=job.slurm_file_prefix
         )
 
         # Dump serialized versions+function+args+kwargs to pickle file
@@ -804,11 +842,34 @@ class FractalSlurmExecutor(SlurmExecutor):
         if self.working_dir_user == self.working_dir:
             return
 
-        files_to_copy = _glob_as_user(
+        logging.warning(
+            f"[_copy_files_from_user_to_server] {job.slurm_file_prefix=}"
+        )
+        logging.warning(
+            f"[_copy_files_from_user_to_server] {job.wftask_file_prefix=}"
+        )
+        logging.warning(
+            "[_copy_files_from_user_to_server] "
+            f"{str(self.working_dir_user)=}"
+        )
+
+        wftask_files_to_copy = _glob_as_user(
             folder=str(self.working_dir_user),
             user=self.slurm_user,
-            startswith=job.file_prefix,
+            startswith=job.wftask_file_prefix,
         )
+        logging.warning(
+            f"[_copy_files_from_user_to_server] {wftask_files_to_copy=}"
+        )
+        slurm_files_to_copy = _glob_as_user(
+            folder=str(self.working_dir_user),
+            user=self.slurm_user,
+            startswith=job.slurm_file_prefix,
+        )
+        logging.warning(
+            f"[_copy_files_from_user_to_server] {slurm_files_to_copy=}"
+        )
+        files_to_copy = slurm_files_to_copy + wftask_files_to_copy
 
         # NOTE: By setting encoding=None, we read/write bytes instead of
         # strings. This is needed to also handle pickle files
@@ -892,9 +953,9 @@ class FractalSlurmExecutor(SlurmExecutor):
         if self.slurm_user:
             pre_cmd = f"sudo --non-interactive -u {self.slurm_user}"
         jobid = self.submit_sbatch(
-            sbatch_script,
-            submit_pre_command=pre_cmd,
             script_path=job.slurm_script,
+            sbatch_script=sbatch_script,
+            submit_pre_command=pre_cmd,
         )
 
         # Plug SLURM job id in stdout/stderr file paths
