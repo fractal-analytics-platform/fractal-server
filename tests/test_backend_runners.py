@@ -45,7 +45,7 @@ async def test_runner(
     THEN the tasks are correctly executed
     """
     debug(f"Testing with {backend=}")
-    if backend == "slurm":
+    if backend in ["slurm", "grouped_slurm"]:
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
         request.getfixturevalue("slurm_config")
@@ -83,7 +83,7 @@ async def test_runner(
         umask = os.umask(0)
         workflow_dir.mkdir(parents=True, mode=0o700)
         os.umask(umask)
-    elif backend == "slurm":
+    elif backend in ["slurm", "grouped_slurm"]:
         workflow_dir, workflow_dir_user = request.getfixturevalue(
             "slurm_working_folders"
         )  # noqa
@@ -104,7 +104,7 @@ async def test_runner(
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
     )
-    if backend == "slurm":
+    if backend in ["slurm", "grouped_slurm"]:
         kwargs["slurm_user"] = monkey_slurm_user
 
     # process workflow
@@ -128,6 +128,7 @@ async def test_runner(
     assert "0.err" in files
     assert "0.out" in files
     assert "0.metadiff.json" in files
+    debug(files)
 
     with (workflow_dir_user / "0.args.json").open("r") as f:
         debug(workflow_dir_user / "0.args.json")
@@ -138,3 +139,14 @@ async def test_runner(
         slurm_job_id = 2  # This may change if you change the test
         assert f"0.slurm.{slurm_job_id}.err" in files
         assert f"0.slurm.{slurm_job_id}.out" in files
+    elif backend == "grouped_slurm":
+        # Files related to (non-parallel) WorkflowTask 0
+        assert "0_slurm_submit.sbatch" in files
+        slurm_job_id = 2  # This may change if you change the test
+        assert f"0_slurm_{slurm_job_id}.err" in files
+        assert f"0_slurm_{slurm_job_id}.out" in files
+        # Files related to (parallel) WorkflowTask 2
+        assert "2_batch_0_slurm_submit.sbatch" in files
+        slurm_job_id = 4  # This may change if you change the test
+        assert f"2_batch_0_slurm_{slurm_job_id}.err" in files
+        assert f"2_batch_0_slurm_{slurm_job_id}.out" in files
