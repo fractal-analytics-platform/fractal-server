@@ -18,7 +18,6 @@ another user. Note that this requires appropriate sudo permissions.
 import logging
 import shlex
 import subprocess  # nosec
-from typing import List
 from typing import Optional
 
 
@@ -91,7 +90,7 @@ def _mkdir_as_user(*, folder: str, user: str) -> None:
 
 def _glob_as_user(
     *, folder: str, user: str, startswith: Optional[str] = None
-) -> List[str]:
+) -> list[str]:
     """
     Run `ls` in a folder (as a user) and filter results
 
