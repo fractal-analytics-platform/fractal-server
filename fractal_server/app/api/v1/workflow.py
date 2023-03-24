@@ -227,8 +227,11 @@ async def patch_workflow(
 
     for key, value in patch.dict(exclude_unset=True).items():
         if key == "reordered_workflowtask_ids":
-            current_workflowtask_ids = [wt.id for wt in workflow.task_list]
-            if len(value) != len(workflow.task_list) or set(value) != set(
+            current_workflowtask_ids = [
+                wftask.id for wftask in workflow.task_list
+            ]
+            num_tasks = len(workflow.task_list)
+            if len(value) != num_tasks or set(value) != set(
                 current_workflowtask_ids
             ):
                 raise HTTPException(
@@ -238,9 +241,9 @@ async def patch_workflow(
                         f" {current_workflowtask_ids} (given {value})"
                     ),
                 )
-            for i in range(len(workflow.task_list)):
-                new_order = value.index(workflow.task_list[i].id)
-                workflow.task_list[i].order = new_order
+            for ind_wftask in range(num_tasks):
+                new_order = value.index(workflow.task_list[ind_wftask].id)
+                workflow.task_list[ind_wftask].order = new_order
         else:
             setattr(workflow, key, value)
     await db.commit()
