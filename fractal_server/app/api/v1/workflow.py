@@ -221,15 +221,34 @@ async def patch_workflow(
     """
     Edit a workflow
     """
-
     workflow = await _get_workflow_check_owner(
         workflow_id=workflow_id, user_id=user.id, db=db
     )
 
     for key, value in patch.dict(exclude_unset=True).items():
-        setattr(workflow, key, value)
+        if key == "reordered_workflowtask_ids":
+            current_workflowtask_ids = [
+                wftask.id for wftask in workflow.task_list
+            ]
+            num_tasks = len(workflow.task_list)
+            if len(value) != num_tasks or set(value) != set(
+                current_workflowtask_ids
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=(
+                        "`reordered_workflowtask_ids` must be a permutation of"
+                        f" {current_workflowtask_ids} (given {value})"
+                    ),
+                )
+            for ind_wftask in range(num_tasks):
+                new_order = value.index(workflow.task_list[ind_wftask].id)
+                workflow.task_list[ind_wftask].order = new_order
+        else:
+            setattr(workflow, key, value)
     await db.commit()
     await db.refresh(workflow)
+
     return workflow
 
 
@@ -319,6 +338,7 @@ async def patch_workflow_task(
 
     await db.commit()
     await db.refresh(db_workflow_task)
+
     return db_workflow_task
 
 
