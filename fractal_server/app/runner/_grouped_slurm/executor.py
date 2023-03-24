@@ -401,7 +401,6 @@ class FractalSlurmExecutor(SlurmExecutor):
             debug(ind_batch)
             debug(this_slurm_file_prefix)
             debug(wftask_file_prefix)
-            # FIXME: can we propagate the actual component index here?
             fs.append(
                 self.submit_multitask(
                     fn,
