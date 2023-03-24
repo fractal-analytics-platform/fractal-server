@@ -535,7 +535,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         """
         fut: futures.Future = futures.Future()
 
-        if wftask_file_prefix is not None:
+        if wftask_file_prefix is None:
             wftask_file_prefix = f"_wftask_{random_string()}"
         if wftask_order is not None:
             slurm_file_prefix = str(wftask_order)
