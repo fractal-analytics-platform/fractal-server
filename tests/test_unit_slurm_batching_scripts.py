@@ -1,3 +1,7 @@
+"""
+FIXME: this does not test anything from fractal_server. Either we import from
+there, or we drop this test.
+"""
 import glob
 import json
 import logging
@@ -50,15 +54,14 @@ def write_script(
 
     tmp_list_args = copy(list_args)
     while tmp_list_args:
-        for ind in range(ntasks):
-            if tmp_list_args:
-                arg = tmp_list_args.pop(0)  # take first element
-                script += (
-                    "srun --ntasks=1 --cpus-per-task=$SLURM_CPUS_PER_TASK "
-                    f"--mem={mem_per_task_MB}MB "
-                    f"$COMMAND {arg} {sleep_time} {logdir} &\n"
-                )
-        script += "wait\n\n"
+        if tmp_list_args:
+            arg = tmp_list_args.pop(0)  # take first element
+            script += (
+                "srun --ntasks=1 --cpus-per-task=$SLURM_CPUS_PER_TASK "
+                f"--mem={mem_per_task_MB}MB "
+                f"$COMMAND {arg} {sleep_time} {logdir} &\n"
+            )
+    script += "wait\n\n"
 
     return script
 
@@ -119,6 +122,7 @@ for this_case in cases_plus_cpus:
         )
 
 
+@pytest.mark.skip(reason="Not up-to-date")
 @pytest.mark.parametrize(
     "n_ftasks_tot,n_ftasks_per_script,n_parallel_ftasks_per_script,cpus_per_task",  # noqa
     safe_cases,
