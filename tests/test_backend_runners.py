@@ -124,17 +124,24 @@ async def test_runner(
     files = [f.name for f in workflow_dir.glob("*")] + [
         f.name for f in workflow_dir_user.glob("*")
     ]
+    debug(sorted(files))
+
+    # Check some backend-independent files
     assert "0.args.json" in files
     assert "0.err" in files
     assert "0.out" in files
     assert "0.metadiff.json" in files
-    debug(files)
-
+    assert "2_par_0.args.json" in files
+    assert "2_par_0.err" in files
+    assert "2_par_0.out" in files
+    assert "2_par_0.metadiff.json" in files
     with (workflow_dir_user / "0.args.json").open("r") as f:
         debug(workflow_dir_user / "0.args.json")
         args = f.read()
         debug(args)
         assert "logger_name" not in args
+
+    # Check some backend-specific files
     if backend == "slurm":
         slurm_job_id = 2  # This may change if you change the test
         assert f"0.slurm.{slurm_job_id}.err" in files
