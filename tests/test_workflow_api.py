@@ -326,8 +326,9 @@ async def test_patch_workflow(
         patch = {"name": "new_WF"}
         res = await client.patch(f"api/v1/workflow/{wf_id}", json=patch)
 
-        await db.refresh(workflow)
-        assert workflow.name == "new_WF"
+        new_workflow = await db.get(Workflow, wf_id)
+        assert new_workflow.name == "new_WF"
+
         res = await client.get(f"api/v1/project/{project.id}/workflows/")
         assert len(res.json()) == 1
 
