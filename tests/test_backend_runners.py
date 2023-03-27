@@ -154,7 +154,7 @@ async def test_runner(
         )
         debug(filename)
         assert filename
-        slurm_job_id = int(filename[8:-4])
+        slurm_job_id = int(filename.strip("0.slurm.").strip(".err"))
         slurm_job_id = 2  # This may change if you change the test
         assert f"0.slurm.{slurm_job_id}.err" in files_server
         assert f"0.slurm.{slurm_job_id}.out" in files_server
@@ -169,7 +169,7 @@ async def test_runner(
         )
         debug(filename)
         assert filename
-        slurm_job_id = int(filename[8:-4])
+        slurm_job_id = int(filename.strip("0_slurm_").strip(".err"))
         assert slurm_job_id
         assert f"0_slurm_{slurm_job_id}.err" in files_server
         assert f"0_slurm_{slurm_job_id}.out" in files_server
