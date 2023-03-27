@@ -143,6 +143,16 @@ async def test_runner(
     # NOTE: the logic to retrieve the job ID is not the most elegant, but
     # it works (both for when a single or two SLURM backends are tested)
     if backend == "slurm":
+        assert "0.slurm.submit.sbatch" in files_server
+        # Find SLURM-job ID from filename
+        filename = next(
+            f
+            for f in files_server
+            if f.startswith("0.slurm.") and f.endswith(".err")
+        )
+        debug(filename)
+        assert filename
+        slurm_job_id = int(filename[8:-4])
         slurm_job_id = 2  # This may change if you change the test
         assert f"0.slurm.{slurm_job_id}.err" in files_server
         assert f"0.slurm.{slurm_job_id}.out" in files_server
