@@ -31,6 +31,16 @@ class MockWorkflowTask(BaseModel):
     def parallelization_level(self) -> Optional[str]:
         return self.task.parallelization_level
 
+    @property
+    def overridden_meta(self) -> dict:
+        """
+        Return a combination of self.meta (higher priority) and self.task.meta
+        (lower priority) key-value pairs.
+        """
+        res = self.task.meta.copy() or {}
+        res.update(self.meta or {})
+        return res
+
     def assemble_args(self, extra: dict[str, Any] = None):
         """
         Merge of `extra` arguments and `self.arguments`.
