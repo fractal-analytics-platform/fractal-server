@@ -33,10 +33,10 @@ from ....config import get_settings
 from ....syringe import Inject
 from ....utils import close_logger
 from ....utils import set_logger
-from .._grouped_slurm import SlurmConfig
 from ..common import JobExecutionError
 from ..common import TaskExecutionError
 from ._batching_heuristics import heuristics
+from ._slurm_config import SlurmConfig
 from ._subprocess_run_as_user import _glob_as_user
 from ._subprocess_run_as_user import _path_exists_as_user
 from ._subprocess_run_as_user import _run_command_as_user
