@@ -122,7 +122,9 @@ async def test_runner(
 
     # Check that the correct files are present in workflow_dir
     files_server = [f.name for f in workflow_dir.glob("*")]
+    files_user = [f.name for f in workflow_dir_user.glob("*")]
     debug(sorted(files_server))
+    debug(sorted(files_user))
 
     # Check some backend-independent files
     assert "0.args.json" in files_server
