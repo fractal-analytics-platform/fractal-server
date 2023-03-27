@@ -15,7 +15,7 @@ Slurm Bakend
 This backend runs fractal workflows in a SLURM cluster using Clusterfutures
 Executor objects.
 """
-import json
+# import json
 from pathlib import Path
 from typing import Any
 from typing import Dict
@@ -27,8 +27,6 @@ from devtools import debug
 from pydantic import BaseModel
 from pydantic import Field
 
-from ....config import get_settings
-from ....syringe import Inject
 from ...models import Workflow
 from ...models import WorkflowTask
 from .._common import get_task_file_paths
@@ -37,53 +35,8 @@ from ..common import async_wrap
 from ..common import TaskParameters
 from .executor import FractalSlurmExecutor
 
-
-class OldSlurmConfig(BaseModel):
-    """
-    Abstraction for SLURM executor parameters
-
-    This class wraps options for the `sbatch` command. Attribute `xxx_yyy` maps
-    to the `--xxx-yyy` option of `sbatch`. Cf. [sbatch
-    documentation](https://slurm.schedmd.com/sbatch.html)
-
-    Note that options containing hyphens ('-') need be aliased to attribute
-    names with underscores ('-').
-
-    Attributes:
-        partition: TBD
-        time: TBD
-        mem:
-            TBD
-            From sbatch docs: Default units are megabytes. Different units can
-            be specified using the suffix [K|M|G|T]
-        cpus_per_task: TBD
-        account: TBD
-        extra_lines: TBD
-    """
-
-    class Config:
-        allow_population_by_field_name = True
-
-    partition: str
-    time: Optional[str]
-    mem: Optional[str]
-    cpus_per_task: Optional[str] = Field(alias="cpus-per-task")
-    account: Optional[str]
-    extra_lines: Optional[List[str]] = Field(default_factory=list)
-
-    def to_sbatch(self, prefix="#SBATCH "):
-        """
-        Transform the class attributes into the preamble block of a script to
-        be submitted via `sbatch`
-        """
-        dic = self.dict(
-            exclude_none=True, by_alias=True, exclude={"extra_lines"}
-        )
-        sbatch_lines = []
-        for k, v in dic.items():
-            sbatch_lines.append(f"{prefix}--{k}={v}")
-        sbatch_lines.extend(self.extra_lines)
-        return sbatch_lines
+# from ....config import get_settings
+# from ....syringe import Inject
 
 
 class SlurmConfigError(ValueError):
@@ -92,52 +45,6 @@ class SlurmConfigError(ValueError):
     """
 
     pass
-
-
-def load_slurm_config(
-    config_path: Optional[Path] = None,
-) -> Dict[str, OldSlurmConfig]:
-    """
-    Parse slurm configuration file
-
-    The configuration file can contain multiple SLURM configurations in JSON
-    format. This functions deserialises all the configurations and returns
-    them in the form of SlurmConfig objects.
-
-    Args:
-        config_path:
-            The path to the configuration file. If not provided, it is read
-            from Fractal settings.
-
-    Raises:
-        SlurmConfigError: if any exeception was raised in reading or
-                          deserialising the configuration file.
-
-    Returns:
-        config_dict:
-            Dictionary whose keys are the configuration identifiers and whose
-            values are SlurmConfig objects.
-    """
-    if not config_path:
-        settings = Inject(get_settings)
-        config_path = settings.FRACTAL_SLURM_CONFIG_FILE
-    try:
-        with config_path.open("r") as f:  # type: ignore
-            raw_data = json.load(f)
-
-        # coerce
-        config_dict = {
-            config_key: OldSlurmConfig(**raw_data[config_key])
-            for config_key in raw_data
-        }
-    except FileNotFoundError:
-        raise SlurmConfigError(f"Configuration file not found: {config_path}")
-    except Exception as e:
-        raise SlurmConfigError(
-            f"Could not read slurm configuration file: {config_path}"
-            f"\nOriginal error: {repr(e)}"
-        )
-    return config_dict
 
 
 class SlurmConfig(BaseModel):
@@ -233,6 +140,14 @@ def set_slurm_config(
     # sources and transforming them into an appropriate SLURM configuration
 
     # FIXME: replace this hard-coded dict with a file read
+    """
+    if not config_path:
+        settings = Inject(get_settings)
+        config_path = settings.FRACTAL_SLURM_CONFIG_FILE
+    try:
+        with config_path.open("r") as f:  # type: ignore
+            raw_data = json.load(f)
+    """
     slurm_config = {
         "partition": "main",
         "cpus_per_job": {
