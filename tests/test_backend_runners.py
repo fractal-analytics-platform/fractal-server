@@ -23,6 +23,17 @@ from fractal_server.app.runner.common import close_job_logger
 from fractal_server.utils import set_logger
 
 
+def _extract_job_id_from_filename(filenames, pre, post) -> int:
+    # Find SLURM-job ID from filename
+    _filename = next(
+        f for f in filenames if f.startswith(pre) and f.endswith(post)
+    )
+    debug(_filename)
+    assert _filename
+    slurm_job_id = int(_filename.strip(pre).strip(post))
+    return slurm_job_id
+
+
 backends_available = list(_backends.keys())
 
 
@@ -140,36 +151,22 @@ async def test_runner(
         args = f.read()
         debug(args)
         assert "logger_name" not in args
-
     # Check some backend-specific files
     # NOTE: the logic to retrieve the job ID is not the most elegant, but
     # it works (both for when a single or two SLURM backends are tested)
     if backend == "slurm":
         assert "0.slurm.submit.sbatch" in files_server
-        # Find SLURM-job ID from filename
-        filename = next(
-            f
-            for f in files_server
-            if f.startswith("0.slurm.") and f.endswith(".err")
+        slurm_job_id = _extract_job_id_from_filename(
+            files_server, pre="0.slurm.", post=".err"
         )
-        debug(filename)
-        assert filename
-        slurm_job_id = int(filename.strip("0.slurm.").strip(".err"))
-        slurm_job_id = 2  # This may change if you change the test
         assert f"0.slurm.{slurm_job_id}.err" in files_server
         assert f"0.slurm.{slurm_job_id}.out" in files_server
     elif backend == "grouped_slurm":
         # Files related to (non-parallel) WorkflowTask 0
         assert "0_slurm_submit.sbatch" in files_server
-        # Find SLURM-job ID from filename
-        filename = next(
-            f
-            for f in files_server
-            if f.startswith("0_slurm_") and f.endswith(".err")
+        slurm_job_id = _extract_job_id_from_filename(
+            files_server, pre="0_slurm_", post=".err"
         )
-        debug(filename)
-        assert filename
-        slurm_job_id = int(filename.strip("0_slurm_").strip(".err"))
         assert slurm_job_id
         assert f"0_slurm_{slurm_job_id}.err" in files_server
         assert f"0_slurm_{slurm_job_id}.out" in files_server
