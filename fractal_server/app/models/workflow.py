@@ -103,7 +103,7 @@ class WorkflowTask(_WorkflowTaskBase, table=True):
         return self.task.parallelization_level
 
     @property
-    def executor(self) -> str:
+    def executor(self) -> str:  # FIXME: deprecate this method
         try:
             return self.meta["executor"]  # type: ignore
         except (KeyError, TypeError):
@@ -112,6 +112,16 @@ class WorkflowTask(_WorkflowTaskBase, table=True):
             else:
                 settings = Inject(get_settings)
                 return settings.FRACTAL_RUNNER_DEFAULT_EXECUTOR
+
+    @property
+    def overridden_meta(self) -> dict:
+        """
+        Return a combination of self.meta (higher priority) and self.task.meta
+        (lower priority) key-value pairs.
+        """
+        res = self.task.meta.copy() or {}
+        res.update(self.meta or {})
+        return res
 
     def assemble_args(self, extra: Dict[str, Any] = None) -> dict:
         """

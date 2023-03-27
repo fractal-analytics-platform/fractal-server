@@ -23,6 +23,7 @@ from typing import List
 from typing import Optional
 from typing import Union
 
+from devtools import debug
 from pydantic import BaseModel
 from pydantic import Field
 
@@ -37,13 +38,13 @@ from ..common import TaskParameters
 from .executor import FractalSlurmExecutor
 
 
-class SlurmConfig(BaseModel):
+class OldSlurmConfig(BaseModel):
     """
     Abstraction for SLURM executor parameters
 
-    This class wraps options for the `sbatch` command. Attribute `xxx` maps to
-    the `--xxx` option of `sbatch`.
-    Cf. [sbatch documentation](https://slurm.schedmd.com/sbatch.html)
+    This class wraps options for the `sbatch` command. Attribute `xxx_yyy` maps
+    to the `--xxx-yyy` option of `sbatch`. Cf. [sbatch
+    documentation](https://slurm.schedmd.com/sbatch.html)
 
     Note that options containing hyphens ('-') need be aliased to attribute
     names with underscores ('-').
@@ -51,7 +52,10 @@ class SlurmConfig(BaseModel):
     Attributes:
         partition: TBD
         time: TBD
-        mem: TBD
+        mem:
+            TBD
+            From sbatch docs: Default units are megabytes. Different units can
+            be specified using the suffix [K|M|G|T]
         cpus_per_task: TBD
         account: TBD
         extra_lines: TBD
@@ -92,7 +96,7 @@ class SlurmConfigError(ValueError):
 
 def load_slurm_config(
     config_path: Optional[Path] = None,
-) -> Dict[str, SlurmConfig]:
+) -> Dict[str, OldSlurmConfig]:
     """
     Parse slurm configuration file
 
@@ -123,7 +127,7 @@ def load_slurm_config(
 
         # coerce
         config_dict = {
-            config_key: SlurmConfig(**raw_data[config_key])
+            config_key: OldSlurmConfig(**raw_data[config_key])
             for config_key in raw_data
         }
     except FileNotFoundError:
@@ -134,6 +138,38 @@ def load_slurm_config(
             f"\nOriginal error: {repr(e)}"
         )
     return config_dict
+
+
+class SlurmConfig(BaseModel):
+    """
+    Abstraction for SLURM parameters
+    """
+
+    # Required SLURM parameters (note that the integer attributes are those
+    # that will need to scale up with the number of parallel tasks per job)
+    partition: str
+    cpus_per_task: int
+    mem_per_task_MB: int
+
+    # Optional SLURM parameters
+    constraint: Optional[str] = None
+    gres: Optional[str] = None
+    time: Optional[str] = None  # FIXME: this will need to scale up with #tasks
+    account: Optional[str] = None
+
+    # Free-field attribute for extra lines to be added to the SLURM job
+    # preamble
+    extra_lines: Optional[List[str]] = Field(default_factory=list)
+
+    # Metaparameters needed to combine multiple tasks in each SLURM job
+    n_ftasks_per_script: Optional[int] = None
+    n_parallel_ftasks_per_script: Optional[int] = None
+    target_cpus_per_job: int
+    max_cpus_per_job: int
+    target_mem_per_job: int
+    max_mem_per_job: int
+    target_num_jobs: int
+    max_num_jobs: int
 
 
 def set_slurm_config(
@@ -156,6 +192,7 @@ def set_slurm_config(
             Task for which the sbatch script is to be assembled
         task_pars:
             Task parameters to be passed to the task
+            (not used in this function)
         workflow_dir:
             Server-owned directory to store all task-execution-related relevant
             files (inputs, outputs, errors, and all meta files related to the
@@ -173,6 +210,119 @@ def set_slurm_config(
             A dictionary that will be passed on to
             `FractalSlurmExecutor.submit` and `FractalSlurmExecutor.map`, so
             as to set extra options in the sbatch script.
+    """
+
+    # Here goes all the logic for reading attributes from the appropriate
+    # sources and transforming them into an appropriate SLURM configuration
+
+    # FIXME: replace this hard-coded dict with a file read
+    slurm_config = {
+        "partition": "main",
+        "cpus_per_job": {
+            "target": 10,
+            "max": 10,
+        },
+        "mem_per_job": {
+            "target": 10,
+            "max": 10,
+        },
+        "number_of_jobs": {
+            "target": 10,
+            "max": 10,
+        },
+        "if_needs_gpu": {
+            # Possible overrides: partition, gres, constraint
+            "partition": "gpu",
+            "gres": "gpu:1",
+            "constraint": "gpuram32gb",
+        },
+    }
+    debug(slurm_config)
+
+    # REQUIRED ATTRIBUTES
+    wftask_options = {}
+
+    # Number of CPUs per task, for multithreading
+    cpus_per_task = int(wftask.overridden_meta["cpus_per_task"])
+    debug(cpus_per_task)
+    wftask_options["cpus_per_task"] = cpus_per_task
+
+    # Required memory per task, in MB
+    raw_mem = wftask.overridden_meta["mem"]
+    if raw_mem.isdigit():
+        mem = int(raw_mem)
+    elif raw_mem.endswith("M"):
+        mem = int(raw_mem.strip("M"))
+    elif raw_mem.endswith("G"):
+        mem = int(raw_mem.strip("G")) * 10**3
+    elif raw_mem.endswith("T"):
+        mem = int(raw_mem.strip("T")) * 10**6
+    else:
+        raise ValueError(
+            f"{mem=} is not a valid specification of memory requirements. "
+            "Valid examples are: 93, 71M, 93G, 71T."
+        )
+    debug(mem)
+    wftask_options["mem_per_task_MB"] = mem
+
+    # Partition name
+    partition = slurm_config["partition"]
+    debug(partition)
+    wftask_options["partition"] = partition
+
+    # Job name
+    job_name = wftask.task.name.replace(" ", "_")
+    debug(job_name)
+    wftask_options["job_name"] = job_name
+    # GPU-related options
+    needs_gpu = wftask.overridden_meta["needs_gpu"]
+    debug(needs_gpu)
+    if needs_gpu:
+        for key, val in slurm_config["if_needs_gpu"].items():
+            if key not in ["partition", "gres", "constraint"]:
+                raise ValueError(
+                    f"Invalid {key=} in the `if_needs_gpu` section."
+                )
+            wftask_options[key] = val
+
+    # OPTIONAL ARGUMENTS
+
+    for key in ["time", "account", "gres", "constraint"]:
+        value = wftask.overridden_meta.get("time", None)
+        if value:
+            wftask_options[key] = value
+
+    # Job-batching parameters (if None, they will be determined heuristically)
+    n_ftasks_per_script = wftask.overridden_meta["n_ftasks_per_script"]
+    n_parallel_ftasks_per_script = wftask.overridden_meta[
+        "n_parallel_ftasks_per_script"
+    ]  # noqa
+    debug(n_ftasks_per_script)
+    debug(n_parallel_ftasks_per_script)
+
+    # Extra lines
+    extra_lines = wftask.overridden_meta.get("extra_lines", None)
+    debug(extra_lines)
+
+    # Put everything together
+    slurm_options = SlurmConfig(**wftask_options)
+
+    # Gather information on task files, to be used in wftask_file_prefix and
+    # wftask_order
+    task_files = get_task_file_paths(
+        workflow_dir=workflow_dir,
+        workflow_dir_user=workflow_dir_user,
+        task_order=wftask.order,
+    )
+
+    # Prepare and return output dictionary
+    submit_setup_dict = dict(
+        slurm_options=slurm_options,
+        wftask_file_prefix=task_files.file_prefix,
+        wftask_order=wftask.order,
+    )
+    return submit_setup_dict
+
     """
     config_dict = load_slurm_config()
     try:
@@ -193,18 +343,7 @@ def set_slurm_config(
         additional_setup_lines.append(
             f"export SRUN_CPUS_PER_TASK={config.cpus_per_task}"
         )
-
-    task_files = get_task_file_paths(
-        workflow_dir=workflow_dir,
-        workflow_dir_user=workflow_dir_user,
-        task_order=wftask.order,
-    )
-    submit_setup_dict = dict(
-        additional_setup_lines=additional_setup_lines,
-        wftask_file_prefix=task_files.file_prefix,
-        wftask_order=wftask.order,
-    )
-    return submit_setup_dict
+    """
 
 
 def _process_workflow(
