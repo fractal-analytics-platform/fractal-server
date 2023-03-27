@@ -25,6 +25,7 @@ from typing import Union
 
 from devtools import debug
 from pydantic import BaseModel
+from pydantic import Extra
 from pydantic import Field
 
 from ...models import Workflow
@@ -47,9 +48,11 @@ class SlurmConfigError(ValueError):
     pass
 
 
-class SlurmConfig(BaseModel):
+class SlurmConfig(BaseModel, extra=Extra.forbid):
     """
     Abstraction for SLURM parameters
+
+    # FIXME: docstring
     """
 
     # Required SLURM parameters (note that the integer attributes are those
@@ -206,6 +209,7 @@ def set_slurm_config(
     job_name = wftask.task.name.replace(" ", "_")
     debug(job_name)
     wftask_options["job_name"] = job_name
+
     # GPU-related options
     needs_gpu = wftask.overridden_meta["needs_gpu"]
     debug(needs_gpu)
@@ -217,24 +221,30 @@ def set_slurm_config(
                 )
             wftask_options[key] = val
 
-    # OPTIONAL ARGUMENTS
-
+    # Optional SLURM arguments and extra lines
     for key in ["time", "account", "gres", "constraint"]:
         value = wftask.overridden_meta.get("time", None)
         if value:
             wftask_options[key] = value
+    extra_lines = wftask.overridden_meta.get("extra_lines", None)
+    debug(extra_lines)
 
     # Job-batching parameters (if None, they will be determined heuristically)
     n_ftasks_per_script = wftask.overridden_meta["n_ftasks_per_script"]
     n_parallel_ftasks_per_script = wftask.overridden_meta[
         "n_parallel_ftasks_per_script"
-    ]  # noqa
+    ]
     debug(n_ftasks_per_script)
     debug(n_parallel_ftasks_per_script)
 
-    # Extra lines
-    extra_lines = wftask.overridden_meta.get("extra_lines", None)
-    debug(extra_lines)
+    wftask_options.n_ftasks_per_script = n_ftasks_per_script
+    wftask_options.n_parallel_ftasks_per_script = n_parallel_ftasks_per_script
+    wftask_options.target_cpus_per_job = slurm_config["cpus_per_job"]["target"]
+    wftask_options.target_mem_per_job = slurm_config["mem_per_job"]["target"]
+    wftask_options.target_num_jobs = slurm_config["number_of_jobs"]["target"]
+    wftask_options.max_cpus_per_job = slurm_config["cpus_per_job"]["max"]
+    wftask_options.max_mem_per_job = slurm_config["mem_per_job"]["max"]
+    wftask_options.max_num_jobs = slurm_config["number_of_jobs"]["max"]
 
     # Put everything together
     slurm_options = SlurmConfig(**wftask_options)

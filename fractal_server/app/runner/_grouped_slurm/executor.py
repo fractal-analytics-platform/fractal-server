@@ -368,7 +368,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         n_ftasks_tot = len(list_args)
         debug(list_args)
 
-        # Set all kind of SLURM parameters
+        # Set/validate parameters for task batching
         n_ftasks_per_script, n_parallel_ftasks_per_script = heuristics(
             # Number of parallel componens (always known)
             n_ftasks_tot=len(list_args),
@@ -379,12 +379,12 @@ class FractalSlurmExecutor(SlurmExecutor):
             cpus_per_task=slurm_config.cpus_per_task,
             mem_per_task=slurm_config.mem_per_task_MB,
             # Fractal configuration variables (soft/hard limits):
-            target_cpus_per_job=slurm_config["cpus_per_job"]["target"],
-            target_mem_per_job=slurm_config["mem_per_job"]["target"],
-            target_num_jobs=slurm_config["number_of_jobs"]["target"],
-            max_cpus_per_job=slurm_config["cpus_per_job"]["max"],
-            max_mem_per_job=slurm_config["mem_per_job"]["max"],
-            max_num_jobs=slurm_config["number_of_jobs"]["max"],
+            target_cpus_per_job=slurm_config.target_cpus_per_job,
+            target_mem_per_job=slurm_config.target_mem_per_job,
+            target_num_jobs=slurm_config.target_number_of_jobs,
+            max_cpus_per_job=slurm_config.max_cpus_per_job,
+            max_mem_per_job=slurm_config.max_mem_per_job,
+            max_num_jobs=slurm_config.max_number_of_jobs,
         )
         debug(n_ftasks_per_script)
         debug(n_parallel_ftasks_per_script)
@@ -1015,6 +1015,8 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         mem_per_job_MB = mem_per_task_MB * ntasks
 
+        # FIXME: this should not be hardcoded, but it should come from
+        # slurm_config
         script = "\n".join(
             (
                 "#!/bin/bash",
