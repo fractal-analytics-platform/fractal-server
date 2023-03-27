@@ -171,6 +171,23 @@ class SlurmConfig(BaseModel):
     target_num_jobs: int
     max_num_jobs: int
 
+    def preamble_lines(self) -> list[str]:
+
+        raise NotImplementedError()
+
+        # Attributes that need to scale
+        scaling_factor = self.n_parallel_ftasks_per_script
+        if not scaling_factor:
+            raise ValueError()
+        debug(scaling_factor)
+        mem_per_job_MB = self.mem_per_task_MB * scaling_factor
+
+        lines = []
+        lines.append(f"#SBATCH --partition {self.partition}")
+        lines.append(f"#SBATCH --cpus-per-task {self.cpus_per_task}")
+        lines.append(f"#SBATCH --mem {mem_per_job_MB}M")
+        # FIXME: THIS IS NOT COMPLETE...
+
 
 def set_slurm_config(
     wftask: WorkflowTask,
