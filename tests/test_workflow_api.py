@@ -4,7 +4,6 @@ import pytest
 from devtools import debug  # noqa
 from sqlmodel import select
 
-from fractal_server.app.models import TaskRead
 from fractal_server.app.models import Workflow
 from fractal_server.app.models import WorkflowExport
 from fractal_server.app.models import WorkflowImport
@@ -155,6 +154,25 @@ async def test_get_workflow(
         assert res.json() == workflow
 
 
+async def get_workflow(client, wf_id):
+    res = await client.get(f"api/v1/workflow/{wf_id}")
+    assert res.status_code == 200
+    return res.json()
+
+
+async def add_task(client, index):
+    t = dict(
+        name=f"task{index}",
+        source=f"source{index}",
+        command="cmd",
+        input_type="zarr",
+        output_type="zarr",
+    )
+    res = await client.post("api/v1/task/", json=t)
+    assert res.status_code == 201
+    return res.json()
+
+
 async def test_post_newtask(
     db, client, MockCurrentUser, project_factory, task_factory
 ):
@@ -177,51 +195,42 @@ async def test_post_newtask(
         assert res.status_code == 201
         wf_id = res.json()["id"]
 
-        workflow = await db.get(Workflow, wf_id)
-        t0 = await task_factory()
-        t1 = await task_factory()
-        await workflow.insert_task(t0.id, db=db)
-        await workflow.insert_task(t1.id, db=db)
-        await db.refresh(workflow)
+        for index in range(2):
+            t = await add_task(client, index)
+            payload = {"task_id": t["id"]}
+            res = await client.post(
+                f"api/v1/workflow/{wf_id}/add-task/",
+                json=payload,
+            )
 
-        assert len(workflow.task_list) == 2
-        assert workflow.task_list[0].task == t0
-        assert workflow.task_list[1].task == t1
+        workflow = await get_workflow(client, wf_id)
+        assert len(workflow["task_list"]) == 2
 
-        await db.refresh(workflow)
-
-        t2 = await task_factory()
-        last_task = {"task_id": t2.id, "args": {"a": 0, "b": 1}}
-
+        t2 = await add_task(client, 2)
+        args_payload = {"task_id": t2["id"], "args": {"a": 0, "b": 1}}
         res = await client.post(
             f"api/v1/workflow/{wf_id}/add-task/",
-            json=last_task,
+            json=args_payload,
         )
         assert res.status_code == 201
 
-        t0b = await task_factory()
-        second_task = {
-            "task_id": t0b.id,
-            "order": 1,
-        }
+        t0b = await add_task(client, "0b")
+        payload = {"task_id": t0b["id"], "order": 1}
         res = await client.post(
             f"api/v1/workflow/{wf_id}/add-task/",
-            json=second_task,
+            json=payload,
         )
         assert res.status_code == 201
 
         # Get back workflow
-        res = await client.get(f"api/v1/workflow/{wf_id}")
-        assert res.status_code == 200
-        workflow = WorkflowRead(**res.json())
-        debug(workflow)
-
-        assert len(workflow.task_list) == 4
-        assert workflow.task_list[0].task == TaskRead(**t0.dict())
-        assert workflow.task_list[1].task == TaskRead(**t0b.dict())
-        assert workflow.task_list[2].task == TaskRead(**t1.dict())
-        assert workflow.task_list[3].task == TaskRead(**t2.dict())
-        assert workflow.task_list[3].args == last_task["args"]
+        workflow = await get_workflow(client, wf_id)
+        task_list = workflow["task_list"]
+        assert len(task_list) == 4
+        assert task_list[0]["task"]["name"] == "task0"
+        assert task_list[1]["task"]["name"] == "task0b"
+        assert task_list[2]["task"]["name"] == "task1"
+        assert task_list[3]["task"]["name"] == "task2"
+        assert task_list[3]["args"] == args_payload["args"]
 
 
 async def test_delete_workflow_task(
