@@ -29,14 +29,14 @@ from cfut import SlurmExecutor
 from cfut.util import random_string
 from devtools import debug
 
-from ._batching_heuristics import heuristics
-from .._grouped_slurm import SlurmConfig
 from ....config import get_settings
 from ....syringe import Inject
 from ....utils import close_logger
 from ....utils import set_logger
+from .._grouped_slurm import SlurmConfig
 from ..common import JobExecutionError
 from ..common import TaskExecutionError
+from ._batching_heuristics import heuristics
 from ._subprocess_run_as_user import _glob_as_user
 from ._subprocess_run_as_user import _path_exists_as_user
 from ._subprocess_run_as_user import _run_command_as_user
@@ -369,9 +369,25 @@ class FractalSlurmExecutor(SlurmExecutor):
         debug(list_args)
 
         # Set all kind of SLURM parameters
-        heuristics(..)
-        n_ftasks_per_script = 4
+        n_ftasks_per_script, n_parallel_ftasks_per_script = heuristics(
+            # Number of parallel componens (always known)
+            n_ftasks_tot=len(list_args),
+            # Optional WorkflowTask attributes:
+            n_ftasks_per_script=slurm_config.n_ftasks_per_script,
+            n_parallel_ftasks_per_script=slurm_config.n_parallel_ftasks_per_script,  # noqa
+            # Task requirements (multiple possible sources):
+            cpus_per_task=slurm_config.cpus_per_task,
+            mem_per_task=slurm_config.mem_per_task_MB,
+            # Fractal configuration variables (soft/hard limits):
+            target_cpus_per_job=slurm_config["cpus_per_job"]["target"],
+            target_mem_per_job=slurm_config["mem_per_job"]["target"],
+            target_num_jobs=slurm_config["number_of_jobs"]["target"],
+            max_cpus_per_job=slurm_config["cpus_per_job"]["max"],
+            max_mem_per_job=slurm_config["mem_per_job"]["max"],
+            max_num_jobs=slurm_config["number_of_jobs"]["max"],
+        )
         debug(n_ftasks_per_script)
+        debug(n_parallel_ftasks_per_script)
 
         # Divide arguments in batches of size n_tasks_per_script
         args_batches = []
