@@ -49,7 +49,7 @@ async def test_command_wrapper(tmp_path):
 
 
 def test_call_single_task(tmp_path):
-    task = MockWorkflowTask(
+    wftask = MockWorkflowTask(
         task=MockTask(name="task0", command=f"python {dummy_module.__file__}"),
         arguments=dict(message="test"),
         order=0,
@@ -66,10 +66,10 @@ def test_call_single_task(tmp_path):
         metadata={},
     )
 
-    debug(task)
+    debug(wftask)
 
     out = call_single_task(
-        task=task, task_pars=task_pars, workflow_dir=tmp_path
+        wftask=wftask, task_pars=task_pars, workflow_dir=tmp_path
     )
     close_job_logger(job_logger)
     debug(out)
@@ -263,7 +263,7 @@ def test_call_parallel_task_max_tasks(
 
     # Prepare task
     SLEEP_TIME = 1
-    task = MockWorkflowTask(
+    wftask = MockWorkflowTask(
         task=MockTask(
             name="task0",
             command=f"python {dummy_parallel_module.__file__}",
@@ -272,7 +272,7 @@ def test_call_parallel_task_max_tasks(
         arguments=dict(message="message", sleep_time=SLEEP_TIME),
         order=0,
     )
-    debug(task)
+    debug(wftask)
 
     # Prepare task arguments (both as TaskParameters and as a dummy Future)
     task_pars = TaskParameters(
@@ -286,7 +286,7 @@ def test_call_parallel_task_max_tasks(
     with ThreadPoolExecutor() as executor:
         future_metadata = call_parallel_task(
             executor=executor,
-            task=task,
+            wftask=wftask,
             task_pars_depend=task_pars,
             workflow_dir=tmp_path,
         )
