@@ -15,7 +15,7 @@ Slurm Bakend
 This backend runs fractal workflows in a SLURM cluster using Clusterfutures
 Executor objects.
 """
-# import json
+import json
 from pathlib import Path
 from typing import Any
 from typing import Dict
@@ -27,12 +27,11 @@ from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import Field
 
+from ....config import get_settings
+from ....syringe import Inject
 from ...models import WorkflowTask
 from .._common import get_task_file_paths
 from ..common import TaskParameters
-
-# from ....config import get_settings
-# from ....syringe import Inject
 
 
 class SlurmConfigError(ValueError):
@@ -48,6 +47,8 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
     Abstraction for SLURM parameters
 
     # FIXME: docstring
+
+    # FIXME: check that extra_lines does not overlap with known fields
     """
 
     # Required SLURM parameters (note that the integer attributes are those
@@ -100,6 +101,7 @@ def set_slurm_config(
     task_pars: TaskParameters,
     workflow_dir: Path,
     workflow_dir_user: Path,
+    config_path: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """
     Collect SLURM configuration parameters
@@ -139,35 +141,17 @@ def set_slurm_config(
     # sources and transforming them into an appropriate SLURM configuration
 
     # FIXME: replace this hard-coded dict with a file read
-    """
     if not config_path:
         settings = Inject(get_settings)
         config_path = settings.FRACTAL_SLURM_CONFIG_FILE
     try:
         with config_path.open("r") as f:  # type: ignore
-            raw_data = json.load(f)
-    """
-    slurm_config = {
-        "partition": "main",
-        "cpus_per_job": {
-            "target": 10,
-            "max": 10,
-        },
-        "mem_per_job": {
-            "target": 10,
-            "max": 10,
-        },
-        "number_of_jobs": {
-            "target": 10,
-            "max": 10,
-        },
-        "if_needs_gpu": {
-            # Possible overrides: partition, gres, constraint
-            "partition": "gpu",
-            "gres": "gpu:1",
-            "constraint": "gpuram32gb",
-        },
-    }
+            slurm_config = json.load(f)
+    except Exception as e:
+        raise SlurmConfigError(
+            f"Error while loading {config_path=}. "
+            f"Original error:\n{str(e)}"
+        )
     debug(slurm_config)
 
     # REQUIRED ATTRIBUTES
@@ -180,6 +164,7 @@ def set_slurm_config(
 
     # Required memory per task, in MB
     raw_mem = wftask.overridden_meta["mem"]
+    # FIXME: treat "M100M"
     if isinstance(raw_mem, int) or raw_mem.isdigit():
         mem = int(raw_mem)
     elif raw_mem.endswith("M"):
@@ -206,17 +191,6 @@ def set_slurm_config(
     debug(job_name)
     opt_dict["job_name"] = job_name
 
-    # GPU-related options
-    needs_gpu = wftask.overridden_meta.get("needs_gpu", False)
-    debug(needs_gpu)
-    if needs_gpu:
-        for key, val in slurm_config["if_needs_gpu"].items():
-            if key not in ["partition", "gres", "constraint"]:
-                raise ValueError(
-                    f"Invalid {key=} in the `if_needs_gpu` section."
-                )
-            opt_dict[key] = val
-
     # Optional SLURM arguments and extra lines
     for key in ["time", "account", "gres", "constraint"]:
         value = wftask.overridden_meta.get("time", None)
@@ -224,6 +198,22 @@ def set_slurm_config(
             opt_dict[key] = value
     extra_lines = wftask.overridden_meta.get("extra_lines", None)
     debug(extra_lines)
+
+    # GPU-related options. Note: this block must be below other overlapping
+    # definition (i.e. partition, constraint, gres), to avoid overriding them
+    needs_gpu = wftask.overridden_meta.get("needs_gpu", False)
+    debug(needs_gpu)
+    if needs_gpu:
+        for key, val in slurm_config["if_needs_gpu"].items():
+            # Check that they key is in the list of the valid ones
+            if key not in ["partition", "gres", "constraint"]:
+                raise ValueError(
+                    f"Invalid {key=} in the `if_needs_gpu` section."
+                )
+            # If the key was already specified, skip it (WorkflowTask.meta
+            # takes the highest priority)
+            if key not in opt_dict.keys():
+                opt_dict[key] = val
 
     # Job-batching parameters (if None, they will be determined heuristically)
     n_ftasks_per_script = wftask.overridden_meta.get(

@@ -382,7 +382,7 @@ def call_parallel_task(
     workflow_dir_user: Optional[Path] = None,
     submit_setup_call: Callable[
         [WorkflowTask, TaskParameters, Path, Path], Dict[str, Any]
-    ] = lambda task, task_pars, workflow_dir, workflow_dir_user: {},
+    ] = lambda wftask, task_pars, workflow_dir, workflow_dir_user: {},
 ) -> Future:  # py3.9 Future[TaskParameters]:
     """
     Collect results from the parallel instances of a parallel task
