@@ -390,7 +390,7 @@ def call_parallel_task(
     Prepare and submit for execution all the single calls of a parallel task,
     and return a single future with the TaskParameters to be passed on to the
     next task.  Note that the configuration variable
-    [`FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW`](../../../../../configuration/#fractal_server.config.Settings.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW)
+    [`FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW`](../../../../../configuration/#fractal_server.config.Settings.FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW)
     may affect the internal behavior of this function.
 
     **Note**: This function returns a future which already has
@@ -439,18 +439,21 @@ def call_parallel_task(
         wftask, task_pars_depend, workflow_dir, workflow_dir_user
     )
 
-    # Depending on FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW, either submit all
-    # tasks at once or in smaller chunks.  Note that `for _ in map_iter: pass`
-    # explicitly calls the .result() method for each future, and therefore is
-    # blocking until the task are complete.
+    # Depending on FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW, either submit
+    # all tasks at once or in smaller chunks.  Note that `for _ in map_iter:
+    # pass` explicitly calls the .result() method for each future, and
+    # therefore is blocking until the task are complete.
     settings = Inject(get_settings)
-    FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW = (
-        settings.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW
-    )
+    max_parallel_tasks = None
+    if settings.FRACTAL_RUNNER_BACKEND == "local":
+        max_parallel_tasks = (
+            settings.FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW
+        )
     # Prepare generator of component chunks (this is just a single item if
-    # FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW is None)
+    # FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW is None)
     component_chunks_generator = _get_list_chunks(
-        component_list, chunksize=FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW
+        component_list,
+        chunksize=max_parallel_tasks,
     )
     for component_chunk in component_chunks_generator:
         # Submit this chunk of tasks for execution
