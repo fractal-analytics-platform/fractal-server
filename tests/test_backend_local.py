@@ -253,13 +253,15 @@ def test_call_parallel_task_max_tasks(
     """
     GIVEN A single task, parallelized over two components
     WHEN This task is executed on a ThreadPoolExecutor via call_parallel_task
-    THEN The FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW env variable is used
+    THEN The FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW env variable is used
          correctly
     """
 
     # Reset environment variable
     debug(max_tasks)
-    override_settings_factory(FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW=max_tasks)
+    override_settings_factory(
+        FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW=max_tasks
+    )
 
     # Prepare task
     SLEEP_TIME = 1
@@ -297,9 +299,9 @@ def test_call_parallel_task_max_tasks(
     assert isinstance(out, TaskParameters)
 
     # Check that the two tasks were submitted at the appropriate time,
-    # depending on FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW. NOTE: the log parsing
-    # and log-to-datetime conversion may easily break if we change the logs
-    # format
+    # depending on FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW. NOTE: the log
+    # parsing and log-to-datetime conversion may easily break if we change the
+    # logs format
     with (tmp_path / "0_par_0.err").open("r") as f:
         first_log_task_0 = f.readlines()[0]
     with (tmp_path / "0_par_1.err").open("r") as f:

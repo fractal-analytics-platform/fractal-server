@@ -10,6 +10,7 @@
 # <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
 # Institute for Biomedical Research and Pelkmans Lab from the University of
 # Zurich.
+import logging
 import shutil
 from os import environ
 from os import getenv
@@ -247,25 +248,18 @@ class Settings(BaseSettings):
     levels](https://docs.python.org/3/library/logging.html#logging-levels)).
     """
 
-    FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW: Optional[int] = None
+    FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW: Optional[int] = None
     """
     Maximum number of components that a parallel task may process
-    simultaneously. If `None`, no limit is set.
+    simultaneously, for the [local backend](../internals/runners/local/).  If
+    `None`, no limit is set.
+
+    Intended use case: Reduce memory requirements of a workflow by capping the
+    number of tasks running in parallel.
 
     Note: this limit concerns a single task in a single workflow execution, but
     it does **not** limit the global (i.e. across workflow executions) number
     of components processed simultaneously.
-
-    Intended use cases:
-
-    1. When using the [local backend](../internals/runners/local/), reduce
-    memory requirements of a workflow by capping the number of tasks running in
-    parallel.
-    2. When using the [SLURM backend](../internals/runners/slurm/), reduce the
-    number of SLURM jobs that are submitted at the same time for a given
-    workflow; this is e.g. to avoid `AssocMaxSubmitJobLimit` errors related to
-    the [`MaxSubmitJobs` SLURM
-    limit](https://slurm.schedmd.com/resource_limits.html#assoc).
     """
 
     FRACTAL_SLURM_CONFIG_FILE: Optional[Path]
@@ -350,12 +344,23 @@ class Settings(BaseSettings):
         StrictSettings(**self.dict())
 
         # Check that some variables are allowed
-        if isinstance(self.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW, int):
-            if self.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW < 1:
+        if isinstance(self.FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW, int):
+            if self.FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW < 1:
                 raise FractalConfigurationError(
-                    f"{self.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW=} "
+                    f"{self.FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW=} "
                     "not allowed"
                 )
+
+        if (
+            self.FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW
+            and self.FRACTAL_RUNNER_BACKEND != "local"
+        ):
+            logging.warning(
+                "FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW is set to "
+                f"{self.FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW}, but "
+                f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND} is "
+                "the local backend."
+            )
 
         if self.FRACTAL_RUNNER_BACKEND in ["slurm", "grouped_slurm"]:
             info = f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
