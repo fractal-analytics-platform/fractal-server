@@ -29,6 +29,8 @@ from cfut import SlurmExecutor
 from cfut.util import random_string
 from devtools import debug
 
+from ._batching_heuristics import heuristics
+from .._grouped_slurm import SlurmConfig
 from ....config import get_settings
 from ....syringe import Inject
 from ....utils import close_logger
@@ -311,6 +313,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         fn: Callable[..., Any],
         iterable: Iterable[Any],
         *,
+        slurm_config: SlurmConfig,
         timeout: Optional[float] = None,
         chunksize: int = 1,
         additional_setup_lines: Optional[list[str]] = None,
@@ -361,10 +364,12 @@ class FractalSlurmExecutor(SlurmExecutor):
         else:
             general_slurm_file_prefix = f"_{random_string()}"
 
-        # Set all kind of SLURM parameters
         list_args = list(iterable)
         n_ftasks_tot = len(list_args)
         debug(list_args)
+
+        # Set all kind of SLURM parameters
+        heuristics(..)
         n_ftasks_per_script = 4
         debug(n_ftasks_per_script)
 
