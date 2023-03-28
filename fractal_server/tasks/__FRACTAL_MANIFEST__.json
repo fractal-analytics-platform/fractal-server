@@ -11,6 +11,10 @@
         "sleep_time": 0,
         "index": 0,
         "raise_error": false
+      },
+      "meta": {
+          "cpus_per_task": 1,
+          "mem": "10M"
       }
     },
     {
