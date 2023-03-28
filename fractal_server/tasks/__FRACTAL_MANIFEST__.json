@@ -26,7 +26,11 @@
         "message": "default message",
         "raise_error": false
       },
-      "meta": {"parallelization_level": "index"}
+      "meta": {
+          "parallelization_level": "index",
+          "cpus_per_task": 1,
+          "mem": "10M"
+      }
     }
   ]
 }
