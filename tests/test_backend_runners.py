@@ -59,9 +59,12 @@ async def test_runner(
     if backend in ["slurm", "grouped_slurm"]:
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
-        request.getfixturevalue("slurm_config")
         request.getfixturevalue("cfut_jobs_finished")
         monkey_slurm_user = request.getfixturevalue("monkey_slurm_user")
+    if backend == "slurm":
+        request.getfixturevalue("old_slurm_config")
+    if backend == "grouped_slurm":
+        request.getfixturevalue("slurm_config")
 
     process_workflow = _backends[backend]
 
@@ -71,6 +74,8 @@ async def test_runner(
     # Add dummy task as a Task
     tk_dummy = collect_packages[0]
     tk_dummy_parallel = collect_packages[1]
+    debug(tk_dummy)
+    debug(tk_dummy_parallel)
 
     # Create a workflow with the dummy task as member
     wf = Workflow(name="wf", project_id=prj.id)
