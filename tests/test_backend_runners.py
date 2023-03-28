@@ -49,21 +49,31 @@ async def test_runner(
     tmp777_path,
     backend,
     request,
+    testdata_path,
+    override_settings_factory,
 ):
     """
     GIVEN a non-trivial workflow
     WHEN the workflow is processed
     THEN the tasks are correctly executed
     """
+
     debug(f"Testing with {backend=}")
     if backend in ["slurm", "grouped_slurm"]:
+
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
         request.getfixturevalue("cfut_jobs_finished")
         monkey_slurm_user = request.getfixturevalue("monkey_slurm_user")
     if backend == "slurm":
+        override_settings_factory(
+            FRACTAL_SLURM_CONFIG_FILE=(testdata_path / "old_slurm_config.json")
+        )
         request.getfixturevalue("old_slurm_config")
     if backend == "grouped_slurm":
+        override_settings_factory(
+            FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
+        )
         request.getfixturevalue("slurm_config")
 
     process_workflow = _backends[backend]
