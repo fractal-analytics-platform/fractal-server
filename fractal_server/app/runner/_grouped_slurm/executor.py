@@ -342,27 +342,42 @@ class FractalSlurmExecutor(SlurmExecutor):
     def map(
         self,
         fn: Callable[..., Any],
-        iterable: Iterable[Any],
+        iterable: Iterable[list[Any]],
         *,
         slurm_config: Optional[SlurmConfig] = None,
         wftask_order: Optional[str] = None,
         wftask_file_prefix: Optional[str] = None,
     ):
         """
-        Returns an iterator equivalent to map(fn, iter), passing
-        parameters to submit
-
-        # FIXME: we replaced iterables with iterable
+        Return an iterator with the results of several execution of a function
 
         This function is based on `concurrent.futures.Executor.map` from Python
-        Standard Library 3.11. Original Copyright 2009 Brian Quinlan. All
-        Rights Reserved.  Licensed to PSF under a Contributor Agreement.
+        Standard Library 3.11.
+        Original Copyright 2009 Brian Quinlan. All Rights Reserved. Licensed to
+        PSF under a Contributor Agreement.
 
-        Modifications include:
-        * Only `fn` and `iterable` can be assigned as positional arguments.
-        * `*iterables` argument eplaced with a single `iterable`
-        * `timeout` and `chunksize` arguments are not supported.
+        Main modifications from the PSF function:
+        1. Only `fn` and `iterable` can be assigned as positional arguments.
+        2. `*iterables` argument eplaced with a single `iterable`
+        3. `timeout` and `chunksize` arguments are not supported.
 
+        Arguments:
+            fn:
+                The function to be executed
+            iterable:
+                An iterable such that each element is the list of arguments to
+                be passed to `fn`, as in `fn(*args)`.
+            slurm_config:
+                A `SlurmConfig` object; if `None`, `get_default_slurm_config()`
+                will be used.
+            wftask_order:
+                FIXME
+            wftask_file_prefix:
+                FIXME
+
+        Returns:
+            An iterator of results, with the same number of elements as
+            `iterable`.
         """
 
         def _result_or_cancel(fut):
@@ -513,7 +528,6 @@ class FractalSlurmExecutor(SlurmExecutor):
             num_tasks_tot=num_tasks_tot,
             slurm_config=slurm_config,
         )
-        debug(vars(job))
 
         # If available, set a more granular prefix for each parallel component
         if component_indices is not None:
@@ -665,7 +679,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                 slurm_config=slurm_config,
                 slurm_file_prefix=this_slurm_file_prefix,
                 wftask_file_prefix=wftask_file_prefix,
-                component_indices=None, ????
+                component_indices=None,
         )
 
         """
