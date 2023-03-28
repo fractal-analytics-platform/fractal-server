@@ -48,13 +48,18 @@ async def test_full_workflow(
     override_settings_factory,
 ):
 
+    if backend == "slurm":
+        FRACTAL_SLURM_CONFIG_FILE = testdata_path / "old_slurm_config.json"
+    elif backend == "grouped_slurm":
+        FRACTAL_SLURM_CONFIG_FILE = testdata_path / "slurm_config.json"
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=backend,
-        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
+        FRACTAL_SLURM_CONFIG_FILE=FRACTAL_SLURM_CONFIG_FILE,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
     )
 
     debug(f"Testing with {backend=}")
+
     if backend in ["slurm", "grouped_slurm"]:
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
@@ -212,9 +217,13 @@ async def test_failing_workflow_TaskExecutionError(
     override_settings_factory,
 ):
 
+    if backend == "slurm":
+        FRACTAL_SLURM_CONFIG_FILE = testdata_path / "old_slurm_config.json"
+    elif backend == "grouped_slurm":
+        FRACTAL_SLURM_CONFIG_FILE = testdata_path / "slurm_config.json"
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=backend,
-        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
+        FRACTAL_SLURM_CONFIG_FILE=FRACTAL_SLURM_CONFIG_FILE,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path
         / f"artifacts-{backend}-TaskExecutionError-{failing_task}",
     )
@@ -362,9 +371,13 @@ async def test_failing_workflow_JobExecutionError(
     cfut_jobs_finished,
 ):
 
+    if backend == "slurm":
+        FRACTAL_SLURM_CONFIG_FILE = testdata_path / "old_slurm_config.json"
+    elif backend == "grouped_slurm":
+        FRACTAL_SLURM_CONFIG_FILE = testdata_path / "slurm_config.json"
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=backend,
-        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
+        FRACTAL_SLURM_CONFIG_FILE=FRACTAL_SLURM_CONFIG_FILE,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path
         / f"artifacts-{backend}-test_failing_workflow_JobExecutionError",
     )
