@@ -1,5 +1,7 @@
 import json
 
+import pydantic
+import pytest
 from devtools import debug
 
 from .fixtures_tasks import MockTask
@@ -10,7 +12,8 @@ from fractal_server.app.runner._grouped_slurm._slurm_config import (
 from fractal_server.app.runner.common import TaskParameters
 
 
-def test_set_slurm_config(tmp_path):
+@pytest.mark.parametrize("fail", [True, False])
+def test_set_slurm_config(tmp_path, fail):
     """
     Testing that:
     1. WorkflowTask.meta overrides WorkflowTask.Task.meta
@@ -38,6 +41,8 @@ def test_set_slurm_config(tmp_path):
             "constraint": GPU_DEFAULT_CONSTRAINT,
         },
     }
+    if fail:
+        slurm_config["invalid_key"] = "something"
     config_path = tmp_path / "slurm_config.json"
     with config_path.open("w") as f:
         json.dump(slurm_config, f)
@@ -82,19 +87,29 @@ def test_set_slurm_config(tmp_path):
     debug(mywftask.overridden_meta)
 
     # Call set_slurm_config
-    submit_setup_dict = set_slurm_config(
-        wftask=mywftask,
-        task_pars=TaskParameters(
-            input_paths=[tmp_path],
-            output_path=tmp_path,
-            metadata={"some": "metadata"},
-        ),
-        workflow_dir=(tmp_path / "server"),
-        workflow_dir_user=(tmp_path / "user"),
-        config_path=config_path,
-    )
-    slurm_config = submit_setup_dict["slurm_config"]
-    debug(slurm_config)
+    try:
+        submit_setup_dict = set_slurm_config(
+            wftask=mywftask,
+            task_pars=TaskParameters(
+                input_paths=[tmp_path],
+                output_path=tmp_path,
+                metadata={"some": "metadata"},
+            ),
+            workflow_dir=(tmp_path / "server"),
+            workflow_dir_user=(tmp_path / "user"),
+            config_path=config_path,
+        )
+        slurm_config = submit_setup_dict["slurm_config"]
+        debug(slurm_config)
+    except pydantic.error_wrappers.ValidationError as e:
+        if fail:
+            debug(
+                "Expected errror took place in set_slurm_config.\n"
+                f"Original error:\n{str(e)}"
+            )
+            return
+        else:
+            raise e
 
     # Check that WorkflowTask.meta takes priority over WorkflowTask.Task.meta
     assert slurm_config.cpus_per_task == CPUS_PER_TASK_OVERRIDE
