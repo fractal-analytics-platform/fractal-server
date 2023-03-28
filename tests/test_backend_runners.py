@@ -105,7 +105,7 @@ async def test_runner(
         )  # noqa
 
     # Prepare backend-specific arguments
-    logger_name = "job_logger"
+    logger_name = f"job_logger_{backend}"
     logger = set_logger(
         logger_name=logger_name,
         log_file_path=workflow_dir / "job.log",
@@ -124,7 +124,13 @@ async def test_runner(
         kwargs["slurm_user"] = monkey_slurm_user
 
     # process workflow
-    metadata = await process_workflow(**kwargs)
+    try:
+        metadata = await process_workflow(**kwargs)
+    except Exception as e:
+        debug(str(e))
+        logging.error(f"process_workflow for {backend=} failed.")
+        logging.error(f"Original error: {str(e)}")
+        raise e
 
     close_job_logger(logger)
     debug(metadata)
