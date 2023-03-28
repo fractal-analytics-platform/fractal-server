@@ -31,8 +31,6 @@ from devtools import debug
 
 from ....config import get_settings
 from ....syringe import Inject
-from ....utils import close_logger
-from ....utils import set_logger
 from ..common import JobExecutionError
 from ..common import TaskExecutionError
 from ._batching_heuristics import heuristics
@@ -162,6 +160,11 @@ class FractalSlurmExecutor(SlurmExecutor):
     """
 
     wait_thread_cls = FractalSlurmWaitThread
+    slurm_user: str
+    common_script_lines: list[str]
+    working_dir: Path
+    working_dir_user: Path
+    map_jobid_to_slurm_files: dict  # FIXME: make more precise
 
     def __init__(
         self,
@@ -189,7 +192,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         if not working_dir:
             settings = Inject(get_settings)
             working_dir = settings.FRACTAL_RUNNER_WORKING_BASE_DIR
-        self.working_dir: Path = working_dir  # type: ignore
+        self.working_dir = working_dir
         if not working_dir_user:
             if self.slurm_user:
                 raise RuntimeError(f"{self.slurm_user=}, {working_dir_user=}")
@@ -200,8 +203,8 @@ class FractalSlurmExecutor(SlurmExecutor):
         ):
             logging.info(f"Missing folder {working_dir_user=}")
 
-        self.working_dir_user: Path = working_dir_user  # type: ignore
-        self.map_jobid_to_slurm_files: dict = {}
+        self.working_dir_user = working_dir_user
+        self.map_jobid_to_slurm_files = {}
 
         # Set the attribute slurm_poll_interval for self.wait_thread (see
         # cfut.SlurmWaitThread)
@@ -209,9 +212,9 @@ class FractalSlurmExecutor(SlurmExecutor):
             settings = Inject(get_settings)
             slurm_poll_interval = settings.FRACTAL_SLURM_POLL_INTERVAL
         self.wait_thread.slurm_poll_interval = slurm_poll_interval
-        self.wait_thread.slurm_user = slurm_user
+        self.wait_thread.slurm_user = self.slurm_user
 
-    def _cleanup(self, jobid: str):
+    def _cleanup(self, jobid: str) -> None:
         """
         Given a job ID as returned by _start, perform any necessary
         cleanup after the job has finished.
@@ -246,20 +249,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         prefix = prefix or "slurmpy.stderr"
         return self.working_dir_user / f"{prefix}_slurm_{arg}.err"
 
-    def write_batch_script(self, sbatch_script: str, dest: Path) -> Path:
-        """
-        Write batch script
-
-        Returns:
-            sbatch_script:
-                The content of the batch script
-            dest:
-                The path to the batch script
-        """
-        with open(dest, "w") as f:
-            f.write(sbatch_script)
-        return dest
-
     def submit_sbatch(
         self,
         *,
@@ -283,30 +272,33 @@ class FractalSlurmExecutor(SlurmExecutor):
                 integer job id as returned by `sbatch` submission
         """
         debug(sbatch_script)
-        self.write_batch_script(sbatch_script=sbatch_script, dest=script_path)
+
+        # Write script content to a file and prepare submission command
+        with open(script_path, "w") as f:
+            f.write(sbatch_script)
         submit_command = f"sbatch --parsable {script_path}"
         full_cmd = shlex.split(submit_pre_command) + shlex.split(
             submit_command
         )
+
+        # Submit SLURM job and retrieve job ID
         try:
             output = subprocess.run(  # nosec
                 full_cmd, capture_output=True, check=True
             )
         except subprocess.CalledProcessError as e:
-            logger = set_logger(logger_name="grouped_slurm_runner")
-            logger.error(e.stderr.decode("utf-8"))
-            close_logger(logger)
+            # FIXME: turn this error into a JobExecutionError
+            logging.error(e.stderr.decode("utf-8"))
             raise e
         try:
             jobid = int(output.stdout)
         except ValueError as e:
-            logger = set_logger(logger_name="grouped_slurm_runner")
-            logger.error(
+            # FIXME: turn this error into a JobExecutionError
+            logging.error(
                 f"Submit command `{submit_command}` returned "
                 f"`{output.stdout.decode('utf-8')}`, which cannot be cast "
                 "to an integer job ID."
             )
-            close_logger(logger)
             raise e
         return str(jobid)
 
@@ -1085,9 +1077,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         )
 
         # Submit job via sbatch, and retrieve jobid
-        pre_cmd = ""
-        if self.slurm_user:
-            pre_cmd = f"sudo --non-interactive -u {self.slurm_user}"
+        pre_cmd = f"sudo --non-interactive -u {self.slurm_user}"
         jobid = self.submit_sbatch(
             script_path=job.slurm_script,
             sbatch_script=sbatch_script,
