@@ -80,10 +80,13 @@ class SlurmJob:
     workerids: tuple[str]
     input_pickle_files: tuple[Path]
     output_pickle_files: tuple[Path]
+    # Slurm configuration
+    slurm_config: SlurmConfig
 
     def __init__(
         self,
         num_tasks_tot: int,
+        slurm_config: SlurmConfig,
         workflow_task_file_prefix: Optional[str] = None,
         slurm_file_prefix: Optional[str] = None,
         wftask_file_prefix: Optional[str] = None,
@@ -98,6 +101,7 @@ class SlurmJob:
         self.workerids = tuple(
             random_string() for i in range(self.num_tasks_tot)
         )
+        self.slurm_config = slurm_config
 
     def get_clean_output_pickle_files(self) -> tuple[str]:
         """
@@ -274,10 +278,9 @@ class FractalSlurmExecutor(SlurmExecutor):
             raise e
         return str(jobid)
 
-    def compose_sbatch_script(
+    def _deprecated_compose_sbatch_script(
         self,
         cmdline: list[str],
-        # NOTE: In SLURM, `%j` is the placeholder for the job ID.
         outpath: Optional[Path] = None,
         errpath: Optional[Path] = None,
         additional_setup_lines=None,
@@ -288,6 +291,9 @@ class FractalSlurmExecutor(SlurmExecutor):
             " but we keep it here for the moment as a reference of how "
             "SLURM variables could be set"
         )
+
+        """
+        # NOTE: In SLURM, `%j` is the placeholder for the job ID.
 
         additional_setup_lines = additional_setup_lines or []
         slurm_stdout_file = outpath or self.get_slurm_stdout_file_path()
@@ -308,6 +314,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         cmd = [shlex.join(["srun", *cmdline])]
         script_lines = ["#!/bin/sh"] + sbatch_lines + non_sbatch_lines + cmd
         return "\n".join(script_lines) + "\n"
+        """
 
     def map(
         self,
@@ -418,6 +425,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                 self.submit_multitask(
                     fn,
                     list_list_args=[[x] for x in batch],  # FIXME
+                    slurm_config=slurm_config,
                     additional_setup_lines=additional_setup_lines,
                     slurm_file_prefix=this_slurm_file_prefix,
                     wftask_file_prefix=wftask_file_prefix,
@@ -462,6 +470,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         list_list_args: Iterable[Iterable[Any]],
         slurm_file_prefix: str,
         wftask_file_prefix: str,
+        slurm_config: SlurmConfig,
         additional_setup_lines: Optional[list[str]] = None,
         component_indices: Optional[list[int]] = None,
     ) -> futures.Future:
@@ -477,6 +486,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             slurm_file_prefix=slurm_file_prefix,
             wftask_file_prefix=wftask_file_prefix,
             num_tasks_tot=num_tasks_tot,
+            slurm_config=slurm_config,
         )
         debug(vars(job))
 
@@ -588,6 +598,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             single_task_submission=True,
             slurm_file_prefix=slurm_file_prefix,
             wftask_file_prefix=wftask_file_prefix,
+            slurm_config=slurm_config,
         )
         job.input_pickle_files = (
             self.get_input_pickle_file_path(
@@ -976,13 +987,11 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         # FIXME: HARDCODED VARIABLES
         sbatch_script = self.compose_sbatch_script_multitask(
+            slurm_config=job.slurm_config,
             list_commands=cmdlines,
-            num_tasks_max_running=2,
-            mem_per_task_MB=300,
-            cpus_per_task=1,
             slurm_out_path=str(job.slurm_stdout),
             slurm_err_path=str(job.slurm_stderr),
-            # additional_setup_lines=additional_setup_lines,  # FIXME
+            # additional_setup_lines=additional_setup_lines,  # FIXME: is this all in slurm_config?  # noqa
         )
 
         # Submit job via sbatch, and retrieve jobid
@@ -1009,12 +1018,14 @@ class FractalSlurmExecutor(SlurmExecutor):
         self,
         *,
         list_commands: list[str],
-        num_tasks_max_running: int,
-        mem_per_task_MB: int,
-        cpus_per_task: int,
         slurm_out_path: str,
         slurm_err_path: str,
+        slurm_config: SlurmConfig,
     ):
+
+        num_tasks_max_running = slurm_config.n_parallel_ftasks_per_script
+        mem_per_task_MB = slurm_config.mem_per_task_MB
+        cpus_per_task = slurm_config.cpus_per_task
 
         # Set ntasks
         ntasks = min(len(list_commands), num_tasks_max_running)
