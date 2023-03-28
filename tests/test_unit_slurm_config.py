@@ -7,6 +7,9 @@ from devtools import debug
 from .fixtures_tasks import MockTask
 from .fixtures_tasks import MockWorkflowTask
 from fractal_server.app.runner._grouped_slurm._slurm_config import (
+    get_default_slurm_config,
+)
+from fractal_server.app.runner._grouped_slurm._slurm_config import (
     set_slurm_config,
 )
 from fractal_server.app.runner.common import TaskParameters
@@ -128,3 +131,24 @@ def test_set_slurm_config(tmp_path, fail):
     # are combined together, and that repeated elements were removed
     assert len(slurm_config.extra_lines) == 3
     assert len(slurm_config.extra_lines) == len(set(slurm_config.extra_lines))
+
+
+def test_to_sbatch_preamble():
+
+    slurm_config = get_default_slurm_config()
+    debug(slurm_config)
+    slurm_config.n_parallel_ftasks_per_script = 2
+    slurm_config.n_ftasks_per_script = 2
+    slurm_config.gres = "some-gres"
+    slurm_config.extra_lines = [
+        "export VAR2=2",
+        "#SBATCH --optionA=valueA",
+        "export VAR1=1",
+        "#SBATCH --optionB=valueB",
+    ]
+    preamble = slurm_config.to_sbatch_preamble()
+
+    debug(preamble)
+    assert preamble[0] == "#!/bin/sh"
+
+    # FIXME: add assertions

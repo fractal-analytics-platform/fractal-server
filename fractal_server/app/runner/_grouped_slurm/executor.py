@@ -307,7 +307,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         cmdline: list[str],
         outpath: Optional[Path] = None,
         errpath: Optional[Path] = None,
-        additional_setup_lines=None,
     ) -> str:
 
         raise RuntimeError(
@@ -319,9 +318,9 @@ class FractalSlurmExecutor(SlurmExecutor):
         """
         # NOTE: In SLURM, `%j` is the placeholder for the job ID.
 
-        additional_setup_lines = additional_setup_lines or []
         slurm_stdout_file = outpath or self.get_slurm_stdout_file_path()
         slurm_stderr_file = errpath or self.get_slurm_stderr_file_path()
+
         sbatch_lines = [
             f"#SBATCH --output={slurm_stdout_file}",
             f"#SBATCH --error={slurm_stderr_file}",
@@ -346,7 +345,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         iterable: Iterable[Any],
         *,
         slurm_config: Optional[SlurmConfig] = None,
-        additional_setup_lines: Optional[list[str]] = None,
         wftask_order: Optional[str] = None,
         wftask_file_prefix: Optional[str] = None,
     ):
@@ -451,7 +449,6 @@ class FractalSlurmExecutor(SlurmExecutor):
                         [x] for x in batch
                     ],  # FIXME: clarify structure  # noqa
                     slurm_config=slurm_config,
-                    additional_setup_lines=additional_setup_lines,
                     slurm_file_prefix=this_slurm_file_prefix,
                     wftask_file_prefix=wftask_file_prefix,
                     component_indices=[
@@ -494,7 +491,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         slurm_file_prefix: str,
         wftask_file_prefix: str,
         slurm_config: SlurmConfig,
-        additional_setup_lines: Optional[list[str]] = None,
         component_indices: Optional[list[int]] = None,
     ) -> futures.Future:
         """
@@ -502,6 +498,12 @@ class FractalSlurmExecutor(SlurmExecutor):
         pickle/remote logic
         """
         fut: futures.Future = futures.Future()
+
+        # Include common_script_lines in extra_lines
+        current_extra_lines = slurm_config.extra_lines or []
+        slurm_config.extra_lines = (
+            current_extra_lines + self.common_script_lines
+        )
 
         # Define slurm-job-related files
         num_tasks_tot = len(list_list_args)
@@ -566,7 +568,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                 f.write(funcser)
 
         # Submit job to SLURM, and get jobid
-        jobid, job = self._start_multitask(job, additional_setup_lines)
+        jobid, job = self._start_multitask(job)
 
         # Add the SLURM script/out/err paths to map_jobid_to_slurm_files (this
         # must be after self._start(job), so that "%j" has already been
@@ -589,7 +591,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         fun: Callable[..., Any],
         *args,
         slurm_config: Optional[SlurmConfig] = None,
-        additional_setup_lines: Optional[list[str]] = None,
         wftask_file_prefix: Optional[str] = None,
         wftask_order: Optional[str] = None,
         **kwargs,
@@ -598,7 +599,8 @@ class FractalSlurmExecutor(SlurmExecutor):
         Submit a job to the pool.
 
         If additional_setup_lines is passed, it overrides the lines given
-        when creating the executor.
+        when creating the executor. FIXME: this is now possible via
+        slurm_config, is it?
         """
         fut: futures.Future = futures.Future()
 
@@ -646,7 +648,6 @@ class FractalSlurmExecutor(SlurmExecutor):
                     fn,
                     list_list_args=[[x] for x in batch],  # FIXME
                     slurm_config=slurm_config,
-                    additional_setup_lines=additional_setup_lines,
                     slurm_file_prefix=this_slurm_file_prefix,
                     wftask_file_prefix=wftask_file_prefix,
                     component_indices=[
@@ -668,6 +669,12 @@ class FractalSlurmExecutor(SlurmExecutor):
         )
 
         """
+
+        # Include common_script_lines in extra_lines
+        current_extra_lines = slurm_config.extra_lines or []
+        slurm_config.extra_lines = (
+            current_extra_lines + self.common_script_lines
+        )
 
         # Define slurm-job-related files
         job = SlurmJob(
@@ -708,7 +715,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             f.write(funcser)
 
         # Submit job to SLURM, and get jobid
-        jobid, job = self._start_multitask(job, additional_setup_lines)
+        jobid, job = self._start_multitask(job)
 
         # Add the SLURM script/out/err paths to map_jobid_to_slurm_files (this
         # must be after self._start(job), so that "%j" has already been
@@ -1030,16 +1037,12 @@ class FractalSlurmExecutor(SlurmExecutor):
     def _start_multitask(
         self,
         job: SlurmJob,
-        additional_setup_lines: Optional[list[str]] = None,
     ) -> tuple[str, SlurmJob]:
         """
         Submit function for execution on a SLURM cluster
         """
 
         debug(job)
-
-        if additional_setup_lines is None:
-            additional_setup_lines = self.additional_setup_lines
 
         # Prepare commands to be included in SLURM submission script
         settings = Inject(get_settings)
@@ -1068,7 +1071,6 @@ class FractalSlurmExecutor(SlurmExecutor):
             list_commands=cmdlines,
             slurm_out_path=str(job.slurm_stdout),
             slurm_err_path=str(job.slurm_stderr),
-            # additional_setup_lines=additional_setup_lines,  # FIXME: is this all in slurm_config?  # noqa
         )
 
         # Submit job via sbatch, and retrieve jobid
@@ -1100,43 +1102,46 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         num_tasks_max_running = slurm_config.n_parallel_ftasks_per_script
         mem_per_task_MB = slurm_config.mem_per_task_MB
-        cpus_per_task = slurm_config.cpus_per_task
 
         # Set ntasks
         ntasks = min(len(list_commands), num_tasks_max_running)
         if len(list_commands) < num_tasks_max_running:
+            ntasks = len(list_commands)
+            slurm_config.n_parallel_ftasks_per_script = ntasks
             logging.warning(
                 f"{len(list_commands)=} is smaller than "
                 f"{num_tasks_max_running=}. Setting {ntasks=}."
             )
 
-        mem_per_job_MB = mem_per_task_MB * ntasks
+        # Prepare SLURM preamble based on SlurmConfig object
+        script_lines = slurm_config.to_sbatch_preamble()
 
-        # FIXME: this should not be hardcoded, but it should come from
-        # slurm_config
-        script = "\n".join(
-            (
-                "#!/bin/bash",
-                "#SBATCH --partition=main",
+        # Extend SLURM preamble with variable which are not in SlurmConfig
+        script_lines.extend(
+            [
                 f"#SBATCH --err={slurm_err_path}",
                 f"#SBATCH --out={slurm_out_path}",
-                f"#SBATCH --cpus-per-task={cpus_per_task}",
-                f"#SBATCH --ntasks={ntasks}",
-                f"#SBATCH --mem={mem_per_job_MB}MB",
-                "\n",
-            )
+            ]
         )
+        debug(script_lines)
 
+        # FIXME: Add worker_init
+
+        # Complete script preamble
+        script_lines.append("\n")
+
+        # Include command lines
         tmp_list_commands = copy(list_commands)
         while tmp_list_commands:
             if tmp_list_commands:
                 cmd = tmp_list_commands.pop(0)  # take first element
                 debug(cmd)
-                script += (
+                script_lines.append(
                     "srun --ntasks=1 --cpus-per-task=$SLURM_CPUS_PER_TASK "
                     f"--mem={mem_per_task_MB}MB "
-                    f"{cmd} &\n"
+                    f"{cmd} &"
                 )
-        script += "wait\n\n"
+        script_lines.append("wait\n")
 
+        script = "\n".join(script_lines)
         return script
