@@ -1,15 +1,7 @@
 {
-    "cpu-low": {
-        "partition": "main",
-        "cpus-per-task": 1
-    },
-    "cpu-mid": {
-        "partition": "main"
-    },
-    "cpu-high": {
-        "partition": "main"
-    },
-    "gpu": {
-        "partition": "gpu"
-    }
+  "partition": "main",
+  "if_needs_gpu": {},
+  "cpus_per_job": {"target": 1, "max": 2},
+  "mem_per_job": {"target": 200, "max": 500},
+  "number_of_jobs": {"target": 2, "max": 3}
 }
