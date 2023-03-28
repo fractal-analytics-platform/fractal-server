@@ -708,22 +708,14 @@ class FractalSlurmExecutor(SlurmExecutor):
                 new_slurm_stderr_file,
             )
 
-            # FIXME: remove
-            in_paths: tuple[Path]
-            out_paths: tuple[Path]
-
             in_paths = job.input_pickle_files
             out_paths = tuple(
                 self.working_dir / f.name for f in job.output_pickle_files
             )
 
-            # FIXME: remove
-            debug(out_paths)
-            debug(in_paths)
-
             outputs = []
             for ind_out_path, out_path in enumerate(out_paths):
-                # in_path = in_paths[ind_out_path]  # FIXME re-enable this
+                in_path = in_paths[ind_out_path]
 
                 debug(out_path)
 
@@ -762,7 +754,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                             " cancelled, exit from"
                             " FractalSlurmExecutor._completion."
                         )
-                        # in_path.unlink()  # FIXME re-enable
+                        in_path.unlink()
                         self._cleanup(jobid)
                         return
 
@@ -807,20 +799,20 @@ class FractalSlurmExecutor(SlurmExecutor):
                             exc = TaskExecutionError(proxy.tb, **kwargs)
                             fut.set_exception(exc)
                             return
-                    # out_path.unlink()  # FIXME re-enable this
+                    out_path.unlink()
                 except futures.InvalidStateError:
                     logging.warning(
                         f"Future {fut} (SLURM job ID: {jobid}) was already"
                         " cancelled, exit from"
                         " FractalSlurmExecutor._completion."
                     )
-                    # out_path.unlink()  # FIXME re-enable this
-                    # in_path.unlink()  # FIXME re-enable this
+                    out_path.unlink()
+                    in_path.unlink()
                     self._cleanup(jobid)
                     return
 
                 # Clean up input pickle file
-                # in_path.unlink()  # FIXME re-enable this
+                in_path.unlink()
             self._cleanup(jobid)
             if job.single_task_submission:
                 fut.set_result(outputs[0])
@@ -948,11 +940,10 @@ class FractalSlurmExecutor(SlurmExecutor):
                     " -m fractal_server.app.runner._slurm.remote "
                     f"--input-file {input_pickle_file} "
                     f"--output-file {output_pickle_file}"
-                    # FIXME: add here err/out redirection to specific files??
                 )
             )
 
-        # FIXME: HARDCODED VARIABLES
+        # ...
         sbatch_script = self.compose_sbatch_script_multitask(
             slurm_config=job.slurm_config,
             list_commands=cmdlines,
@@ -1011,8 +1002,6 @@ class FractalSlurmExecutor(SlurmExecutor):
             ]
         )
         debug(script_lines)
-
-        # FIXME: Add worker_init
 
         # Complete script preamble
         script_lines.append("\n")
