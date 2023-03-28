@@ -16,6 +16,7 @@ This backend runs fractal workflows in a SLURM cluster using Clusterfutures
 Executor objects.
 """
 import json
+import logging
 from pathlib import Path
 from typing import Any
 from typing import Dict
@@ -176,8 +177,42 @@ def set_slurm_config(
     debug(slurm_env)
     print("--------------------------------------------")
 
-    # REQUIRED ATTRIBUTES
     slurm_dict = {}
+
+    # Load all relevant attributes from slurm_env
+    keys_to_skip = [
+        "cpus_per_job",
+        "mem_per_job",
+        "number_of_jobs",
+        "if_needs_gpu",
+    ]
+    for key, value in slurm_env.items():
+        # Skip some keys
+        if key in keys_to_skip:
+            continue
+        # Skip values which are not set (e.g. None or empty strings)
+        if not value:
+            continue
+        # Add this key-value pair to slurm_dict
+        slurm_dict[key] = value
+
+    # GPU-related options
+    # Notes about priority:
+    # 1. This block of definitions takes priority over other definitions from
+    #    slurm_env which are not under the `needs_gpu` subgroup
+    # 2. This block of definitions has lower priority than whatever comes next
+    #    (i.e. from WorkflowTask.overridden_meta).
+    needs_gpu = wftask.overridden_meta.get("needs_gpu", False)
+    debug(needs_gpu)
+    if needs_gpu:
+        for key, val in slurm_env["if_needs_gpu"].items():
+            debug(key, val)
+            # Check that they key is in the list of the valid ones
+            if key not in ["partition", "gres", "constraint"]:
+                raise ValueError(
+                    f"Invalid {key=} in the `if_needs_gpu` section."
+                )
+            slurm_dict[key] = val
 
     # Number of CPUs per task, for multithreading
     cpus_per_task = int(wftask.overridden_meta["cpus_per_task"])
@@ -200,42 +235,23 @@ def set_slurm_config(
             f"{mem=} is not a valid specification of memory requirements. "
             "Valid examples are: 93, 71M, 93G, 71T."
         )
-    debug(mem)
     slurm_dict["mem_per_task_MB"] = mem
-
-    # Partition name
-    partition = slurm_env["partition"]
-    debug(partition)
-    slurm_dict["partition"] = partition
 
     # Job name
     job_name = wftask.task.name.replace(" ", "_")
-    debug(job_name)
     slurm_dict["job_name"] = job_name
 
     # Optional SLURM arguments and extra lines
     for key in ["time", "account", "gres", "constraint"]:
-        value = wftask.overridden_meta.get("time", None)
+        value = wftask.overridden_meta.get(key, None)
         if value:
             slurm_dict[key] = value
-    extra_lines = wftask.overridden_meta.get("extra_lines", None)
-    debug(extra_lines)
-
-    # GPU-related options. Note: this block must be below other overlapping
-    # definition (i.e. partition, constraint, gres), to avoid overriding them
-    needs_gpu = wftask.overridden_meta.get("needs_gpu", False)
-    debug(needs_gpu)
-    if needs_gpu:
-        for key, val in slurm_env["if_needs_gpu"].items():
-            # Check that they key is in the list of the valid ones
-            if key not in ["partition", "gres", "constraint"]:
-                raise ValueError(
-                    f"Invalid {key=} in the `if_needs_gpu` section."
-                )
-            # If the key was already specified, skip it (WorkflowTask.meta
-            # takes the highest priority)
-            if key not in slurm_dict.keys():
-                slurm_dict[key] = val
+    extra_lines = wftask.overridden_meta.get("extra_lines", [])
+    extra_lines = slurm_dict.get("extra_lines", []) + extra_lines
+    if len(set(extra_lines)) != len(extra_lines):
+        logging.warning(f"Removing repeated elements from {extra_lines=}.")
+        extra_lines = list(set(extra_lines))
+    slurm_dict["extra_lines"] = extra_lines
 
     # Job-batching parameters (if None, they will be determined heuristically)
     n_ftasks_per_script = wftask.overridden_meta.get(

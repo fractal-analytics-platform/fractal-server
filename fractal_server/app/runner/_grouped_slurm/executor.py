@@ -372,7 +372,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         # If slurm_config was not provided (e.g. when FractalSlurmExecutor is
         # used as a standalone executor, that is, outside fractal-server), use
         # a default one.
-
         if not slurm_config:
             slurm_config = get_default_slurm_config()
 
