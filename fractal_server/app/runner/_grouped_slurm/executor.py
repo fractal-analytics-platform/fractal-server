@@ -36,6 +36,7 @@ from ....utils import set_logger
 from ..common import JobExecutionError
 from ..common import TaskExecutionError
 from ._batching_heuristics import heuristics
+from ._slurm_config import get_default_slurm_config
 from ._slurm_config import SlurmConfig
 from ._subprocess_run_as_user import _glob_as_user
 from ._subprocess_run_as_user import _path_exists_as_user
@@ -313,7 +314,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         fn: Callable[..., Any],
         iterable: Iterable[Any],
         *,
-        slurm_config: SlurmConfig,
+        slurm_config: Optional[SlurmConfig] = None,
         timeout: Optional[float] = None,
         chunksize: int = 1,
         additional_setup_lines: Optional[list[str]] = None,
@@ -367,6 +368,13 @@ class FractalSlurmExecutor(SlurmExecutor):
         list_args = list(iterable)
         n_ftasks_tot = len(list_args)
         debug(list_args)
+
+        # If slurm_config was not provided (e.g. when FractalSlurmExecutor is
+        # used as a standalone executor, that is, outside fractal-server), use
+        # a default one.
+
+        if not slurm_config:
+            slurm_config = get_default_slurm_config()
 
         # Set/validate parameters for task batching
         n_ftasks_per_script, n_parallel_ftasks_per_script = heuristics(
@@ -548,7 +556,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         self,
         fun: Callable[..., Any],
         *args,
-        slurm_config: SlurmConfig,
+        slurm_config: Optional[SlurmConfig] = None,
         additional_setup_lines: Optional[list[str]] = None,
         wftask_file_prefix: Optional[str] = None,
         wftask_order: Optional[str] = None,
@@ -572,6 +580,8 @@ class FractalSlurmExecutor(SlurmExecutor):
         # FIXME: I guess all what follows in this method should go and be
         # replaced by an appropriate call to submit_multitask
         # FIXME: do something with slurm_config
+        if not slurm_config:
+            slurm_config = get_default_slurm_config()
 
         # Define slurm-job-related files
         job = SlurmJob(
