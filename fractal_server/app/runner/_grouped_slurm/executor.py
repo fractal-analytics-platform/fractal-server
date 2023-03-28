@@ -463,6 +463,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                     list_list_args=[
                         [x] for x in batch
                     ],  # FIXME: clarify structure  # noqa
+                    list_list_kwargs=[{} for x in batch],  # FIXME
                     slurm_config=slurm_config,
                     slurm_file_prefix=this_slurm_file_prefix,
                     wftask_file_prefix=wftask_file_prefix,
@@ -502,11 +503,13 @@ class FractalSlurmExecutor(SlurmExecutor):
     def submit_multitask(
         self,
         fun: Callable[..., Any],
-        list_list_args: Iterable[Iterable[Any]],
+        list_list_args: Iterable[Iterable],
+        list_list_kwargs: Iterable[dict],
         slurm_file_prefix: str,
         wftask_file_prefix: str,
         slurm_config: SlurmConfig,
         component_indices: Optional[list[int]] = None,
+        single_task_submission: bool = False,
     ) -> futures.Future:
         """
         Submit a multi-task job to the pool, where each task is handled via the
@@ -528,6 +531,12 @@ class FractalSlurmExecutor(SlurmExecutor):
             num_tasks_tot=num_tasks_tot,
             slurm_config=slurm_config,
         )
+        if single_task_submission:
+            if job.num_tasks_tot > 1:
+                raise ValueError(
+                    "{single_task_submission=} but {job.num_tasks_tot=}"
+                )
+            job.single_task_submission = 1
 
         # If available, set a more granular prefix for each parallel component
         if component_indices is not None:
@@ -574,7 +583,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         debug(list_list_args)
         for ind_task, args_list in enumerate(list_list_args):
             debug(args_list)
-            kwargs_dict = {}
+            kwargs_dict = list_list_kwargs[ind_task]
             funcser = cloudpickle.dumps(
                 (versions, fun, args_list, kwargs_dict)
             )
@@ -603,11 +612,11 @@ class FractalSlurmExecutor(SlurmExecutor):
     def submit(
         self,
         fun: Callable[..., Any],
-        *args,
+        *fun_args,
         slurm_config: Optional[SlurmConfig] = None,
         wftask_file_prefix: Optional[str] = None,
         wftask_order: Optional[str] = None,
-        **kwargs,
+        **fun_kwargs,
     ) -> futures.Future:
         """
         Submit a job to the pool.
@@ -616,7 +625,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         when creating the executor. FIXME: this is now possible via
         slurm_config, is it?
         """
-        fut: futures.Future = futures.Future()
 
         if wftask_file_prefix is None:
             wftask_file_prefix = f"_wftask_{random_string()}"
@@ -636,115 +644,17 @@ class FractalSlurmExecutor(SlurmExecutor):
         slurm_config.n_ftasks_per_script = 1
         slurm_config.n_parallel_ftasks_per_script = 1
 
-        """
-        ## This is what we do in map:
-
-        # Divide arguments in batches of size n_tasks_per_script
-        args_batches = []
-        batch_size = n_ftasks_per_script
-        for ind_chunk in range(0, n_ftasks_tot, batch_size):
-            args_batches.append(
-                list_args[ind_chunk : ind_chunk + batch_size]  # noqa
-            )
-        if len(args_batches) != math.ceil(n_ftasks_tot / n_ftasks_per_script):
-            raise RuntimeError("Something wrong here while batching tasks")
-
-        # Construct list of futures (one per SLURM job, i.e. one per batch)
-        fs = []
-        current_component_index = 0
-        for ind_batch, batch in enumerate(args_batches):
-            batch_size = len(batch)
-            this_slurm_file_prefix = (
-                f"{general_slurm_file_prefix}_" f"batch_{ind_batch}"
-            )
-            fs.append(
-                self.submit_multitask(
-                    fn,
-                    list_list_args=[[x] for x in batch],  # FIXME
-                    slurm_config=slurm_config,
-                    slurm_file_prefix=this_slurm_file_prefix,
-                    wftask_file_prefix=wftask_file_prefix,
-                    component_indices=[
-                        current_component_index + _ind
-                        for _ind in range(batch_size)
-                    ],
-                )
-            )
-            current_component_index += batch_size
-
-        ## This is how we could do it now
-        fs = self.submit_multitask(  OR self.submit_single_task ?
-                fun,
-                list_list_args=[args],
-                slurm_config=slurm_config,
-                slurm_file_prefix=this_slurm_file_prefix,
-                wftask_file_prefix=wftask_file_prefix,
-                component_indices=None,
-        )
-
-        """
-
-        # Include common_script_lines in extra_lines
-        current_extra_lines = slurm_config.extra_lines or []
-        slurm_config.extra_lines = (
-            current_extra_lines + self.common_script_lines
-        )
-
-        # Define slurm-job-related files
-        job = SlurmJob(
-            num_tasks_tot=1,
-            single_task_submission=True,
+        fut = self.submit_multitask(
+            fun,
+            list_list_args=[fun_args],
+            list_list_kwargs=[fun_kwargs],
+            slurm_config=slurm_config,
             slurm_file_prefix=slurm_file_prefix,
             wftask_file_prefix=wftask_file_prefix,
-            slurm_config=slurm_config,
+            component_indices=None,
+            single_task_submission=True,
         )
-        job.input_pickle_files = (
-            self.get_input_pickle_file_path(
-                job.workerids[0], prefix=job.wftask_file_prefix
-            ),
-        )
-        job.output_pickle_files = (
-            self.get_output_pickle_file_path(
-                job.workerids[0], prefix=job.wftask_file_prefix
-            ),
-        )
-        job.slurm_script = self.get_slurm_script_file_path(
-            prefix=job.slurm_file_prefix
-        )
-        job.slurm_stdout = self.get_slurm_stdout_file_path(
-            prefix=job.slurm_file_prefix
-        )
-        job.slurm_stderr = self.get_slurm_stderr_file_path(
-            prefix=job.slurm_file_prefix
-        )
-
-        # Dump serialized versions+function+args+kwargs to pickle file
-        versions = dict(
-            python=sys.version_info[:3],
-            cloudpickle=cloudpickle.__version__,
-            fractal_server=__VERSION__,
-        )
-        funcser = cloudpickle.dumps((versions, fun, args, kwargs))
-        with open(job.input_pickle_files[0], "wb") as f:
-            f.write(funcser)
-
-        # Submit job to SLURM, and get jobid
-        jobid, job = self._start_multitask(job)
-
-        # Add the SLURM script/out/err paths to map_jobid_to_slurm_files (this
-        # must be after self._start(job), so that "%j" has already been
-        # replaced with the job ID)
-        self.map_jobid_to_slurm_files[jobid] = (
-            job.slurm_script.as_posix(),
-            job.slurm_stdout.as_posix(),
-            job.slurm_stderr.as_posix(),
-        )
-
-        # Thread will wait for it to finish.
-        self.wait_thread.wait(job.get_clean_output_pickle_files(), jobid)
-
-        with self.jobs_lock:
-            self.jobs[jobid] = (fut, job)
+        debug(fut)
         return fut
 
     def _prepare_JobExecutionError(
