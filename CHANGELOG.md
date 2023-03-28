@@ -1,5 +1,9 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Update to fastapi `0.95` (\#587).
+
 # 1.1.1
 
 * Include `reordered_workflowtask_ids` in workflow-edit endpoint payload, to reorder the task list of a workflow (\#585).
