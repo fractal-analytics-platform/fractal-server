@@ -346,8 +346,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         iterable: Iterable[Any],
         *,
         slurm_config: Optional[SlurmConfig] = None,
-        timeout: Optional[float] = None,
-        chunksize: int = 1,
         additional_setup_lines: Optional[list[str]] = None,
         wftask_order: Optional[str] = None,
         wftask_file_prefix: Optional[str] = None,
@@ -358,26 +356,26 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         # FIXME: we replaced iterables with iterable
 
-        Overrides the PSL's `concurrent.futures.Executor.map` so that extra
-        parameters can be passed to `Executor.submit`.
+        This function is based on `concurrent.futures.Executor.map` from Python
+        Standard Library 3.11. Original Copyright 2009 Brian Quinlan. All
+        Rights Reserved.  Licensed to PSF under a Contributor Agreement.
 
-        This function is copied from PSL==3.11
+        Modifications include:
+        * Only `fn` and `iterable` can be assigned as positional arguments.
+        * `*iterables` argument eplaced with a single `iterable`
+        * `timeout` and `chunksize` arguments are not supported.
 
-        Original Copyright 2009 Brian Quinlan. All Rights Reserved.
-        Licensed to PSF under a Contributor Agreement.
         """
-        import time
 
-        def _result_or_cancel(fut, timeout=None):
+        def _result_or_cancel(fut):
             """
-            This function is copied from PSL ==3.11
-
-            Copyright 2009 Brian Quinlan. All Rights Reserved.
+            This function is based on the Python Standard Library 3.11.
+            Original Copyright 2009 Brian Quinlan. All Rights Reserved.
             Licensed to PSF under a Contributor Agreement.
             """
             try:
                 try:
-                    return fut.result(timeout)
+                    return fut.result()
                 finally:
                     fut.cancel()
             finally:
@@ -385,8 +383,11 @@ class FractalSlurmExecutor(SlurmExecutor):
                 # self._exception
                 del fut
 
-        if timeout is not None:
-            end_time = timeout + time.monotonic()
+        # If slurm_config was not provided (e.g. when FractalSlurmExecutor is
+        # used as a standalone executor, that is, outside fractal-server), use
+        # a default one
+        if not slurm_config:
+            slurm_config = get_default_slurm_config()
 
         # Set file prefixes
         if wftask_file_prefix is None:
@@ -396,15 +397,9 @@ class FractalSlurmExecutor(SlurmExecutor):
         else:
             general_slurm_file_prefix = f"_{random_string()}"
 
+        # Transform iterable into a list and count its elements
         list_args = list(iterable)
         n_ftasks_tot = len(list_args)
-        debug(list_args)
-
-        # If slurm_config was not provided (e.g. when FractalSlurmExecutor is
-        # used as a standalone executor, that is, outside fractal-server), use
-        # a default one.
-        if not slurm_config:
-            slurm_config = get_default_slurm_config()
 
         # Set/validate parameters for task batching
         n_ftasks_per_script, n_parallel_ftasks_per_script = heuristics(
@@ -425,13 +420,13 @@ class FractalSlurmExecutor(SlurmExecutor):
             max_num_jobs=slurm_config.max_num_jobs,
         )
         slurm_config.n_parallel_ftasks_per_script = (
-            n_parallel_ftasks_per_script  # noqa
+            n_parallel_ftasks_per_script
         )
         slurm_config.n_ftasks_per_script = n_ftasks_per_script
         debug(n_ftasks_per_script)
         debug(n_parallel_ftasks_per_script)
 
-        # Divide arguments in batches of size n_tasks_per_script
+        # Divide arguments in batches of `n_tasks_per_script` tasks each
         args_batches = []
         batch_size = n_ftasks_per_script
         for ind_chunk in range(0, n_ftasks_tot, batch_size):
@@ -452,7 +447,9 @@ class FractalSlurmExecutor(SlurmExecutor):
             fs.append(
                 self.submit_multitask(
                     fn,
-                    list_list_args=[[x] for x in batch],  # FIXME
+                    list_list_args=[
+                        [x] for x in batch
+                    ],  # FIXME: clarify structure  # noqa
                     slurm_config=slurm_config,
                     additional_setup_lines=additional_setup_lines,
                     slurm_file_prefix=this_slurm_file_prefix,
@@ -471,21 +468,19 @@ class FractalSlurmExecutor(SlurmExecutor):
         # iterable of results (if successful), and we should yield its elements
         # rather than the whole iterable.
         def result_iterator():
+            """
+            This function is based on the Python Standard Library 3.11.
+            Original Copyright 2009 Brian Quinlan. All Rights Reserved.
+            Licensed to PSF under a Contributor Agreement.
+            """
             try:
                 # reverse to keep finishing order
                 fs.reverse()
                 while fs:
                     # Careful not to keep a reference to the popped future
-                    if timeout is None:
-                        results = _result_or_cancel(fs.pop())
-                        for res in results:
-                            yield res
-                    else:
-                        results = _result_or_cancel(
-                            fs.pop(), end_time - time.monotonic()
-                        )
-                        for res in results:
-                            yield res
+                    results = _result_or_cancel(fs.pop())
+                    for res in results:
+                        yield res
             finally:
                 for future in fs:
                     future.cancel()
