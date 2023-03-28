@@ -58,7 +58,7 @@ def heuristics(
         return n_ftasks_per_script, n_parallel_ftasks_per_script
 
     # Branch 2
-    reasonable_n_parallel_ftasks_per_script = 1
+    reasonable_n_parallel_ftasks_per_script = 2  # FIXME: what is this value??
     if (
         math.ceil(n_ftasks_tot / reasonable_n_parallel_ftasks_per_script)
         <= target_num_jobs
@@ -67,8 +67,8 @@ def heuristics(
         n_ftasks_per_script = reasonable_n_parallel_ftasks_per_script
     else:
         n_ftasks_per_script = math.ceil(n_ftasks_tot / target_num_jobs)
-        n_parallel_based_on_cpus = target_cpus_per_job / cpus_per_task
-        n_parallel_based_on_mem = target_mem_per_job / mem_per_task
+        n_parallel_based_on_cpus = int(target_cpus_per_job / cpus_per_task)
+        n_parallel_based_on_mem = int(target_mem_per_job / mem_per_task)
         n_parallel_ftasks_per_script = min(
             n_parallel_based_on_cpus, n_parallel_based_on_mem
         )
