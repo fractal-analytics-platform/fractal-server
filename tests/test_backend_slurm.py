@@ -358,7 +358,7 @@ def test_unit_slurm_config():
 )
 def test_sbatch_script_slurm_config(
     tmp_path,
-    slurm_config,
+    old_slurm_config,
     slurm_config_key,
     task,
     cfut_jobs_finished,
@@ -423,7 +423,7 @@ def test_sbatch_script_slurm_config(
             sbatch_script_lines = f.read().split("\n")
             debug(sbatch_script_lines)
 
-        expected_mem = f"mem={slurm_config[slurm_config_key]['mem']}"
+        expected_mem = f"mem={old_slurm_config[slurm_config_key]['mem']}"
         debug(expected_mem)
         assert next(
             (line for line in sbatch_script_lines if expected_mem in line),
