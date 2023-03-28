@@ -48,7 +48,7 @@ async def test_full_workflow(
     override_settings_factory,
 ):
 
-    if backend == "slurm":
+    if backend == "slurm" or backend == "local":
         FRACTAL_SLURM_CONFIG_FILE = testdata_path / "old_slurm_config.json"
     elif backend == "grouped_slurm":
         FRACTAL_SLURM_CONFIG_FILE = testdata_path / "slurm_config.json"
@@ -217,7 +217,7 @@ async def test_failing_workflow_TaskExecutionError(
     override_settings_factory,
 ):
 
-    if backend == "slurm":
+    if backend == "slurm" or backend == "local":
         FRACTAL_SLURM_CONFIG_FILE = testdata_path / "old_slurm_config.json"
     elif backend == "grouped_slurm":
         FRACTAL_SLURM_CONFIG_FILE = testdata_path / "slurm_config.json"
@@ -371,7 +371,7 @@ async def test_failing_workflow_JobExecutionError(
     cfut_jobs_finished,
 ):
 
-    if backend == "slurm":
+    if backend == "slurm" or backend == "local":
         FRACTAL_SLURM_CONFIG_FILE = testdata_path / "old_slurm_config.json"
     elif backend == "grouped_slurm":
         FRACTAL_SLURM_CONFIG_FILE = testdata_path / "slurm_config.json"
