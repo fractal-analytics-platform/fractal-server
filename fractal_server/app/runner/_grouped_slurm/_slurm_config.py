@@ -147,21 +147,25 @@ def set_slurm_config(
         debug(f"LOADING {settings.FRACTAL_SLURM_CONFIG_FILE=}")
     try:
         with config_path.open("r") as f:  # type: ignore
-            slurm_config = json.load(f)
+            slurm_env = json.load(f)
     except Exception as e:
         raise SlurmConfigError(
             f"Error while loading {config_path=}. "
             f"Original error:\n{str(e)}"
         )
-    debug(slurm_config)
+
+    debug("set_slurm_config")
+    debug(wftask.overridden_meta)
+    debug(slurm_env)
+    print("--------------------------------------------")
 
     # REQUIRED ATTRIBUTES
-    opt_dict = {}
+    slurm_dict = {}
 
     # Number of CPUs per task, for multithreading
     cpus_per_task = int(wftask.overridden_meta["cpus_per_task"])
     debug(cpus_per_task)
-    opt_dict["cpus_per_task"] = cpus_per_task
+    slurm_dict["cpus_per_task"] = cpus_per_task
 
     # Required memory per task, in MB
     raw_mem = wftask.overridden_meta["mem"]
@@ -180,23 +184,23 @@ def set_slurm_config(
             "Valid examples are: 93, 71M, 93G, 71T."
         )
     debug(mem)
-    opt_dict["mem_per_task_MB"] = mem
+    slurm_dict["mem_per_task_MB"] = mem
 
     # Partition name
-    partition = slurm_config["partition"]
+    partition = slurm_env["partition"]
     debug(partition)
-    opt_dict["partition"] = partition
+    slurm_dict["partition"] = partition
 
     # Job name
     job_name = wftask.task.name.replace(" ", "_")
     debug(job_name)
-    opt_dict["job_name"] = job_name
+    slurm_dict["job_name"] = job_name
 
     # Optional SLURM arguments and extra lines
     for key in ["time", "account", "gres", "constraint"]:
         value = wftask.overridden_meta.get("time", None)
         if value:
-            opt_dict[key] = value
+            slurm_dict[key] = value
     extra_lines = wftask.overridden_meta.get("extra_lines", None)
     debug(extra_lines)
 
@@ -205,7 +209,7 @@ def set_slurm_config(
     needs_gpu = wftask.overridden_meta.get("needs_gpu", False)
     debug(needs_gpu)
     if needs_gpu:
-        for key, val in slurm_config["if_needs_gpu"].items():
+        for key, val in slurm_env["if_needs_gpu"].items():
             # Check that they key is in the list of the valid ones
             if key not in ["partition", "gres", "constraint"]:
                 raise ValueError(
@@ -213,8 +217,8 @@ def set_slurm_config(
                 )
             # If the key was already specified, skip it (WorkflowTask.meta
             # takes the highest priority)
-            if key not in opt_dict.keys():
-                opt_dict[key] = val
+            if key not in slurm_dict.keys():
+                slurm_dict[key] = val
 
     # Job-batching parameters (if None, they will be determined heuristically)
     n_ftasks_per_script = wftask.overridden_meta.get(
@@ -226,17 +230,17 @@ def set_slurm_config(
     debug(n_ftasks_per_script)
     debug(n_parallel_ftasks_per_script)
 
-    opt_dict["n_ftasks_per_script"] = n_ftasks_per_script
-    opt_dict["n_parallel_ftasks_per_script"] = n_parallel_ftasks_per_script
-    opt_dict["target_cpus_per_job"] = slurm_config["cpus_per_job"]["target"]
-    opt_dict["target_mem_per_job"] = slurm_config["mem_per_job"]["target"]
-    opt_dict["target_num_jobs"] = slurm_config["number_of_jobs"]["target"]
-    opt_dict["max_cpus_per_job"] = slurm_config["cpus_per_job"]["max"]
-    opt_dict["max_mem_per_job"] = slurm_config["mem_per_job"]["max"]
-    opt_dict["max_num_jobs"] = slurm_config["number_of_jobs"]["max"]
+    slurm_dict["n_ftasks_per_script"] = n_ftasks_per_script
+    slurm_dict["n_parallel_ftasks_per_script"] = n_parallel_ftasks_per_script
+    slurm_dict["target_cpus_per_job"] = slurm_env["cpus_per_job"]["target"]
+    slurm_dict["target_mem_per_job"] = slurm_env["mem_per_job"]["target"]
+    slurm_dict["target_num_jobs"] = slurm_env["number_of_jobs"]["target"]
+    slurm_dict["max_cpus_per_job"] = slurm_env["cpus_per_job"]["max"]
+    slurm_dict["max_mem_per_job"] = slurm_env["mem_per_job"]["max"]
+    slurm_dict["max_num_jobs"] = slurm_env["number_of_jobs"]["max"]
 
     # Put everything together
-    slurm_options = SlurmConfig(**opt_dict)
+    slurm_config = SlurmConfig(**slurm_dict)
 
     # Gather information on task files, to be used in wftask_file_prefix and
     # wftask_order
@@ -248,14 +252,14 @@ def set_slurm_config(
 
     # Prepare and return output dictionary
     submit_setup_dict = dict(
-        slurm_options=slurm_options,
+        slurm_config=slurm_config,
         wftask_file_prefix=task_files.file_prefix,
         wftask_order=wftask.order,
     )
     return submit_setup_dict
 
     """
-    config_dict = load_slurm_config()
+    config_dict = load_slurm_env()
     try:
         config = config_dict[wftask.executor]
     except KeyError:
