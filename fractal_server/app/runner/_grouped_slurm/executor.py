@@ -302,43 +302,6 @@ class FractalSlurmExecutor(SlurmExecutor):
             raise e
         return str(jobid)
 
-    def _deprecated_compose_sbatch_script(
-        self,
-        cmdline: list[str],
-        outpath: Optional[Path] = None,
-        errpath: Optional[Path] = None,
-    ) -> str:
-
-        raise RuntimeError(
-            "This function is replaced by compose_sbatch_script_multitask,"
-            " but we keep it here for the moment as a reference of how "
-            "SLURM variables could be set"
-        )
-
-        """
-        # NOTE: In SLURM, `%j` is the placeholder for the job ID.
-
-        slurm_stdout_file = outpath or self.get_slurm_stdout_file_path()
-        slurm_stderr_file = errpath or self.get_slurm_stderr_file_path()
-
-        sbatch_lines = [
-            f"#SBATCH --output={slurm_stdout_file}",
-            f"#SBATCH --error={slurm_stderr_file}",
-        ] + [
-            ln
-            for ln in additional_setup_lines + self.common_script_lines
-            if ln.startswith("#SBATCH")
-        ]
-        non_sbatch_lines = [
-            ln
-            for ln in additional_setup_lines + self.common_script_lines
-            if not ln.startswith("#SBATCH")
-        ]
-        cmd = [shlex.join(["srun", *cmdline])]
-        script_lines = ["#!/bin/sh"] + sbatch_lines + non_sbatch_lines + cmd
-        return "\n".join(script_lines) + "\n"
-        """
-
     def map(
         self,
         fn: Callable[..., Any],
