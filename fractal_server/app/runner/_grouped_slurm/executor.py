@@ -47,26 +47,54 @@ from fractal_server import __VERSION__
 
 class SlurmJob:
     """
-    Collect a few relevant information related to a FractalSlurmExecutor job
+    Collect information related to a FractalSlurmExecutor job
 
     # FIXME: review and clean up SlurmJob class
 
-    All jobs are defined as containing more than one task. Jobs coming from
-    `map` must have single_task_submission=False (even if num_tasks_tot=1),
-    while jobs coming from `submit` must have it set to True.
+    This includes three groups of attributes:
+    1. Attributes related to the (possibly multi-task) SLURM job, e.g.
+       submission-file path.
+    2. Attributes related to single tasks, e.g. the paths of their input/output
+       pickle files.
+    3. SLURM configuration options, encoded in a SlurmConfig object.
 
+    Note: A SlurmJob object is generally defined as a multi-task job. Jobs
+    coming from the `map` method must have `single_task_submission=False` (even
+    if `num_tasks_tot=1`), while jobs coming from `submit` must have it set to
+    `True`.
 
     Attributes:
-        single_task_submission: FIXME (describe and rename)
-        file_prefix: # FIXME
-        # Prefix for all files handled by FractalSlurmExecutor.
-        workerids: Random strings that enters the pickle-file names.
-        input_pickle_files: Input pickle files.
-        output_pickle_files: Output pickle files.
-        slurm_script: Script to be submitted via `sbatch` command.
-        slurm_stdout: SLURM stdout file.
-        slurm_stderr: SLURM stderr file.
-        slurm_config: SlurmConfig object - FIXME
+        num_tasks_tot:
+            TBD
+        single_task_submission:
+            This must be `True` for jobs submitted as part of the `submit`
+            method, and `False` for jobs coming from the `map` method.
+        slurm_file_prefix:
+            Prefix for SLURM-job related files (submission script and SLURM
+            stdout/stderr); this is needed because such files are created by
+            `FractalSlurmExecutor`.
+        wftask_file_prefix:
+            Prefix for files that are created as part of the functions
+            submitted for execution on the `FractalSlurmExecutor`; this
+            attribute is needed as part of the
+            `_copy_files_from_user_to_server` method, and also to construct the
+            names of per-task input/output pickle files.
+        slurm_script:
+            Path of SLURM submission script.
+        slurm_stdout:
+            Path of SLURM stdout file; if this includes `"%j"`, then this
+            string will be replaced by the SLURM job ID upon `sbatch`
+            submission.
+        slurm_stderr:
+            Path of SLURM stderr file; see `slurm_stdout` concerning `"%j"`.
+        workerids:
+            IDs that enter in the per-task input/output pickle files.
+        input_pickle_files:
+            Input pickle files (one per task).
+        output_pickle_files:
+            Output pickle files (one per task).
+        slurm_config:
+            `SlurmConfig` object.
     """
 
     # Job-related attributes
@@ -93,10 +121,13 @@ class SlurmJob:
         wftask_file_prefix: Optional[str] = None,
         single_task_submission: bool = False,
     ):
+        if single_task_submission and num_tasks_tot > 1:
+            raise ValueError(
+                "Trying to initialize SlurmJob with"
+                f"{single_task_submission=} and {num_tasks_tot=}."
+            )
         self.num_tasks_tot = num_tasks_tot
         self.single_task_submission = single_task_submission
-        if num_tasks_tot > 1:
-            self.single_task_submission = False
         self.slurm_file_prefix = slurm_file_prefix or "default_slurm_prefix"
         self.wftask_file_prefix = wftask_file_prefix or "default_wftask_prefix"
         self.workerids = tuple(
@@ -601,6 +632,55 @@ class FractalSlurmExecutor(SlurmExecutor):
         # instance
         slurm_config.n_ftasks_per_script = 1
         slurm_config.n_parallel_ftasks_per_script = 1
+
+        """
+        ## This is what we do in map:
+
+        # Divide arguments in batches of size n_tasks_per_script
+        args_batches = []
+        batch_size = n_ftasks_per_script
+        for ind_chunk in range(0, n_ftasks_tot, batch_size):
+            args_batches.append(
+                list_args[ind_chunk : ind_chunk + batch_size]  # noqa
+            )
+        if len(args_batches) != math.ceil(n_ftasks_tot / n_ftasks_per_script):
+            raise RuntimeError("Something wrong here while batching tasks")
+
+        # Construct list of futures (one per SLURM job, i.e. one per batch)
+        fs = []
+        current_component_index = 0
+        for ind_batch, batch in enumerate(args_batches):
+            batch_size = len(batch)
+            this_slurm_file_prefix = (
+                f"{general_slurm_file_prefix}_" f"batch_{ind_batch}"
+            )
+            fs.append(
+                self.submit_multitask(
+                    fn,
+                    list_list_args=[[x] for x in batch],  # FIXME
+                    slurm_config=slurm_config,
+                    additional_setup_lines=additional_setup_lines,
+                    slurm_file_prefix=this_slurm_file_prefix,
+                    wftask_file_prefix=wftask_file_prefix,
+                    component_indices=[
+                        current_component_index + _ind
+                        for _ind in range(batch_size)
+                    ],
+                )
+            )
+            current_component_index += batch_size
+
+        ## This is how we could do it now
+        fs = self.submit_multitask(  OR self.submit_single_task ?
+                fun,
+                list_list_args=[args],
+                slurm_config=slurm_config,
+                slurm_file_prefix=this_slurm_file_prefix,
+                wftask_file_prefix=wftask_file_prefix,
+                component_indices=None, ????
+        )
+
+        """
 
         # Define slurm-job-related files
         job = SlurmJob(
