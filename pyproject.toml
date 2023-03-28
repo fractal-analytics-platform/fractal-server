@@ -15,7 +15,7 @@ license = "BSD-3-Clause"
 [tool.poetry.dependencies]
 python = "^3.9"
 python-dotenv = "^0.20.0"
-fastapi = "^0.89.1"
+fastapi = "^0.95.0"
 sqlmodel = "^0.0.8"
 aiosqlite = "^0.17.0"
 fastapi-users = {extras = ["oauth"], version = "^10.1"}
