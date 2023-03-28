@@ -65,7 +65,7 @@ def old_slurm_config(override_settings):  # FIXME: deprecate this fixture
     }
 
     with override_settings.FRACTAL_SLURM_CONFIG_FILE.open("w") as f:
-        json.dump(config, f)
+        json.dump(config, f, indent=2)
     return config
 
 
@@ -87,7 +87,7 @@ def slurm_config(override_settings):
         },
     }
     with override_settings.FRACTAL_SLURM_CONFIG_FILE.open("w") as f:
-        json.dump(config, f)
+        json.dump(config, f, indent=2)
     return config
 
 
