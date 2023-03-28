@@ -381,10 +381,10 @@ class FractalSlurmExecutor(SlurmExecutor):
             # Fractal configuration variables (soft/hard limits):
             target_cpus_per_job=slurm_config.target_cpus_per_job,
             target_mem_per_job=slurm_config.target_mem_per_job,
-            target_num_jobs=slurm_config.target_number_of_jobs,
+            target_num_jobs=slurm_config.target_num_jobs,
             max_cpus_per_job=slurm_config.max_cpus_per_job,
             max_mem_per_job=slurm_config.max_mem_per_job,
-            max_num_jobs=slurm_config.max_number_of_jobs,
+            max_num_jobs=slurm_config.max_num_jobs,
         )
         debug(n_ftasks_per_script)
         debug(n_parallel_ftasks_per_script)
