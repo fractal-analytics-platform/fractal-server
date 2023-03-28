@@ -567,8 +567,7 @@ def recursive_task_submission(
     task_pars_depend = task_pars_depend_future.result()
 
     logger.info(
-        f"SUBMIT {this_task.order}-th task "
-        f'(name="{this_task.task.name}", executor={this_task.executor}).'
+        f"SUBMIT {this_task.order}-th task " f'(name="{this_task.task.name}"'
     )
     if this_task.is_parallel:
         # NOTE: call_parallel_task is blocking, i.e. the returned future always
@@ -598,8 +597,7 @@ def recursive_task_submission(
         # Wait for the future result (blocking)
         this_task_future.result()
     logger.info(
-        f"END    {this_task.order}-th task "
-        f'(name="{this_task.task.name}", executor={this_task.executor}).'
+        f"END    {this_task.order}-th task " f'(name="{this_task.task.name}"'
     )
 
     # Write most recent metadata to METADATA_FILENAME
