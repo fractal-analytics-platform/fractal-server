@@ -144,6 +144,7 @@ def set_slurm_config(
     if not config_path:
         settings = Inject(get_settings)
         config_path = settings.FRACTAL_SLURM_CONFIG_FILE
+        debug(f"LOADING {settings.FRACTAL_SLURM_CONFIG_FILE=}")
     try:
         with config_path.open("r") as f:  # type: ignore
             slurm_config = json.load(f)
