@@ -212,11 +212,6 @@ def set_slurm_config(
     if needs_gpu:
         for key, val in slurm_env["if_needs_gpu"].items():
             debug(key, val)
-            # Check that they key is in the list of the valid ones
-            if key not in ["partition", "gres", "constraint"]:
-                raise ValueError(
-                    f"Invalid {key=} in the `if_needs_gpu` section."
-                )
             slurm_dict[key] = val
 
     # Number of CPUs per task, for multithreading
