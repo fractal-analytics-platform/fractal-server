@@ -1,5 +1,6 @@
 import logging
 import math
+from typing import Optional
 
 
 def heuristics(
@@ -7,8 +8,8 @@ def heuristics(
     # Number of parallel componens (always known)
     n_ftasks_tot: int,
     # Optional WorkflowTask attributes:
-    n_ftasks_per_script: int | None,
-    n_parallel_ftasks_per_script: int | None,
+    n_ftasks_per_script: Optional[int] = None,
+    n_parallel_ftasks_per_script: Optional[int] = None,
     # Task requirements (multiple possible sources):
     cpus_per_task: int,
     mem_per_task: int,
