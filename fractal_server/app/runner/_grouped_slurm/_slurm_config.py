@@ -57,6 +57,7 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
     partition: str
     cpus_per_task: int
     mem_per_task_MB: int
+    prefix: str = "#SBATCH"
 
     # Optional SLURM parameters
     job_name: Optional[str] = None
@@ -79,27 +80,53 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
     target_num_jobs: int
     max_num_jobs: int
 
-    def to_sbatch_lines(self) -> list[str]:
-        raise NotImplementedError()
+    def _sorted_extra_lines(self) -> tuple[list[str], list[str]]:
+        """
+        Return a copy of self.extra_lines, where lines starting with
+        `self.prefix` are listed first.
+        """
 
-    """
-    def preamble_lines(self) -> list[str]:
+        def _no_prefix(_line):
+            if _line.startswith(self.prefix):
+                return 0
+            else:
+                return 1
 
-        raise NotImplementedError()
+        return sorted(self.extra_lines, key=_no_prefix)
 
-        # Attributes that need to scale
-        scaling_factor = self.n_parallel_ftasks_per_script
-        if not scaling_factor:
-            raise ValueError()
-        debug(scaling_factor)
-        mem_per_job_MB = self.mem_per_task_MB * scaling_factor
+    def to_sbatch_preamble(self) -> list[str]:
+        """
+        FIXME: docstring of to_sbatch_preamble
+        """
+        if self.n_parallel_ftasks_per_script is None:
+            raise ValueError(
+                "SlurmConfig.sbatch_preamble requires that "
+                f"{self.n_parallel_ftasks_per_script=} is not None."
+            )
+        if self.extra_lines:
+            if len(self.extra_lines) != len(set(self.extra_lines)):
+                raise ValueError("{self.extra_lines=} contains repetitions")
 
-        lines = []
-        lines.append(f"#SBATCH --partition {self.partition}")
-        lines.append(f"#SBATCH --cpus-per-task {self.cpus_per_task}")
-        lines.append(f"#SBATCH --mem {mem_per_job_MB}M")
-        # FIXME: THIS IS NOT COMPLETE...
-    """
+        mem_per_job_MB = (
+            self.n_parallel_ftasks_per_script * self.mem_per_task_MB
+        )
+        lines = [
+            "#!/bin/sh",
+            f"{self.prefix} --partition={self.partition}",
+            f"{self.prefix} --ntasks={self.n_parallel_ftasks_per_script}",
+            f"{self.prefix} --cpus-per-task={self.cpus_per_task}",
+            f"{self.prefix} --mem={mem_per_job_MB}M",
+        ]
+        for key in ["job_name", "constraint", "gres", "time", "account"]:
+            value = getattr(self, key)
+            if value is not None:
+                option = key.replace("_", "-")
+                lines.append(f"{self.prefix} --{option}={value}")
+        if self.extra_lines:
+            for line in self._sorted_extra_lines():
+                lines.append(line)
+
+        return lines
 
 
 def get_default_slurm_config():
@@ -292,23 +319,12 @@ def set_slurm_config(
     return submit_setup_dict
 
     """
-    config_dict = load_slurm_env()
-    try:
-        config = config_dict[wftask.executor]
-    except KeyError:
-        raise SlurmConfigError(f"Configuration not found: {wftask.executor}")
-
-    additional_setup_lines = config.to_sbatch()
-    additional_setup_lines.append(
-        f"#SBATCH --job-name {wftask.task.name.replace(' ', '_')}"
-    )
-
     # From https://slurm.schedmd.com/sbatch.html: Beginning with 22.05, srun
     # will not inherit the --cpus-per-task value requested by salloc or sbatch.
     # It must be requested again with the call to srun or set with the
     # SRUN_CPUS_PER_TASK environment variable if desired for the task(s).
     if config.cpus_per_task:
-        additional_setup_lines.append(
+        #additional_setup_lines.append(
             f"export SRUN_CPUS_PER_TASK={config.cpus_per_task}"
         )
     """
