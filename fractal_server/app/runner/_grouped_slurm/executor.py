@@ -147,16 +147,16 @@ class FractalSlurmExecutor(SlurmExecutor):
 
     Attributes:
         slurm_user:
-            shell username that runs the `sbatch` command
+            Shell username that runs the `sbatch` command.
         common_script_lines:
-            arbitrary script lines that will always be included in the
+            Arbitrary script lines that will always be included in the
             sbatch script
         working_dir:
-            directory for both the cfut/SLURM and fractal-server files and logs
+            Directory for both the cfut/SLURM and fractal-server files and logs
         working_dir_user:
-            directory for both the cfut/SLURM and fractal-server files and logs
+            Directory for both the cfut/SLURM and fractal-server files and logs
         map_jobid_to_slurm_files:
-            dictionary with paths of slurm-related files for active jobs
+            Dictionary with paths of slurm-related files for active jobs
     """
 
     wait_thread_cls = FractalSlurmWaitThread
@@ -164,7 +164,7 @@ class FractalSlurmExecutor(SlurmExecutor):
     common_script_lines: list[str]
     working_dir: Path
     working_dir_user: Path
-    map_jobid_to_slurm_files: dict  # FIXME: make more precise
+    map_jobid_to_slurm_files: dict[str, tuple[str, str, str]]
 
     def __init__(
         self,
