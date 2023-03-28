@@ -79,6 +79,10 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
     target_num_jobs: int
     max_num_jobs: int
 
+    def to_sbatch_lines(self) -> list[str]:
+        raise NotImplementedError()
+
+    """
     def preamble_lines(self) -> list[str]:
 
         raise NotImplementedError()
@@ -95,6 +99,7 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
         lines.append(f"#SBATCH --cpus-per-task {self.cpus_per_task}")
         lines.append(f"#SBATCH --mem {mem_per_job_MB}M")
         # FIXME: THIS IS NOT COMPLETE...
+    """
 
 
 def get_default_slurm_config():
