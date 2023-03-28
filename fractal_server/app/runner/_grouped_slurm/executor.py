@@ -548,6 +548,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         self,
         fun: Callable[..., Any],
         *args,
+        slurm_config: SlurmConfig,
         additional_setup_lines: Optional[list[str]] = None,
         wftask_file_prefix: Optional[str] = None,
         wftask_order: Optional[str] = None,
@@ -570,6 +571,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         # FIXME: I guess all what follows in this method should go and be
         # replaced by an appropriate call to submit_multitask
+        # FIXME: do something with slurm_config
 
         # Define slurm-job-related files
         job = SlurmJob(
