@@ -1,8 +1,9 @@
+import pytest
+from devtools import debug
+
 from fractal_server.app.runner._grouped_slurm._batching_heuristics import (
     heuristics,
 )
-import pytest
-from devtools import debug
 
 
 @pytest.mark.parametrize(
