@@ -66,6 +66,7 @@ class SlurmJob:
         slurm_script: Script to be submitted via `sbatch` command.
         slurm_stdout: SLURM stdout file.
         slurm_stderr: SLURM stderr file.
+        slurm_config: SlurmConfig object - FIXME
     """
 
     # Job-related attributes
@@ -400,6 +401,10 @@ class FractalSlurmExecutor(SlurmExecutor):
             max_mem_per_job=slurm_config.max_mem_per_job,
             max_num_jobs=slurm_config.max_num_jobs,
         )
+        slurm_config.n_parallel_ftasks_per_script = (
+            n_parallel_ftasks_per_script  # noqa
+        )
+        slurm_config.n_ftasks_per_script = n_ftasks_per_script
         debug(n_ftasks_per_script)
         debug(n_parallel_ftasks_per_script)
 
@@ -591,6 +596,11 @@ class FractalSlurmExecutor(SlurmExecutor):
         # FIXME: do something with slurm_config
         if not slurm_config:
             slurm_config = get_default_slurm_config()
+
+        # Adapt slurm_config to the fact that this is a single-task SlurmJob
+        # instance
+        slurm_config.n_ftasks_per_script = 1
+        slurm_config.n_parallel_ftasks_per_script = 1
 
         # Define slurm-job-related files
         job = SlurmJob(
