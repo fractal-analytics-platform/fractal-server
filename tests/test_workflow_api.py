@@ -260,39 +260,38 @@ async def test_delete_workflow_task(
         assert res.status_code == 201
         wf_id = res.json()["id"]
 
-        workflow = await client.get(f"api/v1/workflow/{wf_id}")
-        t0 = add_task(client, 0)
-        t1 = add_task(client, 1)
-        t2 = add_task(client, 2)
+        workflow = await get_workflow(client, wf_id)
+        t0 = await add_task(client, 0)
+        t1 = await add_task(client, 1)
+        t2 = await add_task(client, 2)
 
-        payload = {"task_id": t1["id"]}  # FIXME
-        res = await client.post(
-            f"api/v1/workflow/{wf_id}/add-task/",
-            json=payload,
-        )
-
-        await workflow.insert_task(t0.id, db=db)
-        await workflow.insert_task(t1.id, db=db)
-        await workflow.insert_task(t2.id, db=db)
-        await db.refresh(workflow)
+        for t in [t0, t1, t2]:
+            payload = {"task_id": t["id"]}
+            res = await client.post(
+                f"api/v1/workflow/{wf_id}/add-task/",
+                json=payload,
+            )
 
         assert (
             len((await db.execute(select(WorkflowTask))).scalars().all()) == 3
         )
-        assert len(workflow.task_list) == 3
-        for i, task in enumerate(workflow.task_list):
-            assert task.order == i
+        workflow = await get_workflow(client, wf_id)
+        assert len(workflow["task_list"]) == 3
+        for i, task in enumerate(workflow["task_list"]):
+            assert task["order"] == i
 
-        res = await client.delete(f"api/v1/workflow/{wf_id}/rm-task/{t1.id}")
+        res = await client.delete(
+            f"api/v1/workflow/{wf_id}/rm-task/{t1['id']}"
+        )
         assert res.status_code == 204
 
-        await db.refresh(workflow)
+        workflow = await get_workflow(client, wf_id)
         assert (
             len((await db.execute(select(WorkflowTask))).scalars().all()) == 2
         )
-        assert len(workflow.task_list) == 2
-        for i, task in enumerate(workflow.task_list):
-            assert task.order == i
+        assert len(workflow["task_list"]) == 2
+        for i, task in enumerate(workflow["task_list"]):
+            assert task["order"] == i
 
 
 async def test_get_project_workflows(
