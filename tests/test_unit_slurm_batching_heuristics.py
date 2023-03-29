@@ -28,6 +28,7 @@ clusters = [
 ]
 
 print("")
+# FIXME: Add n_ftasks_tot column
 cols = (
     "Cluster   | "
     "cpus/task | "
@@ -80,6 +81,7 @@ def test_heuristics(
     cluster_index = clusters.index(cluster)
     cluster_name = f"cluster_{cluster_index}"
 
+    # FIXME: Add n_ftasks_tot column
     output = (
         f"{cluster_name} | "
         f"{cpus_per_task:9d} | "
