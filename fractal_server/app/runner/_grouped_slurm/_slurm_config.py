@@ -287,8 +287,12 @@ def set_slurm_config(
     logging.warning(needs_gpu)
     if needs_gpu:
         for key, val in slurm_env["if_needs_gpu"].items():
-            logging.warning(key, val)
-            slurm_dict[key] = val
+            logging.warning(f"{key=}, {val=}")
+            if key != "mem":
+                slurm_dict[key] = value
+            else:
+                mem_per_task_MB = _parse_mem_value(value)
+            slurm_dict["mem_per_task_MB"] = mem_per_task_MB
 
     # Number of CPUs per task, for multithreading
     if "cpus_per_task" in wftask.overridden_meta.keys():
