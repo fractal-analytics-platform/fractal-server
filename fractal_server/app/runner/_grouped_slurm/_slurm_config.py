@@ -94,7 +94,7 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
 
         return sorted(self.extra_lines, key=_no_prefix)
 
-    def sorted_script_lines(self, script_lines: list[str]) -> list[str]:
+    def sort_script_lines(self, script_lines: list[str]) -> list[str]:
         """
         Return a copy of `script_lines`, where lines are sorted as in:
         1. `self.shebang_line` (if present);
