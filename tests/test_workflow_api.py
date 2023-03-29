@@ -544,10 +544,8 @@ reorder_cases.append([4, 3, 5, 6, 1, 2])
 async def test_reorder_task_list(
     reordered_workflowtask_ids,
     client,
-    db,
     MockCurrentUser,
     project_factory,
-    task_factory,
 ):
     """
     GIVEN a workflow with a task_list
@@ -561,11 +559,10 @@ async def test_reorder_task_list(
 
         # Create project and empty workflow
         project = await project_factory(user)
-        workflow = {"name": "WF", "project_id": project.id}
-        res = await client.post("api/v1/workflow/", json=workflow)
+        payload = {"name": "WF", "project_id": project.id}
+        res = await client.post("api/v1/workflow/", json=payload)
+        assert res.status_code == 201
         wf_id = res.json()["id"]
-        res = await client.get(f"api/v1/workflow/{wf_id}")
-        workflow = res.json()
 
         # Make no-op API call to reorder an empty task list
         res = await client.patch(
@@ -583,6 +580,7 @@ async def test_reorder_task_list(
             )
 
         # At this point, all WorkflowTask attributes have a predictable order
+        workflow = await get_workflow(client, wf_id)
         old_worfklowtask_orders = [
             wft["order"] for wft in workflow["task_list"]
         ]
