@@ -401,7 +401,7 @@ async def test_patch_workflow_task(
 
 
 async def test_patch_workflow_task_failures(
-    db, client, MockCurrentUser, project_factory, task_factory
+    client, MockCurrentUser, project_factory
 ):
     """
     GIVEN a WorkflowTask
@@ -431,10 +431,8 @@ async def test_patch_workflow_task_failures(
             json={"task_id": t2["id"]},
         )
 
-        res = await client.get(f"api/v1/workflow/{wf1_id}")
-        workflow1 = res.json()
-        res = await client.get(f"api/v1/workflow/{wf2_id}")
-        workflow2 = res.json()
+        workflow1 = await get_workflow(client, wf1_id)
+        workflow2 = await get_workflow(client, wf2_id)
         workflow_task_1 = workflow1["task_list"][0]
         workflow_task_2 = workflow2["task_list"][0]
 
