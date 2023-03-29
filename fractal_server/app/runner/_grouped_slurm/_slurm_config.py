@@ -23,7 +23,6 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-from devtools import debug
 from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import Field
@@ -194,7 +193,7 @@ def set_slurm_config(
     if not config_path:
         settings = Inject(get_settings)
         config_path = settings.FRACTAL_SLURM_CONFIG_FILE
-        debug(f"LOADING {settings.FRACTAL_SLURM_CONFIG_FILE=}")
+        logging.warning(f"LOADING {settings.FRACTAL_SLURM_CONFIG_FILE=}")
     try:
         with config_path.open("r") as f:  # type: ignore
             slurm_env = json.load(f)
@@ -204,9 +203,9 @@ def set_slurm_config(
             f"Original error:\n{str(e)}"
         )
 
-    debug("set_slurm_config")
-    debug(wftask.overridden_meta)
-    debug(slurm_env)
+    logging.warning("set_slurm_config")
+    logging.warning(wftask.overridden_meta)
+    logging.warning(slurm_env)
     print("--------------------------------------------")
 
     slurm_dict = {}
@@ -235,15 +234,15 @@ def set_slurm_config(
     # 2. This block of definitions has lower priority than whatever comes next
     #    (i.e. from WorkflowTask.overridden_meta).
     needs_gpu = wftask.overridden_meta.get("needs_gpu", False)
-    debug(needs_gpu)
+    logging.warning(needs_gpu)
     if needs_gpu:
         for key, val in slurm_env["if_needs_gpu"].items():
-            debug(key, val)
+            logging.warning(key, val)
             slurm_dict[key] = val
 
     # Number of CPUs per task, for multithreading
     cpus_per_task = int(wftask.overridden_meta["cpus_per_task"])
-    debug(cpus_per_task)
+    logging.warning(cpus_per_task)
     slurm_dict["cpus_per_task"] = cpus_per_task
 
     # Required memory per task, in MB
@@ -287,8 +286,8 @@ def set_slurm_config(
     n_parallel_ftasks_per_script = wftask.overridden_meta.get(
         "n_parallel_ftasks_per_script", None
     )
-    debug(n_ftasks_per_script)
-    debug(n_parallel_ftasks_per_script)
+    logging.warning(n_ftasks_per_script)
+    logging.warning(n_parallel_ftasks_per_script)
 
     slurm_dict["n_ftasks_per_script"] = n_ftasks_per_script
     slurm_dict["n_parallel_ftasks_per_script"] = n_parallel_ftasks_per_script

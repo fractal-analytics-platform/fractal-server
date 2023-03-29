@@ -27,7 +27,6 @@ from typing import Optional
 import cloudpickle
 from cfut import SlurmExecutor
 from cfut.util import random_string
-from devtools import debug
 
 from ....config import get_settings
 from ....syringe import Inject
@@ -271,7 +270,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             jobid:
                 integer job id as returned by `sbatch` submission
         """
-        debug(sbatch_script)
+        logging.warning(sbatch_script)
 
         # Write script content to a file and prepare submission command
         with open(script_path, "w") as f:
@@ -399,8 +398,8 @@ class FractalSlurmExecutor(SlurmExecutor):
             n_parallel_ftasks_per_script
         )
         slurm_config.n_ftasks_per_script = n_ftasks_per_script
-        debug(n_ftasks_per_script)
-        debug(n_parallel_ftasks_per_script)
+        logging.warning(n_ftasks_per_script)
+        logging.warning(n_parallel_ftasks_per_script)
 
         # Divide arguments in batches of `n_tasks_per_script` tasks each
         args_batches = []
@@ -543,9 +542,9 @@ class FractalSlurmExecutor(SlurmExecutor):
             cloudpickle=cloudpickle.__version__,
             fractal_server=__VERSION__,
         )
-        debug(list_list_args)
+        logging.warning(list_list_args)
         for ind_task, args_list in enumerate(list_list_args):
-            debug(args_list)
+            logging.warning(args_list)
             kwargs_dict = list_list_kwargs[ind_task]
             funcser = cloudpickle.dumps(
                 (versions, fun, args_list, kwargs_dict)
@@ -617,7 +616,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             component_indices=None,
             single_task_submission=True,
         )
-        debug(fut)
+        logging.warning(fut)
         return fut
 
     def _prepare_JobExecutionError(
@@ -679,7 +678,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             if not self.jobs:
                 self.jobs_empty_cond.notify_all()
 
-        debug(job)
+        logging.warning(job)
 
         # Handle all uncaught exceptions in this broad try/except block
         try:
@@ -717,7 +716,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             for ind_out_path, out_path in enumerate(out_paths):
                 in_path = in_paths[ind_out_path]
 
-                debug(out_path)
+                logging.warning(out_path)
 
                 # The output pickle file may be missing because of some slow
                 # filesystem operation; wait some time before considering it as
@@ -765,15 +764,15 @@ class FractalSlurmExecutor(SlurmExecutor):
                 # dictionary) or an ExceptionProxy object; in the latter
                 # case, the ExceptionProxy definition is also part of the
                 # pickle file (thanks to cloudpickle.dumps).
-                debug(cloudpickle.loads(outdata))
+                logging.warning(cloudpickle.loads(outdata))
                 success, output = cloudpickle.loads(outdata)
                 try:
                     if success:
                         outputs.append(output)
                     else:
                         proxy = output
-                        debug(proxy)
-                        debug(vars(proxy))
+                        logging.warning(proxy)
+                        logging.warning(vars(proxy))
                         if proxy.exc_type_name == "JobExecutionError":
                             job_exc = self._prepare_JobExecutionError(
                                 jobid, info=proxy.kwargs.get("info", None)
@@ -921,7 +920,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         Submit function for execution on a SLURM cluster
         """
 
-        debug(job)
+        logging.warning(job)
 
         # Prepare commands to be included in SLURM submission script
         settings = Inject(get_settings)
@@ -930,7 +929,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         )
 
         cmdlines = []
-        debug(vars(job))
+        logging.warning(vars(job))
         for ind_task in range(job.num_tasks_tot):
             input_pickle_file = job.input_pickle_files[ind_task]
             output_pickle_file = job.output_pickle_files[ind_task]
@@ -1001,7 +1000,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                 f"#SBATCH --out={slurm_out_path}",
             ]
         )
-        debug(script_lines)
+        logging.warning(script_lines)
 
         # Complete script preamble
         script_lines.append("\n")
@@ -1011,7 +1010,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         while tmp_list_commands:
             if tmp_list_commands:
                 cmd = tmp_list_commands.pop(0)  # take first element
-                debug(cmd)
+                logging.warning(cmd)
                 script_lines.append(
                     "srun --ntasks=1 --cpus-per-task=$SLURM_CPUS_PER_TASK "
                     f"--mem={mem_per_task_MB}MB "
