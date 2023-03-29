@@ -6,35 +6,31 @@ from fractal_server.app.runner._grouped_slurm._batching_heuristics import (
 )
 
 
+clusters = [
+    dict(
+        target_cpus_per_job=8,
+        max_cpus_per_job=16,
+        target_mem_per_job=31000,
+        max_mem_per_job=62000,
+        target_num_jobs=100,
+        max_num_jobs=200,
+    ),
+    dict(
+        target_cpus_per_job=48,
+        max_cpus_per_job=96,
+        target_mem_per_job=62000,
+        max_mem_per_job=125000,
+        target_num_jobs=5,
+        max_num_jobs=10,
+    ),
+]
+
+
+@pytest.mark.parametrize("n_ftasks_tot", [1, 10, 40, 96, 400])
 @pytest.mark.parametrize(
-    "n_ftasks_per_script,n_parallel_ftasks_per_script",
-    [
-        (None, None),  # use the heuristics
-        (20, 1),  # ask for 20-tasks job with no parallelism
-    ],
+    "task_requirements", [(1, "4G"), (16, "62G"), (4, "16G")]
 )
-@pytest.mark.parametrize(
-    "n_ftasks_tot,cpus_per_task,mem_per_task",  # task properties
-    [
-        (1, 1, 7000),  # yokogawa-to-zarr task for 1 well
-        (10, 1, 7000),  # yokogawa-to-zarr task for 10 wells
-        (400, 1, 7000),  # yokogawa-to-zarr task for 400 wells
-        (1, 16, 63000),  # cellpose task for 1 well
-        (10, 16, 63000),  # cellpose task for 10 wells
-        (400, 16, 63000),  # cellpose task for 400 wells
-    ],
-)
-@pytest.mark.parametrize(
-    "max_cpus_per_job,max_mem_per_job,max_num_jobs",  # cluster configuration  # noqa
-    [
-        (16, 64000, 1000),  # nodes with 16 CPUs, 64G memory, max 1000 jobs
-        (
-            192,
-            805000,
-            100,
-        ),  # nodes with 192 CPUs, 805G memory, max 100 jobs  # noqa
-    ],
-)
+@pytest.mark.parametrize("cluster", clusters)
 def test_heuristics(
     n_ftasks_per_script: int | None,
     n_parallel_ftasks_per_script: int | None,
