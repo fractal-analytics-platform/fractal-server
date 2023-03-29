@@ -284,31 +284,35 @@ def set_slurm_config(
     # 2. This block of definitions has lower priority than whatever comes next
     #    (i.e. from WorkflowTask.overridden_meta).
     needs_gpu = wftask.overridden_meta.get("needs_gpu", False)
-    logging.warning(needs_gpu)
+    logging.warning(f"{needs_gpu=}")
     if needs_gpu:
         for key, val in slurm_env["if_needs_gpu"].items():
-            logging.warning(f"{key=}, {val=}")
+            logging.warning(f"if_needs_gpu options: {key=}, {val=}")
             if key != "mem":
                 slurm_dict[key] = value
             else:
                 mem_per_task_MB = _parse_mem_value(value)
             slurm_dict["mem_per_task_MB"] = mem_per_task_MB
+    logging.warning(f"After {needs_gpu=}, {slurm_dict=}")
 
     # Number of CPUs per task, for multithreading
     if "cpus_per_task" in wftask.overridden_meta.keys():
         cpus_per_task = int(wftask.overridden_meta["cpus_per_task"])
         logging.warning(cpus_per_task)
         slurm_dict["cpus_per_task"] = cpus_per_task
+    logging.warning(f"After cpus_per_task block, {slurm_dict=}")
 
     # Required memory per task, in MB
     if "mem" in wftask.overridden_meta.keys():
         raw_mem = wftask.overridden_meta["mem"]
         mem_per_task_MB = _parse_mem_value(raw_mem)
         slurm_dict["mem_per_task_MB"] = mem_per_task_MB
+    logging.warning(f"After mem block, {slurm_dict=}")
 
     # Job name
     job_name = wftask.task.name.replace(" ", "_")
     slurm_dict["job_name"] = job_name
+    logging.warning(f"After job_name block, {slurm_dict=}")
 
     # Optional SLURM arguments and extra lines
     for key in ["time", "account", "gres", "constraint"]:
@@ -321,6 +325,7 @@ def set_slurm_config(
         logging.warning(f"Removing repeated elements from {extra_lines=}.")
         extra_lines = list(set(extra_lines))
     slurm_dict["extra_lines"] = extra_lines
+    logging.warning(f"After extra_lines block, {slurm_dict=}")
 
     # Job-batching parameters (if None, they will be determined heuristically)
     n_ftasks_per_script = wftask.overridden_meta.get(
@@ -329,8 +334,8 @@ def set_slurm_config(
     n_parallel_ftasks_per_script = wftask.overridden_meta.get(
         "n_parallel_ftasks_per_script", None
     )
-    logging.warning(n_ftasks_per_script)
-    logging.warning(n_parallel_ftasks_per_script)
+    logging.warning(f"{n_ftasks_per_script=}")
+    logging.warning(f"{n_parallel_ftasks_per_script=}")
 
     slurm_dict["n_ftasks_per_script"] = n_ftasks_per_script
     slurm_dict["n_parallel_ftasks_per_script"] = n_parallel_ftasks_per_script
