@@ -360,6 +360,7 @@ async def test_patch_workflow_task(
         project = await project_factory(user)
         workflow = {"name": "WF", "project_id": project.id}
         res = await client.post("api/v1/workflow/", json=workflow)
+        assert res.status_code == 201
         wf_id = res.json()["id"]
 
         t = await add_task(client, 0)
@@ -368,6 +369,7 @@ async def test_patch_workflow_task(
             f"api/v1/workflow/{wf_id}/add-task/",
             json=payload,
         )
+        assert res.status_code == 201
 
         workflow = await get_workflow(client, wf_id)
 
