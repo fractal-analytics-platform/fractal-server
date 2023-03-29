@@ -1,6 +1,7 @@
 import math
 
 import pytest
+from devtools import debug
 
 from fractal_server.app.runner._grouped_slurm._batching_heuristics import (
     heuristics,
@@ -42,7 +43,7 @@ print(cols)
 
 @pytest.mark.parametrize("n_ftasks_tot", [1, 10, 40, 96, 400])
 @pytest.mark.parametrize(
-    "task_requirements", [(1, 4000), (16, 62000), (4, 16000)]
+    "task_requirements", [(1, 4000), (4, 16000), (16, 61000)]
 )
 @pytest.mark.parametrize("cluster", clusters)
 def test_heuristics(
@@ -69,6 +70,11 @@ def test_heuristics(
         target_num_jobs=target_num_jobs,
         max_num_jobs=max_num_jobs,
     )
+    if n_parallel_ftasks_per_script == 0:
+        debug(cluster)
+        debug(task_requirements)
+        debug(n_ftasks_tot)
+        raise ValueError
     num_jobs = math.ceil(n_ftasks_tot / n_ftasks_per_script)
     parallelism = n_parallel_ftasks_per_script / n_ftasks_per_script
     cluster_index = clusters.index(cluster)
