@@ -203,6 +203,9 @@ async def test_post_newtask(
                 f"api/v1/workflow/{wf_id}/add-task/",
                 json=payload,
             )
+            workflow = await get_workflow(client, wf_id)
+            assert len(workflow["task_list"]) == index + 1
+            assert workflow["task_list"][-1]["task"] == t
 
         workflow = await get_workflow(client, wf_id)
         assert len(workflow["task_list"]) == 2
