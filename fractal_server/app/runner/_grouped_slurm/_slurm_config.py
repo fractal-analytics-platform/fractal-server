@@ -57,6 +57,7 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
     cpus_per_task: int
     mem_per_task_MB: int
     prefix: str = "#SBATCH"
+    shebang_line: str = "#!/bin/sh"
 
     # Optional SLURM parameters
     job_name: Optional[str] = None
@@ -79,7 +80,7 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
     target_num_jobs: int
     max_num_jobs: int
 
-    def _sorted_extra_lines(self) -> tuple[list[str], list[str]]:
+    def _sorted_extra_lines(self) -> list[str]:
         """
         Return a copy of self.extra_lines, where lines starting with
         `self.prefix` are listed first.
@@ -92,6 +93,24 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
                 return 1
 
         return sorted(self.extra_lines, key=_no_prefix)
+
+    def sorted_script_lines(self, script_lines: list[str]) -> list[str]:
+        """
+        Return a copy of `script_lines`, where lines are sorted as in:
+        1. `self.shebang_line` (if present);
+        2. Lines starting with `self.prefix`;
+        3. Other lines.
+        """
+
+        def _sorting_function(_line):
+            if _line == self.shebang_line:
+                return 0
+            elif _line.startswith(self.prefix):
+                return 1
+            else:
+                return 2
+
+        return sorted(script_lines, key=_sorting_function)
 
     def to_sbatch_preamble(self) -> list[str]:
         """
@@ -110,7 +129,7 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
             self.n_parallel_ftasks_per_script * self.mem_per_task_MB
         )
         lines = [
-            "#!/bin/sh",
+            self.shebang,
             f"{self.prefix} --partition={self.partition}",
             f"{self.prefix} --ntasks={self.n_parallel_ftasks_per_script}",
             f"{self.prefix} --cpus-per-task={self.cpus_per_task}",

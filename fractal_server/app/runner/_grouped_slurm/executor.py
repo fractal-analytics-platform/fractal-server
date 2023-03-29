@@ -595,9 +595,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         else:
             slurm_file_prefix = f"_{random_string()}"
 
-        # FIXME: I guess all what follows in this method should go and be
-        # replaced by an appropriate call to submit_multitask
-        # FIXME: do something with slurm_config
         if not slurm_config:
             slurm_config = get_default_slurm_config()
 
@@ -993,13 +990,15 @@ class FractalSlurmExecutor(SlurmExecutor):
         # Prepare SLURM preamble based on SlurmConfig object
         script_lines = slurm_config.to_sbatch_preamble()
 
-        # Extend SLURM preamble with variable which are not in SlurmConfig
+        # Extend SLURM preamble with variable which are not in SlurmConfig, and
+        # fix their order
         script_lines.extend(
             [
                 f"#SBATCH --err={slurm_err_path}",
                 f"#SBATCH --out={slurm_out_path}",
             ]
         )
+        script_lines = slurm_config.sort_script_lines(script_lines)
         logging.warning(script_lines)
 
         # Complete script preamble
@@ -1019,4 +1018,5 @@ class FractalSlurmExecutor(SlurmExecutor):
         script_lines.append("wait\n")
 
         script = "\n".join(script_lines)
+        logging.warning(f"\n{script}\n")
         return script
