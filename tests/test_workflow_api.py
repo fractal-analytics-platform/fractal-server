@@ -146,9 +146,7 @@ async def test_delete_workflow(
         assert len(res) == 0
 
 
-async def test_get_workflow(
-    db, client, MockCurrentUser, project_factory, task_factory
-):
+async def test_get_workflow(client, MockCurrentUser, project_factory):
     """
     GIVEN a Workflow in the db
     WHEN the endpoint to GET a Workflow by its id is called
@@ -174,9 +172,7 @@ async def test_get_workflow(
         assert res.json() == workflow
 
 
-async def test_post_newtask(
-    db, client, MockCurrentUser, project_factory, task_factory
-):
+async def test_post_newtask(client, MockCurrentUser, project_factory):
     """
     GIVEN a Workflow with a list of WorkflowTasks
     WHEN the endpoint to POST a new WorkflowTask inside
@@ -238,7 +234,7 @@ async def test_post_newtask(
 
 
 async def test_delete_workflow_task(
-    db, client, MockCurrentUser, project_factory, task_factory
+    db, client, MockCurrentUser, project_factory
 ):
     """
     GIVEN a Workflow with a list of WorkflowTasks
@@ -295,7 +291,7 @@ async def test_delete_workflow_task(
 
 
 async def test_get_project_workflows(
-    db, client, MockCurrentUser, project_factory, task_factory
+    db, client, MockCurrentUser, project_factory
 ):
     """
     GIVEN a Project containing three Workflows
@@ -348,9 +344,7 @@ async def test_patch_workflow(client, MockCurrentUser, project_factory):
         assert len(res.json()) == 1
 
 
-async def test_patch_workflow_task(
-    db, client, MockCurrentUser, project_factory, task_factory
-):
+async def test_patch_workflow_task(client, MockCurrentUser, project_factory):
     """
     GIVEN a WorkflowTask
     WHEN the endpoint to PATCH a WorkflowTask is called
