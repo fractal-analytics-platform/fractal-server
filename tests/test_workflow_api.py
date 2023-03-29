@@ -362,7 +362,6 @@ async def test_patch_workflow_task(
         res = await client.post("api/v1/workflow/", json=workflow)
         wf_id = res.json()["id"]
 
-        res = await client.get(f"api/v1/workflow/{wf_id}")
         t = await add_task(client, 0)
         payload = {"task_id": t["id"]}
         res = await client.post(
@@ -376,8 +375,8 @@ async def test_patch_workflow_task(
 
         payload = dict(args={"a": 123, "d": 321}, meta={"executor": "cpu-low"})
         res = await client.patch(
-            f"api/v1/workflow/{workflow.id}/"
-            f"edit-task/{workflow.task_list[0].id}",
+            f"api/v1/workflow/{workflow['id']}/"
+            f"edit-task/{workflow['task_list'][0]['id']}",
             json=payload,
         )
 
@@ -389,8 +388,8 @@ async def test_patch_workflow_task(
 
         payload_up = dict(args={"a": {"c": 43}, "b": 123})
         res = await client.patch(
-            f"api/v1/workflow/{workflow.id}/"
-            f"edit-task/{workflow.task_list[0].id}",
+            f"api/v1/workflow/{workflow['id']}/"
+            f"edit-task/{workflow['task_list'][0]['id']}",
             json=payload_up,
         )
         patched_workflow_task_up = res.json()
