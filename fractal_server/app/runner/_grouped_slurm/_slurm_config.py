@@ -129,7 +129,7 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
             self.n_parallel_ftasks_per_script * self.mem_per_task_MB
         )
         lines = [
-            self.shebang,
+            self.shebang_line,
             f"{self.prefix} --partition={self.partition}",
             f"{self.prefix} --ntasks={self.n_parallel_ftasks_per_script}",
             f"{self.prefix} --cpus-per-task={self.cpus_per_task}",
