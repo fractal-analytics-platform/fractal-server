@@ -628,14 +628,15 @@ async def test_reorder_task_list_fail(
     async with MockCurrentUser(persist=True) as user:
         # Create project, workflow, tasks, workflowtasks
         project = await project_factory(user)
-        workflow = {"name": "WF", "project_id": project.id}
-        res = await client.post("api/v1/workflow/", json=workflow)
+        payload = {"name": "WF", "project_id": project.id}
+        res = await client.post("api/v1/workflow/", json=payload)
         wf_id = res.json()["id"]
-        workflow = await db.get(Workflow, wf_id)
         for i in range(num_tasks):
-            t = await task_factory(name=f"task-{i}")
-            await workflow.insert_task(t.id, db=db)
-            await db.refresh(workflow)
+            t = await add_task(client, i)
+            res = await client.post(
+                f"api/v1/workflow/{wf_id}/add-task/",
+                json=dict(task_id=t["id"]),
+            )
 
         # Invalid calls to PATCH endpoint to reorder the task_list
 
