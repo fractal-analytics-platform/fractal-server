@@ -128,6 +128,33 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
         return lines
 
 
+def _parse_mem_value(raw_mem):
+    """
+    FIXME: add docstring and unit test
+    """
+    error_msg = (
+        f'"{raw_mem}" is not a valid specification of memory '
+        "requirements. Some valid examples: 93, 71M, 93G, 71T."
+    )
+
+    # Preliminary check
+    if not raw_mem[0].isdigit():
+        raise ValueError(error_msg)
+
+    if isinstance(raw_mem, int) or raw_mem.isdigit():
+        mem_MB = int(raw_mem)
+    elif raw_mem.endswith("M"):
+        mem_MB = int(raw_mem.strip("M"))
+    elif raw_mem.endswith("G"):
+        mem_MB = int(raw_mem.strip("G")) * 10**3
+    elif raw_mem.endswith("T"):
+        mem_MB = int(raw_mem.strip("T")) * 10**6
+    else:
+        raise ValueError(error_msg)
+
+    return mem_MB
+
+
 def get_default_slurm_config():
     """
     FIXME docstring
@@ -153,9 +180,11 @@ def set_slurm_config(
     config_path: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """
-    Collect SLURM configuration parameters
+    Collect WorfklowTask-specific configuration parameters from different
+    sources, and inject them for execution
 
-    Inject SLURM configuration for single task execution.
+    Here goes all the logic for reading attributes from the appropriate sources
+    and transforming them into an appropriate SLURM configuration
 
     For now, this is the reference implementation for argument
     `submit_setup_call` of
@@ -186,14 +215,11 @@ def set_slurm_config(
             as to set extra options in the sbatch script.
     """
 
-    # Here goes all the logic for reading attributes from the appropriate
-    # sources and transforming them into an appropriate SLURM configuration
-
-    # FIXME: replace this hard-coded dict with a file read
+    # Read Fracatal SLURM configuration file
     if not config_path:
         settings = Inject(get_settings)
         config_path = settings.FRACTAL_SLURM_CONFIG_FILE
-        logging.warning(f"LOADING {settings.FRACTAL_SLURM_CONFIG_FILE=}")
+    logging.warning(f"Now loading {config_path=}")
     try:
         with config_path.open("r") as f:  # type: ignore
             slurm_env = json.load(f)
@@ -202,11 +228,9 @@ def set_slurm_config(
             f"Error while loading {config_path=}. "
             f"Original error:\n{str(e)}"
         )
-
-    logging.warning("set_slurm_config")
-    logging.warning(wftask.overridden_meta)
-    logging.warning(slurm_env)
-    print("--------------------------------------------")
+    logging.warning(
+        f"WorkflowTask/Task meta attribute: {wftask.overridden_meta=}"
+    )
 
     slurm_dict = {}
 
@@ -225,7 +249,14 @@ def set_slurm_config(
         if not value:
             continue
         # Add this key-value pair to slurm_dict
-        slurm_dict[key] = value
+        if key != "mem":
+            slurm_dict[key] = value
+        else:
+            mem_per_task_MB = _parse_mem_value(value)
+            slurm_dict["mem_per_task_MB"] = mem_per_task_MB
+
+    logging.warning("Fractal SLURM configuration file: {slurm_env=}")
+    logging.warning("Options retained: {slurm_dict=}")
 
     # GPU-related options
     # Notes about priority:
@@ -241,27 +272,16 @@ def set_slurm_config(
             slurm_dict[key] = val
 
     # Number of CPUs per task, for multithreading
-    cpus_per_task = int(wftask.overridden_meta["cpus_per_task"])
-    logging.warning(cpus_per_task)
-    slurm_dict["cpus_per_task"] = cpus_per_task
+    if "cpus_per_task" in wftask.overridden_meta.keys():
+        cpus_per_task = int(wftask.overridden_meta["cpus_per_task"])
+        logging.warning(cpus_per_task)
+        slurm_dict["cpus_per_task"] = cpus_per_task
 
     # Required memory per task, in MB
-    raw_mem = wftask.overridden_meta["mem"]
-    # FIXME: treat "M100M"
-    if isinstance(raw_mem, int) or raw_mem.isdigit():
-        mem = int(raw_mem)
-    elif raw_mem.endswith("M"):
-        mem = int(raw_mem.strip("M"))
-    elif raw_mem.endswith("G"):
-        mem = int(raw_mem.strip("G")) * 10**3
-    elif raw_mem.endswith("T"):
-        mem = int(raw_mem.strip("T")) * 10**6
-    else:
-        raise ValueError(
-            f"{mem=} is not a valid specification of memory requirements. "
-            "Valid examples are: 93, 71M, 93G, 71T."
-        )
-    slurm_dict["mem_per_task_MB"] = mem
+    if "mem" in wftask.overridden_meta.keys():
+        raw_mem = wftask.overridden_meta["mem"]
+        mem_per_task_MB = _parse_mem_value(raw_mem)
+        slurm_dict["mem_per_task_MB"] = mem_per_task_MB
 
     # Job name
     job_name = wftask.task.name.replace(" ", "_")
@@ -299,7 +319,9 @@ def set_slurm_config(
     slurm_dict["max_num_jobs"] = slurm_env["number_of_jobs"]["max"]
 
     # Put everything together
+    logging.warning(f"Now create a SlurmConfig object based on {slurm_dict=}")
     slurm_config = SlurmConfig(**slurm_dict)
+    logging.warning(f"{slurm_config=}")
 
     # Gather information on task files, to be used in wftask_file_prefix and
     # wftask_order
