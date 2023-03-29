@@ -322,9 +322,7 @@ async def test_get_project_workflows(
         assert len((await db.execute(select(Workflow))).scalars().all()) == 4
 
 
-async def test_patch_workflow(
-    db, client, MockCurrentUser, project_factory, task_factory
-):
+async def test_patch_workflow(client, MockCurrentUser, project_factory):
     """
     GIVEN a Workflow
     WHEN the endpoint to PATCH a Workflow is called
@@ -343,8 +341,7 @@ async def test_patch_workflow(
         patch = {"name": "new_WF"}
         res = await client.patch(f"api/v1/workflow/{wf_id}", json=patch)
 
-        res = await client.get(f"api/v1/workflow/{wf_id}")
-        new_workflow = res.json()
+        new_workflow = await get_workflow(client, wf_id)
         assert new_workflow["name"] == "new_WF"
 
         res = await client.get(f"api/v1/project/{project.id}/workflows/")
