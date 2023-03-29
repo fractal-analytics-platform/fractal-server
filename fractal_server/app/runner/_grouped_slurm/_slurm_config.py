@@ -156,20 +156,29 @@ def _parse_mem_value(raw_mem):
         "requirements. Some valid examples: 93, 71M, 93G, 71T."
     )
 
+    logging.warning(f"[_parse_mem_value] {raw_mem=}")
+
     # Preliminary check
     if not raw_mem[0].isdigit():
+        logging.warning("[_parse_mem_value] 0")
         raise ValueError(error_msg)
 
     if isinstance(raw_mem, int) or raw_mem.isdigit():
         mem_MB = int(raw_mem)
+        logging.warning("[_parse_mem_value] 1")
     elif raw_mem.endswith("M"):
         mem_MB = int(raw_mem.strip("M"))
+        logging.warning("[_parse_mem_value] 2")
     elif raw_mem.endswith("G"):
         mem_MB = int(raw_mem.strip("G")) * 10**3
+        logging.warning("[_parse_mem_value] 3")
     elif raw_mem.endswith("T"):
         mem_MB = int(raw_mem.strip("T")) * 10**6
+        logging.warning("[_parse_mem_value] 4")
     else:
         raise ValueError(error_msg)
+
+    logging.warning(f"[_parse_mem_value] {mem_MB=}")
 
     return mem_MB
 
@@ -274,8 +283,8 @@ def set_slurm_config(
             mem_per_task_MB = _parse_mem_value(value)
             slurm_dict["mem_per_task_MB"] = mem_per_task_MB
 
-    logging.warning("Fractal SLURM configuration file: {slurm_env=}")
-    logging.warning("Options retained: {slurm_dict=}")
+    logging.warning(f"Fractal SLURM configuration file: {slurm_env=}")
+    logging.warning(f"Options retained: {slurm_dict=}")
 
     # GPU-related options
     # Notes about priority:
