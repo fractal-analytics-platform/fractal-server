@@ -55,7 +55,7 @@ async def _get_project_check_owner(
     *,
     project_id: int,
     user_id: UUID4,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession,
 ) -> Project:
     """
     Check that user is a member of project and return
@@ -87,7 +87,7 @@ async def _get_dataset_check_owner(
     project_id: int,
     dataset_id: int,
     user_id: UUID4,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession,
 ) -> Dataset:
     """
     Check that user is a member of project and return
@@ -437,6 +437,7 @@ async def patch_dataset(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
+        db=db,
     )
 
     for key, value in dataset_update.dict(exclude_unset=True).items():
