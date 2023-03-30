@@ -18,6 +18,7 @@ import sys
 import time
 from concurrent import futures
 from copy import copy
+from copy import deepcopy
 from pathlib import Path
 from typing import Any
 from typing import Callable
@@ -476,12 +477,18 @@ class FractalSlurmExecutor(SlurmExecutor):
         """
         Submit a multi-task job to the pool, where each task is handled via the
         pickle/remote logic
+
+        FIXME: this function is valled multiple times, then it should not
+        modify slurm_config. But this could be avoided by just pushing up the
+        common_script_lines extension of extra_lines (note that this would mean
+        duplicating it, though, in submit and map)
         """
         fut: futures.Future = futures.Future()
 
         # Include common_script_lines in extra_lines
-        current_extra_lines = slurm_config.extra_lines or []
-        slurm_config.extra_lines = (
+        local_slurm_config = deepcopy(slurm_config)
+        current_extra_lines = local_slurm_config.extra_lines or []
+        local_slurm_config.extra_lines = (
             current_extra_lines + self.common_script_lines
         )
 
@@ -491,7 +498,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             slurm_file_prefix=slurm_file_prefix,
             wftask_file_prefix=wftask_file_prefix,
             num_tasks_tot=num_tasks_tot,
-            slurm_config=slurm_config,
+            slurm_config=local_slurm_config,
         )
         if single_task_submission:
             if job.num_tasks_tot > 1:
