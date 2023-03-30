@@ -123,7 +123,7 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
             )
         if self.extra_lines:
             if len(self.extra_lines) != len(set(self.extra_lines)):
-                raise ValueError("{self.extra_lines=} contains repetitions")
+                raise ValueError(f"{self.extra_lines=} contains repetitions")
 
         mem_per_job_MB = (
             self.n_parallel_ftasks_per_script * self.mem_per_task_MB
@@ -290,14 +290,14 @@ def set_slurm_config(
     batching_dict = slurm_env["fractal_task_batching"]
     slurm_dict["target_cpus_per_job"] = batching_dict["target_cpus_per_job"]
     slurm_dict["max_cpus_per_job"] = batching_dict["max_cpus_per_job"]
-    slurm_dict["target_num_jobs"] = batching_dict["target_num_jobs"]
-    slurm_dict["max_num_jobs"] = batching_dict["max_num_jobs"]
     slurm_dict["target_mem_per_job"] = _parse_mem_value(
         batching_dict["target_mem_per_job"]
     )
     slurm_dict["max_mem_per_job"] = _parse_mem_value(
         batching_dict["max_mem_per_job"]
     )
+    slurm_dict["target_num_jobs"] = batching_dict["target_num_jobs"]
+    slurm_dict["max_num_jobs"] = batching_dict["max_num_jobs"]
 
     logging.warning(f"Fractal SLURM configuration file: {slurm_env=}")
     logging.warning(f"Options retained: {slurm_dict=}")
