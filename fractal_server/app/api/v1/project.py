@@ -656,21 +656,29 @@ async def import_workflow_into_project(
         source = task.source
         name = task.name
         if not (source, name) in sourcename_to_id.keys():
-            stm = (
-                select(Task)
-                .where(Task.name == name)
-                .where(Task.source == source)
-            )
-            res = await db.execute(stm)
-            current_task = res.scalars().all()
-            if not len(current_task) == 1:
+            stm = select(Task).where(Task.source == source)
+            tasks_by_source = (await db.execute(stm)).scalars().all()
+            if not tasks_by_source:
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=(
-                        f"Found {len(current_task)} tasks with {source=}."
-                    ),
+                    detail=(f"Found 0 tasks with {source=}."),
                 )
-            sourcename_to_id[(source, name)] = current_task[0].id
+            else:
+                stm = (
+                    select(Task)
+                    .where(Task.source == source)
+                    .where(Task.name == name)
+                )
+                current_task = (await db.execute(stm)).scalars().all()
+                if len(current_task) != 1:
+                    raise HTTPException(
+                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                        detail=(
+                            f"Found {len(current_task)} tasks with "
+                            f"{name =} and {source=}."
+                        ),
+                    )
+                sourcename_to_id[(source, name)] = current_task[0].id
 
     # Create new Workflow
     workflow_create = WorkflowCreate(
