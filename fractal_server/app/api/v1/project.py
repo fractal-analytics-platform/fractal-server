@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from typing import List
 from typing import Optional
+from typing import Union
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
@@ -88,7 +89,7 @@ async def _get_dataset_check_owner(
     dataset_id: int,
     user_id: UUID4,
     db: AsyncSession,
-) -> Dataset:
+) -> dict[str, Union[Dataset, Project]]:
     """
     Check that user is a member of project and return
 
@@ -433,12 +434,13 @@ async def patch_dataset(
     """
     Edit a dataset associated to the current project
     """
-    db_dataset = await _get_dataset_check_owner(
+    output = await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
         user_id=user.id,
         db=db,
     )
+    db_dataset = output["dataset"]
 
     for key, value in dataset_update.dict(exclude_unset=True).items():
         setattr(db_dataset, key, value)
