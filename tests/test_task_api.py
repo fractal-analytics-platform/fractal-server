@@ -37,7 +37,7 @@ async def test_task_get_list(db, client, task_factory, MockCurrentUser):
 
 
 async def test_background_collection(
-    db, registered_client, dummy_task_package
+    db, client, MockCurrentUser, dummy_task_package
 ):
     """
     GIVEN a package and its installation environment
@@ -62,7 +62,8 @@ async def test_background_collection(
     await _background_collect_pip(
         state=state, venv_path=venv_path, task_pkg=task_pkg, db=db
     )
-    res = await registered_client.get(f"{PREFIX}/collect/{state.id}")
+    async with MockCurrentUser(persist=True):
+        res = await client.get(f"{PREFIX}/collect/{state.id}")
     debug(res.json())
     assert res.status_code == 200
     out_state = res.json()
