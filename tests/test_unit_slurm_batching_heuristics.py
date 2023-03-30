@@ -1,4 +1,5 @@
 import math
+from pathlib import Path
 
 import pytest
 from devtools import debug
@@ -27,19 +28,11 @@ clusters = [
     ),
 ]
 
-print("")
-# FIXME: Add n_ftasks_tot column
-cols = (
-    "Cluster   | "
-    "cpus/task | "
-    "mem/task | "
-    "| "
-    "#jobs | "
-    "tasks/script | "
-    "parallel_tasks/script | "
-    "Parallelism |"
-)
-print(cols)
+
+@pytest.fixture(scope="session")
+def table_path(tmpdir_factory) -> Path:
+    fn = tmpdir_factory.mktemp("table") / "table.txt"
+    return fn
 
 
 @pytest.mark.parametrize("n_ftasks_tot", [1, 10, 40, 96, 400])
@@ -51,7 +44,25 @@ def test_heuristics(
     n_ftasks_tot: int,
     task_requirements: tuple[int, int],
     cluster: tuple[dict[str, int]],
+    table_path: Path,
 ):
+
+    if not table_path.exists():
+        cols = (
+            "Cluster   | "
+            "cpus/task | "
+            "mem/task | "
+            "#tasks || "
+            "#jobs | "
+            "#tasks/script | "
+            "#parallel_tasks/script | "
+            "Parallelism |\n"
+        )
+        debug(table_path)
+        debug(cols)
+        with table_path.open("w") as f:
+            f.write(cols)
+
     cpus_per_task, mem_per_task = task_requirements[:]
     target_cpus_per_job = cluster["target_cpus_per_job"]
     max_cpus_per_job = cluster["max_cpus_per_job"]
@@ -81,18 +92,17 @@ def test_heuristics(
     cluster_index = clusters.index(cluster)
     cluster_name = f"cluster_{cluster_index}"
 
-    # FIXME: Add n_ftasks_tot column
     output = (
         f"{cluster_name} | "
         f"{cpus_per_task:9d} | "
         f"{mem_per_task:8d} | "
-        "| "
+        f"{n_ftasks_tot:6d} || "
         f"{num_jobs:5d} | "
-        f"{n_ftasks_per_script:12d} | "
-        f"{n_parallel_ftasks_per_script:21d} | "
+        f"{n_ftasks_per_script:13d} | "
+        f"{n_parallel_ftasks_per_script:22d} | "
         f"{parallelism:11.3f} |"
+        "\n"
     )
 
-    print()
-    print(output)
-    print()
+    with table_path.open("a") as f:
+        f.write(output)
