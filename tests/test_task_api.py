@@ -374,26 +374,62 @@ async def test_task_collection_api_failure(
 
 
 async def test_non_python_task(
-    client, MockCurrentUser, testdata_path, project_factory
+    client,
+    MockCurrentUser,
+    testdata_path,
+    project_factory,
+    dataset_factory,
+    resource_factory,
+    tmp777_path,
 ):
     async with MockCurrentUser(persist=True) as user:
-        project = await project_factory(user)
+        project_dir = tmp777_path / "test"
+        project = await project_factory(user, project_dir=str(project_dir))
         payload = {"name": "WF", "project_id": project.id}
         res = await client.post("api/v1/workflow/", json=payload)
         workflow = res.json()
         debug(workflow)
         assert res.status_code == 201
 
-        task = dict(
-            name=f"non-python",
-            source=f"",
-            command="cmd",
+        task_dict = dict(
+            name="non-python",
+            source="custom task",
+            command=(
+                f"sh {str(testdata_path)}/issue189.sh "
+                "--json hello --metadata-out world"
+            ),
             input_type="zarr",
             output_type="zarr",
         )
-        await add_task(client, "0b")
-        payload = {"task_id": t0b["id"], "order": 1}
+        task_create = TaskCreate(**task_dict)
+        res = await client.post("api/v1/task/", json=task_create.dict())
+        assert res.status_code == 201
+        task = res.json()
         res = await client.post(
-            f"api/v1/workflow/{wf_id}/add-task/",
-            json=payload,
+            f"api/v1/workflow/{workflow['id']}/add-task/",
+            json=dict(task_id=task["id"]),
         )
+        assert res.status_code == 201
+
+        input_dataset = await dataset_factory(
+            project, name="input", type="zarr", read_only=False
+        )
+        input_dataset_id = input_dataset.id
+        output_dataset = await dataset_factory(
+            project, name="output", type="zarr", read_only=False
+        )
+        output_dataset_id = output_dataset.id
+
+        await resource_factory(path="/tmp", dataset=output_dataset)
+
+        payload = dict(
+            project_id=project.id,
+            input_dataset_id=input_dataset_id,
+            output_dataset_id=output_dataset_id,
+            workflow_id=workflow["id"],
+            overwrite_input=False,
+        )
+        debug(payload)
+        res = await client.post("/api/v1/project/apply/", json=payload)
+        debug(res.json())
+        assert res.status_code == 202
