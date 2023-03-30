@@ -37,12 +37,17 @@ def table_path(tmpdir_factory) -> Path:
 
 @pytest.mark.parametrize("n_ftasks_tot", [1, 10, 40, 96, 400])
 @pytest.mark.parametrize(
-    "task_requirements", [(1, 4000), (4, 16000), (16, 61000)]
+    "task_requirements",
+    [
+        ("yoko2zarr", 1, 4000),
+        ("napari-wf", 4, 16000),
+        ("cellpose", 16, 61000),
+    ],
 )
 @pytest.mark.parametrize("cluster", clusters)
 def test_heuristics(
     n_ftasks_tot: int,
-    task_requirements: tuple[int, int],
+    task_requirements: tuple[str, int, int],
     cluster: tuple[dict[str, int]],
     table_path: Path,
 ):
@@ -50,12 +55,13 @@ def test_heuristics(
     if not table_path.exists():
         cols = (
             "Cluster   | "
+            "Task       | "
             "cpus/task | "
             "mem/task | "
             "#tasks || "
             "#jobs | "
-            "#tasks/script | "
-            "#parallel_tasks/script | "
+            "max #tasks/script | "
+            "max #parallel_tasks/script | "
             "Parallelism |\n"
         )
         debug(table_path)
@@ -63,7 +69,7 @@ def test_heuristics(
         with table_path.open("w") as f:
             f.write(cols)
 
-    cpus_per_task, mem_per_task = task_requirements[:]
+    task_label, cpus_per_task, mem_per_task = task_requirements[:]
     target_cpus_per_job = cluster["target_cpus_per_job"]
     max_cpus_per_job = cluster["max_cpus_per_job"]
     target_mem_per_job = cluster["target_mem_per_job"]
@@ -86,6 +92,8 @@ def test_heuristics(
         debug(cluster)
         debug(task_requirements)
         debug(n_ftasks_tot)
+        debug(n_ftasks_per_script)
+        debug(n_parallel_ftasks_per_script)
         raise ValueError
     num_jobs = math.ceil(n_ftasks_tot / n_ftasks_per_script)
     parallelism = n_parallel_ftasks_per_script / n_ftasks_per_script
@@ -94,12 +102,13 @@ def test_heuristics(
 
     output = (
         f"{cluster_name} | "
+        f"{task_label:10s} | "
         f"{cpus_per_task:9d} | "
         f"{mem_per_task:8d} | "
         f"{n_ftasks_tot:6d} || "
         f"{num_jobs:5d} | "
-        f"{n_ftasks_per_script:13d} | "
-        f"{n_parallel_ftasks_per_script:22d} | "
+        f"{n_ftasks_per_script:17d} | "
+        f"{n_parallel_ftasks_per_script:26d} | "
         f"{parallelism:11.3f} |"
         "\n"
     )

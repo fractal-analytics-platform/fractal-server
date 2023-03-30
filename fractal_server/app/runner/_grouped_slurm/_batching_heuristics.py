@@ -3,6 +3,20 @@ import math
 from typing import Optional
 
 
+def _estimate_n_parallel_ftasks_per_script(
+    *,
+    cpus_per_task: int,
+    mem_per_task: int,
+    ref_cpus_per_job: int,
+    ref_mem_per_job: int,
+) -> int:
+    if cpus_per_task > ref_cpus_per_job or mem_per_task > ref_mem_per_job:
+        return 1
+    val_based_on_cpus = ref_cpus_per_job // cpus_per_task
+    val_based_on_mem = ref_mem_per_job // mem_per_task
+    return min(val_based_on_cpus, val_based_on_mem)
+
+
 def heuristics(
     *,
     # Number of parallel componens (always known)
@@ -34,7 +48,7 @@ def heuristics(
             "be both set or both unset"
         )
 
-    # Branch 1
+    # Branch 1: validate/update given parameters
     if n_ftasks_per_script and n_parallel_ftasks_per_script:
         if n_parallel_ftasks_per_script > n_ftasks_per_script:
             logging.warning(
@@ -55,25 +69,42 @@ def heuristics(
             logging.warning("Requesting more jobs than expected")
         if num_jobs > max_num_jobs:
             raise ValueError("Requesting more jobs than allowed")
-        return n_ftasks_per_script, n_parallel_ftasks_per_script
+        logging.critical("Heuristic: branch 1")
+        return (n_ftasks_per_script, n_parallel_ftasks_per_script)
 
-    # Branch 2
-    reasonable_n_parallel_ftasks_per_script = 2  # FIXME: what is this value??
-    if (
-        math.ceil(n_ftasks_tot / reasonable_n_parallel_ftasks_per_script)
-        <= target_num_jobs
-    ):
-        n_parallel_ftasks_per_script = reasonable_n_parallel_ftasks_per_script
-        n_ftasks_per_script = reasonable_n_parallel_ftasks_per_script
-    else:
-        n_ftasks_per_script = math.ceil(n_ftasks_tot / target_num_jobs)
-        n_parallel_based_on_cpus = int(target_cpus_per_job / cpus_per_task)
-        n_parallel_based_on_mem = int(target_mem_per_job / mem_per_task)
-        n_parallel_ftasks_per_script = min(
-            n_parallel_based_on_cpus, n_parallel_based_on_mem
-        )
-        n_parallel_ftasks_per_script = min(
-            n_parallel_ftasks_per_script, n_ftasks_per_script
-        )
+    # Branch 2a: Target-based heuristics, without in-job queues
+    n_parallel_ftasks_per_script = _estimate_n_parallel_ftasks_per_script(
+        cpus_per_task=cpus_per_task,
+        mem_per_task=mem_per_task,
+        ref_cpus_per_job=target_cpus_per_job,
+        ref_mem_per_job=target_mem_per_job,
+    )
+    n_ftasks_per_script = n_parallel_ftasks_per_script  # no in-job queues
+    num_jobs = math.ceil(n_ftasks_tot / n_ftasks_per_script)
+    if num_jobs <= target_num_jobs:
+        logging.critical("Heuristic: branch 2a")
+        return (n_ftasks_per_script, n_parallel_ftasks_per_script)
 
-    return n_ftasks_per_script, n_parallel_ftasks_per_script
+    # Branch 2b: Max-based heuristics, without in-job queues
+    n_parallel_ftasks_per_script = _estimate_n_parallel_ftasks_per_script(
+        cpus_per_task=cpus_per_task,
+        mem_per_task=mem_per_task,
+        ref_cpus_per_job=max_cpus_per_job,
+        ref_mem_per_job=max_mem_per_job,
+    )
+    n_ftasks_per_script = n_parallel_ftasks_per_script  # no in-job queues
+    num_jobs = math.ceil(n_ftasks_tot / n_ftasks_per_script)
+    if num_jobs <= max_num_jobs:
+        logging.critical("Heuristic: branch 2b")
+        return (n_ftasks_per_script, n_parallel_ftasks_per_script)
+
+    # Branch 3: Max-based heuristics, with in-job queues
+    n_parallel_ftasks_per_script = _estimate_n_parallel_ftasks_per_script(
+        cpus_per_task=cpus_per_task,
+        mem_per_task=mem_per_task,
+        ref_cpus_per_job=max_cpus_per_job,
+        ref_mem_per_job=max_mem_per_job,
+    )
+    n_ftasks_per_script = math.ceil(n_ftasks_tot / max_num_jobs)
+    logging.critical("Heuristic: branch 3")
+    return (n_ftasks_per_script, n_parallel_ftasks_per_script)
