@@ -18,7 +18,6 @@ import sys
 import time
 from concurrent import futures
 from copy import copy
-from copy import deepcopy
 from pathlib import Path
 from typing import Any
 from typing import Callable
@@ -365,6 +364,16 @@ class FractalSlurmExecutor(SlurmExecutor):
         if not slurm_config:
             slurm_config = get_default_slurm_config()
 
+        # Include common_script_lines in extra_lines
+        logging.warning(
+            f"Adding {self.common_script_lines=} to "
+            f"{slurm_config.extra_lines=}, from map method."
+        )
+        current_extra_lines = slurm_config.extra_lines or []
+        slurm_config.extra_lines = (
+            current_extra_lines + self.common_script_lines
+        )
+
         # Set file prefixes
         if wftask_file_prefix is None:
             wftask_file_prefix = f"_wftask_{random_string()}"
@@ -477,20 +486,8 @@ class FractalSlurmExecutor(SlurmExecutor):
         """
         Submit a multi-task job to the pool, where each task is handled via the
         pickle/remote logic
-
-        FIXME: this function is valled multiple times, then it should not
-        modify slurm_config. But this could be avoided by just pushing up the
-        common_script_lines extension of extra_lines (note that this would mean
-        duplicating it, though, in submit and map)
         """
         fut: futures.Future = futures.Future()
-
-        # Include common_script_lines in extra_lines
-        local_slurm_config = deepcopy(slurm_config)
-        current_extra_lines = local_slurm_config.extra_lines or []
-        local_slurm_config.extra_lines = (
-            current_extra_lines + self.common_script_lines
-        )
 
         # Define slurm-job-related files
         num_tasks_tot = len(list_list_args)
@@ -498,7 +495,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             slurm_file_prefix=slurm_file_prefix,
             wftask_file_prefix=wftask_file_prefix,
             num_tasks_tot=num_tasks_tot,
-            slurm_config=local_slurm_config,
+            slurm_config=slurm_config,
         )
         if single_task_submission:
             if job.num_tasks_tot > 1:
@@ -604,6 +601,16 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         if not slurm_config:
             slurm_config = get_default_slurm_config()
+
+        # Include common_script_lines in extra_lines
+        logging.warning(
+            f"Adding {self.common_script_lines=} to "
+            f"{slurm_config.extra_lines=}, from submit method."
+        )
+        current_extra_lines = slurm_config.extra_lines or []
+        slurm_config.extra_lines = (
+            current_extra_lines + self.common_script_lines
+        )
 
         # Adapt slurm_config to the fact that this is a single-task SlurmJob
         # instance
