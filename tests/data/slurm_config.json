@@ -1,10 +1,12 @@
 {
   "partition": "main",
   "if_needs_gpu": {},
-  "target_cpus_per_job": 1,
-  "max_cpus_per_job": 1,
-  "target_mem_per_job": 200,
-  "max_mem_per_job": 500,
-  "target_number_of_jobs": 2,
-  "max_number_of_jobs": 4
+  "fractal_task_batching": {
+      "target_cpus_per_job": 1,
+      "max_cpus_per_job": 1,
+      "target_mem_per_job": 200,
+      "max_mem_per_job": 500,
+      "target_number_of_jobs": 2,
+      "max_number_of_jobs": 4
+  }
 }
