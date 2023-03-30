@@ -35,13 +35,18 @@ def test_set_slurm_config(tmp_path, fail):
         "partition": "main",
         "account": DEFAULT_ACCOUNT,
         "extra_lines": DEFAULT_EXTRA_LINES,
-        "cpus_per_job": {"target": 10, "max": 10},
-        "mem_per_job": {"target": 10, "max": 10},
-        "number_of_jobs": {"target": 10, "max": 10},
         "if_needs_gpu": {
             "partition": GPU_PARTITION,
             "gres": GPU_DEFAULT_GRES,
             "constraint": GPU_DEFAULT_CONSTRAINT,
+        },
+        "fractal_task_batching": {
+            "target_cpus_per_job": 10,
+            "max_cpus_per_job": 12,
+            "target_mem_per_job": 10,
+            "max_mem_per_job": 12,
+            "target_num_jobs": 5,
+            "max_num_jobs": 10,
         },
     }
     if fail:
