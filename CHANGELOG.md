@@ -3,6 +3,7 @@
 # Unreleased
 
 * Update to fastapi `0.95` (\#587).
+* Minor improvements in dataset-edit endpoint (\#593) and tests (\#589).
 
 # 1.1.1
 
