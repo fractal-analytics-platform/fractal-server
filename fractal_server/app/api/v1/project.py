@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from typing import List
 from typing import Optional
+from typing import Union
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
@@ -55,7 +56,7 @@ async def _get_project_check_owner(
     *,
     project_id: int,
     user_id: UUID4,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession,
 ) -> Project:
     """
     Check that user is a member of project and return
@@ -87,8 +88,8 @@ async def _get_dataset_check_owner(
     project_id: int,
     dataset_id: int,
     user_id: UUID4,
-    db: AsyncSession = Depends(get_db),
-) -> Dataset:
+    db: AsyncSession,
+) -> dict[str, Union[Dataset, Project]]:
     """
     Check that user is a member of project and return
 
@@ -433,15 +434,13 @@ async def patch_dataset(
     """
     Edit a dataset associated to the current project
     """
-    project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+    output = await _get_dataset_check_owner(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        db=db,
     )
-    db_dataset = await db.get(Dataset, dataset_id)
-    if db_dataset not in project.dataset_list:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Dataset {dataset_id} is not part of project {project_id}",
-        )
+    db_dataset = output["dataset"]
 
     for key, value in dataset_update.dict(exclude_unset=True).items():
         setattr(db_dataset, key, value)
