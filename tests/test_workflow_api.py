@@ -4,12 +4,30 @@ import pytest
 from devtools import debug  # noqa
 from sqlmodel import select
 
-from fractal_server.app.models import TaskRead
 from fractal_server.app.models import Workflow
 from fractal_server.app.models import WorkflowExport
 from fractal_server.app.models import WorkflowImport
 from fractal_server.app.models import WorkflowRead
 from fractal_server.app.models import WorkflowTask
+
+
+async def get_workflow(client, wf_id):
+    res = await client.get(f"api/v1/workflow/{wf_id}")
+    assert res.status_code == 200
+    return res.json()
+
+
+async def add_task(client, index):
+    t = dict(
+        name=f"task{index}",
+        source=f"source{index}",
+        command="cmd",
+        input_type="zarr",
+        output_type="zarr",
+    )
+    res = await client.post("api/v1/task/", json=t)
+    assert res.status_code == 201
+    return res.json()
 
 
 async def test_post_workflow(db, client, MockCurrentUser, project_factory):
@@ -118,7 +136,8 @@ async def test_delete_workflow(
         assert res.status_code == 204
 
         # Check that the Workflow was deleted
-        assert not await db.get(Workflow, wf_id)
+        res = await client.get(f"api/v1/workflow/{wf_id}")
+        assert res.status_code == 404
 
         # Check that the WorkflowTask was deleted
         res = await db.execute(stm)
@@ -127,9 +146,7 @@ async def test_delete_workflow(
         assert len(res) == 0
 
 
-async def test_get_workflow(
-    db, client, MockCurrentUser, project_factory, task_factory
-):
+async def test_get_workflow(client, MockCurrentUser, project_factory):
     """
     GIVEN a Workflow in the db
     WHEN the endpoint to GET a Workflow by its id is called
@@ -155,9 +172,7 @@ async def test_get_workflow(
         assert res.json() == workflow
 
 
-async def test_post_newtask(
-    db, client, MockCurrentUser, project_factory, task_factory
-):
+async def test_post_newtask(client, MockCurrentUser, project_factory):
     """
     GIVEN a Workflow with a list of WorkflowTasks
     WHEN the endpoint to POST a new WorkflowTask inside
@@ -177,55 +192,49 @@ async def test_post_newtask(
         assert res.status_code == 201
         wf_id = res.json()["id"]
 
-        workflow = await db.get(Workflow, wf_id)
-        t0 = await task_factory()
-        t1 = await task_factory()
-        await workflow.insert_task(t0.id, db=db)
-        await workflow.insert_task(t1.id, db=db)
-        await db.refresh(workflow)
+        for index in range(2):
+            t = await add_task(client, index)
+            payload = {"task_id": t["id"]}
+            res = await client.post(
+                f"api/v1/workflow/{wf_id}/add-task/",
+                json=payload,
+            )
+            workflow = await get_workflow(client, wf_id)
+            assert len(workflow["task_list"]) == index + 1
+            assert workflow["task_list"][-1]["task"] == t
 
-        assert len(workflow.task_list) == 2
-        assert workflow.task_list[0].task == t0
-        assert workflow.task_list[1].task == t1
+        workflow = await get_workflow(client, wf_id)
+        assert len(workflow["task_list"]) == 2
 
-        await db.refresh(workflow)
-
-        t2 = await task_factory()
-        last_task = {"task_id": t2.id, "args": {"a": 0, "b": 1}}
-
+        t2 = await add_task(client, 2)
+        args_payload = {"task_id": t2["id"], "args": {"a": 0, "b": 1}}
         res = await client.post(
             f"api/v1/workflow/{wf_id}/add-task/",
-            json=last_task,
+            json=args_payload,
         )
         assert res.status_code == 201
 
-        t0b = await task_factory()
-        second_task = {
-            "task_id": t0b.id,
-            "order": 1,
-        }
+        t0b = await add_task(client, "0b")
+        payload = {"task_id": t0b["id"], "order": 1}
         res = await client.post(
             f"api/v1/workflow/{wf_id}/add-task/",
-            json=second_task,
+            json=payload,
         )
         assert res.status_code == 201
 
         # Get back workflow
-        res = await client.get(f"api/v1/workflow/{wf_id}")
-        assert res.status_code == 200
-        workflow = WorkflowRead(**res.json())
-        debug(workflow)
-
-        assert len(workflow.task_list) == 4
-        assert workflow.task_list[0].task == TaskRead(**t0.dict())
-        assert workflow.task_list[1].task == TaskRead(**t0b.dict())
-        assert workflow.task_list[2].task == TaskRead(**t1.dict())
-        assert workflow.task_list[3].task == TaskRead(**t2.dict())
-        assert workflow.task_list[3].args == last_task["args"]
+        workflow = await get_workflow(client, wf_id)
+        task_list = workflow["task_list"]
+        assert len(task_list) == 4
+        assert task_list[0]["task"]["name"] == "task0"
+        assert task_list[1]["task"]["name"] == "task0b"
+        assert task_list[2]["task"]["name"] == "task1"
+        assert task_list[3]["task"]["name"] == "task2"
+        assert task_list[3]["args"] == args_payload["args"]
 
 
 async def test_delete_workflow_task(
-    db, client, MockCurrentUser, project_factory, task_factory
+    db, client, MockCurrentUser, project_factory
 ):
     """
     GIVEN a Workflow with a list of WorkflowTasks
@@ -247,37 +256,42 @@ async def test_delete_workflow_task(
         assert res.status_code == 201
         wf_id = res.json()["id"]
 
-        workflow = await db.get(Workflow, wf_id)
-        t0 = await task_factory()
-        t1 = await task_factory()
-        t2 = await task_factory()
+        workflow = await get_workflow(client, wf_id)
+        t0 = await add_task(client, 0)
+        t1 = await add_task(client, 1)
+        t2 = await add_task(client, 2)
 
-        await workflow.insert_task(t0.id, db=db)
-        await workflow.insert_task(t1.id, db=db)
-        await workflow.insert_task(t2.id, db=db)
-        await db.refresh(workflow)
+        for t in [t0, t1, t2]:
+            payload = {"task_id": t["id"]}
+            res = await client.post(
+                f"api/v1/workflow/{wf_id}/add-task/",
+                json=payload,
+            )
 
         assert (
             len((await db.execute(select(WorkflowTask))).scalars().all()) == 3
         )
-        assert len(workflow.task_list) == 3
-        for i, task in enumerate(workflow.task_list):
-            assert task.order == i
+        workflow = await get_workflow(client, wf_id)
+        assert len(workflow["task_list"]) == 3
+        for i, task in enumerate(workflow["task_list"]):
+            assert task["order"] == i
 
-        res = await client.delete(f"api/v1/workflow/{wf_id}/rm-task/{t1.id}")
+        res = await client.delete(
+            f"api/v1/workflow/{wf_id}/rm-task/{t1['id']}"
+        )
         assert res.status_code == 204
 
-        await db.refresh(workflow)
+        workflow = await get_workflow(client, wf_id)
         assert (
             len((await db.execute(select(WorkflowTask))).scalars().all()) == 2
         )
-        assert len(workflow.task_list) == 2
-        for i, task in enumerate(workflow.task_list):
-            assert task.order == i
+        assert len(workflow["task_list"]) == 2
+        for i, task in enumerate(workflow["task_list"]):
+            assert task["order"] == i
 
 
 async def test_get_project_workflows(
-    db, client, MockCurrentUser, project_factory, task_factory
+    db, client, MockCurrentUser, project_factory
 ):
     """
     GIVEN a Project containing three Workflows
@@ -304,9 +318,7 @@ async def test_get_project_workflows(
         assert len((await db.execute(select(Workflow))).scalars().all()) == 4
 
 
-async def test_patch_workflow(
-    db, client, MockCurrentUser, project_factory, task_factory
-):
+async def test_patch_workflow(client, MockCurrentUser, project_factory):
     """
     GIVEN a Workflow
     WHEN the endpoint to PATCH a Workflow is called
@@ -319,22 +331,20 @@ async def test_patch_workflow(
         wf_id = res.json()["id"]
         assert res.json()["name"] == "WF"
 
-        workflow = await db.get(Workflow, wf_id)
         res = await client.get(f"api/v1/project/{project.id}/workflows/")
         assert len(res.json()) == 1
 
         patch = {"name": "new_WF"}
         res = await client.patch(f"api/v1/workflow/{wf_id}", json=patch)
 
-        await db.refresh(workflow)
-        assert workflow.name == "new_WF"
+        new_workflow = await get_workflow(client, wf_id)
+        assert new_workflow["name"] == "new_WF"
+
         res = await client.get(f"api/v1/project/{project.id}/workflows/")
         assert len(res.json()) == 1
 
 
-async def test_patch_workflow_task(
-    db, client, MockCurrentUser, project_factory, task_factory
-):
+async def test_patch_workflow_task(client, MockCurrentUser, project_factory):
     """
     GIVEN a WorkflowTask
     WHEN the endpoint to PATCH a WorkflowTask is called
@@ -344,18 +354,25 @@ async def test_patch_workflow_task(
         project = await project_factory(user)
         workflow = {"name": "WF", "project_id": project.id}
         res = await client.post("api/v1/workflow/", json=workflow)
+        assert res.status_code == 201
         wf_id = res.json()["id"]
 
-        workflow = await db.get(Workflow, wf_id)
-        t0 = await task_factory()
-        await workflow.insert_task(t0.id, db=db)
-        await db.refresh(workflow)
-        assert workflow.task_list[0].args is None
+        t = await add_task(client, 0)
+        payload = {"task_id": t["id"]}
+        res = await client.post(
+            f"api/v1/workflow/{wf_id}/add-task/",
+            json=payload,
+        )
+        assert res.status_code == 201
+
+        workflow = await get_workflow(client, wf_id)
+
+        assert workflow["task_list"][0]["args"] is None
 
         payload = dict(args={"a": 123, "d": 321}, meta={"executor": "cpu-low"})
         res = await client.patch(
-            f"api/v1/workflow/{workflow.id}/"
-            f"edit-task/{workflow.task_list[0].id}",
+            f"api/v1/workflow/{workflow['id']}/"
+            f"edit-task/{workflow['task_list'][0]['id']}",
             json=payload,
         )
 
@@ -367,8 +384,8 @@ async def test_patch_workflow_task(
 
         payload_up = dict(args={"a": {"c": 43}, "b": 123})
         res = await client.patch(
-            f"api/v1/workflow/{workflow.id}/"
-            f"edit-task/{workflow.task_list[0].id}",
+            f"api/v1/workflow/{workflow['id']}/"
+            f"edit-task/{workflow['task_list'][0]['id']}",
             json=payload_up,
         )
         patched_workflow_task_up = res.json()
@@ -378,7 +395,7 @@ async def test_patch_workflow_task(
 
 
 async def test_patch_workflow_task_failures(
-    db, client, MockCurrentUser, project_factory, task_factory
+    client, MockCurrentUser, project_factory
 ):
     """
     GIVEN a WorkflowTask
@@ -395,23 +412,29 @@ async def test_patch_workflow_task_failures(
         workflow2 = {"name": "WF2", "project_id": project.id}
         res = await client.post("api/v1/workflow/", json=workflow2)
         wf2_id = res.json()["id"]
-        workflow1 = await db.get(Workflow, wf1_id)
-        workflow2 = await db.get(Workflow, wf2_id)
-        task1 = await task_factory()
-        task2 = await task_factory()
-        assert task1.id != task2.id
-        await workflow1.insert_task(task1.id, db=db)
-        await workflow2.insert_task(task2.id, db=db)
-        await db.refresh(workflow1)
-        await db.refresh(workflow2)
-        workflow_task_1 = workflow1.task_list[0]
-        workflow_task_2 = workflow2.task_list[0]
+
+        t1 = await add_task(client, 1)
+        res = await client.post(
+            f"api/v1/workflow/{wf1_id}/add-task/",
+            json={"task_id": t1["id"]},
+        )
+
+        t2 = await add_task(client, 2)
+        res = await client.post(
+            f"api/v1/workflow/{wf2_id}/add-task/",
+            json={"task_id": t2["id"]},
+        )
+
+        workflow1 = await get_workflow(client, wf1_id)
+        workflow2 = await get_workflow(client, wf2_id)
+        workflow_task_1 = workflow1["task_list"][0]
+        workflow_task_2 = workflow2["task_list"][0]
 
         # Modify parallelization_level
         payload = dict(meta={"parallelization_level": "XXX"})
         res = await client.patch(
-            f"api/v1/workflow/{workflow1.id}/"
-            f"edit-task/{workflow_task_1.id}",
+            f"api/v1/workflow/{workflow1['id']}/"
+            f"edit-task/{workflow_task_1['id']}",
             json=payload,
         )
         assert res.status_code == 422
@@ -437,8 +460,8 @@ async def test_patch_workflow_task_failures(
         assert res.status_code == 404
 
         # Edit a valid WorkflowTask without specifying the right Workflow
-        WORKFLOW_ID = workflow1.id
-        WORKFLOW_TASK_ID = workflow_task_2.id
+        WORKFLOW_ID = workflow1["id"]
+        WORKFLOW_TASK_ID = workflow_task_2["id"]
         res = await client.patch(
             f"api/v1/workflow/{WORKFLOW_ID}/edit-task/{WORKFLOW_TASK_ID}",
             json={"args": {"a": 123, "d": 321}},
@@ -515,10 +538,8 @@ reorder_cases.append([4, 3, 5, 6, 1, 2])
 async def test_reorder_task_list(
     reordered_workflowtask_ids,
     client,
-    db,
     MockCurrentUser,
     project_factory,
-    task_factory,
 ):
     """
     GIVEN a workflow with a task_list
@@ -532,10 +553,10 @@ async def test_reorder_task_list(
 
         # Create project and empty workflow
         project = await project_factory(user)
-        workflow = {"name": "WF", "project_id": project.id}
-        res = await client.post("api/v1/workflow/", json=workflow)
+        payload = {"name": "WF", "project_id": project.id}
+        res = await client.post("api/v1/workflow/", json=payload)
+        assert res.status_code == 201
         wf_id = res.json()["id"]
-        workflow = await db.get(Workflow, wf_id)
 
         # Make no-op API call to reorder an empty task list
         res = await client.patch(
@@ -546,14 +567,19 @@ async def test_reorder_task_list(
 
         # Create tasks and insert WorkflowTasks
         for i in range(num_tasks):
-            t = await task_factory(name=f"task-{i}")
-            await workflow.insert_task(t.id, db=db)
-            await db.refresh(workflow)
+            t = await add_task(client, i)
+            res = await client.post(
+                f"api/v1/workflow/{wf_id}/add-task/",
+                json=dict(task_id=t["id"]),
+            )
 
         # At this point, all WorkflowTask attributes have a predictable order
-        old_worfklowtask_orders = [wft.order for wft in workflow.task_list]
-        old_worfklowtask_ids = [wft.id for wft in workflow.task_list]
-        old_task_ids = [wft.task.id for wft in workflow.task_list]
+        workflow = await get_workflow(client, wf_id)
+        old_worfklowtask_orders = [
+            wft["order"] for wft in workflow["task_list"]
+        ]
+        old_worfklowtask_ids = [wft["id"] for wft in workflow["task_list"]]
+        old_task_ids = [wft["task"]["id"] for wft in workflow["task_list"]]
         assert old_worfklowtask_orders == list(range(num_tasks))
         assert old_worfklowtask_ids == list(range(1, num_tasks + 1))
         assert old_task_ids == list(range(1, num_tasks + 1))
@@ -602,14 +628,15 @@ async def test_reorder_task_list_fail(
     async with MockCurrentUser(persist=True) as user:
         # Create project, workflow, tasks, workflowtasks
         project = await project_factory(user)
-        workflow = {"name": "WF", "project_id": project.id}
-        res = await client.post("api/v1/workflow/", json=workflow)
+        payload = {"name": "WF", "project_id": project.id}
+        res = await client.post("api/v1/workflow/", json=payload)
         wf_id = res.json()["id"]
-        workflow = await db.get(Workflow, wf_id)
         for i in range(num_tasks):
-            t = await task_factory(name=f"task-{i}")
-            await workflow.insert_task(t.id, db=db)
-            await db.refresh(workflow)
+            t = await add_task(client, i)
+            res = await client.post(
+                f"api/v1/workflow/{wf_id}/add-task/",
+                json=dict(task_id=t["id"]),
+            )
 
         # Invalid calls to PATCH endpoint to reorder the task_list
 
