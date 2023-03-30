@@ -158,12 +158,16 @@ def _parse_mem_value(raw_mem):
 
     logging.warning(f"[_parse_mem_value] {raw_mem=}")
 
+    if isinstance(raw_mem, int):
+        logging.warning("[_parse_mem_value] 0a")
+        return raw_mem
+
     # Preliminary check
     if not raw_mem[0].isdigit():
-        logging.warning("[_parse_mem_value] 0")
+        logging.warning("[_parse_mem_value] 0b")
         raise ValueError(error_msg)
 
-    if isinstance(raw_mem, int) or raw_mem.isdigit():
+    if raw_mem.isdigit():
         mem_MB = int(raw_mem)
         logging.warning("[_parse_mem_value] 1")
     elif raw_mem.endswith("M"):
@@ -264,6 +268,7 @@ def set_slurm_config(
 
     # Load all relevant attributes from slurm_env
     keys_to_skip = [
+        "fractal_task_batching",
         "cpus_per_job",
         "mem_per_job",
         "number_of_jobs",
@@ -277,11 +282,22 @@ def set_slurm_config(
         if not value:
             continue
         # Add this key-value pair to slurm_dict
-        if key != "mem":
-            slurm_dict[key] = value
-        else:
+        if key == "mem":
             mem_per_task_MB = _parse_mem_value(value)
             slurm_dict["mem_per_task_MB"] = mem_per_task_MB
+        else:
+            slurm_dict[key] = value
+    batching_dict = slurm_env["fractal_task_batching"]
+    slurm_dict["target_cpus_per_job"] = batching_dict["target_cpus_per_job"]
+    slurm_dict["max_cpus_per_job"] = batching_dict["max_cpus_per_job"]
+    slurm_dict["target_num_jobs"] = batching_dict["target_num_jobs"]
+    slurm_dict["max_num_jobs"] = batching_dict["max_num_jobs"]
+    slurm_dict["target_mem_per_job"] = _parse_mem_value(
+        batching_dict["target_mem_per_job"]
+    )
+    slurm_dict["max_mem_per_job"] = _parse_mem_value(
+        batching_dict["max_mem_per_job"]
+    )
 
     logging.warning(f"Fractal SLURM configuration file: {slurm_env=}")
     logging.warning(f"Options retained: {slurm_dict=}")
@@ -295,13 +311,13 @@ def set_slurm_config(
     needs_gpu = wftask.overridden_meta.get("needs_gpu", False)
     logging.warning(f"{needs_gpu=}")
     if needs_gpu:
-        for key, val in slurm_env["if_needs_gpu"].items():
-            logging.warning(f"if_needs_gpu options: {key=}, {val=}")
-            if key != "mem":
-                slurm_dict[key] = value
-            else:
+        for key, value in slurm_env["if_needs_gpu"].items():
+            logging.warning(f"if_needs_gpu options: {key=}, {value=}")
+            if key == "mem":
                 mem_per_task_MB = _parse_mem_value(value)
-            slurm_dict["mem_per_task_MB"] = mem_per_task_MB
+                slurm_dict["mem_per_task_MB"] = mem_per_task_MB
+            else:
+                slurm_dict[key] = value
     logging.warning(f"After {needs_gpu=}, {slurm_dict=}")
 
     # Number of CPUs per task, for multithreading
@@ -348,12 +364,6 @@ def set_slurm_config(
 
     slurm_dict["n_ftasks_per_script"] = n_ftasks_per_script
     slurm_dict["n_parallel_ftasks_per_script"] = n_parallel_ftasks_per_script
-    slurm_dict["target_cpus_per_job"] = slurm_env["cpus_per_job"]["target"]
-    slurm_dict["target_mem_per_job"] = slurm_env["mem_per_job"]["target"]
-    slurm_dict["target_num_jobs"] = slurm_env["number_of_jobs"]["target"]
-    slurm_dict["max_cpus_per_job"] = slurm_env["cpus_per_job"]["max"]
-    slurm_dict["max_mem_per_job"] = slurm_env["mem_per_job"]["max"]
-    slurm_dict["max_num_jobs"] = slurm_env["number_of_jobs"]["max"]
 
     # Put everything together
     logging.warning(f"Now create a SlurmConfig object based on {slurm_dict=}")
