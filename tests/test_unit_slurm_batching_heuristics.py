@@ -13,7 +13,7 @@ clusters = [
     dict(
         target_cpus_per_job=8,
         max_cpus_per_job=16,
-        target_mem_per_job=31000,
+        target_mem_per_job=32000,
         max_mem_per_job=62000,
         target_num_jobs=100,
         max_num_jobs=200,
