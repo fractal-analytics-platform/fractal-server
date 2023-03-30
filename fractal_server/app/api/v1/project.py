@@ -208,7 +208,6 @@ async def apply_workflow(
     db: AsyncSession = Depends(get_db),
     db_sync: DBSyncSession = Depends(get_sync_db),
 ) -> Optional[ApplyWorkflowRead]:
-
     output = await _get_dataset_check_owner(
         project_id=apply_workflow.project_id,
         dataset_id=apply_workflow.input_dataset_id,
@@ -248,7 +247,10 @@ async def apply_workflow(
     else:
         try:
             output_dataset = await auto_output_dataset(
-                project=project, input_dataset=input_dataset, workflow=workflow
+                project=project,
+                input_dataset=input_dataset,
+                workflow=workflow,
+                overwrite_input=apply_workflow.overwrite_input,
             )
         except Exception as e:
             raise HTTPException(
