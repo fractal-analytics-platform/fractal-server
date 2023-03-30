@@ -371,3 +371,29 @@ async def test_task_collection_api_failure(
         assert data["status"] == "fail"
         assert data["log"]  # This is because of verbose=True
         assert "fail" in data["log"]
+
+
+async def test_non_python_task(
+    client, MockCurrentUser, testdata_path, project_factory
+):
+    async with MockCurrentUser(persist=True) as user:
+        project = await project_factory(user)
+        payload = {"name": "WF", "project_id": project.id}
+        res = await client.post("api/v1/workflow/", json=payload)
+        workflow = res.json()
+        debug(workflow)
+        assert res.status_code == 201
+
+        task = dict(
+            name=f"non-python",
+            source=f"",
+            command="cmd",
+            input_type="zarr",
+            output_type="zarr",
+        )
+        await add_task(client, "0b")
+        payload = {"task_id": t0b["id"], "order": 1}
+        res = await client.post(
+            f"api/v1/workflow/{wf_id}/add-task/",
+            json=payload,
+        )
