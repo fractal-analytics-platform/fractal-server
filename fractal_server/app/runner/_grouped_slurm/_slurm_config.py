@@ -18,10 +18,10 @@ Executor objects.
 import json
 import logging
 from pathlib import Path
-from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Union
 
 from pydantic import BaseModel
 from pydantic import Extra
@@ -31,6 +31,7 @@ from ....config import get_settings
 from ....syringe import Inject
 from ...models import WorkflowTask
 from .._common import get_task_file_paths
+from .._common import TaskFiles
 from ..common import TaskParameters
 
 
@@ -210,7 +211,7 @@ def set_slurm_config(
     workflow_dir: Path,
     workflow_dir_user: Path,
     config_path: Optional[Path] = None,
-) -> Dict[str, Any]:
+) -> Dict[str, Union[TaskFiles, SlurmConfig]]:
     """
     Collect WorfklowTask-specific configuration parameters from different
     sources, and inject them for execution
@@ -381,8 +382,9 @@ def set_slurm_config(
     # Prepare and return output dictionary
     submit_setup_dict = dict(
         slurm_config=slurm_config,
-        wftask_file_prefix=task_files.file_prefix,
-        wftask_order=wftask.order,
+        task_files=task_files,
+        # wftask_file_prefix=task_files.file_prefix,  # FIXME remove
+        # wftask_order=wftask.order,  # FIXME remove
     )
     return submit_setup_dict
 
