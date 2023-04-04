@@ -916,17 +916,31 @@ class FractalSlurmExecutor(SlurmExecutor):
             f"[_copy_files_from_user_to_server] XXX {len(files_to_copy)=}"
         )
 
+        # FIXME: remove commented legacy version of _copy_files_from_user_to_server # noqa
         # NOTE: By setting encoding=None, we read/write bytes instead of
         # strings. This is needed to also handle pickle files
+        cat_script_lines = []
         for source_file_name in files_to_copy:
+            if " " in source_file_name:
+                raise ValueError(
+                    f'source_file_name="{source_file_name}" '
+                    "contains whitespaces"
+                )
             source_file_path = str(self.working_dir_user / source_file_name)
+            dest_file_path = str(self.working_dir / source_file_name)
+            cat_script_lines.append(
+                f"cat {source_file_path} > {dest_file_path}"
+            )
+            logging.warning(f"{cat_script_lines[-1]=}")
 
+            toc = tic("_path_exists_as_user")
             if not _path_exists_as_user(
                 path=source_file_path, user=self.slurm_user
             ):
                 raise RuntimeError(
                     f"Trying to `cat` missing path {source_file_path}"
                 )
+            toc()
 
             # Read source_file_path (requires sudo)
             cmd = f"cat {source_file_path}"
@@ -947,6 +961,22 @@ class FractalSlurmExecutor(SlurmExecutor):
             dest_file_path = str(self.working_dir / source_file_name)
             with open(dest_file_path, "wb") as f:
                 f.write(res.stdout)
+
+        cat_script_lines.append("\n")
+        cat_script = "\n".join(cat_script_lines)
+        cat_script_path = (
+            self.working_dir
+            / f"{job.wftask_file_prefix}_{job.slurm_file_prefix}"
+            "_cat_files.sh"
+        )
+        logging.warning(f"{str(cat_script_path)=}")
+        with cat_script_path.open("w") as f:
+            f.write(cat_script)
+        # cmd = f"/bin/sh {str(cat_script_path)}"
+        # toc = tic(cmd)
+        # _run_command_as_user(cmd=cmd, user=self.slurm_user, check=True)
+        # toc()
+
         logging.debug("Exit _copy_files_from_user_to_server")
 
     def _start_multitask(
@@ -980,14 +1010,12 @@ class FractalSlurmExecutor(SlurmExecutor):
             )
 
         # ...
-        toc = tic("compose_sbatch_script_multitask")
         sbatch_script = self.compose_sbatch_script_multitask(
             slurm_config=job.slurm_config,
             list_commands=cmdlines,
             slurm_out_path=str(job.slurm_stdout),
             slurm_err_path=str(job.slurm_stderr),
         )
-        toc()
 
         # Submit job via sbatch, and retrieve jobid
         pre_cmd = f"sudo --non-interactive -u {self.slurm_user}"
