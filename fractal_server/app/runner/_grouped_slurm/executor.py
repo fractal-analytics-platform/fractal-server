@@ -928,13 +928,6 @@ class FractalSlurmExecutor(SlurmExecutor):
                 )
                 dest_file_path = str(self.working_dir / source_file_name)
 
-                # if not _path_exists_as_user(
-                #     path=source_file_path, user=self.slurm_user
-                # ):
-                #     raise RuntimeError(
-                #         f"Trying to `cat` missing path {source_file_path}"
-                #     )
-
                 # Read source_file_path (requires sudo)
                 cmd = f"cat {source_file_path}"
                 res = _run_command_as_user(
