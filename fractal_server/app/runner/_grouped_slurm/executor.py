@@ -782,9 +782,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                 # case, the ExceptionProxy definition is also part of the
                 # pickle file (thanks to cloudpickle.dumps).
                 logging.warning(cloudpickle.loads(outdata))
-                toc = tic("cloudpickle.loads")
                 success, output = cloudpickle.loads(outdata)
-                toc()
                 try:
                     if success:
                         outputs.append(output)
@@ -817,9 +815,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                             exc = TaskExecutionError(proxy.tb, **kwargs)
                             fut.set_exception(exc)
                             return
-                    toc = tic("out_path.unlink")
                     out_path.unlink()
-                    toc()
                 except futures.InvalidStateError:
                     logging.warning(
                         f"Future {fut} (SLURM job ID: {jobid}) was already"
@@ -832,12 +828,8 @@ class FractalSlurmExecutor(SlurmExecutor):
                     return
 
                 # Clean up input pickle file
-                toc = tic("in_path.unlink")
                 in_path.unlink()
-                toc()
-            toc = tic(f"_cleanup({jobid})")
             self._cleanup(jobid)
-            toc()
             if job.single_task_submission:
                 fut.set_result(outputs[0])
             else:
@@ -953,10 +945,8 @@ class FractalSlurmExecutor(SlurmExecutor):
                 raise JobExecutionError(info)
             # Write to dest_file_path (including empty files)
             dest_file_path = str(self.working_dir / source_file_name)
-            toc = tic(f"Write to {dest_file_path}")
             with open(dest_file_path, "wb") as f:
                 f.write(res.stdout)
-            toc()
         logging.debug("Exit _copy_files_from_user_to_server")
 
     def _start_multitask(
