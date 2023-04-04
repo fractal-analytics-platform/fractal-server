@@ -901,7 +901,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         )
         toc()
         logging.warning(
-            f"[_copy_files_from_user_to_server] {wftask_files_to_copy=}"
+            f"[_copy_files_from_user_to_server] {len(wftask_files_to_copy)=}"
         )
         toc = tic(
             "_glob_as_user("
@@ -916,9 +916,13 @@ class FractalSlurmExecutor(SlurmExecutor):
         )
         toc()
         logging.warning(
-            f"[_copy_files_from_user_to_server] {slurm_files_to_copy=}"
+            f"[_copy_files_from_user_to_server] {len(slurm_files_to_copy)=}"
         )
-        files_to_copy = slurm_files_to_copy + wftask_files_to_copy
+        files_to_copy = set(slurm_files_to_copy + wftask_files_to_copy)
+
+        logging.warning(
+            f"[_copy_files_from_user_to_server] XXX {len(files_to_copy)=}"
+        )
 
         # NOTE: By setting encoding=None, we read/write bytes instead of
         # strings. This is needed to also handle pickle files
