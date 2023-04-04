@@ -192,7 +192,7 @@ async def test_runner(
         assert f"0_slurm_{slurm_job_id}.err" in files_server
         assert f"0_slurm_{slurm_job_id}.out" in files_server
         # Files related to (parallel) WorkflowTask 2
-        assert "2_batch_0_slurm_submit.sbatch" in files_server
+        assert "2_batch_000000_slurm_submit.sbatch" in files_server
         slurm_job_id = slurm_job_id + 2
-        assert f"2_batch_0_slurm_{slurm_job_id}.err" in files_server
-        assert f"2_batch_0_slurm_{slurm_job_id}.out" in files_server
+        assert f"2_batch_000000_slurm_{slurm_job_id}.err" in files_server
+        assert f"2_batch_000000_slurm_{slurm_job_id}.out" in files_server

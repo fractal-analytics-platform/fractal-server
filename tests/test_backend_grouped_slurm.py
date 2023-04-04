@@ -23,6 +23,7 @@ def test_slurm_executor_submit(
         working_dir=tmp777_path,
         working_dir_user=tmp777_path,
         slurm_poll_interval=2,
+        keep_pickle_files=True,
     ) as executor:
         res = executor.submit(lambda: 42)
     assert res.result() == 42
@@ -43,6 +44,7 @@ def test_slurm_executor_submit_with_exception(
             working_dir=tmp777_path,
             working_dir_user=tmp777_path,
             slurm_poll_interval=2,
+            keep_pickle_files=True,
         ) as executor:
             fut = executor.submit(raise_ValueError)
             debug(fut.result())
@@ -60,6 +62,7 @@ def test_slurm_executor_map(
         working_dir=tmp777_path,
         working_dir_user=tmp777_path,
         slurm_poll_interval=2,
+        keep_pickle_files=True,
     ) as executor:
         inputs = list(range(10))
         result_generator = executor.map(lambda x: 2 * x, inputs)
@@ -103,6 +106,7 @@ def test_slurm_executor_map_with_exception(
         working_dir=tmp777_path,
         working_dir_user=tmp777_path,
         slurm_poll_interval=1,
+        keep_pickle_files=True,
     ) as executor:
         try:
             result_generator = executor.map(_raise, range(10))
@@ -137,6 +141,7 @@ def test_slurm_executor_submit_separate_folders(
         working_dir=server_working_dir,
         working_dir_user=user_working_dir,
         slurm_poll_interval=2,
+        keep_pickle_files=True,
     ) as executor:
         res = executor.submit(lambda: 42)
     assert res.result() == 42
@@ -170,7 +175,7 @@ def test_slurm_executor_submit_and_scancel(
             working_dir=server_working_dir,
             working_dir_user=user_working_dir,
             debug=True,
-            keep_logs=True,
+            keep_pickle_files=True,
             slurm_poll_interval=2,
         ) as executor:
             fut = executor.submit(wait_and_return)
