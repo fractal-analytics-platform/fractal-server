@@ -38,6 +38,7 @@ from ._slurm_config import SlurmConfig
 from ._subprocess_run_as_user import _glob_as_user
 from ._subprocess_run_as_user import _path_exists_as_user
 from ._subprocess_run_as_user import _run_command_as_user
+from ._timer import tic
 from .wait_thread import FractalSlurmWaitThread
 from fractal_server import __VERSION__
 
@@ -650,6 +651,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             jobid:
                 ID of the SLURM job.
         """
+        toc = tic("_prepare_JobExecutionError")
         # Wait FRACTAL_SLURM_KILLWAIT_INTERVAL seconds
         settings = Inject(get_settings)
         settings.FRACTAL_SLURM_KILLWAIT_INTERVAL
@@ -667,6 +669,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             stderr_file=slurm_stderr_file,
             info=info,
         )
+        toc()
         return job_exc
 
     def _completion(self, jobid: str) -> None:
@@ -696,7 +699,10 @@ class FractalSlurmExecutor(SlurmExecutor):
 
             # Copy all relevant files from self.working_dir_user to
             # self.working_dir
+
+            toc = tic(f"_completion/_copy_files_from_user_to_server({job})")
             self._copy_files_from_user_to_server(job)
+            toc()
 
             # Update the paths to use the files in self.working_dir (rather
             # than the user's ones in self.working_dir_user)
@@ -776,7 +782,9 @@ class FractalSlurmExecutor(SlurmExecutor):
                 # case, the ExceptionProxy definition is also part of the
                 # pickle file (thanks to cloudpickle.dumps).
                 logging.warning(cloudpickle.loads(outdata))
+                toc = tic("cloudpickle.loads")
                 success, output = cloudpickle.loads(outdata)
+                toc()
                 try:
                     if success:
                         outputs.append(output)
@@ -809,7 +817,9 @@ class FractalSlurmExecutor(SlurmExecutor):
                             exc = TaskExecutionError(proxy.tb, **kwargs)
                             fut.set_exception(exc)
                             return
+                    toc = tic("out_path.unlink")
                     out_path.unlink()
+                    toc()
                 except futures.InvalidStateError:
                     logging.warning(
                         f"Future {fut} (SLURM job ID: {jobid}) was already"
@@ -822,8 +832,12 @@ class FractalSlurmExecutor(SlurmExecutor):
                     return
 
                 # Clean up input pickle file
+                toc = tic("in_path.unlink")
                 in_path.unlink()
+                toc()
+            toc = tic(f"_cleanup({jobid})")
             self._cleanup(jobid)
+            toc()
             if job.single_task_submission:
                 fut.set_result(outputs[0])
             else:
@@ -874,19 +888,33 @@ class FractalSlurmExecutor(SlurmExecutor):
             f"{str(self.working_dir_user)=}"
         )
 
+        toc = tic(
+            "_glob_as_user("
+            f"folder={str(self.working_dir_user)}, "
+            f"user={self.slurm_user}, "
+            f"startswith={job.wftask_file_prefix})"
+        )
         wftask_files_to_copy = _glob_as_user(
             folder=str(self.working_dir_user),
             user=self.slurm_user,
             startswith=job.wftask_file_prefix,
         )
+        toc()
         logging.warning(
             f"[_copy_files_from_user_to_server] {wftask_files_to_copy=}"
+        )
+        toc = tic(
+            "_glob_as_user("
+            f"folder={str(self.working_dir_user)}, "
+            f"user={self.slurm_user}, "
+            f"startswith={job.slurm_file_prefix})"
         )
         slurm_files_to_copy = _glob_as_user(
             folder=str(self.working_dir_user),
             user=self.slurm_user,
             startswith=job.slurm_file_prefix,
         )
+        toc()
         logging.warning(
             f"[_copy_files_from_user_to_server] {slurm_files_to_copy=}"
         )
@@ -906,9 +934,11 @@ class FractalSlurmExecutor(SlurmExecutor):
 
             # Read source_file_path (requires sudo)
             cmd = f"cat {source_file_path}"
+            toc = tic("_run_command_as_user(cmd={cmd}")
             res = _run_command_as_user(
                 cmd=cmd, user=self.slurm_user, encoding=None
             )
+            toc()
             if res.returncode != 0:
                 info = (
                     f'Running cmd="{cmd}" as {self.slurm_user=} failed\n\n'
@@ -919,8 +949,10 @@ class FractalSlurmExecutor(SlurmExecutor):
                 raise JobExecutionError(info)
             # Write to dest_file_path (including empty files)
             dest_file_path = str(self.working_dir / source_file_name)
+            toc = tic("Write to {dest_file_path}")
             with open(dest_file_path, "wb") as f:
                 f.write(res.stdout)
+            toc()
         logging.debug("Exit _copy_files_from_user_to_server")
 
     def _start_multitask(
@@ -954,20 +986,24 @@ class FractalSlurmExecutor(SlurmExecutor):
             )
 
         # ...
+        toc = tic("compose_sbatch_script_multitask")
         sbatch_script = self.compose_sbatch_script_multitask(
             slurm_config=job.slurm_config,
             list_commands=cmdlines,
             slurm_out_path=str(job.slurm_stdout),
             slurm_err_path=str(job.slurm_stderr),
         )
+        toc()
 
         # Submit job via sbatch, and retrieve jobid
         pre_cmd = f"sudo --non-interactive -u {self.slurm_user}"
+        toc = tic("submit_sbatch")
         jobid = self.submit_sbatch(
             script_path=job.slurm_script,
             sbatch_script=sbatch_script,
             submit_pre_command=pre_cmd,
         )
+        toc()
 
         # Plug SLURM job id in stdout/stderr file paths
         job.slurm_stdout = Path(
