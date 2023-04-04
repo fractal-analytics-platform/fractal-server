@@ -904,12 +904,12 @@ class FractalSlurmExecutor(SlurmExecutor):
                 "_glob_as_user("
                 f"folder={str(self.working_dir_user)}, "
                 f"user={self.slurm_user}, "
-                f"startswith={prefix}_)"
+                f"startswith={prefix})"
             )
             files_to_copy = _glob_as_user(
                 folder=str(self.working_dir_user),
                 user=self.slurm_user,
-                startswith=f"{prefix}_",
+                startswith=prefix,
             )
             toc()
             logging.warning(
