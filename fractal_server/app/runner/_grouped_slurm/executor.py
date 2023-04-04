@@ -30,6 +30,8 @@ from cfut.util import random_string
 
 from ....config import get_settings
 from ....syringe import Inject
+from .._common import get_task_file_paths
+from .._common import TaskFiles
 from ..common import JobExecutionError
 from ..common import TaskExecutionError
 from ._batching_heuristics import heuristics
@@ -71,7 +73,7 @@ class SlurmJob:
             Prefix for SLURM-job related files (submission script and SLURM
             stdout/stderr); this is needed because such files are created by
             `FractalSlurmExecutor`.
-        wftask_file_prefix:
+        wftask_file_prefixes:
             Prefix for files that are created as part of the functions
             submitted for execution on the `FractalSlurmExecutor`; this
             attribute is needed as part of the
@@ -99,12 +101,12 @@ class SlurmJob:
     num_tasks_tot: int
     single_task_submission: bool
     slurm_file_prefix: str
-    wftask_file_prefix: str
     slurm_script: Path
     slurm_stdout: Path
     slurm_stderr: Path
     # Per-task attributes
     workerids: tuple[str]
+    wftask_file_prefixes: tuple[str]
     input_pickle_files: tuple[Path]
     output_pickle_files: tuple[Path]
     # Slurm configuration
@@ -116,7 +118,7 @@ class SlurmJob:
         slurm_config: SlurmConfig,
         workflow_task_file_prefix: Optional[str] = None,
         slurm_file_prefix: Optional[str] = None,
-        wftask_file_prefix: Optional[str] = None,
+        wftask_file_prefixes: Optional[str] = None,
         single_task_submission: bool = False,
     ):
         if single_task_submission and num_tasks_tot > 1:
@@ -127,7 +129,12 @@ class SlurmJob:
         self.num_tasks_tot = num_tasks_tot
         self.single_task_submission = single_task_submission
         self.slurm_file_prefix = slurm_file_prefix or "default_slurm_prefix"
-        self.wftask_file_prefix = wftask_file_prefix or "default_wftask_prefix"
+        if wftask_file_prefixes is None:
+            self.wftask_file_prefixes = tuple(
+                "default_wftask_prefix" for i in range(self.num_tasks_tot)
+            )
+        else:
+            self.wftask_file_prefixes = wftask_file_prefixes
         self.workerids = tuple(
             random_string() for i in range(self.num_tasks_tot)
         )
@@ -165,6 +172,7 @@ class FractalSlurmExecutor(SlurmExecutor):
     working_dir: Path
     working_dir_user: Path
     map_jobid_to_slurm_files: dict[str, tuple[str, str, str]]
+    keep_pickle_files: bool
 
     def __init__(
         self,
@@ -173,6 +181,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         working_dir_user: Optional[Path] = None,
         common_script_lines: Optional[list[str]] = None,
         slurm_poll_interval: Optional[int] = None,
+        keep_pickle_files: bool = False,
         *args,
         **kwargs,
     ):
@@ -187,6 +196,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         super().__init__(*args, **kwargs)
 
+        self.keep_pickle_files = keep_pickle_files
         self.slurm_user = slurm_user
         self.common_script_lines = common_script_lines or []
         if not working_dir:
@@ -271,8 +281,6 @@ class FractalSlurmExecutor(SlurmExecutor):
             jobid:
                 integer job id as returned by `sbatch` submission
         """
-        logging.warning(sbatch_script)
-
         # Write script content to a file and prepare submission command
         with open(script_path, "w") as f:
             f.write(sbatch_script)
@@ -308,8 +316,9 @@ class FractalSlurmExecutor(SlurmExecutor):
         iterable: Iterable[list[Any]],
         *,
         slurm_config: Optional[SlurmConfig] = None,
-        wftask_order: Optional[str] = None,
-        wftask_file_prefix: Optional[str] = None,
+        task_files: Optional[TaskFiles] = None,
+        # wftask_order: Optional[str] = None,  # FIXME remove
+        # wftask_file_prefix: Optional[str] = None,  # FIXME: remove
     ):
         """
         Return an iterator with the results of several execution of a function
@@ -376,12 +385,14 @@ class FractalSlurmExecutor(SlurmExecutor):
         )
 
         # Set file prefixes
-        if wftask_file_prefix is None:
-            wftask_file_prefix = f"_wftask_{random_string()}"
-        if wftask_order is not None:
-            general_slurm_file_prefix = str(wftask_order)
-        else:
-            general_slurm_file_prefix = f"_{random_string()}"
+        if task_files is None:
+            task_files = TaskFiles(
+                workflow_dir=self.working_dir,
+                workflow_dir_user=self.working_dir_user,
+                task_order=f"task_{random_string(length=8)}",
+            )
+
+        general_slurm_file_prefix = str(task_files.task_order)
 
         # Transform iterable into a list and count its elements
         list_args = list(iterable)
@@ -428,7 +439,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         for ind_batch, batch in enumerate(args_batches):
             batch_size = len(batch)
             this_slurm_file_prefix = (
-                f"{general_slurm_file_prefix}_" f"batch_{ind_batch}"
+                f"{general_slurm_file_prefix}_batch_{ind_batch:06d}"
             )
             fs.append(
                 self.submit_multitask(
@@ -439,7 +450,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                     list_list_kwargs=[{} for x in batch],  # FIXME
                     slurm_config=slurm_config,
                     slurm_file_prefix=this_slurm_file_prefix,
-                    wftask_file_prefix=wftask_file_prefix,
+                    task_files=task_files,
                     component_indices=[
                         current_component_index + _ind
                         for _ind in range(batch_size)
@@ -479,7 +490,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         list_list_args: Iterable[Iterable],
         list_list_kwargs: Iterable[dict],
         slurm_file_prefix: str,
-        wftask_file_prefix: str,
+        task_files: TaskFiles,
         slurm_config: SlurmConfig,
         component_indices: Optional[list[int]] = None,
         single_task_submission: bool = False,
@@ -494,7 +505,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         num_tasks_tot = len(list_list_args)
         job = SlurmJob(
             slurm_file_prefix=slurm_file_prefix,
-            wftask_file_prefix=wftask_file_prefix,
             num_tasks_tot=num_tasks_tot,
             slurm_config=slurm_config,
         )
@@ -504,28 +514,33 @@ class FractalSlurmExecutor(SlurmExecutor):
                     "{single_task_submission=} but {job.num_tasks_tot=}"
                 )
             job.single_task_submission = 1
-
-        # If available, set a more granular prefix for each parallel component
-        if component_indices is not None:
-            prefixes = [
-                (f"{job.wftask_file_prefix}_" f"{component_indices[i]:06d}")
-                for i in range(num_tasks_tot)
-            ]
+            job.wftask_file_prefixes = (task_files.file_prefix,)
         else:
-            prefixes = [f"{job.wftask_file_prefix}"] * num_tasks_tot
+            logging.critical(f"{list_list_args=}")
+            job.wftask_file_prefixes = tuple(
+                get_task_file_paths(
+                    workflow_dir=task_files.workflow_dir,
+                    workflow_dir_user=task_files.workflow_dir_user,
+                    task_order=task_files.task_order,
+                    component=list_args[0],  # FIXME
+                ).file_prefix
+                for list_args in list_list_args
+            )
+
+        logging.critical(f"{job.wftask_file_prefixes=}")
 
         # Define I/O pickle file names/paths
         job.input_pickle_files = tuple(
             self.get_input_pickle_file_path(
                 job.workerids[ind],
-                prefix=prefixes[ind],
+                prefix=job.wftask_file_prefixes[ind],
             )
             for ind in range(job.num_tasks_tot)
         )
         job.output_pickle_files = tuple(
             self.get_output_pickle_file_path(
                 job.workerids[ind],
-                prefix=prefixes[ind],
+                prefix=job.wftask_file_prefixes[ind],
             )
             for ind in range(job.num_tasks_tot)
         )
@@ -581,8 +596,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         fun: Callable[..., Any],
         *fun_args,
         slurm_config: Optional[SlurmConfig] = None,
-        wftask_file_prefix: Optional[str] = None,
-        wftask_order: Optional[str] = None,
+        task_files: Optional[TaskFiles] = None,
         **fun_kwargs,
     ) -> futures.Future:
         """
@@ -593,12 +607,13 @@ class FractalSlurmExecutor(SlurmExecutor):
         slurm_config, is it?
         """
 
-        if wftask_file_prefix is None:
-            wftask_file_prefix = f"_wftask_{random_string()}"
-        if wftask_order is not None:
-            slurm_file_prefix = str(wftask_order)
-        else:
-            slurm_file_prefix = f"_{random_string()}"
+        if task_files is None:
+            task_files = TaskFiles(
+                workflow_dir=self.working_dir,
+                workflow_dir_user=self.working_dir_user,
+                task_order=f"task_{random_string(length=8)}",
+            )
+        slurm_file_prefix = task_files.file_prefix
 
         if not slurm_config:
             slurm_config = get_default_slurm_config()
@@ -624,7 +639,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             list_list_kwargs=[fun_kwargs],
             slurm_config=slurm_config,
             slurm_file_prefix=slurm_file_prefix,
-            wftask_file_prefix=wftask_file_prefix,
+            task_files=task_files,
             component_indices=None,
             single_task_submission=True,
         )
@@ -770,7 +785,8 @@ class FractalSlurmExecutor(SlurmExecutor):
                             " cancelled, exit from"
                             " FractalSlurmExecutor._completion."
                         )
-                        in_path.unlink()
+                        if not self.keep_pickle_files:
+                            in_path.unlink()
                         self._cleanup(jobid)
                         return
 
@@ -815,20 +831,23 @@ class FractalSlurmExecutor(SlurmExecutor):
                             exc = TaskExecutionError(proxy.tb, **kwargs)
                             fut.set_exception(exc)
                             return
-                    out_path.unlink()
+                    if not self.keep_pickle_files:
+                        out_path.unlink()
                 except futures.InvalidStateError:
                     logging.warning(
                         f"Future {fut} (SLURM job ID: {jobid}) was already"
                         " cancelled, exit from"
                         " FractalSlurmExecutor._completion."
                     )
-                    out_path.unlink()
-                    in_path.unlink()
+                    if not self.keep_pickle_files:
+                        out_path.unlink()
+                        in_path.unlink()
                     self._cleanup(jobid)
                     return
 
                 # Clean up input pickle file
-                in_path.unlink()
+                if not self.keep_pickle_files:
+                    in_path.unlink()
             self._cleanup(jobid)
             if job.single_task_submission:
                 fut.set_result(outputs[0])
@@ -869,115 +888,78 @@ class FractalSlurmExecutor(SlurmExecutor):
         if self.working_dir_user == self.working_dir:
             return
 
-        logging.warning(
-            f"[_copy_files_from_user_to_server] {job.slurm_file_prefix=}"
+        prefixes = set(
+            [job.slurm_file_prefix] + list(job.wftask_file_prefixes)
         )
-        logging.warning(
-            f"[_copy_files_from_user_to_server] {job.wftask_file_prefix=}"
-        )
+
+        logging.warning(f"[_copy_files_from_user_to_server] {prefixes=}")
         logging.warning(
             "[_copy_files_from_user_to_server] "
             f"{str(self.working_dir_user)=}"
         )
 
-        toc = tic(
-            "_glob_as_user("
-            f"folder={str(self.working_dir_user)}, "
-            f"user={self.slurm_user}, "
-            f"startswith={job.wftask_file_prefix})"
-        )
-        wftask_files_to_copy = _glob_as_user(
-            folder=str(self.working_dir_user),
-            user=self.slurm_user,
-            startswith=job.wftask_file_prefix,
-        )
-        toc()
-        logging.warning(
-            f"[_copy_files_from_user_to_server] {len(wftask_files_to_copy)=}"
-        )
-        toc = tic(
-            "_glob_as_user("
-            f"folder={str(self.working_dir_user)}, "
-            f"user={self.slurm_user}, "
-            f"startswith={job.slurm_file_prefix})"
-        )
-        slurm_files_to_copy = _glob_as_user(
-            folder=str(self.working_dir_user),
-            user=self.slurm_user,
-            startswith=job.slurm_file_prefix,
-        )
-        toc()
-        logging.warning(
-            f"[_copy_files_from_user_to_server] {len(slurm_files_to_copy)=}"
-        )
-        files_to_copy = set(slurm_files_to_copy + wftask_files_to_copy)
+        for prefix in prefixes:
 
-        logging.warning(
-            f"[_copy_files_from_user_to_server] XXX {len(files_to_copy)=}"
-        )
-
-        # FIXME: remove commented legacy version of _copy_files_from_user_to_server # noqa
-        # NOTE: By setting encoding=None, we read/write bytes instead of
-        # strings. This is needed to also handle pickle files
-        cat_script_lines = []
-        for source_file_name in files_to_copy:
-            if " " in source_file_name:
-                raise ValueError(
-                    f'source_file_name="{source_file_name}" '
-                    "contains whitespaces"
-                )
-            source_file_path = str(self.working_dir_user / source_file_name)
-            dest_file_path = str(self.working_dir / source_file_name)
-            cat_script_lines.append(
-                f"cat {source_file_path} > {dest_file_path}"
+            toc = tic(
+                "_glob_as_user("
+                f"folder={str(self.working_dir_user)}, "
+                f"user={self.slurm_user}, "
+                f"startswith={prefix})"
             )
-            logging.warning(f"{cat_script_lines[-1]=}")
-
-            toc = tic("_path_exists_as_user")
-            if not _path_exists_as_user(
-                path=source_file_path, user=self.slurm_user
-            ):
-                raise RuntimeError(
-                    f"Trying to `cat` missing path {source_file_path}"
-                )
-            toc()
-
-            # Read source_file_path (requires sudo)
-            cmd = f"cat {source_file_path}"
-            toc = tic(f"_run_command_as_user(cmd={cmd}")
-            res = _run_command_as_user(
-                cmd=cmd, user=self.slurm_user, encoding=None
+            files_to_copy = _glob_as_user(
+                folder=str(self.working_dir_user),
+                user=self.slurm_user,
+                startswith=prefix,
             )
             toc()
-            if res.returncode != 0:
-                info = (
-                    f'Running cmd="{cmd}" as {self.slurm_user=} failed\n\n'
-                    f"{res.returncode=}\n\n"
-                    f"{res.stdout=}\n\n{res.stderr=}\n"
+            logging.warning(
+                "[_copy_files_from_user_to_server] "
+                f"{prefix=}, {len(files_to_copy)=}"
+            )
+
+            # NOTE: By setting encoding=None, we read/write bytes instead of
+            # strings. This is needed to also handle pickle files
+            for source_file_name in files_to_copy:
+                if " " in source_file_name:
+                    raise ValueError(
+                        f'source_file_name="{source_file_name}" '
+                        "contains whitespaces"
+                    )
+                source_file_path = str(
+                    self.working_dir_user / source_file_name
                 )
-                logging.error(info)
-                raise JobExecutionError(info)
-            # Write to dest_file_path (including empty files)
-            dest_file_path = str(self.working_dir / source_file_name)
-            with open(dest_file_path, "wb") as f:
-                f.write(res.stdout)
+                dest_file_path = str(self.working_dir / source_file_name)
 
-        cat_script_lines.append("\n")
-        cat_script = "\n".join(cat_script_lines)
-        cat_script_path = (
-            self.working_dir
-            / f"{job.wftask_file_prefix}_{job.slurm_file_prefix}"
-            "_cat_files.sh"
-        )
-        logging.warning(f"{str(cat_script_path)=}")
-        with cat_script_path.open("w") as f:
-            f.write(cat_script)
-        # cmd = f"/bin/sh {str(cat_script_path)}"
-        # toc = tic(cmd)
-        # _run_command_as_user(cmd=cmd, user=self.slurm_user, check=True)
-        # toc()
+                toc = tic("_path_exists_as_user")
+                if not _path_exists_as_user(
+                    path=source_file_path, user=self.slurm_user
+                ):
+                    raise RuntimeError(
+                        f"Trying to `cat` missing path {source_file_path}"
+                    )
+                toc()
 
-        logging.debug("Exit _copy_files_from_user_to_server")
+                # Read source_file_path (requires sudo)
+                cmd = f"cat {source_file_path}"
+                toc = tic(f"_run_command_as_user(cmd={cmd}")
+                res = _run_command_as_user(
+                    cmd=cmd, user=self.slurm_user, encoding=None
+                )
+                toc()
+                if res.returncode != 0:
+                    info = (
+                        f'Running cmd="{cmd}" as {self.slurm_user=} failed\n\n'
+                        f"{res.returncode=}\n\n"
+                        f"{res.stdout=}\n\n{res.stderr=}\n"
+                    )
+                    logging.error(info)
+                    raise JobExecutionError(info)
+                # Write to dest_file_path (including empty files)
+                dest_file_path = str(self.working_dir / source_file_name)
+                with open(dest_file_path, "wb") as f:
+                    f.write(res.stdout)
+
+        logging.warning("Exit _copy_files_from_user_to_server")
 
     def _start_multitask(
         self,
@@ -1090,5 +1072,4 @@ class FractalSlurmExecutor(SlurmExecutor):
         script_lines.append("wait\n")
 
         script = "\n".join(script_lines)
-        logging.warning(f"\n{script}\n")
         return script
