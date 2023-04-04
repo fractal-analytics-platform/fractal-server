@@ -877,6 +877,12 @@ class FractalSlurmExecutor(SlurmExecutor):
         `job.file_prefix`, read them (with `sudo -u` impersonation) and write
         them to `self.working_dir`.
 
+        Files to copy:  FIXME
+        per job:
+        * SLURM job (stderr&stdout, since submission script is already there) -> 2  # noqa
+        per component:
+        * task files (stderr&stdout&metadiff&args&outpickle) -> 5
+
         Arguments:
             job: `SlurmJob` object (needed for its
                  `file_prefix` attribute)
@@ -894,24 +900,16 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         logging.warning(f"[_copy_files_from_user_to_server] {prefixes=}")
         logging.warning(
-            "[_copy_files_from_user_to_server] "
-            f"{str(self.working_dir_user)=}"
+            f"[_copy_files_from_user_to_server] {str(self.working_dir_user)=}"
         )
 
         for prefix in prefixes:
 
-            toc = tic(
-                "_glob_as_user("
-                f"folder={str(self.working_dir_user)}, "
-                f"user={self.slurm_user}, "
-                f"startswith={prefix})"
-            )
             files_to_copy = _glob_as_user(
                 folder=str(self.working_dir_user),
                 user=self.slurm_user,
                 startswith=prefix,
             )
-            toc()
             logging.warning(
                 "[_copy_files_from_user_to_server] "
                 f"{prefix=}, {len(files_to_copy)=}"
@@ -930,22 +928,18 @@ class FractalSlurmExecutor(SlurmExecutor):
                 )
                 dest_file_path = str(self.working_dir / source_file_name)
 
-                toc = tic("_path_exists_as_user")
-                if not _path_exists_as_user(
-                    path=source_file_path, user=self.slurm_user
-                ):
-                    raise RuntimeError(
-                        f"Trying to `cat` missing path {source_file_path}"
-                    )
-                toc()
+                # if not _path_exists_as_user(
+                #     path=source_file_path, user=self.slurm_user
+                # ):
+                #     raise RuntimeError(
+                #         f"Trying to `cat` missing path {source_file_path}"
+                #     )
 
                 # Read source_file_path (requires sudo)
                 cmd = f"cat {source_file_path}"
-                toc = tic(f"_run_command_as_user(cmd={cmd}")
                 res = _run_command_as_user(
                     cmd=cmd, user=self.slurm_user, encoding=None
                 )
-                toc()
                 if res.returncode != 0:
                     info = (
                         f'Running cmd="{cmd}" as {self.slurm_user=} failed\n\n'
