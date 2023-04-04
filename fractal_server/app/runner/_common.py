@@ -109,8 +109,9 @@ class TaskFiles:
         self.task_order = task_order
         self.component = component
 
-        if self.component:
-            component_safe = f"_par_{sanitize_component(self.component)}"
+        if self.component is not None:
+            component_safe = sanitize_component(str(self.component))
+            component_safe = f"_par_{component_safe}"
         else:
             component_safe = ""
 
