@@ -934,7 +934,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
             # Read source_file_path (requires sudo)
             cmd = f"cat {source_file_path}"
-            toc = tic("_run_command_as_user(cmd={cmd}")
+            toc = tic(f"_run_command_as_user(cmd={cmd}")
             res = _run_command_as_user(
                 cmd=cmd, user=self.slurm_user, encoding=None
             )
