@@ -18,6 +18,7 @@ another user. Note that this requires appropriate sudo permissions.
 import logging
 import shlex
 import subprocess  # nosec
+from typing import Iterable
 from typing import Optional
 
 
@@ -112,13 +113,31 @@ def _glob_as_user(
 
 def _path_exists_as_user(*, path: str, user: Optional[str] = None) -> bool:
     """
-    Impersonate a user and check if `filepath` exists via `ls`
+    Impersonate a user and check if `path` exists via `ls`
 
     Arguments:
         path: Absolute file/folder path
         user: If not `None`, user to be impersonated
     """
     res = _run_command_as_user(cmd=f"ls {path}", user=user)
+    if res.returncode == 0:
+        return True
+    else:
+        return False
+
+
+def _multiple_paths_exist_as_user(
+    *, paths: Iterable[str], user: Optional[str] = None
+) -> bool:
+    """
+    Impersonate a user and check if some paths exists via `ls`
+
+    Arguments:
+        path: Absolute file/folder path
+        user: If not `None`, user to be impersonated
+    """
+    paths_string = " ".join(paths)
+    res = _run_command_as_user(cmd=f"ls {paths_string}", user=user)
     if res.returncode == 0:
         return True
     else:
