@@ -3,7 +3,7 @@ import traceback
 from cfut import FileWaitThread
 from cfut import slurm
 
-from ._subprocess_run_as_user import _path_exists_as_user
+from ._subprocess_run_as_user import _multiple_paths_exist_as_user
 
 
 class FractalFileWaitThread(FileWaitThread):
@@ -61,14 +61,9 @@ class FractalFileWaitThread(FileWaitThread):
         """
         # Poll for each file.
         for filenames in list(self.waiting):
-            all_files_exist = True
-            for filename in filenames:
-                if not _path_exists_as_user(
-                    path=filename,
-                    user=self.slurm_user,
-                ):
-                    all_files_exist = False
-                    break
+            all_files_exist = _multiple_paths_exist_as_user(
+                paths=filenames, user=self.slurm_user
+            )
             if all_files_exist:
                 self.callback(self.waiting[filenames])
                 del self.waiting[filenames]
