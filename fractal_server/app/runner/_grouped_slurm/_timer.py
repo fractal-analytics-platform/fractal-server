@@ -6,7 +6,7 @@ import time
 from typing import Callable
 
 
-def tic(description: str, logging_level: int = logging.info) -> Callable:
+def tic(description: str, logging_level: int = logging.WARNING) -> Callable:
     t_start = time.perf_counter()
     logging.log(logging_level, f"[{description}] start")
 
