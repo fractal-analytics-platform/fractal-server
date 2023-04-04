@@ -949,7 +949,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                 raise JobExecutionError(info)
             # Write to dest_file_path (including empty files)
             dest_file_path = str(self.working_dir / source_file_name)
-            toc = tic("Write to {dest_file_path}")
+            toc = tic(f"Write to {dest_file_path}")
             with open(dest_file_path, "wb") as f:
                 f.write(res.stdout)
             toc()
