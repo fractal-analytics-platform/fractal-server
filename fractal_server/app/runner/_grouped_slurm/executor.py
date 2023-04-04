@@ -508,7 +508,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         # If available, set a more granular prefix for each parallel component
         if component_indices is not None:
             prefixes = [
-                f"{job.wftask_file_prefix}_{component_indices[i]}"
+                (f"{job.wftask_file_prefix}_" f"{component_indices[i]:06d}")
                 for i in range(num_tasks_tot)
             ]
         else:
