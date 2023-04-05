@@ -14,7 +14,7 @@ Institute for Biomedical Research and Pelkmans Lab from the University of
 Zurich.
 """
 import asyncio
-import json
+import glob
 import logging
 import os
 import threading
@@ -450,10 +450,11 @@ async def test_failing_workflow_JobExecutionError(
 async def test_non_python_task(
     client,
     MockCurrentUser,
-    testdata_path,
     project_factory,
     dataset_factory,
     resource_factory,
+    testdata_path,
+    tmp_path,
     tmp777_path,
 ):
     async with MockCurrentUser(persist=True) as user:
@@ -465,24 +466,10 @@ async def test_non_python_task(
         debug(workflow)
         assert res.status_code == 201
 
-        file_in = f"{str(testdata_path)}/test_in.json"
-        file_out = f"{str(testdata_path)}/test_out.json"
-
-        if os.path.exists(file_in):
-            with open(file_in, "r") as f:
-                TEST_JSON = json.load(f)
-        else:
-            TEST_JSON = {"test": "json"}
-            with open(file_in, "w") as f:
-                json.dump(TEST_JSON, f)
-
         task_dict = dict(
             name="non-python",
-            source="custom task",
-            command=(
-                f"sh {str(testdata_path)}/issue189.sh "
-                f"--json {file_in} --metadata-out {file_out}"
-            ),
+            source="custom-task",
+            command=f"sh {str(testdata_path)}/issue189.sh",
             input_type="zarr",
             output_type="zarr",
         )
@@ -505,7 +492,13 @@ async def test_non_python_task(
         )
         output_dataset_id = output_dataset.id
 
-        await resource_factory(path="/tmp", dataset=output_dataset)
+        await resource_factory(
+            path=str(tmp_path / "output_dir"), dataset=output_dataset
+        )
+        await resource_factory(
+            path=str(tmp_path / "input_dir"), dataset=input_dataset
+        )
+        debug(tmp_path)
 
         payload = dict(
             project_id=project.id,
@@ -526,10 +519,15 @@ async def test_non_python_task(
         debug(job_status_data)
         assert job_status_data["status"] == "done"
 
-        with open(file_out, "r") as f:
-            loaded_json = json.load(f)
+        working_dir = job_status_data["working_dir"]
 
-        os.remove(file_in)
-        os.remove(file_out)
-
-        assert loaded_json == TEST_JSON
+        glob_list = glob.glob(f"{working_dir}/*")
+        must_exist = [
+            "0.args.json",
+            "0.err",
+            "0.metadiff.json",
+            "0.out",
+            "workflow.log",
+        ]
+        for f in must_exist:
+            assert f in glob_list

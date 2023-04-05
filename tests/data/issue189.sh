@@ -14,7 +14,7 @@ while [[ $# -gt 0 ]]
 do
     key="$1"
     case $key in
-        --json)
+        -j)
         JSON_FILE="$2"
         shift # past argument
         shift # past value
