@@ -14,6 +14,7 @@ Institute for Biomedical Research and Pelkmans Lab from the University of
 Zurich.
 """
 import asyncio
+import json
 import logging
 import os
 import threading
@@ -464,12 +465,23 @@ async def test_non_python_task(
         debug(workflow)
         assert res.status_code == 201
 
+        file_in = f"{str(testdata_path)}/test_in.json"
+        file_out = f"{str(testdata_path)}/test_out.json"
+
+        if os.path.exists(file_in):
+            with open(file_in, "r") as f:
+                TEST_JSON = json.load(f)
+        else:
+            TEST_JSON = {"test": "json"}
+            with open(file_in, "w") as f:
+                json.dump(TEST_JSON, f)
+
         task_dict = dict(
             name="non-python",
             source="custom task",
             command=(
-                f"sh {str(testdata_path)}/issue189.sh "
-                "--json hello --metadata-out world"
+                f"./{str(testdata_path)}/issue189.sh "
+                f"--json {file_in} --metadata-out {file_out}"
             ),
             input_type="zarr",
             output_type="zarr",
@@ -506,3 +518,11 @@ async def test_non_python_task(
         res = await client.post("/api/v1/project/apply/", json=payload)
         debug(res.json())
         assert res.status_code == 202
+
+        with open(file_out, "r") as f:
+            loaded_json = json.load(f)
+
+        os.remove(file_in)
+        os.remove(file_out)
+
+        assert loaded_json == TEST_JSON
