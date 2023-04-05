@@ -6,6 +6,7 @@ Original author(s):
 Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
 Tommaso Comparin <tommaso.comparin@exact-lab.it>
 Marco Franzon <marco.franzon@exact-lab.it>
+Yuri Chiucconi <yuri.chiucconi@exact-lab.it>
 
 This file is part of Fractal and was originally developed by eXact lab S.r.l.
 <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
@@ -24,7 +25,7 @@ from devtools import debug
 
 from .fixtures_slurm import scancel_all_jobs_of_a_slurm_user
 from fractal_server.app.runner import _backends
-
+from fractal_server.common.schemas.task import TaskCreate
 
 PREFIX = "/api/v1"
 
@@ -443,3 +444,65 @@ async def test_failing_workflow_JobExecutionError(
         assert "JOB ERROR" in job_status_data["log"]
         assert "CANCELLED" in job_status_data["log"]
         assert "\\n" not in job_status_data["log"]
+
+
+async def test_non_python_task(
+    client,
+    MockCurrentUser,
+    testdata_path,
+    project_factory,
+    dataset_factory,
+    resource_factory,
+    tmp777_path,
+):
+    async with MockCurrentUser(persist=True) as user:
+        project_dir = tmp777_path / "test"
+        project = await project_factory(user, project_dir=str(project_dir))
+        payload = {"name": "WF", "project_id": project.id}
+        res = await client.post("api/v1/workflow/", json=payload)
+        workflow = res.json()
+        debug(workflow)
+        assert res.status_code == 201
+
+        task_dict = dict(
+            name="non-python",
+            source="custom task",
+            command=(
+                f"sh {str(testdata_path)}/issue189.sh "
+                "--json hello --metadata-out world"
+            ),
+            input_type="zarr",
+            output_type="zarr",
+        )
+        task_create = TaskCreate(**task_dict)
+        res = await client.post("api/v1/task/", json=task_create.dict())
+        assert res.status_code == 201
+        task = res.json()
+        res = await client.post(
+            f"api/v1/workflow/{workflow['id']}/add-task/",
+            json=dict(task_id=task["id"]),
+        )
+        assert res.status_code == 201
+
+        input_dataset = await dataset_factory(
+            project, name="input", type="zarr", read_only=False
+        )
+        input_dataset_id = input_dataset.id
+        output_dataset = await dataset_factory(
+            project, name="output", type="zarr", read_only=False
+        )
+        output_dataset_id = output_dataset.id
+
+        await resource_factory(path="/tmp", dataset=output_dataset)
+
+        payload = dict(
+            project_id=project.id,
+            input_dataset_id=input_dataset_id,
+            output_dataset_id=output_dataset_id,
+            workflow_id=workflow["id"],
+            overwrite_input=False,
+        )
+        debug(payload)
+        res = await client.post("/api/v1/project/apply/", json=payload)
+        debug(res.json())
+        assert res.status_code == 202
