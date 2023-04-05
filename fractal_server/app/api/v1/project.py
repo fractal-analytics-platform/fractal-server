@@ -250,7 +250,6 @@ async def apply_workflow(
                 project=project,
                 input_dataset=input_dataset,
                 workflow=workflow,
-                overwrite_input=apply_workflow.overwrite_input,
             )
         except Exception as e:
             raise HTTPException(
