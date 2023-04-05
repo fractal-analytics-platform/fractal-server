@@ -480,7 +480,7 @@ async def test_non_python_task(
             name="non-python",
             source="custom task",
             command=(
-                f"./{str(testdata_path)}/issue189.sh "
+                f"sh {str(testdata_path)}/issue189.sh "
                 f"--json {file_in} --metadata-out {file_out}"
             ),
             input_type="zarr",
@@ -516,8 +516,15 @@ async def test_non_python_task(
         )
         debug(payload)
         res = await client.post("/api/v1/project/apply/", json=payload)
-        debug(res.json())
+        job_data = res.json()
+        debug(job_data)
         assert res.status_code == 202
+
+        res = await client.get(f"{PREFIX}/job/{job_data['id']}")
+        assert res.status_code == 200
+        job_status_data = res.json()
+        debug(job_status_data)
+        assert job_status_data["status"] == "done"
 
         with open(file_out, "r") as f:
             loaded_json = json.load(f)
