@@ -469,7 +469,7 @@ async def test_non_python_task(
         task_dict = dict(
             name="non-python",
             source="custom-task",
-            command=f"sh {str(testdata_path)}/issue189.sh",
+            command=f"sh {str(testdata_path)}/non_python_task_issue189.sh",
             input_type="zarr",
             output_type="zarr",
         )
@@ -521,7 +521,7 @@ async def test_non_python_task(
 
         working_dir = job_status_data["working_dir"]
 
-        glob_list = glob.glob(f"{working_dir}/*")
+        glob_list = [Path(x).name for x in glob.glob(f"{working_dir}/*")]
         must_exist = [
             "0.args.json",
             "0.err",
