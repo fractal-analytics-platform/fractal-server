@@ -531,3 +531,10 @@ async def test_non_python_task(
         ]
         for f in must_exist:
             assert f in glob_list
+
+        with open(f"{working_dir}/0.out", "r") as f:
+            out = f.read()
+        assert "This goes to standard output" in out
+        with open(f"{working_dir}/0.err", "r") as f:
+            err = f.read()
+        assert "This goes to standard error" in err
