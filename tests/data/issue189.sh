@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # This script accepts two optional arguments, `--json`` and `--metadata-out`.
 # If both arguments are provided, the script copies the file specified
