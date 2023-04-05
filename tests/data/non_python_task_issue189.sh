@@ -1,5 +1,3 @@
-#!/bin/sh
-
 # This script accepts two optional arguments, `--json`` and `--metadata-out`.
 # If both arguments are provided, the script copies the file specified
 # by the `--json` argument to the location specified by the `--metadata-out`
@@ -34,4 +32,6 @@ done
 if [[ -n $JSON_FILE && -n $METADATA_OUT ]]
 then
     cp "$JSON_FILE" "$METADATA_OUT"
+    echo "This goes to standard error" >&2
+    echo "This goes to standard output"
 fi
