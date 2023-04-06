@@ -1,7 +1,5 @@
 import asyncio
 import logging
-import os
-from pathlib import Path
 from typing import List
 from typing import Optional
 from typing import Union
@@ -16,6 +14,8 @@ from pydantic import UUID4
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
+from ....config import get_settings
+from ....syringe import Inject
 from ...db import AsyncSession
 from ...db import DBSyncSession
 from ...db import get_db
@@ -156,15 +156,6 @@ async def create_project(
     Create new poject
     """
 
-    # Check that project_dir is an absolute path
-    if not os.path.isabs(project.project_dir):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                f"Project dir {project.project_dir} is not an absolute path"
-            ),
-        )
-
     # Check that there is no project with the same user and name
     stm = (
         select(Project)
@@ -261,6 +252,27 @@ async def apply_workflow(
                 ),
             )
 
+    # If backend is SLURM, check that the user has required attributes
+    settings = Inject(get_settings)
+    backend = settings.FRACTAL_RUNNER_BACKEND
+    if backend == "slurm":
+        if not user.slurm_user:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    f"FRACTAL_RUNNER_BACKEND={backend}, "
+                    f"but {user.slurm_user=}."
+                ),
+            )
+        if not user.cache_dir:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    f"FRACTAL_RUNNER_BACKEND={backend}, "
+                    f"but {user.cache_dir=}."
+                ),
+            )
+
     try:
         validate_workflow_compatibility(
             workflow=workflow,
@@ -283,9 +295,9 @@ async def apply_workflow(
         input_dataset=input_dataset,
         output_dataset=output_dataset,
         job_id=job.id,
-        slurm_user=user.slurm_user,
         worker_init=apply_workflow.worker_init,
-        project_dir=project.project_dir,
+        slurm_user=user.slurm_user,
+        user_cache_dir=user.cache_dir,
     )
 
     return job
@@ -492,14 +504,6 @@ async def add_resource(
     """
     Add resource to an existing dataset
     """
-
-    # Check that path is absolute, which is needed for when the server submits
-    # tasks as a different user
-    if not Path(resource.path).is_absolute():
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Path `{resource.path}` is not absolute.",
-        )
 
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
