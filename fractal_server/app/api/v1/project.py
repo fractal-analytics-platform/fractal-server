@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from pathlib import Path
 from typing import List
 from typing import Optional
 from typing import Union
@@ -505,14 +504,6 @@ async def add_resource(
     """
     Add resource to an existing dataset
     """
-
-    # Check that path is absolute, which is needed for when the server submits
-    # tasks as a different user
-    if not Path(resource.path).is_absolute():
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Path `{resource.path}` is not absolute.",
-        )
 
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
