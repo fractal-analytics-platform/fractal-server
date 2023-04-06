@@ -25,6 +25,7 @@ from typing import Optional
 from ... import __VERSION__
 from ...config import get_settings
 from ...syringe import Inject
+from ...utils import get_timestamp
 from ...utils import set_logger
 from ..db import DB
 from ..models import ApplyWorkflow
@@ -73,9 +74,9 @@ async def submit_workflow(
     input_dataset: Dataset,
     output_dataset: Dataset,
     job_id: int,
-    slurm_user: Optional[str] = None,
-    user_cache_dir: Optional[str] = None,  # FIXME: take it from user?
     worker_init: Optional[str] = None,
+    slurm_user: Optional[str] = None,
+    user_cache_dir: Optional[str] = None,
 ) -> None:
     """
     Prepares a workflow and applies it to a dataset
@@ -97,15 +98,16 @@ async def submit_workflow(
         job_id:
             Id of the job record which stores the state for the current
             workflow application.
-        user_cache_dir:
-            Cache directory (namely a path where the user can write). For the
-            slurm backend, this is used as a base directory for
-            `job.working_dir_user`.
-        slurm_user:
-            The username to impersonate for the workflow execution.
         worker_init:
             Custom executor parameters that get parsed before the execution of
             each task.
+        user_cache_dir:
+            Cache directory (namely a path where the user can write); for the
+            slurm backend, this is used as a base directory for
+            `job.working_dir_user`.
+        slurm_user:
+            The username to impersonate for the workflow execution, for the
+            slurm backend.
     """
     db_sync = next(DB.get_sync_db())
     job: ApplyWorkflow = db_sync.get(ApplyWorkflow, job_id)  # type: ignore
@@ -137,11 +139,13 @@ async def submit_workflow(
     if FRACTAL_RUNNER_BACKEND == "local":
         WORKFLOW_DIR_USER = WORKFLOW_DIR
     elif FRACTAL_RUNNER_BACKEND == "slurm":
+        # Read user's attribute
+        timestamp_string = get_timestamp().strftime("%Y%m%d_%H%M%S")
+
         from ._slurm._subprocess_run_as_user import _mkdir_as_user
 
-        # FIXME: ADD TIMESTAMP
         WORKFLOW_DIR_USER = (
-            Path(user_cache_dir) / WORKFLOW_DIR.name
+            Path(user_cache_dir) / timestamp_string / WORKFLOW_DIR.name
         ).resolve()
         _mkdir_as_user(folder=str(WORKFLOW_DIR_USER), user=slurm_user)
     else:
