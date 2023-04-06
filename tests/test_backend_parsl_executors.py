@@ -16,11 +16,11 @@ import logging
 import pytest
 from devtools import debug
 
+from .data.tasks_dummy import dummy
+from .data.tasks_dummy import dummy_parallel
 from fractal_server.app.models import Task
 from fractal_server.app.models import Workflow
 from fractal_server.app.runner.common import close_job_logger
-from fractal_server.tasks import dummy
-from fractal_server.tasks import dummy_parallel
 from fractal_server.utils import set_logger
 
 try:

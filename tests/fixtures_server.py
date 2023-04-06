@@ -358,10 +358,7 @@ async def project_factory(db):
     from fractal_server.app.models import Project
 
     async def __project_factory(user, **kwargs):
-        defaults = dict(
-            name="project",
-            project_dir="/tmp/",
-        )
+        defaults = dict(name="project")
         defaults.update(kwargs)
         project = Project(**defaults)
         project.user_member_list.append(user)

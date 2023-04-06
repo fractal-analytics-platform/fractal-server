@@ -120,10 +120,22 @@ async def test_edit_user(registered_client, registered_superuser_client):
 
     # PATCH/{user_id} with superuser
     res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{user_id}", json={"slurm_user": "my_slurm_user"}
+        f"{PREFIX}/users/{user_id}",
+        json={
+            "slurm_user": "my_slurm_user",
+            "cache_dir": "/some/absolute/path",
+        },
     )
     assert res.status_code == 200
     assert res.json()["slurm_user"] == "my_slurm_user"
+    assert res.json()["cache_dir"] == "/some/absolute/path"
+
+    # PATCH/{user_id} with superuser, but with invalid payload
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user_id}", json={"cache_dir": "non/absolute/path"}
+    )
+    debug(res.json())
+    assert res.status_code == 422
 
 
 async def test_add_superuser(registered_superuser_client):
@@ -172,3 +184,11 @@ async def test_delete_user(registered_client, registered_superuser_client):
         f"{PREFIX}/users/THIS-IS-NOT-AN-ID"
     )
     assert res.status_code == 404
+
+
+async def test_MockCurrentUser_fixture(db, app, MockCurrentUser):
+
+    user_kwargs = dict(cache_dir="/tmp")
+    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs) as user:
+        debug(user)
+        assert user.cache_dir == "/tmp"
