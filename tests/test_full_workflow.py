@@ -455,17 +455,24 @@ async def test_non_python_task(
     resource_factory,
     testdata_path,
     tmp_path,
-    tmp777_path,
 ):
+    """
+    Run a full workflow with a single bash task, which simply writes something
+    to stderr and stdout
+    """
     async with MockCurrentUser(persist=True) as user:
-        project_dir = tmp777_path / "test"
+        # Create project
+        project_dir = tmp_path / "test"
         project = await project_factory(user, project_dir=str(project_dir))
+
+        # Create workflow
         payload = {"name": "WF", "project_id": project.id}
         res = await client.post("api/v1/workflow/", json=payload)
         workflow = res.json()
         debug(workflow)
         assert res.status_code == 201
 
+        # Create task
         task_dict = dict(
             name="non-python",
             source="custom-task",
@@ -479,33 +486,33 @@ async def test_non_python_task(
         debug(task)
         assert res.status_code == 201
 
+        # Add task to workflow
         res = await client.post(
             f"api/v1/workflow/{workflow['id']}/add-task/",
             json=dict(task_id=task["id"]),
         )
         assert res.status_code == 201
 
+        # Create datasets
         input_dataset = await dataset_factory(
             project, name="input", type="zarr", read_only=False
         )
-        input_dataset_id = input_dataset.id
         output_dataset = await dataset_factory(
             project, name="output", type="zarr", read_only=False
         )
-        output_dataset_id = output_dataset.id
-
-        await resource_factory(
-            path=str(tmp_path / "output_dir"), dataset=output_dataset
-        )
+        debug(tmp_path)
         await resource_factory(
             path=str(tmp_path / "input_dir"), dataset=input_dataset
         )
-        debug(tmp_path)
+        await resource_factory(
+            path=str(tmp_path / "output_dir"), dataset=output_dataset
+        )
 
+        # Submit workflow
         payload = dict(
             project_id=project.id,
-            input_dataset_id=input_dataset_id,
-            output_dataset_id=output_dataset_id,
+            input_dataset_id=input_dataset.id,
+            output_dataset_id=output_dataset.id,
             workflow_id=workflow["id"],
             overwrite_input=False,
         )
@@ -515,14 +522,15 @@ async def test_non_python_task(
         debug(job_data)
         assert res.status_code == 202
 
+        # Check that the workflow execution is complete
         res = await client.get(f"{PREFIX}/job/{job_data['id']}")
         assert res.status_code == 200
         job_status_data = res.json()
         debug(job_status_data)
         assert job_status_data["status"] == "done"
 
+        # Check that the expected files are present
         working_dir = job_status_data["working_dir"]
-
         glob_list = [Path(x).name for x in glob.glob(f"{working_dir}/*")]
         must_exist = [
             "0.args.json",
@@ -534,6 +542,7 @@ async def test_non_python_task(
         for f in must_exist:
             assert f in glob_list
 
+        # Check that stderr and stdout are as expected
         with open(f"{working_dir}/0.out", "r") as f:
             out = f.read()
         assert "This goes to standard output" in out
