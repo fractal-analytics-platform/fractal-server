@@ -5,11 +5,11 @@ from concurrent.futures import Future
 import pytest
 from devtools import debug
 
+from .data.tasks_dummy import dummy as dummy_module
 from .fixtures_tasks import MockTask
 from .fixtures_tasks import MockWorkflowTask
 from fractal_server.app.runner.common import close_job_logger
 from fractal_server.app.runner.common import TaskParameters
-from fractal_server.tasks import dummy as dummy_module
 from fractal_server.utils import set_logger
 
 

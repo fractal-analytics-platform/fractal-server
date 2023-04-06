@@ -19,6 +19,8 @@ from concurrent.futures import ThreadPoolExecutor
 import pytest
 from devtools import debug
 
+from .data.tasks_dummy import dummy as dummy_module
+from .data.tasks_dummy import dummy_parallel as dummy_parallel_module
 from .fixtures_tasks import MockTask
 from .fixtures_tasks import MockWorkflowTask
 from fractal_server.app.runner._common import _call_command_wrapper
@@ -27,8 +29,6 @@ from fractal_server.app.runner._common import call_single_task
 from fractal_server.app.runner._common import recursive_task_submission
 from fractal_server.app.runner.common import close_job_logger
 from fractal_server.app.runner.common import TaskParameters
-from fractal_server.tasks import dummy as dummy_module
-from fractal_server.tasks import dummy_parallel as dummy_parallel_module
 from fractal_server.utils import set_logger
 
 
