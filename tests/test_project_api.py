@@ -334,7 +334,7 @@ async def test_edit_resource(
         ds = await dataset_factory(project=prj)
         orig_resource = await resource_factory(dataset=ds)
 
-        payload = dict(path="my/new/path")
+        payload = dict(path="/my/new/path")
         res = await client.patch(
             f"{PREFIX}/{prj.id}/{ds.id}/{orig_resource.id}", json=payload
         )
