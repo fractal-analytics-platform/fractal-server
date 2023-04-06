@@ -139,7 +139,6 @@ async def submit_workflow(
     if FRACTAL_RUNNER_BACKEND == "local":
         WORKFLOW_DIR_USER = WORKFLOW_DIR
     elif FRACTAL_RUNNER_BACKEND == "slurm":
-        # Read user's attribute
         timestamp_string = get_timestamp().strftime("%Y%m%d_%H%M%S")
 
         from ._slurm._subprocess_run_as_user import _mkdir_as_user
