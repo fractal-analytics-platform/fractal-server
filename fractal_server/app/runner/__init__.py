@@ -144,7 +144,7 @@ async def submit_workflow(
         from ._slurm._subprocess_run_as_user import _mkdir_as_user
 
         WORKFLOW_DIR_USER = (
-            Path(user_cache_dir) / timestamp_string / WORKFLOW_DIR.name
+            Path(user_cache_dir) / f"{timestamp_string}_{WORKFLOW_DIR.name}"
         ).resolve()
         _mkdir_as_user(folder=str(WORKFLOW_DIR_USER), user=slurm_user)
     else:
