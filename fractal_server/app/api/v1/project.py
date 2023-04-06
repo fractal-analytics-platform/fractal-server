@@ -16,6 +16,8 @@ from pydantic import UUID4
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
+from ....config import get_settings
+from ....syringe import Inject
 from ...db import AsyncSession
 from ...db import DBSyncSession
 from ...db import get_db
@@ -261,6 +263,27 @@ async def apply_workflow(
                 ),
             )
 
+    # If backend is SLURM, check that the user has required attributes
+    settings = Inject(get_settings)
+    backend = settings.FRACTAL_RUNNER_BACKEND
+    if backend == "slurm":
+        if not user.slurm_user:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    f"FRACTAL_RUNNER_BACKEND={backend}, "
+                    f"but {user.slurm_user=}."
+                ),
+            )
+        if not user.cache_dir:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    f"FRACTAL_RUNNER_BACKEND={backend}, "
+                    f"but {user.cache_dir=}."
+                ),
+            )
+
     try:
         validate_workflow_compatibility(
             workflow=workflow,
@@ -285,7 +308,8 @@ async def apply_workflow(
         job_id=job.id,
         slurm_user=user.slurm_user,
         worker_init=apply_workflow.worker_init,
-        project_dir=project.project_dir,
+        user_cache_dir=user.cache_dir,
+        # FIXME: directly pass user, instead of two attributes
     )
 
     return job
