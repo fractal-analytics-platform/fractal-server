@@ -9,7 +9,7 @@
             "meta": {"key": "value"},
             "order": 0,
             "task": {
-                "name": "dummy",
+                "name": "dummy parallel",
                 "source": "test_source"
             }
         },
