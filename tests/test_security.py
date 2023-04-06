@@ -191,3 +191,4 @@ async def test_MockCurrentUser_fixture(db, app, MockCurrentUser):
     user_kwargs = dict(cache_dir="/tmp")
     async with MockCurrentUser(persist=True, user_kwargs=user_kwargs) as user:
         debug(user)
+        assert user.cache_dir == "/tmp"
