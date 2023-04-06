@@ -10,18 +10,13 @@
 # Institute for Biomedical Research and Pelkmans Lab from the University of
 # Zurich.
 """
-Slurm Bakend
-
-This backend runs fractal workflows in a SLURM cluster using Clusterfutures
-Executor objects.
+FIXME
 """
 import json
 import logging
 from pathlib import Path
-from typing import Dict
 from typing import List
 from typing import Optional
-from typing import Union
 
 from pydantic import BaseModel
 from pydantic import Extra
@@ -30,9 +25,6 @@ from pydantic import Field
 from ....config import get_settings
 from ....syringe import Inject
 from ...models import WorkflowTask
-from .._common import get_task_file_paths
-from .._common import TaskFiles
-from ..common import TaskParameters
 
 
 class SlurmConfigError(ValueError):
@@ -205,13 +197,12 @@ def get_default_slurm_config():
     )
 
 
-def set_slurm_config(
+def get_slurm_config(
     wftask: WorkflowTask,
-    task_pars: TaskParameters,
     workflow_dir: Path,
     workflow_dir_user: Path,
     config_path: Optional[Path] = None,
-) -> Dict[str, Union[TaskFiles, SlurmConfig]]:
+) -> SlurmConfig:
     """
     Collect WorfklowTask-specific configuration parameters from different
     sources, and inject them for execution
@@ -226,9 +217,6 @@ def set_slurm_config(
     Args:
         task:
             Task for which the sbatch script is to be assembled
-        task_pars:
-            Task parameters to be passed to the task
-            (not used in this function)
         workflow_dir:
             Server-owned directory to store all task-execution-related relevant
             files (inputs, outputs, errors, and all meta files related to the
@@ -371,22 +359,7 @@ def set_slurm_config(
     slurm_config = SlurmConfig(**slurm_dict)
     logging.warning(f"{slurm_config=}")
 
-    # Gather information on task files, to be used in wftask_file_prefix and
-    # wftask_order
-    task_files = get_task_file_paths(
-        workflow_dir=workflow_dir,
-        workflow_dir_user=workflow_dir_user,
-        task_order=wftask.order,
-    )
-
-    # Prepare and return output dictionary
-    submit_setup_dict = dict(
-        slurm_config=slurm_config,
-        task_files=task_files,
-        # wftask_file_prefix=task_files.file_prefix,  # FIXME remove
-        # wftask_order=wftask.order,  # FIXME remove
-    )
-    return submit_setup_dict
+    return slurm_config
 
     """
     # From https://slurm.schedmd.com/sbatch.html: Beginning with 22.05, srun
