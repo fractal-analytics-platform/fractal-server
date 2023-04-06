@@ -6,6 +6,7 @@
 * Update to fastapi `0.95` (\#587).
 * Minor improvements in dataset-edit endpoint (\#593) and tests (\#589).
 * Include test of non-python task (\#594).
+* Move dummy tasks from package to tests (\#601).
 
 # 1.1.1
 
