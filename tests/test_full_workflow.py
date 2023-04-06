@@ -61,9 +61,11 @@ async def test_full_workflow(
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
         request.getfixturevalue("cfut_jobs_finished")
+        user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
+        user_kwargs = dict(cache_dir=user_cache_dir)
+    else:
+        user_kwargs = {}
 
-    user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
-    user_kwargs = dict(cache_dir=user_cache_dir)
     async with MockCurrentUser(persist=True, user_kwargs=user_kwargs) as user:
         debug(user)
 
