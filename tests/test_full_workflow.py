@@ -62,8 +62,11 @@ async def test_full_workflow(
         request.getfixturevalue("relink_python_interpreter")
         request.getfixturevalue("cfut_jobs_finished")
 
-    user_kwargs = dict(cache_dir=(tmp777_path / f"user_cache_dir-{backend}"))
+    user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
+    user_kwargs = dict(cache_dir=user_cache_dir)
     async with MockCurrentUser(persist=True, user_kwargs=user_kwargs) as user:
+        debug(user)
+
         project = await project_factory(user)
 
         debug(project)
@@ -224,8 +227,11 @@ async def test_failing_workflow_TaskExecutionError(
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
         request.getfixturevalue("cfut_jobs_finished")
-
-    async with MockCurrentUser(persist=True) as user:
+        user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
+        user_kwargs = dict(cache_dir=user_cache_dir)
+    else:
+        user_kwargs = {}
+    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs) as user:
         project = await project_factory(user)
         project_id = project.id
         input_dataset = await dataset_factory(
@@ -351,7 +357,9 @@ async def test_failing_workflow_JobExecutionError(
         / "artifacts-test_failing_workflow_JobExecutionError",
     )
 
-    async with MockCurrentUser(persist=True) as user:
+    user_cache_dir = str(tmp777_path / "user_cache_dir")
+    user_kwargs = dict(cache_dir=user_cache_dir)
+    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs) as user:
         project = await project_factory(user)
         project_id = project.id
         input_dataset = await dataset_factory(
