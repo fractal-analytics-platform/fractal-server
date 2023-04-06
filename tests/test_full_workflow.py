@@ -62,8 +62,9 @@ async def test_full_workflow(
         request.getfixturevalue("relink_python_interpreter")
         request.getfixturevalue("cfut_jobs_finished")
 
-    async with MockCurrentUser(persist=True) as user:
-        project_dir = tmp777_path / f"project_dir-{backend}"
+    user_kwargs = dict(cache_dir=(tmp777_path / f"user_cache_dir-{backend}"))
+    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs) as user:
+        project_dir = tmp777_path / f"project_dir-{backend}"  # FIXME: remove
         project = await project_factory(user, project_dir=str(project_dir))
 
         debug(project)
