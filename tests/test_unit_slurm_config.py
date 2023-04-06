@@ -10,13 +10,12 @@ from fractal_server.app.runner._grouped_slurm._slurm_config import (
     get_default_slurm_config,
 )
 from fractal_server.app.runner._grouped_slurm._slurm_config import (
-    set_slurm_config,
+    get_slurm_config,
 )
-from fractal_server.app.runner.common import TaskParameters
 
 
 @pytest.mark.parametrize("fail", [True, False])
-def test_set_slurm_config(tmp_path, fail):
+def test_get_slurm_config(tmp_path, fail):
     """
     Testing that:
     1. WorkflowTask.meta overrides WorkflowTask.Task.meta
@@ -94,20 +93,14 @@ def test_set_slurm_config(tmp_path, fail):
     debug(mywftask)
     debug(mywftask.overridden_meta)
 
-    # Call set_slurm_config
+    # Call get_slurm_config
     try:
-        submit_setup_dict = set_slurm_config(
+        slurm_config = get_slurm_config(
             wftask=mywftask,
-            task_pars=TaskParameters(
-                input_paths=[tmp_path],
-                output_path=tmp_path,
-                metadata={"some": "metadata"},
-            ),
             workflow_dir=(tmp_path / "server"),
             workflow_dir_user=(tmp_path / "user"),
             config_path=config_path,
         )
-        slurm_config = submit_setup_dict["slurm_config"]
         debug(slurm_config)
     except pydantic.error_wrappers.ValidationError as e:
         if fail:

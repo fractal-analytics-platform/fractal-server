@@ -36,7 +36,7 @@ from ..common import JobExecutionError
 from ..common import TaskExecutionError
 from ._batching_heuristics import heuristics
 from ._slurm_config import get_default_slurm_config
-from ._slurm_config import SlurmConfig
+from ._submit_setup import SlurmConfig
 from ._subprocess_run_as_user import _glob_as_user
 from ._subprocess_run_as_user import _path_exists_as_user
 from ._subprocess_run_as_user import _run_command_as_user

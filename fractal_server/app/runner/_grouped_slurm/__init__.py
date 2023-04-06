@@ -26,7 +26,7 @@ from ...models import Workflow
 from .._common import recursive_task_submission
 from ..common import async_wrap
 from ..common import TaskParameters
-from ._slurm_config import set_slurm_config
+from ._submit_setup import _grouped_slurm_submit_setup
 from .executor import FractalSlurmExecutor
 
 
@@ -81,7 +81,7 @@ def _process_workflow(
             ),
             workflow_dir=workflow_dir,
             workflow_dir_user=workflow_dir_user,
-            submit_setup_call=set_slurm_config,
+            submit_setup_call=_grouped_slurm_submit_setup,
             logger_name=logger_name,
         )
     output_task_pars = output_task_pars_fut.result()
