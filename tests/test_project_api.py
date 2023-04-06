@@ -642,7 +642,7 @@ async def test_create_project(
 ):
     async with MockCurrentUser(persist=True):
         # Payload without `name`
-        wrong_payload2 = {}
-        res = await client.post(f"{PREFIX}/", json=wrong_payload2)
+        empty_payload = {}
+        res = await client.post(f"{PREFIX}/", json=empty_payload)
         debug(res.json())
         assert res.status_code == 422
