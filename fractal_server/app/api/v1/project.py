@@ -296,10 +296,9 @@ async def apply_workflow(
         input_dataset=input_dataset,
         output_dataset=output_dataset,
         job_id=job.id,
-        slurm_user=user.slurm_user,
         worker_init=apply_workflow.worker_init,
+        slurm_user=user.slurm_user,
         user_cache_dir=user.cache_dir,
-        # FIXME: directly pass user, instead of two attributes
     )
 
     return job
