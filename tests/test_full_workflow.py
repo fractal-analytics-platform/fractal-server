@@ -469,14 +469,16 @@ async def test_non_python_task(
         task_dict = dict(
             name="non-python",
             source="custom-task",
-            command=f"sh {str(testdata_path)}/non_python_task_issue189.sh",
+            command=f"bash {str(testdata_path)}/non_python_task_issue189.sh",
             input_type="zarr",
             output_type="zarr",
         )
         task_create = TaskCreate(**task_dict)
         res = await client.post("api/v1/task/", json=task_create.dict())
-        assert res.status_code == 201
         task = res.json()
+        debug(task)
+        assert res.status_code == 201
+
         res = await client.post(
             f"api/v1/workflow/{workflow['id']}/add-task/",
             json=dict(task_id=task["id"]),
