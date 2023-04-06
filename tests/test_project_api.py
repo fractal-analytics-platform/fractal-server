@@ -50,10 +50,7 @@ async def test_project_get(client, db, project_factory, MockCurrentUser):
 
 
 async def test_project_creation(app, client, MockCurrentUser, db):
-    payload = dict(
-        name="new project",
-        project_dir="/tmp",
-    )
+    payload = dict(name="new project")
 
     # Fail for anonymous user
     res = await client.post(f"{PREFIX}/", json=payload)
@@ -66,16 +63,12 @@ async def test_project_creation(app, client, MockCurrentUser, db):
         assert res.status_code == 201
         debug(data)
         assert data["name"] == payload["name"]
-        assert data["project_dir"] == payload["project_dir"]
 
 
 async def test_project_creation_name_constraint(
     app, client, MockCurrentUser, db
 ):
-    payload = dict(
-        name="new project",
-        project_dir="/tmp",
-    )
+    payload = dict(name="new project")
     res = await client.post(f"{PREFIX}/", json=payload)
     assert res.status_code == 401
 
@@ -92,11 +85,9 @@ async def test_project_creation_name_constraint(
 
 
 @pytest.mark.parametrize("new_name", (None, "new name"))
-@pytest.mark.parametrize("new_project_dir", (None, "/new/project/dir"))
 @pytest.mark.parametrize("new_read_only", (None, True, False))
 async def test_edit_project(
     new_name,
-    new_project_dir,
     new_read_only,
     app,
     client,
@@ -111,7 +102,6 @@ async def test_edit_project(
         # Create project
         payload = dict(
             name="old name",
-            project_dir="/old/project/dir",
             read_only=True,
         )
         res = await client.post(f"{PREFIX}/", json=payload)
@@ -123,8 +113,6 @@ async def test_edit_project(
         payload = {}
         if new_name:
             payload["name"] = new_name
-        if new_project_dir:
-            payload["project_dir"] = new_project_dir
         if new_read_only:
             payload["read_only"] = new_read_only
         debug(payload)
@@ -147,10 +135,7 @@ async def test_add_dataset(app, client, MockCurrentUser, db):
 
         res = await client.post(
             f"{PREFIX}/",
-            json=dict(
-                name="test project",
-                project_dir="/tmp/",
-            ),
+            json=dict(name="test project"),
         )
         assert res.status_code == 201
         project = res.json()
@@ -220,10 +205,7 @@ async def test_dataset_get(app, client, MockCurrentUser, db):
         # Create a project
         res = await client.post(
             f"{PREFIX}/",
-            json=dict(
-                name="test project",
-                project_dir="/tmp/",
-            ),
+            json=dict(name="test project"),
         )
         assert res.status_code == 201
         project = res.json()
@@ -256,10 +238,7 @@ async def test_add_dataset_local_path_error(app, client, MockCurrentUser, db):
 
         res = await client.post(
             f"{PREFIX}/",
-            json=dict(
-                name="test project",
-                project_dir="/tmp/",
-            ),
+            json=dict(name="test project"),
         )
         assert res.status_code == 201
         project = res.json()
@@ -314,9 +293,7 @@ async def test_delete_project(client, MockCurrentUser, db):
         assert len(data) == 0
 
         # Create a project
-        res = await client.post(
-            f"{PREFIX}/", json=dict(name="name", project_dir="/tmp")
-        )
+        res = await client.post(f"{PREFIX}/", json=dict(name="name"))
         p = res.json()
 
         # Verify that the project was created
@@ -600,33 +577,8 @@ async def test_create_project(
     MockCurrentUser,
 ):
     async with MockCurrentUser(persist=True):
-        # Payload without `project_dir`
-        wrong_payload = {"name": "project name"}
-        res = await client.post(f"{PREFIX}/", json=wrong_payload)
-        debug(res.json())
-        assert res.status_code == 422
         # Payload without `name`
-        wrong_payload2 = {"project_dir": "/tmp"}
+        wrong_payload2 = {}
         res = await client.post(f"{PREFIX}/", json=wrong_payload2)
-        debug(res.json())
-        assert res.status_code == 422
-        # Payload with abs path and existing dir
-        payload = {"name": "project name", "project_dir": "/tmp"}
-        res = await client.post(f"{PREFIX}/", json=payload)
-        debug(res.json())
-        assert res.status_code == 201
-        # Payload with non abs path
-        payload = {"name": "project name", "project_dir": "../tmp"}
-        res = await client.post(f"{PREFIX}/", json=payload)
-        debug(res.json())
-        assert res.status_code == 422
-        # Payload with abs path and non existing dir
-        payload = {"name": "project name", "project_dir": "/abc"}
-        res = await client.post(f"{PREFIX}/", json=payload)
-        debug(res.json())
-        assert res.status_code == 422
-        # Payload with abs path of a file
-        payload = {"name": "project name", "project_dir": "/bin/bash"}
-        res = await client.post(f"{PREFIX}/", json=payload)
         debug(res.json())
         assert res.status_code == 422

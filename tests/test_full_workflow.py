@@ -64,8 +64,7 @@ async def test_full_workflow(
 
     user_kwargs = dict(cache_dir=(tmp777_path / f"user_cache_dir-{backend}"))
     async with MockCurrentUser(persist=True, user_kwargs=user_kwargs) as user:
-        project_dir = tmp777_path / f"project_dir-{backend}"  # FIXME: remove
-        project = await project_factory(user, project_dir=str(project_dir))
+        project = await project_factory(user)
 
         debug(project)
         project_id = project.id
@@ -227,8 +226,7 @@ async def test_failing_workflow_TaskExecutionError(
         request.getfixturevalue("cfut_jobs_finished")
 
     async with MockCurrentUser(persist=True) as user:
-        project_dir = tmp777_path / f"project_dir-{backend}-TaskExecutionError"
-        project = await project_factory(user, project_dir=str(project_dir))
+        project = await project_factory(user)
         project_id = project.id
         input_dataset = await dataset_factory(
             project, name="input", type="image", read_only=True
@@ -354,8 +352,7 @@ async def test_failing_workflow_JobExecutionError(
     )
 
     async with MockCurrentUser(persist=True) as user:
-        project_dir = tmp777_path / "project_dir-JobExecutionError"
-        project = await project_factory(user, project_dir=str(project_dir))
+        project = await project_factory(user)
         project_id = project.id
         input_dataset = await dataset_factory(
             project, name="input", type="image", read_only=True
@@ -463,8 +460,7 @@ async def test_non_python_task(
     """
     async with MockCurrentUser(persist=True) as user:
         # Create project
-        project_dir = tmp_path / "test"
-        project = await project_factory(user, project_dir=str(project_dir))
+        project = await project_factory(user)
 
         # Create workflow
         payload = {"name": "WF", "project_id": project.id}
