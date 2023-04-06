@@ -522,6 +522,31 @@ async def test_import_export_workflow(
     assert wf_old == wf_new
 
 
+async def test_import_export_workflow_fail(
+    client,
+    MockCurrentUser,
+    project_factory,
+    task_factory,
+    testdata_path,
+    collect_packages,
+):
+    with (testdata_path / "import_export/workflow.json").open("r") as f:
+        workflow_from_file = json.load(f)
+
+    # Create project
+    async with MockCurrentUser(persist=True) as user:
+        prj = await project_factory(user)
+
+    # Import workflow into project
+    payload = WorkflowImport(**workflow_from_file).dict(exclude_none=True)
+    res = await client.post(
+        f"/api/v1/project/{prj.id}/import-workflow/", json=payload
+    )
+
+    debug(res)
+    debug(res.json())
+
+
 reorder_cases = []
 reorder_cases.append([1, 2])
 reorder_cases.append([2, 1])
