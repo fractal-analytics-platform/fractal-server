@@ -11,8 +11,6 @@ from sqlmodel import Relationship
 
 from ...common.schemas.workflow import _WorkflowBase
 from ...common.schemas.workflow import _WorkflowTaskBase
-from ...config import get_settings
-from ...syringe import Inject
 from ..db import AsyncSession
 from .task import Task
 
@@ -99,17 +97,6 @@ class WorkflowTask(_WorkflowTaskBase, table=True):
     @property
     def parallelization_level(self) -> Union[str, None]:
         return self.task.parallelization_level
-
-    @property
-    def executor(self) -> str:  # FIXME: deprecate this method
-        try:
-            return self.meta["executor"]  # type: ignore
-        except (KeyError, TypeError):
-            if self.task.executor:
-                return self.task.executor
-            else:
-                settings = Inject(get_settings)
-                return settings.FRACTAL_RUNNER_DEFAULT_EXECUTOR
 
     @property
     def overridden_meta(self) -> dict:

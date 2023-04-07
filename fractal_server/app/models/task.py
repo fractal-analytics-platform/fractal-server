@@ -42,10 +42,3 @@ class Task(_TaskBase, table=True):
     @property
     def is_parallel(self) -> bool:
         return bool(self.parallelization_level)
-
-    @property
-    def executor(self) -> Optional[str]:
-        try:
-            return self.meta["executor"]
-        except KeyError:
-            return None
