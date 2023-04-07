@@ -59,18 +59,18 @@ async def test_runner(
     """
 
     debug(f"Testing with {backend=}")
-    if backend in ["slurm", "grouped_slurm"]:
+    if backend in ["slurm", "legacy_slurm"]:
 
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
         request.getfixturevalue("cfut_jobs_finished")
         monkey_slurm_user = request.getfixturevalue("monkey_slurm_user")
-    if backend == "slurm":
+    if backend == "legacy_slurm":
         override_settings_factory(
             FRACTAL_SLURM_CONFIG_FILE=(testdata_path / "old_slurm_config.json")
         )
         request.getfixturevalue("old_slurm_config")
-    if backend == "grouped_slurm":
+    if backend == "slurm":
         override_settings_factory(
             FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
         )
@@ -109,7 +109,7 @@ async def test_runner(
         umask = os.umask(0)
         workflow_dir.mkdir(parents=True, mode=0o700)
         os.umask(umask)
-    elif backend in ["slurm", "grouped_slurm"]:
+    elif backend in ["legacy_slurm", "slurm"]:
         workflow_dir, workflow_dir_user = request.getfixturevalue(
             "slurm_working_folders"
         )  # noqa
@@ -130,7 +130,7 @@ async def test_runner(
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
     )
-    if backend in ["slurm", "grouped_slurm"]:
+    if backend in ["legacy_slurm", "slurm"]:
         kwargs["slurm_user"] = monkey_slurm_user
 
     # process workflow
@@ -175,14 +175,14 @@ async def test_runner(
     # Check some backend-specific files
     # NOTE: the logic to retrieve the job ID is not the most elegant, but
     # it works (both for when a single or two SLURM backends are tested)
-    if backend == "slurm":
+    if backend == "legacy_slurm":
         assert "0.slurm.submit.sbatch" in files_server
         slurm_job_id = _extract_job_id_from_filename(
             files_server, pre="0.slurm.", post=".err"
         )
         assert f"0.slurm.{slurm_job_id}.err" in files_server
         assert f"0.slurm.{slurm_job_id}.out" in files_server
-    elif backend == "grouped_slurm":
+    elif backend == "slurm":
         # Files related to (non-parallel) WorkflowTask 0
         assert "0_slurm_submit.sbatch" in files_server
         slurm_job_id = _extract_job_id_from_filename(

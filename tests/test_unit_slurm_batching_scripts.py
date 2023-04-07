@@ -148,7 +148,7 @@ def test_slurm_script(
      * The number of scripts is equal to the ceiling of
        `n_ftasks_tot/n_ftasks_per_script`.
      * Each script includes no more than n_ftasks_per_script.
-     * Inside each script, Fractal tasks are executed in parallel in groupd of
+     * Inside each script, Fractal tasks are executed in parallel in groups of
        size `n_parallel_ftasks_per_script`.
      * Both the primary batching (Fractal tasks -> scripts) and secondary
        batching (grouping of Fractal tasks into sub-batches for parallel
