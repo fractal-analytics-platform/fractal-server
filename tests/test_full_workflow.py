@@ -6,6 +6,7 @@ Original author(s):
 Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
 Tommaso Comparin <tommaso.comparin@exact-lab.it>
 Marco Franzon <marco.franzon@exact-lab.it>
+Yuri Chiucconi <yuri.chiucconi@exact-lab.it>
 
 This file is part of Fractal and was originally developed by eXact lab S.r.l.
 <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
@@ -13,6 +14,7 @@ Institute for Biomedical Research and Pelkmans Lab from the University of
 Zurich.
 """
 import asyncio
+import glob
 import logging
 import os
 import threading
@@ -24,7 +26,7 @@ from devtools import debug
 
 from .fixtures_slurm import scancel_all_jobs_of_a_slurm_user
 from fractal_server.app.runner import _backends
-
+from fractal_server.common.schemas.task import TaskCreate
 
 PREFIX = "/api/v1"
 
@@ -64,10 +66,15 @@ async def test_full_workflow(
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
         request.getfixturevalue("cfut_jobs_finished")
+        user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
+        user_kwargs = dict(cache_dir=user_cache_dir)
+    else:
+        user_kwargs = {}
 
-    async with MockCurrentUser(persist=True) as user:
-        project_dir = tmp777_path / f"project_dir-{backend}"
-        project = await project_factory(user, project_dir=str(project_dir))
+    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs) as user:
+        debug(user)
+
+        project = await project_factory(user)
 
         debug(project)
         project_id = project.id
@@ -233,10 +240,12 @@ async def test_failing_workflow_TaskExecutionError(
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
         request.getfixturevalue("cfut_jobs_finished")
-
-    async with MockCurrentUser(persist=True) as user:
-        project_dir = tmp777_path / f"project_dir-{backend}-TaskExecutionError"
-        project = await project_factory(user, project_dir=str(project_dir))
+        user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
+        user_kwargs = dict(cache_dir=user_cache_dir)
+    else:
+        user_kwargs = {}
+    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs) as user:
+        project = await project_factory(user)
         project_id = project.id
         input_dataset = await dataset_factory(
             project, name="input", type="image", read_only=True
@@ -382,9 +391,10 @@ async def test_failing_workflow_JobExecutionError(
         / f"artifacts-{backend}-test_failing_workflow_JobExecutionError",
     )
 
-    async with MockCurrentUser(persist=True) as user:
-        project_dir = tmp777_path / "project_dir-JobExecutionError"
-        project = await project_factory(user, project_dir=str(project_dir))
+    user_cache_dir = str(tmp777_path / "user_cache_dir")
+    user_kwargs = dict(cache_dir=user_cache_dir)
+    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs) as user:
+        project = await project_factory(user)
         project_id = project.id
         input_dataset = await dataset_factory(
             project, name="input", type="image", read_only=True
@@ -475,3 +485,106 @@ async def test_failing_workflow_JobExecutionError(
         assert "JOB ERROR" in job_status_data["log"]
         assert "CANCELLED" in job_status_data["log"]
         assert "\\n" not in job_status_data["log"]
+
+
+async def test_non_python_task(
+    client,
+    MockCurrentUser,
+    project_factory,
+    dataset_factory,
+    resource_factory,
+    testdata_path,
+    tmp_path,
+):
+    """
+    Run a full workflow with a single bash task, which simply writes something
+    to stderr and stdout
+    """
+    async with MockCurrentUser(persist=True) as user:
+        # Create project
+        project = await project_factory(user)
+
+        # Create workflow
+        payload = {"name": "WF", "project_id": project.id}
+        res = await client.post("api/v1/workflow/", json=payload)
+        workflow = res.json()
+        debug(workflow)
+        assert res.status_code == 201
+
+        # Create task
+        task_dict = dict(
+            name="non-python",
+            source="custom-task",
+            command=f"bash {str(testdata_path)}/non_python_task_issue189.sh",
+            input_type="zarr",
+            output_type="zarr",
+        )
+        task_create = TaskCreate(**task_dict)
+        res = await client.post("api/v1/task/", json=task_create.dict())
+        task = res.json()
+        debug(task)
+        assert res.status_code == 201
+
+        # Add task to workflow
+        res = await client.post(
+            f"api/v1/workflow/{workflow['id']}/add-task/",
+            json=dict(task_id=task["id"]),
+        )
+        assert res.status_code == 201
+
+        # Create datasets
+        input_dataset = await dataset_factory(
+            project, name="input", type="zarr", read_only=False
+        )
+        output_dataset = await dataset_factory(
+            project, name="output", type="zarr", read_only=False
+        )
+        debug(tmp_path)
+        await resource_factory(
+            path=str(tmp_path / "input_dir"), dataset=input_dataset
+        )
+        await resource_factory(
+            path=str(tmp_path / "output_dir"), dataset=output_dataset
+        )
+
+        # Submit workflow
+        payload = dict(
+            project_id=project.id,
+            input_dataset_id=input_dataset.id,
+            output_dataset_id=output_dataset.id,
+            workflow_id=workflow["id"],
+            overwrite_input=False,
+        )
+        debug(payload)
+        res = await client.post("/api/v1/project/apply/", json=payload)
+        job_data = res.json()
+        debug(job_data)
+        assert res.status_code == 202
+
+        # Check that the workflow execution is complete
+        res = await client.get(f"{PREFIX}/job/{job_data['id']}")
+        assert res.status_code == 200
+        job_status_data = res.json()
+        debug(job_status_data)
+        assert job_status_data["status"] == "done"
+
+        # Check that the expected files are present
+        working_dir = job_status_data["working_dir"]
+        glob_list = [Path(x).name for x in glob.glob(f"{working_dir}/*")]
+        must_exist = [
+            "0.args.json",
+            "0.err",
+            "0.metadiff.json",
+            "0.out",
+            "workflow.log",
+        ]
+        for f in must_exist:
+            assert f in glob_list
+
+        # Check that stderr and stdout are as expected
+        with open(f"{working_dir}/0.out", "r") as f:
+            out = f.read()
+        assert "This goes to standard output" in out
+        with open(f"{working_dir}/0.err", "r") as f:
+            err = f.read()
+        assert "This goes to standard error" in err

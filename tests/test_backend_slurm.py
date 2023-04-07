@@ -8,6 +8,8 @@ from typing import Callable
 import pytest
 from devtools import debug
 
+from .data.tasks_dummy import dummy as dummy_module
+from .data.tasks_dummy import dummy_parallel as dummy_parallel_module
 from .fixtures_slurm import run_squeue
 from .fixtures_slurm import scancel_all_jobs_of_a_slurm_user
 from .fixtures_tasks import MockTask
@@ -16,8 +18,6 @@ from fractal_server.app.runner._slurm import SlurmConfig
 from fractal_server.app.runner._slurm.executor import FractalSlurmExecutor
 from fractal_server.app.runner.common import JobExecutionError
 from fractal_server.app.runner.common import TaskExecutionError
-from fractal_server.tasks import dummy as dummy_module
-from fractal_server.tasks import dummy_parallel as dummy_parallel_module
 
 
 def submit_and_ignore_exceptions(

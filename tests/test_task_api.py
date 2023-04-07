@@ -36,7 +36,9 @@ async def test_task_get_list(db, client, task_factory, MockCurrentUser):
         assert data[2]["id"] == t2.id
 
 
-async def test_background_collection(db, dummy_task_package):
+async def test_background_collection(
+    db, client, MockCurrentUser, dummy_task_package
+):
     """
     GIVEN a package and its installation environment
     WHEN the background collection is called on it
@@ -60,9 +62,12 @@ async def test_background_collection(db, dummy_task_package):
     await _background_collect_pip(
         state=state, venv_path=venv_path, task_pkg=task_pkg, db=db
     )
-    out_state = await db.get(State, state.id)
-    debug(out_state)
-    assert out_state.data["status"] == "OK"
+    async with MockCurrentUser(persist=True):
+        res = await client.get(f"{PREFIX}/collect/{state.id}")
+    debug(res.json())
+    assert res.status_code == 200
+    out_state = res.json()
+    assert out_state["data"]["status"] == "OK"
 
     task_list = (await db.execute(select(Task))).scalars().all()
     debug(task_list)
