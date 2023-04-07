@@ -157,8 +157,7 @@ async def submit_workflow(
     db_sync.commit()
 
     # Write logs
-    # logger_name = f"WF{workflow_id}_job{job_id}"
-    logger_name = str(WORKFLOW_DIR)  # FIXME: this is to avoid issues in the CI
+    logger_name = f"WF{workflow_id}_job{job_id}"
     logger = set_logger(
         logger_name=logger_name,
         log_file_path=WORKFLOW_DIR / "workflow.log",

@@ -56,20 +56,22 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
         gres: Corresponds to SLURM option.
         account: Corresponds to SLURM option.
         time: Corresponds to SLURM option (WARNING: not fully supported).
-
         prefix: Prefix of configuration lines in SLURM submission scripts.
         shebang_line: Shebang line for SLURM submission scripts.
-        extra_lines: TBD
-
-        n_ftasks_per_script: TBD
-        n_parallel_ftasks_per_script: TBD
-        target_cpus_per_job: TBD
-        max_cpus_per_job: TBD
-        target_mem_per_job: TBD  # FIXME: units?
-        max_mem_per_job: TBD
-        target_num_jobs: TBD
-        max_num_jobs: TBD
-
+        extra_lines: Additional lines to include in SLURM submission scripts.
+        n_ftasks_per_script: Number of tasks for each SLURM job.
+        n_parallel_ftasks_per_script: Number of tasks to run in parallel for
+                                      each SLURM job.
+        target_cpus_per_job: Optimal number of CPUs to be requested in each
+                             SLURM job.
+        max_cpus_per_job: Maximum number of CPUs that can be requested in each
+                          SLURM job.
+        target_mem_per_job: Optimal amount of memory (in MB) to be requested in
+                            each SLURM job.
+        max_mem_per_job: Maximum amount of memory (in MB) that can be requested
+                         in each SLURM job.
+        target_num_jobs: Optimal number of SLURM jobs for a given WorkflowTask.
+        max_num_jobs: Maximum number of SLURM jobs for a given WorkflowTask.
     """
 
     # Required SLURM parameters (note that the integer attributes are those
@@ -84,7 +86,7 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
     job_name: Optional[str] = None
     constraint: Optional[str] = None
     gres: Optional[str] = None
-    time: Optional[str] = None  # FIXME: this will need to scale up with #tasks
+    time: Optional[str] = None
     account: Optional[str] = None
 
     # Free-field attribute for extra lines to be added to the SLURM job
@@ -135,7 +137,8 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
 
     def to_sbatch_preamble(self) -> list[str]:
         """
-        FIXME: docstring of to_sbatch_preamble
+        Compile SlurmConfig object into the preamble of a SLURM submission
+        script.
         """
         if self.n_parallel_ftasks_per_script is None:
             raise ValueError(
@@ -159,8 +162,19 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
         for key in ["job_name", "constraint", "gres", "time", "account"]:
             value = getattr(self, key)
             if value is not None:
+                # Handle the `time` parameter
+                if key == "time" and self.n_parallel_ftasks_per_script > 1:
+                    logging.warning(
+                        "Ignore `#SBATCH --time=...` line (given: "
+                        f"{self.time=}) for n_parallel_ftasks_per_script>1"
+                        f" (given: {self.n_parallel_ftasks_per_script}), "
+                        "since scaling of time with number of tasks is "
+                        "not implemented."
+                    )
+                    continue
                 option = key.replace("_", "-")
                 lines.append(f"{self.prefix} --{option}={value}")
+
         if self.extra_lines:
             for line in self._sorted_extra_lines():
                 lines.append(line)
@@ -248,7 +262,7 @@ def _parse_mem_value(raw_mem: Union[str, int]) -> int:
 
 def get_default_slurm_config():
     """
-    FIXME docstring
+    Return a default SlurmConfig configuration object
     """
     return SlurmConfig(
         partition="main",
@@ -270,7 +284,14 @@ def get_slurm_config(
     config_path: Optional[Path] = None,
 ) -> SlurmConfig:
     """
-    FIXME
+    Prepare a SlurmConfig configuration object
+
+    The sources for SlurmConfig attributes, in increasing priority order, are
+    1. The general content of the Fractal SLURM configuration file.
+    2. The GPU-specific content of the Fractal SLURM configuration file, if
+        appropriate.
+    3. Properties in `wftask.task.meta`.
+    4. Properties in `wftask.meta`.
 
     Arguments:
         wftask:
@@ -288,29 +309,30 @@ def get_slurm_config(
             `FRACTAL_SLURM_CONFIG_FILE` variable from settings.
 
     Raises:
-        SlurmConfigError: if the slurm-configuration file does not contain the
-                          required config
+        SlurmConfigError: If the slurm-configuration file does not contain the
+                          required config.
 
     Returns:
         slurm_config:
             The SlurmConfig object
     """
 
-    # Read Fracatal SLURM configuration file
+    # Read Fractal SLURM configuration file
     if not config_path:
         settings = Inject(get_settings)
         config_path = settings.FRACTAL_SLURM_CONFIG_FILE
-    logging.warning(f"Now loading {config_path=}")
+    logging.debug(f"[get_slurm_config] Now loading {config_path=}")
     try:
-        with config_path.open("r") as f:  # type: ignore
+        with config_path.open("r") as f:
             slurm_env = json.load(f)
     except Exception as e:
         raise SlurmConfigError(
             f"Error while loading {config_path=}. "
             f"Original error:\n{str(e)}"
         )
-    logging.warning(
-        f"WorkflowTask/Task meta attribute: {wftask.overridden_meta=}"
+    logging.debug(
+        "[get_slurm_config] WorkflowTask/Task meta attribute: "
+        f"{wftask.overridden_meta=}"
     )
 
     slurm_dict = {}
@@ -348,8 +370,10 @@ def get_slurm_config(
     slurm_dict["target_num_jobs"] = batching_dict["target_num_jobs"]
     slurm_dict["max_num_jobs"] = batching_dict["max_num_jobs"]
 
-    logging.warning(f"Fractal SLURM configuration file: {slurm_env=}")
-    logging.warning(f"Options retained: {slurm_dict=}")
+    logging.debug(
+        "[get_slurm_config] Fractal SLURM configuration file: " f"{slurm_env=}"
+    )
+    logging.debug(f"[get_slurm_config] Options retained: {slurm_dict=}")
 
     # GPU-related options
     # Notes about priority:
@@ -358,35 +382,29 @@ def get_slurm_config(
     # 2. This block of definitions has lower priority than whatever comes next
     #    (i.e. from WorkflowTask.overridden_meta).
     needs_gpu = wftask.overridden_meta.get("needs_gpu", False)
-    logging.warning(f"{needs_gpu=}")
+    logging.debug(f"[get_slurm_config] {needs_gpu=}")
     if needs_gpu:
         for key, value in slurm_env["if_needs_gpu"].items():
-            logging.warning(f"if_needs_gpu options: {key=}, {value=}")
             if key == "mem":
                 mem_per_task_MB = _parse_mem_value(value)
                 slurm_dict["mem_per_task_MB"] = mem_per_task_MB
             else:
                 slurm_dict[key] = value
-    logging.warning(f"After {needs_gpu=}, {slurm_dict=}")
 
     # Number of CPUs per task, for multithreading
     if "cpus_per_task" in wftask.overridden_meta.keys():
         cpus_per_task = int(wftask.overridden_meta["cpus_per_task"])
-        logging.warning(cpus_per_task)
         slurm_dict["cpus_per_task"] = cpus_per_task
-    logging.warning(f"After cpus_per_task block, {slurm_dict=}")
 
     # Required memory per task, in MB
     if "mem" in wftask.overridden_meta.keys():
         raw_mem = wftask.overridden_meta["mem"]
         mem_per_task_MB = _parse_mem_value(raw_mem)
         slurm_dict["mem_per_task_MB"] = mem_per_task_MB
-    logging.warning(f"After mem block, {slurm_dict=}")
 
     # Job name
     job_name = wftask.task.name.replace(" ", "_")
     slurm_dict["job_name"] = job_name
-    logging.warning(f"After job_name block, {slurm_dict=}")
 
     # Optional SLURM arguments and extra lines
     for key in ["time", "account", "gres", "constraint"]:
@@ -396,10 +414,12 @@ def get_slurm_config(
     extra_lines = wftask.overridden_meta.get("extra_lines", [])
     extra_lines = slurm_dict.get("extra_lines", []) + extra_lines
     if len(set(extra_lines)) != len(extra_lines):
-        logging.warning(f"Removing repeated elements from {extra_lines=}.")
+        logging.warning(
+            "[get_slurm_config] Removing repeated elements "
+            f"from {extra_lines=}."
+        )
         extra_lines = list(set(extra_lines))
     slurm_dict["extra_lines"] = extra_lines
-    logging.warning(f"After extra_lines block, {slurm_dict=}")
 
     # Job-batching parameters (if None, they will be determined heuristically)
     n_ftasks_per_script = wftask.overridden_meta.get(
@@ -408,15 +428,15 @@ def get_slurm_config(
     n_parallel_ftasks_per_script = wftask.overridden_meta.get(
         "n_parallel_ftasks_per_script", None
     )
-    logging.warning(f"{n_ftasks_per_script=}")
-    logging.warning(f"{n_parallel_ftasks_per_script=}")
 
     slurm_dict["n_ftasks_per_script"] = n_ftasks_per_script
     slurm_dict["n_parallel_ftasks_per_script"] = n_parallel_ftasks_per_script
 
     # Put everything together
-    logging.warning(f"Now create a SlurmConfig object based on {slurm_dict=}")
+    logging.debug(
+        "[get_slurm_config] Now create a SlurmConfig object based "
+        f"on {slurm_dict=}"
+    )
     slurm_config = SlurmConfig(**slurm_dict)
-    logging.warning(f"{slurm_config=}")
 
     return slurm_config
