@@ -16,7 +16,6 @@ from os import environ
 from os import getenv
 from os.path import abspath
 from pathlib import Path
-from typing import List
 from typing import Literal
 from typing import Optional
 from typing import TypeVar
@@ -100,7 +99,7 @@ class Settings(BaseSettings):
     # AUTH
     ###########################################################################
 
-    OAUTH_CLIENTS: List[OAuthClient] = Field(default_factory=list)
+    OAUTH_CLIENTS: list[OAuthClient] = Field(default_factory=list)
 
     # JWT TOKEN
     JWT_EXPIRE_SECONDS: int = 180

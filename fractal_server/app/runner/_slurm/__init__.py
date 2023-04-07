@@ -17,8 +17,6 @@ Executor objects.
 """
 from pathlib import Path
 from typing import Any
-from typing import Dict
-from typing import List
 from typing import Optional
 from typing import Union
 
@@ -33,15 +31,15 @@ from .executor import FractalSlurmExecutor
 def _process_workflow(
     *,
     workflow: Workflow,
-    input_paths: List[Path],
+    input_paths: list[Path],
     output_path: Path,
-    input_metadata: Dict[str, Any],
+    input_metadata: dict[str, Any],
     logger_name: str,
     workflow_dir: Path,
     workflow_dir_user: Path,
     slurm_user: Optional[str] = None,
-    worker_init: Optional[Union[str, List[str]]] = None,
-) -> Dict[str, Any]:
+    worker_init: Optional[Union[str, list[str]]] = None,
+) -> dict[str, Any]:
     """
     Internal processing routine for the SLURM backend
 
@@ -92,15 +90,15 @@ def _process_workflow(
 async def process_workflow(
     *,
     workflow: Workflow,
-    input_paths: List[Path],
+    input_paths: list[Path],
     output_path: Path,
-    input_metadata: Dict[str, Any],
+    input_metadata: dict[str, Any],
     logger_name: str,
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
     slurm_user: Optional[str] = None,
     worker_init: Optional[str] = None,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Process workflow (SLURM backend public interface)
 
