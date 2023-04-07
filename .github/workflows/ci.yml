@@ -62,7 +62,7 @@ jobs:
         run: poetry install --with dev --no-interaction --all-extras
 
       - name: Test with pytest
-        run: poetry run coverage run -m pytest tests/test_backend_grouped_slurm.py tests/test_full_workflow.py tests/test_backend_runners.py::test_runner[grouped_slurm] tests/test_backend_runners.py::test_runner[local] -s
+        run: poetry run coverage run -m pytest tests/test_backend_slurm.py tests/test_full_workflow.py tests/test_backend_runners.py::test_runner[slurm] tests/test_backend_runners.py::test_runner[local] -s
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
