@@ -1,12 +1,12 @@
+import logging
 import math
 from pathlib import Path
 
 import pytest
 from devtools import debug
 
-from fractal_server.app.runner._slurm._batching_heuristics import (
-    heuristics,
-)
+from fractal_server.app.runner._slurm._batching import heuristics
+from fractal_server.app.runner._slurm._batching import SlurmHeuristicsError
 
 
 clusters = [
@@ -115,3 +115,68 @@ def test_heuristics(
 
     with table_path.open("a") as f:
         f.write(output)
+
+
+def test_validate_existing_choice(caplog):
+    """
+    Test different scenarios of calling heuristics with non-None values of
+    n_ftasks_per_script and n_parallel_ftasks_per_script.
+    """
+
+    caplog.set_level(logging.WARNING)
+
+    base_kwargs = dict(
+        n_ftasks_tot=20,  # number of wells
+        cpus_per_task=1,
+        target_cpus_per_job=4,
+        max_cpus_per_job=12,
+        mem_per_task=1000,
+        target_mem_per_job=8000,
+        max_mem_per_job=16000,
+        target_num_jobs=5,
+        max_num_jobs=10,
+    )
+
+    # FAIL for too many jobs
+    kw = base_kwargs.copy()
+    kw["n_ftasks_per_script"] = 1
+    kw["n_parallel_ftasks_per_script"] = 1
+    with pytest.raises(SlurmHeuristicsError) as e:
+        n_ftasks_per_script, n_parallel_ftasks_per_script = heuristics(**kw)
+    debug(e.value.args[0])
+    assert "Requested num_jobs" in e.value.args[0]
+
+    # FAIL for too many CPUs requested
+    kw = base_kwargs.copy()
+    kw["n_ftasks_per_script"] = 20
+    kw["n_parallel_ftasks_per_script"] = 20
+    with pytest.raises(SlurmHeuristicsError) as e:
+        n_ftasks_per_script, n_parallel_ftasks_per_script = heuristics(**kw)
+    debug(e.value.args[0])
+    assert "Requested cpus_per_job" in e.value.args[0]
+
+    # FAIL for too much memory requested
+    kw = base_kwargs.copy()
+    kw["max_cpus_per_job"] = 1000
+    kw["n_ftasks_per_script"] = 20
+    kw["n_parallel_ftasks_per_script"] = 20
+    with pytest.raises(SlurmHeuristicsError) as e:
+        n_ftasks_per_script, n_parallel_ftasks_per_script = heuristics(**kw)
+    debug(e.value.args[0])
+    assert "Requested mem_per_job" in e.value.args[0]
+
+    # WARNING for edit of n_parallel_ftasks_per_script=
+    caplog.clear()
+    kw["n_ftasks_per_script"] = 4
+    kw["n_parallel_ftasks_per_script"] = 5
+    n_ftasks_per_script, n_parallel_ftasks_per_script = heuristics(**kw)
+    debug(caplog.text)
+    warning_msg = "Set n_parallel_ftasks_per_script=n_ftasks_per_script"
+    assert warning_msg in caplog.text
+
+    # All good
+    caplog.clear()
+    kw["n_ftasks_per_script"] = 4
+    kw["n_parallel_ftasks_per_script"] = 4
+    n_ftasks_per_script, n_parallel_ftasks_per_script = heuristics(**kw)
+    debug(caplog.text)
