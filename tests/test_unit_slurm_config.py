@@ -9,9 +9,7 @@ from .fixtures_tasks import MockWorkflowTask
 from fractal_server.app.runner._slurm._slurm_config import (
     get_default_slurm_config,
 )
-from fractal_server.app.runner._slurm._slurm_config import (
-    get_slurm_config,
-)
+from fractal_server.app.runner._slurm._slurm_config import get_slurm_config
 
 
 @pytest.mark.parametrize("fail", [True, False])
@@ -24,7 +22,7 @@ def test_get_slurm_config(tmp_path, fail):
     value that is set (even for needs_gpu=True).
     """
 
-    # Env variables from slurm_config.json
+    # Write gloabl variables into JSON config file
     GPU_PARTITION = "gpu-partition"
     GPU_DEFAULT_GRES = "gpu-default-gres"
     GPU_DEFAULT_CONSTRAINT = "gpu-default-constraint"
@@ -132,21 +130,34 @@ def test_get_slurm_config(tmp_path, fail):
 
 
 def test_to_sbatch_preamble():
+    """
+    Given a SlurmConfig object, test its to_sbatch_preamble method
+    """
 
     slurm_config = get_default_slurm_config()
     debug(slurm_config)
-    slurm_config.n_parallel_ftasks_per_script = 2
-    slurm_config.n_ftasks_per_script = 2
-    slurm_config.gres = "some-gres"
-    slurm_config.extra_lines = [
+
+    GRES = "some-gres"
+    EXTRA_LINES = [
         "export VAR2=2",
         "#SBATCH --optionA=valueA",
         "export VAR1=1",
         "#SBATCH --optionB=valueB",
     ]
+    MEM_SINGLE_TASK_MB = 100
+
+    slurm_config.mem_per_task_MB = MEM_SINGLE_TASK_MB
+    slurm_config.n_parallel_ftasks_per_script = 3
+    slurm_config.n_ftasks_per_script = 5
+    slurm_config.cpus_per_task = 2
+    slurm_config.gres = GRES
+    slurm_config.extra_lines = EXTRA_LINES
     preamble = slurm_config.to_sbatch_preamble()
-
     debug(preamble)
-    assert preamble[0] == "#!/bin/sh"
 
-    # FIXME: add assertions
+    assert preamble[0] == "#!/bin/sh"
+    assert f"#SBATCH --gres={GRES}" in preamble
+    for line in EXTRA_LINES:
+        assert line in preamble
+    MEM = MEM_SINGLE_TASK_MB * slurm_config.n_parallel_ftasks_per_script
+    assert f"#SBATCH --mem={MEM}M" in preamble
