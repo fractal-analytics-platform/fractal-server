@@ -50,9 +50,7 @@ async def test_full_workflow(
     override_settings_factory,
 ):
 
-    if backend == "legacy_slurm" or backend == "local":
-        FRACTAL_SLURM_CONFIG_FILE = testdata_path / "old_slurm_config.json"
-    elif backend == "slurm":
+    if backend == "slurm":
         FRACTAL_SLURM_CONFIG_FILE = testdata_path / "slurm_config.json"
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=backend,
@@ -62,7 +60,7 @@ async def test_full_workflow(
 
     debug(f"Testing with {backend=}")
 
-    if backend in ["slurm", "legacy_slurm"]:
+    if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
         request.getfixturevalue("cfut_jobs_finished")
@@ -224,9 +222,7 @@ async def test_failing_workflow_TaskExecutionError(
     override_settings_factory,
 ):
 
-    if backend == "legacy_slurm" or backend == "local":
-        FRACTAL_SLURM_CONFIG_FILE = testdata_path / "old_slurm_config.json"
-    elif backend == "slurm":
+    if backend == "slurm":
         FRACTAL_SLURM_CONFIG_FILE = testdata_path / "slurm_config.json"
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=backend,
@@ -236,7 +232,7 @@ async def test_failing_workflow_TaskExecutionError(
     )
 
     debug(f"Testing with {backend=}")
-    if backend in ["slurm", "legacy_slurm"]:
+    if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
         request.getfixturevalue("cfut_jobs_finished")
@@ -361,7 +357,7 @@ def _auxiliary_run(slurm_user, sleep_time):
     loop.close()
 
 
-@pytest.mark.parametrize("backend", ["slurm", "legacy_slurm"])
+@pytest.mark.parametrize("backend", ["slurm"])
 @pytest.mark.slow
 async def test_failing_workflow_JobExecutionError(
     backend,
@@ -380,9 +376,7 @@ async def test_failing_workflow_JobExecutionError(
     cfut_jobs_finished,
 ):
 
-    if backend == "legacy_slurm" or backend == "local":
-        FRACTAL_SLURM_CONFIG_FILE = testdata_path / "old_slurm_config.json"
-    elif backend == "slurm":
+    if backend == "slurm":
         FRACTAL_SLURM_CONFIG_FILE = testdata_path / "slurm_config.json"
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=backend,
