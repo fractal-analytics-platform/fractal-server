@@ -104,10 +104,10 @@ class SlurmJob:
     slurm_stdout: Path
     slurm_stderr: Path
     # Per-task attributes
-    workerids: tuple[str]
-    wftask_file_prefixes: tuple[str]
-    input_pickle_files: tuple[Path]
-    output_pickle_files: tuple[Path]
+    workerids: tuple[str, ...]
+    wftask_file_prefixes: tuple[str, ...]
+    input_pickle_files: tuple[Path, ...]
+    output_pickle_files: tuple[Path, ...]
     # Slurm configuration
     slurm_config: SlurmConfig
 
@@ -117,7 +117,7 @@ class SlurmJob:
         slurm_config: SlurmConfig,
         workflow_task_file_prefix: Optional[str] = None,
         slurm_file_prefix: Optional[str] = None,
-        wftask_file_prefixes: Optional[str] = None,
+        wftask_file_prefixes: Optional[tuple[str, ...]] = None,
         single_task_submission: bool = False,
     ):
         if single_task_submission and num_tasks_tot > 1:
@@ -139,7 +139,7 @@ class SlurmJob:
         )
         self.slurm_config = slurm_config
 
-    def get_clean_output_pickle_files(self) -> tuple[str]:
+    def get_clean_output_pickle_files(self) -> tuple[str, ...]:
         """
         Transform all pathlib.Path objects in self.output_pickle_files to
         strings

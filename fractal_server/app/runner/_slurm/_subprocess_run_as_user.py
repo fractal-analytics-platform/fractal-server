@@ -26,7 +26,7 @@ def _run_command_as_user(
     *,
     cmd: str,
     user: Optional[str] = None,
-    encoding: str = "utf-8",
+    encoding: Optional[str] = "utf-8",
     check: bool = False,
 ) -> subprocess.CompletedProcess:
     """

@@ -17,11 +17,8 @@ import argparse
 import logging
 import os
 import sys
-from typing import Dict
-from typing import List
 from typing import Literal
 from typing import Optional
-from typing import Tuple
 from typing import Type
 from typing import Union
 
@@ -46,12 +43,12 @@ class ExceptionProxy:
     """
 
     def __init__(
-        self, exc_type: Type[BaseException], tb: List[str], *args, **kwargs
+        self, exc_type: Type[BaseException], tb: str, *args, **kwargs
     ):
         self.exc_type_name: str = exc_type.__name__
-        self.tb: List[str] = tb
+        self.tb: str = tb
         self.args = args
-        self.kwargs: Dict = kwargs
+        self.kwargs: dict = kwargs
 
 
 class FractalVersionMismatch(RuntimeError):
@@ -63,9 +60,9 @@ class FractalVersionMismatch(RuntimeError):
 
 
 def _check_versions_mismatch(
-    server_versions: Dict[
+    server_versions: dict[
         Literal["python", "fractal_server", "cloudpickle"],
-        Union[str, Tuple[int]],
+        Union[str, tuple[int]],
     ]
 ):
     """

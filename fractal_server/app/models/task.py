@@ -1,5 +1,4 @@
 from typing import Any
-from typing import Dict
 from typing import Optional
 
 from sqlalchemy import Column
@@ -9,7 +8,7 @@ from sqlmodel import Field
 from ...common.schemas.task import _TaskBase
 
 
-class Task(_TaskBase, table=True):  # type: ignore
+class Task(_TaskBase, table=True):
     """
     Task model
 
@@ -28,10 +27,10 @@ class Task(_TaskBase, table=True):  # type: ignore
     command: str
     input_type: str
     output_type: str
-    default_args: Optional[Dict[str, Any]] = Field(
+    default_args: Optional[dict[str, Any]] = Field(
         sa_column=Column(JSON), default={}
     )
-    meta: Optional[Dict[str, Any]] = Field(sa_column=Column(JSON), default={})
+    meta: Optional[dict[str, Any]] = Field(sa_column=Column(JSON), default={})
 
     @property
     def parallelization_level(self) -> Optional[str]:
