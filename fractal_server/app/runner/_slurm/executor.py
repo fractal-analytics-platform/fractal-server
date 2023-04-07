@@ -369,7 +369,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             task_files = self.get_default_task_files()
 
         # Include common_script_lines in extra_lines
-        logging.warning(
+        logging.debug(
             f"Adding {self.common_script_lines=} to "
             f"{slurm_config.extra_lines=}, from map method."
         )
@@ -407,8 +407,6 @@ class FractalSlurmExecutor(SlurmExecutor):
             n_parallel_ftasks_per_script
         )
         slurm_config.n_ftasks_per_script = n_ftasks_per_script
-        logging.warning(n_ftasks_per_script)
-        logging.warning(n_parallel_ftasks_per_script)
 
         # Divide arguments in batches of `n_tasks_per_script` tasks each
         args_batches = []
@@ -549,9 +547,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             cloudpickle=cloudpickle.__version__,
             fractal_server=__VERSION__,
         )
-        logging.warning(list_list_args)
         for ind_task, args_list in enumerate(list_list_args):
-            logging.warning(args_list)
             kwargs_dict = list_list_kwargs[ind_task]
             funcser = cloudpickle.dumps(
                 (versions, fun, args_list, kwargs_dict)
@@ -591,8 +587,6 @@ class FractalSlurmExecutor(SlurmExecutor):
     ) -> futures.Future:
         """
         Submit a job to the pool.
-
-        FIXME
         """
 
         # Set defaults, if needed
@@ -604,7 +598,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         slurm_file_prefix = task_files.file_prefix
 
         # Include common_script_lines in extra_lines
-        logging.warning(
+        logging.debug(
             f"Adding {self.common_script_lines=} to "
             f"{slurm_config.extra_lines=}, from submit method."
         )
@@ -628,7 +622,6 @@ class FractalSlurmExecutor(SlurmExecutor):
             component_indices=None,
             single_task_submission=True,
         )
-        logging.warning(fut)
         return fut
 
     def _prepare_JobExecutionError(
@@ -690,8 +683,6 @@ class FractalSlurmExecutor(SlurmExecutor):
             if not self.jobs:
                 self.jobs_empty_cond.notify_all()
 
-        logging.warning(job)
-
         # Handle all uncaught exceptions in this broad try/except block
         try:
 
@@ -728,8 +719,6 @@ class FractalSlurmExecutor(SlurmExecutor):
             outputs = []
             for ind_out_path, out_path in enumerate(out_paths):
                 in_path = in_paths[ind_out_path]
-
-                logging.warning(out_path)
 
                 # The output pickle file may be missing because of some slow
                 # filesystem operation; wait some time before considering it as
@@ -778,15 +767,12 @@ class FractalSlurmExecutor(SlurmExecutor):
                 # dictionary) or an ExceptionProxy object; in the latter
                 # case, the ExceptionProxy definition is also part of the
                 # pickle file (thanks to cloudpickle.dumps).
-                logging.warning(cloudpickle.loads(outdata))
                 success, output = cloudpickle.loads(outdata)
                 try:
                     if success:
                         outputs.append(output)
                     else:
                         proxy = output
-                        logging.warning(proxy)
-                        logging.warning(vars(proxy))
                         if proxy.exc_type_name == "JobExecutionError":
                             job_exc = self._prepare_JobExecutionError(
                                 jobid, info=proxy.kwargs.get("info", None)
@@ -858,15 +844,15 @@ class FractalSlurmExecutor(SlurmExecutor):
         `job.file_prefix`, read them (with `sudo -u` impersonation) and write
         them to `self.working_dir`.
 
-        Files to copy:  FIXME
-        per job:
-        * SLURM job (stderr&stdout, since submission script is already there) -> 2  # noqa
-        per component:
-        * task files (stderr&stdout&metadiff&args&outpickle) -> 5
+        Files to copy:
+        * Job-related files (SLURM stderr/stdout files); with prefix
+          `job.slurm_file_prefix`;
+        * Task-related files (stderr/stdout, args.json, metadiff.json, output
+          pickle), with prefixes `job.wftask_file_prefixes`.
 
         Arguments:
-            job: `SlurmJob` object (needed for its
-                 `file_prefix` attribute)
+            job:
+                `SlurmJob` object (needed for its prefixes-related attributes).
 
         Raises:
             JobExecutionError: If a `cat` command fails.
@@ -879,8 +865,8 @@ class FractalSlurmExecutor(SlurmExecutor):
             [job.slurm_file_prefix] + list(job.wftask_file_prefixes)
         )
 
-        logging.warning(f"[_copy_files_from_user_to_server] {prefixes=}")
-        logging.warning(
+        logging.debug(f"[_copy_files_from_user_to_server] {prefixes=}")
+        logging.debug(
             f"[_copy_files_from_user_to_server] {str(self.working_dir_user)=}"
         )
 
@@ -891,13 +877,11 @@ class FractalSlurmExecutor(SlurmExecutor):
                 user=self.slurm_user,
                 startswith=prefix,
             )
-            logging.warning(
+            logging.debug(
                 "[_copy_files_from_user_to_server] "
                 f"{prefix=}, {len(files_to_copy)=}"
             )
 
-            # NOTE: By setting encoding=None, we read/write bytes instead of
-            # strings. This is needed to also handle pickle files
             for source_file_name in files_to_copy:
                 if " " in source_file_name:
                     raise ValueError(
@@ -910,6 +894,8 @@ class FractalSlurmExecutor(SlurmExecutor):
                 dest_file_path = str(self.working_dir / source_file_name)
 
                 # Read source_file_path (requires sudo)
+                # NOTE: By setting encoding=None, we read/write bytes instead
+                # of strings; this is needed to also handle pickle files.
                 cmd = f"cat {source_file_path}"
                 res = _run_command_as_user(
                     cmd=cmd, user=self.slurm_user, encoding=None
@@ -926,8 +912,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                 dest_file_path = str(self.working_dir / source_file_name)
                 with open(dest_file_path, "wb") as f:
                     f.write(res.stdout)
-
-        logging.warning("Exit _copy_files_from_user_to_server")
+        logging.debug("[_copy_files_from_user_to_server] End")
 
     def _start_multitask(
         self,
@@ -937,8 +922,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         Submit function for execution on a SLURM cluster
         """
 
-        logging.warning(job)
-
         # Prepare commands to be included in SLURM submission script
         settings = Inject(get_settings)
         python_worker_interpreter = (
@@ -946,7 +929,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         )
 
         cmdlines = []
-        logging.warning(vars(job))
         for ind_task in range(job.num_tasks_tot):
             input_pickle_file = job.input_pickle_files[ind_task]
             output_pickle_file = job.output_pickle_files[ind_task]
@@ -1019,7 +1001,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             ]
         )
         script_lines = slurm_config.sort_script_lines(script_lines)
-        logging.warning(script_lines)
+        logging.debug(script_lines)
 
         # Complete script preamble
         script_lines.append("\n")
@@ -1029,7 +1011,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         while tmp_list_commands:
             if tmp_list_commands:
                 cmd = tmp_list_commands.pop(0)  # take first element
-                logging.warning(cmd)
                 script_lines.append(
                     "srun --ntasks=1 --cpus-per-task=$SLURM_CPUS_PER_TASK "
                     f"--mem={mem_per_task_MB}MB "
