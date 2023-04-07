@@ -50,13 +50,14 @@ async def test_full_workflow(
     override_settings_factory,
 ):
 
-    if backend == "slurm":
-        FRACTAL_SLURM_CONFIG_FILE = testdata_path / "slurm_config.json"
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=backend,
-        FRACTAL_SLURM_CONFIG_FILE=FRACTAL_SLURM_CONFIG_FILE,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
     )
+    if backend == "slurm":
+        override_settings_factory(
+            FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
+        )
 
     debug(f"Testing with {backend=}")
 
@@ -222,14 +223,15 @@ async def test_failing_workflow_TaskExecutionError(
     override_settings_factory,
 ):
 
-    if backend == "slurm":
-        FRACTAL_SLURM_CONFIG_FILE = testdata_path / "slurm_config.json"
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=backend,
-        FRACTAL_SLURM_CONFIG_FILE=FRACTAL_SLURM_CONFIG_FILE,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path
         / f"artifacts-{backend}-TaskExecutionError-{failing_task}",
     )
+    if backend == "slurm":
+        override_settings_factory(
+            FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
+        )
 
     debug(f"Testing with {backend=}")
     if backend == "slurm":
@@ -376,14 +378,15 @@ async def test_failing_workflow_JobExecutionError(
     cfut_jobs_finished,
 ):
 
-    if backend == "slurm":
-        FRACTAL_SLURM_CONFIG_FILE = testdata_path / "slurm_config.json"
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=backend,
-        FRACTAL_SLURM_CONFIG_FILE=FRACTAL_SLURM_CONFIG_FILE,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path
         / f"artifacts-{backend}-test_failing_workflow_JobExecutionError",
     )
+    if backend == "slurm":
+        override_settings_factory(
+            FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
+        )
 
     user_cache_dir = str(tmp777_path / "user_cache_dir")
     user_kwargs = dict(cache_dir=user_cache_dir)
