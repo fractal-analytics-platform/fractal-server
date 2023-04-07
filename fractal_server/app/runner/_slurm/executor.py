@@ -35,13 +35,12 @@ from .._common import TaskFiles
 from ..common import JobExecutionError
 from ..common import TaskExecutionError
 from ._batching_heuristics import heuristics
+from ._executor_wait_thread import FractalSlurmWaitThread
 from ._slurm_config import get_default_slurm_config
 from ._submit_setup import SlurmConfig
 from ._subprocess_run_as_user import _glob_as_user
 from ._subprocess_run_as_user import _path_exists_as_user
 from ._subprocess_run_as_user import _run_command_as_user
-from ._timer import tic
-from .wait_thread import FractalSlurmWaitThread
 from fractal_server import __VERSION__
 
 
@@ -666,7 +665,6 @@ class FractalSlurmExecutor(SlurmExecutor):
             jobid:
                 ID of the SLURM job.
         """
-        toc = tic("_prepare_JobExecutionError")
         # Wait FRACTAL_SLURM_KILLWAIT_INTERVAL seconds
         settings = Inject(get_settings)
         settings.FRACTAL_SLURM_KILLWAIT_INTERVAL
@@ -684,7 +682,6 @@ class FractalSlurmExecutor(SlurmExecutor):
             stderr_file=slurm_stderr_file,
             info=info,
         )
-        toc()
         return job_exc
 
     def _completion(self, jobid: str) -> None:
@@ -715,9 +712,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             # Copy all relevant files from self.working_dir_user to
             # self.working_dir
 
-            toc = tic(f"_completion/_copy_files_from_user_to_server({job})")
             self._copy_files_from_user_to_server(job)
-            toc()
 
             # Update the paths to use the files in self.working_dir (rather
             # than the user's ones in self.working_dir_user)
@@ -988,13 +983,11 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         # Submit job via sbatch, and retrieve jobid
         pre_cmd = f"sudo --non-interactive -u {self.slurm_user}"
-        toc = tic("submit_sbatch")
         jobid = self.submit_sbatch(
             script_path=job.slurm_script,
             sbatch_script=sbatch_script,
             submit_pre_command=pre_cmd,
         )
-        toc()
 
         # Plug SLURM job id in stdout/stderr file paths
         job.slurm_stdout = Path(
