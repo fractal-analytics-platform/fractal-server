@@ -228,9 +228,7 @@ class Settings(BaseSettings):
     Directory under which all the tasks will be saved.
     """
 
-    FRACTAL_RUNNER_BACKEND: Literal[
-        "local", "slurm", "grouped_slurm"
-    ] = "local"
+    FRACTAL_RUNNER_BACKEND: Literal["local", "slurm", "legacy_slurm"] = "local"
     """
     Select which runner backend to use.
     """
@@ -338,7 +336,7 @@ class Settings(BaseSettings):
             FRACTAL_RUNNER_WORKING_BASE_DIR: Path
 
             FRACTAL_RUNNER_BACKEND: str = Field()
-            if FRACTAL_RUNNER_BACKEND in ["slurm", "grouped_slurm"]:
+            if FRACTAL_RUNNER_BACKEND in ["slurm", "legacy_slurm"]:
                 FRACTAL_SLURM_CONFIG_FILE: Path
 
         StrictSettings(**self.dict())
@@ -362,7 +360,7 @@ class Settings(BaseSettings):
                 "the local backend."
             )
 
-        if self.FRACTAL_RUNNER_BACKEND in ["slurm", "grouped_slurm"]:
+        if self.FRACTAL_RUNNER_BACKEND in ["slurm", "legacy_slurm"]:
             info = f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
 
             # Check that FRACTAL_SLURM_CONFIG_FILE exists
