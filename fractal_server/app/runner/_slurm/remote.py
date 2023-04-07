@@ -89,7 +89,7 @@ def _check_versions_mismatch(
         # https://github.com/fractal-analytics-platform/fractal-server/issues/375
         logging.critical(
             f"{server_python_version=} but {worker_python_version=}. "
-            "Note that cloudpickle is not guaranteed to correctly load "
+            "cloudpickle is not guaranteed to correctly load "
             "pickle files created with different python versions. "
             "Note, however, that if you reached this line it means that "
             "the pickle file was likely loaded correctly."
@@ -143,6 +143,9 @@ def worker(
             indata = f.read()
         server_versions, fun, args, kwargs = cloudpickle.loads(indata)
         _check_versions_mismatch(server_versions)
+        logging.critical(f"{fun=}")
+        logging.critical(f"{args=}")
+        logging.critical(f"{kwargs=}")
 
         result = True, fun(*args, **kwargs)
         out = cloudpickle.dumps(result)
