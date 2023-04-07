@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Any
 from typing import Dict
 from typing import List
@@ -58,7 +57,7 @@ class Dataset(_DatasetBase, table=True):
         arbitrary_types_allowed = True
 
     @property
-    def paths(self) -> List[Path]:
+    def paths(self) -> list[str]:
         return [r.path for r in self.resource_list]
 
 
