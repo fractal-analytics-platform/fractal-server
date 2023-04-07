@@ -14,11 +14,8 @@ from functools import lru_cache
 from functools import partial
 from pathlib import Path
 from shlex import split as shlex_split
-from typing import Any
 from typing import Callable
-from typing import Dict
 from typing import Generator
-from typing import List
 from typing import Optional
 
 from ...config import get_settings
@@ -33,6 +30,19 @@ from .common import write_args_file
 METADATA_FILENAME = "metadata.json"
 
 
+def no_op_submit_setup_call(
+    *,
+    wftask: WorkflowTask,
+    workflow_dir: Path,
+    workflow_dir_user: Path,
+    task_pars: TaskParameters,
+) -> dict:
+    """
+    Default (no-operation) interface of submit_setup_call.
+    """
+    return {}
+
+
 def sanitize_component(value: str) -> str:
     """
     Remove {" ", "/", "."} form a string, e.g. going from
@@ -41,7 +51,7 @@ def sanitize_component(value: str) -> str:
     return value.replace(" ", "_").replace("/", "_").replace(".", "_")
 
 
-def _get_list_chunks(mylist: List, *, chunksize: Optional[int]) -> Generator:
+def _get_list_chunks(mylist: list, *, chunksize: Optional[int]) -> Generator:
     """
     Split a list into several chunks of maximum size `chunksize`. If
     `chunksize` is `None`, return a single chunk with the whole list.
@@ -381,9 +391,7 @@ def call_parallel_task(
     task_pars_depend: TaskParameters,
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
-    submit_setup_call: Callable[
-        [WorkflowTask, TaskParameters, Path, Path], Dict[str, Any]
-    ] = lambda wftask, task_pars, workflow_dir, workflow_dir_user: {},
+    submit_setup_call: Optional[Callable] = no_op_submit_setup_call,
 ) -> Future:  # py3.9 Future[TaskParameters]:
     """
     Collect results from the parallel instances of a parallel task
@@ -428,6 +436,14 @@ def call_parallel_task(
 
     component_list = task_pars_depend.metadata[wftask.parallelization_level]
 
+    # Backend-specific configuration
+    extra_setup = submit_setup_call(
+        wftask=wftask,
+        task_pars=task_pars_depend,
+        workflow_dir=workflow_dir,
+        workflow_dir_user=workflow_dir_user,
+    )
+
     # Preliminary steps
     partial_call_task = partial(
         call_single_parallel_task,
@@ -435,9 +451,6 @@ def call_parallel_task(
         task_pars=task_pars_depend,
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
-    )
-    extra_setup = submit_setup_call(
-        wftask, task_pars_depend, workflow_dir, workflow_dir_user
     )
 
     # Depending on FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW, either submit
@@ -486,13 +499,11 @@ def call_parallel_task(
 def recursive_task_submission(
     *,
     executor: Executor,
-    task_list: List[WorkflowTask],
+    task_list: list[WorkflowTask],
     task_pars: TaskParameters,
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
-    submit_setup_call: Callable[
-        [WorkflowTask, TaskParameters, Path, Path], Dict[str, Any]
-    ] = lambda task, task_pars, workflow_dir, workflow_dir_user: {},
+    submit_setup_call: Optional[Callable] = no_op_submit_setup_call,
     logger_name: str,
 ) -> Future:
     """
@@ -535,7 +546,7 @@ def recursive_task_submission(
             Name of the logger
 
     Returns:
-        this_task_future:
+        this_wftask_future:
             a future that results to the task parameters which constitute the
             input of the following task in the list.
     """
@@ -543,7 +554,7 @@ def recursive_task_submission(
         workflow_dir_user = workflow_dir
 
     try:
-        *dependencies, this_task = task_list
+        *dependencies, this_wftask = task_list
     except ValueError:
         # step 0: return future containing original task_pars
         pseudo_future: Future = Future()
@@ -568,14 +579,14 @@ def recursive_task_submission(
     task_pars_depend = task_pars_depend_future.result()
 
     logger.info(
-        f'SUBMIT {this_task.order}-th task (name="{this_task.task.name}")'
+        f'SUBMIT {this_wftask.order}-th task (name="{this_wftask.task.name}")'
     )
-    if this_task.is_parallel:
+    if this_wftask.is_parallel:
         # NOTE: call_parallel_task is blocking, i.e. the returned future always
-        # has `this_task_future.done() = True`
-        this_task_future = call_parallel_task(
+        # has `this_wftask_future.done() = True`
+        this_wftask_future = call_parallel_task(
             executor=executor,
-            wftask=this_task,
+            wftask=this_wftask,
             task_pars_depend=task_pars_depend,
             workflow_dir=workflow_dir,
             workflow_dir_user=workflow_dir_user,
@@ -583,26 +594,29 @@ def recursive_task_submission(
         )
     else:
         # NOTE: executor.submit(call_single_task, ...) is non-blocking, i.e.
-        # the returned future may have `this_task_future.done() = False`
+        # the returned future may have `this_wftask_future.done() = False`
         extra_setup = submit_setup_call(
-            this_task, task_pars, workflow_dir, workflow_dir_user
+            wftask=this_wftask,
+            task_pars=task_pars,
+            workflow_dir=workflow_dir,
+            workflow_dir_user=workflow_dir_user,
         )
-        this_task_future = executor.submit(
+        this_wftask_future = executor.submit(
             call_single_task,
-            wftask=this_task,
+            wftask=this_wftask,
             task_pars=task_pars_depend,
             workflow_dir=workflow_dir,
             workflow_dir_user=workflow_dir_user,
             **extra_setup,
         )
         # Wait for the future result (blocking)
-        this_task_future.result()
+        this_wftask_future.result()
     logger.info(
-        f'END    {this_task.order}-th task (name="{this_task.task.name}")'
+        f'END    {this_wftask.order}-th task (name="{this_wftask.task.name}")'
     )
 
     # Write most recent metadata to METADATA_FILENAME
     with open(workflow_dir / METADATA_FILENAME, "w") as f:
-        json.dump(this_task_future.result().metadata, f, indent=2)
+        json.dump(this_wftask_future.result().metadata, f, indent=2)
 
-    return this_task_future
+    return this_wftask_future
