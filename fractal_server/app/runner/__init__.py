@@ -46,13 +46,6 @@ _backend_errors: Dict[str, Exception] = {}
 _backends["local"] = local_process_workflow
 
 try:
-    from ._legacy_slurm import process_workflow as slurm_process_workflow
-
-    _backends["legacy_slurm"] = slurm_process_workflow
-except ModuleNotFoundError as e:
-    _backend_errors["legacy_slurm"] = e
-
-try:
     from ._slurm import process_workflow as slurm_process_workflow
 
     _backends["slurm"] = slurm_process_workflow
@@ -145,7 +138,7 @@ async def submit_workflow(
     # Define and create user-side working folder, if needed
     if FRACTAL_RUNNER_BACKEND == "local":
         WORKFLOW_DIR_USER = WORKFLOW_DIR
-    elif FRACTAL_RUNNER_BACKEND in ["legacy_slurm", "slurm"]:
+    elif FRACTAL_RUNNER_BACKEND == "slurm":
         timestamp_string = get_timestamp().strftime("%Y%m%d_%H%M%S")
 
         from ._slurm._subprocess_run_as_user import _mkdir_as_user
