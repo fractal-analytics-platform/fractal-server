@@ -27,6 +27,7 @@ from ._slurm_config import SlurmConfig
 
 
 def _slurm_submit_setup(
+    *,
     wftask: WorkflowTask,
     workflow_dir: Path,
     workflow_dir_user: Path,
