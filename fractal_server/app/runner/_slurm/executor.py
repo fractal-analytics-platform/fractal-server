@@ -256,6 +256,53 @@ class FractalSlurmExecutor(SlurmExecutor):
         prefix = prefix or "slurmpy.stderr"
         return self.working_dir_user / f"{prefix}_slurm_{arg}.err"
 
+    def submit(
+        self,
+        fun: Callable[..., Any],
+        *fun_args,
+        slurm_config: Optional[SlurmConfig] = None,
+        task_files: Optional[TaskFiles] = None,
+        **fun_kwargs,
+    ) -> futures.Future:
+        """
+        Submit a job to the pool.
+        """
+
+        # Set defaults, if needed
+        if slurm_config is None:
+            slurm_config = get_default_slurm_config()
+        if task_files is None:
+            task_files = self.get_default_task_files()
+
+        slurm_file_prefix = task_files.file_prefix
+
+        # Include common_script_lines in extra_lines
+        logging.debug(
+            f"Adding {self.common_script_lines=} to "
+            f"{slurm_config.extra_lines=}, from submit method."
+        )
+        current_extra_lines = slurm_config.extra_lines or []
+        slurm_config.extra_lines = (
+            current_extra_lines + self.common_script_lines
+        )
+
+        # Adapt slurm_config to the fact that this is a single-task SlurmJob
+        # instance
+        slurm_config.n_ftasks_per_script = 1
+        slurm_config.n_parallel_ftasks_per_script = 1
+
+        fut = self.submit_multitask(
+            fun,
+            list_list_args=[fun_args],
+            list_list_kwargs=[fun_kwargs],
+            slurm_config=slurm_config,
+            slurm_file_prefix=slurm_file_prefix,
+            task_files=task_files,
+            component_indices=None,
+            single_task_submission=True,
+        )
+        return fut
+
     def map(
         self,
         fn: Callable[..., Any],
@@ -524,53 +571,6 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         with self.jobs_lock:
             self.jobs[jobid] = (fut, job)
-        return fut
-
-    def submit(
-        self,
-        fun: Callable[..., Any],
-        *fun_args,
-        slurm_config: Optional[SlurmConfig] = None,
-        task_files: Optional[TaskFiles] = None,
-        **fun_kwargs,
-    ) -> futures.Future:
-        """
-        Submit a job to the pool.
-        """
-
-        # Set defaults, if needed
-        if slurm_config is None:
-            slurm_config = get_default_slurm_config()
-        if task_files is None:
-            task_files = self.get_default_task_files()
-
-        slurm_file_prefix = task_files.file_prefix
-
-        # Include common_script_lines in extra_lines
-        logging.debug(
-            f"Adding {self.common_script_lines=} to "
-            f"{slurm_config.extra_lines=}, from submit method."
-        )
-        current_extra_lines = slurm_config.extra_lines or []
-        slurm_config.extra_lines = (
-            current_extra_lines + self.common_script_lines
-        )
-
-        # Adapt slurm_config to the fact that this is a single-task SlurmJob
-        # instance
-        slurm_config.n_ftasks_per_script = 1
-        slurm_config.n_parallel_ftasks_per_script = 1
-
-        fut = self.submit_multitask(
-            fun,
-            list_list_args=[fun_args],
-            list_list_kwargs=[fun_kwargs],
-            slurm_config=slurm_config,
-            slurm_file_prefix=slurm_file_prefix,
-            task_files=task_files,
-            component_indices=None,
-            single_task_submission=True,
-        )
         return fut
 
     def _prepare_JobExecutionError(
