@@ -119,12 +119,28 @@ def heuristics(
         Valid values of `n_ftasks_per_script` and
         `n_parallel_ftasks_per_script`.
     """
-    # Preliminary check
+    # Preliminary checks
     if bool(n_ftasks_per_script) != bool(n_parallel_ftasks_per_script):
-        raise SlurmHeuristicsError(
+        msg = (
             "n_ftasks_per_script and n_parallel_ftasks_per_script must "
             "be both set or both unset"
         )
+        logging.error(msg)
+        raise SlurmHeuristicsError(msg)
+    if cpus_per_task > max_cpus_per_job:
+        msg = (
+            f"[heuristics] Requested {cpus_per_task=} "
+            f"but {max_cpus_per_job=}."
+        )
+        logging.error(msg)
+        raise SlurmHeuristicsError(msg)
+    if mem_per_task > max_mem_per_job:
+        msg = (
+            f"[heuristics] Requested {mem_per_task=} "
+            f"but {max_mem_per_job=}."
+        )
+        logging.error(msg)
+        raise SlurmHeuristicsError(msg)
 
     # Branch 1: validate/update given parameters
     if n_ftasks_per_script and n_parallel_ftasks_per_script:
