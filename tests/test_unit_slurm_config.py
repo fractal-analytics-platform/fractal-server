@@ -6,10 +6,12 @@ from devtools import debug
 
 from .fixtures_tasks import MockTask
 from .fixtures_tasks import MockWorkflowTask
+from fractal_server.app.runner._slurm._slurm_config import _parse_mem_value
 from fractal_server.app.runner._slurm._slurm_config import (
     get_default_slurm_config,
 )
 from fractal_server.app.runner._slurm._slurm_config import get_slurm_config
+from fractal_server.app.runner._slurm._slurm_config import SlurmConfigError
 
 
 @pytest.mark.parametrize("fail", [True, False])
@@ -161,3 +163,25 @@ def test_to_sbatch_preamble():
         assert line in preamble
     MEM = MEM_SINGLE_TASK_MB * slurm_config.n_parallel_ftasks_per_script
     assert f"#SBATCH --mem={MEM}M" in preamble
+
+
+def test_parse_mem_value():
+
+    # Successful calls
+    assert _parse_mem_value(99) == 99
+    assert _parse_mem_value("99") == 99
+    assert _parse_mem_value("99M") == 99
+    assert _parse_mem_value("2G") == 2000
+    assert _parse_mem_value("3T") == 3000000
+
+    # Failures
+    with pytest.raises(SlurmConfigError):
+        _parse_mem_value("100 M")
+    with pytest.raises(SlurmConfigError):
+        _parse_mem_value("100K")
+    with pytest.raises(SlurmConfigError):
+        _parse_mem_value("M10M")
+    with pytest.raises(SlurmConfigError):
+        _parse_mem_value("10-M")
+    with pytest.raises(SlurmConfigError):
+        _parse_mem_value("2.5G")
