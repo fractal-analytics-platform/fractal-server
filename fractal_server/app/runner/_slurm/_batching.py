@@ -1,3 +1,16 @@
+# Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
+# University of Zurich
+#
+# Original authors:
+# Tommaso Comparin <tommaso.comparin@exact-lab.it>
+#
+# This file is part of Fractal and was originally developed by eXact lab S.r.l.
+# <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
+# Institute for Biomedical Research and Pelkmans Lab from the University of
+# Zurich.
+"""
+Submodule to determine the number of total/parallel tasks per SLURM job.
+"""
 import logging
 import math
 from typing import Optional
@@ -20,8 +33,8 @@ def _estimate_n_parallel_ftasks_per_script(
     Arguments:
         cpus_per_task: Number of CPUs needed for one task.
         mem_per_task: Memory (in MB) needed for one task.
-        ref_cpus_per_job: Maximum number of CPUs available for one job.
-        ref_mem_per_job: Maximum memory (in MB) available for one job.
+        max_cpus_per_job: Maximum number of CPUs available for one job.
+        max_mem_per_job: Maximum memory (in MB) available for one job.
 
     Returns:
         Number of parallel tasks per job
@@ -55,7 +68,22 @@ def heuristics(
     """
     Heuristically determine parameters for multi-task batching
 
-    FIXME docstring
+    "In-job queues" refer to the case where
+    `n_parallel_ftasks_per_script<n_ftasks_per_script`, that is, where not all
+    tasks of a given SLURM job will be executed at the same time.
+
+    This function goes through the following branches:
+    1. Validate/fix parameters, if they are provided as input.
+    2. Heuristically determine parameters based on the per-task resource
+       requirements and on the target amount of per-job resources, without
+       resorting to in-job queues.
+    3. Heuristically determine parameters based on the per-task resource
+       requirements and on the maximum amount of per-job resources, without
+       resorting to in-job queues.
+    4. Heuristically determine parameters (based on the per-task resource
+       requirements and on the maximum amount of per-job resources) and then
+       introduce in-job queues to satisfy the hard constraint on the maximum
+       number of jobs.
 
     Arguments:
         n_ftasks_tot:
@@ -150,33 +178,33 @@ def heuristics(
         logging.debug("[heuristics] Return from branch 1")
         return (n_ftasks_per_script, n_parallel_ftasks_per_script)
 
-    # Branch 2a: Target-based heuristics, without in-job queues
+    # 2: Target-resources-based heuristics, without in-job queues
     n_parallel_ftasks_per_script = _estimate_n_parallel_ftasks_per_script(
         cpus_per_task=cpus_per_task,
         mem_per_task=mem_per_task,
         max_cpus_per_job=target_cpus_per_job,
         max_mem_per_job=target_mem_per_job,
     )
-    n_ftasks_per_script = n_parallel_ftasks_per_script  # no in-job queues
+    n_ftasks_per_script = n_parallel_ftasks_per_script
     num_jobs = math.ceil(n_ftasks_tot / n_ftasks_per_script)
     if num_jobs <= target_num_jobs:
-        logging.critical("Heuristic: branch 2a")
+        logging.debug("[heuristics] Return from branch 2")
         return (n_ftasks_per_script, n_parallel_ftasks_per_script)
 
-    # Branch 2b: Max-based heuristics, without in-job queues
+    # Branch 3: Max-resources-based heuristics, without in-job queues
     n_parallel_ftasks_per_script = _estimate_n_parallel_ftasks_per_script(
         cpus_per_task=cpus_per_task,
         mem_per_task=mem_per_task,
-        ref_cpus_per_job=max_cpus_per_job,
-        ref_mem_per_job=max_mem_per_job,
+        max_cpus_per_job=max_cpus_per_job,
+        max_mem_per_job=max_mem_per_job,
     )
-    n_ftasks_per_script = n_parallel_ftasks_per_script  # no in-job queues
+    n_ftasks_per_script = n_parallel_ftasks_per_script
     num_jobs = math.ceil(n_ftasks_tot / n_ftasks_per_script)
     if num_jobs <= max_num_jobs:
-        logging.critical("Heuristic: branch 2b")
+        logging.debug("[heuristics] Return from branch 3")
         return (n_ftasks_per_script, n_parallel_ftasks_per_script)
 
-    # Branch 3: Max-based heuristics, with in-job queues
+    # Branch 4: Max-resources-based heuristics, with in-job queues
     n_parallel_ftasks_per_script = _estimate_n_parallel_ftasks_per_script(
         cpus_per_task=cpus_per_task,
         mem_per_task=mem_per_task,
@@ -184,5 +212,5 @@ def heuristics(
         max_mem_per_job=max_mem_per_job,
     )
     n_ftasks_per_script = math.ceil(n_ftasks_tot / max_num_jobs)
-    logging.critical("Heuristic: branch 3")
+    logging.debug("[heuristics] Return from branch 4")
     return (n_ftasks_per_script, n_parallel_ftasks_per_script)
