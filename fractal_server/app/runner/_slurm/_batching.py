@@ -30,6 +30,11 @@ def _estimate_n_parallel_ftasks_per_script(
     """
     Compute how many parallel tasks can fit in a given SLURM job
 
+
+    Note: If more resources than available are requested, return 1. This
+    assumes that further checks will be performed on the output of the current
+    function, as is the case in the `heuristics` function below.
+
     Arguments:
         cpus_per_task: Number of CPUs needed for one task.
         mem_per_task: Memory (in MB) needed for one task.
@@ -40,7 +45,6 @@ def _estimate_n_parallel_ftasks_per_script(
         Number of parallel tasks per job
     """
     if cpus_per_task > max_cpus_per_job or mem_per_task > max_mem_per_job:
-        # FIXME: what should we do here? Return 1 or raise an error?
         return 1
     val_based_on_cpus = max_cpus_per_job // cpus_per_task
     val_based_on_mem = max_mem_per_job // mem_per_task
