@@ -10,7 +10,7 @@
 # Institute for Biomedical Research and Pelkmans Lab from the University of
 # Zurich.
 """
-FIXME
+Submodule to handle the SLURM configuration for a WorkflowTask
 """
 import json
 import logging
@@ -39,9 +39,37 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
     """
     Abstraction for SLURM parameters
 
-    # FIXME: docstring
+    Part of the attributes map directly to some of the SLURM attribues (see
+    https://slurm.schedmd.com/sbatch.html), e.g. `partition`. Other attributes
+    are metaparameters which are needed in fractal-server to combine multiple
+    tasks in the same SLURM job (e.g. `n_parallel_ftasks_per_script` or
+    `max_num_jobs`).
 
     # FIXME: check that extra_lines does not overlap with known fields
+
+    Attributes:
+        partition: Corresponds to SLURM option.
+        cpus_per_task: Corresponds to SLURM option.
+        mem_per_task_MB: Corresponds to `mem` SLURM option.
+        job_name: Corresponds to `name` SLURM option.
+        constraint: Corresponds to SLURM option.
+        gres: Corresponds to SLURM option.
+        account: Corresponds to SLURM option.
+        time: Corresponds to SLURM option (WARNING: not fully supported).
+
+        prefix: Prefix of configuration lines in SLURM submission scripts.
+        shebang_line: Shebang line for SLURM submission scripts.
+        extra_lines: TBD
+
+        n_ftasks_per_script: TBD
+        n_parallel_ftasks_per_script: TBD
+        target_cpus_per_job: TBD
+        max_cpus_per_job: TBD
+        target_mem_per_job: TBD  # FIXME: units?
+        max_mem_per_job: TBD
+        target_num_jobs: TBD
+        max_num_jobs: TBD
+
     """
 
     # Required SLURM parameters (note that the integer attributes are those
@@ -136,6 +164,19 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
         if self.extra_lines:
             for line in self._sorted_extra_lines():
                 lines.append(line)
+
+        """
+        FIXME export SRUN_CPUS_PER_TASK
+        # From https://slurm.schedmd.com/sbatch.html: Beginning with 22.05,
+        # srun will not inherit the --cpus-per-task value requested by salloc
+        # or sbatch.  It must be requested again with the call to srun or set
+        # with the SRUN_CPUS_PER_TASK environment variable if desired for the
+        # task(s).
+        if config.cpus_per_task:
+            #additional_setup_lines.append(
+                f"export SRUN_CPUS_PER_TASK={config.cpus_per_task}"
+            )
+        """
 
         return lines
 
@@ -361,14 +402,3 @@ def get_slurm_config(
     logging.warning(f"{slurm_config=}")
 
     return slurm_config
-
-    """
-    # From https://slurm.schedmd.com/sbatch.html: Beginning with 22.05, srun
-    # will not inherit the --cpus-per-task value requested by salloc or sbatch.
-    # It must be requested again with the call to srun or set with the
-    # SRUN_CPUS_PER_TASK environment variable if desired for the task(s).
-    if config.cpus_per_task:
-        #additional_setup_lines.append(
-            f"export SRUN_CPUS_PER_TASK={config.cpus_per_task}"
-        )
-    """
