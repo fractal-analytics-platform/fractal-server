@@ -9,11 +9,6 @@ __pycache__
 *.db
 dist/
 
-# parsl-related
-cmd_parsl.slurm.*.sh
-runinfo
-.*.swp
-
 output*
 tmp_data
 LOG_*
@@ -25,7 +20,6 @@ mprofile_*.dat
 nohup
 nohup.out
 
-parsl_executors.log
 fractal.log
 logs
 site/
