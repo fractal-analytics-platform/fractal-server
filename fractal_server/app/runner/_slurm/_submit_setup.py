@@ -25,7 +25,7 @@ from ._slurm_config import get_slurm_config
 from ._slurm_config import SlurmConfig
 
 
-def _grouped_slurm_submit_setup(
+def _slurm_submit_setup(
     wftask: WorkflowTask,
     task_pars: TaskParameters,
     workflow_dir: Path,
