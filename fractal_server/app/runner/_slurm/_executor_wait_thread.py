@@ -33,8 +33,9 @@ class FractalFileWaitThread(FileWaitThread):
 
     def wait(
         self,
-        filenames: tuple[str],
-        value,  # FIXME: add type hint
+        *,
+        filenames: tuple[str, ...],
+        jobid: str,
     ):
         """
         Add a a new job (filenames and callback value, that is, SLURM job ID)
@@ -44,7 +45,7 @@ class FractalFileWaitThread(FileWaitThread):
         * Replaced `filename` with `filenames`
         """
         with self.lock:
-            self.waiting[filenames] = value
+            self.waiting[filenames] = jobid
 
     def check(self, i):
         """
@@ -52,7 +53,6 @@ class FractalFileWaitThread(FileWaitThread):
 
         Note: the `i` parameter allows subclasses like `SlurmWaitThread` to do
         something on every Nth check.
-
 
         Changed from clusterfutures:
         * Check file exitence via `_path_exists_as_user` instead of using `os`.

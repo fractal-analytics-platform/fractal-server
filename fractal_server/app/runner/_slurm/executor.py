@@ -584,7 +584,10 @@ class FractalSlurmExecutor(SlurmExecutor):
         )
 
         # Thread will wait for it to finish.
-        self.wait_thread.wait(job.get_clean_output_pickle_files(), jobid)
+        self.wait_thread.wait(
+            filenames=job.get_clean_output_pickle_files(),
+            jobid=jobid,
+        )
 
         with self.jobs_lock:
             self.jobs[jobid] = (fut, job)
