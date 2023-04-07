@@ -291,7 +291,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         slurm_config.n_ftasks_per_script = 1
         slurm_config.n_parallel_ftasks_per_script = 1
 
-        fut = self.submit_multitask(
+        fut = self._submit_job(
             fun,
             list_list_args=[fun_args],
             list_list_kwargs=[fun_kwargs],
@@ -423,7 +423,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                 f"{general_slurm_file_prefix}_batch_{ind_batch:06d}"
             )
             fs.append(
-                self.submit_multitask(
+                self._submit_job(
                     fn,
                     list_list_args=[
                         [x] for x in batch
@@ -465,7 +465,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         return result_iterator()
 
-    def submit_multitask(
+    def _submit_job(
         self,
         fun: Callable[..., Any],
         list_list_args: Iterable[Iterable],
@@ -552,7 +552,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                 f.write(funcser)
 
         # Submit job to SLURM, and get jobid
-        jobid, job = self._start_multitask(job)
+        jobid, job = self._start(job)
 
         # Add the SLURM script/out/err paths to map_jobid_to_slurm_files (this
         # must be after self._start(job), so that "%j" has already been
@@ -863,7 +863,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                     f.write(res.stdout)
         logging.debug("[_copy_files_from_user_to_server] End")
 
-    def _start_multitask(
+    def _start(
         self,
         job: SlurmJob,
     ) -> tuple[str, SlurmJob]:
@@ -891,7 +891,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             )
 
         # ...
-        sbatch_script = self.compose_sbatch_script_multitask(
+        sbatch_script = self._prepare_sbatch_script(
             slurm_config=job.slurm_config,
             list_commands=cmdlines,
             slurm_out_path=str(job.slurm_stdout),
@@ -940,7 +940,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         return jobid, job
 
-    def compose_sbatch_script_multitask(  # FIXME: rename
+    def _prepare_sbatch_script(
         self,
         *,
         list_commands: list[str],
