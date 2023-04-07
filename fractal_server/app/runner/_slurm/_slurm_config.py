@@ -268,22 +268,14 @@ def get_slurm_config(
     workflow_dir: Path,
     workflow_dir_user: Path,
     config_path: Optional[Path] = None,
-    task_pars=None,  # FIXME remove this
 ) -> SlurmConfig:
     """
-    Collect WorfklowTask-specific configuration parameters from different
-    sources, and inject them for execution
+    FIXME
 
-    Here goes all the logic for reading attributes from the appropriate sources
-    and transforming them into an appropriate SLURM configuration
-
-    For now, this is the reference implementation for argument
-    `submit_setup_call` of
-    [fractal_server.app.runner._common.recursive_task_submission][]
-
-    Args:
-        task:
-            Task for which the sbatch script is to be assembled
+    Arguments:
+        wftask:
+            WorkflowTask for which the SLURM configuration is is to be
+            prepared.
         workflow_dir:
             Server-owned directory to store all task-execution-related relevant
             files (inputs, outputs, errors, and all meta files related to the
@@ -291,16 +283,17 @@ def get_slurm_config(
         workflow_dir_user:
             User-side directory with the same scope as `workflow_dir`, and
             where a user can write.
+        config_path:
+            Path of aFractal  SLURM configuration file; if `None`, use
+            `FRACTAL_SLURM_CONFIG_FILE` variable from settings.
 
     Raises:
         SlurmConfigError: if the slurm-configuration file does not contain the
                           required config
 
     Returns:
-        submit_setup_dict:
-            A dictionary that will be passed on to
-            `FractalSlurmExecutor.submit` and `FractalSlurmExecutor.map`, so
-            as to set extra options in the sbatch script.
+        slurm_config:
+            The SlurmConfig object
     """
 
     # Read Fracatal SLURM configuration file
