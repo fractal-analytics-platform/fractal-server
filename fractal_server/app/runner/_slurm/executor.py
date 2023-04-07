@@ -34,7 +34,7 @@ from .._common import get_task_file_paths
 from .._common import TaskFiles
 from ..common import JobExecutionError
 from ..common import TaskExecutionError
-from ._batching_heuristics import heuristics
+from ._batching import heuristics
 from ._executor_wait_thread import FractalSlurmWaitThread
 from ._slurm_config import get_default_slurm_config
 from ._submit_setup import SlurmConfig
