@@ -10,10 +10,11 @@
 # Institute for Biomedical Research and Pelkmans Lab from the University of
 # Zurich.
 """
-FIXME
+Submodule to define _slurm_submit_setup, which is also the reference
+implementation of `submit_setup_call` in
+[fractal_server.app.runner._common][]).
 """
 from pathlib import Path
-from typing import Dict
 from typing import Optional
 from typing import Union
 
@@ -27,25 +28,26 @@ from ._slurm_config import SlurmConfig
 
 def _slurm_submit_setup(
     wftask: WorkflowTask,
-    task_pars: TaskParameters,
     workflow_dir: Path,
     workflow_dir_user: Path,
-    config_path: Optional[Path] = None,
-) -> Dict[str, Union[TaskFiles, SlurmConfig]]:
+    task_pars: Optional[TaskParameters] = None,
+) -> dict[str, Union[TaskFiles, SlurmConfig]]:
     """
     Collect WorfklowTask-specific configuration parameters from different
-    sources, and inject them for execution
+    sources, and inject them for execution.
 
     Here goes all the logic for reading attributes from the appropriate sources
-    and transforming them into an appropriate SLURM configuration
+    and transforming them into an appropriate `SlurmConfig` object (encoding
+    SLURM configuration) and `TaskFiles` object (with details e.g. about file
+    paths or filename prefixes).
 
-    For now, this is the reference implementation for argument
+    For now, this is the reference implementation for the argument
     `submit_setup_call` of
-    [fractal_server.app.runner._common.recursive_task_submission][]
+    [fractal_server.app.runner._common.recursive_task_submission][].
 
     Args:
-        task:
-            Task for which the sbatch script is to be assembled
+        wftask:
+            WorkflowTask for which the configuration is to be assembled
         task_pars:
             Task parameters to be passed to the task
             (not used in this function)
@@ -57,25 +59,21 @@ def _slurm_submit_setup(
             User-side directory with the same scope as `workflow_dir`, and
             where a user can write.
 
-    Raises:
-        SlurmConfigError: if the slurm-configuration file does not contain the
-                          required config
-
     Returns:
         submit_setup_dict:
             A dictionary that will be passed on to
             `FractalSlurmExecutor.submit` and `FractalSlurmExecutor.map`, so
-            as to set extra options in the sbatch script.
+            as to set extra options.
     """
 
+    # Get SlurmConfig object
     slurm_config = get_slurm_config(
         wftask=wftask,
-        task_pars=task_pars,
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
-        config_path=config_path,
     )
 
+    # Get TaskFiles object
     task_files = get_task_file_paths(
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
@@ -88,14 +86,3 @@ def _slurm_submit_setup(
         task_files=task_files,
     )
     return submit_setup_dict
-
-    """
-    # From https://slurm.schedmd.com/sbatch.html: Beginning with 22.05, srun
-    # will not inherit the --cpus-per-task value requested by salloc or sbatch.
-    # It must be requested again with the call to srun or set with the
-    # SRUN_CPUS_PER_TASK environment variable if desired for the task(s).
-    if config.cpus_per_task:
-        #additional_setup_lines.append(
-            f"export SRUN_CPUS_PER_TASK={config.cpus_per_task}"
-        )
-    """
