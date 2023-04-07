@@ -15,8 +15,8 @@ Submodule to handle the SLURM configuration for a WorkflowTask
 import json
 import logging
 from pathlib import Path
-from typing import List
 from typing import Optional
+from typing import Union
 
 from pydantic import BaseModel
 from pydantic import Extra
@@ -89,7 +89,7 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
 
     # Free-field attribute for extra lines to be added to the SLURM job
     # preamble
-    extra_lines: Optional[List[str]] = Field(default_factory=list)
+    extra_lines: Optional[list[str]] = Field(default_factory=list)
 
     # Metaparameters needed to combine multiple tasks in each SLURM job
     n_ftasks_per_script: Optional[int] = None
@@ -181,43 +181,68 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
         return lines
 
 
-def _parse_mem_value(raw_mem):
+def _parse_mem_value(raw_mem: Union[str, int]) -> int:
     """
-    FIXME: add docstring and unit test
+    Convert a memory-specification string into an integer (in MB units), or
+    simply return the input if it is already an integer.
+
+    Supported units are `"M", "G", "T"`, with `"M"` being the default; some
+    parsing examples are: `"10M" -> 10000`, `"3G" -> 3000000`.
+
+    Arguments:
+        raw_mem:
+            A string (e.g. `"100M"`) or an integer (in MB).
+
+    Returns:
+        Integer value of memory in MB units.
+
     """
+
+    info = f"[_parse_mem_value] {raw_mem=}"
     error_msg = (
-        f'"{raw_mem}" is not a valid specification of memory '
-        "requirements. Some valid examples: 93, 71M, 93G, 71T."
+        f"{info}, invalid specification of memory requirements "
+        "(valid examples: 93, 71M, 93G, 71T)."
     )
+    logging.debug(info)
 
-    logging.warning(f"[_parse_mem_value] {raw_mem=}")
-
+    # Handle integer argument
     if isinstance(raw_mem, int):
-        logging.warning("[_parse_mem_value] 0a")
+        logging.debug(f"{info}, received integer.")
         return raw_mem
 
-    # Preliminary check
-    if not raw_mem[0].isdigit():
-        logging.warning("[_parse_mem_value] 0b")
-        raise ValueError(error_msg)
-
+    # Handle string argument
+    if not raw_mem[0].isdigit():  # fail e.g. for raw_mem="M100"
+        logging.error(error_msg)
+        raise SlurmConfigError(error_msg)
     if raw_mem.isdigit():
+        logging.debug(f"{info}, received digits-only string.")
         mem_MB = int(raw_mem)
-        logging.warning("[_parse_mem_value] 1")
     elif raw_mem.endswith("M"):
-        mem_MB = int(raw_mem.strip("M"))
-        logging.warning("[_parse_mem_value] 2")
+        logging.debug(f"{info}, received string for memory in M.")
+        stripped_raw_mem = raw_mem.strip("M")
+        if not stripped_raw_mem.isdigit():
+            logging.error(error_msg)
+            raise SlurmConfigError(error_msg)
+        mem_MB = int(stripped_raw_mem)
     elif raw_mem.endswith("G"):
-        mem_MB = int(raw_mem.strip("G")) * 10**3
-        logging.warning("[_parse_mem_value] 3")
+        logging.debug(f"{info}, received string for memory in G.")
+        stripped_raw_mem = raw_mem.strip("G")
+        if not stripped_raw_mem.isdigit():
+            logging.error(error_msg)
+            raise SlurmConfigError(error_msg)
+        mem_MB = int(stripped_raw_mem) * 10**3
     elif raw_mem.endswith("T"):
-        mem_MB = int(raw_mem.strip("T")) * 10**6
-        logging.warning("[_parse_mem_value] 4")
+        logging.debug(f"{info}, received string for memory in T.")
+        stripped_raw_mem = raw_mem.strip("T")
+        if not stripped_raw_mem.isdigit():
+            logging.error(error_msg)
+            raise SlurmConfigError(error_msg)
+        mem_MB = int(stripped_raw_mem) * 10**6
     else:
-        raise ValueError(error_msg)
+        logging.error(error_msg)
+        raise SlurmConfigError(error_msg)
 
-    logging.warning(f"[_parse_mem_value] {mem_MB=}")
-
+    logging.debug(f"{info}, return {mem_MB}")
     return mem_MB
 
 
