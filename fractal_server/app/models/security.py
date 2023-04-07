@@ -3,7 +3,6 @@ Adapted from
 https://github.com/fastapi-users/fastapi-users-db-sqlmodel/blob/main/tests/conftest.py
 """
 import uuid
-from typing import List
 from typing import Optional
 
 from fastapi_users_db_sqlmodel import SQLModelBaseOAuthAccount
@@ -24,7 +23,7 @@ class UserOAuth(SQLModelBaseUserDB, table=True):
     )
     slurm_user: Optional[str]
     cache_dir: Optional[str]
-    oauth_accounts: List["OAuthAccount"] = Relationship(
+    oauth_accounts: list["OAuthAccount"] = Relationship(
         back_populates="user",
         sa_relationship_kwargs={"lazy": "selectin", "cascade": "all, delete"},
     )

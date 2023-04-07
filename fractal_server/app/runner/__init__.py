@@ -19,7 +19,6 @@ individual backends.
 import logging
 import os
 from pathlib import Path
-from typing import Dict
 from typing import Optional
 
 from ... import __VERSION__
@@ -41,7 +40,7 @@ from .common import validate_workflow_compatibility  # noqa: F401
 
 
 _backends = {}
-_backend_errors: Dict[str, Exception] = {}
+_backend_errors: dict[str, Exception] = {}
 
 _backends["local"] = local_process_workflow
 

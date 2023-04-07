@@ -6,7 +6,6 @@ from pathlib import Path
 from shutil import copy as shell_copy
 from shutil import rmtree as shell_rmtree
 from tempfile import TemporaryDirectory
-from typing import List
 from typing import Optional
 
 from fastapi import APIRouter
@@ -133,9 +132,9 @@ async def _background_collect_pip(
 
 
 async def _insert_tasks(
-    task_list: List[TaskCreate],
+    task_list: list[TaskCreate],
     db: AsyncSession,
-) -> List[Task]:
+) -> list[Task]:
     """
     Insert tasks into database
     """
@@ -285,11 +284,11 @@ async def check_collection_status(
     return state
 
 
-@router.get("/", response_model=List[TaskRead])
+@router.get("/", response_model=list[TaskRead])
 async def get_list_task(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-) -> List[TaskRead]:
+) -> list[TaskRead]:
     """
     Get list of available tasks
     """

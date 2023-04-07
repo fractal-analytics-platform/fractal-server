@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from typing import List
 from typing import Optional
 from typing import Union
 
@@ -128,11 +127,11 @@ async def _get_dataset_check_owner(
 # Main endpoints (no ID required)
 
 
-@router.get("/", response_model=List[ProjectRead])
+@router.get("/", response_model=list[ProjectRead])
 async def get_list_project(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-) -> List[Project]:
+) -> list[Project]:
     """
     Return list of projects user is member of
     """
@@ -362,12 +361,12 @@ async def add_dataset(
     return db_dataset
 
 
-@router.get("/{project_id}/workflows/", response_model=List[WorkflowRead])
+@router.get("/{project_id}/workflows/", response_model=list[WorkflowRead])
 async def get_workflow_list(
     project_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-) -> Optional[List[WorkflowRead]]:
+) -> Optional[list[WorkflowRead]]:
     """
     Get list of workflows associated to the current project
     """
@@ -380,12 +379,12 @@ async def get_workflow_list(
     return workflow_list
 
 
-@router.get("/{project_id}/jobs/", response_model=List[ApplyWorkflowRead])
+@router.get("/{project_id}/jobs/", response_model=list[ApplyWorkflowRead])
 async def get_job_list(
     project_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-) -> Optional[List[ApplyWorkflowRead]]:
+) -> Optional[list[ApplyWorkflowRead]]:
     """
     Get list of jobs associated to the current project
     """
@@ -524,14 +523,14 @@ async def add_resource(
 
 @router.get(
     "/{project_id}/{dataset_id}/resources/",
-    response_model=List[ResourceRead],
+    response_model=list[ResourceRead],
 )
 async def get_resource(
     project_id: int,
     dataset_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-) -> Optional[List[ResourceRead]]:
+) -> Optional[list[ResourceRead]]:
     """
     Get resources from a dataset
     """
