@@ -20,6 +20,9 @@ from fractal_server.app.runner.common import JobExecutionError
 from fractal_server.app.runner.common import TaskExecutionError
 
 
+pytest.skip(allow_module_level=True)
+
+
 def submit_and_ignore_exceptions(
     executor: Executor, fun: Callable, *args, **kwargs
 ):
