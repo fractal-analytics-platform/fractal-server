@@ -202,6 +202,7 @@ def get_slurm_config(
     workflow_dir: Path,
     workflow_dir_user: Path,
     config_path: Optional[Path] = None,
+    task_pars=None,  # FIXME remove this
 ) -> SlurmConfig:
     """
     Collect WorfklowTask-specific configuration parameters from different
