@@ -48,8 +48,6 @@ class SlurmJob:
     """
     Collect information related to a FractalSlurmExecutor job
 
-    # FIXME: review and clean up SlurmJob class
-
     This includes three groups of attributes:
     1. Attributes related to the (possibly multi-task) SLURM job, e.g.
        submission-file path.
@@ -64,20 +62,19 @@ class SlurmJob:
 
     Attributes:
         num_tasks_tot:
-            TBD
+            Total number of tasks to be executed as part of this SLURM job.
         single_task_submission:
             This must be `True` for jobs submitted as part of the `submit`
             method, and `False` for jobs coming from the `map` method.
         slurm_file_prefix:
             Prefix for SLURM-job related files (submission script and SLURM
-            stdout/stderr); this is needed because such files are created by
-            `FractalSlurmExecutor`.
+            stdout/stderr); this is also needed in the
+            `_copy_files_from_user_to_server` method.
         wftask_file_prefixes:
             Prefix for files that are created as part of the functions
-            submitted for execution on the `FractalSlurmExecutor`; this
-            attribute is needed as part of the
-            `_copy_files_from_user_to_server` method, and also to construct the
-            names of per-task input/output pickle files.
+            submitted for execution on the `FractalSlurmExecutor`; this is
+            needed in the `_copy_files_from_user_to_server` method, and also to
+            construct the names of per-task input/output pickle files.
         slurm_script:
             Path of SLURM submission script.
         slurm_stdout:
@@ -87,7 +84,8 @@ class SlurmJob:
         slurm_stderr:
             Path of SLURM stderr file; see `slurm_stdout` concerning `"%j"`.
         workerids:
-            IDs that enter in the per-task input/output pickle files.
+            IDs that enter in the per-task input/output pickle files (one per
+            task).
         input_pickle_files:
             Input pickle files (one per task).
         output_pickle_files:
@@ -316,8 +314,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         *,
         slurm_config: Optional[SlurmConfig] = None,
         task_files: Optional[TaskFiles] = None,
-        # wftask_order: Optional[str] = None,  # FIXME remove
-        # wftask_file_prefix: Optional[str] = None,  # FIXME: remove
     ):
         """
         Return an iterator with the results of several execution of a function
@@ -339,12 +335,11 @@ class FractalSlurmExecutor(SlurmExecutor):
                 An iterable such that each element is the list of arguments to
                 be passed to `fn`, as in `fn(*args)`.
             slurm_config:
-                A `SlurmConfig` object; if `None`, `get_default_slurm_config()`
-                will be used.
-            wftask_order:
-                FIXME
-            wftask_file_prefix:
-                FIXME
+                A `SlurmConfig` object; if `None`, use
+                `get_default_slurm_config()`.
+            task_files:
+                A `TaskFiles` object; if `None`, use
+                `self.get_default_task_files()`.
 
         Returns:
             An iterator of results, with the same number of elements as
@@ -367,11 +362,11 @@ class FractalSlurmExecutor(SlurmExecutor):
                 # self._exception
                 del fut
 
-        # If slurm_config was not provided (e.g. when FractalSlurmExecutor is
-        # used as a standalone executor, that is, outside fractal-server), use
-        # a default one
+        # Set defaults, if needed
         if not slurm_config:
             slurm_config = get_default_slurm_config()
+        if task_files is None:
+            task_files = self.get_default_task_files()
 
         # Include common_script_lines in extra_lines
         logging.warning(
@@ -384,13 +379,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         )
 
         # Set file prefixes
-        if task_files is None:
-            task_files = TaskFiles(
-                workflow_dir=self.working_dir,
-                workflow_dir_user=self.working_dir_user,
-                task_order=f"task_{random_string(length=8)}",
-            )
-
         general_slurm_file_prefix = str(task_files.task_order)
 
         # Transform iterable into a list and count its elements
@@ -604,21 +592,16 @@ class FractalSlurmExecutor(SlurmExecutor):
         """
         Submit a job to the pool.
 
-        If additional_setup_lines is passed, it overrides the lines given
-        when creating the executor. FIXME: this is now possible via
-        slurm_config, is it?
+        FIXME
         """
 
-        if task_files is None:
-            task_files = TaskFiles(
-                workflow_dir=self.working_dir,
-                workflow_dir_user=self.working_dir_user,
-                task_order=f"task_{random_string(length=8)}",
-            )
-        slurm_file_prefix = task_files.file_prefix
-
-        if not slurm_config:
+        # Set defaults, if needed
+        if slurm_config is None:
             slurm_config = get_default_slurm_config()
+        if task_files is None:
+            task_files = self.get_default_task_files()
+
+        slurm_file_prefix = task_files.file_prefix
 
         # Include common_script_lines in extra_lines
         logging.warning(
@@ -1056,3 +1039,17 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         script = "\n".join(script_lines)
         return script
+
+    def get_default_task_files(self) -> TaskFiles:
+        """
+        This will be called when self.submit or self.map are called from
+        outside fractal-server, and then lack some optional arguments.
+        """
+        import random
+
+        task_files = TaskFiles(
+            workflow_dir=self.working_dir,
+            workflow_dir_user=self.working_dir_user,
+            task_order=random.randint(10000, 99999),  # nosec
+        )
+        return task_files
