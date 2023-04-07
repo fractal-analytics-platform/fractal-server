@@ -1,9 +1,8 @@
 import asyncio
 import logging
-import os
-from pathlib import Path
 from typing import List
 from typing import Optional
+from typing import Union
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
@@ -15,6 +14,8 @@ from pydantic import UUID4
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
+from ....config import get_settings
+from ....syringe import Inject
 from ...db import AsyncSession
 from ...db import DBSyncSession
 from ...db import get_db
@@ -55,7 +56,7 @@ async def _get_project_check_owner(
     *,
     project_id: int,
     user_id: UUID4,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession,
 ) -> Project:
     """
     Check that user is a member of project and return
@@ -87,8 +88,8 @@ async def _get_dataset_check_owner(
     project_id: int,
     dataset_id: int,
     user_id: UUID4,
-    db: AsyncSession = Depends(get_db),
-) -> Dataset:
+    db: AsyncSession,
+) -> dict[str, Union[Dataset, Project]]:
     """
     Check that user is a member of project and return
 
@@ -155,15 +156,6 @@ async def create_project(
     Create new poject
     """
 
-    # Check that project_dir is an absolute path
-    if not os.path.isabs(project.project_dir):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                f"Project dir {project.project_dir} is not an absolute path"
-            ),
-        )
-
     # Check that there is no project with the same user and name
     stm = (
         select(Project)
@@ -208,7 +200,6 @@ async def apply_workflow(
     db: AsyncSession = Depends(get_db),
     db_sync: DBSyncSession = Depends(get_sync_db),
 ) -> Optional[ApplyWorkflowRead]:
-
     output = await _get_dataset_check_owner(
         project_id=apply_workflow.project_id,
         dataset_id=apply_workflow.input_dataset_id,
@@ -248,7 +239,9 @@ async def apply_workflow(
     else:
         try:
             output_dataset = await auto_output_dataset(
-                project=project, input_dataset=input_dataset, workflow=workflow
+                project=project,
+                input_dataset=input_dataset,
+                workflow=workflow,
             )
         except Exception as e:
             raise HTTPException(
@@ -256,6 +249,27 @@ async def apply_workflow(
                 detail=(
                     f"Could not determine output dataset. "
                     f"Original error: {str(e)}."
+                ),
+            )
+
+    # If backend is SLURM, check that the user has required attributes
+    settings = Inject(get_settings)
+    backend = settings.FRACTAL_RUNNER_BACKEND
+    if backend == "slurm":
+        if not user.slurm_user:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    f"FRACTAL_RUNNER_BACKEND={backend}, "
+                    f"but {user.slurm_user=}."
+                ),
+            )
+        if not user.cache_dir:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    f"FRACTAL_RUNNER_BACKEND={backend}, "
+                    f"but {user.cache_dir=}."
                 ),
             )
 
@@ -281,9 +295,9 @@ async def apply_workflow(
         input_dataset=input_dataset,
         output_dataset=output_dataset,
         job_id=job.id,
-        slurm_user=user.slurm_user,
         worker_init=apply_workflow.worker_init,
-        project_dir=project.project_dir,
+        slurm_user=user.slurm_user,
+        user_cache_dir=user.cache_dir,
     )
 
     return job
@@ -433,15 +447,13 @@ async def patch_dataset(
     """
     Edit a dataset associated to the current project
     """
-    project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+    output = await _get_dataset_check_owner(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        db=db,
     )
-    db_dataset = await db.get(Dataset, dataset_id)
-    if db_dataset not in project.dataset_list:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Dataset {dataset_id} is not part of project {project_id}",
-        )
+    db_dataset = output["dataset"]
 
     for key, value in dataset_update.dict(exclude_unset=True).items():
         setattr(db_dataset, key, value)
@@ -492,14 +504,6 @@ async def add_resource(
     """
     Add resource to an existing dataset
     """
-
-    # Check that path is absolute, which is needed for when the server submits
-    # tasks as a different user
-    if not Path(resource.path).is_absolute():
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Path `{resource.path}` is not absolute.",
-        )
 
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db

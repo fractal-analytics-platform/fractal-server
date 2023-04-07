@@ -79,7 +79,7 @@ async def dummy_task_package(testdata_path, tmp_path_factory) -> Path:
     wheel_path : Path
         the path to the built wheel package
     """
-    from fractal_server import tasks as task_package
+    from .data import tasks_dummy as task_package
 
     PACKAGE_TEMPLATE_PATH = testdata_path / "fractal-tasks-dummy"
     PACKAGE_PATH = tmp_path_factory.mktemp("fractal-tasks-dummy")

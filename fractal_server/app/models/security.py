@@ -23,6 +23,7 @@ class UserOAuth(SQLModelBaseUserDB, table=True):
         sa_column=Column(UUIDType(), primary_key=True),
     )
     slurm_user: Optional[str]
+    cache_dir: Optional[str]
     oauth_accounts: List["OAuthAccount"] = Relationship(
         back_populates="user",
         sa_relationship_kwargs={"lazy": "selectin", "cascade": "all, delete"},
