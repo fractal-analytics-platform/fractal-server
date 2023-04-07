@@ -256,57 +256,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         prefix = prefix or "slurmpy.stderr"
         return self.working_dir_user / f"{prefix}_slurm_{arg}.err"
 
-    def submit_sbatch(
-        self,
-        *,
-        sbatch_script: str,
-        script_path: Path,
-        submit_pre_command: str = "",
-    ) -> str:
-        """
-        Submit a Slurm job script
-
-        Write the batch script in a temporary file and submit it with `sbatch`.
-
-        Args:
-            sbatch_script:
-                the string representing the full job
-            submit_pre_command:
-                command that is prefixed to `sbatch`
-
-        Returns:
-            jobid:
-                integer job id as returned by `sbatch` submission
-        """
-        # Write script content to a file and prepare submission command
-        with open(script_path, "w") as f:
-            f.write(sbatch_script)
-        submit_command = f"sbatch --parsable {script_path}"
-        full_cmd = shlex.split(submit_pre_command) + shlex.split(
-            submit_command
-        )
-
-        # Submit SLURM job and retrieve job ID
-        try:
-            output = subprocess.run(  # nosec
-                full_cmd, capture_output=True, check=True
-            )
-        except subprocess.CalledProcessError as e:
-            # FIXME: turn this error into a JobExecutionError
-            logging.error(e.stderr.decode("utf-8"))
-            raise e
-        try:
-            jobid = int(output.stdout)
-        except ValueError as e:
-            # FIXME: turn this error into a JobExecutionError
-            logging.error(
-                f"Submit command `{submit_command}` returned "
-                f"`{output.stdout.decode('utf-8')}`, which cannot be cast "
-                "to an integer job ID."
-            )
-            raise e
-        return str(jobid)
-
     def map(
         self,
         fn: Callable[..., Any],
@@ -950,12 +899,36 @@ class FractalSlurmExecutor(SlurmExecutor):
         )
 
         # Submit job via sbatch, and retrieve jobid
-        pre_cmd = f"sudo --non-interactive -u {self.slurm_user}"
-        jobid = self.submit_sbatch(
-            script_path=job.slurm_script,
-            sbatch_script=sbatch_script,
-            submit_pre_command=pre_cmd,
-        )
+
+        # Write script content to a job.slurm_script
+        with job.slurm_script.open("w") as f:
+            f.write(sbatch_script)
+
+        # Prepare submission command
+        pre_command = f"sudo --non-interactive -u {self.slurm_user}"
+        submit_command = f"sbatch --parsable {job.slurm_script}"
+        full_cmd = shlex.split(f"{pre_command} {submit_command}")
+
+        # Submit SLURM job and retrieve job ID
+        try:
+            output = subprocess.run(  # nosec
+                full_cmd, capture_output=True, check=True
+            )
+        except subprocess.CalledProcessError as e:
+            # FIXME: turn this error into a JobExecutionError
+            logging.error(e.stderr.decode("utf-8"))
+            raise e
+        try:
+            jobid = int(output.stdout)
+        except ValueError as e:
+            # FIXME: turn this error into a JobExecutionError
+            logging.error(
+                f"Submit command `{submit_command}` returned "
+                f"`{output.stdout.decode('utf-8')}`, which cannot be cast "
+                "to an integer job ID."
+            )
+            raise e
+        jobid = str(jobid)
 
         # Plug SLURM job id in stdout/stderr file paths
         job.slurm_stdout = Path(
