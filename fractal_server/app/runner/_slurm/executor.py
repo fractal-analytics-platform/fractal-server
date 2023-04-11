@@ -305,8 +305,8 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         # Adapt slurm_config to the fact that this is a single-task SlurmJob
         # instance
-        slurm_config.n_ftasks_per_script = 1
-        slurm_config.n_parallel_ftasks_per_script = 1
+        slurm_config.tasks_per_job = 1
+        slurm_config.parallel_tasks_per_job = 1
 
         fut = self._submit_job(
             fun,
@@ -395,15 +395,15 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         # Transform iterable into a list and count its elements
         list_args = list(iterable)
-        n_ftasks_tot = len(list_args)
+        tot_tasks = len(list_args)
 
         # Set/validate parameters for task batching
-        n_ftasks_per_script, n_parallel_ftasks_per_script = heuristics(
+        tasks_per_job, parallel_tasks_per_job = heuristics(
             # Number of parallel components (always known)
-            n_ftasks_tot=len(list_args),
+            tot_tasks=len(list_args),
             # Optional WorkflowTask attributes:
-            n_ftasks_per_script=slurm_config.n_ftasks_per_script,
-            n_parallel_ftasks_per_script=slurm_config.n_parallel_ftasks_per_script,  # noqa
+            tasks_per_job=slurm_config.tasks_per_job,
+            parallel_tasks_per_job=slurm_config.parallel_tasks_per_job,  # noqa
             # Task requirements (multiple possible sources):
             cpus_per_task=slurm_config.cpus_per_task,
             mem_per_task=slurm_config.mem_per_task_MB,
@@ -415,19 +415,17 @@ class FractalSlurmExecutor(SlurmExecutor):
             max_mem_per_job=slurm_config.max_mem_per_job,
             max_num_jobs=slurm_config.max_num_jobs,
         )
-        slurm_config.n_parallel_ftasks_per_script = (
-            n_parallel_ftasks_per_script
-        )
-        slurm_config.n_ftasks_per_script = n_ftasks_per_script
+        slurm_config.parallel_tasks_per_job = parallel_tasks_per_job
+        slurm_config.tasks_per_job = tasks_per_job
 
         # Divide arguments in batches of `n_tasks_per_script` tasks each
         args_batches = []
-        batch_size = n_ftasks_per_script
-        for ind_chunk in range(0, n_ftasks_tot, batch_size):
+        batch_size = tasks_per_job
+        for ind_chunk in range(0, tot_tasks, batch_size):
             args_batches.append(
                 list_args[ind_chunk : ind_chunk + batch_size]  # noqa
             )
-        if len(args_batches) != math.ceil(n_ftasks_tot / n_ftasks_per_script):
+        if len(args_batches) != math.ceil(tot_tasks / tasks_per_job):
             raise RuntimeError("Something wrong here while batching tasks")
 
         # Construct list of futures (one per SLURM job, i.e. one per batch)
@@ -1000,14 +998,14 @@ class FractalSlurmExecutor(SlurmExecutor):
         slurm_config: SlurmConfig,
     ):
 
-        num_tasks_max_running = slurm_config.n_parallel_ftasks_per_script
+        num_tasks_max_running = slurm_config.parallel_tasks_per_job
         mem_per_task_MB = slurm_config.mem_per_task_MB
 
         # Set ntasks
         ntasks = min(len(list_commands), num_tasks_max_running)
         if len(list_commands) < num_tasks_max_running:
             ntasks = len(list_commands)
-            slurm_config.n_parallel_ftasks_per_script = ntasks
+            slurm_config.parallel_tasks_per_job = ntasks
             logging.info(
                 f"{len(list_commands)=} is smaller than "
                 f"{num_tasks_max_running=}. Setting {ntasks=}."

@@ -35,7 +35,7 @@ def table_path(tmpdir_factory) -> Path:
     return fn
 
 
-@pytest.mark.parametrize("n_ftasks_tot", [1, 10, 40, 96, 400])
+@pytest.mark.parametrize("tot_tasks", [1, 10, 40, 96, 400])
 @pytest.mark.parametrize(
     "task_requirements",
     [
@@ -46,14 +46,14 @@ def table_path(tmpdir_factory) -> Path:
 )
 @pytest.mark.parametrize("cluster", clusters)
 def test_heuristics(
-    n_ftasks_tot: int,
+    tot_tasks: int,
     task_requirements: tuple[str, int, int],
     cluster: tuple[dict[str, int]],
     table_path: Path,
 ):
     """
     This test produces an example table of heuristic results, and also checks
-    that n_parallel_ftasks_per_script is never set to 0 in these cases.
+    that parallel_tasks_per_job is never set to 0 in these cases.
     """
 
     if not table_path.exists():
@@ -81,8 +81,8 @@ def test_heuristics(
     target_num_jobs = cluster["target_num_jobs"]
     max_num_jobs = cluster["max_num_jobs"]
 
-    n_ftasks_per_script, n_parallel_ftasks_per_script = heuristics(
-        n_ftasks_tot=n_ftasks_tot,
+    tasks_per_job, parallel_tasks_per_job = heuristics(
+        tot_tasks=tot_tasks,
         cpus_per_task=cpus_per_task,
         target_cpus_per_job=target_cpus_per_job,
         max_cpus_per_job=max_cpus_per_job,
@@ -92,16 +92,16 @@ def test_heuristics(
         target_num_jobs=target_num_jobs,
         max_num_jobs=max_num_jobs,
     )
-    if n_parallel_ftasks_per_script == 0:
+    if parallel_tasks_per_job == 0:
         debug(cluster)
         debug(task_requirements)
-        debug(n_ftasks_tot)
-        debug(n_ftasks_per_script)
-        debug(n_parallel_ftasks_per_script)
-        raise ValueError(f"{n_parallel_ftasks_per_script=}")
+        debug(tot_tasks)
+        debug(tasks_per_job)
+        debug(parallel_tasks_per_job)
+        raise ValueError(f"{parallel_tasks_per_job=}")
 
-    num_jobs = math.ceil(n_ftasks_tot / n_ftasks_per_script)
-    parallelism = n_parallel_ftasks_per_script / n_ftasks_per_script
+    num_jobs = math.ceil(tot_tasks / tasks_per_job)
+    parallelism = parallel_tasks_per_job / tasks_per_job
     cluster_index = clusters.index(cluster)
     cluster_name = f"cluster_{cluster_index}"
 
@@ -110,10 +110,10 @@ def test_heuristics(
         f"{task_label:10s} | "
         f"{cpus_per_task:9d} | "
         f"{mem_per_task:8d} | "
-        f"{n_ftasks_tot:6d} || "
+        f"{tot_tasks:6d} || "
         f"{num_jobs:5d} | "
-        f"{n_ftasks_per_script:17d} | "
-        f"{n_parallel_ftasks_per_script:26d} | "
+        f"{tasks_per_job:17d} | "
+        f"{parallel_tasks_per_job:26d} | "
         f"{parallelism:11.3f} |"
         "\n"
     )
@@ -125,13 +125,13 @@ def test_heuristics(
 def test_validate_existing_choice(caplog):
     """
     Test different scenarios of calling heuristics with non-None values of
-    n_ftasks_per_script and n_parallel_ftasks_per_script.
+    tasks_per_job and parallel_tasks_per_job.
     """
 
     caplog.set_level(logging.WARNING)
 
     base_kwargs = dict(
-        n_ftasks_tot=20,  # number of wells
+        tot_tasks=20,  # number of wells
         cpus_per_task=1,
         target_cpus_per_job=4,
         max_cpus_per_job=12,
@@ -144,46 +144,46 @@ def test_validate_existing_choice(caplog):
 
     # FAIL for too many jobs
     kw = base_kwargs.copy()
-    kw["n_ftasks_per_script"] = 1
-    kw["n_parallel_ftasks_per_script"] = 1
+    kw["tasks_per_job"] = 1
+    kw["parallel_tasks_per_job"] = 1
     with pytest.raises(SlurmHeuristicsError) as e:
-        n_ftasks_per_script, n_parallel_ftasks_per_script = heuristics(**kw)
+        tasks_per_job, parallel_tasks_per_job = heuristics(**kw)
     debug(e.value.args[0])
     assert "Requested num_jobs" in e.value.args[0]
 
     # FAIL for too many CPUs requested
     kw = base_kwargs.copy()
-    kw["n_ftasks_per_script"] = 20
-    kw["n_parallel_ftasks_per_script"] = 20
+    kw["tasks_per_job"] = 20
+    kw["parallel_tasks_per_job"] = 20
     with pytest.raises(SlurmHeuristicsError) as e:
-        n_ftasks_per_script, n_parallel_ftasks_per_script = heuristics(**kw)
+        tasks_per_job, parallel_tasks_per_job = heuristics(**kw)
     debug(e.value.args[0])
     assert "Requested cpus_per_job" in e.value.args[0]
 
     # FAIL for too much memory requested
     kw = base_kwargs.copy()
     kw["max_cpus_per_job"] = 1000
-    kw["n_ftasks_per_script"] = 20
-    kw["n_parallel_ftasks_per_script"] = 20
+    kw["tasks_per_job"] = 20
+    kw["parallel_tasks_per_job"] = 20
     with pytest.raises(SlurmHeuristicsError) as e:
-        n_ftasks_per_script, n_parallel_ftasks_per_script = heuristics(**kw)
+        tasks_per_job, parallel_tasks_per_job = heuristics(**kw)
     debug(e.value.args[0])
     assert "Requested mem_per_job" in e.value.args[0]
 
-    # WARNING for edit of n_parallel_ftasks_per_script=
+    # WARNING for edit of parallel_tasks_per_job=
     caplog.clear()
-    kw["n_ftasks_per_script"] = 4
-    kw["n_parallel_ftasks_per_script"] = 5
-    n_ftasks_per_script, n_parallel_ftasks_per_script = heuristics(**kw)
+    kw["tasks_per_job"] = 4
+    kw["parallel_tasks_per_job"] = 5
+    tasks_per_job, parallel_tasks_per_job = heuristics(**kw)
     debug(caplog.text)
-    warning_msg = "Set n_parallel_ftasks_per_script=n_ftasks_per_script"
+    warning_msg = "Set parallel_tasks_per_job=tasks_per_job"
     assert warning_msg in caplog.text
 
     # All good
     caplog.clear()
-    kw["n_ftasks_per_script"] = 4
-    kw["n_parallel_ftasks_per_script"] = 4
-    n_ftasks_per_script, n_parallel_ftasks_per_script = heuristics(**kw)
+    kw["tasks_per_job"] = 4
+    kw["parallel_tasks_per_job"] = 4
+    tasks_per_job, parallel_tasks_per_job = heuristics(**kw)
     debug(caplog.text)
 
 
@@ -193,7 +193,7 @@ def test_failures():
     """
 
     base_kwargs = dict(
-        n_ftasks_tot=20,  # number of wells
+        tot_tasks=20,  # number of wells
         cpus_per_task=1,
         target_cpus_per_job=4,
         max_cpus_per_job=12,
@@ -204,18 +204,18 @@ def test_failures():
         max_num_jobs=10,
     )
 
-    # FAIL for only setting one of n_ftasks_per_script
-    # n_parallel_ftasks_per_script
+    # FAIL for only setting one of tasks_per_job
+    # parallel_tasks_per_job
     kw = base_kwargs.copy()
-    kw["n_ftasks_per_script"] = 1
+    kw["tasks_per_job"] = 1
     with pytest.raises(SlurmHeuristicsError) as e:
-        n_ftasks_per_script, n_parallel_ftasks_per_script = heuristics(**kw)
+        tasks_per_job, parallel_tasks_per_job = heuristics(**kw)
     debug(e.value.args[0])
     assert "must be both set or both unset" in e.value.args[0]
     kw = base_kwargs.copy()
-    kw["n_parallel_ftasks_per_script"] = 1
+    kw["parallel_tasks_per_job"] = 1
     with pytest.raises(SlurmHeuristicsError) as e:
-        n_ftasks_per_script, n_parallel_ftasks_per_script = heuristics(**kw)
+        tasks_per_job, parallel_tasks_per_job = heuristics(**kw)
     debug(e.value.args[0])
     assert "must be both set or both unset" in e.value.args[0]
 
@@ -224,7 +224,7 @@ def test_failures():
     kw["cpus_per_task"] = 100
     kw["max_cpus_per_job"] = 10
     with pytest.raises(SlurmHeuristicsError) as e:
-        n_ftasks_per_script, n_parallel_ftasks_per_script = heuristics(**kw)
+        tasks_per_job, parallel_tasks_per_job = heuristics(**kw)
     debug(e.value.args[0])
     assert "[heuristics] Requested cpus_per_task=" in e.value.args[0]
     assert "but max_cpus_per_job=" in e.value.args[0]
@@ -234,7 +234,7 @@ def test_failures():
     kw["mem_per_task"] = 128000
     kw["max_mem_per_job"] = 64000
     with pytest.raises(SlurmHeuristicsError) as e:
-        n_ftasks_per_script, n_parallel_ftasks_per_script = heuristics(**kw)
+        tasks_per_job, parallel_tasks_per_job = heuristics(**kw)
     debug(e.value.args[0])
     assert "[heuristics] Requested mem_per_task=" in e.value.args[0]
     assert "but max_mem_per_job=" in e.value.args[0]

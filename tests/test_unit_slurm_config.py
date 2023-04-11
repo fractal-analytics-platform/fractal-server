@@ -150,8 +150,8 @@ def test_to_sbatch_preamble():
     MEM_SINGLE_TASK_MB = 100
 
     slurm_config.mem_per_task_MB = MEM_SINGLE_TASK_MB
-    slurm_config.n_parallel_ftasks_per_script = 3
-    slurm_config.n_ftasks_per_script = 5
+    slurm_config.parallel_tasks_per_job = 3
+    slurm_config.tasks_per_job = 5
     slurm_config.cpus_per_task = 2
     slurm_config.gres = GRES
     slurm_config.extra_lines = EXTRA_LINES
@@ -162,7 +162,7 @@ def test_to_sbatch_preamble():
     assert f"#SBATCH --gres={GRES}" in preamble
     for line in EXTRA_LINES:
         assert line in preamble
-    MEM = MEM_SINGLE_TASK_MB * slurm_config.n_parallel_ftasks_per_script
+    MEM = MEM_SINGLE_TASK_MB * slurm_config.parallel_tasks_per_job
     assert f"#SBATCH --mem={MEM}M" in preamble
 
 
