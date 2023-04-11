@@ -1,9 +1,14 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 1.2.0
 
+* Drop `project.project_dir` and replace it with `user.cache_dir` (\#601).
+* Update SLURM backend (\#582); this includes (1) combining several tasks in a single SLURM job, and (2) offering more granular sources for SLURM configuration options.
 * Update to fastapi `0.95` (\#587).
 * Minor improvements in dataset-edit endpoint (\#593) and tests (\#589).
+* Include test of non-python task (\#594).
+* Move dummy tasks from package to tests (\#601).
+* Remove deprecated parsl backend (\#607).
 
 # 1.1.1
 

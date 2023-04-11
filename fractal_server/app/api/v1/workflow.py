@@ -13,7 +13,6 @@
 import asyncio
 from copy import deepcopy
 from typing import Optional
-from typing import Tuple
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -88,7 +87,7 @@ async def _get_workflow_task_check_owner(
     workflow_task_id: int,
     user_id: UUID4,
     db: AsyncSession = Depends(get_db),
-) -> Tuple[WorkflowTask, Workflow]:
+) -> tuple[WorkflowTask, Workflow]:
     """
     Check that user has rights to access a Workflow and a WorkflowTask and
     return the WorkflowTask

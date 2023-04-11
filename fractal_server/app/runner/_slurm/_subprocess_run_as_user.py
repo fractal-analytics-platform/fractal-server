@@ -18,15 +18,15 @@ another user. Note that this requires appropriate sudo permissions.
 import logging
 import shlex
 import subprocess  # nosec
-from typing import List
 from typing import Optional
+from typing import Sequence
 
 
 def _run_command_as_user(
     *,
     cmd: str,
     user: Optional[str] = None,
-    encoding: str = "utf-8",
+    encoding: Optional[str] = "utf-8",
     check: bool = False,
 ) -> subprocess.CompletedProcess:
     """
@@ -91,7 +91,7 @@ def _mkdir_as_user(*, folder: str, user: str) -> None:
 
 def _glob_as_user(
     *, folder: str, user: str, startswith: Optional[str] = None
-) -> List[str]:
+) -> list[str]:
     """
     Run `ls` in a folder (as a user) and filter results
 
@@ -113,13 +113,33 @@ def _glob_as_user(
 
 def _path_exists_as_user(*, path: str, user: Optional[str] = None) -> bool:
     """
-    Impersonate a user and check if `filepath` exists via `ls`
+    Impersonate a user and check if `path` exists via `ls`
 
     Arguments:
         path: Absolute file/folder path
         user: If not `None`, user to be impersonated
     """
     res = _run_command_as_user(cmd=f"ls {path}", user=user)
+    if res.returncode == 0:
+        return True
+    else:
+        return False
+
+
+def _multiple_paths_exist_as_user(
+    *,
+    paths: Sequence[str],
+    user: Optional[str] = None,
+) -> bool:
+    """
+    Impersonate a user and check if some paths exists via `ls`
+
+    Arguments:
+        paths: Absolute file/folder path
+        user: If not `None`, user to be impersonated
+    """
+    paths_string = " ".join(paths)
+    res = _run_command_as_user(cmd=f"ls {paths_string}", user=user)
     if res.returncode == 0:
         return True
     else:

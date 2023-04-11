@@ -36,7 +36,6 @@ or popped from the directory.
 """
 from typing import Any
 from typing import Callable
-from typing import Dict
 from typing import TypeVar
 
 
@@ -55,7 +54,7 @@ class _Inject:
             The dependency directory
     """
 
-    _dependencies: Dict[Any, Any] = {}
+    _dependencies: dict[Any, Any] = {}
 
     def __init__(self):
         global _instance_count

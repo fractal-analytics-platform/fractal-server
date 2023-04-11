@@ -28,7 +28,6 @@ All routes are registerd under the `auth/` prefix.
 """
 import uuid
 from typing import AsyncGenerator
-from typing import List
 from typing import Optional
 from typing import Union
 
@@ -163,7 +162,7 @@ async def whoami(
     return user
 
 
-@auth_router.get("/userlist", response_model=List[UserRead])
+@auth_router.get("/userlist", response_model=list[UserRead])
 async def list_users(
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_db),

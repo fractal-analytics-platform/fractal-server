@@ -1,7 +1,4 @@
-from pathlib import Path
 from typing import Any
-from typing import Dict
-from typing import List
 from typing import Optional
 
 from pydantic import UUID4
@@ -46,40 +43,40 @@ class Dataset(_DatasetBase, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     project_id: int = Field(foreign_key="project.id")
-    resource_list: List["Resource"] = Relationship(
+    resource_list: list["Resource"] = Relationship(
         sa_relationship_kwargs={
             "lazy": "selectin",
             "cascade": "all, delete-orphan",
         }
     )
-    meta: Dict[str, Any] = Field(sa_column=Column(JSON), default={})
+    meta: dict[str, Any] = Field(sa_column=Column(JSON), default={})
 
     class Config:
         arbitrary_types_allowed = True
 
     @property
-    def paths(self) -> List[Path]:
+    def paths(self) -> list[str]:
         return [r.path for r in self.resource_list]
 
 
 class Project(_ProjectBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    user_member_list: List[User] = Relationship(
+    user_member_list: list[User] = Relationship(
         link_model=LinkUserProject,
         sa_relationship_kwargs={
             "lazy": "selectin",
         },
     )
 
-    dataset_list: List[Dataset] = Relationship(
+    dataset_list: list[Dataset] = Relationship(
         sa_relationship_kwargs={
             "lazy": "selectin",
             "cascade": "all, delete-orphan",
         }
     )
 
-    workflow_list: List[Workflow] = Relationship(
+    workflow_list: list[Workflow] = Relationship(
         sa_relationship_kwargs={
             "lazy": "selectin",
             "cascade": "all, delete-orphan",
