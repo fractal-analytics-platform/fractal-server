@@ -43,7 +43,7 @@ def _slurm_submit_setup(
     `submit_setup_call` of
     [fractal_server.app.runner._common.recursive_task_submission][].
 
-    Args:
+    Arguments:
         wftask:
             WorkflowTask for which the configuration is to be assembled
         task_pars:
