@@ -1,8 +1,5 @@
 import asyncio
 import logging
-import os
-from pathlib import Path
-from typing import List
 from typing import Optional
 from typing import Union
 
@@ -16,6 +13,8 @@ from pydantic import UUID4
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
+from ....config import get_settings
+from ....syringe import Inject
 from ...db import AsyncSession
 from ...db import DBSyncSession
 from ...db import get_db
@@ -128,11 +127,11 @@ async def _get_dataset_check_owner(
 # Main endpoints (no ID required)
 
 
-@router.get("/", response_model=List[ProjectRead])
+@router.get("/", response_model=list[ProjectRead])
 async def get_list_project(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-) -> List[Project]:
+) -> list[Project]:
     """
     Return list of projects user is member of
     """
@@ -155,15 +154,6 @@ async def create_project(
     """
     Create new poject
     """
-
-    # Check that project_dir is an absolute path
-    if not os.path.isabs(project.project_dir):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                f"Project dir {project.project_dir} is not an absolute path"
-            ),
-        )
 
     # Check that there is no project with the same user and name
     stm = (
@@ -209,7 +199,6 @@ async def apply_workflow(
     db: AsyncSession = Depends(get_db),
     db_sync: DBSyncSession = Depends(get_sync_db),
 ) -> Optional[ApplyWorkflowRead]:
-
     output = await _get_dataset_check_owner(
         project_id=apply_workflow.project_id,
         dataset_id=apply_workflow.input_dataset_id,
@@ -249,7 +238,9 @@ async def apply_workflow(
     else:
         try:
             output_dataset = await auto_output_dataset(
-                project=project, input_dataset=input_dataset, workflow=workflow
+                project=project,
+                input_dataset=input_dataset,
+                workflow=workflow,
             )
         except Exception as e:
             raise HTTPException(
@@ -257,6 +248,27 @@ async def apply_workflow(
                 detail=(
                     f"Could not determine output dataset. "
                     f"Original error: {str(e)}."
+                ),
+            )
+
+    # If backend is SLURM, check that the user has required attributes
+    settings = Inject(get_settings)
+    backend = settings.FRACTAL_RUNNER_BACKEND
+    if backend == "slurm":
+        if not user.slurm_user:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    f"FRACTAL_RUNNER_BACKEND={backend}, "
+                    f"but {user.slurm_user=}."
+                ),
+            )
+        if not user.cache_dir:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    f"FRACTAL_RUNNER_BACKEND={backend}, "
+                    f"but {user.cache_dir=}."
                 ),
             )
 
@@ -282,9 +294,9 @@ async def apply_workflow(
         input_dataset=input_dataset,
         output_dataset=output_dataset,
         job_id=job.id,
-        slurm_user=user.slurm_user,
         worker_init=apply_workflow.worker_init,
-        project_dir=project.project_dir,
+        slurm_user=user.slurm_user,
+        user_cache_dir=user.cache_dir,
     )
 
     return job
@@ -349,12 +361,12 @@ async def add_dataset(
     return db_dataset
 
 
-@router.get("/{project_id}/workflows/", response_model=List[WorkflowRead])
+@router.get("/{project_id}/workflows/", response_model=list[WorkflowRead])
 async def get_workflow_list(
     project_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-) -> Optional[List[WorkflowRead]]:
+) -> Optional[list[WorkflowRead]]:
     """
     Get list of workflows associated to the current project
     """
@@ -367,12 +379,12 @@ async def get_workflow_list(
     return workflow_list
 
 
-@router.get("/{project_id}/jobs/", response_model=List[ApplyWorkflowRead])
+@router.get("/{project_id}/jobs/", response_model=list[ApplyWorkflowRead])
 async def get_job_list(
     project_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-) -> Optional[List[ApplyWorkflowRead]]:
+) -> Optional[list[ApplyWorkflowRead]]:
     """
     Get list of jobs associated to the current project
     """
@@ -492,14 +504,6 @@ async def add_resource(
     Add resource to an existing dataset
     """
 
-    # Check that path is absolute, which is needed for when the server submits
-    # tasks as a different user
-    if not Path(resource.path).is_absolute():
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Path `{resource.path}` is not absolute.",
-        )
-
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
@@ -519,14 +523,14 @@ async def add_resource(
 
 @router.get(
     "/{project_id}/{dataset_id}/resources/",
-    response_model=List[ResourceRead],
+    response_model=list[ResourceRead],
 )
 async def get_resource(
     project_id: int,
     dataset_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-) -> Optional[List[ResourceRead]]:
+) -> Optional[list[ResourceRead]]:
     """
     Get resources from a dataset
     """

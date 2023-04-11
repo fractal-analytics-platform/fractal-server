@@ -1,6 +1,4 @@
 from typing import Any
-from typing import Dict
-from typing import List
 from typing import Optional
 from typing import Union
 
@@ -13,8 +11,6 @@ from sqlmodel import Relationship
 
 from ...common.schemas.workflow import _WorkflowBase
 from ...common.schemas.workflow import _WorkflowTaskBase
-from ...config import get_settings
-from ...syringe import Inject
 from ..db import AsyncSession
 from .task import Task
 
@@ -56,8 +52,8 @@ class WorkflowTask(_WorkflowTaskBase, table=True):
     workflow_id: Optional[int] = Field(foreign_key="workflow.id")
     task_id: Optional[int] = Field(foreign_key="task.id")
     order: Optional[int]
-    meta: Optional[Dict[str, Any]] = Field(sa_column=Column(JSON))
-    args: Optional[Dict[str, Any]] = Field(sa_column=Column(JSON))
+    meta: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
+    args: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
     task: Task = Relationship(sa_relationship_kwargs=dict(lazy="selectin"))
 
     @validator("args")
@@ -103,17 +99,16 @@ class WorkflowTask(_WorkflowTaskBase, table=True):
         return self.task.parallelization_level
 
     @property
-    def executor(self) -> str:
-        try:
-            return self.meta["executor"]  # type: ignore
-        except (KeyError, TypeError):
-            if self.task.executor:
-                return self.task.executor
-            else:
-                settings = Inject(get_settings)
-                return settings.FRACTAL_RUNNER_DEFAULT_EXECUTOR
+    def overridden_meta(self) -> dict:
+        """
+        Return a combination of self.meta (higher priority) and self.task.meta
+        (lower priority) key-value pairs.
+        """
+        res = self.task.meta.copy() or {}
+        res.update(self.meta or {})
+        return res
 
-    def assemble_args(self, extra: Dict[str, Any] = None) -> dict:
+    def assemble_args(self, extra: dict[str, Any] = None) -> dict:
         """
         Merge of `extra` arguments and `self.arguments`.
 
@@ -145,7 +140,7 @@ class Workflow(_WorkflowBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     project_id: int = Field(foreign_key="project.id")
 
-    task_list: List["WorkflowTask"] = Relationship(
+    task_list: list["WorkflowTask"] = Relationship(
         sa_relationship_kwargs=dict(
             lazy="selectin",
             order_by="WorkflowTask.order",
@@ -158,8 +153,8 @@ class Workflow(_WorkflowBase, table=True):
         self,
         task_id: int,
         *,
-        args: Optional[Dict[str, Any]] = None,
-        meta: Optional[Dict[str, Any]] = None,
+        args: Optional[dict[str, Any]] = None,
+        meta: Optional[dict[str, Any]] = None,
         order: Optional[int] = None,
         db: AsyncSession,
         commit: bool = True,
