@@ -497,7 +497,6 @@ class FractalSlurmExecutor(SlurmExecutor):
             job.single_task_submission = 1
             job.wftask_file_prefixes = (task_files.file_prefix,)
         else:
-            logging.critical(f"{list_list_args=}")
             job.wftask_file_prefixes = tuple(
                 get_task_file_paths(
                     workflow_dir=task_files.workflow_dir,
@@ -507,8 +506,6 @@ class FractalSlurmExecutor(SlurmExecutor):
                 ).file_prefix
                 for list_args in list_list_args
             )
-
-        logging.critical(f"{job.wftask_file_prefixes=}")
 
         # Define I/O pickle file names/paths
         job.input_pickle_files = tuple(
@@ -918,22 +915,22 @@ class FractalSlurmExecutor(SlurmExecutor):
                 encoding="utf-8",
             )
         except subprocess.CalledProcessError as e:
-            msg = (
+            error_msg = (
                 f"Submit command `{full_command}` failed. "
                 f"Original error:\n{str(e)}"
             )
-            logging.error(msg)
-            raise JobExecutionError(info=msg)
+            logging.error(error_msg)
+            raise JobExecutionError(info=error_msg)
         try:
             jobid = int(output.stdout)
         except ValueError as e:
-            msg = (
+            error_msg = (
                 f"Submit command `{full_command}` returned "
                 f"`{output.stdout=}` which cannot be cast to an integer "
                 f"SLURM-job ID. Original error:\n{str(e)}"
             )
-            logging.error(msg)
-            raise JobExecutionError(info=msg)
+            logging.error(error_msg)
+            raise JobExecutionError(info=error_msg)
         jobid = str(jobid)
 
         # Plug SLURM job id in stdout/stderr file paths
@@ -963,7 +960,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         if len(list_commands) < num_tasks_max_running:
             ntasks = len(list_commands)
             slurm_config.n_parallel_ftasks_per_script = ntasks
-            logging.warning(
+            logging.info(
                 f"{len(list_commands)=} is smaller than "
                 f"{num_tasks_max_running=}. Setting {ntasks=}."
             )

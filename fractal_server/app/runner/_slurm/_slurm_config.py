@@ -460,7 +460,7 @@ def get_slurm_config(
     extra_lines = wftask.overridden_meta.get("extra_lines", [])
     extra_lines = slurm_dict.get("extra_lines", []) + extra_lines
     if len(set(extra_lines)) != len(extra_lines):
-        logging.warning(
+        logging.info(
             "[get_slurm_config] Removing repeated elements "
             f"from {extra_lines=}."
         )
