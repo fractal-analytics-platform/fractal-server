@@ -907,27 +907,33 @@ class FractalSlurmExecutor(SlurmExecutor):
         # Prepare submission command
         pre_command = f"sudo --non-interactive -u {self.slurm_user}"
         submit_command = f"sbatch --parsable {job.slurm_script}"
-        full_cmd = shlex.split(f"{pre_command} {submit_command}")
+        full_command = f"{pre_command} {submit_command}"
 
         # Submit SLURM job and retrieve job ID
         try:
             output = subprocess.run(  # nosec
-                full_cmd, capture_output=True, check=True
+                shlex.split(full_command),
+                capture_output=True,
+                check=True,
+                encoding="utf-8",
             )
         except subprocess.CalledProcessError as e:
-            # FIXME: turn this error into a JobExecutionError
-            logging.error(e.stderr.decode("utf-8"))
-            raise e
+            msg = (
+                f"Submit command `{full_command}` failed. "
+                f"Original error:\n{str(e)}"
+            )
+            logging.error(msg)
+            raise JobExecutionError(info=msg)
         try:
             jobid = int(output.stdout)
         except ValueError as e:
-            # FIXME: turn this error into a JobExecutionError
-            logging.error(
-                f"Submit command `{submit_command}` returned "
-                f"`{output.stdout.decode('utf-8')}`, which cannot be cast "
-                "to an integer job ID."
+            msg = (
+                f"Submit command `{full_command}` returned "
+                f"`{output.stdout=}` which cannot be cast to an integer "
+                f"SLURM-job ID. Original error:\n{str(e)}"
             )
-            raise e
+            logging.error(msg)
+            raise JobExecutionError(info=msg)
         jobid = str(jobid)
 
         # Plug SLURM job id in stdout/stderr file paths
