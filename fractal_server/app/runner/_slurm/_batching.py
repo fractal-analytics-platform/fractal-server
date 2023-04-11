@@ -146,7 +146,7 @@ def heuristics(
     if n_ftasks_per_script and n_parallel_ftasks_per_script:
         # Reduce n_parallel_ftasks_per_script if it exceeds n_ftasks_per_script
         if n_parallel_ftasks_per_script > n_ftasks_per_script:
-            logging.info(
+            logging.warning(
                 "[heuristics] Set n_parallel_ftasks_per_script="
                 f"n_ftasks_per_script={n_ftasks_per_script}"
             )
@@ -155,7 +155,7 @@ def heuristics(
         # Check requested cpus_per_job
         cpus_per_job = n_parallel_ftasks_per_script * cpus_per_task
         if cpus_per_job > target_cpus_per_job:
-            logging.info(
+            logging.warning(
                 f"[heuristics] Requested {cpus_per_job=} "
                 f"but {target_cpus_per_job=}."
             )
@@ -170,7 +170,7 @@ def heuristics(
         # Check requested mem_per_job
         mem_per_job = n_parallel_ftasks_per_script * mem_per_task
         if mem_per_job > target_mem_per_job:
-            logging.info(
+            logging.warning(
                 f"[heuristics] Requested {mem_per_job=} "
                 f"but {target_mem_per_job=}."
             )
