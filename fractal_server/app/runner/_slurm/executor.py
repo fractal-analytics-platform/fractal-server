@@ -16,7 +16,8 @@ import shlex
 import subprocess  # nosec
 import sys
 import time
-from concurrent import futures
+from concurrent.futures import Future
+from concurrent.futures import InvalidStateError
 from copy import copy
 from pathlib import Path
 from typing import Any
@@ -260,13 +261,27 @@ class FractalSlurmExecutor(SlurmExecutor):
     def submit(
         self,
         fun: Callable[..., Any],
-        *fun_args,
+        *fun_args: Sequence[Any],
         slurm_config: Optional[SlurmConfig] = None,
         task_files: Optional[TaskFiles] = None,
-        **fun_kwargs,
-    ) -> futures.Future:
+        **fun_kwargs: dict,
+    ) -> Future:
         """
-        Submit a job to the pool.
+        Submit a function for execution on `FractalSlurmExecutor`
+
+        Arguments:
+            fun: The function to be executed
+            fun_args: Function positional arguments
+            fun_kwargs: Function keyword arguments
+            slurm_config:
+                A `SlurmConfig` object; if `None`, use
+                `get_default_slurm_config()`.
+            task_files:
+                A `TaskFiles` object; if `None`, use
+                `self.get_default_task_files()`.
+
+        Returns:
+            Future representing the execution of the current SLURM job.
         """
 
         # Set defaults, if needed
@@ -275,6 +290,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         if task_files is None:
             task_files = self.get_default_task_files()
 
+        # Set slurm_file_prefix
         slurm_file_prefix = task_files.file_prefix
 
         # Include common_script_lines in extra_lines
@@ -294,20 +310,19 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         fut = self._submit_job(
             fun,
-            list_list_args=[fun_args],
-            list_list_kwargs=[fun_kwargs],
             slurm_config=slurm_config,
             slurm_file_prefix=slurm_file_prefix,
             task_files=task_files,
-            component_indices=None,
             single_task_submission=True,
+            args=fun_args,
+            kwargs=fun_kwargs,
         )
         return fut
 
     def map(
         self,
         fn: Callable[..., Any],
-        iterable: list[list[Any]],
+        iterable: list[Sequence[Any]],
         *,
         slurm_config: Optional[SlurmConfig] = None,
         task_files: Optional[TaskFiles] = None,
@@ -322,8 +337,8 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         Main modifications from the PSF function:
 
-        1. Only `fn` and `iterable` can be assigned as positional arguments.
-        2. `*iterables` argument eplaced with a single `iterable`
+        1. Only `fn` and `iterable` can be assigned as positional arguments;
+        2. `*iterables` argument replaced with a single `iterable`;
         3. `timeout` and `chunksize` arguments are not supported.
 
         Arguments:
@@ -340,9 +355,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                 `self.get_default_task_files()`.
 
         Returns:
-            result_iterator():
-                An iterator of results, with the same number of elements as
-                `iterable`.
+            An iterator of results.
         """
 
         def _result_or_cancel(fut):
@@ -386,7 +399,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         # Set/validate parameters for task batching
         n_ftasks_per_script, n_parallel_ftasks_per_script = heuristics(
-            # Number of parallel componens (always known)
+            # Number of parallel components (always known)
             n_ftasks_tot=len(list_args),
             # Optional WorkflowTask attributes:
             n_ftasks_per_script=slurm_config.n_ftasks_per_script,
@@ -428,17 +441,11 @@ class FractalSlurmExecutor(SlurmExecutor):
             fs.append(
                 self._submit_job(
                     fn,
-                    list_list_args=[
-                        [x] for x in batch
-                    ],  # FIXME: clarify structure  # noqa
-                    list_list_kwargs=[{} for x in batch],  # FIXME
                     slurm_config=slurm_config,
                     slurm_file_prefix=this_slurm_file_prefix,
                     task_files=task_files,
-                    component_indices=[
-                        current_component_index + _ind
-                        for _ind in range(batch_size)
-                    ],
+                    single_task_submission=False,
+                    components=batch,
                 )
             )
             current_component_index += batch_size
@@ -471,28 +478,49 @@ class FractalSlurmExecutor(SlurmExecutor):
     def _submit_job(
         self,
         fun: Callable[..., Any],
-        list_list_args: list[Sequence[Any]],
-        list_list_kwargs: list[dict],
         slurm_file_prefix: str,
         task_files: TaskFiles,
         slurm_config: SlurmConfig,
-        component_indices: Optional[list[int]] = None,
         single_task_submission: bool = False,
-    ) -> futures.Future:
+        args: Optional[Sequence[Any]] = None,
+        kwargs: Optional[dict] = None,
+        components: list[Any] = None,
+    ) -> Future:
         """
         Submit a multi-task job to the pool, where each task is handled via the
         pickle/remote logic
+
+        NOTE: this method has different behaviors when it is called from the
+        `self.submit` or `self.map` methods (which is also encoded in
+        `single_task_submission`):
+
+        * When called from `self.submit`, it supports general `args` and
+          `kwargs` arguments;
+        * When called from `self.map`, there cannot be any `args` or `kwargs`
+          argument, but there must be a `components` argument.
+
+        Arguments:
+            fun:
+            slurm_file_prefix:
+            task_files:
+            slurm_config:
+            single_task_submission:
+            args:
+            kwargs:
+            components:
+
+        Returns:
+            Future representing the execution of the current SLURM job.
         """
-        fut: futures.Future = futures.Future()
+        fut: Future = Future()
 
         # Define slurm-job-related files
-        num_tasks_tot = len(list_list_args)
-        job = SlurmJob(
-            slurm_file_prefix=slurm_file_prefix,
-            num_tasks_tot=num_tasks_tot,
-            slurm_config=slurm_config,
-        )
         if single_task_submission:
+            job = SlurmJob(
+                slurm_file_prefix=slurm_file_prefix,
+                num_tasks_tot=1,
+                slurm_config=slurm_config,
+            )
             if job.num_tasks_tot > 1:
                 raise ValueError(
                     "{single_task_submission=} but {job.num_tasks_tot=}"
@@ -500,14 +528,25 @@ class FractalSlurmExecutor(SlurmExecutor):
             job.single_task_submission = True
             job.wftask_file_prefixes = (task_files.file_prefix,)
         else:
+            if not components or len(components) < 1:
+                raise ValueError(
+                    "In FractalSlurmExecutor._submit_job, given "
+                    f"{components=}."
+                )
+            num_tasks_tot = len(components)
+            job = SlurmJob(
+                slurm_file_prefix=slurm_file_prefix,
+                num_tasks_tot=num_tasks_tot,
+                slurm_config=slurm_config,
+            )
             job.wftask_file_prefixes = tuple(
                 get_task_file_paths(
                     workflow_dir=task_files.workflow_dir,
                     workflow_dir_user=task_files.workflow_dir_user,
                     task_order=task_files.task_order,
-                    component=list_args[0],  # FIXME
+                    component=component,
                 ).file_prefix
-                for list_args in list_list_args
+                for component in components
             )
 
         # Define I/O pickle file names/paths
@@ -543,13 +582,19 @@ class FractalSlurmExecutor(SlurmExecutor):
             cloudpickle=cloudpickle.__version__,
             fractal_server=__VERSION__,
         )
-        for ind_task, args_list in enumerate(list_list_args):
-            kwargs_dict = list_list_kwargs[ind_task]
-            funcser = cloudpickle.dumps(
-                (versions, fun, args_list, kwargs_dict)
-            )
-            with open(job.input_pickle_files[ind_task], "wb") as f:
+        if job.single_task_submission:
+            _args = args or []
+            _kwargs = kwargs or {}
+            funcser = cloudpickle.dumps((versions, fun, _args, _kwargs))
+            with open(job.input_pickle_files[0], "wb") as f:
                 f.write(funcser)
+        else:
+            for ind_component, component in enumerate(components):
+                _args = [component]
+                _kwargs = {}
+                funcser = cloudpickle.dumps((versions, fun, _args, _kwargs))
+                with open(job.input_pickle_files[ind_component], "wb") as f:
+                    f.write(funcser)
 
         # Submit job to SLURM, and get jobid
         jobid, job = self._start(job)
@@ -698,7 +743,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                     try:
                         fut.set_exception(job_exc)
                         return
-                    except futures.InvalidStateError:
+                    except InvalidStateError:
                         logging.warning(
                             f"Future {fut} (SLURM job ID: {jobid}) was already"
                             " cancelled, exit from"
@@ -749,7 +794,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                             return
                     if not self.keep_pickle_files:
                         out_path.unlink()
-                except futures.InvalidStateError:
+                except InvalidStateError:
                     logging.warning(
                         f"Future {fut} (SLURM job ID: {jobid}) was already"
                         " cancelled, exit from"
@@ -775,7 +820,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             try:
                 fut.set_exception(e)
                 return
-            except futures.InvalidStateError:
+            except InvalidStateError:
                 logging.warning(
                     f"Future {fut} (SLURM job ID: {jobid}) was already"
                     " cancelled, exit from"
