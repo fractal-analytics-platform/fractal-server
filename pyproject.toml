@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fractal-server"
-version = "1.2.0a0"
+version = "1.2.0a1"
 description = "Server component of the Fractal analytics platform"
 authors = [
     "Jacopo Nespolo <jacopo.nespolo@exact-lab.it>",
@@ -25,7 +25,7 @@ uvicorn = "^0.20.0"
 sqlalchemy = "^1.4"
 SQLAlchemy-Utils = "^0.38.3"
 
-clusterfutures = { version = "^0.5", optional = true }
+clusterfutures = { version = "^0.5", optional = true}
 
 asyncpg = { version = "^0.27.0", optional = true }
 psycopg2 = { version = "^2.9.5", optional = true }
@@ -75,7 +75,7 @@ filterwarnings = [
 ]
 
 [tool.bumpver]
-current_version = "1.2.0a0"
+current_version = "1.2.0a1"
 version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true

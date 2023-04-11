@@ -10,12 +10,12 @@
 # <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
 # Institute for Biomedical Research and Pelkmans Lab from the University of
 # Zurich.
+import logging
 import shutil
 from os import environ
 from os import getenv
 from os.path import abspath
 from pathlib import Path
-from typing import List
 from typing import Literal
 from typing import Optional
 from typing import TypeVar
@@ -99,7 +99,7 @@ class Settings(BaseSettings):
     # AUTH
     ###########################################################################
 
-    OAUTH_CLIENTS: List[OAuthClient] = Field(default_factory=list)
+    OAUTH_CLIENTS: list[OAuthClient] = Field(default_factory=list)
 
     # JWT TOKEN
     JWT_EXPIRE_SECONDS: int = 180
@@ -245,25 +245,18 @@ class Settings(BaseSettings):
     levels](https://docs.python.org/3/library/logging.html#logging-levels)).
     """
 
-    FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW: Optional[int] = None
+    FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW: Optional[int] = None
     """
     Maximum number of components that a parallel task may process
-    simultaneously. If `None`, no limit is set.
+    simultaneously, for the [local backend](../internals/runners/local/).  If
+    `None`, no limit is set.
+
+    Intended use case: Reduce memory requirements of a workflow by capping the
+    number of tasks running in parallel.
 
     Note: this limit concerns a single task in a single workflow execution, but
     it does **not** limit the global (i.e. across workflow executions) number
     of components processed simultaneously.
-
-    Intended use cases:
-
-    1. When using the [local backend](../internals/runners/local/), reduce
-    memory requirements of a workflow by capping the number of tasks running in
-    parallel.
-    2. When using the [SLURM backend](../internals/runners/slurm/), reduce the
-    number of SLURM jobs that are submitted at the same time for a given
-    workflow; this is e.g. to avoid `AssocMaxSubmitJobLimit` errors related to
-    the [`MaxSubmitJobs` SLURM
-    limit](https://slurm.schedmd.com/resource_limits.html#assoc).
     """
 
     FRACTAL_SLURM_CONFIG_FILE: Optional[Path]
@@ -348,12 +341,23 @@ class Settings(BaseSettings):
         StrictSettings(**self.dict())
 
         # Check that some variables are allowed
-        if isinstance(self.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW, int):
-            if self.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW < 1:
+        if isinstance(self.FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW, int):
+            if self.FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW < 1:
                 raise FractalConfigurationError(
-                    f"{self.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW=} "
+                    f"{self.FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW=} "
                     "not allowed"
                 )
+
+        if (
+            self.FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW
+            and self.FRACTAL_RUNNER_BACKEND != "local"
+        ):
+            logging.warning(
+                "FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW is set to "
+                f"{self.FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW}, but "
+                f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND} is "
+                "the local backend."
+            )
 
         if self.FRACTAL_RUNNER_BACKEND == "slurm":
             info = f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
@@ -364,11 +368,22 @@ class Settings(BaseSettings):
                     f"{info} but {str(self.FRACTAL_SLURM_CONFIG_FILE)} "
                     "is missing"
                 )
+
+            # Check that FRACTAL_SLURM_CONFIG_FILE content is valid
+            from fractal_server.app.runnner._slurm._slurm_config import (
+                load_slurm_config_file,
+            )
+
+            _ = load_slurm_config_file(
+                config_path=self.FRACTAL_SLURM_CONFIG_FILE
+            )
+
             # Check that sbatch command is available
             if not shutil.which("sbatch"):
                 raise FractalConfigurationError(
                     f"{info} but sbatch command not found."
                 )
+
             # Check that squeue command is available
             if not shutil.which("squeue"):
                 raise FractalConfigurationError(

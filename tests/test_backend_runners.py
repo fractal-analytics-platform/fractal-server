@@ -23,6 +23,17 @@ from fractal_server.app.runner.common import close_job_logger
 from fractal_server.utils import set_logger
 
 
+def _extract_job_id_from_filename(filenames, pre, post) -> int:
+    # Find SLURM-job ID from filename
+    _filename = next(
+        f for f in filenames if f.startswith(pre) and f.endswith(post)
+    )
+    debug(_filename)
+    assert _filename
+    slurm_job_id = int(_filename.strip(pre).strip(post))
+    return slurm_job_id
+
+
 backends_available = list(_backends.keys())
 
 
@@ -38,19 +49,27 @@ async def test_runner(
     tmp777_path,
     backend,
     request,
+    testdata_path,
+    override_settings_factory,
 ):
     """
     GIVEN a non-trivial workflow
     WHEN the workflow is processed
     THEN the tasks are correctly executed
     """
+
     debug(f"Testing with {backend=}")
     if backend == "slurm":
+
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
-        request.getfixturevalue("slurm_config")
         request.getfixturevalue("cfut_jobs_finished")
         monkey_slurm_user = request.getfixturevalue("monkey_slurm_user")
+    if backend == "slurm":
+        override_settings_factory(
+            FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
+        )
+        request.getfixturevalue("slurm_config")
 
     process_workflow = _backends[backend]
 
@@ -60,6 +79,8 @@ async def test_runner(
     # Add dummy task as a Task
     tk_dummy = collect_packages[0]
     tk_dummy_parallel = collect_packages[1]
+    debug(tk_dummy)
+    debug(tk_dummy_parallel)
 
     # Create a workflow with the dummy task as member
     wf = Workflow(name="wf", project_id=prj.id)
@@ -89,7 +110,7 @@ async def test_runner(
         )  # noqa
 
     # Prepare backend-specific arguments
-    logger_name = "job_logger"
+    logger_name = f"job_logger_{backend}"
     logger = set_logger(
         logger_name=logger_name,
         log_file_path=workflow_dir / "job.log",
@@ -108,7 +129,13 @@ async def test_runner(
         kwargs["slurm_user"] = monkey_slurm_user
 
     # process workflow
-    metadata = await process_workflow(**kwargs)
+    try:
+        metadata = await process_workflow(**kwargs)
+    except Exception as e:
+        debug(str(e))
+        logging.error(f"process_workflow for {backend=} failed.")
+        logging.error(f"Original error: {str(e)}")
+        raise e
 
     close_job_logger(logger)
     debug(metadata)
@@ -121,20 +148,39 @@ async def test_runner(
     ]
 
     # Check that the correct files are present in workflow_dir
-    files = [f.name for f in workflow_dir.glob("*")] + [
-        f.name for f in workflow_dir_user.glob("*")
-    ]
-    assert "0.args.json" in files
-    assert "0.err" in files
-    assert "0.out" in files
-    assert "0.metadiff.json" in files
+    files_server = [f.name for f in workflow_dir.glob("*")]
+    files_user = [f.name for f in workflow_dir_user.glob("*")]
+    debug(sorted(files_server))
+    debug(sorted(files_user))
 
+    # Check some backend-independent files
+    assert "0.args.json" in files_server
+    assert "0.err" in files_server
+    assert "0.out" in files_server
+    assert "0.metadiff.json" in files_server
+    assert "2_par_0.args.json" in files_server
+    assert "2_par_0.err" in files_server
+    assert "2_par_0.out" in files_server
+    assert "2_par_0.metadiff.json" in files_server
     with (workflow_dir_user / "0.args.json").open("r") as f:
         debug(workflow_dir_user / "0.args.json")
         args = f.read()
         debug(args)
         assert "logger_name" not in args
+    # Check some backend-specific files
+    # NOTE: the logic to retrieve the job ID is not the most elegant, but
+    # it works (both for when a single or two SLURM backends are tested)
     if backend == "slurm":
-        slurm_job_id = 2  # This may change if you change the test
-        assert f"0.slurm.{slurm_job_id}.err" in files
-        assert f"0.slurm.{slurm_job_id}.out" in files
+        # Files related to (non-parallel) WorkflowTask 0
+        assert "0_slurm_submit.sbatch" in files_server
+        slurm_job_id = _extract_job_id_from_filename(
+            files_server, pre="0_slurm_", post=".err"
+        )
+        assert slurm_job_id
+        assert f"0_slurm_{slurm_job_id}.err" in files_server
+        assert f"0_slurm_{slurm_job_id}.out" in files_server
+        # Files related to (parallel) WorkflowTask 2
+        assert "2_batch_000000_slurm_submit.sbatch" in files_server
+        slurm_job_id = slurm_job_id + 2
+        assert f"2_batch_000000_slurm_{slurm_job_id}.err" in files_server
+        assert f"2_batch_000000_slurm_{slurm_job_id}.out" in files_server

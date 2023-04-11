@@ -9,8 +9,6 @@ implementation for a backend.
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
-from typing import Dict
-from typing import List
 from typing import Optional
 
 from ...models import Workflow
@@ -22,12 +20,12 @@ from ..common import TaskParameters
 def _process_workflow(
     *,
     workflow: Workflow,
-    input_paths: List[Path],
+    input_paths: list[Path],
     output_path: Path,
-    input_metadata: Dict[str, Any],
+    input_metadata: dict[str, Any],
     logger_name: str,
     workflow_dir: Path,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Internal processing routine
 
@@ -58,15 +56,15 @@ def _process_workflow(
 async def process_workflow(
     *,
     workflow: Workflow,
-    input_paths: List[Path],
+    input_paths: list[Path],
     output_path: Path,
-    input_metadata: Dict[str, Any],
+    input_metadata: dict[str, Any],
     logger_name: str,
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
     slurm_user: Optional[str] = None,
     worker_init: Optional[str] = None,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Run a workflow
 

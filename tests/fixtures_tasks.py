@@ -1,7 +1,6 @@
 import asyncio
 from pathlib import Path
 from typing import Any
-from typing import Dict
 from typing import Optional
 
 import pytest
@@ -14,12 +13,14 @@ class MockTask(BaseModel):
     name: str
     command: str
     parallelization_level: Optional[str] = None
+    meta: dict = {}
 
 
 class MockWorkflowTask(BaseModel):
     order: int = 0
     task: MockTask
-    arguments: Dict = {}
+    arguments: dict = {}
+    meta: dict = {}
     executor: Optional[str] = "default"
 
     @property
@@ -30,13 +31,23 @@ class MockWorkflowTask(BaseModel):
     def parallelization_level(self) -> Optional[str]:
         return self.task.parallelization_level
 
-    def assemble_args(self, extra: Dict[str, Any] = None):
+    @property
+    def overridden_meta(self) -> dict:
+        """
+        Return a combination of self.meta (higher priority) and self.task.meta
+        (lower priority) key-value pairs.
+        """
+        res = self.task.meta.copy() or {}
+        res.update(self.meta or {})
+        return res
+
+    def assemble_args(self, extra: dict[str, Any] = None):
         """
         Merge of `extra` arguments and `self.arguments`.
 
         Return
         ------
-        full_arsgs (Dict):
+        full_arsgs (dict):
             A dictionary consisting of the merge of `extra` and
             self.arguments.
         """

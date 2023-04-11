@@ -52,11 +52,15 @@ async def test_full_workflow(
 
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=backend,
-        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
     )
+    if backend == "slurm":
+        override_settings_factory(
+            FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
+        )
 
     debug(f"Testing with {backend=}")
+
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
@@ -204,6 +208,7 @@ async def test_full_workflow(
 
 @pytest.mark.slow
 @pytest.mark.parametrize("backend", backends_available)
+@pytest.mark.parametrize("failing_task", ["parallel", "non_parallel"])
 async def test_failing_workflow_TaskExecutionError(
     client,
     MockCurrentUser,
@@ -213,16 +218,20 @@ async def test_failing_workflow_TaskExecutionError(
     project_factory,
     dataset_factory,
     backend,
+    failing_task: str,
     request,
     override_settings_factory,
 ):
 
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=backend,
-        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path
-        / f"artifacts-{backend}-TaskExecutionError",
+        / f"artifacts-{backend}-TaskExecutionError-{failing_task}",
     )
+    if backend == "slurm":
+        override_settings_factory(
+            FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
+        )
 
     debug(f"Testing with {backend=}")
     if backend == "slurm":
@@ -260,7 +269,7 @@ async def test_failing_workflow_TaskExecutionError(
         )
         assert res.status_code == 201
 
-        # CREATE WORKFLOW
+        # CREATE TASKS AND WORKFLOW
         res = await client.post(
             f"{PREFIX}/workflow/",
             json=dict(name="test workflow", project_id=project.id),
@@ -269,18 +278,33 @@ async def test_failing_workflow_TaskExecutionError(
         workflow_dict = res.json()
         workflow_id = workflow_dict["id"]
 
-        # Add a dummy task
-        ERROR_MESSAGE = "this is a nice error"
+        # Prepare payloads for adding non-parallel and parallel dummy tasks
+        payload_non_parallel = dict(task_id=collect_packages[0].id)
+        payload_parallel = dict(task_id=collect_packages[1].id)
+        ERROR_MESSAGE = f"this is a nice error for a {failing_task} task"
+        failing_args = {"raise_error": True, "message": ERROR_MESSAGE}
+        if failing_task == "non_parallel":
+            payload_non_parallel["args"] = failing_args
+        elif failing_task == "parallel":
+            payload_parallel["args"] = failing_args
+
+        # Add a (non-parallel) dummy task
+        debug(payload_non_parallel)
         res = await client.post(
             f"{PREFIX}/workflow/{workflow_id}/add-task/",
-            json=dict(
-                task_id=collect_packages[0].id,
-                args={"raise_error": True, "message": ERROR_MESSAGE},
-            ),
+            json=payload_non_parallel,
         )
+        debug(res.json())
         assert res.status_code == 201
-        workflow_task_id = res.json()["id"]
-        debug(workflow_task_id)
+
+        # Add a (parallel) dummy_parallel task
+        debug(payload_parallel)
+        res = await client.post(
+            f"{PREFIX}/workflow/{workflow_id}/add-task/",
+            json=payload_parallel,
+        )
+        debug(res.json())
+        assert res.status_code == 201
 
         # EXECUTE WORKFLOW
         payload = dict(
@@ -335,8 +359,10 @@ def _auxiliary_run(slurm_user, sleep_time):
     loop.close()
 
 
+@pytest.mark.parametrize("backend", ["slurm"])
 @pytest.mark.slow
 async def test_failing_workflow_JobExecutionError(
+    backend,
     client,
     MockCurrentUser,
     testdata_path,
@@ -353,11 +379,14 @@ async def test_failing_workflow_JobExecutionError(
 ):
 
     override_settings_factory(
-        FRACTAL_RUNNER_BACKEND="slurm",
-        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
+        FRACTAL_RUNNER_BACKEND=backend,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path
-        / "artifacts-test_failing_workflow_JobExecutionError",
+        / f"artifacts-{backend}-test_failing_workflow_JobExecutionError",
     )
+    if backend == "slurm":
+        override_settings_factory(
+            FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
+        )
 
     user_cache_dir = str(tmp777_path / "user_cache_dir")
     user_kwargs = dict(cache_dir=user_cache_dir)
