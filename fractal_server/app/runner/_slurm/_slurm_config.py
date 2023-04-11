@@ -40,6 +40,16 @@ class _SlurmConfigSet(BaseModel, extra=Extra.forbid):
     """
     Options that can be set in `FRACTAL_SLURM_CONFIG_FILE` for the default/gpu
     SLURM config. Only used as part of `SlurmConfigFile`.
+
+    Attributes:
+        partition:
+        cpus_per_task:
+        mem:
+        constraint:
+        gres:
+        time:
+        account:
+        extra_lines:
     """
 
     partition: Optional[str]
@@ -57,19 +67,27 @@ class _BatchingConfigSet(BaseModel, extra=Extra.forbid):
     Options that can be set in `FRACTAL_SLURM_CONFIG_FILE` to configure the
     batching strategy (that is, how to combine several tasks in a single SLURM
     job). Only used as part of `SlurmConfigFile`.
+
+    Attributes:
+        target_cpus_per_job:
+        max_cpus_per_job:
+        target_mem_per_job:
+        max_mem_per_job:
+        target_num_jobs:
+        max_num_jobs:
     """
 
     target_cpus_per_job: int
     max_cpus_per_job: int
-    target_mem_per_job: int
-    max_mem_per_job: int
+    target_mem_per_job: Union[int, str]
+    max_mem_per_job: Union[int, str]
     target_num_jobs: int
     max_num_jobs: int
 
 
 class SlurmConfigFile(BaseModel, extra=Extra.forbid):
     """
-    Specifications for the content of FRACTAL_SLURM_CONFIG_FILE
+    Specifications for the content of `FRACTAL_SLURM_CONFIG_FILE`
 
     Attributes:
         default_slurm_config:
@@ -90,7 +108,10 @@ def load_slurm_config_file(
 ) -> SlurmConfigFile:
     """
     Load a SLURM configuration file and validate its content with
-    SlurmConfigFile.
+    `SlurmConfigFile`.
+
+    Arguments:
+        config_path:
     """
 
     if not config_path:
@@ -204,7 +225,7 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
 
     def _sorted_extra_lines(self) -> list[str]:
         """
-        Return a copy of self.extra_lines, where lines starting with
+        Return a copy of `self.extra_lines`, where lines starting with
         `self.prefix` are listed first.
         """
 
@@ -219,9 +240,13 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
     def sort_script_lines(self, script_lines: list[str]) -> list[str]:
         """
         Return a copy of `script_lines`, where lines are sorted as in:
+
         1. `self.shebang_line` (if present);
         2. Lines starting with `self.prefix`;
         3. Other lines.
+
+        Arguments:
+            script_lines:
         """
 
         def _sorting_function(_line):
@@ -236,7 +261,7 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
 
     def to_sbatch_preamble(self) -> list[str]:
         """
-        Compile SlurmConfig object into the preamble of a SLURM submission
+        Compile `SlurmConfig` object into the preamble of a SLURM submission
         script.
         """
         if self.n_parallel_ftasks_per_script is None:
@@ -308,7 +333,6 @@ def _parse_mem_value(raw_mem: Union[str, int]) -> int:
 
     Returns:
         Integer value of memory in MB units.
-
     """
 
     info = f"[_parse_mem_value] {raw_mem=}"
@@ -355,7 +379,7 @@ def _parse_mem_value(raw_mem: Union[str, int]) -> int:
 
 def get_default_slurm_config():
     """
-    Return a default SlurmConfig configuration object
+    Return a default `SlurmConfig` configuration object
     """
     return SlurmConfig(
         partition="main",
@@ -377,9 +401,10 @@ def get_slurm_config(
     config_path: Optional[Path] = None,
 ) -> SlurmConfig:
     """
-    Prepare a SlurmConfig configuration object
+    Prepare a `SlurmConfig` configuration object
 
-    The sources for SlurmConfig attributes, in increasing priority order, are
+    The sources for `SlurmConfig` attributes, in increasing priority order, are
+
     1. The general content of the Fractal SLURM configuration file.
     2. The GPU-specific content of the Fractal SLURM configuration file, if
         appropriate.

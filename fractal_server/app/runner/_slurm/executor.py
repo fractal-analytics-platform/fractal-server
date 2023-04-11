@@ -49,6 +49,7 @@ class SlurmJob:
     Collect information related to a FractalSlurmExecutor job
 
     This includes three groups of attributes:
+
     1. Attributes related to the (possibly multi-task) SLURM job, e.g.
        submission-file path.
     2. Attributes related to single tasks, e.g. the paths of their input/output
@@ -320,6 +321,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         PSF under a Contributor Agreement.
 
         Main modifications from the PSF function:
+
         1. Only `fn` and `iterable` can be assigned as positional arguments.
         2. `*iterables` argument eplaced with a single `iterable`
         3. `timeout` and `chunksize` arguments are not supported.
