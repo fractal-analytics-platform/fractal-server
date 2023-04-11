@@ -20,7 +20,7 @@ class SlurmHeuristicsError(ValueError):
     pass
 
 
-def _estimate_n_parallel_ftasks_per_script(
+def _estimate_parallel_tasks_per_job(
     *,
     cpus_per_task: int,
     mem_per_task: int,
@@ -56,8 +56,8 @@ def heuristics(
     # Number of parallel components (always known)
     n_ftasks_tot: int,
     # Optional WorkflowTask attributes:
-    n_ftasks_per_script: Optional[int] = None,
-    n_parallel_ftasks_per_script: Optional[int] = None,
+    tasks_per_job: Optional[int] = None,
+    parallel_tasks_per_job: Optional[int] = None,
     # Task requirements (multiple possible sources):
     cpus_per_task: int,
     mem_per_task: int,
@@ -73,7 +73,7 @@ def heuristics(
     Heuristically determine parameters for multi-task batching
 
     "In-job queues" refer to the case where
-    `n_parallel_ftasks_per_script<n_ftasks_per_script`, that is, where not all
+    `parallel_tasks_per_job<tasks_per_job`, that is, where not all
     tasks of a given SLURM job will be executed at the same time.
 
     This function goes through the following branches:
@@ -94,11 +94,11 @@ def heuristics(
         n_ftasks_tot:
             Total number of elements to be processed (e.g. number of images in
             a OME-NGFF array).
-        n_ftasks_per_script:
-            If `n_ftasks_per_script` and `n_parallel_ftasks_per_script` are not
+        tasks_per_job:
+            If `tasks_per_job` and `parallel_tasks_per_job` are not
             `None`, validate/edit this choice.
-        n_parallel_ftasks_per_script:
-            If `n_ftasks_per_script` and `n_parallel_ftasks_per_script` are not
+        parallel_tasks_per_job:
+            If `tasks_per_job` and `parallel_tasks_per_job` are not
             `None`, validate/edit this choice.
         cpus_per_task:
             Number of CPUs needed for each parallel task.
@@ -117,13 +117,13 @@ def heuristics(
         max_num_jobs:
             Maximum total number of SLURM jobs for a given WorkflowTask.
     Return:
-        Valid values of `n_ftasks_per_script` and
-        `n_parallel_ftasks_per_script`.
+        Valid values of `tasks_per_job` and
+        `parallel_tasks_per_job`.
     """
     # Preliminary checks
-    if bool(n_ftasks_per_script) != bool(n_parallel_ftasks_per_script):
+    if bool(tasks_per_job) != bool(parallel_tasks_per_job):
         msg = (
-            "n_ftasks_per_script and n_parallel_ftasks_per_script must "
+            "tasks_per_job and parallel_tasks_per_job must "
             "be both set or both unset"
         )
         logging.error(msg)
@@ -144,17 +144,17 @@ def heuristics(
         raise SlurmHeuristicsError(msg)
 
     # Branch 1: validate/update given parameters
-    if n_ftasks_per_script and n_parallel_ftasks_per_script:
-        # Reduce n_parallel_ftasks_per_script if it exceeds n_ftasks_per_script
-        if n_parallel_ftasks_per_script > n_ftasks_per_script:
+    if tasks_per_job and parallel_tasks_per_job:
+        # Reduce parallel_tasks_per_job if it exceeds tasks_per_job
+        if parallel_tasks_per_job > tasks_per_job:
             logging.warning(
-                "[heuristics] Set n_parallel_ftasks_per_script="
-                f"n_ftasks_per_script={n_ftasks_per_script}"
+                "[heuristics] Set parallel_tasks_per_job="
+                f"tasks_per_job={tasks_per_job}"
             )
-            n_parallel_ftasks_per_script = n_ftasks_per_script
+            parallel_tasks_per_job = tasks_per_job
 
         # Check requested cpus_per_job
-        cpus_per_job = n_parallel_ftasks_per_script * cpus_per_task
+        cpus_per_job = parallel_tasks_per_job * cpus_per_task
         if cpus_per_job > target_cpus_per_job:
             logging.warning(
                 f"[heuristics] Requested {cpus_per_job=} "
@@ -169,7 +169,7 @@ def heuristics(
             raise SlurmHeuristicsError(msg)
 
         # Check requested mem_per_job
-        mem_per_job = n_parallel_ftasks_per_script * mem_per_task
+        mem_per_job = parallel_tasks_per_job * mem_per_task
         if mem_per_job > target_mem_per_job:
             logging.warning(
                 f"[heuristics] Requested {mem_per_job=} "
@@ -184,7 +184,7 @@ def heuristics(
             raise SlurmHeuristicsError(msg)
 
         # Check number of jobs
-        num_jobs = math.ceil(n_ftasks_tot / n_ftasks_per_script)
+        num_jobs = math.ceil(n_ftasks_tot / tasks_per_job)
         if num_jobs > target_num_jobs:
             logging.info(
                 f"[heuristics] Requested {num_jobs=} "
@@ -195,41 +195,41 @@ def heuristics(
             logging.error(msg)
             raise SlurmHeuristicsError(msg)
         logging.debug("[heuristics] Return from branch 1")
-        return (n_ftasks_per_script, n_parallel_ftasks_per_script)
+        return (tasks_per_job, parallel_tasks_per_job)
 
     # 2: Target-resources-based heuristics, without in-job queues
-    n_parallel_ftasks_per_script = _estimate_n_parallel_ftasks_per_script(
+    parallel_tasks_per_job = _estimate_parallel_tasks_per_job(
         cpus_per_task=cpus_per_task,
         mem_per_task=mem_per_task,
         max_cpus_per_job=target_cpus_per_job,
         max_mem_per_job=target_mem_per_job,
     )
-    n_ftasks_per_script = n_parallel_ftasks_per_script
-    num_jobs = math.ceil(n_ftasks_tot / n_ftasks_per_script)
+    tasks_per_job = parallel_tasks_per_job
+    num_jobs = math.ceil(n_ftasks_tot / tasks_per_job)
     if num_jobs <= target_num_jobs:
         logging.debug("[heuristics] Return from branch 2")
-        return (n_ftasks_per_script, n_parallel_ftasks_per_script)
+        return (tasks_per_job, parallel_tasks_per_job)
 
     # Branch 3: Max-resources-based heuristics, without in-job queues
-    n_parallel_ftasks_per_script = _estimate_n_parallel_ftasks_per_script(
+    parallel_tasks_per_job = _estimate_parallel_tasks_per_job(
         cpus_per_task=cpus_per_task,
         mem_per_task=mem_per_task,
         max_cpus_per_job=max_cpus_per_job,
         max_mem_per_job=max_mem_per_job,
     )
-    n_ftasks_per_script = n_parallel_ftasks_per_script
-    num_jobs = math.ceil(n_ftasks_tot / n_ftasks_per_script)
+    tasks_per_job = parallel_tasks_per_job
+    num_jobs = math.ceil(n_ftasks_tot / tasks_per_job)
     if num_jobs <= max_num_jobs:
         logging.debug("[heuristics] Return from branch 3")
-        return (n_ftasks_per_script, n_parallel_ftasks_per_script)
+        return (tasks_per_job, parallel_tasks_per_job)
 
     # Branch 4: Max-resources-based heuristics, with in-job queues
-    n_parallel_ftasks_per_script = _estimate_n_parallel_ftasks_per_script(
+    parallel_tasks_per_job = _estimate_parallel_tasks_per_job(
         cpus_per_task=cpus_per_task,
         mem_per_task=mem_per_task,
         max_cpus_per_job=max_cpus_per_job,
         max_mem_per_job=max_mem_per_job,
     )
-    n_ftasks_per_script = math.ceil(n_ftasks_tot / max_num_jobs)
+    tasks_per_job = math.ceil(n_ftasks_tot / max_num_jobs)
     logging.debug("[heuristics] Return from branch 4")
-    return (n_ftasks_per_script, n_parallel_ftasks_per_script)
+    return (tasks_per_job, parallel_tasks_per_job)
