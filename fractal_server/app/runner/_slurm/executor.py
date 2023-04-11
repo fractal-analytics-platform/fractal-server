@@ -395,12 +395,12 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         # Transform iterable into a list and count its elements
         list_args = list(iterable)
-        n_ftasks_tot = len(list_args)
+        tot_tasks = len(list_args)
 
         # Set/validate parameters for task batching
         tasks_per_job, parallel_tasks_per_job = heuristics(
             # Number of parallel components (always known)
-            n_ftasks_tot=len(list_args),
+            tot_tasks=len(list_args),
             # Optional WorkflowTask attributes:
             tasks_per_job=slurm_config.tasks_per_job,
             parallel_tasks_per_job=slurm_config.parallel_tasks_per_job,  # noqa
@@ -421,11 +421,11 @@ class FractalSlurmExecutor(SlurmExecutor):
         # Divide arguments in batches of `n_tasks_per_script` tasks each
         args_batches = []
         batch_size = tasks_per_job
-        for ind_chunk in range(0, n_ftasks_tot, batch_size):
+        for ind_chunk in range(0, tot_tasks, batch_size):
             args_batches.append(
                 list_args[ind_chunk : ind_chunk + batch_size]  # noqa
             )
-        if len(args_batches) != math.ceil(n_ftasks_tot / tasks_per_job):
+        if len(args_batches) != math.ceil(tot_tasks / tasks_per_job):
             raise RuntimeError("Something wrong here while batching tasks")
 
         # Construct list of futures (one per SLURM job, i.e. one per batch)

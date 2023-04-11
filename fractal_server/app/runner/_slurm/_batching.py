@@ -54,7 +54,7 @@ def _estimate_parallel_tasks_per_job(
 def heuristics(
     *,
     # Number of parallel components (always known)
-    n_ftasks_tot: int,
+    tot_tasks: int,
     # Optional WorkflowTask attributes:
     tasks_per_job: Optional[int] = None,
     parallel_tasks_per_job: Optional[int] = None,
@@ -91,7 +91,7 @@ def heuristics(
        number of jobs.
 
     Arguments:
-        n_ftasks_tot:
+        tot_tasks:
             Total number of elements to be processed (e.g. number of images in
             a OME-NGFF array).
         tasks_per_job:
@@ -117,8 +117,7 @@ def heuristics(
         max_num_jobs:
             Maximum total number of SLURM jobs for a given WorkflowTask.
     Return:
-        Valid values of `tasks_per_job` and
-        `parallel_tasks_per_job`.
+        Valid values of `tasks_per_job` and `parallel_tasks_per_job`.
     """
     # Preliminary checks
     if bool(tasks_per_job) != bool(parallel_tasks_per_job):
@@ -184,7 +183,7 @@ def heuristics(
             raise SlurmHeuristicsError(msg)
 
         # Check number of jobs
-        num_jobs = math.ceil(n_ftasks_tot / tasks_per_job)
+        num_jobs = math.ceil(tot_tasks / tasks_per_job)
         if num_jobs > target_num_jobs:
             logging.info(
                 f"[heuristics] Requested {num_jobs=} "
@@ -205,7 +204,7 @@ def heuristics(
         max_mem_per_job=target_mem_per_job,
     )
     tasks_per_job = parallel_tasks_per_job
-    num_jobs = math.ceil(n_ftasks_tot / tasks_per_job)
+    num_jobs = math.ceil(tot_tasks / tasks_per_job)
     if num_jobs <= target_num_jobs:
         logging.debug("[heuristics] Return from branch 2")
         return (tasks_per_job, parallel_tasks_per_job)
@@ -218,7 +217,7 @@ def heuristics(
         max_mem_per_job=max_mem_per_job,
     )
     tasks_per_job = parallel_tasks_per_job
-    num_jobs = math.ceil(n_ftasks_tot / tasks_per_job)
+    num_jobs = math.ceil(tot_tasks / tasks_per_job)
     if num_jobs <= max_num_jobs:
         logging.debug("[heuristics] Return from branch 3")
         return (tasks_per_job, parallel_tasks_per_job)
@@ -230,6 +229,6 @@ def heuristics(
         max_cpus_per_job=max_cpus_per_job,
         max_mem_per_job=max_mem_per_job,
     )
-    tasks_per_job = math.ceil(n_ftasks_tot / max_num_jobs)
+    tasks_per_job = math.ceil(tot_tasks / max_num_jobs)
     logging.debug("[heuristics] Return from branch 4")
     return (tasks_per_job, parallel_tasks_per_job)

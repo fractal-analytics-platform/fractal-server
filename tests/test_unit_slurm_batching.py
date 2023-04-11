@@ -35,7 +35,7 @@ def table_path(tmpdir_factory) -> Path:
     return fn
 
 
-@pytest.mark.parametrize("n_ftasks_tot", [1, 10, 40, 96, 400])
+@pytest.mark.parametrize("tot_tasks", [1, 10, 40, 96, 400])
 @pytest.mark.parametrize(
     "task_requirements",
     [
@@ -46,7 +46,7 @@ def table_path(tmpdir_factory) -> Path:
 )
 @pytest.mark.parametrize("cluster", clusters)
 def test_heuristics(
-    n_ftasks_tot: int,
+    tot_tasks: int,
     task_requirements: tuple[str, int, int],
     cluster: tuple[dict[str, int]],
     table_path: Path,
@@ -82,7 +82,7 @@ def test_heuristics(
     max_num_jobs = cluster["max_num_jobs"]
 
     tasks_per_job, parallel_tasks_per_job = heuristics(
-        n_ftasks_tot=n_ftasks_tot,
+        tot_tasks=tot_tasks,
         cpus_per_task=cpus_per_task,
         target_cpus_per_job=target_cpus_per_job,
         max_cpus_per_job=max_cpus_per_job,
@@ -95,12 +95,12 @@ def test_heuristics(
     if parallel_tasks_per_job == 0:
         debug(cluster)
         debug(task_requirements)
-        debug(n_ftasks_tot)
+        debug(tot_tasks)
         debug(tasks_per_job)
         debug(parallel_tasks_per_job)
         raise ValueError(f"{parallel_tasks_per_job=}")
 
-    num_jobs = math.ceil(n_ftasks_tot / tasks_per_job)
+    num_jobs = math.ceil(tot_tasks / tasks_per_job)
     parallelism = parallel_tasks_per_job / tasks_per_job
     cluster_index = clusters.index(cluster)
     cluster_name = f"cluster_{cluster_index}"
@@ -110,7 +110,7 @@ def test_heuristics(
         f"{task_label:10s} | "
         f"{cpus_per_task:9d} | "
         f"{mem_per_task:8d} | "
-        f"{n_ftasks_tot:6d} || "
+        f"{tot_tasks:6d} || "
         f"{num_jobs:5d} | "
         f"{tasks_per_job:17d} | "
         f"{parallel_tasks_per_job:26d} | "
@@ -131,7 +131,7 @@ def test_validate_existing_choice(caplog):
     caplog.set_level(logging.WARNING)
 
     base_kwargs = dict(
-        n_ftasks_tot=20,  # number of wells
+        tot_tasks=20,  # number of wells
         cpus_per_task=1,
         target_cpus_per_job=4,
         max_cpus_per_job=12,
@@ -193,7 +193,7 @@ def test_failures():
     """
 
     base_kwargs = dict(
-        n_ftasks_tot=20,  # number of wells
+        tot_tasks=20,  # number of wells
         cpus_per_task=1,
         target_cpus_per_job=4,
         max_cpus_per_job=12,
