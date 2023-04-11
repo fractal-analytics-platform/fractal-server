@@ -9,6 +9,7 @@ from ._subprocess_run_as_user import _multiple_paths_exist_as_user
 class FractalFileWaitThread(FileWaitThread):
     """
     Overrides the original clusterfutures.FileWaitThread, so that:
+
     1. Each jobid in the waiting list is associated to a tuple of filenames,
        rather than a single one.
     2. The file-existence check can be replaced with the custom

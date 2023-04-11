@@ -77,6 +77,7 @@ def heuristics(
     tasks of a given SLURM job will be executed at the same time.
 
     This function goes through the following branches:
+
     1. Validate/fix parameters, if they are provided as input.
     2. Heuristically determine parameters based on the per-task resource
        requirements and on the target amount of per-job resources, without
