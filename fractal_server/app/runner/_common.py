@@ -414,7 +414,7 @@ def call_parallel_task(
             run the task.
         wftask:
             The parallel task to run.
-        task_pars_depend_future:
+        task_pars_depend:
             The task parameters to be passed on to the parallel task.
         workflow_dir:
             The server-side working directory for workflow execution.
