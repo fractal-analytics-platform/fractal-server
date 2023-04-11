@@ -401,10 +401,6 @@ def get_slurm_config(
             Path of aFractal  SLURM configuration file; if `None`, use
             `FRACTAL_SLURM_CONFIG_FILE` variable from settings.
 
-    Raises:
-        SlurmConfigError: If the slurm-configuration file does not contain the
-                          required config.
-
     Returns:
         slurm_config:
             The SlurmConfig object
