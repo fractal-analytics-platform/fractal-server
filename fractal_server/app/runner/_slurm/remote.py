@@ -140,9 +140,6 @@ def worker(
             indata = f.read()
         server_versions, fun, args, kwargs = cloudpickle.loads(indata)
         _check_versions_mismatch(server_versions)
-        logging.critical(f"{fun=}")
-        logging.critical(f"{args=}")
-        logging.critical(f"{kwargs=}")
 
         result = True, fun(*args, **kwargs)
         out = cloudpickle.dumps(result)

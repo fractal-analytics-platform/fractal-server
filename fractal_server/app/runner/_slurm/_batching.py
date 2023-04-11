@@ -146,7 +146,7 @@ def heuristics(
     if n_ftasks_per_script and n_parallel_ftasks_per_script:
         # Reduce n_parallel_ftasks_per_script if it exceeds n_ftasks_per_script
         if n_parallel_ftasks_per_script > n_ftasks_per_script:
-            logging.warning(
+            logging.info(
                 "[heuristics] Set n_parallel_ftasks_per_script="
                 f"n_ftasks_per_script={n_ftasks_per_script}"
             )
@@ -155,7 +155,7 @@ def heuristics(
         # Check requested cpus_per_job
         cpus_per_job = n_parallel_ftasks_per_script * cpus_per_task
         if cpus_per_job > target_cpus_per_job:
-            logging.warning(
+            logging.info(
                 f"[heuristics] Requested {cpus_per_job=} "
                 f"but {target_cpus_per_job=}."
             )
@@ -170,7 +170,7 @@ def heuristics(
         # Check requested mem_per_job
         mem_per_job = n_parallel_ftasks_per_script * mem_per_task
         if mem_per_job > target_mem_per_job:
-            logging.warning(
+            logging.info(
                 f"[heuristics] Requested {mem_per_job=} "
                 f"but {target_mem_per_job=}."
             )
@@ -185,14 +185,12 @@ def heuristics(
         # Check number of jobs
         num_jobs = math.ceil(n_ftasks_tot / n_ftasks_per_script)
         if num_jobs > target_num_jobs:
-            logging.warning(
+            logging.info(
                 f"[heuristics] Requested {num_jobs=} "
                 f"but {target_num_jobs=}."
             )
         if num_jobs > max_num_jobs:
-            msg = (
-                f"[heuristics] Requested {num_jobs=} " f"but {max_num_jobs=}."
-            )
+            msg = f"[heuristics] Requested {num_jobs=} but {max_num_jobs=}."
             logging.error(msg)
             raise SlurmHeuristicsError(msg)
         logging.debug("[heuristics] Return from branch 1")
