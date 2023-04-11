@@ -3,6 +3,38 @@
 In-progress (for the moment, refer to the
 [slurm](../../../reference/fractal_server/app/runner/_slurm) module).
 
+## SLURM configuration
+
+The logic for setting up the SLURM configuration of a given `WorkflowTask` is
+implemented in the
+[slurm.\_slurm_config](../../../reference/fractal_server/app/runner/_slurm/_slurm_config)
+submodule.
+
+The different sources for SLURM configuration options (like `partition`, `cpus_per_task`, ...) are:
+
+1. All attributes that are explicitly set in the `WorkflowTask.meta` dictionary
+   attribute take highest priority;
+2. Next priority goes to all attributes that are explicitly set in the
+   `WorkflowTask.task.meta` dictionary attribute;
+3. Lowest-priority (that is default) values come from the configuration in
+   `FRACTAL_SLURM_CONFIG_FILE`. This JSON file follows [these
+specifications](../../../reference/fractal_server/app/runner/_slurm/_slurm_config/#fractal_server.app.runner._slurm._slurm_config.SlurmConfigFile).
+
+### Example
+
+The configuration file could be the one defined [here](../../../reference/fractal_server/app/runner/_slurm/_slurm_config/#fractal_server.app.runner._slurm._slurm_config.SlurmConfigFile), while a certain `WorkflowTask` could have
+```python
+workflow_task.meta = {"cpus_per_task": 3}
+workflow_task.task.meta = {"cpus_per_task": 2, "mem": "10G"}
+```
+In this case, the SLURM configuration for this `WorkflowTask` will correspond to
+```
+partition=main
+cpus_per_task=3
+mem=10G
+```
+
+
 ## User impersonation
 
 The user who runs `fractal-server` must have sufficient priviliges for running
