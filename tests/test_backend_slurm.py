@@ -1,4 +1,7 @@
+import shlex
 import time
+from concurrent.futures import Executor
+from typing import Callable
 
 import pytest
 from devtools import debug
@@ -210,3 +213,52 @@ def test_slurm_executor_submit_and_scancel(
     # Since we waited for the job to be RUNNING, both the SLURM stdout and
     # stderr files should exist
     assert "missing" not in e.value.assemble_error()
+
+
+def test_missing_slurm_user():
+    with pytest.raises(TypeError):
+        FractalSlurmExecutor()
+    with pytest.raises(RuntimeError):
+        FractalSlurmExecutor(slurm_user=None)
+
+
+def submit_and_ignore_exceptions(
+    executor: Executor, fun: Callable, *args, **kwargs
+):
+    try:
+        return executor.submit(fun, *args, **kwargs)
+    except Exception as e:
+        debug(f"Ignored exception: {str(e)}")
+
+
+def test_submit_pre_command(fake_process, tmp_path, cfut_jobs_finished):
+    """
+    GIVEN a FractalSlurmExecutor
+    WHEN it is initialised with a slurm_user
+    THEN the sbatch call contains the sudo pre-command
+    """
+    fake_process.register(["sbatch", fake_process.any()])
+    fake_process.register(["sudo", fake_process.any()])
+    fake_process.register(["squeue", fake_process.any()])
+
+    slurm_user = "some-fake-user"
+
+    with FractalSlurmExecutor(
+        slurm_user=slurm_user,
+        working_dir=tmp_path,
+        working_dir_user=tmp_path,
+    ) as executor:
+        submit_and_ignore_exceptions(executor, lambda: None)
+
+    # Convert from deque to list, and apply shlex.join
+    call_strings = [shlex.join(call) for call in fake_process.calls]
+    debug(call_strings)
+
+    # The first subprocess command in FractalSlurmExecutor (which fails, and
+    # then stops the execution via submit_and_ignore_exceptions) is an `ls`
+    # command to check that a certain folder exists. This will change if we
+    # remove this check from FractalSlurmExecutor, or if another subprocess
+    # command is called before the `ls` one.
+    target = f"sudo --non-interactive -u {slurm_user} ls"
+    debug([target in call for call in call_strings])
+    assert any([target in call for call in call_strings])
