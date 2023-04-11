@@ -191,7 +191,7 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
     Part of the attributes map directly to some of the SLURM attribues (see
     https://slurm.schedmd.com/sbatch.html), e.g. `partition`. Other attributes
     are metaparameters which are needed in fractal-server to combine multiple
-    tasks in the same SLURM job (e.g. `n_parallel_ftasks_per_script` or
+    tasks in the same SLURM job (e.g. `parallel_tasks_per_job` or
     `max_num_jobs`).
 
     Attributes:
@@ -206,8 +206,8 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
         prefix: Prefix of configuration lines in SLURM submission scripts.
         shebang_line: Shebang line for SLURM submission scripts.
         extra_lines: Additional lines to include in SLURM submission scripts.
-        n_ftasks_per_script: Number of tasks for each SLURM job.
-        n_parallel_ftasks_per_script: Number of tasks to run in parallel for
+        tasks_per_job: Number of tasks for each SLURM job.
+        parallel_tasks_per_job: Number of tasks to run in parallel for
                                       each SLURM job.
         target_cpus_per_job: Optimal number of CPUs to be requested in each
                              SLURM job.
@@ -241,8 +241,8 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
     extra_lines: Optional[list[str]] = Field(default_factory=list)
 
     # Metaparameters needed to combine multiple tasks in each SLURM job
-    n_ftasks_per_script: Optional[int] = None
-    n_parallel_ftasks_per_script: Optional[int] = None
+    tasks_per_job: Optional[int] = None
+    parallel_tasks_per_job: Optional[int] = None
     target_cpus_per_job: int
     max_cpus_per_job: int
     target_mem_per_job: int
@@ -291,22 +291,20 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
         Compile `SlurmConfig` object into the preamble of a SLURM submission
         script.
         """
-        if self.n_parallel_ftasks_per_script is None:
+        if self.parallel_tasks_per_job is None:
             raise ValueError(
                 "SlurmConfig.sbatch_preamble requires that "
-                f"{self.n_parallel_ftasks_per_script=} is not None."
+                f"{self.parallel_tasks_per_job=} is not None."
             )
         if self.extra_lines:
             if len(self.extra_lines) != len(set(self.extra_lines)):
                 raise ValueError(f"{self.extra_lines=} contains repetitions")
 
-        mem_per_job_MB = (
-            self.n_parallel_ftasks_per_script * self.mem_per_task_MB
-        )
+        mem_per_job_MB = self.parallel_tasks_per_job * self.mem_per_task_MB
         lines = [
             self.shebang_line,
             f"{self.prefix} --partition={self.partition}",
-            f"{self.prefix} --ntasks={self.n_parallel_ftasks_per_script}",
+            f"{self.prefix} --ntasks={self.parallel_tasks_per_job}",
             f"{self.prefix} --cpus-per-task={self.cpus_per_task}",
             f"{self.prefix} --mem={mem_per_job_MB}M",
         ]
@@ -314,11 +312,11 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
             value = getattr(self, key)
             if value is not None:
                 # Handle the `time` parameter
-                if key == "time" and self.n_parallel_ftasks_per_script > 1:
+                if key == "time" and self.parallel_tasks_per_job > 1:
                     logging.warning(
                         "Ignore `#SBATCH --time=...` line (given: "
-                        f"{self.time=}) for n_parallel_ftasks_per_script>1"
-                        f" (given: {self.n_parallel_ftasks_per_script}), "
+                        f"{self.time=}) for parallel_tasks_per_job>1"
+                        f" (given: {self.parallel_tasks_per_job}), "
                         "since scaling of time with number of tasks is "
                         "not implemented."
                     )
@@ -520,15 +518,13 @@ def get_slurm_config(
     slurm_dict["extra_lines"] = extra_lines
 
     # Job-batching parameters (if None, they will be determined heuristically)
-    n_ftasks_per_script = wftask.overridden_meta.get(
-        "n_ftasks_per_script", None
-    )
-    n_parallel_ftasks_per_script = wftask.overridden_meta.get(
-        "n_parallel_ftasks_per_script", None
+    tasks_per_job = wftask.overridden_meta.get("tasks_per_job", None)
+    parallel_tasks_per_job = wftask.overridden_meta.get(
+        "parallel_tasks_per_job", None
     )
 
-    slurm_dict["n_ftasks_per_script"] = n_ftasks_per_script
-    slurm_dict["n_parallel_ftasks_per_script"] = n_parallel_ftasks_per_script
+    slurm_dict["tasks_per_job"] = tasks_per_job
+    slurm_dict["parallel_tasks_per_job"] = parallel_tasks_per_job
 
     # Put everything together
     logging.debug(
