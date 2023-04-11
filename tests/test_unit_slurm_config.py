@@ -1,6 +1,5 @@
 import json
 
-import pydantic
 import pytest
 from devtools import debug
 
@@ -31,15 +30,17 @@ def test_get_slurm_config(tmp_path, fail):
     DEFAULT_ACCOUNT = "default-account"
     DEFAULT_EXTRA_LINES = ["#SBATCH --option=value", "export VAR1=VALUE1"]
     slurm_config = {
-        "partition": "main",
-        "account": DEFAULT_ACCOUNT,
-        "extra_lines": DEFAULT_EXTRA_LINES,
-        "if_needs_gpu": {
+        "default_slurm_config": {
+            "partition": "main",
+            "account": DEFAULT_ACCOUNT,
+            "extra_lines": DEFAULT_EXTRA_LINES,
+        },
+        "gpu_slurm_config": {
             "partition": GPU_PARTITION,
             "gres": GPU_DEFAULT_GRES,
             "constraint": GPU_DEFAULT_CONSTRAINT,
         },
-        "fractal_task_batching": {
+        "batching_config": {
             "target_cpus_per_job": 10,
             "max_cpus_per_job": 12,
             "target_mem_per_job": 10,
@@ -102,7 +103,7 @@ def test_get_slurm_config(tmp_path, fail):
             config_path=config_path,
         )
         debug(slurm_config)
-    except pydantic.error_wrappers.ValidationError as e:
+    except SlurmConfigError as e:
         if fail:
             debug(
                 "Expected errror took place in set_slurm_config.\n"
