@@ -38,6 +38,7 @@ def test_get_slurm_config(tmp_path, fail):
         },
         "gpu_slurm_config": {
             "partition": GPU_PARTITION,
+            "mem": "1G",
             "gres": GPU_DEFAULT_GRES,
             "constraint": GPU_DEFAULT_CONSTRAINT,
         },
