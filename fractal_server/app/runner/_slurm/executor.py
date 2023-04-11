@@ -21,8 +21,8 @@ from copy import copy
 from pathlib import Path
 from typing import Any
 from typing import Callable
-from typing import Iterable
 from typing import Optional
+from typing import Sequence
 
 import cloudpickle
 from cfut import SlurmExecutor
@@ -37,7 +37,7 @@ from ..common import TaskExecutionError
 from ._batching import heuristics
 from ._executor_wait_thread import FractalSlurmWaitThread
 from ._slurm_config import get_default_slurm_config
-from ._submit_setup import SlurmConfig
+from ._slurm_config import SlurmConfig
 from ._subprocess_run_as_user import _glob_as_user
 from ._subprocess_run_as_user import _path_exists_as_user
 from ._subprocess_run_as_user import _run_command_as_user
@@ -306,7 +306,7 @@ class FractalSlurmExecutor(SlurmExecutor):
     def map(
         self,
         fn: Callable[..., Any],
-        iterable: Iterable[list[Any]],
+        iterable: list[list[Any]],
         *,
         slurm_config: Optional[SlurmConfig] = None,
         task_files: Optional[TaskFiles] = None,
@@ -468,8 +468,8 @@ class FractalSlurmExecutor(SlurmExecutor):
     def _submit_job(
         self,
         fun: Callable[..., Any],
-        list_list_args: Iterable[Iterable],
-        list_list_kwargs: Iterable[dict],
+        list_list_args: list[Sequence[Any]],
+        list_list_kwargs: list[dict],
         slurm_file_prefix: str,
         task_files: TaskFiles,
         slurm_config: SlurmConfig,
@@ -494,7 +494,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                 raise ValueError(
                     "{single_task_submission=} but {job.num_tasks_tot=}"
                 )
-            job.single_task_submission = 1
+            job.single_task_submission = True
             job.wftask_file_prefixes = (task_files.file_prefix,)
         else:
             job.wftask_file_prefixes = tuple(
@@ -931,17 +931,17 @@ class FractalSlurmExecutor(SlurmExecutor):
             )
             logging.error(error_msg)
             raise JobExecutionError(info=error_msg)
-        jobid = str(jobid)
+        jobid_str = str(jobid)
 
         # Plug SLURM job id in stdout/stderr file paths
         job.slurm_stdout = Path(
-            job.slurm_stdout.as_posix().replace("%j", jobid)
+            job.slurm_stdout.as_posix().replace("%j", jobid_str)
         )
         job.slurm_stderr = Path(
-            job.slurm_stderr.as_posix().replace("%j", jobid)
+            job.slurm_stderr.as_posix().replace("%j", jobid_str)
         )
 
-        return jobid, job
+        return jobid_str, job
 
     def _prepare_sbatch_script(
         self,
