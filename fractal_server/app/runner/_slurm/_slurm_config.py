@@ -45,6 +45,7 @@ class _SlurmConfigSet(BaseModel, extra=Extra.forbid):
         partition:
         cpus_per_task:
         mem:
+            See `_parse_mem_value` for details on allowed values.
         constraint:
         gres:
         time:
@@ -72,7 +73,9 @@ class _BatchingConfigSet(BaseModel, extra=Extra.forbid):
         target_cpus_per_job:
         max_cpus_per_job:
         target_mem_per_job:
+            (see `_parse_mem_value` for details on allowed values)
         max_mem_per_job:
+            (see `_parse_mem_value` for details on allowed values)
         target_num_jobs:
         max_num_jobs:
     """
@@ -88,6 +91,30 @@ class _BatchingConfigSet(BaseModel, extra=Extra.forbid):
 class SlurmConfigFile(BaseModel, extra=Extra.forbid):
     """
     Specifications for the content of `FRACTAL_SLURM_CONFIG_FILE`
+
+    This must be a JSON file, and a valid example is
+    ```JSON
+    {
+      "default_slurm_config": {
+          "partition": "main",
+          "cpus_per_task": 1
+      },
+      "gpu_slurm_config": {
+          "partition": "gpu",
+          "extra_lines": ["#SBATCH --gres=gpu:v100:1"]
+      },
+      "batching_config": {
+          "target_cpus_per_job": 1,
+          "max_cpus_per_job": 1,
+          "target_mem_per_job": 200,
+          "max_mem_per_job": 500,
+          "target_num_jobs": 2,
+          "max_num_jobs": 4
+      }
+    }
+    ```
+
+    See `_SlurmConfigSet` and `_BatchingConfigSet` for more details.
 
     Attributes:
         default_slurm_config:
