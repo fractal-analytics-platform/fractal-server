@@ -14,8 +14,6 @@ from json import JSONEncoder
 from pathlib import Path
 from typing import Any
 from typing import Callable
-from typing import Dict
-from typing import List
 from typing import Optional
 
 from pydantic import BaseModel
@@ -181,9 +179,9 @@ class TaskParameters(BaseModel):
             the previous task.
     """
 
-    input_paths: List[Path]
+    input_paths: list[Path]
     output_path: Path
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
     class Config:
         arbitrary_types_allowed = True
@@ -306,7 +304,7 @@ def async_wrap(func: Callable) -> Callable:
     return async_wrapper
 
 
-def write_args_file(*args: Dict[str, Any], path: Path):
+def write_args_file(*args: dict[str, Any], path: Path):
     """
     Merge arbitrary dictionaries and write to file
 

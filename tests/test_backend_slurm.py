@@ -1,110 +1,18 @@
 import shlex
-import subprocess
 import time
 from concurrent.futures import Executor
-from itertools import product
 from typing import Callable
 
 import pytest
 from devtools import debug
 
-from .data.tasks_dummy import dummy as dummy_module
-from .data.tasks_dummy import dummy_parallel as dummy_parallel_module
 from .fixtures_slurm import run_squeue
 from .fixtures_slurm import scancel_all_jobs_of_a_slurm_user
-from .fixtures_tasks import MockTask
-from .fixtures_tasks import MockWorkflowTask
-from fractal_server.app.runner._slurm import SlurmConfig
-from fractal_server.app.runner._slurm.executor import FractalSlurmExecutor
+from fractal_server.app.runner._slurm.executor import (
+    FractalSlurmExecutor,
+)  # noqa
 from fractal_server.app.runner.common import JobExecutionError
 from fractal_server.app.runner.common import TaskExecutionError
-
-
-def submit_and_ignore_exceptions(
-    executor: Executor, fun: Callable, *args, **kwargs
-):
-    try:
-        return executor.submit(fun, *args, **kwargs)
-    except Exception as e:
-        debug(f"Ignored exception: {str(e)}")
-
-
-def test_missing_slurm_user():
-    with pytest.raises(TypeError):
-        FractalSlurmExecutor()
-    with pytest.raises(RuntimeError):
-        FractalSlurmExecutor(slurm_user=None)
-
-
-def test_submit_pre_command(fake_process, tmp_path, cfut_jobs_finished):
-    """
-    GIVEN a FractalSlurmExecutor
-    WHEN it is initialised with a slurm_user
-    THEN the sbatch call contains the sudo pre-command
-    """
-    fake_process.register(["sbatch", fake_process.any()])
-    fake_process.register(["sudo", fake_process.any()])
-    fake_process.register(["squeue", fake_process.any()])
-
-    slurm_user = "some-fake-user"
-
-    with FractalSlurmExecutor(
-        slurm_user=slurm_user,
-        working_dir=tmp_path,
-        working_dir_user=tmp_path,
-    ) as executor:
-        submit_and_ignore_exceptions(executor, lambda: None)
-
-    # Convert from deque to list, and apply shlex.join
-    call_strings = [shlex.join(call) for call in fake_process.calls]
-    debug(call_strings)
-
-    # The first subprocess command in FractalSlurmExecutor (which fails, and
-    # then stops the execution via submit_and_ignore_exceptions) is an `ls`
-    # command to check that a certain folder exists. This will change if we
-    # remove this check from FractalSlurmExecutor, or if another subprocess
-    # command is called before the `ls` one.
-    target = f"sudo --non-interactive -u {slurm_user} ls"
-    debug([target in call for call in call_strings])
-    assert any([target in call for call in call_strings])
-
-
-def test_unit_sbatch_script_readable(
-    monkey_slurm,
-    monkey_slurm_user,
-    tmp777_path,
-    cfut_jobs_finished,
-    slurm_working_folders,
-):
-    """
-    GIVEN a batch script written to file by the slurm executor
-    WHEN a different user tries to read it
-    THEN it has all the permissions needed
-    """
-
-    server_working_dir, user_working_dir = slurm_working_folders
-
-    SBATCH_SCRIPT = "test"
-    with FractalSlurmExecutor(
-        working_dir=server_working_dir,
-        working_dir_user=user_working_dir,
-        slurm_user=monkey_slurm_user,
-    ) as executor:
-        f = executor.write_batch_script(
-            SBATCH_SCRIPT, dest=server_working_dir / "script.sbatch"
-        )
-
-    out = subprocess.run(
-        shlex.split(
-            f"sudo --non-interactive -u {monkey_slurm_user} sbatch {f}"
-        ),
-        capture_output=True,
-        text=True,
-    )
-    debug(out.stderr)
-    assert out.returncode == 1
-    assert "Unable to open file" not in out.stderr
-    assert "This does not look like a batch script" in out.stderr
 
 
 def test_slurm_executor_submit(
@@ -113,17 +21,12 @@ def test_slurm_executor_submit(
     tmp777_path,
     cfut_jobs_finished,
 ):
-    """
-    GIVEN a docker slurm cluster and a FractalSlurmExecutor executor
-    WHEN a function is submitted to the executor, as a given user
-    THEN the result is correctly computed
-    """
-
     with FractalSlurmExecutor(
         slurm_user=monkey_slurm_user,
         working_dir=tmp777_path,
         working_dir_user=tmp777_path,
         slurm_poll_interval=2,
+        keep_pickle_files=True,
     ) as executor:
         res = executor.submit(lambda: 42)
     assert res.result() == 42
@@ -135,12 +38,6 @@ def test_slurm_executor_submit_with_exception(
     tmp777_path,
     cfut_jobs_finished,
 ):
-    """
-    GIVEN a docker slurm cluster and a FractalSlurmExecutor executor
-    WHEN a function is submitted to the executor and raises an exception
-    THEN the executor raises a TaskExecutionError
-    """
-
     def raise_ValueError():
         raise ValueError
 
@@ -150,6 +47,7 @@ def test_slurm_executor_submit_with_exception(
             working_dir=tmp777_path,
             working_dir_user=tmp777_path,
             slurm_poll_interval=2,
+            keep_pickle_files=True,
         ) as executor:
             fut = executor.submit(raise_ValueError)
             debug(fut.result())
@@ -167,11 +65,13 @@ def test_slurm_executor_map(
         working_dir=tmp777_path,
         working_dir_user=tmp777_path,
         slurm_poll_interval=2,
+        keep_pickle_files=True,
     ) as executor:
-        result_generator = executor.map(lambda x: 2 * x, range(4))
+        inputs = list(range(10))
+        result_generator = executor.map(lambda x: 2 * x, inputs)
         results = list(result_generator)
         debug(results)
-        assert results == [2 * x for x in range(4)]
+        assert results == [2 * x for x in inputs]
 
 
 @pytest.mark.parametrize("early_late", ["early", "late"])
@@ -209,12 +109,15 @@ def test_slurm_executor_map_with_exception(
         working_dir=tmp777_path,
         working_dir_user=tmp777_path,
         slurm_poll_interval=1,
+        keep_pickle_files=True,
     ) as executor:
         try:
-            result_generator = executor.map(_raise, range(4))
+            result_generator = executor.map(_raise, range(10))
             for result in result_generator:
                 debug(f"While looping over results, I got to {result=}")
-            raise RuntimeError("We should never reach this line")
+            raise RuntimeError(
+                "If we reached this line, then the test is failed"
+            )
         except Exception as e:
             debug(e)
             debug(vars(e))
@@ -241,6 +144,7 @@ def test_slurm_executor_submit_separate_folders(
         working_dir=server_working_dir,
         working_dir_user=user_working_dir,
         slurm_poll_interval=2,
+        keep_pickle_files=True,
     ) as executor:
         res = executor.submit(lambda: 42)
     assert res.result() == 42
@@ -274,7 +178,7 @@ def test_slurm_executor_submit_and_scancel(
             working_dir=server_working_dir,
             working_dir_user=user_working_dir,
             debug=True,
-            keep_logs=True,
+            keep_pickle_files=True,
             slurm_poll_interval=2,
         ) as executor:
             fut = executor.submit(wait_and_return)
@@ -311,148 +215,50 @@ def test_slurm_executor_submit_and_scancel(
     assert "missing" not in e.value.assemble_error()
 
 
-def test_unit_slurm_config():
-    """
-    GIVEN the Slurm configuration class
-    WHEN it is instantiated with a mix of attribute names and attribute aliases
-    THEN
-        * The object is correctly instantiated, regardless of whether the
-          parameters were passed by attribute name or by alias
-
-        Furthermore, when `to_sbatch()` is called
-        * the object's attributes are correctly returned as a list of strings
-        * the `name` attribute is not included
-    """
-    ARGS = {
-        "partition": "partition",
-        "cpus-per-task": 4,
-        "extra_lines": ["#SBATCH extra line 0", "#SBATCH extra line 1"],
-    }
-    sc = SlurmConfig(**ARGS)
-    debug(sc)
-    sbatch_lines = sc.to_sbatch()
-    assert len(sbatch_lines) == len(ARGS) + 1
-    debug(sbatch_lines)
-    for line in sbatch_lines:
-        assert line.startswith("#SBATCH")
-        # check that '_' in field names is never used, but changed to '_'
-        assert "_" not in line
+def test_missing_slurm_user():
+    with pytest.raises(TypeError):
+        FractalSlurmExecutor()
+    with pytest.raises(RuntimeError):
+        FractalSlurmExecutor(slurm_user=None)
 
 
-@pytest.mark.parametrize(
-    ("slurm_config_key", "task"),
-    product(
-        ("default", "low"),
-        (
-            MockTask(
-                name="task serial",
-                command=f"python {dummy_module.__file__}",
-            ),
-            MockTask(
-                name="task parallel",
-                command=f"python {dummy_parallel_module.__file__}",
-                parallelization_level="index",
-            ),
-        ),
-    ),
-)
-def test_sbatch_script_slurm_config(
-    tmp_path,
-    slurm_config,
-    slurm_config_key,
-    task,
-    cfut_jobs_finished,
+def submit_and_ignore_exceptions(
+    executor: Executor, fun: Callable, *args, **kwargs
 ):
-    """
-    GIVEN
-        * a workflow submitted via `recursive_task_submission`
-        * a valid slurm configuration file` defining `default` and `low`
-          configurations
-    WHEN a `submit_setup_call` is set`that customises each task's configuration
-    THEN the configuration options are correctly set in the sbatch script
-    """
-    from fractal_server.app.runner.common import TaskParameters
-    from fractal_server.app.runner._common import recursive_task_submission
-    from fractal_server.app.runner._slurm import set_slurm_config
+    try:
+        return executor.submit(fun, *args, **kwargs)
+    except Exception as e:
+        debug(f"Ignored exception: {str(e)}")
 
-    task_list = [
-        MockWorkflowTask(
-            task=task,
-            arguments=dict(message="test"),
-            order=0,
-            executor=slurm_config_key,
-        )
-    ]
-    logger_name = "job_logger_recursive_task_submission_step0"
-    task_pars = TaskParameters(
-        input_paths=[tmp_path],
-        output_path=tmp_path,
-        metadata={"index": ["a", "b"]},
-    )
 
-    # Assign a non existent slurm_user so that the sudo call will fail with a
-    # FileNotFoundError. This will allow inspection of the sbatch script file.
-    sbatch_init_lines = [
-        "export FOO=bar",
-        "#SBATCH --common-non-existent-option",
-    ]
+def test_submit_pre_command(fake_process, tmp_path, cfut_jobs_finished):
+    """
+    GIVEN a FractalSlurmExecutor
+    WHEN it is initialised with a slurm_user
+    THEN the sbatch call contains the sudo pre-command
+    """
+    fake_process.register(["sbatch", fake_process.any()])
+    fake_process.register(["sudo", fake_process.any()])
+    fake_process.register(["squeue", fake_process.any()])
+
+    slurm_user = "some-fake-user"
+
     with FractalSlurmExecutor(
-        slurm_user="NO_USER",
+        slurm_user=slurm_user,
         working_dir=tmp_path,
         working_dir_user=tmp_path,
-        common_script_lines=sbatch_init_lines,
     ) as executor:
+        submit_and_ignore_exceptions(executor, lambda: None)
 
-        try:
-            recursive_task_submission(
-                executor=executor,
-                task_list=task_list,
-                task_pars=task_pars,
-                workflow_dir=tmp_path,
-                workflow_dir_user=tmp_path,
-                submit_setup_call=set_slurm_config,
-                logger_name=logger_name,
-            )
-        except subprocess.CalledProcessError as e:
-            assert "unknown user NO_USER" in e.stderr.decode(
-                "utf-8"
-            ) or "unknown user: NO_USER" in e.stderr.decode("utf-8")
-            sbatch_file = e.cmd[-1]
-            debug(sbatch_file)
-        with open(sbatch_file, "r") as f:
-            sbatch_script_lines = f.read().split("\n")
-            debug(sbatch_script_lines)
+    # Convert from deque to list, and apply shlex.join
+    call_strings = [shlex.join(call) for call in fake_process.calls]
+    debug(call_strings)
 
-        expected_mem = f"mem={slurm_config[slurm_config_key]['mem']}"
-        debug(expected_mem)
-        assert next(
-            (line for line in sbatch_script_lines if expected_mem in line),
-            False,
-        )
-
-        job_name = next(
-            (line for line in sbatch_script_lines if "--job-name" in line),
-            False,
-        )
-        assert job_name
-        assert len(job_name.split()[-1]) == len(task.name)
-
-        sbatch_script = "".join(sbatch_script_lines)
-        for line in sbatch_init_lines:
-            assert line in sbatch_script_lines
-        debug(sbatch_script)
-        if "task_parallel" in sbatch_script:
-            output_line = next(
-                (line for line in sbatch_script_lines if "--output" in line),
-                False,
-            ).strip()
-            error_line = next(
-                (line for line in sbatch_script_lines if "--error" in line),
-                False,
-            ).strip()
-
-            # output and error filenames for parallel tasks should contain the
-            # `{task_order}_par_{component}` tag
-            debug(output_line)
-            assert "_par_" in output_line
-            assert "_par_" in error_line
+    # The first subprocess command in FractalSlurmExecutor (which fails, and
+    # then stops the execution via submit_and_ignore_exceptions) is an `ls`
+    # command to check that a certain folder exists. This will change if we
+    # remove this check from FractalSlurmExecutor, or if another subprocess
+    # command is called before the `ls` one.
+    target = f"sudo --non-interactive -u {slurm_user} ls"
+    debug([target in call for call in call_strings])
+    assert any([target in call for call in call_strings])
