@@ -368,11 +368,22 @@ class Settings(BaseSettings):
                     f"{info} but {str(self.FRACTAL_SLURM_CONFIG_FILE)} "
                     "is missing"
                 )
+
+            # Check that FRACTAL_SLURM_CONFIG_FILE content is valid
+            from fractal_server.app.runnner._slurm._slurm_config import (
+                load_slurm_config_file,
+            )
+
+            _ = load_slurm_config_file(
+                config_path=self.FRACTAL_SLURM_CONFIG_FILE
+            )
+
             # Check that sbatch command is available
             if not shutil.which("sbatch"):
                 raise FractalConfigurationError(
                     f"{info} but sbatch command not found."
                 )
+
             # Check that squeue command is available
             if not shutil.which("squeue"):
                 raise FractalConfigurationError(
