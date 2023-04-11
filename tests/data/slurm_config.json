@@ -1,7 +1,9 @@
 {
-  "partition": "main",
-  "if_needs_gpu": {},
-  "fractal_task_batching": {
+  "default_slurm_config": {
+      "partition": "main"
+  },
+  "gpu_slurm_config": {},
+  "batching_config": {
       "target_cpus_per_job": 1,
       "max_cpus_per_job": 1,
       "target_mem_per_job": 200,

@@ -21,6 +21,7 @@ from typing import Union
 from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import Field
+from pydantic.error_wrappers import ValidationError
 
 from ....config import get_settings
 from ....syringe import Inject
@@ -35,6 +36,106 @@ class SlurmConfigError(ValueError):
     pass
 
 
+class _SlurmConfigSet(BaseModel, extra=Extra.forbid):
+    """
+    Options that can be set in `FRACTAL_SLURM_CONFIG_FILE` for the default/gpu
+    SLURM config. Only used as part of `SlurmConfigFile`.
+    """
+
+    partition: Optional[str]
+    cpus_per_task: Optional[int]
+    mem: Optional[Union[int, str]]
+    constraint: Optional[str]
+    gres: Optional[str]
+    time: Optional[str]
+    account: Optional[str]
+    extra_lines: Optional[list[str]]
+
+
+class _BatchingConfigSet(BaseModel, extra=Extra.forbid):
+    """
+    Options that can be set in `FRACTAL_SLURM_CONFIG_FILE` to configure the
+    batching strategy (that is, how to combine several tasks in a single SLURM
+    job). Only used as part of `SlurmConfigFile`.
+    """
+
+    target_cpus_per_job: int
+    max_cpus_per_job: int
+    target_mem_per_job: int
+    max_mem_per_job: int
+    target_num_jobs: int
+    max_num_jobs: int
+
+
+class SlurmConfigFile(BaseModel, extra=Extra.forbid):
+    """
+    Specifications for the content of FRACTAL_SLURM_CONFIG_FILE
+
+    Attributes:
+        default_slurm_config:
+            Common default options for all tasks.
+        gpu_slurm_config:
+            Default configuration for all GPU tasks.
+        batching_config:
+            Configuration of the batching strategy.
+    """
+
+    default_slurm_config: _SlurmConfigSet
+    gpu_slurm_config: Optional[_SlurmConfigSet]
+    batching_config: _BatchingConfigSet
+
+
+def load_slurm_config_file(
+    config_path: Optional[Path] = None,
+) -> SlurmConfigFile:
+    """
+    Load a SLURM configuration file and validate its content with
+    SlurmConfigFile.
+    """
+
+    if not config_path:
+        settings = Inject(get_settings)
+        config_path = settings.FRACTAL_SLURM_CONFIG_FILE
+
+    # Load file
+    logging.debug(f"[get_slurm_config] Now loading {config_path=}")
+    try:
+        with config_path.open("r") as f:
+            slurm_env = json.load(f)
+    except Exception as e:
+        raise SlurmConfigError(
+            f"Error while loading {config_path=}. "
+            f"Original error:\n{str(e)}"
+        )
+
+    # Validate file content
+    logging.debug(f"[load_slurm_config_file] Now validating {config_path=}")
+    logging.debug(f"[load_slurm_config_file] {slurm_env=}")
+    try:
+        obj = SlurmConfigFile(**slurm_env)
+    except ValidationError as e:
+        raise SlurmConfigError(
+            f"Error while loading {config_path=}. "
+            f"Original error:\n{str(e)}"
+        )
+
+    # Convert memory to MB units, in all relevant attributes
+    if obj.default_slurm_config.mem:
+        obj.default_slurm_config.mem = _parse_mem_value(
+            obj.default_slurm_config.mem
+        )
+    if obj.gpu_slurm_config and obj.gpu_slurm_config.mem:
+        obj.gpu_slurm_config.mem = _parse_mem_value(obj.gpu_slurm_config.mem)
+    obj.batching_config.target_mem_per_job = _parse_mem_value(
+        obj.batching_config.target_mem_per_job
+    )
+    obj.batching_config.max_mem_per_job = _parse_mem_value(
+        obj.batching_config.max_mem_per_job
+    )
+
+    return obj
+
+
 class SlurmConfig(BaseModel, extra=Extra.forbid):
     """
     Abstraction for SLURM parameters
@@ -44,8 +145,6 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
     are metaparameters which are needed in fractal-server to combine multiple
     tasks in the same SLURM job (e.g. `n_parallel_ftasks_per_script` or
     `max_num_jobs`).
-
-    # FIXME: check that extra_lines does not overlap with known fields
 
     Attributes:
         partition: Corresponds to SLURM option.
@@ -217,11 +316,9 @@ def _parse_mem_value(raw_mem: Union[str, int]) -> int:
         f"{info}, invalid specification of memory requirements "
         "(valid examples: 93, 71M, 93G, 71T)."
     )
-    logging.debug(info)
 
     # Handle integer argument
     if isinstance(raw_mem, int):
-        logging.debug(f"{info}, received integer.")
         return raw_mem
 
     # Handle string argument
@@ -229,24 +326,20 @@ def _parse_mem_value(raw_mem: Union[str, int]) -> int:
         logging.error(error_msg)
         raise SlurmConfigError(error_msg)
     if raw_mem.isdigit():
-        logging.debug(f"{info}, received digits-only string.")
         mem_MB = int(raw_mem)
     elif raw_mem.endswith("M"):
-        logging.debug(f"{info}, received string for memory in M.")
         stripped_raw_mem = raw_mem.strip("M")
         if not stripped_raw_mem.isdigit():
             logging.error(error_msg)
             raise SlurmConfigError(error_msg)
         mem_MB = int(stripped_raw_mem)
     elif raw_mem.endswith("G"):
-        logging.debug(f"{info}, received string for memory in G.")
         stripped_raw_mem = raw_mem.strip("G")
         if not stripped_raw_mem.isdigit():
             logging.error(error_msg)
             raise SlurmConfigError(error_msg)
         mem_MB = int(stripped_raw_mem) * 10**3
     elif raw_mem.endswith("T"):
-        logging.debug(f"{info}, received string for memory in T.")
         stripped_raw_mem = raw_mem.strip("T")
         if not stripped_raw_mem.isdigit():
             logging.error(error_msg)
@@ -317,63 +410,22 @@ def get_slurm_config(
             The SlurmConfig object
     """
 
-    # Read Fractal SLURM configuration file
-    if not config_path:
-        settings = Inject(get_settings)
-        config_path = settings.FRACTAL_SLURM_CONFIG_FILE
-    logging.debug(f"[get_slurm_config] Now loading {config_path=}")
-    try:
-        with config_path.open("r") as f:
-            slurm_env = json.load(f)
-    except Exception as e:
-        raise SlurmConfigError(
-            f"Error while loading {config_path=}. "
-            f"Original error:\n{str(e)}"
-        )
     logging.debug(
         "[get_slurm_config] WorkflowTask/Task meta attribute: "
         f"{wftask.overridden_meta=}"
     )
 
-    slurm_dict = {}
+    # Incorporate slurm_env.default_slurm_config
+    slurm_env = load_slurm_config_file(config_path=config_path)
+    slurm_dict = slurm_env.default_slurm_config.dict(exclude_unset=True)
 
-    # Load all relevant attributes from slurm_env
-    keys_to_skip = [
-        "fractal_task_batching",
-        "cpus_per_job",
-        "mem_per_job",
-        "number_of_jobs",
-        "if_needs_gpu",
-    ]
-    for key, value in slurm_env.items():
-        # Skip some keys
-        if key in keys_to_skip:
-            continue
-        # Skip values which are not set (e.g. None or empty strings)
-        if not value:
-            continue
-        # Add this key-value pair to slurm_dict
-        if key == "mem":
-            mem_per_task_MB = _parse_mem_value(value)
-            slurm_dict["mem_per_task_MB"] = mem_per_task_MB
-        else:
-            slurm_dict[key] = value
-    batching_dict = slurm_env["fractal_task_batching"]
-    slurm_dict["target_cpus_per_job"] = batching_dict["target_cpus_per_job"]
-    slurm_dict["max_cpus_per_job"] = batching_dict["max_cpus_per_job"]
-    slurm_dict["target_mem_per_job"] = _parse_mem_value(
-        batching_dict["target_mem_per_job"]
-    )
-    slurm_dict["max_mem_per_job"] = _parse_mem_value(
-        batching_dict["max_mem_per_job"]
-    )
-    slurm_dict["target_num_jobs"] = batching_dict["target_num_jobs"]
-    slurm_dict["max_num_jobs"] = batching_dict["max_num_jobs"]
-
+    # Incorporate slurm_env.batching_config
+    for key, value in slurm_env.batching_config.dict().items():
+        slurm_dict[key] = value
     logging.debug(
-        "[get_slurm_config] Fractal SLURM configuration file: " f"{slurm_env=}"
+        "[get_slurm_config] Fractal SLURM configuration file: "
+        f"{slurm_env.dict()=}"
     )
-    logging.debug(f"[get_slurm_config] Options retained: {slurm_dict=}")
 
     # GPU-related options
     # Notes about priority:
@@ -384,12 +436,10 @@ def get_slurm_config(
     needs_gpu = wftask.overridden_meta.get("needs_gpu", False)
     logging.debug(f"[get_slurm_config] {needs_gpu=}")
     if needs_gpu:
-        for key, value in slurm_env["if_needs_gpu"].items():
-            if key == "mem":
-                mem_per_task_MB = _parse_mem_value(value)
-                slurm_dict["mem_per_task_MB"] = mem_per_task_MB
-            else:
-                slurm_dict[key] = value
+        for key, value in slurm_env.gpu_slurm_config.dict(
+            exclude_unset=True
+        ).items():
+            slurm_dict[key] = value
 
     # Number of CPUs per task, for multithreading
     if "cpus_per_task" in wftask.overridden_meta.keys():
