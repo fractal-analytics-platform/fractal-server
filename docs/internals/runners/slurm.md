@@ -34,6 +34,21 @@ cpus_per_task=3
 mem=10G
 ```
 
+## SLURM batching
+
+The SLURM backend in `fractal-server` may combine multiple tasks in the same
+SLURM job (AKA batching), in order to reduce the total number of SLURM jobs
+that are submitted. This is especially relevant for clusters with constraints
+on the number of jobs that a user is allowed to submit over a certain timespan.
+
+The logic for handling the batching parameters (that is, how many tasks can be
+combined in the same SLURM job, and how many of them can run in parallel) is
+implemented in the
+[slurm.\_batching](../../../reference/fractal_server/app/runner/_slurm/_batching)
+submodule, and especially in its
+[`heuristics`](../../../reference/fractal_server/app/runner/_slurm/_batching/#fractal_server.app.runner._slurm._batching.heuristics)
+function.
+
 
 ## User impersonation
 
