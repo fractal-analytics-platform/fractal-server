@@ -208,7 +208,7 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
         extra_lines: Additional lines to include in SLURM submission scripts.
         tasks_per_job: Number of tasks for each SLURM job.
         parallel_tasks_per_job: Number of tasks to run in parallel for
-                                      each SLURM job.
+                                each SLURM job.
         target_cpus_per_job: Optimal number of CPUs to be requested in each
                              SLURM job.
         max_cpus_per_job: Maximum number of CPUs that can be requested in each
