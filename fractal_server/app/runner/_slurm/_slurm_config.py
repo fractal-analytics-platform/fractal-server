@@ -465,7 +465,11 @@ def get_slurm_config(
 
     # Incorporate slurm_env.default_slurm_config
     slurm_env = load_slurm_config_file(config_path=config_path)
-    slurm_dict = slurm_env.default_slurm_config.dict(exclude_unset=True)
+    slurm_dict = slurm_env.default_slurm_config.dict(
+        exclude_unset=True, exclude={"mem"}
+    )
+    if slurm_env.default_slurm_config.mem:
+        slurm_dict["mem_per_task_MB"] = slurm_env.default_slurm_config.mem
 
     # Incorporate slurm_env.batching_config
     for key, value in slurm_env.batching_config.dict().items():
@@ -485,9 +489,11 @@ def get_slurm_config(
     logging.debug(f"[get_slurm_config] {needs_gpu=}")
     if needs_gpu:
         for key, value in slurm_env.gpu_slurm_config.dict(
-            exclude_unset=True
+            exclude_unset=True, exclude={"mem"}
         ).items():
             slurm_dict[key] = value
+        if slurm_env.gpu_slurm_config.mem:
+            slurm_dict["mem_per_task_MB"] = slurm_env.gpu_slurm_config.mem
 
     # Number of CPUs per task, for multithreading
     if "cpus_per_task" in wftask.overridden_meta.keys():
