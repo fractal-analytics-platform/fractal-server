@@ -391,7 +391,7 @@ def call_parallel_task(
     task_pars_depend: TaskParameters,
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
-    submit_setup_call: Optional[Callable] = no_op_submit_setup_call,
+    submit_setup_call: Callable = no_op_submit_setup_call,
 ) -> Future:  # py3.9 Future[TaskParameters]:
     """
     Collect results from the parallel instances of a parallel task
@@ -503,7 +503,7 @@ def recursive_task_submission(
     task_pars: TaskParameters,
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
-    submit_setup_call: Optional[Callable] = no_op_submit_setup_call,
+    submit_setup_call: Callable = no_op_submit_setup_call,
     logger_name: str,
 ) -> Future:
     """

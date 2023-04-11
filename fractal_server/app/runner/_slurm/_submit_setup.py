@@ -16,14 +16,11 @@ implementation of `submit_setup_call` in
 """
 from pathlib import Path
 from typing import Optional
-from typing import Union
 
 from ...models import WorkflowTask
 from .._common import get_task_file_paths
-from .._common import TaskFiles
 from ..common import TaskParameters
 from ._slurm_config import get_slurm_config
-from ._slurm_config import SlurmConfig
 
 
 def _slurm_submit_setup(
@@ -32,7 +29,7 @@ def _slurm_submit_setup(
     workflow_dir: Path,
     workflow_dir_user: Path,
     task_pars: Optional[TaskParameters] = None,
-) -> dict[str, Union[TaskFiles, SlurmConfig]]:
+) -> dict[str, object]:
     """
     Collect WorfklowTask-specific configuration parameters from different
     sources, and inject them for execution.
