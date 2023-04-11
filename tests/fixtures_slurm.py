@@ -55,21 +55,6 @@ def docker_compose_file(pytestconfig, testdata_path: Path):
 
 
 @pytest.fixture(scope="session")
-def old_slurm_config(override_settings):  # FIXME: deprecate this fixture
-    # NOTE: override_settings also loads all environment variables from
-    # get_patched_settings
-    config = {
-        "default": dict(partition="main", mem="1024"),
-        "low": dict(partition="main", mem="128"),
-        "cpu-low": dict(partition="main"),
-    }
-
-    with override_settings.FRACTAL_SLURM_CONFIG_FILE.open("w") as f:
-        json.dump(config, f, indent=2)
-    return config
-
-
-@pytest.fixture(scope="session")
 def slurm_config(override_settings):
     # NOTE: override_settings also loads all environment variables from
     # get_patched_settings
