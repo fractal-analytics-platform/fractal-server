@@ -340,8 +340,9 @@ class FractalSlurmExecutor(SlurmExecutor):
                 `self.get_default_task_files()`.
 
         Returns:
-            An iterator of results, with the same number of elements as
-            `iterable`.
+            result_iterator():
+                An iterator of results, with the same number of elements as
+                `iterable`.
         """
 
         def _result_or_cancel(fut):

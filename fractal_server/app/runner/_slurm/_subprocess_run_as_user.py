@@ -18,8 +18,8 @@ another user. Note that this requires appropriate sudo permissions.
 import logging
 import shlex
 import subprocess  # nosec
-from typing import Iterable
 from typing import Optional
+from typing import Sequence
 
 
 def _run_command_as_user(
@@ -127,13 +127,15 @@ def _path_exists_as_user(*, path: str, user: Optional[str] = None) -> bool:
 
 
 def _multiple_paths_exist_as_user(
-    *, paths: Iterable[str], user: Optional[str] = None
+    *,
+    paths: Sequence[str],
+    user: Optional[str] = None,
 ) -> bool:
     """
     Impersonate a user and check if some paths exists via `ls`
 
     Arguments:
-        path: Absolute file/folder path
+        paths: Absolute file/folder path
         user: If not `None`, user to be impersonated
     """
     paths_string = " ".join(paths)
