@@ -26,10 +26,10 @@
 | fractal\_server/app/runner/\_slurm/\_\_init\_\_.py                |       24 |        2 |        6 |        2 |     87% |    57, 62 |
 | fractal\_server/app/runner/\_slurm/\_batching.py                  |       68 |        0 |       28 |        0 |    100% |           |
 | fractal\_server/app/runner/\_slurm/\_executor\_wait\_thread.py    |       33 |        3 |       14 |        0 |     94% |     93-96 |
-| fractal\_server/app/runner/\_slurm/\_slurm\_config.py             |      185 |       11 |       64 |        9 |     92% |153-154, 172, 176, 285, 295, 301, 318-325, 396-397, 493->498, 498->504 |
+| fractal\_server/app/runner/\_slurm/\_slurm\_config.py             |      185 |       11 |       64 |        9 |     92% |153-154, 172, 176, 285, 295, 301, 316-323, 394-395, 491->496, 496->502 |
 | fractal\_server/app/runner/\_slurm/\_submit\_setup.py             |       12 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/\_slurm/\_subprocess\_run\_as\_user.py |       40 |        1 |       14 |        1 |     96% |        86 |
-| fractal\_server/app/runner/\_slurm/executor.py                    |      357 |       24 |      118 |       13 |     92% |124, 136, 202-203, 206-209, 213, 431, 525, 532, 753, 803->806, 822, 881, 898-904, 966-971, 974-981, 1036->1035 |
+| fractal\_server/app/runner/\_slurm/executor.py                    |      357 |       24 |      118 |       13 |     92% |124, 136, 202-203, 206-209, 213, 429, 523, 530, 751, 801->804, 820, 879, 896-902, 964-969, 972-979, 1034->1033 |
 | fractal\_server/app/runner/common.py                              |      111 |       19 |       38 |       12 |     75% |121, 132, 137, 142, 145->148, 149, 162, 225-231, 238, 254, 261-272, 276, 299->301 |
 | fractal\_server/app/security/\_\_init\_\_.py                      |       78 |       13 |        8 |        1 |     79% |175-176, 193-234 |
 | fractal\_server/common/\_\_init\_\_.py                            |        0 |        0 |        0 |        0 |    100% |           |
