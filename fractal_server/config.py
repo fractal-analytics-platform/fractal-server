@@ -370,7 +370,7 @@ class Settings(BaseSettings):
                 )
 
             # Check that FRACTAL_SLURM_CONFIG_FILE content is valid
-            from fractal_server.app.runnner._slurm._slurm_config import (
+            from fractal_server.app.runner._slurm._slurm_config import (
                 load_slurm_config_file,
             )
 
