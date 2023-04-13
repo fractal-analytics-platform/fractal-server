@@ -526,25 +526,32 @@ async def test_import_export_workflow_fail(
     client,
     MockCurrentUser,
     project_factory,
-    task_factory,
     testdata_path,
-    collect_packages,
+    task_factory,
 ):
-    with (testdata_path / "import_export/workflow.json").open("r") as f:
-        workflow_from_file = json.load(f)
-
-    # Create project
     async with MockCurrentUser(persist=True) as user:
         prj = await project_factory(user)
 
-    # Import workflow into project
+    with (testdata_path / "import_export/workflow2.json").open("r") as f:
+        workflow_from_file = json.load(f)
     payload = WorkflowImport(**workflow_from_file).dict(exclude_none=True)
     res = await client.post(
         f"/api/v1/project/{prj.id}/import-workflow/", json=payload
     )
+    assert res.status_code == 422
+    assert "Found 0 tasks" in res.json()["detail"]
 
-    debug(res)
-    debug(res.json())
+    N = 2
+    for _ in range(N):
+        await task_factory(name="foo")
+    with (testdata_path / "import_export/workflow3.json").open("r") as f:
+        workflow_from_file = json.load(f)
+    payload = WorkflowImport(**workflow_from_file).dict(exclude_none=True)
+    res = await client.post(
+        f"/api/v1/project/{prj.id}/import-workflow/", json=payload
+    )
+    assert res.status_code == 422
+    assert f"Found {N} tasks" in res.json()["detail"]
 
 
 reorder_cases = []

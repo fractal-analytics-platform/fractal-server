@@ -10,17 +10,7 @@
             "order": 0,
             "task": {
                 "name": "dummy",
-                "source": "test_source"
-            }
-        },
-        {
-            "args": {
-                "message": "task 1"
-            },
-            "order": 1,
-            "task": {
-                "name": "dummy parallel",
-                "source": "test_source"
+                "source": "xyz"
             }
         }
     ]
