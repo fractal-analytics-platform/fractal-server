@@ -214,7 +214,7 @@ async def test_collection_api(
 
         assert data["status"] == "OK"
         task_list = data["task_list"]
-        assert data["log"] is None
+        assert data["log"]
 
         task_names = (t["name"] for t in task_list)
         assert len(task_list) == 2
