@@ -50,10 +50,7 @@ async def test_project_get(client, db, project_factory, MockCurrentUser):
 
 
 async def test_project_creation(app, client, MockCurrentUser, db):
-    payload = dict(
-        name="new project",
-        project_dir="/tmp",
-    )
+    payload = dict(name="new project")
 
     # Fail for anonymous user
     res = await client.post(f"{PREFIX}/", json=payload)
@@ -66,16 +63,12 @@ async def test_project_creation(app, client, MockCurrentUser, db):
         assert res.status_code == 201
         debug(data)
         assert data["name"] == payload["name"]
-        assert data["project_dir"] == payload["project_dir"]
 
 
 async def test_project_creation_name_constraint(
     app, client, MockCurrentUser, db
 ):
-    payload = dict(
-        name="new project",
-        project_dir="/tmp",
-    )
+    payload = dict(name="new project")
     res = await client.post(f"{PREFIX}/", json=payload)
     assert res.status_code == 401
 
@@ -92,11 +85,9 @@ async def test_project_creation_name_constraint(
 
 
 @pytest.mark.parametrize("new_name", (None, "new name"))
-@pytest.mark.parametrize("new_project_dir", (None, "/new/project/dir"))
 @pytest.mark.parametrize("new_read_only", (None, True, False))
 async def test_edit_project(
     new_name,
-    new_project_dir,
     new_read_only,
     app,
     client,
@@ -111,7 +102,6 @@ async def test_edit_project(
         # Create project
         payload = dict(
             name="old name",
-            project_dir="/old/project/dir",
             read_only=True,
         )
         res = await client.post(f"{PREFIX}/", json=payload)
@@ -123,8 +113,6 @@ async def test_edit_project(
         payload = {}
         if new_name:
             payload["name"] = new_name
-        if new_project_dir:
-            payload["project_dir"] = new_project_dir
         if new_read_only:
             payload["read_only"] = new_read_only
         debug(payload)
@@ -147,10 +135,7 @@ async def test_add_dataset(app, client, MockCurrentUser, db):
 
         res = await client.post(
             f"{PREFIX}/",
-            json=dict(
-                name="test project",
-                project_dir="/tmp/",
-            ),
+            json=dict(name="test project"),
         )
         assert res.status_code == 201
         project = res.json()
@@ -200,8 +185,17 @@ async def test_add_dataset(app, client, MockCurrentUser, db):
         assert patched_dataset["name"] == payload1["name"]
         assert patched_dataset["meta"] == payload1["meta"]
 
-        # ADD RESOURCE TO DATASET
+        # ADD RESOURCE TO DATASET / FAILURE
+        payload = dict(path="non/absolute/path")
+        res = await client.post(
+            f"{PREFIX}/{project_id}/{dataset['id']}",
+            json=payload,
+        )
+        debug(res.json())
+        assert res.status_code == 422
+        resource = res.json()
 
+        # ADD RESOURCE TO DATASET / SUCCESS
         payload = dict(path="/some/absolute/path")
         res = await client.post(
             f"{PREFIX}/{project_id}/{dataset['id']}",
@@ -220,10 +214,7 @@ async def test_dataset_get(app, client, MockCurrentUser, db):
         # Create a project
         res = await client.post(
             f"{PREFIX}/",
-            json=dict(
-                name="test project",
-                project_dir="/tmp/",
-            ),
+            json=dict(name="test project"),
         )
         assert res.status_code == 201
         project = res.json()
@@ -256,10 +247,7 @@ async def test_add_dataset_local_path_error(app, client, MockCurrentUser, db):
 
         res = await client.post(
             f"{PREFIX}/",
-            json=dict(
-                name="test project",
-                project_dir="/tmp/",
-            ),
+            json=dict(name="test project"),
         )
         assert res.status_code == 201
         project = res.json()
@@ -314,9 +302,7 @@ async def test_delete_project(client, MockCurrentUser, db):
         assert len(data) == 0
 
         # Create a project
-        res = await client.post(
-            f"{PREFIX}/", json=dict(name="name", project_dir="/tmp")
-        )
+        res = await client.post(f"{PREFIX}/", json=dict(name="name"))
         p = res.json()
 
         # Verify that the project was created
@@ -357,7 +343,7 @@ async def test_edit_resource(
         ds = await dataset_factory(project=prj)
         orig_resource = await resource_factory(dataset=ds)
 
-        payload = dict(path="my/new/path")
+        payload = dict(path="/my/new/path")
         res = await client.patch(
             f"{PREFIX}/{prj.id}/{ds.id}/{orig_resource.id}", json=payload
         )
@@ -594,39 +580,69 @@ async def test_project_apply_failures(
         assert res.status_code == 422
 
 
+async def test_project_apply_missing_cache_dir(
+    db,
+    client,
+    MockCurrentUser,
+    project_factory,
+    dataset_factory,
+    resource_factory,
+    workflow_factory,
+    task_factory,
+    override_settings_factory,
+):
+    """
+    When using the slurm backend, user.slurm_user and user.cache_dir become
+    required attributes. If they are missing, the apply endpoint fails with a
+    422 error.
+    """
+
+    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm")
+
+    async with MockCurrentUser(persist=True) as user:
+
+        # Make sure that user.cache_dir was not set
+        debug(user)
+        assert user.cache_dir is None
+
+        # Create project, datasets, workflow, task, workflowtask
+        project = await project_factory(user)
+        input_dataset = await dataset_factory(
+            project, name="input", type="zarr"
+        )
+        output_dataset = await dataset_factory(project, name="output")
+        for dataset_id in [input_dataset.id, output_dataset.id]:
+            res = await client.post(
+                f"{PREFIX}/{project.id}/{dataset_id}",
+                json=dict(path="/some/absolute/path"),
+            )
+            assert res.status_code == 201
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(input_type="zarr")
+        await workflow.insert_task(task.id, db=db)
+
+        # Call apply endpoint
+        payload = dict(
+            project_id=project.id,
+            input_dataset_id=input_dataset.id,
+            output_dataset_id=output_dataset.id,
+            workflow_id=workflow.id,
+            overwrite_input=False,
+        )
+        res = await client.post(f"{PREFIX}/apply/", json=payload)
+        debug(res.json())
+        assert res.status_code == 422
+        assert "user.cache_dir=None" in res.json()["detail"]
+
+
 async def test_create_project(
     db,
     client,
     MockCurrentUser,
 ):
     async with MockCurrentUser(persist=True):
-        # Payload without `project_dir`
-        wrong_payload = {"name": "project name"}
-        res = await client.post(f"{PREFIX}/", json=wrong_payload)
-        debug(res.json())
-        assert res.status_code == 422
         # Payload without `name`
-        wrong_payload2 = {"project_dir": "/tmp"}
-        res = await client.post(f"{PREFIX}/", json=wrong_payload2)
-        debug(res.json())
-        assert res.status_code == 422
-        # Payload with abs path and existing dir
-        payload = {"name": "project name", "project_dir": "/tmp"}
-        res = await client.post(f"{PREFIX}/", json=payload)
-        debug(res.json())
-        assert res.status_code == 201
-        # Payload with non abs path
-        payload = {"name": "project name", "project_dir": "../tmp"}
-        res = await client.post(f"{PREFIX}/", json=payload)
-        debug(res.json())
-        assert res.status_code == 422
-        # Payload with abs path and non existing dir
-        payload = {"name": "project name", "project_dir": "/abc"}
-        res = await client.post(f"{PREFIX}/", json=payload)
-        debug(res.json())
-        assert res.status_code == 422
-        # Payload with abs path of a file
-        payload = {"name": "project name", "project_dir": "/bin/bash"}
-        res = await client.post(f"{PREFIX}/", json=payload)
+        empty_payload = {}
+        res = await client.post(f"{PREFIX}/", json=empty_payload)
         debug(res.json())
         assert res.status_code == 422

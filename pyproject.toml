@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fractal-server"
-version = "1.1.1"
+version = "1.2.0a2"
 description = "Server component of the Fractal analytics platform"
 authors = [
     "Jacopo Nespolo <jacopo.nespolo@exact-lab.it>",
@@ -25,7 +25,7 @@ uvicorn = "^0.20.0"
 sqlalchemy = "^1.4"
 SQLAlchemy-Utils = "^0.38.3"
 
-clusterfutures = { version = "^0.5", optional = true }
+clusterfutures = { version = "^0.5", optional = true}
 
 asyncpg = { version = "^0.27.0", optional = true }
 psycopg2 = { version = "^2.9.5", optional = true }
@@ -75,7 +75,7 @@ filterwarnings = [
 ]
 
 [tool.bumpver]
-current_version = "1.1.1"
+current_version = "1.2.0a2"
 version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true
@@ -97,7 +97,7 @@ fractalctl = "fractal_server.__main__:run"
 branch = true
 parallel = true
 relative_files = true
-omit = ["tests/*", "fractal_server/app/runner/_parsl/*", "fractal_server/common/tests/*"]
+omit = ["tests/*", "fractal_server/common/tests/*"]
 
 [[tool.mypy.overrides]]
 module = ["devtools", "uvicorn", "sqlalchemy_utils"]

@@ -97,9 +97,8 @@ def get_patched_settings(temp_path: Path):
     else:
         raise ValueError
 
-    settings.FRACTAL_TASKS_DIR = temp_path / "fractal_root"
+    settings.FRACTAL_TASKS_DIR = temp_path / "fractal_tasks_dir"
     settings.FRACTAL_TASKS_DIR.mkdir(parents=True, exist_ok=True)
-    debug(settings.FRACTAL_TASKS_DIR)
     settings.FRACTAL_TASKS_DIR.chmod(0o755)
     settings.FRACTAL_RUNNER_WORKING_BASE_DIR = temp_path / "artifacts"
     settings.FRACTAL_RUNNER_WORKING_BASE_DIR.mkdir(parents=True, exist_ok=True)
@@ -358,10 +357,7 @@ async def project_factory(db):
     from fractal_server.app.models import Project
 
     async def __project_factory(user, **kwargs):
-        defaults = dict(
-            name="project",
-            project_dir="/tmp/",
-        )
+        defaults = dict(name="project")
         defaults.update(kwargs)
         project = Project(**defaults)
         project.user_member_list.append(user)

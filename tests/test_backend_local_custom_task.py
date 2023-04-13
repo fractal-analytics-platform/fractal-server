@@ -15,8 +15,6 @@ import sys
 
 from devtools import debug
 
-import fractal_server.tasks
-
 
 PREFIX = "/api/v1"
 
@@ -38,7 +36,7 @@ async def test_full_workflow(
 
     async with MockCurrentUser(persist=True) as user:
         # add custom task
-        task_path = f"{fractal_server.tasks.__path__[0]}/dummy.py"
+        task_path = str(testdata_path / "tasks_dummy/dummy.py")
         command = f"{sys.executable} {task_path}"
         TASK_NAME = "dummy_custom"
         payload = dict(
@@ -55,7 +53,7 @@ async def test_full_workflow(
         task_id = res.json()["id"]
 
         # add custom parallel task
-        task_path = f"{fractal_server.tasks.__path__[0]}/dummy_parallel.py"
+        task_path = str(testdata_path / "tasks_dummy/dummy_parallel.py")
         command = f"{sys.executable} {task_path}"
         PARALLEL_TASK_NAME = "parallel_dummy_custom"
         payload = dict(

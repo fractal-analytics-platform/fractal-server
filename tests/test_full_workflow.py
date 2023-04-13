@@ -6,6 +6,7 @@ Original author(s):
 Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
 Tommaso Comparin <tommaso.comparin@exact-lab.it>
 Marco Franzon <marco.franzon@exact-lab.it>
+Yuri Chiucconi <yuri.chiucconi@exact-lab.it>
 
 This file is part of Fractal and was originally developed by eXact lab S.r.l.
 <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
@@ -13,6 +14,7 @@ Institute for Biomedical Research and Pelkmans Lab from the University of
 Zurich.
 """
 import asyncio
+import glob
 import logging
 import os
 import threading
@@ -24,7 +26,7 @@ from devtools import debug
 
 from .fixtures_slurm import scancel_all_jobs_of_a_slurm_user
 from fractal_server.app.runner import _backends
-
+from fractal_server.common.schemas.task import TaskCreate
 
 PREFIX = "/api/v1"
 
@@ -50,19 +52,28 @@ async def test_full_workflow(
 
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=backend,
-        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
     )
+    if backend == "slurm":
+        override_settings_factory(
+            FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
+        )
 
     debug(f"Testing with {backend=}")
+
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
         request.getfixturevalue("cfut_jobs_finished")
+        user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
+        user_kwargs = dict(cache_dir=user_cache_dir)
+    else:
+        user_kwargs = {}
 
-    async with MockCurrentUser(persist=True) as user:
-        project_dir = tmp777_path / f"project_dir-{backend}"
-        project = await project_factory(user, project_dir=str(project_dir))
+    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs) as user:
+        debug(user)
+
+        project = await project_factory(user)
 
         debug(project)
         project_id = project.id
@@ -197,6 +208,7 @@ async def test_full_workflow(
 
 @pytest.mark.slow
 @pytest.mark.parametrize("backend", backends_available)
+@pytest.mark.parametrize("failing_task", ["parallel", "non_parallel"])
 async def test_failing_workflow_TaskExecutionError(
     client,
     MockCurrentUser,
@@ -206,26 +218,32 @@ async def test_failing_workflow_TaskExecutionError(
     project_factory,
     dataset_factory,
     backend,
+    failing_task: str,
     request,
     override_settings_factory,
 ):
 
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=backend,
-        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path
-        / f"artifacts-{backend}-TaskExecutionError",
+        / f"artifacts-{backend}-TaskExecutionError-{failing_task}",
     )
+    if backend == "slurm":
+        override_settings_factory(
+            FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
+        )
 
     debug(f"Testing with {backend=}")
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
         request.getfixturevalue("cfut_jobs_finished")
-
-    async with MockCurrentUser(persist=True) as user:
-        project_dir = tmp777_path / f"project_dir-{backend}-TaskExecutionError"
-        project = await project_factory(user, project_dir=str(project_dir))
+        user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
+        user_kwargs = dict(cache_dir=user_cache_dir)
+    else:
+        user_kwargs = {}
+    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs) as user:
+        project = await project_factory(user)
         project_id = project.id
         input_dataset = await dataset_factory(
             project, name="input", type="image", read_only=True
@@ -251,7 +269,7 @@ async def test_failing_workflow_TaskExecutionError(
         )
         assert res.status_code == 201
 
-        # CREATE WORKFLOW
+        # CREATE TASKS AND WORKFLOW
         res = await client.post(
             f"{PREFIX}/workflow/",
             json=dict(name="test workflow", project_id=project.id),
@@ -260,18 +278,33 @@ async def test_failing_workflow_TaskExecutionError(
         workflow_dict = res.json()
         workflow_id = workflow_dict["id"]
 
-        # Add a dummy task
-        ERROR_MESSAGE = "this is a nice error"
+        # Prepare payloads for adding non-parallel and parallel dummy tasks
+        payload_non_parallel = dict(task_id=collect_packages[0].id)
+        payload_parallel = dict(task_id=collect_packages[1].id)
+        ERROR_MESSAGE = f"this is a nice error for a {failing_task} task"
+        failing_args = {"raise_error": True, "message": ERROR_MESSAGE}
+        if failing_task == "non_parallel":
+            payload_non_parallel["args"] = failing_args
+        elif failing_task == "parallel":
+            payload_parallel["args"] = failing_args
+
+        # Add a (non-parallel) dummy task
+        debug(payload_non_parallel)
         res = await client.post(
             f"{PREFIX}/workflow/{workflow_id}/add-task/",
-            json=dict(
-                task_id=collect_packages[0].id,
-                args={"raise_error": True, "message": ERROR_MESSAGE},
-            ),
+            json=payload_non_parallel,
         )
+        debug(res.json())
         assert res.status_code == 201
-        workflow_task_id = res.json()["id"]
-        debug(workflow_task_id)
+
+        # Add a (parallel) dummy_parallel task
+        debug(payload_parallel)
+        res = await client.post(
+            f"{PREFIX}/workflow/{workflow_id}/add-task/",
+            json=payload_parallel,
+        )
+        debug(res.json())
+        assert res.status_code == 201
 
         # EXECUTE WORKFLOW
         payload = dict(
@@ -326,8 +359,10 @@ def _auxiliary_run(slurm_user, sleep_time):
     loop.close()
 
 
+@pytest.mark.parametrize("backend", ["slurm"])
 @pytest.mark.slow
 async def test_failing_workflow_JobExecutionError(
+    backend,
     client,
     MockCurrentUser,
     testdata_path,
@@ -344,15 +379,19 @@ async def test_failing_workflow_JobExecutionError(
 ):
 
     override_settings_factory(
-        FRACTAL_RUNNER_BACKEND="slurm",
-        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
+        FRACTAL_RUNNER_BACKEND=backend,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path
-        / "artifacts-test_failing_workflow_JobExecutionError",
+        / f"artifacts-{backend}-test_failing_workflow_JobExecutionError",
     )
+    if backend == "slurm":
+        override_settings_factory(
+            FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
+        )
 
-    async with MockCurrentUser(persist=True) as user:
-        project_dir = tmp777_path / "project_dir-JobExecutionError"
-        project = await project_factory(user, project_dir=str(project_dir))
+    user_cache_dir = str(tmp777_path / "user_cache_dir")
+    user_kwargs = dict(cache_dir=user_cache_dir)
+    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs) as user:
+        project = await project_factory(user)
         project_id = project.id
         input_dataset = await dataset_factory(
             project, name="input", type="image", read_only=True
@@ -443,3 +482,106 @@ async def test_failing_workflow_JobExecutionError(
         assert "JOB ERROR" in job_status_data["log"]
         assert "CANCELLED" in job_status_data["log"]
         assert "\\n" not in job_status_data["log"]
+
+
+async def test_non_python_task(
+    client,
+    MockCurrentUser,
+    project_factory,
+    dataset_factory,
+    resource_factory,
+    testdata_path,
+    tmp_path,
+):
+    """
+    Run a full workflow with a single bash task, which simply writes something
+    to stderr and stdout
+    """
+    async with MockCurrentUser(persist=True) as user:
+        # Create project
+        project = await project_factory(user)
+
+        # Create workflow
+        payload = {"name": "WF", "project_id": project.id}
+        res = await client.post("api/v1/workflow/", json=payload)
+        workflow = res.json()
+        debug(workflow)
+        assert res.status_code == 201
+
+        # Create task
+        task_dict = dict(
+            name="non-python",
+            source="custom-task",
+            command=f"bash {str(testdata_path)}/non_python_task_issue189.sh",
+            input_type="zarr",
+            output_type="zarr",
+        )
+        task_create = TaskCreate(**task_dict)
+        res = await client.post("api/v1/task/", json=task_create.dict())
+        task = res.json()
+        debug(task)
+        assert res.status_code == 201
+
+        # Add task to workflow
+        res = await client.post(
+            f"api/v1/workflow/{workflow['id']}/add-task/",
+            json=dict(task_id=task["id"]),
+        )
+        assert res.status_code == 201
+
+        # Create datasets
+        input_dataset = await dataset_factory(
+            project, name="input", type="zarr", read_only=False
+        )
+        output_dataset = await dataset_factory(
+            project, name="output", type="zarr", read_only=False
+        )
+        debug(tmp_path)
+        await resource_factory(
+            path=str(tmp_path / "input_dir"), dataset=input_dataset
+        )
+        await resource_factory(
+            path=str(tmp_path / "output_dir"), dataset=output_dataset
+        )
+
+        # Submit workflow
+        payload = dict(
+            project_id=project.id,
+            input_dataset_id=input_dataset.id,
+            output_dataset_id=output_dataset.id,
+            workflow_id=workflow["id"],
+            overwrite_input=False,
+        )
+        debug(payload)
+        res = await client.post("/api/v1/project/apply/", json=payload)
+        job_data = res.json()
+        debug(job_data)
+        assert res.status_code == 202
+
+        # Check that the workflow execution is complete
+        res = await client.get(f"{PREFIX}/job/{job_data['id']}")
+        assert res.status_code == 200
+        job_status_data = res.json()
+        debug(job_status_data)
+        assert job_status_data["status"] == "done"
+
+        # Check that the expected files are present
+        working_dir = job_status_data["working_dir"]
+        glob_list = [Path(x).name for x in glob.glob(f"{working_dir}/*")]
+        must_exist = [
+            "0.args.json",
+            "0.err",
+            "0.metadiff.json",
+            "0.out",
+            "workflow.log",
+        ]
+        for f in must_exist:
+            assert f in glob_list
+
+        # Check that stderr and stdout are as expected
+        with open(f"{working_dir}/0.out", "r") as f:
+            out = f.read()
+        assert "This goes to standard output" in out
+        with open(f"{working_dir}/0.err", "r") as f:
+            err = f.read()
+        assert "This goes to standard error" in err
