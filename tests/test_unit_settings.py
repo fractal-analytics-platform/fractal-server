@@ -60,20 +60,20 @@ def test_FractalConfigurationError():
     debug(settings)
     settings.check()
 
-    settings.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW = None
+    settings.FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW = None
     debug(settings)
     settings.check()
 
-    settings.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW = 1
+    settings.FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW = 1
     debug(settings)
     settings.check()
 
-    settings.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW = 0
+    settings.FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW = 0
     debug(settings)
     with pytest.raises(FractalConfigurationError):
         settings.check()
 
-    settings.FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW = -123
+    settings.FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW = -123
     debug(settings)
     with pytest.raises(FractalConfigurationError):
         settings.check()

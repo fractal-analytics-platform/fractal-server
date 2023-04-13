@@ -19,6 +19,8 @@ from concurrent.futures import ThreadPoolExecutor
 import pytest
 from devtools import debug
 
+from .data.tasks_dummy import dummy as dummy_module
+from .data.tasks_dummy import dummy_parallel as dummy_parallel_module
 from .fixtures_tasks import MockTask
 from .fixtures_tasks import MockWorkflowTask
 from fractal_server.app.runner._common import _call_command_wrapper
@@ -27,8 +29,6 @@ from fractal_server.app.runner._common import call_single_task
 from fractal_server.app.runner._common import recursive_task_submission
 from fractal_server.app.runner.common import close_job_logger
 from fractal_server.app.runner.common import TaskParameters
-from fractal_server.tasks import dummy as dummy_module
-from fractal_server.tasks import dummy_parallel as dummy_parallel_module
 from fractal_server.utils import set_logger
 
 
@@ -49,7 +49,7 @@ async def test_command_wrapper(tmp_path):
 
 
 def test_call_single_task(tmp_path):
-    task = MockWorkflowTask(
+    wftask = MockWorkflowTask(
         task=MockTask(name="task0", command=f"python {dummy_module.__file__}"),
         arguments=dict(message="test"),
         order=0,
@@ -66,10 +66,10 @@ def test_call_single_task(tmp_path):
         metadata={},
     )
 
-    debug(task)
+    debug(wftask)
 
     out = call_single_task(
-        task=task, task_pars=task_pars, workflow_dir=tmp_path
+        wftask=wftask, task_pars=task_pars, workflow_dir=tmp_path
     )
     close_job_logger(job_logger)
     debug(out)
@@ -253,17 +253,19 @@ def test_call_parallel_task_max_tasks(
     """
     GIVEN A single task, parallelized over two components
     WHEN This task is executed on a ThreadPoolExecutor via call_parallel_task
-    THEN The FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW env variable is used
+    THEN The FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW env variable is used
          correctly
     """
 
     # Reset environment variable
     debug(max_tasks)
-    override_settings_factory(FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW=max_tasks)
+    override_settings_factory(
+        FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW=max_tasks
+    )
 
     # Prepare task
     SLEEP_TIME = 1
-    task = MockWorkflowTask(
+    wftask = MockWorkflowTask(
         task=MockTask(
             name="task0",
             command=f"python {dummy_parallel_module.__file__}",
@@ -272,7 +274,7 @@ def test_call_parallel_task_max_tasks(
         arguments=dict(message="message", sleep_time=SLEEP_TIME),
         order=0,
     )
-    debug(task)
+    debug(wftask)
 
     # Prepare task arguments (both as TaskParameters and as a dummy Future)
     task_pars = TaskParameters(
@@ -286,7 +288,7 @@ def test_call_parallel_task_max_tasks(
     with ThreadPoolExecutor() as executor:
         future_metadata = call_parallel_task(
             executor=executor,
-            task=task,
+            wftask=wftask,
             task_pars_depend=task_pars,
             workflow_dir=tmp_path,
         )
@@ -297,9 +299,9 @@ def test_call_parallel_task_max_tasks(
     assert isinstance(out, TaskParameters)
 
     # Check that the two tasks were submitted at the appropriate time,
-    # depending on FRACTAL_RUNNER_MAX_TASKS_PER_WORKFLOW. NOTE: the log parsing
-    # and log-to-datetime conversion may easily break if we change the logs
-    # format
+    # depending on FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW. NOTE: the log
+    # parsing and log-to-datetime conversion may easily break if we change the
+    # logs format
     with (tmp_path / "0_par_0.err").open("r") as f:
         first_log_task_0 = f.readlines()[0]
     with (tmp_path / "0_par_1.err").open("r") as f:

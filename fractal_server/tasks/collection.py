@@ -21,9 +21,7 @@ import shutil
 import sys
 from io import IOBase
 from pathlib import Path
-from typing import List
 from typing import Optional
-from typing import Tuple
 from typing import Union
 from zipfile import ZipFile
 
@@ -164,7 +162,7 @@ class _TaskCollectPip(TaskCollectPip):
             raise ValueError("Version is not set or cannot be determined")
 
 
-def _package_from_path(wheel_path: Path) -> Tuple[str, str]:
+def _package_from_path(wheel_path: Path) -> tuple[str, str]:
     """
     Extract package name and version from package files such as wheel files.
     """
@@ -259,7 +257,7 @@ async def create_package_environment_pip(
     task_pkg: _TaskCollectPip,
     venv_path: Path,
     logger_name: str,
-) -> List[TaskCreate]:
+) -> list[TaskCreate]:
     """
     Create environment and install package
     """
@@ -310,7 +308,7 @@ def load_manifest(
     package_root: Path,
     python_bin: Path,
     source: str,
-) -> List[TaskCreate]:
+) -> list[TaskCreate]:
 
     manifest_file = package_root / "__FRACTAL_MANIFEST__.json"
     manifest = read_manifest(manifest_file)
@@ -334,7 +332,7 @@ async def _create_venv_install_package(
     task_pkg: _TaskCollectPip,
     path: Path,
     logger_name: str,
-) -> Tuple[Path, Path]:
+) -> tuple[Path, Path]:
     """Create venv and install package
 
     Args:

@@ -1,15 +1,14 @@
 {
-    "cpu-low": {
-        "partition": "main",
-        "cpus-per-task": 1
-    },
-    "cpu-mid": {
-        "partition": "main"
-    },
-    "cpu-high": {
-        "partition": "main"
-    },
-    "gpu": {
-        "partition": "gpu"
-    }
+  "default_slurm_config": {
+      "partition": "main"
+  },
+  "gpu_slurm_config": {},
+  "batching_config": {
+      "target_cpus_per_job": 1,
+      "max_cpus_per_job": 1,
+      "target_mem_per_job": 200,
+      "max_mem_per_job": 500,
+      "target_num_jobs": 2,
+      "max_num_jobs": 4
+  }
 }
