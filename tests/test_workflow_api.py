@@ -522,6 +522,42 @@ async def test_import_export_workflow(
     assert wf_old == wf_new
 
 
+async def test_import_export_workflow_fail(
+    client,
+    MockCurrentUser,
+    project_factory,
+    testdata_path,
+    task_factory,
+):
+    async with MockCurrentUser(persist=True) as user:
+        prj = await project_factory(user)
+
+    await task_factory(name="valid", source="test_source")
+    payload = {
+        "name": "MyWorkflow",
+        "task_list": [
+            {"order": 0, "task": {"name": "dummy", "source": "xyz"}}
+        ],
+    }
+    res = await client.post(
+        f"/api/v1/project/{prj.id}/import-workflow/", json=payload
+    )
+    assert res.status_code == 422
+    assert "Found 0 tasks with source" in res.json()["detail"]
+
+    payload = {
+        "name": "MyWorkflow",
+        "task_list": [
+            {"order": 0, "task": {"name": "invalid", "source": "test_source"}}
+        ],
+    }
+    res = await client.post(
+        f"/api/v1/project/{prj.id}/import-workflow/", json=payload
+    )
+    assert res.status_code == 422
+    assert "Found 0 tasks with name" in res.json()["detail"]
+
+
 reorder_cases = []
 reorder_cases.append([1, 2])
 reorder_cases.append([2, 1])
