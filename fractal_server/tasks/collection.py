@@ -33,9 +33,7 @@ from ..common.schemas import TaskCollectStatus
 from ..common.schemas import TaskCreate
 from ..config import get_settings
 from ..syringe import Inject
-from ..utils import close_logger
 from ..utils import execute_command
-from ..utils import set_logger
 
 
 FRACTAL_PUBLIC_TASK_SUBDIR = ".fractal"
@@ -263,7 +261,7 @@ async def create_package_environment_pip(
     """
     Create environment and install package
     """
-    logger = set_logger(logger_name=logger_name, level=logging.info)
+    logger = logging.getLogger(logger_name)
     try:
         logger.info("Creating venv and installing package")
 
@@ -281,10 +279,8 @@ async def create_package_environment_pip(
             source=task_pkg.source,
         )
         logger.debug("Loaded task manifest")
-        close_logger(logger)
     except Exception as e:
         logger.error("Task manifest loading failed")
-        close_logger(logger)
         raise e
     return task_list
 
@@ -436,8 +432,6 @@ async def _pip_install(
     )
     package_root = location / task_pkg.package.replace("-", "_")
     if not package_root.exists():
-        logger = logging.getLogger(logger_name)
-        close_logger(logger)
         raise RuntimeError(
             "Could not determine package installation location."
         )

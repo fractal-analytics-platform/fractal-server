@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from shutil import which as shutil_which
 
@@ -72,6 +73,52 @@ async def test_background_collection(
     task_list = (await db.execute(select(Task))).scalars().all()
     debug(task_list)
     assert len(task_list) == 2
+
+
+@pytest.mark.parametrize(
+    "level", [logging.DEBUG, logging.INFO, logging.WARNING]
+)
+async def test_background_collection_logs(
+    db,
+    client,
+    MockCurrentUser,
+    dummy_task_package,
+    override_settings_factory,
+    level: int,
+):
+    """
+    GIVEN a package and its installation environment
+    WHEN the background collection is called, for a given FRACTAL_LOGGING_LEVEL
+    THEN the logs are always present
+    """
+    override_settings_factory(FRACTAL_LOGGING_LEVEL=level)
+    task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())
+    venv_path = create_package_dir_pip(
+        task_pkg=task_pkg, user=f"test_user_{level}"
+    )
+    collection_status = TaskCollectStatus(
+        status="pending", venv_path=venv_path, package=task_pkg.package
+    )
+    # replacing with path because of non-serializable Path
+    collection_status_dict = collection_status.sanitised_dict()
+
+    state = State(data=collection_status_dict)
+    db.add(state)
+    await db.commit()
+    await db.refresh(state)
+    debug(state)
+    await _background_collect_pip(
+        state=state, venv_path=venv_path, task_pkg=task_pkg, db=db
+    )
+    async with MockCurrentUser(persist=True):
+        res = await client.get(f"{PREFIX}/collect/{state.id}")
+    out_state = res.json()
+    debug(out_state)
+    assert res.status_code == 200
+    assert out_state["data"]["status"] == "OK"
+    debug(out_state["data"]["log"])
+    debug(out_state["data"]["info"])
+    assert out_state["data"]["log"]
 
 
 async def test_background_collection_failure(db, dummy_task_package):

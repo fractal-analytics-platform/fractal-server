@@ -124,7 +124,7 @@ async def execute_command(
     command_split = shlex_split(command)
     cmd, *args = command_split
 
-    logger = set_logger(logger_name=logger_name)
+    logger = logging.getLogger(logger_name)
     proc = await asyncio.create_subprocess_exec(
         cmd,
         *args,
