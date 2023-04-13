@@ -67,7 +67,6 @@ async def _background_collect_pip(
         level=logging.DEBUG,
     )
 
-    logger = set_logger(logger_name=logger_name)
     logger.info("Start background task collection")
     data = TaskCollectStatus(**state.data)
     data.info = None
@@ -103,6 +102,7 @@ async def _background_collect_pip(
 
         # Update DB
         data.status = "OK"
+        data.log = get_collection_log(venv_path)
         state.data = data.sanitised_dict()
         db.add(state)
         await db.merge(state)
@@ -247,6 +247,7 @@ async def collect_tasks_pip(
     )
 
     logger.info("collection endpoint: returning state")
+    close_logger(logger)
     info = (
         "Collecting tasks in the background. "
         "GET /task/collect/{id} to query collection status"
@@ -267,7 +268,7 @@ async def check_collection_status(
     Check status of background task collection
     """
     logger = set_logger(logger_name="fractal")
-    logger.info("querying state")
+    logger.info("Querying state")
     state = await db.get(State, state_id)
     if not state:
         raise HTTPException(
@@ -281,6 +282,7 @@ async def check_collection_status(
     if verbose and not data.log:
         data.log = get_collection_log(data.venv_path)
         state.data = data.sanitised_dict()
+    close_logger(logger)
     return state
 
 
