@@ -9,6 +9,7 @@
 * Include test of non-python task (\#594).
 * Move dummy tasks from package to tests (\#601).
 * Remove deprecated parsl backend (\#607).
+* Improve error handling in workflow-import endpoint (\#595).
 
 # 1.1.1
 
