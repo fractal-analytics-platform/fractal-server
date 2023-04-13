@@ -2,9 +2,9 @@
 `db` module, loosely adapted from
 https://testdriven.io/blog/fastapi-sqlmodel/#async-sqlmodel
 """
+import logging
 from typing import AsyncGenerator
 from typing import Generator
-from warnings import warn
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -42,7 +42,7 @@ class DB:
         settings = Inject(get_settings)
 
         if settings.DB_ENGINE == "sqlite":
-            warn(
+            logging.warning(
                 "SQLite is partially supported but discouraged "
                 "in production environment."
                 "SQLite offers partial support for ForeignKey "

@@ -20,7 +20,6 @@ from datetime import timezone
 from pathlib import Path
 from shlex import split as shlex_split
 from typing import Optional
-from warnings import warn as _warn
 
 from .config import get_settings
 from .syringe import Inject
@@ -54,7 +53,7 @@ def warn(message):
     """
     settings = Inject(get_settings)
     if settings.DEPLOYMENT_TYPE in ["testing", "development"]:
-        _warn(message, RuntimeWarning)
+        logging.warning(message, RuntimeWarning)
     else:
         raise RuntimeError(message)
 
