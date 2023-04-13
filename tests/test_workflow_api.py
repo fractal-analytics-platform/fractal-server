@@ -532,26 +532,30 @@ async def test_import_export_workflow_fail(
     async with MockCurrentUser(persist=True) as user:
         prj = await project_factory(user)
 
-    with (testdata_path / "import_export/workflow2.json").open("r") as f:
-        workflow_from_file = json.load(f)
-    payload = WorkflowImport(**workflow_from_file).dict(exclude_none=True)
+    await task_factory(name="valid", source="test_source")
+    payload = {
+        "name": "MyWorkflow",
+        "task_list": [
+            {"order": 0, "task": {"name": "dummy", "source": "xyz"}}
+        ],
+    }
     res = await client.post(
         f"/api/v1/project/{prj.id}/import-workflow/", json=payload
     )
     assert res.status_code == 422
-    assert "Found 0 tasks" in res.json()["detail"]
+    assert "Found 0 tasks with source" in res.json()["detail"]
 
-    N = 2
-    for _ in range(N):
-        await task_factory(name="foo")
-    with (testdata_path / "import_export/workflow3.json").open("r") as f:
-        workflow_from_file = json.load(f)
-    payload = WorkflowImport(**workflow_from_file).dict(exclude_none=True)
+    payload = {
+        "name": "MyWorkflow",
+        "task_list": [
+            {"order": 0, "task": {"name": "invalid", "source": "test_source"}}
+        ],
+    }
     res = await client.post(
         f"/api/v1/project/{prj.id}/import-workflow/", json=payload
     )
     assert res.status_code == 422
-    assert f"Found {N} tasks" in res.json()["detail"]
+    assert "Found 0 tasks with name" in res.json()["detail"]
 
 
 reorder_cases = []
