@@ -10,7 +10,6 @@
 #
 # Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
 # University of Zurich
-import logging
 import math
 import shlex
 import subprocess  # nosec
@@ -30,6 +29,7 @@ from cfut import SlurmExecutor
 from cfut.util import random_string
 
 from ....config import get_settings
+from ....logger import set_logger
 from ....syringe import Inject
 from .._common import get_task_file_paths
 from .._common import TaskFiles
@@ -43,6 +43,9 @@ from ._subprocess_run_as_user import _glob_as_user
 from ._subprocess_run_as_user import _path_exists_as_user
 from ._subprocess_run_as_user import _run_command_as_user
 from fractal_server import __VERSION__
+
+
+logger = set_logger(__name__)
 
 
 class SlurmJob:
@@ -210,7 +213,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         if not _path_exists_as_user(
             path=str(working_dir_user), user=self.slurm_user
         ):
-            logging.info(f"Missing folder {working_dir_user=}")
+            logger.info(f"Missing folder {working_dir_user=}")
 
         self.working_dir_user = working_dir_user
         self.map_jobid_to_slurm_files = {}
@@ -294,7 +297,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         slurm_file_prefix = task_files.file_prefix
 
         # Include common_script_lines in extra_lines
-        logging.debug(
+        logger.debug(
             f"Adding {self.common_script_lines=} to "
             f"{slurm_config.extra_lines=}, from submit method."
         )
@@ -381,7 +384,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             task_files = self.get_default_task_files()
 
         # Include common_script_lines in extra_lines
-        logging.debug(
+        logger.debug(
             f"Adding {self.common_script_lines=} to "
             f"{slurm_config.extra_lines=}, from map method."
         )
@@ -742,7 +745,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                         fut.set_exception(job_exc)
                         return
                     except InvalidStateError:
-                        logging.warning(
+                        logger.warning(
                             f"Future {fut} (SLURM job ID: {jobid}) was already"
                             " cancelled, exit from"
                             " FractalSlurmExecutor._completion."
@@ -793,7 +796,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                     if not self.keep_pickle_files:
                         out_path.unlink()
                 except InvalidStateError:
-                    logging.warning(
+                    logger.warning(
                         f"Future {fut} (SLURM job ID: {jobid}) was already"
                         " cancelled, exit from"
                         " FractalSlurmExecutor._completion."
@@ -819,7 +822,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                 fut.set_exception(e)
                 return
             except InvalidStateError:
-                logging.warning(
+                logger.warning(
                     f"Future {fut} (SLURM job ID: {jobid}) was already"
                     " cancelled, exit from"
                     " FractalSlurmExecutor._completion."
@@ -849,7 +852,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         Raises:
             JobExecutionError: If a `cat` command fails.
         """
-        logging.debug("Enter _copy_files_from_user_to_server")
+        logger.debug("Enter _copy_files_from_user_to_server")
         if self.working_dir_user == self.working_dir:
             return
 
@@ -857,8 +860,8 @@ class FractalSlurmExecutor(SlurmExecutor):
             [job.slurm_file_prefix] + list(job.wftask_file_prefixes)
         )
 
-        logging.debug(f"[_copy_files_from_user_to_server] {prefixes=}")
-        logging.debug(
+        logger.debug(f"[_copy_files_from_user_to_server] {prefixes=}")
+        logger.debug(
             f"[_copy_files_from_user_to_server] {str(self.working_dir_user)=}"
         )
 
@@ -869,7 +872,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                 user=self.slurm_user,
                 startswith=prefix,
             )
-            logging.debug(
+            logger.debug(
                 "[_copy_files_from_user_to_server] "
                 f"{prefix=}, {len(files_to_copy)=}"
             )
@@ -898,13 +901,13 @@ class FractalSlurmExecutor(SlurmExecutor):
                         f"{res.returncode=}\n\n"
                         f"{res.stdout=}\n\n{res.stderr=}\n"
                     )
-                    logging.error(info)
+                    logger.error(info)
                     raise JobExecutionError(info)
                 # Write to dest_file_path (including empty files)
                 dest_file_path = str(self.working_dir / source_file_name)
                 with open(dest_file_path, "wb") as f:
                     f.write(res.stdout)
-        logging.debug("[_copy_files_from_user_to_server] End")
+        logger.debug("[_copy_files_from_user_to_server] End")
 
     def _start(
         self,
@@ -965,7 +968,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                 f"Submit command `{full_command}` failed. "
                 f"Original error:\n{str(e)}"
             )
-            logging.error(error_msg)
+            logger.error(error_msg)
             raise JobExecutionError(info=error_msg)
         try:
             jobid = int(output.stdout)
@@ -975,7 +978,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                 f"`{output.stdout=}` which cannot be cast to an integer "
                 f"SLURM-job ID. Original error:\n{str(e)}"
             )
-            logging.error(error_msg)
+            logger.error(error_msg)
             raise JobExecutionError(info=error_msg)
         jobid_str = str(jobid)
 
@@ -1006,7 +1009,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         if len(list_commands) < num_tasks_max_running:
             ntasks = len(list_commands)
             slurm_config.parallel_tasks_per_job = ntasks
-            logging.info(
+            logger.info(
                 f"{len(list_commands)=} is smaller than "
                 f"{num_tasks_max_running=}. Setting {ntasks=}."
             )
@@ -1023,7 +1026,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             ]
         )
         script_lines = slurm_config.sort_script_lines(script_lines)
-        logging.debug(script_lines)
+        logger.debug(script_lines)
 
         # Complete script preamble
         script_lines.append("\n")
