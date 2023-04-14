@@ -23,9 +23,9 @@ from typing import Optional
 
 from ... import __VERSION__
 from ...config import get_settings
+from ...logger import set_logger
 from ...syringe import Inject
 from ...utils import get_timestamp
-from ...utils import set_logger
 from ..db import DB
 from ..models import ApplyWorkflow
 from ..models import Dataset
@@ -161,7 +161,6 @@ async def submit_workflow(
     logger = set_logger(
         logger_name=logger_name,
         log_file_path=WORKFLOW_DIR / "workflow.log",
-        level=logging.INFO,
         formatter=logging.Formatter("%(asctime)s; %(levelname)s; %(message)s"),
     )
     logger.info(f"fractal_server.__VERSION__: {__VERSION__}")

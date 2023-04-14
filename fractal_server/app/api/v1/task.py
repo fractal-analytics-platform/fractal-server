@@ -1,6 +1,5 @@
 import asyncio
 import json
-import logging
 from copy import deepcopy  # noqa
 from pathlib import Path
 from shutil import copy as shell_copy
@@ -23,6 +22,8 @@ from ....common.schemas import TaskCreate
 from ....common.schemas import TaskRead
 from ....common.schemas import TaskUpdate
 from ....config import get_settings
+from ....logger import close_logger
+from ....logger import set_logger
 from ....syringe import Inject
 from ....tasks.collection import _TaskCollectPip
 from ....tasks.collection import create_package_dir_pip
@@ -33,8 +34,6 @@ from ....tasks.collection import get_collection_log
 from ....tasks.collection import get_collection_path
 from ....tasks.collection import get_log_path
 from ....tasks.collection import inspect_package
-from ....utils import close_logger
-from ....utils import set_logger
 from ...db import AsyncSession
 from ...db import DBSyncSession
 from ...db import get_db
@@ -64,7 +63,6 @@ async def _background_collect_pip(
     logger = set_logger(
         logger_name=logger_name,
         log_file_path=get_log_path(venv_path),
-        level=logging.DEBUG,
     )
 
     logger.info("Start background task collection")
