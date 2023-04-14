@@ -24,6 +24,7 @@ from pydantic.error_wrappers import ValidationError
 
 from ....config import get_settings
 from ....logger import set_logger
+from ....logger import wrap_with_timing_logs
 from ....syringe import Inject
 from ...models import WorkflowTask
 
@@ -421,6 +422,7 @@ def get_default_slurm_config():
     )
 
 
+@wrap_with_timing_logs
 def get_slurm_config(
     wftask: WorkflowTask,
     workflow_dir: Path,
