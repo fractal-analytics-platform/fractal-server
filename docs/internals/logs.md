@@ -8,8 +8,8 @@ more detailed view on `fractal-server` logging, see the [logger module
 documentation](../../reference/fractal_server/logger/).
 
 The [logger module](../../reference/fractal_server/logger/) exposes the
-functions to set/get/close a logger, and define where its records are sent to
-(e.g. the `fractal-server` console or a specific file).  The logging levels of
+functions to set/get/close a logger, and it defines where the records are sent to
+(e.g. the `fractal-server` console or a specific file). The logging levels of
 a logger created with
 [`set_logger`](../../reference/fractal_server/logger/#fractal_server.logger.set_logger)
 are defined as follows:
