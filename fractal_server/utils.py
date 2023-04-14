@@ -14,12 +14,13 @@ This module provides general purpose utilities that are not specific to any
 subsystem.
 """
 import asyncio
-import logging
 from datetime import datetime
 from datetime import timezone
 from pathlib import Path
 from shlex import split as shlex_split
 from typing import Optional
+
+from .logger import get_logger
 
 
 def get_timestamp() -> datetime:
@@ -58,7 +59,7 @@ async def execute_command(
     command_split = shlex_split(command)
     cmd, *args = command_split
 
-    logger = logging.getLogger(logger_name)
+    logger = get_logger(logger_name)
     proc = await asyncio.create_subprocess_exec(
         cmd,
         *args,
