@@ -159,7 +159,7 @@ async def submit_workflow(
     logger_name = f"WF{workflow_id}_job{job_id}"
     logger = set_logger(
         logger_name=logger_name,
-        log_file_path=str(WORKFLOW_DIR / "workflow.log"),
+        log_file_path=WORKFLOW_DIR / "workflow.log",
     )
     logger.info(f"fractal_server.__VERSION__: {__VERSION__}")
     logger.info(f"FRACTAL_RUNNER_BACKEND: {FRACTAL_RUNNER_BACKEND}")

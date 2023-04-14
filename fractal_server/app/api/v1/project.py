@@ -1,5 +1,4 @@
 import asyncio
-import logging
 from typing import Optional
 from typing import Union
 
@@ -14,6 +13,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
 from ....config import get_settings
+from ....logger import set_logger
 from ....syringe import Inject
 from ...db import AsyncSession
 from ...db import DBSyncSession
@@ -178,7 +178,8 @@ async def create_project(
         await db.refresh(db_project)
     except IntegrityError as e:
         await db.rollback()
-        logging.error(str(e))
+        logger = set_logger("create_project")
+        logger.error(str(e))
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=str(e),
