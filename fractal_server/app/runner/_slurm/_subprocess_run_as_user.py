@@ -21,10 +21,12 @@ from typing import Optional
 from typing import Sequence
 
 from ....logger import set_logger
+from ....logger import wrap_with_timing_logs
 
 logger = set_logger(__name__)
 
 
+@wrap_with_timing_logs
 def _run_command_as_user(
     *,
     cmd: str,
@@ -73,6 +75,7 @@ def _run_command_as_user(
     return res
 
 
+@wrap_with_timing_logs
 def _mkdir_as_user(*, folder: str, user: str) -> None:
     """
     Create a folder as a different user
@@ -92,6 +95,7 @@ def _mkdir_as_user(*, folder: str, user: str) -> None:
     _run_command_as_user(cmd=cmd, user=user, check=True)
 
 
+@wrap_with_timing_logs
 def _glob_as_user(
     *, folder: str, user: str, startswith: Optional[str] = None
 ) -> list[str]:
@@ -114,6 +118,7 @@ def _glob_as_user(
     return output
 
 
+@wrap_with_timing_logs
 def _path_exists_as_user(*, path: str, user: Optional[str] = None) -> bool:
     """
     Impersonate a user and check if `path` exists via `ls`
@@ -129,6 +134,7 @@ def _path_exists_as_user(*, path: str, user: Optional[str] = None) -> bool:
         return False
 
 
+@wrap_with_timing_logs
 def _multiple_paths_exist_as_user(
     *,
     paths: Sequence[str],
