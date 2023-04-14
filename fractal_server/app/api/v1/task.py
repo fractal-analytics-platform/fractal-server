@@ -61,8 +61,8 @@ async def _background_collect_pip(
     """
     logger_name = task_pkg.package.replace("/", "_")
     logger = set_logger(
-        logger_name=logger_name,
-        log_file_path=str(get_log_path(venv_path)),
+        logger_name=logger_name,  # FIXME
+        log_file_path=get_log_path(venv_path),
     )
 
     logger.info("Start background task collection")
@@ -175,7 +175,7 @@ async def collect_tasks_pip(
     of a package and the collection of tasks as advertised in the manifest.
     """
 
-    logger = set_logger(logger_name="fractal")
+    logger = set_logger(logger_name="POST /collect/pip")
     task_pkg = _TaskCollectPip(**task_collect.dict())
 
     with TemporaryDirectory() as tmpdir:
@@ -235,7 +235,6 @@ async def collect_tasks_pip(
     await db.commit()
     await db.refresh(state)
 
-    logger.info("starting background collection")
     background_tasks.add_task(
         _background_collect_pip,
         state=state,
@@ -243,12 +242,14 @@ async def collect_tasks_pip(
         task_pkg=task_pkg,
         db=db,
     )
-
-    logger.info("collection endpoint: returning state")
+    logger.info(
+        "Task-collection endpoint: start background collection "
+        "and return state"
+    )
     close_logger(logger)
     info = (
         "Collecting tasks in the background. "
-        "GET /task/collect/{id} to query collection status"
+        f"GET /task/collect/{state.id} to query collection status"
     )
     state.data["info"] = info
     response.status_code = status.HTTP_201_CREATED
@@ -265,7 +266,7 @@ async def check_collection_status(
     """
     Check status of background task collection
     """
-    logger = set_logger(logger_name="fractal")
+    logger = set_logger(logger_name=f"GET /collect/{state_id}")
     logger.info("Querying state")
     state = await db.get(State, state_id)
     if not state:

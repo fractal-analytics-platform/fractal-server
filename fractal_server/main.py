@@ -4,6 +4,7 @@
 # Original authors:
 # Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
 # Marco Franzon <marco.franzon@exact-lab.it>
+# Tommaso Comaprin <tommaso.comparin@exact-lab.it>
 #
 # This file is part of Fractal and was originally developed by eXact lab S.r.l.
 # <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
@@ -15,7 +16,6 @@
 This module sets up the FastAPI application that serves the Fractal Server.
 """
 import contextlib
-import logging
 from typing import Optional
 
 from fastapi import FastAPI
@@ -27,11 +27,14 @@ from .app.security import get_user_db
 from .app.security import get_user_manager
 from .common.schemas.user import UserCreate
 from .config import get_settings
+from .logger import set_logger
 from .syringe import Inject
 
 get_async_session_context = contextlib.asynccontextmanager(get_db)
 get_user_db_context = contextlib.asynccontextmanager(get_user_db)
 get_user_manager_context = contextlib.asynccontextmanager(get_user_manager)
+
+logger = set_logger(__name__)
 
 
 def collect_routers(app: FastAPI) -> None:
@@ -109,10 +112,10 @@ async def _create_user(
                     if slurm_user:
                         kwargs["slurm_user"] = slurm_user
                     user = await user_manager.create(UserCreate(**kwargs))
-                    logging.info(f"User {user.email} created")
+                    logger.info(f"User {user.email} created")
 
     except UserAlreadyExists:
-        logging.warning(f"User {email} already exists")
+        logger.warning(f"User {email} already exists")
 
 
 def start_application() -> FastAPI:

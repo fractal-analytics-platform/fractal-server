@@ -25,14 +25,6 @@ LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 LOG_FORMATTER = logging.Formatter(LOG_FORMAT)
 
 
-def close_logger(logger: logging.Logger) -> None:
-    """
-    Close all handlers of a logger
-    """
-    for handle in logger.handlers:
-        handle.close()
-
-
 def warn(message):
     """
     # FIXME: this is not used
@@ -52,9 +44,13 @@ def warn(message):
         raise RuntimeError(message)
 
 
+def get_logger(logger_name: str) -> logging.Logger:
+    return logging.getLogger(logger_name)
+
+
 def set_logger(
+    logger_name: str,
     *,
-    logger_name: Optional[str] = None,
     log_file_path: Optional[Union[str, Path]] = None,
 ) -> logging.Logger:
     """
@@ -104,6 +100,14 @@ def set_logger(
             if isinstance(handler, logging.FileHandler)
         ]
         if len(current_file_handlers) > 1:
-            logger.warning("Logger {logger_name} has multiple file handlers.")
+            logger.warning(f"Logger {logger_name} has multiple file handlers.")
 
     return logger
+
+
+def close_logger(logger: logging.Logger) -> None:
+    """
+    Close all handlers of a logger
+    """
+    for handle in logger.handlers:
+        handle.close()
