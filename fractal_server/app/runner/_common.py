@@ -578,7 +578,7 @@ def recursive_task_submission(
     # see below
     task_pars_depend = task_pars_depend_future.result()
 
-    logger.info(
+    logger.debug(
         f'SUBMIT {this_wftask.order}-th task (name="{this_wftask.task.name}")'
     )
     if this_wftask.is_parallel:
@@ -611,7 +611,7 @@ def recursive_task_submission(
         )
         # Wait for the future result (blocking)
         this_wftask_future.result()
-    logger.info(
+    logger.debug(
         f'END    {this_wftask.order}-th task (name="{this_wftask.task.name}")'
     )
 

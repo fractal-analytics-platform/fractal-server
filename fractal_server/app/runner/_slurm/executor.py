@@ -1009,7 +1009,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         if len(list_commands) < num_tasks_max_running:
             ntasks = len(list_commands)
             slurm_config.parallel_tasks_per_job = ntasks
-            logger.info(
+            logger.debug(
                 f"{len(list_commands)=} is smaller than "
                 f"{num_tasks_max_running=}. Setting {ntasks=}."
             )

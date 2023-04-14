@@ -157,21 +157,26 @@ async def submit_workflow(
 
     # Write logs
     logger_name = f"WF{workflow_id}_job{job_id}"
+    log_file_path = WORKFLOW_DIR / "workflow.log"
     logger = set_logger(
         logger_name=logger_name,
-        log_file_path=WORKFLOW_DIR / "workflow.log",
+        log_file_path=log_file_path,
     )
-    logger.info(f"fractal_server.__VERSION__: {__VERSION__}")
-    logger.info(f"FRACTAL_RUNNER_BACKEND: {FRACTAL_RUNNER_BACKEND}")
-    logger.info(f"slurm_user: {slurm_user}")
-    logger.info(f"worker_init: {worker_init}")
-    logger.info(f"input metadata: {input_dataset.meta}")
-    logger.info(f"input_paths: {input_paths}")
-    logger.info(f"output_path: {output_path}")
-    logger.info(f"job.id: {job.id}")
-    logger.info(f"job.working_dir: {str(WORKFLOW_DIR)}")
-    logger.info(f"job.workflow_dir_user: {str(WORKFLOW_DIR_USER)}")
-    logger.info(f'START workflow "{workflow.name}"')
+    logger.info(
+        f'Start execution of workflow "{workflow.name}"; '
+        f"more logs at {str(log_file_path)}"
+    )
+    logger.debug(f"fractal_server.__VERSION__: {__VERSION__}")
+    logger.debug(f"FRACTAL_RUNNER_BACKEND: {FRACTAL_RUNNER_BACKEND}")
+    logger.debug(f"slurm_user: {slurm_user}")
+    logger.debug(f"worker_init: {worker_init}")
+    logger.debug(f"input metadata: {input_dataset.meta}")
+    logger.debug(f"input_paths: {input_paths}")
+    logger.debug(f"output_path: {output_path}")
+    logger.debug(f"job.id: {job.id}")
+    logger.debug(f"job.working_dir: {str(WORKFLOW_DIR)}")
+    logger.debug(f"job.workflow_dir_user: {str(WORKFLOW_DIR_USER)}")
+    logger.debug(f'START workflow "{workflow.name}"')
 
     try:
         output_dataset.meta = await process_workflow(
@@ -186,8 +191,7 @@ async def submit_workflow(
             worker_init=worker_init,
         )
 
-        logger.info(f'END workflow "{workflow.name}"')
-        close_job_logger(logger)
+        logger.debug(f'END workflow "{workflow.name}"')
 
         db_sync.merge(output_dataset)
         job.status = JobStatusType.DONE
@@ -195,8 +199,8 @@ async def submit_workflow(
 
     except TaskExecutionError as e:
 
-        logger.info(f'FAILED workflow "{workflow.name}", TaskExecutionError.')
-        close_job_logger(logger)
+        logger.debug(f'FAILED workflow "{workflow.name}", TaskExecutionError.')
+        logger.info(f'Workflow "{workflow.name}" failed (TaskExecutionError).')
 
         job.status = JobStatusType.FAILED
 
@@ -211,8 +215,8 @@ async def submit_workflow(
 
     except JobExecutionError as e:
 
-        logger.info(f'FAILED workflow "{workflow.name}", JobExecutionError.')
-        close_job_logger(logger)
+        logger.debug(f'FAILED workflow "{workflow.name}", JobExecutionError.')
+        logger.info(f'Workflow "{workflow.name}" failed (JobExecutionError).')
 
         job.status = JobStatusType.FAILED
         error = e.assemble_error()
@@ -221,12 +225,13 @@ async def submit_workflow(
 
     except Exception as e:
 
-        logger.info(f'FAILED workflow "{workflow.name}", unknown error.')
-        close_job_logger(logger)
+        logger.debug(f'FAILED workflow "{workflow.name}", unknown error.')
+        logger.info(f'Workflow "{workflow.name}" failed (unkwnon error).')
 
         job.status = JobStatusType.FAILED
         job.log = f"UNKNOWN ERROR\nOriginal error: {str(e)}"
         db_sync.merge(job)
 
     finally:
+        close_job_logger(logger)
         db_sync.commit()

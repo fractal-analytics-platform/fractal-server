@@ -188,7 +188,7 @@ def heuristics(
         # Check number of jobs
         num_jobs = math.ceil(tot_tasks / tasks_per_job)
         if num_jobs > target_num_jobs:
-            logger.info(
+            logger.debug(
                 f"[heuristics] Requested {num_jobs=} "
                 f"but {target_num_jobs=}."
             )
