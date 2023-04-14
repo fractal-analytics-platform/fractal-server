@@ -13,6 +13,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
 from ....config import get_settings
+from ....logger import close_logger
 from ....logger import set_logger
 from ....syringe import Inject
 from ...db import AsyncSession
@@ -180,6 +181,7 @@ async def create_project(
         await db.rollback()
         logger = set_logger("create_project")
         logger.error(str(e))
+        close_logger(logger)
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=str(e),

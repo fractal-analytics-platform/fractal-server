@@ -61,17 +61,17 @@ async def _background_collect_pip(
     """
     logger_name = task_pkg.package.replace("/", "_")
     logger = set_logger(
-        logger_name=logger_name,  # FIXME
+        logger_name=logger_name,
         log_file_path=get_log_path(venv_path),
     )
 
-    logger.info("Start background task collection")
+    logger.debug("Start background task collection")
     data = TaskCollectStatus(**state.data)
     data.info = None
 
     try:
         # install
-        logger.info("Status: installing")
+        logger.debug("Task-collection status: installing")
         data.status = "installing"
 
         state.data = data.sanitised_dict()
@@ -84,7 +84,7 @@ async def _background_collect_pip(
         )
 
         # collect
-        logger.info("Status: collecting")
+        logger.debug("Task-collection status: collecting")
         data.status = "collecting"
         state.data = data.sanitised_dict()
         await db.merge(state)
@@ -92,7 +92,7 @@ async def _background_collect_pip(
         tasks = await _insert_tasks(task_list=task_list, db=db)
 
         # finalise
-        logger.info("Status: finalising")
+        logger.debug("Task-collection status: finalising")
         collection_path = get_collection_path(venv_path)
         data.task_list = tasks
         with collection_path.open("w") as f:
@@ -107,13 +107,13 @@ async def _background_collect_pip(
         await db.commit()
 
         # Write last logs to file
-        logger.info("Status: OK")
+        logger.debug("Task-collection status: OK")
         logger.info("Background task collection completed successfully")
         close_logger(logger)
 
     except Exception as e:
         # Write last logs to file
-        logger.info("Status: fail")
+        logger.debug("Task-collection status: fail")
         logger.info(f"Background collection failed. Original error: {e}")
         close_logger(logger)
 
@@ -175,7 +175,7 @@ async def collect_tasks_pip(
     of a package and the collection of tasks as advertised in the manifest.
     """
 
-    logger = set_logger(logger_name="POST /collect/pip")
+    logger = set_logger(logger_name="collect_tasks_pip")
     task_pkg = _TaskCollectPip(**task_collect.dict())
 
     with TemporaryDirectory() as tmpdir:
@@ -242,7 +242,7 @@ async def collect_tasks_pip(
         task_pkg=task_pkg,
         db=db,
     )
-    logger.info(
+    logger.debug(
         "Task-collection endpoint: start background collection "
         "and return state"
     )
@@ -266,8 +266,8 @@ async def check_collection_status(
     """
     Check status of background task collection
     """
-    logger = set_logger(logger_name=f"GET /collect/{state_id}")
-    logger.info("Querying state")
+    logger = set_logger(logger_name="check_collection_status")
+    logger.debug(f"Querying state for state.id={state_id}")
     state = await db.get(State, state_id)
     if not state:
         raise HTTPException(
