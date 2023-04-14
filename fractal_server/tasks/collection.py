@@ -263,7 +263,7 @@ async def create_package_environment_pip(
     """
     logger = get_logger(logger_name)
     try:
-        logger.info("Creating venv and installing package")
+        logger.debug("Creating venv and installing package")
 
         python_bin, package_root = await _create_venv_install_package(
             path=venv_path,
