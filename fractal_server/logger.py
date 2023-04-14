@@ -10,7 +10,7 @@
 # Institute for Biomedical Research and Pelkmans Lab from the University of
 # Zurich.
 """
-This module provides logging utilities.
+This module provides logging utilities
 """
 import logging
 from pathlib import Path
@@ -23,25 +23,6 @@ from .syringe import Inject
 
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 LOG_FORMATTER = logging.Formatter(LOG_FORMAT)
-
-
-def warn(message):
-    """
-    # FIXME: this is not used
-
-    Custom warning that becomes an error in staging and production deployments
-
-    This works towards assuring that warnings do not make their way to staing
-    and production.
-
-    Raises:
-        RuntimeError: if the deployment type is not `testing` or `development`.
-    """
-    settings = Inject(get_settings)
-    if settings.DEPLOYMENT_TYPE in ["testing", "development"]:
-        logging.warning(message, RuntimeWarning)
-    else:
-        raise RuntimeError(message)
 
 
 def get_logger(logger_name: str) -> logging.Logger:
