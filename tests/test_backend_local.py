@@ -56,7 +56,7 @@ def test_call_single_task(tmp_path):
     logger_name = "test_logger_call_single_task"
     job_logger = set_logger(
         logger_name=logger_name,
-        log_file_path=tmp_path / "job.log",
+        log_file_path=str(tmp_path / "job.log"),
     )
     task_pars = TaskParameters(
         input_paths=[str(tmp_path)],
@@ -95,7 +95,7 @@ def test_recursive_task_submission_step0(tmp_path):
     logger_name = "job_logger_recursive_task_submission_step0"
     job_logger = set_logger(
         logger_name=logger_name,
-        log_file_path=tmp_path / "job.log",
+        log_file_path=str(tmp_path / "job.log"),
     )
     task_pars = TaskParameters(
         input_paths=[str(tmp_path)],
@@ -139,7 +139,7 @@ def test_recursive_parallel_task_submission_step0(tmp_path):
     logger_name = "job_logger_recursive_parallel_task_submission_step0"
     job_logger = set_logger(
         logger_name=logger_name,
-        log_file_path=tmp_path / "job.log",
+        log_file_path=str(tmp_path / "job.log"),
     )
     output_path = tmp_path / "output/"
     task_pars = TaskParameters(
@@ -209,7 +209,7 @@ def test_recursive_task_submission_inductive_step(tmp_path):
     logger_name = "job_logger_recursive_task_submission_inductive_step"
     job_logger = set_logger(
         logger_name=logger_name,
-        log_file_path=tmp_path / "job.log",
+        log_file_path=str(tmp_path / "job.log"),
     )
     task_pars = TaskParameters(
         input_paths=[str(tmp_path)],

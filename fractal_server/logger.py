@@ -15,22 +15,28 @@ This module provides logging utilities.
 import logging
 from pathlib import Path
 from typing import Optional
+from typing import Union
 
 from .config import get_settings
 from .syringe import Inject
 
 
+LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+LOG_FORMATTER = logging.Formatter(LOG_FORMAT)
+
+
 def close_logger(logger: logging.Logger) -> None:
     """
-    Close all FileHandles of a logger, if any.
+    Close all handlers of a logger
     """
     for handle in logger.handlers:
-        if isinstance(handle, logging.FileHandler):
-            handle.close()
+        handle.close()
 
 
 def warn(message):
     """
+    # FIXME: this is not used
+
     Custom warning that becomes an error in staging and production deployments
 
     This works towards assuring that warnings do not make their way to staing
@@ -49,11 +55,12 @@ def warn(message):
 def set_logger(
     *,
     logger_name: Optional[str] = None,
-    log_file_path: Optional[Path] = None,
-    formatter: Optional[logging.Formatter] = None,
+    log_file_path: Optional[Union[str, Path]] = None,
 ) -> logging.Logger:
     """
-    Set up and return a logger
+    Set up and return a fractal-server logger
+
+    FIXME docstring
 
     Args:
         logger_name:
@@ -72,26 +79,31 @@ def set_logger(
     logger.propagate = False
     logger.setLevel(logging.DEBUG)
 
-    ch = logging.StreamHandler()
-    ch.setLevel(Inject(get_settings).FRACTAL_LOGGING_LEVEL)
-    formatter = logging.Formatter(
-        "STREAMHANDLER %(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )  # noqa
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
+    current_stream_handlers = [
+        handler
+        for handler in logger.handlers
+        if isinstance(handler, logging.StreamHandler)
+    ]
 
-    if log_file_path:
-        fh = logging.FileHandler(log_file_path, mode="a")
-        formatter = logging.Formatter(
-            "FILEHANDLER %(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        )  # noqa
-        fh.setLevel(logging.DEBUG)
-        fh.setFormatter(formatter)
-        logger.addHandler(fh)
+    if not current_stream_handlers:
+        stream_handler = logging.StreamHandler()
+        settings = Inject(get_settings)
+        stream_handler.setLevel(settings.FRACTAL_LOGGING_LEVEL)
+        stream_handler.setFormatter(LOG_FORMATTER)
+        logger.addHandler(stream_handler)
 
-    from devtools import debug
-
-    debug(logger)
-    debug(vars(logger))
+    if log_file_path is not None:
+        file_handler = logging.FileHandler(log_file_path, mode="a")
+        file_handler.setLevel(logging.DEBUG)
+        stream_handler.setFormatter(LOG_FORMATTER)
+        file_handler.setFormatter(LOG_FORMATTER)
+        logger.addHandler(file_handler)
+        current_file_handlers = [
+            handler
+            for handler in logger.handlers
+            if isinstance(handler, logging.FileHandler)
+        ]
+        if len(current_file_handlers) > 1:
+            logger.warning("Logger {logger_name} has multiple file handlers.")
 
     return logger

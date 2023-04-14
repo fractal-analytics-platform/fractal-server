@@ -16,7 +16,6 @@ This module is the single entry point to the runner backend subsystem. Other
 subystems should only import this module and not its submodules or the
 individual backends.
 """
-import logging
 import os
 from pathlib import Path
 from typing import Optional
@@ -160,8 +159,7 @@ async def submit_workflow(
     logger_name = f"WF{workflow_id}_job{job_id}"
     logger = set_logger(
         logger_name=logger_name,
-        log_file_path=WORKFLOW_DIR / "workflow.log",
-        formatter=logging.Formatter("%(asctime)s; %(levelname)s; %(message)s"),
+        log_file_path=str(WORKFLOW_DIR / "workflow.log"),
     )
     logger.info(f"fractal_server.__VERSION__: {__VERSION__}")
     logger.info(f"FRACTAL_RUNNER_BACKEND: {FRACTAL_RUNNER_BACKEND}")

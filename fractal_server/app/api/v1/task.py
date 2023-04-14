@@ -62,7 +62,7 @@ async def _background_collect_pip(
     logger_name = task_pkg.package.replace("/", "_")
     logger = set_logger(
         logger_name=logger_name,
-        log_file_path=get_log_path(venv_path),
+        log_file_path=str(get_log_path(venv_path)),
     )
 
     logger.info("Start background task collection")
