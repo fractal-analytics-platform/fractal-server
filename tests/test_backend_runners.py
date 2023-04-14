@@ -113,7 +113,7 @@ async def test_runner(
     logger_name = f"job_logger_{backend}"
     logger = set_logger(
         logger_name=logger_name,
-        log_file_path=workflow_dir / "job.log",
+        log_file_path=str(workflow_dir / "job.log"),
     )
     kwargs = dict(
         workflow=wf,

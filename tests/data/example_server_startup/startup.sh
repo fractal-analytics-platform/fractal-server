@@ -21,7 +21,7 @@ rm test.db
 rm -r FRACTAL_TASKS_DIR
 
 # Create an empty db
-fractalctl set-db
+poetry run fractalctl set-db
 
 # Start the server
-fractalctl start --port 8000
+poetry run fractalctl start --port 8000
