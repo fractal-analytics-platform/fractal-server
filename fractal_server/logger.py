@@ -95,7 +95,7 @@ def set_logger(
     if log_file_path is not None:
         file_handler = logging.FileHandler(log_file_path, mode="a")
         file_handler.setLevel(logging.DEBUG)
-        stream_handler.setFormatter(LOG_FORMATTER)
+        file_handler.setFormatter(LOG_FORMATTER)
         file_handler.setFormatter(LOG_FORMATTER)
         logger.addHandler(file_handler)
         current_file_handlers = [
