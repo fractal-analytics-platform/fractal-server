@@ -18,7 +18,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from ...utils import close_logger as close_job_logger  # noqa F401
+from ...logger import close_logger as close_job_logger  # noqa F401
 from ..models import Dataset
 from ..models import Project
 from ..models.workflow import Workflow

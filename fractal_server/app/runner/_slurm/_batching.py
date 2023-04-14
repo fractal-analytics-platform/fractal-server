@@ -11,9 +11,12 @@
 """
 Submodule to determine the number of total/parallel tasks per SLURM job.
 """
-import logging
 import math
 from typing import Optional
+
+from ....logger import set_logger
+
+logger = set_logger(__name__)
 
 
 class SlurmHeuristicsError(ValueError):
@@ -125,28 +128,28 @@ def heuristics(
             "tasks_per_job and parallel_tasks_per_job must "
             "be both set or both unset"
         )
-        logging.error(msg)
+        logger.error(msg)
         raise SlurmHeuristicsError(msg)
     if cpus_per_task > max_cpus_per_job:
         msg = (
             f"[heuristics] Requested {cpus_per_task=} "
             f"but {max_cpus_per_job=}."
         )
-        logging.error(msg)
+        logger.error(msg)
         raise SlurmHeuristicsError(msg)
     if mem_per_task > max_mem_per_job:
         msg = (
             f"[heuristics] Requested {mem_per_task=} "
             f"but {max_mem_per_job=}."
         )
-        logging.error(msg)
+        logger.error(msg)
         raise SlurmHeuristicsError(msg)
 
     # Branch 1: validate/update given parameters
     if tasks_per_job and parallel_tasks_per_job:
         # Reduce parallel_tasks_per_job if it exceeds tasks_per_job
         if parallel_tasks_per_job > tasks_per_job:
-            logging.warning(
+            logger.warning(
                 "[heuristics] Set parallel_tasks_per_job="
                 f"tasks_per_job={tasks_per_job}"
             )
@@ -155,7 +158,7 @@ def heuristics(
         # Check requested cpus_per_job
         cpus_per_job = parallel_tasks_per_job * cpus_per_task
         if cpus_per_job > target_cpus_per_job:
-            logging.warning(
+            logger.warning(
                 f"[heuristics] Requested {cpus_per_job=} "
                 f"but {target_cpus_per_job=}."
             )
@@ -164,13 +167,13 @@ def heuristics(
                 f"[heuristics] Requested {cpus_per_job=} "
                 f"but {max_cpus_per_job=}."
             )
-            logging.error(msg)
+            logger.error(msg)
             raise SlurmHeuristicsError(msg)
 
         # Check requested mem_per_job
         mem_per_job = parallel_tasks_per_job * mem_per_task
         if mem_per_job > target_mem_per_job:
-            logging.warning(
+            logger.warning(
                 f"[heuristics] Requested {mem_per_job=} "
                 f"but {target_mem_per_job=}."
             )
@@ -179,21 +182,21 @@ def heuristics(
                 f"[heuristics] Requested {mem_per_job=} "
                 f"but {max_mem_per_job=}."
             )
-            logging.error(msg)
+            logger.error(msg)
             raise SlurmHeuristicsError(msg)
 
         # Check number of jobs
         num_jobs = math.ceil(tot_tasks / tasks_per_job)
         if num_jobs > target_num_jobs:
-            logging.info(
+            logger.debug(
                 f"[heuristics] Requested {num_jobs=} "
                 f"but {target_num_jobs=}."
             )
         if num_jobs > max_num_jobs:
             msg = f"[heuristics] Requested {num_jobs=} but {max_num_jobs=}."
-            logging.error(msg)
+            logger.error(msg)
             raise SlurmHeuristicsError(msg)
-        logging.debug("[heuristics] Return from branch 1")
+        logger.debug("[heuristics] Return from branch 1")
         return (tasks_per_job, parallel_tasks_per_job)
 
     # 2: Target-resources-based heuristics, without in-job queues
@@ -206,7 +209,7 @@ def heuristics(
     tasks_per_job = parallel_tasks_per_job
     num_jobs = math.ceil(tot_tasks / tasks_per_job)
     if num_jobs <= target_num_jobs:
-        logging.debug("[heuristics] Return from branch 2")
+        logger.debug("[heuristics] Return from branch 2")
         return (tasks_per_job, parallel_tasks_per_job)
 
     # Branch 3: Max-resources-based heuristics, without in-job queues
@@ -219,7 +222,7 @@ def heuristics(
     tasks_per_job = parallel_tasks_per_job
     num_jobs = math.ceil(tot_tasks / tasks_per_job)
     if num_jobs <= max_num_jobs:
-        logging.debug("[heuristics] Return from branch 3")
+        logger.debug("[heuristics] Return from branch 3")
         return (tasks_per_job, parallel_tasks_per_job)
 
     # Branch 4: Max-resources-based heuristics, with in-job queues
@@ -230,5 +233,5 @@ def heuristics(
         max_mem_per_job=max_mem_per_job,
     )
     tasks_per_job = math.ceil(tot_tasks / max_num_jobs)
-    logging.debug("[heuristics] Return from branch 4")
+    logger.debug("[heuristics] Return from branch 4")
     return (tasks_per_job, parallel_tasks_per_job)

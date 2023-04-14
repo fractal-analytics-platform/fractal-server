@@ -4,7 +4,6 @@ https://testdriven.io/blog/fastapi-sqlmodel/#async-sqlmodel
 """
 from typing import AsyncGenerator
 from typing import Generator
-from warnings import warn
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +12,12 @@ from sqlalchemy.orm import Session as DBSyncSession
 from sqlalchemy.orm import sessionmaker
 
 from ...config import get_settings
+from ...logger import set_logger
 from ...syringe import Inject
+
+
+print(__name__)
+logger = set_logger(__name__)
 
 
 class DB:
@@ -42,12 +46,10 @@ class DB:
         settings = Inject(get_settings)
 
         if settings.DB_ENGINE == "sqlite":
-            warn(
-                "SQLite is partially supported but discouraged "
-                "in production environment."
-                "SQLite offers partial support for ForeignKey "
-                "constraints. As such, consistency of the database "
-                "cannot be guaranteed."
+            logger.warning(
+                "SQLite is supported but discouraged in production. Given its "
+                "partial support for ForeignKey constraints, consistency of "
+                "the database cannot be guaranteed."
             )
 
         cls._engine_async = create_async_engine(

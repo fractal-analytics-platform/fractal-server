@@ -238,11 +238,12 @@ class Settings(BaseSettings):
     up, run and tear down jobs are placed in subdirs of this directory.
     """
 
-    FRACTAL_LOGGING_LEVEL: int = 30
+    FRACTAL_LOGGING_LEVEL: int = logging.INFO
     """
-    Logging verbosity for main Fractal logger (`30` means `WARNING` - see
-    [logging
-    levels](https://docs.python.org/3/library/logging.html#logging-levels)).
+    Logging-level threshold for logging
+
+    Only logs of with this level (or higher) will appear in the console logs;
+    see details [here](../internals/logs/).
     """
 
     FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW: Optional[int] = None

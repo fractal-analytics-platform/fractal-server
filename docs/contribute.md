@@ -168,5 +168,8 @@ To build the documentation
 
 1. Setup a python environment and install the requirements from
    [`docs/doc-requirements.txt`](https://github.com/fractal-analytics-platform/fractal-server/blob/main/docs/doc-requirements.txt).
-2. Run `poetry run mkdocs serve --config-file mkdocs.yml` and browse documentation at
-   `http://127.0.0.1:8000`.
+2. Run
+```
+poetry run mkdocs serve --config-file mkdocs.yml
+```
+and browse the documentation at `http://127.0.0.1:8000`.
