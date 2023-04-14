@@ -240,10 +240,10 @@ class Settings(BaseSettings):
 
     FRACTAL_LOGGING_LEVEL: int = logging.INFO
     """
-    Logging-level threshold for logging (see [logging
-    levels](https://docs.python.org/3/library/logging.html#logging-levels);
-    setting e.g. `FRACTAL_LOGGING_LEVEL=20` (the default value) will only show
-    logs with level `INFO` or higher.
+    Logging-level threshold for logging
+
+    Only logs of with this level (or higher) will appear in the console logs;
+    see details [here](../internals/logs/).
     """
 
     FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW: Optional[int] = None
