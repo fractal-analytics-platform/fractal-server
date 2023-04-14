@@ -6,7 +6,6 @@ runner backends and that should not be exposed outside of the runner
 subsystem.
 """
 import json
-import logging
 import subprocess  # nosec
 from concurrent.futures import Executor
 from concurrent.futures import Future
@@ -19,6 +18,7 @@ from typing import Generator
 from typing import Optional
 
 from ...config import get_settings
+from ...logger import get_logger
 from ...syringe import Inject
 from ..models import WorkflowTask
 from .common import JobExecutionError
@@ -561,7 +561,7 @@ def recursive_task_submission(
         pseudo_future.set_result(task_pars)
         return pseudo_future
 
-    logger = logging.getLogger(logger_name)
+    logger = get_logger(logger_name)
 
     # step n => step n+1
     task_pars_depend_future = recursive_task_submission(
