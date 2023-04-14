@@ -20,7 +20,7 @@ from devtools import debug
 from fractal_server.app.models import Workflow
 from fractal_server.app.runner import _backends
 from fractal_server.app.runner.common import close_job_logger
-from fractal_server.utils import set_logger
+from fractal_server.logger import set_logger
 
 
 def _extract_job_id_from_filename(filenames, pre, post) -> int:
@@ -113,8 +113,7 @@ async def test_runner(
     logger_name = f"job_logger_{backend}"
     logger = set_logger(
         logger_name=logger_name,
-        log_file_path=workflow_dir / "job.log",
-        level=logging.DEBUG,
+        log_file_path=str(workflow_dir / "job.log"),
     )
     kwargs = dict(
         workflow=wf,

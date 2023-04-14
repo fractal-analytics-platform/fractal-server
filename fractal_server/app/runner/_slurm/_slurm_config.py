@@ -13,7 +13,6 @@
 Submodule to handle the SLURM configuration for a WorkflowTask
 """
 import json
-import logging
 from pathlib import Path
 from typing import Optional
 from typing import Union
@@ -24,8 +23,11 @@ from pydantic import Field
 from pydantic.error_wrappers import ValidationError
 
 from ....config import get_settings
+from ....logger import set_logger
 from ....syringe import Inject
 from ...models import WorkflowTask
+
+logger = set_logger(__name__)
 
 
 class SlurmConfigError(ValueError):
@@ -146,7 +148,7 @@ def load_slurm_config_file(
         config_path = settings.FRACTAL_SLURM_CONFIG_FILE
 
     # Load file
-    logging.debug(f"[get_slurm_config] Now loading {config_path=}")
+    logger.debug(f"[get_slurm_config] Now loading {config_path=}")
     try:
         with config_path.open("r") as f:
             slurm_env = json.load(f)
@@ -157,8 +159,8 @@ def load_slurm_config_file(
         )
 
     # Validate file content
-    logging.debug(f"[load_slurm_config_file] Now validating {config_path=}")
-    logging.debug(f"[load_slurm_config_file] {slurm_env=}")
+    logger.debug(f"[load_slurm_config_file] Now validating {config_path=}")
+    logger.debug(f"[load_slurm_config_file] {slurm_env=}")
     try:
         obj = SlurmConfigFile(**slurm_env)
     except ValidationError as e:
@@ -313,7 +315,7 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
             if value is not None:
                 # Handle the `time` parameter
                 if key == "time" and self.parallel_tasks_per_job > 1:
-                    logging.warning(
+                    logger.warning(
                         "Ignore `#SBATCH --time=...` line (given: "
                         f"{self.time=}) for parallel_tasks_per_job>1"
                         f" (given: {self.parallel_tasks_per_job}), "
@@ -372,33 +374,33 @@ def _parse_mem_value(raw_mem: Union[str, int]) -> int:
 
     # Handle string argument
     if not raw_mem[0].isdigit():  # fail e.g. for raw_mem="M100"
-        logging.error(error_msg)
+        logger.error(error_msg)
         raise SlurmConfigError(error_msg)
     if raw_mem.isdigit():
         mem_MB = int(raw_mem)
     elif raw_mem.endswith("M"):
         stripped_raw_mem = raw_mem.strip("M")
         if not stripped_raw_mem.isdigit():
-            logging.error(error_msg)
+            logger.error(error_msg)
             raise SlurmConfigError(error_msg)
         mem_MB = int(stripped_raw_mem)
     elif raw_mem.endswith("G"):
         stripped_raw_mem = raw_mem.strip("G")
         if not stripped_raw_mem.isdigit():
-            logging.error(error_msg)
+            logger.error(error_msg)
             raise SlurmConfigError(error_msg)
         mem_MB = int(stripped_raw_mem) * 10**3
     elif raw_mem.endswith("T"):
         stripped_raw_mem = raw_mem.strip("T")
         if not stripped_raw_mem.isdigit():
-            logging.error(error_msg)
+            logger.error(error_msg)
             raise SlurmConfigError(error_msg)
         mem_MB = int(stripped_raw_mem) * 10**6
     else:
-        logging.error(error_msg)
+        logger.error(error_msg)
         raise SlurmConfigError(error_msg)
 
-    logging.debug(f"{info}, return {mem_MB}")
+    logger.debug(f"{info}, return {mem_MB}")
     return mem_MB
 
 
@@ -456,7 +458,7 @@ def get_slurm_config(
             The SlurmConfig object
     """
 
-    logging.debug(
+    logger.debug(
         "[get_slurm_config] WorkflowTask/Task meta attribute: "
         f"{wftask.overridden_meta=}"
     )
@@ -472,7 +474,7 @@ def get_slurm_config(
     # Incorporate slurm_env.batching_config
     for key, value in slurm_env.batching_config.dict().items():
         slurm_dict[key] = value
-    logging.debug(
+    logger.debug(
         "[get_slurm_config] Fractal SLURM configuration file: "
         f"{slurm_env.dict()=}"
     )
@@ -484,7 +486,7 @@ def get_slurm_config(
     # 2. This block of definitions has lower priority than whatever comes next
     #    (i.e. from WorkflowTask.overridden_meta).
     needs_gpu = wftask.overridden_meta.get("needs_gpu", False)
-    logging.debug(f"[get_slurm_config] {needs_gpu=}")
+    logger.debug(f"[get_slurm_config] {needs_gpu=}")
     if needs_gpu:
         for key, value in slurm_env.gpu_slurm_config.dict(
             exclude_unset=True, exclude={"mem"}
@@ -516,7 +518,7 @@ def get_slurm_config(
     extra_lines = wftask.overridden_meta.get("extra_lines", [])
     extra_lines = slurm_dict.get("extra_lines", []) + extra_lines
     if len(set(extra_lines)) != len(extra_lines):
-        logging.info(
+        logger.debug(
             "[get_slurm_config] Removing repeated elements "
             f"from {extra_lines=}."
         )
@@ -533,7 +535,7 @@ def get_slurm_config(
     slurm_dict["parallel_tasks_per_job"] = parallel_tasks_per_job
 
     # Put everything together
-    logging.debug(
+    logger.debug(
         "[get_slurm_config] Now create a SlurmConfig object based "
         f"on {slurm_dict=}"
     )

@@ -15,11 +15,14 @@ This module provides a set of tools similar to `subprocess.run`, `glob.glob` or
 `os.path.exists`, but extended so that they can be executed on behalf of
 another user. Note that this requires appropriate sudo permissions.
 """
-import logging
 import shlex
 import subprocess  # nosec
 from typing import Optional
 from typing import Sequence
+
+from ....logger import set_logger
+
+logger = set_logger(__name__)
 
 
 def _run_command_as_user(
@@ -45,7 +48,7 @@ def _run_command_as_user(
     Returns:
         res: The return value from `subprocess.run`.
     """
-    logging.debug(f'[_run_command_as_user] {user=}, cmd="{cmd}"')
+    logger.debug(f'[_run_command_as_user] {user=}, cmd="{cmd}"')
     if user:
         new_cmd = f"sudo --non-interactive -u {user} {cmd}"
     else:
@@ -55,9 +58,9 @@ def _run_command_as_user(
         capture_output=True,
         encoding=encoding,
     )
-    logging.debug(f"[_run_command_as_user] {res.returncode=}")
-    logging.debug(f"[_run_command_as_user] {res.stdout=}")
-    logging.debug(f"[_run_command_as_user] {res.stderr=}")
+    logger.debug(f"[_run_command_as_user] {res.returncode=}")
+    logger.debug(f"[_run_command_as_user] {res.stdout=}")
+    logger.debug(f"[_run_command_as_user] {res.stderr=}")
 
     if check and not res.returncode == 0:
         raise RuntimeError(

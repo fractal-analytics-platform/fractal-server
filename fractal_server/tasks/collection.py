@@ -16,7 +16,6 @@ Tasks can be private or public. Private tasks are installed under
 .fractal`.
 """
 import json
-import logging
 import shutil
 import sys
 from io import IOBase
@@ -32,6 +31,7 @@ from ..common.schemas import TaskCollectPip
 from ..common.schemas import TaskCollectStatus
 from ..common.schemas import TaskCreate
 from ..config import get_settings
+from ..logger import get_logger
 from ..syringe import Inject
 from ..utils import execute_command
 
@@ -176,7 +176,6 @@ def create_package_dir_pip(
     task_pkg: _TaskCollectPip,
     user: Optional[str] = None,
     create: bool = True,
-    logger_name: Optional[str] = None,
     **_,  # FIXME remove this catch-all argument
 ) -> Path:
     settings = Inject(get_settings)
@@ -261,7 +260,7 @@ async def create_package_environment_pip(
     """
     Create environment and install package
     """
-    logger = logging.getLogger(logger_name)
+    logger = get_logger(logger_name)
     try:
         logger.debug("Creating venv and installing package")
 
@@ -271,16 +270,16 @@ async def create_package_environment_pip(
             logger_name=logger_name,
         )
 
-        logger.debug("loading manifest")
+        logger.debug("Loading task manifest")
 
         task_list = load_manifest(
             package_root=package_root,
             python_bin=python_bin,
             source=task_pkg.source,
         )
-        logger.debug("manifest loaded")
+        logger.debug("Loaded task manifest")
     except Exception as e:
-        logger.debug("manifest loading failed")
+        logger.error("Task manifest loading failed")
         raise e
     return task_list
 

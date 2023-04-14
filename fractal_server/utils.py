@@ -14,25 +14,13 @@ This module provides general purpose utilities that are not specific to any
 subsystem.
 """
 import asyncio
-import logging
 from datetime import datetime
 from datetime import timezone
 from pathlib import Path
 from shlex import split as shlex_split
 from typing import Optional
-from warnings import warn as _warn
 
-from .config import get_settings
-from .syringe import Inject
-
-
-def close_logger(logger: logging.Logger) -> None:
-    """
-    Close all FileHandles of a logger, if any.
-    """
-    for handle in logger.handlers:
-        if isinstance(handle, logging.FileHandler):
-            handle.close()
+from .logger import get_logger
 
 
 def get_timestamp() -> datetime:
@@ -40,59 +28,6 @@ def get_timestamp() -> datetime:
     Get timezone aware timestamp.
     """
     return datetime.now(tz=timezone.utc)
-
-
-def warn(message):
-    """
-    Custom warning that becomes an error in staging and production deployments
-
-    This works towards assuring that warnings do not make their way to staing
-    and production.
-
-    Raises:
-        RuntimeError: if the deployment type is not `testing` or `development`.
-    """
-    settings = Inject(get_settings)
-    if settings.DEPLOYMENT_TYPE in ["testing", "development"]:
-        _warn(message, RuntimeWarning)
-    else:
-        raise RuntimeError(message)
-
-
-def set_logger(
-    *,
-    logger_name: Optional[str] = None,
-    log_file_path: Optional[Path] = None,
-    level: Optional[int] = None,
-    formatter: Optional[logging.Formatter] = None,
-) -> logging.Logger:
-    """
-    Set up and return a logger
-
-    Args:
-        logger_name:
-            The identifier of the logger.
-        log_file_path:
-            Path to the log file.
-        level:
-            Logging level of this logger.
-        formatter:
-            Custom formatter.
-
-    Returns:
-        logger:
-            The logger, as configured by the arguments.
-    """
-    if not level:
-        settings = Inject(get_settings)
-        level = settings.FRACTAL_LOGGING_LEVEL
-    logger = logging.getLogger(logger_name)
-    logger.setLevel(level)
-    if log_file_path:
-        file_handler = logging.FileHandler(log_file_path, mode="a")
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
-    return logger
 
 
 async def execute_command(
@@ -124,7 +59,7 @@ async def execute_command(
     command_split = shlex_split(command)
     cmd, *args = command_split
 
-    logger = set_logger(logger_name=logger_name)
+    logger = get_logger(logger_name)
     proc = await asyncio.create_subprocess_exec(
         cmd,
         *args,

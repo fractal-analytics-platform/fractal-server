@@ -1,6 +1,5 @@
 import asyncio
 import json
-import logging
 from copy import deepcopy  # noqa
 from pathlib import Path
 from shutil import copy as shell_copy
@@ -23,6 +22,8 @@ from ....common.schemas import TaskCreate
 from ....common.schemas import TaskRead
 from ....common.schemas import TaskUpdate
 from ....config import get_settings
+from ....logger import close_logger
+from ....logger import set_logger
 from ....syringe import Inject
 from ....tasks.collection import _TaskCollectPip
 from ....tasks.collection import create_package_dir_pip
@@ -33,8 +34,6 @@ from ....tasks.collection import get_collection_log
 from ....tasks.collection import get_collection_path
 from ....tasks.collection import get_log_path
 from ....tasks.collection import inspect_package
-from ....utils import close_logger
-from ....utils import set_logger
 from ...db import AsyncSession
 from ...db import DBSyncSession
 from ...db import get_db
@@ -64,17 +63,15 @@ async def _background_collect_pip(
     logger = set_logger(
         logger_name=logger_name,
         log_file_path=get_log_path(venv_path),
-        level=logging.DEBUG,
     )
 
-    logger = set_logger(logger_name=logger_name)
-    logger.info("Start background task collection")
+    logger.debug("Start background task collection")
     data = TaskCollectStatus(**state.data)
     data.info = None
 
     try:
         # install
-        logger.info("Status: installing")
+        logger.debug("Task-collection status: installing")
         data.status = "installing"
 
         state.data = data.sanitised_dict()
@@ -87,7 +84,7 @@ async def _background_collect_pip(
         )
 
         # collect
-        logger.info("Status: collecting")
+        logger.debug("Task-collection status: collecting")
         data.status = "collecting"
         state.data = data.sanitised_dict()
         await db.merge(state)
@@ -95,7 +92,7 @@ async def _background_collect_pip(
         tasks = await _insert_tasks(task_list=task_list, db=db)
 
         # finalise
-        logger.info("Status: finalising")
+        logger.debug("Task-collection status: finalising")
         collection_path = get_collection_path(venv_path)
         data.task_list = tasks
         with collection_path.open("w") as f:
@@ -103,19 +100,20 @@ async def _background_collect_pip(
 
         # Update DB
         data.status = "OK"
+        data.log = get_collection_log(venv_path)
         state.data = data.sanitised_dict()
         db.add(state)
         await db.merge(state)
         await db.commit()
 
         # Write last logs to file
-        logger.info("Status: OK")
+        logger.debug("Task-collection status: OK")
         logger.info("Background task collection completed successfully")
         close_logger(logger)
 
     except Exception as e:
         # Write last logs to file
-        logger.info("Status: fail")
+        logger.debug("Task-collection status: fail")
         logger.info(f"Background collection failed. Original error: {e}")
         close_logger(logger)
 
@@ -177,7 +175,7 @@ async def collect_tasks_pip(
     of a package and the collection of tasks as advertised in the manifest.
     """
 
-    logger = set_logger(logger_name="fractal")
+    logger = set_logger(logger_name="collect_tasks_pip")
     task_pkg = _TaskCollectPip(**task_collect.dict())
 
     with TemporaryDirectory() as tmpdir:
@@ -237,7 +235,6 @@ async def collect_tasks_pip(
     await db.commit()
     await db.refresh(state)
 
-    logger.info("starting background collection")
     background_tasks.add_task(
         _background_collect_pip,
         state=state,
@@ -245,11 +242,14 @@ async def collect_tasks_pip(
         task_pkg=task_pkg,
         db=db,
     )
-
-    logger.info("collection endpoint: returning state")
+    logger.debug(
+        "Task-collection endpoint: start background collection "
+        "and return state"
+    )
+    close_logger(logger)
     info = (
         "Collecting tasks in the background. "
-        "GET /task/collect/{id} to query collection status"
+        f"GET /task/collect/{state.id} to query collection status"
     )
     state.data["info"] = info
     response.status_code = status.HTTP_201_CREATED
@@ -266,8 +266,8 @@ async def check_collection_status(
     """
     Check status of background task collection
     """
-    logger = set_logger(logger_name="fractal")
-    logger.info("querying state")
+    logger = set_logger(logger_name="check_collection_status")
+    logger.debug(f"Querying state for state.id={state_id}")
     state = await db.get(State, state_id)
     if not state:
         raise HTTPException(
@@ -281,6 +281,7 @@ async def check_collection_status(
     if verbose and not data.log:
         data.log = get_collection_log(data.venv_path)
         state.data = data.sanitised_dict()
+    close_logger(logger)
     return state
 
 
