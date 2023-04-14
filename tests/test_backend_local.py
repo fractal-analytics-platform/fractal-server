@@ -13,7 +13,6 @@ Zurich.
 """
 import datetime
 import json
-import logging
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
@@ -29,7 +28,7 @@ from fractal_server.app.runner._common import call_single_task
 from fractal_server.app.runner._common import recursive_task_submission
 from fractal_server.app.runner.common import close_job_logger
 from fractal_server.app.runner.common import TaskParameters
-from fractal_server.utils import set_logger
+from fractal_server.logger import set_logger
 
 
 async def test_command_wrapper(tmp_path):
@@ -58,7 +57,6 @@ def test_call_single_task(tmp_path):
     job_logger = set_logger(
         logger_name=logger_name,
         log_file_path=tmp_path / "job.log",
-        level=logging.DEBUG,
     )
     task_pars = TaskParameters(
         input_paths=[str(tmp_path)],
@@ -98,7 +96,6 @@ def test_recursive_task_submission_step0(tmp_path):
     job_logger = set_logger(
         logger_name=logger_name,
         log_file_path=tmp_path / "job.log",
-        level=logging.DEBUG,
     )
     task_pars = TaskParameters(
         input_paths=[str(tmp_path)],
@@ -143,7 +140,6 @@ def test_recursive_parallel_task_submission_step0(tmp_path):
     job_logger = set_logger(
         logger_name=logger_name,
         log_file_path=tmp_path / "job.log",
-        level=logging.DEBUG,
     )
     output_path = tmp_path / "output/"
     task_pars = TaskParameters(
@@ -214,7 +210,6 @@ def test_recursive_task_submission_inductive_step(tmp_path):
     job_logger = set_logger(
         logger_name=logger_name,
         log_file_path=tmp_path / "job.log",
-        level=logging.DEBUG,
     )
     task_pars = TaskParameters(
         input_paths=[str(tmp_path)],
