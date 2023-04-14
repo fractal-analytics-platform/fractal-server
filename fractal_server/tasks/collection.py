@@ -176,7 +176,6 @@ def create_package_dir_pip(
     task_pkg: _TaskCollectPip,
     user: Optional[str] = None,
     create: bool = True,
-    logger_name: Optional[str] = None,  # FIXME remove this
     **_,  # FIXME remove this catch-all argument
 ) -> Path:
     settings = Inject(get_settings)
