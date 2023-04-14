@@ -12,8 +12,11 @@
 """
 This module provides logging utilities
 """
+import functools
 import logging
+import time
 from pathlib import Path
+from typing import Callable
 from typing import Optional
 from typing import Union
 
@@ -125,3 +128,26 @@ def close_logger(logger: logging.Logger) -> None:
     """
     for handle in logger.handlers:
         handle.close()
+
+
+def wrap_with_timing_logs(func: Callable):
+    """
+    Wrap a function with start/end logs, including the elapsed time
+    """
+
+    @functools.wraps(func)
+    def wrapped(*args, **kwargs):
+        name = func.__name__
+        logger = set_logger(name)
+        logger.debug(f'START execution of "{name}"')
+
+        t_start = time.perf_counter()
+        res = func(*args, **kwargs)
+        elapsed = time.perf_counter() - t_start
+
+        logger.debug(
+            f'END   execution of "{name}"; ' f"elapsed: {elapsed:.3f} seconds"
+        )
+        return res
+
+    return wrapped

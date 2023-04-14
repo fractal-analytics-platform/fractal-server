@@ -30,6 +30,7 @@ from cfut.util import random_string
 
 from ....config import get_settings
 from ....logger import set_logger
+from ....logger import wrap_with_timing_logs
 from ....syringe import Inject
 from .._common import get_task_file_paths
 from .._common import TaskFiles
@@ -476,6 +477,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         return result_iterator()
 
+    @wrap_with_timing_logs
     def _submit_job(
         self,
         fun: Callable[..., Any],
@@ -619,6 +621,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             self.jobs[jobid] = (fut, job)
         return fut
 
+    @wrap_with_timing_logs
     def _prepare_JobExecutionError(
         self, jobid: str, info: str
     ) -> JobExecutionError:
@@ -658,6 +661,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         )
         return job_exc
 
+    @wrap_with_timing_logs
     def _completion(self, jobid: str) -> None:
         """
         Callback function to be executed whenever a job finishes.
@@ -828,6 +832,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                     " FractalSlurmExecutor._completion."
                 )
 
+    @wrap_with_timing_logs
     def _copy_files_from_user_to_server(
         self,
         job: SlurmJob,
@@ -909,6 +914,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                     f.write(res.stdout)
         logger.debug("[_copy_files_from_user_to_server] End")
 
+    @wrap_with_timing_logs
     def _start(
         self,
         job: SlurmJob,
@@ -992,6 +998,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         return jobid_str, job
 
+    @wrap_with_timing_logs
     def _prepare_sbatch_script(
         self,
         *,
@@ -1046,6 +1053,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         script = "\n".join(script_lines)
         return script
 
+    @wrap_with_timing_logs
     def get_default_task_files(self) -> TaskFiles:
         """
         This will be called when self.submit or self.map are called from
