@@ -34,6 +34,33 @@ cpus_per_task=3
 mem=10G
 ```
 
+### Exporing environment variables
+
+In a typical use case, the tasks are Python scripts that are executed by a
+certain user A, but with a Python interpreter that belongs to the user B who
+runs `fractal-server. For this reason, it may be needed to explicitly set some
+environment variables needed by external libraries, so that they are writeable
+by user A.
+
+The `fractal-server` admin can set some defaults for variables that must be
+exported. By including a block like
+```JSON
+{
+  ...
+  "user_local_exports": {
+    "var1": "path1",
+    "var2": "path2.json"
+  }
+```
+to the [SLURM configuration
+file](../../../reference/fractal_server/app/runner/_slurm/_slurm_config/#fractal_server.app.runner._slurm._slurm_config.SlurmConfigFile), the SLURM submission script will include the lines
+```bash
+...
+export var1=/this/is/the/cache/dir/of/user/A/path1
+export var2=/this/is/the/cache/dir/of/user/A/path2.json
+...
+```
+
 ## SLURM batching
 
 The SLURM backend in `fractal-server` may combine multiple tasks in the same
