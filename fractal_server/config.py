@@ -333,6 +333,12 @@ class Settings(BaseSettings):
         StrictSettings(**self.dict())
 
         # Check that some variables are allowed
+        if self.FRACTAL_RUNNER_BACKEND not in ["local", "slurm"]:
+            raise FractalConfigurationError(
+                f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
+                "is not allowed"
+            )
+
         if self.FRACTAL_RUNNER_BACKEND == "slurm":
             info = f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
 
