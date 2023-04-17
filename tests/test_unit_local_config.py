@@ -1,11 +1,15 @@
 import json
 
+import pytest
 from devtools import debug
 
 from .fixtures_tasks import MockTask
 from .fixtures_tasks import MockWorkflowTask
 from fractal_server.app.runner._local._local_config import (
     get_local_backend_config,
+)
+from fractal_server.app.runner._local._local_config import (
+    LocalBackendConfigError,
 )
 
 
@@ -65,3 +69,19 @@ def test_get_local_backend_config(tmp_path):
         config_path=config_file,
     )
     assert local_backend_config.parallel_tasks_per_job == WFTASK_VALUE
+
+
+def test_get_local_backend_config_fail(tmp_path):
+
+    # Global configuration
+    config = dict(parallel_tasks_per_job=1, invalid_key=0)
+    config_file = tmp_path / "config.json"
+    debug(config_file)
+    with config_file.open("w") as f:
+        json.dump(config, f)
+
+    # Fail
+    mytask = MockTask(name="T", command="cmd", meta={})
+    mywftask = MockWorkflowTask(task=mytask, meta={})
+    with pytest.raises(LocalBackendConfigError):
+        _ = get_local_backend_config(wftask=mywftask, config_path=config_file)
