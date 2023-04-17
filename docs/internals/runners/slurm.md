@@ -37,10 +37,10 @@ mem=10G
 ### Exporing environment variables
 
 In a typical use case, the tasks are Python scripts that are executed by a
-certain user A, but with a Python interpreter that belongs to the user B who
-runs `fractal-server. For this reason, it may be needed to explicitly set some
-environment variables needed by external libraries, so that they are writeable
-by user A.
+certain user A, but with a Python interpreter that belongs to the user B (that
+is, the `fractal-server` admin). For this reason, it may be needed to
+explicitly set some environment variables needed by external libraries, so that
+they are writable by user A.
 
 The `fractal-server` admin can set some defaults for variables that must be
 exported. By including a block like
