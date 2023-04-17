@@ -534,6 +534,7 @@ def recursive_task_submission(
         workflow_dir_user=workflow_dir_user,
         submit_setup_call=submit_setup_call,
         logger_name=logger_name,
+        submit_setup_call=submit_setup_call,
     )
     # Wait for dependencies to be complete (NOTE: this is not necessary if we
     # explicitly wait for the result of executor.submit(call_single_task, ...),
