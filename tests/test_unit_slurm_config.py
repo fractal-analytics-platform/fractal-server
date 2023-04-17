@@ -188,3 +188,38 @@ def test_parse_mem_value():
         _parse_mem_value("10-M")
     with pytest.raises(SlurmConfigError):
         _parse_mem_value("2.5G")
+
+
+def test_to_sbatch_preamble_with_user_local_exports():
+    slurm_config = get_default_slurm_config()
+    slurm_config.parallel_tasks_per_job = 1
+    slurm_config.tasks_per_job = 1
+    slurm_config.user_local_exports = dict(
+        CELLPOSE_LOCAL_MODELS_PATH="CELLPOSE_LOCAL_MODELS_PATH",
+        NAPARI_CONFIG="napari_config.json",
+    )
+    debug(slurm_config)
+
+    expected_line_1 = (
+        "export CELLPOSE_LOCAL_MODELS_PATH="
+        "/some/path/CELLPOSE_LOCAL_MODELS_PATH"
+    )
+    expected_line_2 = "export NAPARI_CONFIG=/some/path/napari_config.json"
+
+    # Test that user_cache_dir is required
+    with pytest.raises(ValueError):
+        preamble = slurm_config.to_sbatch_preamble()
+
+    # Test preamble (without trailing slash in user_cache_dir)
+    CACHE = "/some/path"
+    preamble = slurm_config.to_sbatch_preamble(user_cache_dir=CACHE)
+    debug(preamble)
+    assert expected_line_1 in preamble
+    assert expected_line_2 in preamble
+
+    # Test preamble (without trailing slash in user_cache_dir)
+    CACHE = "/some/path/"
+    preamble = slurm_config.to_sbatch_preamble(user_cache_dir=CACHE)
+    debug(preamble)
+    assert expected_line_1 in preamble
+    assert expected_line_2 in preamble
