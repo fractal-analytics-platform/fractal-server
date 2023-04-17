@@ -25,6 +25,7 @@ from fractal_server.app.runner._common import _call_command_wrapper
 from fractal_server.app.runner._common import call_parallel_task
 from fractal_server.app.runner._common import call_single_task
 from fractal_server.app.runner._common import recursive_task_submission
+from fractal_server.app.runner._local._local_config import LocalBackendConfig
 from fractal_server.app.runner._local.executor import FractalThreadPoolExecutor
 from fractal_server.app.runner.common import close_job_logger
 from fractal_server.app.runner.common import TaskParameters
@@ -249,17 +250,18 @@ def test_call_parallel_task_max_tasks(
     GIVEN A single task, parallelized over two components
     WHEN This task is executed on a FractalThreadPoolExecutor via
         call_parallel_task
-    THEN The FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW env variable is used
-         correctly
+    THEN The `parallel_tasks_per_job` variable is used correctly
 
     FIXME THIS IS NOT UP TO DATE
     """
 
     # Reset environment variable
-    debug(max_tasks)
-    override_settings_factory(
-        FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW=max_tasks
-    )
+    def mock_submit_setup_call(*args, **kwargs):
+        return dict(
+            local_backend_config=LocalBackendConfig(
+                parallel_tasks_per_job=max_tasks
+            )
+        )
 
     # Prepare task
     SLEEP_TIME = 1
@@ -289,6 +291,7 @@ def test_call_parallel_task_max_tasks(
             wftask=wftask,
             task_pars_depend=task_pars,
             workflow_dir=tmp_path,
+            submit_setup_call=mock_submit_setup_call,
         )
     debug(tmp_path)
     debug(future_metadata)
