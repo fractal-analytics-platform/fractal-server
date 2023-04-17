@@ -1,8 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 from typing import Optional
 
-from devtools import debug
-
 
 class FractalThreadPoolExecutor(ThreadPoolExecutor):
     """
@@ -27,9 +25,6 @@ class FractalThreadPoolExecutor(ThreadPoolExecutor):
             fn: A callable that will take as many arguments as there are
                 passed iterables.
         """
-
-        parallel_tasks_per_job = 1
-        debug(parallel_tasks_per_job)
 
         iterable_lengths = [len(it) for it in iterables]
         if not len(set(iterable_lengths)) == 1:
