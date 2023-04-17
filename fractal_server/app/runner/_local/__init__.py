@@ -1,12 +1,12 @@
 """
 Local Bakend
 
-This backend runs Fractal workflows using python
-[ThreadPoolExecutor](https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor)
-to run tasks in several threads. Incidentally, it also represents the reference
-implementation for a backend.
+This backend runs Fractal workflows using `FractalThreadPoolExecutor` (a custom
+version of Python
+[ThreadPoolExecutor](https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor))
+to run tasks in several threads.
+Incidentally, it also represents the reference implementation for a backend.
 """
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 from typing import Optional
@@ -16,6 +16,7 @@ from .._common import recursive_task_submission
 from ..common import async_wrap
 from ..common import TaskParameters
 from ._submit_setup import _local_submit_setup
+from .executor import FractalThreadPoolExecutor
 
 
 def _process_workflow(
@@ -36,7 +37,7 @@ def _process_workflow(
     for the call signature.
     """
 
-    with ThreadPoolExecutor() as executor:
+    with FractalThreadPoolExecutor() as executor:
         output_task_pars_fut = recursive_task_submission(
             executor=executor,
             task_list=workflow.task_list,
