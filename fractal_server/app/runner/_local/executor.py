@@ -1,6 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from typing import Optional
 
+from ._local_config import get_default_local_backend_config
 from ._local_config import LocalBackendConfig
 
 
@@ -40,6 +41,9 @@ class FractalThreadPoolExecutor(ThreadPoolExecutor):
         if not len(set(iterable_lengths)) == 1:
             raise ValueError("Iterables have different lengths.")
         n_elements = iterable_lengths[0]
+
+        if local_backend_config is None:
+            local_backend_config = get_default_local_backend_config()
 
         parallel_tasks_per_job = local_backend_config.parallel_tasks_per_job
 
