@@ -13,6 +13,7 @@ Zurich.
 import pytest
 from devtools import debug
 
+from fractal_server.app.runner._local._local_config import LocalBackendConfig
 from fractal_server.app.runner._local.executor import FractalThreadPoolExecutor
 
 
@@ -35,6 +36,9 @@ def test_executor_submit_with_exception():
 
 @pytest.mark.parametrize("parallel_tasks_per_job", [None, 1, 2, 3, 4, 8, 16])
 def test_executor_map(parallel_tasks_per_job: int):
+    local_backend_config = LocalBackendConfig(
+        parallel_tasks_per_job=parallel_tasks_per_job
+    )
 
     NUM = 7
 
@@ -48,7 +52,7 @@ def test_executor_map(parallel_tasks_per_job: int):
         result_generator = executor.map(
             fun_x,
             inputs,
-            parallel_tasks_per_job=parallel_tasks_per_job,
+            local_backend_config=local_backend_config,
         )
         results = list(result_generator)
         assert results == [fun_x(x) for x in inputs]
@@ -65,7 +69,7 @@ def test_executor_map(parallel_tasks_per_job: int):
             fun_xy,
             inputs_x,
             inputs_y,
-            parallel_tasks_per_job=parallel_tasks_per_job,
+            local_backend_config=local_backend_config,
         )
         results = list(result_generator)
         assert results == [fun_xy(x, y) for x, y in zip(inputs_x, inputs_y)]
@@ -79,10 +83,14 @@ def test_executor_map_with_exception(parallel_tasks_per_job):
         else:
             return n
 
+    local_backend_config = LocalBackendConfig(
+        parallel_tasks_per_job=parallel_tasks_per_job
+    )
+
     with pytest.raises(ValueError):
         with FractalThreadPoolExecutor() as executor:
             _ = executor.map(
                 _raise,
                 range(10),
-                parallel_tasks_per_job=parallel_tasks_per_job,
+                local_backend_config=local_backend_config,
             )
