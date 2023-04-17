@@ -83,24 +83,27 @@ def get_local_backend_config(
     key = "parallel_tasks_per_job"
     default = None
 
-    if key in wftask.meta.keys():
+    if wftask.meta and key in wftask.meta.keys():
         parallel_tasks_per_job = wftask.meta[key]
-    elif key in wftask.task.meta.keys():
+    elif wftask.task.meta and key in wftask.task.meta.keys():
         parallel_tasks_per_job = wftask.task.meta[key]
     else:
         if not config_path:
             settings = Inject(get_settings)
             config_path = settings.FRACTAL_RUNNER_LOCAL_CONFIG_FILE
-        with config_path.open("r") as f:
-            env = json.load(f)
-        try:
-            _ = LocalBackendConfig(**env)
-        except ValidationError as e:
-            raise LocalBackendConfigError(
-                f"Error while loading {config_path=}. "
-                f"Original error:\n{str(e)}"
-            )
+        if config_path is None:
+            parallel_tasks_per_job = default
+        else:
+            with config_path.open("r") as f:
+                env = json.load(f)
+            try:
+                _ = LocalBackendConfig(**env)
+            except ValidationError as e:
+                raise LocalBackendConfigError(
+                    f"Error while loading {config_path=}. "
+                    f"Original error:\n{str(e)}"
+                )
 
-        parallel_tasks_per_job = env.get(key, default)
+            parallel_tasks_per_job = env.get(key, default)
 
     return LocalBackendConfig(parallel_tasks_per_job=parallel_tasks_per_job)
