@@ -333,24 +333,6 @@ class Settings(BaseSettings):
         StrictSettings(**self.dict())
 
         # Check that some variables are allowed
-        if isinstance(self.FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW, int):
-            if self.FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW < 1:
-                raise FractalConfigurationError(
-                    f"{self.FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW=} "
-                    "not allowed"
-                )
-
-        if (
-            self.FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW
-            and self.FRACTAL_RUNNER_BACKEND != "local"
-        ):
-            logging.warning(
-                "FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW is set to "
-                f"{self.FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW}, but "
-                f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND} is "
-                "the local backend."
-            )
-
         if self.FRACTAL_RUNNER_BACKEND == "slurm":
             info = f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
 
