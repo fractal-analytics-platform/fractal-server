@@ -27,7 +27,24 @@ def _local_submit_setup(
     task_pars: Optional[TaskParameters] = None,
 ) -> dict[str, object]:
     """
-    FIXME
+    Collect WorfklowTask-specific configuration parameters from different
+    sources, and inject them for execution.
+
+    Arguments:
+        wftask:
+            WorkflowTask for which the configuration is to be assembled
+        task_pars:
+            Not used in this function.
+        workflow_dir:
+            Not used in this function.
+        workflow_dir_user:
+            Not used in this function.
+
+    Returns:
+        submit_setup_dict:
+            A dictionary that will be passed on to
+            `FractalThreadPoolExecutor.submit` and
+            `FractalThreadPoolExecutor.map`, so as to set extra options.
     """
 
     local_backend_config = get_local_backend_config(wftask=wftask)
