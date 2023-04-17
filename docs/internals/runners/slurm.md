@@ -51,6 +51,7 @@ exported. By including a block like
     "var1": "path1",
     "var2": "path2.json"
   }
+}
 ```
 to the [SLURM configuration
 file](../../../reference/fractal_server/app/runner/_slurm/_slurm_config/#fractal_server.app.runner._slurm._slurm_config.SlurmConfigFile), the SLURM submission script will include the lines
