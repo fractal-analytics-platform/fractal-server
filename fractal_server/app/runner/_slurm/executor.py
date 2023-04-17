@@ -212,8 +212,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             path=str(working_dir_user), user=self.slurm_user
         ):
             logger.info(f"Missing folder {working_dir_user=}")
-        if user_cache_dir:
-            self.user_cache_dir = user_cache_dir
+        self.user_cache_dir = user_cache_dir
 
         self.working_dir_user = working_dir_user
         self.map_jobid_to_slurm_files = {}
