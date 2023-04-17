@@ -1,12 +1,24 @@
+# Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
+# University of Zurich
+#
+# Original authors:
+# Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
+# Tommaso Comparin <tommaso.comparin@exact-lab.it>
+# Marco Franzon <marco.franzon@exact-lab.it>
+#
+# This file is part of Fractal and was originally developed by eXact lab S.r.l.
+# <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
+# Institute for Biomedical Research and Pelkmans Lab from the University of
+# Zurich.
 """
 Local Bakend
 
-This backend runs Fractal workflows using python
-[ThreadPoolExecutor](https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor)
-to run tasks in several threads. Incidentally, it also represents the reference
-implementation for a backend.
+This backend runs Fractal workflows using `FractalThreadPoolExecutor` (a custom
+version of Python
+[ThreadPoolExecutor](https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor))
+to run tasks in several threads.
+Incidentally, it also represents the reference implementation for a backend.
 """
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 from typing import Optional
@@ -15,6 +27,8 @@ from ...models import Workflow
 from .._common import recursive_task_submission
 from ..common import async_wrap
 from ..common import TaskParameters
+from ._submit_setup import _local_submit_setup
+from .executor import FractalThreadPoolExecutor
 
 
 def _process_workflow(
@@ -29,13 +43,13 @@ def _process_workflow(
     """
     Internal processing routine
 
-    Schedules the workflow using a ThreadPoolExecutor.
+    Schedules the workflow using a `FractalThreadPoolExecutor`.
 
     Cf. [process_workflow][fractal_server.app.runner._local.process_workflow]
     for the call signature.
     """
 
-    with ThreadPoolExecutor() as executor:
+    with FractalThreadPoolExecutor() as executor:
         output_task_pars_fut = recursive_task_submission(
             executor=executor,
             task_list=workflow.task_list,
@@ -47,6 +61,7 @@ def _process_workflow(
             workflow_dir=workflow_dir,
             workflow_dir_user=workflow_dir,
             logger_name=logger_name,
+            submit_setup_call=_local_submit_setup,
         )
     output_task_pars = output_task_pars_fut.result()
     output_dataset_metadata = output_task_pars.metadata
