@@ -1,17 +1,27 @@
 from concurrent.futures import ThreadPoolExecutor
 from typing import Optional
 
+from ._local_config import LocalBackendConfig
+
 
 class FractalThreadPoolExecutor(ThreadPoolExecutor):
     """
     FIXME
     """
 
+    def submit(
+        self,
+        *args,
+        local_backend_config: Optional[LocalBackendConfig] = None,
+        **kwargs,
+    ):
+        return super().submit(*args, **kwargs)
+
     def map(
         self,
         fn,
         *iterables,
-        parallel_tasks_per_job: Optional[int] = None,
+        local_backend_config: Optional[LocalBackendConfig] = None,
     ):
         """
         FIXME: docstring
@@ -28,8 +38,10 @@ class FractalThreadPoolExecutor(ThreadPoolExecutor):
 
         iterable_lengths = [len(it) for it in iterables]
         if not len(set(iterable_lengths)) == 1:
-            raise ValueError("Iterables have different lenghts.")
+            raise ValueError("Iterables have different lengths.")
         n_elements = iterable_lengths[0]
+
+        parallel_tasks_per_job = local_backend_config.parallel_tasks_per_job
 
         if parallel_tasks_per_job is None:
             parallel_tasks_per_job = n_elements
