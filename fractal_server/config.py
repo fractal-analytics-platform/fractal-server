@@ -256,11 +256,6 @@ class Settings(BaseSettings):
     Path of JSON file with configuration for the SLURM backend.
     """
 
-    FRACTAL_RUNNER_DEFAULT_EXECUTOR: str = "cpu-low"
-    """
-    Used by some runner backends to configure the parameters to run jobs with.
-    """
-
     FRACTAL_SLURM_WORKER_PYTHON: Optional[str] = None
     """
     Path to Python interpreter that will run the jobs on the SLURM nodes. If

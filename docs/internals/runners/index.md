@@ -4,9 +4,8 @@ Runner backends are responsible for scheduling and applying (running) tasks on
 your data. Fractal currently supports two backends:
 
 * [local](local.md):
-    This is the reference backend implementation. It is mostly useful for
-    testing purposes, as it runs tasks locally on the same host where the
-    server is installed.
+    This is the reference backend implementation, which runs tasks locally on
+    the same host where the server is installed.
 * [SLURM](slurm.md):
     Run tasks by scheduling them on a SLURM cluster.
 
