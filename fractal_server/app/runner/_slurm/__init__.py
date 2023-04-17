@@ -38,6 +38,7 @@ def _process_workflow(
     workflow_dir: Path,
     workflow_dir_user: Path,
     slurm_user: Optional[str] = None,
+    user_cache_dir: str,
     worker_init: Optional[Union[str, list[str]]] = None,
 ) -> dict[str, Any]:
     """
@@ -96,6 +97,7 @@ async def process_workflow(
     logger_name: str,
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
+    user_cache_dir: Optional[str] = None,
     slurm_user: Optional[str] = None,
     worker_init: Optional[str] = None,
 ) -> dict[str, Any]:
@@ -113,6 +115,7 @@ async def process_workflow(
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
         slurm_user=slurm_user,
+        user_cache_dir=user_cache_dir,
         worker_init=worker_init,
     )
     return output_dataset_metadata

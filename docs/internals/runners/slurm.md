@@ -34,6 +34,53 @@ cpus_per_task=3
 mem=10G
 ```
 
+### Exporting environment variables
+
+The `fractal-server` admin may need to set some global variables that need to
+be included in all SLURM submission scripts; this can be achieved via the
+`extra_lines` field in the SLURM configuration file, for instance as in
+```JSON
+{
+  "default_slurm_config": {
+    "partition": "main",
+    "extra_lines": [
+      "export SOMEVARIABLE=123",
+      "export ANOTHERVARIABLE=ABC"
+    ]
+  }
+}
+```
+
+There exists another use case where the value of a variable depends on the user
+who runs a certain task. A relevant example is that user A (who will run the
+task via SLURM) needs to define the cache-directory paths for some libraries
+they use (and those must be paths where user A can write).  This use case is
+also supported in the specs of `fractal-server` [SLURM configuration
+file](../../../reference/fractal_server/app/runner/_slurm/_slurm_config/#fractal_server.app.runner._slurm._slurm_config.SlurmConfigFile):
+If this file includes a block like
+```JSON
+{
+  ...
+  "user_local_exports": {
+    "LIBRARY_1_CACHE_DIR": "somewhere/library_1",
+    "LIBRARY_2_FILE": "somewhere/else/library_2.json"
+  }
+}
+```
+then the SLURM submission script will include the lines
+```bash
+...
+export LIBRARY_1_CACHE_DIR=/my/cache/somewhere/library_1
+export LIBRARY_2_FILE=/my/cache/somewhere/else/library_2.json
+...
+```
+Note that all paths in the values of `user_local_exports` are interpreted as
+relative to a base directory which is user-specific (for instance `/my/cache/`,
+in the example above), and which is defined in the `User.cache_dir` attribute.
+Also note that in this case `fractal-server` only compiles the configuration
+options into lines of the SLURM submission script, without performing any check
+on the validity of the given paths.
+
 ## SLURM batching
 
 The SLURM backend in `fractal-server` may combine multiple tasks in the same

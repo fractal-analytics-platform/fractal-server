@@ -4,6 +4,7 @@
 
 * Drop `project.project_dir` and replace it with `user.cache_dir` (\#601).
 * Update SLURM backend (\#582, \#612, \#614); this includes (1) combining several tasks in a single SLURM job, and (2) offering more granular sources for SLURM configuration options.
+* Expose local user exports in SLURM configuration file (\#625).
 * Review logging configuration (\#619, \#623).
 * Update to fastapi `0.95` (\#587).
 * Minor improvements in dataset-edit endpoint (\#593) and tests (\#589).
