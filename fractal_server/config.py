@@ -246,20 +246,6 @@ class Settings(BaseSettings):
     see details [here](../internals/logs/).
     """
 
-    FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW: Optional[int] = None
-    """
-    Maximum number of components that a parallel task may process
-    simultaneously, for the [local backend](../internals/runners/local/).  If
-    `None`, no limit is set.
-
-    Intended use case: Reduce memory requirements of a workflow by capping the
-    number of tasks running in parallel.
-
-    Note: this limit concerns a single task in a single workflow execution, but
-    it does **not** limit the global (i.e. across workflow executions) number
-    of components processed simultaneously.
-    """
-
     FRACTAL_SLURM_CONFIG_FILE: Optional[Path]
     """
     Path of JSON file with configuration for the SLURM backend.
