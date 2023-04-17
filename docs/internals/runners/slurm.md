@@ -34,33 +34,52 @@ cpus_per_task=3
 mem=10G
 ```
 
-### Exporing environment variables
+### Exporting environment variables
 
-In a typical use case, the tasks are Python scripts that are executed by a
-certain user A, but with a Python interpreter that belongs to the user B (that
-is, the `fractal-server` admin). For this reason, it may be needed to
-explicitly set some environment variables needed by external libraries, so that
-they are writable by user A.
+The `fractal-server` admin may need to set some global variables that need to
+be included in all SLURM submission scripts; this can be achieved via the
+`extra_lines` field in the SLURM configuration file, for instance as in
+```JSON
+{
+  "default_slurm_config": {
+    "partition": "main",
+    "extra_lines": [
+      "export SOMEVARIABLE=123",
+      "export ANOTHERVARIABLE=ABC"
+    ]
+  }
+}
+```
 
-The `fractal-server` admin can set some defaults for variables that must be
-exported. By including a block like
+There exists another use case where the value of a variable depends on the user
+who runs a certain task. A relevant example is that user A (who will run the
+task via SLURM) needs to define the cache-directory paths for some libraries
+they use (and those must be paths where user A can write).  This use case is
+also supported in the specs of `fractal-server` [SLURM configuration
+file](../../../reference/fractal_server/app/runner/_slurm/_slurm_config/#fractal_server.app.runner._slurm._slurm_config.SlurmConfigFile):
+If this file includes a block like
 ```JSON
 {
   ...
   "user_local_exports": {
-    "var1": "path1",
-    "var2": "path2.json"
+    "LIBRARY_1_CACHE_DIR": "somewhere/library_1",
+    "LIBRARY_2_FILE": "somewhere/else/library_2.json"
   }
 }
 ```
-to the [SLURM configuration
-file](../../../reference/fractal_server/app/runner/_slurm/_slurm_config/#fractal_server.app.runner._slurm._slurm_config.SlurmConfigFile), the SLURM submission script will include the lines
+then the SLURM submission script will include the lines
 ```bash
 ...
-export var1=/this/is/the/cache/dir/of/user/A/path1
-export var2=/this/is/the/cache/dir/of/user/A/path2.json
+export LIBRARY_1_CACHE_DIR=/my/cache/somewhere/library_1
+export LIBRARY_2_FILE=/my/cache/somewhere/else/library_2.json
 ...
 ```
+Note that all paths in the values of `user_local_exports` are interpreted as
+relative to a base directory which is user-specific (for instance `/my/cache/`,
+in the example above), and which is defined in the `User.cache_dir` attribute.
+Also note that in this case `fractal-server` only compiles the configuration
+options into lines of the SLURM submission script, without performing any check
+on the validity of the given paths.
 
 ## SLURM batching
 
