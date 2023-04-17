@@ -194,6 +194,11 @@ class FractalSlurmExecutor(SlurmExecutor):
         Init method for FractalSlurmExecutor
         """
 
+        if not slurm_user:
+            raise RuntimeError(
+                "Missing attribute FractalSlurmExecutor.slurm_user"
+            )
+
         super().__init__(*args, **kwargs)
 
         self.keep_pickle_files = keep_pickle_files
