@@ -94,3 +94,17 @@ def test_executor_map_with_exception(parallel_tasks_per_job):
                 range(10),
                 local_backend_config=local_backend_config,
             )
+
+
+def test_executor_map_failure():
+    """
+    Iterables of different length -> ValueError
+    """
+
+    with pytest.raises(ValueError):
+        with FractalThreadPoolExecutor() as executor:
+            executor.map(
+                lambda x, y: 42,
+                [0, 1],
+                [2, 3, 4],
+            )
