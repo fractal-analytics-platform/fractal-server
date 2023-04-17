@@ -113,6 +113,10 @@ class SlurmConfigFile(BaseModel, extra=Extra.forbid):
           "max_mem_per_job": 500,
           "target_num_jobs": 2,
           "max_num_jobs": 4
+      },
+      "user_local_exports": {
+          "CELLPOSE_LOCAL_MODELS_PATH": "CELLPOSE_LOCAL_MODELS_PATH",
+          "NAPARI_CONFIG": "napari_config.json"
       }
     }
     ```
@@ -126,11 +130,16 @@ class SlurmConfigFile(BaseModel, extra=Extra.forbid):
             Default configuration for all GPU tasks.
         batching_config:
             Configuration of the batching strategy.
+        user_local_exports:
+            Key-value pairs to be included as `export`-ed variables in SLURM
+            submission script, after prepending values with the user's cache
+            directory.
     """
 
     default_slurm_config: _SlurmConfigSet
     gpu_slurm_config: Optional[_SlurmConfigSet]
     batching_config: _BatchingConfigSet
+    user_local_exports: Optional[dict[str, str]]
 
 
 def load_slurm_config_file(
@@ -222,6 +231,10 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
                          in each SLURM job.
         target_num_jobs: Optimal number of SLURM jobs for a given WorkflowTask.
         max_num_jobs: Maximum number of SLURM jobs for a given WorkflowTask.
+        user_local_exports:
+            Key-value pairs to be included as `export`-ed variables in SLURM
+            submission script, after prepending values with the user's cache
+            directory.
     """
 
     # Required SLURM parameters (note that the integer attributes are those
@@ -242,6 +255,9 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
     # Free-field attribute for extra lines to be added to the SLURM job
     # preamble
     extra_lines: Optional[list[str]] = Field(default_factory=list)
+
+    # Variables that will be `export`ed in the SLURM submission script
+    user_local_exports: Optional[dict[str, str]] = None
 
     # Metaparameters needed to combine multiple tasks in each SLURM job
     tasks_per_job: Optional[int] = None
@@ -289,10 +305,18 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
 
         return sorted(script_lines, key=_sorting_function)
 
-    def to_sbatch_preamble(self) -> list[str]:
+    def to_sbatch_preamble(
+        self,
+        user_cache_dir: Optional[str] = None,
+    ) -> list[str]:
         """
         Compile `SlurmConfig` object into the preamble of a SLURM submission
         script.
+
+        Arguments:
+            user_cache_dir:
+                Base directory for exports defined in
+                `self.user_local_exports`.
         """
         if self.parallel_tasks_per_job is None:
             raise ValueError(
@@ -330,6 +354,15 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
         if self.extra_lines:
             for line in self._sorted_extra_lines():
                 lines.append(line)
+
+        if self.user_local_exports:
+            if user_cache_dir is None:
+                raise ValueError(
+                    f"user_cache_dir=None but {self.user_local_exports=}"
+                )
+            for key, value in self.user_local_exports.items():
+                tmp_value = str(Path(user_cache_dir) / value)
+                lines.append(f"export {key}={tmp_value}")
 
         """
         FIXME export SRUN_CPUS_PER_TASK
