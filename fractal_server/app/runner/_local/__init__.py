@@ -63,6 +63,7 @@ async def process_workflow(
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
     slurm_user: Optional[str] = None,
+    user_cache_dir: Optional[str] = None,
     worker_init: Optional[str] = None,
 ) -> dict[str, Any]:
     """
@@ -96,6 +97,10 @@ async def process_workflow(
             Username to impersonate to run the workflow. This argument is
             present for compatibility with the standard backend interface, but
             is ignored in the `local` backend.
+        user_cache_dir:
+            Cache directory of the user who will run the workflow. This
+            argument is present for compatibility with the standard backend
+            interface, but is ignored in the `local` backend.
         worker_init:
             Any additional, usually backend specific, information to be passed
             to the backend executor. This argument is present for compatibility

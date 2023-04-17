@@ -172,6 +172,7 @@ class FractalSlurmExecutor(SlurmExecutor):
     wait_thread_cls = FractalSlurmWaitThread
     slurm_user: str
     common_script_lines: list[str]
+    user_cache_dir: str
     working_dir: Path
     working_dir_user: Path
     map_jobid_to_slurm_files: dict[str, tuple[str, str, str]]
@@ -182,6 +183,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         slurm_user: str,
         working_dir: Optional[Path] = None,
         working_dir_user: Optional[Path] = None,
+        user_cache_dir: Optional[str] = None,
         common_script_lines: Optional[list[str]] = None,
         slurm_poll_interval: Optional[int] = None,
         keep_pickle_files: bool = False,
@@ -215,6 +217,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             path=str(working_dir_user), user=self.slurm_user
         ):
             logger.info(f"Missing folder {working_dir_user=}")
+        self.user_cache_dir = user_cache_dir
 
         self.working_dir_user = working_dir_user
         self.map_jobid_to_slurm_files = {}
@@ -1022,7 +1025,9 @@ class FractalSlurmExecutor(SlurmExecutor):
             )
 
         # Prepare SLURM preamble based on SlurmConfig object
-        script_lines = slurm_config.to_sbatch_preamble()
+        script_lines = slurm_config.to_sbatch_preamble(
+            user_cache_dir=self.user_cache_dir
+        )
 
         # Extend SLURM preamble with variable which are not in SlurmConfig, and
         # fix their order
