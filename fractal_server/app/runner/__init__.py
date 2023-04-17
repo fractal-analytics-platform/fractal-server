@@ -185,6 +185,7 @@ async def submit_workflow(
             output_path=output_path,
             input_metadata=input_dataset.meta,
             slurm_user=slurm_user,
+            user_cache_dir=user_cache_dir,
             workflow_dir=WORKFLOW_DIR,
             workflow_dir_user=WORKFLOW_DIR_USER,
             logger_name=logger_name,
