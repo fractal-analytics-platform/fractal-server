@@ -15,6 +15,7 @@ from ...models import Workflow
 from .._common import recursive_task_submission
 from ..common import async_wrap
 from ..common import TaskParameters
+from ._submit_setup import _local_submit_setup
 
 
 def _process_workflow(
@@ -47,6 +48,7 @@ def _process_workflow(
             workflow_dir=workflow_dir,
             workflow_dir_user=workflow_dir,
             logger_name=logger_name,
+            submit_setup_call=_local_submit_setup,
         )
     output_task_pars = output_task_pars_fut.result()
     output_dataset_metadata = output_task_pars.metadata
