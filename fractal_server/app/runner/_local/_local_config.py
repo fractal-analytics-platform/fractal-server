@@ -75,7 +75,7 @@ def get_local_backend_config(
             prepared.
         config_path:
             Path of local-backend configuration file; if `None`, use
-            `FRACTAL_LOCAL_RUNNER_CONFIG_FILE` variable from settings.
+            `FRACTAL_LOCAL_CONFIG_FILE` variable from settings.
 
     Returns:
         A local-backend configuration object
@@ -89,7 +89,7 @@ def get_local_backend_config(
     else:
         if not config_path:
             settings = Inject(get_settings)
-            config_path = settings.FRACTAL_RUNNER_LOCAL_CONFIG_FILE
+            config_path = settings.FRACTAL_LOCAL_CONFIG_FILE
         if config_path is None:
             parallel_tasks_per_job = default
         else:

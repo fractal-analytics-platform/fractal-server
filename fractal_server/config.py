@@ -246,7 +246,7 @@ class Settings(BaseSettings):
     see details [here](../internals/logs/).
     """
 
-    FRACTAL_RUNNER_LOCAL_CONFIG_FILE: Optional[Path]
+    FRACTAL_LOCAL_CONFIG_FILE: Optional[Path]
     """
     Path of JSON file with configuration for the local backend.
     """
