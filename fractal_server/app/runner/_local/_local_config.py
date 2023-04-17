@@ -61,7 +61,7 @@ def get_local_backend_config(
     Prepare a `LocalBackendConfig` configuration object
 
     The sources for `parallel_tasks_per_job` attributes, starting from the
-    higest-priority one, are
+    highest-priority one, are
 
     1. Properties in `wftask.meta`;
     2. Properties in `wftask.task.meta` (this is already included in
