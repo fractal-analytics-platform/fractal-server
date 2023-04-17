@@ -13,7 +13,6 @@ Zurich.
 """
 import datetime
 import json
-from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 from devtools import debug
@@ -26,6 +25,8 @@ from fractal_server.app.runner._common import _call_command_wrapper
 from fractal_server.app.runner._common import call_parallel_task
 from fractal_server.app.runner._common import call_single_task
 from fractal_server.app.runner._common import recursive_task_submission
+from fractal_server.app.runner._local._local_config import LocalBackendConfig
+from fractal_server.app.runner._local.executor import FractalThreadPoolExecutor
 from fractal_server.app.runner.common import close_job_logger
 from fractal_server.app.runner.common import TaskParameters
 from fractal_server.logger import set_logger
@@ -34,7 +35,7 @@ from fractal_server.logger import set_logger
 async def test_command_wrapper(tmp_path):
     OUT_PATH = tmp_path / "out"
     ERR_PATH = tmp_path / "err"
-    with ThreadPoolExecutor() as executor:
+    with FractalThreadPoolExecutor() as executor:
         future = executor.submit(
             _call_command_wrapper,
             f"ls -al {dummy_module.__file__}",
@@ -103,7 +104,7 @@ def test_recursive_task_submission_step0(tmp_path):
         metadata={},
     )
 
-    with ThreadPoolExecutor() as executor:
+    with FractalThreadPoolExecutor() as executor:
         res = recursive_task_submission(
             executor=executor,
             task_list=task_list,
@@ -151,7 +152,7 @@ def test_recursive_parallel_task_submission_step0(tmp_path):
     debug(task_list)
     debug(task_pars)
 
-    with ThreadPoolExecutor() as executor:
+    with FractalThreadPoolExecutor() as executor:
         res = recursive_task_submission(
             executor=executor,
             task_list=task_list,
@@ -217,7 +218,7 @@ def test_recursive_task_submission_inductive_step(tmp_path):
         metadata=METADATA_0,
     )
 
-    with ThreadPoolExecutor() as executor:
+    with FractalThreadPoolExecutor() as executor:
         res = recursive_task_submission(
             executor=executor,
             task_list=task_list,
@@ -247,16 +248,20 @@ def test_call_parallel_task_max_tasks(
 ):
     """
     GIVEN A single task, parallelized over two components
-    WHEN This task is executed on a ThreadPoolExecutor via call_parallel_task
-    THEN The FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW env variable is used
-         correctly
+    WHEN This task is executed on a FractalThreadPoolExecutor via
+        call_parallel_task
+    THEN The `parallel_tasks_per_job` variable is used correctly
+
+    FIXME THIS IS NOT UP TO DATE
     """
 
     # Reset environment variable
-    debug(max_tasks)
-    override_settings_factory(
-        FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW=max_tasks
-    )
+    def mock_submit_setup_call(*args, **kwargs):
+        return dict(
+            local_backend_config=LocalBackendConfig(
+                parallel_tasks_per_job=max_tasks
+            )
+        )
 
     # Prepare task
     SLEEP_TIME = 1
@@ -280,12 +285,13 @@ def test_call_parallel_task_max_tasks(
     debug(task_pars)
 
     # Execute task
-    with ThreadPoolExecutor() as executor:
+    with FractalThreadPoolExecutor() as executor:
         future_metadata = call_parallel_task(
             executor=executor,
             wftask=wftask,
             task_pars_depend=task_pars,
             workflow_dir=tmp_path,
+            submit_setup_call=mock_submit_setup_call,
         )
     debug(tmp_path)
     debug(future_metadata)

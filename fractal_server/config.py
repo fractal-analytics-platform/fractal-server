@@ -246,28 +246,14 @@ class Settings(BaseSettings):
     see details [here](../internals/logs/).
     """
 
-    FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW: Optional[int] = None
+    FRACTAL_LOCAL_CONFIG_FILE: Optional[Path]
     """
-    Maximum number of components that a parallel task may process
-    simultaneously, for the [local backend](../internals/runners/local/).  If
-    `None`, no limit is set.
-
-    Intended use case: Reduce memory requirements of a workflow by capping the
-    number of tasks running in parallel.
-
-    Note: this limit concerns a single task in a single workflow execution, but
-    it does **not** limit the global (i.e. across workflow executions) number
-    of components processed simultaneously.
+    Path of JSON file with configuration for the local backend.
     """
 
     FRACTAL_SLURM_CONFIG_FILE: Optional[Path]
     """
     Path of JSON file with configuration for the SLURM backend.
-    """
-
-    FRACTAL_RUNNER_DEFAULT_EXECUTOR: str = "cpu-low"
-    """
-    Used by some runner backends to configure the parameters to run jobs with.
     """
 
     FRACTAL_SLURM_WORKER_PYTHON: Optional[str] = None
@@ -342,22 +328,10 @@ class Settings(BaseSettings):
         StrictSettings(**self.dict())
 
         # Check that some variables are allowed
-        if isinstance(self.FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW, int):
-            if self.FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW < 1:
-                raise FractalConfigurationError(
-                    f"{self.FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW=} "
-                    "not allowed"
-                )
-
-        if (
-            self.FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW
-            and self.FRACTAL_RUNNER_BACKEND != "local"
-        ):
-            logging.warning(
-                "FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW is set to "
-                f"{self.FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW}, but "
-                f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND} is "
-                "the local backend."
+        if self.FRACTAL_RUNNER_BACKEND not in ["local", "slurm"]:
+            raise FractalConfigurationError(
+                f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
+                "is not allowed"
             )
 
         if self.FRACTAL_RUNNER_BACKEND == "slurm":
