@@ -63,10 +63,11 @@ def get_local_backend_config(
     The sources for `parallel_tasks_per_job` attributes, starting from the
     higest-priority one, are
 
-    1. Properties in `wftask.meta`.
-    2. Properties in `wftask.task.meta`.
-    3. The general content of the local-backend configuration file.
-    4. The default value (`None`)
+    1. Properties in `wftask.meta`;
+    2. Properties in `wftask.task.meta` (this is already included in
+       overridden_meta);
+    3. The general content of the local-backend configuration file;
+    4. The default value (`None`).
 
     Arguments:
         wftask:
@@ -83,10 +84,8 @@ def get_local_backend_config(
     key = "parallel_tasks_per_job"
     default = None
 
-    if wftask.meta and key in wftask.meta.keys():
-        parallel_tasks_per_job = wftask.meta[key]
-    elif wftask.task.meta and key in wftask.task.meta.keys():
-        parallel_tasks_per_job = wftask.task.meta[key]
+    if wftask.overridden_meta and key in wftask.overridden_meta.keys():
+        parallel_tasks_per_job = wftask.overridden_meta[key]
     else:
         if not config_path:
             settings = Inject(get_settings)
