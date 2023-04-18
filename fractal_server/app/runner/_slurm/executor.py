@@ -175,7 +175,9 @@ class FractalSlurmExecutor(SlurmExecutor):
     user_cache_dir: str
     working_dir: Path
     working_dir_user: Path
-    map_jobid_to_slurm_files: dict[str, tuple[str, str, str]]
+    map_jobid_to_slurm_files: dict[
+        str, tuple[str, str, str]
+    ]  # FIXME: introduce lock? # noqa
     keep_pickle_files: bool
 
     def __init__(
@@ -1101,6 +1103,8 @@ class FractalSlurmExecutor(SlurmExecutor):
             while self.jobs:
                 jobid, fut_and_job = self.jobs.popitem()
                 fut, job = fut_and_job[:]
+
+                self.map_jobid_to_slurm_files.pop(jobid)
 
                 # Handle future
                 fut.set_exception(
