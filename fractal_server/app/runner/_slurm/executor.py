@@ -1073,23 +1073,29 @@ class FractalSlurmExecutor(SlurmExecutor):
         )
         return task_files
 
-    def shutdown(self):
+    @wrap_with_timing_logs
+    def shutdown(self, wait=True, *, cancel_futures=False):
+        """
+        FIXME: wait and cancel_futures are ignored
+        """
+
         logger.warning("Executor shutdown")
 
         from devtools import debug
 
-        debug(self.wait_thread.waiting)
         debug(self.map_jobid_to_slurm_files)
         debug(self.jobs)
 
-        debug(self.wait_thread)
+        # Call stop and then join on the threading.Thread object
+        # self.wait_thread
         self.wait_thread.stop()
-        debug(self.wait_thread)
-        self.wait_thread.join(timeout=2)
-        debug(self.wait_thread)
+        with self.wait_thread.lock:
+            self.wait_thread.waiting = {}
+        logger.warning("Now join self.wait_thread")
+        self.wait_thread.join(timeout=4)
+        logger.warning("self.wait_thread joined")
 
-        # this simply sets self.wait_thread.shutdown = True
-
+        # Handle all jobs' futures and the corresponding SLURM jobs
         with self.jobs_lock:
 
             while self.jobs:
