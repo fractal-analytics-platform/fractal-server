@@ -1072,3 +1072,56 @@ class FractalSlurmExecutor(SlurmExecutor):
             task_order=random.randint(10000, 99999),  # nosec
         )
         return task_files
+
+    def shutdown(self):
+        logger.warning("Executor shutdown")
+
+        from devtools import debug
+
+        debug(self.wait_thread.waiting)
+        debug(self.map_jobid_to_slurm_files)
+        debug(self.jobs)
+
+        debug(self.wait_thread)
+        self.wait_thread.stop()
+        debug(self.wait_thread)
+        self.wait_thread.join(timeout=2)
+        debug(self.wait_thread)
+
+        # this simply sets self.wait_thread.shutdown = True
+
+        with self.jobs_lock:
+
+            while self.jobs:
+                jobid, fut_and_job = self.jobs.popitem()
+                fut, job = fut_and_job[:]
+
+                # Handle future
+                fut.set_exception(
+                    JobExecutionError(
+                        "Job cancelled due to executor shutdown."
+                    )
+                )
+                fut.cancel()
+
+                # Handle SLURM job
+                logger.warning(f"Now scancel-ing SLURM job {jobid}")
+                pre_command = f"sudo --non-interactive -u {self.slurm_user}"
+                submit_command = f"scancel {jobid}"
+                full_command = f"{pre_command} {submit_command}"
+                debug(full_command)
+                try:
+                    res = subprocess.run(  # nosec
+                        shlex.split(full_command),
+                        capture_output=True,
+                        check=True,
+                        encoding="utf-8",
+                    )
+                    debug(res)
+                except subprocess.CalledProcessError as e:
+                    error_msg = (
+                        f"Cancel command `{full_command}` failed. "
+                        f"Original error:\n{str(e)}"
+                    )
+                    logger.error(error_msg)
+                    raise JobExecutionError(info=error_msg)
