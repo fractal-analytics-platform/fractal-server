@@ -3,6 +3,7 @@ import traceback
 from cfut import FileWaitThread
 from cfut import slurm
 
+from ....logger import wrap_with_timing_logs
 from ._subprocess_run_as_user import _multiple_paths_exist_as_user
 
 
@@ -31,6 +32,10 @@ class FractalFileWaitThread(FileWaitThread):
 
         super().__init__(*args, **kwargs)
         self.slurm_user: str
+
+    @wrap_with_timing_logs
+    def join(self, *args, **kwargs):  # FIXME: remove
+        super().join(*args, **kwargs)
 
     def wait(
         self,
