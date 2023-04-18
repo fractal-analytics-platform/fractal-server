@@ -171,6 +171,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
     wait_thread_cls = FractalSlurmWaitThread
     slurm_user: str
+    shutdown_file: str
     common_script_lines: list[str]
     user_cache_dir: str
     working_dir: Path
@@ -183,6 +184,7 @@ class FractalSlurmExecutor(SlurmExecutor):
     def __init__(
         self,
         slurm_user: str,
+        shutdown_file: Optional[str] = None,
         working_dir: Optional[Path] = None,
         working_dir_user: Optional[Path] = None,
         user_cache_dir: Optional[str] = None,
@@ -205,6 +207,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         self.keep_pickle_files = keep_pickle_files
         self.slurm_user = slurm_user
+
         self.common_script_lines = common_script_lines or []
         if not working_dir:
             settings = Inject(get_settings)
@@ -231,6 +234,9 @@ class FractalSlurmExecutor(SlurmExecutor):
             slurm_poll_interval = settings.FRACTAL_SLURM_POLL_INTERVAL
         self.wait_thread.slurm_poll_interval = slurm_poll_interval
         self.wait_thread.slurm_user = self.slurm_user
+
+        self.wait_thread.shutdown_file = shutdown_file
+        self.wait_thread.shutdown_callback = self.shutdown
 
     def _cleanup(self, jobid: str) -> None:
         """
@@ -1085,7 +1091,6 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         from devtools import debug
 
-        debug(self.map_jobid_to_slurm_files)
         debug(self.jobs)
 
         # Call stop and then join on the threading.Thread object

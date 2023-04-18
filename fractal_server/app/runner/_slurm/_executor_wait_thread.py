@@ -1,10 +1,16 @@
+import os
 import traceback
+from typing import Callable
 
 from cfut import FileWaitThread
 from cfut import slurm
 
+from ....logger import set_logger
 from ....logger import wrap_with_timing_logs
 from ._subprocess_run_as_user import _multiple_paths_exist_as_user
+
+
+logger = set_logger(__name__)
 
 
 class FractalFileWaitThread(FileWaitThread):
@@ -24,14 +30,18 @@ class FractalFileWaitThread(FileWaitThread):
     `FractalSlurmWaitThread`.
     """
 
+    slurm_user: str
+    shutdown_file: str = None
+    shutdown_callback: Callable
+
     def __init__(self, *args, **kwargs):
         """
         Changed from clusterfutures:
         * Additional attribute `slurm_user`
+        * Additional attribute `shutdown_file`
         """
 
         super().__init__(*args, **kwargs)
-        self.slurm_user: str
 
     @wrap_with_timing_logs
     def join(self, *args, **kwargs):  # FIXME: remove
@@ -73,6 +83,9 @@ class FractalFileWaitThread(FileWaitThread):
             if all_files_exist:
                 self.callback(self.waiting[filenames])
                 del self.waiting[filenames]
+        if self.shutdown_file and os.path.exists(self.shutdown_file):
+            logger.warning("THE SHUTDOWN FILE EXISTS")
+            self.shutdown_callback()
 
 
 class FractalSlurmWaitThread(FractalFileWaitThread):
