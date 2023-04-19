@@ -21,6 +21,7 @@ from typing import Optional
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_users.exceptions import UserAlreadyExists
+from sqlalchemy.exc import IntegrityError
 
 from .app.db import get_db
 from .app.security import get_user_db
@@ -116,6 +117,12 @@ async def _create_user(
 
     except UserAlreadyExists:
         logger.warning(f"User {email} already exists")
+
+    except IntegrityError:
+        logger.warning(
+            f"Creation of user {email} failed with IntegrityError "
+            "(likely due to simultaneous call from different workers)."
+        )
 
 
 def start_application() -> FastAPI:
