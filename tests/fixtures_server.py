@@ -31,7 +31,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from fractal_server.config import get_settings
 from fractal_server.config import Settings
-from fractal_server.main import _create_user
+from fractal_server.main import _create_first_user
 from fractal_server.syringe import Inject
 
 try:
@@ -253,7 +253,7 @@ async def registered_client(
 
     EMAIL = "test@test.com"
     PWD = "123"
-    await _create_user(email=EMAIL, password=PWD, is_superuser=False)
+    await _create_first_user(email=EMAIL, password=PWD, is_superuser=False)
 
     async with AsyncClient(
         app=app, base_url="http://test"
@@ -274,7 +274,7 @@ async def registered_superuser_client(
 ) -> AsyncGenerator[AsyncClient, Any]:
     EMAIL = "some-admin@fractal.xy"
     PWD = "some-admin-password"
-    await _create_user(email=EMAIL, password=PWD, is_superuser=True)
+    await _create_first_user(email=EMAIL, password=PWD, is_superuser=True)
     async with AsyncClient(
         app=app, base_url="http://test"
     ) as client, LifespanManager(app):

@@ -195,7 +195,11 @@ async def submit_workflow(
         logger.debug(f'END workflow "{workflow.name}"')
 
         db_sync.merge(output_dataset)
+
         job.status = JobStatusType.DONE
+        with log_file_path.open("r") as f:
+            logs = f.read()
+        job.log = logs
         db_sync.merge(job)
 
     except TaskExecutionError as e:
