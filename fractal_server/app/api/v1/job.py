@@ -11,6 +11,8 @@ from fastapi import HTTPException
 from fastapi import status
 from fastapi.responses import StreamingResponse
 
+from ....config import get_settings
+from ....syringe import Inject
 from ...db import AsyncSession
 from ...db import get_db
 from ...models import ApplyWorkflow
@@ -90,3 +92,47 @@ async def download_job_logs(
         media_type="application/x-zip-compressed",
         headers={"Content-Disposition": f"attachment;filename={zip_filename}"},
     )
+
+
+@router.post("/{job_id}/stop", status_code=200)  # FIXME: is this a POST?
+async def stop_job(
+    job_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[ApplyWorkflow]:
+    """
+    Stop execution of a workflow job (only available for slurm backend)
+    """
+
+    # This endpoint is only implemented for SLURM backend
+    settings = Inject(get_settings)
+    backend = settings.FRACTAL_RUNNER_BACKEND
+    if backend == "slurm":
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Stopping a job execution is not implemented for "
+                f"FRACTAL_RUNNER_BACKEND={backend}."
+            ),
+        )
+
+    # Get job from DB
+    job = await db.get(ApplyWorkflow, job_id)
+    if not job:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Job not found"
+        )
+    await _get_project_check_owner(
+        project_id=job.project_id, user_id=user.id, db=db
+    )
+    job_read = ApplyWorkflowRead(**job.dict())
+
+    # Write shutdown file
+    shutdown_file = Path(job_read.working_dir) / "shutdown"
+    with shutdown_file.open("w") as f:
+        f.write(f"I confirm: Please shutdown job {job.id}")
+
+    # FIXME: anything else we'd need to do with the job status here? Probably
+    # not
+
+    return
