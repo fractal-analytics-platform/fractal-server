@@ -184,6 +184,9 @@ async def test_full_workflow(
         job_status_data = res.json()
         debug(job_status_data)
         assert job_status_data["status"] == "done"
+        assert job_status_data["log"]
+        assert "START workflow" in job_status_data["log"]
+        assert "END workflow" in job_status_data["log"]
 
         # Verify output
         res = await client.get(
