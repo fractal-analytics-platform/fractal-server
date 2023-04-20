@@ -8,32 +8,46 @@ from pathlib import Path
 import pytest
 from devtools import debug
 
+from .fixtures_server import DB_ENGINE
+
 
 def _prepare_config_and_db(_tmp_path: Path):
     cwd = str(_tmp_path)
 
-    config = "\n".join(
-        [
-            "DEPLOYMENT_TYPE=testing",
-            "JWT_SECRET_KEY=secret",
-            "DB_ENGINE=postgres",
-            "POSTGRES_USER=postgres",
-            "POSTGRES_PASSWORD=postgres",
-            "POSTGRES_DB=fractal",
-            f"SQLITE_PATH={cwd}/test.db",
-            "FRACTAL_LOGGING_LEVEL=10",
-            "FRACTAL_RUNNER_BACKEND=local",
-            f"FRACTAL_RUNNER_WORKING_BASE_DIR={cwd}/artifacts",
-            f"FRACTAL_TASKS_DIR={cwd}/FRACTAL_TASKS_DIR",
-            "FRACTAL_ADMIN_DEFAULT_EMAIL=admin@fractal.xy",
-            "FRACTAL_ADMIN_DEFAULT_PASSWORD=1234",
-            "JWT_EXPIRE_SECONDS=84600",
-            "\n",
-        ]
-    )
+    # General config
+    config_lines = [
+        "DEPLOYMENT_TYPE=testing",
+        "JWT_SECRET_KEY=secret",
+        "FRACTAL_LOGGING_LEVEL=10",
+        "FRACTAL_RUNNER_BACKEND=local",
+        f"FRACTAL_RUNNER_WORKING_BASE_DIR={cwd}/artifacts",
+        f"FRACTAL_TASKS_DIR={cwd}/FRACTAL_TASKS_DIR",
+        "FRACTAL_ADMIN_DEFAULT_EMAIL=admin@fractal.xy",
+        "FRACTAL_ADMIN_DEFAULT_PASSWORD=1234",
+        "JWT_EXPIRE_SECONDS=84600",
+        f"DB_ENGINE={DB_ENGINE}",
+    ]
+
+    # DB_ENGINE-specific config
+    if DB_ENGINE == "postgres":
+        config_lines.extend(
+            [
+                "POSTGRES_USER=postgres",
+                "POSTGRES_PASSWORD=postgres",
+                "POSTGRES_DB=fractal",
+            ]
+        )
+    elif DB_ENGINE == "sqlite":
+        config_lines.append(f"SQLITE_PATH={cwd}/test.db")
+    else:
+        raise ValueError(f"Invalid {DB_ENGINE=}")
+
+    # Write config to file
+    config = "\n".join(config_lines + ["\n"])
     with (_tmp_path / ".fractal_server.env").open("w") as f:
         f.write(config)
 
+    # Initialize db
     cmd = "fractalctl set-db"
     debug(cmd)
     res = subprocess.run(
