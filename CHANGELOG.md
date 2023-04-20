@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# 1.2.1
+
+* Fix bug upon creation of first user when using multiple workers (\#632).
+* Allow both ports 5173 and 4173 as CORS origins (\#637).
+
 # 1.2.0
 
 * Drop `project.project_dir` and replace it with `user.cache_dir` (\#601).
@@ -13,6 +18,7 @@
 * Move dummy tasks from package to tests (\#601).
 * Remove deprecated parsl backend (\#607).
 * Improve error handling in workflow-import endpoint (\#595).
+* Also show logs for successful workflow execution (\#635).
 
 # 1.1.1
 
