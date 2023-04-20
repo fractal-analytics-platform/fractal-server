@@ -21,6 +21,7 @@ from typing import Optional
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_users.exceptions import UserAlreadyExists
+from sqlalchemy.exc import IntegrityError
 
 from .app.db import get_db
 from .app.security import get_user_db
@@ -78,18 +79,25 @@ async def __on_startup() -> None:
     check_settings()
 
 
-async def _create_user(
+async def _create_first_user(
     email: str,
     password: str,
     is_superuser: bool = False,
     slurm_user: Optional[str] = None,
+    cache_dir: Optional[str] = None,
 ) -> None:
     """
-    Private method to create a fractal user
+    Private method to create the first fractal-server user
 
     Create a user with the given default arguments and return a message with
     the relevant informations. If the user alredy exists, for example after a
     restart, it returns a message to inform that user already exists.
+
+    WARNING: This function is only meant to create the first user, and then it
+    catches and ignores IntegrityError (when multiple workers may be trying to
+    concurrently create the first user). This is not the expected behavior for
+    regular user creation, which must rather happen via the /auth/register
+    endpoint.
 
     See [fastapi_users docs](https://fastapi-users.github.io/fastapi-users/
     10.2/cookbook/create-user-programmatically)
@@ -111,8 +119,16 @@ async def _create_user(
                     )
                     if slurm_user:
                         kwargs["slurm_user"] = slurm_user
+                    if cache_dir:
+                        kwargs["cache_dir"] = cache_dir
                     user = await user_manager.create(UserCreate(**kwargs))
                     logger.info(f"User {user.email} created")
+
+    except IntegrityError:
+        logger.warning(
+            f"Creation of user {email} failed with IntegrityError "
+            "(likely due to concurrent attempts from different workers)."
+        )
 
     except UserAlreadyExists:
         logger.warning(f"User {email} already exists")
@@ -162,7 +178,7 @@ async def on_startup() -> None:
     If the calls raise any error, the application startup is aborted.
     """
     settings = Inject(get_settings)
-    await _create_user(
+    await _create_first_user(
         settings.FRACTAL_DEFAULT_ADMIN_EMAIL,
         settings.FRACTAL_DEFAULT_ADMIN_PASSWORD,
         True,
