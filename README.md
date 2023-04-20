@@ -47,7 +47,7 @@
 | fractal\_server/common/schemas/workflow.py                        |       62 |        0 |        7 |        0 |    100% |           |
 | fractal\_server/config.py                                         |      133 |       24 |       34 |        9 |     74% |139-157, 177-184, 185->exit, 197-199, 200->exit, 315-317, 319, 326, 338-364 |
 | fractal\_server/logger.py                                         |       50 |        0 |       12 |        0 |    100% |           |
-| fractal\_server/main.py                                           |       57 |       12 |       12 |        2 |     77% |68-69, 79, 121, 123, 127-134, 180-186 |
+| fractal\_server/main.py                                           |       57 |       12 |       12 |        2 |     77% |68-69, 79, 121, 123, 127-134, 185-191 |
 | fractal\_server/syringe.py                                        |       29 |        2 |        2 |        0 |     94% |     93-94 |
 | fractal\_server/tasks/\_\_init\_\_.py                             |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/tasks/collection.py                               |      165 |        9 |       52 |       12 |     90% |81-82, 135, 136->143, 162, 169-171, 207->exit, 226->250, 232->exit, 235->exit, 241->exit, 301, 425->exit, 434 |
