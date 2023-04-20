@@ -127,7 +127,7 @@ async def _create_first_user(
     except IntegrityError:
         logger.warning(
             f"Creation of user {email} failed with IntegrityError "
-            "(likely due to simultaneous call from different workers)."
+            "(likely due to concurrent attempts from different workers)."
         )
 
     except UserAlreadyExists:
