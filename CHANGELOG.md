@@ -3,6 +3,7 @@
 # 1.2.1
 
 * Fix bug upon creation of first user when using multiple workers (\#632).
+* Allow both ports 5173 and 4173 as CORS origins (\#637).
 
 # 1.2.0
 
