@@ -13,6 +13,7 @@
 * Move dummy tasks from package to tests (\#601).
 * Remove deprecated parsl backend (\#607).
 * Improve error handling in workflow-import endpoint (\#595).
+* Also show logs for successful workflow execution (\#635).
 
 # 1.1.1
 
