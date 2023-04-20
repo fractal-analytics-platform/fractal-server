@@ -1,5 +1,9 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# 1.2.1
+
+* Fix bug upon creation of first user when using multiple workers (\#632).
+
 # 1.2.0
 
 * Drop `project.project_dir` and replace it with `user.cache_dir` (\#601).
