@@ -251,8 +251,6 @@ def test_call_parallel_task_max_tasks(
     WHEN This task is executed on a FractalThreadPoolExecutor via
         call_parallel_task
     THEN The `parallel_tasks_per_job` variable is used correctly
-
-    FIXME THIS IS NOT UP TO DATE
     """
 
     # Reset environment variable
