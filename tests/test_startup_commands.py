@@ -16,6 +16,7 @@ def _prepare_config_and_db(_tmp_path: Path):
         [
             "DEPLOYMENT_TYPE=testing",
             "JWT_SECRET_KEY=secret",
+            "DB_ENGINE=postgres",
             f"SQLITE_PATH={cwd}/test.db",
             "FRACTAL_LOGGING_LEVEL=10",
             "FRACTAL_RUNNER_BACKEND=local",
