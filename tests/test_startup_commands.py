@@ -1,5 +1,8 @@
+import os
 import shlex
+import signal
 import subprocess
+import time
 from pathlib import Path
 
 import pytest
@@ -44,8 +47,11 @@ def _prepare_config_and_db(_tmp_path: Path):
 commands = [
     "fractalctl start",
     "fractalctl start --reload",
-    "gunicorn fractal_server.main:app --worker-class uvicorn.workers.UvicornWorker --bind localhost:8010",  # noqa
-    "gunicorn fractal_server.main:app --worker-class uvicorn.workers.UvicornWorker --workers 2",  # noqa
+    "fractalctl start --port 8000",
+    "fractalctl start --host 0.0.0.0 --port 8000",
+    "gunicorn fractal_server.main:app --worker-class uvicorn.workers.UvicornWorker --bind localhost:8000",  # noqa
+    "gunicorn fractal_server.main:app --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000",  # noqa
+    "gunicorn fractal_server.main:app --worker-class uvicorn.workers.UvicornWorker --workers 8",  # noqa
 ]
 
 
@@ -55,15 +61,26 @@ def test_startup_commands(cmd, tmp_path):
     _prepare_config_and_db(tmp_path)
 
     debug(cmd)
+    p = subprocess.Popen(
+        shlex.split(cmd),
+        start_new_session=True,
+        cwd=str(tmp_path),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        encoding="utf-8",
+    )
+    debug(p)
     with pytest.raises(subprocess.TimeoutExpired) as e:
-        res = subprocess.run(
-            shlex.split(cmd),
-            encoding="utf-8",
-            capture_output=True,
-            cwd=str(tmp_path),
-            timeout=2,
-        )
-        debug(res.stdout)
-        debug(res.stderr)
-        debug(res.returncode)
+        p.wait(timeout=1.5)
+        out, err = p.communicate()
+        debug(p.returncode)
+        debug(out)
+        debug(err)
+        assert p.returncode == 0
+
+    debug("Now call killpg")
+    debug(p)
+    os.killpg(os.getpgid(p.pid), signal.SIGTERM)
+    # Wait a bit, so that the killpg ends before pytest ends
+    time.sleep(0.3)
     debug(e.value)
