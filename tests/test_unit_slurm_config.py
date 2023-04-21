@@ -29,6 +29,8 @@ def test_get_slurm_config(tmp_path, fail):
     GPU_DEFAULT_CONSTRAINT = "gpu-default-constraint"
     DEFAULT_ACCOUNT = "default-account"
     DEFAULT_EXTRA_LINES = ["#SBATCH --option=value", "export VAR1=VALUE1"]
+    USER_LOCAL_EXPORTS = {"SOME_CACHE_DIR": "SOME_CACHE_DIR"}
+
     slurm_config = {
         "default_slurm_config": {
             "partition": "main",
@@ -50,6 +52,7 @@ def test_get_slurm_config(tmp_path, fail):
             "target_num_jobs": 5,
             "max_num_jobs": 10,
         },
+        "user_local_exports": USER_LOCAL_EXPORTS,
     }
     if fail:
         slurm_config["invalid_key"] = "something"
@@ -132,6 +135,8 @@ def test_get_slurm_config(tmp_path, fail):
     # are combined together, and that repeated elements were removed
     assert len(slurm_config.extra_lines) == 3
     assert len(slurm_config.extra_lines) == len(set(slurm_config.extra_lines))
+    # Check value of user_local_exports
+    assert slurm_config.user_local_exports == USER_LOCAL_EXPORTS
 
 
 def test_to_sbatch_preamble():
