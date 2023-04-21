@@ -2,7 +2,7 @@
 
 # 1.2.2
 
-* Bugfix related to `user_local_exports` in SLURM-backend configuration (\#642).
+* Fix bug related to `user_local_exports` in SLURM-backend configuration (\#642).
 
 # 1.2.1
 
