@@ -509,6 +509,10 @@ def get_slurm_config(
     # Incorporate slurm_env.batching_config
     for key, value in slurm_env.batching_config.dict().items():
         slurm_dict[key] = value
+
+    # Incorporate slurm_env.user_local_exports
+    slurm_dict["user_local_exports"] = slurm_env.user_local_exports
+
     logger.debug(
         "[get_slurm_config] Fractal SLURM configuration file: "
         f"{slurm_env.dict()=}"
@@ -565,7 +569,6 @@ def get_slurm_config(
     parallel_tasks_per_job = wftask.overridden_meta.get(
         "parallel_tasks_per_job", None
     )
-
     slurm_dict["tasks_per_job"] = tasks_per_job
     slurm_dict["parallel_tasks_per_job"] = parallel_tasks_per_job
 
