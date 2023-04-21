@@ -1,5 +1,9 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# 1.2.2
+
+* Fix bug related to `user_local_exports` in SLURM-backend configuration (\#642).
+
 # 1.2.1
 
 * Fix bug upon creation of first user when using multiple workers (\#632).
