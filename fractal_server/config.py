@@ -285,11 +285,6 @@ class Settings(BaseSettings):
     file is considered as missing.
     """
 
-    # NOTE: we currently set FRACTAL_PARSL_MONITORING to False, due to
-    # https://github.com/fractal-analytics-platform/fractal-server/issues/148
-    FRACTAL_PARSL_MONITORING: bool = False
-    FRACTAL_PARSL_CONFIG: str = "local"
-
     ###########################################################################
     # BUSINESS LOGIC
     ###########################################################################
