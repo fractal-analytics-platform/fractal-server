@@ -216,7 +216,6 @@ async def apply_workflow(
     project = output["project"]
 
     workflow = db_sync.get(Workflow, apply_workflow.workflow_id)
-    db_sync.close()
     if not workflow:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -295,7 +294,6 @@ async def apply_workflow(
     db.add(job)
     await db.commit()
     await db.refresh(job)
-    await db.close()
 
     background_tasks.add_task(
         submit_workflow,
@@ -307,6 +305,9 @@ async def apply_workflow(
         slurm_user=user.slurm_user,
         user_cache_dir=user.cache_dir,
     )
+
+    await db.close()
+    db_sync.close()
 
     return job
 
