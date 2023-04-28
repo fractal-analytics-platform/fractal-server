@@ -35,9 +35,7 @@ from ....tasks.collection import get_collection_path
 from ....tasks.collection import get_log_path
 from ....tasks.collection import inspect_package
 from ...db import AsyncSession
-from ...db import DBSyncSession
 from ...db import get_db
-from ...db import get_sync_db
 from ...models import State
 from ...models import Task
 from ...security import current_active_superuser
@@ -317,16 +315,16 @@ async def get_list_task(
 
 
 @router.get("/{task_id}", response_model=TaskRead)
-def get_task(
+async def get_task(
     task_id: int,
     user: User = Depends(current_active_user),
-    db_sync: DBSyncSession = Depends(get_sync_db),
+    db: AsyncSession = Depends(get_db),
 ) -> TaskRead:
     """
     Get info on a specific task
     """
-    task = db_sync.get(Task, task_id)
-    db_sync.close()
+    task = await db.get(Task, task_id)
+    await db.close()
     return task
 
 
