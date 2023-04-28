@@ -1,5 +1,9 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# 1.2.4
+
+* Review setup for database URLs, especially to allow using UNIX-socket connections for postgresl (\#657).
+
 # 1.2.3
 
 * Fix bug that was keeping multiple database conection open (\#649).
