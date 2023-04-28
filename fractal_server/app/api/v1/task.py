@@ -62,7 +62,8 @@ async def _background_collect_pip(
     directory.
     """
 
-    db = await anext(get_db())
+    # Note: anext(get_db()) is only available for python>=3.10
+    db = await get_db().__anext__
 
     state: State = await db.get(State, state_id)
 
