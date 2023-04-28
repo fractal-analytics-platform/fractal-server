@@ -62,7 +62,8 @@ async def _background_collect_pip(
     directory.
     """
 
-    db = next(get_db())
+    db = await anext(get_db())
+
     state: State = await db.get(State, state_id)
 
     logger_name = task_pkg.package.replace("/", "_")
