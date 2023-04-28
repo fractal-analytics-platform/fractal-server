@@ -68,9 +68,9 @@ def get_process_workflow():
 
 async def submit_workflow(
     *,
-    workflow: Workflow,
-    input_dataset: Dataset,
-    output_dataset: Dataset,
+    workflow_id: int,
+    input_dataset_id: int,
+    output_dataset_id: int,
     job_id: int,
     worker_init: Optional[str] = None,
     slurm_user: Optional[str] = None,
@@ -83,16 +83,14 @@ async def submit_workflow(
     backend (e.g. local or slurm backend).
 
     Args:
-        workflow:
-            Workflow being applied
-        input_dataset:
-            Input dataset
-        output_dataset:
-            the destination dataset of the workflow. If not provided,
+        workflow_id:
+            ID of the workflow being applied
+        input_dataset_id
+            Input dataset ID
+        output_dataset_id:
+            ID of the destination dataset of the workflow. If not provided,
             overwriting of the input dataset is implied and an error is raised
-            if the dataset is in read only mode. If a string is passed and the
-            dataset does not exist, a new dataset with that name is created and
-            within it a new resource with the same name.
+            if the dataset is in read only mode.
         job_id:
             Id of the job record which stores the state for the current
             workflow application.
@@ -107,10 +105,21 @@ async def submit_workflow(
             The username to impersonate for the workflow execution, for the
             slurm backend.
     """
+
     db_sync = next(DB.get_sync_db())
-    job: ApplyWorkflow = db_sync.get(ApplyWorkflow, job_id)  # type: ignore
+
+    job: ApplyWorkflow = db_sync.get(ApplyWorkflow, job_id)
     if not job:
         raise ValueError("Cannot fetch job from database")
+    input_dataset: Dataset = db_sync.get(Dataset, input_dataset_id)
+    if not input_dataset:
+        raise ValueError("Cannot fetch input_dataset from database")
+    output_dataset: Dataset = db_sync.get(Dataset, output_dataset_id)
+    if not output_dataset:
+        raise ValueError("Cannot fetch output_dataset from database")
+    workflow: Workflow = db_sync.get(Workflow, workflow_id)
+    if not workflow:
+        raise ValueError("Cannot fetch workflow from database")
 
     # Select backend
     settings = Inject(get_settings)
@@ -178,7 +187,13 @@ async def submit_workflow(
     logger.debug(f"job.workflow_dir_user: {str(WORKFLOW_DIR_USER)}")
     logger.debug(f'START workflow "{workflow.name}"')
 
+    # Note: from the docs, "The Session.close() method does not prevent the
+    # Session from being used again"
+    # (https://docs.sqlalchemy.org/en/20/orm/session_api.html#sqlalchemy.orm.Session.close)
+    db_sync.close()
+
     try:
+
         output_dataset.meta = await process_workflow(
             workflow=workflow,
             input_paths=input_paths,
@@ -192,6 +207,10 @@ async def submit_workflow(
             worker_init=worker_init,
         )
 
+        logger.info(
+            f'End execution of workflow "{workflow.name}"; '
+            f"more logs at {str(log_file_path)}"
+        )
         logger.debug(f'END workflow "{workflow.name}"')
 
         db_sync.merge(output_dataset)
@@ -240,3 +259,4 @@ async def submit_workflow(
     finally:
         close_job_logger(logger)
         db_sync.commit()
+        db_sync.close()

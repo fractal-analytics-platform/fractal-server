@@ -184,6 +184,7 @@ async def create_workflow(
     db.add(db_workflow)
     await db.commit()
     await db.refresh(db_workflow)
+    await db.close()
     return db_workflow
 
 
@@ -247,6 +248,7 @@ async def patch_workflow(
             setattr(workflow, key, value)
     await db.commit()
     await db.refresh(workflow)
+    await db.close()
 
     return workflow
 
@@ -292,6 +294,7 @@ async def add_task_to_workflow(
             db=db,
         )
 
+    await db.close()
     return workflow_task
 
 
@@ -337,6 +340,7 @@ async def patch_workflow_task(
 
     await db.commit()
     await db.refresh(db_workflow_task)
+    await db.close()
 
     return db_workflow_task
 
@@ -387,4 +391,5 @@ async def export_worfklow(
     workflow = await _get_workflow_check_owner(
         workflow_id=workflow_id, user_id=user.id, db=db
     )
+    await db.close()
     return workflow

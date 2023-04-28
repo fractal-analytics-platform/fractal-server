@@ -52,6 +52,7 @@ async def get_job(
     except (KeyError, FileNotFoundError):
         pass
 
+    await db.close()
     return job_read
 
 
@@ -84,6 +85,8 @@ async def download_job_logs(
     with ZipFile(byte_stream, mode="w", compression=ZIP_DEFLATED) as zipfile:
         for fpath in working_dir_path.glob("*"):
             zipfile.write(filename=str(fpath), arcname=str(fpath.name))
+
+    await db.close()
 
     return StreamingResponse(
         iter([byte_stream.getvalue()]),

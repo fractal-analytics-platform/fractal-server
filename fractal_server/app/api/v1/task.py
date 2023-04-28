@@ -35,9 +35,7 @@ from ....tasks.collection import get_collection_path
 from ....tasks.collection import get_log_path
 from ....tasks.collection import inspect_package
 from ...db import AsyncSession
-from ...db import DBSyncSession
 from ...db import get_db
-from ...db import get_sync_db
 from ...models import State
 from ...models import Task
 from ...security import current_active_superuser
@@ -48,7 +46,9 @@ router = APIRouter()
 
 
 async def _background_collect_pip(
-    state: State, venv_path: Path, task_pkg: _TaskCollectPip, db: AsyncSession
+    state_id: int,
+    venv_path: Path,
+    task_pkg: _TaskCollectPip,
 ) -> None:
     """
     Install package and collect tasks
@@ -59,6 +59,12 @@ async def _background_collect_pip(
     In case of error, copy the log into the state and delete the package
     directory.
     """
+
+    # Note: anext(get_db()) is only available for python>=3.10
+    db = await get_db().__anext__()
+
+    state: State = await db.get(State, state_id)
+
     logger_name = task_pkg.package.replace("/", "_")
     logger = set_logger(
         logger_name=logger_name,
@@ -110,6 +116,7 @@ async def _background_collect_pip(
         logger.debug("Task-collection status: OK")
         logger.info("Background task collection completed successfully")
         close_logger(logger)
+        await db.close()
 
     except Exception as e:
         # Write last logs to file
@@ -124,6 +131,7 @@ async def _background_collect_pip(
         state.data = data.sanitised_dict()
         await db.merge(state)
         await db.commit()
+        await db.close()
 
         # Delete corrupted package dir
         shell_rmtree(venv_path)
@@ -140,6 +148,7 @@ async def _insert_tasks(
     db.add_all(task_db_list)
     await db.commit()
     await asyncio.gather(*[db.refresh(t) for t in task_db_list])
+    await db.close()
     return task_db_list
 
 
@@ -208,6 +217,7 @@ async def collect_tasks_pip(
         try:
             task_collect_status = get_collection_data(venv_path)
         except FileNotFoundError as e:
+            await db.close()
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
@@ -219,6 +229,7 @@ async def collect_tasks_pip(
         task_collect_status.info = "Already installed"
         state = State(data=task_collect_status.sanitised_dict())
         response.status_code == status.HTTP_200_OK
+        await db.close()
         return state
     settings = Inject(get_settings)
 
@@ -237,10 +248,9 @@ async def collect_tasks_pip(
 
     background_tasks.add_task(
         _background_collect_pip,
-        state=state,
+        state_id=state.id,
         venv_path=venv_path,
         task_pkg=task_pkg,
-        db=db,
     )
     logger.debug(
         "Task-collection endpoint: start background collection "
@@ -253,6 +263,7 @@ async def collect_tasks_pip(
     )
     state.data["info"] = info
     response.status_code = status.HTTP_201_CREATED
+    await db.close()
     return state
 
 
@@ -270,6 +281,7 @@ async def check_collection_status(
     logger.debug(f"Querying state for state.id={state_id}")
     state = await db.get(State, state_id)
     if not state:
+        await db.close()
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No task collection info with id={state_id}",
@@ -282,6 +294,7 @@ async def check_collection_status(
         data.log = get_collection_log(data.venv_path)
         state.data = data.sanitised_dict()
     close_logger(logger)
+    await db.close()
     return state
 
 
@@ -297,19 +310,21 @@ async def get_list_task(
     res = await db.execute(stm)
     task_list = res.scalars().unique().fetchall()
     await asyncio.gather(*[db.refresh(t) for t in task_list])
+    await db.close()
     return task_list
 
 
 @router.get("/{task_id}", response_model=TaskRead)
-def get_task(
+async def get_task(
     task_id: int,
     user: User = Depends(current_active_user),
-    db_sync: DBSyncSession = Depends(get_sync_db),
+    db: AsyncSession = Depends(get_db),
 ) -> TaskRead:
     """
     Get info on a specific task
     """
-    task = db_sync.get(Task, task_id)
+    task = await db.get(Task, task_id)
+    await db.close()
     return task
 
 
@@ -346,6 +361,7 @@ async def patch_task(
 
     await db.commit()
     await db.refresh(db_task)
+    await db.close()
     return db_task
 
 
@@ -369,4 +385,5 @@ async def create_task(
     db.add(db_task)
     await db.commit()
     await db.refresh(db_task)
+    await db.close()
     return db_task

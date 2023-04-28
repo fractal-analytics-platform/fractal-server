@@ -1,5 +1,9 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# 1.2.3
+
+* Fix bug that was keeping multiple database conection open (\#649).
+
 # 1.2.2
 
 * Fix bug related to `user_local_exports` in SLURM-backend configuration (\#642).
