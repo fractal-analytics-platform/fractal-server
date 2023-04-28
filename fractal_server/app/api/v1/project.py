@@ -299,9 +299,9 @@ async def apply_workflow(
 
     background_tasks.add_task(
         submit_workflow,
-        workflow=workflow,
-        input_dataset=input_dataset,
-        output_dataset=output_dataset,
+        workflow_id=workflow.id,
+        input_dataset_id=input_dataset.id,
+        output_dataset_id=output_dataset.id,
         job_id=job.id,
         worker_init=apply_workflow.worker_init,
         slurm_user=user.slurm_user,
