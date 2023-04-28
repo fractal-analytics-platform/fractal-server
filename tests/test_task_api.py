@@ -61,7 +61,9 @@ async def test_background_collection(
     await db.refresh(state)
     debug(state)
     await _background_collect_pip(
-        state=state, venv_path=venv_path, task_pkg=task_pkg, db=db
+        state_id=state.id,
+        venv_path=venv_path,
+        task_pkg=task_pkg,
     )
     async with MockCurrentUser(persist=True):
         res = await client.get(f"{PREFIX}/collect/{state.id}")
@@ -108,7 +110,9 @@ async def test_background_collection_logs(
     await db.refresh(state)
     debug(state)
     await _background_collect_pip(
-        state=state, venv_path=venv_path, task_pkg=task_pkg, db=db
+        state_id=state.id,
+        venv_path=venv_path,
+        task_pkg=task_pkg,
     )
     async with MockCurrentUser(persist=True):
         res = await client.get(f"{PREFIX}/collect/{state.id}")
@@ -147,7 +151,9 @@ async def test_background_collection_failure(db, dummy_task_package):
     task_pkg.package_path = None
 
     await _background_collect_pip(
-        state=state, venv_path=venv_path, task_pkg=task_pkg, db=db
+        state_id=state.id,
+        venv_path=venv_path,
+        task_pkg=task_pkg,
     )
 
     await db.refresh(state)
