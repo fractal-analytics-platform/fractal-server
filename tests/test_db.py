@@ -53,3 +53,37 @@ async def test_sync_db(db_sync, db):
     task_list = res.scalars().all()
     assert len(task_list) == 1
     assert task_list[0].name == "mytask"
+
+
+async def test_sync_db_close(db_sync, db):
+    """
+    This test is used as an example to show that the commit() method is not
+    enough to fully close a db_sync connection.
+    """
+
+    from fractal_server.app.models.task import Task
+    from fractal_server.app.db import DB
+
+    db.add(
+        Task(
+            name="mytask",
+            input_type="image",
+            output_type="zarr",
+            command="cmd",
+            source="/source",
+        )
+    )
+    await db.commit()
+    await db.close()
+
+    new_db_sync = next(DB.get_sync_db())
+    task = new_db_sync.get(Task, 1)
+    debug(task)
+    task.name = "new_name"
+    new_db_sync.merge(task)
+    new_db_sync.commit()
+    debug(new_db_sync.identity_map)
+    assert new_db_sync.identity_map
+    new_db_sync.close()
+    debug(new_db_sync.identity_map)
+    assert not new_db_sync.identity_map
