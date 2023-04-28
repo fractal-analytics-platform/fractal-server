@@ -173,6 +173,7 @@ async def list_users(
     stm = select(User)
     res = await db.execute(stm)
     user_list = res.scalars().all()
+    await db.close()
     return user_list
 
 

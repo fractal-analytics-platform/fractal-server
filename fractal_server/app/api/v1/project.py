@@ -143,6 +143,7 @@ async def get_list_project(
     )
     res = await db.execute(stm)
     project_list = res.scalars().all()
+    await db.close()
     return project_list
 
 
@@ -177,6 +178,7 @@ async def create_project(
         db.add(db_project)
         await db.commit()
         await db.refresh(db_project)
+        await db.close()
     except IntegrityError as e:
         await db.rollback()
         logger = set_logger("create_project")
@@ -200,7 +202,9 @@ async def apply_workflow(
     background_tasks: BackgroundTasks,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-    db_sync: DBSyncSession = Depends(get_sync_db),
+    db_sync: DBSyncSession = Depends(
+        get_sync_db
+    ),  # FIXME: why both sync and async?  # noqa
 ) -> Optional[ApplyWorkflowRead]:
     output = await _get_dataset_check_owner(
         project_id=apply_workflow.project_id,
@@ -293,14 +297,17 @@ async def apply_workflow(
 
     background_tasks.add_task(
         submit_workflow,
-        workflow=workflow,
-        input_dataset=input_dataset,
-        output_dataset=output_dataset,
+        workflow_id=workflow.id,
+        input_dataset_id=input_dataset.id,
+        output_dataset_id=output_dataset.id,
         job_id=job.id,
         worker_init=apply_workflow.worker_init,
         slurm_user=user.slurm_user,
         user_cache_dir=user.cache_dir,
     )
+
+    await db.close()
+    db_sync.close()
 
     return job
 
@@ -320,6 +327,7 @@ async def get_project(
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
+    await db.close()
     return project
 
 
@@ -337,6 +345,7 @@ async def delete_project(
     )
     await db.delete(project)
     await db.commit()
+    await db.close()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -361,6 +370,8 @@ async def add_dataset(
     db.add(db_dataset)
     await db.commit()
     await db.refresh(db_dataset)
+    await db.close()
+
     return db_dataset
 
 
@@ -379,6 +390,7 @@ async def get_workflow_list(
     stm = select(Workflow).where(Workflow.project_id == project_id)
     res = await db.execute(stm)
     workflow_list = res.scalars().all()
+    await db.close()
     return workflow_list
 
 
@@ -397,6 +409,7 @@ async def get_job_list(
     stm = select(ApplyWorkflow).where(ApplyWorkflow.project_id == project_id)
     res = await db.execute(stm)
     job_list = res.scalars().all()
+    await db.close()
     return job_list
 
 
@@ -415,6 +428,7 @@ async def edit_project(
 
     await db.commit()
     await db.refresh(project)
+    await db.close()
     return project
 
 
@@ -435,6 +449,7 @@ async def get_dataset(
         project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
     )
     dataset = output["dataset"]
+    await db.close()
     return dataset
 
 
@@ -462,6 +477,7 @@ async def patch_dataset(
 
     await db.commit()
     await db.refresh(db_dataset)
+    await db.close()
     return db_dataset
 
 
@@ -488,6 +504,7 @@ async def delete_dataset(
     dataset = res.scalar()
     await db.delete(dataset)
     await db.commit()
+    await db.close()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -521,6 +538,7 @@ async def add_resource(
     db.add(db_resource)
     await db.commit()
     await db.refresh(db_resource)
+    await db.close()
     return db_resource
 
 
@@ -543,6 +561,7 @@ async def get_resource(
     stm = select(Resource).where(Resource.dataset_id == dataset_id)
     res = await db.execute(stm)
     resource_list = res.scalars().all()
+    await db.close()
     return resource_list
 
 
@@ -573,6 +592,7 @@ async def delete_resource(
         )
     await db.delete(resource)
     await db.commit()
+    await db.close()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -614,6 +634,7 @@ async def edit_resource(
         setattr(orig_resource, key, value)
     await db.commit()
     await db.refresh(orig_resource)
+    await db.close()
     return orig_resource
 
 
@@ -715,4 +736,5 @@ async def import_workflow_into_project(
                 db=db,
             )
 
+    await db.close()
     return db_workflow
