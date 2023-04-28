@@ -52,6 +52,11 @@ class DB:
                 "the database cannot be guaranteed."
             )
 
+        from devtools import debug
+
+        debug(settings.DATABASE_URL)
+        debug(settings.DATABASE_SYNC_URL)
+
         cls._engine_async = create_async_engine(
             settings.DATABASE_URL, echo=settings.DB_ECHO, future=True
         )
