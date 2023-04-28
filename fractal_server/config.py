@@ -25,6 +25,7 @@ from pydantic import BaseModel
 from pydantic import BaseSettings
 from pydantic import Field
 from pydantic import root_validator
+from sqlalchemy.engine import URL
 
 import fractal_server
 
@@ -164,10 +165,11 @@ class Settings(BaseSettings):
     DB_ECHO: bool = False
 
     POSTGRES_USER: Optional[str]
+    POSTGRES_DB: Optional[str]
+    POSTGRES_HOST: Optional[str]
     POSTGRES_PASSWORD: Optional[str]
     POSTGRES_SERVER: Optional[str] = "localhost"
     POSTGRES_PORT: Optional[str] = "5432"
-    POSTGRES_DB: Optional[str]
 
     SQLITE_PATH: Optional[str]
 
@@ -183,13 +185,33 @@ class Settings(BaseSettings):
             )
             return f"sqlite+aiosqlite:///{sqlite_path}"
         elif "postgres":
-            pg_uri = (
-                "postgresql+asyncpg://"
-                f"{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
-                f"@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}"
-                f"/{self.POSTGRES_DB}"
+            return URL.create(
+                drivername="postgresql+asyncpg",
+                username=self.POSTGRES_USER,
+                password=self.POSTGRES_PASSWORD,
+                host=self.POSTGRES_SERVER,
+                port=self.POSTGRES_PORT,
+                database=self.POSTGRES_DB,
             )
+
+            """
+            if self.POSTGRES_HOST:
+                pg_uri = (
+                    "postgresql+asyncpg://"
+                    f"{self.POSTGRES_USER}"
+                    "@"
+                    f"/{self.POSTGRES_DB}"
+                    f"?host={self.POSTGRES_HOST}"
+                )
+            else:
+                pg_uri = (
+                    "postgresql+asyncpg://"
+                    f"{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+                    f"@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}"
+                    f"/{self.POSTGRES_DB}"
+                )
             return pg_uri
+            """
 
     @property
     def DATABASE_SYNC_URL(self):
@@ -198,7 +220,7 @@ class Settings(BaseSettings):
                 raise ValueError("SQLITE_PATH path cannot be None")
             return self.DATABASE_URL.replace("aiosqlite", "pysqlite")
         elif self.DB_ENGINE == "postgres":
-            return self.DATABASE_URL.replace("asyncpg", "psycopg2")
+            return self.DATABASE_URL.set(drivername="postgresql+psycopg2")
 
     ###########################################################################
     # FRACTAL SPECIFIC
@@ -313,7 +335,6 @@ class Settings(BaseSettings):
 
             if DB_ENGINE == "postgres":
                 POSTGRES_USER: str
-                POSTGRES_PASSWORD: str
                 POSTGRES_DB: str
             elif DB_ENGINE == "sqlite":
                 SQLITE_PATH: str
@@ -326,6 +347,19 @@ class Settings(BaseSettings):
                 FRACTAL_SLURM_CONFIG_FILE: Path
 
         StrictSettings(**self.dict())
+
+        # Check that postgres configuration falls into one of the two supported
+        # cases (either a password-less socket-based connection, or a
+        # server:port connection with password)
+        if self.DB_ENGINE == "postgres":
+            if self.POSTGRES_HOST:
+                pass
+            elif (
+                self.POSTGRES_PASSWORD is None
+                or self.POSTGRES_SERVER is None
+                or self.POSTGRES_PORT is None
+            ):
+                raise FractalConfigurationError()
 
         # Check that some variables are allowed
         if self.FRACTAL_RUNNER_BACKEND not in ["local", "slurm"]:
