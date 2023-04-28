@@ -48,7 +48,9 @@ router = APIRouter()
 
 
 async def _background_collect_pip(
-    state: State, venv_path: Path, task_pkg: _TaskCollectPip, db: AsyncSession
+    state_id: int,
+    venv_path: Path,
+    task_pkg: _TaskCollectPip,
 ) -> None:
     """
     Install package and collect tasks
@@ -59,6 +61,10 @@ async def _background_collect_pip(
     In case of error, copy the log into the state and delete the package
     directory.
     """
+
+    db = next(get_db())
+    state: State = await db.get(State, state_id)
+
     logger_name = task_pkg.package.replace("/", "_")
     logger = set_logger(
         logger_name=logger_name,
@@ -110,6 +116,7 @@ async def _background_collect_pip(
         logger.debug("Task-collection status: OK")
         logger.info("Background task collection completed successfully")
         close_logger(logger)
+        await db.close()
 
     except Exception as e:
         # Write last logs to file
@@ -124,6 +131,7 @@ async def _background_collect_pip(
         state.data = data.sanitised_dict()
         await db.merge(state)
         await db.commit()
+        await db.close()
 
         # Delete corrupted package dir
         shell_rmtree(venv_path)
@@ -240,10 +248,9 @@ async def collect_tasks_pip(
 
     background_tasks.add_task(
         _background_collect_pip,
-        state=state,
+        state_id=state.id,
         venv_path=venv_path,
         task_pkg=task_pkg,
-        db=db,
     )
     logger.debug(
         "Task-collection endpoint: start background collection "
