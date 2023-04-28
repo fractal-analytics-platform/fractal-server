@@ -207,6 +207,10 @@ async def submit_workflow(
             worker_init=worker_init,
         )
 
+        logger.info(
+            f'End execution of workflow "{workflow.name}"; '
+            f"more logs at {str(log_file_path)}"
+        )
         logger.debug(f'END workflow "{workflow.name}"')
 
         db_sync.merge(output_dataset)
