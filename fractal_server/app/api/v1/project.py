@@ -409,7 +409,7 @@ async def get_job_list(
     stm = select(ApplyWorkflow).where(ApplyWorkflow.project_id == project_id)
     res = await db.execute(stm)
     job_list = res.scalars().all()
-
+    await db.close()
     return job_list
 
 
