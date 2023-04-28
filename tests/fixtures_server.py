@@ -91,10 +91,9 @@ def get_patched_settings(temp_path: Path):
         )
     elif DB_ENGINE == "postgres":
         settings.DB_ENGINE = "postgres"
-        settings.POSTGRES_USER = "fractal"
-        settings.POSTGRES_PASSWORD = "mynewpassword"
+        settings.POSTGRES_USER = "postgres"
+        settings.POSTGRES_PASSWORD = "postgres"
         settings.POSTGRES_DB = "fractal"
-        settings.POSTGRES_SERVER = "127.0.0.1"
     else:
         raise ValueError
 
