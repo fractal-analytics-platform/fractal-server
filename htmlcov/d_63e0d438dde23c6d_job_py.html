@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for fractal_server/app/api/v1/job.py: 87%</title>
+    <title>Coverage for fractal_server/app/api/v1/job.py: 84%</title>
     <link rel="icon" sizes="32x32" href="favicon_32.png">
     <link rel="stylesheet" href="style.css" type="text/css">
     <script type="text/javascript" src="coverage_html.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>fractal_server/app/api/v1/job.py</b>:
-            <span class="pc_cov">87%</span>
+            <span class="pc_cov">84%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -55,9 +55,9 @@
             </div>
         </aside>
         <h2>
-            <span class="text">50 statements &nbsp;</span>
+            <span class="text">52 statements &nbsp;</span>
             <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">46<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">4<span class="text"> missing</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">6<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
             <button type="button" class="par run show_par button_toggle_par" value="par" data-shortcut="p" title="Toggle lines partially run">0<span class="text"> partial</span></button>
         </h2>
@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="d_63e0d438dde23c6d_project_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.3">coverage.py v7.2.3</a>,
-            created at 2023-04-21 11:10 +0000
+            created at 2023-04-28 13:29 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -136,44 +136,47 @@
     <p class="run"><span class="n"><a id="t52" href="#t52">52</a></span><span class="t">    <span class="key">except</span> <span class="op">(</span><span class="nam">KeyError</span><span class="op">,</span> <span class="nam">FileNotFoundError</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t53" href="#t53">53</a></span><span class="t">        <span class="key">pass</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t54" href="#t54">54</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t55" href="#t55">55</a></span><span class="t">    <span class="key">return</span> <span class="nam">job_read</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t56" href="#t56">56</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t55" href="#t55">55</a></span><span class="t">    <span class="key">await</span> <span class="nam">db</span><span class="op">.</span><span class="nam">close</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t56" href="#t56">56</a></span><span class="t">    <span class="key">return</span> <span class="nam">job_read</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t57" href="#t57">57</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t58" href="#t58">58</a></span><span class="t"><span class="op">@</span><span class="nam">router</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"/download/{job_id}"</span><span class="op">,</span> <span class="nam">response_class</span><span class="op">=</span><span class="nam">StreamingResponse</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t59" href="#t59">59</a></span><span class="t"><span class="key">async</span> <span class="key">def</span> <span class="nam">download_job_logs</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t60" href="#t60">60</a></span><span class="t">    <span class="nam">job_id</span><span class="op">:</span> <span class="nam">int</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t61" href="#t61">61</a></span><span class="t">    <span class="nam">user</span><span class="op">:</span> <span class="nam">User</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">current_active_user</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t62" href="#t62">62</a></span><span class="t">    <span class="nam">db</span><span class="op">:</span> <span class="nam">AsyncSession</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">get_db</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t63" href="#t63">63</a></span><span class="t"><span class="op">)</span> <span class="op">-></span> <span class="nam">StreamingResponse</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t64" href="#t64">64</a></span><span class="t">    <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t65" href="#t65">65</a></span><span class="t"><span class="str">    Download job folder</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t66" href="#t66">66</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t67" href="#t67">67</a></span><span class="t">    <span class="nam">job</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">db</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="nam">ApplyWorkflow</span><span class="op">,</span> <span class="nam">job_id</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t68" href="#t68">68</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">job</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t69" href="#t69">69</a></span><span class="t">        <span class="key">raise</span> <span class="nam">HTTPException</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t70" href="#t70">70</a></span><span class="t">            <span class="nam">status_code</span><span class="op">=</span><span class="nam">status</span><span class="op">.</span><span class="nam">HTTP_404_NOT_FOUND</span><span class="op">,</span> <span class="nam">detail</span><span class="op">=</span><span class="str">"Job not found"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t71" href="#t71">71</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t72" href="#t72">72</a></span><span class="t">    <span class="key">await</span> <span class="nam">_get_project_check_owner</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t73" href="#t73">73</a></span><span class="t">        <span class="nam">project_id</span><span class="op">=</span><span class="nam">job</span><span class="op">.</span><span class="nam">project_id</span><span class="op">,</span> <span class="nam">user_id</span><span class="op">=</span><span class="nam">user</span><span class="op">.</span><span class="nam">id</span><span class="op">,</span> <span class="nam">db</span><span class="op">=</span><span class="nam">db</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t74" href="#t74">74</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t75" href="#t75">75</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t76" href="#t76">76</a></span><span class="t">    <span class="com"># Extract job's working_dir attribute</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t77" href="#t77">77</a></span><span class="t">    <span class="nam">working_dir_str</span> <span class="op">=</span> <span class="nam">job</span><span class="op">.</span><span class="nam">dict</span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="str">"working_dir"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t78" href="#t78">78</a></span><span class="t">    <span class="nam">working_dir_path</span> <span class="op">=</span> <span class="nam">Path</span><span class="op">(</span><span class="nam">working_dir_str</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t79" href="#t79">79</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t80" href="#t80">80</a></span><span class="t">    <span class="com"># Create zip byte stream</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t81" href="#t81">81</a></span><span class="t">    <span class="nam">PREFIX_ZIP</span> <span class="op">=</span> <span class="nam">working_dir_path</span><span class="op">.</span><span class="nam">name</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t82" href="#t82">82</a></span><span class="t">    <span class="nam">zip_filename</span> <span class="op">=</span> <span class="str">f"{PREFIX_ZIP}_archive.zip"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t83" href="#t83">83</a></span><span class="t">    <span class="nam">byte_stream</span> <span class="op">=</span> <span class="nam">BytesIO</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t84" href="#t84">84</a></span><span class="t">    <span class="key">with</span> <span class="nam">ZipFile</span><span class="op">(</span><span class="nam">byte_stream</span><span class="op">,</span> <span class="nam">mode</span><span class="op">=</span><span class="str">"w"</span><span class="op">,</span> <span class="nam">compression</span><span class="op">=</span><span class="nam">ZIP_DEFLATED</span><span class="op">)</span> <span class="key">as</span> <span class="nam">zipfile</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t85" href="#t85">85</a></span><span class="t">        <span class="key">for</span> <span class="nam">fpath</span> <span class="key">in</span> <span class="nam">working_dir_path</span><span class="op">.</span><span class="nam">glob</span><span class="op">(</span><span class="str">"*"</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t86" href="#t86">86</a></span><span class="t">            <span class="nam">zipfile</span><span class="op">.</span><span class="nam">write</span><span class="op">(</span><span class="nam">filename</span><span class="op">=</span><span class="nam">str</span><span class="op">(</span><span class="nam">fpath</span><span class="op">)</span><span class="op">,</span> <span class="nam">arcname</span><span class="op">=</span><span class="nam">str</span><span class="op">(</span><span class="nam">fpath</span><span class="op">.</span><span class="nam">name</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t87" href="#t87">87</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t88" href="#t88">88</a></span><span class="t">    <span class="key">return</span> <span class="nam">StreamingResponse</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t89" href="#t89">89</a></span><span class="t">        <span class="nam">iter</span><span class="op">(</span><span class="op">[</span><span class="nam">byte_stream</span><span class="op">.</span><span class="nam">getvalue</span><span class="op">(</span><span class="op">)</span><span class="op">]</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t90" href="#t90">90</a></span><span class="t">        <span class="nam">media_type</span><span class="op">=</span><span class="str">"application/x-zip-compressed"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t91" href="#t91">91</a></span><span class="t">        <span class="nam">headers</span><span class="op">=</span><span class="op">{</span><span class="str">"Content-Disposition"</span><span class="op">:</span> <span class="str">f"attachment;filename={zip_filename}"</span><span class="op">}</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t92" href="#t92">92</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t58" href="#t58">58</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t59" href="#t59">59</a></span><span class="t"><span class="op">@</span><span class="nam">router</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"/download/{job_id}"</span><span class="op">,</span> <span class="nam">response_class</span><span class="op">=</span><span class="nam">StreamingResponse</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t60" href="#t60">60</a></span><span class="t"><span class="key">async</span> <span class="key">def</span> <span class="nam">download_job_logs</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t61" href="#t61">61</a></span><span class="t">    <span class="nam">job_id</span><span class="op">:</span> <span class="nam">int</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t62" href="#t62">62</a></span><span class="t">    <span class="nam">user</span><span class="op">:</span> <span class="nam">User</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">current_active_user</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t63" href="#t63">63</a></span><span class="t">    <span class="nam">db</span><span class="op">:</span> <span class="nam">AsyncSession</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">get_db</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t64" href="#t64">64</a></span><span class="t"><span class="op">)</span> <span class="op">-></span> <span class="nam">StreamingResponse</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t65" href="#t65">65</a></span><span class="t">    <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t66" href="#t66">66</a></span><span class="t"><span class="str">    Download job folder</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t67" href="#t67">67</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t68" href="#t68">68</a></span><span class="t">    <span class="nam">job</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">db</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="nam">ApplyWorkflow</span><span class="op">,</span> <span class="nam">job_id</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t69" href="#t69">69</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">job</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t70" href="#t70">70</a></span><span class="t">        <span class="key">raise</span> <span class="nam">HTTPException</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t71" href="#t71">71</a></span><span class="t">            <span class="nam">status_code</span><span class="op">=</span><span class="nam">status</span><span class="op">.</span><span class="nam">HTTP_404_NOT_FOUND</span><span class="op">,</span> <span class="nam">detail</span><span class="op">=</span><span class="str">"Job not found"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t72" href="#t72">72</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t73" href="#t73">73</a></span><span class="t">    <span class="key">await</span> <span class="nam">_get_project_check_owner</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t74" href="#t74">74</a></span><span class="t">        <span class="nam">project_id</span><span class="op">=</span><span class="nam">job</span><span class="op">.</span><span class="nam">project_id</span><span class="op">,</span> <span class="nam">user_id</span><span class="op">=</span><span class="nam">user</span><span class="op">.</span><span class="nam">id</span><span class="op">,</span> <span class="nam">db</span><span class="op">=</span><span class="nam">db</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t75" href="#t75">75</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t76" href="#t76">76</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t77" href="#t77">77</a></span><span class="t">    <span class="com"># Extract job's working_dir attribute</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t78" href="#t78">78</a></span><span class="t">    <span class="nam">working_dir_str</span> <span class="op">=</span> <span class="nam">job</span><span class="op">.</span><span class="nam">dict</span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="str">"working_dir"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t79" href="#t79">79</a></span><span class="t">    <span class="nam">working_dir_path</span> <span class="op">=</span> <span class="nam">Path</span><span class="op">(</span><span class="nam">working_dir_str</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t80" href="#t80">80</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t81" href="#t81">81</a></span><span class="t">    <span class="com"># Create zip byte stream</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t82" href="#t82">82</a></span><span class="t">    <span class="nam">PREFIX_ZIP</span> <span class="op">=</span> <span class="nam">working_dir_path</span><span class="op">.</span><span class="nam">name</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t83" href="#t83">83</a></span><span class="t">    <span class="nam">zip_filename</span> <span class="op">=</span> <span class="str">f"{PREFIX_ZIP}_archive.zip"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t84" href="#t84">84</a></span><span class="t">    <span class="nam">byte_stream</span> <span class="op">=</span> <span class="nam">BytesIO</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t85" href="#t85">85</a></span><span class="t">    <span class="key">with</span> <span class="nam">ZipFile</span><span class="op">(</span><span class="nam">byte_stream</span><span class="op">,</span> <span class="nam">mode</span><span class="op">=</span><span class="str">"w"</span><span class="op">,</span> <span class="nam">compression</span><span class="op">=</span><span class="nam">ZIP_DEFLATED</span><span class="op">)</span> <span class="key">as</span> <span class="nam">zipfile</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t86" href="#t86">86</a></span><span class="t">        <span class="key">for</span> <span class="nam">fpath</span> <span class="key">in</span> <span class="nam">working_dir_path</span><span class="op">.</span><span class="nam">glob</span><span class="op">(</span><span class="str">"*"</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t87" href="#t87">87</a></span><span class="t">            <span class="nam">zipfile</span><span class="op">.</span><span class="nam">write</span><span class="op">(</span><span class="nam">filename</span><span class="op">=</span><span class="nam">str</span><span class="op">(</span><span class="nam">fpath</span><span class="op">)</span><span class="op">,</span> <span class="nam">arcname</span><span class="op">=</span><span class="nam">str</span><span class="op">(</span><span class="nam">fpath</span><span class="op">.</span><span class="nam">name</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t88" href="#t88">88</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t89" href="#t89">89</a></span><span class="t">    <span class="key">await</span> <span class="nam">db</span><span class="op">.</span><span class="nam">close</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t90" href="#t90">90</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t91" href="#t91">91</a></span><span class="t">    <span class="key">return</span> <span class="nam">StreamingResponse</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t92" href="#t92">92</a></span><span class="t">        <span class="nam">iter</span><span class="op">(</span><span class="op">[</span><span class="nam">byte_stream</span><span class="op">.</span><span class="nam">getvalue</span><span class="op">(</span><span class="op">)</span><span class="op">]</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t93" href="#t93">93</a></span><span class="t">        <span class="nam">media_type</span><span class="op">=</span><span class="str">"application/x-zip-compressed"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t94" href="#t94">94</a></span><span class="t">        <span class="nam">headers</span><span class="op">=</span><span class="op">{</span><span class="str">"Content-Disposition"</span><span class="op">:</span> <span class="str">f"attachment;filename={zip_filename}"</span><span class="op">}</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t95" href="#t95">95</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -183,7 +186,7 @@
             <a id="nextFileLink" class="nav" href="d_63e0d438dde23c6d_project_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.3">coverage.py v7.2.3</a>,
-            created at 2023-04-21 11:10 +0000
+            created at 2023-04-28 13:29 +0000
         </p>
     </div>
 </footer>
