@@ -140,6 +140,7 @@ async def _insert_tasks(
     db.add_all(task_db_list)
     await db.commit()
     await asyncio.gather(*[db.refresh(t) for t in task_db_list])
+    await db.close()
     return task_db_list
 
 
@@ -208,6 +209,7 @@ async def collect_tasks_pip(
         try:
             task_collect_status = get_collection_data(venv_path)
         except FileNotFoundError as e:
+            await db.close()
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
@@ -219,6 +221,7 @@ async def collect_tasks_pip(
         task_collect_status.info = "Already installed"
         state = State(data=task_collect_status.sanitised_dict())
         response.status_code == status.HTTP_200_OK
+        await db.close()
         return state
     settings = Inject(get_settings)
 
@@ -253,6 +256,7 @@ async def collect_tasks_pip(
     )
     state.data["info"] = info
     response.status_code = status.HTTP_201_CREATED
+    await db.close()
     return state
 
 
@@ -270,6 +274,7 @@ async def check_collection_status(
     logger.debug(f"Querying state for state.id={state_id}")
     state = await db.get(State, state_id)
     if not state:
+        await db.close()
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No task collection info with id={state_id}",
@@ -282,6 +287,7 @@ async def check_collection_status(
         data.log = get_collection_log(data.venv_path)
         state.data = data.sanitised_dict()
     close_logger(logger)
+    await db.close()
     return state
 
 
@@ -297,6 +303,7 @@ async def get_list_task(
     res = await db.execute(stm)
     task_list = res.scalars().unique().fetchall()
     await asyncio.gather(*[db.refresh(t) for t in task_list])
+    await db.close()
     return task_list
 
 
@@ -310,6 +317,7 @@ def get_task(
     Get info on a specific task
     """
     task = db_sync.get(Task, task_id)
+    db_sync.close()
     return task
 
 
@@ -346,6 +354,7 @@ async def patch_task(
 
     await db.commit()
     await db.refresh(db_task)
+    await db.close()
     return db_task
 
 
@@ -369,4 +378,5 @@ async def create_task(
     db.add(db_task)
     await db.commit()
     await db.refresh(db_task)
+    await db.close()
     return db_task
