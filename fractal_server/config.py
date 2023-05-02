@@ -177,7 +177,11 @@ class Settings(BaseSettings):
         if self.DB_ENGINE == "sqlite":
             if not self.SQLITE_PATH:
                 raise ValueError("SQLITE_PATH path cannot be None")
-            sqlite_path = abspath(self.SQLITE_PATH)
+            sqlite_path = (
+                abspath(self.SQLITE_PATH)
+                if self.SQLITE_PATH
+                else self.SQLITE_PATH
+            )
             url = URL.create(
                 drivername="sqlite+aiosqlite",
                 database=sqlite_path,
