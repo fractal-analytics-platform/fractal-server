@@ -24,7 +24,6 @@ from uuid import uuid4
 
 import pytest
 from asgi_lifespan import LifespanManager
-from devtools import debug
 from fastapi import FastAPI
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -42,41 +41,6 @@ except ModuleNotFoundError:
     DB_ENGINE = "sqlite"
 
 HAS_LOCAL_SBATCH = bool(shutil.which("sbatch"))
-
-
-def check_python_has_venv(python_path: str, temp_path: Path):
-    """
-    This function checks that we can safely use a certain python interpreter,
-    namely
-    1. It exists;
-    2. It has the venv module installed.
-    """
-
-    import subprocess
-    import shlex
-
-    temp_path.parent.mkdir(parents=True, exist_ok=True)
-    temp_path.parent.chmod(0o755)
-    temp_path.mkdir(parents=True, exist_ok=True)
-    temp_path.chmod(0o755)
-
-    cmd = f"{python_path} -m venv {temp_path.as_posix()}"
-    p = subprocess.run(
-        shlex.split(cmd),
-        capture_output=True,
-    )
-    if p.returncode != 0:
-        debug(cmd)
-        debug(p.stdout.decode("UTF-8"))
-        debug(p.stderr.decode("UTF-8"))
-        logging.warning(
-            "check_python_has_venv({python_path=}, {temp_path=}) failed."
-        )
-        raise RuntimeError(
-            p.stderr.decode("UTF-8"),
-            f"Hint: is the venv module installed for {python_path}? "
-            f'Try running "{cmd}".',
-        )
 
 
 def get_patched_settings(temp_path: Path):
@@ -109,9 +73,6 @@ def get_patched_settings(temp_path: Path):
     # container. If left unset it defaults to `sys.executable`
     if not HAS_LOCAL_SBATCH:
         settings.FRACTAL_SLURM_WORKER_PYTHON = "/usr/bin/python3.9"
-        check_python_has_venv(
-            "/usr/bin/python3.9", temp_path / "check_python_has_venv"
-        )
 
     settings.FRACTAL_SLURM_CONFIG_FILE = temp_path / "slurm_config.json"
 
