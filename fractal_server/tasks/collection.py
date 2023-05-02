@@ -24,7 +24,6 @@ from typing import Optional
 from typing import Union
 from zipfile import ZipFile
 
-from devtools import debug
 from pydantic import root_validator
 
 from ..common.schemas import ManifestV1
@@ -61,17 +60,10 @@ def get_python_interpreter(version: Optional[str] = None) -> str:
         interpreter: string representing the python executable or its path
     """
 
-    debug("WE ARE IN get_python_interpreter")
-    debug(version)
-    import socket
-
-    debug(socket.gethostname())
-
     settings = Inject(get_settings)
     if settings.FRACTAL_SLURM_WORKER_PYTHON is not None:
         interpreter = settings.FRACTAL_SLURM_WORKER_PYTHON
         if version is not None:
-            debug("THIS CANNOT WORK")
             raise ValueError(
                 "Cannot choose Python interpreter for task collection and "
                 f"installation: both Python version {version} and "
@@ -86,8 +78,6 @@ def get_python_interpreter(version: Optional[str] = None) -> str:
             )
     else:
         interpreter = sys.executable
-
-    debug(interpreter)
 
     return interpreter
 
