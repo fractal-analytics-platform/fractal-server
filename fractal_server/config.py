@@ -261,8 +261,10 @@ class Settings(BaseSettings):
 
     FRACTAL_SLURM_WORKER_PYTHON: Optional[str] = None
     """
-    Path to Python interpreter that will run the jobs on the SLURM nodes. If
-    not specified, the same interpreter that runs the server is used.
+    Path to Python interpreter that will create the task environments and also
+    run the jobs on the SLURM nodes. If not specified, the same interpreter
+    that runs the server is used. NOTE: this interpreter must have the venv and
+    pip modules available.
     """
 
     FRACTAL_SLURM_POLL_INTERVAL: Optional[int] = 60
@@ -287,11 +289,6 @@ class Settings(BaseSettings):
     cancelled, or writing the file is taking long). After this interval, the
     file is considered as missing.
     """
-
-    # NOTE: we currently set FRACTAL_PARSL_MONITORING to False, due to
-    # https://github.com/fractal-analytics-platform/fractal-server/issues/148
-    FRACTAL_PARSL_MONITORING: bool = False
-    FRACTAL_PARSL_CONFIG: str = "local"
 
     ###########################################################################
     # BUSINESS LOGIC
@@ -336,6 +333,15 @@ class Settings(BaseSettings):
                 f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
                 "is not allowed"
             )
+
+        # When using local backend, SLURM-related variables should not be set
+        if self.FRACTAL_RUNNER_BACKEND == "local":
+            if self.FRACTAL_SLURM_WORKER_PYTHON:
+                raise FractalConfigurationError(
+                    "Cannot set FRACTAL_RUNNER_BACKEND=local and "
+                    "FRACTAL_SLURM_WORKER_PYTHON="
+                    f"{self.FRACTAL_SLURM_WORKER_PYTHON}"
+                )
 
         if self.FRACTAL_RUNNER_BACKEND == "slurm":
             info = f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"

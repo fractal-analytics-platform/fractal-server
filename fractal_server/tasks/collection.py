@@ -24,6 +24,7 @@ from typing import Optional
 from typing import Union
 from zipfile import ZipFile
 
+from devtools import debug
 from pydantic import root_validator
 
 from ..common.schemas import ManifestV1
@@ -43,6 +44,12 @@ def get_python_interpreter(version: Optional[str] = None) -> str:
     """
     Return the path to the python interpreter
 
+    Priority list:
+
+    1. `FRACTAL_SLURM_WORKER_PYTHON`, if specified;
+    2. `python{version}`, if specified;
+    3. The same interpreter that is running fractal-server.
+
     Args:
         version: Python version
 
@@ -53,7 +60,25 @@ def get_python_interpreter(version: Optional[str] = None) -> str:
     Returns:
         interpreter: string representing the python executable or its path
     """
-    if version:
+
+    debug("WE ARE IN get_python_interpreter")
+    debug(version)
+    import socket
+
+    debug(socket.gethostname())
+
+    settings = Inject(get_settings)
+    if settings.FRACTAL_SLURM_WORKER_PYTHON is not None:
+        interpreter = settings.FRACTAL_SLURM_WORKER_PYTHON
+        if version is not None:
+            debug("THIS CANNOT WORK")
+            raise ValueError(
+                "Cannot choose Python interpreter for task collection and "
+                f"installation: both Python version {version} and "
+                f"{settings.FRACTAL_SLURM_WORKER_PYTHON=} are specified."
+            )
+
+    elif version:
         interpreter = shutil.which(f"python{version}")
         if not interpreter:
             raise ValueError(
@@ -61,6 +86,8 @@ def get_python_interpreter(version: Optional[str] = None) -> str:
             )
     else:
         interpreter = sys.executable
+
+    debug(interpreter)
 
     return interpreter
 
