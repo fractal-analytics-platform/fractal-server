@@ -802,23 +802,6 @@ redis = ["redis (>=4.3.3,<5.0.0)"]
 sqlalchemy = ["fastapi-users-db-sqlalchemy (>=4.0.0)"]
 
 [[package]]
-name = "fastapi-users-db-sqlmodel"
-version = "0.2.0"
-description = "FastAPI Users database adapter for SQLModel."
-category = "main"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "fastapi-users-db-sqlmodel-0.2.0.tar.gz", hash = "sha256:d373aada5cc9e46e1cca327e4cb9e9e5c78208b61074955434fdeb4156bad1c3"},
-    {file = "fastapi_users_db_sqlmodel-0.2.0-py3-none-any.whl", hash = "sha256:b4e91fe9afe719040888ad886ea033b8e1f8fcd459b242733e95e33cfa16984c"},
-]
-
-[package.dependencies]
-fastapi-users = ">=10.0.2"
-sqlalchemy = {version = ">=1.4,<1.4.36", extras = ["asyncio"]}
-sqlmodel = "*"
-
-[[package]]
 name = "filelock"
 version = "3.12.0"
 description = "A platform independent file lock."
@@ -2653,4 +2636,4 @@ slurm = ["clusterfutures"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "8f3eeba3bf1d520fcd87116d613c9bab279149984f2420e53ca55795e070bc08"
+content-hash = "0cb7e05bb116750a67e50ffa612f9a23dc4888b53c09cb5d404e9961ac8bc348"
