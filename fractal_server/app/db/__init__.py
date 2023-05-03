@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import Session as DBSyncSession
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from ...config import get_settings
 from ...logger import set_logger
@@ -52,18 +53,28 @@ class DB:
                 "the database cannot be guaranteed."
             )
 
+        # Set some sqlite-specific options
+        if settings.DB_ENGINE == "sqlite":
+            engine_kwargs_async = dict(poolclass=StaticPool)
+            engine_kwargs_sync = dict(
+                poolclass=StaticPool,
+                connect_args={"check_same_thread": False},
+            )
+        else:
+            engine_kwargs_async = {}
+            engine_kwargs_sync = {}
+
         cls._engine_async = create_async_engine(
-            settings.DATABASE_URL, echo=settings.DB_ECHO, future=True
+            settings.DATABASE_URL,
+            echo=settings.DB_ECHO,
+            future=True,
+            **engine_kwargs_async,
         )
         cls._engine_sync = create_engine(
             settings.DATABASE_SYNC_URL,
             echo=settings.DB_ECHO,
             future=True,
-            connect_args=(
-                {"check_same_thread": False}
-                if settings.DB_ENGINE == "sqlite"
-                else {}
-            ),
+            **engine_kwargs_sync,
         )
 
         cls._async_session_maker = sessionmaker(
