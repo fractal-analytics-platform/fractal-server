@@ -86,9 +86,7 @@ def get_patched_settings(temp_path: Path):
 
     settings.DB_ENGINE = DB_ENGINE
     if DB_ENGINE == "sqlite":
-        settings.SQLITE_PATH = (
-            f"{temp_path.as_posix()}/_test.db?mode=memory&cache=shared"
-        )
+        settings.SQLITE_PATH = f"{temp_path.as_posix()}/_test.db"
     elif DB_ENGINE == "postgres":
         settings.DB_ENGINE = "postgres"
         settings.POSTGRES_USER = "postgres"
