@@ -224,6 +224,7 @@ async def test_failing_workflow_TaskExecutionError(
     failing_task: str,
     request,
     override_settings_factory,
+    resource_factory,
 ):
 
     override_settings_factory(
@@ -252,6 +253,9 @@ async def test_failing_workflow_TaskExecutionError(
             project, name="input", type="image", read_only=True
         )
         input_dataset_id = input_dataset.id
+        await resource_factory(
+            path=str(tmp777_path / "input_dir"), dataset=input_dataset
+        )
 
         # CREATE OUTPUT DATASET AND RESOURCE
 
@@ -379,6 +383,7 @@ async def test_failing_workflow_JobExecutionError(
     monkey_slurm_user,
     relink_python_interpreter,
     cfut_jobs_finished,
+    resource_factory,
 ):
 
     override_settings_factory(
@@ -400,6 +405,9 @@ async def test_failing_workflow_JobExecutionError(
             project, name="input", type="image", read_only=True
         )
         input_dataset_id = input_dataset.id
+        await resource_factory(
+            path=str(tmp777_path / "input_dir"), dataset=input_dataset
+        )
 
         # CREATE OUTPUT DATASET AND RESOURCE
 
