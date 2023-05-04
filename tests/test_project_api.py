@@ -684,3 +684,41 @@ async def test_591(
         )
         debug(res.json())
         assert res.status_code == 422
+
+
+async def test_no_resources(
+    MockCurrentUser,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    task_factory,
+    db,
+    client,
+):
+    async with MockCurrentUser(persist=True) as user:
+        project = await project_factory(user)
+        input_dataset = await dataset_factory(
+            project, name="input", type="zarr"
+        )
+        output_dataset = await dataset_factory(project, name="output")
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory()
+        await workflow.insert_task(task.id, db=db)
+
+        payload = dict(
+            project_id=project.id,
+            input_dataset_id=input_dataset.id,
+            output_dataset_id=output_dataset.id,
+            workflow_id=workflow.id,
+            overwrite_input=False,
+        )
+        debug(input_dataset)
+        debug(output_dataset)
+
+        res = await client.post(
+            f"{PREFIX}/apply/",
+            json=payload,
+        )
+
+        debug(res.json())
+        assert res.status_code == 422
