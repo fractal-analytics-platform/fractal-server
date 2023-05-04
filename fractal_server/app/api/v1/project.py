@@ -285,7 +285,7 @@ async def apply_workflow(
             input_dataset=input_dataset,
             output_dataset=output_dataset,
         )
-    except TypeError as e:
+    except (TypeError, ValueError) as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)
         )
