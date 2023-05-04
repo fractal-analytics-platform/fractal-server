@@ -23,18 +23,25 @@ from fractal_server.logger import set_logger
 logger = set_logger(__name__)
 
 
-async def bgtask_async_db():
+async def bgtask_async_db(state_id: int):
+    logger.critical("bgtask_async_db START")
     new_db: AsyncSession = await get_db().__anext__()
-    state = await new_db.get(State, 1)
+    logger.critical("bgtask_async_db 0")
+    state = await new_db.get(State, state_id)
+    logger.critical("bgtask_async_db 1")
     state.data = {"a": "b"}
+    logger.critical("bgtask_async_db 2")
     await new_db.merge(state)
+    logger.critical("bgtask_async_db 3")
     await new_db.commit()
+    logger.critical("bgtask_async_db 4")
     await new_db.close()
+    logger.critical("bgtask_async_db END")
 
 
-async def bgtask_sync_db():
+async def bgtask_sync_db(state_id: int):
     new_db: DBSyncSession = next(get_sync_db())
-    state = new_db.get(State, 1)
+    state = new_db.get(State, state_id)
     state.data = {"c": "d"}
     new_db.merge(state)
     new_db.commit()
@@ -53,7 +60,7 @@ async def run_background_task_async(
     await db.commit()
     logger.critical("ENDPOINT END")
 
-    background_tasks.add_task(bgtask_async_db)
+    background_tasks.add_task(bgtask_async_db, state1.id)
 
 
 @router_default.get("/test_sync")
@@ -68,14 +75,13 @@ async def run_background_task_sync(
     await db.commit()
     logger.critical("ENDPOINT END")
 
-    background_tasks.add_task(bgtask_sync_db)
+    background_tasks.add_task(bgtask_sync_db, state1.id)
 
 
 @pytest.fixture
 async def client_for_bgtasks(
     app: FastAPI,
     db: AsyncSession,
-    db_sync: DBSyncSession,
 ) -> AsyncGenerator[AsyncClient, Any]:
 
     app.include_router(router_default, prefix="/api/bgtasks")
@@ -85,10 +91,8 @@ async def client_for_bgtasks(
         yield client
 
 
-@pytest.mark.skip
 async def test_async_db(
     db,
-    db_sync,
     client_for_bgtasks,
 ):
     res = await client_for_bgtasks.get("http://test/api/bgtasks/test_async")
