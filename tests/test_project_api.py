@@ -294,7 +294,9 @@ async def test_add_dataset_local_path_error(app, client, MockCurrentUser, db):
         assert res.status_code == 422
 
 
-async def test_delete_project(client, MockCurrentUser, db):
+async def test_delete_project(
+    client, MockCurrentUser, db, job_factory, workflow_factory, tmp_path
+):
 
     async with MockCurrentUser(persist=True):
         res = await client.get(f"{PREFIX}/")
@@ -318,6 +320,20 @@ async def test_delete_project(client, MockCurrentUser, db):
         res = list(res)
         debug(res)
         assert len(res) == 1
+        dataset = res[0]
+
+        # Add a workflow to the project
+        wf = await workflow_factory()
+
+        # Add a job to the project
+        job = await job_factory(
+            project_id=p["id"],
+            workflow_id=wf.id,
+            working_dir=(tmp_path / "some_working_dir").as_posix(),
+            input_dataset_id=dataset.id,
+            output_dataset_id=dataset.id,
+        )
+        debug(job)
 
         # Delete the project
         res = await client.delete(f"{PREFIX}/{p['id']}")
