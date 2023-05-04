@@ -91,7 +91,7 @@ def get_patched_settings(temp_path: Path):
         settings.DB_ENGINE = "postgres"
         settings.POSTGRES_USER = "postgres"
         settings.POSTGRES_PASSWORD = "postgres"
-        settings.POSTGRES_DB = "fractal"
+        settings.POSTGRES_DB = "fractal_test"
     else:
         raise ValueError
 
@@ -200,6 +200,7 @@ async def db_create_tables(override_settings):
     engine = DB.engine_sync()
     metadata = SQLModel.metadata
     metadata.create_all(engine)
+
     yield
 
     metadata.drop_all(engine)
