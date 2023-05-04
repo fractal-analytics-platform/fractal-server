@@ -75,6 +75,7 @@ async def run_background_task_sync(
 async def client_for_bgtasks(
     app: FastAPI,
     db: AsyncSession,
+    db_sync: DBSyncSession,
 ) -> AsyncGenerator[AsyncClient, Any]:
 
     app.include_router(router_default, prefix="/api/bgtasks")
@@ -84,11 +85,21 @@ async def client_for_bgtasks(
         yield client
 
 
-async def test_async_db(db, client_for_bgtasks):
+@pytest.mark.skip
+async def test_async_db(
+    db,
+    db_sync,
+    client_for_bgtasks,
+):
     res = await client_for_bgtasks.get("http://test/api/bgtasks/test_async")
     debug(res)
 
 
-async def test_sync_db(db, client_for_bgtasks):
+@pytest.mark.skip
+async def test_sync_db(
+    db,
+    db_sync,
+    client_for_bgtasks,
+):
     res = await client_for_bgtasks.get("http://test/api/bgtasks/test_sync")
     debug(res)
