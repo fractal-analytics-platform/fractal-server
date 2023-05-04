@@ -5,6 +5,7 @@ import pytest
 from devtools import debug
 from sqlmodel import select
 
+from fractal_server.app.models import ApplyWorkflow
 from fractal_server.app.models import Dataset
 from fractal_server.app.models import Project
 from fractal_server.app.models import Resource
@@ -320,7 +321,8 @@ async def test_delete_project(
         res = list(res)
         debug(res)
         assert len(res) == 1
-        dataset = res[0]
+        dataset = res[0][0]
+        debug(dataset)
 
         # Add a workflow to the project
         wf = await workflow_factory()
@@ -345,6 +347,13 @@ async def test_delete_project(
         assert len(data) == 0
 
         # Check that project-related datasets were deleted
+        res = await db.execute(stm)
+        res = list(res)
+        debug(res)
+        assert len(res) == 0
+
+        # Check that project-related jobs were deleted
+        stm = select(ApplyWorkflow).join(Project).where(Project.id == p["id"])
         res = await db.execute(stm)
         res = list(res)
         debug(res)
