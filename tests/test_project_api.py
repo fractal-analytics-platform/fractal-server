@@ -580,7 +580,7 @@ async def test_project_apply_failures(
         assert res.status_code == 422
 
 
-async def test_project_apply_missing_cache_dir(
+async def test_project_apply_missing_user_attributes(
     db,
     client,
     MockCurrentUser,
@@ -633,6 +633,16 @@ async def test_project_apply_missing_cache_dir(
         debug(res.json())
         assert res.status_code == 422
         assert "user.cache_dir=None" in res.json()["detail"]
+
+        user.cache_dir = "/tmp"
+        user.slurm_user = None
+        await db.merge(user)
+        await db.commit()
+
+        res = await client.post(f"{PREFIX}/apply/", json=payload)
+        debug(res.json())
+        assert res.status_code == 422
+        assert "user.slurm_user=None" in res.json()["detail"]
 
 
 async def test_create_project(
