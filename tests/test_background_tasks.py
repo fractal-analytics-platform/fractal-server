@@ -95,7 +95,6 @@ async def test_async_db(
     debug(res)
 
 
-@pytest.mark.skip
 async def test_sync_db(
     db,
     db_sync,
