@@ -1,5 +1,9 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# 1.2.5
+
+* Improve error handling in workflow-apply endpoint (\#665).
+
 # 1.2.4
 
 * Review setup for database URLs, especially to allow using UNIX-socket connections for postgresl (\#657).
