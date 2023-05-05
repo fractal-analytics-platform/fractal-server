@@ -193,6 +193,9 @@ async def create_project(
     return db_project
 
 
+# Project endpoints ("/{project_id}")
+
+
 @router.post(
     "/{project_id}/workflow/{workflow_id}/apply/",
     status_code=status.HTTP_202_ACCEPTED,
@@ -319,9 +322,6 @@ async def apply_workflow(
     return job
 
 
-# Project endpoints ("/{project_id}")
-
-
 @router.get("/{project_id}", response_model=ProjectRead)
 async def get_project(
     project_id: int,
@@ -439,10 +439,10 @@ async def edit_project(
     return project
 
 
-# Dataset endpoints ("/{project_id}/{dataset_id}")
+# Dataset endpoints ("/{project_id}/dataset/{dataset_id}")
 
 
-@router.get("/{project_id}/{dataset_id}", response_model=DatasetRead)
+@router.get("/{project_id}/dataset/{dataset_id}", response_model=DatasetRead)
 async def get_dataset(
     project_id: int,
     dataset_id: int,
@@ -460,7 +460,7 @@ async def get_dataset(
     return dataset
 
 
-@router.patch("/{project_id}/{dataset_id}", response_model=DatasetRead)
+@router.patch("/{project_id}/dataset/{dataset_id}", response_model=DatasetRead)
 async def patch_dataset(
     project_id: int,
     dataset_id: int,
@@ -488,7 +488,7 @@ async def patch_dataset(
     return db_dataset
 
 
-@router.delete("/{project_id}/{dataset_id}", status_code=204)
+@router.delete("/{project_id}/dataset/{dataset_id}", status_code=204)
 async def delete_dataset(
     project_id: int,
     dataset_id: int,
@@ -516,7 +516,7 @@ async def delete_dataset(
 
 
 @router.post(
-    "/{project_id}/{dataset_id}",
+    "/{project_id}/dataset/{dataset_id}",
     response_model=ResourceRead,
     status_code=status.HTTP_201_CREATED,
 )
@@ -550,7 +550,7 @@ async def add_resource(
 
 
 @router.get(
-    "/{project_id}/{dataset_id}/resources/",
+    "/{project_id}/dataset/{dataset_id}/resources/",
     response_model=list[ResourceRead],
 )
 async def get_resource(
@@ -572,10 +572,14 @@ async def get_resource(
     return resource_list
 
 
-# Resource endpoints ("/{project_id}/{dataset_id}/{resource_id}")
+# Resource endpoints
+# ("/{project_id}/dataset/{dataset_id}/resource/{resource_id}")
 
 
-@router.delete("/{project_id}/{dataset_id}/{resource_id}", status_code=204)
+@router.delete(
+    "/{project_id}/dataset/{dataset_id}/resource/{resource_id}",
+    status_code=204,
+)
 async def delete_resource(
     project_id: int,
     dataset_id: int,
@@ -604,7 +608,8 @@ async def delete_resource(
 
 
 @router.patch(
-    "/{project_id}/{dataset_id}/{resource_id}", response_model=ResourceRead
+    "/{project_id}/dataset/{dataset_id}/resource/{resource_id}",
+    response_model=ResourceRead,
 )
 async def edit_resource(
     project_id: int,
