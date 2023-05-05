@@ -315,27 +315,30 @@ async def test_delete_project(
         assert res.status_code == 200
         assert len(data) == 1
 
-        # Verify that the project has a dataset
+        # Check that a project-related dataset exists
         stm = select(Dataset).join(Project).where(Project.id == p["id"])
         res = await db.execute(stm)
-        res = list(res)
-        debug(res)
-        assert len(res) == 1
-        dataset = res[0][0]
-        debug(dataset)
+        datasets = list(res)
+        assert len(datasets) == 1
+        dataset_id = datasets[0][0].id
 
         # Add a workflow to the project
-        wf = await workflow_factory()
+        wf = await workflow_factory(project_id=p["id"])
 
         # Add a job to the project
-        job = await job_factory(
+        await job_factory(
             project_id=p["id"],
             workflow_id=wf.id,
             working_dir=(tmp_path / "some_working_dir").as_posix(),
-            input_dataset_id=dataset.id,
-            output_dataset_id=dataset.id,
+            input_dataset_id=dataset_id,
+            output_dataset_id=dataset_id,
         )
-        debug(job)
+
+        # Check that a project-related job exists
+        stm = select(ApplyWorkflow).join(Project).where(Project.id == p["id"])
+        res = await db.execute(stm)
+        jobs = list(res)
+        assert len(jobs) == 1
 
         # Delete the project
         res = await client.delete(f"{PREFIX}/{p['id']}")
@@ -347,17 +350,18 @@ async def test_delete_project(
         assert len(data) == 0
 
         # Check that project-related datasets were deleted
+        stm = select(Dataset).join(Project).where(Project.id == p["id"])
         res = await db.execute(stm)
-        res = list(res)
-        debug(res)
-        assert len(res) == 0
+        datasets = list(res)
+        debug(datasets)
+        assert len(datasets) == 0
 
         # Check that project-related jobs were deleted
         stm = select(ApplyWorkflow).join(Project).where(Project.id == p["id"])
-        res = await db.execute(stm)
-        res = list(res)
-        debug(res)
-        assert len(res) == 0
+        jobs = await db.execute(stm)
+        jobs = list(jobs)
+        debug(jobs)
+        assert len(jobs) == 0
 
 
 async def test_edit_resource(
