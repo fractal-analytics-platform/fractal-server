@@ -6,6 +6,7 @@ from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Query
 from fastapi import Response
 from fastapi import status
 from pydantic import UUID4
@@ -193,13 +194,17 @@ async def create_project(
 
 
 @router.post(
-    "/apply/",
+    "/{project_id}/workflow/{workflow_id}/apply/",
     status_code=status.HTTP_202_ACCEPTED,
     response_model=ApplyWorkflowRead,
 )
 async def apply_workflow(
+    project_id: int,
+    workflow_id: int,
     apply_workflow: ApplyWorkflowCreate,
     background_tasks: BackgroundTasks,
+    input_dataset_id: int = Query(),
+    output_dataset_id: Union[int, None] = Query(default=None),
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
     db_sync: DBSyncSession = Depends(
@@ -207,19 +212,19 @@ async def apply_workflow(
     ),  # FIXME: why both sync and async?  # noqa
 ) -> Optional[ApplyWorkflowRead]:
     output = await _get_dataset_check_owner(
-        project_id=apply_workflow.project_id,
-        dataset_id=apply_workflow.input_dataset_id,
+        project_id=project_id,
+        dataset_id=input_dataset_id,
         user_id=user.id,
         db=db,
     )
     input_dataset = output["dataset"]
     project = output["project"]
 
-    workflow = db_sync.get(Workflow, apply_workflow.workflow_id)
+    workflow = db_sync.get(Workflow, workflow_id)
     if not workflow:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Workflow {apply_workflow.workflow_id} not found",
+            detail=f"Workflow {workflow_id} not found",
         )
     if workflow.project_id != project.id:
         raise HTTPException(
@@ -229,15 +234,13 @@ async def apply_workflow(
     if not workflow.task_list:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                f"Workflow {apply_workflow.workflow_id} has empty task list"
-            ),
+            detail=(f"Workflow {workflow_id} has empty task list"),
         )
 
-    if apply_workflow.output_dataset_id:
+    if output_dataset_id:
         output = await _get_dataset_check_owner(
-            project_id=apply_workflow.project_id,
-            dataset_id=apply_workflow.output_dataset_id,
+            project_id=project_id,
+            dataset_id=output_dataset_id,
             user_id=user.id,
             db=db,
         )
