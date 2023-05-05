@@ -83,6 +83,13 @@ class Project(_ProjectBase, table=True):
         },
     )
 
+    job_list: list["ApplyWorkflow"] = Relationship(  # noqa
+        sa_relationship_kwargs={
+            "lazy": "selectin",
+            "cascade": "all, delete-orphan",
+        },
+    )
+
 
 class Resource(_ResourceBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
