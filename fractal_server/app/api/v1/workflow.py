@@ -161,9 +161,12 @@ async def _check_workflow_exists(
 
 
 @router.post(
-    "/", response_model=WorkflowRead, status_code=status.HTTP_201_CREATED
+    "/project/{project_id}",
+    response_model=WorkflowRead,
+    status_code=status.HTTP_201_CREATED,
 )
 async def create_workflow(
+    project_id: int,
     workflow: WorkflowCreate,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -172,12 +175,12 @@ async def create_workflow(
     Create a workflow, associate to a project
     """
     await _get_project_check_owner(
-        project_id=workflow.project_id,
+        project_id=project_id,
         user_id=user.id,
         db=db,
     )
     await _check_workflow_exists(
-        name=workflow.name, project_id=workflow.project_id, db=db
+        name=workflow.name, project_id=project_id, db=db
     )
 
     db_workflow = Workflow.from_orm(workflow)
@@ -271,12 +274,13 @@ async def get_workflow(
 
 
 @router.post(
-    "/{workflow_id}/add-task/",
+    "/{workflow_id}/add-task/{task_id}",
     response_model=WorkflowTaskRead,
     status_code=status.HTTP_201_CREATED,
 )
 async def add_task_to_workflow(
     workflow_id: int,
+    task_id: int,
     new_task: WorkflowTaskCreate,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -291,6 +295,7 @@ async def add_task_to_workflow(
     async with db:
         workflow_task = await workflow.insert_task(
             **new_task.dict(),
+            task_id=task_id,
             db=db,
         )
 
