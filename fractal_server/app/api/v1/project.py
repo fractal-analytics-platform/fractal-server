@@ -357,7 +357,7 @@ async def delete_project(
 
 
 @router.post(
-    "/{project_id}/",
+    "/{project_id}/dataset/",
     response_model=DatasetRead,
     status_code=status.HTTP_201_CREATED,
 )

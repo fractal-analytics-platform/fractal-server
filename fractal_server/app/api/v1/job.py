@@ -56,7 +56,7 @@ async def get_job(
     return job_read
 
 
-@router.get("/download/{job_id}", response_class=StreamingResponse)
+@router.get("/{job_id}/download/", response_class=StreamingResponse)
 async def download_job_logs(
     job_id: int,
     user: User = Depends(current_active_user),
