@@ -25,18 +25,19 @@ logger = set_logger(__name__)
 
 async def bgtask_async_db(state_id: int):
     logger.critical("bgtask_async_db START")
-    new_db: AsyncSession = await get_db().__anext__()
-    logger.critical("bgtask_async_db 0")
-    state = await new_db.get(State, state_id)
-    logger.critical("bgtask_async_db 1")
-    state.data = {"a": "b"}
-    logger.critical("bgtask_async_db 2")
-    await new_db.merge(state)
-    logger.critical("bgtask_async_db 3")
-    await new_db.commit()
-    logger.critical("bgtask_async_db 4")
-    await new_db.close()
-    logger.critical("bgtask_async_db END")
+    # new_db: AsyncSession = await get_db().__anext__()
+    async for new_db in get_db():
+        logger.critical("bgtask_async_db 0")
+        state = await new_db.get(State, state_id)
+        logger.critical("bgtask_async_db 1")
+        state.data = {"a": "b"}
+        logger.critical("bgtask_async_db 2")
+        await new_db.merge(state)
+        logger.critical("bgtask_async_db 3")
+        await new_db.commit()
+        logger.critical("bgtask_async_db 4")
+        await new_db.close()
+        logger.critical("bgtask_async_db END")
 
 
 async def bgtask_sync_db(state_id: int):
