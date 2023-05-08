@@ -11,6 +11,7 @@ Institute for Biomedical Research and Pelkmans Lab from the University of
 Zurich.
 """
 import logging
+import random
 import shutil
 from dataclasses import dataclass
 from dataclasses import field
@@ -20,7 +21,6 @@ from typing import AsyncGenerator
 from typing import Dict
 from typing import List
 from typing import Optional
-from uuid import uuid4
 
 import pytest
 from asgi_lifespan import LifespanManager
@@ -302,7 +302,7 @@ async def MockCurrentUser(app, db):
             default_factory=lambda: ["project"]
         )
         email: Optional[str] = field(
-            default_factory=lambda: f"{uuid4()}@exact-lab.it"
+            default_factory=lambda: f"{random.randint(0, 10000)}@exact-lab.it"
         )
         persist: Optional[bool] = True
 
