@@ -17,6 +17,8 @@ from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
+from .linkuserproject import LinkUserProject
+
 
 class SQLModelBaseUserDB(SQLModel):
     """
@@ -76,6 +78,11 @@ class UserOAuth(SQLModelBaseUserDB, table=True):
     oauth_accounts: list["OAuthAccount"] = Relationship(
         back_populates="user",
         sa_relationship_kwargs={"lazy": "selectin", "cascade": "all, delete"},
+    )
+    project_list: list["Project"] = Relationship(  # noqa
+        back_populates="user_list",
+        link_model=LinkUserProject,
+        sa_relationship_kwargs={"lazy": "selectin"},
     )
 
 
