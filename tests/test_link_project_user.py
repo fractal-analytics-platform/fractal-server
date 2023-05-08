@@ -24,7 +24,7 @@ async def test_project_user_link(app, client, MockCurrentUser, db):
     assert len(user2.project_list) == 0
 
     # Create projectA, and use add/remove to handle user/project relationships
-    projectA = Project(name="MyProjA")
+    projectA = Project(name="Project A")
     db.add(projectA)
     await db.commit()
     await db.refresh(projectA)
@@ -56,7 +56,7 @@ async def test_project_user_link(app, client, MockCurrentUser, db):
     assert len(user2.project_list) == 0
 
     # Directly create project B with user2 in its user_list
-    projectB = Project(name="MyProj2", user_list=[user2])
+    projectB = Project(name="Project B", user_list=[user2])
     db.add(projectB)
     await db.commit()
     assert len(projectB.user_list) == 1
@@ -73,3 +73,13 @@ async def test_project_user_link(app, client, MockCurrentUser, db):
     assert len(user1.project_list) == 1
     assert len(user2.project_list) == 1
     assert user1.project_list[0].id == projectB.id
+
+    # Delete all projects, and check that they are also removed from
+    # users' project lists
+    await db.delete(projectA)
+    await db.delete(projectB)
+    await db.commit()
+    await db.refresh(user1)
+    await db.refresh(user2)
+    assert len(user1.project_list) == 0
+    assert len(user2.project_list) == 0
