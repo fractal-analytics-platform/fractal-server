@@ -111,7 +111,7 @@ class _TaskCollectPip(TaskCollectPip):
     Internal TaskCollectPip schema
 
     The difference with its parent class is that we check if the package
-    corresponds to a path in the filesystem.
+    corresponds to a path in the filesystem, and whether it exists.
     """
 
     package_path: Optional[Path] = None
@@ -140,6 +140,8 @@ class _TaskCollectPip(TaskCollectPip):
                     values["version"],
                     *_,
                 ) = package_path.name.split("-")
+            else:
+                raise ValueError(f"Package {package_path} does not exist.")
         return values
 
     @property
