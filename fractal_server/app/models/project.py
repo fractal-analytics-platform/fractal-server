@@ -1,7 +1,6 @@
 from typing import Any
 from typing import Optional
 
-from pydantic import UUID4
 from sqlalchemy import Column
 from sqlalchemy.types import JSON
 from sqlmodel import Field
@@ -21,7 +20,7 @@ class LinkUserProject(SQLModel, table=True):
     """
 
     project_id: int = Field(foreign_key="project.id", primary_key=True)
-    user_id: UUID4 = Field(foreign_key="user_oauth.id", primary_key=True)
+    user_id: int = Field(foreign_key="user_oauth.id", primary_key=True)
 
 
 class Dataset(_DatasetBase, table=True):

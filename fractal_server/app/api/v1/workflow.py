@@ -19,7 +19,6 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
-from pydantic import UUID4
 from sqlmodel import select
 
 from ...db import AsyncSession
@@ -45,7 +44,7 @@ router = APIRouter()
 async def _get_workflow_check_owner(
     *,
     workflow_id: int,
-    user_id: UUID4,
+    user_id: int,
     db: AsyncSession = Depends(get_db),
 ) -> Workflow:
     """
@@ -85,7 +84,7 @@ async def _get_workflow_task_check_owner(
     *,
     workflow_id: int,
     workflow_task_id: int,
-    user_id: UUID4,
+    user_id: int,
     db: AsyncSession = Depends(get_db),
 ) -> tuple[WorkflowTask, Workflow]:
     """
