@@ -1,5 +1,3 @@
-from uuid import uuid4
-
 import pytest
 from fastapi import HTTPException
 
@@ -24,8 +22,9 @@ async def test_proejct_membership(db, project_factory, MockCurrentUser):
         assert e.value.status_code == 404
 
         # non-member user
+        invalid_user_id = 9999
         with pytest.raises(HTTPException) as e:
             out_prj = await _get_project_check_owner(
-                project_id=prj.id, user_id=uuid4(), db=db
+                project_id=prj.id, user_id=invalid_user_id, db=db
             )
         assert e.value.status_code == 403
