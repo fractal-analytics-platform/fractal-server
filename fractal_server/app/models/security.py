@@ -10,7 +10,6 @@
 # Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
 # University of Zurich
 from typing import Optional
-from typing import TYPE_CHECKING
 
 from pydantic import EmailStr
 from sqlmodel import Field
@@ -18,31 +17,6 @@ from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
 from .linkuserproject import LinkUserProject
-
-
-class SQLModelBaseUserDB(SQLModel):
-    """
-    This class is from fastapi_users_db_sqlmodel
-    Original Copyright: 2022 François Voron, released under MIT licence
-    """
-
-    __tablename__ = "user"
-
-    id: Optional[int] = Field(default=None, primary_key=True, nullable=False)
-    if TYPE_CHECKING:  # pragma: no cover
-        email: str
-    else:
-        email: EmailStr = Field(
-            sa_column_kwargs={"unique": True, "index": True}, nullable=False
-        )
-    hashed_password: str
-
-    is_active: bool = Field(True, nullable=False)
-    is_superuser: bool = Field(False, nullable=False)
-    is_verified: bool = Field(False, nullable=False)
-
-    class Config:
-        orm_mode = True
 
 
 class SQLModelBaseOAuthAccount(SQLModel):
@@ -66,13 +40,26 @@ class SQLModelBaseOAuthAccount(SQLModel):
         orm_mode = True
 
 
-class UserOAuth(SQLModelBaseUserDB, table=True):
+class UserOAuth(SQLModel, table=True):
+
+    """
+    This class is a modification of SQLModelBaseUserDB from from
+    fastapi_users_db_sqlmodel. Original Copyright: 2022 François Voron,
+    released under MIT licence
+    """
+
     __tablename__ = "user_oauth"
-    id: int = Field(
-        default=None,
-        nullable=False,
-        primary_key=True,
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+    email: EmailStr = Field(
+        sa_column_kwargs={"unique": True, "index": True}, nullable=False
     )
+    hashed_password: str
+    is_active: bool = Field(True, nullable=False)
+    is_superuser: bool = Field(False, nullable=False)
+    is_verified: bool = Field(False, nullable=False)
+
     slurm_user: Optional[str]
     cache_dir: Optional[str]
     oauth_accounts: list["OAuthAccount"] = Relationship(
@@ -84,6 +71,9 @@ class UserOAuth(SQLModelBaseUserDB, table=True):
         link_model=LinkUserProject,
         sa_relationship_kwargs={"lazy": "selectin"},
     )
+
+    class Config:
+        orm_mode = True
 
 
 class OAuthAccount(SQLModelBaseOAuthAccount, table=True):
