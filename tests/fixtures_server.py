@@ -86,14 +86,12 @@ def get_patched_settings(temp_path: Path):
 
     settings.DB_ENGINE = DB_ENGINE
     if DB_ENGINE == "sqlite":
-        settings.SQLITE_PATH = (
-            f"{temp_path.as_posix()}/_test.db?mode=memory&cache=shared"
-        )
+        settings.SQLITE_PATH = f"{temp_path.as_posix()}/_test.db"
     elif DB_ENGINE == "postgres":
         settings.DB_ENGINE = "postgres"
         settings.POSTGRES_USER = "postgres"
         settings.POSTGRES_PASSWORD = "postgres"
-        settings.POSTGRES_DB = "fractal"
+        settings.POSTGRES_DB = "fractal_test"
     else:
         raise ValueError
 
@@ -202,6 +200,7 @@ async def db_create_tables(override_settings):
     engine = DB.engine_sync()
     metadata = SQLModel.metadata
     metadata.create_all(engine)
+
     yield
 
     metadata.drop_all(engine)

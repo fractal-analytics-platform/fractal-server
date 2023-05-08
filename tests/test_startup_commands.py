@@ -34,7 +34,7 @@ def _prepare_config_and_db(_tmp_path: Path):
             [
                 "POSTGRES_USER=postgres",
                 "POSTGRES_PASSWORD=postgres",
-                "POSTGRES_DB=fractal",
+                "POSTGRES_DB=fractal_test",
             ]
         )
     elif DB_ENGINE == "sqlite":

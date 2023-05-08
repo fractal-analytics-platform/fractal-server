@@ -60,81 +60,80 @@ async def _background_collect_pip(
     directory.
     """
 
-    # Note: anext(get_db()) is only available for python>=3.10
-    db = await get_db().__anext__()
+    async for db in get_db():
 
-    state: State = await db.get(State, state_id)
+        state: State = await db.get(State, state_id)
 
-    logger_name = task_pkg.package.replace("/", "_")
-    logger = set_logger(
-        logger_name=logger_name,
-        log_file_path=get_log_path(venv_path),
-    )
-
-    logger.debug("Start background task collection")
-    data = TaskCollectStatus(**state.data)
-    data.info = None
-
-    try:
-        # install
-        logger.debug("Task-collection status: installing")
-        data.status = "installing"
-
-        state.data = data.sanitised_dict()
-        await db.merge(state)
-        await db.commit()
-        task_list = await create_package_environment_pip(
-            venv_path=venv_path,
-            task_pkg=task_pkg,
+        logger_name = task_pkg.package.replace("/", "_")
+        logger = set_logger(
             logger_name=logger_name,
+            log_file_path=get_log_path(venv_path),
         )
 
-        # collect
-        logger.debug("Task-collection status: collecting")
-        data.status = "collecting"
-        state.data = data.sanitised_dict()
-        await db.merge(state)
-        await db.commit()
-        tasks = await _insert_tasks(task_list=task_list, db=db)
+        logger.debug("Start background task collection")
+        data = TaskCollectStatus(**state.data)
+        data.info = None
 
-        # finalise
-        logger.debug("Task-collection status: finalising")
-        collection_path = get_collection_path(venv_path)
-        data.task_list = tasks
-        with collection_path.open("w") as f:
-            json.dump(data.sanitised_dict(), f)
+        try:
+            # install
+            logger.debug("Task-collection status: installing")
+            data.status = "installing"
 
-        # Update DB
-        data.status = "OK"
-        data.log = get_collection_log(venv_path)
-        state.data = data.sanitised_dict()
-        db.add(state)
-        await db.merge(state)
-        await db.commit()
+            state.data = data.sanitised_dict()
+            await db.merge(state)
+            await db.commit()
+            task_list = await create_package_environment_pip(
+                venv_path=venv_path,
+                task_pkg=task_pkg,
+                logger_name=logger_name,
+            )
 
-        # Write last logs to file
-        logger.debug("Task-collection status: OK")
-        logger.info("Background task collection completed successfully")
-        close_logger(logger)
-        await db.close()
+            # collect
+            logger.debug("Task-collection status: collecting")
+            data.status = "collecting"
+            state.data = data.sanitised_dict()
+            await db.merge(state)
+            await db.commit()
+            tasks = await _insert_tasks(task_list=task_list, db=db)
 
-    except Exception as e:
-        # Write last logs to file
-        logger.debug("Task-collection status: fail")
-        logger.info(f"Background collection failed. Original error: {e}")
-        close_logger(logger)
+            # finalise
+            logger.debug("Task-collection status: finalising")
+            collection_path = get_collection_path(venv_path)
+            data.task_list = tasks
+            with collection_path.open("w") as f:
+                json.dump(data.sanitised_dict(), f)
 
-        # Update db
-        data.status = "fail"
-        data.info = f"Original error: {e}"
-        data.log = get_collection_log(venv_path)
-        state.data = data.sanitised_dict()
-        await db.merge(state)
-        await db.commit()
-        await db.close()
+            # Update DB
+            data.status = "OK"
+            data.log = get_collection_log(venv_path)
+            state.data = data.sanitised_dict()
+            db.add(state)
+            await db.merge(state)
+            await db.commit()
 
-        # Delete corrupted package dir
-        shell_rmtree(venv_path)
+            # Write last logs to file
+            logger.debug("Task-collection status: OK")
+            logger.info("Background task collection completed successfully")
+            close_logger(logger)
+            await db.close()
+
+        except Exception as e:
+            # Write last logs to file
+            logger.debug("Task-collection status: fail")
+            logger.info(f"Background collection failed. Original error: {e}")
+            close_logger(logger)
+
+            # Update db
+            data.status = "fail"
+            data.info = f"Original error: {e}"
+            data.log = get_collection_log(venv_path)
+            state.data = data.sanitised_dict()
+            await db.merge(state)
+            await db.commit()
+            await db.close()
+
+            # Delete corrupted package dir
+            shell_rmtree(venv_path)
 
 
 async def _insert_tasks(
