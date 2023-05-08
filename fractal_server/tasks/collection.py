@@ -396,13 +396,12 @@ async def _pip_install(
     """
     pip = venv_path / "venv/bin/pip"
 
+    extras = f"[{task_pkg.package_extras}]" if task_pkg.package_extras else ""
+
     if task_pkg.is_local_package:
-        pip_install_str = task_pkg.package_path.as_posix()  # type: ignore
+        pip_install_str = f"{task_pkg.package_path.as_posix()}{extras}"
     else:
         version_string = f"=={task_pkg.version}" if task_pkg.version else ""
-        extras = (
-            f"[{task_pkg.package_extras}]" if task_pkg.package_extras else ""
-        )
         pip_install_str = f"{task_pkg.package}{extras}{version_string}"
 
     cmd_install = f"{pip} install {pip_install_str}"
