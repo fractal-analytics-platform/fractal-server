@@ -4,6 +4,7 @@ from shutil import which as shutil_which
 
 import pytest
 from devtools import debug
+from pydantic.error_wrappers import ValidationError
 from sqlmodel import select
 
 from .fixtures_tasks import execute_command
@@ -162,6 +163,22 @@ async def test_background_collection_failure(db, dummy_task_package):
     assert state.data["status"] == "fail"
     assert state.data["info"].startswith("Original error")
     assert not venv_path.exists()
+
+
+async def test_collection_api_missing_file(
+    client,
+    MockCurrentUser,
+    tmp_path,
+):
+    async with MockCurrentUser():
+        with pytest.raises(ValidationError) as e:
+            await client.post(
+                f"{PREFIX}/collect/pip/",
+                json=dict(package=str(tmp_path / "missing_file")),
+            )
+        debug(e.value)
+        assert e.value.model == _TaskCollectPip
+        assert "does not exist" in e.value.errors()[0]["msg"]
 
 
 @pytest.mark.parametrize(
