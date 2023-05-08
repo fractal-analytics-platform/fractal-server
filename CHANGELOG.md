@@ -2,6 +2,7 @@
 
 # 1.2.5
 
+* Fix bug in task collection when using sqlite (\#664).
 * Improve error handling in workflow-apply endpoint (\#665).
 
 # 1.2.4
