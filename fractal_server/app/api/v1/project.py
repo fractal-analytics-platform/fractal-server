@@ -8,7 +8,6 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
-from pydantic import UUID4
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
@@ -55,7 +54,7 @@ router = APIRouter()
 async def _get_project_check_owner(
     *,
     project_id: int,
-    user_id: UUID4,
+    user_id: int,
     db: AsyncSession,
 ) -> Project:
     """
@@ -87,7 +86,7 @@ async def _get_dataset_check_owner(
     *,
     project_id: int,
     dataset_id: int,
-    user_id: UUID4,
+    user_id: int,
     db: AsyncSession,
 ) -> dict[str, Union[Dataset, Project]]:
     """

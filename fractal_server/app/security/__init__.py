@@ -26,7 +26,6 @@ registers the client and the relative routes.
 
 All routes are registerd under the `auth/` prefix.
 """
-import uuid
 from typing import Any
 from typing import AsyncGenerator
 from typing import Dict
@@ -41,7 +40,7 @@ from fastapi import HTTPException
 from fastapi import status
 from fastapi_users import BaseUserManager
 from fastapi_users import FastAPIUsers
-from fastapi_users import UUIDIDMixin
+from fastapi_users import IntegerIDMixin
 from fastapi_users.authentication import AuthenticationBackend
 from fastapi_users.authentication import BearerTransport
 from fastapi_users.authentication import CookieTransport
@@ -178,7 +177,7 @@ async def get_user_db(
     yield SQLModelUserDatabaseAsync(session, User, OAuthAccount)
 
 
-class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
+class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     pass
 
 
@@ -220,7 +219,7 @@ cookie_backend = AuthenticationBackend(
 )
 
 
-fastapi_users = FastAPIUsers[User, uuid.UUID](
+fastapi_users = FastAPIUsers[User, int](
     get_user_manager,
     [token_backend, cookie_backend],
 )

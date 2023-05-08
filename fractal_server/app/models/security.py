@@ -9,14 +9,10 @@
 #
 # Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
 # University of Zurich
-import uuid
 from typing import Optional
 from typing import TYPE_CHECKING
 
 from pydantic import EmailStr
-from pydantic import UUID4
-from sqlalchemy_utils import UUIDType
-from sqlmodel import Column
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
@@ -30,9 +26,7 @@ class SQLModelBaseUserDB(SQLModel):
 
     __tablename__ = "user"
 
-    id: UUID4 = Field(
-        default_factory=uuid.uuid4, primary_key=True, nullable=False
-    )  # noqa
+    id: Optional[int] = Field(default=None, primary_key=True, nullable=False)
     if TYPE_CHECKING:  # pragma: no cover
         email: str
     else:
@@ -57,8 +51,8 @@ class SQLModelBaseOAuthAccount(SQLModel):
 
     __tablename__ = "oauthaccount"
 
-    id: UUID4 = Field(default_factory=uuid.uuid4, primary_key=True)
-    user_id: UUID4 = Field(foreign_key="user.id", nullable=False)
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id", nullable=False)
     oauth_name: str = Field(index=True, nullable=False)
     access_token: str = Field(nullable=False)
     expires_at: Optional[int] = Field(nullable=True)
@@ -72,10 +66,10 @@ class SQLModelBaseOAuthAccount(SQLModel):
 
 class UserOAuth(SQLModelBaseUserDB, table=True):
     __tablename__ = "user_oauth"
-    id: UUID4 = Field(
-        default_factory=uuid.uuid4,
+    id: int = Field(
+        default=None,
         nullable=False,
-        sa_column=Column(UUIDType(), primary_key=True),
+        primary_key=True,
     )
     slurm_user: Optional[str]
     cache_dir: Optional[str]
@@ -86,5 +80,5 @@ class UserOAuth(SQLModelBaseUserDB, table=True):
 
 
 class OAuthAccount(SQLModelBaseOAuthAccount, table=True):
-    user_id: UUID4 = Field(foreign_key="user_oauth.id", nullable=False)
+    user_id: int = Field(foreign_key="user_oauth.id", nullable=False)
     user: Optional[UserOAuth] = Relationship(back_populates="oauth_accounts")
