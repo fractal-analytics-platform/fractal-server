@@ -72,3 +72,4 @@ async def test_project_user_link(app, client, MockCurrentUser, db):
     assert len(projectB.user_list) == 2
     assert len(user1.project_list) == 1
     assert len(user2.project_list) == 1
+    assert user1.project_list[0].id == projectB.id
