@@ -2,7 +2,9 @@
 
 # 1.2.5
 
+* Fix bug in task collection when using sqlite (\#664).
 * Improve error handling in workflow-apply endpoint (\#665).
+* Fix a bug upon project removal in the presence of project-related jobs (\#666). Note: this removes the `ApplyWorkflow.Project` attribute.
 
 # 1.2.4
 
