@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# 1.2.5
+
+* Improve error handling in workflow-apply endpoint (\#665).
+* Fix a bug upon project removal in the presence of project-related jobs (\#666). Note: this removes the `ApplyWorkflow.Project` attribute.
+
 # 1.2.4
 
 * Review setup for database URLs, especially to allow using UNIX-socket connections for postgresl (\#657).

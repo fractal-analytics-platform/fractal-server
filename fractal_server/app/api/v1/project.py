@@ -277,7 +277,11 @@ async def apply_workflow(
                     f"but {user.cache_dir=}."
                 ),
             )
-
+    if not input_dataset.resource_list:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Input dataset has empty resource_list",
+        )
     try:
         validate_workflow_compatibility(
             workflow=workflow,

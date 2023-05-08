@@ -5,6 +5,7 @@ import pytest
 from devtools import debug
 from sqlmodel import select
 
+from fractal_server.app.models import ApplyWorkflow
 from fractal_server.app.models import Dataset
 from fractal_server.app.models import Project
 from fractal_server.app.models import Resource
@@ -294,7 +295,9 @@ async def test_add_dataset_local_path_error(app, client, MockCurrentUser, db):
         assert res.status_code == 422
 
 
-async def test_delete_project(client, MockCurrentUser, db):
+async def test_delete_project(
+    client, MockCurrentUser, db, job_factory, workflow_factory, tmp_path
+):
 
     async with MockCurrentUser(persist=True):
         res = await client.get(f"{PREFIX}/")
@@ -312,12 +315,30 @@ async def test_delete_project(client, MockCurrentUser, db):
         assert res.status_code == 200
         assert len(data) == 1
 
-        # Verify that the project has a dataset
+        # Check that a project-related dataset exists
         stm = select(Dataset).join(Project).where(Project.id == p["id"])
         res = await db.execute(stm)
-        res = list(res)
-        debug(res)
-        assert len(res) == 1
+        datasets = list(res)
+        assert len(datasets) == 1
+        dataset_id = datasets[0][0].id
+
+        # Add a workflow to the project
+        wf = await workflow_factory(project_id=p["id"])
+
+        # Add a job to the project
+        await job_factory(
+            project_id=p["id"],
+            workflow_id=wf.id,
+            working_dir=(tmp_path / "some_working_dir").as_posix(),
+            input_dataset_id=dataset_id,
+            output_dataset_id=dataset_id,
+        )
+
+        # Check that a project-related job exists
+        stm = select(ApplyWorkflow).join(Project).where(Project.id == p["id"])
+        res = await db.execute(stm)
+        jobs = list(res)
+        assert len(jobs) == 1
 
         # Delete the project
         res = await client.delete(f"{PREFIX}/{p['id']}")
@@ -329,10 +350,18 @@ async def test_delete_project(client, MockCurrentUser, db):
         assert len(data) == 0
 
         # Check that project-related datasets were deleted
+        stm = select(Dataset).join(Project).where(Project.id == p["id"])
         res = await db.execute(stm)
-        res = list(res)
-        debug(res)
-        assert len(res) == 0
+        datasets = list(res)
+        debug(datasets)
+        assert len(datasets) == 0
+
+        # Check that project-related jobs were deleted
+        stm = select(ApplyWorkflow).join(Project).where(Project.id == p["id"])
+        jobs = await db.execute(stm)
+        jobs = list(jobs)
+        debug(jobs)
+        assert len(jobs) == 0
 
 
 async def test_edit_resource(
@@ -580,7 +609,7 @@ async def test_project_apply_failures(
         assert res.status_code == 422
 
 
-async def test_project_apply_missing_cache_dir(
+async def test_project_apply_missing_user_attributes(
     db,
     client,
     MockCurrentUser,
@@ -634,6 +663,16 @@ async def test_project_apply_missing_cache_dir(
         assert res.status_code == 422
         assert "user.cache_dir=None" in res.json()["detail"]
 
+        user.cache_dir = "/tmp"
+        user.slurm_user = None
+        await db.merge(user)
+        await db.commit()
+
+        res = await client.post(f"{PREFIX}/apply/", json=payload)
+        debug(res.json())
+        assert res.status_code == 422
+        assert "user.slurm_user=None" in res.json()["detail"]
+
 
 async def test_create_project(
     db,
@@ -646,3 +685,42 @@ async def test_create_project(
         res = await client.post(f"{PREFIX}/", json=empty_payload)
         debug(res.json())
         assert res.status_code == 422
+
+
+async def test_no_resources(
+    MockCurrentUser,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    task_factory,
+    db,
+    client,
+):
+    async with MockCurrentUser(persist=True) as user:
+        project = await project_factory(user)
+        input_dataset = await dataset_factory(
+            project, name="input", type="zarr"
+        )
+        output_dataset = await dataset_factory(project, name="output")
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory()
+        await workflow.insert_task(task.id, db=db)
+
+        payload = dict(
+            project_id=project.id,
+            input_dataset_id=input_dataset.id,
+            output_dataset_id=output_dataset.id,
+            workflow_id=workflow.id,
+            overwrite_input=False,
+        )
+        debug(input_dataset)
+        debug(output_dataset)
+
+        res = await client.post(
+            f"{PREFIX}/apply/",
+            json=payload,
+        )
+
+        debug(res.json())
+        assert res.status_code == 422
+        assert "empty resource_list" in res.json()["detail"]
