@@ -360,7 +360,7 @@ async def project_factory(db):
         defaults = dict(name="project")
         defaults.update(kwargs)
         project = Project(**defaults)
-        project.user_member_list.append(user)
+        project.user_list.append(user)
         db.add(project)
         await db.commit()
         await db.refresh(project)

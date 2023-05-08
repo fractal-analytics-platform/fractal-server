@@ -61,7 +61,7 @@ class Dataset(_DatasetBase, table=True):
 class Project(_ProjectBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    user_member_list: list[User] = Relationship(
+    user_list: list[User] = Relationship(
         link_model=LinkUserProject,
         sa_relationship_kwargs={
             "lazy": "selectin",

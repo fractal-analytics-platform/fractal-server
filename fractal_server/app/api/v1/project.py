@@ -172,7 +172,7 @@ async def create_project(
 
     db_project = Project.from_orm(project)
     db_project.dataset_list.append(Dataset(name=project.default_dataset_name))
-    db_project.user_member_list.append(user)
+    db_project.user_list.append(user)
     try:
         db.add(db_project)
         await db.commit()
