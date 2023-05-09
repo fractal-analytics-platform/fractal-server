@@ -509,7 +509,9 @@ async def test_job_download_logs(
             f.write(LOG_CONTENT)
 
         # Test that the endpoint returns a list with the new job
-        res = await client.get(f"{PREFIX}/job/{job.id}/download/")
+        res = await client.get(
+            f"{PREFIX}/project/{prj.id}/job/{job.id}/download/"
+        )
         assert res.status_code == 200
         assert (
             res.headers.get("content-type") == "application/x-zip-compressed"
