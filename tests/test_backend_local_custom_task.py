@@ -82,7 +82,7 @@ async def test_full_workflow(
         res = await client.post(
             (
                 f"{PREFIX}/project/{project_id}"
-                f"/dataset/{input_dataset_id}/resource"
+                f"/dataset/{input_dataset_id}/resource/"
             ),
             json={
                 "path": (testdata_path / "png").as_posix(),
@@ -108,7 +108,7 @@ async def test_full_workflow(
         res = await client.post(
             (
                 f"{PREFIX}/project/{project_id}/"
-                f"dataset/{output_dataset_id}/resource"
+                f"dataset/{output_dataset_id}/resource/"
             ),
             json=dict(path=tmp777_path.as_posix()),
         )
@@ -118,8 +118,8 @@ async def test_full_workflow(
 
         # Create workflow
         res = await client.post(
-            f"{PREFIX}/workflow/",
-            json=dict(name="test workflow", project_id=project_id),
+            f"{PREFIX}/project/{project_id}/workflow/",
+            json=dict(name="test workflow"),
         )
         debug(res.json())
         assert res.status_code == 201
@@ -128,7 +128,10 @@ async def test_full_workflow(
 
         # Add a dummy task
         res = await client.post(
-            f"{PREFIX}/workflow/{workflow_id}/wftask/?task_id={task_id}",
+            (
+                f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/"
+                f"wftask/?task_id={task_id}"
+            ),
             json=dict(args={"message": "my_message"}),
         )
         debug(res.json())
@@ -137,7 +140,7 @@ async def test_full_workflow(
         # Add a dummy_parallel task
         res = await client.post(
             (
-                f"{PREFIX}/workflow/{workflow_id}/"
+                f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/"
                 f"wftask/?task_id={task_parallel_id}"
             ),
             json=dict(args={"message": "my_message"}),
