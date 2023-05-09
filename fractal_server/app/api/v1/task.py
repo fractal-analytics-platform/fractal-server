@@ -13,6 +13,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from pydantic.error_wrappers import ValidationError
 from sqlmodel import select
 
 from ....common.schemas import StateRead
@@ -184,7 +185,14 @@ async def collect_tasks_pip(
     """
 
     logger = set_logger(logger_name="collect_tasks_pip")
-    task_pkg = _TaskCollectPip(**task_collect.dict())
+
+    try:
+        task_pkg = _TaskCollectPip(**task_collect.dict())
+    except ValidationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid package or manifest. Original error: {e}",
+        )
 
     with TemporaryDirectory() as tmpdir:
         try:
