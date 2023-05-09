@@ -181,7 +181,9 @@ async def test_full_workflow(
         debug(job_data)
         assert res.status_code == 202
 
-        res = await client.get(f"{PREFIX}/job/{job_data['id']}")
+        res = await client.get(
+            f"{PREFIX}/project/{project_id}/job/{job_data['id']}"
+        )
         assert res.status_code == 200
         job_status_data = res.json()
         debug(job_status_data)
@@ -330,7 +332,7 @@ async def test_failing_workflow_TaskExecutionError(
         assert res.status_code == 202
         job_id = job_data["id"]
 
-        res = await client.get(f"{PREFIX}/job/{job_id}")
+        res = await client.get(f"{PREFIX}/project/{project_id}/job/{job_id}")
         assert res.status_code == 200
         job_status_data = res.json()
         debug(job_status_data)
@@ -481,7 +483,7 @@ async def test_failing_workflow_JobExecutionError(
         debug(job_id)
 
         # Query status of the job
-        res = await client.get(f"{PREFIX}/job/{job_id}")
+        res = await client.get(f"{PREFIX}/project/{project.id}/job/{job_id}")
         assert res.status_code == 200
         job_status_data = res.json()
         debug(job_status_data)
@@ -569,7 +571,9 @@ async def test_non_python_task(
         assert res.status_code == 202
 
         # Check that the workflow execution is complete
-        res = await client.get(f"{PREFIX}/job/{job_data['id']}")
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/job/{job_data['id']}"
+        )
         assert res.status_code == 200
         job_status_data = res.json()
         debug(job_status_data)
