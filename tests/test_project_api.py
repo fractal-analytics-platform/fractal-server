@@ -410,7 +410,7 @@ async def test_delete_dataset(
         # Add a resource to verify that the cascade works
         payload = dict(path="/some/absolute/path")
         res = await client.post(
-            f"{PREFIX}/project/{prj.id}/dataset/{ds0.id}",
+            f"{PREFIX}/project/{prj.id}/dataset/{ds0.id}/resource/",
             json=payload,
         )
 
