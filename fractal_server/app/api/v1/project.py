@@ -1,15 +1,11 @@
-import asyncio
 from typing import Optional
-from typing import Union
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Query
 from fastapi import Response
 from fastapi import status
-from pydantic import UUID4
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
@@ -39,7 +35,6 @@ from ...models import ResourceRead
 from ...models import ResourceUpdate
 from ...models import Task
 from ...models import Workflow
-from ...models import WorkflowCreate
 from ...models import WorkflowImport
 from ...models import WorkflowRead
 from ...models import WorkflowTaskCreate
@@ -48,82 +43,13 @@ from ...runner import submit_workflow
 from ...runner import validate_workflow_compatibility
 from ...security import current_active_user
 from ...security import User
+from ._aux_functions import _check_workflow_exists
+from ._aux_functions import _get_dataset_check_owner
+from ._aux_functions import _get_project_check_owner
+from ._aux_functions import _get_workflow_check_owner
 
 
 router = APIRouter()
-
-
-async def _get_project_check_owner(
-    *,
-    project_id: int,
-    user_id: UUID4,
-    db: AsyncSession,
-) -> Project:
-    """
-    Check that user is a member of project and return
-
-    Raises:
-        HTTPException(status_code=403_FORBIDDEN): If the user is not a
-                                                  member of the project
-        HTTPException(status_code=404_NOT_FOUND): If the project does not
-                                                  exist
-    """
-    project, link_user_project = await asyncio.gather(
-        db.get(Project, project_id),
-        db.get(LinkUserProject, (project_id, user_id)),
-    )
-    if not project:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
-        )
-    if not link_user_project:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Not allowed on project {project_id}",
-        )
-    return project
-
-
-async def _get_dataset_check_owner(
-    *,
-    project_id: int,
-    dataset_id: int,
-    user_id: UUID4,
-    db: AsyncSession,
-) -> dict[str, Union[Dataset, Project]]:
-    """
-    Check that user is a member of project and return
-
-    Raises:
-        HTTPException(status_code=403_FORBIDDEN): If the user is not a
-                                                         member of the project
-        HTTPException(status_code=404_NOT_FOUND): If the dataset or project do
-                                                  not exist
-    """
-    project, dataset, link_user_project = await asyncio.gather(
-        db.get(Project, project_id),
-        db.get(Dataset, dataset_id),
-        db.get(LinkUserProject, (project_id, user_id)),
-    )
-    if not project:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
-        )
-    if not link_user_project:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Not allowed on project {project_id}",
-        )
-    if not dataset:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Dataset not found"
-        )
-    if dataset.project_id != project_id:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Invalid {project_id=} for {dataset_id=}",
-        )
-    return dict(dataset=dataset, project=project)
 
 
 # Main endpoints (no ID required)
@@ -206,14 +132,15 @@ async def apply_workflow(
     workflow_id: int,
     apply_workflow: ApplyWorkflowCreate,
     background_tasks: BackgroundTasks,
-    input_dataset_id: int = Query(),
-    output_dataset_id: Union[int, None] = Query(default=None),
+    input_dataset_id: int,
+    output_dataset_id: Optional[int] = None,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
     db_sync: DBSyncSession = Depends(
         get_sync_db
     ),  # FIXME: why both sync and async?  # noqa
 ) -> Optional[ApplyWorkflowRead]:
+
     output = await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=input_dataset_id,
@@ -223,17 +150,10 @@ async def apply_workflow(
     input_dataset = output["dataset"]
     project = output["project"]
 
-    workflow = db_sync.get(Workflow, workflow_id)
-    if not workflow:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Workflow {workflow_id} not found",
-        )
-    if workflow.project_id != project.id:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Error: {workflow.project_id=} differs from {project.id=}",
-        )
+    workflow = await _get_workflow_check_owner(
+        project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
+    )
+
     if not workflow.task_list:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -382,7 +302,7 @@ async def add_dataset(
     return db_dataset
 
 
-@router.get("/{project_id}/workflows/", response_model=list[WorkflowRead])
+@router.get("/{project_id}/workflow/", response_model=list[WorkflowRead])
 async def get_workflow_list(
     project_id: int,
     user: User = Depends(current_active_user),
@@ -401,7 +321,7 @@ async def get_workflow_list(
     return workflow_list
 
 
-@router.get("/{project_id}/jobs/", response_model=list[ApplyWorkflowRead])
+@router.get("/{project_id}/job/", response_model=list[ApplyWorkflowRead])
 async def get_job_list(
     project_id: int,
     user: User = Depends(current_active_user),
@@ -498,17 +418,13 @@ async def delete_dataset(
     """
     Delete a dataset associated to the current project
     """
-    await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+    output = await _get_dataset_check_owner(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        db=db,
     )
-    stm = (
-        select(Dataset)
-        .join(Project)
-        .where(Project.id == project_id)
-        .where(Dataset.id == dataset_id)
-    )
-    res = await db.execute(stm)
-    dataset = res.scalar()
+    dataset = output["dataset"]
     await db.delete(dataset)
     await db.commit()
     await db.close()
@@ -516,7 +432,7 @@ async def delete_dataset(
 
 
 @router.post(
-    "/{project_id}/dataset/{dataset_id}",
+    "/{project_id}/dataset/{dataset_id}/resource/",
     response_model=ResourceRead,
     status_code=status.HTTP_201_CREATED,
 )
@@ -530,17 +446,13 @@ async def add_resource(
     """
     Add resource to an existing dataset
     """
-
-    project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+    output = await _get_dataset_check_owner(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        db=db,
     )
-    dataset = await db.get(Dataset, dataset_id)
-    if dataset not in project.dataset_list:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Dataset {dataset_id} is not part of project {project_id}",
-        )
-
+    dataset = output["dataset"]
     db_resource = Resource(dataset_id=dataset.id, **resource.dict())
     db.add(db_resource)
     await db.commit()
@@ -550,7 +462,7 @@ async def add_resource(
 
 
 @router.get(
-    "/{project_id}/dataset/{dataset_id}/resources/",
+    "/{project_id}/dataset/{dataset_id}/resource/",
     response_model=list[ResourceRead],
 )
 async def get_resource(
@@ -562,8 +474,11 @@ async def get_resource(
     """
     Get resources from a dataset
     """
-    await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+    await _get_dataset_check_owner(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        db=db,
     )
     stm = select(Resource).where(Resource.dataset_id == dataset_id)
     res = await db.execute(stm)
@@ -622,17 +537,15 @@ async def edit_resource(
     """
     Edit a resource of a dataset
     """
-    project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+    output = await _get_dataset_check_owner(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        db=db,
     )
-    dataset = await db.get(Dataset, dataset_id)
+    dataset = output["dataset"]
     orig_resource = await db.get(Resource, resource_id)
 
-    if dataset not in project.dataset_list:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Dataset {dataset_id} is not part of project {project_id}",
-        )
     if orig_resource not in dataset.resource_list:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -651,7 +564,7 @@ async def edit_resource(
 
 
 @router.post(
-    "/{project_id}/import-workflow/",
+    "/{project_id}/workflow/import/",
     response_model=WorkflowRead,
     status_code=status.HTTP_201_CREATED,
 )
@@ -674,18 +587,10 @@ async def import_workflow_into_project(
         user_id=user.id,
         db=db,
     )
-    stm = (
-        select(Workflow)
-        .where(Workflow.name == workflow.name)
-        .where(Workflow.project_id == project_id)
+
+    await _check_workflow_exists(
+        name=workflow.name, project_id=project_id, db=db
     )
-    res = await db.execute(stm)
-    if res.scalars().all():
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Workflow with name={workflow.name} and\
-                    {project_id=} already in use",
-        )
 
     # Check that all required tasks are available
     # NOTE: by now we go through the pair (source, name), but later on we may
@@ -720,11 +625,11 @@ async def import_workflow_into_project(
                     )
                 sourcename_to_id[(source, name)] = current_task[0].id
 
-    # Create new Workflow
-    workflow_create = WorkflowCreate(
-        project_id=project_id, **workflow.dict(exclude_none=True)
+    # Create new Workflow (with empty task_list)
+    db_workflow = Workflow(
+        project_id=project_id,
+        **workflow.dict(exclude_none=True, exclude={"task_list"}),
     )
-    db_workflow = Workflow.from_orm(workflow_create)
     db.add(db_workflow)
     await db.commit()
     await db.refresh(db_workflow)
@@ -739,12 +644,11 @@ async def import_workflow_into_project(
             # Prepare new_wf_task
             new_wf_task = WorkflowTaskCreate(
                 **wf_task.dict(exclude_none=True),
-                workflow_id=db_workflow.id,
-                task_id=task_id,
             )
             # Insert task
             await db_workflow.insert_task(
-                **new_wf_task.dict(exclude={"workflow_id"}),
+                **new_wf_task.dict(),
+                task_id=task_id,
                 db=db,
             )
 
