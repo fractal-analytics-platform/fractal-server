@@ -94,11 +94,13 @@ async def test_full_workflow(
         # ADD TEST IMAGES AS RESOURCE TO INPUT DATASET
 
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/dataset/{input_dataset_id}",
+            f"{PREFIX}/project/{project_id}/"
+            f"dataset/{input_dataset_id}/resource/",
             json={
                 "path": (testdata_path / "png").as_posix(),
             },
         )
+        debug(res)
         debug(res.json())
         assert res.status_code == 201
 
@@ -117,7 +119,8 @@ async def test_full_workflow(
         output_dataset_id = output_dataset["id"]
 
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/dataset/{output_dataset['id']}",
+            f"{PREFIX}/project/{project_id}/"
+            f"dataset/{output_dataset['id']}/resource/",
             json=dict(path=tmp777_path.as_posix()),
         )
         out_resource = res.json()
@@ -130,7 +133,7 @@ async def test_full_workflow(
 
         # CREATE WORKFLOW
         res = await client.post(
-            f"{PREFIX}/workflow/project/{project_id}",
+            f"{PREFIX}/project/{project_id}/workflow/",
             json=dict(name="test workflow"),
         )
         debug(res.json())
@@ -140,39 +143,38 @@ async def test_full_workflow(
 
         # Add a dummy task
         res = await client.post(
-            f"{PREFIX}/workflow/{workflow_id}/add-task/",
-            json=dict(task_id=collect_packages[0].id),
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
+            f"?task_id={collect_packages[0].id}",
+            json=dict(),
         )
         debug(res.json())
         assert res.status_code == 201
 
         # Add another (identical) dummy task, to make sure that this is allowed
         res = await client.post(
-            f"{PREFIX}/workflow/{workflow_id}/add-task/",
-            json=dict(task_id=collect_packages[0].id),
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
+            f"?task_id={collect_packages[0].id}",
+            json=dict(),
         )
         debug(res.json())
         assert res.status_code == 201
 
         # Add a dummy_parallel task
         res = await client.post(
-            f"{PREFIX}/workflow/{workflow_id}/add-task/",
-            json=dict(task_id=collect_packages[1].id),
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
+            f"?task_id={collect_packages[1].id}",
+            json=dict(),
         )
         debug(res.json())
         assert res.status_code == 201
 
         # EXECUTE WORKFLOW
-        payload = dict(
-            project_id=project_id,
-            input_dataset_id=input_dataset_id,
-            output_dataset_id=output_dataset_id,
-            workflow_id=workflow_id,
-            overwrite_input=False,
-        )
+        payload = dict(overwrite_input=False)
         debug(payload)
         res = await client.post(
-            f"{PREFIX}/project/apply/",
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/apply/"
+            f"?input_dataset_id={input_dataset_id}"
+            f"&output_dataset_id={output_dataset_id}",
             json=payload,
         )
         job_data = res.json()
@@ -190,7 +192,7 @@ async def test_full_workflow(
 
         # Verify output
         res = await client.get(
-            f"{PREFIX}/project/{project_id}/{output_dataset_id}"
+            f"{PREFIX}/project/{project_id}/dataset/{output_dataset_id}"
         )
         data = res.json()
         debug(data)
