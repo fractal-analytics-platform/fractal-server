@@ -143,7 +143,11 @@ async def _check_workflow_exists(
         HTTPException(status_code=422_UNPROCESSABLE_ENTITY): If such a workflow
                                                              already exists
     """
-    stm = select(Workflow).where(Workflow.name == name)
+    stm = (
+        select(Workflow)
+        .where(Workflow.name == name)
+        .where(Workflow.project_id == project_id)
+    )
     res = await db.execute(stm)
     if res.scalars().all():
         raise HTTPException(
@@ -178,6 +182,7 @@ async def create_workflow(
     await _check_workflow_exists(
         name=workflow.name, project_id=project_id, db=db
     )
+
     db_workflow = Workflow.from_orm(workflow)
     db.add(db_workflow)
     await db.commit()
