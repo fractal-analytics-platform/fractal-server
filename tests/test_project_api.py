@@ -10,13 +10,13 @@ from fractal_server.app.models import Dataset
 from fractal_server.app.models import Project
 from fractal_server.app.models import Resource
 
-PREFIX = "/api/v1/project"
+PREFIX = "/api/v1"
 
 
 async def test_project_get(client, db, project_factory, MockCurrentUser):
-    # unauthenticated
 
-    res = await client.get(f"{PREFIX}/")
+    # unauthenticated
+    res = await client.get(f"{PREFIX}/project/")
     assert res.status_code == 401
 
     # authenticated
@@ -24,29 +24,29 @@ async def test_project_get(client, db, project_factory, MockCurrentUser):
         other_project = await project_factory(user)
 
     async with MockCurrentUser(persist=True) as user:
-        res = await client.get(f"{PREFIX}/")
+        res = await client.get(f"{PREFIX}/project/")
         debug(res)
         assert res.status_code == 200
         assert res.json() == []
 
         await project_factory(user)
-        res = await client.get(f"{PREFIX}/")
+        res = await client.get(f"{PREFIX}/project/")
         data = res.json()
         debug(data)
         assert res.status_code == 200
         assert len(data) == 1
 
         project_id = data[0]["id"]
-        res = await client.get(f"{PREFIX}/{project_id}")
+        res = await client.get(f"{PREFIX}/project/{project_id}")
         assert res.status_code == 200
         assert res.json()["id"] == project_id
 
         # fail on non existent project
-        res = await client.get(f"{PREFIX}/666")
+        res = await client.get(f"{PREFIX}/project/123456")
         assert res.status_code == 404
 
         # fail on other owner's project
-        res = await client.get(f"{PREFIX}/{other_project.id}")
+        res = await client.get(f"{PREFIX}/project/{other_project.id}")
         assert res.status_code == 403
 
 
@@ -54,12 +54,12 @@ async def test_project_creation(app, client, MockCurrentUser, db):
     payload = dict(name="new project")
 
     # Fail for anonymous user
-    res = await client.post(f"{PREFIX}/", json=payload)
+    res = await client.post(f"{PREFIX}/project/", json=payload)
     data = res.json()
     assert res.status_code == 401
 
     async with MockCurrentUser(persist=True):
-        res = await client.post(f"{PREFIX}/", json=payload)
+        res = await client.post(f"{PREFIX}/project/", json=payload)
         data = res.json()
         assert res.status_code == 201
         debug(data)
@@ -70,18 +70,18 @@ async def test_project_creation_name_constraint(
     app, client, MockCurrentUser, db
 ):
     payload = dict(name="new project")
-    res = await client.post(f"{PREFIX}/", json=payload)
+    res = await client.post(f"{PREFIX}/project/", json=payload)
     assert res.status_code == 401
 
     async with MockCurrentUser(persist=True):
 
         # Create a first project named "new project"
-        res = await client.post(f"{PREFIX}/", json=payload)
+        res = await client.post(f"{PREFIX}/project/", json=payload)
         assert res.status_code == 201
 
         # Create a second project named "new project", and check that this
         # fails with 422_UNPROCESSABLE_ENTITY
-        res = await client.post(f"{PREFIX}/", json=payload)
+        res = await client.post(f"{PREFIX}/project/", json=payload)
         assert res.status_code == 422
 
 
@@ -105,7 +105,7 @@ async def test_edit_project(
             name="old name",
             read_only=True,
         )
-        res = await client.post(f"{PREFIX}/", json=payload)
+        res = await client.post(f"{PREFIX}/project/", json=payload)
         old_project = res.json()
         project_id = old_project["id"]
         assert res.status_code == 201
@@ -117,7 +117,9 @@ async def test_edit_project(
         if new_read_only:
             payload["read_only"] = new_read_only
         debug(payload)
-        res = await client.patch(f"{PREFIX}/{project_id}", json=payload)
+        res = await client.patch(
+            f"{PREFIX}/project/{project_id}", json=payload
+        )
         new_project = res.json()
         debug(new_project)
         assert res.status_code == 200
@@ -135,7 +137,7 @@ async def test_add_dataset(app, client, MockCurrentUser, db):
         # CREATE A PROJECT
 
         res = await client.post(
-            f"{PREFIX}/",
+            f"{PREFIX}/project/",
             json=dict(name="test project"),
         )
         assert res.status_code == 201
@@ -149,7 +151,7 @@ async def test_add_dataset(app, client, MockCurrentUser, db):
             meta={"xy": 2},
         )
         res = await client.post(
-            f"{PREFIX}/{project_id}/",
+            f"{PREFIX}/project/{project_id}/dataset/",
             json=payload,
         )
         assert res.status_code == 201
@@ -162,7 +164,7 @@ async def test_add_dataset(app, client, MockCurrentUser, db):
 
         payload1 = dict(name="new dataset name", meta={})
         res = await client.patch(
-            f"{PREFIX}/{project_id}/{dataset['id']}",
+            f"{PREFIX}/project/{project_id}/dataset/{dataset['id']}",
             json=payload1,
         )
         patched_dataset = res.json()
@@ -175,7 +177,7 @@ async def test_add_dataset(app, client, MockCurrentUser, db):
 
         payload2 = dict(type="new type", read_only=(not dataset["read_only"]))
         res = await client.patch(
-            f"{PREFIX}/{project_id}/{dataset['id']}",
+            f"{PREFIX}/project/{project_id}/dataset/{dataset['id']}",
             json=payload2,
         )
         patched_dataset = res.json()
@@ -189,7 +191,7 @@ async def test_add_dataset(app, client, MockCurrentUser, db):
         # ADD RESOURCE TO DATASET / FAILURE
         payload = dict(path="non/absolute/path")
         res = await client.post(
-            f"{PREFIX}/{project_id}/{dataset['id']}",
+            f"{PREFIX}/project/{project_id}/dataset/{dataset['id']}/resource/",
             json=payload,
         )
         debug(res.json())
@@ -199,7 +201,7 @@ async def test_add_dataset(app, client, MockCurrentUser, db):
         # ADD RESOURCE TO DATASET / SUCCESS
         payload = dict(path="/some/absolute/path")
         res = await client.post(
-            f"{PREFIX}/{project_id}/{dataset['id']}",
+            f"{PREFIX}/project/{project_id}/dataset/{dataset['id']}/resource/",
             json=payload,
         )
         assert res.status_code == 201
@@ -214,7 +216,7 @@ async def test_dataset_get(app, client, MockCurrentUser, db):
 
         # Create a project
         res = await client.post(
-            f"{PREFIX}/",
+            f"{PREFIX}/project/",
             json=dict(name="test project"),
         )
         assert res.status_code == 201
@@ -225,7 +227,7 @@ async def test_dataset_get(app, client, MockCurrentUser, db):
 
         # Show existing dataset
         res = await client.get(
-            f"{PREFIX}/{project_id}/{dataset_id}",
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}",
         )
         assert res.status_code == 200
         dataset = res.json()
@@ -235,7 +237,7 @@ async def test_dataset_get(app, client, MockCurrentUser, db):
         # Show missing dataset
         invalid_dataset_id = 999
         res = await client.get(
-            f"{PREFIX}/{project_id}/{invalid_dataset_id}",
+            f"{PREFIX}/project/{project_id}/dataset/{invalid_dataset_id}",
         )
         assert res.status_code == 404
 
@@ -247,7 +249,7 @@ async def test_add_dataset_local_path_error(app, client, MockCurrentUser, db):
         # CREATE A PROJECT
 
         res = await client.post(
-            f"{PREFIX}/",
+            f"{PREFIX}/project/",
             json=dict(name="test project"),
         )
         assert res.status_code == 201
@@ -261,7 +263,7 @@ async def test_add_dataset_local_path_error(app, client, MockCurrentUser, db):
             meta={"xy": 2},
         )
         res = await client.post(
-            f"{PREFIX}/{project_id}/",
+            f"{PREFIX}/project/{project_id}/dataset/",
             json=payload,
         )
         assert res.status_code == 201
@@ -274,7 +276,7 @@ async def test_add_dataset_local_path_error(app, client, MockCurrentUser, db):
 
         payload = dict(name="new dataset name", meta={})
         res = await client.patch(
-            f"{PREFIX}/{project_id}/{dataset['id']}",
+            f"{PREFIX}/project/{project_id}/dataset/{dataset['id']}",
             json=payload,
         )
         patched_dataset = res.json()
@@ -286,10 +288,10 @@ async def test_add_dataset_local_path_error(app, client, MockCurrentUser, db):
         # ADD WRONG RESOURCE TO DATASET
 
         payload = dict(path="some/local/path")
-        debug(payload["path"])
+        debug(payload)
 
         res = await client.post(
-            f"{PREFIX}/{project_id}/{dataset['id']}",
+            f"{PREFIX}/project/{project_id}/dataset/{dataset['id']}/resource/",
             json=payload,
         )
         assert res.status_code == 422
@@ -300,16 +302,16 @@ async def test_delete_project(
 ):
 
     async with MockCurrentUser(persist=True):
-        res = await client.get(f"{PREFIX}/")
+        res = await client.get(f"{PREFIX}/project/")
         data = res.json()
         assert len(data) == 0
 
         # Create a project
-        res = await client.post(f"{PREFIX}/", json=dict(name="name"))
+        res = await client.post(f"{PREFIX}/project/", json=dict(name="name"))
         p = res.json()
 
         # Verify that the project was created
-        res = await client.get(f"{PREFIX}/")
+        res = await client.get(f"{PREFIX}/project/")
         data = res.json()
         debug(data)
         assert res.status_code == 200
@@ -341,11 +343,11 @@ async def test_delete_project(
         assert len(jobs) == 1
 
         # Delete the project
-        res = await client.delete(f"{PREFIX}/{p['id']}")
+        res = await client.delete(f"{PREFIX}/project/{p['id']}")
         assert res.status_code == 204
 
         # Check that the project was deleted
-        res = await client.get(f"{PREFIX}/")
+        res = await client.get(f"{PREFIX}/project/")
         data = res.json()
         assert len(data) == 0
 
@@ -374,7 +376,9 @@ async def test_edit_resource(
 
         payload = dict(path="/my/new/path")
         res = await client.patch(
-            f"{PREFIX}/{prj.id}/{ds.id}/{orig_resource.id}", json=payload
+            f"{PREFIX}/project/{prj.id}/dataset/{ds.id}/"
+            "resource/{orig_resource.id}",
+            json=payload,
         )
         data = res.json()
         debug(data)
@@ -397,7 +401,7 @@ async def test_delete_dataset(
 
         ds_ids = (ds0.id, ds1.id)
 
-        res = await client.get(f"{PREFIX}/{prj.id}")
+        res = await client.get(f"{PREFIX}/project/{prj.id}")
         prj_dict = res.json()
         assert len(prj_dict["dataset_list"]) == 2
         assert prj_dict["dataset_list"][0]["id"] in ds_ids
@@ -406,7 +410,7 @@ async def test_delete_dataset(
         # Add a resource to verify that the cascade works
         payload = dict(path="/some/absolute/path")
         res = await client.post(
-            f"{PREFIX}/{prj.id}/{ds0.id}",
+            f"{PREFIX}/project/{prj.id}/dataset/{ds0.id}",
             json=payload,
         )
 
@@ -416,7 +420,9 @@ async def test_delete_dataset(
         assert len([r for r in res]) == 1
 
         # Delete dataset
-        res = await client.delete(f"{PREFIX}/{prj.id}/{ds0.id}")
+        res = await client.delete(
+            f"{PREFIX}/project/{prj.id}/dataset/{ds0.id}"
+        )
         assert res.status_code == 204
 
         # Verify that the resources with the deleted
@@ -424,7 +430,7 @@ async def test_delete_dataset(
         res = await db.execute(stm)
         assert len([r for r in res]) == 0
 
-        res = await client.get(f"{PREFIX}/{prj.id}")
+        res = await client.get(f"{PREFIX}/project/{prj.id}")
         prj_dict = res.json()
         assert len(prj_dict["dataset_list"]) == 1
         assert prj_dict["dataset_list"][0]["id"] == ds1.id
@@ -443,7 +449,7 @@ async def test_job_list(
         prj = await project_factory(user)
 
         # Test that the endpoint returns an empty job list
-        res = await client.get(f"{PREFIX}/{prj.id}/jobs/")
+        res = await client.get(f"{PREFIX}/project/{prj.id}/job/")
         assert res.status_code == 200
         debug(res.json())
         assert len(res.json()) == 0
@@ -462,11 +468,10 @@ async def test_job_list(
         debug(job)
 
         # Test that the endpoint returns a list with the new job
-        res = await client.get(f"{PREFIX}/{prj.id}/jobs/")
+        res = await client.get(f"{PREFIX}/project/{prj.id}/job/")
         assert res.status_code == 200
         debug(res.json())
         assert len(res.json()) == 1
-        assert res.json()[0]["project_id"] == prj.id
         assert res.json()[0]["id"] == job.id
 
 
@@ -504,7 +509,7 @@ async def test_job_download_logs(
             f.write(LOG_CONTENT)
 
         # Test that the endpoint returns a list with the new job
-        res = await client.get(f"/api/v1/job/download/{job.id}")
+        res = await client.get(f"{PREFIX}/job/{job.id}/download/")
         assert res.status_code == 200
         assert (
             res.headers.get("content-type") == "application/x-zip-compressed"
@@ -550,60 +555,53 @@ async def test_project_apply_failures(
         task = await task_factory()
         await workflow1.insert_task(task.id, db=db)
 
-        base_payload = dict(
-            project_id=project1.id,
-            input_dataset_id=input_dataset.id,
-            output_dataset_id=output_dataset.id,
-            workflow_id=workflow1.id,
-            overwrite_input=False,
-        )
-
+        payload = dict(overwrite_input=False)
         # Not existing workflow
-        bug1 = base_payload.copy()
-        bug1["workflow_id"] = 123
         res = await client.post(
-            f"{PREFIX}/apply/",
-            json=bug1,
+            f"{PREFIX}/project/{project1.id}/workflow/123/apply/"
+            f"?input_dataset_id={input_dataset.id}"
+            f"&output_dataset_id={output_dataset.id}",
+            json=payload,
         )
         debug(res.json())
         assert res.status_code == 404
 
         # Workflow with wrong project_id
-        bug2 = base_payload.copy()
-        bug2["workflow_id"] = workflow3.id
+
         res = await client.post(
-            f"{PREFIX}/apply/",
-            json=bug2,
+            f"{PREFIX}/project/{project1.id}/workflow/{workflow3.id}/apply/"
+            f"?input_dataset_id={input_dataset.id}"
+            f"&output_dataset_id={output_dataset.id}",
+            json=payload,
         )
         debug(res.json())
         assert res.status_code == 422
 
         # Not existing output dataset
-        bug3 = base_payload.copy()
-        bug3["output_dataset_id"] = 123
         res = await client.post(
-            f"{PREFIX}/apply/",
-            json=bug3,
+            f"{PREFIX}/project/{project1.id}/workflow/{workflow1.id}/apply/"
+            f"?input_dataset_id={input_dataset.id}&output_dataset_id=123",
+            json=payload,
         )
         debug(res.json())
         assert res.status_code == 404
 
         # Failed auto_output_dataset
-        bug4 = base_payload.copy()
-        bug4.pop("output_dataset_id")
         res = await client.post(
-            f"{PREFIX}/apply/",
-            json=bug4,
+            f"{PREFIX}/project/{project1.id}/workflow/{workflow1.id}/apply/"
+            f"?input_dataset_id={input_dataset.id}",
+            json=payload,
         )
         debug(res.json())
         assert res.status_code == 422
 
         # Workflow without tasks
-        bug5 = base_payload.copy()
-        bug5["workflow_id"] = workflow2.id
+
         res = await client.post(
-            f"{PREFIX}/apply/",
-            json=bug5,
+            f"{PREFIX}/project/{project1.id}/workflow/{workflow2.id}/apply/"
+            f"?input_dataset_id={input_dataset.id}"
+            f"&output_dataset_id={output_dataset.id}",
+            json=payload,
         )
         debug(res.json())
         assert res.status_code == 422
@@ -642,7 +640,8 @@ async def test_project_apply_missing_user_attributes(
         output_dataset = await dataset_factory(project, name="output")
         for dataset_id in [input_dataset.id, output_dataset.id]:
             res = await client.post(
-                f"{PREFIX}/{project.id}/{dataset_id}",
+                f"{PREFIX}/project/{project.id}/"
+                f"dataset/{dataset_id}/resource/",
                 json=dict(path="/some/absolute/path"),
             )
             assert res.status_code == 201
@@ -651,14 +650,13 @@ async def test_project_apply_missing_user_attributes(
         await workflow.insert_task(task.id, db=db)
 
         # Call apply endpoint
-        payload = dict(
-            project_id=project.id,
-            input_dataset_id=input_dataset.id,
-            output_dataset_id=output_dataset.id,
-            workflow_id=workflow.id,
-            overwrite_input=False,
+        payload = dict(overwrite_input=False)
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
+            f"?input_dataset_id={input_dataset.id}"
+            f"&output_dataset_id={output_dataset.id}",
+            json=payload,
         )
-        res = await client.post(f"{PREFIX}/apply/", json=payload)
         debug(res.json())
         assert res.status_code == 422
         assert "user.cache_dir=None" in res.json()["detail"]
@@ -668,7 +666,12 @@ async def test_project_apply_missing_user_attributes(
         await db.merge(user)
         await db.commit()
 
-        res = await client.post(f"{PREFIX}/apply/", json=payload)
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
+            f"?input_dataset_id={input_dataset.id}"
+            f"&output_dataset_id={output_dataset.id}",
+            json=payload,
+        )
         debug(res.json())
         assert res.status_code == 422
         assert "user.slurm_user=None" in res.json()["detail"]
@@ -682,7 +685,7 @@ async def test_create_project(
     async with MockCurrentUser(persist=True):
         # Payload without `name`
         empty_payload = {}
-        res = await client.post(f"{PREFIX}/", json=empty_payload)
+        res = await client.post(f"{PREFIX}/project/", json=empty_payload)
         debug(res.json())
         assert res.status_code == 422
 
@@ -707,17 +710,15 @@ async def test_no_resources(
         await workflow.insert_task(task.id, db=db)
 
         payload = dict(
-            project_id=project.id,
-            input_dataset_id=input_dataset.id,
-            output_dataset_id=output_dataset.id,
-            workflow_id=workflow.id,
             overwrite_input=False,
         )
         debug(input_dataset)
         debug(output_dataset)
 
         res = await client.post(
-            f"{PREFIX}/apply/",
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
+            f"?input_dataset_id={input_dataset.id}"
+            f"&output_dataset_id={output_dataset.id}",
             json=payload,
         )
 
