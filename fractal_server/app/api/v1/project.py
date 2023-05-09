@@ -382,7 +382,7 @@ async def add_dataset(
     return db_dataset
 
 
-@router.get("/{project_id}/workflows/", response_model=list[WorkflowRead])
+@router.get("/{project_id}/workflow/", response_model=list[WorkflowRead])
 async def get_workflow_list(
     project_id: int,
     user: User = Depends(current_active_user),
@@ -401,7 +401,7 @@ async def get_workflow_list(
     return workflow_list
 
 
-@router.get("/{project_id}/jobs/", response_model=list[ApplyWorkflowRead])
+@router.get("/{project_id}/job/", response_model=list[ApplyWorkflowRead])
 async def get_job_list(
     project_id: int,
     user: User = Depends(current_active_user),
@@ -516,7 +516,7 @@ async def delete_dataset(
 
 
 @router.post(
-    "/{project_id}/dataset/{dataset_id}",
+    "/{project_id}/dataset/{dataset_id}/resource/",
     response_model=ResourceRead,
     status_code=status.HTTP_201_CREATED,
 )
@@ -550,7 +550,7 @@ async def add_resource(
 
 
 @router.get(
-    "/{project_id}/dataset/{dataset_id}/resources/",
+    "/{project_id}/dataset/{dataset_id}/resource/",
     response_model=list[ResourceRead],
 )
 async def get_resource(
@@ -651,7 +651,7 @@ async def edit_resource(
 
 
 @router.post(
-    "/{project_id}/import-workflow/",
+    "/{project_id}/workflow/import/",
     response_model=WorkflowRead,
     status_code=status.HTTP_201_CREATED,
 )

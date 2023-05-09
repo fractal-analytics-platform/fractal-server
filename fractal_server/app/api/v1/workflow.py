@@ -45,6 +45,7 @@ router = APIRouter()
 async def _get_workflow_check_owner(
     *,
     workflow_id: int,
+    project_id: int,
     user_id: UUID4,
     db: AsyncSession = Depends(get_db),
 ) -> Workflow:
@@ -83,6 +84,7 @@ async def _get_workflow_check_owner(
 
 async def _get_workflow_task_check_owner(
     *,
+    project_id: int,
     workflow_id: int,
     workflow_task_id: int,
     user_id: UUID4,
@@ -101,19 +103,18 @@ async def _get_workflow_task_check_owner(
                                                              the Workflow
     """
 
-    workflow_task = await db.get(WorkflowTask, workflow_task_id)
+    # Access control for workflow
+    workflow = await _get_workflow_check_owner(  # noqa: F841
+        workflow_id=workflow_id, project_id=project_id, user_id=user_id, db=db
+    )
 
     # If WorkflowTask is not in the db, exit
+    workflow_task = await db.get(WorkflowTask, workflow_task_id)
     if not workflow_task:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="WorkflowTask not found",
         )
-
-    # Access control for workflow
-    workflow = await _get_workflow_check_owner(  # noqa: F841
-        workflow_id=workflow_id, user_id=user_id, db=db
-    )
 
     # If WorkflowTask is not part of the expected Workflow, exit
     if workflow_id != workflow_task.workflow_id:
@@ -161,7 +162,7 @@ async def _check_workflow_exists(
 
 
 @router.post(
-    "/project/{project_id}",
+    "/project/{project_id}/workflow/",
     response_model=WorkflowRead,
     status_code=status.HTTP_201_CREATED,
 )
@@ -194,8 +195,12 @@ async def create_workflow(
 # Workflow endpoints ("/{workflow_id}")
 
 
-@router.delete("/{workflow_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/project/{project_id}/workflow/{workflow_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
 async def delete_workflow(
+    project_id: int,
     workflow_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -205,7 +210,7 @@ async def delete_workflow(
     """
 
     workflow = await _get_workflow_check_owner(
-        workflow_id=workflow_id, user_id=user.id, db=db
+        project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
 
     await db.delete(workflow)
@@ -214,8 +219,12 @@ async def delete_workflow(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.patch("/{workflow_id}", response_model=WorkflowRead)
+@router.patch(
+    "/project/{project_id}/workflow/{workflow_id}",
+    response_model=WorkflowRead,
+)
 async def patch_workflow(
+    project_id: int,
     workflow_id: int,
     patch: WorkflowUpdate,
     user: User = Depends(current_active_user),
@@ -225,7 +234,7 @@ async def patch_workflow(
     Edit a workflow
     """
     workflow = await _get_workflow_check_owner(
-        workflow_id=workflow_id, user_id=user.id, db=db
+        project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
 
     for key, value in patch.dict(exclude_unset=True).items():
@@ -256,8 +265,12 @@ async def patch_workflow(
     return workflow
 
 
-@router.get("/{workflow_id}", response_model=WorkflowRead)
+@router.get(
+    "/project/{project_id}/workflow/{workflow_id}",
+    response_model=WorkflowRead,
+)
 async def get_workflow(
+    project_id: int,
     workflow_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -267,20 +280,21 @@ async def get_workflow(
     """
 
     workflow = await _get_workflow_check_owner(
-        workflow_id=workflow_id, user_id=user.id, db=db
+        project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
 
     return workflow
 
 
 @router.post(
-    "/{workflow_id}/add-task/{task_id}",
+    "/project/{project_id}/workflow/{workflow_id}/wftask/",
     response_model=WorkflowTaskRead,
     status_code=status.HTTP_201_CREATED,
 )
 async def add_task_to_workflow(
-    workflow_id: int,
-    task_id: int,
+    project_id: int,  # path parameter
+    workflow_id: int,  # path parameter
+    task_id: int,  # query parameter
     new_task: WorkflowTaskCreate,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -290,7 +304,7 @@ async def add_task_to_workflow(
     """
 
     workflow = await _get_workflow_check_owner(
-        workflow_id=workflow_id, user_id=user.id, db=db
+        project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
     async with db:
         workflow_task = await workflow.insert_task(
@@ -307,10 +321,11 @@ async def add_task_to_workflow(
 
 
 @router.patch(
-    "/{workflow_id}/edit-task/{workflow_task_id}",
+    "/project/{project_id}/workflow/{workflow_id}/wftask/{workflow_task_id}",
     response_model=WorkflowTaskRead,
 )
 async def patch_workflow_task(
+    project_id: int,
     workflow_id: int,
     workflow_task_id: int,
     workflow_task_update: WorkflowTaskUpdate,
@@ -322,6 +337,7 @@ async def patch_workflow_task(
     """
 
     db_workflow_task, db_workflow = await _get_workflow_task_check_owner(
+        project_id=project_id,
         workflow_task_id=workflow_task_id,
         workflow_id=workflow_id,
         user_id=user.id,
@@ -351,10 +367,11 @@ async def patch_workflow_task(
 
 
 @router.delete(
-    "/{workflow_id}/rm-task/{workflow_task_id}",
+    "/project/{project_id}/workflow/{workflow_id}/wftask/{workflow_task_id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_task_from_workflow(
+    project_id: int,
     workflow_id: int,
     workflow_task_id: int,
     user: User = Depends(current_active_user),
@@ -365,6 +382,7 @@ async def delete_task_from_workflow(
     """
 
     db_workflow_task, db_workflow = await _get_workflow_task_check_owner(
+        project_id=project_id,
         workflow_task_id=workflow_task_id,
         workflow_id=workflow_id,
         user_id=user.id,
@@ -382,10 +400,11 @@ async def delete_task_from_workflow(
 
 
 @router.get(
-    "/{workflow_id}/export/",
+    "/project/{project_id}/workflow/{workflow_id}/export/",
     response_model=WorkflowExport,
 )
 async def export_worfklow(
+    project_id: int,
     workflow_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -394,7 +413,7 @@ async def export_worfklow(
     Export an existing workflow, after stripping all IDs
     """
     workflow = await _get_workflow_check_owner(
-        workflow_id=workflow_id, user_id=user.id, db=db
+        project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
     await db.close()
     return workflow
