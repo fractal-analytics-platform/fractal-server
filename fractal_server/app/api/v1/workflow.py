@@ -184,7 +184,11 @@ async def create_workflow(
         name=workflow.name, project_id=project_id, db=db
     )
 
-    db_workflow = Workflow.from_orm(workflow)
+    # Include foreign key
+    workflow_obj = workflow.dict()
+    workflow_obj.update(dict(project_id=project_id))
+
+    db_workflow = Workflow.from_orm(workflow_obj)
     db.add(db_workflow)
     await db.commit()
     await db.refresh(db_workflow)
@@ -292,9 +296,9 @@ async def get_workflow(
     status_code=status.HTTP_201_CREATED,
 )
 async def add_task_to_workflow(
-    project_id: int,  # path parameter
-    workflow_id: int,  # path parameter
-    task_id: int,  # query parameter
+    project_id: int,
+    workflow_id: int,
+    task_id: int,
     new_task: WorkflowTaskCreate,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
