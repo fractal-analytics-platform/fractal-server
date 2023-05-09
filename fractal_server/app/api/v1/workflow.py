@@ -59,15 +59,10 @@ async def _get_workflow_check_owner(
                                                   not exist
     """
 
-    workflow = await db.get(Workflow, workflow_id)
-    if not workflow:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Workflow not found"
-        )
-
+    # Access control for project
     project, link_user_project = await asyncio.gather(
-        db.get(Project, workflow.project_id),
-        db.get(LinkUserProject, (workflow.project_id, user_id)),
+        db.get(Project, project_id),
+        db.get(LinkUserProject, (project_id, user_id)),
     )
     if not project:
         raise HTTPException(
@@ -76,7 +71,20 @@ async def _get_workflow_check_owner(
     if not link_user_project:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Not allowed on project {workflow.project_id}",
+            detail=f"Not allowed on project {project_id}",
+        )
+
+    workflow = await db.get(Workflow, workflow_id)
+    if not workflow:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Workflow not found"
+        )
+    if workflow.project_id != project.id:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Error: {workflow.project_id=} differs from {project_id=}"
+            ),
         )
 
     return workflow
@@ -153,8 +161,7 @@ async def _check_workflow_exists(
     if res.scalars().all():
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Workflow with {name=} and\
-                    {project_id=} already in use",
+            detail=f"Workflow with {name=} and {project_id=} already in use",
         )
 
 

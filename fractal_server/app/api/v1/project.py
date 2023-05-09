@@ -38,7 +38,6 @@ from ...models import ResourceRead
 from ...models import ResourceUpdate
 from ...models import Task
 from ...models import Workflow
-from ...models import WorkflowCreate
 from ...models import WorkflowImport
 from ...models import WorkflowRead
 from ...models import WorkflowTaskCreate
@@ -47,6 +46,8 @@ from ...runner import submit_workflow
 from ...runner import validate_workflow_compatibility
 from ...security import current_active_user
 from ...security import User
+from .workflow import _check_workflow_exists
+from .workflow import _get_workflow_check_owner
 
 
 router = APIRouter()
@@ -104,6 +105,8 @@ async def _get_dataset_check_owner(
         db.get(Dataset, dataset_id),
         db.get(LinkUserProject, (project_id, user_id)),
     )
+
+    # Access control for project
     if not project:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
@@ -213,6 +216,7 @@ async def apply_workflow(
         get_sync_db
     ),  # FIXME: why both sync and async?  # noqa
 ) -> Optional[ApplyWorkflowRead]:
+
     output = await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=input_dataset_id,
@@ -222,17 +226,10 @@ async def apply_workflow(
     input_dataset = output["dataset"]
     project = output["project"]
 
-    workflow = db_sync.get(Workflow, workflow_id)
-    if not workflow:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Workflow {workflow_id} not found",
-        )
-    if workflow.project_id != project.id:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Error: {workflow.project_id=} differs from {project.id=}",
-        )
+    workflow = await _get_workflow_check_owner(
+        project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
+    )
+
     if not workflow.task_list:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -497,17 +494,13 @@ async def delete_dataset(
     """
     Delete a dataset associated to the current project
     """
-    await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+    output = await _get_dataset_check_owner(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        db=db,
     )
-    stm = (
-        select(Dataset)
-        .join(Project)
-        .where(Project.id == project_id)
-        .where(Dataset.id == dataset_id)
-    )
-    res = await db.execute(stm)
-    dataset = res.scalar()
+    dataset = output["dataset"]
     await db.delete(dataset)
     await db.commit()
     await db.close()
@@ -529,17 +522,13 @@ async def add_resource(
     """
     Add resource to an existing dataset
     """
-
-    project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+    output = await _get_dataset_check_owner(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        db=db,
     )
-    dataset = await db.get(Dataset, dataset_id)
-    if dataset not in project.dataset_list:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Dataset {dataset_id} is not part of project {project_id}",
-        )
-
+    dataset = output["dataset"]
     db_resource = Resource(dataset_id=dataset.id, **resource.dict())
     db.add(db_resource)
     await db.commit()
@@ -561,8 +550,11 @@ async def get_resource(
     """
     Get resources from a dataset
     """
-    await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+    await _get_dataset_check_owner(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        db=db,
     )
     stm = select(Resource).where(Resource.dataset_id == dataset_id)
     res = await db.execute(stm)
@@ -621,17 +613,15 @@ async def edit_resource(
     """
     Edit a resource of a dataset
     """
-    project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+    output = await _get_dataset_check_owner(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        db=db,
     )
-    dataset = await db.get(Dataset, dataset_id)
+    dataset = output["dataset"]
     orig_resource = await db.get(Resource, resource_id)
 
-    if dataset not in project.dataset_list:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Dataset {dataset_id} is not part of project {project_id}",
-        )
     if orig_resource not in dataset.resource_list:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -673,18 +663,10 @@ async def import_workflow_into_project(
         user_id=user.id,
         db=db,
     )
-    stm = (
-        select(Workflow)
-        .where(Workflow.name == workflow.name)
-        .where(Workflow.project_id == project_id)
+
+    await _check_workflow_exists(
+        name=workflow.name, project_id=project_id, db=db
     )
-    res = await db.execute(stm)
-    if res.scalars().all():
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Workflow with name={workflow.name} and\
-                    {project_id=} already in use",
-        )
 
     # Check that all required tasks are available
     # NOTE: by now we go through the pair (source, name), but later on we may
@@ -720,10 +702,9 @@ async def import_workflow_into_project(
                 sourcename_to_id[(source, name)] = current_task[0].id
 
     # Create new Workflow
-    workflow_create = WorkflowCreate(
+    db_workflow = Workflow(
         project_id=project_id, **workflow.dict(exclude_none=True)
     )
-    db_workflow = Workflow.from_orm(workflow_create)
     db.add(db_workflow)
     await db.commit()
     await db.refresh(db_workflow)
@@ -738,12 +719,11 @@ async def import_workflow_into_project(
             # Prepare new_wf_task
             new_wf_task = WorkflowTaskCreate(
                 **wf_task.dict(exclude_none=True),
-                workflow_id=db_workflow.id,
-                task_id=task_id,
             )
             # Insert task
             await db_workflow.insert_task(
-                **new_wf_task.dict(exclude={"workflow_id"}),
+                **new_wf_task.dict(),
+                task_id=task_id,
                 db=db,
             )
 
