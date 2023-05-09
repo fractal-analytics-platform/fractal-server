@@ -164,7 +164,7 @@ async def add_resource(
     "/project/{project_id}/dataset/{dataset_id}/resource/",
     response_model=list[ResourceRead],
 )
-async def get_resource(
+async def get_resource_list(
     project_id: int,
     dataset_id: int,
     user: User = Depends(current_active_user),
