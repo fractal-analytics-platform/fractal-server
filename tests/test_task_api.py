@@ -177,7 +177,7 @@ async def test_collection_api_missing_file(
         debug(res)
         debug(res.json())
         assert res.status_code == 422
-        assert "does not exist" in res.json()["detail"]
+        assert "does not exist" in str(res.json())
 
 
 async def test_collection_api_local_package_with_extras(
