@@ -36,7 +36,9 @@ from ....tasks.collection import get_collection_path
 from ....tasks.collection import get_log_path
 from ....tasks.collection import inspect_package
 from ...db import AsyncSession
+from ...db import DBSyncSession
 from ...db import get_db
+from ...db import get_sync_db
 from ...models import State
 from ...models import Task
 from ...security import current_active_superuser
@@ -61,9 +63,9 @@ async def _background_collect_pip(
     directory.
     """
 
-    async for db in get_db():
+    with get_sync_db() as db:
 
-        state: State = await db.get(State, state_id)
+        state: State = db.get(State, state_id)
 
         logger_name = task_pkg.package.replace("/", "_")
         logger = set_logger(
@@ -81,9 +83,9 @@ async def _background_collect_pip(
             data.status = "installing"
 
             state.data = data.sanitised_dict()
-            await db.merge(state)
-            await db.commit()
-            task_list = await create_package_environment_pip(
+            db.merge(state)
+            db.commit()
+            task_list = create_package_environment_pip(
                 venv_path=venv_path,
                 task_pkg=task_pkg,
                 logger_name=logger_name,
@@ -93,9 +95,9 @@ async def _background_collect_pip(
             logger.debug("Task-collection status: collecting")
             data.status = "collecting"
             state.data = data.sanitised_dict()
-            await db.merge(state)
-            await db.commit()
-            tasks = await _insert_tasks(task_list=task_list, db=db)
+            db.merge(state)
+            db.commit()
+            tasks = _insert_tasks(task_list=task_list, db=db)
 
             # finalise
             logger.debug("Task-collection status: finalising")
@@ -109,14 +111,14 @@ async def _background_collect_pip(
             data.log = get_collection_log(venv_path)
             state.data = data.sanitised_dict()
             db.add(state)
-            await db.merge(state)
-            await db.commit()
+            db.merge(state)
+            db.commit()
 
             # Write last logs to file
             logger.debug("Task-collection status: OK")
             logger.info("Background task collection completed successfully")
             close_logger(logger)
-            await db.close()
+            db.close()
 
         except Exception as e:
             # Write last logs to file
@@ -129,9 +131,9 @@ async def _background_collect_pip(
             data.info = f"Original error: {e}"
             data.log = get_collection_log(venv_path)
             state.data = data.sanitised_dict()
-            await db.merge(state)
-            await db.commit()
-            await db.close()
+            db.merge(state)
+            db.commit()
+            db.close()
 
             # Delete corrupted package dir
             shell_rmtree(venv_path)
@@ -139,16 +141,17 @@ async def _background_collect_pip(
 
 async def _insert_tasks(
     task_list: list[TaskCreate],
-    db: AsyncSession,
+    db: DBSyncSession,
 ) -> list[Task]:
     """
     Insert tasks into database
     """
     task_db_list = [Task.from_orm(t) for t in task_list]
     db.add_all(task_db_list)
-    await db.commit()
-    await asyncio.gather(*[db.refresh(t) for t in task_db_list])
-    await db.close()
+    db.commit()
+    for t in task_db_list:
+        db.refresh(t)
+    db.close()
     return task_db_list
 
 
