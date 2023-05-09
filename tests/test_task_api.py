@@ -172,10 +172,11 @@ async def test_collection_api_missing_file(
 ):
     async with MockCurrentUser():
         with pytest.raises(ValidationError) as e:
-            await client.post(
+            res = await client.post(
                 f"{PREFIX}/collect/pip/",
                 json=dict(package=str(tmp_path / "missing_file")),
             )
+            debug(res)
         debug(e.value)
         assert e.value.model == _TaskCollectPip
         assert "does not exist" in e.value.errors()[0]["msg"]
