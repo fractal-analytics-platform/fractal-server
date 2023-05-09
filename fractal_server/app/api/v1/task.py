@@ -186,6 +186,8 @@ async def collect_tasks_pip(
 
     logger = set_logger(logger_name="collect_tasks_pip")
 
+    # Validate payload as _TaskCollectPip, which has more strict checks than
+    # TaskCollectPip
     try:
         task_pkg = _TaskCollectPip(**task_collect.dict())
     except ValidationError as e:
