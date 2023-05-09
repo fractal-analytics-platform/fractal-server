@@ -377,7 +377,7 @@ async def test_edit_resource(
         payload = dict(path="/my/new/path")
         res = await client.patch(
             f"{PREFIX}/project/{prj.id}/dataset/{ds.id}/"
-            "resource/{orig_resource.id}",
+            f"resource/{orig_resource.id}",
             json=payload,
         )
         data = res.json()
