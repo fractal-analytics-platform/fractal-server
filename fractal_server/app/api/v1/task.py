@@ -63,7 +63,7 @@ async def _background_collect_pip(
     directory.
     """
 
-    with get_sync_db() as db:
+    with next(get_sync_db()) as db:
 
         state: State = db.get(State, state_id)
 
