@@ -25,7 +25,10 @@ from ._aux_functions import _get_project_check_owner
 router = APIRouter()
 
 
-@router.get("/project/{project_id}/{job_id}", response_model=ApplyWorkflowRead)
+@router.get(
+    "/project/{project_id}/job/{job_id}",
+    response_model=ApplyWorkflowRead,
+)
 async def get_job(
     project_id: int,
     job_id: int,
@@ -59,7 +62,10 @@ async def get_job(
     return job_read
 
 
-@router.get("/{job_id}/download/", response_class=StreamingResponse)
+@router.get(
+    "/project/{project_id}/job/{job_id}/download/",
+    response_class=StreamingResponse,
+)
 async def download_job_logs(
     job_id: int,
     user: User = Depends(current_active_user),
@@ -98,7 +104,10 @@ async def download_job_logs(
     )
 
 
-@router.get("/{project_id}/job/", response_model=list[ApplyWorkflowRead])
+@router.get(
+    "/project/{project_id}/job/",
+    response_model=list[ApplyWorkflowRead],
+)
 async def get_job_list(
     project_id: int,
     user: User = Depends(current_active_user),
