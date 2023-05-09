@@ -10,6 +10,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
 from fastapi.responses import StreamingResponse
+from sqlmodel import select
 
 from ...db import AsyncSession
 from ...db import get_db
@@ -18,14 +19,15 @@ from ...models import ApplyWorkflowRead
 from ...runner._common import METADATA_FILENAME
 from ...security import current_active_user
 from ...security import User
-from .project import _get_project_check_owner
+from ._aux_functions import _get_project_check_owner
 
 
 router = APIRouter()
 
 
-@router.get("/{job_id}", response_model=ApplyWorkflowRead)
+@router.get("/project/{project_id}/{job_id}", response_model=ApplyWorkflowRead)
 async def get_job(
+    project_id: int,
     job_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -94,3 +96,22 @@ async def download_job_logs(
         media_type="application/x-zip-compressed",
         headers={"Content-Disposition": f"attachment;filename={zip_filename}"},
     )
+
+
+@router.get("/{project_id}/job/", response_model=list[ApplyWorkflowRead])
+async def get_job_list(
+    project_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[list[ApplyWorkflowRead]]:
+    """
+    Get list of jobs associated to the current project
+    """
+    await _get_project_check_owner(
+        project_id=project_id, user_id=user.id, db=db
+    )
+    stm = select(ApplyWorkflow).where(ApplyWorkflow.project_id == project_id)
+    res = await db.execute(stm)
+    job_list = res.scalars().all()
+    await db.close()
+    return job_list
