@@ -625,9 +625,10 @@ async def import_workflow_into_project(
                     )
                 sourcename_to_id[(source, name)] = current_task[0].id
 
-    # Create new Workflow
+    # Create new Workflow (with empty task_list)
     db_workflow = Workflow(
-        project_id=project_id, **workflow.dict(exclude_none=True)
+        project_id=project_id,
+        **workflow.dict(exclude_none=True, exclude={"task_list"}),
     )
     db.add(db_workflow)
     await db.commit()
