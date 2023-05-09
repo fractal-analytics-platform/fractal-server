@@ -429,23 +429,34 @@ async def test_patch_workflow_task_failures(
 
         # Prepare two workflows, with one task each
         project = await project_factory(user)
-        workflow1 = {"name": "WF1", "project_id": project.id}
-        res = await client.post("api/v1/workflow/", json=workflow1)
+        workflow1 = {"name": "WF1"}
+        res = await client.post(
+            f"api/v1/project/{project.id}/workflow/", json=workflow1
+        )
         wf1_id = res.json()["id"]
-        workflow2 = {"name": "WF2", "project_id": project.id}
-        res = await client.post("api/v1/workflow/", json=workflow2)
+        workflow2 = {"name": "WF2"}
+        res = await client.post(
+            f"api/v1/project/{project.id}/workflow/", json=workflow2
+        )
         wf2_id = res.json()["id"]
 
         t1 = await add_task(client, 1)
         res = await client.post(
-            f"api/v1/workflow/{wf1_id}/add-task/",
-            json={"task_id": t1["id"]},
+            (
+                f"api/v1/project/{project.id}/workflow/{wf1_id}/wftask/"
+                f"?task_id={t1['id']}"
+            ),
+            json={},
         )
 
         t2 = await add_task(client, 2)
+
         res = await client.post(
-            f"api/v1/workflow/{wf2_id}/add-task/",
-            json={"task_id": t2["id"]},
+            (
+                f"api/v1/project/{project.id}/workflow/{wf2_id}/wftask/"
+                f"?task_id={t2['id']}"
+            ),
+            json={},
         )
 
         workflow1 = await get_workflow(client, project.id, wf1_id)
@@ -456,8 +467,10 @@ async def test_patch_workflow_task_failures(
         # Modify parallelization_level
         payload = dict(meta={"parallelization_level": "XXX"})
         res = await client.patch(
-            f"api/v1/workflow/{workflow1['id']}/"
-            f"edit-task/{workflow_task_1['id']}",
+            (
+                f"api/v1/project/{project.id}/workflow/{workflow1['id']}/"
+                f"wftask/{workflow_task_1['id']}"
+            ),
             json=payload,
         )
         assert res.status_code == 422
@@ -466,7 +479,10 @@ async def test_patch_workflow_task_failures(
         WORKFLOW_ID = 999
         WORKFLOW_TASK_ID = 1
         res = await client.patch(
-            f"api/v1/workflow/{WORKFLOW_ID}/edit-task/{WORKFLOW_TASK_ID}",
+            (
+                f"api/v1/project/{project.id}/workflow/{WORKFLOW_ID}/"
+                f"wftask/{WORKFLOW_TASK_ID}"
+            ),
             json={"args": {"a": 123, "d": 321}},
         )
         debug(res.content)
@@ -476,7 +492,10 @@ async def test_patch_workflow_task_failures(
         WORKFLOW_ID = 1
         WORKFLOW_TASK_ID = 999
         res = await client.patch(
-            f"api/v1/workflow/{WORKFLOW_ID}/edit-task/{WORKFLOW_TASK_ID}",
+            (
+                f"api/v1/project/{project.id}/workflow/{WORKFLOW_ID}/"
+                f"wftask/{WORKFLOW_TASK_ID}"
+            ),
             json={"args": {"a": 123, "d": 321}},
         )
         debug(res.content)
@@ -486,7 +505,10 @@ async def test_patch_workflow_task_failures(
         WORKFLOW_ID = workflow1["id"]
         WORKFLOW_TASK_ID = workflow_task_2["id"]
         res = await client.patch(
-            f"api/v1/workflow/{WORKFLOW_ID}/edit-task/{WORKFLOW_TASK_ID}",
+            (
+                f"api/v1/project/{project.id}/workflow/{WORKFLOW_ID}/"
+                f"wftask/{WORKFLOW_TASK_ID}"
+            ),
             json={"args": {"a": 123, "d": 321}},
         )
         debug(res.content)
@@ -511,8 +533,9 @@ async def test_import_export_workflow(
 
     # Import workflow into project
     payload = WorkflowImport(**workflow_from_file).dict(exclude_none=True)
+    debug(payload)
     res = await client.post(
-        f"/api/v1/project/{prj.id}/import-workflow/", json=payload
+        f"/api/v1/project/{prj.id}/workflow/import/", json=payload
     )
     debug(res)
     assert res.status_code == 201
@@ -524,7 +547,9 @@ async def test_import_export_workflow(
 
     # Export workflow
     workflow_id = workflow_imported["id"]
-    res = await client.get(f"/api/v1/workflow/{workflow_id}/export/")
+    res = await client.get(
+        f"/api/v1/project/{prj.id}/workflow/{workflow_id}/export/"
+    )
     debug(res.status_code)
     workflow_exported = res.json()
     debug(workflow_exported)
@@ -563,7 +588,7 @@ async def test_import_export_workflow_fail(
         ],
     }
     res = await client.post(
-        f"/api/v1/project/{prj.id}/import-workflow/", json=payload
+        f"/api/v1/project/{prj.id}/workflow/import/", json=payload
     )
     assert res.status_code == 422
     assert "Found 0 tasks with source" in res.json()["detail"]
@@ -575,7 +600,7 @@ async def test_import_export_workflow_fail(
         ],
     }
     res = await client.post(
-        f"/api/v1/project/{prj.id}/import-workflow/", json=payload
+        f"/api/v1/project/{prj.id}/workflow/import/", json=payload
     )
     assert res.status_code == 422
     assert "Found 0 tasks with name" in res.json()["detail"]
@@ -612,14 +637,16 @@ async def test_reorder_task_list(
 
         # Create project and empty workflow
         project = await project_factory(user)
-        payload = {"name": "WF", "project_id": project.id}
-        res = await client.post("api/v1/workflow/", json=payload)
+        payload = {"name": "WF"}
+        res = await client.post(
+            f"api/v1/project/{project.id}/workflow/", json=payload
+        )
         assert res.status_code == 201
         wf_id = res.json()["id"]
 
         # Make no-op API call to reorder an empty task list
         res = await client.patch(
-            f"api/v1/workflow/{wf_id}",
+            f"api/v1/project/{project.id}/workflow/{wf_id}",
             json=dict(reordered_workflowtask_ids=[]),
         )
         assert res.status_code == 200
@@ -628,8 +655,11 @@ async def test_reorder_task_list(
         for i in range(num_tasks):
             t = await add_task(client, i)
             res = await client.post(
-                f"api/v1/workflow/{wf_id}/add-task/",
-                json=dict(task_id=t["id"]),
+                (
+                    f"api/v1/project/{project.id}/workflow/{wf_id}/wftask/"
+                    f"?task_id={t['id']}"
+                ),
+                json={},
             )
 
         # At this point, all WorkflowTask attributes have a predictable order
@@ -647,7 +677,7 @@ async def test_reorder_task_list(
         # update the name attribute)
         NEW_WF_NAME = "new-wf-name"
         res = await client.patch(
-            f"api/v1/workflow/{wf_id}",
+            f"api/v1/project/{project.id}/workflow/{wf_id}",
             json=dict(
                 name=NEW_WF_NAME,
                 reordered_workflowtask_ids=reordered_workflowtask_ids,
@@ -687,14 +717,19 @@ async def test_reorder_task_list_fail(
     async with MockCurrentUser(persist=True) as user:
         # Create project, workflow, tasks, workflowtasks
         project = await project_factory(user)
-        payload = {"name": "WF", "project_id": project.id}
-        res = await client.post("api/v1/workflow/", json=payload)
+        payload = {"name": "WF"}
+        res = await client.post(
+            f"api/v1/project/{project.id}/workflow/", json=payload
+        )
         wf_id = res.json()["id"]
         for i in range(num_tasks):
             t = await add_task(client, i)
             res = await client.post(
-                f"api/v1/workflow/{wf_id}/add-task/",
-                json=dict(task_id=t["id"]),
+                (
+                    f"api/v1/project/{project.id}/workflow/{wf_id}/wftask/"
+                    f"?task_id{t['id']}"
+                ),
+                json={},
             )
 
         # Invalid calls to PATCH endpoint to reorder the task_list
@@ -702,7 +737,7 @@ async def test_reorder_task_list_fail(
         # Invalid payload (not a permutation) leads to pydantic validation
         # error
         res = await client.patch(
-            f"api/v1/workflow/{wf_id}",
+            f"api/v1/project/{project.id}/workflow/{wf_id}",
             json=dict(reordered_workflowtask_ids=[2, 1, 3, 1]),
         )
         debug(res.json())
@@ -712,7 +747,7 @@ async def test_reorder_task_list_fail(
 
         # Invalid payload (wrong length) leads to custom fractal-server error
         res = await client.patch(
-            f"api/v1/workflow/{wf_id}",
+            f"api/v1/project/{project.id}/workflow/{wf_id}",
             json=dict(reordered_workflowtask_ids=[1, 2, 3, 4]),
         )
         debug(res.json())
@@ -721,7 +756,7 @@ async def test_reorder_task_list_fail(
 
         # Invalid payload (wrong values) leads to custom fractal-server error
         res = await client.patch(
-            f"api/v1/workflow/{wf_id}",
+            f"api/v1/project/{project.id}/workflow/{wf_id}",
             json=dict(reordered_workflowtask_ids=[2, 1, 33]),
         )
         debug(res.json())
