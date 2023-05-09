@@ -169,7 +169,7 @@ async def _check_workflow_exists(
 
 
 @router.post(
-    "/project/{project_id}/workflow/",
+    "/",
     response_model=WorkflowRead,
     status_code=status.HTTP_201_CREATED,
 )
@@ -203,7 +203,7 @@ async def create_workflow(
 
 
 @router.delete(
-    "/project/{project_id}/workflow/{workflow_id}",
+    "/{workflow_id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_workflow(
@@ -227,7 +227,7 @@ async def delete_workflow(
 
 
 @router.patch(
-    "/project/{project_id}/workflow/{workflow_id}",
+    "/{workflow_id}",
     response_model=WorkflowRead,
 )
 async def patch_workflow(
@@ -273,7 +273,7 @@ async def patch_workflow(
 
 
 @router.get(
-    "/project/{project_id}/workflow/{workflow_id}",
+    "/{workflow_id}",
     response_model=WorkflowRead,
 )
 async def get_workflow(
@@ -294,7 +294,7 @@ async def get_workflow(
 
 
 @router.post(
-    "/project/{project_id}/workflow/{workflow_id}/wftask/",
+    "/{workflow_id}/wftask/",
     response_model=WorkflowTaskRead,
     status_code=status.HTTP_201_CREATED,
 )
@@ -328,7 +328,7 @@ async def add_task_to_workflow(
 
 
 @router.patch(
-    "/project/{project_id}/workflow/{workflow_id}/wftask/{workflow_task_id}",
+    "/{workflow_id}/wftask/{workflow_task_id}",
     response_model=WorkflowTaskRead,
 )
 async def patch_workflow_task(
@@ -374,7 +374,7 @@ async def patch_workflow_task(
 
 
 @router.delete(
-    "/project/{project_id}/workflow/{workflow_id}/wftask/{workflow_task_id}",
+    "/{workflow_id}/wftask/{workflow_task_id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_task_from_workflow(
@@ -407,7 +407,7 @@ async def delete_task_from_workflow(
 
 
 @router.get(
-    "/project/{project_id}/workflow/{workflow_id}/export/",
+    "/{workflow_id}/export/",
     response_model=WorkflowExport,
 )
 async def export_worfklow(
