@@ -424,7 +424,10 @@ async def test_failing_workflow_JobExecutionError(
         output_dataset_id = output_dataset["id"]
 
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/dataset/{output_dataset['id']}",
+            (
+                f"{PREFIX}/project/{project_id}/"
+                f"dataset/{output_dataset['id']}/resource/"
+            ),
             json=dict(path=tmp777_path.as_posix()),
         )
         assert res.status_code == 201
@@ -440,8 +443,8 @@ async def test_failing_workflow_JobExecutionError(
 
         # Add a dummy task
         res = await client.post(
-            f"{PREFIX}/project/{project.id}/workflow/{workflow_id}/add-task/"
-            f"task_id={collect_packages[0].id}",
+            f"{PREFIX}/project/{project.id}/workflow/{workflow_id}/wftask/"
+            f"?task_id={collect_packages[0].id}",
             json=dict(args={"raise_error": False, "sleep_time": 200}),
         )
         assert res.status_code == 201
@@ -508,7 +511,6 @@ async def test_non_python_task(
         project = await project_factory(user)
 
         # Create workflow
-
         payload = dict(name="WF")
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/", json=payload
