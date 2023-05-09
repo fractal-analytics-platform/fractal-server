@@ -381,7 +381,7 @@ async def update_workflowtask(
     "/project/{project_id}/workflow/{workflow_id}/wftask/{workflow_task_id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
-async def delete_task_from_workflow(
+async def delete_workflowtask(
     project_id: int,
     workflow_id: int,
     workflow_task_id: int,
