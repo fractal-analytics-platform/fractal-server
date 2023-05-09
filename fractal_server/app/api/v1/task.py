@@ -85,7 +85,7 @@ async def _background_collect_pip(
             state.data = data.sanitised_dict()
             db.merge(state)
             db.commit()
-            task_list = create_package_environment_pip(
+            task_list = await create_package_environment_pip(
                 venv_path=venv_path,
                 task_pkg=task_pkg,
                 logger_name=logger_name,
@@ -97,7 +97,7 @@ async def _background_collect_pip(
             state.data = data.sanitised_dict()
             db.merge(state)
             db.commit()
-            tasks = _insert_tasks(task_list=task_list, db=db)
+            tasks = await _insert_tasks(task_list=task_list, db=db)
 
             # finalise
             logger.debug("Task-collection status: finalising")
