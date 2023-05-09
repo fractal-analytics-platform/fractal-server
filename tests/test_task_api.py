@@ -4,7 +4,6 @@ from shutil import which as shutil_which
 
 import pytest
 from devtools import debug
-from pydantic.error_wrappers import ValidationError
 from sqlmodel import select
 
 from .fixtures_tasks import execute_command
@@ -171,16 +170,14 @@ async def test_collection_api_missing_file(
     tmp_path,
 ):
     async with MockCurrentUser():
-        with pytest.raises(ValidationError) as e:
-            res = await client.post(
-                f"{PREFIX}/collect/pip/",
-                json=dict(package=str(tmp_path / "missing_file")),
-            )
-            debug(res)
-            debug(res.json())
-        debug(e.value)
-        assert e.value.model == _TaskCollectPip
-        assert "does not exist" in e.value.errors()[0]["msg"]
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=dict(package=str(tmp_path / "missing_file")),
+        )
+        debug(res)
+        debug(res.json())
+        assert res.status_code == 422
+        assert "does not exist" in res.json()["detail"]
 
 
 async def test_collection_api_local_package_with_extras(
