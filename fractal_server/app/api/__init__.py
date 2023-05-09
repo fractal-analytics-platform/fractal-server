@@ -17,7 +17,7 @@ router_v1 = APIRouter()
 router_v1.include_router(project_router, prefix="/project", tags=["project"])
 router_v1.include_router(task_router, prefix="/task", tags=["task"])
 router_v1.include_router(
-    workflow_router, prefix="/workflow", tags=["workflow"]
+    workflow_router, prefix="/project/{project_id}/workflow", tags=["workflow"]
 )
 router_v1.include_router(job_router, prefix="/job", tags=["monitoring"])
 
