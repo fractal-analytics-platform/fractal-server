@@ -184,11 +184,7 @@ async def create_workflow(
         name=workflow.name, project_id=project_id, db=db
     )
 
-    # Include foreign key
-    workflow_obj = workflow.dict()
-    workflow_obj.update(dict(project_id=project_id))
-
-    db_workflow = Workflow.from_orm(workflow_obj)
+    db_workflow = Workflow(project_id=project_id, **workflow.dict())
     db.add(db_workflow)
     await db.commit()
     await db.refresh(db_workflow)
