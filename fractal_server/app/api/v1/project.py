@@ -6,7 +6,6 @@ from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Query
 from fastapi import Response
 from fastapi import status
 from pydantic import UUID4
@@ -206,8 +205,8 @@ async def apply_workflow(
     workflow_id: int,
     apply_workflow: ApplyWorkflowCreate,
     background_tasks: BackgroundTasks,
-    input_dataset_id: int = Query(),
-    output_dataset_id: Union[int, None] = Query(default=None),
+    input_dataset_id: int,
+    output_dataset_id: Optional[int] = None,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
     db_sync: DBSyncSession = Depends(
