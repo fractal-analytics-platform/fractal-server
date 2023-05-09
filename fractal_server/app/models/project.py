@@ -12,7 +12,6 @@ from ...common.schemas.project import _DatasetBase
 from ...common.schemas.project import _ProjectBase
 from ...common.schemas.project import _ResourceBase
 from .security import UserOAuth as User
-from .workflow import Workflow
 
 
 class LinkUserProject(SQLModel, table=True):
@@ -74,13 +73,6 @@ class Project(_ProjectBase, table=True):
             "lazy": "selectin",
             "cascade": "all, delete-orphan",
         }
-    )
-
-    workflow_list: list[Workflow] = Relationship(
-        sa_relationship_kwargs={
-            "lazy": "selectin",
-            "cascade": "all, delete-orphan",
-        },
     )
 
     job_list: list["ApplyWorkflow"] = Relationship(  # noqa
