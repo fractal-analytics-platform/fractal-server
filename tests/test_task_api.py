@@ -177,6 +177,7 @@ async def test_collection_api_missing_file(
                 json=dict(package=str(tmp_path / "missing_file")),
             )
             debug(res)
+            debug(res.json())
         debug(e.value)
         assert e.value.model == _TaskCollectPip
         assert "does not exist" in e.value.errors()[0]["msg"]
