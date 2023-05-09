@@ -111,7 +111,7 @@ class _TaskCollectPip(TaskCollectPip):
     Internal TaskCollectPip schema
 
     The difference with its parent class is that we check if the package
-    corresponds to a path in the filesystem.
+    corresponds to a path in the filesystem, and whether it exists.
     """
 
     package_path: Optional[Path] = None
@@ -140,6 +140,8 @@ class _TaskCollectPip(TaskCollectPip):
                     values["version"],
                     *_,
                 ) = package_path.name.split("-")
+            else:
+                raise ValueError(f"Package {package_path} does not exist.")
         return values
 
     @property
@@ -396,13 +398,12 @@ async def _pip_install(
     """
     pip = venv_path / "venv/bin/pip"
 
+    extras = f"[{task_pkg.package_extras}]" if task_pkg.package_extras else ""
+
     if task_pkg.is_local_package:
-        pip_install_str = task_pkg.package_path.as_posix()  # type: ignore
+        pip_install_str = f"{task_pkg.package_path.as_posix()}{extras}"
     else:
         version_string = f"=={task_pkg.version}" if task_pkg.version else ""
-        extras = (
-            f"[{task_pkg.package_extras}]" if task_pkg.package_extras else ""
-        )
         pip_install_str = f"{task_pkg.package}{extras}{version_string}"
 
     cmd_install = f"{pip} install {pip_install_str}"

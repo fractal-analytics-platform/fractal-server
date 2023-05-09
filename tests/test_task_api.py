@@ -164,6 +164,51 @@ async def test_background_collection_failure(db, dummy_task_package):
     assert not venv_path.exists()
 
 
+async def test_collection_api_missing_file(
+    client,
+    MockCurrentUser,
+    tmp_path,
+):
+    async with MockCurrentUser():
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=dict(package=str(tmp_path / "missing_file")),
+        )
+        debug(res)
+        debug(res.json())
+        assert res.status_code == 422
+        assert "does not exist" in str(res.json())
+
+
+async def test_collection_api_local_package_with_extras(
+    client,
+    MockCurrentUser,
+    dummy_task_package,
+):
+    """
+    Check that the package extras are correctly included in a local-package
+    collection.
+    """
+    async with MockCurrentUser():
+        # Task collection
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=dict(
+                package=dummy_task_package.as_posix(),
+                package_extras="my_extra",
+            ),
+        )
+        debug(res.json())
+        assert res.status_code == 201
+
+        # Get logs
+        res = await client.get(f"{PREFIX}/collect/{res.json()['id']}")
+        debug(res.json())
+        assert res.status_code == 200
+        log = res.json()["data"]["log"]
+        assert ".whl[my_extra]" in log
+
+
 @pytest.mark.parametrize(
     ("slurm_user", "python_version"),
     [
