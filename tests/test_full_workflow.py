@@ -105,7 +105,7 @@ async def test_full_workflow(
         # CREATE OUTPUT DATASET AND RESOURCE
 
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/",
+            f"{PREFIX}/project/{project_id}/dataset/",
             json=dict(
                 name="output dataset",
                 type="json",
@@ -117,7 +117,7 @@ async def test_full_workflow(
         output_dataset_id = output_dataset["id"]
 
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/{output_dataset['id']}",
+            f"{PREFIX}/project/{project_id}/dataset/{output_dataset['id']}",
             json=dict(path=tmp777_path.as_posix()),
         )
         out_resource = res.json()
@@ -130,8 +130,8 @@ async def test_full_workflow(
 
         # CREATE WORKFLOW
         res = await client.post(
-            f"{PREFIX}/workflow/",
-            json=dict(name="test workflow", project_id=project_id),
+            f"{PREFIX}/workflow/project/{project_id}",
+            json=dict(name="test workflow"),
         )
         debug(res.json())
         assert res.status_code == 201
