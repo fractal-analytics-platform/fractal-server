@@ -43,6 +43,28 @@ from ._aux_functions import _get_workflow_task_check_owner
 router = APIRouter()
 
 
+@router.get(
+    "/project/{project_id}/workflow/",
+    response_model=list[WorkflowRead],
+)
+async def get_workflow_list(
+    project_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[list[WorkflowRead]]:
+    """
+    Get list of workflows associated to the current project
+    """
+    await _get_project_check_owner(
+        project_id=project_id, user_id=user.id, db=db
+    )
+    stm = select(Workflow).where(Workflow.project_id == project_id)
+    res = await db.execute(stm)
+    workflow_list = res.scalars().all()
+    await db.close()
+    return workflow_list
+
+
 @router.post(
     "/project/{project_id}/workflow/",
     response_model=WorkflowRead,
@@ -74,35 +96,32 @@ async def create_workflow(
     return db_workflow
 
 
-@router.delete(
+@router.get(
     "/project/{project_id}/workflow/{workflow_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
+    response_model=WorkflowRead,
 )
-async def delete_workflow(
+async def read_workflow(
     project_id: int,
     workflow_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-) -> Response:
+) -> Optional[WorkflowRead]:
     """
-    Delte a workflow
+    Get info on an existing workflow
     """
 
     workflow = await _get_workflow_check_owner(
         project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
 
-    await db.delete(workflow)
-    await db.commit()
-
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return workflow
 
 
 @router.patch(
     "/project/{project_id}/workflow/{workflow_id}",
     response_model=WorkflowRead,
 )
-async def patch_workflow(
+async def update_workflow(
     project_id: int,
     workflow_id: int,
     patch: WorkflowUpdate,
@@ -144,132 +163,25 @@ async def patch_workflow(
     return workflow
 
 
-@router.get(
-    "/project/{project_id}/workflow/{workflow_id}",
-    response_model=WorkflowRead,
-)
-async def get_workflow(
-    project_id: int,
-    workflow_id: int,
-    user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
-) -> Optional[WorkflowRead]:
-    """
-    Get info on an existing workflow
-    """
-
-    workflow = await _get_workflow_check_owner(
-        project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
-    )
-
-    return workflow
-
-
-@router.post(
-    "/project/{project_id}/workflow/{workflow_id}/wftask/",
-    response_model=WorkflowTaskRead,
-    status_code=status.HTTP_201_CREATED,
-)
-async def add_task_to_workflow(
-    project_id: int,
-    workflow_id: int,
-    task_id: int,
-    new_task: WorkflowTaskCreate,
-    user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
-) -> Optional[WorkflowTaskRead]:
-    """
-    Add a WorkflowTask to a Workflow
-    """
-
-    workflow = await _get_workflow_check_owner(
-        project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
-    )
-    async with db:
-        workflow_task = await workflow.insert_task(
-            **new_task.dict(),
-            task_id=task_id,
-            db=db,
-        )
-
-    await db.close()
-    return workflow_task
-
-
-@router.patch(
-    "/project/{project_id}/workflow/{workflow_id}/wftask/{workflow_task_id}",
-    response_model=WorkflowTaskRead,
-)
-async def patch_workflow_task(
-    project_id: int,
-    workflow_id: int,
-    workflow_task_id: int,
-    workflow_task_update: WorkflowTaskUpdate,
-    user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
-) -> Optional[WorkflowTaskRead]:
-    """
-    Edit a WorkflowTask of a Workflow
-    """
-
-    db_workflow_task, db_workflow = await _get_workflow_task_check_owner(
-        project_id=project_id,
-        workflow_task_id=workflow_task_id,
-        workflow_id=workflow_id,
-        user_id=user.id,
-        db=db,
-    )
-
-    for key, value in workflow_task_update.dict(exclude_unset=True).items():
-        if key == "args":
-            current_args = deepcopy(db_workflow_task.args) or {}
-            current_args.update(value)
-            setattr(db_workflow_task, key, current_args)
-        elif key == "meta":
-            current_meta = deepcopy(db_workflow_task.meta) or {}
-            current_meta.update(value)
-            setattr(db_workflow_task, key, current_meta)
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"patch_workflow_task endpoint cannot set {key=}",
-            )
-
-    await db.commit()
-    await db.refresh(db_workflow_task)
-    await db.close()
-
-    return db_workflow_task
-
-
 @router.delete(
-    "/project/{project_id}/workflow/{workflow_id}/wftask/{workflow_task_id}",
+    "/project/{project_id}/workflow/{workflow_id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
-async def delete_task_from_workflow(
+async def delete_workflow(
     project_id: int,
     workflow_id: int,
-    workflow_task_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
     """
-    Delete a WorkflowTask of a Workflow
+    Delte a workflow
     """
 
-    db_workflow_task, db_workflow = await _get_workflow_task_check_owner(
-        project_id=project_id,
-        workflow_task_id=workflow_task_id,
-        workflow_id=workflow_id,
-        user_id=user.id,
-        db=db,
+    workflow = await _get_workflow_check_owner(
+        project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
 
-    await db.delete(db_workflow_task)
-    await db.commit()
-
-    await db.refresh(db_workflow)
-    db_workflow.task_list.reorder()
+    await db.delete(workflow)
     await db.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -295,34 +207,12 @@ async def export_worfklow(
     return workflow
 
 
-@router.get(
-    "/project/{project_id}/workflow/",
-    response_model=list[WorkflowRead],
-)
-async def get_workflow_list(
-    project_id: int,
-    user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
-) -> Optional[list[WorkflowRead]]:
-    """
-    Get list of workflows associated to the current project
-    """
-    await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
-    )
-    stm = select(Workflow).where(Workflow.project_id == project_id)
-    res = await db.execute(stm)
-    workflow_list = res.scalars().all()
-    await db.close()
-    return workflow_list
-
-
 @router.post(
     "/project/{project_id}/workflow/import/",
     response_model=WorkflowRead,
     status_code=status.HTTP_201_CREATED,
 )
-async def import_workflow_into_project(
+async def import_workflow(
     project_id: int,
     workflow: WorkflowImport,
     user: User = Depends(current_active_user),
@@ -408,3 +298,113 @@ async def import_workflow_into_project(
 
     await db.close()
     return db_workflow
+
+
+@router.post(
+    "/project/{project_id}/workflow/{workflow_id}/wftask/",
+    response_model=WorkflowTaskRead,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_workflowtask(
+    project_id: int,
+    workflow_id: int,
+    task_id: int,
+    new_task: WorkflowTaskCreate,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[WorkflowTaskRead]:
+    """
+    Add a WorkflowTask to a Workflow
+    """
+
+    workflow = await _get_workflow_check_owner(
+        project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
+    )
+    async with db:
+        workflow_task = await workflow.insert_task(
+            **new_task.dict(),
+            task_id=task_id,
+            db=db,
+        )
+
+    await db.close()
+    return workflow_task
+
+
+@router.patch(
+    "/project/{project_id}/workflow/{workflow_id}/wftask/{workflow_task_id}",
+    response_model=WorkflowTaskRead,
+)
+async def update_workflowtask(
+    project_id: int,
+    workflow_id: int,
+    workflow_task_id: int,
+    workflow_task_update: WorkflowTaskUpdate,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[WorkflowTaskRead]:
+    """
+    Edit a WorkflowTask of a Workflow
+    """
+
+    db_workflow_task, db_workflow = await _get_workflow_task_check_owner(
+        project_id=project_id,
+        workflow_task_id=workflow_task_id,
+        workflow_id=workflow_id,
+        user_id=user.id,
+        db=db,
+    )
+
+    for key, value in workflow_task_update.dict(exclude_unset=True).items():
+        if key == "args":
+            current_args = deepcopy(db_workflow_task.args) or {}
+            current_args.update(value)
+            setattr(db_workflow_task, key, current_args)
+        elif key == "meta":
+            current_meta = deepcopy(db_workflow_task.meta) or {}
+            current_meta.update(value)
+            setattr(db_workflow_task, key, current_meta)
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"patch_workflow_task endpoint cannot set {key=}",
+            )
+
+    await db.commit()
+    await db.refresh(db_workflow_task)
+    await db.close()
+
+    return db_workflow_task
+
+
+@router.delete(
+    "/project/{project_id}/workflow/{workflow_id}/wftask/{workflow_task_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_task_from_workflow(
+    project_id: int,
+    workflow_id: int,
+    workflow_task_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    """
+    Delete a WorkflowTask of a Workflow
+    """
+
+    db_workflow_task, db_workflow = await _get_workflow_task_check_owner(
+        project_id=project_id,
+        workflow_task_id=workflow_task_id,
+        workflow_id=workflow_id,
+        user_id=user.id,
+        db=db,
+    )
+
+    await db.delete(db_workflow_task)
+    await db.commit()
+
+    await db.refresh(db_workflow)
+    db_workflow.task_list.reorder()
+    await db.commit()
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
