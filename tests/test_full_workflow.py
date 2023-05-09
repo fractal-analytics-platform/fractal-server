@@ -514,8 +514,11 @@ async def test_non_python_task(
         project = await project_factory(user)
 
         # Create workflow
-        payload = {"name": "WF", "project_id": project.id}
-        res = await client.post("api/v1/workflow/", json=payload)
+
+        payload = dict(name="WF")
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/", json=payload
+        )
         workflow = res.json()
         debug(workflow)
         assert res.status_code == 201
@@ -529,15 +532,16 @@ async def test_non_python_task(
             output_type="zarr",
         )
         task_create = TaskCreate(**task_dict)
-        res = await client.post("api/v1/task/", json=task_create.dict())
+        res = await client.post(f"{PREFIX}/task/", json=task_create.dict())
         task = res.json()
         debug(task)
         assert res.status_code == 201
 
         # Add task to workflow
         res = await client.post(
-            f"api/v1/workflow/{workflow['id']}/add-task/",
-            json=dict(task_id=task["id"]),
+            f"{PREFIX}/project/{project.id}/workflow/{workflow['id']}/wftask/"
+            f"?task_id={task['id']}",
+            json=dict(),
         )
         assert res.status_code == 201
 
@@ -557,15 +561,13 @@ async def test_non_python_task(
         )
 
         # Submit workflow
-        payload = dict(
-            project_id=project.id,
-            input_dataset_id=input_dataset.id,
-            output_dataset_id=output_dataset.id,
-            workflow_id=workflow["id"],
-            overwrite_input=False,
+
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow['id']}/apply/"
+            f"?input_dataset_id={input_dataset.id}"
+            f"&output_dataset_id={output_dataset.id}",
+            json=dict(overwrite_input=False),
         )
-        debug(payload)
-        res = await client.post("/api/v1/project/apply/", json=payload)
         job_data = res.json()
         debug(job_data)
         assert res.status_code == 202
