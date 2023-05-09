@@ -1,6 +1,4 @@
-import asyncio
 from typing import Optional
-from typing import Union
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
@@ -8,7 +6,6 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
-from pydantic import UUID4
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
@@ -46,86 +43,13 @@ from ...runner import submit_workflow
 from ...runner import validate_workflow_compatibility
 from ...security import current_active_user
 from ...security import User
-from .workflow import _check_workflow_exists
-from .workflow import _get_workflow_check_owner
+from ._aux_functions import _check_workflow_exists
+from ._aux_functions import _get_dataset_check_owner
+from ._aux_functions import _get_project_check_owner
+from ._aux_functions import _get_workflow_check_owner
 
 
 router = APIRouter()
-
-
-async def _get_project_check_owner(
-    *,
-    project_id: int,
-    user_id: UUID4,
-    db: AsyncSession,
-) -> Project:
-    """
-    Check that user is a member of project and return
-
-    Raises:
-        HTTPException(status_code=403_FORBIDDEN): If the user is not a
-                                                  member of the project
-        HTTPException(status_code=404_NOT_FOUND): If the project does not
-                                                  exist
-    """
-    project, link_user_project = await asyncio.gather(
-        db.get(Project, project_id),
-        db.get(LinkUserProject, (project_id, user_id)),
-    )
-    if not project:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
-        )
-    if not link_user_project:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Not allowed on project {project_id}",
-        )
-    return project
-
-
-async def _get_dataset_check_owner(
-    *,
-    project_id: int,
-    dataset_id: int,
-    user_id: UUID4,
-    db: AsyncSession,
-) -> dict[str, Union[Dataset, Project]]:
-    """
-    Check that user is a member of project and return
-
-    Raises:
-        HTTPException(status_code=403_FORBIDDEN): If the user is not a
-                                                         member of the project
-        HTTPException(status_code=404_NOT_FOUND): If the dataset or project do
-                                                  not exist
-    """
-    project, dataset, link_user_project = await asyncio.gather(
-        db.get(Project, project_id),
-        db.get(Dataset, dataset_id),
-        db.get(LinkUserProject, (project_id, user_id)),
-    )
-
-    # Access control for project
-    if not project:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
-        )
-    if not link_user_project:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Not allowed on project {project_id}",
-        )
-    if not dataset:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Dataset not found"
-        )
-    if dataset.project_id != project_id:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Invalid {project_id=} for {dataset_id=}",
-        )
-    return dict(dataset=dataset, project=project)
 
 
 # Main endpoints (no ID required)
