@@ -413,7 +413,7 @@ async def test_failing_workflow_JobExecutionError(
         # CREATE OUTPUT DATASET AND RESOURCE
 
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/",
+            f"{PREFIX}/project/{project_id}",
             json=dict(
                 name="output dataset",
                 type="json",
