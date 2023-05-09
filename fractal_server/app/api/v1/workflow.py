@@ -18,12 +18,15 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from sqlmodel import select
 
 from ...db import AsyncSession
 from ...db import get_db
+from ...models import Task
 from ...models import Workflow
 from ...models import WorkflowCreate
 from ...models import WorkflowExport
+from ...models import WorkflowImport
 from ...models import WorkflowRead
 from ...models import WorkflowTaskCreate
 from ...models import WorkflowTaskRead
@@ -290,3 +293,118 @@ async def export_worfklow(
     )
     await db.close()
     return workflow
+
+
+@router.get(
+    "/project/{project_id}/workflow/",
+    response_model=list[WorkflowRead],
+)
+async def get_workflow_list(
+    project_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[list[WorkflowRead]]:
+    """
+    Get list of workflows associated to the current project
+    """
+    await _get_project_check_owner(
+        project_id=project_id, user_id=user.id, db=db
+    )
+    stm = select(Workflow).where(Workflow.project_id == project_id)
+    res = await db.execute(stm)
+    workflow_list = res.scalars().all()
+    await db.close()
+    return workflow_list
+
+
+@router.post(
+    "/project/{project_id}/workflow/import/",
+    response_model=WorkflowRead,
+    status_code=status.HTTP_201_CREATED,
+)
+async def import_workflow_into_project(
+    project_id: int,
+    workflow: WorkflowImport,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[WorkflowRead]:
+    """
+    Import an existing workflow into a project
+
+    Also create all required objects (i.e. Workflow and WorkflowTask's) along
+    the way.
+    """
+
+    # Preliminary checks
+    await _get_project_check_owner(
+        project_id=project_id,
+        user_id=user.id,
+        db=db,
+    )
+
+    await _check_workflow_exists(
+        name=workflow.name, project_id=project_id, db=db
+    )
+
+    # Check that all required tasks are available
+    # NOTE: by now we go through the pair (source, name), but later on we may
+    # combine them into source -- see issue #293.
+    tasks = [wf_task.task for wf_task in workflow.task_list]
+    sourcename_to_id = {}
+    for task in tasks:
+        source = task.source
+        name = task.name
+        if not (source, name) in sourcename_to_id.keys():
+            stm = select(Task).where(Task.source == source)
+            tasks_by_source = (await db.execute(stm)).scalars().all()
+            if not tasks_by_source:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=(f"Found 0 tasks with {source=}."),
+                )
+            else:
+                stm = (
+                    select(Task)
+                    .where(Task.source == source)
+                    .where(Task.name == name)
+                )
+                current_task = (await db.execute(stm)).scalars().all()
+                if len(current_task) != 1:
+                    raise HTTPException(
+                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                        detail=(
+                            f"Found {len(current_task)} tasks with "
+                            f"{name =} and {source=}."
+                        ),
+                    )
+                sourcename_to_id[(source, name)] = current_task[0].id
+
+    # Create new Workflow (with empty task_list)
+    db_workflow = Workflow(
+        project_id=project_id,
+        **workflow.dict(exclude_none=True, exclude={"task_list"}),
+    )
+    db.add(db_workflow)
+    await db.commit()
+    await db.refresh(db_workflow)
+
+    # Insert tasks
+    async with db:
+        for _, wf_task in enumerate(workflow.task_list):
+            # Identify task_id
+            source = wf_task.task.source
+            name = wf_task.task.name
+            task_id = sourcename_to_id[(source, name)]
+            # Prepare new_wf_task
+            new_wf_task = WorkflowTaskCreate(
+                **wf_task.dict(exclude_none=True),
+            )
+            # Insert task
+            await db_workflow.insert_task(
+                **new_wf_task.dict(),
+                task_id=task_id,
+                db=db,
+            )
+
+    await db.close()
+    return db_workflow

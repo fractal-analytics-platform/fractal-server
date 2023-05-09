@@ -63,7 +63,7 @@ async def _get_workflow_check_owner(
     """
 
     # Access control for project
-    project = _get_project_check_owner(
+    project = await _get_project_check_owner(
         project_id=project_id, user_id=user_id, db=db
     )
     # Get workflow
@@ -168,7 +168,7 @@ async def _get_dataset_check_owner(
     """
 
     # Access control for project
-    project = _get_project_check_owner(
+    project = await _get_project_check_owner(
         project_id=project_id, user_id=user_id, db=db
     )
     # Get dataset
@@ -196,7 +196,7 @@ async def _get_job_check_owner(
     Get a job and a project, after access control on the project
     """
     # Access control for project
-    project = _get_project_check_owner(
+    project = await _get_project_check_owner(
         project_id=project_id, user_id=user_id, db=db
     )
     # Get dataset
