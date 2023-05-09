@@ -424,15 +424,15 @@ async def test_failing_workflow_JobExecutionError(
         output_dataset_id = output_dataset["id"]
 
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/{output_dataset['id']}",
+            f"{PREFIX}/project/{project_id}/dataset/{output_dataset['id']}",
             json=dict(path=tmp777_path.as_posix()),
         )
         assert res.status_code == 201
 
         # CREATE WORKFLOW
         res = await client.post(
-            f"{PREFIX}/workflow/",
-            json=dict(name="test workflow", project_id=project.id),
+            f"{PREFIX}/project/{project.id}/workflow/",
+            json=dict(name="test workflow"),
         )
         assert res.status_code == 201
         workflow_dict = res.json()
@@ -440,11 +440,9 @@ async def test_failing_workflow_JobExecutionError(
 
         # Add a dummy task
         res = await client.post(
-            f"{PREFIX}/workflow/{workflow_id}/add-task/",
-            json=dict(
-                task_id=collect_packages[0].id,
-                args={"raise_error": False, "sleep_time": 200},
-            ),
+            f"{PREFIX}/project/{project.id}/workflow/{workflow_id}/add-task/"
+            f"task_id={collect_packages[0].id}",
+            json=dict(args={"raise_error": False, "sleep_time": 200}),
         )
         assert res.status_code == 201
         workflow_task_id = res.json()["id"]
@@ -466,15 +464,11 @@ async def test_failing_workflow_JobExecutionError(
         logging.warning(f"POST THREAD START {time.perf_counter()=}")
 
         # Re-submit the modified workflow
-        payload = dict(
-            project_id=project_id,
-            input_dataset_id=input_dataset_id,
-            output_dataset_id=output_dataset_id,
-            workflow_id=workflow_id,
-            overwrite_input=False,
-        )
+        payload = dict(overwrite_input=False)
         res_second_apply = await client.post(
-            f"{PREFIX}/project/apply/",
+            f"{PREFIX}/project/{project.id}/workflow/{workflow_id}/apply/"
+            f"?input_dataset_id={input_dataset_id}"
+            f"&output_dataset_id={output_dataset_id}",
             json=payload,
         )
         job_data = res_second_apply.json()
