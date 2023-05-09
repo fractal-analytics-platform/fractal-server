@@ -191,7 +191,7 @@ async def collect_tasks_pip(
     except ValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Invalid package or manifest. Original error: {e}",
+            detail=f"Invalid task-collection object. Original error: {e}",
         )
 
     with TemporaryDirectory() as tmpdir:
