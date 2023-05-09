@@ -29,7 +29,7 @@ router = APIRouter()
     "/project/{project_id}/job/{job_id}",
     response_model=ApplyWorkflowRead,
 )
-async def get_job(
+async def read_job(
     project_id: int,
     job_id: int,
     user: User = Depends(current_active_user),
