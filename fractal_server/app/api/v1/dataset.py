@@ -31,7 +31,7 @@ router = APIRouter()
     response_model=DatasetRead,
     status_code=status.HTTP_201_CREATED,
 )
-async def add_dataset(
+async def create_dataset(
     project_id: int,
     dataset: DatasetCreate,
     user: User = Depends(current_active_user),
@@ -56,7 +56,7 @@ async def add_dataset(
     "/project/{project_id}/dataset/{dataset_id}",
     response_model=DatasetRead,
 )
-async def get_dataset(
+async def read_dataset(
     project_id: int,
     dataset_id: int,
     user: User = Depends(current_active_user),
@@ -77,7 +77,7 @@ async def get_dataset(
     "/project/{project_id}/dataset/{dataset_id}",
     response_model=DatasetRead,
 )
-async def patch_dataset(
+async def update_dataset(
     project_id: int,
     dataset_id: int,
     dataset_update: DatasetUpdate,
@@ -135,7 +135,7 @@ async def delete_dataset(
     response_model=ResourceRead,
     status_code=status.HTTP_201_CREATED,
 )
-async def add_resource(
+async def create_resource(
     project_id: int,
     dataset_id: int,
     resource: ResourceCreate,
@@ -186,42 +186,11 @@ async def get_resource_list(
     return resource_list
 
 
-@router.delete(
-    "/project/{project_id}/dataset/{dataset_id}/resource/{resource_id}",
-    status_code=204,
-)
-async def delete_resource(
-    project_id: int,
-    dataset_id: int,
-    resource_id: int,
-    user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
-) -> Response:
-    """
-    Delete a resource of a dataset
-    """
-    project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
-    )
-    resource = await db.get(Resource, resource_id)
-    if not resource or resource.dataset_id not in (
-        ds.id for ds in project.dataset_list
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Resource does not exist or does not belong to project",
-        )
-    await db.delete(resource)
-    await db.commit()
-    await db.close()
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
 @router.patch(
     "/project/{project_id}/dataset/{dataset_id}/resource/{resource_id}",
     response_model=ResourceRead,
 )
-async def edit_resource(
+async def update_resource(
     project_id: int,
     dataset_id: int,
     resource_id: int,
@@ -256,3 +225,34 @@ async def edit_resource(
     await db.refresh(orig_resource)
     await db.close()
     return orig_resource
+
+
+@router.delete(
+    "/project/{project_id}/dataset/{dataset_id}/resource/{resource_id}",
+    status_code=204,
+)
+async def delete_resource(
+    project_id: int,
+    dataset_id: int,
+    resource_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    """
+    Delete a resource of a dataset
+    """
+    project = await _get_project_check_owner(
+        project_id=project_id, user_id=user.id, db=db
+    )
+    resource = await db.get(Resource, resource_id)
+    if not resource or resource.dataset_id not in (
+        ds.id for ds in project.dataset_list
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Resource does not exist or does not belong to project",
+        )
+    await db.delete(resource)
+    await db.commit()
+    await db.close()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
