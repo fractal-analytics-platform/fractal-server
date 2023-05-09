@@ -44,6 +44,7 @@ async def get_job(
 
     job_read = ApplyWorkflowRead(**job.dict())
 
+    # FIXME: this operation is not reading from the DB, but from file
     try:
         metadata_file = Path(job_read.working_dir) / METADATA_FILENAME
         with metadata_file.open("r") as f:
