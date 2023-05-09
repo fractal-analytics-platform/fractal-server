@@ -131,14 +131,11 @@ class Workflow(_WorkflowBase, table=True):
     Attributes:
         id:
             Primary key
-        project_id:
-            ID of the project the workflow belongs to.
         task_list:
             List of associations to tasks.
     """
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    project_id: int = Field(foreign_key="project.id")
 
     task_list: list["WorkflowTask"] = Relationship(
         sa_relationship_kwargs=dict(

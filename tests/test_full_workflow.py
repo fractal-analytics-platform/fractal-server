@@ -85,7 +85,7 @@ async def test_full_workflow(
         # EDIT DEFAULT DATASET TO SET TYPE IMAGE
 
         res = await client.patch(
-            f"{PREFIX}/project/{project_id}/{input_dataset_id}",
+            f"{PREFIX}/project/{project_id}/dataset/{input_dataset_id}",
             json={"type": "image", "read_only": True},
         )
         debug(res.json())
@@ -94,7 +94,7 @@ async def test_full_workflow(
         # ADD TEST IMAGES AS RESOURCE TO INPUT DATASET
 
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/{input_dataset_id}",
+            f"{PREFIX}/project/{project_id}/dataset/{input_dataset_id}",
             json={
                 "path": (testdata_path / "png").as_posix(),
             },
@@ -260,7 +260,7 @@ async def test_failing_workflow_TaskExecutionError(
         # CREATE OUTPUT DATASET AND RESOURCE
 
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/",
+            f"{PREFIX}/project/{project_id}/dataset/",
             json=dict(
                 name="output dataset",
                 type="json",
@@ -271,15 +271,15 @@ async def test_failing_workflow_TaskExecutionError(
         output_dataset_id = output_dataset["id"]
 
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/{output_dataset['id']}",
+            f"{PREFIX}/project/{project_id}/dataset/{output_dataset['id']}",
             json=dict(path=tmp777_path.as_posix()),
         )
         assert res.status_code == 201
 
         # CREATE TASKS AND WORKFLOW
         res = await client.post(
-            f"{PREFIX}/workflow/",
-            json=dict(name="test workflow", project_id=project.id),
+            f"{PREFIX}/workflow/project/{project.id}",
+            json=dict(name="test workflow"),
         )
         assert res.status_code == 201
         workflow_dict = res.json()
