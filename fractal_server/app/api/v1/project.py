@@ -327,25 +327,6 @@ async def get_workflow_list(
     return workflow_list
 
 
-@router.get("/{project_id}/job/", response_model=list[ApplyWorkflowRead])
-async def get_job_list(
-    project_id: int,
-    user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
-) -> Optional[list[ApplyWorkflowRead]]:
-    """
-    Get list of jobs associated to the current project
-    """
-    await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
-    )
-    stm = select(ApplyWorkflow).where(ApplyWorkflow.project_id == project_id)
-    res = await db.execute(stm)
-    job_list = res.scalars().all()
-    await db.close()
-    return job_list
-
-
 @router.patch("/{project_id}", response_model=ProjectRead)
 async def edit_project(
     project_id: int,
