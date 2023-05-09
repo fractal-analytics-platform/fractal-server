@@ -273,14 +273,15 @@ async def test_failing_workflow_TaskExecutionError(
         output_dataset_id = output_dataset["id"]
 
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/dataset/{output_dataset['id']}",
+            f"{PREFIX}/project/"
+            f"{project_id}/dataset/{output_dataset_id}/resource/",
             json=dict(path=tmp777_path.as_posix()),
         )
         assert res.status_code == 201
 
         # CREATE TASKS AND WORKFLOW
         res = await client.post(
-            f"{PREFIX}/workflow/project/{project.id}",
+            f"{PREFIX}/project/{project.id}/workflow/",
             json=dict(name="test workflow"),
         )
         assert res.status_code == 201
@@ -288,8 +289,8 @@ async def test_failing_workflow_TaskExecutionError(
         workflow_id = workflow_dict["id"]
 
         # Prepare payloads for adding non-parallel and parallel dummy tasks
-        payload_non_parallel = dict(task_id=collect_packages[0].id)
-        payload_parallel = dict(task_id=collect_packages[1].id)
+        payload_non_parallel = dict()
+        payload_parallel = dict()
         ERROR_MESSAGE = f"this is a nice error for a {failing_task} task"
         failing_args = {"raise_error": True, "message": ERROR_MESSAGE}
         if failing_task == "non_parallel":
@@ -300,7 +301,8 @@ async def test_failing_workflow_TaskExecutionError(
         # Add a (non-parallel) dummy task
         debug(payload_non_parallel)
         res = await client.post(
-            f"{PREFIX}/workflow/{workflow_id}/add-task/",
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
+            f"?task_id={collect_packages[0].id}",
             json=payload_non_parallel,
         )
         debug(res.json())
@@ -309,22 +311,19 @@ async def test_failing_workflow_TaskExecutionError(
         # Add a (parallel) dummy_parallel task
         debug(payload_parallel)
         res = await client.post(
-            f"{PREFIX}/workflow/{workflow_id}/add-task/",
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
+            f"?task_id={collect_packages[1].id}",
             json=payload_parallel,
         )
         debug(res.json())
         assert res.status_code == 201
 
         # EXECUTE WORKFLOW
-        payload = dict(
-            project_id=project_id,
-            input_dataset_id=input_dataset_id,
-            output_dataset_id=output_dataset_id,
-            workflow_id=workflow_id,
-            overwrite_input=False,
-        )
+        payload = dict(overwrite_input=False)
         res = await client.post(
-            f"{PREFIX}/project/apply/",
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/apply/"
+            f"?input_dataset_id={input_dataset_id}"
+            f"&output_dataset_id={output_dataset_id}",
             json=payload,
         )
         job_data = res.json()
