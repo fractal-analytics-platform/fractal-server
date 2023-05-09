@@ -220,7 +220,13 @@ async def apply_workflow(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)
         )
 
-    job = ApplyWorkflow.from_orm(apply_workflow)
+    job = ApplyWorkflow(
+        project_id=project_id,
+        input_dataset_id=input_dataset_id,
+        output_dataset_id=output_dataset_id,
+        workflow_id=workflow_id,
+        **apply_workflow.dict(),
+    )
     db.add(job)
     await db.commit()
     await db.refresh(job)
