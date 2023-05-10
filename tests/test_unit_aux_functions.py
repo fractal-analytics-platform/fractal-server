@@ -233,6 +233,7 @@ async def test_get_dataset_check_owner(
 async def test_get_job_check_owner(
     MockCurrentUser,
     project_factory,
+    workflow_factory,
     dataset_factory,
     job_factory,
     db,
@@ -241,9 +242,16 @@ async def test_get_job_check_owner(
         project = await project_factory(user, id=1)
         other_project = await project_factory(user, id=2)
 
-        await dataset_factory(project, id=1)
-        await dataset_factory(project, id=2)
-        job = await job_factory(project)
+        workflow = await workflow_factory(project_id=project.id)
+
+        dataset = await dataset_factory(project)
+
+        job = await job_factory(
+            project,
+            input_dataset_id=dataset.id,
+            output_dataset_id=dataset.id,
+            workflow_id=workflow.id,
+        )
 
         # Test success
         await _get_job_check_owner(
