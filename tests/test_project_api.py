@@ -727,3 +727,37 @@ async def test_no_resources(
         debug(res.json())
         assert res.status_code == 422
         assert "empty resource_list" in res.json()["detail"]
+
+
+async def test_get_job_list(
+    MockCurrentUser,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    job_factory,
+    client,
+):
+    async with MockCurrentUser(persist=True) as user:
+
+        project = await project_factory(user)
+
+        res = await client.get(f"{PREFIX}/project/{project.id}/job/")
+        assert res.status_code == 200
+        assert len(res.json()) == 0
+
+        workflow = await workflow_factory(project_id=project.id)
+        dataset = await dataset_factory(project)
+
+        N = 5
+        for i in range(N):
+            await job_factory(
+                project,
+                input_dataset_id=dataset.id,
+                output_dataset_id=dataset.id,
+                workflow_id=workflow.id,
+            )
+
+        res = await client.get(f"{PREFIX}/project/{project.id}/job/")
+        debug(res)
+        assert res.status_code == 200
+        assert len(res.json()) == N
