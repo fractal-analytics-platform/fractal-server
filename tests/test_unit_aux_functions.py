@@ -97,8 +97,40 @@ async def test_get_workflow_task_check_owner():
     pass
 
 
-async def test_check_workflow_exists():
-    pass
+async def test_check_workflow_exists(
+    MockCurrentUser,
+    project_factory,
+    workflow_factory,
+    db,
+):
+    async with MockCurrentUser(persist=True) as user:
+        project = await project_factory(user)
+        workflow = await workflow_factory(project_id=project.id)
+
+    # Test success
+    await _check_workflow_exists(
+        name=workflow.name + "abc",
+        project_id=project.id,
+        db=db,
+    )
+    await _check_workflow_exists(
+        name=workflow.name,
+        project_id=project.id + 1,
+        db=db,
+    )
+
+    # Test fail
+    with pytest.raises(HTTPException) as err:
+        await _check_workflow_exists(
+            name=workflow.name,
+            project_id=project.id,
+            db=db,
+        )
+        assert err.value.status_code == 404
+        assert err.value.detail == (
+            f"Workflow with name={workflow.name} and project_id={project.id} "
+            "already in use"
+        )
 
 
 async def test_get_dataset_check_owner():
