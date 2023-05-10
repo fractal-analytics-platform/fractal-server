@@ -233,12 +233,16 @@ async def test_get_dataset_check_owner(
 async def test_get_job_check_owner(
     MockCurrentUser,
     project_factory,
+    dataset_factory,
     job_factory,
     db,
 ):
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user, id=1)
         other_project = await project_factory(user, id=2)
+
+        await dataset_factory(project, id=1)
+        await dataset_factory(project, id=2)
         job = await job_factory(project)
 
         # Test success
