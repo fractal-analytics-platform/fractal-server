@@ -200,14 +200,14 @@ async def _get_job_check_owner(
         project_id=project_id, user_id=user_id, db=db
     )
     # Get dataset
-    dataset = await db.get(ApplyWorkflow, job_id)
-    if not dataset:
+    job = await db.get(ApplyWorkflow, job_id)
+    if not job:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Dataset not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Job not found"
         )
-    if dataset.project_id != project_id:
+    if job.project_id != project_id:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Invalid {project_id=} for {job_id=}",
         )
-    return dict(dataset=dataset, project=project)
+    return dict(job=job, project=project)
