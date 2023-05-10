@@ -185,8 +185,24 @@ async def test_check_workflow_exists(
         )
 
 
-async def test_get_dataset_check_owner():
-    pass
+async def test_get_dataset_check_owner(
+    MockCurrentUser,
+    project_factory,
+    workflow_factory,
+    dataset_factory,
+    db,
+):
+    async with MockCurrentUser(persist=True) as user:
+        project = await project_factory(user)
+        dataset = await dataset_factory(project)
+
+        # Test success
+        await _get_dataset_check_owner(
+            project_id=project.id,
+            dataset_id=dataset.id,
+            user_id=user.id,
+            db=db,
+        )
 
 
 async def test_get_job_check_owner():
