@@ -38,7 +38,7 @@ async def read_job(
     Return info on an existing job
     """
 
-    output = _get_job_check_owner(
+    output = await _get_job_check_owner(
         project_id=project_id,
         job_id=job_id,
         user_id=user.id,
@@ -74,7 +74,7 @@ async def download_job_logs(
     """
     Download job folder
     """
-    output = _get_job_check_owner(
+    output = await _get_job_check_owner(
         project_id=project_id,
         job_id=job_id,
         user_id=user.id,
