@@ -480,28 +480,3 @@ async def workflow_factory(db: AsyncSession):
         return w
 
     return __workflow_factory
-
-
-@pytest.fixture
-async def workflowtask_factory(db: AsyncSession):
-    """
-    Insert workflowtask in db
-    """
-    from fractal_server.app.models import WorkflowTask
-
-    async def __workflowtask_factory(
-        workflow_id: int, task_id: int, db: AsyncSession = db, **kwargs
-    ):
-        defaults = dict(
-            workflow_id=workflow_id,
-            task_id=task_id,
-        )
-        args = dict(**defaults)
-        args.update(kwargs)
-        wft = WorkflowTask(**args)
-        db.add(wft)
-        await db.commit()
-        await db.refresh(wft)
-        return wft
-
-    return __workflowtask_factory
