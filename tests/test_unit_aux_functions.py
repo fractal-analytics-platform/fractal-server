@@ -188,12 +188,12 @@ async def test_check_workflow_exists(
 async def test_get_dataset_check_owner(
     MockCurrentUser,
     project_factory,
-    workflow_factory,
     dataset_factory,
     db,
 ):
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
+        other_project = await project_factory(user)
         dataset = await dataset_factory(project)
 
         # Test success
@@ -204,6 +204,68 @@ async def test_get_dataset_check_owner(
             db=db,
         )
 
+        # Test fail 1
+        with pytest.raises(HTTPException) as err:
+            await _get_dataset_check_owner(
+                project_id=project.id,
+                dataset_id=dataset.id + 1,
+                user_id=user.id,
+                db=db,
+            )
+        assert err.value.status_code == 404
+        assert err.value.detail == "Dataset not found"
 
-async def test_get_job_check_owner():
-    pass
+        # Test fail 2
+        with pytest.raises(HTTPException) as err:
+            await _get_dataset_check_owner(
+                project_id=other_project.id,
+                dataset_id=dataset.id,
+                user_id=user.id,
+                db=db,
+            )
+        assert err.value.status_code == 422
+        assert err.value.detail == (
+            f"Invalid project_id={other_project.id} "
+            f"for dataset_id={dataset.id}"
+        )
+
+
+async def test_get_job_check_owner(
+    MockCurrentUser,
+    project_factory,
+    job_factory,
+    db,
+):
+    async with MockCurrentUser(persist=True) as user:
+        project = await project_factory(user, id=1)
+        other_project = await project_factory(user, id=2)
+        job = await job_factory(project)
+
+        # Test success
+        await _get_job_check_owner(
+            project_id=project.id, job_id=job.id, user_id=user.id, db=db
+        )
+
+        # Test fail 1
+        with pytest.raises(HTTPException) as err:
+            await _get_job_check_owner(
+                project_id=project.id,
+                job_id=job.id + 1,
+                user_id=user.id,
+                db=db,
+            )
+        assert err.value.status_code == 404
+        assert err.value.detail == "Job not found"
+
+        # Test fail 2
+        with pytest.raises(HTTPException) as err:
+            await _get_job_check_owner(
+                project_id=other_project.id,
+                job_id=job.id,
+                user_id=user.id,
+                db=db,
+            )
+        assert err.value.status_code == 422
+        assert err.value.detail == (
+            f"Invalid project_id={other_project.id} for job_id={job.id}"
+        )
