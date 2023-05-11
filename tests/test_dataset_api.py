@@ -1,6 +1,4 @@
-import pytest
 from devtools import debug
-from fastapi import HTTPException
 
 PREFIX = "api/v1"
 
@@ -34,15 +32,13 @@ async def test_error_in_update(
 
         other_dataset = await dataset_factory(project)
 
-        with pytest.raises(HTTPException) as err:
-            res = await client.patch(
-                f"{PREFIX}/project/{project.id}/dataset/{other_dataset.id}/"
-                f"resource/{resource['id']}",
-                json=dict(path="/tmp/abc"),
-            )
-            debug(res, res.json())
-        assert err.value.status_code == 422
-        assert err.value.detail == (
+        res = await client.patch(
+            f"{PREFIX}/project/{project.id}/dataset/{other_dataset.id}/"
+            f"resource/{resource['id']}",
+            json=dict(path="/tmp/abc"),
+        )
+        assert res.status_code == 422
+        assert res.json()["detail"] == (
             f"Resource {resource['id']} is not part "
             f"of dataset {other_dataset.id}"
         )
