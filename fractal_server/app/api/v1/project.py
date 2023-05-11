@@ -240,7 +240,7 @@ async def apply_workflow(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
                 "Output dataset must have a single resource, "
-                f"but it has {len(len(output_dataset.resource_list))}"
+                f"but it has {len(output_dataset.resource_list)}"
             ),
         )
 
