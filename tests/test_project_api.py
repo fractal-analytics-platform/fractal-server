@@ -541,6 +541,7 @@ async def test_project_apply_failures(
     MockCurrentUser,
     project_factory,
     dataset_factory,
+    resource_factory,
     workflow_factory,
     task_factory,
 ):
@@ -549,6 +550,22 @@ async def test_project_apply_failures(
         project2 = await project_factory(user)
         input_dataset = await dataset_factory(project1, name="input")
         output_dataset = await dataset_factory(project1, name="output")
+        output_dataset_read_only = await dataset_factory(
+            project1, name="output", read_only=True
+        )
+        output_dataset_wrong_type = await dataset_factory(
+            project1, name="output", type="invalid_type"
+        )
+        output_dataset_two_resources = await dataset_factory(
+            project1, name="output"
+        )
+
+        await resource_factory(input_dataset)
+        await resource_factory(output_dataset)
+        await resource_factory(output_dataset_read_only)
+        await resource_factory(output_dataset_wrong_type)
+        await resource_factory(output_dataset_two_resources)
+        await resource_factory(output_dataset_two_resources)
 
         workflow1 = await workflow_factory(project_id=project1.id)
         workflow2 = await workflow_factory(project_id=project1.id)
@@ -558,6 +575,7 @@ async def test_project_apply_failures(
         await workflow1.insert_task(task.id, db=db)
 
         payload = dict(overwrite_input=False)
+
         # Not existing workflow
         res = await client.post(
             f"{PREFIX}/project/{project1.id}/workflow/123/apply/"
@@ -569,7 +587,6 @@ async def test_project_apply_failures(
         assert res.status_code == 404
 
         # Workflow with wrong project_id
-
         res = await client.post(
             f"{PREFIX}/project/{project1.id}/workflow/{workflow3.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
@@ -588,7 +605,7 @@ async def test_project_apply_failures(
         debug(res.json())
         assert res.status_code == 404
 
-        # Failed auto_output_dataset
+        # Missing output_dataset
         res = await client.post(
             f"{PREFIX}/project/{project1.id}/workflow/{workflow1.id}/apply/"
             f"?input_dataset_id={input_dataset.id}",
@@ -597,8 +614,40 @@ async def test_project_apply_failures(
         debug(res.json())
         assert res.status_code == 422
 
-        # Workflow without tasks
+        # Read-only output_dataset
+        res = await client.post(
+            f"{PREFIX}/project/{project1.id}/workflow/{workflow1.id}/apply/"
+            f"?input_dataset_id={input_dataset.id}"
+            f"&output_dataset_id={output_dataset_read_only.id}",
+            json=payload,
+        )
+        debug(res.json())
+        assert res.status_code == 422
+        assert "read_only" in res.json()["detail"]
 
+        # output_dataset with wrong type
+        res = await client.post(
+            f"{PREFIX}/project/{project1.id}/workflow/{workflow1.id}/apply/"
+            f"?input_dataset_id={input_dataset.id}"
+            f"&output_dataset_id={output_dataset_wrong_type.id}",
+            json=payload,
+        )
+        debug(res.json())
+        assert res.status_code == 422
+        assert "Incompatible types" in res.json()["detail"]
+
+        # output_dataset with two resources
+        res = await client.post(
+            f"{PREFIX}/project/{project1.id}/workflow/{workflow1.id}/apply/"
+            f"?input_dataset_id={input_dataset.id}"
+            f"&output_dataset_id={output_dataset_two_resources.id}",
+            json=payload,
+        )
+        debug(res.json())
+        assert res.status_code == 422
+        assert "must have a single resource" in res.json()["detail"]
+
+        # Workflow without tasks
         res = await client.post(
             f"{PREFIX}/project/{project1.id}/workflow/{workflow2.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
@@ -607,6 +656,7 @@ async def test_project_apply_failures(
         )
         debug(res.json())
         assert res.status_code == 422
+        assert "empty task list" in res.json()["detail"]
 
 
 async def test_project_apply_missing_user_attributes(
