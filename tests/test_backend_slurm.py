@@ -215,9 +215,11 @@ def test_slurm_executor_submit_and_scancel(
     assert "missing" not in e.value.assemble_error()
 
 
-def test_missing_slurm_user():
+def test_missing_slurm_user(tmp_path, tmp777_path):
     with pytest.raises(TypeError):
-        FractalSlurmExecutor()
+        FractalSlurmExecutor(
+            working_dir=tmp_path, working_dir_user=tmp777_path
+        )
     with pytest.raises(RuntimeError):
         FractalSlurmExecutor(slurm_user=None)
 
