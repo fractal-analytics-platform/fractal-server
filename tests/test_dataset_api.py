@@ -5,7 +5,7 @@ from fastapi import HTTPException
 PREFIX = "api/v1"
 
 
-async def test_delete_workflow(
+async def test_get_resource(
     db, client, MockCurrentUser, project_factory, dataset_factory
 ):
     async with MockCurrentUser(persist=True) as user:
