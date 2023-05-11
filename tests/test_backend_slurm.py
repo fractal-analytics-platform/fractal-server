@@ -221,7 +221,9 @@ def test_missing_slurm_user(tmp_path, tmp777_path):
             working_dir=tmp_path, working_dir_user=tmp777_path
         )
     with pytest.raises(RuntimeError):
-        FractalSlurmExecutor(slurm_user=None)
+        FractalSlurmExecutor(
+            slurm_user=None, working_dir=tmp_path, working_dir_user=tmp777_path
+        )
 
 
 def submit_and_ignore_exceptions(
