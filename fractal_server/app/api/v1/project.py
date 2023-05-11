@@ -189,6 +189,14 @@ async def apply_workflow(
         db=db,
     )
     output_dataset = output["dataset"]
+    if output_dataset.read_only:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Cannot apply workflow because output dataset "
+                f"({output_dataset_id=}) is read_only."
+            ),
+        )
 
     workflow = await _get_workflow_check_owner(
         project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
@@ -197,7 +205,7 @@ async def apply_workflow(
     if not workflow.task_list:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(f"Workflow {workflow_id} has empty task list"),
+            detail=f"Workflow {workflow_id} has empty task list",
         )
 
     # If backend is SLURM, check that the user has required attributes
