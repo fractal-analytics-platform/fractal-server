@@ -228,11 +228,22 @@ async def apply_workflow(
                     f"but {user.cache_dir=}."
                 ),
             )
+
+    # Check that datasets have the right number of resources
     if not input_dataset.resource_list:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Input dataset has empty resource_list",
         )
+    if len(output_dataset.resource_list) != 1:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Output dataset must have a single resource, "
+                f"but it has {len(len(output_dataset.resource_list))}"
+            ),
+        )
+
     try:
         validate_workflow_compatibility(
             workflow=workflow,
