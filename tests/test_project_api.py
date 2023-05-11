@@ -623,7 +623,7 @@ async def test_project_apply_failures(
         )
         debug(res.json())
         assert res.status_code == 422
-        assert "read_only" in res.json().detail
+        assert "read_only" in res.json()["detail"]
 
         # output_dataset with wrong type
         res = await client.post(
@@ -634,7 +634,7 @@ async def test_project_apply_failures(
         )
         debug(res.json())
         assert res.status_code == 422
-        assert "Incompatible types" in res.json().detail
+        assert "Incompatible types" in res.json()["detail"]
 
         # output_dataset with two resources
         res = await client.post(
@@ -645,7 +645,7 @@ async def test_project_apply_failures(
         )
         debug(res.json())
         assert res.status_code == 422
-        assert "must have a single resource" in res.json().detail
+        assert "must have a single resource" in res.json()["detail"]
 
         # Workflow without tasks
         res = await client.post(
@@ -656,7 +656,7 @@ async def test_project_apply_failures(
         )
         debug(res.json())
         assert res.status_code == 422
-        assert "empty task list" in res.json().detail
+        assert "empty task list" in res.json()["detail"]
 
 
 async def test_project_apply_missing_user_attributes(
