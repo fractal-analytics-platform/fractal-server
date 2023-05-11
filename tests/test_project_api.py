@@ -549,6 +549,12 @@ async def test_project_apply_failures(
         project2 = await project_factory(user)
         input_dataset = await dataset_factory(project1, name="input")
         output_dataset = await dataset_factory(project1, name="output")
+        output_dataset_read_only = await dataset_factory(
+            project1, name="output", read_only=True
+        )
+        output_dataset_wrong_type = await dataset_factory(
+            project1, name="output", type="invalid_type"
+        )
 
         workflow1 = await workflow_factory(project_id=project1.id)
         workflow2 = await workflow_factory(project_id=project1.id)
@@ -569,7 +575,6 @@ async def test_project_apply_failures(
         assert res.status_code == 404
 
         # Workflow with wrong project_id
-
         res = await client.post(
             f"{PREFIX}/project/{project1.id}/workflow/{workflow3.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
@@ -588,7 +593,7 @@ async def test_project_apply_failures(
         debug(res.json())
         assert res.status_code == 404
 
-        # Failed auto_output_dataset
+        # Missing output_dataset
         res = await client.post(
             f"{PREFIX}/project/{project1.id}/workflow/{workflow1.id}/apply/"
             f"?input_dataset_id={input_dataset.id}",
@@ -597,8 +602,27 @@ async def test_project_apply_failures(
         debug(res.json())
         assert res.status_code == 422
 
-        # Workflow without tasks
+        # Read-only output_dataset
+        res = await client.post(
+            f"{PREFIX}/project/{project1.id}/workflow/{workflow1.id}/apply/"
+            f"?input_dataset_id={input_dataset.id}"
+            f"&output_dataset_id={output_dataset_read_only.id}",
+            json=payload,
+        )
+        debug(res.json())
+        assert res.status_code == 422
 
+        # output_dataset with wrong type
+        res = await client.post(
+            f"{PREFIX}/project/{project1.id}/workflow/{workflow1.id}/apply/"
+            f"?input_dataset_id={input_dataset.id}"
+            f"&output_dataset_id={output_dataset_wrong_type.id}",
+            json=payload,
+        )
+        debug(res.json())
+        assert res.status_code == 422
+
+        # Workflow without tasks
         res = await client.post(
             f"{PREFIX}/project/{project1.id}/workflow/{workflow2.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
