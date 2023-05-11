@@ -10,7 +10,6 @@
 # <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
 # Institute for Biomedical Research and Pelkmans Lab from the University of
 # Zurich.
-import asyncio
 from copy import deepcopy
 from typing import Optional
 
@@ -23,146 +22,56 @@ from sqlmodel import select
 
 from ...db import AsyncSession
 from ...db import get_db
-from ...models import LinkUserProject
-from ...models import Project
+from ...models import Task
 from ...models import Workflow
 from ...models import WorkflowCreate
 from ...models import WorkflowExport
+from ...models import WorkflowImport
 from ...models import WorkflowRead
-from ...models import WorkflowTask
 from ...models import WorkflowTaskCreate
 from ...models import WorkflowTaskRead
 from ...models import WorkflowTaskUpdate
 from ...models import WorkflowUpdate
 from ...security import current_active_user
 from ...security import User
-from .project import _get_project_check_owner
+from ._aux_functions import _check_workflow_exists
+from ._aux_functions import _get_project_check_owner
+from ._aux_functions import _get_workflow_check_owner
+from ._aux_functions import _get_workflow_task_check_owner
+
 
 router = APIRouter()
 
 
-async def _get_workflow_check_owner(
-    *,
-    workflow_id: int,
-    user_id: int,
-    db: AsyncSession = Depends(get_db),
-) -> Workflow:
-    """
-    Check that user is a member of a workflow's project and return
-
-    Raises:
-        HTTPException(status_code=403_FORBIDDEN): If the user is not a
-                                                  member of the project
-        HTTPException(status_code=404_NOT_FOUND): If the project or workflow do
-                                                  not exist
-    """
-
-    workflow = await db.get(Workflow, workflow_id)
-    if not workflow:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Workflow not found"
-        )
-
-    project, link_user_project = await asyncio.gather(
-        db.get(Project, workflow.project_id),
-        db.get(LinkUserProject, (workflow.project_id, user_id)),
-    )
-    if not project:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
-        )
-    if not link_user_project:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Not allowed on project {workflow.project_id}",
-        )
-
-    return workflow
-
-
-async def _get_workflow_task_check_owner(
-    *,
-    workflow_id: int,
-    workflow_task_id: int,
-    user_id: int,
-    db: AsyncSession = Depends(get_db),
-) -> tuple[WorkflowTask, Workflow]:
-    """
-    Check that user has rights to access a Workflow and a WorkflowTask and
-    return the WorkflowTask
-
-    Raises:
-        HTTPException(status_code=404_NOT_FOUND): If the WorkflowTask does not
-                                                  exist
-        HTTPException(status_code=422_UNPROCESSABLE_ENTITY): If the
-                                                             WorkflowTask is
-                                                             not associated to
-                                                             the Workflow
-    """
-
-    workflow_task = await db.get(WorkflowTask, workflow_task_id)
-
-    # If WorkflowTask is not in the db, exit
-    if not workflow_task:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="WorkflowTask not found",
-        )
-
-    # Access control for workflow
-    workflow = await _get_workflow_check_owner(  # noqa: F841
-        workflow_id=workflow_id, user_id=user_id, db=db
-    )
-
-    # If WorkflowTask is not part of the expected Workflow, exit
-    if workflow_id != workflow_task.workflow_id:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Invalid {workflow_id=} for {workflow_task_id=}",
-        )
-
-    return workflow_task, workflow
-
-
-async def _check_workflow_exists(
-    *,
-    name: str,
+@router.get(
+    "/project/{project_id}/workflow/",
+    response_model=list[WorkflowRead],
+)
+async def get_workflow_list(
     project_id: int,
+    user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Optional[list[WorkflowRead]]:
     """
-    Check that there is no existing workflow for the same project and with the
-    same name
-
-    Arguments:
-        name: Workflow name
-        project_id: Project ID
-
-    Raises:
-        HTTPException(status_code=422_UNPROCESSABLE_ENTITY): If such a workflow
-                                                             already exists
+    Get list of workflows associated to the current project
     """
-    stm = (
-        select(Workflow)
-        .where(Workflow.name == name)
-        .where(Workflow.project_id == project_id)
+    await _get_project_check_owner(
+        project_id=project_id, user_id=user.id, db=db
     )
+    stm = select(Workflow).where(Workflow.project_id == project_id)
     res = await db.execute(stm)
-    if res.scalars().all():
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Workflow with {name=} and\
-                    {project_id=} already in use",
-        )
-
-
-# Main endpoints ("/")
+    workflow_list = res.scalars().all()
+    await db.close()
+    return workflow_list
 
 
 @router.post(
-    "/", response_model=WorkflowRead, status_code=status.HTTP_201_CREATED
+    "/project/{project_id}/workflow/",
+    response_model=WorkflowRead,
+    status_code=status.HTTP_201_CREATED,
 )
 async def create_workflow(
+    project_id: int,
     workflow: WorkflowCreate,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -171,15 +80,15 @@ async def create_workflow(
     Create a workflow, associate to a project
     """
     await _get_project_check_owner(
-        project_id=workflow.project_id,
+        project_id=project_id,
         user_id=user.id,
         db=db,
     )
     await _check_workflow_exists(
-        name=workflow.name, project_id=workflow.project_id, db=db
+        name=workflow.name, project_id=project_id, db=db
     )
 
-    db_workflow = Workflow.from_orm(workflow)
+    db_workflow = Workflow(project_id=project_id, **workflow.dict())
     db.add(db_workflow)
     await db.commit()
     await db.refresh(db_workflow)
@@ -187,31 +96,33 @@ async def create_workflow(
     return db_workflow
 
 
-# Workflow endpoints ("/{workflow_id}")
-
-
-@router.delete("/{workflow_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_workflow(
+@router.get(
+    "/project/{project_id}/workflow/{workflow_id}",
+    response_model=WorkflowRead,
+)
+async def read_workflow(
+    project_id: int,
     workflow_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-) -> Response:
+) -> Optional[WorkflowRead]:
     """
-    Delte a workflow
+    Get info on an existing workflow
     """
 
     workflow = await _get_workflow_check_owner(
-        workflow_id=workflow_id, user_id=user.id, db=db
+        project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
 
-    await db.delete(workflow)
-    await db.commit()
-
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return workflow
 
 
-@router.patch("/{workflow_id}", response_model=WorkflowRead)
-async def patch_workflow(
+@router.patch(
+    "/project/{project_id}/workflow/{workflow_id}",
+    response_model=WorkflowRead,
+)
+async def update_workflow(
+    project_id: int,
     workflow_id: int,
     patch: WorkflowUpdate,
     user: User = Depends(current_active_user),
@@ -221,7 +132,7 @@ async def patch_workflow(
     Edit a workflow
     """
     workflow = await _get_workflow_check_owner(
-        workflow_id=workflow_id, user_id=user.id, db=db
+        project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
 
     for key, value in patch.dict(exclude_unset=True).items():
@@ -252,30 +163,152 @@ async def patch_workflow(
     return workflow
 
 
-@router.get("/{workflow_id}", response_model=WorkflowRead)
-async def get_workflow(
+@router.delete(
+    "/project/{project_id}/workflow/{workflow_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_workflow(
+    project_id: int,
     workflow_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-) -> Optional[WorkflowRead]:
+) -> Response:
     """
-    Get info on an existing workflow
+    Delte a workflow
     """
 
     workflow = await _get_workflow_check_owner(
-        workflow_id=workflow_id, user_id=user.id, db=db
+        project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
 
+    await db.delete(workflow)
+    await db.commit()
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get(
+    "/project/{project_id}/workflow/{workflow_id}/export/",
+    response_model=WorkflowExport,
+)
+async def export_worfklow(
+    project_id: int,
+    workflow_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[WorkflowExport]:
+    """
+    Export an existing workflow, after stripping all IDs
+    """
+    workflow = await _get_workflow_check_owner(
+        project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
+    )
+    await db.close()
     return workflow
 
 
 @router.post(
-    "/{workflow_id}/add-task/",
+    "/project/{project_id}/workflow/import/",
+    response_model=WorkflowRead,
+    status_code=status.HTTP_201_CREATED,
+)
+async def import_workflow(
+    project_id: int,
+    workflow: WorkflowImport,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[WorkflowRead]:
+    """
+    Import an existing workflow into a project
+
+    Also create all required objects (i.e. Workflow and WorkflowTask's) along
+    the way.
+    """
+
+    # Preliminary checks
+    await _get_project_check_owner(
+        project_id=project_id,
+        user_id=user.id,
+        db=db,
+    )
+
+    await _check_workflow_exists(
+        name=workflow.name, project_id=project_id, db=db
+    )
+
+    # Check that all required tasks are available
+    # NOTE: by now we go through the pair (source, name), but later on we may
+    # combine them into source -- see issue #293.
+    tasks = [wf_task.task for wf_task in workflow.task_list]
+    sourcename_to_id = {}
+    for task in tasks:
+        source = task.source
+        name = task.name
+        if not (source, name) in sourcename_to_id.keys():
+            stm = select(Task).where(Task.source == source)
+            tasks_by_source = (await db.execute(stm)).scalars().all()
+            if not tasks_by_source:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=(f"Found 0 tasks with {source=}."),
+                )
+            else:
+                stm = (
+                    select(Task)
+                    .where(Task.source == source)
+                    .where(Task.name == name)
+                )
+                current_task = (await db.execute(stm)).scalars().all()
+                if len(current_task) != 1:
+                    raise HTTPException(
+                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                        detail=(
+                            f"Found {len(current_task)} tasks with "
+                            f"{name =} and {source=}."
+                        ),
+                    )
+                sourcename_to_id[(source, name)] = current_task[0].id
+
+    # Create new Workflow (with empty task_list)
+    db_workflow = Workflow(
+        project_id=project_id,
+        **workflow.dict(exclude_none=True, exclude={"task_list"}),
+    )
+    db.add(db_workflow)
+    await db.commit()
+    await db.refresh(db_workflow)
+
+    # Insert tasks
+    async with db:
+        for _, wf_task in enumerate(workflow.task_list):
+            # Identify task_id
+            source = wf_task.task.source
+            name = wf_task.task.name
+            task_id = sourcename_to_id[(source, name)]
+            # Prepare new_wf_task
+            new_wf_task = WorkflowTaskCreate(
+                **wf_task.dict(exclude_none=True),
+            )
+            # Insert task
+            await db_workflow.insert_task(
+                **new_wf_task.dict(),
+                task_id=task_id,
+                db=db,
+            )
+
+    await db.close()
+    return db_workflow
+
+
+@router.post(
+    "/project/{project_id}/workflow/{workflow_id}/wftask/",
     response_model=WorkflowTaskRead,
     status_code=status.HTTP_201_CREATED,
 )
-async def add_task_to_workflow(
+async def create_workflowtask(
+    project_id: int,
     workflow_id: int,
+    task_id: int,
     new_task: WorkflowTaskCreate,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -285,11 +318,12 @@ async def add_task_to_workflow(
     """
 
     workflow = await _get_workflow_check_owner(
-        workflow_id=workflow_id, user_id=user.id, db=db
+        project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
     async with db:
         workflow_task = await workflow.insert_task(
             **new_task.dict(),
+            task_id=task_id,
             db=db,
         )
 
@@ -297,14 +331,12 @@ async def add_task_to_workflow(
     return workflow_task
 
 
-# WorkflowTask endpoints ("/{workflow_id}/../{workflow_task_id}"
-
-
 @router.patch(
-    "/{workflow_id}/edit-task/{workflow_task_id}",
+    "/project/{project_id}/workflow/{workflow_id}/wftask/{workflow_task_id}",
     response_model=WorkflowTaskRead,
 )
-async def patch_workflow_task(
+async def update_workflowtask(
+    project_id: int,
     workflow_id: int,
     workflow_task_id: int,
     workflow_task_update: WorkflowTaskUpdate,
@@ -316,6 +348,7 @@ async def patch_workflow_task(
     """
 
     db_workflow_task, db_workflow = await _get_workflow_task_check_owner(
+        project_id=project_id,
         workflow_task_id=workflow_task_id,
         workflow_id=workflow_id,
         user_id=user.id,
@@ -345,10 +378,11 @@ async def patch_workflow_task(
 
 
 @router.delete(
-    "/{workflow_id}/rm-task/{workflow_task_id}",
+    "/project/{project_id}/workflow/{workflow_id}/wftask/{workflow_task_id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
-async def delete_task_from_workflow(
+async def delete_workflowtask(
+    project_id: int,
     workflow_id: int,
     workflow_task_id: int,
     user: User = Depends(current_active_user),
@@ -359,6 +393,7 @@ async def delete_task_from_workflow(
     """
 
     db_workflow_task, db_workflow = await _get_workflow_task_check_owner(
+        project_id=project_id,
         workflow_task_id=workflow_task_id,
         workflow_id=workflow_id,
         user_id=user.id,
@@ -373,22 +408,3 @@ async def delete_task_from_workflow(
     await db.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-@router.get(
-    "/{workflow_id}/export/",
-    response_model=WorkflowExport,
-)
-async def export_worfklow(
-    workflow_id: int,
-    user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
-) -> Optional[WorkflowExport]:
-    """
-    Export an existing workflow, after stripping all IDs
-    """
-    workflow = await _get_workflow_check_owner(
-        workflow_id=workflow_id, user_id=user.id, db=db
-    )
-    await db.close()
-    return workflow
