@@ -20,7 +20,6 @@ from pydantic import BaseModel
 
 from ...logger import close_logger as close_job_logger  # noqa F401
 from ..models import Dataset
-from ..models import Project
 from ..models.workflow import Workflow
 
 
@@ -186,56 +185,6 @@ class TaskParameters(BaseModel):
     class Config:
         arbitrary_types_allowed = True
         extra = "forbid"
-
-
-async def auto_output_dataset(
-    *,
-    project: Project,
-    input_dataset: Dataset,
-    workflow: Workflow,
-    overwrite_input: bool = False,
-) -> Dataset:
-    """
-    Determine the output dataset if it was not provided explicitly
-
-    Only datasets containing exactly one path can be used as output.
-
-    Note: This routine is still a stub.
-
-    Args:
-        project:
-            The project that contains the input and output datasets.
-        input_dataset:
-            The input dataset.
-        workflow:
-            The workflow to be applied to the input dataset.
-        overwrite_input:
-            Whether it is allowed to overwrite the input dataset with the
-            output data.
-
-    Raises:
-        ValueError: If the input dataset is to be overwritten and it provides
-                    more than one path.
-
-    Returns:
-        output_dataset:
-            the output dataset
-    """
-    if overwrite_input and not input_dataset.read_only:
-        input_paths = input_dataset.paths
-        if len(input_paths) != 1:
-            raise ValueError(
-                "Cannot determine output dataset "
-                "with more than one input path."
-            )
-        output_dataset = input_dataset
-    else:
-        raise NotImplementedError(
-            "Cannot determine ouput dataset with "
-            f"{overwrite_input=} and {input_dataset.read_only=}"
-        )
-
-    return output_dataset
 
 
 def validate_workflow_compatibility(

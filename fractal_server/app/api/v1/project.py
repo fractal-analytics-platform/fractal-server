@@ -26,7 +26,6 @@ from ...models import Project
 from ...models import ProjectCreate
 from ...models import ProjectRead
 from ...models import ProjectUpdate
-from ...runner import auto_output_dataset
 from ...runner import submit_workflow
 from ...runner import validate_workflow_compatibility
 from ...security import current_active_user
@@ -167,7 +166,7 @@ async def apply_workflow(
     apply_workflow: ApplyWorkflowCreate,
     background_tasks: BackgroundTasks,
     input_dataset_id: int,
-    output_dataset_id: Optional[int] = None,
+    output_dataset_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
     db_sync: DBSyncSession = Depends(
@@ -182,7 +181,14 @@ async def apply_workflow(
         db=db,
     )
     input_dataset = output["dataset"]
-    project = output["project"]
+
+    output = await _get_dataset_check_owner(
+        project_id=project_id,
+        dataset_id=output_dataset_id,
+        user_id=user.id,
+        db=db,
+    )
+    output_dataset = output["dataset"]
 
     workflow = await _get_workflow_check_owner(
         project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
@@ -193,30 +199,6 @@ async def apply_workflow(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(f"Workflow {workflow_id} has empty task list"),
         )
-
-    if output_dataset_id:
-        output = await _get_dataset_check_owner(
-            project_id=project_id,
-            dataset_id=output_dataset_id,
-            user_id=user.id,
-            db=db,
-        )
-        output_dataset = output["dataset"]
-    else:
-        try:
-            output_dataset = await auto_output_dataset(
-                project=project,
-                input_dataset=input_dataset,
-                workflow=workflow,
-            )
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    f"Could not determine output dataset. "
-                    f"Original error: {str(e)}."
-                ),
-            )
 
     # If backend is SLURM, check that the user has required attributes
     settings = Inject(get_settings)
