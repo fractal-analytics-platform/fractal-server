@@ -191,11 +191,12 @@ def validate_workflow_compatibility(
     *,
     input_dataset: Dataset,
     workflow: Workflow,
-    output_dataset: Optional[Dataset] = None,
-):
+    output_dataset: Dataset,
+) -> None:
     """
     Check compatibility of workflow and input / ouptut dataset
     """
+    # Check input_dataset type
     if (
         workflow.input_type != "Any"
         and workflow.input_type != input_dataset.type
@@ -206,28 +207,16 @@ def validate_workflow_compatibility(
             f"`{input_dataset.name}`"
         )
 
-    if not output_dataset:
-        if input_dataset.read_only:
-            raise ValueError("Input dataset is read-only")
-        else:
-            input_paths = input_dataset.paths
-            if len(input_paths) != 1:
-                # Only single input can be safely transformed in an output
-                raise ValueError(
-                    "Cannot determine output path: multiple input "
-                    "paths to overwrite"
-                )
-            else:
-                output_path = input_paths[0]
-    else:
-
-        if len(output_dataset.paths) != 1:
-            raise ValueError(
-                "Cannot determine output path: Multiple paths in dataset."
-            )
-        else:
-            output_path = output_dataset.paths[0]
-    return output_path
+    # Check output_dataset type
+    if (
+        workflow.output_type != "Any"
+        and workflow.output_type != output_dataset.type
+    ):
+        raise TypeError(
+            f"Incompatible types `{workflow.output_type}` of workflow "
+            f"`{workflow.name}` and `{output_dataset.type}` of dataset "
+            f"`{output_dataset.name}`"
+        )
 
 
 def async_wrap(func: Callable) -> Callable:
