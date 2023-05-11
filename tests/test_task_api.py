@@ -474,3 +474,12 @@ async def test_task_collection_api_failure(
         assert data["status"] == "fail"
         assert data["log"]  # This is because of verbose=True
         assert "fail" in data["log"]
+
+
+async def test_get_task(task_factory, client, MockCurrentUser):
+    async with MockCurrentUser():
+        task = await task_factory(name="name")
+        res = await client.get(f"{PREFIX}/{task.id}")
+        debug(res)
+        debug(res.json())
+        assert res.status_code == 200
