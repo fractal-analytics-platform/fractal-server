@@ -1,18 +1,17 @@
-"""Initial schema
+"""New initial schema
 
-Revision ID: 47072e0106ce
+Revision ID: e8f4051440be
 Revises:
-Create Date: 2023-03-16 08:37:00.138811
+Create Date: 2023-05-08 09:23:14.013706
 
 """
 import sqlalchemy as sa
-import sqlalchemy_utils
 import sqlmodel
 from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = "47072e0106ce"
+revision = "e8f4051440be"
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -23,9 +22,6 @@ def upgrade() -> None:
     op.create_table(
         "project",
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column(
-            "project_dir", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
         sa.Column("read_only", sa.Boolean(), nullable=False),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
@@ -59,9 +55,7 @@ def upgrade() -> None:
     )
     op.create_table(
         "user_oauth",
-        sa.Column(
-            "id", sqlalchemy_utils.types.uuid.UUIDType(), nullable=False
-        ),
+        sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("email", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column(
             "hashed_password",
@@ -73,6 +67,9 @@ def upgrade() -> None:
         sa.Column("is_verified", sa.Boolean(), nullable=False),
         sa.Column(
             "slurm_user", sqlmodel.sql.sqltypes.AutoString(), nullable=True
+        ),
+        sa.Column(
+            "cache_dir", sqlmodel.sql.sqltypes.AutoString(), nullable=True
         ),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -96,7 +93,7 @@ def upgrade() -> None:
     op.create_table(
         "linkuserproject",
         sa.Column("project_id", sa.Integer(), nullable=False),
-        sa.Column("user_id", sqlmodel.sql.sqltypes.GUID(), nullable=False),
+        sa.Column("user_id", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
             ["project_id"],
             ["project.id"],
@@ -109,8 +106,8 @@ def upgrade() -> None:
     )
     op.create_table(
         "oauthaccount",
-        sa.Column("id", sqlmodel.sql.sqltypes.GUID(), nullable=False),
-        sa.Column("user_id", sqlmodel.sql.sqltypes.GUID(), nullable=False),
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column(
             "oauth_name", sqlmodel.sql.sqltypes.AutoString(), nullable=False
         ),
@@ -215,10 +212,10 @@ def upgrade() -> None:
         "workflowtask",
         sa.Column("meta", sa.JSON(), nullable=True),
         sa.Column("args", sa.JSON(), nullable=True),
-        sa.Column("order", sa.Integer(), nullable=True),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("workflow_id", sa.Integer(), nullable=True),
         sa.Column("task_id", sa.Integer(), nullable=True),
+        sa.Column("order", sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(
             ["task_id"],
             ["task.id"],
