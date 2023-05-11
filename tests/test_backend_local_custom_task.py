@@ -78,10 +78,12 @@ async def test_full_workflow(
         )
         input_dataset_id = input_dataset.id
 
-        # ADD TEST IMAGES AS RESOURCE TO INPUT DATASET
-
+        # Add a resource to input_dataset_id
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/{input_dataset_id}",
+            (
+                f"{PREFIX}/project/{project_id}"
+                f"/dataset/{input_dataset_id}/resource/"
+            ),
             json={
                 "path": (testdata_path / "png").as_posix(),
             },
@@ -89,32 +91,35 @@ async def test_full_workflow(
         debug(res.json())
         assert res.status_code == 201
 
-        # CREATE OUTPUT DATASET AND RESOURCE
-
+        # Create output dataset
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/",
+            f"{PREFIX}/project/{project_id}/dataset/",
             json=dict(
                 name="output dataset",
                 type="json",
             ),
         )
-        debug(res.json())
-        assert res.status_code == 201
         output_dataset = res.json()
+        debug(output_dataset)
+        assert res.status_code == 201
         output_dataset_id = output_dataset["id"]
 
+        # Add a resource
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/{output_dataset['id']}",
+            (
+                f"{PREFIX}/project/{project_id}/"
+                f"dataset/{output_dataset_id}/resource/"
+            ),
             json=dict(path=tmp777_path.as_posix()),
         )
         out_resource = res.json()
         debug(out_resource)
         assert res.status_code == 201
 
-        # CREATE WORKFLOW
+        # Create workflow
         res = await client.post(
-            f"{PREFIX}/workflow/",
-            json=dict(name="test workflow", project_id=project_id),
+            f"{PREFIX}/project/{project_id}/workflow/",
+            json=dict(name="test workflow"),
         )
         debug(res.json())
         assert res.status_code == 201
@@ -123,40 +128,44 @@ async def test_full_workflow(
 
         # Add a dummy task
         res = await client.post(
-            f"{PREFIX}/workflow/{workflow_id}/add-task/",
-            json=dict(task_id=task_id, args={"message": "my_message"}),
+            (
+                f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/"
+                f"wftask/?task_id={task_id}"
+            ),
+            json=dict(args={"message": "my_message"}),
         )
         debug(res.json())
         assert res.status_code == 201
 
         # Add a dummy_parallel task
         res = await client.post(
-            f"{PREFIX}/workflow/{workflow_id}/add-task/",
-            json=dict(
-                task_id=task_parallel_id, args={"message": "my_message"}
+            (
+                f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/"
+                f"wftask/?task_id={task_parallel_id}"
             ),
+            json=dict(args={"message": "my_message"}),
         )
         debug(res.json())
         assert res.status_code == 201
 
-        # EXECUTE WORKFLOW
-        payload = dict(
-            project_id=project_id,
-            input_dataset_id=input_dataset_id,
-            output_dataset_id=output_dataset_id,
-            workflow_id=workflow_id,
-            overwrite_input=False,
-        )
+        # Execute workflow
+        payload = dict(overwrite_input=False)
         debug(payload)
-        res = await client.post(
-            f"{PREFIX}/project/apply/",
-            json=payload,
+        url = (
+            f"{PREFIX}/project/{project_id}/"
+            f"workflow/{workflow_id}/apply/"
+            f"?input_dataset_id={input_dataset_id}"
+            f"&output_dataset_id={output_dataset_id}"
         )
+        debug(url)
+        res = await client.post(url, json=payload)
         job_data = res.json()
         debug(job_data)
         assert res.status_code == 202
 
-        res = await client.get(f"{PREFIX}/job/{job_data['id']}")
+        res = await client.get(
+            f"{PREFIX}/project/{project_id}/job/{job_data['id']}"
+        )
         assert res.status_code == 200
         job_status_data = res.json()
         debug(job_status_data)
@@ -164,7 +173,7 @@ async def test_full_workflow(
 
         # Verify output
         res = await client.get(
-            f"{PREFIX}/project/{project_id}/{output_dataset_id}"
+            f"{PREFIX}/project/{project_id}/dataset/{output_dataset_id}"
         )
         data = res.json()
         debug(data)
