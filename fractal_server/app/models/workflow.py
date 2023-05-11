@@ -184,3 +184,7 @@ class Workflow(_WorkflowBase, table=True):
     @property
     def input_type(self):
         return self.task_list[0].task.input_type
+
+    @property
+    def output_type(self):
+        return self.task_list[-1].task.output_type
