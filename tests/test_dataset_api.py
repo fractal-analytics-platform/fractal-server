@@ -72,3 +72,22 @@ async def test_delete_resource(
             f"resource/{resource['id']}"
         )
         assert res.status_code == 204
+
+        other_project = await project_factory(user)
+        other_dataset = await dataset_factory(other_project)
+        res = await client.post(
+            f"{PREFIX}/project/{other_project.id}/"
+            f"dataset/{other_dataset.id}/resource/",
+            json=dict(path="/tmp/xyz"),
+        )
+        assert res.status_code == 201
+        other_resource = res.json()
+
+        res = await client.delete(
+            f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/"
+            f"resource/{other_resource['id']}"
+        )
+        assert res.status_code == 422
+        assert res.json()["detail"] == (
+            "Resource does not exist or does not belong to project"
+        )
