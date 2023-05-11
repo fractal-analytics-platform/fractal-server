@@ -6,7 +6,6 @@ from typing import Union
 
 from fastapi import HTTPException
 from fastapi import status
-from pydantic import UUID4
 from sqlmodel import select
 
 from ...db import AsyncSession
@@ -21,7 +20,7 @@ from ...models import WorkflowTask
 async def _get_project_check_owner(
     *,
     project_id: int,
-    user_id: UUID4,
+    user_id: int,
     db: AsyncSession,
 ) -> Project:
     """
@@ -55,7 +54,7 @@ async def _get_workflow_check_owner(
     *,
     workflow_id: int,
     project_id: int,
-    user_id: UUID4,
+    user_id: int,
     db: AsyncSession,
 ) -> Workflow:
     """
@@ -86,7 +85,7 @@ async def _get_workflow_task_check_owner(
     project_id: int,
     workflow_id: int,
     workflow_task_id: int,
-    user_id: UUID4,
+    user_id: int,
     db: AsyncSession,
 ) -> tuple[WorkflowTask, Workflow]:
     """
@@ -160,7 +159,7 @@ async def _get_dataset_check_owner(
     *,
     project_id: int,
     dataset_id: int,
-    user_id: UUID4,
+    user_id: int,
     db: AsyncSession,
 ) -> dict[str, Union[Dataset, Project]]:
     """
@@ -189,7 +188,7 @@ async def _get_job_check_owner(
     *,
     project_id: int,
     job_id: int,
-    user_id: UUID4,
+    user_id: int,
     db: AsyncSession,
 ) -> dict[str, Union[Dataset, Project]]:
     """
