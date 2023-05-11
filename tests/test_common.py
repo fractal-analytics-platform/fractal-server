@@ -6,6 +6,7 @@ from fractal_server.common.schemas.applyworkflow import ApplyWorkflowRead
 from fractal_server.common.schemas.manifest import ManifestV1
 from fractal_server.common.schemas.project import ProjectCreate
 from fractal_server.common.schemas.project import ResourceCreate
+from fractal_server.common.schemas.task import TaskCollectPip
 from fractal_server.common.schemas.workflow import WorkflowTaskCreate
 from fractal_server.common.schemas.workflow import WorkflowUpdate
 
@@ -60,3 +61,9 @@ async def test_fail_wfupdate():
     WorkflowUpdate(reordered_workflowtask_ids=[1, 2, 3])
     with pytest.raises(ValueError):
         WorkflowUpdate(reordered_workflowtask_ids=[1, -2, 3])
+
+
+async def test_non_absolute_path():
+    TaskCollectPip(package="/a/b/c")
+    with pytest.raises(ValueError):
+        TaskCollectPip(package="a/b/c")
