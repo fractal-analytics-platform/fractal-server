@@ -42,3 +42,33 @@ async def test_error_in_update(
             f"Resource {resource['id']} is not part "
             f"of dataset {other_dataset.id}"
         )
+
+
+async def test_delete_resource(
+    db, client, MockCurrentUser, project_factory, dataset_factory
+):
+    async with MockCurrentUser(persist=True) as user:
+        project = await project_factory(user)
+        dataset = await dataset_factory(project)
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/resource/",
+            json=dict(path="/tmp/xyz"),
+        )
+        debug(res)
+        assert res.status_code == 201
+        resource = res.json()
+
+        res = await client.delete(
+            f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/"
+            f"resource/{resource['id']+1}"
+        )
+        assert res.status_code == 422
+        assert res.json()["detail"] == (
+            "Resource does not exist or does not belong to project"
+        )
+
+        res = await client.delete(
+            f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/"
+            f"resource/{resource['id']}"
+        )
+        assert res.status_code == 204
