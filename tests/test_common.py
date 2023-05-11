@@ -7,6 +7,7 @@ from fractal_server.common.schemas.manifest import ManifestV1
 from fractal_server.common.schemas.project import ProjectCreate
 from fractal_server.common.schemas.project import ResourceCreate
 from fractal_server.common.schemas.workflow import WorkflowTaskCreate
+from fractal_server.common.schemas.workflow import WorkflowUpdate
 
 
 async def test_fail_valstr():
@@ -53,3 +54,9 @@ async def test_manifest():
     ManifestV1(manifest_version="1", task_list=[])
     with pytest.raises(ValueError):
         ManifestV1(manifest_version="2", task_list=[])
+
+
+async def test_fail_wfupdate():
+    WorkflowUpdate(reordered_workflowtask_ids=[1, 2, 3])
+    with pytest.raises(ValueError):
+        WorkflowUpdate(reordered_workflowtask_ids=[1, -2, 3])
