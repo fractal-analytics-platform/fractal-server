@@ -1,9 +1,17 @@
+import os
+import time
 import traceback
+from itertools import count
+from typing import Callable
 
 from cfut import FileWaitThread
 from cfut import slurm
 
+from ....logger import set_logger
 from ._subprocess_run_as_user import _multiple_paths_exist_as_user
+
+
+logger = set_logger(__name__)
 
 
 class FractalFileWaitThread(FileWaitThread):
@@ -23,14 +31,18 @@ class FractalFileWaitThread(FileWaitThread):
     `FractalSlurmWaitThread`.
     """
 
+    slurm_user: str
+    shutdown_file: str = None
+    shutdown_callback: Callable
+
     def __init__(self, *args, **kwargs):
         """
         Changed from clusterfutures:
         * Additional attribute `slurm_user`
+        * Additional attribute `shutdown_file`
         """
 
         super().__init__(*args, **kwargs)
-        self.slurm_user: str
 
     def wait(
         self,
@@ -68,6 +80,28 @@ class FractalFileWaitThread(FileWaitThread):
             if all_files_exist:
                 self.callback(self.waiting[filenames])
                 del self.waiting[filenames]
+        if self.shutdown_file and os.path.exists(self.shutdown_file):
+            logger.info(
+                "Detected executor-shutdown file " f"{str(self.shutdown_file)}"
+            )
+            self.shutdown = True
+
+    def run(self):
+        """
+        Overrides the original clusterfutures.FileWaitThread.run, adding a call
+        to self.shutdown_callback.
+
+        Note that shutdown_callback only takes care of cleaning up the
+        FractalSlurmExecutor variables, and then the `return` here is enough to
+        fully clean up the `FractalFileWaitThread` object.
+        """
+        for i in count():
+            if self.shutdown:
+                self.shutdown_callback()
+                return
+            with self.lock:
+                self.check(i)
+            time.sleep(self.interval)
 
 
 class FractalSlurmWaitThread(FractalFileWaitThread):

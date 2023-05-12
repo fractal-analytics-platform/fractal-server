@@ -25,6 +25,7 @@ from .common import write_args_file
 
 
 METADATA_FILENAME = "metadata.json"
+SHUTDOWN_FILENAME = "shutdown"
 
 
 def no_op_submit_setup_call(
@@ -436,7 +437,9 @@ def call_parallel_task(
     # pass` explicitly calls the .result() method for each future, and
     # therefore is blocking until the task are complete.
     map_iter = executor.map(partial_call_task, component_list, **extra_setup)
-    # Wait for execution of this chunk of tasks
+    # Wait for execution of this chunk of tasks. Note: this is required *also*
+    # because otherwise the shutdown of a FractalSlurmExecutor while running
+    # map() may not work
     for _ in map_iter:
         pass  # noqa: 701
 

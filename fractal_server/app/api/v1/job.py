@@ -7,14 +7,20 @@ from zipfile import ZipFile
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Response
+from fastapi import status
 from fastapi.responses import StreamingResponse
 from sqlmodel import select
 
+from ....config import get_settings
+from ....syringe import Inject
 from ...db import AsyncSession
 from ...db import get_db
 from ...models import ApplyWorkflow
 from ...models import ApplyWorkflowRead
 from ...runner._common import METADATA_FILENAME
+from ...runner._common import SHUTDOWN_FILENAME
 from ...security import current_active_user
 from ...security import User
 from ._aux_functions import _get_job_check_owner
@@ -123,3 +129,46 @@ async def get_job_list(
     job_list = res.scalars().all()
     await db.close()
     return job_list
+
+
+@router.get(
+    "/project/{project_id}/job/{job_id}/stop/",
+    status_code=200,
+)
+async def stop_job(
+    project_id: int,
+    job_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[ApplyWorkflow]:
+    """
+    Stop execution of a workflow job (only available for slurm backend)
+    """
+
+    # This endpoint is only implemented for SLURM backend
+    settings = Inject(get_settings)
+    backend = settings.FRACTAL_RUNNER_BACKEND
+    if backend == "slurm":
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Stopping a job execution is not implemented for "
+                f"FRACTAL_RUNNER_BACKEND={backend}."
+            ),
+        )
+
+    # Get job from DB
+    output = await _get_job_check_owner(
+        project_id=project_id,
+        job_id=job_id,
+        user_id=user.id,
+        db=db,
+    )
+    job = output["job"]
+
+    # Write shutdown file
+    shutdown_file = Path(job.working_dir) / SHUTDOWN_FILENAME
+    with shutdown_file.open("w") as f:
+        f.write(f"Trigger executor shutdown for {job.id=}, {project_id=}.")
+
+    return Response(status_code=status.HTTP_200_OK)
