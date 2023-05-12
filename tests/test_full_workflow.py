@@ -85,7 +85,7 @@ async def test_full_workflow(
         # EDIT DEFAULT DATASET TO SET TYPE IMAGE
 
         res = await client.patch(
-            f"{PREFIX}/project/{project_id}/{input_dataset_id}",
+            f"{PREFIX}/project/{project_id}/dataset/{input_dataset_id}",
             json={"type": "image", "read_only": True},
         )
         debug(res.json())
@@ -94,18 +94,20 @@ async def test_full_workflow(
         # ADD TEST IMAGES AS RESOURCE TO INPUT DATASET
 
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/{input_dataset_id}",
+            f"{PREFIX}/project/{project_id}/"
+            f"dataset/{input_dataset_id}/resource/",
             json={
                 "path": (testdata_path / "png").as_posix(),
             },
         )
+        debug(res)
         debug(res.json())
         assert res.status_code == 201
 
         # CREATE OUTPUT DATASET AND RESOURCE
 
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/",
+            f"{PREFIX}/project/{project_id}/dataset/",
             json=dict(
                 name="output dataset",
                 type="json",
@@ -117,7 +119,8 @@ async def test_full_workflow(
         output_dataset_id = output_dataset["id"]
 
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/{output_dataset['id']}",
+            f"{PREFIX}/project/{project_id}/"
+            f"dataset/{output_dataset['id']}/resource/",
             json=dict(path=tmp777_path.as_posix()),
         )
         out_resource = res.json()
@@ -130,8 +133,8 @@ async def test_full_workflow(
 
         # CREATE WORKFLOW
         res = await client.post(
-            f"{PREFIX}/workflow/",
-            json=dict(name="test workflow", project_id=project_id),
+            f"{PREFIX}/project/{project_id}/workflow/",
+            json=dict(name="test workflow"),
         )
         debug(res.json())
         assert res.status_code == 201
@@ -140,46 +143,47 @@ async def test_full_workflow(
 
         # Add a dummy task
         res = await client.post(
-            f"{PREFIX}/workflow/{workflow_id}/add-task/",
-            json=dict(task_id=collect_packages[0].id),
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
+            f"?task_id={collect_packages[0].id}",
+            json=dict(),
         )
         debug(res.json())
         assert res.status_code == 201
 
         # Add another (identical) dummy task, to make sure that this is allowed
         res = await client.post(
-            f"{PREFIX}/workflow/{workflow_id}/add-task/",
-            json=dict(task_id=collect_packages[0].id),
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
+            f"?task_id={collect_packages[0].id}",
+            json=dict(),
         )
         debug(res.json())
         assert res.status_code == 201
 
         # Add a dummy_parallel task
         res = await client.post(
-            f"{PREFIX}/workflow/{workflow_id}/add-task/",
-            json=dict(task_id=collect_packages[1].id),
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
+            f"?task_id={collect_packages[1].id}",
+            json=dict(),
         )
         debug(res.json())
         assert res.status_code == 201
 
         # EXECUTE WORKFLOW
-        payload = dict(
-            project_id=project_id,
-            input_dataset_id=input_dataset_id,
-            output_dataset_id=output_dataset_id,
-            workflow_id=workflow_id,
-            overwrite_input=False,
-        )
+        payload = dict(overwrite_input=False)
         debug(payload)
         res = await client.post(
-            f"{PREFIX}/project/apply/",
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/apply/"
+            f"?input_dataset_id={input_dataset_id}"
+            f"&output_dataset_id={output_dataset_id}",
             json=payload,
         )
         job_data = res.json()
         debug(job_data)
         assert res.status_code == 202
 
-        res = await client.get(f"{PREFIX}/job/{job_data['id']}")
+        res = await client.get(
+            f"{PREFIX}/project/{project_id}/job/{job_data['id']}"
+        )
         assert res.status_code == 200
         job_status_data = res.json()
         debug(job_status_data)
@@ -190,7 +194,7 @@ async def test_full_workflow(
 
         # Verify output
         res = await client.get(
-            f"{PREFIX}/project/{project_id}/{output_dataset_id}"
+            f"{PREFIX}/project/{project_id}/dataset/{output_dataset_id}"
         )
         data = res.json()
         debug(data)
@@ -224,6 +228,7 @@ async def test_failing_workflow_TaskExecutionError(
     failing_task: str,
     request,
     override_settings_factory,
+    resource_factory,
 ):
 
     override_settings_factory(
@@ -252,11 +257,14 @@ async def test_failing_workflow_TaskExecutionError(
             project, name="input", type="image", read_only=True
         )
         input_dataset_id = input_dataset.id
+        await resource_factory(
+            path=str(tmp777_path / "input_dir"), dataset=input_dataset
+        )
 
         # CREATE OUTPUT DATASET AND RESOURCE
 
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/",
+            f"{PREFIX}/project/{project_id}/dataset/",
             json=dict(
                 name="output dataset",
                 type="json",
@@ -267,23 +275,24 @@ async def test_failing_workflow_TaskExecutionError(
         output_dataset_id = output_dataset["id"]
 
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/{output_dataset['id']}",
+            f"{PREFIX}/project/"
+            f"{project_id}/dataset/{output_dataset_id}/resource/",
             json=dict(path=tmp777_path.as_posix()),
         )
         assert res.status_code == 201
 
         # CREATE TASKS AND WORKFLOW
         res = await client.post(
-            f"{PREFIX}/workflow/",
-            json=dict(name="test workflow", project_id=project.id),
+            f"{PREFIX}/project/{project.id}/workflow/",
+            json=dict(name="test workflow"),
         )
         assert res.status_code == 201
         workflow_dict = res.json()
         workflow_id = workflow_dict["id"]
 
         # Prepare payloads for adding non-parallel and parallel dummy tasks
-        payload_non_parallel = dict(task_id=collect_packages[0].id)
-        payload_parallel = dict(task_id=collect_packages[1].id)
+        payload_non_parallel = dict()
+        payload_parallel = dict()
         ERROR_MESSAGE = f"this is a nice error for a {failing_task} task"
         failing_args = {"raise_error": True, "message": ERROR_MESSAGE}
         if failing_task == "non_parallel":
@@ -294,7 +303,8 @@ async def test_failing_workflow_TaskExecutionError(
         # Add a (non-parallel) dummy task
         debug(payload_non_parallel)
         res = await client.post(
-            f"{PREFIX}/workflow/{workflow_id}/add-task/",
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
+            f"?task_id={collect_packages[0].id}",
             json=payload_non_parallel,
         )
         debug(res.json())
@@ -303,29 +313,26 @@ async def test_failing_workflow_TaskExecutionError(
         # Add a (parallel) dummy_parallel task
         debug(payload_parallel)
         res = await client.post(
-            f"{PREFIX}/workflow/{workflow_id}/add-task/",
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
+            f"?task_id={collect_packages[1].id}",
             json=payload_parallel,
         )
         debug(res.json())
         assert res.status_code == 201
 
         # EXECUTE WORKFLOW
-        payload = dict(
-            project_id=project_id,
-            input_dataset_id=input_dataset_id,
-            output_dataset_id=output_dataset_id,
-            workflow_id=workflow_id,
-            overwrite_input=False,
-        )
+        payload = dict(overwrite_input=False)
         res = await client.post(
-            f"{PREFIX}/project/apply/",
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/apply/"
+            f"?input_dataset_id={input_dataset_id}"
+            f"&output_dataset_id={output_dataset_id}",
             json=payload,
         )
         job_data = res.json()
         assert res.status_code == 202
         job_id = job_data["id"]
 
-        res = await client.get(f"{PREFIX}/job/{job_id}")
+        res = await client.get(f"{PREFIX}/project/{project_id}/job/{job_id}")
         assert res.status_code == 200
         job_status_data = res.json()
         debug(job_status_data)
@@ -379,6 +386,7 @@ async def test_failing_workflow_JobExecutionError(
     monkey_slurm_user,
     relink_python_interpreter,
     cfut_jobs_finished,
+    resource_factory,
 ):
 
     override_settings_factory(
@@ -400,11 +408,14 @@ async def test_failing_workflow_JobExecutionError(
             project, name="input", type="image", read_only=True
         )
         input_dataset_id = input_dataset.id
+        await resource_factory(
+            path=str(tmp777_path / "input_dir"), dataset=input_dataset
+        )
 
         # CREATE OUTPUT DATASET AND RESOURCE
 
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/",
+            f"{PREFIX}/project/{project_id}/dataset/",
             json=dict(
                 name="output dataset",
                 type="json",
@@ -415,15 +426,18 @@ async def test_failing_workflow_JobExecutionError(
         output_dataset_id = output_dataset["id"]
 
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/{output_dataset['id']}",
+            (
+                f"{PREFIX}/project/{project_id}/"
+                f"dataset/{output_dataset['id']}/resource/"
+            ),
             json=dict(path=tmp777_path.as_posix()),
         )
         assert res.status_code == 201
 
         # CREATE WORKFLOW
         res = await client.post(
-            f"{PREFIX}/workflow/",
-            json=dict(name="test workflow", project_id=project.id),
+            f"{PREFIX}/project/{project.id}/workflow/",
+            json=dict(name="test workflow"),
         )
         assert res.status_code == 201
         workflow_dict = res.json()
@@ -431,11 +445,9 @@ async def test_failing_workflow_JobExecutionError(
 
         # Add a dummy task
         res = await client.post(
-            f"{PREFIX}/workflow/{workflow_id}/add-task/",
-            json=dict(
-                task_id=collect_packages[0].id,
-                args={"raise_error": False, "sleep_time": 200},
-            ),
+            f"{PREFIX}/project/{project.id}/workflow/{workflow_id}/wftask/"
+            f"?task_id={collect_packages[0].id}",
+            json=dict(args={"raise_error": False, "sleep_time": 200}),
         )
         assert res.status_code == 201
         workflow_task_id = res.json()["id"]
@@ -457,15 +469,11 @@ async def test_failing_workflow_JobExecutionError(
         logging.warning(f"POST THREAD START {time.perf_counter()=}")
 
         # Re-submit the modified workflow
-        payload = dict(
-            project_id=project_id,
-            input_dataset_id=input_dataset_id,
-            output_dataset_id=output_dataset_id,
-            workflow_id=workflow_id,
-            overwrite_input=False,
-        )
+        payload = dict(overwrite_input=False)
         res_second_apply = await client.post(
-            f"{PREFIX}/project/apply/",
+            f"{PREFIX}/project/{project.id}/workflow/{workflow_id}/apply/"
+            f"?input_dataset_id={input_dataset_id}"
+            f"&output_dataset_id={output_dataset_id}",
             json=payload,
         )
         job_data = res_second_apply.json()
@@ -475,7 +483,7 @@ async def test_failing_workflow_JobExecutionError(
         debug(job_id)
 
         # Query status of the job
-        res = await client.get(f"{PREFIX}/job/{job_id}")
+        res = await client.get(f"{PREFIX}/project/{project.id}/job/{job_id}")
         assert res.status_code == 200
         job_status_data = res.json()
         debug(job_status_data)
@@ -505,8 +513,10 @@ async def test_non_python_task(
         project = await project_factory(user)
 
         # Create workflow
-        payload = {"name": "WF", "project_id": project.id}
-        res = await client.post("api/v1/workflow/", json=payload)
+        payload = dict(name="WF")
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/", json=payload
+        )
         workflow = res.json()
         debug(workflow)
         assert res.status_code == 201
@@ -520,15 +530,16 @@ async def test_non_python_task(
             output_type="zarr",
         )
         task_create = TaskCreate(**task_dict)
-        res = await client.post("api/v1/task/", json=task_create.dict())
+        res = await client.post(f"{PREFIX}/task/", json=task_create.dict())
         task = res.json()
         debug(task)
         assert res.status_code == 201
 
         # Add task to workflow
         res = await client.post(
-            f"api/v1/workflow/{workflow['id']}/add-task/",
-            json=dict(task_id=task["id"]),
+            f"{PREFIX}/project/{project.id}/workflow/{workflow['id']}/wftask/"
+            f"?task_id={task['id']}",
+            json=dict(),
         )
         assert res.status_code == 201
 
@@ -548,21 +559,21 @@ async def test_non_python_task(
         )
 
         # Submit workflow
-        payload = dict(
-            project_id=project.id,
-            input_dataset_id=input_dataset.id,
-            output_dataset_id=output_dataset.id,
-            workflow_id=workflow["id"],
-            overwrite_input=False,
+
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow['id']}/apply/"
+            f"?input_dataset_id={input_dataset.id}"
+            f"&output_dataset_id={output_dataset.id}",
+            json=dict(overwrite_input=False),
         )
-        debug(payload)
-        res = await client.post("/api/v1/project/apply/", json=payload)
         job_data = res.json()
         debug(job_data)
         assert res.status_code == 202
 
         # Check that the workflow execution is complete
-        res = await client.get(f"{PREFIX}/job/{job_data['id']}")
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/job/{job_data['id']}"
+        )
         assert res.status_code == 200
         job_status_data = res.json()
         debug(job_status_data)

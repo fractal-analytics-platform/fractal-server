@@ -184,9 +184,9 @@ class FractalSlurmExecutor(SlurmExecutor):
     def __init__(
         self,
         slurm_user: str,
+        working_dir: Path,
+        working_dir_user: Path,
         shutdown_file: Optional[str] = None,
-        working_dir: Optional[Path] = None,
-        working_dir_user: Optional[Path] = None,
         user_cache_dir: Optional[str] = None,
         common_script_lines: Optional[list[str]] = None,
         slurm_poll_interval: Optional[int] = None,
@@ -209,15 +209,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         self.slurm_user = slurm_user
 
         self.common_script_lines = common_script_lines or []
-        if not working_dir:
-            settings = Inject(get_settings)
-            working_dir = settings.FRACTAL_RUNNER_WORKING_BASE_DIR
         self.working_dir = working_dir
-        if not working_dir_user:
-            if self.slurm_user:
-                raise RuntimeError(f"{self.slurm_user=}, {working_dir_user=}")
-            else:
-                working_dir_user = working_dir
         if not _path_exists_as_user(
             path=str(working_dir_user), user=self.slurm_user
         ):

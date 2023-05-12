@@ -66,6 +66,7 @@ def _process_workflow(
         debug=True,
         keep_logs=True,
         slurm_user=slurm_user,
+        user_cache_dir=user_cache_dir,
         working_dir=workflow_dir,
         working_dir_user=workflow_dir_user,
         common_script_lines=worker_init,

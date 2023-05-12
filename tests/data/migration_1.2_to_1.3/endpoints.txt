@@ -1,0 +1,65 @@
+OLD GET /api/v1/job/download/{job_id}
+NEW GET /api/v1/project/{project_id}/job/{job_id}/download/
+
+OLD GET /api/v1/job/{job_id}
+NEW GET /api/v1/project/{project_id}/job/{job_id}
+
+OLD GET /api/v1/project/{project_id}/jobs/
+NEW GET /api/v1/project/{project_id}/job/
+
+OLD POST /api/v1/project/{project_id}/{dataset_id}
+NEW POST /api/v1/project/{project_id}/dataset/{dataset_id}/resource/
+
+OLD GET /api/v1/project/{project_id}/{dataset_id}
+NEW GET /api/v1/project/{project_id}/dataset/{dataset_id}
+
+OLD GET /api/v1/project/{project_id}/{dataset_id}/resources/
+NEW GET /api/v1/project/{project_id}/dataset/{dataset_id}/resource/
+
+OLD PATCH /api/v1/project/{project_id}/{dataset_id}
+NEW PATCH /api/v1/project/{project_id}/dataset/{dataset_id}
+
+OLD PATCH /api/v1/project/{project_id}/{dataset_id}/{resource_id}
+NEW PATCH /api/v1/project/{project_id}/dataset/{dataset_id}/resource/{resource_id}
+
+OLD DELETE /api/v1/project/{project_id}/{dataset_id}
+NEW DELETE /api/v1/project/{project_id}/dataset/{dataset_id}
+
+OLD DELETE /api/v1/project/{project_id}/{dataset_id}/{resource_id}
+NEW DELETE /api/v1/project/{project_id}/dataset/{dataset_id}/resource/{resource_id}
+
+OLD PATCH /api/v1/workflow/{workflow_id}/edit-task/{workflow_task_id}
+NEW PATCH /api/v1/project/{project_id}/workflow/{workflow_id}/wftask/{workflow_task_id}
+
+OLD DELETE /api/v1/workflow/{workflow_id}/rm-task/{workflow_task_id}
+NEW DELETE /api/v1/project/{project_id}/workflow/{workflow_id}/wftask/{workflow_task_id}
+
+OLD POST /api/v1/workflow/{workflow_id}/add-task/
+NEW POST /api/v1/project/{project_id}/workflow/{workflow_id}/wftask/  QUERY PARAMETERS: ['task_id']
+
+OLD POST /api/v1/project/apply/
+NEW POST /api/v1/project/{project_id}/workflow/{workflow_id}/apply/  QUERY PARAMETERS: ['input_dataset_id', 'output_dataset_id']
+
+OLD POST /api/v1/project/{project_id}/import-workflow/
+NEW POST /api/v1/project/{project_id}/workflow/
+
+OLD POST /api/v1/workflow/
+NEW POST /api/v1/project/{project_id}/workflow/import/
+
+OLD GET /api/v1/project/{project_id}/workflows/
+NEW GET /api/v1/project/{project_id}/workflow/
+
+OLD GET /api/v1/workflow/{workflow_id}
+NEW GET /api/v1/project/{project_id}/workflow/{workflow_id}
+
+OLD GET /api/v1/workflow/{workflow_id}/export/
+NEW GET /api/v1/project/{project_id}/workflow/{workflow_id}/export/
+
+OLD PATCH /api/v1/workflow/{workflow_id}
+NEW PATCH /api/v1/project/{project_id}/workflow/{workflow_id}
+
+OLD DELETE /api/v1/workflow/{workflow_id}
+NEW DELETE /api/v1/project/{project_id}/workflow/{workflow_id}
+
+OLD POST /api/v1/project/{project_id}/
+NEW POST /api/v1/project/{project_id}/dataset/

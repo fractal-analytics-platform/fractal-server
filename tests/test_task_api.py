@@ -61,7 +61,9 @@ async def test_background_collection(
     await db.refresh(state)
     debug(state)
     await _background_collect_pip(
-        state=state, venv_path=venv_path, task_pkg=task_pkg, db=db
+        state_id=state.id,
+        venv_path=venv_path,
+        task_pkg=task_pkg,
     )
     async with MockCurrentUser(persist=True):
         res = await client.get(f"{PREFIX}/collect/{state.id}")
@@ -108,7 +110,9 @@ async def test_background_collection_logs(
     await db.refresh(state)
     debug(state)
     await _background_collect_pip(
-        state=state, venv_path=venv_path, task_pkg=task_pkg, db=db
+        state_id=state.id,
+        venv_path=venv_path,
+        task_pkg=task_pkg,
     )
     async with MockCurrentUser(persist=True):
         res = await client.get(f"{PREFIX}/collect/{state.id}")
@@ -147,7 +151,9 @@ async def test_background_collection_failure(db, dummy_task_package):
     task_pkg.package_path = None
 
     await _background_collect_pip(
-        state=state, venv_path=venv_path, task_pkg=task_pkg, db=db
+        state_id=state.id,
+        venv_path=venv_path,
+        task_pkg=task_pkg,
     )
 
     await db.refresh(state)
@@ -156,6 +162,51 @@ async def test_background_collection_failure(db, dummy_task_package):
     assert state.data["status"] == "fail"
     assert state.data["info"].startswith("Original error")
     assert not venv_path.exists()
+
+
+async def test_collection_api_missing_file(
+    client,
+    MockCurrentUser,
+    tmp_path,
+):
+    async with MockCurrentUser():
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=dict(package=str(tmp_path / "missing_file")),
+        )
+        debug(res)
+        debug(res.json())
+        assert res.status_code == 422
+        assert "does not exist" in str(res.json())
+
+
+async def test_collection_api_local_package_with_extras(
+    client,
+    MockCurrentUser,
+    dummy_task_package,
+):
+    """
+    Check that the package extras are correctly included in a local-package
+    collection.
+    """
+    async with MockCurrentUser():
+        # Task collection
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=dict(
+                package=dummy_task_package.as_posix(),
+                package_extras="my_extra",
+            ),
+        )
+        debug(res.json())
+        assert res.status_code == 201
+
+        # Get logs
+        res = await client.get(f"{PREFIX}/collect/{res.json()['id']}")
+        debug(res.json())
+        assert res.status_code == 200
+        log = res.json()["data"]["log"]
+        assert ".whl[my_extra]" in log
 
 
 @pytest.mark.parametrize(
@@ -423,3 +474,12 @@ async def test_task_collection_api_failure(
         assert data["status"] == "fail"
         assert data["log"]  # This is because of verbose=True
         assert "fail" in data["log"]
+
+
+async def test_get_task(task_factory, client, MockCurrentUser):
+    async with MockCurrentUser():
+        task = await task_factory(name="name")
+        res = await client.get(f"{PREFIX}/{task.id}")
+        debug(res)
+        debug(res.json())
+        assert res.status_code == 200
