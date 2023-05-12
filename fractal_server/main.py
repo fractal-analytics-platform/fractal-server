@@ -149,15 +149,10 @@ def start_application() -> FastAPI:
     """
     app = FastAPI()
     collect_routers(app)
-
+    settings = Inject(get_settings)
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[
-            "http://127.0.0.1:5173",
-            "http://localhost:5173",
-            "http://127.0.0.1:4173",
-            "http://localhost:4173",
-        ],
+        allow_origins=settings.FRACTAL_CORS_ALLOW_ORIGIN.split(";"),
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=[
             "set-cookie",

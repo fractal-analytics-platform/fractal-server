@@ -269,7 +269,8 @@ class Settings(BaseSettings):
     """
     Interval to wait (in seconds) before checking whether unfinished job are
     still running on SLURM (see `SlurmWaitThread` in
-    [`clusterfutures`](https://github.com/sampsyo/clusterfutures/blob/master/cfut/__init__.py)).
+    [`clusterfutures`]
+    (https://github.com/sampsyo/clusterfutures/blob/master/cfut/__init__.py)).
     """
 
     FRACTAL_SLURM_KILLWAIT_INTERVAL: Optional[int] = 45
@@ -288,10 +289,13 @@ class Settings(BaseSettings):
     file is considered as missing.
     """
 
-    # NOTE: we currently set FRACTAL_PARSL_MONITORING to False, due to
-    # https://github.com/fractal-analytics-platform/fractal-server/issues/148
-    FRACTAL_PARSL_MONITORING: bool = False
-    FRACTAL_PARSL_CONFIG: str = "local"
+    FRACTAL_CORS_ALLOW_ORIGIN: str = (
+        "http://127.0.0.1:5173;http://localhost:5173"
+    )
+    """
+    Allowed origins for CORS middleware configuration.
+    Default values correspond to `vite` defaults.
+    """
 
     ###########################################################################
     # BUSINESS LOGIC
