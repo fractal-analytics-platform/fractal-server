@@ -1081,12 +1081,13 @@ class FractalSlurmExecutor(SlurmExecutor):
                 slurm_jobs_to_scancel.append(jobid)
                 fut, job = fut_and_job[:]
                 self.map_jobid_to_slurm_files.pop(jobid)
-                fut.set_exception(
-                    JobExecutionError(
-                        "Job cancelled due to executor shutdown."
+                if not fut.cancelled():
+                    fut.set_exception(
+                        JobExecutionError(
+                            "Job cancelled due to executor shutdown."
+                        )
                     )
-                )
-                fut.cancel()
+                    fut.cancel()
 
         # Cancel SLURM jobs
         if slurm_jobs_to_scancel:
