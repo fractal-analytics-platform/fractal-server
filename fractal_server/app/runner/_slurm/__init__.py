@@ -84,7 +84,7 @@ def _process_workflow(
             submit_setup_call=_slurm_submit_setup,
             logger_name=logger_name,
         )
-    output_task_pars = output_task_pars_fut.result()
+        output_task_pars = output_task_pars_fut.result()
     output_dataset_metadata = output_task_pars.metadata
     return output_dataset_metadata
 

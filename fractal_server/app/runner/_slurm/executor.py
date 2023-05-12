@@ -30,7 +30,6 @@ from cfut.util import random_string
 
 from ....config import get_settings
 from ....logger import set_logger
-from ....logger import wrap_with_timing_logs
 from ....syringe import Inject
 from .._common import get_task_file_paths
 from .._common import TaskFiles
@@ -171,6 +170,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
     wait_thread_cls = FractalSlurmWaitThread
     slurm_user: str
+    shutdown_file: str
     common_script_lines: list[str]
     user_cache_dir: str
     working_dir: Path
@@ -183,6 +183,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         slurm_user: str,
         working_dir: Path,
         working_dir_user: Path,
+        shutdown_file: Optional[str] = None,
         user_cache_dir: Optional[str] = None,
         common_script_lines: Optional[list[str]] = None,
         slurm_poll_interval: Optional[int] = None,
@@ -203,6 +204,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         self.keep_pickle_files = keep_pickle_files
         self.slurm_user = slurm_user
+
         self.common_script_lines = common_script_lines or []
         self.working_dir = working_dir
         if not _path_exists_as_user(
@@ -222,12 +224,16 @@ class FractalSlurmExecutor(SlurmExecutor):
         self.wait_thread.slurm_poll_interval = slurm_poll_interval
         self.wait_thread.slurm_user = self.slurm_user
 
+        self.wait_thread.shutdown_file = shutdown_file
+        self.wait_thread.shutdown_callback = self.shutdown
+
     def _cleanup(self, jobid: str) -> None:
         """
         Given a job ID as returned by _start, perform any necessary
         cleanup after the job has finished.
         """
-        self.map_jobid_to_slurm_files.pop(jobid)
+        with self.jobs_lock:
+            self.map_jobid_to_slurm_files.pop(jobid)
 
     def get_input_pickle_file_path(
         self, arg: str, prefix: Optional[str] = None
@@ -472,7 +478,6 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         return result_iterator()
 
-    @wrap_with_timing_logs
     def _submit_job(
         self,
         fun: Callable[..., Any],
@@ -600,11 +605,12 @@ class FractalSlurmExecutor(SlurmExecutor):
         # Add the SLURM script/out/err paths to map_jobid_to_slurm_files (this
         # must be after self._start(job), so that "%j" has already been
         # replaced with the job ID)
-        self.map_jobid_to_slurm_files[jobid] = (
-            job.slurm_script.as_posix(),
-            job.slurm_stdout.as_posix(),
-            job.slurm_stderr.as_posix(),
-        )
+        with self.jobs_lock:
+            self.map_jobid_to_slurm_files[jobid] = (
+                job.slurm_script.as_posix(),
+                job.slurm_stdout.as_posix(),
+                job.slurm_stderr.as_posix(),
+            )
 
         # Thread will wait for it to finish.
         self.wait_thread.wait(
@@ -616,7 +622,6 @@ class FractalSlurmExecutor(SlurmExecutor):
             self.jobs[jobid] = (fut, job)
         return fut
 
-    @wrap_with_timing_logs
     def _prepare_JobExecutionError(
         self, jobid: str, info: str
     ) -> JobExecutionError:
@@ -642,11 +647,12 @@ class FractalSlurmExecutor(SlurmExecutor):
         settings.FRACTAL_SLURM_KILLWAIT_INTERVAL
         time.sleep(settings.FRACTAL_SLURM_KILLWAIT_INTERVAL)
         # Extract SLURM file paths
-        (
-            slurm_script_file,
-            slurm_stdout_file,
-            slurm_stderr_file,
-        ) = self.map_jobid_to_slurm_files[jobid]
+        with self.jobs_lock:
+            (
+                slurm_script_file,
+                slurm_stdout_file,
+                slurm_stderr_file,
+            ) = self.map_jobid_to_slurm_files[jobid]
         # Construct JobExecutionError exception
         job_exc = JobExecutionError(
             cmd_file=slurm_script_file,
@@ -656,7 +662,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         )
         return job_exc
 
-    @wrap_with_timing_logs
     def _completion(self, jobid: str) -> None:
         """
         Callback function to be executed whenever a job finishes.
@@ -687,23 +692,25 @@ class FractalSlurmExecutor(SlurmExecutor):
 
             # Update the paths to use the files in self.working_dir (rather
             # than the user's ones in self.working_dir_user)
-            self.map_jobid_to_slurm_files[jobid]
-            (
-                slurm_script_file,
-                slurm_stdout_file,
-                slurm_stderr_file,
-            ) = self.map_jobid_to_slurm_files[jobid]
+            with self.jobs_lock:
+                self.map_jobid_to_slurm_files[jobid]
+                (
+                    slurm_script_file,
+                    slurm_stdout_file,
+                    slurm_stderr_file,
+                ) = self.map_jobid_to_slurm_files[jobid]
             new_slurm_stdout_file = str(
                 self.working_dir / Path(slurm_stdout_file).name
             )
             new_slurm_stderr_file = str(
                 self.working_dir / Path(slurm_stderr_file).name
             )
-            self.map_jobid_to_slurm_files[jobid] = (
-                slurm_script_file,
-                new_slurm_stdout_file,
-                new_slurm_stderr_file,
-            )
+            with self.jobs_lock:
+                self.map_jobid_to_slurm_files[jobid] = (
+                    slurm_script_file,
+                    new_slurm_stdout_file,
+                    new_slurm_stderr_file,
+                )
 
             in_paths = job.input_pickle_files
             out_paths = tuple(
@@ -827,7 +834,6 @@ class FractalSlurmExecutor(SlurmExecutor):
                     " FractalSlurmExecutor._completion."
                 )
 
-    @wrap_with_timing_logs
     def _copy_files_from_user_to_server(
         self,
         job: SlurmJob,
@@ -909,7 +915,6 @@ class FractalSlurmExecutor(SlurmExecutor):
                     f.write(res.stdout)
         logger.debug("[_copy_files_from_user_to_server] End")
 
-    @wrap_with_timing_logs
     def _start(
         self,
         job: SlurmJob,
@@ -993,7 +998,6 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         return jobid_str, job
 
-    @wrap_with_timing_logs
     def _prepare_sbatch_script(
         self,
         *,
@@ -1050,7 +1054,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         script = "\n".join(script_lines)
         return script
 
-    @wrap_with_timing_logs
     def get_default_task_files(self) -> TaskFiles:
         """
         This will be called when self.submit or self.map are called from
@@ -1064,3 +1067,52 @@ class FractalSlurmExecutor(SlurmExecutor):
             task_order=random.randint(10000, 99999),  # nosec
         )
         return task_files
+
+    def shutdown(self, wait=True, *, cancel_futures=False):
+        """
+        Clean up all executor variables. Note that this function is executed on
+        the self.wait_thread thread, see _completion.
+        """
+
+        logger.debug("Executor shutdown: start")
+
+        # Handle all job futures
+        slurm_jobs_to_scancel = []
+        with self.jobs_lock:
+            while self.jobs:
+                jobid, fut_and_job = self.jobs.popitem()
+                slurm_jobs_to_scancel.append(jobid)
+                fut, job = fut_and_job[:]
+                self.map_jobid_to_slurm_files.pop(jobid)
+                if not fut.cancelled():
+                    fut.set_exception(
+                        JobExecutionError(
+                            "Job cancelled due to executor shutdown."
+                        )
+                    )
+                    fut.cancel()
+
+        # Cancel SLURM jobs
+        if slurm_jobs_to_scancel:
+            scancel_string = " ".join(slurm_jobs_to_scancel)
+            logger.warning(f"Now scancel-ing SLURM jobs {scancel_string}")
+            pre_command = f"sudo --non-interactive -u {self.slurm_user}"
+            submit_command = f"scancel {scancel_string}"
+            full_command = f"{pre_command} {submit_command}"
+            logger.debug(f"Now execute `{full_command}`")
+            try:
+                subprocess.run(  # nosec
+                    shlex.split(full_command),
+                    capture_output=True,
+                    check=True,
+                    encoding="utf-8",
+                )
+            except subprocess.CalledProcessError as e:
+                error_msg = (
+                    f"Cancel command `{full_command}` failed. "
+                    f"Original error:\n{str(e)}"
+                )
+                logger.error(error_msg)
+                raise JobExecutionError(info=error_msg)
+
+        logger.debug("Executor shutdown: end")

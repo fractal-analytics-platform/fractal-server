@@ -63,7 +63,7 @@ def _process_workflow(
             logger_name=logger_name,
             submit_setup_call=_local_submit_setup,
         )
-    output_task_pars = output_task_pars_fut.result()
+        output_task_pars = output_task_pars_fut.result()
     output_dataset_metadata = output_task_pars.metadata
     return output_dataset_metadata
 
