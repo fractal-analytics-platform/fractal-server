@@ -87,9 +87,7 @@ async def submit_workflow(
         input_dataset_id
             Input dataset ID
         output_dataset_id:
-            ID of the destination dataset of the workflow. If not provided,
-            overwriting of the input dataset is implied and an error is raised
-            if the dataset is in read only mode.
+            ID of the destination dataset of the workflow.
         job_id:
             Id of the job record which stores the state for the current
             workflow application.
