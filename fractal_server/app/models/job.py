@@ -10,7 +10,6 @@ from sqlmodel import Relationship
 from ...common.schemas import ApplyWorkflowBase
 from ...utils import get_timestamp
 from .project import Dataset
-from .project import Project
 from .workflow import Workflow
 
 
@@ -85,7 +84,6 @@ class ApplyWorkflow(ApplyWorkflowBase, table=True):
     working_dir: Optional[str]
     working_dir_user: Optional[str]
 
-    project: Project = Relationship()
     input_dataset: Dataset = Relationship(
         sa_relationship_kwargs=dict(
             lazy="selectin",

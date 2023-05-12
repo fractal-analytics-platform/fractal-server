@@ -13,6 +13,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from pydantic.error_wrappers import ValidationError
 from sqlmodel import select
 
 from ....common.schemas import StateRead
@@ -48,7 +49,9 @@ router = APIRouter()
 
 
 async def _background_collect_pip(
-    state: State, venv_path: Path, task_pkg: _TaskCollectPip, db: AsyncSession
+    state_id: int,
+    venv_path: Path,
+    task_pkg: _TaskCollectPip,
 ) -> None:
     """
     Install package and collect tasks
@@ -59,87 +62,96 @@ async def _background_collect_pip(
     In case of error, copy the log into the state and delete the package
     directory.
     """
-    logger_name = task_pkg.package.replace("/", "_")
-    logger = set_logger(
-        logger_name=logger_name,
-        log_file_path=get_log_path(venv_path),
-    )
 
-    logger.debug("Start background task collection")
-    data = TaskCollectStatus(**state.data)
-    data.info = None
+    with next(get_sync_db()) as db:
 
-    try:
-        # install
-        logger.debug("Task-collection status: installing")
-        data.status = "installing"
+        state: State = db.get(State, state_id)
 
-        state.data = data.sanitised_dict()
-        await db.merge(state)
-        await db.commit()
-        task_list = await create_package_environment_pip(
-            venv_path=venv_path,
-            task_pkg=task_pkg,
+        logger_name = task_pkg.package.replace("/", "_")
+        logger = set_logger(
             logger_name=logger_name,
+            log_file_path=get_log_path(venv_path),
         )
 
-        # collect
-        logger.debug("Task-collection status: collecting")
-        data.status = "collecting"
-        state.data = data.sanitised_dict()
-        await db.merge(state)
-        await db.commit()
-        tasks = await _insert_tasks(task_list=task_list, db=db)
+        logger.debug("Start background task collection")
+        data = TaskCollectStatus(**state.data)
+        data.info = None
 
-        # finalise
-        logger.debug("Task-collection status: finalising")
-        collection_path = get_collection_path(venv_path)
-        data.task_list = tasks
-        with collection_path.open("w") as f:
-            json.dump(data.sanitised_dict(), f)
+        try:
+            # install
+            logger.debug("Task-collection status: installing")
+            data.status = "installing"
 
-        # Update DB
-        data.status = "OK"
-        data.log = get_collection_log(venv_path)
-        state.data = data.sanitised_dict()
-        db.add(state)
-        await db.merge(state)
-        await db.commit()
+            state.data = data.sanitised_dict()
+            db.merge(state)
+            db.commit()
+            task_list = await create_package_environment_pip(
+                venv_path=venv_path,
+                task_pkg=task_pkg,
+                logger_name=logger_name,
+            )
 
-        # Write last logs to file
-        logger.debug("Task-collection status: OK")
-        logger.info("Background task collection completed successfully")
-        close_logger(logger)
+            # collect
+            logger.debug("Task-collection status: collecting")
+            data.status = "collecting"
+            state.data = data.sanitised_dict()
+            db.merge(state)
+            db.commit()
+            tasks = await _insert_tasks(task_list=task_list, db=db)
 
-    except Exception as e:
-        # Write last logs to file
-        logger.debug("Task-collection status: fail")
-        logger.info(f"Background collection failed. Original error: {e}")
-        close_logger(logger)
+            # finalise
+            logger.debug("Task-collection status: finalising")
+            collection_path = get_collection_path(venv_path)
+            data.task_list = tasks
+            with collection_path.open("w") as f:
+                json.dump(data.sanitised_dict(), f)
 
-        # Update db
-        data.status = "fail"
-        data.info = f"Original error: {e}"
-        data.log = get_collection_log(venv_path)
-        state.data = data.sanitised_dict()
-        await db.merge(state)
-        await db.commit()
+            # Update DB
+            data.status = "OK"
+            data.log = get_collection_log(venv_path)
+            state.data = data.sanitised_dict()
+            db.add(state)
+            db.merge(state)
+            db.commit()
 
-        # Delete corrupted package dir
-        shell_rmtree(venv_path)
+            # Write last logs to file
+            logger.debug("Task-collection status: OK")
+            logger.info("Background task collection completed successfully")
+            close_logger(logger)
+            db.close()
+
+        except Exception as e:
+            # Write last logs to file
+            logger.debug("Task-collection status: fail")
+            logger.info(f"Background collection failed. Original error: {e}")
+            close_logger(logger)
+
+            # Update db
+            data.status = "fail"
+            data.info = f"Original error: {e}"
+            data.log = get_collection_log(venv_path)
+            state.data = data.sanitised_dict()
+            db.merge(state)
+            db.commit()
+            db.close()
+
+            # Delete corrupted package dir
+            shell_rmtree(venv_path)
 
 
 async def _insert_tasks(
     task_list: list[TaskCreate],
-    db: AsyncSession,
+    db: DBSyncSession,
 ) -> list[Task]:
     """
     Insert tasks into database
     """
     task_db_list = [Task.from_orm(t) for t in task_list]
     db.add_all(task_db_list)
-    await db.commit()
-    await asyncio.gather(*[db.refresh(t) for t in task_db_list])
+    db.commit()
+    for t in task_db_list:
+        db.refresh(t)
+    db.close()
     return task_db_list
 
 
@@ -176,7 +188,16 @@ async def collect_tasks_pip(
     """
 
     logger = set_logger(logger_name="collect_tasks_pip")
-    task_pkg = _TaskCollectPip(**task_collect.dict())
+
+    # Validate payload as _TaskCollectPip, which has more strict checks than
+    # TaskCollectPip
+    try:
+        task_pkg = _TaskCollectPip(**task_collect.dict())
+    except ValidationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid task-collection object. Original error: {e}",
+        )
 
     with TemporaryDirectory() as tmpdir:
         try:
@@ -208,6 +229,7 @@ async def collect_tasks_pip(
         try:
             task_collect_status = get_collection_data(venv_path)
         except FileNotFoundError as e:
+            await db.close()
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
@@ -219,6 +241,7 @@ async def collect_tasks_pip(
         task_collect_status.info = "Already installed"
         state = State(data=task_collect_status.sanitised_dict())
         response.status_code == status.HTTP_200_OK
+        await db.close()
         return state
     settings = Inject(get_settings)
 
@@ -237,10 +260,9 @@ async def collect_tasks_pip(
 
     background_tasks.add_task(
         _background_collect_pip,
-        state=state,
+        state_id=state.id,
         venv_path=venv_path,
         task_pkg=task_pkg,
-        db=db,
     )
     logger.debug(
         "Task-collection endpoint: start background collection "
@@ -253,6 +275,7 @@ async def collect_tasks_pip(
     )
     state.data["info"] = info
     response.status_code = status.HTTP_201_CREATED
+    await db.close()
     return state
 
 
@@ -270,6 +293,7 @@ async def check_collection_status(
     logger.debug(f"Querying state for state.id={state_id}")
     state = await db.get(State, state_id)
     if not state:
+        await db.close()
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No task collection info with id={state_id}",
@@ -282,6 +306,7 @@ async def check_collection_status(
         data.log = get_collection_log(data.venv_path)
         state.data = data.sanitised_dict()
     close_logger(logger)
+    await db.close()
     return state
 
 
@@ -297,19 +322,21 @@ async def get_list_task(
     res = await db.execute(stm)
     task_list = res.scalars().unique().fetchall()
     await asyncio.gather(*[db.refresh(t) for t in task_list])
+    await db.close()
     return task_list
 
 
 @router.get("/{task_id}", response_model=TaskRead)
-def get_task(
+async def get_task(
     task_id: int,
     user: User = Depends(current_active_user),
-    db_sync: DBSyncSession = Depends(get_sync_db),
+    db: AsyncSession = Depends(get_db),
 ) -> TaskRead:
     """
     Get info on a specific task
     """
-    task = db_sync.get(Task, task_id)
+    task = await db.get(Task, task_id)
+    await db.close()
     return task
 
 
@@ -346,6 +373,7 @@ async def patch_task(
 
     await db.commit()
     await db.refresh(db_task)
+    await db.close()
     return db_task
 
 
@@ -369,4 +397,5 @@ async def create_task(
     db.add(db_task)
     await db.commit()
     await db.refresh(db_task)
+    await db.close()
     return db_task

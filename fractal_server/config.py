@@ -25,6 +25,7 @@ from pydantic import BaseModel
 from pydantic import BaseSettings
 from pydantic import Field
 from pydantic import root_validator
+from sqlalchemy.engine import URL
 
 import fractal_server
 
@@ -165,40 +166,42 @@ class Settings(BaseSettings):
 
     POSTGRES_USER: Optional[str]
     POSTGRES_PASSWORD: Optional[str]
-    POSTGRES_SERVER: Optional[str] = "localhost"
+    POSTGRES_HOST: Optional[str] = "localhost"
     POSTGRES_PORT: Optional[str] = "5432"
     POSTGRES_DB: Optional[str]
 
     SQLITE_PATH: Optional[str]
 
     @property
-    def DATABASE_URL(self):
+    def DATABASE_URL(self) -> URL:
         if self.DB_ENGINE == "sqlite":
             if not self.SQLITE_PATH:
                 raise ValueError("SQLITE_PATH path cannot be None")
-            sqlite_path = (
-                abspath(self.SQLITE_PATH)
-                if self.SQLITE_PATH
-                else self.SQLITE_PATH
+            sqlite_path = abspath(self.SQLITE_PATH)
+            url = URL.create(
+                drivername="sqlite+aiosqlite",
+                database=sqlite_path,
             )
-            return f"sqlite+aiosqlite:///{sqlite_path}"
+            return url
         elif "postgres":
-            pg_uri = (
-                "postgresql+asyncpg://"
-                f"{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
-                f"@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}"
-                f"/{self.POSTGRES_DB}"
+            url = URL.create(
+                drivername="postgresql+asyncpg",
+                username=self.POSTGRES_USER,
+                password=self.POSTGRES_PASSWORD,
+                host=self.POSTGRES_HOST,
+                port=self.POSTGRES_PORT,
+                database=self.POSTGRES_DB,
             )
-            return pg_uri
+            return url
 
     @property
     def DATABASE_SYNC_URL(self):
         if self.DB_ENGINE == "sqlite":
             if not self.SQLITE_PATH:
                 raise ValueError("SQLITE_PATH path cannot be None")
-            return self.DATABASE_URL.replace("aiosqlite", "pysqlite")
+            return self.DATABASE_URL.set(drivername="sqlite")
         elif self.DB_ENGINE == "postgres":
-            return self.DATABASE_URL.replace("asyncpg", "psycopg2")
+            return self.DATABASE_URL.set(drivername="postgresql+psycopg2")
 
     ###########################################################################
     # FRACTAL SPECIFIC

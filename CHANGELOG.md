@@ -1,5 +1,24 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# 1.2.5
+
+* Fix bug in task collection when using sqlite (\#664, \#673).
+* Fix bug in task collection from local package, where package extras were not considered (\#671).
+* Improve error handling in workflow-apply endpoint (\#665).
+* Fix a bug upon project removal in the presence of project-related jobs (\#666). Note: this removes the `ApplyWorkflow.Project` attribute.
+
+# 1.2.4
+
+* Review setup for database URLs, especially to allow using UNIX-socket connections for postgresl (\#657).
+
+# 1.2.3
+
+* Fix bug that was keeping multiple database conection open (\#649).
+
+# 1.2.2
+
+* Fix bug related to `user_local_exports` in SLURM-backend configuration (\#642).
+
 # 1.2.1
 
 * Fix bug upon creation of first user when using multiple workers (\#632).

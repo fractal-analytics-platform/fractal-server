@@ -168,10 +168,10 @@ async def install_dummy_packages(tmp777_session_path, dummy_task_package):
 
 
 @pytest.fixture(scope="function")
-async def collect_packages(db, install_dummy_packages):
+async def collect_packages(db_sync, install_dummy_packages):
     from fractal_server.app.api.v1.task import _insert_tasks
 
-    tasks = await _insert_tasks(task_list=install_dummy_packages, db=db)
+    tasks = await _insert_tasks(task_list=install_dummy_packages, db=db_sync)
     return tasks
 
 

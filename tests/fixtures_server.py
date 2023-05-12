@@ -11,6 +11,7 @@ Institute for Biomedical Research and Pelkmans Lab from the University of
 Zurich.
 """
 import logging
+import random
 import shutil
 from dataclasses import dataclass
 from dataclasses import field
@@ -20,7 +21,6 @@ from typing import AsyncGenerator
 from typing import Dict
 from typing import List
 from typing import Optional
-from uuid import uuid4
 
 import pytest
 from asgi_lifespan import LifespanManager
@@ -86,14 +86,12 @@ def get_patched_settings(temp_path: Path):
 
     settings.DB_ENGINE = DB_ENGINE
     if DB_ENGINE == "sqlite":
-        settings.SQLITE_PATH = (
-            f"{temp_path.as_posix()}/_test.db?mode=memory&cache=shared"
-        )
+        settings.SQLITE_PATH = f"{temp_path.as_posix()}/_test.db"
     elif DB_ENGINE == "postgres":
         settings.DB_ENGINE = "postgres"
         settings.POSTGRES_USER = "postgres"
         settings.POSTGRES_PASSWORD = "postgres"
-        settings.POSTGRES_DB = "fractal"
+        settings.POSTGRES_DB = "fractal_test"
     else:
         raise ValueError
 
@@ -202,6 +200,7 @@ async def db_create_tables(override_settings):
     engine = DB.engine_sync()
     metadata = SQLModel.metadata
     metadata.create_all(engine)
+
     yield
 
     metadata.drop_all(engine)
@@ -302,7 +301,7 @@ async def MockCurrentUser(app, db):
             default_factory=lambda: ["project"]
         )
         email: Optional[str] = field(
-            default_factory=lambda: f"{uuid4()}@exact-lab.it"
+            default_factory=lambda: f"{random.randint(0, 10000)}@exact-lab.it"
         )
         persist: Optional[bool] = True
 
@@ -360,7 +359,7 @@ async def project_factory(db):
         defaults = dict(name="project")
         defaults.update(kwargs)
         project = Project(**defaults)
-        project.user_member_list.append(user)
+        project.user_list.append(user)
         db.add(project)
         await db.commit()
         await db.refresh(project)
@@ -481,3 +480,28 @@ async def workflow_factory(db: AsyncSession):
         return w
 
     return __workflow_factory
+
+
+@pytest.fixture
+async def workflowtask_factory(db: AsyncSession):
+    """
+    Insert workflowtask in db
+    """
+    from fractal_server.app.models import WorkflowTask
+
+    async def __workflowtask_factory(
+        workflow_id: int, task_id: int, db: AsyncSession = db, **kwargs
+    ):
+        defaults = dict(
+            workflow_id=workflow_id,
+            task_id=task_id,
+        )
+        args = dict(**defaults)
+        args.update(kwargs)
+        wft = WorkflowTask(**args)
+        db.add(wft)
+        await db.commit()
+        await db.refresh(wft)
+        return wft
+
+    return __workflowtask_factory
