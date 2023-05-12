@@ -29,7 +29,7 @@ def test_slurm_executor_submit(
         keep_pickle_files=True,
     ) as executor:
         res = executor.submit(lambda: 42)
-    assert res.result() == 42
+        assert res.result() == 42
 
 
 def test_slurm_executor_submit_with_exception(
@@ -147,7 +147,7 @@ def test_slurm_executor_submit_separate_folders(
         keep_pickle_files=True,
     ) as executor:
         res = executor.submit(lambda: 42)
-    assert res.result() == 42
+        assert res.result() == 42
 
 
 def test_slurm_executor_submit_and_scancel(
