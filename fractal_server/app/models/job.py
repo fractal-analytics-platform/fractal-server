@@ -61,7 +61,7 @@ class ApplyWorkflow(ApplyWorkflowBase, table=True):
         start_timestamp:
             Timestamp of when the run began.
         end_timestamp:
-            Timestamp of when the run ended.
+            Timestamp of when the run ended or failed.
         status:
             Status of the run.
         log:
