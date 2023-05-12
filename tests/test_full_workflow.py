@@ -578,6 +578,8 @@ async def test_non_python_task(
         job_status_data = res.json()
         debug(job_status_data)
         assert job_status_data["status"] == "done"
+        debug(job_status_data["end_timestamp"])
+        assert job_status_data["end_timestamp"]
 
         # Check that the expected files are present
         working_dir = job_status_data["working_dir"]
