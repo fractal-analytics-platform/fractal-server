@@ -134,11 +134,6 @@ async def _create_first_user(
         logger.warning(f"User {email} already exists")
 
 
-def _get_CORS_allowed_origins() -> list[str]:
-    # TODO: split setting variable
-    pass
-
-
 def start_application() -> FastAPI:
     """
     Create and initialise the application
