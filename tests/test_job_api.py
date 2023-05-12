@@ -24,6 +24,7 @@ async def test_stop_job(
             output_dataset_id=ds.id,
             working_id=wf.id,
         )
+
         debug(job)
 
         res = await client.get(
