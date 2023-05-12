@@ -35,7 +35,7 @@ def test_direct_shutdown_during_submit(
         keep_pickle_files=True,
     )
 
-    res = executor.submit(_sleep_and_return, 10)
+    res = executor.submit(_sleep_and_return, 100)
     debug(res)
     debug(run_squeue())
     executor.shutdown()
@@ -68,7 +68,7 @@ def test_indirect_shutdown_during_submit(
         shutdown_file=str(shutdown_file),
     )
 
-    res = executor.submit(_sleep_and_return, 10)
+    res = executor.submit(_sleep_and_return, 100)
     debug(res)
     debug(run_squeue())
 
@@ -121,7 +121,7 @@ def test_indirect_shutdown_during_map(
     cfut_jobs_finished,
 ):
     def fun_sleep(dummy):
-        time.sleep(10)
+        time.sleep(100)
         return 42
 
     shutdown_file = tmp_path / "shutdown"
