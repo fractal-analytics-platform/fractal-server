@@ -213,6 +213,7 @@ async def submit_workflow(
         db_sync.merge(output_dataset)
 
         job.status = JobStatusType.DONE
+        job.end_timestamp = get_timestamp()
         with log_file_path.open("r") as f:
             logs = f.read()
         job.log = logs
@@ -224,6 +225,7 @@ async def submit_workflow(
         logger.info(f'Workflow "{workflow.name}" failed (TaskExecutionError).')
 
         job.status = JobStatusType.FAILED
+        job.end_timestamp = get_timestamp()
 
         exception_args_string = "\n".join(e.args)
         job.log = (
@@ -240,6 +242,7 @@ async def submit_workflow(
         logger.info(f'Workflow "{workflow.name}" failed (JobExecutionError).')
 
         job.status = JobStatusType.FAILED
+        job.end_timestamp = get_timestamp()
         error = e.assemble_error()
         job.log = f"JOB ERROR:\nTRACEBACK:\n{error}"
         db_sync.merge(job)
@@ -250,6 +253,7 @@ async def submit_workflow(
         logger.info(f'Workflow "{workflow.name}" failed (unkwnon error).')
 
         job.status = JobStatusType.FAILED
+        job.end_timestamp = get_timestamp()
         job.log = f"UNKNOWN ERROR\nOriginal error: {str(e)}"
         db_sync.merge(job)
 
