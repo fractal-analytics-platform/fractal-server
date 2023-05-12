@@ -128,6 +128,21 @@ async def update_project(
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
+
+    # Check that there is no project with the same user and name
+    stm = (
+        select(Project)
+        .join(LinkUserProject)
+        .where(Project.name == project_update.name)
+        .where(LinkUserProject.user_id == user.id)
+    )
+    res = await db.execute(stm)
+    if res.scalars().all():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Project name ({project_update.name}) already in use",
+        )
+
     for key, value in project_update.dict(exclude_unset=True).items():
         setattr(project, key, value)
 
