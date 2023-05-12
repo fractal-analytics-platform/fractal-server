@@ -19,6 +19,7 @@ from ...db import get_db
 from ...models import ApplyWorkflow
 from ...models import ApplyWorkflowRead
 from ...runner._common import METADATA_FILENAME
+from ...runner._common import SHUTDOWN_FILENAME
 from ...security import current_active_user
 from ...security import User
 from ._aux_functions import _get_job_check_owner
@@ -165,13 +166,6 @@ async def stop_job(
     job = output["job"]
 
     # Write shutdown file
-    shutdown_file = (
-        Path(job.working_dir) / "shutdown"
-    )  # FIXME: replace with filename imported from somewhere  # noqa
+    shutdown_file = Path(job.working_dir) / SHUTDOWN_FILENAME
     with shutdown_file.open("w") as f:
-        f.write(f"I confirm: Please shutdown job {job.id}")
-
-    # FIXME: anything else we'd need to do with the job status here? Probably
-    # not
-
-    return
+        f.write(f"Trigger executor shutdown for {job.id=}, {project_id=}.")
