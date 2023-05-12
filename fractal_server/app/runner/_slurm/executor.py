@@ -175,9 +175,7 @@ class FractalSlurmExecutor(SlurmExecutor):
     user_cache_dir: str
     working_dir: Path
     working_dir_user: Path
-    map_jobid_to_slurm_files: dict[
-        str, tuple[str, str, str]
-    ]  # FIXME: introduce lock? # noqa
+    map_jobid_to_slurm_files: dict[str, tuple[str, str, str]]
     keep_pickle_files: bool
 
     def __init__(
@@ -234,7 +232,8 @@ class FractalSlurmExecutor(SlurmExecutor):
         Given a job ID as returned by _start, perform any necessary
         cleanup after the job has finished.
         """
-        self.map_jobid_to_slurm_files.pop(jobid)
+        with self.jobs_lock:
+            self.map_jobid_to_slurm_files.pop(jobid)
 
     def get_input_pickle_file_path(
         self, arg: str, prefix: Optional[str] = None
@@ -606,11 +605,12 @@ class FractalSlurmExecutor(SlurmExecutor):
         # Add the SLURM script/out/err paths to map_jobid_to_slurm_files (this
         # must be after self._start(job), so that "%j" has already been
         # replaced with the job ID)
-        self.map_jobid_to_slurm_files[jobid] = (
-            job.slurm_script.as_posix(),
-            job.slurm_stdout.as_posix(),
-            job.slurm_stderr.as_posix(),
-        )
+        with self.jobs_lock:
+            self.map_jobid_to_slurm_files[jobid] = (
+                job.slurm_script.as_posix(),
+                job.slurm_stdout.as_posix(),
+                job.slurm_stderr.as_posix(),
+            )
 
         # Thread will wait for it to finish.
         self.wait_thread.wait(
@@ -647,11 +647,12 @@ class FractalSlurmExecutor(SlurmExecutor):
         settings.FRACTAL_SLURM_KILLWAIT_INTERVAL
         time.sleep(settings.FRACTAL_SLURM_KILLWAIT_INTERVAL)
         # Extract SLURM file paths
-        (
-            slurm_script_file,
-            slurm_stdout_file,
-            slurm_stderr_file,
-        ) = self.map_jobid_to_slurm_files[jobid]
+        with self.jobs_lock:
+            (
+                slurm_script_file,
+                slurm_stdout_file,
+                slurm_stderr_file,
+            ) = self.map_jobid_to_slurm_files[jobid]
         # Construct JobExecutionError exception
         job_exc = JobExecutionError(
             cmd_file=slurm_script_file,
@@ -691,23 +692,25 @@ class FractalSlurmExecutor(SlurmExecutor):
 
             # Update the paths to use the files in self.working_dir (rather
             # than the user's ones in self.working_dir_user)
-            self.map_jobid_to_slurm_files[jobid]
-            (
-                slurm_script_file,
-                slurm_stdout_file,
-                slurm_stderr_file,
-            ) = self.map_jobid_to_slurm_files[jobid]
+            with self.jobs_lock:
+                self.map_jobid_to_slurm_files[jobid]
+                (
+                    slurm_script_file,
+                    slurm_stdout_file,
+                    slurm_stderr_file,
+                ) = self.map_jobid_to_slurm_files[jobid]
             new_slurm_stdout_file = str(
                 self.working_dir / Path(slurm_stdout_file).name
             )
             new_slurm_stderr_file = str(
                 self.working_dir / Path(slurm_stderr_file).name
             )
-            self.map_jobid_to_slurm_files[jobid] = (
-                slurm_script_file,
-                new_slurm_stdout_file,
-                new_slurm_stderr_file,
-            )
+            with self.jobs_lock:
+                self.map_jobid_to_slurm_files[jobid] = (
+                    slurm_script_file,
+                    new_slurm_stdout_file,
+                    new_slurm_stderr_file,
+                )
 
             in_paths = job.input_pickle_files
             out_paths = tuple(
