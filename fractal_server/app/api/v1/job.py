@@ -8,6 +8,7 @@ from zipfile import ZipFile
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Response
 from fastapi import status
 from fastapi.responses import StreamingResponse
 from sqlmodel import select
@@ -169,3 +170,5 @@ async def stop_job(
     shutdown_file = Path(job.working_dir) / SHUTDOWN_FILENAME
     with shutdown_file.open("w") as f:
         f.write(f"Trigger executor shutdown for {job.id=}, {project_id=}.")
+
+    return Response(status_code=status.HTTP_200_OK)
