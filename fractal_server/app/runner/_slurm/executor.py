@@ -676,14 +676,17 @@ class FractalSlurmExecutor(SlurmExecutor):
         Arguments:
             jobid: ID of the SLURM job
         """
-
-        with self.jobs_lock:
-            fut, job = self.jobs.pop(jobid)
-            if not self.jobs:
-                self.jobs_empty_cond.notify_all()
-
         # Handle all uncaught exceptions in this broad try/except block
         try:
+
+            # Retrieve job
+            with self.jobs_lock:
+                try:
+                    fut, job = self.jobs.pop(jobid)
+                except KeyError:
+                    return
+                if not self.jobs:
+                    self.jobs_empty_cond.notify_all()
 
             # Copy all relevant files from self.working_dir_user to
             # self.working_dir
