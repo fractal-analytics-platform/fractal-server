@@ -60,6 +60,8 @@ class ApplyWorkflow(ApplyWorkflowBase, table=True):
             Workflow status
         start_timestamp:
             Timestamp of when the run began.
+        end_timestamp:
+            Timestamp of when the run ended or failed.
         status:
             Status of the run.
         log:
@@ -102,6 +104,9 @@ class ApplyWorkflow(ApplyWorkflowBase, table=True):
         default_factory=get_timestamp,
         nullable=False,
         sa_column=Column(DateTime(timezone=True)),
+    )
+    end_timestamp: Optional[datetime] = Field(
+        default=None, sa_column=Column(DateTime(timezone=True))
     )
     status: JobStatusType = JobStatusType.SUBMITTED
     log: Optional[str] = None
