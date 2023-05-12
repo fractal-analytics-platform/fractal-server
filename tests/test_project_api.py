@@ -85,6 +85,39 @@ async def test_project_creation_name_constraint(
         assert res.status_code == 422
 
 
+async def test_project_edit_name_constraint(app, client, MockCurrentUser, db):
+    async with MockCurrentUser(persist=True):
+
+        # Create a first project named "name1"
+        res = await client.post(f"{PREFIX}/project/", json=dict(name="name1"))
+        assert res.status_code == 201
+
+        # Create a second project named "name2"
+        res = await client.post(f"{PREFIX}/project/", json=dict(name="name2"))
+        assert res.status_code == 201
+        prj2 = res.json()
+
+        # Fail in editing the name of prj2 to "name1"
+        res = await client.patch(
+            f"{PREFIX}/project/{prj2['id']}", json=dict(name="name1")
+        )
+        assert res.status_code == 422
+        assert res.json()["detail"] == "Project name (name1) already in use"
+
+    async with MockCurrentUser(persist=True):
+
+        # Using another user, create a project named "name3"
+        res = await client.post(f"{PREFIX}/project/", json=dict(name="name3"))
+        assert res.status_code == 201
+        prj3 = res.json()
+        # Edit the name of prj3 to "name1" without errors
+        res = await client.patch(
+            f"{PREFIX}/project/{prj3['id']}", json=dict(name="name1")
+        )
+        debug(res.json())
+        assert res.status_code == 200
+
+
 @pytest.mark.parametrize("new_name", (None, "new name"))
 @pytest.mark.parametrize("new_read_only", (None, True, False))
 async def test_edit_project(
