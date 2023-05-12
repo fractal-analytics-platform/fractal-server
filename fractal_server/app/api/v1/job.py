@@ -131,7 +131,7 @@ async def get_job_list(
 
 
 @router.get(
-    "/project/{project_id}/{job_id}/stop",
+    "/project/{project_id}/job/{job_id}/stop/",
     status_code=200,
 )
 async def stop_job(
