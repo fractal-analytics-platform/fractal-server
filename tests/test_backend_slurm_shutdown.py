@@ -23,22 +23,27 @@ def test_direct_shutdown_during_submit(
     tmp777_path,
     cfut_jobs_finished,
 ):
+    """
+    Test the FractalSlurmExecutor.shutdown method directly
+    """
 
-    with FractalSlurmExecutor(
+    executor = FractalSlurmExecutor(
         slurm_user=monkey_slurm_user,
         working_dir=tmp777_path,
         working_dir_user=tmp777_path,
         slurm_poll_interval=2,
         keep_pickle_files=True,
-    ) as executor:
-        res = executor.submit(_sleep_and_return, 10)
-        debug(res)
-        debug(run_squeue())
-        executor.shutdown()
-        debug(res)
-        assert not run_squeue(header=False)
-        with pytest.raises(JobExecutionError):
-            _ = res.result()
+    )
+
+    res = executor.submit(_sleep_and_return, 10)
+    debug(res)
+    debug(run_squeue())
+    executor.shutdown()
+    debug(res)
+    assert not run_squeue(header=False)
+    with pytest.raises(JobExecutionError) as e:
+        _ = res.result()
+    debug(e)
 
 
 def test_indirect_shutdown_during_submit(
@@ -48,33 +53,37 @@ def test_indirect_shutdown_during_submit(
     tmp_path,
     cfut_jobs_finished,
 ):
+    """
+    Test the FractalSlurmExecutor.shutdown method indirectly, that is, when it
+    is triggered by the presence of a shutdown_file
+    """
     shutdown_file = tmp_path / "shutdown"
 
-    with FractalSlurmExecutor(
+    executor = FractalSlurmExecutor(
         slurm_user=monkey_slurm_user,
         working_dir=tmp777_path,
         working_dir_user=tmp777_path,
         slurm_poll_interval=2,
         keep_pickle_files=True,
         shutdown_file=str(shutdown_file),
-    ) as executor:
+    )
 
-        res = executor.submit(_sleep_and_return, 10)
-        debug(res)
-        debug(run_squeue())
+    res = executor.submit(_sleep_and_return, 10)
+    debug(res)
+    debug(run_squeue())
 
-        with shutdown_file.open("w") as f:
-            f.write("")
-        assert shutdown_file.exists()
+    with shutdown_file.open("w") as f:
+        f.write("")
+    assert shutdown_file.exists()
 
-        time.sleep(5)
+    time.sleep(5)
 
-        debug(res)
-        debug(run_squeue())
+    debug(res)
+    debug(run_squeue())
 
-        assert not run_squeue(header=False)
-        with pytest.raises(JobExecutionError):
-            _ = res.result()
+    assert not run_squeue(header=False)
+    with pytest.raises(JobExecutionError):
+        _ = res.result()
 
 
 async def _write_shutdown_file(shutdown_file: Path, sleep_time):
@@ -84,6 +93,8 @@ async def _write_shutdown_file(shutdown_file: Path, sleep_time):
     # Wait `scancel_sleep_time` seconds, to let the SLURM job pass from PENDING
     # to RUNNING
     time.sleep(sleep_time)
+
+    debug(run_squeue())
     # Scancel all jobs of the current SLURM user
     logging.warning(f"[_write_shutdown_file] run WRITE {time.perf_counter()=}")
     # Trigger shutdown
@@ -102,7 +113,6 @@ def _auxiliary_run(shutdown_file: Path, sleep_time):
     loop.close()
 
 
-@pytest.mark.skip()
 def test_indirect_shutdown_during_map(
     monkey_slurm,
     monkey_slurm_user,
@@ -138,10 +148,13 @@ def test_indirect_shutdown_during_map(
         shutdown_file=str(shutdown_file),
     ) as executor:
 
-        res = executor.map(fun_sleep, range(100))
-        debug(res)
+        res = executor.map(fun_sleep, range(25))
         debug(run_squeue())
 
-        time.sleep(2)
-
+        time.sleep(shutdown_sleep_time + 1)
         debug(run_squeue())
+
+        with pytest.raises(JobExecutionError) as e:
+            list(res)
+        debug(e.value)
+        assert "shutdown" in str(e.value)
