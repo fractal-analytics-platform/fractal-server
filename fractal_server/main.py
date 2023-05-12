@@ -152,7 +152,7 @@ def start_application() -> FastAPI:
     settings = Inject(get_settings)
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.FRACTAL_ALLOW_ORIGIN.split(";"),
+        allow_origins=settings.FRACTAL_CORS_ALLOW_ORIGIN.split(";"),
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=[
             "set-cookie",
