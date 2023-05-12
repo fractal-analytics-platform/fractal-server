@@ -337,7 +337,7 @@ async def test_failing_workflow_TaskExecutionError(
         job_status_data = res.json()
         debug(job_status_data)
         assert job_status_data["status"] == "failed"
-        assert not job_status_data["end_timestamp"]
+        assert job_status_data["end_timestamp"]
         assert "id: None" not in job_status_data["log"]
         assert "ValueError" in job_status_data["log"]
         assert ERROR_MESSAGE in job_status_data["log"]
@@ -490,6 +490,7 @@ async def test_failing_workflow_JobExecutionError(
         debug(job_status_data)
         print(job_status_data["log"])
         assert job_status_data["status"] == "failed"
+        assert job_status_data["end_timestamp"]
         assert "id: None" not in job_status_data["log"]
         assert "JOB ERROR" in job_status_data["log"]
         assert "CANCELLED" in job_status_data["log"]
