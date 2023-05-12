@@ -30,7 +30,6 @@ from cfut.util import random_string
 
 from ....config import get_settings
 from ....logger import set_logger
-from ....logger import wrap_with_timing_logs
 from ....syringe import Inject
 from .._common import get_task_file_paths
 from .._common import TaskFiles
@@ -480,7 +479,6 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         return result_iterator()
 
-    @wrap_with_timing_logs
     def _submit_job(
         self,
         fun: Callable[..., Any],
@@ -624,7 +622,6 @@ class FractalSlurmExecutor(SlurmExecutor):
             self.jobs[jobid] = (fut, job)
         return fut
 
-    @wrap_with_timing_logs
     def _prepare_JobExecutionError(
         self, jobid: str, info: str
     ) -> JobExecutionError:
@@ -664,7 +661,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         )
         return job_exc
 
-    @wrap_with_timing_logs
     def _completion(self, jobid: str) -> None:
         """
         Callback function to be executed whenever a job finishes.
@@ -835,7 +831,6 @@ class FractalSlurmExecutor(SlurmExecutor):
                     " FractalSlurmExecutor._completion."
                 )
 
-    @wrap_with_timing_logs
     def _copy_files_from_user_to_server(
         self,
         job: SlurmJob,
@@ -917,7 +912,6 @@ class FractalSlurmExecutor(SlurmExecutor):
                     f.write(res.stdout)
         logger.debug("[_copy_files_from_user_to_server] End")
 
-    @wrap_with_timing_logs
     def _start(
         self,
         job: SlurmJob,
@@ -1001,7 +995,6 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         return jobid_str, job
 
-    @wrap_with_timing_logs
     def _prepare_sbatch_script(
         self,
         *,
@@ -1058,7 +1051,6 @@ class FractalSlurmExecutor(SlurmExecutor):
         script = "\n".join(script_lines)
         return script
 
-    @wrap_with_timing_logs
     def get_default_task_files(self) -> TaskFiles:
         """
         This will be called when self.submit or self.map are called from
@@ -1073,37 +1065,22 @@ class FractalSlurmExecutor(SlurmExecutor):
         )
         return task_files
 
-    @wrap_with_timing_logs
     def shutdown(self, wait=True, *, cancel_futures=False):
         """
-        FIXME: wait and cancel_futures are ignored
+        Clean up all executor variables. Note that this function is executed on
+        the self.wait_thread thread, see _completion.
         """
 
-        logger.warning("Executor shutdown")
+        logger.debug("Executor shutdown: start")
 
-        from devtools import debug
-
-        debug(self.jobs)
-
-        # Call stop and then join on the threading.Thread object
-        # self.wait_thread
-        self.wait_thread.stop()
-        with self.wait_thread.lock:
-            self.wait_thread.waiting = {}
-        logger.warning("Now join self.wait_thread")
-        self.wait_thread.join(timeout=4)
-        logger.warning("self.wait_thread joined")
-
-        # Handle all jobs' futures and the corresponding SLURM jobs
+        # Handle all job futures
+        slurm_jobs_to_scancel = []
         with self.jobs_lock:
-
             while self.jobs:
                 jobid, fut_and_job = self.jobs.popitem()
+                slurm_jobs_to_scancel.append(jobid)
                 fut, job = fut_and_job[:]
-
                 self.map_jobid_to_slurm_files.pop(jobid)
-
-                # Handle future
                 fut.set_exception(
                     JobExecutionError(
                         "Job cancelled due to executor shutdown."
@@ -1111,24 +1088,27 @@ class FractalSlurmExecutor(SlurmExecutor):
                 )
                 fut.cancel()
 
-                # Handle SLURM job
-                logger.warning(f"Now scancel-ing SLURM job {jobid}")
-                pre_command = f"sudo --non-interactive -u {self.slurm_user}"
-                submit_command = f"scancel {jobid}"
-                full_command = f"{pre_command} {submit_command}"
-                debug(full_command)
-                try:
-                    res = subprocess.run(  # nosec
-                        shlex.split(full_command),
-                        capture_output=True,
-                        check=True,
-                        encoding="utf-8",
-                    )
-                    debug(res)
-                except subprocess.CalledProcessError as e:
-                    error_msg = (
-                        f"Cancel command `{full_command}` failed. "
-                        f"Original error:\n{str(e)}"
-                    )
-                    logger.error(error_msg)
-                    raise JobExecutionError(info=error_msg)
+        # Cancel SLURM jobs
+        if slurm_jobs_to_scancel:
+            scancel_string = " ".join(slurm_jobs_to_scancel)
+            logger.warning(f"Now scancel-ing SLURM jobs {scancel_string}")
+            pre_command = f"sudo --non-interactive -u {self.slurm_user}"
+            submit_command = f"scancel {scancel_string}"
+            full_command = f"{pre_command} {submit_command}"
+            logger.debug(f"Now execute `{full_command}`")
+            try:
+                subprocess.run(  # nosec
+                    shlex.split(full_command),
+                    capture_output=True,
+                    check=True,
+                    encoding="utf-8",
+                )
+            except subprocess.CalledProcessError as e:
+                error_msg = (
+                    f"Cancel command `{full_command}` failed. "
+                    f"Original error:\n{str(e)}"
+                )
+                logger.error(error_msg)
+                raise JobExecutionError(info=error_msg)
+
+        logger.debug("Executor shutdown: end")
