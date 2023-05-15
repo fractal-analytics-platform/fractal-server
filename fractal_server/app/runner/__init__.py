@@ -84,7 +84,7 @@ async def submit_workflow(
     Args:
         workflow_id:
             ID of the workflow being applied
-        input_dataset_id
+        input_dataset_id:
             Input dataset ID
         output_dataset_id:
             ID of the destination dataset of the workflow.

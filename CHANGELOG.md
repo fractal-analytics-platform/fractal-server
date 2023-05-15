@@ -1,5 +1,24 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# 1.3.0
+
+* Refactor user model:
+    * Switch from UUID4 to int for IDs (\#660, \#684).
+    * Fix many-to-many relationship between users and project (\#660).
+    * Remove `fastapi-users-db-sqlmodel` dependency (\#660).
+    * Rename `Project.user_member_list` into `Project.user_list` (\#660).
+* Update endpoints (see also [1.2->1.3 upgrade info](../internals/version_upgrades/upgrade_1_2_5_to_1_3_0/) in the documentation):
+    * Review endpoint URLs (\#669).
+    * Remove foreign keys from payloads (\#669).
+* Add `FractalSlurmExecutor.shutdown` and corresponding endpoint (\#631, \#691).
+* In `FractalSlurmExecutor`, make `working_dir*` attributes required (\#679).
+* Add `ApplyWorkflow.end_timestamp` column (\#687, \#684).
+* Remove `ApplyWorkflow.overwrite_input` column (\#684).
+* Add project-name uniqueness constraint in project-edit endpoint (\#689).
+* Expose `FRACTAL_CORS_ALLOW_ORIGIN` environment variable (\#688).
+* Make coverage measure more accurate (\#676) and improve coverage (\#678).
+* Make `output_dataset_id` a required argument of apply-workflow endpoint (\#681).
+
 # 1.2.5
 
 * Fix bug in task collection when using sqlite (\#664, \#673).
