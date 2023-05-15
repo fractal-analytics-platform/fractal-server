@@ -25,13 +25,14 @@ sqlalchemy = "^1.4"
 SQLAlchemy-Utils = "^0.38.3"
 
 clusterfutures = { version = "^0.5", optional = true}
+cloudpickle = {version = ">=2.2.1 <2.3.0", optional = true}
 
 asyncpg = { version = "^0.27.0", optional = true }
 psycopg2 = { version = "^2.9.5", optional = true }
 gunicorn = { version = "^20.1.0", optional = true }
 
 [tool.poetry.extras]
-slurm = ["clusterfutures"]
+slurm = ["clusterfutures", "cloudpickle"]
 postgres = ["asyncpg", "psycopg2"]
 gunicorn = ["gunicorn"]
 
