@@ -1,57 +1,15 @@
-"""
-"""
 import asyncio
-import importlib
 import logging
-import sys
 import threading
 import time
 from pathlib import Path
 
-import cloudpickle
 import pytest
 from devtools import debug
 
-from ._auxiliary_functions import _sleep_and_return
 from .fixtures_slurm import run_squeue
 from fractal_server.app.runner._slurm.executor import FractalSlurmExecutor
 from fractal_server.app.runner.common import JobExecutionError
-
-
-@pytest.fixture
-def cloudpickle_import(testdata_path):
-    """
-    NOTE: the experimental `register_pickle_by_value` feature of cloudpickle>=2
-    is described in
-    https://github.com/cloudpipe/cloudpickle#overriding-pickles-serialization-mechanism-for-importable-constructs.
-
-    Briefly:
-    1. It allows us to unpickle a function even if we don't have access to the
-       module where it was defined.
-    2. It is experimental and can fail for some relevant cases (e.g. functions
-       that include other imports, or a mix of by-value/by-reference pickling).
-
-    For us, this feature could be quite useful as part of the CI, to avoid
-    unexpected errors as in
-    https://github.com/fractal-analytics-platform/fractal-server/issues/690.
-    """
-
-    # Import module by name/path
-    module_name = "_auxiliary_functions"
-    file_path = str(testdata_path.parent / "_auxiliary_functions.py")
-    spec = importlib.util.spec_from_file_location(module_name, file_path)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[module_name] = module
-    spec.loader.exec_module(module)
-
-    # Configure by-value pickling for this module
-    cloudpickle.register_pickle_by_value(module)
-
-    yield
-
-    # Clean up, after test
-    cloudpickle.unregister_pickle_by_value(module)
-    sys.modules.pop(module_name)
 
 
 def test_direct_shutdown_during_submit(
@@ -59,7 +17,6 @@ def test_direct_shutdown_during_submit(
     monkey_slurm_user,
     tmp777_path,
     cfut_jobs_finished,
-    cloudpickle_import,
 ):
     """
     Test the FractalSlurmExecutor.shutdown method directly
@@ -72,6 +29,18 @@ def test_direct_shutdown_during_submit(
         slurm_poll_interval=2,
         keep_pickle_files=True,
     )
+
+    # NOTE: this function has to be defined inside the test function, so that
+    # this works correctly with cloudpickle. In principle one could make it
+    # work with cloudpickle as well, via register_pickle_by_value (see
+    # https://github.com/fractal-analytics-platform/fractal-server/issues/690)
+    # but we observed some unexpected behavior and did not investigate further.
+    # Note that this only affects the CI, while the function to be executed via
+    # FractalSlurmExecutor in fractal-server are always imported from a kwown
+    # package (i.e. fractal-server itself).
+    def _sleep_and_return(sleep_time):
+        time.sleep(sleep_time)
+        return 42
 
     res = executor.submit(_sleep_and_return, 100)
     debug(res)
@@ -96,7 +65,6 @@ def test_indirect_shutdown_during_submit(
     tmp777_path,
     tmp_path,
     cfut_jobs_finished,
-    cloudpickle_import,
 ):
     """
     Test the FractalSlurmExecutor.shutdown method indirectly, that is, when it
@@ -112,6 +80,12 @@ def test_indirect_shutdown_during_submit(
         keep_pickle_files=True,
         shutdown_file=str(shutdown_file),
     )
+
+    # NOTE: this has to be defined here, see note above and
+    # https://github.com/fractal-analytics-platform/fractal-server/issues/690
+    def _sleep_and_return(sleep_time):
+        time.sleep(sleep_time)
+        return 42
 
     res = executor.submit(_sleep_and_return, 100)
     debug(res)
