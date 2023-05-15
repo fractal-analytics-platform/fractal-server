@@ -37,14 +37,14 @@ NEW DELETE /api/v1/project/{project_id}/workflow/{workflow_id}/wftask/{workflow_
 OLD POST /api/v1/workflow/{workflow_id}/add-task/
 NEW POST /api/v1/project/{project_id}/workflow/{workflow_id}/wftask/  QUERY PARAMETERS: ['task_id']
 
+OLD POST /api/v1/project/{project_id}/import-workflow/
+NEW POST /api/v1/project/{project_id}/workflow/import/
+
 OLD POST /api/v1/project/apply/
 NEW POST /api/v1/project/{project_id}/workflow/{workflow_id}/apply/  QUERY PARAMETERS: ['input_dataset_id', 'output_dataset_id']
 
-OLD POST /api/v1/project/{project_id}/import-workflow/
-NEW POST /api/v1/project/{project_id}/workflow/
-
 OLD POST /api/v1/workflow/
-NEW POST /api/v1/project/{project_id}/workflow/import/
+NEW POST /api/v1/project/{project_id}/workflow/
 
 OLD GET /api/v1/project/{project_id}/workflows/
 NEW GET /api/v1/project/{project_id}/workflow/
@@ -63,3 +63,5 @@ NEW DELETE /api/v1/project/{project_id}/workflow/{workflow_id}
 
 OLD POST /api/v1/project/{project_id}/
 NEW POST /api/v1/project/{project_id}/dataset/
+
+NEW GET /api/v1/project/{project_id}/job/{job_id}/stop/
