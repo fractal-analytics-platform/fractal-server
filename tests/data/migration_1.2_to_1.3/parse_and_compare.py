@@ -9,7 +9,9 @@ def _sort_function(string):
     same order.
     """
     base = ["POST", "GET", "PATCH", "DELETE"].index(string.split()[0])
-    if "download" in string:
+    if "stop" in string:
+        return 999999
+    elif "download" in string:
         return base + 0
     elif "job_id" in string:
         return base + 100
@@ -30,6 +32,8 @@ def _sort_function(string):
         or "edit-task" in string
     ):  # noqa
         return base + 700
+    elif "import" in string:
+        return base + 750
     elif "apply" in string:
         return base + 800
     elif "workflow" in string:
@@ -84,10 +88,15 @@ endpoints_13, queryparams_13 = extract_info(api13, paths_13)
 debug(queryparams_12)
 debug(queryparams_13)
 
-assert len(endpoints_12) == len(endpoints_13)
+if len(endpoints_12) != len(endpoints_13):
+    print(f"WARNING: {len(endpoints_12)=} but {len(endpoints_13)=}")
+assert len(endpoints_12) <= len(endpoints_13)
 with open("endpoints.txt", "w") as f:
-    for ind, endpoint_12 in enumerate(endpoints_12):
-        endpoint_13 = endpoints_13[ind]
+    for ind, endpoint_13 in enumerate(endpoints_13):
+        try:
+            endpoint_12 = endpoints_12[ind]
+        except IndexError:
+            endpoint_12 = None
         queryparam_12 = queryparams_12.get(endpoint_12)
         queryparam_13 = queryparams_13.get(endpoint_13)
         if queryparam_12:
@@ -98,6 +107,7 @@ with open("endpoints.txt", "w") as f:
             query_string_13 = f"  QUERY PARAMETERS: {queryparam_13}"
         else:
             query_string_13 = ""
-        f.write(f"OLD {endpoint_12}{query_string_12}\n")
+        if endpoint_12:
+            f.write(f"OLD {endpoint_12}{query_string_12}\n")
         f.write(f"NEW {endpoint_13}{query_string_13}\n")
         f.write("\n")

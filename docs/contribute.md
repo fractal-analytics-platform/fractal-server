@@ -109,11 +109,7 @@ version and commit the changes locally.
 ```
 poetry build
 ```
-4. If the previous step was successful, push the version bump and tags:
-```
-git push && git push --tags
-```
-5. Finally, publish the updated package to PyPI with:
+4. Finally, publish the updated package to PyPI with:
 ```
 poetry publish --dry-run
 ```
