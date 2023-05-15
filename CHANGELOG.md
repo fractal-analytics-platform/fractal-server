@@ -10,7 +10,7 @@
 * Update endpoints (see also [1.2->1.3 upgrade info](../internals/version_upgrades/upgrade_1_2_5_to_1_3_0/) in the documentation):
     * Review endpoint URLs (\#669).
     * Remove foreign keys from payloads (\#669).
-* Add `FractalSlurmExecutor.shutdown` and corresponding endpoint (\#631, \#691).
+* Add `FractalSlurmExecutor.shutdown` and corresponding endpoint (\#631, \#691, \#696).
 * Add project-name uniqueness constraint in project-edit endpoint (\#689).
 * Add `ApplyWorkflow.end_timestamp` column (\#687, \#684).
 * Expose `FRACTAL_CORS_ALLOW_ORIGIN` environment variable (\#688).

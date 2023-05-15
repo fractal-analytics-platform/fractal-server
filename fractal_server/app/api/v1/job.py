@@ -148,7 +148,7 @@ async def stop_job(
     # This endpoint is only implemented for SLURM backend
     settings = Inject(get_settings)
     backend = settings.FRACTAL_RUNNER_BACKEND
-    if backend == "slurm":
+    if backend != "slurm":
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
