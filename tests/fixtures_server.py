@@ -444,7 +444,6 @@ async def job_factory(db: AsyncSession):
             input_dataset_id=1,
             output_dataset_id=2,
             workflow_id=1,
-            overwrite_input=False,
             worker_init="WORKER_INIT string",
             working_dir=working_dir,
         )

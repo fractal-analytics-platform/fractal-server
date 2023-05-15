@@ -169,13 +169,11 @@ async def test_full_workflow(
         assert res.status_code == 201
 
         # EXECUTE WORKFLOW
-        payload = dict(overwrite_input=False)
-        debug(payload)
         res = await client.post(
             f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/apply/"
             f"?input_dataset_id={input_dataset_id}"
             f"&output_dataset_id={output_dataset_id}",
-            json=payload,
+            json={},
         )
         job_data = res.json()
         debug(job_data)
@@ -321,12 +319,11 @@ async def test_failing_workflow_TaskExecutionError(
         assert res.status_code == 201
 
         # EXECUTE WORKFLOW
-        payload = dict(overwrite_input=False)
         res = await client.post(
             f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/apply/"
             f"?input_dataset_id={input_dataset_id}"
             f"&output_dataset_id={output_dataset_id}",
-            json=payload,
+            json={},
         )
         job_data = res.json()
         assert res.status_code == 202
@@ -470,12 +467,11 @@ async def test_failing_workflow_JobExecutionError(
         logging.warning(f"POST THREAD START {time.perf_counter()=}")
 
         # Re-submit the modified workflow
-        payload = dict(overwrite_input=False)
         res_second_apply = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow_id}/apply/"
             f"?input_dataset_id={input_dataset_id}"
             f"&output_dataset_id={output_dataset_id}",
-            json=payload,
+            json={},
         )
         job_data = res_second_apply.json()
         debug(job_data)
@@ -566,7 +562,7 @@ async def test_non_python_task(
             f"{PREFIX}/project/{project.id}/workflow/{workflow['id']}/apply/"
             f"?input_dataset_id={input_dataset.id}"
             f"&output_dataset_id={output_dataset.id}",
-            json=dict(overwrite_input=False),
+            json={},
         )
         job_data = res.json()
         debug(job_data)
