@@ -607,14 +607,12 @@ async def test_project_apply_failures(
         task = await task_factory()
         await workflow1.insert_task(task.id, db=db)
 
-        payload = dict(overwrite_input=False)
-
         # Not existing workflow
         res = await client.post(
             f"{PREFIX}/project/{project1.id}/workflow/123/apply/"
             f"?input_dataset_id={input_dataset.id}"
             f"&output_dataset_id={output_dataset.id}",
-            json=payload,
+            json={},
         )
         debug(res.json())
         assert res.status_code == 404
@@ -624,7 +622,7 @@ async def test_project_apply_failures(
             f"{PREFIX}/project/{project1.id}/workflow/{workflow3.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
             f"&output_dataset_id={output_dataset.id}",
-            json=payload,
+            json={},
         )
         debug(res.json())
         assert res.status_code == 422
@@ -633,7 +631,7 @@ async def test_project_apply_failures(
         res = await client.post(
             f"{PREFIX}/project/{project1.id}/workflow/{workflow1.id}/apply/"
             f"?input_dataset_id={input_dataset.id}&output_dataset_id=123",
-            json=payload,
+            json={},
         )
         debug(res.json())
         assert res.status_code == 404
@@ -642,7 +640,7 @@ async def test_project_apply_failures(
         res = await client.post(
             f"{PREFIX}/project/{project1.id}/workflow/{workflow1.id}/apply/"
             f"?input_dataset_id={input_dataset.id}",
-            json=payload,
+            json={},
         )
         debug(res.json())
         assert res.status_code == 422
@@ -652,7 +650,7 @@ async def test_project_apply_failures(
             f"{PREFIX}/project/{project1.id}/workflow/{workflow1.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
             f"&output_dataset_id={output_dataset_read_only.id}",
-            json=payload,
+            json={},
         )
         debug(res.json())
         assert res.status_code == 422
@@ -663,7 +661,7 @@ async def test_project_apply_failures(
             f"{PREFIX}/project/{project1.id}/workflow/{workflow1.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
             f"&output_dataset_id={output_dataset_wrong_type.id}",
-            json=payload,
+            json={},
         )
         debug(res.json())
         assert res.status_code == 422
@@ -674,7 +672,7 @@ async def test_project_apply_failures(
             f"{PREFIX}/project/{project1.id}/workflow/{workflow1.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
             f"&output_dataset_id={output_dataset_two_resources.id}",
-            json=payload,
+            json={},
         )
         debug(res.json())
         assert res.status_code == 422
@@ -685,7 +683,7 @@ async def test_project_apply_failures(
             f"{PREFIX}/project/{project1.id}/workflow/{workflow2.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
             f"&output_dataset_id={output_dataset.id}",
-            json=payload,
+            json={},
         )
         debug(res.json())
         assert res.status_code == 422
@@ -735,12 +733,11 @@ async def test_project_apply_missing_user_attributes(
         await workflow.insert_task(task.id, db=db)
 
         # Call apply endpoint
-        payload = dict(overwrite_input=False)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
             f"&output_dataset_id={output_dataset.id}",
-            json=payload,
+            json={},
         )
         debug(res.json())
         assert res.status_code == 422
@@ -755,7 +752,7 @@ async def test_project_apply_missing_user_attributes(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
             f"&output_dataset_id={output_dataset.id}",
-            json=payload,
+            json={},
         )
         debug(res.json())
         assert res.status_code == 422
@@ -794,9 +791,6 @@ async def test_no_resources(
         task = await task_factory()
         await workflow.insert_task(task.id, db=db)
 
-        payload = dict(
-            overwrite_input=False,
-        )
         debug(input_dataset)
         debug(output_dataset)
 
@@ -804,7 +798,7 @@ async def test_no_resources(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
             f"&output_dataset_id={output_dataset.id}",
-            json=payload,
+            json={},
         )
 
         debug(res.json())
