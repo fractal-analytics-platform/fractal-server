@@ -82,7 +82,7 @@ class FractalFileWaitThread(FileWaitThread):
                 del self.waiting[filenames]
         if self.shutdown_file and os.path.exists(self.shutdown_file):
             logger.info(
-                "Detected executor-shutdown file " f"{str(self.shutdown_file)}"
+                f"Detected executor-shutdown file {str(self.shutdown_file)}"
             )
             self.shutdown = True
 
