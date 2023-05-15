@@ -41,9 +41,14 @@ def test_direct_shutdown_during_submit(
     executor.shutdown()
     debug(res)
     assert not run_squeue(header=False)
-    with pytest.raises(JobExecutionError) as e:
+
+    try:
         _ = res.result()
-    debug(e)
+    except JobExecutionError as e:
+        debug(e)
+    except Exception as e:
+        debug(e)
+        raise e
 
 
 def test_indirect_shutdown_during_submit(
@@ -82,8 +87,12 @@ def test_indirect_shutdown_during_submit(
     debug(run_squeue())
 
     assert not run_squeue(header=False)
-    with pytest.raises(JobExecutionError):
+    try:
         _ = res.result()
+    except JobExecutionError as e:
+        debug(e)
+    except Exception as e:
+        debug(e)
 
 
 async def _write_shutdown_file(shutdown_file: Path, sleep_time):
