@@ -39,6 +39,7 @@ def test_direct_shutdown_during_submit(
     debug(res)
     debug(run_squeue())
     executor.shutdown()
+    executor.wait_thread.shutdown = True
     debug(res)
     assert not run_squeue(header=False)
 
