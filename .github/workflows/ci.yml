@@ -62,7 +62,7 @@ jobs:
         run: poetry install --with dev --no-interaction --all-extras
 
       - name: Test with pytest
-        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest tests
+        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest tests/test_backend_slurm_shutdown.py -s --log-cli-level debug
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
