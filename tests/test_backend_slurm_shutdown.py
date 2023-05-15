@@ -94,6 +94,7 @@ def test_indirect_shutdown_during_submit(
         debug(e)
     except Exception as e:
         debug(e)
+        raise e
 
 
 async def _write_shutdown_file(shutdown_file: Path, sleep_time):
