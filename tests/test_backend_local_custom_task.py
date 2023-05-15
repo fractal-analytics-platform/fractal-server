@@ -149,8 +149,6 @@ async def test_full_workflow(
         assert res.status_code == 201
 
         # Execute workflow
-        payload = dict(overwrite_input=False)
-        debug(payload)
         url = (
             f"{PREFIX}/project/{project_id}/"
             f"workflow/{workflow_id}/apply/"
@@ -158,7 +156,7 @@ async def test_full_workflow(
             f"&output_dataset_id={output_dataset_id}"
         )
         debug(url)
-        res = await client.post(url, json=payload)
+        res = await client.post(url, json={})
         job_data = res.json()
         debug(job_data)
         assert res.status_code == 202
