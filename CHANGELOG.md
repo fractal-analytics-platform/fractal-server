@@ -17,6 +17,7 @@
 * In `FractalSlurmExecutor`, make `working_dir*` attributes required (\#679).
 * Make `output_dataset_id` a required argument of apply-workflow endpoint (\#681).
 * Remove `ApplyWorkflow.overwrite_input` column (\#684, \#694).
+* Improve error message related to out-of-space disk (\#699).
 * Make coverage measure more accurate (\#676) and improve coverage (\#678).
 
 # 1.2.5
