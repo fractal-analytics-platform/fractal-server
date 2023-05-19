@@ -773,8 +773,8 @@ async def test_prevent_removal(
     workflow_factory,
 ):
     """
-    GIVEN a workflow in a relationship with a job
-    WHEN we try to DELETE that workflow
+    GIVEN a Workflow in a relationship with a Job
+    WHEN we try to DELETE that Workflow
     THEN we fail with a 422
     """
     async with MockCurrentUser(persist=True) as user:

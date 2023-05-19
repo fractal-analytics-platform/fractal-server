@@ -91,3 +91,52 @@ async def test_delete_resource(
         assert res.json()["detail"] == (
             "Resource does not exist or does not belong to project"
         )
+
+
+async def test_prevent_removal(
+    client,
+    MockCurrentUser,
+    project_factory,
+    job_factory,
+    tmp_path,
+    workflow_factory,
+    dataset_factory,
+):
+    """
+    GIVEN a Dataset in a relationship with a Job
+    WHEN we try to DELETE that Dataset
+    THEN we fail with a 422
+    """
+    async with MockCurrentUser(persist=True) as user:
+
+        project = await project_factory(user)
+        workflow = await workflow_factory(project_id=project.id)
+
+        input = await dataset_factory(project)
+        output = await dataset_factory(project)
+        useless = await dataset_factory(project)
+
+        job = await job_factory(
+            project_id=project.id,
+            workflow_id=workflow.id,
+            input_dataset_id=input.id,
+            output_dataset_id=output.id,
+            working_dir=(tmp_path / "some_working_dir").as_posix(),
+        )
+
+        res = await client.delete(
+            f"api/v1/project/{project.id}/dataset/{input.id}"
+        )
+        assert res.status_code == 422
+        assert f"still linked to job {job.id}" in res.json()["detail"]
+
+        res = await client.delete(
+            f"api/v1/project/{project.id}/dataset/{useless.id}"
+        )
+        assert res.status_code == 204
+
+        res = await client.delete(
+            f"api/v1/project/{project.id}/dataset/{output.id}"
+        )
+        assert res.status_code == 422
+        assert f"still linked to job {job.id}" in res.json()["detail"]
