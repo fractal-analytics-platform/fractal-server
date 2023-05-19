@@ -764,7 +764,7 @@ async def test_reorder_task_list_fail(
         assert res.status_code == 422
 
 
-async def test_prevent_removal(
+async def test_delete_workflow_failure(
     client,
     MockCurrentUser,
     project_factory,
@@ -780,29 +780,27 @@ async def test_prevent_removal(
     """
     async with MockCurrentUser(persist=True) as user:
 
+        # Successful workflow deletion
         project = await project_factory(user)
-        workflow = await workflow_factory(project_id=project.id)
+        workflow_1 = await workflow_factory(project_id=project.id)
         res = await client.delete(
-            f"api/v1/project/{project.id}/workflow/{workflow.id}"
+            f"api/v1/project/{project.id}/workflow/{workflow_1.id}"
         )
         assert res.status_code == 204
 
-        workflow2 = await workflow_factory(
-            id=workflow.id + 1, project_id=project.id
-        )
-        # without the next to lines the test fails on CI but passes locally
-        input = await dataset_factory(project)
-        output = await dataset_factory(project)
-
+        # Create a workflow and a job in relationship with it
+        workflow_2 = await workflow_factory(project_id=project.id)
+        input_ds = await dataset_factory(project)
+        output_ds = await dataset_factory(project)
         job = await job_factory(
             project_id=project.id,
-            workflow_id=workflow2.id,
-            input_dataset_id=input.id,
-            output_dataset_id=output.id,
+            workflow_id=workflow_2.id,
+            input_dataset_id=input_ds.id,
+            output_dataset_id=output_ds.id,
             working_dir=(tmp_path / "some_working_dir").as_posix(),
         )
         res = await client.delete(
-            f"api/v1/project/{project.id}/workflow/{workflow2.id}"
+            f"api/v1/project/{project.id}/workflow/{workflow_2.id}"
         )
         assert res.status_code == 422
         assert f"still linked to job {job.id}" in res.json()["detail"]
