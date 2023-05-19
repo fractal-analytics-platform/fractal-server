@@ -22,6 +22,7 @@ from sqlmodel import select
 
 from ...db import AsyncSession
 from ...db import get_db
+from ...models import ApplyWorkflow
 from ...models import Task
 from ...models import Workflow
 from ...models import WorkflowCreate
@@ -180,6 +181,19 @@ async def delete_workflow(
     workflow = await _get_workflow_check_owner(
         project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
+
+    # Check that no ApplyWorkflow is in relationship with the current Workflow
+    stm = select(ApplyWorkflow).where(ApplyWorkflow.workflow_id == workflow_id)
+    res = await db.execute(stm)
+    job = res.scalars().first()
+    if job:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Cannot remove workflow {workflow_id}: "
+                f"it's still linked to job {job.id}."
+            ),
+        )
 
     await db.delete(workflow)
     await db.commit()

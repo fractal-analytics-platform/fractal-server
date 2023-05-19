@@ -5,10 +5,12 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from sqlmodel import or_
 from sqlmodel import select
 
 from ...db import AsyncSession
 from ...db import get_db
+from ...models import ApplyWorkflow
 from ...models import Dataset
 from ...models import DatasetCreate
 from ...models import DatasetRead
@@ -124,6 +126,25 @@ async def delete_dataset(
         db=db,
     )
     dataset = output["dataset"]
+
+    # Check that no ApplyWorkflow is in relationship with the current Dataset
+    stm = select(ApplyWorkflow).filter(
+        or_(
+            ApplyWorkflow.input_dataset_id == dataset_id,
+            ApplyWorkflow.output_dataset_id == dataset_id,
+        )
+    )
+    res = await db.execute(stm)
+    job = res.scalars().first()
+    if job:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Cannot remove dataset {dataset_id}: "
+                f"it's still linked to job {job.id}."
+            ),
+        )
+
     await db.delete(dataset)
     await db.commit()
     await db.close()
