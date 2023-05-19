@@ -762,3 +762,45 @@ async def test_reorder_task_list_fail(
         debug(res.json())
         assert "must be a permutation" in res.json()["detail"]
         assert res.status_code == 422
+
+
+async def test_delete_workflow_failure(
+    client,
+    MockCurrentUser,
+    project_factory,
+    job_factory,
+    tmp_path,
+    workflow_factory,
+    dataset_factory,
+):
+    """
+    GIVEN a Workflow in a relationship with a Job
+    WHEN we try to DELETE that Workflow
+    THEN we fail with a 422
+    """
+    async with MockCurrentUser(persist=True) as user:
+        project = await project_factory(user)
+
+        # Create a workflow and a job in relationship with it
+        workflow_1 = await workflow_factory(project_id=project.id)
+        input_ds = await dataset_factory(project)
+        output_ds = await dataset_factory(project)
+        job = await job_factory(
+            project_id=project.id,
+            workflow_id=workflow_1.id,
+            input_dataset_id=input_ds.id,
+            output_dataset_id=output_ds.id,
+            working_dir=(tmp_path / "some_working_dir").as_posix(),
+        )
+        res = await client.delete(
+            f"api/v1/project/{project.id}/workflow/{workflow_1.id}"
+        )
+        assert res.status_code == 422
+        assert f"still linked to job {job.id}" in res.json()["detail"]
+
+        # Successful workflow deletion
+        workflow_2 = await workflow_factory(project_id=project.id)
+        res = await client.delete(
+            f"api/v1/project/{project.id}/workflow/{workflow_2.id}"
+        )
+        assert res.status_code == 204
