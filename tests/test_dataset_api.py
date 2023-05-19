@@ -93,7 +93,7 @@ async def test_delete_resource(
         )
 
 
-async def test_prevent_removal(
+async def test_delete_dataset_failure(
     client,
     MockCurrentUser,
     project_factory,
@@ -103,40 +103,38 @@ async def test_prevent_removal(
     dataset_factory,
 ):
     """
-    GIVEN a Dataset in a relationship with a Job
-    WHEN we try to DELETE that Dataset
+    GIVEN a Dataset in a relationship with an ApplyWorkflow
+    WHEN we try to DELETE that Dataset via the correspondig endpoint
     THEN we fail with a 422
     """
     async with MockCurrentUser(persist=True) as user:
 
+        # Populate the database with the appropriate objects
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id)
+        input_ds = await dataset_factory(project)
+        output_ds = await dataset_factory(project)
+        dummy_ds = await dataset_factory(project)
 
-        input = await dataset_factory(project)
-        output = await dataset_factory(project)
-        useless = await dataset_factory(project)
-
+        # Create a job in relationship with input_ds, output_ds and workflow
         job = await job_factory(
             project_id=project.id,
             workflow_id=workflow.id,
-            input_dataset_id=input.id,
-            output_dataset_id=output.id,
+            input_dataset_id=input_ds.id,
+            output_dataset_id=output_ds.id,
             working_dir=(tmp_path / "some_working_dir").as_posix(),
         )
 
-        res = await client.delete(
-            f"api/v1/project/{project.id}/dataset/{input.id}"
-        )
-        assert res.status_code == 422
-        assert f"still linked to job {job.id}" in res.json()["detail"]
+        # Check that you cannot delete datasets in relationship with a job
+        for ds_id in (input_ds.id, output_ds.id):
+            res = await client.delete(
+                f"api/v1/project/{project.id}/dataset/{ds_id}"
+            )
+            assert res.status_code == 422
+            assert f"still linked to job {job.id}" in res.json()["detail"]
 
+        # Test successful dataset deletion
         res = await client.delete(
-            f"api/v1/project/{project.id}/dataset/{useless.id}"
+            f"api/v1/project/{project.id}/dataset/{dummy_ds.id}"
         )
         assert res.status_code == 204
-
-        res = await client.delete(
-            f"api/v1/project/{project.id}/dataset/{output.id}"
-        )
-        assert res.status_code == 422
-        assert f"still linked to job {job.id}" in res.json()["detail"]
