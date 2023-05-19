@@ -182,11 +182,9 @@ async def delete_workflow(
         project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
 
-    job = (
-        db.query(ApplyWorkflow)
-        .where(ApplyWorkflow.workflow_id == workflow_id)
-        .first()
-    )
+    stm = select(ApplyWorkflow).where(ApplyWorkflow.workflow_id == workflow_id)
+    res = await db.execute(stm)
+    job = res.scalars().first()
     if job:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
