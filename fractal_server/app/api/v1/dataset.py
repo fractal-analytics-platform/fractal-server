@@ -127,6 +127,7 @@ async def delete_dataset(
     )
     dataset = output["dataset"]
 
+    # Check that no ApplyWorkflow is in relationship with the current Dataset
     stm = select(ApplyWorkflow).filter(
         or_(
             ApplyWorkflow.input_dataset_id == dataset_id,
