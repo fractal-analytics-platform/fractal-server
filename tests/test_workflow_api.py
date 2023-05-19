@@ -779,28 +779,28 @@ async def test_delete_workflow_failure(
     THEN we fail with a 422
     """
     async with MockCurrentUser(persist=True) as user:
-
-        # Successful workflow deletion
         project = await project_factory(user)
-        workflow_1 = await workflow_factory(project_id=project.id)
-        res = await client.delete(
-            f"api/v1/project/{project.id}/workflow/{workflow_1.id}"
-        )
-        assert res.status_code == 204
 
         # Create a workflow and a job in relationship with it
-        workflow_2 = await workflow_factory(project_id=project.id)
+        workflow_1 = await workflow_factory(project_id=project.id)
         input_ds = await dataset_factory(project)
         output_ds = await dataset_factory(project)
         job = await job_factory(
             project_id=project.id,
-            workflow_id=workflow_2.id,
+            workflow_id=workflow_1.id,
             input_dataset_id=input_ds.id,
             output_dataset_id=output_ds.id,
             working_dir=(tmp_path / "some_working_dir").as_posix(),
         )
         res = await client.delete(
-            f"api/v1/project/{project.id}/workflow/{workflow_2.id}"
+            f"api/v1/project/{project.id}/workflow/{workflow_1.id}"
         )
         assert res.status_code == 422
         assert f"still linked to job {job.id}" in res.json()["detail"]
+
+        # Successful workflow deletion
+        workflow_2 = await workflow_factory(project_id=project.id)
+        res = await client.delete(
+            f"api/v1/project/{project.id}/workflow/{workflow_2.id}"
+        )
+        assert res.status_code == 204
