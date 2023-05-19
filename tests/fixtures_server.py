@@ -363,7 +363,6 @@ async def project_factory(db):
         db.add(project)
         await db.commit()
         await db.refresh(project)
-        await db.close()
         return project
 
     return __project_factory
@@ -380,7 +379,6 @@ async def dataset_factory(db):
         db.add(project)
         await db.commit()
         await db.refresh(project)
-        await db.close()
         return project.dataset_list[-1]
 
     return __dataset_factory
@@ -400,7 +398,6 @@ async def resource_factory(db, testdata_path):
         db.add(resource)
         await db.commit()
         await db.refresh(dataset)
-        await db.close()
         return dataset.resource_list[-1]
 
     return __resource_factory
@@ -427,7 +424,6 @@ async def task_factory(db: AsyncSession):
         db.add(t)
         await db.commit()
         await db.refresh(t)
-        await db.close()
         return t
 
     return __task_factory
@@ -457,7 +453,6 @@ async def job_factory(db: AsyncSession):
         db.add(j)
         await db.commit()
         await db.refresh(j)
-        await db.close()
         return j
 
     return __job_factory
@@ -481,7 +476,6 @@ async def workflow_factory(db: AsyncSession):
         db.add(w)
         await db.commit()
         await db.refresh(w)
-        await db.close()
         return w
 
     return __workflow_factory
@@ -507,7 +501,6 @@ async def workflowtask_factory(db: AsyncSession):
         db.add(wft)
         await db.commit()
         await db.refresh(wft)
-        await db.close()
         return wft
 
     return __workflowtask_factory
