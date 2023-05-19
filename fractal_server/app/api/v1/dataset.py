@@ -127,16 +127,14 @@ async def delete_dataset(
     )
     dataset = output["dataset"]
 
-    job = (
-        db.query(ApplyWorkflow)
-        .filter(
-            or_(
-                ApplyWorkflow.input_dataset_id == dataset_id,
-                ApplyWorkflow.output_dataset_id == dataset_id,
-            )
+    stm = select(ApplyWorkflow).filter(
+        or_(
+            ApplyWorkflow.input_dataset_id == dataset_id,
+            ApplyWorkflow.output_dataset_id == dataset_id,
         )
-        .first()
     )
+    res = await db.execute(stm)
+    job = res.scalars().first()
     if job:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
