@@ -227,6 +227,23 @@ async def collect_tasks_pip(
         venv_path = create_package_dir_pip(task_pkg=task_pkg, create=False)
         try:
             task_collect_status = get_collection_data(venv_path)
+            for task in task_collect_status.task_list:
+                db_task = await db.get(Task, task.id)
+                if (
+                    (not db_task)
+                    or db_task.source != task.source
+                    or db_task.name != task.name
+                ):
+                    await db.close()
+                    raise HTTPException(
+                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                        detail=(
+                            "Cannot collect package. Folder already exists, "
+                            f"but task {task.id} does not exists or it does "
+                            f"not have the expected source ({task.source}) or "
+                            f"name ({task.name})."
+                        ),
+                    )
         except FileNotFoundError as e:
             await db.close()
             raise HTTPException(
