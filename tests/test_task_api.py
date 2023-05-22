@@ -40,13 +40,23 @@ async def test_task_get_list(db, client, task_factory, MockCurrentUser):
 
 
 async def test_background_collection(
-    db, client, MockCurrentUser, dummy_task_package
+    db,
+    client,
+    MockCurrentUser,
+    dummy_task_package,
+    override_settings_factory,
+    tmp_path,
 ):
     """
     GIVEN a package and its installation environment
     WHEN the background collection is called on it
     THEN the tasks are collected and the state is updated to db accordingly
     """
+
+    override_settings_factory(
+        FRACTAL_TASKS_DIR=(tmp_path / "test_background_collection")
+    )
+
     task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())
     # Load manifest
     with ZipFile(task_pkg.package_path) as wheel:
