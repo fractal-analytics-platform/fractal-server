@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
 from shutil import which as shutil_which
+from zipfile import ZipFile
 
 import pytest
 from devtools import debug
@@ -17,6 +18,7 @@ from fractal_server.common.schemas.task import TaskCreate
 from fractal_server.common.schemas.task import TaskUpdate
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
+from fractal_server.tasks.collection import _load_manifest_from_wheel
 from fractal_server.tasks.collection import get_collection_path
 from fractal_server.tasks.collection import get_log_path
 
@@ -46,9 +48,15 @@ async def test_background_collection(
     THEN the tasks are collected and the state is updated to db accordingly
     """
     task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())
-    venv_path = create_package_dir_pip(
-        task_pkg=task_pkg, user="test_bg_collection"
-    )
+    # Load manifest
+    with ZipFile(task_pkg.package_path) as wheel:
+        task_pkg.manifest = _load_manifest_from_wheel(
+            task_pkg.package_path, wheel
+        )
+    debug(task_pkg)
+    task_pkg.check()
+
+    venv_path = create_package_dir_pip(task_pkg=task_pkg)
     collection_status = TaskCollectStatus(
         status="pending", venv_path=venv_path, package=task_pkg.package
     )
@@ -86,6 +94,7 @@ async def test_background_collection_logs(
     MockCurrentUser,
     dummy_task_package,
     override_settings_factory,
+    tmp_path,
     level: int,
 ):
     """
@@ -93,11 +102,23 @@ async def test_background_collection_logs(
     WHEN the background collection is called, for a given FRACTAL_LOGGING_LEVEL
     THEN the logs are always present
     """
-    override_settings_factory(FRACTAL_LOGGING_LEVEL=level)
-    task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())
-    venv_path = create_package_dir_pip(
-        task_pkg=task_pkg, user=f"test_user_{level}"
+    override_settings_factory(
+        FRACTAL_LOGGING_LEVEL=level,
+        FRACTAL_TASKS_DIR=(
+            tmp_path / f"test_background_collection_logs_{level}"
+        ),
     )
+    task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())
+    # Load manifest
+    with ZipFile(task_pkg.package_path) as wheel:
+        task_pkg.manifest = _load_manifest_from_wheel(
+            task_pkg.package_path, wheel
+        )
+    debug(task_pkg)
+    task_pkg.check()
+
+    venv_path = create_package_dir_pip(task_pkg=task_pkg)
+    debug(venv_path)
     collection_status = TaskCollectStatus(
         status="pending", venv_path=venv_path, package=task_pkg.package
     )
@@ -125,7 +146,9 @@ async def test_background_collection_logs(
     assert out_state["data"]["log"]
 
 
-async def test_background_collection_failure(db, dummy_task_package):
+async def test_background_collection_failure(
+    db, dummy_task_package, override_settings_factory, tmp_path
+):
     """
     GIVEN a package and its installation environment
     WHEN the background collection is called on it and it fails
@@ -133,10 +156,19 @@ async def test_background_collection_failure(db, dummy_task_package):
         * the log of the collection is saved to the state
         * the installation directory is removed
     """
-    task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())
-    venv_path = create_package_dir_pip(
-        task_pkg=task_pkg, user="test_bg_collection_fail"
+
+    override_settings_factory(
+        FRACTAL_TASKS_DIR=(tmp_path / "test_background_collection_failure")
     )
+
+    task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())
+    # Load manifest
+    with ZipFile(task_pkg.package_path) as wheel:
+        task_pkg.manifest = _load_manifest_from_wheel(
+            task_pkg.package_path, wheel
+        )
+    debug(task_pkg)
+    venv_path = create_package_dir_pip(task_pkg=task_pkg)
     collection_status = TaskCollectStatus(
         status="pending", venv_path=venv_path, package=task_pkg.package
     )
@@ -184,11 +216,20 @@ async def test_collection_api_local_package_with_extras(
     client,
     MockCurrentUser,
     dummy_task_package,
+    override_settings_factory,
+    tmp_path,
 ):
     """
     Check that the package extras are correctly included in a local-package
     collection.
     """
+
+    override_settings_factory(
+        FRACTAL_TASKS_DIR=(
+            tmp_path / "test_collection_api_local_package_with_extras"
+        )
+    )
+
     async with MockCurrentUser():
         # Task collection
         res = await client.post(
@@ -210,11 +251,10 @@ async def test_collection_api_local_package_with_extras(
 
 
 @pytest.mark.parametrize(
-    ("slurm_user", "python_version"),
+    "python_version",
     [
-        ("user00", None),
+        None,
         pytest.param(
-            "user01",
             "3.10",
             marks=pytest.mark.skipif(
                 not shutil_which("python3.10"), reason="No python3.10 on host"
@@ -223,7 +263,12 @@ async def test_collection_api_local_package_with_extras(
     ],
 )
 async def test_collection_api(
-    client, dummy_task_package, MockCurrentUser, slurm_user, python_version
+    client,
+    dummy_task_package,
+    MockCurrentUser,
+    python_version,
+    override_settings_factory,
+    tmp_path,
 ):
     """
     GIVEN a package in a format that `pip` understands
@@ -237,17 +282,16 @@ async def test_collection_api(
         * if called twice, the same tasks are returned without installing
     """
 
+    override_settings_factory(
+        FRACTAL_TASKS_DIR=(tmp_path / "test_collection_api")
+    )
+
     task_collection = dict(
         package=dummy_task_package.as_posix(), python_version=python_version
     )
 
-    async with MockCurrentUser(user_kwargs=dict(slurm_user=slurm_user)):
-        # NOTE: collecting private tasks so that they are assigned to user and
-        # written in a non-default folder. Bypass for non stateless
-        # FRACTAL_TASKS_DIR in test suite.
-        res = await client.post(
-            f"{PREFIX}/collect/pip/?public=false", json=task_collection
-        )
+    async with MockCurrentUser():
+        res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
         debug(res.json())
         assert res.status_code == 201
         assert res.json()["data"]["status"] == "pending"
@@ -296,9 +340,7 @@ async def test_collection_api(
             assert python_version in version
 
         # collect again
-        res = await client.post(
-            f"{PREFIX}/collect/pip/?public=false", json=task_collection
-        )
+        res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
         debug(res.json())
         assert res.status_code == 200
         state = res.json()
@@ -307,7 +349,11 @@ async def test_collection_api(
 
 
 async def test_collection_api_invalid_manifest(
-    client, dummy_task_package_invalid_manifest, MockCurrentUser
+    client,
+    dummy_task_package_invalid_manifest,
+    MockCurrentUser,
+    override_settings_factory,
+    tmp_path,
 ):
     """
     GIVEN a package in a format that `pip` understands, with invalid manifest
@@ -319,13 +365,12 @@ async def test_collection_api_invalid_manifest(
         package=dummy_task_package_invalid_manifest.as_posix()
     )
 
+    override_settings_factory(
+        FRACTAL_TASKS_DIR=(tmp_path / "test_collection_api_invalid_manifest")
+    )
+
     async with MockCurrentUser(persist=True):
-        # NOTE: collecting private tasks so that they are assigned to user and
-        # written in a non-default folder. Bypass for non stateless
-        # FRACTAL_TASKS_DIR in test suite.
-        res = await client.post(
-            f"{PREFIX}/collect/pip/?public=false", json=task_collection
-        )
+        res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
         debug(res.json())
         assert res.status_code == 422
 
@@ -440,7 +485,7 @@ async def test_patch_task(
 
 
 async def test_task_collection_api_failure(
-    client, MockCurrentUser, testdata_path
+    client, MockCurrentUser, testdata_path, override_settings_factory, tmp_path
 ):
     """
     Try to collect a task package which triggers an error (namely its manifests
@@ -448,11 +493,17 @@ async def test_task_collection_api_failure(
     handle failure.
     """
 
+    override_settings_factory(
+        FRACTAL_TASKS_DIR=(tmp_path / "test_task_collection_api_failure")
+    )
+    debug(tmp_path)
+
     path = str(
         testdata_path
         / "my-tasks-fail/dist/my_tasks_fail-0.1.0-py3-none-any.whl"
     )
     task_collection = dict(package=path)
+    debug(task_collection)
 
     async with MockCurrentUser():
         res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)

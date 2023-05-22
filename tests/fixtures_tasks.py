@@ -141,29 +141,45 @@ async def install_dummy_packages(tmp777_session_path, dummy_task_package):
     """
 
     from fractal_server.tasks.collection import (
-        _create_venv_install_package,
-        load_manifest,
+        inspect_package,
+        create_package_dir_pip,
+        create_package_environment_pip,
     )
     from fractal_server.tasks.collection import _TaskCollectPip
 
-    venv_path = tmp777_session_path("dummy")
-    venv_path.mkdir(exist_ok=True, parents=True)
     task_pkg = _TaskCollectPip(
         package=dummy_task_package.as_posix(),
         python_version=3.9,
     )
+
+    pkg_info = inspect_package(dummy_task_package)
+    task_pkg.version = pkg_info["pkg_version"]
+    task_pkg.package = pkg_info["pkg_name"]
+    task_pkg.manifest = pkg_info["pkg_manifest"]
+    task_pkg.check()
+
+    venv_path = create_package_dir_pip(task_pkg=task_pkg)
+    task_list = await create_package_environment_pip(
+        venv_path=venv_path,
+        task_pkg=task_pkg,
+        logger_name="dummy",
+    )
+
+    """
+    venv_path = tmp777_session_path("dummy")
+    venv_path.mkdir(exist_ok=True, parents=True)
 
     python_bin, package_root = await _create_venv_install_package(
         path=venv_path,
         task_pkg=task_pkg,
         logger_name="test",
     )
-
     task_list = load_manifest(
         package_root=package_root,
         python_bin=python_bin,
         source="test_source",
     )
+    """
     return task_list
 
 
