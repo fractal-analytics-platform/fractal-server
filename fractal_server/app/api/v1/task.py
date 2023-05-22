@@ -178,7 +178,6 @@ async def collect_tasks_pip(
     response: Response,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-    public: bool = True,
 ) -> StateRead:  # State[TaskCollectStatus]
     """
     Task collection endpoint
@@ -201,6 +200,7 @@ async def collect_tasks_pip(
 
     with TemporaryDirectory() as tmpdir:
         try:
+            # Copy or download the package wheel file to tmpdir
             if task_pkg.is_local_package:
                 shell_copy(task_pkg.package_path.as_posix(), tmpdir)
                 pkg_path = Path(tmpdir) / task_pkg.package_path.name
@@ -208,10 +208,12 @@ async def collect_tasks_pip(
                 pkg_path = await download_package(
                     task_pkg=task_pkg, dest=tmpdir
                 )
-
-            version_manifest = inspect_package(pkg_path)
-
-            task_pkg.version = version_manifest["version"]
+            # Read package info from wheel file, and override the ones coming
+            # from the request body
+            pkg_info = inspect_package(pkg_path)
+            task_pkg.version = pkg_info["pkg_version"]
+            task_pkg.package = pkg_info["pkg_name"]
+            task_pkg.manifest = pkg_info["pkg_manifest"]
             task_pkg.check()
         except Exception as e:
             raise HTTPException(
@@ -220,12 +222,9 @@ async def collect_tasks_pip(
             )
 
     try:
-        pkg_user = None if public else user.slurm_user
-        venv_path = create_package_dir_pip(task_pkg=task_pkg, user=pkg_user)
+        venv_path = create_package_dir_pip(task_pkg=task_pkg)
     except FileExistsError:
-        venv_path = create_package_dir_pip(
-            task_pkg=task_pkg, user=pkg_user, create=False
-        )
+        venv_path = create_package_dir_pip(task_pkg=task_pkg, create=False)
         try:
             task_collect_status = get_collection_data(venv_path)
         except FileNotFoundError as e:
