@@ -361,28 +361,40 @@ async def test_collection_api(
 async def test_collection_api_invalid_manifest(
     client,
     dummy_task_package_invalid_manifest,
+    dummy_task_package_missing_manifest,
     MockCurrentUser,
     override_settings_factory,
     tmp_path,
 ):
     """
-    GIVEN a package in a format that `pip` understands, with invalid manifest
+    GIVEN a package with invalid/missing manifest
     WHEN the api to collect tasks from that package is called
-    THEN it returns 422 (Unprocessable Entity)
+    THEN it returns 422 (Unprocessable Entity) with an informative message
     """
-
-    task_collection = dict(
-        package=dummy_task_package_invalid_manifest.as_posix()
-    )
 
     override_settings_factory(
         FRACTAL_TASKS_DIR=(tmp_path / "test_collection_api_invalid_manifest")
     )
 
+    task_collection = dict(
+        package=dummy_task_package_invalid_manifest.as_posix()
+    )
+    debug(dummy_task_package_invalid_manifest)
     async with MockCurrentUser(persist=True):
         res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
         debug(res.json())
         assert res.status_code == 422
+        assert "not supported" in res.json()["detail"]
+
+    task_collection = dict(
+        package=dummy_task_package_missing_manifest.as_posix()
+    )
+    debug(dummy_task_package_missing_manifest)
+    async with MockCurrentUser(persist=True):
+        res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
+        debug(res.json())
+        assert res.status_code == 422
+        assert "does not include" in res.json()["detail"]
 
 
 async def test_post_task(client, MockCurrentUser):
