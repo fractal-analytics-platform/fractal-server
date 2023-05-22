@@ -273,6 +273,7 @@ async def test_collection_api_local_package_with_extras(
     ],
 )
 async def test_collection_api(
+    db,
     client,
     dummy_task_package,
     MockCurrentUser,
@@ -349,13 +350,27 @@ async def test_collection_api(
             version = await execute_command(f"{python_bin} --version")
             assert python_version in version
 
-        # collect again
+        # Collect again
         res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
         debug(res.json())
         assert res.status_code == 200
         state = res.json()
         data = state["data"]
         assert data["info"] == "Already installed"
+
+        # Edit a task (via DB, since endpoint cannot modify source)
+        res = await client.get(f"{PREFIX}/")
+        assert res.status_code == 200
+        task_list = res.json()
+        db_task = await db.get(Task, task_list[0]["id"])
+        db_task.source = "some_new_source"
+        await db.merge(db_task)
+        await db.commit()
+        await db.close()
+        # Collect again, and check that collection fails
+        res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
+        debug(res.json())
+        assert res.status_code == 422
 
 
 async def test_collection_api_invalid_manifest(
