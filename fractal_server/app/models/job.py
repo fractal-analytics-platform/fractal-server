@@ -6,6 +6,7 @@ from sqlalchemy import Column
 from sqlalchemy.types import DateTime
 from sqlmodel import Field
 from sqlmodel import Relationship
+from sqlmodel import SQLModel
 
 from ...common.schemas import ApplyWorkflowBase
 from ...utils import get_timestamp
@@ -38,7 +39,7 @@ class JobStatusType(str, Enum):
     FAILED = "failed"
 
 
-class ApplyWorkflow(ApplyWorkflowBase, table=True):
+class ApplyWorkflow(ApplyWorkflowBase, SQLModel, table=True):
     """
     Represent a workflow run
 
