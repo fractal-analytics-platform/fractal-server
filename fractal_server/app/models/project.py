@@ -5,6 +5,7 @@ from sqlalchemy import Column
 from sqlalchemy.types import JSON
 from sqlmodel import Field
 from sqlmodel import Relationship
+from sqlmodel import SQLModel
 
 from ...common.schemas.project import _DatasetBase
 from ...common.schemas.project import _ProjectBase
@@ -14,7 +15,7 @@ from .security import UserOAuth as User
 from .workflow import Workflow
 
 
-class Dataset(_DatasetBase, table=True):
+class Dataset(_DatasetBase, SQLModel, table=True):
     """
     Represent a dataset
 
@@ -49,7 +50,7 @@ class Dataset(_DatasetBase, table=True):
         return [r.path for r in self.resource_list]
 
 
-class Project(_ProjectBase, table=True):
+class Project(_ProjectBase, SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     user_list: list[User] = Relationship(
@@ -82,6 +83,6 @@ class Project(_ProjectBase, table=True):
     )
 
 
-class Resource(_ResourceBase, table=True):
+class Resource(_ResourceBase, SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     dataset_id: int = Field(foreign_key="dataset.id")
