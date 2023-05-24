@@ -526,6 +526,14 @@ async def test_import_export_workflow(
     # Load workflow to be imported into DB
     with (testdata_path / "import_export/workflow.json").open("r") as f:
         workflow_from_file = json.load(f)
+    # Modify tasks' source to match the existing one
+    existing_source = collect_packages[0].source
+    debug(existing_source)
+    for ind, wftask in enumerate(workflow_from_file["task_list"]):
+        workflow_from_file["task_list"][ind]["task"][
+            "source"
+        ] = existing_source  # noqa
+    debug(workflow_from_file)
 
     # Create project
     async with MockCurrentUser(persist=True) as user:
@@ -537,7 +545,7 @@ async def test_import_export_workflow(
     res = await client.post(
         f"/api/v1/project/{prj.id}/workflow/import/", json=payload
     )
-    debug(res)
+    debug(res.json())
     assert res.status_code == 201
     workflow_imported = res.json()
     debug(workflow_imported)
@@ -550,6 +558,7 @@ async def test_import_export_workflow(
     res = await client.get(
         f"/api/v1/project/{prj.id}/workflow/{workflow_id}/export/"
     )
+    debug(res)
     debug(res.status_code)
     workflow_exported = res.json()
     debug(workflow_exported)

@@ -1,3 +1,4 @@
+import pytest
 from devtools import debug
 
 
@@ -186,9 +187,23 @@ async def test_delete_user(registered_client, registered_superuser_client):
     assert res.status_code == 404
 
 
-async def test_MockCurrentUser_fixture(db, app, MockCurrentUser):
+@pytest.mark.parametrize("cache_dir", ("/some/path", None))
+@pytest.mark.parametrize("username", ("my_username", None))
+@pytest.mark.parametrize("slurm_user", ("test01", None))
+async def test_MockCurrentUser_fixture(
+    db,
+    app,
+    MockCurrentUser,
+    cache_dir,
+    username,
+    slurm_user,
+):
 
-    user_kwargs = dict(cache_dir="/tmp")
-    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs) as user:
+    user_kwargs = dict(
+        cache_dir=cache_dir, username=username, slurm_user=slurm_user
+    )
+    async with MockCurrentUser(persist=False, user_kwargs=user_kwargs) as user:
         debug(user)
-        assert user.cache_dir == "/tmp"
+        assert user.cache_dir == cache_dir
+        assert user.username == username
+        assert user.slurm_user == slurm_user
