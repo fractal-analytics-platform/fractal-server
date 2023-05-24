@@ -47,6 +47,8 @@ from ...security import User
 
 router = APIRouter()
 
+logger = set_logger(__name__)
+
 
 async def _background_collect_pip(
     state_id: int,
@@ -372,7 +374,24 @@ async def patch_task(
             detail="patch_task endpoint cannot set `source`",
         )
 
+    # Retrieve task from database
     db_task = await db.get(Task, task_id)
+
+    # Check match of owner attribute. This check constitutes a preliminary,
+    # **soft**, version of access control: if task owner differs from the
+    # current user, we simply raise a warning
+    if user.username:
+        owner = user.username
+    elif user.slurm_user:
+        owner = user.slurm_user
+    else:
+        owner = None
+    if owner != db_task.owner:
+        logger.warning(
+            f"Task owner ({db_task.owner}) differs "
+            f"from current user ({owner}). Proceed anyway."
+        )
+
     update = task_update.dict(exclude_unset=True)
     for key, value in update.items():
         if isinstance(value, str):
@@ -402,6 +421,7 @@ async def create_task(
     """
     Create a new task
     """
+    # Verify that source is not already in use
     stm = select(Task).where(Task.source == task.source)
     res = await db.execute(stm)
     if res.scalars().all():
@@ -409,7 +429,21 @@ async def create_task(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Task with source={task.source} already in use",
         )
-    db_task = Task.from_orm(task)
+    # Set task.owner attribute
+    if user.username:
+        owner = user.username
+    elif user.slurm_user:
+        owner = user.slurm_user
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Cannot add a new task because current user does not "
+                "have `username` or `slurm_user` attributes."
+            ),
+        )
+    # Add task
+    db_task = Task(**task.dict(), owner=owner)
     db.add(db_task)
     await db.commit()
     await db.refresh(db_task)
