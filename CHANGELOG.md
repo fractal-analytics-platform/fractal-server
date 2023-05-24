@@ -20,6 +20,7 @@
 * Prevent deletion of a `Workflow`/`Dataset` in relationship with existing `ApplyWorkflow` (\#703).
 * Improve error message related to out-of-space disk (\#699).
 * Make coverage measure more accurate (\#676) and improve coverage (\#678).
+* Require pydantic version to be `>=1.10.8` (\#711, \#713).
 * Include `fractal-common` updates (\#705).
 
 # 1.2.5
