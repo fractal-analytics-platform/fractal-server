@@ -416,16 +416,20 @@ async def test_post_task(client, MockCurrentUser):
     async with MockCurrentUser(persist=True):
 
         # Successful task creation
+        VERSION = "1.2.3"
         task = TaskCreate(
             name="task_name",
             command="task_command",
             source="task_source",
             input_type="task_input_type",
             output_type="task_output_type",
+            version=VERSION,
         )
-        res = await client.post(f"{PREFIX}/", json=dict(task))
+        payload = task.dict(exclude_unset=True)
+        res = await client.post(f"{PREFIX}/", json=payload)
         debug(res.json())
         assert res.status_code == 201
+        assert res.json()["version"] == VERSION
 
         # Fail for repeated task.source
         new_task = TaskCreate(
@@ -435,7 +439,8 @@ async def test_post_task(client, MockCurrentUser):
             input_type="new_task_input_type",
             output_type="new_task_output_type",
         )
-        res = await client.post(f"{PREFIX}/", json=dict(new_task))
+        payload = new_task.dict(exclude_unset=True)
+        res = await client.post(f"{PREFIX}/", json=payload)
         debug(res.json())
         assert res.status_code == 422
 
