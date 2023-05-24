@@ -366,7 +366,7 @@ async def patch_task(
     db: AsyncSession = Depends(get_db),
 ) -> Optional[TaskRead]:
     """
-    Edit a specific task
+    Edit a specific task (restricted to superuser)
     """
     if task_update.source:
         raise HTTPException(
@@ -379,7 +379,8 @@ async def patch_task(
 
     # Check match of owner attribute. This check constitutes a preliminary,
     # **soft**, version of access control: if task owner differs from the
-    # current user, we simply raise a warning
+    # current user, we simply raise a warning. Note that this is not very
+    # relevant as long as this endpoint is for superusers only
     if user.username:
         owner = user.username
     elif user.slurm_user:
