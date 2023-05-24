@@ -491,7 +491,6 @@ async def test_patch_task(
     registered_client,
     registered_superuser_client,
     task_factory,
-    MockCurrentUser,
 ):
     task = await task_factory(name="task")
     old_source = task.source
@@ -565,19 +564,56 @@ async def test_patch_task(
     assert len(res.json()["default_args"]) == 3
     assert len(res.json()["meta"]) == 3
 
-    # Patching a task still works, even if task.owner differs from
-    # user.some_username
-    USERNAME = "some_username_123"
+
+@pytest.mark.parametrize("username", (None, "myself"))
+@pytest.mark.parametrize("slurm_user", (None, "myself_slurm"))
+@pytest.mark.parametrize("owner", (None, "another_owner"))
+async def test_patch_task_different_users(
+    db,
+    registered_superuser_client,
+    task_factory,
+    username,
+    slurm_user,
+    owner,
+):
+    """
+    Test that the `username` or `slurm_user` attributes of a (super)user do not
+    affect their ability to patch a task. They do raise warnings, but the PATCH
+    endpoint returns correctly.
+    """
+
+    task = await task_factory(name="task", owner=owner)
+    debug(task)
+    assert task.owner == owner
+
+    # Update user
+    payload = {}
+    if username:
+        payload["username"] = username
+    if slurm_user:
+        payload["slurm_user"] = slurm_user
+    if payload:
+        res = await registered_superuser_client.patch(
+            "/auth/users/me",
+            json=payload,
+        )
+        debug(res.json())
+        assert res.status_code == 200
+
+    # Patch task
+    NEW_NAME = "new name"
+    payload = TaskUpdate(name=NEW_NAME).dict(exclude_unset=True)
+    debug(payload)
     res = await registered_superuser_client.patch(
-        "/auth/users/me", json=dict(username=USERNAME)
+        f"{PREFIX}/{task.id}", json=payload
     )
+    debug(res.json())
     assert res.status_code == 200
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/{task.id}",
-        json=second_update.dict(exclude_unset=True),
-    )
-    assert res.status_code == 200
-    assert res.json()["owner"] != USERNAME
+    assert res.json()["owner"] == owner
+    if username:
+        assert res.json()["owner"] != username
+    if slurm_user:
+        assert res.json()["owner"] != slurm_user
 
 
 async def test_task_collection_api_failure(
