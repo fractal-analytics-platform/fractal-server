@@ -5,7 +5,6 @@
 * Refactor user model:
     * Switch from UUID4 to int for IDs (\#660, \#684).
     * Fix many-to-many relationship between users and project (\#660).
-    * Remove `fastapi-users-db-sqlmodel` dependency (\#660).
     * Rename `Project.user_member_list` into `Project.user_list` (\#660).
     * Add `username` column (\#704).
 * Update endpoints (see also [1.2->1.3 upgrade info](../internals/version_upgrades/upgrade_1_2_5_to_1_3_0/) in the documentation):
@@ -28,7 +27,8 @@
     * Add `ApplyWorkflow.end_timestamp` column (\#687, \#684).
     * Prevent deletion of a `Workflow`/`Dataset` in relationship with existing `ApplyWorkflow` (\#703).
 * Expose `FRACTAL_CORS_ALLOW_ORIGIN` environment variable (\#688).
-* Tools:
+* Package and repository:
+    * Remove `fastapi-users-db-sqlmodel` dependency (\#660).
     * Make coverage measure more accurate (\#676) and improve coverage (\#678).
     * Require pydantic version to be `>=1.10.8` (\#711, \#713).
     * Include multiple `fractal-common` updates (\#705).
