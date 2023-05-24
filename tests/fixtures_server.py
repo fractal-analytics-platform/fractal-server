@@ -343,7 +343,7 @@ async def MockCurrentUser(app, db):
             if self.previous_user:
                 app.dependency_overrides[
                     current_active_user
-                ] = self.previous_user()
+                ] = self.previous_user
 
     return _MockCurrentUser
 

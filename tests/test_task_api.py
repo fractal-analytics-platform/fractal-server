@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
 from shutil import which as shutil_which
+from zipfile import ZipFile
 
 import pytest
 from devtools import debug
@@ -17,6 +18,7 @@ from fractal_server.common.schemas.task import TaskCreate
 from fractal_server.common.schemas.task import TaskUpdate
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
+from fractal_server.tasks.collection import _load_manifest_from_wheel
 from fractal_server.tasks.collection import get_collection_path
 from fractal_server.tasks.collection import get_log_path
 
@@ -38,17 +40,33 @@ async def test_task_get_list(db, client, task_factory, MockCurrentUser):
 
 
 async def test_background_collection(
-    db, client, MockCurrentUser, dummy_task_package
+    db,
+    client,
+    MockCurrentUser,
+    dummy_task_package,
+    override_settings_factory,
+    tmp_path,
 ):
     """
     GIVEN a package and its installation environment
     WHEN the background collection is called on it
     THEN the tasks are collected and the state is updated to db accordingly
     """
-    task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())
-    venv_path = create_package_dir_pip(
-        task_pkg=task_pkg, user="test_bg_collection"
+
+    override_settings_factory(
+        FRACTAL_TASKS_DIR=(tmp_path / "test_background_collection")
     )
+
+    task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())
+    # Load manifest
+    with ZipFile(task_pkg.package_path) as wheel:
+        task_pkg.manifest = _load_manifest_from_wheel(
+            task_pkg.package_path, wheel
+        )
+    debug(task_pkg)
+    task_pkg.check()
+
+    venv_path = create_package_dir_pip(task_pkg=task_pkg)
     collection_status = TaskCollectStatus(
         status="pending", venv_path=venv_path, package=task_pkg.package
     )
@@ -86,6 +104,7 @@ async def test_background_collection_logs(
     MockCurrentUser,
     dummy_task_package,
     override_settings_factory,
+    tmp_path,
     level: int,
 ):
     """
@@ -93,11 +112,23 @@ async def test_background_collection_logs(
     WHEN the background collection is called, for a given FRACTAL_LOGGING_LEVEL
     THEN the logs are always present
     """
-    override_settings_factory(FRACTAL_LOGGING_LEVEL=level)
-    task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())
-    venv_path = create_package_dir_pip(
-        task_pkg=task_pkg, user=f"test_user_{level}"
+    override_settings_factory(
+        FRACTAL_LOGGING_LEVEL=level,
+        FRACTAL_TASKS_DIR=(
+            tmp_path / f"test_background_collection_logs_{level}"
+        ),
     )
+    task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())
+    # Load manifest
+    with ZipFile(task_pkg.package_path) as wheel:
+        task_pkg.manifest = _load_manifest_from_wheel(
+            task_pkg.package_path, wheel
+        )
+    debug(task_pkg)
+    task_pkg.check()
+
+    venv_path = create_package_dir_pip(task_pkg=task_pkg)
+    debug(venv_path)
     collection_status = TaskCollectStatus(
         status="pending", venv_path=venv_path, package=task_pkg.package
     )
@@ -125,7 +156,9 @@ async def test_background_collection_logs(
     assert out_state["data"]["log"]
 
 
-async def test_background_collection_failure(db, dummy_task_package):
+async def test_background_collection_failure(
+    db, dummy_task_package, override_settings_factory, tmp_path
+):
     """
     GIVEN a package and its installation environment
     WHEN the background collection is called on it and it fails
@@ -133,10 +166,19 @@ async def test_background_collection_failure(db, dummy_task_package):
         * the log of the collection is saved to the state
         * the installation directory is removed
     """
-    task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())
-    venv_path = create_package_dir_pip(
-        task_pkg=task_pkg, user="test_bg_collection_fail"
+
+    override_settings_factory(
+        FRACTAL_TASKS_DIR=(tmp_path / "test_background_collection_failure")
     )
+
+    task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())
+    # Load manifest
+    with ZipFile(task_pkg.package_path) as wheel:
+        task_pkg.manifest = _load_manifest_from_wheel(
+            task_pkg.package_path, wheel
+        )
+    debug(task_pkg)
+    venv_path = create_package_dir_pip(task_pkg=task_pkg)
     collection_status = TaskCollectStatus(
         status="pending", venv_path=venv_path, package=task_pkg.package
     )
@@ -184,11 +226,20 @@ async def test_collection_api_local_package_with_extras(
     client,
     MockCurrentUser,
     dummy_task_package,
+    override_settings_factory,
+    tmp_path,
 ):
     """
     Check that the package extras are correctly included in a local-package
     collection.
     """
+
+    override_settings_factory(
+        FRACTAL_TASKS_DIR=(
+            tmp_path / "test_collection_api_local_package_with_extras"
+        )
+    )
+
     async with MockCurrentUser():
         # Task collection
         res = await client.post(
@@ -210,11 +261,10 @@ async def test_collection_api_local_package_with_extras(
 
 
 @pytest.mark.parametrize(
-    ("slurm_user", "python_version"),
+    "python_version",
     [
-        ("user00", None),
+        None,
         pytest.param(
-            "user01",
             "3.10",
             marks=pytest.mark.skipif(
                 not shutil_which("python3.10"), reason="No python3.10 on host"
@@ -223,7 +273,13 @@ async def test_collection_api_local_package_with_extras(
     ],
 )
 async def test_collection_api(
-    client, dummy_task_package, MockCurrentUser, slurm_user, python_version
+    db,
+    client,
+    dummy_task_package,
+    MockCurrentUser,
+    python_version,
+    override_settings_factory,
+    tmp_path,
 ):
     """
     GIVEN a package in a format that `pip` understands
@@ -237,17 +293,16 @@ async def test_collection_api(
         * if called twice, the same tasks are returned without installing
     """
 
+    override_settings_factory(
+        FRACTAL_TASKS_DIR=(tmp_path / "test_collection_api")
+    )
+
     task_collection = dict(
         package=dummy_task_package.as_posix(), python_version=python_version
     )
 
-    async with MockCurrentUser(user_kwargs=dict(slurm_user=slurm_user)):
-        # NOTE: collecting private tasks so that they are assigned to user and
-        # written in a non-default folder. Bypass for non stateless
-        # FRACTAL_TASKS_DIR in test suite.
-        res = await client.post(
-            f"{PREFIX}/collect/pip/?public=false", json=task_collection
-        )
+    async with MockCurrentUser():
+        res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
         debug(res.json())
         assert res.status_code == 201
         assert res.json()["data"]["status"] == "pending"
@@ -295,55 +350,87 @@ async def test_collection_api(
             version = await execute_command(f"{python_bin} --version")
             assert python_version in version
 
-        # collect again
-        res = await client.post(
-            f"{PREFIX}/collect/pip/?public=false", json=task_collection
-        )
+        # Collect again
+        res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
         debug(res.json())
         assert res.status_code == 200
         state = res.json()
         data = state["data"]
         assert data["info"] == "Already installed"
 
-
-async def test_collection_api_invalid_manifest(
-    client, dummy_task_package_invalid_manifest, MockCurrentUser
-):
-    """
-    GIVEN a package in a format that `pip` understands, with invalid manifest
-    WHEN the api to collect tasks from that package is called
-    THEN it returns 422 (Unprocessable Entity)
-    """
-
-    task_collection = dict(
-        package=dummy_task_package_invalid_manifest.as_posix()
-    )
-
-    async with MockCurrentUser(persist=True):
-        # NOTE: collecting private tasks so that they are assigned to user and
-        # written in a non-default folder. Bypass for non stateless
-        # FRACTAL_TASKS_DIR in test suite.
-        res = await client.post(
-            f"{PREFIX}/collect/pip/?public=false", json=task_collection
-        )
+        # Edit a task (via DB, since endpoint cannot modify source)
+        res = await client.get(f"{PREFIX}/")
+        assert res.status_code == 200
+        task_list = res.json()
+        db_task = await db.get(Task, task_list[0]["id"])
+        db_task.source = "some_new_source"
+        await db.merge(db_task)
+        await db.commit()
+        await db.close()
+        # Collect again, and check that collection fails
+        res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
         debug(res.json())
         assert res.status_code == 422
 
 
+async def test_collection_api_invalid_manifest(
+    client,
+    dummy_task_package_invalid_manifest,
+    dummy_task_package_missing_manifest,
+    MockCurrentUser,
+    override_settings_factory,
+    tmp_path,
+):
+    """
+    GIVEN a package with invalid/missing manifest
+    WHEN the api to collect tasks from that package is called
+    THEN it returns 422 (Unprocessable Entity) with an informative message
+    """
+
+    override_settings_factory(
+        FRACTAL_TASKS_DIR=(tmp_path / "test_collection_api_invalid_manifest")
+    )
+
+    task_collection = dict(
+        package=dummy_task_package_invalid_manifest.as_posix()
+    )
+    debug(dummy_task_package_invalid_manifest)
+    async with MockCurrentUser(persist=True):
+        res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
+        debug(res.json())
+        assert res.status_code == 422
+        assert "not supported" in res.json()["detail"]
+
+    task_collection = dict(
+        package=dummy_task_package_missing_manifest.as_posix()
+    )
+    debug(dummy_task_package_missing_manifest)
+    async with MockCurrentUser(persist=True):
+        res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
+        debug(res.json())
+        assert res.status_code == 422
+        assert "does not include" in res.json()["detail"]
+
+
 async def test_post_task(client, MockCurrentUser):
+
     async with MockCurrentUser(persist=True):
 
         # Successful task creation
+        VERSION = "1.2.3"
         task = TaskCreate(
             name="task_name",
             command="task_command",
             source="task_source",
             input_type="task_input_type",
             output_type="task_output_type",
+            version=VERSION,
         )
-        res = await client.post(f"{PREFIX}/", json=dict(task))
+        payload = task.dict(exclude_unset=True)
+        res = await client.post(f"{PREFIX}/", json=payload)
         debug(res.json())
         assert res.status_code == 201
+        assert res.json()["version"] == VERSION
 
         # Fail for repeated task.source
         new_task = TaskCreate(
@@ -353,7 +440,8 @@ async def test_post_task(client, MockCurrentUser):
             input_type="new_task_input_type",
             output_type="new_task_output_type",
         )
-        res = await client.post(f"{PREFIX}/", json=dict(new_task))
+        payload = new_task.dict(exclude_unset=True)
+        res = await client.post(f"{PREFIX}/", json=payload)
         debug(res.json())
         assert res.status_code == 422
 
@@ -362,13 +450,47 @@ async def test_post_task(client, MockCurrentUser):
         debug(res.json())
         assert res.status_code == 422
 
+    # Test multiple combinations of (username, slurm_user)
+    SLURM_USER = "some_slurm_user"
+    USERNAME = "some_username"
+    # Case 1: (username, slurm_user) = (None, None)
+    user_kwargs = dict(username=None, slurm_user=None)
+    payload["source"] = "source_1"
+    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs):
+        res = await client.post(f"{PREFIX}/", json=payload)
+        assert res.status_code == 422
+        assert res.json()["detail"] == (
+            "Cannot add a new task because current user does not have "
+            "`username` or `slurm_user` attributes."
+        )
+    # Case 2: (username, slurm_user) = (not None, not None)
+    user_kwargs = dict(username=USERNAME, slurm_user=SLURM_USER)
+    payload["source"] = "source_2"
+    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs):
+        res = await client.post(f"{PREFIX}/", json=payload)
+        assert res.status_code == 201
+        assert res.json()["owner"] == USERNAME
+    # Case 3: (username, slurm_user) = (None, not None)
+    user_kwargs = dict(username=None, slurm_user=SLURM_USER)
+    payload["source"] = "source_3"
+    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs):
+        res = await client.post(f"{PREFIX}/", json=payload)
+        assert res.status_code == 201
+        assert res.json()["owner"] == SLURM_USER
+    # Case 4: (username, slurm_user) = (not None, None)
+    user_kwargs = dict(username=USERNAME, slurm_user=None)
+    payload["source"] = "source_4"
+    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs):
+        res = await client.post(f"{PREFIX}/", json=payload)
+        assert res.status_code == 201
+        assert res.json()["owner"] == USERNAME
+
 
 async def test_patch_task(
     db,
     registered_client,
     registered_superuser_client,
     task_factory,
-    MockCurrentUser,
 ):
     task = await task_factory(name="task")
     old_source = task.source
@@ -380,6 +502,7 @@ async def test_patch_task(
     NEW_SOURCE = "new source"
     NEW_DEFAULT_ARGS = {"key1": 1, "key2": 2}
     NEW_META = {"key3": "3", "key4": "4"}
+    NEW_VERSION = "1.2.3"
     update = TaskUpdate(
         name=NEW_NAME,
         input_type=NEW_INPUT_TYPE,
@@ -388,6 +511,7 @@ async def test_patch_task(
         default_args=NEW_DEFAULT_ARGS,
         meta=NEW_META,
         source=NEW_SOURCE,
+        version=NEW_VERSION,
     )
 
     # Test non-superuser
@@ -417,6 +541,8 @@ async def test_patch_task(
     assert res.json()["default_args"] == NEW_DEFAULT_ARGS
     assert res.json()["meta"] == NEW_META
     assert res.json()["source"] == old_source
+    assert res.json()["version"] == NEW_VERSION
+    assert res.json()["owner"] is None
 
     # Test dictionaries update
     OTHER_DEFAULT_ARGS = {"key1": 42, "key100": 100}
@@ -439,8 +565,59 @@ async def test_patch_task(
     assert len(res.json()["meta"]) == 3
 
 
+@pytest.mark.parametrize("username", (None, "myself"))
+@pytest.mark.parametrize("slurm_user", (None, "myself_slurm"))
+@pytest.mark.parametrize("owner", (None, "another_owner"))
+async def test_patch_task_different_users(
+    db,
+    registered_superuser_client,
+    task_factory,
+    username,
+    slurm_user,
+    owner,
+):
+    """
+    Test that the `username` or `slurm_user` attributes of a (super)user do not
+    affect their ability to patch a task. They do raise warnings, but the PATCH
+    endpoint returns correctly.
+    """
+
+    task = await task_factory(name="task", owner=owner)
+    debug(task)
+    assert task.owner == owner
+
+    # Update user
+    payload = {}
+    if username:
+        payload["username"] = username
+    if slurm_user:
+        payload["slurm_user"] = slurm_user
+    if payload:
+        res = await registered_superuser_client.patch(
+            "/auth/users/me",
+            json=payload,
+        )
+        debug(res.json())
+        assert res.status_code == 200
+
+    # Patch task
+    NEW_NAME = "new name"
+    payload = TaskUpdate(name=NEW_NAME).dict(exclude_unset=True)
+    debug(payload)
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/{task.id}", json=payload
+    )
+    debug(res.json())
+    assert res.status_code == 200
+    assert res.json()["owner"] == owner
+    if username:
+        assert res.json()["owner"] != username
+    if slurm_user:
+        assert res.json()["owner"] != slurm_user
+
+
 async def test_task_collection_api_failure(
-    client, MockCurrentUser, testdata_path
+    client, MockCurrentUser, testdata_path, override_settings_factory, tmp_path
 ):
     """
     Try to collect a task package which triggers an error (namely its manifests
@@ -448,11 +625,17 @@ async def test_task_collection_api_failure(
     handle failure.
     """
 
+    override_settings_factory(
+        FRACTAL_TASKS_DIR=(tmp_path / "test_task_collection_api_failure")
+    )
+    debug(tmp_path)
+
     path = str(
         testdata_path
         / "my-tasks-fail/dist/my_tasks_fail-0.1.0-py3-none-any.whl"
     )
     task_collection = dict(package=path)
+    debug(task_collection)
 
     async with MockCurrentUser():
         res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
