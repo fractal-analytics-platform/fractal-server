@@ -413,6 +413,7 @@ async def test_collection_api_invalid_manifest(
 
 
 async def test_post_task(client, MockCurrentUser):
+
     async with MockCurrentUser(persist=True):
 
         # Successful task creation
@@ -448,6 +449,41 @@ async def test_post_task(client, MockCurrentUser):
         res = await client.post(f"{PREFIX}/")  # request without body
         debug(res.json())
         assert res.status_code == 422
+
+    # Test multiple combinations of (username, slurm_user)
+    SLURM_USER = "some_slurm_user"
+    USERNAME = "some_username"
+    # Case 1: (username, slurm_user) = (None, None)
+    user_kwargs = dict(username=None, slurm_user=None)
+    payload["source"] = "source_1"
+    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs):
+        res = await client.post(f"{PREFIX}/", json=payload)
+        assert res.status_code == 422
+        assert res.json()["detail"] == (
+            "Cannot add a new task because current user does not have "
+            "`username` or `slurm_user` attributes."
+        )
+    # Case 2: (username, slurm_user) = (not None, not None)
+    user_kwargs = dict(username=USERNAME, slurm_user=SLURM_USER)
+    payload["source"] = "source_2"
+    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs):
+        res = await client.post(f"{PREFIX}/", json=payload)
+        assert res.status_code == 201
+        assert res.json()["owner"] == USERNAME
+    # Case 3: (username, slurm_user) = (None, not None)
+    user_kwargs = dict(username=None, slurm_user=SLURM_USER)
+    payload["source"] = "source_3"
+    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs):
+        res = await client.post(f"{PREFIX}/", json=payload)
+        assert res.status_code == 201
+        assert res.json()["owner"] == SLURM_USER
+    # Case 4: (username, slurm_user) = (not None, None)
+    user_kwargs = dict(username=USERNAME, slurm_user=None)
+    payload["source"] = "source_4"
+    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs):
+        res = await client.post(f"{PREFIX}/", json=payload)
+        assert res.status_code == 201
+        assert res.json()["owner"] == USERNAME
 
 
 async def test_patch_task(
