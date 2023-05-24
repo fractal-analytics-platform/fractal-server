@@ -11,14 +11,12 @@
 """
 This module takes care of installing tasks so that fractal can execute them
 
-Tasks can be private or public. Private tasks are installed under
-`Settings.FRACTAL_TASKS_DIR/{username}`. For public tasks, `username =
-.fractal`.
+Tasks are installed under `Settings.FRACTAL_TASKS_DIR/{username}`, with
+`username = ".fractal"`.
 """
 import json
 import shutil
 import sys
-from io import IOBase
 from pathlib import Path
 from typing import Optional
 from typing import Union
@@ -110,11 +108,20 @@ class _TaskCollectPip(TaskCollectPip):
     """
     Internal TaskCollectPip schema
 
-    The difference with its parent class is that we check if the package
-    corresponds to a path in the filesystem, and whether it exists.
+    FIXME: this will be heavily updated, see
+    https://github.com/fractal-analytics-platform/fractal-server/issues/702
+
+    Differences with its parent class (`TaskCollectPip`):
+
+    1. We check if the package corresponds to a path in the filesystem, and
+       whether it exists.
+    2. We include an additional `manifest` attribute.
+    3. We expose some additional properties.
+
     """
 
     package_path: Optional[Path] = None
+    manifest: Optional[ManifestV1] = None
 
     @property
     def is_local_package(self) -> bool:
@@ -162,30 +169,27 @@ class _TaskCollectPip(TaskCollectPip):
     def check(self):
         if not self.version:
             raise ValueError("Version is not set or cannot be determined")
-
-
-def _package_from_path(wheel_path: Path) -> tuple[str, str]:
-    """
-    Extract package name and version from package files such as wheel files.
-    """
-    wheel_filename = wheel_path.name
-    package, version, *_rest = wheel_filename.split("-")
-    return package, version
+        if not self.manifest:
+            raise ValueError("Manifest is not set or cannot be determined")
 
 
 def create_package_dir_pip(
     *,
     task_pkg: _TaskCollectPip,
-    user: Optional[str] = None,
     create: bool = True,
-    **_,  # FIXME remove this catch-all argument
 ) -> Path:
+    """
+    Create venv folder for a task package and return corresponding Path object
+    """
     settings = Inject(get_settings)
-    user = user or FRACTAL_PUBLIC_TASK_SUBDIR
-
-    package_dir = f"{task_pkg.package}{task_pkg.version or ''}"
+    user = FRACTAL_PUBLIC_TASK_SUBDIR
+    if task_pkg.version is None:
+        raise ValueError(
+            f"Cannot create venv folder for package `{task_pkg.package}` "
+            "with `version=None`."
+        )
+    package_dir = f"{task_pkg.package}{task_pkg.version}"
     venv_path = settings.FRACTAL_TASKS_DIR / user / package_dir  # type: ignore
-    # TODO check the access right of the venv_path and subdirs
     if create:
         venv_path.mkdir(exist_ok=False, parents=True)
     return venv_path
@@ -212,9 +216,40 @@ async def download_package(
     return Path(pkg_file)
 
 
-def inspect_package(path: Path) -> dict:
+def _load_manifest_from_wheel(
+    path: Path, wheel: ZipFile, logger_name: Optional[str] = None
+) -> ManifestV1:
+    logger = get_logger(logger_name)
+    namelist = wheel.namelist()
+    try:
+        manifest = next(
+            name for name in namelist if "__FRACTAL_MANIFEST__.json" in name
+        )
+    except StopIteration:
+        msg = f"{path.as_posix()} does not include __FRACTAL_MANIFEST__.json"
+        logger.error(msg)
+        raise ValueError(msg)
+    with wheel.open(manifest) as manifest_fd:
+        manifest_dict = json.load(manifest_fd)
+    manifest_version = str(manifest_dict["manifest_version"])
+    if manifest_version == "1":
+        pkg_manifest = ManifestV1(**manifest_dict)
+        return pkg_manifest
+    else:
+        msg = f"Manifest version {manifest_version=} not supported"
+        logger.error(msg)
+        raise ValueError(msg)
+
+
+def inspect_package(path: Path, logger_name: Optional[str] = None) -> dict:
     """
-    Inspect task package for version and manifest
+    Inspect task package to extract version, name and manifest
+
+    Note that this only works with wheel files, which have a well-defined
+    dist-info section. If we need to generalize to to tar.gz archives, we would
+    need to go and look for `PKG-INFO`.
+
+    Note: package name is normalized by replacing `{-,.}` with `_`.
 
     Args:
         path: Path
@@ -225,32 +260,54 @@ def inspect_package(path: Path) -> dict:
         pacakge, and `manifest`, the Fractal manifest object relative to the
         tasks.
     """
-    if "whl" in path.as_posix():
-        # it is simply a zip file
-        # we can extract the version number from *.dist-info/METADATA
-        # and read the fractal manifest from the package content
-        with ZipFile(path) as wheel:
-            namelist = wheel.namelist()
-            metadata = next(
-                name for name in namelist if "dist-info/METADATA" in name
+
+    logger = get_logger(logger_name)
+
+    if not path.as_posix().endswith(".whl"):
+        raise ValueError(
+            f"Only wheel packages are supported, given {path.as_posix()}."
+        )
+
+    with ZipFile(path) as wheel:
+        namelist = wheel.namelist()
+
+        # Read and validate task manifest
+        logger.debug(f"Now reading manifest for {path.as_posix()}")
+        pkg_manifest = _load_manifest_from_wheel(
+            path, wheel, logger_name=logger_name
+        )
+        logger.debug("Manifest read correctly.")
+
+        # Read package name and version from *.dist-info/METADATA
+        logger.debug(
+            f"Now reading package name and version for {path.as_posix()}"
+        )
+        metadata = next(
+            name for name in namelist if "dist-info/METADATA" in name
+        )
+        with wheel.open(metadata) as metadata_fd:
+            meta = metadata_fd.read().decode("utf-8")
+            pkg_name = next(
+                line.split()[-1]
+                for line in meta.splitlines()
+                if line.startswith("Name")
             )
-            manifest = next(
-                name for name in namelist if "__FRACTAL_MANIFEST__" in name
+            pkg_version = next(
+                line.split()[-1]
+                for line in meta.splitlines()
+                if line.startswith("Version")
             )
+        logger.debug("Package name and version read correctly.")
 
-            with wheel.open(metadata) as metadata_fd:
-                meta = metadata_fd.read().decode("utf-8")
-                version = next(
-                    line.split()[-1]
-                    for line in meta.splitlines()
-                    if line.startswith("Version")
-                )
+    # Normalize package name:
+    pkg_name = pkg_name.replace("-", "_").replace(".", "_")
 
-            with wheel.open(manifest) as manifest_fd:
-                manifest_obj = read_manifest(manifest_fd)  # type: ignore
-
-    version_manifest = dict(version=version, manifest=manifest_obj)
-    return version_manifest
+    info = dict(
+        pkg_version=pkg_version,
+        pkg_name=pkg_name,
+        pkg_manifest=pkg_manifest,
+    )
+    return info
 
 
 async def create_package_environment_pip(
@@ -260,71 +317,43 @@ async def create_package_environment_pip(
     logger_name: str,
 ) -> list[TaskCreate]:
     """
-    Create environment and install package
+    Create environment, install package, and prepare task list
     """
-    logger = get_logger(logger_name)
-    try:
-        logger.debug("Creating venv and installing package")
 
+    logger = get_logger(logger_name)
+
+    # Only proceed if package, version and manifest attributes are set
+    task_pkg.check()
+
+    try:
+
+        logger.debug("Creating venv and installing package")
         python_bin, package_root = await _create_venv_install_package(
             path=venv_path,
             task_pkg=task_pkg,
             logger_name=logger_name,
         )
+        logger.debug("Venv creation and package installation ended correctly.")
 
-        logger.debug("Loading task manifest")
-
-        task_list = load_manifest(
-            package_root=package_root,
-            python_bin=python_bin,
-            source=task_pkg.source,
-        )
-        logger.debug("Loaded task manifest")
+        # Prepare task_list with appropriate metadata
+        logger.debug("Creating task list from manifest")
+        task_list = []
+        for t in task_pkg.manifest.task_list:
+            task_executable = package_root / t.executable
+            if not task_executable.exists():
+                raise FileNotFoundError(
+                    f"Cannot find executable `{task_executable}` "
+                    f"for task `{t.name}`"
+                )
+            cmd = f"{python_bin.as_posix()} {task_executable.as_posix()}"
+            this_task = TaskCreate(
+                **t.dict(), command=cmd, source=task_pkg.source
+            )
+            task_list.append(this_task)
+        logger.debug("Task list created correctly")
     except Exception as e:
         logger.error("Task manifest loading failed")
         raise e
-    return task_list
-
-
-def read_manifest(file: Union[Path, IOBase]) -> ManifestV1:
-    """
-    Read and parse manifest file
-    """
-    if isinstance(file, IOBase):
-        manifest_dict = json.load(file)
-    else:
-        with file.open("r") as f:
-            manifest_dict = json.load(f)
-
-    manifest_version = str(manifest_dict["manifest_version"])
-    if manifest_version == "1":
-        manifest = ManifestV1(**manifest_dict)
-    else:
-        raise ValueError("Manifest version {manifest_version=} not supported")
-
-    return manifest
-
-
-def load_manifest(
-    package_root: Path,
-    python_bin: Path,
-    source: str,
-) -> list[TaskCreate]:
-
-    manifest_file = package_root / "__FRACTAL_MANIFEST__.json"
-    manifest = read_manifest(manifest_file)
-
-    task_list = []
-    for t in manifest.task_list:
-        task_executable = package_root / t.executable
-        if not task_executable.exists():
-            raise FileNotFoundError(
-                f"Cannot find executable `{task_executable}` "
-                f"for task `{t.name}`"
-            )
-        cmd = f"{python_bin.as_posix()} {task_executable.as_posix()}"
-        this_task = TaskCreate(**t.dict(), command=cmd, source=source)
-        task_list.append(this_task)
     return task_list
 
 
