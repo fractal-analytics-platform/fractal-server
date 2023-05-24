@@ -467,6 +467,7 @@ async def test_patch_task(
     NEW_SOURCE = "new source"
     NEW_DEFAULT_ARGS = {"key1": 1, "key2": 2}
     NEW_META = {"key3": "3", "key4": "4"}
+    NEW_VERSION = "1.2.3"
     update = TaskUpdate(
         name=NEW_NAME,
         input_type=NEW_INPUT_TYPE,
@@ -475,6 +476,7 @@ async def test_patch_task(
         default_args=NEW_DEFAULT_ARGS,
         meta=NEW_META,
         source=NEW_SOURCE,
+        version=NEW_VERSION,
     )
 
     # Test non-superuser
@@ -504,6 +506,8 @@ async def test_patch_task(
     assert res.json()["default_args"] == NEW_DEFAULT_ARGS
     assert res.json()["meta"] == NEW_META
     assert res.json()["source"] == old_source
+    assert res.json()["version"] == NEW_VERSION
+    assert res.json()["owner"] is None
 
     # Test dictionaries update
     OTHER_DEFAULT_ARGS = {"key1": 42, "key100": 100}
