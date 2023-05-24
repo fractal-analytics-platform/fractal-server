@@ -565,6 +565,20 @@ async def test_patch_task(
     assert len(res.json()["default_args"]) == 3
     assert len(res.json()["meta"]) == 3
 
+    # Patching a task still works, even if task.owner differs from
+    # user.some_username
+    USERNAME = "some_username_123"
+    res = await registered_superuser_client.patch(
+        "/auth/users/me", json=dict(username=USERNAME)
+    )
+    assert res.status_code == 200
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/{task.id}",
+        json=second_update.dict(exclude_unset=True),
+    )
+    assert res.status_code == 200
+    assert res.json()["owner"] != USERNAME
+
 
 async def test_task_collection_api_failure(
     client, MockCurrentUser, testdata_path, override_settings_factory, tmp_path
