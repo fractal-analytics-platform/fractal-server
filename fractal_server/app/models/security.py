@@ -62,6 +62,8 @@ class UserOAuth(SQLModel, table=True):
 
     slurm_user: Optional[str]
     cache_dir: Optional[str]
+    username: Optional[str]
+
     oauth_accounts: list["OAuthAccount"] = Relationship(
         back_populates="user",
         sa_relationship_kwargs={"lazy": "selectin", "cascade": "all, delete"},
