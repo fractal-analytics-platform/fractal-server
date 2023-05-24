@@ -226,9 +226,7 @@ def _load_manifest_from_wheel(
             name for name in namelist if "__FRACTAL_MANIFEST__.json" in name
         )
     except StopIteration:
-        msg = (
-            f"{path.as_posix()} does not include " "__FRACTAL_MANIFEST__.json"
-        )
+        msg = f"{path.as_posix()} does not include __FRACTAL_MANIFEST__.json"
         logger.error(msg)
         raise ValueError(msg)
     with wheel.open(manifest) as manifest_fd:
