@@ -47,6 +47,8 @@ from ...security import User
 
 router = APIRouter()
 
+logger = set_logger(__name__)
+
 
 async def _background_collect_pip(
     state_id: int,
@@ -178,7 +180,6 @@ async def collect_tasks_pip(
     response: Response,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-    public: bool = True,
 ) -> StateRead:  # State[TaskCollectStatus]
     """
     Task collection endpoint
@@ -201,6 +202,7 @@ async def collect_tasks_pip(
 
     with TemporaryDirectory() as tmpdir:
         try:
+            # Copy or download the package wheel file to tmpdir
             if task_pkg.is_local_package:
                 shell_copy(task_pkg.package_path.as_posix(), tmpdir)
                 pkg_path = Path(tmpdir) / task_pkg.package_path.name
@@ -208,10 +210,12 @@ async def collect_tasks_pip(
                 pkg_path = await download_package(
                     task_pkg=task_pkg, dest=tmpdir
                 )
-
-            version_manifest = inspect_package(pkg_path)
-
-            task_pkg.version = version_manifest["version"]
+            # Read package info from wheel file, and override the ones coming
+            # from the request body
+            pkg_info = inspect_package(pkg_path)
+            task_pkg.version = pkg_info["pkg_version"]
+            task_pkg.package = pkg_info["pkg_name"]
+            task_pkg.manifest = pkg_info["pkg_manifest"]
             task_pkg.check()
         except Exception as e:
             raise HTTPException(
@@ -220,14 +224,28 @@ async def collect_tasks_pip(
             )
 
     try:
-        pkg_user = None if public else user.slurm_user
-        venv_path = create_package_dir_pip(task_pkg=task_pkg, user=pkg_user)
+        venv_path = create_package_dir_pip(task_pkg=task_pkg)
     except FileExistsError:
-        venv_path = create_package_dir_pip(
-            task_pkg=task_pkg, user=pkg_user, create=False
-        )
+        venv_path = create_package_dir_pip(task_pkg=task_pkg, create=False)
         try:
             task_collect_status = get_collection_data(venv_path)
+            for task in task_collect_status.task_list:
+                db_task = await db.get(Task, task.id)
+                if (
+                    (not db_task)
+                    or db_task.source != task.source
+                    or db_task.name != task.name
+                ):
+                    await db.close()
+                    raise HTTPException(
+                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                        detail=(
+                            "Cannot collect package. Folder already exists, "
+                            f"but task {task.id} does not exists or it does "
+                            f"not have the expected source ({task.source}) or "
+                            f"name ({task.name})."
+                        ),
+                    )
         except FileNotFoundError as e:
             await db.close()
             raise HTTPException(
@@ -348,7 +366,7 @@ async def patch_task(
     db: AsyncSession = Depends(get_db),
 ) -> Optional[TaskRead]:
     """
-    Edit a specific task
+    Edit a specific task (restricted to superuser)
     """
     if task_update.source:
         raise HTTPException(
@@ -356,7 +374,25 @@ async def patch_task(
             detail="patch_task endpoint cannot set `source`",
         )
 
+    # Retrieve task from database
     db_task = await db.get(Task, task_id)
+
+    # Check match of owner attribute. This check constitutes a preliminary,
+    # **soft**, version of access control: if task owner differs from the
+    # current user, we simply raise a warning. Note that this is not very
+    # relevant as long as this endpoint is for superusers only
+    if user.username:
+        owner = user.username
+    elif user.slurm_user:
+        owner = user.slurm_user
+    else:
+        owner = None
+    if owner != db_task.owner:
+        logger.warning(
+            f"Task owner ({db_task.owner}) differs "
+            f"from current user ({owner}). Proceed anyway."
+        )
+
     update = task_update.dict(exclude_unset=True)
     for key, value in update.items():
         if isinstance(value, str):
@@ -386,6 +422,7 @@ async def create_task(
     """
     Create a new task
     """
+    # Verify that source is not already in use
     stm = select(Task).where(Task.source == task.source)
     res = await db.execute(stm)
     if res.scalars().all():
@@ -393,7 +430,21 @@ async def create_task(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Task with source={task.source} already in use",
         )
-    db_task = Task.from_orm(task)
+    # Set task.owner attribute
+    if user.username:
+        owner = user.username
+    elif user.slurm_user:
+        owner = user.slurm_user
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Cannot add a new task because current user does not "
+                "have `username` or `slurm_user` attributes."
+            ),
+        )
+    # Add task
+    db_task = Task(**task.dict(), owner=owner)
     db.add(db_task)
     await db.commit()
     await db.refresh(db_task)

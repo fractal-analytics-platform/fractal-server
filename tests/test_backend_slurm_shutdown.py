@@ -94,12 +94,12 @@ def test_indirect_shutdown_during_submit(
     with shutdown_file.open("w") as f:
         f.write("")
     assert shutdown_file.exists()
-    time.sleep(1.5)
+    time.sleep(2)
 
     debug(executor.wait_thread.shutdown)
     assert executor.wait_thread.shutdown
 
-    time.sleep(2)
+    time.sleep(4)
 
     debug(res)
     debug(run_squeue())
