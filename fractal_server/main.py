@@ -123,7 +123,7 @@ async def _create_first_user(
                     if cache_dir:
                         kwargs["cache_dir"] = cache_dir
                     if username:
-                        kwargs["username"] = cache_dir
+                        kwargs["username"] = username
                     user = await user_manager.create(UserCreate(**kwargs))
                     logger.info(f"User {user.email} created")
 
