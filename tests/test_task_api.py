@@ -304,8 +304,11 @@ async def test_collection_api(
     )
 
     task_collection = dict(package=dummy_task_package.as_posix())
+    PKG_SOURCE = "pip_local:fractal_tasks_dummy:0.1.0::"
     if python_version:
         task_collection["python_version"] = python_version
+        PKG_SOURCE = f"pip_local:fractal_tasks_dummy:0.1.0::py{python_version}"
+    debug(PKG_SOURCE)
 
     async with MockCurrentUser():
         res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
@@ -332,6 +335,9 @@ async def test_collection_api(
         assert len(task_list) == 2
         assert "dummy" in task_names
         assert "dummy parallel" in task_names
+
+        assert task_list[0]["source"] == f"{PKG_SOURCE}:dummy"
+        assert task_list[1]["source"] == f"{PKG_SOURCE}:dummy_parallel"
 
         # using verbose option
         res = await client.get(f"{PREFIX}/collect/{state['id']}?verbose=true")
