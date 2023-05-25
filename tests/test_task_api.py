@@ -1,7 +1,6 @@
 import logging
 from pathlib import Path
 from shutil import which as shutil_which
-from zipfile import ZipFile
 
 import pytest
 from devtools import debug
@@ -18,11 +17,24 @@ from fractal_server.common.schemas.task import TaskCreate
 from fractal_server.common.schemas.task import TaskUpdate
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
-from fractal_server.tasks.collection import _load_manifest_from_wheel
 from fractal_server.tasks.collection import get_collection_path
 from fractal_server.tasks.collection import get_log_path
+from fractal_server.tasks.collection import inspect_package
 
 PREFIX = "/api/v1/task"
+
+
+def _inspect_package_and_set_attributes(task_pkg) -> None:
+    """
+    Reproduce a logical block that normally takes place in the task-collection
+    endpoint
+    """
+    # Extract info form the wheel package (this is part of the endpoint)
+    pkg_info = inspect_package(task_pkg.package_path)
+    task_pkg.package_name = pkg_info["pkg_name"]
+    task_pkg.package_version = pkg_info["pkg_version"]
+    task_pkg.package_manifest = pkg_info["pkg_manifest"]
+    task_pkg.check()
 
 
 async def test_task_get_list(db, client, task_factory, MockCurrentUser):
@@ -58,13 +70,10 @@ async def test_background_collection(
     )
 
     task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())
-    # Load manifest
-    with ZipFile(task_pkg.package_path) as wheel:
-        task_pkg.manifest = _load_manifest_from_wheel(
-            task_pkg.package_path, wheel
-        )
+
+    # Extract info form the wheel package (this would be part of the endpoint)
+    _inspect_package_and_set_attributes(task_pkg)
     debug(task_pkg)
-    task_pkg.check()
 
     venv_path = create_package_dir_pip(task_pkg=task_pkg)
     collection_status = TaskCollectStatus(
@@ -118,14 +127,12 @@ async def test_background_collection_logs(
             tmp_path / f"test_background_collection_logs_{level}"
         ),
     )
+
     task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())
-    # Load manifest
-    with ZipFile(task_pkg.package_path) as wheel:
-        task_pkg.manifest = _load_manifest_from_wheel(
-            task_pkg.package_path, wheel
-        )
+
+    # Extract info form the wheel package (this would be part of the endpoint)
+    _inspect_package_and_set_attributes(task_pkg)
     debug(task_pkg)
-    task_pkg.check()
 
     venv_path = create_package_dir_pip(task_pkg=task_pkg)
     debug(venv_path)
@@ -172,12 +179,11 @@ async def test_background_collection_failure(
     )
 
     task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())
-    # Load manifest
-    with ZipFile(task_pkg.package_path) as wheel:
-        task_pkg.manifest = _load_manifest_from_wheel(
-            task_pkg.package_path, wheel
-        )
+
+    # Extract info form the wheel package (this would be part of the endpoint)
+    _inspect_package_and_set_attributes(task_pkg)
     debug(task_pkg)
+
     venv_path = create_package_dir_pip(task_pkg=task_pkg)
     collection_status = TaskCollectStatus(
         status="pending", venv_path=venv_path, package=task_pkg.package
@@ -214,7 +220,7 @@ async def test_collection_api_missing_file(
     async with MockCurrentUser():
         res = await client.post(
             f"{PREFIX}/collect/pip/",
-            json=dict(package=str(tmp_path / "missing_file")),
+            json=dict(package=str(tmp_path / "missing_file.whl")),
         )
         debug(res)
         debug(res.json())
@@ -297,9 +303,12 @@ async def test_collection_api(
         FRACTAL_TASKS_DIR=(tmp_path / "test_collection_api")
     )
 
-    task_collection = dict(
-        package=dummy_task_package.as_posix(), python_version=python_version
-    )
+    task_collection = dict(package=dummy_task_package.as_posix())
+    PKG_SOURCE = "pip_local:fractal_tasks_dummy:0.1.0::"
+    if python_version:
+        task_collection["python_version"] = python_version
+        PKG_SOURCE = f"pip_local:fractal_tasks_dummy:0.1.0::py{python_version}"
+    debug(PKG_SOURCE)
 
     async with MockCurrentUser():
         res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
@@ -326,6 +335,9 @@ async def test_collection_api(
         assert len(task_list) == 2
         assert "dummy" in task_names
         assert "dummy parallel" in task_names
+
+        assert task_list[0]["source"] == f"{PKG_SOURCE}:dummy"
+        assert task_list[1]["source"] == f"{PKG_SOURCE}:dummy_parallel"
 
         # using verbose option
         res = await client.get(f"{PREFIX}/collect/{state['id']}?verbose=true")

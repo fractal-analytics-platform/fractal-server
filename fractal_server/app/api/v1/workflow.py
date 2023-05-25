@@ -251,37 +251,21 @@ async def import_workflow(
     )
 
     # Check that all required tasks are available
-    # NOTE: by now we go through the pair (source, name), but later on we may
-    # combine them into source -- see issue #293.
     tasks = [wf_task.task for wf_task in workflow.task_list]
-    sourcename_to_id = {}
+    source_to_id = {}
     for task in tasks:
         source = task.source
-        name = task.name
-        if not (source, name) in sourcename_to_id.keys():
+        if source not in source_to_id.keys():
             stm = select(Task).where(Task.source == source)
             tasks_by_source = (await db.execute(stm)).scalars().all()
-            if not tasks_by_source:
+            if len(tasks_by_source) != 1:
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=(f"Found 0 tasks with {source=}."),
+                    detail=(
+                        f"Found {len(tasks_by_source)} tasks with {source=}."
+                    ),
                 )
-            else:
-                stm = (
-                    select(Task)
-                    .where(Task.source == source)
-                    .where(Task.name == name)
-                )
-                current_task = (await db.execute(stm)).scalars().all()
-                if len(current_task) != 1:
-                    raise HTTPException(
-                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                        detail=(
-                            f"Found {len(current_task)} tasks with "
-                            f"{name =} and {source=}."
-                        ),
-                    )
-                sourcename_to_id[(source, name)] = current_task[0].id
+            source_to_id[source] = tasks_by_source[0].id
 
     # Create new Workflow (with empty task_list)
     db_workflow = Workflow(
@@ -297,8 +281,7 @@ async def import_workflow(
         for _, wf_task in enumerate(workflow.task_list):
             # Identify task_id
             source = wf_task.task.source
-            name = wf_task.task.name
-            task_id = sourcename_to_id[(source, name)]
+            task_id = source_to_id[source]
             # Prepare new_wf_task
             new_wf_task = WorkflowTaskCreate(
                 **wf_task.dict(exclude_none=True),
