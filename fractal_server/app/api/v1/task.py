@@ -213,9 +213,9 @@ async def collect_tasks_pip(
             # Read package info from wheel file, and override the ones coming
             # from the request body
             pkg_info = inspect_package(pkg_path)
-            task_pkg.version = pkg_info["pkg_version"]
-            task_pkg.package = pkg_info["pkg_name"]
-            task_pkg.manifest = pkg_info["pkg_manifest"]
+            task_pkg.package_name = pkg_info["pkg_name"]
+            task_pkg.package_version = pkg_info["pkg_version"]
+            task_pkg.package_manifest = pkg_info["pkg_manifest"]
             task_pkg.check()
         except Exception as e:
             raise HTTPException(
