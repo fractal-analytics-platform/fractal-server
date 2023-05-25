@@ -18,6 +18,7 @@
     * Improve behavior when task-collection folder already exists (\#704).
     * Update `_TaskCollectPip` methods, attributes and properties (\#719).
     * Set `Task.version` during task collection (\#719).
+    * Make `Task.source` task-specific rather than package-specific (\#719).
 * Job execution:
     * Add `FractalSlurmExecutor.shutdown` and corresponding endpoint (\#631, \#691, \#696).
     * In `FractalSlurmExecutor`, make `working_dir*` attributes required (\#679).
