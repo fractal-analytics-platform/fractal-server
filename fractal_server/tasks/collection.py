@@ -323,8 +323,8 @@ def inspect_package(path: Path, logger_name: Optional[str] = None) -> dict:
     pkg_name = pkg_name.replace("-", "_").replace(".", "_")
 
     info = dict(
-        pkg_version=pkg_version,
         pkg_name=pkg_name,
+        pkg_version=pkg_version,
         pkg_manifest=pkg_manifest,
     )
     return info
@@ -358,7 +358,7 @@ async def create_package_environment_pip(
         # Prepare task_list with appropriate metadata
         logger.debug("Creating task list from manifest")
         task_list = []
-        for t in task_pkg.manifest.task_list:
+        for t in task_pkg.package_manifest.task_list:
             task_executable = package_root / t.executable
             if not task_executable.exists():
                 raise FileNotFoundError(
