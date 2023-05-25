@@ -37,6 +37,7 @@
     * Require pydantic version to be `>=1.10.8` (\#711, \#713).
     * Include multiple `fractal-common` updates (\#705, \#719).
     * Add test equivalent to `alembic check` (\#722).
+    * Update `poetry.lock` to address security alerts (\#723).
 
 # 1.2.5
 
