@@ -72,10 +72,10 @@ def test_unit_source_resolution(
     assert tc.package_source == expected_source
 
 
-def test_task_collect_model(dummy_task_package):
+def test_TaskCollectPip_model(dummy_task_package):
     """
     GIVEN a path to a local wheel package
-    WHEN it is passed to the _TaskCollectPip constructor
+    WHEN it is passed to the `_TaskCollectPip` constructor
     THEN the package name is correctly extracted and the package path
          correctly set
     """
@@ -85,6 +85,18 @@ def test_task_collect_model(dummy_task_package):
 
     assert tc.package == "fractal_tasks_dummy"
     assert tc.package_path == dummy_task_package
+
+    # Test multiple cases for the check() method
+    with pytest.raises(ValueError):
+        tc.check()
+    tc.package_name = tc.package
+    with pytest.raises(ValueError):
+        tc.check()
+    tc.package_version = "1.2.3"
+    with pytest.raises(ValueError):
+        tc.check()
+    tc.package_manifest = ManifestV1(manifest_version="1", task_list=[])
+    tc.check()
 
 
 @pytest.mark.parametrize("python_version", [None, "3.10"])
