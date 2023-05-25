@@ -12,6 +12,9 @@ from .fixtures_server import DB_ENGINE
 
 
 def _prepare_config_and_db(_tmp_path: Path):
+    if not _tmp_path.exists():
+        _tmp_path.mkdir(parents=True)
+
     cwd = str(_tmp_path)
 
     # General config
@@ -70,7 +73,19 @@ def test_alembic_check(tmp_path):
     import alembic
 
     # Set db
-    _prepare_config_and_db(tmp_path)
+    db_folder = tmp_path / "test_alembic_check"
+    _prepare_config_and_db(db_folder)
+
+    # Read env
+    env = {}
+    with (db_folder / ".fractal_server.env").open("r") as f:
+        lines = f.read().splitlines()
+    for line in lines:
+        if not line:
+            continue
+        key, value = line.split("=")
+        env[key] = value
+    debug(env)
 
     # Run check
     fractal_server_dir = Path(fractal_server.__file__).parent
@@ -82,7 +97,7 @@ def test_alembic_check(tmp_path):
         cwd=fractal_server_dir,
         encoding="utf-8",
         capture_output=True,
-        env=dict(SQLITE_PATH=f"{tmp_path}/test.db"),
+        env=env,
     )
     if not res.returncode == 0:
         raise ValueError(
