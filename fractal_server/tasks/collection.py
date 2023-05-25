@@ -152,11 +152,11 @@ class _TaskCollectPip(TaskCollectPip):
 
     @property
     def package_source(self):
-        if not self.package_name:
-            from devtools import debug
-
-            debug(self)
-            raise ValueError()
+        if not self.package_name or not self.package_version:
+            raise ValueError(
+                "Cannot construct `package_source` property with "
+                f"{self.package_name=} and {self.package_version=}."
+            )
         if self.is_local_package:
             collection_type = "pip_local"
         else:
