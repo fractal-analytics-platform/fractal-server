@@ -193,7 +193,7 @@ async def collect_tasks_pip(
     # Validate payload as _TaskCollectPip, which has more strict checks than
     # TaskCollectPip
     try:
-        task_pkg = _TaskCollectPip(**task_collect.dict())
+        task_pkg = _TaskCollectPip(**task_collect.dict(exclude_unset=True))
     except ValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
