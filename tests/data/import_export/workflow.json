@@ -9,8 +9,7 @@
             "meta": {"key": "value"},
             "order": 0,
             "task": {
-                "name": "dummy",
-                "source": "test_source"
+                "source": "PKG_SOURCE:dummy"
             }
         },
         {
@@ -19,8 +18,7 @@
             },
             "order": 1,
             "task": {
-                "name": "dummy parallel",
-                "source": "test_source"
+                "source": "PKG_SOURCE:dummy_parallel"
             }
         }
     ]
