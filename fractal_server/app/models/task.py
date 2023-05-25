@@ -24,6 +24,7 @@ class Task(_TaskBase, table=True):
     """
 
     id: Optional[int] = Field(default=None, primary_key=True)
+    a: int
     name: str
     command: str
     input_type: str
