@@ -62,23 +62,35 @@ def _prepare_config_and_db(_tmp_path: Path):
     assert res.returncode == 0
 
 
-def test_alembic_check():
+def test_alembic_check(tmp_path):
     """
     Run `alembic check` to see whether new migrations are needed
     """
     import fractal_server
-    import alembic.command
-    import alembic.config
+    import alembic
 
     # Set db
-    alembic_ini = Path(fractal_server.__file__).parent / "alembic.ini"
-    alembic_args = ["-c", alembic_ini.as_posix(), "upgrade", "head"]
-    print(f"Run alembic.config, with argv={alembic_args}")
-    alembic.config.main(argv=alembic_args)
+    _prepare_config_and_db(tmp_path)
 
     # Run check
-    cfg = alembic.config.Config(alembic_ini)
-    alembic.command.check(cfg)
+    fractal_server_dir = Path(fractal_server.__file__).parent
+    alembic_bin = Path(alembic.__file__).parents[4] / "bin/alembic"
+    cmd = f"{alembic_bin} check"
+    debug(cmd)
+    res = subprocess.run(
+        shlex.split(cmd),
+        cwd=fractal_server_dir,
+        encoding="utf-8",
+        capture_output=True,
+        env=dict(SQLITE_PATH=f"{tmp_path}/test.db"),
+    )
+    if not res.returncode == 0:
+        raise ValueError(
+            f"Command `{cmd}` failed with exit code {res.returncode}.\n"
+            f"Original stdout: {res.stdout}\n"
+            f"Original stderr: {res.stderr}\n"
+        )
+    assert "No new upgrade operations detected" in res.stdout
 
 
 commands = [
