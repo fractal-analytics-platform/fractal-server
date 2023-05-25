@@ -374,7 +374,7 @@ async def create_package_environment_pip(
             this_task = TaskCreate(
                 **t.dict(),
                 command=cmd,
-                version=task_pkg.version,  # this is the new line
+                version=task_pkg.version,
                 source=task_source,
             )
             task_list.append(this_task)
