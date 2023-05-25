@@ -359,18 +359,16 @@ async def create_package_environment_pip(
         logger.debug("Creating task list from manifest")
         task_list = []
         for t in task_pkg.package_manifest.task_list:
+            # Fill in attributes for TaskCreate
             task_executable = package_root / t.executable
+            cmd = f"{python_bin.as_posix()} {task_executable.as_posix()}"
+            task_name_slug = t.name.replace(" ", "_").lower()
+            task_source = f"{task_pkg.package_source}:{task_name_slug}"
             if not task_executable.exists():
                 raise FileNotFoundError(
                     f"Cannot find executable `{task_executable}` "
                     f"for task `{t.name}`"
                 )
-            cmd = f"{python_bin.as_posix()} {task_executable.as_posix()}"
-
-            # FIXME: source must be the combination of package_source and some
-            # task-specific string
-            task_source = task_pkg.package_source
-
             this_task = TaskCreate(
                 **t.dict(),
                 command=cmd,
