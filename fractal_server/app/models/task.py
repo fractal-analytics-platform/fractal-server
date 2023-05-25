@@ -26,6 +26,7 @@ class Task(_TaskBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
     command: str
+    wrong: str
     input_type: str
     output_type: str
     default_args: Optional[dict[str, Any]] = Field(
