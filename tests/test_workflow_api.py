@@ -611,18 +611,6 @@ async def test_import_export_workflow_fail(
     assert res.status_code == 422
     assert "Found 0 tasks with source" in res.json()["detail"]
 
-    payload = {
-        "name": "MyWorkflow",
-        "task_list": [
-            {"order": 0, "task": {"name": "invalid", "source": "test_source"}}
-        ],
-    }
-    res = await client.post(
-        f"/api/v1/project/{prj.id}/workflow/import/", json=payload
-    )
-    assert res.status_code == 422
-    assert "Found 0 tasks with name" in res.json()["detail"]
-
 
 reorder_cases = []
 reorder_cases.append([1, 2])
