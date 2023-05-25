@@ -86,15 +86,20 @@ def test_TaskCollectPip_model(dummy_task_package):
     assert tc.package == "fractal_tasks_dummy"
     assert tc.package_path == dummy_task_package
 
-    # Test multiple cases for the check() method
+    # Test multiple cases for the check() method and package_source() property
     with pytest.raises(ValueError):
         tc.check()
+    with pytest.raises(ValueError):
+        tc.package_source
     tc.package_name = tc.package
     with pytest.raises(ValueError):
         tc.check()
+    with pytest.raises(ValueError):
+        tc.package_source
     tc.package_version = "1.2.3"
     with pytest.raises(ValueError):
         tc.check()
+    debug(tc.package_source)
     tc.package_manifest = ManifestV1(manifest_version="1", task_list=[])
     tc.check()
 
