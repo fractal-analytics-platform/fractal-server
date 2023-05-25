@@ -108,20 +108,19 @@ class _TaskCollectPip(TaskCollectPip):
     """
     Internal TaskCollectPip schema
 
-    FIXME: this will be heavily updated, see
-    https://github.com/fractal-analytics-platform/fractal-server/issues/702
-
     Differences with its parent class (`TaskCollectPip`):
 
-    1. We check if the package corresponds to a path in the filesystem, and
-       whether it exists.
-    2. We include an additional `manifest` attribute.
-    3. We expose some additional properties.
-
+        1. We check if the package corresponds to a path in the filesystem, and
+           whether it exists (via new validator `check_local_package`, new
+           method `is_local_package` and new attribute `package_path`).
+        2. We include an additional `package_manifest` attribute.
+        3. We expose an additional attribute `package_name`, which is filled
+           during task collection.
     """
 
+    package_name: Optional[str] = None
     package_path: Optional[Path] = None
-    manifest: Optional[ManifestV1] = None
+    package_manifest: Optional[ManifestV1] = None
 
     @property
     def is_local_package(self) -> bool:
@@ -152,25 +151,45 @@ class _TaskCollectPip(TaskCollectPip):
         return values
 
     @property
-    def pip_package_version(self):
-        """
-        Return pip compatible specification of package and version
-        """
-        version = f"=={self.version}" if self.version else ""
-        return f"{self.package}{version}"
+    def package_source(self):
+        if not self.package_name:
+            from devtools import debug
 
-    @property
-    def source(self):
+            debug(self)
+            raise ValueError()
         if self.is_local_package:
-            return f"pip-local:{self.package_path.name}"
+            collection_type = "pip_local"
         else:
-            return f"pip:{self.pip_package_version}"
+            collection_type = "pip_remote"
+
+        package_extras = self.package_extras or ""
+        if self.python_version:
+            python_version = f"py{self.python_version}"
+        else:
+            python_version = ""  # FIXME: can we allow this?
+
+        source = ":".join(
+            (
+                collection_type,
+                self.package_name,
+                self.package_version,
+                package_extras,
+                python_version,
+            )
+        )
+        return source
 
     def check(self):
-        if not self.version:
-            raise ValueError("Version is not set or cannot be determined")
-        if not self.manifest:
-            raise ValueError("Manifest is not set or cannot be determined")
+        """
+        Verify that the package has all attributes that are needed to continue
+        with task collection
+        """
+        if not self.package_name:
+            raise ValueError("`package_name` attribute is not set")
+        if not self.package_version:
+            raise ValueError("`package_version` attribute is not set")
+        if not self.package_manifest:
+            raise ValueError("`package_manifest` attribute is not set")
 
 
 def create_package_dir_pip(
@@ -183,12 +202,12 @@ def create_package_dir_pip(
     """
     settings = Inject(get_settings)
     user = FRACTAL_PUBLIC_TASK_SUBDIR
-    if task_pkg.version is None:
+    if task_pkg.package_version is None:
         raise ValueError(
             f"Cannot create venv folder for package `{task_pkg.package}` "
             "with `version=None`."
         )
-    package_dir = f"{task_pkg.package}{task_pkg.version}"
+    package_dir = f"{task_pkg.package}{task_pkg.package_version}"
     venv_path = settings.FRACTAL_TASKS_DIR / user / package_dir  # type: ignore
     if create:
         venv_path.mkdir(exist_ok=False, parents=True)
@@ -205,10 +224,11 @@ async def download_package(
     """
     interpreter = get_python_interpreter(version=task_pkg.python_version)
     pip = f"{interpreter} -m pip"
-    cmd = (
-        f"{pip} download --no-deps {task_pkg.pip_package_version} "
-        f"-d {dest}"
+    version = (
+        f"=={task_pkg.package_version}" if task_pkg.package_version else ""
     )
+    package_and_version = f"{task_pkg.package}{version}"
+    cmd = f"{pip} download --no-deps {package_and_version} -d {dest}"
     stdout = await execute_command(command=cmd, cwd=Path("."))
     pkg_file = next(
         line.split()[-1] for line in stdout.split("\n") if "Saved" in line
@@ -346,8 +366,10 @@ async def create_package_environment_pip(
                     f"for task `{t.name}`"
                 )
             cmd = f"{python_bin.as_posix()} {task_executable.as_posix()}"
+            # FIXME: source must be the combination of package_source and some
+            # task-specific string
             this_task = TaskCreate(
-                **t.dict(), command=cmd, source=task_pkg.source
+                **t.dict(), command=cmd, source=task_pkg.package_source
             )
             task_list.append(this_task)
         logger.debug("Task list created correctly")
@@ -432,7 +454,9 @@ async def _pip_install(
     if task_pkg.is_local_package:
         pip_install_str = f"{task_pkg.package_path.as_posix()}{extras}"
     else:
-        version_string = f"=={task_pkg.version}" if task_pkg.version else ""
+        version_string = (
+            f"=={task_pkg.package_version}" if task_pkg.package_version else ""
+        )
         pip_install_str = f"{task_pkg.package}{extras}{version_string}"
 
     cmd_install = f"{pip} install {pip_install_str}"
