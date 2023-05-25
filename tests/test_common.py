@@ -2,13 +2,13 @@ from datetime import datetime
 
 import pytest
 
-from fractal_server.common.schemas.applyworkflow import ApplyWorkflowRead
-from fractal_server.common.schemas.manifest import ManifestV1
-from fractal_server.common.schemas.project import ProjectCreate
-from fractal_server.common.schemas.project import ResourceCreate
-from fractal_server.common.schemas.task import TaskCollectPip
-from fractal_server.common.schemas.workflow import WorkflowTaskCreate
-from fractal_server.common.schemas.workflow import WorkflowUpdate
+from fractal_server.common.schemas import ApplyWorkflowRead
+from fractal_server.common.schemas import ManifestV1
+from fractal_server.common.schemas import ProjectCreate
+from fractal_server.common.schemas import ResourceCreate
+from fractal_server.common.schemas import TaskCollectPip
+from fractal_server.common.schemas import WorkflowTaskCreate
+from fractal_server.common.schemas import WorkflowUpdate
 
 
 async def test_fail_valstr():
