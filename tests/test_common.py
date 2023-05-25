@@ -64,6 +64,6 @@ async def test_fail_wfupdate():
 
 
 async def test_non_absolute_path():
-    TaskCollectPip(package="/a/b/c")
+    TaskCollectPip(package="/some/path.whl")
     with pytest.raises(ValueError):
         TaskCollectPip(package="a/b/c")

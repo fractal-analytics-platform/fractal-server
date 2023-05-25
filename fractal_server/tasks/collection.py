@@ -366,10 +366,16 @@ async def create_package_environment_pip(
                     f"for task `{t.name}`"
                 )
             cmd = f"{python_bin.as_posix()} {task_executable.as_posix()}"
+
             # FIXME: source must be the combination of package_source and some
             # task-specific string
+            task_source = task_pkg.package_source
+
             this_task = TaskCreate(
-                **t.dict(), command=cmd, source=task_pkg.package_source
+                **t.dict(),
+                command=cmd,
+                version=task_pkg.version,
+                source=task_source,
             )
             task_list.append(this_task)
         logger.debug("Task list created correctly")
