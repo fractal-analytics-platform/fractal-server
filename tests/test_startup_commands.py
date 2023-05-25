@@ -62,6 +62,25 @@ def _prepare_config_and_db(_tmp_path: Path):
     assert res.returncode == 0
 
 
+def test_alembic_check():
+    """
+    Run `alembic check` to see whether new migrations are needed
+    """
+    import fractal_server
+    import alembic.command
+    import alembic.config
+
+    # Set db
+    alembic_ini = Path(fractal_server.__file__).parent / "alembic.ini"
+    alembic_args = ["-c", alembic_ini.as_posix(), "upgrade", "head"]
+    print(f"Run alembic.config, with argv={alembic_args}")
+    alembic.config.main(argv=alembic_args)
+
+    # Run check
+    cfg = alembic.config.Config(alembic_ini)
+    alembic.command.check(cfg)
+
+
 commands = [
     "fractalctl start",
     "fractalctl start --reload",
