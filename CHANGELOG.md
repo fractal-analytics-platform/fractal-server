@@ -38,6 +38,7 @@
     * Include multiple `fractal-common` updates (\#705, \#719).
     * Add test equivalent to `alembic check` (\#722).
     * Update `poetry.lock` to address security alerts (\#723).
+    * Remove `sqlmodel` from `fractal-common`, and declare database models with multiple inheritance (\#710).
 
 # 1.2.5
 
