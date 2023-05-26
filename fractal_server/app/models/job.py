@@ -8,7 +8,7 @@ from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
-from ...common.schemas import ApplyWorkflowBase
+from ...common.schemas import _ApplyWorkflowBase
 from ...utils import get_timestamp
 from .project import Dataset
 from .workflow import Workflow
@@ -39,7 +39,7 @@ class JobStatusType(str, Enum):
     FAILED = "failed"
 
 
-class ApplyWorkflow(ApplyWorkflowBase, SQLModel, table=True):
+class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
     """
     Represent a workflow run
 
