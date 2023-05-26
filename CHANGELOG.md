@@ -5,23 +5,39 @@
 * Refactor user model:
     * Switch from UUID4 to int for IDs (\#660, \#684).
     * Fix many-to-many relationship between users and project (\#660).
-    * Remove `fastapi-users-db-sqlmodel` dependency (\#660).
     * Rename `Project.user_member_list` into `Project.user_list` (\#660).
+    * Add `username` column (\#704).
 * Update endpoints (see also [1.2->1.3 upgrade info](../internals/version_upgrades/upgrade_1_2_5_to_1_3_0/) in the documentation):
     * Review endpoint URLs (\#669).
     * Remove foreign keys from payloads (\#669).
-* Add `FractalSlurmExecutor.shutdown` and corresponding endpoint (\#631, \#691, \#696).
-* Add project-name uniqueness constraint in project-edit endpoint (\#689).
-* Add `ApplyWorkflow.end_timestamp` column (\#687, \#684).
+* Update `Task` models, task collection and task-related endpoints (\#704):
+    * Add `version` and `owner` columns to `Task` model (\#704).
+    * Set `Task.owner` as part of create-task endpoint (\#704).
+    * Improve error message for missing package manifest (\#704).
+    * Remove private/public options for task collection (\#704).
+    * Improve behavior when task-collection folder already exists (\#704).
+    * Update `_TaskCollectPip` methods, attributes and properties (\#719).
+    * Set `Task.version` during task collection (\#719).
+    * Make `Task.source` task-specific rather than package-specific (\#719).
+    * When importing a workflow, only use tasks' `source` values, instead of `(source,name)` pairs (\#719).
+* Job execution:
+    * Add `FractalSlurmExecutor.shutdown` and corresponding endpoint (\#631, \#691, \#696).
+    * In `FractalSlurmExecutor`, make `working_dir*` attributes required (\#679).
+    * Remove `ApplyWorkflow.overwrite_input` column (\#684, \#694).
+    * Make `output_dataset_id` a required argument of apply-workflow endpoint (\#681).
+    * Improve error message related to out-of-space disk (\#699).
+* Database:
+    * Add project-name uniqueness constraint in project-edit endpoint (\#689).
+    * Add `ApplyWorkflow.end_timestamp` column (\#687, \#684).
+    * Prevent deletion of a `Workflow`/`Dataset` in relationship with existing `ApplyWorkflow` (\#703).
 * Expose `FRACTAL_CORS_ALLOW_ORIGIN` environment variable (\#688).
-* In `FractalSlurmExecutor`, make `working_dir*` attributes required (\#679).
-* Make `output_dataset_id` a required argument of apply-workflow endpoint (\#681).
-* Remove `ApplyWorkflow.overwrite_input` column (\#684, \#694).
-* Prevent deletion of a `Workflow`/`Dataset` in relationship with existing `ApplyWorkflow` (\#703).
-* Improve error message related to out-of-space disk (\#699).
-* Make coverage measure more accurate (\#676) and improve coverage (\#678).
-* Require pydantic version to be `>=1.10.8` (\#711, \#713).
-* Include `fractal-common` updates (\#705).
+* Package and repository:
+    * Remove `fastapi-users-db-sqlmodel` dependency (\#660).
+    * Make coverage measure more accurate (\#676) and improve coverage (\#678).
+    * Require pydantic version to be `>=1.10.8` (\#711, \#713).
+    * Include multiple `fractal-common` updates (\#705, \#719).
+    * Add test equivalent to `alembic check` (\#722).
+    * Update `poetry.lock` to address security alerts (\#723).
 
 # 1.2.5
 

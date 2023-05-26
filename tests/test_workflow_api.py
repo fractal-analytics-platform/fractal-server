@@ -527,6 +527,23 @@ async def test_import_export_workflow(
     with (testdata_path / "import_export/workflow.json").open("r") as f:
         workflow_from_file = json.load(f)
 
+    # Modify tasks' source to match the existing one
+    debug(collect_packages)
+    existing_source = collect_packages[0].source
+    debug(existing_source)
+    existing_package_source = ":".join(existing_source.split(":")[:-1])
+    debug(existing_package_source)
+    task_list = workflow_from_file["task_list"]
+    for ind, wftask in enumerate(task_list):
+        old_task_source = task_list[ind]["task"]["source"]
+        new_task_source = old_task_source.replace(
+            "PKG_SOURCE", existing_package_source
+        )  # noqa
+        task_list[ind]["task"]["source"] = new_task_source
+    workflow_from_file["task_list"] = task_list[:]
+
+    debug(workflow_from_file)
+
     # Create project
     async with MockCurrentUser(persist=True) as user:
         prj = await project_factory(user)
@@ -537,7 +554,7 @@ async def test_import_export_workflow(
     res = await client.post(
         f"/api/v1/project/{prj.id}/workflow/import/", json=payload
     )
-    debug(res)
+    debug(res.json())
     assert res.status_code == 201
     workflow_imported = res.json()
     debug(workflow_imported)
@@ -550,6 +567,7 @@ async def test_import_export_workflow(
     res = await client.get(
         f"/api/v1/project/{prj.id}/workflow/{workflow_id}/export/"
     )
+    debug(res)
     debug(res.status_code)
     workflow_exported = res.json()
     debug(workflow_exported)
@@ -592,18 +610,6 @@ async def test_import_export_workflow_fail(
     )
     assert res.status_code == 422
     assert "Found 0 tasks with source" in res.json()["detail"]
-
-    payload = {
-        "name": "MyWorkflow",
-        "task_list": [
-            {"order": 0, "task": {"name": "invalid", "source": "test_source"}}
-        ],
-    }
-    res = await client.post(
-        f"/api/v1/project/{prj.id}/workflow/import/", json=payload
-    )
-    assert res.status_code == 422
-    assert "Found 0 tasks with name" in res.json()["detail"]
 
 
 reorder_cases = []

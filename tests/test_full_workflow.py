@@ -528,7 +528,8 @@ async def test_non_python_task(
             output_type="zarr",
         )
         task_create = TaskCreate(**task_dict)
-        res = await client.post(f"{PREFIX}/task/", json=task_create.dict())
+        payload = task_create.dict(exclude_unset=True)
+        res = await client.post(f"{PREFIX}/task/", json=payload)
         task = res.json()
         debug(task)
         assert res.status_code == 201
