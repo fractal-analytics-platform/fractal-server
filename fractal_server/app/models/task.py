@@ -4,11 +4,12 @@ from typing import Optional
 from sqlalchemy import Column
 from sqlalchemy.types import JSON
 from sqlmodel import Field
+from sqlmodel import SQLModel
 
 from ...common.schemas.task import _TaskBase
 
 
-class Task(_TaskBase, table=True):
+class Task(_TaskBase, SQLModel, table=True):
     """
     Task model
 
