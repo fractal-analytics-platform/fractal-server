@@ -12,6 +12,9 @@ from .fixtures_server import DB_ENGINE
 
 
 def _prepare_config_and_db(_tmp_path: Path):
+    if not _tmp_path.exists():
+        _tmp_path.mkdir(parents=True)
+
     cwd = str(_tmp_path)
 
     # General config
@@ -60,6 +63,49 @@ def _prepare_config_and_db(_tmp_path: Path):
     debug(res.stderr)
     debug(res.returncode)
     assert res.returncode == 0
+
+
+def test_alembic_check(tmp_path):
+    """
+    Run `alembic check` to see whether new migrations are needed
+    """
+    import fractal_server
+    import alembic
+
+    # Set db
+    db_folder = tmp_path / "test_alembic_check"
+    _prepare_config_and_db(db_folder)
+
+    # Read env
+    env = {}
+    with (db_folder / ".fractal_server.env").open("r") as f:
+        lines = f.read().splitlines()
+    for line in lines:
+        if not line:
+            continue
+        key, value = line.split("=")
+        env[key] = value
+    debug(env)
+
+    # Run check
+    fractal_server_dir = Path(fractal_server.__file__).parent
+    alembic_bin = Path(alembic.__file__).parents[4] / "bin/alembic"
+    cmd = f"{alembic_bin} check"
+    debug(cmd)
+    res = subprocess.run(
+        shlex.split(cmd),
+        cwd=fractal_server_dir,
+        encoding="utf-8",
+        capture_output=True,
+        env=env,
+    )
+    if not res.returncode == 0:
+        raise ValueError(
+            f"Command `{cmd}` failed with exit code {res.returncode}.\n"
+            f"Original stdout: {res.stdout}\n"
+            f"Original stderr: {res.stderr}\n"
+        )
+    assert "No new upgrade operations detected" in res.stdout
 
 
 commands = [

@@ -85,6 +85,7 @@ async def _create_first_user(
     is_superuser: bool = False,
     slurm_user: Optional[str] = None,
     cache_dir: Optional[str] = None,
+    username: Optional[str] = None,
 ) -> None:
     """
     Private method to create the first fractal-server user
@@ -121,6 +122,8 @@ async def _create_first_user(
                         kwargs["slurm_user"] = slurm_user
                     if cache_dir:
                         kwargs["cache_dir"] = cache_dir
+                    if username:
+                        kwargs["username"] = username
                     user = await user_manager.create(UserCreate(**kwargs))
                     logger.info(f"User {user.email} created")
 

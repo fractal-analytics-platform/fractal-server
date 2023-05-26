@@ -25,6 +25,7 @@ class Task(_TaskBase, SQLModel, table=True):
     """
 
     id: Optional[int] = Field(default=None, primary_key=True)
+    name: str
     command: str
     input_type: str
     output_type: str
@@ -32,6 +33,8 @@ class Task(_TaskBase, SQLModel, table=True):
         sa_column=Column(JSON), default={}
     )
     meta: Optional[dict[str, Any]] = Field(sa_column=Column(JSON), default={})
+    owner: Optional[str] = None
+    version: Optional[str] = None
 
     @property
     def parallelization_level(self) -> Optional[str]:

@@ -1,4 +1,3 @@
-import json
 from pathlib import Path
 
 import pytest
@@ -13,39 +12,96 @@ from fractal_server.tasks.collection import _TaskCollectPip
 from fractal_server.tasks.collection import create_package_dir_pip
 from fractal_server.tasks.collection import download_package
 from fractal_server.tasks.collection import inspect_package
-from fractal_server.tasks.collection import load_manifest
 from fractal_server.tasks.collection import ManifestV1
 
 
 @pytest.mark.parametrize(
-    ("package", "version", "source"),
+    (
+        "package",
+        "package_version",
+        "package_extras",
+        "python_version",
+        "expected_source",
+    ),
     [
-        ("my_package", None, "pip:my_package"),
-        ("my-package", "1.2.3", "pip:my-package==1.2.3"),
+        (
+            "my-package",
+            "1.2.3",
+            None,
+            None,
+            "pip_remote:my-package:1.2.3::",
+        ),
+        (
+            "my-package",
+            "1.2.3",
+            "extra1,extra2",
+            None,
+            "pip_remote:my-package:1.2.3:extra1,extra2:",
+        ),
+        (
+            "my-package",
+            "1.2.3",
+            "extra1,extra2",
+            "3.9",
+            "pip_remote:my-package:1.2.3:extra1,extra2:py3.9",
+        ),
     ],
 )
-def test_unit_source_resolution(package, version, source):
+def test_unit_source_resolution(
+    package,
+    package_version,
+    package_extras,
+    python_version,
+    expected_source,
+):
     """
-    GIVEN a private task package
+    GIVEN a task package
     WHEN the source is resolved
     THEN it matches expectations
     """
-    tc = _TaskCollectPip(package=package, version=version)
-    assert tc.source == source
+    args = dict(
+        package=package,
+        package_name=package,
+        package_version=package_version,
+    )
+    if package_extras:
+        args["package_extras"] = package_extras
+    if python_version:
+        args["python_version"] = python_version
+    tc = _TaskCollectPip(**args)
+    assert tc.package_source == expected_source
 
 
-def test_task_collect_model(dummy_task_package):
+def test_TaskCollectPip_model(dummy_task_package):
     """
     GIVEN a path to a local wheel package
-    WHEN it is passed to the _TaskCollectPip constructor
+    WHEN it is passed to the `_TaskCollectPip` constructor
     THEN the package name is correctly extracted and the package path
          correctly set
     """
     debug(dummy_task_package)
     tc = _TaskCollectPip(package=dummy_task_package.as_posix())
+    debug(tc)
 
     assert tc.package == "fractal_tasks_dummy"
     assert tc.package_path == dummy_task_package
+
+    # Test multiple cases for the check() method and package_source() property
+    with pytest.raises(ValueError):
+        tc.check()
+    with pytest.raises(ValueError):
+        tc.package_source
+    tc.package_name = tc.package
+    with pytest.raises(ValueError):
+        tc.check()
+    with pytest.raises(ValueError):
+        tc.package_source
+    tc.package_version = "1.2.3"
+    with pytest.raises(ValueError):
+        tc.check()
+    debug(tc.package_source)
+    tc.package_manifest = ManifestV1(manifest_version="1", task_list=[])
+    tc.check()
 
 
 @pytest.mark.parametrize("python_version", [None, "3.10"])
@@ -95,7 +151,7 @@ async def test_pip_install(tmp_path):
     await _init_venv(path=venv_path, logger_name=logger_name)
     location = await _pip_install(
         venv_path=venv_path,
-        task_pkg=_TaskCollectPip(package=PACKAGE, version=VERSION),
+        task_pkg=_TaskCollectPip(package=PACKAGE, package_version=VERSION),
         logger_name=logger_name,
     )
     debug(location)
@@ -116,97 +172,50 @@ async def test_download(tmp_path):
     assert "whl" in pkg.as_posix()
 
 
-async def test_inspect(tmp_path):
+async def test_inspect_package(tmp_path):
     """
     GIVEN the path to a wheel package
     WHEN the inspect package is called on the path of the wheel
-    THEN the version number and the manifest are loaded
+    THEN the name, version and manifest of the package are loaded
     """
-    PACKAGE = "fractal-tasks-core"
+    PACKAGE = "fractal-tasks-core==0.9.4"
     task_pkg = _TaskCollectPip(package=PACKAGE)
-    pkg = await download_package(task_pkg=task_pkg, dest=tmp_path)
-
-    res = inspect_package(pkg)
-    debug(res)
-    assert "version" in res
-    assert isinstance(res["manifest"], ManifestV1)
-
-
-def test_load_manifest(tmp_path):
-    TASK_EXECUTABLE = "task0.py"
-    __FRACTAL_MANIFEST__ = dict(
-        manifest_version=1,
-        task_list=[
-            dict(
-                name="task0",
-                executable=TASK_EXECUTABLE,
-                input_type="Any",
-                output_type="Any",
-                default_args=dict(a=1, b="c"),
-                meta=dict(
-                    min_memory="2G", requires_gpu=True, version="custom"
-                ),
-            )
-        ],
-    )
-
-    package_root = tmp_path / "package"
-    package_root.mkdir(exist_ok=True, parents=True)
-    manifest_path = package_root / "__FRACTAL_MANIFEST__.json"
-    executable_path = package_root / TASK_EXECUTABLE
-    python_bin = package_root / "my/custon/python_bin"
-    SOURCE = "my:source==123"
-
-    with executable_path.open("w") as f:
-        f.write("test_executable")
-
-    with manifest_path.open("w") as f:
-        json.dump(__FRACTAL_MANIFEST__, f)
-
-    task_list = load_manifest(
-        package_root=package_root,
-        python_bin=python_bin,
-        source=SOURCE,
-    )
-
-    debug(task_list)
-
-    assert len(task_list) == 1
-    for t in task_list:
-        assert t.source == SOURCE
+    pkg_wheel = await download_package(task_pkg=task_pkg, dest=tmp_path)
+    debug(pkg_wheel)
+    info = inspect_package(pkg_wheel)
+    debug(info)
+    assert info["pkg_name"] == "fractal_tasks_core"
+    assert info["pkg_version"] == "0.9.4"
+    assert isinstance(info["pkg_manifest"], ManifestV1)
 
 
 @pytest.mark.parametrize(
-    ("task_pkg", "user", "expected_path"),
+    ("task_pkg", "expected_path"),
     [
         (
             _TaskCollectPip(package="my-package"),
-            None,
             Path(".fractal/my-package"),
         ),
         (
-            _TaskCollectPip(package="my-package", version="1.2.3"),
-            None,
+            _TaskCollectPip(package="my-package", package_version="1.2.3"),
             Path(".fractal/my-package1.2.3"),
-        ),
-        (
-            _TaskCollectPip(package="my-package", version="1.2.3"),
-            "genoveffo",
-            Path("genoveffo/my-package1.2.3"),
         ),
     ],
 )
-def test_create_pkg_dir(task_pkg, user, expected_path):
+def test_create_pkg_dir(task_pkg, expected_path):
     """
     GIVEN a taks package
     WHEN the directory for installation is created
-    THEN the path is the one expected
+    THEN the path is the one expected, or we obtain the expected error
 
     NOTE:
         expected_path relative to FRACTAL_TASKS_DIR
     """
     settings = Inject(get_settings)
     check = settings.FRACTAL_TASKS_DIR / expected_path
-
-    venv_path = create_package_dir_pip(task_pkg=task_pkg, user=user)
-    assert venv_path == check
+    if task_pkg.package_version is None:
+        with pytest.raises(ValueError):
+            venv_path = create_package_dir_pip(task_pkg=task_pkg)
+    else:
+        venv_path = create_package_dir_pip(task_pkg=task_pkg)
+        assert venv_path == check
