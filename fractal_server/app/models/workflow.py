@@ -8,6 +8,7 @@ from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.types import JSON
 from sqlmodel import Field
 from sqlmodel import Relationship
+from sqlmodel import SQLModel
 
 from ...common.schemas.workflow import _WorkflowBase
 from ...common.schemas.workflow import _WorkflowTaskBase
@@ -15,7 +16,7 @@ from ..db import AsyncSession
 from .task import Task
 
 
-class WorkflowTask(_WorkflowTaskBase, table=True):
+class WorkflowTask(_WorkflowTaskBase, SQLModel, table=True):
     """
     A Task as part of a Workflow
 
@@ -124,7 +125,7 @@ class WorkflowTask(_WorkflowTaskBase, table=True):
         return full_args
 
 
-class Workflow(_WorkflowBase, table=True):
+class Workflow(_WorkflowBase, SQLModel, table=True):
     """
     Workflow
 

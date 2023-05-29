@@ -67,8 +67,13 @@ at the version provided instead of the system interpreter.
 Whenever the models are modified (either in
 [`app/models`](../reference/fractal_server/app/models/) or in
 [`common/schemas`](../reference/fractal_server/common/schemas)), you should
-update them via a migration. The simplest procedure is to use `alembic
---autogenerate` to create an incremental migration script, as in the following
+update them via a migration. To check whether this is needed, run
+```
+poetry run alembic check
+```
+
+If needed, the simplest procedure is to use `alembic --autogenerate` to create
+an incremental migration script, as in
 ```
 $ export SQLITE_PATH=some-test.db
 $ rm some-test.db
