@@ -8,7 +8,11 @@ from pathlib import Path
 import pytest
 from devtools import debug
 
+import fractal_server
 from .fixtures_server import DB_ENGINE
+
+
+FRACTAL_SERVER_DIR = Path(fractal_server.__file__).parent
 
 
 def _prepare_config_and_db(_tmp_path: Path):
@@ -19,16 +23,12 @@ def _prepare_config_and_db(_tmp_path: Path):
 
     # General config
     config_lines = [
+        f"DB_ENGINE={DB_ENGINE}",
+        f"FRACTAL_TASKS_DIR={cwd}/FRACTAL_TASKS_DIR",
+        f"FRACTAL_RUNNER_WORKING_BASE_DIR={cwd}/artifacts",
         "DEPLOYMENT_TYPE=testing",
         "JWT_SECRET_KEY=secret",
         "FRACTAL_LOGGING_LEVEL=10",
-        "FRACTAL_RUNNER_BACKEND=local",
-        f"FRACTAL_RUNNER_WORKING_BASE_DIR={cwd}/artifacts",
-        f"FRACTAL_TASKS_DIR={cwd}/FRACTAL_TASKS_DIR",
-        "FRACTAL_ADMIN_DEFAULT_EMAIL=admin@fractal.xy",
-        "FRACTAL_ADMIN_DEFAULT_PASSWORD=1234",
-        "JWT_EXPIRE_SECONDS=84600",
-        f"DB_ENGINE={DB_ENGINE}",
     ]
 
     # DB_ENGINE-specific config
@@ -41,23 +41,27 @@ def _prepare_config_and_db(_tmp_path: Path):
             ]
         )
     elif DB_ENGINE == "sqlite":
+        if "SQLITE_PATH" in os.environ:
+            SQLITE_PATH = os.environ.pop("SQLITE_PATH")
+            debug(f"Dropped {SQLITE_PATH=} from `os.environ`.")
         config_lines.append(f"SQLITE_PATH={cwd}/test.db")
+        debug(f"SQLITE_PATH={cwd}/test.db")
     else:
         raise ValueError(f"Invalid {DB_ENGINE=}")
 
     # Write config to file
     config = "\n".join(config_lines + ["\n"])
-    with (_tmp_path / ".fractal_server.env").open("w") as f:
+    with (FRACTAL_SERVER_DIR / ".fractal_server.env").open("w") as f:
         f.write(config)
 
     # Initialize db
-    cmd = "fractalctl set-db"
+    cmd = "poetry run fractalctl set-db"
     debug(cmd)
     res = subprocess.run(
         shlex.split(cmd),
         encoding="utf-8",
         capture_output=True,
-        cwd=cwd,
+        cwd=FRACTAL_SERVER_DIR,
     )
     debug(res.stdout)
     debug(res.stderr)
@@ -65,40 +69,37 @@ def _prepare_config_and_db(_tmp_path: Path):
     assert res.returncode == 0
 
 
+def test_set_db(tmp_path: Path):
+    """
+    Run `poetry run fractalctl set-db`
+    """
+    _prepare_config_and_db(tmp_path)
+    if DB_ENGINE == "sqlite":
+        db_file = str(tmp_path / "test.db")
+        debug(db_file)
+        assert os.path.exists(db_file)
+
+
 def test_alembic_check(tmp_path):
     """
-    Run `alembic check` to see whether new migrations are needed
+    Run `poetry run alembic check` to see whether new migrations are needed
     """
-    import fractal_server
-    import alembic
-
     # Set db
     db_folder = tmp_path / "test_alembic_check"
     _prepare_config_and_db(db_folder)
 
-    # Read env
-    env = {}
-    with (db_folder / ".fractal_server.env").open("r") as f:
-        lines = f.read().splitlines()
-    for line in lines:
-        if not line:
-            continue
-        key, value = line.split("=")
-        env[key] = value
-    debug(env)
-
     # Run check
-    fractal_server_dir = Path(fractal_server.__file__).parent
-    alembic_bin = Path(alembic.__file__).parents[4] / "bin/alembic"
-    cmd = f"{alembic_bin} check"
+    cmd = "poetry run alembic check"
+
     debug(cmd)
     res = subprocess.run(
         shlex.split(cmd),
-        cwd=fractal_server_dir,
         encoding="utf-8",
         capture_output=True,
-        env=env,
+        cwd=FRACTAL_SERVER_DIR,
     )
+    debug(res.stdout)
+    debug(res.stderr)
     if not res.returncode == 0:
         raise ValueError(
             f"Command `{cmd}` failed with exit code {res.returncode}.\n"
@@ -126,9 +127,9 @@ def test_startup_commands(cmd, tmp_path):
 
     debug(cmd)
     p = subprocess.Popen(
-        shlex.split(cmd),
+        shlex.split(f"poetry run {cmd}"),
         start_new_session=True,
-        cwd=str(tmp_path),
+        cwd=FRACTAL_SERVER_DIR,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         encoding="utf-8",

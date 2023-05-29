@@ -30,6 +30,7 @@ class Task(_TaskBase, SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
     command: str
+    source: str = Field(unique=True)
     input_type: str
     output_type: str
     default_args: Optional[dict[str, Any]] = Field(
