@@ -20,6 +20,8 @@ from fastapi import Response
 from fastapi import status
 from sqlmodel import select
 
+from ....logger import close_logger
+from ....logger import set_logger
 from ...db import AsyncSession
 from ...db import get_db
 from ...models import ApplyWorkflow
@@ -217,6 +219,18 @@ async def export_worfklow(
     workflow = await _get_workflow_check_owner(
         project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
+    # Emit a warning when exporting a workflow with custom tasks
+    logger = set_logger(None)
+    for wftask in workflow.task_list:
+        if wftask.task.owner is not None:
+            logger.warning(
+                f"Custom tasks (like the one with id={wftask.task.id} and "
+                f'source="{wftask.task.source}") are not meant to be '
+                "portable; re-importing this workflow may not work as "
+                "expected."
+            )
+    close_logger(logger)
+
     await db.close()
     return workflow
 
