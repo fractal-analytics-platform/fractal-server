@@ -1,8 +1,8 @@
-"""Update user and task
+"""Add task.owner, task.version and useroauth.username
 
-Revision ID: 62f2f0c4ac49
-Revises: bb1cca2acc40
-Create Date: 2023-05-24 12:38:43.871007
+Revision ID: 72dd911f94bb
+Revises: 46e70ccbc4f6
+Create Date: 2023-05-29 10:54:39.251667
 
 """
 import sqlalchemy as sa
@@ -11,8 +11,8 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = "62f2f0c4ac49"
-down_revision = "bb1cca2acc40"
+revision = "72dd911f94bb"
+down_revision = "46e70ccbc4f6"
 branch_labels = None
 depends_on = None
 
