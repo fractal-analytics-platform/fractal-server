@@ -16,34 +16,92 @@ from fractal_server.tasks.collection import ManifestV1
 
 
 @pytest.mark.parametrize(
-    ("package", "version", "source"),
+    (
+        "package",
+        "package_version",
+        "package_extras",
+        "python_version",
+        "expected_source",
+    ),
     [
-        ("my_package", None, "pip:my_package"),
-        ("my-package", "1.2.3", "pip:my-package==1.2.3"),
+        (
+            "my-package",
+            "1.2.3",
+            None,
+            None,
+            "pip_remote:my-package:1.2.3::",
+        ),
+        (
+            "my-package",
+            "1.2.3",
+            "extra1,extra2",
+            None,
+            "pip_remote:my-package:1.2.3:extra1,extra2:",
+        ),
+        (
+            "my-package",
+            "1.2.3",
+            "extra1,extra2",
+            "3.9",
+            "pip_remote:my-package:1.2.3:extra1,extra2:py3.9",
+        ),
     ],
 )
-def test_unit_source_resolution(package, version, source):
+def test_unit_source_resolution(
+    package,
+    package_version,
+    package_extras,
+    python_version,
+    expected_source,
+):
     """
-    GIVEN a private task package
+    GIVEN a task package
     WHEN the source is resolved
     THEN it matches expectations
     """
-    tc = _TaskCollectPip(package=package, version=version)
-    assert tc.source == source
+    args = dict(
+        package=package,
+        package_name=package,
+        package_version=package_version,
+    )
+    if package_extras:
+        args["package_extras"] = package_extras
+    if python_version:
+        args["python_version"] = python_version
+    tc = _TaskCollectPip(**args)
+    assert tc.package_source == expected_source
 
 
-def test_task_collect_model(dummy_task_package):
+def test_TaskCollectPip_model(dummy_task_package):
     """
     GIVEN a path to a local wheel package
-    WHEN it is passed to the _TaskCollectPip constructor
+    WHEN it is passed to the `_TaskCollectPip` constructor
     THEN the package name is correctly extracted and the package path
          correctly set
     """
     debug(dummy_task_package)
     tc = _TaskCollectPip(package=dummy_task_package.as_posix())
+    debug(tc)
 
     assert tc.package == "fractal_tasks_dummy"
     assert tc.package_path == dummy_task_package
+
+    # Test multiple cases for the check() method and package_source() property
+    with pytest.raises(ValueError):
+        tc.check()
+    with pytest.raises(ValueError):
+        tc.package_source
+    tc.package_name = tc.package
+    with pytest.raises(ValueError):
+        tc.check()
+    with pytest.raises(ValueError):
+        tc.package_source
+    tc.package_version = "1.2.3"
+    with pytest.raises(ValueError):
+        tc.check()
+    debug(tc.package_source)
+    tc.package_manifest = ManifestV1(manifest_version="1", task_list=[])
+    tc.check()
 
 
 @pytest.mark.parametrize("python_version", [None, "3.10"])
@@ -93,7 +151,7 @@ async def test_pip_install(tmp_path):
     await _init_venv(path=venv_path, logger_name=logger_name)
     location = await _pip_install(
         venv_path=venv_path,
-        task_pkg=_TaskCollectPip(package=PACKAGE, version=VERSION),
+        task_pkg=_TaskCollectPip(package=PACKAGE, package_version=VERSION),
         logger_name=logger_name,
     )
     debug(location)
@@ -114,7 +172,7 @@ async def test_download(tmp_path):
     assert "whl" in pkg.as_posix()
 
 
-async def test_inspect(tmp_path):
+async def test_inspect_package(tmp_path):
     """
     GIVEN the path to a wheel package
     WHEN the inspect package is called on the path of the wheel
@@ -139,7 +197,7 @@ async def test_inspect(tmp_path):
             Path(".fractal/my-package"),
         ),
         (
-            _TaskCollectPip(package="my-package", version="1.2.3"),
+            _TaskCollectPip(package="my-package", package_version="1.2.3"),
             Path(".fractal/my-package1.2.3"),
         ),
     ],
@@ -155,7 +213,7 @@ def test_create_pkg_dir(task_pkg, expected_path):
     """
     settings = Inject(get_settings)
     check = settings.FRACTAL_TASKS_DIR / expected_path
-    if task_pkg.version is None:
+    if task_pkg.package_version is None:
         with pytest.raises(ValueError):
             venv_path = create_package_dir_pip(task_pkg=task_pkg)
     else:
