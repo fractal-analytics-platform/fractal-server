@@ -38,8 +38,8 @@ def _inspect_package_and_set_attributes(task_pkg) -> None:
 
 
 async def test_task_get_list(db, client, task_factory, MockCurrentUser):
-    t0 = await task_factory(name="task0")
-    t1 = await task_factory(name="task1")
+    t0 = await task_factory(name="task0", source="source0")
+    t1 = await task_factory(name="task1", source="source1")
     t2 = await task_factory(index=2, subtask_list=[t0, t1])
 
     async with MockCurrentUser(persist=True):
@@ -426,14 +426,16 @@ async def test_collection_api_invalid_manifest(
 
 async def test_post_task(client, MockCurrentUser):
 
-    async with MockCurrentUser(persist=True):
+    async with MockCurrentUser(persist=True) as user:
+        TASK_OWNER = user.username or user.slurm_user
+        TASK_SOURCE = "some_source"
 
         # Successful task creation
         VERSION = "1.2.3"
         task = TaskCreate(
             name="task_name",
             command="task_command",
-            source="task_source",
+            source=TASK_SOURCE,
             input_type="task_input_type",
             output_type="task_output_type",
             version=VERSION,
@@ -443,12 +445,14 @@ async def test_post_task(client, MockCurrentUser):
         debug(res.json())
         assert res.status_code == 201
         assert res.json()["version"] == VERSION
+        assert res.json()["owner"] == TASK_OWNER
+        assert res.json()["source"] == f"{TASK_OWNER}:{TASK_SOURCE}"
 
         # Fail for repeated task.source
         new_task = TaskCreate(
             name="new_task_name",
             command="new_task_command",
-            source="task_source",  # same source as `task`
+            source=TASK_SOURCE,  # same source as `task`
             input_type="new_task_input_type",
             output_type="new_task_output_type",
         )

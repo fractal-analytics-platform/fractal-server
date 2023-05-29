@@ -27,6 +27,7 @@ from asgi_lifespan import LifespanManager
 from devtools import debug
 from fastapi import FastAPI
 from httpx import AsyncClient
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from fractal_server.config import get_settings
@@ -289,6 +290,9 @@ async def MockCurrentUser(app, db):
     from fractal_server.app.security import current_active_user
     from fractal_server.app.security import User
 
+    def _random_email():
+        return f"{random.randint(0, 100000000)}@exact-lab.it"
+
     @dataclass
     class _MockCurrentUser:
         """
@@ -300,9 +304,7 @@ async def MockCurrentUser(app, db):
         scopes: Optional[List[str]] = field(
             default_factory=lambda: ["project"]
         )
-        email: Optional[str] = field(
-            default_factory=lambda: f"{random.randint(0, 10000)}@exact-lab.it"
-        )
+        email: Optional[str] = field(default_factory=_random_email)
         persist: Optional[bool] = True
 
         def _create_user(self):
@@ -325,9 +327,17 @@ async def MockCurrentUser(app, db):
             self._create_user()
 
             if self.persist:
-                db.add(self.user)
-                await db.commit()
-                await db.refresh(self.user)
+                try:
+                    db.add(self.user)
+                    await db.commit()
+                    await db.refresh(self.user)
+                except IntegrityError:
+                    # Safety net, in case of non-unique email addresses
+                    await db.rollback()
+                    self.user.email = _random_email()
+                    db.add(self.user)
+                    await db.commit()
+                    await db.refresh(self.user)
                 # Removing object from test db session, so that we can operate
                 # on user from other sessions
                 db.expunge(self.user)

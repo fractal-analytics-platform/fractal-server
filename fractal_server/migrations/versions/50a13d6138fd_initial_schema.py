@@ -1,8 +1,8 @@
-"""New initial schema
+"""Initial schema
 
-Revision ID: e8f4051440be
+Revision ID: 50a13d6138fd
 Revises:
-Create Date: 2023-05-08 09:23:14.013706
+Create Date: 2023-05-29 12:14:56.670243
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = "e8f4051440be"
+revision = "50a13d6138fd"
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -37,11 +37,11 @@ def upgrade() -> None:
         "task",
         sa.Column("default_args", sa.JSON(), nullable=True),
         sa.Column("meta", sa.JSON(), nullable=True),
-        sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column(
             "source", sqlmodel.sql.sqltypes.AutoString(), nullable=False
         ),
         sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column(
             "command", sqlmodel.sql.sqltypes.AutoString(), nullable=False
         ),
@@ -51,7 +51,12 @@ def upgrade() -> None:
         sa.Column(
             "output_type", sqlmodel.sql.sqltypes.AutoString(), nullable=False
         ),
+        sa.Column("owner", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+        sa.Column(
+            "version", sqlmodel.sql.sqltypes.AutoString(), nullable=True
+        ),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("source"),
     )
     op.create_table(
         "user_oauth",
@@ -70,6 +75,9 @@ def upgrade() -> None:
         ),
         sa.Column(
             "cache_dir", sqlmodel.sql.sqltypes.AutoString(), nullable=True
+        ),
+        sa.Column(
+            "username", sqlmodel.sql.sqltypes.AutoString(), nullable=True
         ),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -158,15 +166,15 @@ def upgrade() -> None:
         sa.Column(
             "start_timestamp", sa.DateTime(timezone=True), nullable=True
         ),
-        sa.Column("project_id", sa.Integer(), nullable=False),
-        sa.Column("input_dataset_id", sa.Integer(), nullable=False),
-        sa.Column("output_dataset_id", sa.Integer(), nullable=False),
-        sa.Column("workflow_id", sa.Integer(), nullable=False),
-        sa.Column("overwrite_input", sa.Boolean(), nullable=False),
+        sa.Column("end_timestamp", sa.DateTime(timezone=True), nullable=True),
         sa.Column(
             "worker_init", sqlmodel.sql.sqltypes.AutoString(), nullable=True
         ),
         sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("project_id", sa.Integer(), nullable=False),
+        sa.Column("input_dataset_id", sa.Integer(), nullable=False),
+        sa.Column("output_dataset_id", sa.Integer(), nullable=False),
+        sa.Column("workflow_id", sa.Integer(), nullable=False),
         sa.Column(
             "working_dir", sqlmodel.sql.sqltypes.AutoString(), nullable=True
         ),

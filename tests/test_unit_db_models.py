@@ -55,8 +55,8 @@ async def test_task_workflow_association(
 ):
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
-        t0 = await task_factory()
-        t1 = await task_factory()
+        t0 = await task_factory(source="source0")
+        t1 = await task_factory(source="source1")
 
         wf = Workflow(name="my wfl", project_id=project.id)
         args = dict(arg="test arg")
@@ -101,9 +101,7 @@ async def test_task_workflow_association(
 
 
 @pytest.mark.xfail(DB_ENGINE == "sqlite", reason="Not supported in SQLite")
-async def test_task_foreign_key(
-    db, MockCurrentUser, task_factory, project_factory
-):
+async def test_task_foreign_key(db, MockCurrentUser, project_factory):
     """
     GIVEN the WorkflowTask table
     WHEN trying to add non-existent task_id / workflow_id
@@ -139,8 +137,8 @@ async def test_cascade_delete_workflow(
         await db.refresh(workflow)
         wf_id = workflow.id
 
-        t0 = await task_factory()
-        t1 = await task_factory()
+        t0 = await task_factory(source="source0")
+        t1 = await task_factory(source="source1")
 
         await workflow.insert_task(t0.id, db=db)
         await workflow.insert_task(t1.id, db=db)

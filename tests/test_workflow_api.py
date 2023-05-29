@@ -1,4 +1,5 @@
 import json
+import logging
 
 import pytest
 from devtools import debug  # noqa
@@ -586,6 +587,48 @@ async def test_import_export_workflow(
     wf_new = WorkflowExport(**workflow_exported).dict(exclude_none=True)
 
     assert wf_old == wf_new
+
+
+async def test_export_workflow_log(
+    client,
+    MockCurrentUser,
+    task_factory,
+    project_factory,
+    workflow_factory,
+    tmp_path,
+    caplog,
+):
+    """
+    WHEN exporting a workflow with custom tasks
+    THEN there must be a warning
+    """
+
+    # Create project and task
+    async with MockCurrentUser(persist=True) as user:
+        TASK_OWNER = "someone"
+        task = await task_factory(owner=TASK_OWNER, source="some-source")
+        prj = await project_factory(user)
+        wf = await workflow_factory(project_id=prj.id)
+
+    # Insert WorkflowTasks
+    res = await client.post(
+        (
+            f"api/v1/project/{prj.id}/workflow/{wf.id}/wftask/"
+            f"?task_id={task.id}"
+        ),
+        json={},
+    )
+    assert res.status_code == 201
+
+    # Export workflow
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+    res = await client.get(
+        f"/api/v1/project/{prj.id}/workflow/{wf.id}/export/"
+    )
+    assert res.status_code == 200
+    debug(caplog.text)
+    assert "not meant to be portable" in caplog.text
 
 
 async def test_import_export_workflow_fail(
