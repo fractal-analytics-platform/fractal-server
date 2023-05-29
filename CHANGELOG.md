@@ -28,10 +28,10 @@
     * Remove `ApplyWorkflow.overwrite_input` column (\#684, \#694).
     * Make `output_dataset_id` a required argument of apply-workflow endpoint (\#681).
     * Improve error message related to out-of-space disk (\#699).
-* Database:
-    * Add project-name uniqueness constraint in project-edit endpoint (\#689).
+* Other updates to endpoints and database:
     * Add `ApplyWorkflow.end_timestamp` column (\#687, \#684).
     * Prevent deletion of a `Workflow`/`Dataset` in relationship with existing `ApplyWorkflow` (\#703).
+    * Add project-name uniqueness constraint in project-edit endpoint (\#689).
 * Expose `FRACTAL_CORS_ALLOW_ORIGIN` environment variable (\#688).
 * Package and repository:
     * Remove `fastapi-users-db-sqlmodel` dependency (\#660).
