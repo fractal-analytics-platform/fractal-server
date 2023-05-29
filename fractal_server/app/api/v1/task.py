@@ -14,6 +14,7 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from pydantic.error_wrappers import ValidationError
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
 from ....common.schemas import StateRead
@@ -422,14 +423,7 @@ async def create_task(
     """
     Create a new task
     """
-    # Verify that source is not already in use
-    stm = select(Task).where(Task.source == task.source)
-    res = await db.execute(stm)
-    if res.scalars().all():
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Task with source={task.source} already in use",
-        )
+
     # Set task.owner attribute
     if user.username:
         owner = user.username
@@ -443,10 +437,35 @@ async def create_task(
                 "have `username` or `slurm_user` attributes."
             ),
         )
+
+    # Prepend owner to task.source
+    task.source = f"{owner}:{task.source}"
+
+    # Verify that source is not already in use (note: this check is only useful
+    # to provide a user-friendly error message, but `task.source` uniqueness is
+    # already guaranteed by a constraint in the table definition).
+    stm = select(Task).where(Task.source == task.source)
+    res = await db.execute(stm)
+    if res.scalars().all():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f'Task source "{task.source}" already in use',
+        )
+
     # Add task
-    db_task = Task(**task.dict(), owner=owner)
-    db.add(db_task)
-    await db.commit()
-    await db.refresh(db_task)
-    await db.close()
-    return db_task
+    try:
+        db_task = Task(**task.dict(), owner=owner)
+        db.add(db_task)
+        await db.commit()
+        await db.refresh(db_task)
+        await db.close()
+        return db_task
+    except IntegrityError as e:
+        await db.rollback()
+        logger = set_logger("create_task")
+        logger.error(str(e))
+        close_logger(logger)
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(e),
+        )
