@@ -22,6 +22,7 @@
     * Remove private/public options for task collection (\#704).
     * Improve error message for missing package manifest (\#704).
     * Improve behavior when task-collection folder already exists (\#704).
+    * Add warning when exporting workflows which include custom tasks (\#728).
 * Job execution:
     * Add `FractalSlurmExecutor.shutdown` and corresponding endpoint (\#631, \#691, \#696).
     * In `FractalSlurmExecutor`, make `working_dir*` attributes required (\#679).
