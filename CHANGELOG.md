@@ -12,14 +12,16 @@
     * Remove foreign keys from payloads (\#669).
 * Update `Task` models, task collection and task-related endpoints (\#704):
     * Add `version` and `owner` columns to `Task` model (\#704).
-    * Set `Task.owner` as part of create-task endpoint (\#704).
-    * Improve error message for missing package manifest (\#704).
-    * Remove private/public options for task collection (\#704).
-    * Improve behavior when task-collection folder already exists (\#704).
-    * Update `_TaskCollectPip` methods, attributes and properties (\#719).
     * Set `Task.version` during task collection (\#719).
+    * Set `Task.owner` as part of create-task endpoint (\#704).
+    * For custom tasks, prepend `owner` to user-provided `source` (\#725).
     * Make `Task.source` task-specific rather than package-specific (\#719).
+    * Make `Task.source` unique (\#725).
     * When importing a workflow, only use tasks' `source` values, instead of `(source,name)` pairs (\#719).
+    * Update `_TaskCollectPip` methods, attributes and properties (\#719).
+    * Remove private/public options for task collection (\#704).
+    * Improve error message for missing package manifest (\#704).
+    * Improve behavior when task-collection folder already exists (\#704).
 * Job execution:
     * Add `FractalSlurmExecutor.shutdown` and corresponding endpoint (\#631, \#691, \#696).
     * In `FractalSlurmExecutor`, make `working_dir*` attributes required (\#679).
