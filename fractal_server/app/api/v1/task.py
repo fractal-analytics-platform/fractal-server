@@ -14,7 +14,6 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from pydantic.error_wrappers import ValidationError
-from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
 from ....common.schemas import StateRead
@@ -453,19 +452,9 @@ async def create_task(
         )
 
     # Add task
-    try:
-        db_task = Task(**task.dict(), owner=owner)
-        db.add(db_task)
-        await db.commit()
-        await db.refresh(db_task)
-        await db.close()
-        return db_task
-    except IntegrityError as e:
-        await db.rollback()
-        logger = set_logger("create_task")
-        logger.error(str(e))
-        close_logger(logger)
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=str(e),
-        )
+    db_task = Task(**task.dict(), owner=owner)
+    db.add(db_task)
+    await db.commit()
+    await db.refresh(db_task)
+    await db.close()
+    return db_task
