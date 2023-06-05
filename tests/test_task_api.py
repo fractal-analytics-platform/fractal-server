@@ -502,6 +502,89 @@ async def test_post_task(client, MockCurrentUser):
         assert res.json()["owner"] == USERNAME
 
 
+async def test_patch_task_auth(
+    MockCurrentUser,
+    client,
+    task_factory,
+):
+    USER_1 = "Alice"
+    USER_2 = "Bob"
+
+    task_with_no_owner = await task_factory()
+    task_with_no_owner_id = task_with_no_owner.id
+
+    async with MockCurrentUser(user_kwargs={"username": USER_1}):
+
+        task = TaskCreate(
+            name="task_name",
+            command="task_command",
+            source="task_source",
+            input_type="task_input_type",
+            output_type="task_output_type",
+        )
+        res = await client.post(
+            f"{PREFIX}/", json=task.dict(exclude_unset=True)
+        )
+        assert res.status_code == 201
+        assert res.json()["owner"] == USER_1
+
+        task_id = res.json()["id"]
+
+        # Test success: owner == user
+        update = TaskUpdate(name="new_name_1")
+        res = await client.patch(
+            f"{PREFIX}/{task_id}", json=update.dict(exclude_unset=True)
+        )
+        assert res.status_code == 200
+        assert res.json()["name"] == "new_name_1"
+
+    async with MockCurrentUser(user_kwargs={"slurm_user": USER_2}):
+
+        update = TaskUpdate(name="new_name_2")
+
+        # Test fail: (not user.is_superuser) and (owner != user)
+        res = await client.patch(
+            f"{PREFIX}/{task_id}", json=update.dict(exclude_unset=True)
+        )
+        assert res.status_code == 422
+        assert res.json()["detail"] == (
+            f"Task owner ({USER_1}) differs from current user ({USER_2})"
+        )
+
+        # Test fail: (not user.is_superuser) and (owner == None)
+        res = await client.patch(
+            f"{PREFIX}/{task_with_no_owner_id}",
+            json=update.dict(exclude_unset=True),
+        )
+        assert res.status_code == 403
+        assert res.json()["detail"] == (
+            f"Task {task_with_no_owner_id} has no no owner: "
+            "you must be a superuser"
+        )
+
+    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+
+        res = await client.get(f"{PREFIX}/{task_id}")
+        assert res.json()["name"] == "new_name_1"
+
+        # Test success: (owner != user) but (user.is_superuser)
+        update = TaskUpdate(name="new_name_3")
+        res = await client.patch(
+            f"{PREFIX}/{task_id}", json=update.dict(exclude_unset=True)
+        )
+        assert res.status_code == 200
+        assert res.json()["name"] == "new_name_3"
+
+        # Test success: (owner == None) but (user.is_superuser)
+        update = TaskUpdate(name="new_name_4")
+        res = await client.patch(
+            f"{PREFIX}/{task_with_no_owner_id}",
+            json=update.dict(exclude_unset=True),
+        )
+        assert res.status_code == 200
+        assert res.json()["name"] == "new_name_4"
+
+
 async def test_patch_task(
     db,
     registered_client,
@@ -509,6 +592,7 @@ async def test_patch_task(
     task_factory,
 ):
     task = await task_factory(name="task")
+
     old_source = task.source
     debug(task)
     NEW_NAME = "new name"
@@ -524,27 +608,21 @@ async def test_patch_task(
         input_type=NEW_INPUT_TYPE,
         output_type=NEW_OUTPUT_TYPE,
         command=NEW_COMMAND,
+        source=NEW_SOURCE,
         default_args=NEW_DEFAULT_ARGS,
         meta=NEW_META,
-        source=NEW_SOURCE,
         version=NEW_VERSION,
     )
 
-    # Test non-superuser
-    res = await registered_client.patch(
-        f"{PREFIX}/{task.id}", json=update.dict(exclude_unset=True)
-    )
-    debug(res, res.json())
-    assert res.status_code == 403
-
-    # Test payload with `source`
+    # Test fails with `source`
     res = await registered_superuser_client.patch(
         f"{PREFIX}/{task.id}", json=update.dict(exclude_unset=True)
     )
     debug(res, res.json())
     assert res.status_code == 422
+    assert res.json()["detail"] == "patch_task endpoint cannot set `source`"
 
-    # Test successuful (superuser)
+    # Test successuful withot `source`
     res = await registered_superuser_client.patch(
         f"{PREFIX}/{task.id}",
         json=update.dict(exclude_unset=True, exclude={"source"}),
