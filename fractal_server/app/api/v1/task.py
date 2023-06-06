@@ -365,7 +365,7 @@ async def patch_task(
     db: AsyncSession = Depends(get_db),
 ) -> Optional[TaskRead]:
     """
-    Edit a specific task (restricted to superuser)
+    Edit a specific task (restricted to superusers and task owner)
     """
 
     if task_update.source:
@@ -377,25 +377,24 @@ async def patch_task(
     # Retrieve task from database
     db_task = await db.get(Task, task_id)
 
-    # Check match of owner attribute. This check constitutes a preliminary,
-    # **soft**, version of access control: if task owner differs from the
-    # current user, we simply raise a warning. Note that this is not very
-    # relevant as long as this endpoint is for superusers only
+    # This check constitutes a preliminary **soft** version of access control:
+    # if the current user is not a superuser and differs from the task owner
+    # (including when `owner is None`), we raise an 403 HTTP Exception.
     if not user.is_superuser:
         if db_task.owner is None:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=(
-                    f"Task {task_id} has no no owner: you must be a superuser"
-                ),
+                detail=("Only a superuser can edit a task with `owner=None`."),
             )
         else:
             owner = user.username or user.slurm_user
             if owner != db_task.owner:
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=f"Task owner ({db_task.owner}) differs "
-                    f"from current user ({owner})",
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=(
+                        f"Current user ({owner}) cannot modify task "
+                        f"({task_id}) with different owner ({db_task.owner})."
+                    ),
                 )
 
     update = task_update.dict(exclude_unset=True)
