@@ -377,7 +377,7 @@ async def patch_task(
     # Retrieve task from database
     db_task = await db.get(Task, task_id)
 
-    # This check constitutes a preliminary **soft** version of access control:
+    # This check constitutes a preliminary version of access control:
     # if the current user is not a superuser and differs from the task owner
     # (including when `owner is None`), we raise an 403 HTTP Exception.
     if not user.is_superuser:
