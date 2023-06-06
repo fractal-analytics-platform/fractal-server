@@ -511,7 +511,7 @@ async def test_patch_task_auth(
     GIVEN a Task `A` with owner Alice and a Task `N` with owner None
     WHEN Alice, Bob and a Superuser try to patch them
     THEN Alice can edit `A`, Bob cannot edit anything
-         and the Superuser can edit both A and B.
+         and the Superuser can edit both A and N.
     """
     USER_1 = "Alice"
     USER_2 = "Bob"
