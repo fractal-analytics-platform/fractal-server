@@ -41,7 +41,6 @@ from ...db import get_db
 from ...db import get_sync_db
 from ...models import State
 from ...models import Task
-from ...security import current_active_superuser
 from ...security import current_active_user
 from ...security import User
 
@@ -362,12 +361,13 @@ async def get_task(
 async def patch_task(
     task_id: int,
     task_update: TaskUpdate,
-    user: User = Depends(current_active_superuser),
+    user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[TaskRead]:
     """
-    Edit a specific task (restricted to superuser)
+    Edit a specific task (restricted to superusers and task owner)
     """
+
     if task_update.source:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -377,21 +377,25 @@ async def patch_task(
     # Retrieve task from database
     db_task = await db.get(Task, task_id)
 
-    # Check match of owner attribute. This check constitutes a preliminary,
-    # **soft**, version of access control: if task owner differs from the
-    # current user, we simply raise a warning. Note that this is not very
-    # relevant as long as this endpoint is for superusers only
-    if user.username:
-        owner = user.username
-    elif user.slurm_user:
-        owner = user.slurm_user
-    else:
-        owner = None
-    if owner != db_task.owner:
-        logger.warning(
-            f"Task owner ({db_task.owner}) differs "
-            f"from current user ({owner}). Proceed anyway."
-        )
+    # This check constitutes a preliminary version of access control:
+    # if the current user is not a superuser and differs from the task owner
+    # (including when `owner is None`), we raise an 403 HTTP Exception.
+    if not user.is_superuser:
+        if db_task.owner is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=("Only a superuser can edit a task with `owner=None`."),
+            )
+        else:
+            owner = user.username or user.slurm_user
+            if owner != db_task.owner:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=(
+                        f"Current user ({owner}) cannot modify task "
+                        f"({task_id}) with different owner ({db_task.owner})."
+                    ),
+                )
 
     update = task_update.dict(exclude_unset=True)
     for key, value in update.items():
@@ -422,7 +426,6 @@ async def create_task(
     """
     Create a new task
     """
-
     # Set task.owner attribute
     if user.username:
         owner = user.username
