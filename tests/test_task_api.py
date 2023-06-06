@@ -507,6 +507,12 @@ async def test_patch_task_auth(
     client,
     task_factory,
 ):
+    """
+    GIVEN a Task `A` with owner Alice and a Task `N` with owner None
+    WHEN Alice, Bob and a Superuser try to patch them
+    THEN Alice can edit `A`, Bob cannot edit anything
+         and the Superuser can edit both A and B.
+    """
     USER_1 = "Alice"
     USER_2 = "Bob"
 
@@ -546,9 +552,10 @@ async def test_patch_task_auth(
         res = await client.patch(
             f"{PREFIX}/{task_id}", json=update.dict(exclude_unset=True)
         )
-        assert res.status_code == 422
+        assert res.status_code == 403
         assert res.json()["detail"] == (
-            f"Task owner ({USER_1}) differs from current user ({USER_2})"
+            f"Current user ({USER_2}) cannot modify task ({task_id}) "
+            f"with different owner ({USER_1})."
         )
 
         # Test fail: (not user.is_superuser) and (owner == None)
@@ -558,8 +565,7 @@ async def test_patch_task_auth(
         )
         assert res.status_code == 403
         assert res.json()["detail"] == (
-            f"Task {task_with_no_owner_id} has no no owner: "
-            "you must be a superuser"
+            "Only a superuser can edit a task with `owner=None`."
         )
 
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
@@ -622,7 +628,7 @@ async def test_patch_task(
     assert res.status_code == 422
     assert res.json()["detail"] == "patch_task endpoint cannot set `source`"
 
-    # Test successuful withot `source`
+    # Test successuful without `source`
     res = await registered_superuser_client.patch(
         f"{PREFIX}/{task.id}",
         json=update.dict(exclude_unset=True, exclude={"source"}),
