@@ -171,7 +171,14 @@ class Workflow(_WorkflowBase, SQLModel, table=True):
         """
         if order is None:
             order = len(self.task_list)
-        wf_task = WorkflowTask(task_id=task_id, args=args, meta=meta)
+
+        # FIXME handle args
+        default_args = {}  # FIXME: extract from task.args_schema
+        actual_args = default_args.copy()
+        for k, v in args.items():
+            actual_args[k] = v
+
+        wf_task = WorkflowTask(task_id=task_id, args=actual_args, meta=meta)
         db.add(wf_task)
         self.task_list.insert(order, wf_task)
         self.task_list.reorder()  # type: ignore
