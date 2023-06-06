@@ -12,6 +12,7 @@
     * Remove foreign keys from payloads (\#669).
 * Update `Task` models, task collection and task-related endpoints:
     * Add `args_schema` and `args_schema_version` to `Task` model (\#707).
+    * Remove `default_args` from `Tasks` model and from manifest tasks (\#707).
     * Add `version` and `owner` columns to `Task` model (\#704).
     * Set `Task.version` during task collection (\#719).
     * Set `Task.owner` as part of create-task endpoint (\#704).
