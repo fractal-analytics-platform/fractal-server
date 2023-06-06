@@ -87,9 +87,7 @@ class WorkflowTask(_WorkflowTaskBase, SQLModel, table=True):
         """
         Override default arguments
         """
-        out = self.task.default_args.copy()
-        out.update(self.args or {})
-        return out
+        return self.args or {}
 
     @property
     def is_parallel(self) -> bool:

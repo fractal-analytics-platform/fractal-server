@@ -18,7 +18,6 @@ class Task(_TaskBase, SQLModel, table=True):
         command: Executable command
         input_type: Expected type of input `Dataset`
         output_type: Expected type of output `Dataset`
-        default_args: Default values for task arguments
         meta:
             Additional metadata related to execution (e.g. computational
             resources)
@@ -33,9 +32,6 @@ class Task(_TaskBase, SQLModel, table=True):
     source: str = Field(unique=True)
     input_type: str
     output_type: str
-    default_args: Optional[dict[str, Any]] = Field(
-        sa_column=Column(JSON), default={}
-    )
     meta: Optional[dict[str, Any]] = Field(sa_column=Column(JSON), default={})
     owner: Optional[str] = None
     version: Optional[str] = None
