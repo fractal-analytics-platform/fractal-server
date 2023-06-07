@@ -100,6 +100,57 @@ async def test_task_workflow_association(
         assert link.task_id == t1.id
 
 
+async def test_workflow_insert_task_with_args_schema(
+    db, project_factory, MockCurrentUser, task_factory
+):
+    """
+    GIVEN a Workflow, and a Task with valid args_schema (including defaults)
+    WHEN the Task is inserted into the Workflow
+    THEN the WorkflowTask.args attribute is set correctly
+    """
+    from pydantic import BaseModel
+    from typing import Optional
+
+    async with MockCurrentUser(persist=True) as user:
+
+        # Create a task with a valid args_schema
+        class _Arguments(BaseModel):
+            arg_no_default: int
+            arg_default_one: str = "one"
+            arg_default_none: Optional[str] = None
+
+        args_schema = _Arguments.schema()
+        debug(args_schema)
+        t0 = await task_factory(source="source0", args_schema=args_schema)
+
+        # Create project and workflow
+        project = await project_factory(user)
+        wf = Workflow(name="my wfl", project_id=project.id)
+
+        # Insert task into workflow, with no additional args
+        wftask1 = await wf.insert_task(t0.id, db=db)
+        wftask2 = await wf.insert_task(
+            t0.id, db=db, args=dict(arg_default_one="two")
+        )
+        wftask3 = await wf.insert_task(
+            t0.id, db=db, args=dict(arg_default_none="three")
+        )
+        db.add(wf)
+        await db.commit()
+        await db.refresh(wf)
+
+        # Verify taht args were set correctly
+        wftask1, wftask2, wftask3 = wf.task_list[:]
+        debug(wftask1.args)
+        assert wftask1.args == dict(arg_default_one="one")
+        debug(wftask2.args)
+        assert wftask2.args == dict(arg_default_one="two")
+        debug(wftask3.args)
+        assert wftask3.args == dict(
+            arg_default_one="one", arg_default_none="three"
+        )
+
+
 @pytest.mark.xfail(DB_ENGINE == "sqlite", reason="Not supported in SQLite")
 async def test_task_foreign_key(db, MockCurrentUser, project_factory):
     """
