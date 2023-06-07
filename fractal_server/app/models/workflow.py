@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import Any
 from typing import Optional
@@ -186,8 +187,9 @@ class Workflow(_WorkflowBase, SQLModel, table=True):
                         default_args[prop_name] = default_value
             except KeyError as e:
                 logging.warning(
-                    "Cannot set default_args from task args_schema. "
-                    f"Original error:\n{e}"
+                    "Cannot set default_args from args_schema="
+                    f"{json.dumps(db_task.args_schema)}\n"
+                    f"Original KeyError: {str(e)}"
                 )
         # Override default_args with args
         actual_args = default_args.copy()
