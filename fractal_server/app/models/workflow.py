@@ -197,6 +197,8 @@ class Workflow(_WorkflowBase, SQLModel, table=True):
         if args is not None:
             for k, v in args.items():
                 actual_args[k] = v
+        if not actual_args:
+            actual_args = None
 
         # Create DB entry
         wf_task = WorkflowTask(task_id=task_id, args=actual_args, meta=meta)
