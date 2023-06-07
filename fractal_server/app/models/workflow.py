@@ -176,23 +176,19 @@ class Workflow(_WorkflowBase, SQLModel, table=True):
         # Get task from db, extract the JSON Schema for its arguments (if any),
         # read default values and set them in default_args
         db_task = await db.get(Task, task_id)
-        if db_task.args_schema is None:
-            default_args = {}
-        else:
-            default_args = {}
+        default_args = {}
+        if db_task.args_schema is not None:
             try:
                 properties = db_task.args_schema["properties"]
                 for prop_name, prop_schema in properties.items():
                     default_value = prop_schema.get("default", None)
                     if default_value:
                         default_args[prop_name] = default_value
-            except (KeyError, IndexError) as e:
+            except KeyError as e:
                 logging.warning(
                     "Cannot set default_args from task args_schema. "
                     f"Original error:\n{e}"
                 )
-                default_args = {}
-
         # Override default_args with args
         actual_args = default_args.copy()
         if args is not None:
