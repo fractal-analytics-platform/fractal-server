@@ -113,12 +113,19 @@ async def test_workflow_insert_task_with_args_schema(
 
     async with MockCurrentUser(persist=True) as user:
 
-        # Create a task with a valid args_schema
+        # Prepare models to generate a valid JSON Schema
+        class _InnerArgument(BaseModel):
+            x: int
+            y: int = 2
+
         class _Arguments(BaseModel):
             arg_no_default: int
             arg_default_one: str = "one"
             arg_default_none: Optional[str] = None
+            innerA: _InnerArgument
+            innerB: _InnerArgument = _InnerArgument(x=11)
 
+        # Create a task with a valid args_schema
         args_schema = _Arguments.schema()
         debug(args_schema)
         t0 = await task_factory(source="source0", args_schema=args_schema)
@@ -142,12 +149,20 @@ async def test_workflow_insert_task_with_args_schema(
         # Verify taht args were set correctly
         wftask1, wftask2, wftask3 = wf.task_list[:]
         debug(wftask1.args)
-        assert wftask1.args == dict(arg_default_one="one")
+        assert wftask1.args == dict(
+            arg_default_one="one",
+            innerB=dict(x=11, y=2),
+        )
         debug(wftask2.args)
-        assert wftask2.args == dict(arg_default_one="two")
+        assert wftask2.args == dict(
+            arg_default_one="two",
+            innerB=dict(x=11, y=2),
+        )
         debug(wftask3.args)
         assert wftask3.args == dict(
-            arg_default_one="one", arg_default_none="three"
+            arg_default_one="one",
+            arg_default_none="three",
+            innerB=dict(x=11, y=2),
         )
 
 
