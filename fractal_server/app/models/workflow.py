@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 from typing import Optional
 from typing import Union
@@ -172,12 +173,31 @@ class Workflow(_WorkflowBase, SQLModel, table=True):
         if order is None:
             order = len(self.task_list)
 
-        # FIXME handle args
-        default_args = {}  # FIXME: extract from task.args_schema
+        # Get task from db, extract the JSON Schema for its arguments (if any),
+        # read default values and set them in default_args
+        db_task = await db.get(Task, task_id)
+        if db_task.args_schema is None:
+            default_args = {}
+        else:
+            try:
+                properties = db_task.args_schema["properties"]
+                for prop_name, prop_schema in properties.items():
+                    default_value = prop_schema.get("default", None)
+                    if default_value:
+                        default_args[prop_name] = default_value
+            except (KeyError, IndexError) as e:
+                logging.warning(
+                    "Cannot set default_args from task args_schema. "
+                    f"Original error:\n{e}"
+                )
+                default_args = {}
+
+        # Override default_args with args
         actual_args = default_args.copy()
         for k, v in args.items():
             actual_args[k] = v
 
+        # Create DB entry
         wf_task = WorkflowTask(task_id=task_id, args=actual_args, meta=meta)
         db.add(wf_task)
         self.task_list.insert(order, wf_task)
