@@ -374,6 +374,8 @@ async def create_package_environment_pip(
                 additional_attrs = dict(
                     args_schema_version=manifest.args_schema_version
                 )
+            else:
+                additional_attrs = {}
             this_task = TaskCreate(
                 **t.dict(),
                 command=cmd,
