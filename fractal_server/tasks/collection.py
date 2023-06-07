@@ -369,10 +369,16 @@ async def create_package_environment_pip(
                     f"Cannot find executable `{task_executable}` "
                     f"for task `{t.name}`"
                 )
+            manifest = task_pkg.package_manifest
+            if manifest.has_args_schemas:
+                additional_attrs = dict(
+                    args_schema_version=manifest.args_schema_version
+                )
             this_task = TaskCreate(
                 **t.dict(),
                 command=cmd,
                 version=task_pkg.package_version,
+                **additional_attrs,
                 source=task_source,
             )
             task_list.append(this_task)
