@@ -134,14 +134,10 @@ async def test_workflow_insert_task_with_args_schema(
         project = await project_factory(user)
         wf = Workflow(name="my wfl", project_id=project.id)
 
-        # Insert task into workflow, with no additional args
-        wftask1 = await wf.insert_task(t0.id, db=db)
-        wftask2 = await wf.insert_task(
-            t0.id, db=db, args=dict(arg_default_one="two")
-        )
-        wftask3 = await wf.insert_task(
-            t0.id, db=db, args=dict(arg_default_none="three")
-        )
+        # Insert task into workflow, without/with additional args
+        await wf.insert_task(t0.id, db=db)
+        await wf.insert_task(t0.id, db=db, args=dict(arg_default_one="two"))
+        await wf.insert_task(t0.id, db=db, args=dict(arg_default_none="three"))
         db.add(wf)
         await db.commit()
         await db.refresh(wf)
@@ -164,6 +160,22 @@ async def test_workflow_insert_task_with_args_schema(
             arg_default_none="three",
             innerB=dict(x=11, y=2),
         )
+
+        # Create a task with an invalid args_schema
+        invalid_args_schema = args_schema.copy()
+        del invalid_args_schema["properties"]
+        t1 = await task_factory(
+            source="source1", args_schema=invalid_args_schema
+        )
+
+        # Insert task with invalid args_schema into workflow
+        await wf.insert_task(t1.id, db=db)
+        db.add(wf)
+        await db.commit()
+        await db.refresh(wf)
+        wftask4 = wf.task_list[-1]
+        debug(wftask4)
+        assert wftask4.args is None
 
 
 @pytest.mark.xfail(DB_ENGINE == "sqlite", reason="Not supported in SQLite")
