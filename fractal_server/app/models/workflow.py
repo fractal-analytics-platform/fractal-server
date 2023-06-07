@@ -86,7 +86,7 @@ class WorkflowTask(_WorkflowTaskBase, SQLModel, table=True):
     @property
     def arguments(self):
         """
-        Override default arguments
+        Transform args=None into {}
         """
         return self.args or {}
 
