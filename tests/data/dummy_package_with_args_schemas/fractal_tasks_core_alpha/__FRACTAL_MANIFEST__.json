@@ -57,12 +57,6 @@
         "title": "Dummy",
         "type": "object"
       },
-      "default_args": {
-        "index": 0,
-        "message": "default message",
-        "raise_error": false,
-        "sleep_time": 0
-      },
       "executable": "tasks/dummy.py",
       "input_type": "Any",
       "meta": {
@@ -124,10 +118,6 @@
         ],
         "title": "DummyParallel",
         "type": "object"
-      },
-      "default_args": {
-        "message": "default message",
-        "raise_error": false
       },
       "executable": "tasks/dummy_parallel.py",
       "input_type": "Any",
