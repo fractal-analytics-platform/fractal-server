@@ -516,7 +516,6 @@ async def test_patch_task(
     NEW_OUTPUT_TYPE = "new output_type"
     NEW_COMMAND = "new command"
     NEW_SOURCE = "new source"
-    NEW_DEFAULT_ARGS = {"key1": 1, "key2": 2}
     NEW_META = {"key3": "3", "key4": "4"}
     NEW_VERSION = "1.2.3"
     update = TaskUpdate(
@@ -524,7 +523,6 @@ async def test_patch_task(
         input_type=NEW_INPUT_TYPE,
         output_type=NEW_OUTPUT_TYPE,
         command=NEW_COMMAND,
-        default_args=NEW_DEFAULT_ARGS,
         meta=NEW_META,
         source=NEW_SOURCE,
         version=NEW_VERSION,
@@ -554,17 +552,14 @@ async def test_patch_task(
     assert res.json()["input_type"] == NEW_INPUT_TYPE
     assert res.json()["output_type"] == NEW_OUTPUT_TYPE
     assert res.json()["command"] == NEW_COMMAND
-    assert res.json()["default_args"] == NEW_DEFAULT_ARGS
     assert res.json()["meta"] == NEW_META
     assert res.json()["source"] == old_source
     assert res.json()["version"] == NEW_VERSION
     assert res.json()["owner"] is None
 
     # Test dictionaries update
-    OTHER_DEFAULT_ARGS = {"key1": 42, "key100": 100}
     OTHER_META = {"key4": [4, 8, 15], "key0": [16, 23, 42]}
     second_update = TaskUpdate(
-        default_args=OTHER_DEFAULT_ARGS,
         meta=OTHER_META,
     )
     res = await registered_superuser_client.patch(
@@ -577,7 +572,6 @@ async def test_patch_task(
     assert res.json()["input_type"] == NEW_INPUT_TYPE
     assert res.json()["output_type"] == NEW_OUTPUT_TYPE
     assert res.json()["command"] == NEW_COMMAND
-    assert len(res.json()["default_args"]) == 3
     assert len(res.json()["meta"]) == 3
 
 

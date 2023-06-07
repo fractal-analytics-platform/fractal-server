@@ -5,18 +5,12 @@
             "name": "My Task 1",
             "input_type": "none",
             "output_type": "none",
-            "default_args": {
-                "message": "default message"
-            },
             "executable": "task1.py"
         },
         {
             "name": "My Task 2 (does not exist)",
             "input_type": "none",
             "output_type": "none",
-            "default_args": {
-                "message": "default message"
-            },
             "executable": "task2.py"
         }
 

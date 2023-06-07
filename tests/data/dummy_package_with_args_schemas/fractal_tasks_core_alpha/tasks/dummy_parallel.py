@@ -39,7 +39,7 @@ def dummy_parallel(
     component: str,
     metadata: Optional[dict[str, Any]] = None,
     # arguments of this task
-    message: str,
+    message: str = "default message",
     raise_error: bool = False,
     sleep_time: Optional[int] = None,
 ) -> dict[str, Any]:

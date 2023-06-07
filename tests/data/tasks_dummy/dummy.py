@@ -43,7 +43,7 @@ def dummy(
     output_path: str,
     metadata: Optional[Dict[str, Any]] = None,
     # arguments of this task
-    message: str,
+    message: str = "default message",
     index: int = 0,
     raise_error: bool = False,
     sleep_time: int = 0,
@@ -137,7 +137,7 @@ if __name__ == "__main__":
         input_paths: list[str]
         output_path: str
         metadata: Optional[Dict[str, Any]] = None
-        message: str
+        message: str = "default message"
         index: int = 0
         raise_error: bool = False
         sleep_time: int = 0
