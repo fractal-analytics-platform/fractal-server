@@ -42,7 +42,7 @@ def dummy_parallel(
     component: str,
     metadata: Optional[Dict[str, Any]] = None,
     # arguments of this task
-    message: str,
+    message: str = "default message",
     raise_error: bool = False,
     sleep_time: Optional[int] = None,
 ) -> Dict[str, Any]:
@@ -132,7 +132,7 @@ if __name__ == "__main__":
         output_path: str
         metadata: Optional[Dict[str, Any]] = None
         component: str
-        message: str
+        message: str = "default message"
         raise_error: bool = False
         sleep_time: Optional[int] = None
 

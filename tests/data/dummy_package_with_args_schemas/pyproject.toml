@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "fractal-tasks-core-alpha"
+version = "0.0.1a0"
+description = ""
+authors = ["X Y <x@y.z>"]
+packages = [{include = "fractal_tasks_core_alpha"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+pydantic = "~1.10.2"
+devtools = "*"
+docstring_parser = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

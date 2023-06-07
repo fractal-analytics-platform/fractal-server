@@ -11,7 +11,8 @@
 # Institute for Biomedical Research and Pelkmans Lab from the University of
 # Zurich.
 """
-This module only contains a dummy task, to be used in tests of fractal-server
+This module only contains a dummy task (to be executed in parallel over several
+components), to be used in tests of fractal-server
 """
 import json
 import logging
@@ -19,42 +20,36 @@ import os
 import time
 from datetime import datetime
 from datetime import timezone
-from json.decoder import JSONDecodeError
 from pathlib import Path
 from sys import stdout
 from typing import Any
-from typing import Dict
 from typing import Optional
-
-from pydantic import BaseModel
 
 
 logging.basicConfig(
     level=logging.DEBUG, format="%(asctime)s; %(levelname)s; %(message)s"
 )
-
-
 logger = logging.getLogger(__name__)
 
 
-def dummy(
+def dummy_parallel(
     *,
     input_paths: list[str],
     output_path: str,
-    metadata: Optional[Dict[str, Any]] = None,
+    component: str,
+    metadata: Optional[dict[str, Any]] = None,
     # arguments of this task
     message: str = "default message",
-    index: int = 0,
     raise_error: bool = False,
-    sleep_time: int = 0,
-) -> Dict[str, Any]:
+    sleep_time: Optional[int] = None,
+) -> dict[str, Any]:
     """
-    Dummy task
+    Dummy task to be run in parallel
 
-    This task appends to a json file the parameters it was called with, such
-    that it is easy to parse the file in a test settings.
-
-    Incidentally, this task defines the reference interface of a task.
+    This task writes its arguments to to a JSON file named `component`.json (in
+    the `output_path` parent folder); mapping this task over a list of
+    `component`s produces a corresponding list of files that can be parsed in
+    tests.
 
     Arguments:
         input_paths:
@@ -62,16 +57,16 @@ def dummy(
         output_path:
             The output path, pointing either to a file or to a directory in
             which the task will write its output files.
+        component:
+            The component to process, e.g. component="1"
         metadata:
             Optional metadata about the input the task may need
-
         message:
             A message to be printed in the output file or in the raised error
-        index: TBD
         raise_error:
             If `True`, raise an error
         sleep_time:
-            Interval (in seconds) to be waited with a `time.sleep` statement
+            Interval to sleep, in seconds.
 
     Raises:
         ValueError: If `raise_error` is `True`
@@ -80,9 +75,9 @@ def dummy(
         metadata_update:
             A dictionary that will update the metadata
     """
-    logger.info("[dummy] ENTERING")
-    logger.info(f"[dummy] {input_paths=}")
-    logger.info(f"[dummy] {output_path=}")
+    logger.info("[dummy_parallel] ENTERING")
+    logger.info(f"[dummy_parallel] {input_paths=}")
+    logger.info(f"[dummy_parallel] {output_path=}")
 
     if raise_error:
         raise ValueError(message)
@@ -93,54 +88,34 @@ def dummy(
         input_paths=input_paths,
         output_path=output_path,
         metadata=metadata,
+        component=component,
         message=message,
     )
 
-    # Create output folder and set output file path
+    if sleep_time:
+        logger.info(f"[dummy_parallel] Now let's sleep {sleep_time=} seconds")
+        time.sleep(sleep_time)
+
+    # Create folder output and set output file path
     if not os.path.isdir(output_path):
         os.makedirs(output_path, exist_ok=True)
-    filename_out = f"{index}.result.json"
-    out_fullpath = Path(output_path) / filename_out
+    safe_component = component.replace(" ", "_").replace("/", "_")
+    safe_component = safe_component.replace(".", "_")
+    out_fullpath = str(Path(output_path) / f"{safe_component}.result.json")
 
-    try:
-        with out_fullpath.open("r") as fin:
-            data = json.load(fin)
-    except (JSONDecodeError, FileNotFoundError):
-        data = []
-    data.append(payload)
-    with out_fullpath.open("w") as fout:
-        json.dump(data, fout, indent=2)
+    # Write output
+    with open(out_fullpath, "w") as fout:
+        json.dump(payload, fout, indent=2, sort_keys=True)
 
-    # Sleep
-    logger.info(f"[dummy] Now starting {sleep_time}-seconds sleep")
-    time.sleep(sleep_time)
+    logger.info("[dummy_parallel] EXITING")
 
-    # Update metadata
-    metadata_update = dict(dummy=f"dummy {index}", index=["0", "1", "2"])
-
-    logger.info("[dummy] EXITING")
-
+    # Return empty metadata, since the "history" will be filled by fractal
+    metadata_update: dict = {}
     return metadata_update
 
 
 if __name__ == "__main__":
     from argparse import ArgumentParser
-
-    class TaskArguments(BaseModel):
-        """
-        Wrap task arguments to ease marshalling
-
-        This way we can automatically cast the input from command line onto
-        the correct type required by the task.
-        """
-
-        input_paths: list[str]
-        output_path: str
-        metadata: Optional[Dict[str, Any]] = None
-        message: str = "default message"
-        index: int = 0
-        raise_error: bool = False
-        sleep_time: int = 0
 
     parser = ArgumentParser()
     parser.add_argument("-j", "--json", help="Read parameters from json file")
@@ -165,8 +140,7 @@ if __name__ == "__main__":
         with open(args.json, "r") as f:
             pars = json.load(f)
 
-    task_args = TaskArguments(**pars)
-    metadata_update = dummy(**task_args.dict())
+    metadata_update = dummy_parallel(**pars)
 
     if args.metadata_out:
         with open(args.metadata_out, "w") as fout:
