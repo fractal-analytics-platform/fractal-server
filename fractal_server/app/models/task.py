@@ -21,9 +21,12 @@ class Task(_TaskBase, SQLModel, table=True):
         meta:
             Additional metadata related to execution (e.g. computational
             resources)
-        args_schema: JSON schema of task arguments
         source: inherited from `_TaskBase`
         name: inherited from `_TaskBase`
+        args_schema: JSON schema of task arguments
+        args_schema_version:
+            label pointing at how the JSON schema of task arguments was
+            generated
     """
 
     id: Optional[int] = Field(default=None, primary_key=True)
