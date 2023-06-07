@@ -1,4 +1,5 @@
 import logging
+import time
 from pathlib import Path
 from shutil import which as shutil_which
 
@@ -606,7 +607,6 @@ async def test_patch_task(
     NEW_OUTPUT_TYPE = "new output_type"
     NEW_COMMAND = "new command"
     NEW_SOURCE = "new source"
-    NEW_DEFAULT_ARGS = {"key1": 1, "key2": 2}
     NEW_META = {"key3": "3", "key4": "4"}
     NEW_VERSION = "1.2.3"
     update = TaskUpdate(
@@ -615,7 +615,6 @@ async def test_patch_task(
         output_type=NEW_OUTPUT_TYPE,
         command=NEW_COMMAND,
         source=NEW_SOURCE,
-        default_args=NEW_DEFAULT_ARGS,
         meta=NEW_META,
         version=NEW_VERSION,
     )
@@ -638,17 +637,14 @@ async def test_patch_task(
     assert res.json()["input_type"] == NEW_INPUT_TYPE
     assert res.json()["output_type"] == NEW_OUTPUT_TYPE
     assert res.json()["command"] == NEW_COMMAND
-    assert res.json()["default_args"] == NEW_DEFAULT_ARGS
     assert res.json()["meta"] == NEW_META
     assert res.json()["source"] == old_source
     assert res.json()["version"] == NEW_VERSION
     assert res.json()["owner"] is None
 
     # Test dictionaries update
-    OTHER_DEFAULT_ARGS = {"key1": 42, "key100": 100}
     OTHER_META = {"key4": [4, 8, 15], "key0": [16, 23, 42]}
     second_update = TaskUpdate(
-        default_args=OTHER_DEFAULT_ARGS,
         meta=OTHER_META,
     )
     res = await registered_superuser_client.patch(
@@ -661,7 +657,6 @@ async def test_patch_task(
     assert res.json()["input_type"] == NEW_INPUT_TYPE
     assert res.json()["output_type"] == NEW_OUTPUT_TYPE
     assert res.json()["command"] == NEW_COMMAND
-    assert len(res.json()["default_args"]) == 3
     assert len(res.json()["meta"]) == 3
 
 
@@ -766,3 +761,67 @@ async def test_get_task(task_factory, client, MockCurrentUser):
         debug(res)
         debug(res.json())
         assert res.status_code == 200
+
+
+async def test_background_collection_with_json_schemas(
+    db,
+    client,
+    MockCurrentUser,
+    override_settings_factory,
+    tmp_path,
+    testdata_path,
+):
+    """
+    GIVEN a package which has JSON Schemas for task arguments
+    WHEN the background collection is called on it
+    THEN the tasks are collected and the
+    """
+
+    override_settings_factory(
+        FRACTAL_TASKS_DIR=(tmp_path / "test_background_collection")
+    )
+
+    task_package = (
+        testdata_path
+        / "dummy_package_with_args_schemas"
+        / "dist/fractal_tasks_core_alpha-0.0.1a0-py3-none-any.whl"
+    )
+    task_pkg = _TaskCollectPip(package=task_package.as_posix())
+
+    # Extract info form the wheel package (this would be part of the endpoint)
+    _inspect_package_and_set_attributes(task_pkg)
+    debug(task_pkg)
+
+    venv_path = create_package_dir_pip(task_pkg=task_pkg)
+    collection_status = TaskCollectStatus(
+        status="pending", venv_path=venv_path, package=task_pkg.package
+    )
+    # Replacing with path because of non-serializable Path
+    collection_status_dict = collection_status.sanitised_dict()
+
+    state = State(data=collection_status_dict)
+    db.add(state)
+    await db.commit()
+    await db.refresh(state)
+    debug(state)
+    await _background_collect_pip(
+        state_id=state.id,
+        venv_path=venv_path,
+        task_pkg=task_pkg,
+    )
+    async with MockCurrentUser(persist=True):
+        status = "pending"
+        while status == "pending":
+            res = await client.get(f"{PREFIX}/collect/{state.id}")
+            debug(res.json())
+            assert res.status_code == 200
+            status = res.json()["data"]["status"]
+            time.sleep(0.5)
+    assert status == "OK"
+
+    task_list = (await db.execute(select(Task))).scalars().all()
+    assert len(task_list) == 2
+    for task in task_list:
+        debug(task)
+        assert task.args_schema is not None
+        assert task.args_schema_version is not None

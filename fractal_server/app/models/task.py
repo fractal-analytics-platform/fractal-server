@@ -15,13 +15,18 @@ class Task(_TaskBase, SQLModel, table=True):
 
     Attributes:
         id: Primary key
-        command: TBD
-        input_type: TBD
-        output_type: TBD
-        default_args: TBD
-        meta: TBD
+        command: Executable command
+        input_type: Expected type of input `Dataset`
+        output_type: Expected type of output `Dataset`
+        meta:
+            Additional metadata related to execution (e.g. computational
+            resources)
         source: inherited from `_TaskBase`
         name: inherited from `_TaskBase`
+        args_schema: JSON schema of task arguments
+        args_schema_version:
+            label pointing at how the JSON schema of task arguments was
+            generated
     """
 
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -30,12 +35,13 @@ class Task(_TaskBase, SQLModel, table=True):
     source: str = Field(unique=True)
     input_type: str
     output_type: str
-    default_args: Optional[dict[str, Any]] = Field(
-        sa_column=Column(JSON), default={}
-    )
     meta: Optional[dict[str, Any]] = Field(sa_column=Column(JSON), default={})
     owner: Optional[str] = None
     version: Optional[str] = None
+    args_schema: Optional[dict[str, Any]] = Field(
+        sa_column=Column(JSON), default=None
+    )
+    args_schema_version: Optional[str]
 
     @property
     def parallelization_level(self) -> Optional[str]:

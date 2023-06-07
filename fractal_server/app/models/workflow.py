@@ -1,3 +1,5 @@
+import json
+import logging
 from typing import Any
 from typing import Optional
 from typing import Union
@@ -85,11 +87,9 @@ class WorkflowTask(_WorkflowTaskBase, SQLModel, table=True):
     @property
     def arguments(self):
         """
-        Override default arguments
+        Transform args=None into {}
         """
-        out = self.task.default_args.copy()
-        out.update(self.args or {})
-        return out
+        return self.args or {}
 
     @property
     def is_parallel(self) -> bool:
@@ -173,7 +173,34 @@ class Workflow(_WorkflowBase, SQLModel, table=True):
         """
         if order is None:
             order = len(self.task_list)
-        wf_task = WorkflowTask(task_id=task_id, args=args, meta=meta)
+
+        # Get task from db, extract the JSON Schema for its arguments (if any),
+        # read default values and set them in default_args
+        db_task = await db.get(Task, task_id)
+        default_args = {}
+        if db_task.args_schema is not None:
+            try:
+                properties = db_task.args_schema["properties"]
+                for prop_name, prop_schema in properties.items():
+                    default_value = prop_schema.get("default", None)
+                    if default_value:
+                        default_args[prop_name] = default_value
+            except KeyError as e:
+                logging.warning(
+                    "Cannot set default_args from args_schema="
+                    f"{json.dumps(db_task.args_schema)}\n"
+                    f"Original KeyError: {str(e)}"
+                )
+        # Override default_args with args
+        actual_args = default_args.copy()
+        if args is not None:
+            for k, v in args.items():
+                actual_args[k] = v
+        if not actual_args:
+            actual_args = None
+
+        # Create DB entry
+        wf_task = WorkflowTask(task_id=task_id, args=actual_args, meta=meta)
         db.add(wf_task)
         self.task_list.insert(order, wf_task)
         self.task_list.reorder()  # type: ignore

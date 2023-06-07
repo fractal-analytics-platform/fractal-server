@@ -23,10 +23,7 @@ from json.decoder import JSONDecodeError
 from pathlib import Path
 from sys import stdout
 from typing import Any
-from typing import Dict
 from typing import Optional
-
-from pydantic import BaseModel
 
 
 logging.basicConfig(
@@ -41,13 +38,13 @@ def dummy(
     *,
     input_paths: list[str],
     output_path: str,
-    metadata: Optional[Dict[str, Any]] = None,
+    metadata: Optional[dict[str, Any]] = None,
     # arguments of this task
-    message: str = "default message",
+    message: str = "default_message",
     index: int = 0,
     raise_error: bool = False,
     sleep_time: int = 0,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Dummy task
 
@@ -126,22 +123,6 @@ def dummy(
 if __name__ == "__main__":
     from argparse import ArgumentParser
 
-    class TaskArguments(BaseModel):
-        """
-        Wrap task arguments to ease marshalling
-
-        This way we can automatically cast the input from command line onto
-        the correct type required by the task.
-        """
-
-        input_paths: list[str]
-        output_path: str
-        metadata: Optional[Dict[str, Any]] = None
-        message: str = "default message"
-        index: int = 0
-        raise_error: bool = False
-        sleep_time: int = 0
-
     parser = ArgumentParser()
     parser.add_argument("-j", "--json", help="Read parameters from json file")
     parser.add_argument(
@@ -165,8 +146,7 @@ if __name__ == "__main__":
         with open(args.json, "r") as f:
             pars = json.load(f)
 
-    task_args = TaskArguments(**pars)
-    metadata_update = dummy(**task_args.dict())
+    metadata_update = dummy(**pars)
 
     if args.metadata_out:
         with open(args.metadata_out, "w") as fout:

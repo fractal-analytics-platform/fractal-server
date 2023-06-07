@@ -10,7 +10,7 @@ def task1(
     *,
     input_paths: Sequence[str],
     output_path: str,
-    message: str,
+    message: str = "default message",
 ):
     """
     My task 1

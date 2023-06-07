@@ -1,0 +1,133 @@
+{
+  "args_schema_version": "pydantic_v1",
+  "has_args_schemas": true,
+  "manifest_version": 1,
+  "task_list": [
+    {
+      "args_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "index": {
+            "default": 0,
+            "description": "TBD",
+            "title": "Index",
+            "type": "integer"
+          },
+          "input_paths": {
+            "description": "The paths to fetch data from",
+            "items": {
+              "type": "string"
+            },
+            "title": "Input Paths",
+            "type": "array"
+          },
+          "message": {
+            "description": "A message to be printed in the output file or in the raised error",
+            "title": "Message",
+            "type": "string"
+          },
+          "metadata": {
+            "description": "Optional metadata about the input the task may need",
+            "title": "Metadata",
+            "type": "object"
+          },
+          "output_path": {
+            "description": "The output path, pointing either to a file or to a directory in which the task will write its output files.",
+            "title": "Output Path",
+            "type": "string"
+          },
+          "raise_error": {
+            "default": false,
+            "description": "If `True`, raise an error",
+            "title": "Raise Error",
+            "type": "boolean"
+          },
+          "sleep_time": {
+            "default": 0,
+            "description": "Interval (in seconds) to be waited with a `time.sleep` statement",
+            "title": "Sleep Time",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "input_paths",
+          "output_path",
+          "message"
+        ],
+        "title": "Dummy",
+        "type": "object"
+      },
+      "executable": "tasks/dummy.py",
+      "input_type": "Any",
+      "meta": {
+        "cpus_per_task": 1,
+        "mem": "10M"
+      },
+      "name": "dummy",
+      "output_type": "Any"
+    },
+    {
+      "args_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "component": {
+            "description": "The component to process, e.g. component=\"1\"",
+            "title": "Component",
+            "type": "string"
+          },
+          "input_paths": {
+            "description": "The paths to fetch data from",
+            "items": {
+              "type": "string"
+            },
+            "title": "Input Paths",
+            "type": "array"
+          },
+          "message": {
+            "description": "A message to be printed in the output file or in the raised error",
+            "title": "Message",
+            "type": "string"
+          },
+          "metadata": {
+            "description": "Optional metadata about the input the task may need",
+            "title": "Metadata",
+            "type": "object"
+          },
+          "output_path": {
+            "description": "The output path, pointing either to a file or to a directory in which the task will write its output files.",
+            "title": "Output Path",
+            "type": "string"
+          },
+          "raise_error": {
+            "default": false,
+            "description": "If `True`, raise an error",
+            "title": "Raise Error",
+            "type": "boolean"
+          },
+          "sleep_time": {
+            "description": "Interval to sleep, in seconds.",
+            "title": "Sleep Time",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "input_paths",
+          "output_path",
+          "component",
+          "message"
+        ],
+        "title": "DummyParallel",
+        "type": "object"
+      },
+      "executable": "tasks/dummy_parallel.py",
+      "input_type": "Any",
+      "meta": {
+        "cpus_per_task": 1,
+        "mem": "10M",
+        "parallelization_level": "index"
+      },
+      "name": "dummy parallel",
+      "output_type": "Any"
+    }
+  ]
+}

@@ -6,12 +6,6 @@
       "executable": "dummy.py",
       "input_type": "Any",
       "output_type": "Any",
-      "default_args": {
-        "message": "default message",
-        "sleep_time": 0,
-        "index": 0,
-        "raise_error": false
-      },
       "meta": {
           "cpus_per_task": 1,
           "mem": "10M"
@@ -22,10 +16,6 @@
       "executable": "dummy_parallel.py",
       "input_type": "Any",
       "output_type": "Any",
-      "default_args": {
-        "message": "default message",
-        "raise_error": false
-      },
       "meta": {
           "parallelization_level": "index",
           "cpus_per_task": 1,
