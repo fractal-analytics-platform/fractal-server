@@ -25,6 +25,7 @@
     * Improve error message for missing package manifest (\#704).
     * Improve behavior when task-collection folder already exists (\#704).
     * Add warning when exporting workflows which include custom tasks (\#728).
+    * Restrict Task editing to superusers and task owners (\#733).
 * Job execution:
     * Add `FractalSlurmExecutor.shutdown` and corresponding endpoint (\#631, \#691, \#696).
     * In `FractalSlurmExecutor`, make `working_dir*` attributes required (\#679).
@@ -45,6 +46,7 @@
     * Update `poetry.lock` to address security alerts (\#723).
     * Remove `sqlmodel` from `fractal-common`, and declare database models with multiple inheritance (\#710).
     * Make email generation more robust in `MockCurrentUser` (\#730).
+    * Update `poetry.lock` to `cryptography=41`, to address security alert (\#739).
 
 # 1.2.5
 
