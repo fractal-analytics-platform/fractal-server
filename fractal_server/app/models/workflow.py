@@ -179,6 +179,7 @@ class Workflow(_WorkflowBase, SQLModel, table=True):
         if db_task.args_schema is None:
             default_args = {}
         else:
+            default_args = {}
             try:
                 properties = db_task.args_schema["properties"]
                 for prop_name, prop_schema in properties.items():
