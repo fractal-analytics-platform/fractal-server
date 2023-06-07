@@ -194,8 +194,9 @@ class Workflow(_WorkflowBase, SQLModel, table=True):
 
         # Override default_args with args
         actual_args = default_args.copy()
-        for k, v in args.items():
-            actual_args[k] = v
+        if args is not None:
+            for k, v in args.items():
+                actual_args[k] = v
 
         # Create DB entry
         wf_task = WorkflowTask(task_id=task_id, args=actual_args, meta=meta)
