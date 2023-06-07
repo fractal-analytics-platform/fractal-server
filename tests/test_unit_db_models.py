@@ -163,7 +163,7 @@ async def test_workflow_insert_task_with_args_schema(
 
         # Create a task with an invalid args_schema
         invalid_args_schema = args_schema.copy()
-        del invalid_args_schema["properties"]
+        invalid_args_schema["xxx"] = invalid_args_schema.pop("properties")
         t1 = await task_factory(
             source="source1", args_schema=invalid_args_schema
         )
