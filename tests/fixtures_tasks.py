@@ -20,7 +20,7 @@ class MockTask(BaseModel):
 class MockWorkflowTask(BaseModel):
     order: int = 0
     task: MockTask
-    arguments: dict = {}
+    args: dict = {}
     meta: dict = {}
     executor: Optional[str] = "default"
 
