@@ -39,8 +39,7 @@ class WorkflowTask(_WorkflowTaskBase, SQLModel, table=True):
         meta:
             Additional parameters useful for execution
         args:
-            Additional task arguments, overriding the ones in
-            `WorkflowTask.task.args`
+            Task arguments
         task:
             `Task` object associated with the current `WorkflowTask`
 
@@ -85,13 +84,6 @@ class WorkflowTask(_WorkflowTaskBase, SQLModel, table=True):
         return value
 
     @property
-    def arguments(self):
-        """
-        Transform args=None into {}
-        """
-        return self.args or {}
-
-    @property
     def is_parallel(self) -> bool:
         return self.task.is_parallel
 
@@ -108,21 +100,6 @@ class WorkflowTask(_WorkflowTaskBase, SQLModel, table=True):
         res = self.task.meta.copy() or {}
         res.update(self.meta or {})
         return res
-
-    def assemble_args(self, extra: dict[str, Any] = None) -> dict:
-        """
-        Merge of `extra` arguments and `self.arguments`.
-
-        Returns
-            full_args:
-                A dictionary consisting of the merge of `extra` and
-                `self.arguments`.
-        """
-        full_args = {}
-        if extra:
-            full_args.update(extra)
-        full_args.update(self.arguments)
-        return full_args
 
 
 class Workflow(_WorkflowBase, SQLModel, table=True):
