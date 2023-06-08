@@ -832,11 +832,11 @@ async def test_background_collection_with_json_schemas(
         debug(task)
         assert task.args_schema is not None
         assert task.args_schema_version is not None
-        task_file = task.command.split(" ")[1]
 
         # The fractal_tasks_core_alpha package has tasks in the
         # fractal_tasks_core_alpha/tasks subpackage. Here we check that these
         # paths are correctly set in the Task object
+        task_file = task.command.split(" ")[1]
         debug(task_file)
         assert os.path.exists(task_file)
         assert os.path.isfile(task_file)
