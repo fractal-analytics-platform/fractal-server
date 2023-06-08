@@ -187,10 +187,10 @@ def call_single_task(
     Call a single task
 
     This assembles the runner arguments (input_paths, output_path, ...) and
-    task arguments (i.e., arguments that are specific to the task, such as
-    message or index in the dummy task), writes them to file, call the task
-    executable command passing the arguments file as an input and assembles
-    the output.
+    wftask arguments (i.e., arguments that are specific to the WorkflowTask,
+    such as message or index in the dummy task), writes them to file, call the
+    task executable command passing the arguments file as an input and
+    assembles the output.
 
     **Note**: This function is directly submitted to a
     `concurrent.futures`-compatible executor, as in
@@ -205,7 +205,7 @@ def call_single_task(
     Args:
         wftask:
             The workflow task to be called. This includes task specific
-            arguments via the task.task.arguments attribute.
+            arguments via the wftask.args attribute.
         task_pars:
             The parameters required to run the task which are not specific to
             the task, e.g., I/O paths.
@@ -238,11 +238,12 @@ def call_single_task(
         task_order=wftask.order,
     )
 
-    # assemble full args
-    args_dict = wftask.assemble_args(extra=task_pars.dict())
-
-    # write args file
-    write_args_file(args_dict, path=task_files.args)
+    # write args file (by assembling task_pars and wftask.args)
+    write_args_file(
+        task_pars.dict(),
+        wftask.args or {},
+        path=task_files.args,
+    )
 
     # assemble full command
     cmd = (
@@ -341,10 +342,10 @@ def call_single_parallel_task(
         component=component,
     )
 
-    # assemble full args
+    # write args file (by assembling task_pars, wftask.args and component)
     write_args_file(
         task_pars.dict(),
-        wftask.arguments,
+        wftask.args or {},
         dict(component=component),
         path=task_files.args,
     )
