@@ -92,7 +92,7 @@ def test_get_slurm_config(tmp_path, fail):
     )
     mywftask = MockWorkflowTask(
         task=mytask,
-        arguments=dict(message="test"),
+        args=dict(message="test"),
         order=0,
         meta=meta,
     )

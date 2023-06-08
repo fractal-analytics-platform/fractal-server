@@ -51,7 +51,7 @@ async def test_command_wrapper(tmp_path):
 def test_call_single_task(tmp_path):
     wftask = MockWorkflowTask(
         task=MockTask(name="task0", command=f"python {dummy_module.__file__}"),
-        arguments=dict(message="test"),
+        args=dict(message="test"),
         order=0,
     )
     logger_name = "test_logger_call_single_task"
@@ -89,7 +89,7 @@ def test_recursive_task_submission_step0(tmp_path):
             task=MockTask(
                 name="task0", command=f"python {dummy_module.__file__}"
             ),
-            arguments=dict(message="test", index=INDEX),
+            args=dict(message="test", index=INDEX),
             order=0,
         )
     ]
@@ -133,7 +133,7 @@ def test_recursive_parallel_task_submission_step0(tmp_path):
                 command=f"python {dummy_parallel_module.__file__}",
                 parallelization_level="index",
             ),
-            arguments=dict(message=MESSAGE),
+            args=dict(message=MESSAGE),
             order=0,
         )
     ]
@@ -196,14 +196,14 @@ def test_recursive_task_submission_inductive_step(tmp_path):
             task=MockTask(
                 name=TASK_NAME, command=f"python {dummy_module.__file__}"
             ),
-            arguments=dict(message="test 0", index=0),
+            args=dict(message="test 0", index=0),
             order=0,
         ),
         MockWorkflowTask(
             task=MockTask(
                 name="task1", command=f"python {dummy_module.__file__}"
             ),
-            arguments=dict(message="test 1", index=1),
+            args=dict(message="test 1", index=1),
             order=1,
         ),
     ]
@@ -269,7 +269,7 @@ def test_call_parallel_task_max_tasks(
             command=f"python {dummy_parallel_module.__file__}",
             parallelization_level="index",
         ),
-        arguments=dict(message="message", sleep_time=SLEEP_TIME),
+        args=dict(message="message", sleep_time=SLEEP_TIME),
         order=0,
     )
     debug(wftask)
