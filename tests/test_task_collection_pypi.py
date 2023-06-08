@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 import pytest
 from devtools import debug
@@ -159,26 +160,21 @@ async def test_pip_install(tmp_path):
 
 
 async def test_pip_install_pinned(tmp_path):
-    """ """
+
+    LOG = "fractal"
 
     PACKAGE = "devtools"
     VERSION = "0.8.0"
     EXTRA = "pygments"
-    PIN_VERSION = "2.0"
-    PIN = {EXTRA: PIN_VERSION}
 
-    for pin in [None, PIN]:
-
-        if pin:
-            venv_path = tmp_path / "fractal_test" / f"{PACKAGE}{VERSION}_pin"
-        else:
-            venv_path = tmp_path / "fractal_test" / f"{PACKAGE}{VERSION}"
-
+    async def _aux(
+        *, venv_name: str, pin: Optional[dict[str, str]] = None
+    ) -> str:
+        """pip install with pin and return version for EXTRA package"""
+        venv_path = tmp_path / "fractal_test" / venv_name
         venv_path.mkdir(exist_ok=True, parents=True)
         pip = venv_path / "venv/bin/pip"
-        logger_name = "fractal"
-
-        await _init_venv(path=venv_path, logger_name=logger_name)
+        await _init_venv(path=venv_path, logger_name=LOG)
         await _pip_install(
             venv_path=venv_path,
             task_pkg=_TaskCollectPip(
@@ -187,19 +183,36 @@ async def test_pip_install_pinned(tmp_path):
                 package_extras=EXTRA,
                 pinned_package_versions=pin,
             ),
-            logger_name=logger_name,
+            logger_name=LOG,
         )
         stdout_inspect = await execute_command(f"{pip} show {EXTRA}")
-        current_version = next(
+        extra_version = next(
             line.split()[-1]
             for line in stdout_inspect.split("\n")
             if line.startswith("Version:")
         )
+        return extra_version
 
-        if pin:
-            assert current_version == PIN_VERSION
-        else:
-            assert current_version != PIN_VERSION
+    # Case 0:
+    #   get default EXTRA version and check that it differs from pin version
+    DEFAULT_VERSION = await _aux(venv_name="case0")
+    PIN_VERSION = "2.0"
+    assert PIN_VERSION != DEFAULT_VERSION
+
+    # Case 1: good pin
+    pin = {EXTRA: PIN_VERSION}
+    new_version = await _aux(venv_name="case1", pin=pin)
+    assert new_version == PIN_VERSION
+
+    # Case 2: bad pin with unexisting EXTRA version
+    pin = {EXTRA: "123456789"}
+    with pytest.raises(RuntimeError):
+        await _aux(venv_name="case2", pin=pin)
+
+    # Case 3: bad pin with not already installed package
+    pin = {"pydantic": "1.0.0"}
+    with pytest.raises(RuntimeError):
+        await _aux(venv_name="case3", pin=pin)
 
 
 async def test_download(tmp_path):
