@@ -195,9 +195,13 @@ async def test_pip_install_pinned(tmp_path):
 
     # Case 0:
     #   get default EXTRA version and check that it differs from pin version
-    DEFAULT_VERSION = await _aux(venv_name="case0")
+    #   then try to pin with DEFAULT_VERSION
+    DEFAULT_VERSION = await _aux(venv_name="case0a")
     PIN_VERSION = "2.0"
     assert PIN_VERSION != DEFAULT_VERSION
+    pin = {EXTRA: DEFAULT_VERSION}
+    new_version = await _aux(venv_name="case0b", pin=pin)
+    assert new_version == DEFAULT_VERSION
 
     # Case 1: good pin
     pin = {EXTRA: PIN_VERSION}
