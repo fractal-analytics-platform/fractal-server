@@ -158,6 +158,50 @@ async def test_pip_install(tmp_path):
     assert PACKAGE in location.as_posix()
 
 
+async def test_pip_install_pinned(tmp_path):
+    """ """
+
+    PACKAGE = "devtools"
+    VERSION = "0.8.0"
+    EXTRA = "pygments"
+    PIN_VERSION = "2.0"
+    PIN = {EXTRA: PIN_VERSION}
+
+    for pin in [None, PIN]:
+
+        if pin:
+            venv_path = tmp_path / "fractal_test" / f"{PACKAGE}{VERSION}_pin"
+        else:
+            venv_path = tmp_path / "fractal_test" / f"{PACKAGE}{VERSION}"
+
+        venv_path.mkdir(exist_ok=True, parents=True)
+        pip = venv_path / "venv/bin/pip"
+        logger_name = "fractal"
+
+        await _init_venv(path=venv_path, logger_name=logger_name)
+        await _pip_install(
+            venv_path=venv_path,
+            task_pkg=_TaskCollectPip(
+                package=PACKAGE,
+                package_version=VERSION,
+                package_extras=EXTRA,
+                pinned_package_versions=pin,
+            ),
+            logger_name=logger_name,
+        )
+        stdout_inspect = await execute_command(f"{pip} show {EXTRA}")
+        current_version = next(
+            line.split()[-1]
+            for line in stdout_inspect.split("\n")
+            if line.startswith("Version:")
+        )
+
+        if pin:
+            assert current_version == PIN_VERSION
+        else:
+            assert current_version != PIN_VERSION
+
+
 async def test_download(tmp_path):
     """
     GIVEN a PyPI package name
