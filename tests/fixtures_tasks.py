@@ -1,7 +1,6 @@
 import asyncio
 import json
 from pathlib import Path
-from typing import Any
 from typing import Optional
 
 import pytest
@@ -21,7 +20,7 @@ class MockTask(BaseModel):
 class MockWorkflowTask(BaseModel):
     order: int = 0
     task: MockTask
-    arguments: dict = {}
+    args: dict = {}
     meta: dict = {}
     executor: Optional[str] = "default"
 
@@ -42,22 +41,6 @@ class MockWorkflowTask(BaseModel):
         res = self.task.meta.copy() or {}
         res.update(self.meta or {})
         return res
-
-    def assemble_args(self, extra: dict[str, Any] = None):
-        """
-        Merge of `extra` arguments and `self.arguments`.
-
-        Return
-        ------
-        full_arsgs (dict):
-            A dictionary consisting of the merge of `extra` and
-            self.arguments.
-        """
-        full_args = {}
-        if extra:
-            full_args.update(extra)
-        full_args.update(self.arguments)
-        return full_args
 
 
 async def execute_command(cmd, **kwargs):
