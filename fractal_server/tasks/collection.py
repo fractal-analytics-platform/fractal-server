@@ -483,6 +483,25 @@ async def _pip_install(
         cwd=venv_path, command=cmd_install, logger_name=logger_name
     )
 
+    if task_pkg.pinned_package_versions:
+        for pkg_name, pkg_version in task_pkg.pinned_package_versions.items():
+            stdout_inspect = await execute_command(
+                cwd=venv_path,
+                command=f"{pip} show {pkg_name}",
+                logger_name=logger_name,
+            )
+            current_version = next(
+                line.split()[-1]
+                for line in stdout_inspect.split("\n")
+                if line.startswith("Version:")
+            )
+            if current_version != pkg_version:
+                await execute_command(
+                    cwd=venv_path,
+                    command=f"{pip} install {pkg_name}=={pkg_version}",
+                    logger_name=logger_name,
+                )
+
     # Extract package installation path from `pip show`
     stdout_inspect = await execute_command(
         cwd=venv_path, command=cmd_inspect, logger_name=logger_name
