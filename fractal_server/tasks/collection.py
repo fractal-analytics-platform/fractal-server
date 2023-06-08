@@ -459,6 +459,9 @@ async def _pip_install(
         package_root : Path
             the location of the package manifest
     """
+
+    logger = get_logger(logger_name)
+
     pip = venv_path / "venv/bin/pip"
 
     extras = f"[{task_pkg.package_extras}]" if task_pkg.package_extras else ""
@@ -482,12 +485,16 @@ async def _pip_install(
     await execute_command(
         cwd=venv_path, command=cmd_install, logger_name=logger_name
     )
-
     if task_pkg.pinned_package_versions:
         for (
             pinned_pkg_name,
             pinned_pkg_version,
         ) in task_pkg.pinned_package_versions.items():
+
+            logger.debug(
+                "Specific version required: "
+                f"{pinned_pkg_name}=={pinned_pkg_version}"
+            )
             stdout_inspect = await execute_command(
                 cwd=venv_path,
                 command=f"{pip} show {pinned_pkg_name}",
@@ -498,7 +505,17 @@ async def _pip_install(
                 for line in stdout_inspect.split("\n")
                 if line.startswith("Version:")
             )
+            logger.debug(
+                "Preliminary check: verify that "
+                f"{pinned_pkg_version} is already installed"
+            )
             if current_version != pinned_pkg_version:
+                logger.debug(
+                    f"Currently installed version of {pinned_pkg_name}"
+                    f"({current_version}) differs from pinned version "
+                    f"({pinned_pkg_version}); "
+                    f"install version {pinned_pkg_version}."
+                )
                 await execute_command(
                     cwd=venv_path,
                     command=(
@@ -506,6 +523,11 @@ async def _pip_install(
                         f"{pinned_pkg_name}=={pinned_pkg_version}"
                     ),
                     logger_name=logger_name,
+                )
+            else:
+                logger.debug(
+                    f"Currently installed version of {pinned_pkg_name}"
+                    f"({current_version}) already matches the pinned version."
                 )
 
     # Extract package installation path from `pip show`
