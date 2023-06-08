@@ -36,6 +36,8 @@
     * Add `ApplyWorkflow.end_timestamp` column (\#687, \#684).
     * Prevent deletion of a `Workflow`/`Dataset` in relationship with existing `ApplyWorkflow` (\#703).
     * Add project-name uniqueness constraint in project-edit endpoint (\#689).
+* Other updates to internal logic:
+    * Drop `WorkflowTask.arguments` property and `WorkflowTask.assemble_args` method (\#742).
 * Expose `FRACTAL_CORS_ALLOW_ORIGIN` environment variable (\#688).
 * Package and repository:
     * Remove `fastapi-users-db-sqlmodel` dependency (\#660).
