@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 from pathlib import Path
 from shutil import which as shutil_which
@@ -772,9 +773,15 @@ async def test_background_collection_with_json_schemas(
     testdata_path,
 ):
     """
-    GIVEN a package which has JSON Schemas for task arguments
+    GIVEN a package which
+        1. has JSON Schemas for task arguments
+        2. has the tasks in a `tasks` subpackage
     WHEN the background collection is called on it
-    THEN the tasks are collected and the
+    THEN
+        1. The tasks are collected and the args_schema and args_schema_version
+        attributes are not None.
+        2. The task.command attribtues are correct (i.e. they point to existing
+        task files)
     """
 
     override_settings_factory(
@@ -825,3 +832,11 @@ async def test_background_collection_with_json_schemas(
         debug(task)
         assert task.args_schema is not None
         assert task.args_schema_version is not None
+        task_file = task.command.split(" ")[1]
+
+        # The fractal_tasks_core_alpha package has tasks in the
+        # fractal_tasks_core_alpha/tasks subpackage. Here we check that these
+        # paths are correctly set in the Task object
+        debug(task_file)
+        assert os.path.exists(task_file)
+        assert os.path.isfile(task_file)
