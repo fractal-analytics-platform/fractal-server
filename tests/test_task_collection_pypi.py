@@ -168,15 +168,13 @@ async def test_pip_install_pinned(tmp_path, caplog):
     PACKAGE = "devtools"
     VERSION = "0.8.0"
     EXTRA = "pygments"
+    venv_path = tmp_path / "fractal_test"
+    venv_path.mkdir(exist_ok=True, parents=True)
+    pip = venv_path / "venv/bin/pip"
+    await _init_venv(path=venv_path, logger_name=LOG)
 
-    async def _aux(
-        *, venv_name: str, pin: Optional[dict[str, str]] = None
-    ) -> str:
+    async def _aux(*, pin: Optional[dict[str, str]] = None) -> str:
         """pip install with pin and return version for EXTRA package"""
-        venv_path = tmp_path / "fractal_test" / venv_name
-        venv_path.mkdir(exist_ok=True, parents=True)
-        pip = venv_path / "venv/bin/pip"
-        await _init_venv(path=venv_path, logger_name=LOG)
         await _pip_install(
             venv_path=venv_path,
             task_pkg=_TaskCollectPip(
@@ -193,18 +191,19 @@ async def test_pip_install_pinned(tmp_path, caplog):
             for line in stdout_inspect.split("\n")
             if line.startswith("Version:")
         )
+        await execute_command(f"{pip} uninstall {PACKAGE} -y")
         return extra_version
 
     # Case 0:
     #   get default EXTRA version and check that it differs from pin version
     #   then try to pin with DEFAULT_VERSION
-    DEFAULT_VERSION = await _aux(venv_name="case0a")
+    DEFAULT_VERSION = await _aux()
     PIN_VERSION = "2.0"
     assert PIN_VERSION != DEFAULT_VERSION
     caplog.clear()
 
     pin = {EXTRA: DEFAULT_VERSION}
-    new_version = await _aux(venv_name="case0b", pin=pin)
+    new_version = await _aux(pin=pin)
     assert new_version == DEFAULT_VERSION
     assert "Specific version required" in caplog.text
     assert "already matches the pinned version" in caplog.text
@@ -212,7 +211,7 @@ async def test_pip_install_pinned(tmp_path, caplog):
 
     # Case 1: good pin
     pin = {EXTRA: PIN_VERSION}
-    new_version = await _aux(venv_name="case1", pin=pin)
+    new_version = await _aux(pin=pin)
     assert new_version == PIN_VERSION
     assert "differs from pinned version" in caplog.text
     assert f"pip install {EXTRA}" in caplog.text
@@ -222,7 +221,7 @@ async def test_pip_install_pinned(tmp_path, caplog):
     UNEXISTING_EXTRA = "123456789"
     pin = {EXTRA: UNEXISTING_EXTRA}
     with pytest.raises(RuntimeError) as error_info:
-        await _aux(venv_name="case2", pin=pin)
+        await _aux(pin=pin)
     assert f"pip install {EXTRA}=={UNEXISTING_EXTRA}" in caplog.text
     assert (
         "Could not find a version that satisfies the requirement "
@@ -233,7 +232,7 @@ async def test_pip_install_pinned(tmp_path, caplog):
     # Case 3: bad pin with not already installed package
     pin = {"pydantic": "1.0.0"}
     with pytest.raises(RuntimeError) as error_info:
-        await _aux(venv_name="case3", pin=pin)
+        await _aux(pin=pin)
     assert "pip show pydantic" in caplog.text
     assert "Package(s) not found: pydantic" in str(error_info.value)
     caplog.clear()
