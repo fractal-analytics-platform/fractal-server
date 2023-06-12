@@ -3,6 +3,8 @@
 #
 # Original authors:
 # Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
+# Tommaso Comparin <tommaso.comparin@exact-lab.it>
+# Yuri Chiucconi <yuri.chiucconi@exact-lab.it>
 #
 # This file is part of Fractal and was originally developed by eXact lab S.r.l.
 # <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
@@ -459,6 +461,9 @@ async def _pip_install(
         package_root : Path
             the location of the package manifest
     """
+
+    logger = get_logger(logger_name)
+
     pip = venv_path / "venv/bin/pip"
 
     extras = f"[{task_pkg.package_extras}]" if task_pkg.package_extras else ""
@@ -482,6 +487,50 @@ async def _pip_install(
     await execute_command(
         cwd=venv_path, command=cmd_install, logger_name=logger_name
     )
+    if task_pkg.pinned_package_versions:
+        for (
+            pinned_pkg_name,
+            pinned_pkg_version,
+        ) in task_pkg.pinned_package_versions.items():
+
+            logger.debug(
+                "Specific version required: "
+                f"{pinned_pkg_name}=={pinned_pkg_version}"
+            )
+            logger.debug(
+                "Preliminary check: verify that "
+                f"{pinned_pkg_version} is already installed"
+            )
+            stdout_inspect = await execute_command(
+                cwd=venv_path,
+                command=f"{pip} show {pinned_pkg_name}",
+                logger_name=logger_name,
+            )
+            current_version = next(
+                line.split()[-1]
+                for line in stdout_inspect.split("\n")
+                if line.startswith("Version:")
+            )
+            if current_version != pinned_pkg_version:
+                logger.debug(
+                    f"Currently installed version of {pinned_pkg_name}"
+                    f"({current_version}) differs from pinned version "
+                    f"({pinned_pkg_version}); "
+                    f"install version {pinned_pkg_version}."
+                )
+                await execute_command(
+                    cwd=venv_path,
+                    command=(
+                        f"{pip} install "
+                        f"{pinned_pkg_name}=={pinned_pkg_version}"
+                    ),
+                    logger_name=logger_name,
+                )
+            else:
+                logger.debug(
+                    f"Currently installed version of {pinned_pkg_name}"
+                    f"({current_version}) already matches the pinned version."
+                )
 
     # Extract package installation path from `pip show`
     stdout_inspect = await execute_command(

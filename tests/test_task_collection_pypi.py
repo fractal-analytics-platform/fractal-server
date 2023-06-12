@@ -1,4 +1,6 @@
+import logging
 from pathlib import Path
+from typing import Optional
 
 import pytest
 from devtools import debug
@@ -156,6 +158,84 @@ async def test_pip_install(tmp_path):
     )
     debug(location)
     assert PACKAGE in location.as_posix()
+
+
+async def test_pip_install_pinned(tmp_path, caplog):
+
+    caplog.set_level(logging.DEBUG)
+
+    LOG = "fractal_pinned_version"
+    PACKAGE = "devtools"
+    VERSION = "0.8.0"
+    EXTRA = "pygments"
+    venv_path = tmp_path / "fractal_test"
+    venv_path.mkdir(exist_ok=True, parents=True)
+    pip = venv_path / "venv/bin/pip"
+    await _init_venv(path=venv_path, logger_name=LOG)
+
+    async def _aux(*, pin: Optional[dict[str, str]] = None) -> str:
+        """pip install with pin and return version for EXTRA package"""
+        await _pip_install(
+            venv_path=venv_path,
+            task_pkg=_TaskCollectPip(
+                package=PACKAGE,
+                package_version=VERSION,
+                package_extras=EXTRA,
+                pinned_package_versions=pin,
+            ),
+            logger_name=LOG,
+        )
+        stdout_inspect = await execute_command(f"{pip} show {EXTRA}")
+        extra_version = next(
+            line.split()[-1]
+            for line in stdout_inspect.split("\n")
+            if line.startswith("Version:")
+        )
+        await execute_command(f"{pip} uninstall {PACKAGE} {EXTRA} -y")
+        return extra_version
+
+    # Case 0:
+    #   get default EXTRA version and check that it differs from pin version
+    #   then try to pin with DEFAULT_VERSION
+    DEFAULT_VERSION = await _aux()
+    PIN_VERSION = "2.0"
+    assert PIN_VERSION != DEFAULT_VERSION
+    caplog.clear()
+
+    pin = {EXTRA: DEFAULT_VERSION}
+    new_version = await _aux(pin=pin)
+    assert new_version == DEFAULT_VERSION
+    assert "Specific version required" in caplog.text
+    assert "already matches the pinned version" in caplog.text
+    caplog.clear()
+
+    # Case 1: good pin
+    pin = {EXTRA: PIN_VERSION}
+    new_version = await _aux(pin=pin)
+    assert new_version == PIN_VERSION
+    assert "differs from pinned version" in caplog.text
+    assert f"pip install {EXTRA}" in caplog.text
+    caplog.clear()
+
+    # Case 2: bad pin with unexisting EXTRA version
+    UNEXISTING_EXTRA = "123456789"
+    pin = {EXTRA: UNEXISTING_EXTRA}
+    with pytest.raises(RuntimeError) as error_info:
+        await _aux(pin=pin)
+    assert f"pip install {EXTRA}=={UNEXISTING_EXTRA}" in caplog.text
+    assert (
+        "Could not find a version that satisfies the requirement "
+        f"{EXTRA}=={UNEXISTING_EXTRA}"
+    ) in str(error_info.value)
+    caplog.clear()
+
+    # Case 3: bad pin with not already installed package
+    pin = {"pydantic": "1.0.0"}
+    with pytest.raises(RuntimeError) as error_info:
+        await _aux(pin=pin)
+    assert "pip show pydantic" in caplog.text
+    assert "Package(s) not found: pydantic" in str(error_info.value)
+    caplog.clear()
 
 
 async def test_download(tmp_path):
