@@ -41,6 +41,7 @@ from ...db import get_db
 from ...db import get_sync_db
 from ...models import State
 from ...models import Task
+from ...models import WorkflowTask
 from ...security import current_active_user
 from ...security import User
 
@@ -477,7 +478,23 @@ async def delete_task(
     """
     # Retrieve task from database
     db_task = await db.get(Task, task_id)
-
     _can_access_task(task=db_task, user=user)
 
-    raise NotImplementedError
+    stm = select(WorkflowTask).filter(WorkflowTask.task_id == task_id)
+    res = await db.execute(stm)
+    workflowtask_list = res.scalars().all()
+
+    if workflowtask_list:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Cannot remove Task {task_id} because it is currently"
+                f"imported in Workflows {[x.id for x in workflowtask_list]}. "
+                "If you want to remove this task, then you should first remove"
+                " the workflows.",
+            ),
+        )
+
+    await db.delete(db_task)
+    await db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
