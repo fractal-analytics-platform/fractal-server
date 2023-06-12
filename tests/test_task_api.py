@@ -567,7 +567,7 @@ async def test_patch_task_auth(
         )
         assert res.status_code == 403
         assert res.json()["detail"] == (
-            "Only a superuser can edit a task with `owner=None`."
+            "Only a superuser can edit or delete a Task with `owner=None`."
         )
 
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
@@ -840,3 +840,66 @@ async def test_background_collection_with_json_schemas(
         debug(task_file)
         assert os.path.exists(task_file)
         assert os.path.isfile(task_file)
+
+
+async def test_delete_task(
+    db,
+    client,
+    MockCurrentUser,
+    override_settings_factory,
+    tmp_path,
+    testdata_path,
+    workflow_factory,
+    project_factory,
+    task_factory,
+    collect_packages,
+):
+    free_task = await task_factory()
+
+    async with MockCurrentUser(persist=True) as user:
+
+        # Create project
+        project = await project_factory(user)
+        p_id = project.id
+        workflow = {
+            "name": "My Workflow",
+        }
+
+        # Create workflow
+        res = await client.post(
+            f"api/v1/project/{p_id}/workflow/",
+            json=workflow,
+        )
+        wf_id = res.json()["id"]
+
+        # Add a dummy task to workflow
+        task_id = collect_packages[0].id
+        res = await client.post(
+            (
+                f"api/v1/project/{p_id}/workflow/{wf_id}/wftask/?"
+                f"task_id={task_id}"
+            ),
+            json={},
+        )
+        assert res.status_code == 201
+
+        res = await client.delete(f"api/v1/task/{task_id}")
+        assert res.status_code == 403
+
+    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+
+        res = await client.delete(f"api/v1/task/{task_id}")
+        assert res.status_code == 422
+
+        assert res.json()["detail"][0] == (
+            f"Cannot remove Task {task_id} because it is currently imported in"
+            f" Workflows [{wf_id}]. If you want to remove this task, then you"
+            " should first remove the workflows."
+        )
+
+        res = await client.get(f"api/v1/task/{free_task.id}")
+        assert res.status_code == 200
+        res = await client.delete(f"api/v1/task/{free_task.id}")
+        assert res.status_code == 204
+        res = await client.get(f"api/v1/task/{free_task.id}")
+        assert res.status_code == 404
