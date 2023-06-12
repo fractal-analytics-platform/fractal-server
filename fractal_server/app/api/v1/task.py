@@ -165,7 +165,10 @@ def _can_access_task(*, task: Task, user: User):
         if task.owner is None:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=("Only a superuser can edit a task with `owner=None`."),
+                detail=(
+                    "Only a superuser can edit or delete a Task with "
+                    "`owner=None`."
+                ),
             )
         else:
             owner = user.username or user.slurm_user
@@ -377,6 +380,10 @@ async def get_task(
     """
     task = await db.get(Task, task_id)
     await db.close()
+    if not task:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
+        )
     return task
 
 
@@ -476,7 +483,6 @@ async def delete_task(
     """
     Delete task
     """
-    # Retrieve task from database
     db_task = await db.get(Task, task_id)
     _can_access_task(task=db_task, user=user)
 
@@ -488,8 +494,9 @@ async def delete_task(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
-                f"Cannot remove Task {task_id} because it is currently"
-                f"imported in Workflows {[x.id for x in workflowtask_list]}. "
+                f"Cannot remove Task {task_id} because it is currently "
+                f"imported in Workflows "
+                f"{[x.workflow_id for x in workflowtask_list]}. "
                 "If you want to remove this task, then you should first remove"
                 " the workflows.",
             ),
