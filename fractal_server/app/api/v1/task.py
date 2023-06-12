@@ -156,6 +156,28 @@ async def _insert_tasks(
     return task_db_list
 
 
+def _can_access_task(*, task: Task, user: User):
+    # This check constitutes a preliminary version of access control:
+    # if the current user is not a superuser and differs from the task owner
+    # (including when `owner is None`), we raise an 403 HTTP Exception.
+    if not user.is_superuser:
+        if task.owner is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=("Only a superuser can edit a task with `owner=None`."),
+            )
+        else:
+            owner = user.username or user.slurm_user
+            if owner != task.owner:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=(
+                        f"Current user ({owner}) cannot modify task "
+                        f"({task.id}) with different owner ({task.owner})."
+                    ),
+                )
+
+
 @router.post(
     "/collect/pip/",
     response_model=StateRead,
@@ -376,26 +398,7 @@ async def patch_task(
 
     # Retrieve task from database
     db_task = await db.get(Task, task_id)
-
-    # This check constitutes a preliminary version of access control:
-    # if the current user is not a superuser and differs from the task owner
-    # (including when `owner is None`), we raise an 403 HTTP Exception.
-    if not user.is_superuser:
-        if db_task.owner is None:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=("Only a superuser can edit a task with `owner=None`."),
-            )
-        else:
-            owner = user.username or user.slurm_user
-            if owner != db_task.owner:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail=(
-                        f"Current user ({owner}) cannot modify task "
-                        f"({task_id}) with different owner ({db_task.owner})."
-                    ),
-                )
+    _can_access_task(task=db_task, user=user)
 
     update = task_update.dict(exclude_unset=True)
     for key, value in update.items():
@@ -461,3 +464,20 @@ async def create_task(
     await db.refresh(db_task)
     await db.close()
     return db_task
+
+
+@router.delete("/{task_id}", status_code=204)
+async def delete_task(
+    task_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    """
+    Delete task
+    """
+    # Retrieve task from database
+    db_task = await db.get(Task, task_id)
+
+    _can_access_task(task=db_task, user=user)
+
+    raise NotImplementedError
