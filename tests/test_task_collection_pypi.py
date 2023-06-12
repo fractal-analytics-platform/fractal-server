@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import Optional
 
@@ -159,10 +160,11 @@ async def test_pip_install(tmp_path):
     assert PACKAGE in location.as_posix()
 
 
-async def test_pip_install_pinned(tmp_path):
+async def test_pip_install_pinned(tmp_path, caplog):
 
-    LOG = "fractal"
+    caplog.set_level(logging.DEBUG)
 
+    LOG = "fractal_pinned_version"
     PACKAGE = "devtools"
     VERSION = "0.8.0"
     EXTRA = "pygments"
@@ -199,30 +201,42 @@ async def test_pip_install_pinned(tmp_path):
     DEFAULT_VERSION = await _aux(venv_name="case0a")
     PIN_VERSION = "2.0"
     assert PIN_VERSION != DEFAULT_VERSION
+    caplog.clear()
+
     pin = {EXTRA: DEFAULT_VERSION}
     new_version = await _aux(venv_name="case0b", pin=pin)
     assert new_version == DEFAULT_VERSION
+    assert "Specific version required" in caplog.text
+    assert "already matches the pinned version" in caplog.text
+    caplog.clear()
 
     # Case 1: good pin
     pin = {EXTRA: PIN_VERSION}
     new_version = await _aux(venv_name="case1", pin=pin)
     assert new_version == PIN_VERSION
+    assert "differs from pinned version" in caplog.text
+    assert f"pip install {EXTRA}" in caplog.text
+    caplog.clear()
 
     # Case 2: bad pin with unexisting EXTRA version
     UNEXISTING_EXTRA = "123456789"
     pin = {EXTRA: UNEXISTING_EXTRA}
     with pytest.raises(RuntimeError) as error_info:
         await _aux(venv_name="case2", pin=pin)
+    assert f"pip install {EXTRA}=={UNEXISTING_EXTRA}" in caplog.text
     assert (
         "Could not find a version that satisfies the requirement "
         f"{EXTRA}=={UNEXISTING_EXTRA}"
     ) in str(error_info.value)
+    caplog.clear()
 
     # Case 3: bad pin with not already installed package
     pin = {"pydantic": "1.0.0"}
     with pytest.raises(RuntimeError) as error_info:
         await _aux(venv_name="case3", pin=pin)
-    assert "Package(s) not found: pydantic}" in str(error_info.value)
+    assert "pip show pydantic" in caplog.text
+    assert "Package(s) not found: pydantic" in str(error_info.value)
+    caplog.clear()
 
 
 async def test_download(tmp_path):
