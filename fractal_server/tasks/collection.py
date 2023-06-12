@@ -497,6 +497,10 @@ async def _pip_install(
                 "Specific version required: "
                 f"{pinned_pkg_name}=={pinned_pkg_version}"
             )
+            logger.debug(
+                "Preliminary check: verify that "
+                f"{pinned_pkg_version} is already installed"
+            )
             stdout_inspect = await execute_command(
                 cwd=venv_path,
                 command=f"{pip} show {pinned_pkg_name}",
@@ -506,10 +510,6 @@ async def _pip_install(
                 line.split()[-1]
                 for line in stdout_inspect.split("\n")
                 if line.startswith("Version:")
-            )
-            logger.debug(
-                "Preliminary check: verify that "
-                f"{pinned_pkg_version} is already installed"
             )
             if current_version != pinned_pkg_version:
                 logger.debug(

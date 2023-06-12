@@ -209,14 +209,20 @@ async def test_pip_install_pinned(tmp_path):
     assert new_version == PIN_VERSION
 
     # Case 2: bad pin with unexisting EXTRA version
-    pin = {EXTRA: "123456789"}
-    with pytest.raises(RuntimeError):
+    UNEXISTING_EXTRA = "123456789"
+    pin = {EXTRA: UNEXISTING_EXTRA}
+    with pytest.raises(RuntimeError) as error_info:
         await _aux(venv_name="case2", pin=pin)
+    assert (
+        "Could not find a version that satisfies the requirement "
+        f"{EXTRA}=={UNEXISTING_EXTRA}"
+    ) in str(error_info.value)
 
     # Case 3: bad pin with not already installed package
     pin = {"pydantic": "1.0.0"}
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError) as error_info:
         await _aux(venv_name="case3", pin=pin)
+    assert "Package(s) not found: pydantic}" in str(error_info.value)
 
 
 async def test_download(tmp_path):
