@@ -191,7 +191,7 @@ async def test_pip_install_pinned(tmp_path, caplog):
             for line in stdout_inspect.split("\n")
             if line.startswith("Version:")
         )
-        await execute_command(f"{pip} uninstall {PACKAGE} -y")
+        await execute_command(f"{pip} uninstall {PACKAGE} {EXTRA} -y")
         return extra_version
 
     # Case 0:
