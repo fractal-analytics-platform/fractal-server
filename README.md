@@ -46,7 +46,7 @@
 | fractal\_server/common/schemas/project.py                         |       50 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/common/schemas/state.py                           |       14 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/common/schemas/task.py                            |       55 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/common/schemas/task\_collection.py                |       38 |        1 |        6 |        1 |     95% |        69 |
+| fractal\_server/common/schemas/task\_collection.py                |       39 |        1 |        6 |        1 |     96% |        74 |
 | fractal\_server/common/schemas/user.py                            |       24 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/common/schemas/workflow.py                        |       56 |        0 |        7 |        0 |    100% |           |
 | fractal\_server/config.py                                         |      135 |       25 |       34 |        9 |     74% |140-158, 178-185, 186->exit, 200-202, 203->exit, 322-324, 326, 333, 345-371 |
@@ -54,9 +54,9 @@
 | fractal\_server/main.py                                           |       60 |       13 |       14 |        3 |     76% |68-69, 79, 122, 124, 126, 130-137, 183-189 |
 | fractal\_server/syringe.py                                        |       29 |        2 |        2 |        0 |     94% |     93-94 |
 | fractal\_server/tasks/\_\_init\_\_.py                             |        0 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/tasks/collection.py                               |      192 |        5 |       62 |        9 |     94% |79-80, 141, 233->exit, 287, 305->exit, 310->exit, 315->exit, 491->exit, 500 |
+| fractal\_server/tasks/collection.py                               |      203 |        5 |       70 |       10 |     95% |81-82, 143, 235->exit, 289, 307->exit, 312->exit, 317->exit, 509->exit, 540->exit, 549 |
 | fractal\_server/utils.py                                          |       22 |        0 |        2 |        0 |    100% |           |
-|                                                         **TOTAL** | **3275** |  **190** |  **731** |   **77** | **93%** |           |
+|                                                         **TOTAL** | **3287** |  **190** |  **739** |   **78** | **93%** |           |
 
 
 ## Setup coverage badge
