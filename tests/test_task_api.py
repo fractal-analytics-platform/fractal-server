@@ -873,3 +873,28 @@ async def test_delete_task(
         assert res.status_code == 204
         task_list = (await db.execute(select(Task))).scalars().all()
         assert len(task_list) == 1
+
+
+async def test_patch_args_schema(MockCurrentUser, client):
+
+    async with MockCurrentUser(persist=True):
+        task = TaskCreate(
+            name="task_name",
+            command="task_command",
+            source="some_source",
+            input_type="task_input_type",
+            output_type="task_output_type",
+            version="1",
+            args_schema=dict(key1=1, key2=2),
+            args_schema_version="1.2.3",
+        )
+        payload = task.dict(exclude_unset=True)
+        res = await client.post(f"{PREFIX}/", json=payload)
+        assert res.status_code == 201
+
+        task_id = res.json()["id"]
+        payload = dict(args_schema=dict(key2=0, key3=3, key4=4))
+        res = await client.patch(f"{PREFIX}/{task_id}", json=payload)
+        assert res.status_code == 200
+        new_args_schema = res.json()["args_schema"]
+        assert new_args_schema == payload["args_schema"]
