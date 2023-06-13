@@ -762,6 +762,9 @@ async def test_get_task(task_factory, client, MockCurrentUser):
         debug(res)
         debug(res.json())
         assert res.status_code == 200
+        res = await client.get(f"{PREFIX}/{task.id+999}")
+        assert res.status_code == 404
+        assert res.json()["detail"] == "Task not found"
 
 
 async def test_background_collection_with_json_schemas(
