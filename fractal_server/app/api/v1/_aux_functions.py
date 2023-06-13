@@ -220,7 +220,11 @@ async def _get_task_check_owner(
     user: User,
     db: AsyncSession,
 ) -> Task:
-
+    """
+    This check constitutes a preliminary version of access control:
+    if the current user is not a superuser and differs from the task owner
+    (including when `owner is None`), we raise an 403 HTTP Exception.
+    """
     task = await db.get(Task, task_id)
     if not task:
         raise HTTPException(
@@ -232,7 +236,9 @@ async def _get_task_check_owner(
         if task.owner is None:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=("Only a superuser can get a Task with `owner=None`."),
+                detail=(
+                    "Only a superuser can modify a Task with `owner=None`."
+                ),
             )
         else:
             owner = user.username or user.slurm_user
@@ -240,7 +246,7 @@ async def _get_task_check_owner(
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail=(
-                        f"Current user ({owner}) cannot get Task {task.id} "
+                        f"Current user ({owner}) cannot modify Task {task.id} "
                         f"with different owner ({task.owner})."
                     ),
                 )
