@@ -456,21 +456,21 @@ async def delete_task(
     db: AsyncSession = Depends(get_db),
 ) -> Response:
     """
-    Delete task
+    Delete a task
     """
 
     db_task = await _get_task_check_owner(task_id=task_id, user=user, db=db)
 
+    # Check that the Task is not in relationship with some WorkflowTask
     stm = select(WorkflowTask).filter(WorkflowTask.task_id == task_id)
     res = await db.execute(stm)
     workflowtask_list = res.scalars().all()
-
     if workflowtask_list:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
                 f"Cannot remove Task {task_id} because it is currently "
-                f"imported in Workflows "
+                "imported in Workflows "
                 f"{[x.workflow_id for x in workflowtask_list]}. "
                 "If you want to remove this task, then you should first remove"
                 " the workflows.",
