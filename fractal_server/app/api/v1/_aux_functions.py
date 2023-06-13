@@ -13,8 +13,10 @@ from ...models import ApplyWorkflow
 from ...models import Dataset
 from ...models import LinkUserProject
 from ...models import Project
+from ...models import Task
 from ...models import Workflow
 from ...models import WorkflowTask
+from ...security import User
 
 
 async def _get_project_check_owner(
@@ -210,3 +212,39 @@ async def _get_job_check_owner(
             detail=f"Invalid {project_id=} for {job_id=}",
         )
     return dict(job=job, project=project)
+
+
+async def _get_task_check_owner(
+    *,
+    task_id: int,
+    user: User,
+    db: AsyncSession,
+) -> Task:
+
+    task = await db.get(Task, task_id)
+    if not task:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Task {task_id} not found.",
+        )
+
+    if not user.is_superuser:
+        if task.owner is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=(
+                    "Only a superuser can edit or delete a Task with "
+                    "`owner=None`."
+                ),
+            )
+        else:
+            owner = user.username or user.slurm_user
+            if owner != task.owner:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=(
+                        f"Current user ({owner}) cannot modify task "
+                        f"({task.id}) with different owner ({task.owner})."
+                    ),
+                )
+    return task
