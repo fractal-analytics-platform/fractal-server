@@ -44,6 +44,7 @@ from ...models import Task
 from ...models import WorkflowTask
 from ...security import current_active_user
 from ...security import User
+from ._aux_functions import _get_task_check_owner
 
 router = APIRouter()
 
@@ -155,31 +156,6 @@ async def _insert_tasks(
         db.refresh(t)
     db.close()
     return task_db_list
-
-
-def _can_access_task(*, task: Task, user: User):
-    # This check constitutes a preliminary version of access control:
-    # if the current user is not a superuser and differs from the task owner
-    # (including when `owner is None`), we raise an 403 HTTP Exception.
-    if not user.is_superuser:
-        if task.owner is None:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=(
-                    "Only a superuser can edit or delete a Task with "
-                    "`owner=None`."
-                ),
-            )
-        else:
-            owner = user.username or user.slurm_user
-            if owner != task.owner:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail=(
-                        f"Current user ({owner}) cannot modify task "
-                        f"({task.id}) with different owner ({task.owner})."
-                    ),
-                )
 
 
 @router.post(
@@ -405,8 +381,7 @@ async def patch_task(
         )
 
     # Retrieve task from database
-    db_task = await db.get(Task, task_id)
-    _can_access_task(task=db_task, user=user)
+    db_task = await _get_task_check_owner(task_id=task_id, user=user, db=db)
 
     update = task_update.dict(exclude_unset=True)
     for key, value in update.items():
@@ -483,8 +458,8 @@ async def delete_task(
     """
     Delete task
     """
-    db_task = await db.get(Task, task_id)
-    _can_access_task(task=db_task, user=user)
+
+    db_task = _get_task_check_owner(task_id=task_id, user=user, db=db)
 
     stm = select(WorkflowTask).filter(WorkflowTask.task_id == task_id)
     res = await db.execute(stm)
