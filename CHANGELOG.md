@@ -27,6 +27,7 @@
     * Add warning when exporting workflows which include custom tasks (\#728).
     * Restrict Task editing to superusers and task owners (\#733).
     * Expose `pinned_package_version` for tasks collection (\#744).
+    * Implement `delete_task` endpoint (\#745).
 * Job execution:
     * Add `FractalSlurmExecutor.shutdown` and corresponding endpoint (\#631, \#691, \#696).
     * In `FractalSlurmExecutor`, make `working_dir*` attributes required (\#679).

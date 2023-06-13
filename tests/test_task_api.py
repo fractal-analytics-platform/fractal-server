@@ -556,7 +556,7 @@ async def test_patch_task_auth(
         )
         assert res.status_code == 403
         assert res.json()["detail"] == (
-            f"Current user ({USER_2}) cannot modify task ({task_id}) "
+            f"Current user ({USER_2}) cannot modify Task {task_id} "
             f"with different owner ({USER_1})."
         )
 
@@ -567,7 +567,7 @@ async def test_patch_task_auth(
         )
         assert res.status_code == 403
         assert res.json()["detail"] == (
-            "Only a superuser can edit a task with `owner=None`."
+            "Only a superuser can modify a Task with `owner=None`."
         )
 
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
@@ -762,6 +762,9 @@ async def test_get_task(task_factory, client, MockCurrentUser):
         debug(res)
         debug(res.json())
         assert res.status_code == 200
+        res = await client.get(f"{PREFIX}/{task.id+999}")
+        assert res.status_code == 404
+        assert res.json()["detail"] == "Task not found"
 
 
 async def test_background_collection_with_json_schemas(
@@ -840,3 +843,33 @@ async def test_background_collection_with_json_schemas(
         debug(task_file)
         assert os.path.exists(task_file)
         assert os.path.isfile(task_file)
+
+
+async def test_delete_task(
+    db,
+    client,
+    MockCurrentUser,
+    workflow_factory,
+    project_factory,
+    task_factory,
+    workflowtask_factory,
+):
+    async with MockCurrentUser(user_kwargs={"username": "bob"}) as user:
+        project = await project_factory(user)
+        workflow = await workflow_factory(project_id=project.id)
+        taskA = await task_factory(source="A", owner=user.username)
+        taskB = await task_factory(source="B", owner=user.username)
+        await workflowtask_factory(workflow_id=workflow.id, task_id=taskA.id)
+
+        # test 422
+        res = await client.delete(f"{PREFIX}/{taskA.id}")
+        assert res.status_code == 422
+        assert "Cannot remove Task" in res.json()["detail"][0]
+
+        # test success
+        task_list = (await db.execute(select(Task))).scalars().all()
+        assert len(task_list) == 2
+        res = await client.delete(f"{PREFIX}/{taskB.id}")
+        assert res.status_code == 204
+        task_list = (await db.execute(select(Task))).scalars().all()
+        assert len(task_list) == 1
