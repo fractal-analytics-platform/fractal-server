@@ -313,7 +313,7 @@ async def test_get_task_check_owner(
             await _get_task_check_owner(task_id=taskB.id, user=user, db=db)
         assert err.value.status_code == 403
         assert err.value.detail == (
-            "Only a superuser can get a Task with `owner=None`."
+            "Only a superuser can modify a Task with `owner=None`."
         )
 
     async with MockCurrentUser(user_kwargs={"username": "bob"}) as user:
@@ -322,7 +322,7 @@ async def test_get_task_check_owner(
             await _get_task_check_owner(task_id=taskA.id, user=user, db=db)
         assert err.value.status_code == 403
         assert err.value.detail == (
-            f"Current user ({user.username}) cannot get Task {taskA.id} "
+            f"Current user ({user.username}) cannot modify Task {taskA.id} "
             f"with different owner ({taskA.owner})."
         )
 
