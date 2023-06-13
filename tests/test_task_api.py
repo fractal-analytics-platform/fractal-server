@@ -556,7 +556,7 @@ async def test_patch_task_auth(
         )
         assert res.status_code == 403
         assert res.json()["detail"] == (
-            f"Current user ({USER_2}) cannot modify task ({task_id}) "
+            f"Current user ({USER_2}) cannot get Task {task_id} "
             f"with different owner ({USER_1})."
         )
 
@@ -567,7 +567,7 @@ async def test_patch_task_auth(
         )
         assert res.status_code == 403
         assert res.json()["detail"] == (
-            "Only a superuser can edit or delete a Task with `owner=None`."
+            "Only a superuser can get a Task with `owner=None`."
         )
 
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
