@@ -5,6 +5,7 @@ from fractal_server.app.api.v1._aux_functions import _check_workflow_exists
 from fractal_server.app.api.v1._aux_functions import _get_dataset_check_owner
 from fractal_server.app.api.v1._aux_functions import _get_job_check_owner
 from fractal_server.app.api.v1._aux_functions import _get_project_check_owner
+from fractal_server.app.api.v1._aux_functions import _get_task_check_owner
 from fractal_server.app.api.v1._aux_functions import _get_workflow_check_owner
 from fractal_server.app.api.v1._aux_functions import (
     _get_workflow_task_check_owner,
@@ -281,3 +282,59 @@ async def test_get_job_check_owner(
         assert err.value.detail == (
             f"Invalid project_id={other_project.id} for job_id={job.id}"
         )
+
+
+async def test_get_task_check_owner(
+    MockCurrentUser,
+    project_factory,
+    workflow_factory,
+    task_factory,
+    workflowtask_factory,
+    db,
+):
+    async with MockCurrentUser(user_kwargs={"username": "alice"}) as user:
+        taskA = await task_factory(source="A", owner=user.username)
+        taskB = await task_factory(source="B")
+
+        # Test fail 1: 404 NOT FOUND
+        with pytest.raises(HTTPException) as err:
+            await _get_task_check_owner(
+                task_id=taskA.id + 999, user=user, db=db
+            )
+        assert err.value.status_code == 404
+        assert err.value.detail == f"Task {taskA.id + 999} not found."
+
+        # Test success
+        _task = await _get_task_check_owner(task_id=taskA.id, user=user, db=db)
+        assert _task.id == taskA.id
+
+        # Test fail 2: 403 FORBIDDEN
+        with pytest.raises(HTTPException) as err:
+            await _get_task_check_owner(task_id=taskB.id, user=user, db=db)
+        assert err.value.status_code == 403
+        assert err.value.detail == (
+            "Only a superuser can get a Task with `owner=None`."
+        )
+
+    async with MockCurrentUser(user_kwargs={"username": "bob"}) as user:
+        # Test fail 3: 403 FORBIDDEN
+        with pytest.raises(HTTPException) as err:
+            await _get_task_check_owner(task_id=taskA.id, user=user, db=db)
+        assert err.value.status_code == 403
+        assert err.value.detail == (
+            f"Current user ({user.username}) cannot get Task {taskA.id} "
+            f"with different owner ({taskA.owner})."
+        )
+
+    async with MockCurrentUser(
+        user_kwargs={"username": "boss", "is_superuser": True}
+    ) as superuser:
+        # Test success
+        _task = await _get_task_check_owner(
+            task_id=taskA.id, user=superuser, db=db
+        )
+        assert _task.id == taskA.id
+        _task = await _get_task_check_owner(
+            task_id=taskB.id, user=superuser, db=db
+        )
+        assert _task.id == taskB.id
