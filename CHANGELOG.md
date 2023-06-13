@@ -52,6 +52,7 @@
     * Remove `sqlmodel` from `fractal-common`, and declare database models with multiple inheritance (\#710).
     * Make email generation more robust in `MockCurrentUser` (\#730).
     * Update `poetry.lock` to `cryptography=41`, to address security alert (\#739).
+    * Add `greenlet` as a direct dependency (\#748).
 
 # 1.2.5
 
