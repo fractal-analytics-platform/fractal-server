@@ -388,9 +388,12 @@ async def patch_task(
         if isinstance(value, str):
             setattr(db_task, key, value)
         elif isinstance(value, dict):
-            current_dict = deepcopy(getattr(db_task, key))
-            current_dict.update(value)
-            setattr(db_task, key, current_dict)
+            if key == "args_schema":
+                setattr(db_task, key, value)
+            else:
+                current_dict = deepcopy(getattr(db_task, key))
+                current_dict.update(value)
+                setattr(db_task, key, current_dict)
         else:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
