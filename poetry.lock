@@ -2521,4 +2521,4 @@ slurm = ["cloudpickle", "clusterfutures"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "6e143be2de6e6c3ed99a7c2ec4fdc16217a1517a6b408a5e0f9370b1c9a5d313"
+content-hash = "b029c5dbb2309efca5bb27ae3a687e78d0b6c8db36ab29ef26ff3e92dba89413"
