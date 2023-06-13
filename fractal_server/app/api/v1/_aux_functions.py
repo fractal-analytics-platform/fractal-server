@@ -232,10 +232,7 @@ async def _get_task_check_owner(
         if task.owner is None:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=(
-                    "Only a superuser can edit or delete a Task with "
-                    "`owner=None`."
-                ),
+                detail=("Only a superuser can get a Task with `owner=None`."),
             )
         else:
             owner = user.username or user.slurm_user
@@ -243,8 +240,8 @@ async def _get_task_check_owner(
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail=(
-                        f"Current user ({owner}) cannot modify task "
-                        f"({task.id}) with different owner ({task.owner})."
+                        f"Current user ({owner}) cannot get Task {task.id} "
+                        f"with different owner ({task.owner})."
                     ),
                 )
     return task

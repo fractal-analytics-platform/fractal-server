@@ -459,7 +459,7 @@ async def delete_task(
     Delete task
     """
 
-    db_task = _get_task_check_owner(task_id=task_id, user=user, db=db)
+    db_task = await _get_task_check_owner(task_id=task_id, user=user, db=db)
 
     stm = select(WorkflowTask).filter(WorkflowTask.task_id == task_id)
     res = await db.execute(stm)
