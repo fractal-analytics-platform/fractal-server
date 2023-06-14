@@ -182,8 +182,9 @@ async def on_startup() -> None:
     """
     settings = Inject(get_settings)
     await _create_first_user(
-        settings.FRACTAL_DEFAULT_ADMIN_EMAIL,
-        settings.FRACTAL_DEFAULT_ADMIN_PASSWORD,
-        True,
+        email=settings.FRACTAL_DEFAULT_ADMIN_EMAIL,
+        password=settings.FRACTAL_DEFAULT_ADMIN_PASSWORD,
+        is_superuser=True,
+        username=settings.FRACTAL_DEFAULT_ADMIN_USERNAME,
     )
     await __on_startup()
