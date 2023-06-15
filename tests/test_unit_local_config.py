@@ -16,8 +16,7 @@ from fractal_server.app.runner._local._local_config import (
 def test_get_local_backend_config(tmp_path):
     """
     Testing that:
-    1. WorkflowTask.meta overrides WorkflowTask.task.meta (this is taken care
-      of by the overridden_meta property);
+    1. WorkflowTask.meta overrides WorkflowTask.task.meta;
     2. WorkflowTask.task.meta overrides global config.
     """
 
@@ -34,14 +33,14 @@ def test_get_local_backend_config(tmp_path):
     # Case 1: no set value
     mytask = MockTask(name="T", command="cmd", meta={})
     mywftask = MockWorkflowTask(task=mytask, meta={})
-    debug(mywftask.overridden_meta)
+    debug(mywftask.meta)
     local_backend_config = get_local_backend_config(wftask=mywftask)
     assert local_backend_config.parallel_tasks_per_job is None
 
     # Case 2: highest-priority set value is in config file
     mytask = MockTask(name="T", command="cmd", meta={})
     mywftask = MockWorkflowTask(task=mytask, meta={})
-    debug(mywftask.overridden_meta)
+    debug(mywftask.meta)
     local_backend_config = get_local_backend_config(
         wftask=mywftask,
         config_path=config_file,
@@ -52,7 +51,7 @@ def test_get_local_backend_config(tmp_path):
     task_meta = dict(parallel_tasks_per_job=TASK_VALUE)
     mytask = MockTask(name="T", command="cmd", meta=task_meta)
     mywftask = MockWorkflowTask(task=mytask, meta={})
-    debug(mywftask.overridden_meta)
+    debug(mywftask.meta)
     local_backend_config = get_local_backend_config(
         wftask=mywftask,
         config_path=config_file,
@@ -63,7 +62,7 @@ def test_get_local_backend_config(tmp_path):
     wftask_meta = dict(parallel_tasks_per_job=WFTASK_VALUE)
     mytask = MockTask(name="T", command="cmd", meta=task_meta)
     mywftask = MockWorkflowTask(task=mytask, meta=wftask_meta)
-    debug(mywftask.overridden_meta)
+    debug(mywftask.meta)
     local_backend_config = get_local_backend_config(
         wftask=mywftask,
         config_path=config_file,
