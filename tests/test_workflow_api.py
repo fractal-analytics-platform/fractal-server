@@ -592,6 +592,8 @@ async def test_import_export_workflow(
             assert task_old["meta"].items() <= task_new["meta"].items()
             task_old.pop("meta")
             task_new.pop("meta")
+        elif "meta" in task_new:  # but not in task_old
+            task_new.pop("meta")
         assert task_old == task_new
 
 
