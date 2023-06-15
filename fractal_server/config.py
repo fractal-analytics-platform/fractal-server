@@ -225,6 +225,15 @@ class Settings(BaseSettings):
     admin credentials.
     """
 
+    FRACTAL_DEFAULT_ADMIN_USERNAME: str = "admin"
+    """
+    Admin default username, used upon creation of the first superuser during
+    server startup.
+
+    **IMPORTANT**: After the server startup, you should always edit the default
+    admin credentials.
+    """
+
     FRACTAL_TASKS_DIR: Optional[Path]
     """
     Directory under which all the tasks will be saved.

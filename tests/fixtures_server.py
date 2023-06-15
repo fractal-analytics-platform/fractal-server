@@ -85,6 +85,8 @@ def get_patched_settings(temp_path: Path):
     settings.JWT_SECRET_KEY = "secret_key"
     settings.DEPLOYMENT_TYPE = "development"
 
+    settings.FRACTAL_DEFAULT_ADMIN_USERNAME = "admin"
+
     settings.DB_ENGINE = DB_ENGINE
     if DB_ENGINE == "sqlite":
         settings.SQLITE_PATH = f"{temp_path.as_posix()}/_test.db"

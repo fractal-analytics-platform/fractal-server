@@ -42,7 +42,8 @@
 * Other updates to internal logic:
     * Drop `WorkflowTask.arguments` property and `WorkflowTask.assemble_args` method (\#742).
     * Add test for collection of tasks packages with tasks in a subpackage (\#743).
-* Expose `FRACTAL_CORS_ALLOW_ORIGIN` environment variable (\#688).
+    * Expose `FRACTAL_CORS_ALLOW_ORIGIN` environment variable (\#688).
+    * Expose `FRACTAL_DEFAULT_ADMIN_USERNAME` environment variable (\#751).
 * Package and repository:
     * Remove `fastapi-users-db-sqlmodel` dependency (\#660).
     * Make coverage measure more accurate (\#676) and improve coverage (\#678).
