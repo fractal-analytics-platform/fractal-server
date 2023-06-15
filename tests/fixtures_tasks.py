@@ -6,6 +6,7 @@ from typing import Optional
 import pytest
 from devtools import debug  # noqa
 from pydantic import BaseModel
+from pydantic import validator
 
 from .fixtures_server import HAS_LOCAL_SBATCH
 
@@ -24,6 +25,17 @@ class MockWorkflowTask(BaseModel):
     meta: dict = {}
     executor: Optional[str] = "default"
 
+    @validator("meta", pre=True)
+    def merge_meta(cls, meta, values):
+        """
+        This validator merges the task.meta and meta dictionaries, in the same
+        way as it takes place in Workflow.insert_task.
+        """
+        task_meta = values.get("task").meta
+        if task_meta:
+            meta = {**task_meta, **meta}
+        return meta
+
     @property
     def is_parallel(self) -> bool:
         return bool(self.task.parallelization_level)
@@ -31,16 +43,6 @@ class MockWorkflowTask(BaseModel):
     @property
     def parallelization_level(self) -> Optional[str]:
         return self.task.parallelization_level
-
-    @property
-    def overridden_meta(self) -> dict:
-        """
-        Return a combination of self.meta (higher priority) and self.task.meta
-        (lower priority) key-value pairs.
-        """
-        res = self.task.meta.copy() or {}
-        res.update(self.meta or {})
-        return res
 
 
 async def execute_command(cmd, **kwargs):

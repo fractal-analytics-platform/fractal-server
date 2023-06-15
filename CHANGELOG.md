@@ -29,6 +29,7 @@
     * Expose `pinned_package_version` for tasks collection (\#744).
     * Implement `delete_task` endpoint (\#745).
     * Expose `args_schema` and `args_schema_version` in task POST/PATCH endpoints (\#749).
+    * Remove `WorkflowTask.overridden_meta` property and on-the-fly overriding of `meta` (\#752).
 * Job execution:
     * Add `FractalSlurmExecutor.shutdown` and corresponding endpoint (\#631, \#691, \#696).
     * In `FractalSlurmExecutor`, make `working_dir*` attributes required (\#679).
