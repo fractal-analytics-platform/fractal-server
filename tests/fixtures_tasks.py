@@ -32,16 +32,6 @@ class MockWorkflowTask(BaseModel):
     def parallelization_level(self) -> Optional[str]:
         return self.task.parallelization_level
 
-    @property
-    def overridden_meta(self) -> dict:
-        """
-        Return a combination of self.meta (higher priority) and self.task.meta
-        (lower priority) key-value pairs.
-        """
-        res = self.task.meta.copy() or {}
-        res.update(self.meta or {})
-        return res
-
 
 async def execute_command(cmd, **kwargs):
     proc = await asyncio.create_subprocess_shell(
