@@ -470,8 +470,9 @@ def get_slurm_config(
     1. The general content of the Fractal SLURM configuration file.
     2. The GPU-specific content of the Fractal SLURM configuration file, if
         appropriate.
-    3. Properties in `wftask.task.meta`.
-    4. Properties in `wftask.meta`.
+    3. Properties in `wftask.meta` (which, for `WorkflowTask`s added through
+       `Workflow.insert_task`, also includes `wftask.task.meta`);
+
 
     Arguments:
         wftask:
