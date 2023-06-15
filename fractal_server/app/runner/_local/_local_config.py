@@ -64,7 +64,7 @@ def get_local_backend_config(
     highest-priority one, are
 
     1. Properties in `wftask.meta` (which, for `WorkflowTask`s added through
-       `Workflow.insert_task`, als includes `wftask.task.meta`);
+       `Workflow.insert_task`, also includes `wftask.task.meta`);
     2. The general content of the local-backend configuration file;
     3. The default value (`None`).
 
