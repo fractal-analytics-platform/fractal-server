@@ -588,11 +588,13 @@ async def test_import_export_workflow(
     assert len(wf_old["task_list"]) == len(wf_new["task_list"])
     for task_old, task_new in zip(wf_old["task_list"], wf_new["task_list"]):
         assert task_old.keys() <= task_new.keys()
-        for k, v in task_old.items():
-            if k == "meta":
-                assert v.items() <= task_new[k].items()
-            else:
-                assert v == task_new[k]
+        if "meta" in task_old:
+            assert "meta" in task_new
+            assert task_old["meta"].items() <= task_new["meta"].items()
+            task_old.pop("meta")
+        if "meta" in task_new:
+            task_new.pop("meta")
+        assert task_old == task_new
 
 
 async def test_export_workflow_log(
