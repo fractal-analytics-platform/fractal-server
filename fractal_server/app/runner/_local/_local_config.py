@@ -103,5 +103,4 @@ def get_local_backend_config(
                 )
 
             parallel_tasks_per_job = env.get(key, default)
-
     return LocalBackendConfig(parallel_tasks_per_job=parallel_tasks_per_job)

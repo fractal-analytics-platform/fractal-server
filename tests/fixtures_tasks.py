@@ -6,6 +6,7 @@ from typing import Optional
 import pytest
 from devtools import debug  # noqa
 from pydantic import BaseModel
+from pydantic import validator
 
 from .fixtures_server import HAS_LOCAL_SBATCH
 
@@ -23,6 +24,13 @@ class MockWorkflowTask(BaseModel):
     args: dict = {}
     meta: dict = {}
     executor: Optional[str] = "default"
+
+    @validator("meta", pre=True)
+    def merge_meta(cls, meta, values):
+        task_meta = values.get("task").meta
+        if task_meta:
+            meta = {**task_meta, **meta}
+        return meta
 
     @property
     def is_parallel(self) -> bool:
