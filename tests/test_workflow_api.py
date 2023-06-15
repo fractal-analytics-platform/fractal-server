@@ -585,8 +585,7 @@ async def test_import_export_workflow(
     # original JSON file
     wf_old = WorkflowExport(**workflow_from_file).dict(exclude_none=True)
     wf_new = WorkflowExport(**workflow_exported).dict(exclude_none=True)
-    debug(wf_old)
-    debug(wf_new)
+    assert len(wf_old["task_list"]) == len(wf_new["task_list"])
     for task_old, task_new in zip(wf_old["task_list"], wf_new["task_list"]):
         assert task_old.keys() <= task_new.keys()
         for k, v in task_old.items():
