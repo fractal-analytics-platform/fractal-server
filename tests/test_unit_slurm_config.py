@@ -97,7 +97,7 @@ def test_get_slurm_config(tmp_path, fail):
         meta=meta,
     )
     debug(mywftask)
-    debug(mywftask.overridden_meta)
+    debug(mywftask.meta)
 
     # Call get_slurm_config
     try:
@@ -131,7 +131,7 @@ def test_get_slurm_config(tmp_path, fail):
     assert " " not in slurm_config.job_name
     assert slurm_config.account == DEFAULT_ACCOUNT
     assert "time" not in slurm_config.dict(exclude_unset=True).keys()
-    # Check that extra_lines from WorkflowTask.overridden_meta and config_path
+    # Check that extra_lines from WorkflowTask.meta and config_path
     # are combined together, and that repeated elements were removed
     assert len(slurm_config.extra_lines) == 3
     assert len(slurm_config.extra_lines) == len(set(slurm_config.extra_lines))
