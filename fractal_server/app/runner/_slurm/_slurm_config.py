@@ -470,8 +470,9 @@ def get_slurm_config(
     1. The general content of the Fractal SLURM configuration file.
     2. The GPU-specific content of the Fractal SLURM configuration file, if
         appropriate.
-    3. Properties in `wftask.task.meta`.
-    4. Properties in `wftask.meta`.
+    3. Properties in `wftask.meta` (which, for `WorkflowTask`s added through
+       `Workflow.insert_task`, also includes `wftask.task.meta`);
+
 
     Arguments:
         wftask:
@@ -494,8 +495,7 @@ def get_slurm_config(
     """
 
     logger.debug(
-        "[get_slurm_config] WorkflowTask/Task meta attribute: "
-        f"{wftask.overridden_meta=}"
+        "[get_slurm_config] WorkflowTask meta attribute: " f"{wftask.meta=}"
     )
 
     # Incorporate slurm_env.default_slurm_config
@@ -523,8 +523,8 @@ def get_slurm_config(
     # 1. This block of definitions takes priority over other definitions from
     #    slurm_env which are not under the `needs_gpu` subgroup
     # 2. This block of definitions has lower priority than whatever comes next
-    #    (i.e. from WorkflowTask.overridden_meta).
-    needs_gpu = wftask.overridden_meta.get("needs_gpu", False)
+    #    (i.e. from WorkflowTask.meta).
+    needs_gpu = wftask.meta.get("needs_gpu", False)
     logger.debug(f"[get_slurm_config] {needs_gpu=}")
     if needs_gpu:
         for key, value in slurm_env.gpu_slurm_config.dict(
@@ -535,13 +535,13 @@ def get_slurm_config(
             slurm_dict["mem_per_task_MB"] = slurm_env.gpu_slurm_config.mem
 
     # Number of CPUs per task, for multithreading
-    if "cpus_per_task" in wftask.overridden_meta.keys():
-        cpus_per_task = int(wftask.overridden_meta["cpus_per_task"])
+    if "cpus_per_task" in wftask.meta:
+        cpus_per_task = int(wftask.meta["cpus_per_task"])
         slurm_dict["cpus_per_task"] = cpus_per_task
 
     # Required memory per task, in MB
-    if "mem" in wftask.overridden_meta.keys():
-        raw_mem = wftask.overridden_meta["mem"]
+    if "mem" in wftask.meta:
+        raw_mem = wftask.meta["mem"]
         mem_per_task_MB = _parse_mem_value(raw_mem)
         slurm_dict["mem_per_task_MB"] = mem_per_task_MB
 
@@ -551,10 +551,10 @@ def get_slurm_config(
 
     # Optional SLURM arguments and extra lines
     for key in ["time", "account", "gres", "constraint"]:
-        value = wftask.overridden_meta.get(key, None)
+        value = wftask.meta.get(key, None)
         if value:
             slurm_dict[key] = value
-    extra_lines = wftask.overridden_meta.get("extra_lines", [])
+    extra_lines = wftask.meta.get("extra_lines", [])
     extra_lines = slurm_dict.get("extra_lines", []) + extra_lines
     if len(set(extra_lines)) != len(extra_lines):
         logger.debug(
@@ -565,10 +565,8 @@ def get_slurm_config(
     slurm_dict["extra_lines"] = extra_lines
 
     # Job-batching parameters (if None, they will be determined heuristically)
-    tasks_per_job = wftask.overridden_meta.get("tasks_per_job", None)
-    parallel_tasks_per_job = wftask.overridden_meta.get(
-        "parallel_tasks_per_job", None
-    )
+    tasks_per_job = wftask.meta.get("tasks_per_job", None)
+    parallel_tasks_per_job = wftask.meta.get("parallel_tasks_per_job", None)
     slurm_dict["tasks_per_job"] = tasks_per_job
     slurm_dict["parallel_tasks_per_job"] = parallel_tasks_per_job
 

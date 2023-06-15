@@ -581,12 +581,20 @@ async def test_import_export_workflow(
         assert "id" not in wftask["task"]
     assert res.status_code == 200
 
-    # Check that the exported workflow matches with the one in the original
-    # JSON file
+    # Check that the exported workflow is an extension of the one in the
+    # original JSON file
     wf_old = WorkflowExport(**workflow_from_file).dict(exclude_none=True)
     wf_new = WorkflowExport(**workflow_exported).dict(exclude_none=True)
-
-    assert wf_old == wf_new
+    assert len(wf_old["task_list"]) == len(wf_new["task_list"])
+    for task_old, task_new in zip(wf_old["task_list"], wf_new["task_list"]):
+        assert task_old.keys() <= task_new.keys()
+        if "meta" in task_old:  # then "meta" is also in task_new
+            assert task_old["meta"].items() <= task_new["meta"].items()
+            task_old.pop("meta")
+            task_new.pop("meta")
+        elif "meta" in task_new:  # but not in task_old
+            task_new.pop("meta")
+        assert task_old == task_new
 
 
 async def test_export_workflow_log(
