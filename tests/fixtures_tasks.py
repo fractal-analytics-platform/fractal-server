@@ -27,6 +27,10 @@ class MockWorkflowTask(BaseModel):
 
     @validator("meta", pre=True)
     def merge_meta(cls, meta, values):
+        """
+        This validator merges the task.meta and meta dictionaries, in the same
+        way as it takes place in Workflow.insert_task.
+        """
         task_meta = values.get("task").meta
         if task_meta:
             meta = {**task_meta, **meta}
