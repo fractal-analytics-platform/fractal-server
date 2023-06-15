@@ -63,10 +63,10 @@ def get_local_backend_config(
     The sources for `parallel_tasks_per_job` attributes, starting from the
     highest-priority one, are
 
-    1. Properties in `wftask.meta`;
-    2. Properties in `wftask.task.meta`;
-    3. The general content of the local-backend configuration file;
-    4. The default value (`None`).
+    1. Properties in `wftask.meta` (which, for `WorkflowTask`s added through
+       `Workflow.insert_task`, als includes `wftask.task.meta`);
+    2. The general content of the local-backend configuration file;
+    3. The default value (`None`).
 
     Arguments:
         wftask:
