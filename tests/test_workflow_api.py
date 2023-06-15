@@ -589,7 +589,6 @@ async def test_import_export_workflow(
     for task_old, task_new in zip(wf_old["task_list"], wf_new["task_list"]):
         assert task_old.keys() <= task_new.keys()
         if "meta" in task_old:
-            assert "meta" in task_new
             assert task_old["meta"].items() <= task_new["meta"].items()
             task_old.pop("meta")
         if "meta" in task_new:
