@@ -91,16 +91,6 @@ class WorkflowTask(_WorkflowTaskBase, SQLModel, table=True):
     def parallelization_level(self) -> Union[str, None]:
         return self.task.parallelization_level
 
-    @property
-    def overridden_meta(self) -> dict:
-        """
-        Return a combination of self.meta (higher priority) and self.task.meta
-        (lower priority) key-value pairs.
-        """
-        res = self.task.meta.copy() or {}
-        res.update(self.meta or {})
-        return res
-
 
 class Workflow(_WorkflowBase, SQLModel, table=True):
     """
@@ -176,8 +166,14 @@ class Workflow(_WorkflowBase, SQLModel, table=True):
         if not actual_args:
             actual_args = None
 
+        # Combine meta (higher priority) and db_task.meta (lower priority)
+        wt_meta = db_task.meta.copy() or {}
+        wt_meta.update(meta or {})
+        if not wt_meta:
+            wt_meta = None
+
         # Create DB entry
-        wf_task = WorkflowTask(task_id=task_id, args=actual_args, meta=meta)
+        wf_task = WorkflowTask(task_id=task_id, args=actual_args, meta=wt_meta)
         db.add(wf_task)
         self.task_list.insert(order, wf_task)
         self.task_list.reorder()  # type: ignore
