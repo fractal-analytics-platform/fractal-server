@@ -495,8 +495,7 @@ def get_slurm_config(
     """
 
     logger.debug(
-        "[get_slurm_config] WorkflowTask/Task meta attribute: "
-        f"{wftask.meta=}"
+        "[get_slurm_config] WorkflowTask meta attribute: " f"{wftask.meta=}"
     )
 
     # Incorporate slurm_env.default_slurm_config
