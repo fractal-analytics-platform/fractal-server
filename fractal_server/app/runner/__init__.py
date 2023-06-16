@@ -130,25 +130,31 @@ async def submit_workflow(
 
     # Define and create server-side working folder
     project_id = workflow.project_id
+    timestamp_string = get_timestamp().strftime("%Y%m%d_%H%M%S")
     WORKFLOW_DIR = (
         settings.FRACTAL_RUNNER_WORKING_BASE_DIR  # type: ignore
-        / f"proj_{project_id:07d}_wf_{workflow_id:07d}_job_{job_id:07d}"
+        / (
+            f"proj_{project_id:07d}_wf_{workflow_id:07d}_job_{job_id:07d}"
+            f"_{timestamp_string}"
+        )
     ).resolve()
-    if not WORKFLOW_DIR.exists():
-        original_umask = os.umask(0)
-        WORKFLOW_DIR.mkdir(parents=True, mode=0o755)
-        os.umask(original_umask)
+
+    if WORKFLOW_DIR.exists():
+        raise RuntimeError(f"Workflow dir {WORKFLOW_DIR} already exists.")
+
+    original_umask = os.umask(0)
+    WORKFLOW_DIR.mkdir(parents=True, mode=0o755)
+    os.umask(original_umask)
 
     # Define and create user-side working folder, if needed
     if FRACTAL_RUNNER_BACKEND == "local":
         WORKFLOW_DIR_USER = WORKFLOW_DIR
     elif FRACTAL_RUNNER_BACKEND == "slurm":
-        timestamp_string = get_timestamp().strftime("%Y%m%d_%H%M%S")
 
         from ._slurm._subprocess_run_as_user import _mkdir_as_user
 
         WORKFLOW_DIR_USER = (
-            Path(user_cache_dir) / f"{timestamp_string}_{WORKFLOW_DIR.name}"
+            Path(user_cache_dir) / f"{WORKFLOW_DIR.name}"
         ).resolve()
         _mkdir_as_user(folder=str(WORKFLOW_DIR_USER), user=slurm_user)
     else:
