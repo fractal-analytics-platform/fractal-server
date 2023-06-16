@@ -225,7 +225,8 @@ async def submit_workflow(
             logs = f.read()
         job.log = logs
         db_sync.merge(job)
-
+        close_job_logger(logger)
+        db_sync.commit()
     except TaskExecutionError as e:
 
         logger.debug(f'FAILED workflow "{workflow.name}", TaskExecutionError.')
@@ -242,7 +243,8 @@ async def submit_workflow(
             f"TRACEBACK:\n{exception_args_string}"
         )
         db_sync.merge(job)
-
+        close_job_logger(logger)
+        db_sync.commit()
     except JobExecutionError as e:
 
         logger.debug(f'FAILED workflow "{workflow.name}", JobExecutionError.')
@@ -253,7 +255,8 @@ async def submit_workflow(
         error = e.assemble_error()
         job.log = f"JOB ERROR:\nTRACEBACK:\n{error}"
         db_sync.merge(job)
-
+        close_job_logger(logger)
+        db_sync.commit()
     except Exception as e:
 
         logger.debug(f'FAILED workflow "{workflow.name}", unknown error.')
@@ -263,8 +266,7 @@ async def submit_workflow(
         job.end_timestamp = get_timestamp()
         job.log = f"UNKNOWN ERROR\nOriginal error: {str(e)}"
         db_sync.merge(job)
-
-    finally:
         close_job_logger(logger)
         db_sync.commit()
+    finally:
         db_sync.close()
