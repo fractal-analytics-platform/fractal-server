@@ -56,6 +56,7 @@
     * Make email generation more robust in `MockCurrentUser` (\#730).
     * Update `poetry.lock` to `cryptography=41`, to address security alert (\#739).
     * Add `greenlet` as a direct dependency (\#748).
+    * Removed tests for `IntegrityError` (\#754).
 
 # 1.2.5
 
