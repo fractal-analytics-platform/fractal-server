@@ -142,6 +142,7 @@ async def submit_workflow(
     if WORKFLOW_DIR.exists():
         raise RuntimeError(f"Workflow dir {WORKFLOW_DIR} already exists.")
 
+    # Create WORKFLOW_DIR with 755 permissions
     original_umask = os.umask(0)
     WORKFLOW_DIR.mkdir(parents=True, mode=0o755)
     os.umask(original_umask)

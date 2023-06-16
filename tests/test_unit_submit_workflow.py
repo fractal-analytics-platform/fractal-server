@@ -10,7 +10,7 @@ from fractal_server.app.models import ApplyWorkflow
 from fractal_server.app.runner import submit_workflow
 
 
-async def test_success_submit_workflows_at_same_time(
+async def test_success_submit_workflows(
     MockCurrentUser,
     db,
     project_factory,
@@ -35,7 +35,6 @@ async def test_success_submit_workflows_at_same_time(
             output_dataset_id=dataset.id,
             working_id=workflow.id,
         )
-
         await resource_factory(dataset)
 
         await submit_workflow(
@@ -44,13 +43,13 @@ async def test_success_submit_workflows_at_same_time(
             output_dataset_id=dataset.id,
             job_id=job0.id,
         )
-
         with next(get_sync_db()) as _db:
             job1 = _db.get(ApplyWorkflow, job0.id)
         debug(job1.working_dir)
-
         folder1 = Path(job1.working_dir).name
+
         time.sleep(1.01)
+
         await submit_workflow(
             workflow_id=workflow.id,
             input_dataset_id=dataset.id,
@@ -95,10 +94,10 @@ async def test_fail_submit_workflows_at_same_time(
         )
         await resource_factory(dataset)
 
-        now = datetime.datetime.now()
+        NOW = datetime.datetime.now()
 
         def patched_get_timestamp():
-            return now
+            return NOW
 
         monkeypatch.setattr(
             "fractal_server.app.runner.get_timestamp", patched_get_timestamp
