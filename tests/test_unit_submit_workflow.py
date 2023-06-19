@@ -68,7 +68,6 @@ async def test_success_submit_workflows(
 
 async def test_fail_submit_workflows_at_same_time(
     MockCurrentUser,
-    db,
     project_factory,
     workflow_factory,
     dataset_factory,
