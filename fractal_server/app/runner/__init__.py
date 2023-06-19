@@ -102,7 +102,6 @@ async def submit_workflow(
             The username to impersonate for the workflow execution, for the
             slurm backend.
     """
-
     db_sync = next(DB.get_sync_db())
 
     job: ApplyWorkflow = db_sync.get(ApplyWorkflow, job_id)
@@ -167,7 +166,6 @@ async def submit_workflow(
     job.status = JobStatusType.RUNNING
     db_sync.merge(job)
     db_sync.commit()
-
     # Write logs
     logger_name = f"WF{workflow_id}_job{job_id}"
     log_file_path = WORKFLOW_DIR / "workflow.log"
@@ -197,7 +195,6 @@ async def submit_workflow(
     db_sync.close()
 
     try:
-
         output_dataset.meta = await process_workflow(
             workflow=workflow,
             input_paths=input_paths,
