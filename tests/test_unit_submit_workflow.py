@@ -93,10 +93,10 @@ async def test_fail_submit_workflows_at_same_time(
         )
         await resource_factory(dataset)
 
-        NOW = datetime.datetime.now()
-
         def patched_get_timestamp():
-            return NOW
+            return datetime.datetime(
+                300, 1, 1, 0, 0, tzinfo=datetime.timezone.utc
+            )
 
         monkeypatch.setattr(
             "fractal_server.app.runner.get_timestamp", patched_get_timestamp
