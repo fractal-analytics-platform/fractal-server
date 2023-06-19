@@ -102,100 +102,95 @@ async def submit_workflow(
             The username to impersonate for the workflow execution, for the
             slurm backend.
     """
-    db_sync = next(DB.get_sync_db())
+    with next(DB.get_sync_db()) as db_sync:
 
-    job: ApplyWorkflow = db_sync.get(ApplyWorkflow, job_id)
-    if not job:
-        raise ValueError("Cannot fetch job from database")
-    input_dataset: Dataset = db_sync.get(Dataset, input_dataset_id)
-    if not input_dataset:
-        raise ValueError("Cannot fetch input_dataset from database")
-    output_dataset: Dataset = db_sync.get(Dataset, output_dataset_id)
-    if not output_dataset:
-        raise ValueError("Cannot fetch output_dataset from database")
-    workflow: Workflow = db_sync.get(Workflow, workflow_id)
-    if not workflow:
-        raise ValueError("Cannot fetch workflow from database")
+        job: ApplyWorkflow = db_sync.get(ApplyWorkflow, job_id)
+        if not job:
+            raise ValueError("Cannot fetch job from database")
+        input_dataset: Dataset = db_sync.get(Dataset, input_dataset_id)
+        if not input_dataset:
+            raise ValueError("Cannot fetch input_dataset from database")
+        output_dataset: Dataset = db_sync.get(Dataset, output_dataset_id)
+        if not output_dataset:
+            raise ValueError("Cannot fetch output_dataset from database")
+        workflow: Workflow = db_sync.get(Workflow, workflow_id)
+        if not workflow:
+            raise ValueError("Cannot fetch workflow from database")
 
-    # Select backend
-    settings = Inject(get_settings)
-    FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
-    process_workflow = get_process_workflow()
+        # Select backend
+        settings = Inject(get_settings)
+        FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
+        process_workflow = get_process_workflow()
 
-    # Prepare some of process_workflow arguments
-    input_paths = input_dataset.paths
-    output_path = output_dataset.paths[0]
-    workflow_id = workflow.id
+        # Prepare some of process_workflow arguments
+        input_paths = input_dataset.paths
+        output_path = output_dataset.paths[0]
+        workflow_id = workflow.id
 
-    # Define and create server-side working folder
-    project_id = workflow.project_id
-    timestamp_string = get_timestamp().strftime("%Y%m%d_%H%M%S")
-    WORKFLOW_DIR = (
-        settings.FRACTAL_RUNNER_WORKING_BASE_DIR  # type: ignore
-        / (
-            f"proj_{project_id:07d}_wf_{workflow_id:07d}_job_{job_id:07d}"
-            f"_{timestamp_string}"
-        )
-    ).resolve()
-
-    if WORKFLOW_DIR.exists():
-        db_sync.close()
-        raise RuntimeError(f"Workflow dir {WORKFLOW_DIR} already exists.")
-
-    # Create WORKFLOW_DIR with 755 permissions
-    original_umask = os.umask(0)
-    WORKFLOW_DIR.mkdir(parents=True, mode=0o755)
-    os.umask(original_umask)
-
-    # Define and create user-side working folder, if needed
-    if FRACTAL_RUNNER_BACKEND == "local":
-        WORKFLOW_DIR_USER = WORKFLOW_DIR
-    elif FRACTAL_RUNNER_BACKEND == "slurm":
-
-        from ._slurm._subprocess_run_as_user import _mkdir_as_user
-
-        WORKFLOW_DIR_USER = (
-            Path(user_cache_dir) / f"{WORKFLOW_DIR.name}"
+        # Define and create server-side working folder
+        project_id = workflow.project_id
+        timestamp_string = get_timestamp().strftime("%Y%m%d_%H%M%S")
+        WORKFLOW_DIR = (
+            settings.FRACTAL_RUNNER_WORKING_BASE_DIR  # type: ignore
+            / (
+                f"proj_{project_id:07d}_wf_{workflow_id:07d}_job_{job_id:07d}"
+                f"_{timestamp_string}"
+            )
         ).resolve()
-        _mkdir_as_user(folder=str(WORKFLOW_DIR_USER), user=slurm_user)
-    else:
-        raise ValueError(f"{FRACTAL_RUNNER_BACKEND=} not supported")
 
-    # Update db
-    job.working_dir = WORKFLOW_DIR.as_posix()
-    job.working_dir_user = WORKFLOW_DIR_USER.as_posix()
-    job.status = JobStatusType.RUNNING
-    db_sync.merge(job)
-    db_sync.commit()
-    # Write logs
-    logger_name = f"WF{workflow_id}_job{job_id}"
-    log_file_path = WORKFLOW_DIR / "workflow.log"
-    logger = set_logger(
-        logger_name=logger_name,
-        log_file_path=log_file_path,
-    )
-    logger.info(
-        f'Start execution of workflow "{workflow.name}"; '
-        f"more logs at {str(log_file_path)}"
-    )
-    logger.debug(f"fractal_server.__VERSION__: {__VERSION__}")
-    logger.debug(f"FRACTAL_RUNNER_BACKEND: {FRACTAL_RUNNER_BACKEND}")
-    logger.debug(f"slurm_user: {slurm_user}")
-    logger.debug(f"worker_init: {worker_init}")
-    logger.debug(f"input metadata: {input_dataset.meta}")
-    logger.debug(f"input_paths: {input_paths}")
-    logger.debug(f"output_path: {output_path}")
-    logger.debug(f"job.id: {job.id}")
-    logger.debug(f"job.working_dir: {str(WORKFLOW_DIR)}")
-    logger.debug(f"job.workflow_dir_user: {str(WORKFLOW_DIR_USER)}")
-    logger.debug(f'START workflow "{workflow.name}"')
+        if WORKFLOW_DIR.exists():
+            raise RuntimeError(f"Workflow dir {WORKFLOW_DIR} already exists.")
 
-    # Note: from the docs, "The Session.close() method does not prevent the
-    # Session from being used again"
-    # (https://docs.sqlalchemy.org/en/20/orm/session_api.html#sqlalchemy.orm.Session.close)
-    db_sync.close()
+        # Create WORKFLOW_DIR with 755 permissions
+        original_umask = os.umask(0)
+        WORKFLOW_DIR.mkdir(parents=True, mode=0o755)
+        os.umask(original_umask)
+
+        # Define and create user-side working folder, if needed
+        if FRACTAL_RUNNER_BACKEND == "local":
+            WORKFLOW_DIR_USER = WORKFLOW_DIR
+        elif FRACTAL_RUNNER_BACKEND == "slurm":
+
+            from ._slurm._subprocess_run_as_user import _mkdir_as_user
+
+            WORKFLOW_DIR_USER = (
+                Path(user_cache_dir) / f"{WORKFLOW_DIR.name}"
+            ).resolve()
+            _mkdir_as_user(folder=str(WORKFLOW_DIR_USER), user=slurm_user)
+        else:
+            raise ValueError(f"{FRACTAL_RUNNER_BACKEND=} not supported")
+
+        # Update db
+        job.working_dir = WORKFLOW_DIR.as_posix()
+        job.working_dir_user = WORKFLOW_DIR_USER.as_posix()
+        job.status = JobStatusType.RUNNING
+        db_sync.merge(job)
+        db_sync.commit()
+        # Write logs
+        logger_name = f"WF{workflow_id}_job{job_id}"
+        log_file_path = WORKFLOW_DIR / "workflow.log"
+        logger = set_logger(
+            logger_name=logger_name,
+            log_file_path=log_file_path,
+        )
+        logger.info(
+            f'Start execution of workflow "{workflow.name}"; '
+            f"more logs at {str(log_file_path)}"
+        )
+        logger.debug(f"fractal_server.__VERSION__: {__VERSION__}")
+        logger.debug(f"FRACTAL_RUNNER_BACKEND: {FRACTAL_RUNNER_BACKEND}")
+        logger.debug(f"slurm_user: {slurm_user}")
+        logger.debug(f"worker_init: {worker_init}")
+        logger.debug(f"input metadata: {input_dataset.meta}")
+        logger.debug(f"input_paths: {input_paths}")
+        logger.debug(f"output_path: {output_path}")
+        logger.debug(f"job.id: {job.id}")
+        logger.debug(f"job.working_dir: {str(WORKFLOW_DIR)}")
+        logger.debug(f"job.workflow_dir_user: {str(WORKFLOW_DIR_USER)}")
+        logger.debug(f'START workflow "{workflow.name}"')
 
     try:
+        db_sync = next(DB.get_sync_db())
         output_dataset.meta = await process_workflow(
             workflow=workflow,
             input_paths=input_paths,
