@@ -191,6 +191,11 @@ async def submit_workflow(
 
     try:
         db_sync = next(DB.get_sync_db())
+        # Note: from the docs, "The Session.close() method does not prevent the
+        # Session from being used again"
+        # (https://docs.sqlalchemy.org/en/20/orm/session_api.html#sqlalchemy.orm.Session.close)
+        db_sync.close()
+
         output_dataset.meta = await process_workflow(
             workflow=workflow,
             input_paths=input_paths,
