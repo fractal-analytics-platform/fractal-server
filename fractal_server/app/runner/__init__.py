@@ -139,6 +139,7 @@ async def submit_workflow(
     ).resolve()
 
     if WORKFLOW_DIR.exists():
+        db_sync.close()
         raise RuntimeError(f"Workflow dir {WORKFLOW_DIR} already exists.")
 
     # Create WORKFLOW_DIR with 755 permissions
