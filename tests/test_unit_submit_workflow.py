@@ -115,3 +115,58 @@ async def test_fail_submit_workflows_at_same_time(
                 output_dataset_id=dataset.id,
                 job_id=job.id,
             )
+
+
+async def test_fail_submit_workflows_wrong_IDs(
+    MockCurrentUser,
+    project_factory,
+    workflow_factory,
+    dataset_factory,
+    job_factory,
+    resource_factory,
+    tmp_path,
+    override_settings_factory,
+):
+    async with MockCurrentUser(persist=True) as user:
+
+        project = await project_factory(user)
+        workflow = await workflow_factory(project_id=project.id)
+        dataset = await dataset_factory(project)
+        job = await job_factory(
+            working_dir=tmp_path.as_posix(),
+            project_id=project.id,
+            input_dataset_id=dataset.id,
+            output_dataset_id=dataset.id,
+            working_id=workflow.id,
+        )
+        await resource_factory(dataset)
+
+        # Fail for invalid DB IDs
+        with pytest.raises(ValueError):
+            await submit_workflow(
+                workflow_id=9999999,
+                input_dataset_id=dataset.id,
+                output_dataset_id=dataset.id,
+                job_id=job.id,
+            )
+        with pytest.raises(ValueError):
+            await submit_workflow(
+                workflow_id=workflow.id,
+                input_dataset_id=9999999,
+                output_dataset_id=dataset.id,
+                job_id=job.id,
+            )
+        with pytest.raises(ValueError):
+            await submit_workflow(
+                workflow_id=workflow.id,
+                input_dataset_id=dataset.id,
+                output_dataset_id=9999999,
+                job_id=job.id,
+            )
+        with pytest.raises(ValueError):
+            await submit_workflow(
+                workflow_id=workflow.id,
+                input_dataset_id=dataset.id,
+                output_dataset_id=dataset.id,
+                job_id=9999999,
+            )
