@@ -95,7 +95,7 @@ async def test_fail_submit_workflows_at_same_time(
 
         def patched_get_timestamp():
             return datetime.datetime(
-                300, 1, 1, 0, 0, tzinfo=datetime.timezone.utc
+                3000, 1, 1, 0, 0, tzinfo=datetime.timezone.utc
             )
 
         monkeypatch.setattr(
