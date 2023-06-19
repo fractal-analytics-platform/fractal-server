@@ -206,7 +206,11 @@ async def db_create_tables(override_settings):
 
     yield
 
+    from devtools import debug
+
+    debug("---------------- A ----------------")
     metadata.drop_all(engine)
+    debug("---------------- B ----------------")
 
 
 @pytest.fixture
