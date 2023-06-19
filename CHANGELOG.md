@@ -36,6 +36,7 @@
     * Remove `ApplyWorkflow.overwrite_input` column (\#684, \#694).
     * Make `output_dataset_id` a required argument of apply-workflow endpoint (\#681).
     * Improve error message related to out-of-space disk (\#699).
+    * Include timestamp in job working directory, to avoid name clashes (\#756).
 * Other updates to endpoints and database:
     * Add `ApplyWorkflow.end_timestamp` column (\#687, \#684).
     * Prevent deletion of a `Workflow`/`Dataset` in relationship with existing `ApplyWorkflow` (\#703).
