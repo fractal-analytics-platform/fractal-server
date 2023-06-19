@@ -190,10 +190,17 @@ async def submit_workflow(
         logger.debug(f'START workflow "{workflow.name}"')
 
     try:
+        # "The Session.close() method does not prevent the Session from being
+        # used again. The Session itself does not actually have a distinct
+        # “closed” state; it merely means the Session will release all database
+        # connections and ORM objects."
+        # (https://docs.sqlalchemy.org/en/20/orm/session_api.html#sqlalchemy.orm.Session.close).
+        #
+        # We close the session before the (possibly long) process_workflow
+        # call, to make sure all DB connections are released. The reason why we
+        # are not using a context manager within the try block is that we also
+        # need access to db_sync in the except branches.
         db_sync = next(DB.get_sync_db())
-        # Note: from the docs, "The Session.close() method does not prevent the
-        # Session from being used again"
-        # (https://docs.sqlalchemy.org/en/20/orm/session_api.html#sqlalchemy.orm.Session.close)
         db_sync.close()
 
         output_dataset.meta = await process_workflow(
