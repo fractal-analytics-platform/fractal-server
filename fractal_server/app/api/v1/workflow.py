@@ -368,9 +368,7 @@ async def update_workflowtask(
 
     for key, value in workflow_task_update.dict(exclude_unset=True).items():
         if key == "args":
-            current_args = deepcopy(db_workflow_task.args) or {}
-            current_args.update(value)
-            setattr(db_workflow_task, key, current_args)
+            setattr(db_workflow_task, key, value)
         elif key == "meta":
             current_meta = deepcopy(db_workflow_task.meta) or {}
             current_meta.update(value)
