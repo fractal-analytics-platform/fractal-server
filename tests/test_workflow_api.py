@@ -413,9 +413,7 @@ async def test_patch_workflow_task(client, MockCurrentUser, project_factory):
             json=payload_up,
         )
         patched_workflow_task_up = res.json()
-        assert patched_workflow_task_up["args"] == dict(
-            a=dict(c=43), b=123, d=321
-        )
+        assert patched_workflow_task_up["args"] == payload_up["args"]
 
 
 async def test_patch_workflow_task_failures(
