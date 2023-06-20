@@ -28,6 +28,7 @@
     * Restrict Task editing to superusers and task owners (\#733).
     * Implement `delete_task` endpoint (\#745).
 * Update `Workflow` and `WorkflowTask` endpoints:
+    * Fully replace `WorkflowTask.args`, in `update_workflowtask` endpoint (\#759).
     * Remove `WorkflowTask.overridden_meta` property and on-the-fly overriding of `meta` (\#752).
     * Add warning when exporting workflows which include custom tasks (\#728).
     * When importing a workflow, only use tasks' `source` values, instead of `(source,name)` pairs (\#719).
