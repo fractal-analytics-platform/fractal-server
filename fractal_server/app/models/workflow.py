@@ -1,5 +1,3 @@
-import json
-import logging
 from typing import Any
 from typing import Optional
 from typing import Union
@@ -141,23 +139,10 @@ class Workflow(_WorkflowBase, SQLModel, table=True):
         if order is None:
             order = len(self.task_list)
 
-        # Get task from db, extract the JSON Schema for its arguments (if any),
-        # read default values and set them in default_args
+        # Get task from db, and extract default arguments via a Task property
+        # method
         db_task = await db.get(Task, task_id)
-        default_args = {}
-        if db_task.args_schema is not None:
-            try:
-                properties = db_task.args_schema["properties"]
-                for prop_name, prop_schema in properties.items():
-                    default_value = prop_schema.get("default", None)
-                    if default_value:
-                        default_args[prop_name] = default_value
-            except KeyError as e:
-                logging.warning(
-                    "Cannot set default_args from args_schema="
-                    f"{json.dumps(db_task.args_schema)}\n"
-                    f"Original KeyError: {str(e)}"
-                )
+        default_args = db_task.default_args_from_args_schema
         # Override default_args with args
         actual_args = default_args.copy()
         if args is not None:
