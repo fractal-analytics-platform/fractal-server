@@ -415,6 +415,99 @@ async def test_patch_workflow_task(client, MockCurrentUser, project_factory):
         patched_workflow_task_up = res.json()
         assert patched_workflow_task_up["args"] == payload_up["args"]
 
+        # Remove an argument
+        new_args = patched_workflow_task_up["args"]
+        new_args.pop("a")
+        res = await client.patch(
+            f"api/v1/project/{project.id}/workflow/{workflow['id']}/"
+            f"wftask/{workflow['task_list'][0]['id']}",
+            json=dict(args=new_args),
+        )
+        patched_workflow_task = res.json()
+        debug(patched_workflow_task["args"])
+        assert "a" not in patched_workflow_task["args"]
+
+
+async def test_patch_workflow_task_with_args_schema(
+    client, MockCurrentUser, project_factory, task_factory
+):
+    """
+    GIVEN a Task with args_schema and a WorkflowTask
+    WHEN the endpoint to PATCH a WorkflowTask is called
+    THEN
+        it works as expected, that is, it merges the new API-call values with
+        the task defaults
+    """
+
+    from pydantic import BaseModel
+    from typing import Optional
+
+    # Prepare models to generate a valid JSON Schema
+    class _Arguments(BaseModel):
+        a: int
+        b: str = "one"
+        c: Optional[str] = None
+        d: list[int] = [1, 2, 3]
+
+    args_schema = _Arguments.schema()
+
+    async with MockCurrentUser(persist=True) as user:
+        # Create DB objects
+        project = await project_factory(user)
+        workflow = {"name": "WF"}
+        res = await client.post(
+            f"api/v1/project/{project.id}/workflow/", json=workflow
+        )
+        assert res.status_code == 201
+        wf_id = res.json()["id"]
+        task = await task_factory(
+            name="task with schema",
+            source="source0",
+            command="cmd",
+            input_type="Any",
+            output_type="Any",
+            args_schema_version="X.Y",
+            args_schema=args_schema,
+        )
+        debug(task)
+        task_id = task.id
+        res = await client.post(
+            (
+                f"api/v1/project/{project.id}/workflow/{wf_id}/wftask/"
+                f"?task_id={task_id}"
+            ),
+            json={},
+        )
+        wftask = res.json()
+        wftask_id = wftask["id"]
+        debug(wftask)
+        assert res.status_code == 201
+
+        # First update: modify existing args and add a new one
+        payload = dict(args={"a": 123, "b": "two", "e": "something"})
+        res = await client.patch(
+            f"api/v1/project/{project.id}/workflow/{wf_id}/"
+            f"wftask/{wftask_id}",
+            json=payload,
+        )
+        patched_workflow_task = res.json()
+        debug(patched_workflow_task["args"])
+        assert patched_workflow_task["args"] == dict(
+            a=123, b="two", d=[1, 2, 3], e="something"
+        )
+        assert res.status_code == 200
+
+        # Second update: remove all values
+        res = await client.patch(
+            f"api/v1/project/{project.id}/workflow/{wf_id}/wftask/{wftask_id}",
+            json=dict(args={}),
+        )
+        patched_workflow_task = res.json()
+        debug(patched_workflow_task["args"])
+        assert (
+            patched_workflow_task["args"] == task.default_args_from_args_schema
+        )
+
 
 async def test_patch_workflow_task_failures(
     client, MockCurrentUser, project_factory
