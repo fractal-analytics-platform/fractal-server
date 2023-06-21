@@ -1,3 +1,5 @@
+import json
+import logging
 from typing import Any
 from typing import Optional
 
@@ -63,11 +65,11 @@ class Task(_TaskBase, SQLModel, table=True):
         if self.args_schema is None:
             return {}
         # Return {} for invalid args_schema
-        if not "properties" in self.args_schema.keys():
+        if "properties" not in self.args_schema.keys():
             logging.error(
                 f'Invalid args_schema for task "{self.name}" '
                 '(missing key "properties"); cannot set default '
-                'argument values'
+                "argument values"
             )
             return {}
         # Try to construct default_args
