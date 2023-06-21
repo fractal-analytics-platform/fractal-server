@@ -368,7 +368,19 @@ async def update_workflowtask(
 
     for key, value in workflow_task_update.dict(exclude_unset=True).items():
         if key == "args":
-            setattr(db_workflow_task, key, value)
+
+            # Get default arguments via a Task property method
+            default_args = deepcopy(
+                db_workflow_task.task.default_args_from_args_schema
+            )
+            # Override default_args with args value items
+            actual_args = default_args.copy()
+            if value is not None:
+                for k, v in value.items():
+                    actual_args[k] = v
+            if not actual_args:
+                actual_args = None
+            setattr(db_workflow_task, key, actual_args)
         elif key == "meta":
             current_meta = deepcopy(db_workflow_task.meta) or {}
             current_meta.update(value)
