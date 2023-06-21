@@ -299,3 +299,17 @@ async def test_task_default_args_from_args_schema(
         )
         debug(task.default_args_from_args_schema)
         assert task.default_args_from_args_schema == expected_default_args
+
+    invalid_args_schema = {"something": "else"}
+    async with MockCurrentUser(persist=True):
+        task = await task_factory(
+            name="task with schema",
+            source="source1",
+            command="cmd",
+            input_type="Any",
+            output_type="Any",
+            args_schema_version="something",
+            args_schema=invalid_args_schema,
+        )
+        debug(task.default_args_from_args_schema)
+        assert task.default_args_from_args_schema == {}
