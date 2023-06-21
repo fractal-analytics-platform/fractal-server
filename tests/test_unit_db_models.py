@@ -263,3 +263,53 @@ async def test_state_table(db):
     debug(state_list)
     assert len(state_list) == 1
     assert state_list[0].data == payload
+
+
+async def test_task_default_args_from_args_schema(
+    client, MockCurrentUser, project_factory, task_factory
+):
+    """
+    GIVEN a Task with args_schema
+    THEN the default_args_from_args_schema property works as expected
+    """
+
+    from pydantic import BaseModel
+    from typing import Optional
+
+    # Prepare models to generate a valid JSON Schema
+    class _Arguments(BaseModel):
+        a: int
+        b: str = "one"
+        c: Optional[str] = None
+        d: list[int] = [1, 2, 3]
+
+    args_schema = _Arguments.schema()
+    debug(args_schema)
+    expected_default_args = {"b": "one", "d": [1, 2, 3]}
+
+    async with MockCurrentUser(persist=True):
+        task = await task_factory(
+            name="task with schema",
+            source="source0",
+            command="cmd",
+            input_type="Any",
+            output_type="Any",
+            args_schema_version="something",
+            args_schema=args_schema,
+        )
+        debug(task.default_args_from_args_schema)
+        assert task.default_args_from_args_schema == expected_default_args
+
+    invalid_args_schema = {"something": "else"}
+    async with MockCurrentUser(persist=True):
+        task = await task_factory(
+            name="task with schema",
+            source="source1",
+            command="cmd",
+            input_type="Any",
+            output_type="Any",
+            args_schema_version="something",
+            args_schema=invalid_args_schema,
+        )
+        debug(task.default_args_from_args_schema)
+        assert task.default_args_from_args_schema == {}
