@@ -64,14 +64,6 @@ class Task(_TaskBase, SQLModel, table=True):
         # Return {} if there is no args_schema
         if self.args_schema is None:
             return {}
-        # Return {} for invalid args_schema
-        if "properties" not in self.args_schema.keys():
-            logging.error(
-                f'Invalid args_schema for task "{self.name}" '
-                '(missing key "properties"); cannot set default '
-                "argument values"
-            )
-            return {}
         # Try to construct default_args
         try:
             default_args = {}
