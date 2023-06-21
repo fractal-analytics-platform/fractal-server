@@ -414,6 +414,7 @@ async def test_patch_workflow_task(client, MockCurrentUser, project_factory):
         )
         patched_workflow_task_up = res.json()
         assert patched_workflow_task_up["args"] == payload_up["args"]
+        assert res.status_code == 200
 
         # Remove an argument
         new_args = patched_workflow_task_up["args"]
@@ -426,6 +427,7 @@ async def test_patch_workflow_task(client, MockCurrentUser, project_factory):
         patched_workflow_task = res.json()
         debug(patched_workflow_task["args"])
         assert "a" not in patched_workflow_task["args"]
+        assert res.status_code == 200
 
 
 async def test_patch_workflow_task_with_args_schema(
@@ -507,6 +509,14 @@ async def test_patch_workflow_task_with_args_schema(
         assert (
             patched_workflow_task["args"] == task.default_args_from_args_schema
         )
+        assert res.status_code == 200
+
+        # Third update: only update meta
+        res = await client.patch(
+            f"api/v1/project/{project.id}/workflow/{wf_id}/wftask/{wftask_id}",
+            json=dict(meta={}),
+        )
+        assert res.status_code == 200
 
 
 async def test_patch_workflow_task_failures(
