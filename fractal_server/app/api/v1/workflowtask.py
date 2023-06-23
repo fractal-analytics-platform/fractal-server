@@ -68,7 +68,7 @@ async def create_workflowtask(
     "/project/{project_id}/workflow/{workflow_id}/wftask/{workflow_task_id}",
     response_model=WorkflowTaskRead,
 )
-async def get_workflowtask(
+async def read_workflowtask(
     project_id: int,
     workflow_id: int,
     workflow_task_id: int,
