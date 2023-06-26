@@ -966,3 +966,31 @@ async def test_delete_workflow_failure(
             f"api/v1/project/{project.id}/workflow/{workflow_2.id}"
         )
         assert res.status_code == 204
+
+
+async def test_read_workflowtask(MockCurrentUser, project_factory, client):
+    async with MockCurrentUser(persist=True) as user:
+        project = await project_factory(user)
+        workflow = {"name": "My Workflow"}
+        res = await client.post(
+            f"api/v1/project/{project.id}/workflow/",
+            json=workflow,
+        )
+        assert res.status_code == 201
+        wf_id = res.json()["id"]
+
+        t = await add_task(client, 99)
+        res = await client.post(
+            (
+                f"api/v1/project/{project.id}/workflow/{wf_id}/wftask/"
+                f"?task_id={t['id']}"
+            ),
+            json={},
+        )
+        assert res.status_code == 201
+        wft_id = res.json()["id"]
+        res = await client.get(
+            f"api/v1/project/{project.id}/workflow/{wf_id}/wftask/{wft_id}"
+        )
+        assert res.status_code == 200
+        assert res.json()["task"] == t

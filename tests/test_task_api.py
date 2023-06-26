@@ -9,10 +9,10 @@ from devtools import debug
 from sqlmodel import select
 
 from .fixtures_tasks import execute_command
-from fractal_server.app.api.v1.task import _background_collect_pip
-from fractal_server.app.api.v1.task import _TaskCollectPip
-from fractal_server.app.api.v1.task import create_package_dir_pip
-from fractal_server.app.api.v1.task import TaskCollectStatus
+from fractal_server.app.api.v1.task_collection import _background_collect_pip
+from fractal_server.app.api.v1.task_collection import _TaskCollectPip
+from fractal_server.app.api.v1.task_collection import create_package_dir_pip
+from fractal_server.app.api.v1.task_collection import TaskCollectStatus
 from fractal_server.app.models import State
 from fractal_server.app.models import Task
 from fractal_server.common.schemas.task import TaskCreate
