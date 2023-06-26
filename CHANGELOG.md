@@ -32,6 +32,7 @@
     * Remove `WorkflowTask.overridden_meta` property and on-the-fly overriding of `meta` (\#752).
     * Add warning when exporting workflows which include custom tasks (\#728).
     * When importing a workflow, only use tasks' `source` values, instead of `(source,name)` pairs (\#719).
+    * Expose GET `WorkflowTask` (\#762).
 * Job execution:
     * Add `FractalSlurmExecutor.shutdown` and corresponding endpoint (\#631, \#691, \#696).
     * In `FractalSlurmExecutor`, make `working_dir*` attributes required (\#679).
@@ -60,6 +61,9 @@
     * Update `poetry.lock` to `cryptography=41`, to address security alert (\#739).
     * Add `greenlet` as a direct dependency (\#748).
     * Removed tests for `IntegrityError` (\#754).
+    * Split `Workflow` and `WorkflowTask` endpoints (\#762).
+    * Split `Task` and `Task Collection` endpoints (\#762).
+
 
 # 1.2.5
 
