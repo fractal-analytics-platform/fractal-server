@@ -20,7 +20,7 @@ router_v1 = APIRouter()
 router_v1.include_router(project_router, prefix="/project", tags=["Projects"])
 router_v1.include_router(task_router, prefix="/task", tags=["Tasks"])
 router_v1.include_router(
-    taskcollection_router, prefix="/task", tags=["Tasks Collection"]
+    taskcollection_router, prefix="/task", tags=["Task Collection"]
 )
 router_v1.include_router(dataset_router, tags=["Datasets"])
 router_v1.include_router(workflow_router, tags=["Workflows"])
