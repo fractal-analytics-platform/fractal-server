@@ -1,5 +1,12 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# 1.3.1
+
+* Expose new GET `WorkflowTask` endpoint (\#762).
+* Clean up API modules (\#762):
+    * Split workflow/workflowtask modules;
+    * Split tasks/task-collection modules.
+
 # 1.3.0
 
 * Refactor user model:
@@ -60,6 +67,7 @@
     * Update `poetry.lock` to `cryptography=41`, to address security alert (\#739).
     * Add `greenlet` as a direct dependency (\#748).
     * Removed tests for `IntegrityError` (\#754).
+
 
 # 1.2.5
 
