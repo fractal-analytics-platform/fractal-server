@@ -2,7 +2,6 @@ from typing import Any
 from typing import Optional
 
 from sqlalchemy import Column
-from sqlalchemy import UniqueConstraint
 from sqlalchemy.types import JSON
 from sqlmodel import Field
 from sqlmodel import SQLModel
@@ -29,10 +28,6 @@ class Task(_TaskBase, SQLModel, table=True):
             label pointing at how the JSON schema of task arguments was
             generated
     """
-
-    __table_args__ = (
-        UniqueConstraint("input_type", name="unique_task_input_type"),
-    )
 
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
