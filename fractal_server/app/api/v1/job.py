@@ -8,7 +8,6 @@ from zipfile import ZipFile
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Response
 from fastapi import status
 from fastapi.responses import StreamingResponse
 from sqlmodel import select
@@ -166,9 +165,13 @@ async def stop_job(
     )
     job = output["job"]
 
+    # Note: we are **not** marking the job as failed (by setting its `status`
+    # attribute) here, since this will be done by the runner backend as soon as
+    # it detects the shutdown-trigerring file and performs the actual shutdown.
+
     # Write shutdown file
     shutdown_file = Path(job.working_dir) / SHUTDOWN_FILENAME
     with shutdown_file.open("w") as f:
         f.write(f"Trigger executor shutdown for {job.id=}, {project_id=}.")
 
-    return Response(status_code=status.HTTP_200_OK)
+    return job
