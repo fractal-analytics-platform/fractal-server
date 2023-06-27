@@ -192,7 +192,7 @@ async def _get_job_check_owner(
     job_id: int,
     user_id: int,
     db: AsyncSession,
-) -> dict[str, Union[Dataset, Project]]:
+) -> dict[str, Union[ApplyWorkflow, Project]]:
     """
     Get a job and a project, after access control on the project
     """
