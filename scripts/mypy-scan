@@ -1,11 +1,6 @@
 #!/usr/bin/env bash
 # Adapted from https://jaredkhan.com/blog/mypy-pre-commit
 
-set -o errexit
-
-# change to project root dir
-cd "$(dirname "$0")"
-
 poetry run mypy --package fractal_server\
     --ignore-missing-imports\
     --warn-redundant-casts\
