@@ -2,6 +2,7 @@
 
 # 1.3.1
 
+* Fix return value of stop-job endpoint (\#764).
 * Expose new GET `WorkflowTask` endpoint (\#762).
 * Clean up API modules (\#762):
     * Split workflow/workflowtask modules;
