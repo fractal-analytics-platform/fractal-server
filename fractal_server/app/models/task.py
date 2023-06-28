@@ -32,13 +32,15 @@ class Task(_TaskBase, SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
     command: str
-    source: Optional[str] = Field(nullable=True)
+    source: str
     input_type: str = Field(unique=True)
     output_type: str
     meta: Optional[dict[str, Any]] = Field(sa_column=Column(JSON), default={})
     owner: Optional[str] = None
     version: Optional[str] = None
-    args_schema: dict[str, Any] = Field(sa_column=Column(JSON))
+    args_schema: Optional[dict[str, Any]] = Field(
+        sa_column=Column(JSON), default=None
+    )
     args_schema_version: Optional[str]
 
     @property
