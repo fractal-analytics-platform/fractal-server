@@ -32,6 +32,7 @@ from ....config import get_settings
 from ....logger import set_logger
 from ....syringe import Inject
 from .._common import get_task_file_paths
+from .._common import SHUTDOWN_FILENAME
 from .._common import TaskFiles
 from ..common import JobExecutionError
 from ..common import TaskExecutionError
@@ -224,7 +225,9 @@ class FractalSlurmExecutor(SlurmExecutor):
         self.wait_thread.slurm_poll_interval = slurm_poll_interval
         self.wait_thread.slurm_user = self.slurm_user
 
-        self.wait_thread.shutdown_file = shutdown_file
+        self.wait_thread.shutdown_file = shutdown_file or (
+            self.working_dir / SHUTDOWN_FILENAME
+        )
         self.wait_thread.shutdown_callback = self.shutdown
 
     def _cleanup(self, jobid: str) -> None:
