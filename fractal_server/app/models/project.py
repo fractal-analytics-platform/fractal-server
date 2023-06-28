@@ -80,3 +80,4 @@ class Project(_ProjectBase, SQLModel, table=True):
 
 class Resource(_ResourceBase, SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
+    fake_dataset_id: int = Field(foreign_key="dataset.id")
