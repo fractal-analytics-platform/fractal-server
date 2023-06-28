@@ -513,7 +513,7 @@ async def _pip_install(
             )
             if current_version != pinned_pkg_version:
                 logger.debug(
-                    f"Currently installed version of {pinned_pkg_name}"
+                    f"Currently installed version of {pinned_pkg_name} "
                     f"({current_version}) differs from pinned version "
                     f"({pinned_pkg_version}); "
                     f"install version {pinned_pkg_version}."
@@ -528,7 +528,7 @@ async def _pip_install(
                 )
             else:
                 logger.debug(
-                    f"Currently installed version of {pinned_pkg_name}"
+                    f"Currently installed version of {pinned_pkg_name} "
                     f"({current_version}) already matches the pinned version."
                 )
 
