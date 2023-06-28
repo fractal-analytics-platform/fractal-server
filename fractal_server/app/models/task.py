@@ -33,7 +33,7 @@ class Task(_TaskBase, SQLModel, table=True):
     name: str
     command: str
     source: str = Field(unique=True)
-    input_type: str
+    input_type: str = Field(unique=True)
     output_type: str
     meta: Optional[dict[str, Any]] = Field(sa_column=Column(JSON), default={})
     owner: Optional[str] = None
