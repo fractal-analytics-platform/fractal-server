@@ -34,12 +34,7 @@ class Dataset(_DatasetBase, SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     project_id: int = Field(foreign_key="project.id")
-    resource_list: list["Resource"] = Relationship(
-        sa_relationship_kwargs={
-            "lazy": "selectin",
-            "cascade": "all, delete-orphan",
-        }
-    )
+
     meta: dict[str, Any] = Field(sa_column=Column(JSON), default={})
 
     class Config:
@@ -85,4 +80,3 @@ class Project(_ProjectBase, SQLModel, table=True):
 
 class Resource(_ResourceBase, SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    dataset_id: int = Field(foreign_key="dataset.id")
