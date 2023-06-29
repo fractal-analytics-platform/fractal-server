@@ -225,8 +225,8 @@ class FractalSlurmExecutor(SlurmExecutor):
         self.wait_thread.slurm_poll_interval = slurm_poll_interval
         self.wait_thread.slurm_user = self.slurm_user
 
-        self.wait_thread.shutdown_file = shutdown_file or (
-            self.working_dir / SHUTDOWN_FILENAME
+        self.wait_thread.shutdown_file = (
+            shutdown_file or (self.working_dir / SHUTDOWN_FILENAME).as_posix()
         )
         self.wait_thread.shutdown_callback = self.shutdown
 
