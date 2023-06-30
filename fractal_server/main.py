@@ -22,8 +22,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_users.exceptions import UserAlreadyExists
 from sqlalchemy.exc import IntegrityError
-from starlette_admin.contrib.sqla import Admin
-from starlette_admin.contrib.sqla import ModelView
 
 from .app.db import get_db
 from .app.security import get_user_db
@@ -169,47 +167,7 @@ def start_application() -> FastAPI:
         ],
         allow_credentials=True,
     )
-    from fractal_server.app.db import DB
 
-    engine = DB.engine_sync()
-    # metadata = SQLModel.metadata
-    # metadata.create_all(engine)
-    from starlette_admin.contrib.sqlmodel import ModelView, Admin
-
-    admin = Admin(engine, title="Example: fractal-server")
-    from .app.models import (
-        LinkUserProject,
-        Task,
-        Project,
-        Workflow,
-        UserOAuth,
-        Dataset,
-        Resource,
-        WorkflowTask,
-        ApplyWorkflow,
-        State,
-        OAuthAccount,
-    )
-
-    admin.add_view(ModelView(Task))
-    admin.add_view(ModelView(Project))
-    admin.add_view(ModelView(Workflow))
-    admin.add_view(ModelView(UserOAuth))
-    admin.add_view(ModelView(Dataset))
-    admin.add_view(ModelView(Resource))
-    admin.add_view(ModelView(WorkflowTask))
-    admin.add_view(ModelView(ApplyWorkflow))
-    admin.add_view(ModelView(State))
-    admin.add_view(ModelView(OAuthAccount))
-
-    from starlette_admin import BaseModelView
-
-    class PostView(BaseModelView):
-        pk_attr = ["project_id", "user_id"]
-
-    admin.add_view(PostView(LinkUserProject))
-
-    admin.mount_to(app)
     return app
 
 
