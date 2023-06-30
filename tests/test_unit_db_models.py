@@ -313,3 +313,18 @@ async def test_task_default_args_from_args_schema(
         )
         debug(task.default_args_from_args_schema)
         assert task.default_args_from_args_schema == {}
+
+
+async def test_insert_task_with_meta_none(
+    db, project_factory, MockCurrentUser, task_factory
+):
+    """
+    Test insertion of a task which has `task.meta=None`, see
+    https://github.com/fractal-analytics-platform/fractal-server/issues/770
+    """
+    async with MockCurrentUser(persist=True) as user:
+        project = await project_factory(user)
+        t0 = await task_factory(source="source0", meta=None)
+        wf = Workflow(name="my wfl", project_id=project.id)
+        args = dict(arg="test arg")
+        await wf.insert_task(t0.id, db=db, args=args)

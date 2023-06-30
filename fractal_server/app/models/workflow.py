@@ -152,7 +152,7 @@ class Workflow(_WorkflowBase, SQLModel, table=True):
             actual_args = None
 
         # Combine meta (higher priority) and db_task.meta (lower priority)
-        wt_meta = db_task.meta.copy() or {}
+        wt_meta = (db_task.meta or {}).copy()
         wt_meta.update(meta or {})
         if not wt_meta:
             wt_meta = None

@@ -5,6 +5,7 @@
 
 * Add sqlalchemy naming convention for DB constraints, and add `render_as_batch=True` to `do_run_migrations` (\#757).
 * Fix bug in job-stop endpoint, due to missing default for `FractalSlurmExecutor.wait_thread.shutdown_file` (\#768, \#769).
+* Fix bug upon inserting a task with `meta=None` into a Workflow (\#772).
 
 # 1.3.1
 
