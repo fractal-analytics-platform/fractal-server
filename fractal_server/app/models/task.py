@@ -37,7 +37,7 @@ class Task(_TaskBase, SQLModel, table=True):
     source: str = Field(unique=True)
     input_type: str
     output_type: str
-    meta: Optional[dict[str, Any]] = Field(sa_column=Column(JSON), default={})
+    metab: Optional[dict[str, Any]] = Field(sa_column=Column(JSON), default={})
     owner: Optional[str] = None
     version: Optional[str] = None
     args_schema: Optional[dict[str, Any]] = Field(

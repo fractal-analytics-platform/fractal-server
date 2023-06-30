@@ -36,7 +36,7 @@ def upgrade() -> None:
     op.create_table(
         "task",
         sa.Column("default_args", sa.JSON(), nullable=True),
-        sa.Column("meta", sa.JSON(), nullable=True),
+        sa.Column("metab", sa.JSON(), nullable=True),
         sa.Column(
             "source", sqlmodel.sql.sqltypes.AutoString(), nullable=False
         ),
@@ -218,7 +218,7 @@ def upgrade() -> None:
     )
     op.create_table(
         "workflowtask",
-        sa.Column("meta", sa.JSON(), nullable=True),
+        sa.Column("metab", sa.JSON(), nullable=True),
         sa.Column("args", sa.JSON(), nullable=True),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("workflow_id", sa.Integer(), nullable=True),

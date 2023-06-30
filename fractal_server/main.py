@@ -21,6 +21,8 @@ from typing import Optional
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_users.exceptions import UserAlreadyExists
+from sqladmin import Admin
+from sqladmin import ModelView
 from sqlalchemy.exc import IntegrityError
 
 from .app.db import get_db
@@ -167,6 +169,59 @@ def start_application() -> FastAPI:
         ],
         allow_credentials=True,
     )
+
+    from fractal_server.app.db import DB
+
+    engine = DB.engine_sync()
+    admin = Admin(app, engine)
+    from fractal_server.app.models import (
+        State,
+        UserOAuth,
+        OAuthAccount,
+        Project,
+        LinkUserProject,
+        Dataset,
+        Workflow,
+        Resource,
+        Task,
+    )
+
+    class StateAdmin(ModelView, model=State):
+        column_list = "__all__"
+
+    class UserOAuthAdmin(ModelView, model=UserOAuth):
+        column_list = "__all__"
+
+    class OAuthAccountAdmin(ModelView, model=OAuthAccount):
+        column_list = "__all__"
+
+    class ProjectAdmin(ModelView, model=Project):
+        column_list = "__all__"
+
+    class LinkUserProjectAdmin(ModelView, model=LinkUserProject):
+        column_list = "__all__"
+
+    class DatasetAdmin(ModelView, model=Dataset):
+        column_list = "__all__"
+
+    class WorkflowAdmin(ModelView, model=Workflow):
+        column_list = "__all__"
+
+    class ResourceAdmin(ModelView, model=Resource):
+        column_list = "__all__"
+
+    class TaskAdmin(ModelView, model=Task):
+        column_list = "__all__"
+
+    admin.add_view(StateAdmin)
+    admin.add_view(UserOAuthAdmin)
+    admin.add_view(OAuthAccountAdmin)
+    admin.add_view(ProjectAdmin)
+    admin.add_view(LinkUserProjectAdmin)
+    admin.add_view(DatasetAdmin)
+    admin.add_view(WorkflowAdmin)
+    admin.add_view(ResourceAdmin)
+    admin.add_view(TaskAdmin)
 
     return app
 

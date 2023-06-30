@@ -4,8 +4,6 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy.engine import Connection
 from sqlmodel import SQLModel
-from starlette_admin.contrib.sqla import Admin
-from starlette_admin.contrib.sqla import ModelView
 
 from fractal_server.app import models  # noqa
 from fractal_server.config import get_settings
