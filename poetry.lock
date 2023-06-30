@@ -2197,6 +2197,24 @@ files = [
 ]
 
 [[package]]
+name = "sqladmin"
+version = "0.13.0"
+description = "SQLAlchemy admin for FastAPI and Starlette"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "sqladmin-0.13.0-py3-none-any.whl", hash = "sha256:5d5a3f2b68f9017d99adea08672a8a15892eaff2d4c1427caed417f3c148b8e3"},
+    {file = "sqladmin-0.13.0.tar.gz", hash = "sha256:7a7b54fe179022e1f08861205a2b953b6b9737e1624b4b4164afeb9af93edeb7"},
+]
+
+[package.dependencies]
+jinja2 = "*"
+python-multipart = "*"
+sqlalchemy = ">=1.4"
+starlette = "*"
+wtforms = ">=3,<4"
+
+[[package]]
 name = "sqlalchemy"
 version = "1.4.41"
 description = "Database Abstraction Library"
@@ -2345,28 +2363,6 @@ typing-extensions = {version = ">=3.10.0", markers = "python_version < \"3.10\""
 
 [package.extras]
 full = ["httpx (>=0.22.0)", "itsdangerous", "jinja2", "python-multipart", "pyyaml"]
-
-[[package]]
-name = "starlette-admin"
-version = "0.10.0"
-description = "Fast, beautiful and extensible administrative interface framework for Starlette/FastApi applications"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "starlette_admin-0.10.0-py3-none-any.whl", hash = "sha256:e2a0b148ee2b6abfcd2dd843b8a8061d1ae13b653c02676f83afa90a69bf845f"},
-    {file = "starlette_admin-0.10.0.tar.gz", hash = "sha256:af3e404b1ec921738b5313a7fbaed57221a20286b90f77ec2bd92e8936b396e0"},
-]
-
-[package.dependencies]
-jinja2 = ">=3,<4"
-python-multipart = "*"
-starlette = "*"
-
-[package.extras]
-dev = ["pre-commit (>=2.20.0,<4.0.0)", "uvicorn (>=0.20.0,<0.23.0)"]
-doc = ["mkdocs (>=1.4.2,<2.0.0)", "mkdocs-material (>=9.0.0,<10.0.0)", "mkdocs-static-i18n (>=0.53.0,<0.57.0)", "mkdocstrings[python] (>=0.19.0,<0.23.0)"]
-i18n = ["babel (>=2.12.1)"]
-test = ["aiomysql (>=0.1.1,<0.3.0)", "aiosqlite (>=0.17.0,<0.20.0)", "arrow (>=1.2.3,<1.3.0)", "asyncpg (>=0.27.0,<0.28.0)", "backports-zoneinfo", "black (==23.3.0)", "colour (>=0.1.5,<0.2.0)", "coverage (>=7.0.0,<7.3.0)", "fasteners (==0.18)", "httpx (>=0.23.3,<0.25.0)", "itsdangerous (>=2.1.2,<2.2.0)", "mongoengine (>=0.25.0,<0.28.0)", "mypy (==1.4.1)", "odmantic (>=0.9.0,<0.10.0)", "passlib (>=1.7.4,<1.8.0)", "phonenumbers (>=8.13.3,<8.14.0)", "pillow (>=9.4.0,<9.6.0)", "psycopg2-binary (>=2.9.5,<3.0.0)", "pydantic[email] (>=1.10.2,<2.0.0)", "pymysql[rsa] (>=1.0.2,<1.2.0)", "pytest (>=7.2.0,<7.5.0)", "pytest-asyncio (>=0.20.2,<0.22.0)", "ruff (==0.0.275)", "sqlalchemy-file (>=0.4.0,<0.5.0)", "sqlalchemy-utils (>=0.40.0,<0.42.0)", "tinydb (>=4.7.0,<4.9.0)"]
 
 [[package]]
 name = "texttable"
@@ -2521,6 +2517,23 @@ files = [
 six = "*"
 
 [[package]]
+name = "wtforms"
+version = "3.0.1"
+description = "Form validation and rendering for Python web development."
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "WTForms-3.0.1-py3-none-any.whl", hash = "sha256:837f2f0e0ca79481b92884962b914eba4e72b7a2daaf1f939c890ed0124b834b"},
+    {file = "WTForms-3.0.1.tar.gz", hash = "sha256:6b351bbb12dd58af57ffef05bc78425d08d1914e0fd68ee14143b7ade023c5bc"},
+]
+
+[package.dependencies]
+MarkupSafe = "*"
+
+[package.extras]
+email = ["email-validator"]
+
+[[package]]
 name = "zipp"
 version = "3.15.0"
 description = "Backport of pathlib-compatible object wrapper for zip files"
@@ -2543,4 +2556,4 @@ slurm = ["cloudpickle", "clusterfutures"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "d515ee39e6aa2626426e7456c5566c5e49e6746a5f05a1f29739db13509b2392"
+content-hash = "181ebf25a4b3f1deb3eaef35bb9f1fc8202a379add1213888d29b4b02af61c27"
