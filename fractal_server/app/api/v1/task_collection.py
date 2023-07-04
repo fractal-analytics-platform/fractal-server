@@ -57,17 +57,15 @@ async def _background_collect_pip(
     In case of error, copy the log into the state and delete the package
     directory.
     """
+    logger_name = task_pkg.package.replace("/", "_")
+    logger = set_logger(
+        logger_name=logger_name,
+        log_file_path=get_log_path(venv_path),
+    )
+    logger.debug(f"Task to collect: {task_pkg.dict()}")
 
     with next(get_sync_db()) as db:
-
         state: State = db.get(State, state_id)
-
-        logger_name = task_pkg.package.replace("/", "_")
-        logger = set_logger(
-            logger_name=logger_name,
-            log_file_path=get_log_path(venv_path),
-        )
-
         logger.debug("Start background task collection")
         data = TaskCollectStatus(**state.data)
         data.info = None
