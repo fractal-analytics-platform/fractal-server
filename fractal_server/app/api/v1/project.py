@@ -28,6 +28,7 @@ from ...models import ProjectRead
 from ...models import ProjectUpdate
 from ...runner import submit_workflow
 from ...runner import validate_workflow_compatibility
+from ...runner.common import set_start_and_end_task
 from ...security import current_active_user
 from ...security import User
 from ._aux_functions import _get_dataset_check_owner
@@ -222,23 +223,24 @@ async def apply_workflow(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Workflow {workflow_id} has empty task list",
         )
-    num_tasks = len(workflow.task_list)
 
     # Set values of start_task and end_task
-    if apply_workflow.start_task is None:
-        apply_workflow.start_task = 0
-    if apply_workflow.end_task is None:
-        apply_workflow.end_task = num_tasks - 1
-    if (
-        apply_workflow.start_task < 0
-        or apply_workflow.end_task > num_tasks - 1
-        or apply_workflow.start_task > apply_workflow.end_task
-    ):
+    num_tasks = len(workflow.task_list)
+    try:
+        start_task, end_task = set_start_and_end_task(
+            num_tasks,
+            start_task=apply_workflow.start_task,
+            end_task=apply_workflow.end_task,
+        )
+        apply_workflow.start_task = start_task
+        apply_workflow.end_task = end_task
+    except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
-                f"Invalid values for {apply_workflow.start_task=} and "
-                f"{apply_workflow.end_task=} (with {num_tasks=})"
+                "Invalid values for start_task or end_task "
+                f"(with {num_tasks=}).\n"
+                f"Original error: {str(e)}"
             ),
         )
 

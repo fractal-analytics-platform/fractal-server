@@ -263,3 +263,27 @@ def write_args_file(*args: dict[str, Any], path: Path):
         out.update(d)
     with open(path, "w") as f:
         json.dump(out, f, cls=TaskParameterEncoder, indent=4)
+
+
+def set_start_and_end_task(
+    num_tasks: int,
+    start_task: Optional[int] = None,
+    end_task: Optional[int] = None,
+) -> tuple[int, int]:
+    """
+    FIXME
+    """
+    # Set default values
+    if start_task is None:
+        start_task = 0
+    if end_task is None:
+        end_task = num_tasks - 1
+
+    # Perform checks
+    if start_task < 0:
+        raise ValueError(f"{start_task=} cannot be smaller than 0")
+    elif end_task > num_tasks - 1:
+        raise ValueError(f"{end_task=} cannot be larger than {(num_tasks-1)=}")
+    elif start_task > end_task:
+        raise ValueError(f"{start_task=} cannot be larger than {end_task=}")
+    return (start_task, end_task)
