@@ -1,6 +1,8 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
 
+* Pin Pydantic to v1 (\#779).
+
 # 1.3.2
 
 * Add sqlalchemy naming convention for DB constraints, and add `render_as_batch=True` to `do_run_migrations` (\#757).

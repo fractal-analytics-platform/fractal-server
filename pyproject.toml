@@ -24,7 +24,7 @@ uvicorn = "^0.20.0"
 sqlalchemy = "^1.4"
 SQLAlchemy-Utils = "^0.38.3"
 greenlet = "*"
-pydantic = ">=1.10.8"
+pydantic = ">=1.10.8,<2"
 
 clusterfutures = { version = "^0.5", optional = true}
 cloudpickle = {version = ">=2.2.1 <2.3.0", optional = true}
