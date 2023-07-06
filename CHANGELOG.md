@@ -1,5 +1,6 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# 1.3.3
 
 * Pin Pydantic to v1 (\#779).
 
