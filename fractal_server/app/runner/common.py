@@ -211,7 +211,7 @@ def validate_workflow_compatibility(
         )
 
     # Check output_dataset type
-    workflow_output_type = workflow.task_list[end_task].task.input_type
+    workflow_output_type = workflow.task_list[end_task].task.output_type
     if (
         workflow_output_type != "Any"
         and workflow_output_type != output_dataset.type
