@@ -519,70 +519,54 @@ def recursive_task_submission(
     if not workflow_dir_user:
         workflow_dir_user = workflow_dir
 
-    try:
-        *dependencies, this_wftask = task_list
-    except ValueError:
-        # step 0: return future containing original task_pars
-        pseudo_future: Future = Future()
-        pseudo_future.set_result(task_pars)
-        return pseudo_future
-
     logger = get_logger(logger_name)
 
-    # step n => step n+1
-    task_pars_depend_future = recursive_task_submission(
-        executor=executor,
-        task_list=dependencies,
-        task_pars=task_pars,
-        workflow_dir=workflow_dir,
-        workflow_dir_user=workflow_dir_user,
-        submit_setup_call=submit_setup_call,
-        logger_name=logger_name,
-    )
-    # Wait for dependencies to be complete (NOTE: this is not necessary if we
-    # explicitly wait for the result of executor.submit(call_single_task, ...),
-    # see below
-    task_pars_depend = task_pars_depend_future.result()
+    current_task_pars = task_pars.copy()
 
-    logger.debug(
-        f'SUBMIT {this_wftask.order}-th task (name="{this_wftask.task.name}")'
-    )
-    if this_wftask.is_parallel:
-        # NOTE: call_parallel_task is blocking, i.e. the returned future always
-        # has `this_wftask_future.done() = True`
-        this_wftask_future = call_parallel_task(
-            executor=executor,
-            wftask=this_wftask,
-            task_pars_depend=task_pars_depend,
-            workflow_dir=workflow_dir,
-            workflow_dir_user=workflow_dir_user,
-            submit_setup_call=submit_setup_call,
+    for this_wftask in task_list:
+        logger.debug(
+            f"SUBMIT {this_wftask.order}-th task "
+            f'(name="{this_wftask.task.name}")'
         )
-    else:
-        # NOTE: executor.submit(call_single_task, ...) is non-blocking, i.e.
-        # the returned future may have `this_wftask_future.done() = False`
-        extra_setup = submit_setup_call(
-            wftask=this_wftask,
-            task_pars=task_pars,
-            workflow_dir=workflow_dir,
-            workflow_dir_user=workflow_dir_user,
+        if this_wftask.is_parallel:
+            # NOTE: call_parallel_task is blocking, i.e. the returned future
+            # always has `this_wftask_future.done() = True`
+            this_wftask_future = call_parallel_task(
+                executor=executor,
+                wftask=this_wftask,
+                task_pars_depend=current_task_pars,
+                workflow_dir=workflow_dir,
+                workflow_dir_user=workflow_dir_user,
+                submit_setup_call=submit_setup_call,
+            )
+            current_task_pars = this_wftask_future.result()
+        else:
+            # NOTE: executor.submit(call_single_task, ...) is non-blocking,
+            # i.e. the returned future may have `this_wftask_future.done() =
+            # False`
+            extra_setup = submit_setup_call(
+                wftask=this_wftask,
+                task_pars=current_task_pars,
+                workflow_dir=workflow_dir,
+                workflow_dir_user=workflow_dir_user,
+            )
+            this_wftask_future = executor.submit(
+                call_single_task,
+                wftask=this_wftask,
+                task_pars=current_task_pars,
+                workflow_dir=workflow_dir,
+                workflow_dir_user=workflow_dir_user,
+                **extra_setup,
+            )
+            # Wait for the future result (blocking)
+            current_task_pars = this_wftask_future.result()
+        logger.debug(
+            f"END    {this_wftask.order}-th task "
+            f'(name="{this_wftask.task.name}")'
         )
-        this_wftask_future = executor.submit(
-            call_single_task,
-            wftask=this_wftask,
-            task_pars=task_pars_depend,
-            workflow_dir=workflow_dir,
-            workflow_dir_user=workflow_dir_user,
-            **extra_setup,
-        )
-        # Wait for the future result (blocking)
-        this_wftask_future.result()
-    logger.debug(
-        f'END    {this_wftask.order}-th task (name="{this_wftask.task.name}")'
-    )
 
-    # Write most recent metadata to METADATA_FILENAME
-    with open(workflow_dir / METADATA_FILENAME, "w") as f:
-        json.dump(this_wftask_future.result().metadata, f, indent=2)
+        # Write most recent metadata to METADATA_FILENAME
+        with open(workflow_dir / METADATA_FILENAME, "w") as f:
+            json.dump(current_task_pars.metadata, f, indent=2)
 
     return this_wftask_future
