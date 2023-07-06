@@ -41,7 +41,7 @@ def _slurm_submit_setup(
 
     For now, this is the reference implementation for the argument
     `submit_setup_call` of
-    [fractal_server.app.runner._common.recursive_task_submission][].
+    [fractal_server.app.runner._common.execute_tasks][].
 
     Arguments:
         wftask:
