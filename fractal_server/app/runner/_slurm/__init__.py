@@ -71,7 +71,7 @@ def _process_workflow(
         working_dir_user=workflow_dir_user,
         common_script_lines=worker_init,
     ) as executor:
-        output_task_pars_fut = recursive_task_submission(
+        output_task_pars = recursive_task_submission(
             executor=executor,
             task_list=workflow.task_list,
             task_pars=TaskParameters(
@@ -84,7 +84,6 @@ def _process_workflow(
             submit_setup_call=_slurm_submit_setup,
             logger_name=logger_name,
         )
-        output_task_pars = output_task_pars_fut.result()
     output_dataset_metadata = output_task_pars.metadata
     return output_dataset_metadata
 
