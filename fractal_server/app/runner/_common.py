@@ -509,8 +509,6 @@ def execute_tasks(
             f'(name="{this_wftask.task.name}")'
         )
         if this_wftask.is_parallel:
-            # NOTE: call_parallel_task is blocking, i.e. the returned future
-            # always has `this_wftask_future.done() = True`
             current_task_pars = call_parallel_task(
                 executor=executor,
                 wftask=this_wftask,
@@ -522,7 +520,7 @@ def execute_tasks(
         else:
             # NOTE: executor.submit(call_single_task, ...) is non-blocking,
             # i.e. the returned future may have `this_wftask_future.done() =
-            # False`
+            # False`. We make it blocking right away, by calling `.result()`
             extra_setup = submit_setup_call(
                 wftask=this_wftask,
                 task_pars=current_task_pars,
