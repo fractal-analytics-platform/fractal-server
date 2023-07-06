@@ -24,7 +24,7 @@ from typing import Any
 from typing import Optional
 
 from ...models import Workflow
-from .._common import recursive_task_submission
+from .._common import execute_tasks
 from ..common import async_wrap
 from ..common import TaskParameters
 from ._submit_setup import _local_submit_setup
@@ -50,7 +50,7 @@ def _process_workflow(
     """
 
     with FractalThreadPoolExecutor() as executor:
-        output_task_pars = recursive_task_submission(
+        output_task_pars = execute_tasks(
             executor=executor,
             task_list=workflow.task_list,
             task_pars=TaskParameters(

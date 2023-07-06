@@ -454,7 +454,7 @@ def call_parallel_task(
     return out_task_parameters
 
 
-def recursive_task_submission(
+def execute_tasks(
     *,
     executor: Executor,
     task_list: list[WorkflowTask],

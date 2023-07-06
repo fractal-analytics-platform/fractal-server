@@ -24,7 +24,7 @@ from .fixtures_tasks import MockWorkflowTask
 from fractal_server.app.runner._common import _call_command_wrapper
 from fractal_server.app.runner._common import call_parallel_task
 from fractal_server.app.runner._common import call_single_task
-from fractal_server.app.runner._common import recursive_task_submission
+from fractal_server.app.runner._common import execute_tasks
 from fractal_server.app.runner._local._local_config import LocalBackendConfig
 from fractal_server.app.runner._local.executor import FractalThreadPoolExecutor
 from fractal_server.app.runner.common import close_job_logger
@@ -77,7 +77,7 @@ def test_call_single_task(tmp_path):
     assert out.metadata["dummy"] == "dummy 0"
 
 
-def test_recursive_task_submission_step0(tmp_path):
+def test_execute_tasks_step0(tmp_path):
     """
     GIVEN a workflow with a single task
     WHEN it is passed to the recursive task submission
@@ -93,7 +93,7 @@ def test_recursive_task_submission_step0(tmp_path):
             order=0,
         )
     ]
-    logger_name = "job_logger_recursive_task_submission_step0"
+    logger_name = "job_logger_execute_tasks_step0"
     job_logger = set_logger(
         logger_name=logger_name,
         log_file_path=str(tmp_path / "job.log"),
@@ -105,7 +105,7 @@ def test_recursive_task_submission_step0(tmp_path):
     )
 
     with FractalThreadPoolExecutor() as executor:
-        res = recursive_task_submission(
+        res = execute_tasks(
             executor=executor,
             task_list=task_list,
             task_pars=task_pars,
@@ -153,7 +153,7 @@ def test_recursive_parallel_task_submission_step0(tmp_path):
     debug(task_pars)
 
     with FractalThreadPoolExecutor() as executor:
-        res = recursive_task_submission(
+        res = execute_tasks(
             executor=executor,
             task_list=task_list,
             task_pars=task_pars,
@@ -179,7 +179,7 @@ def test_recursive_parallel_task_submission_step0(tmp_path):
         assert data["message"] == MESSAGE
 
 
-def test_recursive_task_submission_inductive_step(tmp_path):
+def test_execute_tasks_inductive_step(tmp_path):
     """
     GIVEN a workflow with two or more tasks
     WHEN it is passed to the recursive task submission
@@ -207,7 +207,7 @@ def test_recursive_task_submission_inductive_step(tmp_path):
             order=1,
         ),
     ]
-    logger_name = "job_logger_recursive_task_submission_inductive_step"
+    logger_name = "job_logger_execute_tasks_inductive_step"
     job_logger = set_logger(
         logger_name=logger_name,
         log_file_path=str(tmp_path / "job.log"),
@@ -219,7 +219,7 @@ def test_recursive_task_submission_inductive_step(tmp_path):
     )
 
     with FractalThreadPoolExecutor() as executor:
-        output = recursive_task_submission(
+        output = execute_tasks(
             executor=executor,
             task_list=task_list,
             task_pars=task_pars,
