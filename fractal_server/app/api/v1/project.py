@@ -222,6 +222,25 @@ async def apply_workflow(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Workflow {workflow_id} has empty task list",
         )
+    num_tasks = len(workflow.task_list)
+
+    # Set values of start_task and end_task
+    if apply_workflow.start_task is None:
+        apply_workflow.start_task = 0
+    if apply_workflow.end_task is None:
+        apply_workflow.end_task = num_tasks - 1
+    if (
+        apply_workflow.start_task < 0
+        or apply_workflow.end_task > num_tasks - 1
+        or apply_workflow.start_task > apply_workflow.end_task
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Invalid values for {apply_workflow.start_task=} and "
+                f"{apply_workflow.end_task=} (with {num_tasks=})"
+            ),
+        )
 
     # If backend is SLURM, check that the user has required attributes
     settings = Inject(get_settings)
@@ -264,6 +283,8 @@ async def apply_workflow(
             workflow=workflow,
             input_dataset=input_dataset,
             output_dataset=output_dataset,
+            start_task=apply_workflow.start_task,
+            end_task=apply_workflow.end_task,
         )
     except TypeError as e:
         raise HTTPException(

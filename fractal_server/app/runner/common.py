@@ -192,28 +192,32 @@ def validate_workflow_compatibility(
     input_dataset: Dataset,
     workflow: Workflow,
     output_dataset: Dataset,
+    start_task: int,
+    end_task: int,
 ) -> None:
     """
     Check compatibility of workflow and input / ouptut dataset
     """
     # Check input_dataset type
+    workflow_input_type = workflow.task_list[start_task].task.input_type
     if (
-        workflow.input_type != "Any"
-        and workflow.input_type != input_dataset.type
+        workflow_input_type != "Any"
+        and workflow_input_type != input_dataset.type
     ):
         raise TypeError(
-            f"Incompatible types `{workflow.input_type}` of workflow "
+            f"Incompatible types `{workflow_input_type}` of workflow "
             f"`{workflow.name}` and `{input_dataset.type}` of dataset "
             f"`{input_dataset.name}`"
         )
 
     # Check output_dataset type
+    workflow_output_type = workflow.task_list[end_task].task.input_type
     if (
-        workflow.output_type != "Any"
-        and workflow.output_type != output_dataset.type
+        workflow_output_type != "Any"
+        and workflow_output_type != output_dataset.type
     ):
         raise TypeError(
-            f"Incompatible types `{workflow.output_type}` of workflow "
+            f"Incompatible types `{workflow_output_type}` of workflow "
             f"`{workflow.name}` and `{output_dataset.type}` of dataset "
             f"`{output_dataset.name}`"
         )
