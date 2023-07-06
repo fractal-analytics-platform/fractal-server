@@ -183,7 +183,7 @@ async def test_post_worfkflow_task(client, MockCurrentUser, project_factory):
         assert res.status_code == 201
         wf_id = res.json()["id"]
 
-        # Test that adding an invalid task fails with 422
+        # Test that adding an invalid task fails with 404
         res = await client.post(
             (
                 f"api/v1/project/{project.id}/workflow/{wf_id}/wftask/"
@@ -191,7 +191,8 @@ async def test_post_worfkflow_task(client, MockCurrentUser, project_factory):
             ),
             json={},
         )
-        assert res.status_code == 422
+        debug(res.json())
+        assert res.status_code == 404
 
         # Add valid tasks
         for index in range(2):
