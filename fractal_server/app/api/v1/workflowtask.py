@@ -22,6 +22,7 @@ from fastapi import status
 
 from ...db import AsyncSession
 from ...db import get_db
+from ...models import Task
 from ...models import WorkflowTaskCreate
 from ...models import WorkflowTaskRead
 from ...models import WorkflowTaskUpdate
@@ -53,6 +54,15 @@ async def create_workflowtask(
     workflow = await _get_workflow_check_owner(
         project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
+
+    # Check that task exists
+    task = await db.get(Task, task_id)
+    if not task:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Task {task_id} not found.",
+        )
+
     async with db:
         workflow_task = await workflow.insert_task(
             **new_task.dict(),
