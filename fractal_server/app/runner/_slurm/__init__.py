@@ -23,6 +23,7 @@ from typing import Union
 from ...models import Workflow
 from .._common import execute_tasks
 from ..common import async_wrap
+from ..common import set_start_and_end_task
 from ..common import TaskParameters
 from ._submit_setup import _slurm_submit_setup
 from .executor import FractalSlurmExecutor
@@ -112,17 +113,10 @@ async def process_workflow(
     """
 
     # Set values of start_task and end_task
-    # FIXME transform this block into a function
     num_tasks = len(workflow.task_list)
-    if start_task is None:
-        start_task = 0
-    if end_task is None:
-        end_task = num_tasks - 1
-    if start_task < 0 or end_task > num_tasks - 1 or start_task > end_task:
-        raise ValueError(
-            f"Invalid values for {start_task=} and "
-            f"{end_task=} (with {num_tasks=})"
-        )
+    start_task, end_task = set_start_and_end_task(
+        num_tasks, start_task=start_task, end_task=end_task
+    )
 
     output_dataset_metadata = await async_wrap(_process_workflow)(
         workflow=workflow,
