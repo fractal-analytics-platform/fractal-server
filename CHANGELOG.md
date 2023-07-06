@@ -3,6 +3,7 @@
 # 1.3.4
 
 * Fix internal server error for invalid `task_id` in `create_workflowtask` endpoint (\#782).
+* Simplify internal function for execution of a list of task (\#780).
 
 # 1.3.3
 
