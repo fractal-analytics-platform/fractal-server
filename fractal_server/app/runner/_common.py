@@ -8,7 +8,6 @@ subsystem.
 import json
 import subprocess  # nosec
 from concurrent.futures import Executor
-from concurrent.futures import Future
 from functools import lru_cache
 from functools import partial
 from pathlib import Path
@@ -269,7 +268,7 @@ def call_single_task(
     updated_metadata = task_pars.metadata.copy()
     updated_metadata.update(diff_metadata)
 
-    # Assemble a Future[TaskParameter]
+    # Assemble a TaskParameter object
     history = f"{wftask.task.name}"
     try:
         updated_metadata["history"].append(history)
@@ -375,19 +374,13 @@ def call_parallel_task(
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
-) -> Future:  # py3.9 Future[TaskParameters]:
+) -> TaskParameters:
     """
     Collect results from the parallel instances of a parallel task
 
     Prepare and submit for execution all the single calls of a parallel task,
-    and return a single future with the TaskParameters to be passed on to the
+    and return a single TaskParameters instance to be passed on to the
     next task.
-
-    **Note**: This function returns a future which already has
-    `out_future.done()=True` (that is, this function is blocking and it
-    returns only after the task is over). The reason for returning a future
-    instead of a `TaskParameter` object is for compatibility with the output of
-    `executor.submit(call_single_task, ...)`.
 
     Args:
         executor:
@@ -407,9 +400,9 @@ def call_parallel_task(
             the executor.
 
     Returns:
-        out_future:
-            A future that resolves in the output task parameters of the
-            parallel task execution, ready to be passed on to the next task.
+        out_task_parameters:
+            The output task parameters of the parallel task execution, ready to
+            be passed on to the next task.
     """
 
     if not workflow_dir_user:
@@ -438,13 +431,14 @@ def call_parallel_task(
     # pass` explicitly calls the .result() method for each future, and
     # therefore is blocking until the task are complete.
     map_iter = executor.map(partial_call_task, component_list, **extra_setup)
+
     # Wait for execution of this chunk of tasks. Note: this is required *also*
     # because otherwise the shutdown of a FractalSlurmExecutor while running
     # map() may not work
     for _ in map_iter:
         pass  # noqa: 701
 
-    # Assemble a Future[TaskParameter]
+    # Assemble a TaskParameter object
     history = f"{wftask.task.name}: {component_list}"
     try:
         task_pars_depend.metadata["history"].append(history)
@@ -457,9 +451,7 @@ def call_parallel_task(
         metadata=task_pars_depend.metadata,
     )
 
-    out_future: Future = Future()
-    out_future.set_result(out_task_parameters)
-    return out_future
+    return out_task_parameters
 
 
 def recursive_task_submission(
@@ -471,21 +463,9 @@ def recursive_task_submission(
     workflow_dir_user: Optional[Path] = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
     logger_name: str,
-) -> Future:
+) -> TaskParameters:
     """
-    Recursively submit a list of tasks
-
-    This recursive function schedules a workflow task list in the correct
-    order, making sure to resolve dependency before proceeding to the next
-    task: each following task depends on the future.result() of the previous
-    one, thus assuring the dependency chain.
-
-    Induction process:
-
-    * `0`: return a future which resolves in the task parameters necessary for
-      the first task of the list.
-    * `n => n+1`: use output resulting from step `n` as input for the first
-      task in the list, i.e., the `n+1`st task.
+    Submit a list of WorkflowTasks for execution
 
     **Note:** At the end of each task, write current metadata to `working_dir /
     METADATA_FILENAME`, so that they can be read as part of the [`get_job`
@@ -496,7 +476,7 @@ def recursive_task_submission(
             The `concurrent.futures.Executor`-compatible executor that will
             run the task.
         task_list:
-            The list of tasks to be run
+            The list of wftasks to be run
         task_pars:
             The task parameters to be passed on to the first task of the list.
         workflow_dir:
@@ -512,9 +492,9 @@ def recursive_task_submission(
             Name of the logger
 
     Returns:
-        this_wftask_future:
-            a future that results to the task parameters which constitute the
-            input of the following task in the list.
+        current_task_pars:
+            A TaskParameters object which constitutes the output of the last
+            task in the list.
     """
     if not workflow_dir_user:
         workflow_dir_user = workflow_dir
@@ -531,7 +511,7 @@ def recursive_task_submission(
         if this_wftask.is_parallel:
             # NOTE: call_parallel_task is blocking, i.e. the returned future
             # always has `this_wftask_future.done() = True`
-            this_wftask_future = call_parallel_task(
+            current_task_pars = call_parallel_task(
                 executor=executor,
                 wftask=this_wftask,
                 task_pars_depend=current_task_pars,
@@ -539,7 +519,6 @@ def recursive_task_submission(
                 workflow_dir_user=workflow_dir_user,
                 submit_setup_call=submit_setup_call,
             )
-            current_task_pars = this_wftask_future.result()
         else:
             # NOTE: executor.submit(call_single_task, ...) is non-blocking,
             # i.e. the returned future may have `this_wftask_future.done() =
@@ -569,4 +548,4 @@ def recursive_task_submission(
         with open(workflow_dir / METADATA_FILENAME, "w") as f:
             json.dump(current_task_pars.metadata, f, indent=2)
 
-    return this_wftask_future
+    return current_task_pars

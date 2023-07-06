@@ -50,7 +50,7 @@ def _process_workflow(
     """
 
     with FractalThreadPoolExecutor() as executor:
-        output_task_pars_fut = recursive_task_submission(
+        output_task_pars = recursive_task_submission(
             executor=executor,
             task_list=workflow.task_list,
             task_pars=TaskParameters(
@@ -63,7 +63,6 @@ def _process_workflow(
             logger_name=logger_name,
             submit_setup_call=_local_submit_setup,
         )
-        output_task_pars = output_task_pars_fut.result()
     output_dataset_metadata = output_task_pars.metadata
     return output_dataset_metadata
 

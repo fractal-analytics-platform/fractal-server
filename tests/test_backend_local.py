@@ -112,8 +112,8 @@ def test_recursive_task_submission_step0(tmp_path):
             workflow_dir=tmp_path,
             logger_name=logger_name,
         )
-        debug(res.result())
-        assert res.result().metadata["dummy"] == f"dummy {INDEX}"
+        debug(res)
+        assert res.metadata["dummy"] == f"dummy {INDEX}"
     close_job_logger(job_logger)
 
 
@@ -160,8 +160,8 @@ def test_recursive_parallel_task_submission_step0(tmp_path):
             workflow_dir=tmp_path,
             logger_name=logger_name,
         )
-        debug(res.result())
-        assert MOCKPARALLELTASK_NAME in res.result().metadata["history"][0]
+        debug(res)
+        assert MOCKPARALLELTASK_NAME in res.metadata["history"][0]
     close_job_logger(job_logger)
 
     # Validate results
@@ -219,7 +219,7 @@ def test_recursive_task_submission_inductive_step(tmp_path):
     )
 
     with FractalThreadPoolExecutor() as executor:
-        res = recursive_task_submission(
+        output = recursive_task_submission(
             executor=executor,
             task_list=task_list,
             task_pars=task_pars,
@@ -228,7 +228,6 @@ def test_recursive_task_submission_inductive_step(tmp_path):
         )
     close_job_logger(job_logger)
 
-    output = res.result()
     debug(output)
     with (tmp_path / "0.result.json").open("r") as f:
         data = json.load(f)
@@ -284,7 +283,7 @@ def test_call_parallel_task_max_tasks(
 
     # Execute task
     with FractalThreadPoolExecutor() as executor:
-        future_metadata = call_parallel_task(
+        out = call_parallel_task(
             executor=executor,
             wftask=wftask,
             task_pars_depend=task_pars,
@@ -292,8 +291,6 @@ def test_call_parallel_task_max_tasks(
             submit_setup_call=mock_submit_setup_call,
         )
     debug(tmp_path)
-    debug(future_metadata)
-    out = future_metadata.result()
     debug(out)
     assert isinstance(out, TaskParameters)
 
