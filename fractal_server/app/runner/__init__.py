@@ -126,6 +126,8 @@ async def submit_workflow(
         input_paths = input_dataset.paths
         output_path = output_dataset.paths[0]
         workflow_id = workflow.id
+        start_task = job.start_task
+        end_task = job.end_task
 
         # Define and create server-side working folder
         project_id = workflow.project_id
@@ -187,6 +189,8 @@ async def submit_workflow(
         logger.debug(f"job.id: {job.id}")
         logger.debug(f"job.working_dir: {str(WORKFLOW_DIR)}")
         logger.debug(f"job.workflow_dir_user: {str(WORKFLOW_DIR_USER)}")
+        logger.debug(f"job.start_task: {job.start_task}")
+        logger.debug(f"job.end_task: {job.end_task}")
         logger.debug(f'START workflow "{workflow.name}"')
 
     try:
@@ -214,6 +218,8 @@ async def submit_workflow(
             workflow_dir_user=WORKFLOW_DIR_USER,
             logger_name=logger_name,
             worker_init=worker_init,
+            start_task=start_task,
+            end_task=end_task,
         )
 
         logger.info(

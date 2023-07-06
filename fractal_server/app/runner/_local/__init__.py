@@ -39,6 +39,8 @@ def _process_workflow(
     input_metadata: dict[str, Any],
     logger_name: str,
     workflow_dir: Path,
+    start_task: int,
+    end_task: int,
 ) -> dict[str, Any]:
     """
     Internal processing routine
@@ -52,7 +54,7 @@ def _process_workflow(
     with FractalThreadPoolExecutor() as executor:
         output_task_pars = execute_tasks(
             executor=executor,
-            task_list=workflow.task_list,
+            task_list=workflow.task_list[start_task : (end_task + 1)],  # noqa
             task_pars=TaskParameters(
                 input_paths=input_paths,
                 output_path=output_path,
@@ -79,6 +81,8 @@ async def process_workflow(
     slurm_user: Optional[str] = None,
     user_cache_dir: Optional[str] = None,
     worker_init: Optional[str] = None,
+    start_task: Optional[int] = None,
+    end_task: Optional[int] = None,
 ) -> dict[str, Any]:
     """
     Run a workflow
@@ -120,6 +124,10 @@ async def process_workflow(
             to the backend executor. This argument is present for compatibility
             with the standard backend interface, but is ignored in the `local`
             backend.
+        start_task:
+            TBD
+        end_task:
+            TBD
 
     Raises:
         TaskExecutionError: wrapper for errors raised during tasks' execution
@@ -139,6 +147,19 @@ async def process_workflow(
             f"{workflow_dir=} and {workflow_dir_user=}"
         )
 
+    # Set values of start_task and end_task
+    # FIXME transform this block into a function
+    num_tasks = len(workflow.task_list)
+    if start_task is None:
+        start_task = 0
+    if end_task is None:
+        end_task = num_tasks - 1
+    if start_task < 0 or end_task > num_tasks - 1 or start_task > end_task:
+        raise ValueError(
+            f"Invalid values for {start_task=} and "
+            f"{end_task=} (with {num_tasks=})"
+        )
+
     output_dataset_metadata = await async_wrap(_process_workflow)(
         workflow=workflow,
         input_paths=input_paths,
@@ -146,5 +167,7 @@ async def process_workflow(
         input_metadata=input_metadata,
         logger_name=logger_name,
         workflow_dir=workflow_dir,
+        start_task=start_task,
+        end_task=end_task,
     )
     return output_dataset_metadata
