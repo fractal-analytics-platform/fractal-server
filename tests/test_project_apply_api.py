@@ -226,3 +226,120 @@ async def test_project_apply_missing_resources(
         debug(res.json())
         assert res.status_code == 422
         assert "empty resource_list" in res.json()["detail"]
+
+
+async def test_project_apply_workflow_subset(
+    db,
+    client,
+    MockCurrentUser,
+    project_factory,
+    dataset_factory,
+    resource_factory,
+    workflow_factory,
+    task_factory,
+):
+    async with MockCurrentUser(persist=True) as user:
+        project = await project_factory(user)
+        dataset1 = await dataset_factory(project, name="ds1", type="type1")
+        dataset2 = await dataset_factory(project, name="ds2", type="type2")
+        dataset3 = await dataset_factory(project, name="ds3", type="type3")
+
+        await resource_factory(dataset1)
+        await resource_factory(dataset2)
+        await resource_factory(dataset3)
+
+        workflow = await workflow_factory(project_id=project.id)
+
+        task12 = await task_factory(
+            input_type="type1", output_type="type2", source="admin:1to2"
+        )
+        task23 = await task_factory(
+            input_type="type2", output_type="type3", source="admin:2to3"
+        )
+        await workflow.insert_task(task12.id, db=db)
+        await workflow.insert_task(task23.id, db=db)
+
+        debug(workflow)
+
+        # This job (with no start_task or end_task) is submitted correctly (and
+        # then fails, because tasks have invalid `command` values)
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
+            f"?input_dataset_id={dataset1.id}"
+            f"&output_dataset_id={dataset3.id}",
+            json={},
+        )
+        debug(res.json())
+        job_id = res.json()["id"]
+        assert res.status_code == 202
+        res = await client.get(f"{PREFIX}/project/{project.id}/job/{job_id}")
+        assert res.json()["status"] == "failed"
+
+        # These two jobs (with valid start_task and end_task) are submitted
+        # correctly (and then fail)
+        # Case A
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
+            f"?input_dataset_id={dataset1.id}"
+            f"&output_dataset_id={dataset2.id}",
+            json=dict(start_task=0, end_task=0),
+        )
+        debug(res.json())
+        job_id = res.json()["id"]
+        assert res.status_code == 202
+        res = await client.get(f"{PREFIX}/project/{project.id}/job/{job_id}")
+        assert res.json()["status"] == "failed"
+        # Case B
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
+            f"?input_dataset_id={dataset2.id}"
+            f"&output_dataset_id={dataset3.id}",
+            json=dict(start_task=1, end_task=1),
+        )
+        debug(res.json())
+        job_id = res.json()["id"]
+        assert res.status_code == 202
+        res = await client.get(f"{PREFIX}/project/{project.id}/job/{job_id}")
+        assert res.json()["status"] == "failed"
+
+        # Jobs with invalid start_task and end_task are not submitted
+
+        # Case A (type mismatch for workflow subset)
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
+            f"?input_dataset_id={dataset1.id}"
+            f"&output_dataset_id={dataset3.id}",
+            json=dict(start_task=0, end_task=0),
+        )
+        debug(res.json())
+        assert res.status_code == 422
+
+        # Case B (invalid start_task)
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
+            f"?input_dataset_id={dataset1.id}"
+            f"&output_dataset_id={dataset3.id}",
+            json=dict(start_task=-2, end_task=1),
+        )
+        debug(res.json())
+        assert res.status_code == 422
+
+        # Case C (invalid end_task)
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
+            f"?input_dataset_id={dataset1.id}"
+            f"&output_dataset_id={dataset3.id}",
+            json=dict(start_task=0, end_task=99),
+        )
+        debug(res.json())
+        assert res.status_code == 422
+
+        # Case D (start_end and end_task exchanged)
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
+            f"?input_dataset_id={dataset1.id}"
+            f"&output_dataset_id={dataset3.id}",
+            json=dict(start_task=1, end_task=0),
+        )
+        debug(res.json())
+        assert res.status_code == 422
