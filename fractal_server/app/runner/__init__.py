@@ -114,17 +114,24 @@ async def submit_workflow(
         if not (input_dataset and output_dataset and workflow):
             log_msg = ""
             if not input_dataset:
-                log_msg += "Cannot fetch input_dataset from database\n"
+                log_msg += (
+                    f"Cannot fetch input_dataset {input_dataset_id} "
+                    "from database\n"
+                )
             if not output_dataset:
-                log_msg += "Cannot fetch output_dataset from database\n"
+                log_msg += (
+                    f"Cannot fetch output_dataset {output_dataset_id} "
+                    "from database\n"
+                )
             if not workflow:
-                log_msg += "Cannot fetch workflow from database\n"
+                log_msg += (
+                    f"Cannot fetch workflow {workflow_id} from database\n"
+                )
             job.status = JobStatusType.FAILED
             job.end_timestamp = get_timestamp()
             job.log = log_msg
             db_sync.merge(job)
             db_sync.commit()
-            db_sync.close()
             return
 
         # Select backend

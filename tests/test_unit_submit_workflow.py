@@ -7,6 +7,7 @@ from devtools import debug
 
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import ApplyWorkflow
+from fractal_server.app.models import JobStatusType
 from fractal_server.app.runner import submit_workflow
 
 
@@ -125,6 +126,7 @@ async def test_fail_submit_workflows_wrong_IDs(
     job_factory,
     resource_factory,
     tmp_path,
+    db,
     override_settings_factory,
 ):
     async with MockCurrentUser(persist=True) as user:
@@ -142,27 +144,7 @@ async def test_fail_submit_workflows_wrong_IDs(
         await resource_factory(dataset)
 
         # Fail for invalid DB IDs
-        with pytest.raises(ValueError):
-            await submit_workflow(
-                workflow_id=9999999,
-                input_dataset_id=dataset.id,
-                output_dataset_id=dataset.id,
-                job_id=job.id,
-            )
-        with pytest.raises(ValueError):
-            await submit_workflow(
-                workflow_id=workflow.id,
-                input_dataset_id=9999999,
-                output_dataset_id=dataset.id,
-                job_id=job.id,
-            )
-        with pytest.raises(ValueError):
-            await submit_workflow(
-                workflow_id=workflow.id,
-                input_dataset_id=dataset.id,
-                output_dataset_id=9999999,
-                job_id=job.id,
-            )
+
         with pytest.raises(ValueError):
             await submit_workflow(
                 workflow_id=workflow.id,
@@ -170,3 +152,27 @@ async def test_fail_submit_workflows_wrong_IDs(
                 output_dataset_id=dataset.id,
                 job_id=9999999,
             )
+
+        await submit_workflow(
+            workflow_id=1234,
+            input_dataset_id=dataset.id,
+            output_dataset_id=dataset.id,
+            job_id=job.id,
+        )
+        await db.refresh(job)
+        assert job.status == JobStatusType.FAILED
+        assert job.log == "Cannot fetch workflow 1234 from database\n"
+
+        await submit_workflow(
+            workflow_id=workflow.id,
+            input_dataset_id=1111,
+            output_dataset_id=2222,
+            job_id=job.id,
+        )
+        await db.refresh(job)
+        debug(job)
+        assert job.status == JobStatusType.FAILED
+        assert job.log == (
+            "Cannot fetch input_dataset_id 1111 from database\n"
+            "Cannot fetch output_dataset_id 2222 from database\n"
+        )
