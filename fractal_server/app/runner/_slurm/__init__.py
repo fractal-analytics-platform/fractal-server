@@ -21,7 +21,7 @@ from typing import Optional
 from typing import Union
 
 from ...models import Workflow
-from .._common import recursive_task_submission
+from .._common import execute_tasks
 from ..common import async_wrap
 from ..common import TaskParameters
 from ._submit_setup import _slurm_submit_setup
@@ -71,7 +71,7 @@ def _process_workflow(
         working_dir_user=workflow_dir_user,
         common_script_lines=worker_init,
     ) as executor:
-        output_task_pars_fut = recursive_task_submission(
+        output_task_pars = execute_tasks(
             executor=executor,
             task_list=workflow.task_list,
             task_pars=TaskParameters(
@@ -84,7 +84,6 @@ def _process_workflow(
             submit_setup_call=_slurm_submit_setup,
             logger_name=logger_name,
         )
-        output_task_pars = output_task_pars_fut.result()
     output_dataset_metadata = output_task_pars.metadata
     return output_dataset_metadata
 

@@ -1,5 +1,13 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# 1.3.4
+
+* Fix internal server error for invalid `task_id` in `create_workflowtask` endpoint (\#782).
+* Simplify internal function for execution of a list of task (\#780).
+
+# 1.3.3
+
+* Pin Pydantic to v1 (\#779).
 
 # 1.3.2
 
