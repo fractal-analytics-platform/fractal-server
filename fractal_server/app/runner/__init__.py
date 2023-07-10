@@ -106,7 +106,7 @@ async def submit_workflow(
 
         job: ApplyWorkflow = db_sync.get(ApplyWorkflow, job_id)
         if not job:
-            raise ValueError("Cannot fetch job from database")
+            raise ValueError(f"Cannot fetch job {job_id} from database")
 
         input_dataset: Dataset = db_sync.get(Dataset, input_dataset_id)
         output_dataset: Dataset = db_sync.get(Dataset, output_dataset_id)
