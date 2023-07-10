@@ -173,6 +173,6 @@ async def test_fail_submit_workflows_wrong_IDs(
         debug(job)
         assert job.status == JobStatusType.FAILED
         assert job.log == (
-            "Cannot fetch input_dataset_id 1111 from database\n"
-            "Cannot fetch output_dataset_id 2222 from database\n"
+            "Cannot fetch input_dataset 1111 from database\n"
+            "Cannot fetch output_dataset 2222 from database\n"
         )
