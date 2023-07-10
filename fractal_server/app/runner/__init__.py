@@ -106,16 +106,34 @@ async def submit_workflow(
 
         job: ApplyWorkflow = db_sync.get(ApplyWorkflow, job_id)
         if not job:
-            raise ValueError("Cannot fetch job from database")
+            raise ValueError(f"Cannot fetch job {job_id} from database")
+
         input_dataset: Dataset = db_sync.get(Dataset, input_dataset_id)
-        if not input_dataset:
-            raise ValueError("Cannot fetch input_dataset from database")
         output_dataset: Dataset = db_sync.get(Dataset, output_dataset_id)
-        if not output_dataset:
-            raise ValueError("Cannot fetch output_dataset from database")
         workflow: Workflow = db_sync.get(Workflow, workflow_id)
-        if not workflow:
-            raise ValueError("Cannot fetch workflow from database")
+        if not (input_dataset and output_dataset and workflow):
+            log_msg = ""
+            if not input_dataset:
+                log_msg += (
+                    f"Cannot fetch input_dataset {input_dataset_id} "
+                    "from database\n"
+                )
+            if not output_dataset:
+                log_msg += (
+                    f"Cannot fetch output_dataset {output_dataset_id} "
+                    "from database\n"
+                )
+            if not workflow:
+                log_msg += (
+                    f"Cannot fetch workflow {workflow_id} from database\n"
+                )
+            job.status = JobStatusType.FAILED
+            job.end_timestamp = get_timestamp()
+            job.log = log_msg
+            db_sync.merge(job)
+            db_sync.commit()
+            db_sync.close()
+            return
 
         # Select backend
         settings = Inject(get_settings)
