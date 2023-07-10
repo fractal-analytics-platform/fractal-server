@@ -62,11 +62,12 @@ async def _background_collect_pip(
         logger_name=logger_name,
         log_file_path=get_log_path(venv_path),
     )
-    logger.debug(f"Task to collect: {task_pkg.dict()}")
+    logger.debug("Start background task collection")
+    for key, value in task_pkg.dict(exclude={"package_manifest"}).items():
+        logger.debug(f"{key}: {value}")
 
     with next(get_sync_db()) as db:
         state: State = db.get(State, state_id)
-        logger.debug("Start background task collection")
         data = TaskCollectStatus(**state.data)
         data.info = None
 
