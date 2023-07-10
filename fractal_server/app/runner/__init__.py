@@ -132,6 +132,7 @@ async def submit_workflow(
             job.log = log_msg
             db_sync.merge(job)
             db_sync.commit()
+            db_sync.close()
             return
 
         # Select backend
