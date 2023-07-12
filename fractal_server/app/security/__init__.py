@@ -49,6 +49,8 @@ from fastapi_users.db.base import BaseUserDatabase
 from fastapi_users.models import ID
 from fastapi_users.models import OAP
 from fastapi_users.models import UP
+from httpx_oauth.clients.github import GitHubOAuth2
+from httpx_oauth.oauth2 import OAuth2
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlmodel import func
@@ -308,22 +310,22 @@ for client in settings.OAUTH_CLIENTS:
     # INIT CLIENTS
     client_name = client.CLIENT_NAME.lower()
     _client: Optional[Union["GitHubOAuth2", "OAuth2"]] = None
+
     if client_name == "github":
-        from httpx_oauth.clients.github import GitHubOAuth2
-
         _client = GitHubOAuth2(client.CLIENT_ID, client.CLIENT_SECRET)
-    else:  # GENERIC CLIENT
-        from httpx_oauth.oauth2 import OAuth2
 
-        if (
-            not client.CLIENT_SECRET
-            or not client.AUTHORIZE_ENDPOINT
-            or not client.ACCESS_TOKEN_ENDPOINT
+    else:  # GENERIC CLIENT
+
+        if not (
+            client.CLIENT_SECRET
+            and client.AUTHORIZE_ENDPOINT
+            and client.ACCESS_TOKEN_ENDPOINT
         ):
             raise ValueError(
                 "Must specify CLIENT_SECRET, AUTHORIZE_ENDPOINT and "
                 "ACCESS_TOKEN_ENDPOINT to define custom OAuth2 client."
             )
+
         _client = OAuth2(
             client.CLIENT_ID,
             client.CLIENT_SECRET,
@@ -334,22 +336,19 @@ for client in settings.OAUTH_CLIENTS:
         )
 
     # ADD ROUTES
-    # GitHub OAuth
     auth_router.include_router(
         fastapi_users.get_oauth_router(
             _client,
             cookie_backend,
             settings.JWT_SECRET_KEY,  # type: ignore
-            # WARNING:
-            # associate_by_email=True exposes to security risks if the OAuth
-            # provider does not verify emails.
             associate_by_email=True,
         ),
         prefix=f"/{client_name}",
     )
+
     auth_router.include_router(
         fastapi_users.get_oauth_associate_router(
             _client, UserRead, settings.JWT_SECRET_KEY  # type: ignore
         ),
-        prefix=f"/{client_name}/associate",
+        prefix=f"/associate/{client_name}",
     )
