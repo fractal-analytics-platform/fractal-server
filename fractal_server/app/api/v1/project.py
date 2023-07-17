@@ -28,6 +28,7 @@ from ...models import ProjectRead
 from ...models import ProjectUpdate
 from ...runner import submit_workflow
 from ...runner import validate_workflow_compatibility
+from ...runner.common import set_start_and_last_task_index
 from ...security import current_active_user
 from ...security import User
 from ._aux_functions import _get_dataset_check_owner
@@ -223,6 +224,26 @@ async def apply_workflow(
             detail=f"Workflow {workflow_id} has empty task list",
         )
 
+    # Set values of first_task_index and last_task_index
+    num_tasks = len(workflow.task_list)
+    try:
+        first_task_index, last_task_index = set_start_and_last_task_index(
+            num_tasks,
+            first_task_index=apply_workflow.first_task_index,
+            last_task_index=apply_workflow.last_task_index,
+        )
+        apply_workflow.first_task_index = first_task_index
+        apply_workflow.last_task_index = last_task_index
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Invalid values for first_task_index or last_task_index "
+                f"(with {num_tasks=}).\n"
+                f"Original error: {str(e)}"
+            ),
+        )
+
     # If backend is SLURM, check that the user has required attributes
     settings = Inject(get_settings)
     backend = settings.FRACTAL_RUNNER_BACKEND
@@ -264,6 +285,8 @@ async def apply_workflow(
             workflow=workflow,
             input_dataset=input_dataset,
             output_dataset=output_dataset,
+            first_task_index=apply_workflow.first_task_index,
+            last_task_index=apply_workflow.last_task_index,
         )
     except TypeError as e:
         raise HTTPException(
