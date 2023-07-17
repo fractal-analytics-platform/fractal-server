@@ -1,6 +1,7 @@
 import asyncio
 import json
 from pathlib import Path
+from typing import AsyncGenerator
 from typing import Optional
 
 import pytest
@@ -59,7 +60,9 @@ async def execute_command(cmd, **kwargs):
 
 
 @pytest.fixture(scope="session")
-async def dummy_task_package(testdata_path, tmp_path_factory) -> Path:
+async def dummy_task_package(
+    testdata_path, tmp_path_factory
+) -> AsyncGenerator[Path, None]:
     """
     Yields
     ------
@@ -84,7 +87,9 @@ async def dummy_task_package(testdata_path, tmp_path_factory) -> Path:
 
 
 @pytest.fixture
-async def dummy_task_package_invalid_manifest(testdata_path, tmp_path) -> Path:
+async def dummy_task_package_invalid_manifest(
+    testdata_path, tmp_path
+) -> AsyncGenerator[Path, None]:
     from .data import tasks_dummy as task_package
 
     PACKAGE_TEMPLATE_PATH = testdata_path / "fractal-tasks-dummy"
@@ -113,7 +118,9 @@ async def dummy_task_package_invalid_manifest(testdata_path, tmp_path) -> Path:
 
 
 @pytest.fixture
-async def dummy_task_package_missing_manifest(testdata_path, tmp_path) -> Path:
+async def dummy_task_package_missing_manifest(
+    testdata_path, tmp_path
+) -> AsyncGenerator[Path, None]:
     from .data import tasks_dummy as task_package
 
     PACKAGE_TEMPLATE_PATH = testdata_path / "fractal-tasks-dummy"
