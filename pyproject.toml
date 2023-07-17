@@ -10,6 +10,12 @@ authors = [
 readme = "README.md"
 homepage = "https://github.com/fractal-analytics-platform/fractal-server"
 license = "BSD-3-Clause"
+exclude = [
+"fractal_server/.gitignore",
+"fractal_server/common/tests",
+"fractal_server/common/.git*",
+"fractal_server/common/.pre-commit-config.yaml",
+]
 
 
 [tool.poetry.dependencies]
@@ -45,8 +51,6 @@ httpx = "^0.23"
 devtools = "^0.10"
 pytest-asyncio = "^0.20"
 bumpver = "^2022.1120"
-Pillow = "^9.1.1"
-pytest-mock = "^3.8"
 pre-commit = "^2.19"
 coverage = {extras = ["toml"], version = "^6.4.4"}
 mypy = "^0.982"
