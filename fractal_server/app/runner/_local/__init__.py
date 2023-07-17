@@ -26,7 +26,7 @@ from typing import Optional
 from ...models import Workflow
 from .._common import execute_tasks
 from ..common import async_wrap
-from ..common import set_start_and_end_task
+from ..common import set_start_and_last_task_index
 from ..common import TaskParameters
 from ._submit_setup import _local_submit_setup
 from .executor import FractalThreadPoolExecutor
@@ -40,8 +40,8 @@ def _process_workflow(
     input_metadata: dict[str, Any],
     logger_name: str,
     workflow_dir: Path,
-    start_task: int,
-    end_task: int,
+    first_task_index: int,
+    last_task_index: int,
 ) -> dict[str, Any]:
     """
     Internal processing routine
@@ -55,7 +55,9 @@ def _process_workflow(
     with FractalThreadPoolExecutor() as executor:
         output_task_pars = execute_tasks(
             executor=executor,
-            task_list=workflow.task_list[start_task : (end_task + 1)],  # noqa
+            task_list=workflow.task_list[
+                first_task_index : (last_task_index + 1)  # noqa
+            ],  # noqa
             task_pars=TaskParameters(
                 input_paths=input_paths,
                 output_path=output_path,
@@ -82,8 +84,8 @@ async def process_workflow(
     slurm_user: Optional[str] = None,
     user_cache_dir: Optional[str] = None,
     worker_init: Optional[str] = None,
-    start_task: Optional[int] = None,
-    end_task: Optional[int] = None,
+    first_task_index: Optional[int] = None,
+    last_task_index: Optional[int] = None,
 ) -> dict[str, Any]:
     """
     Run a workflow
@@ -125,9 +127,9 @@ async def process_workflow(
             to the backend executor. This argument is present for compatibility
             with the standard backend interface, but is ignored in the `local`
             backend.
-        start_task:
+        first_task_index:
             TBD
-        end_task:
+        last_task_index:
             TBD
 
     Raises:
@@ -148,10 +150,12 @@ async def process_workflow(
             f"{workflow_dir=} and {workflow_dir_user=}"
         )
 
-    # Set values of start_task and end_task
+    # Set values of first_task_index and last_task_index
     num_tasks = len(workflow.task_list)
-    start_task, end_task = set_start_and_end_task(
-        num_tasks, start_task=start_task, end_task=end_task
+    first_task_index, last_task_index = set_start_and_last_task_index(
+        num_tasks,
+        first_task_index=first_task_index,
+        last_task_index=last_task_index,
     )
 
     output_dataset_metadata = await async_wrap(_process_workflow)(
@@ -161,7 +165,7 @@ async def process_workflow(
         input_metadata=input_metadata,
         logger_name=logger_name,
         workflow_dir=workflow_dir,
-        start_task=start_task,
-        end_task=end_task,
+        first_task_index=first_task_index,
+        last_task_index=last_task_index,
     )
     return output_dataset_metadata
