@@ -128,9 +128,11 @@ async def process_workflow(
             with the standard backend interface, but is ignored in the `local`
             backend.
         first_task_index:
-            TBD
+            Positional index of the first task to execute; if `None`, start
+            from `0`.
         last_task_index:
-            TBD
+            Positional index of the last task to execute; if `None`, proceed
+            until the last task.
 
     Raises:
         TaskExecutionError: wrapper for errors raised during tasks' execution
