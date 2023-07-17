@@ -281,12 +281,14 @@ def set_start_and_last_task_index(
 
     # Perform checks
     if first_task_index < 0:
-        raise ValueError(f"{first_task_index=} cannot be smaller than 0")
-    elif last_task_index > num_tasks - 1:
+        raise ValueError(f"{first_task_index=} cannot be negative")
+    if last_task_index < 0:
+        raise ValueError(f"{last_task_index=} cannot be negative")
+    if last_task_index > num_tasks - 1:
         raise ValueError(
             f"{last_task_index=} cannot be larger than {(num_tasks-1)=}"
         )
-    elif first_task_index > last_task_index:
+    if first_task_index > last_task_index:
         raise ValueError(
             f"{first_task_index=} cannot be larger than {last_task_index=}"
         )
