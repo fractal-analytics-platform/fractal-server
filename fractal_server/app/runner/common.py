@@ -271,7 +271,15 @@ def set_start_and_last_task_index(
     last_task_index: Optional[int] = None,
 ) -> tuple[int, int]:
     """
-    FIXME
+    Handle `first_task_index` and `last_task_index`, by setting defaults and
+    validating values.
+
+    num_tasks:
+        Total number of tasks in a workflow task list
+    first_task_index:
+        Positional index of the first task to execute
+    last_task_index:
+        Positional index of the last task to execute
     """
     # Set default values
     if first_task_index is None:
