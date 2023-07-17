@@ -1,5 +1,8 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# 1.3.5
+
+* Support execution of a workflow subset (\#784).
 * Handle failures in `submit_workflow` without raising errors (\#787).
 * Improve logging in background task collection (\#776).
 
