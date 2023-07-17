@@ -14,6 +14,7 @@ exclude = [
 "fractal_server/.gitignore",
 "fractal_server/common/tests",
 "fractal_server/common/.git*",
+"fractal_server/common/requirements.txt",
 "fractal_server/common/.pre-commit-config.yaml",
 ]
 
