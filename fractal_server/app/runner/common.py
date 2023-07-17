@@ -192,14 +192,14 @@ def validate_workflow_compatibility(
     input_dataset: Dataset,
     workflow: Workflow,
     output_dataset: Dataset,
-    start_task: int,
-    end_task: int,
+    first_task_index: int,
+    last_task_index: int,
 ) -> None:
     """
     Check compatibility of workflow and input / ouptut dataset
     """
     # Check input_dataset type
-    workflow_input_type = workflow.task_list[start_task].task.input_type
+    workflow_input_type = workflow.task_list[first_task_index].task.input_type
     if (
         workflow_input_type != "Any"
         and workflow_input_type != input_dataset.type
@@ -211,7 +211,7 @@ def validate_workflow_compatibility(
         )
 
     # Check output_dataset type
-    workflow_output_type = workflow.task_list[end_task].task.output_type
+    workflow_output_type = workflow.task_list[last_task_index].task.output_type
     if (
         workflow_output_type != "Any"
         and workflow_output_type != output_dataset.type
@@ -265,25 +265,29 @@ def write_args_file(*args: dict[str, Any], path: Path):
         json.dump(out, f, cls=TaskParameterEncoder, indent=4)
 
 
-def set_start_and_end_task(
+def set_start_and_last_task_index(
     num_tasks: int,
-    start_task: Optional[int] = None,
-    end_task: Optional[int] = None,
+    first_task_index: Optional[int] = None,
+    last_task_index: Optional[int] = None,
 ) -> tuple[int, int]:
     """
     FIXME
     """
     # Set default values
-    if start_task is None:
-        start_task = 0
-    if end_task is None:
-        end_task = num_tasks - 1
+    if first_task_index is None:
+        first_task_index = 0
+    if last_task_index is None:
+        last_task_index = num_tasks - 1
 
     # Perform checks
-    if start_task < 0:
-        raise ValueError(f"{start_task=} cannot be smaller than 0")
-    elif end_task > num_tasks - 1:
-        raise ValueError(f"{end_task=} cannot be larger than {(num_tasks-1)=}")
-    elif start_task > end_task:
-        raise ValueError(f"{start_task=} cannot be larger than {end_task=}")
-    return (start_task, end_task)
+    if first_task_index < 0:
+        raise ValueError(f"{first_task_index=} cannot be smaller than 0")
+    elif last_task_index > num_tasks - 1:
+        raise ValueError(
+            f"{last_task_index=} cannot be larger than {(num_tasks-1)=}"
+        )
+    elif first_task_index > last_task_index:
+        raise ValueError(
+            f"{first_task_index=} cannot be larger than {last_task_index=}"
+        )
+    return (first_task_index, last_task_index)

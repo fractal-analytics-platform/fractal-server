@@ -23,7 +23,7 @@ from typing import Union
 from ...models import Workflow
 from .._common import execute_tasks
 from ..common import async_wrap
-from ..common import set_start_and_end_task
+from ..common import set_start_and_last_task_index
 from ..common import TaskParameters
 from ._submit_setup import _slurm_submit_setup
 from .executor import FractalSlurmExecutor
@@ -38,8 +38,8 @@ def _process_workflow(
     logger_name: str,
     workflow_dir: Path,
     workflow_dir_user: Path,
-    start_task: int,
-    end_task: int,
+    first_task_index: int,
+    last_task_index: int,
     slurm_user: Optional[str] = None,
     user_cache_dir: str,
     worker_init: Optional[Union[str, list[str]]] = None,
@@ -76,7 +76,9 @@ def _process_workflow(
     ) as executor:
         output_task_pars = execute_tasks(
             executor=executor,
-            task_list=workflow.task_list[start_task : (end_task + 1)],  # noqa
+            task_list=workflow.task_list[
+                first_task_index : (last_task_index + 1)  # noqa
+            ],  # noqa
             task_pars=TaskParameters(
                 input_paths=input_paths,
                 output_path=output_path,
@@ -103,8 +105,8 @@ async def process_workflow(
     user_cache_dir: Optional[str] = None,
     slurm_user: Optional[str] = None,
     worker_init: Optional[str] = None,
-    start_task: Optional[int] = None,
-    end_task: Optional[int] = None,
+    first_task_index: Optional[int] = None,
+    last_task_index: Optional[int] = None,
 ) -> dict[str, Any]:
     """
     Process workflow (SLURM backend public interface)
@@ -112,10 +114,12 @@ async def process_workflow(
     Cf. [process_workflow][fractal_server.app.runner._local.process_workflow]
     """
 
-    # Set values of start_task and end_task
+    # Set values of first_task_index and last_task_index
     num_tasks = len(workflow.task_list)
-    start_task, end_task = set_start_and_end_task(
-        num_tasks, start_task=start_task, end_task=end_task
+    first_task_index, last_task_index = set_start_and_last_task_index(
+        num_tasks,
+        first_task_index=first_task_index,
+        last_task_index=last_task_index,
     )
 
     output_dataset_metadata = await async_wrap(_process_workflow)(
@@ -129,7 +133,7 @@ async def process_workflow(
         slurm_user=slurm_user,
         user_cache_dir=user_cache_dir,
         worker_init=worker_init,
-        start_task=start_task,
-        end_task=end_task,
+        first_task_index=first_task_index,
+        last_task_index=last_task_index,
     )
     return output_dataset_metadata

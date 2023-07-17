@@ -261,8 +261,9 @@ async def test_project_apply_workflow_subset(
 
         debug(workflow)
 
-        # This job (with no start_task or end_task) is submitted correctly (and
-        # then fails, because tasks have invalid `command` values)
+        # This job (with no first_task_index or last_task_index) is submitted
+        # correctly (and then fails, because tasks have invalid `command`
+        # values)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={dataset1.id}"
@@ -275,14 +276,14 @@ async def test_project_apply_workflow_subset(
         res = await client.get(f"{PREFIX}/project/{project.id}/job/{job_id}")
         assert res.json()["status"] == "failed"
 
-        # These two jobs (with valid start_task and end_task) are submitted
-        # correctly (and then fail)
+        # These two jobs (with valid first_task_index and last_task_index) are
+        # submitted correctly (and then fail)
         # Case A
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={dataset1.id}"
             f"&output_dataset_id={dataset2.id}",
-            json=dict(start_task=0, end_task=0),
+            json=dict(first_task_index=0, last_task_index=0),
         )
         debug(res.json())
         job_id = res.json()["id"]
@@ -294,7 +295,7 @@ async def test_project_apply_workflow_subset(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={dataset2.id}"
             f"&output_dataset_id={dataset3.id}",
-            json=dict(start_task=1, end_task=1),
+            json=dict(first_task_index=1, last_task_index=1),
         )
         debug(res.json())
         job_id = res.json()["id"]
@@ -302,44 +303,45 @@ async def test_project_apply_workflow_subset(
         res = await client.get(f"{PREFIX}/project/{project.id}/job/{job_id}")
         assert res.json()["status"] == "failed"
 
-        # Jobs with invalid start_task and end_task are not submitted
+        # Jobs with invalid first_task_index and last_task_index are not
+        # submitted
 
         # Case A (type mismatch for workflow subset)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={dataset1.id}"
             f"&output_dataset_id={dataset3.id}",
-            json=dict(start_task=0, end_task=0),
+            json=dict(first_task_index=0, last_task_index=0),
         )
         debug(res.json())
         assert res.status_code == 422
 
-        # Case B (invalid start_task)
+        # Case B (invalid first_task_index)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={dataset1.id}"
             f"&output_dataset_id={dataset3.id}",
-            json=dict(start_task=-2, end_task=1),
+            json=dict(first_task_index=-2, last_task_index=1),
         )
         debug(res.json())
         assert res.status_code == 422
 
-        # Case C (invalid end_task)
+        # Case C (invalid last_task_index)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={dataset1.id}"
             f"&output_dataset_id={dataset3.id}",
-            json=dict(start_task=0, end_task=99),
+            json=dict(first_task_index=0, last_task_index=99),
         )
         debug(res.json())
         assert res.status_code == 422
 
-        # Case D (start_end and end_task exchanged)
+        # Case D (start_end and last_task_index exchanged)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={dataset1.id}"
             f"&output_dataset_id={dataset3.id}",
-            json=dict(start_task=1, end_task=0),
+            json=dict(first_task_index=1, last_task_index=0),
         )
         debug(res.json())
         assert res.status_code == 422
