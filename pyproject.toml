@@ -10,6 +10,12 @@ authors = [
 readme = "README.md"
 homepage = "https://github.com/fractal-analytics-platform/fractal-server"
 license = "BSD-3-Clause"
+exclude = [
+"fractal_server/.gitignore",
+"fractal_server/common/tests",
+"fractal_server/common/.git*",
+"fractal_server/common/.pre-commit-config.yaml",
+]
 
 
 [tool.poetry.dependencies]
