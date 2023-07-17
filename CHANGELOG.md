@@ -9,6 +9,7 @@
 * Simplify internal function for execution of a list of task (\#780).
 * Exclude `common/tests` and other git-related files from build (\#795).
 * Remove development dependencies `Pillow` and `pytest-mock` (\#795).
+* Remove obsolete folders from `tests/data` folder (\#795).
 
 # 1.3.3
 
