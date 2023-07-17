@@ -1,14 +1,11 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
-# 1.3.5
-
-* Support execution of a workflow subset (\#784).
-* Handle failures in `submit_workflow` without raising errors (\#787).
-* Improve logging in background task collection (\#776).
-
 # 1.3.4
 
+* Support execution of a workflow subset (\#784).
 * Fix internal server error for invalid `task_id` in `create_workflowtask` endpoint (\#782).
+* Improve logging in background task collection (\#776).
+* Handle failures in `submit_workflow` without raising errors (\#787).
 * Simplify internal function for execution of a list of task (\#780).
 
 # 1.3.3
