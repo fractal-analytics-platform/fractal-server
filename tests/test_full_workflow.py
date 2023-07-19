@@ -600,3 +600,105 @@ async def test_non_python_task(
         with open(f"{working_dir}/0.err", "r") as f:
             err = f.read()
         assert "This goes to standard error" in err
+
+
+@pytest.mark.parametrize("backend", backends_available)
+async def test_non_executable_task_command(
+    db,
+    client,
+    MockCurrentUser,
+    testdata_path,
+    tmp777_path,
+    collect_packages,
+    task_factory,
+    project_factory,
+    dataset_factory,
+    resource_factory,
+    backend,
+    request,
+    override_settings_factory,
+    tmp_path,
+):
+    """
+    Execute a workflow with a task which has an invalid `command` (i.e. it is
+    not executable).
+    """
+    override_settings_factory(
+        FRACTAL_RUNNER_BACKEND=backend,
+        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
+    )
+    if backend == "slurm":
+        override_settings_factory(
+            FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
+        )
+
+    debug(f"Testing with {backend=}")
+
+    if backend == "slurm":
+        request.getfixturevalue("monkey_slurm")
+        request.getfixturevalue("relink_python_interpreter")
+        request.getfixturevalue("cfut_jobs_finished")
+        user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
+        user_kwargs = dict(cache_dir=user_cache_dir)
+    else:
+        user_kwargs = {}
+
+    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs) as user:
+
+        # Create task
+        task = await task_factory(
+            name="invalid-task-command",
+            source="some_source",
+            command=str(testdata_path / "non_executable_task.sh"),
+            input_type="zarr",
+            output_type="zarr",
+        )
+        debug(task)
+
+        # Create project
+        project = await project_factory(user)
+
+        # Create workflow
+        payload = dict(name="WF")
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/", json=payload
+        )
+        workflow = res.json()
+        debug(workflow)
+        assert res.status_code == 201
+
+        # Add task to workflow
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow['id']}/wftask/"
+            f"?task_id={task.id}",
+            json=dict(),
+        )
+        debug(res.json())
+        assert res.status_code == 201
+
+        # Create dataset
+        dataset = await dataset_factory(
+            project, name="input", type="zarr", read_only=False
+        )
+        await resource_factory(path=str(tmp_path / "dir"), dataset=dataset)
+
+        # Submit workflow
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow['id']}/apply/"
+            f"?input_dataset_id={dataset.id}"
+            f"&output_dataset_id={dataset.id}",
+            json={},
+        )
+        job_data = res.json()
+        debug(job_data)
+        assert res.status_code == 202
+
+        # Check that the workflow execution failed as expected
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/job/{job_data['id']}"
+        )
+        assert res.status_code == 200
+        job = res.json()
+        debug(job)
+        assert job["status"] == "failed"
+        assert "Hint: make sure that it is executable" in job["log"]
