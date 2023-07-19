@@ -200,6 +200,13 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
     """
     Abstraction for SLURM parameters
 
+    **NOTE**: `SlurmConfig` objects are created internally in `fractal-server`,
+    and they are not meant to be initialized by the user; the same holds for
+    `SlurmConfig` attributes (e.g. `mem_per_task_MB` or `cpus_per_task`), which
+    are not meant to be part of the `FRACTAL_SLURM_CONFIG_FILE` JSON file
+    (details on the expected file content are defined in
+    [`SlurmConfigFile`](./#fractal_server.app.runner._slurm._slurm_config.SlurmConfigFile)).
+
     Part of the attributes map directly to some of the SLURM attribues (see
     https://slurm.schedmd.com/sbatch.html), e.g. `partition`. Other attributes
     are metaparameters which are needed in fractal-server to combine multiple
