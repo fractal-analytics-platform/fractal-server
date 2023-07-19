@@ -1,5 +1,7 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+* Clarify documentation about `SlurmConfig` (\#798).
+
 # 1.3.4
 
 * Support execution of a workflow subset (\#784).
