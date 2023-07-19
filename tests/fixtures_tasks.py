@@ -16,7 +16,7 @@ class MockTask(BaseModel):
     name: str
     command: str
     parallelization_level: Optional[str] = None
-    meta: dict = {}
+    meta: Optional[dict] = {}
 
 
 class MockWorkflowTask(BaseModel):
