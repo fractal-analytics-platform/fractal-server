@@ -1,7 +1,14 @@
 # SLURM backend
 
-(refer to the [slurm](../../../reference/fractal_server/app/runner/_slurm)
-module for more details)
+Refer to the [slurm](../../../reference/fractal_server/app/runner/_slurm)
+module for more details.
+
+**NOTE**: `SlurmConfig` objects are created internally in `fractal-server`, and
+they are not meant to be initialized by the user; the same holds for
+`SlurmConfig` attributes (e.g. `mem_per_task_MB` or `cpus_per_task`), which are
+not meant to be part of the `FRACTAL_SLURM_CONFIG_FILE` JSON file (details on
+the expected file content are defined in
+[`SlurmConfigFile`](../../../reference/fractal_server/app/runner/_slurm/_slurm_config/#fractal_server.app.runner._slurm._slurm_config.SlurmConfigFile)).
 
 ## SLURM configuration
 
