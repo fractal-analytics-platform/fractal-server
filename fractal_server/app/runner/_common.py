@@ -6,6 +6,7 @@ runner backends and that should not be exposed outside of the runner
 subsystem.
 """
 import json
+import shutil
 import subprocess  # nosec
 import traceback
 from concurrent.futures import Executor
@@ -152,6 +153,14 @@ def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
                             exit code (e.g. due to the subprocess receiving a
                             TERM or KILL signal)
     """
+
+    # Verify that task command is executable
+    if shutil.which(shlex_split(cmd)[0]) is None:
+        msg = (
+            f'Command "{shlex_split(cmd)[0]}" is not valid. '
+            "Hint: make sure that it is executable."
+        )
+        raise TaskExecutionError(msg)
 
     fp_stdout = open(stdout, "w")
     fp_stderr = open(stderr, "w")
