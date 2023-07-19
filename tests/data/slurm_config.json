@@ -1,6 +1,8 @@
 {
   "default_slurm_config": {
-      "partition": "main"
+      "partition": "main",
+      "cpus_per_task": 1,
+      "mem": "100M"
   },
   "gpu_slurm_config": {},
   "batching_config": {

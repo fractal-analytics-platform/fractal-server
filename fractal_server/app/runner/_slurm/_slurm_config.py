@@ -202,9 +202,9 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
 
     **NOTE**: `SlurmConfig` objects are created internally in `fractal-server`,
     and they are not meant to be initialized by the user; the same holds for
-    `SlurmConfig` attributes (e.g. `mem_per_task_MB` or `cpus_per_task`), which
-    are not meant to be part of the `FRACTAL_SLURM_CONFIG_FILE` JSON file
-    (details on the expected file content are defined in
+    `SlurmConfig` attributes (e.g. `mem_per_task_MB`), which are not meant to
+    be part of the `FRACTAL_SLURM_CONFIG_FILE` JSON file (details on the
+    expected file content are defined in
     [`SlurmConfigFile`](./#fractal_server.app.runner._slurm._slurm_config.SlurmConfigFile)).
 
     Part of the attributes map directly to some of the SLURM attribues (see
@@ -480,6 +480,7 @@ def get_slurm_config(
     3. Properties in `wftask.meta` (which, for `WorkflowTask`s added through
        `Workflow.insert_task`, also includes `wftask.task.meta`);
 
+    Note: `wftask.meta` may be `None`.
 
     Arguments:
         wftask:
@@ -502,7 +503,7 @@ def get_slurm_config(
     """
 
     logger.debug(
-        "[get_slurm_config] WorkflowTask meta attribute: " f"{wftask.meta=}"
+        "[get_slurm_config] WorkflowTask meta attribute: {wftask.meta=}"
     )
 
     # Incorporate slurm_env.default_slurm_config
@@ -531,7 +532,10 @@ def get_slurm_config(
     #    slurm_env which are not under the `needs_gpu` subgroup
     # 2. This block of definitions has lower priority than whatever comes next
     #    (i.e. from WorkflowTask.meta).
-    needs_gpu = wftask.meta.get("needs_gpu", False)
+    if wftask.meta is not None:
+        needs_gpu = wftask.meta.get("needs_gpu", False)
+    else:
+        needs_gpu = False
     logger.debug(f"[get_slurm_config] {needs_gpu=}")
     if needs_gpu:
         for key, value in slurm_env.gpu_slurm_config.dict(
@@ -542,12 +546,12 @@ def get_slurm_config(
             slurm_dict["mem_per_task_MB"] = slurm_env.gpu_slurm_config.mem
 
     # Number of CPUs per task, for multithreading
-    if "cpus_per_task" in wftask.meta:
+    if wftask.meta is not None and "cpus_per_task" in wftask.meta:
         cpus_per_task = int(wftask.meta["cpus_per_task"])
         slurm_dict["cpus_per_task"] = cpus_per_task
 
     # Required memory per task, in MB
-    if "mem" in wftask.meta:
+    if wftask.meta is not None and "mem" in wftask.meta:
         raw_mem = wftask.meta["mem"]
         mem_per_task_MB = _parse_mem_value(raw_mem)
         slurm_dict["mem_per_task_MB"] = mem_per_task_MB
@@ -557,11 +561,15 @@ def get_slurm_config(
     slurm_dict["job_name"] = job_name
 
     # Optional SLURM arguments and extra lines
-    for key in ["time", "account", "gres", "constraint"]:
-        value = wftask.meta.get(key, None)
-        if value:
-            slurm_dict[key] = value
-    extra_lines = wftask.meta.get("extra_lines", [])
+    if wftask.meta is not None:
+        for key in ["time", "account", "gres", "constraint"]:
+            value = wftask.meta.get(key, None)
+            if value:
+                slurm_dict[key] = value
+    if wftask.meta is not None:
+        extra_lines = wftask.meta.get("extra_lines", [])
+    else:
+        extra_lines = []
     extra_lines = slurm_dict.get("extra_lines", []) + extra_lines
     if len(set(extra_lines)) != len(extra_lines):
         logger.debug(
@@ -572,13 +580,19 @@ def get_slurm_config(
     slurm_dict["extra_lines"] = extra_lines
 
     # Job-batching parameters (if None, they will be determined heuristically)
-    tasks_per_job = wftask.meta.get("tasks_per_job", None)
-    parallel_tasks_per_job = wftask.meta.get("parallel_tasks_per_job", None)
+    if wftask.meta is not None:
+        tasks_per_job = wftask.meta.get("tasks_per_job", None)
+        parallel_tasks_per_job = wftask.meta.get(
+            "parallel_tasks_per_job", None
+        )
+    else:
+        tasks_per_job = None
+        parallel_tasks_per_job = None
     slurm_dict["tasks_per_job"] = tasks_per_job
     slurm_dict["parallel_tasks_per_job"] = parallel_tasks_per_job
 
     # Put everything together
-    logger.debug(
+    logger.error(
         "[get_slurm_config] Now create a SlurmConfig object based "
         f"on {slurm_dict=}"
     )
