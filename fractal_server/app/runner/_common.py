@@ -7,6 +7,7 @@ subsystem.
 """
 import json
 import subprocess  # nosec
+import traceback
 from concurrent.futures import Executor
 from functools import lru_cache
 from functools import partial
@@ -151,6 +152,7 @@ def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
                             exit code (e.g. due to the subprocess receiving a
                             TERM or KILL signal)
     """
+
     fp_stdout = open(stdout, "w")
     fp_stderr = open(stderr, "w")
     try:
@@ -411,12 +413,19 @@ def call_parallel_task(
     component_list = task_pars_depend.metadata[wftask.parallelization_level]
 
     # Backend-specific configuration
-    extra_setup = submit_setup_call(
-        wftask=wftask,
-        task_pars=task_pars_depend,
-        workflow_dir=workflow_dir,
-        workflow_dir_user=workflow_dir_user,
-    )
+    try:
+        extra_setup = submit_setup_call(
+            wftask=wftask,
+            task_pars=task_pars_depend,
+            workflow_dir=workflow_dir,
+            workflow_dir_user=workflow_dir_user,
+        )
+    except Exception as e:
+        tb = "".join(traceback.format_tb(e.__traceback__))
+        raise RuntimeError(
+            f"{type(e)} error in {submit_setup_call=}\n"
+            f"Original traceback:\n{tb}"
+        )
 
     # Preliminary steps
     partial_call_task = partial(
@@ -518,15 +527,23 @@ def execute_tasks(
                 submit_setup_call=submit_setup_call,
             )
         else:
+            # Call backend-specific submit_setup_call
+            try:
+                extra_setup = submit_setup_call(
+                    wftask=this_wftask,
+                    task_pars=current_task_pars,
+                    workflow_dir=workflow_dir,
+                    workflow_dir_user=workflow_dir_user,
+                )
+            except Exception as e:
+                tb = "".join(traceback.format_tb(e.__traceback__))
+                raise RuntimeError(
+                    f"{type(e)} error in {submit_setup_call=}\n"
+                    f"Original traceback:\n{tb}"
+                )
             # NOTE: executor.submit(call_single_task, ...) is non-blocking,
             # i.e. the returned future may have `this_wftask_future.done() =
             # False`. We make it blocking right away, by calling `.result()`
-            extra_setup = submit_setup_call(
-                wftask=this_wftask,
-                task_pars=current_task_pars,
-                workflow_dir=workflow_dir,
-                workflow_dir_user=workflow_dir_user,
-            )
             this_wftask_future = executor.submit(
                 call_single_task,
                 wftask=this_wftask,
