@@ -18,10 +18,10 @@ from ...db import DBSyncSession
 from ...db import get_db
 from ...db import get_sync_db
 from ...models import ApplyWorkflow
-from ...models import JobStatusType
 from ...models import ApplyWorkflowCreate
 from ...models import ApplyWorkflowRead
 from ...models import Dataset
+from ...models import JobStatusType
 from ...models import LinkUserProject
 from ...models import Project
 from ...models import ProjectCreate
@@ -49,7 +49,9 @@ async def get_list_project(
     Return list of projects user is member of
     """
     stm = (
-        select(Project).join(LinkUserProject).where(LinkUserProject.user_id == user.id)
+        select(Project)
+        .join(LinkUserProject)
+        .where(LinkUserProject.user_id == user.id)
     )
     res = await db.execute(stm)
     project_list = res.scalars().all()
@@ -250,14 +252,16 @@ async def apply_workflow(
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
-                    f"FRACTAL_RUNNER_BACKEND={backend}, " f"but {user.slurm_user=}."
+                    f"FRACTAL_RUNNER_BACKEND={backend}, "
+                    f"but {user.slurm_user=}."
                 ),
             )
         if not user.cache_dir:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
-                    f"FRACTAL_RUNNER_BACKEND={backend}, " f"but {user.cache_dir=}."
+                    f"FRACTAL_RUNNER_BACKEND={backend}, "
+                    f"but {user.cache_dir=}."
                 ),
             )
 
@@ -301,12 +305,14 @@ async def apply_workflow(
         select(ApplyWorkflow)
         .where(ApplyWorkflow.output_dataset_id == output_dataset_id)
         .where(
-            ApplyWorkflow.status.in_([JobStatusType.SUBMITTED, JobStatusType.RUNNING])
+            ApplyWorkflow.status.in_(
+                [JobStatusType.SUBMITTED, JobStatusType.RUNNING]
+            )
         )
     )
 
     res = await db.execute(stm)
-    if res.scalars().all() != 0:
+    if res.scalars().all():
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Output dataset already in use",
