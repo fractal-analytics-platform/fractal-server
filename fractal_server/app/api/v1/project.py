@@ -303,7 +303,7 @@ async def apply_workflow(
 
     stm = (
         select(ApplyWorkflow)
-        .where(ApplyWorkflow.output_dataset_id == output_dataset_id)
+        .where(ApplyWorkflow.output_dataset_id == job.output_dataset_id)
         .where(
             ApplyWorkflow.status.in_(
                 [JobStatusType.SUBMITTED, JobStatusType.RUNNING]
