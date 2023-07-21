@@ -53,6 +53,7 @@ async def test_project_apply_failures(
         )
         debug(res.json())
         assert res.status_code == 404
+
         # (B) Workflow with wrong project_id
         res = await client.post(
             f"{PREFIX}/project/{project1.id}/workflow/{workflow3.id}/apply/"
