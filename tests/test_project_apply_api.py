@@ -12,8 +12,6 @@ async def test_project_apply_failures(
     resource_factory,
     workflow_factory,
     task_factory,
-    job_factory,
-    tmp_path,
 ):
     async with MockCurrentUser(persist=True) as user:
         project1 = await project_factory(user)
@@ -126,32 +124,79 @@ async def test_project_apply_failures(
         assert res.status_code == 422
         assert "empty task list" in res.json()["detail"]
 
-        # (I) Another job with the same output_dataset is already running
-        workflow4 = await workflow_factory(project_id=project1.id)
+
+async def test_project_apply_existing_job(
+    db,
+    client,
+    project_factory,
+    job_factory,
+    workflow_factory,
+    dataset_factory,
+    resource_factory,
+    task_factory,
+    tmp_path,
+    MockCurrentUser,
+):
+
+    async with MockCurrentUser(persist=True) as user:
+        project = await project_factory(user)
+        input_dataset = await dataset_factory(project, name="input")
+        output_dataset_A = await dataset_factory(project, name="output-A")
+        output_dataset_B = await dataset_factory(project, name="output-B")
+        await resource_factory(input_dataset)
+        await resource_factory(output_dataset_A)
+        await resource_factory(output_dataset_B)
+
         new_task = await task_factory(
             input_type="Any",
             output_type="Any",
-            source="new_source",
         )
-        await workflow4.insert_task(new_task.id, db=db)
-        existing_job = await job_factory(
-            project_id=project1.id,
+        workflow = await workflow_factory(project_id=project.id)
+        await workflow.insert_task(new_task.id, db=db)
+
+        # Existing jobs with done/running status
+        existing_job_A_done = await job_factory(
+            project_id=project.id,
             input_dataset_id=input_dataset.id,
-            output_dataset_id=output_dataset.id,
-            workflow_id=workflow4.id,
+            output_dataset_id=output_dataset_A.id,
+            workflow_id=workflow.id,
             working_dir=tmp_path.as_posix(),
+            status="done",
         )
-        debug(existing_job)
+        debug(existing_job_A_done)
+        existing_job_B_done = await job_factory(
+            project_id=project.id,
+            input_dataset_id=input_dataset.id,
+            output_dataset_id=output_dataset_B.id,
+            workflow_id=workflow.id,
+            working_dir=tmp_path.as_posix(),
+            status="running",
+        )
+        debug(existing_job_B_done)
+
+        # API call succeeds when the other job with the same output_dataset has
+        # status="done"
         res = await client.post(
-            f"{PREFIX}/project/{project1.id}/workflow/{workflow4.id}/apply/"
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
-            f"&output_dataset_id={output_dataset.id}",
+            f"&output_dataset_id={output_dataset_A.id}",
+            json={},
+        )
+        debug(res.json())
+        assert res.status_code == 202
+
+        # API call fails when the other job with the same output_dataset has
+        # status="done"
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
+            f"?input_dataset_id={input_dataset.id}"
+            f"&output_dataset_id={output_dataset_B.id}",
             json={},
         )
         debug(res.json())
         assert res.status_code == 422
         assert (
-            f"Output dataset {output_dataset.id} is already in use"
+            f"Output dataset {output_dataset_B.id} is already in use"
             in res.json()["detail"]
         )
 
