@@ -293,6 +293,28 @@ async def apply_workflow(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)
         )
 
+    # Check that no other job with the same output_dataset_id is either
+    # SUBMITTED or RUNNING
+    stm = (
+        select(ApplyWorkflow)
+        .where(ApplyWorkflow.output_dataset_id == output_dataset_id)
+        .where(
+            ApplyWorkflow.status.in_(
+                [JobStatusType.SUBMITTED, JobStatusType.RUNNING]
+            )
+        )
+    )
+    res = await db.execute(stm)
+    if res.scalars().all():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Output dataset {output_dataset_id} is already in use "
+                "in pending/running job(s)."
+            ),
+        )
+
+    # Add new ApplyWorkflow object to DB
     job = ApplyWorkflow(
         project_id=project_id,
         input_dataset_id=input_dataset_id,
@@ -300,24 +322,6 @@ async def apply_workflow(
         workflow_id=workflow_id,
         **apply_workflow.dict(),
     )
-
-    stm = (
-        select(ApplyWorkflow)
-        .where(ApplyWorkflow.output_dataset_id == job.output_dataset_id)
-        .where(
-            ApplyWorkflow.status.in_(
-                [JobStatusType.SUBMITTED, JobStatusType.RUNNING]
-            )
-        )
-    )
-
-    res = await db.execute(stm)
-    if res.scalars().all():
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Output dataset already in use",
-        )
-
     db.add(job)
     await db.commit()
     await db.refresh(job)
