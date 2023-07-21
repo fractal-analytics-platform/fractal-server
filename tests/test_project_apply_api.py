@@ -12,6 +12,8 @@ async def test_project_apply_failures(
     resource_factory,
     workflow_factory,
     task_factory,
+    job_factory,
+    tmp_path,
 ):
     async with MockCurrentUser(persist=True) as user:
         project1 = await project_factory(user)
@@ -42,7 +44,7 @@ async def test_project_apply_failures(
         task = await task_factory()
         await workflow1.insert_task(task.id, db=db)
 
-        # Not existing workflow
+        # (A) Not existing workflow
         res = await client.post(
             f"{PREFIX}/project/{project1.id}/workflow/123/apply/"
             f"?input_dataset_id={input_dataset.id}"
@@ -51,8 +53,7 @@ async def test_project_apply_failures(
         )
         debug(res.json())
         assert res.status_code == 404
-
-        # Workflow with wrong project_id
+        # (B) Workflow with wrong project_id
         res = await client.post(
             f"{PREFIX}/project/{project1.id}/workflow/{workflow3.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
@@ -62,7 +63,7 @@ async def test_project_apply_failures(
         debug(res.json())
         assert res.status_code == 422
 
-        # Not existing output dataset
+        # (C) Not existing output dataset
         res = await client.post(
             f"{PREFIX}/project/{project1.id}/workflow/{workflow1.id}/apply/"
             f"?input_dataset_id={input_dataset.id}&output_dataset_id=123",
@@ -71,7 +72,7 @@ async def test_project_apply_failures(
         debug(res.json())
         assert res.status_code == 404
 
-        # Missing output_dataset
+        # (D) Missing output_dataset
         res = await client.post(
             f"{PREFIX}/project/{project1.id}/workflow/{workflow1.id}/apply/"
             f"?input_dataset_id={input_dataset.id}",
@@ -80,7 +81,7 @@ async def test_project_apply_failures(
         debug(res.json())
         assert res.status_code == 422
 
-        # Read-only output_dataset
+        # (E) Read-only output_dataset
         res = await client.post(
             f"{PREFIX}/project/{project1.id}/workflow/{workflow1.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
@@ -91,7 +92,7 @@ async def test_project_apply_failures(
         assert res.status_code == 422
         assert "read_only" in res.json()["detail"]
 
-        # output_dataset with wrong type
+        # (F) output_dataset with wrong type
         res = await client.post(
             f"{PREFIX}/project/{project1.id}/workflow/{workflow1.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
@@ -102,7 +103,7 @@ async def test_project_apply_failures(
         assert res.status_code == 422
         assert "Incompatible types" in res.json()["detail"]
 
-        # output_dataset with two resources
+        # (G) output_dataset with two resources
         res = await client.post(
             f"{PREFIX}/project/{project1.id}/workflow/{workflow1.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
@@ -113,7 +114,7 @@ async def test_project_apply_failures(
         assert res.status_code == 422
         assert "must have a single resource" in res.json()["detail"]
 
-        # Workflow without tasks
+        # (H) Workflow without tasks
         res = await client.post(
             f"{PREFIX}/project/{project1.id}/workflow/{workflow2.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
@@ -123,6 +124,32 @@ async def test_project_apply_failures(
         debug(res.json())
         assert res.status_code == 422
         assert "empty task list" in res.json()["detail"]
+
+        # (I) Another job with the same output_dataset is already running
+        workflow4 = await workflow_factory(project_id=project1.id)
+        new_task = await task_factory(
+            input_type="Any",
+            output_type="Any",
+            source="new_source",
+        )
+        await workflow4.insert_task(new_task.id, db=db)
+        existing_job = await job_factory(
+            project_id=project1.id,
+            input_dataset_id=input_dataset.id,
+            output_dataset_id=output_dataset.id,
+            workflow_id=workflow4.id,
+            working_dir=tmp_path.as_posix(),
+        )
+        debug(existing_job)
+        res = await client.post(
+            f"{PREFIX}/project/{project1.id}/workflow/{workflow4.id}/apply/"
+            f"?input_dataset_id={input_dataset.id}"
+            f"&output_dataset_id={output_dataset.id}",
+            json={},
+        )
+        debug(res.json())
+        assert res.status_code == 422
+        assert "Output dataset already in use" in res.json()["detail"]
 
 
 async def test_project_apply_missing_user_attributes(
