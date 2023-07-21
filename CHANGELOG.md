@@ -1,5 +1,6 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+* Prevent execution of multiple jobs with the same output dataset (\#801).
 * Improve handling of errors raised in `get_slurm_config` (\#800).
 * Raise an appropriate error if a task command is not executable (\#800).
 * Clarify documentation about `SlurmConfig` (\#798).

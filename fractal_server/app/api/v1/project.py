@@ -21,6 +21,7 @@ from ...models import ApplyWorkflow
 from ...models import ApplyWorkflowCreate
 from ...models import ApplyWorkflowRead
 from ...models import Dataset
+from ...models import JobStatusType
 from ...models import LinkUserProject
 from ...models import Project
 from ...models import ProjectCreate
@@ -189,7 +190,6 @@ async def apply_workflow(
         get_sync_db
     ),  # FIXME: why both sync and async?  # noqa
 ) -> Optional[ApplyWorkflowRead]:
-
     output = await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=input_dataset_id,
@@ -293,6 +293,28 @@ async def apply_workflow(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)
         )
 
+    # Check that no other job with the same output_dataset_id is either
+    # SUBMITTED or RUNNING
+    stm = (
+        select(ApplyWorkflow)
+        .where(ApplyWorkflow.output_dataset_id == output_dataset_id)
+        .where(
+            ApplyWorkflow.status.in_(
+                [JobStatusType.SUBMITTED, JobStatusType.RUNNING]
+            )
+        )
+    )
+    res = await db.execute(stm)
+    if res.scalars().all():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Output dataset {output_dataset_id} is already in use "
+                "in pending/running job(s)."
+            ),
+        )
+
+    # Add new ApplyWorkflow object to DB
     job = ApplyWorkflow(
         project_id=project_id,
         input_dataset_id=input_dataset_id,
