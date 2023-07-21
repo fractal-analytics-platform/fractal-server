@@ -137,6 +137,10 @@ async def test_project_apply_existing_job(
     tmp_path,
     MockCurrentUser,
 ):
+    """
+    Test behavior for when another job with the same output_dataset_id already
+    exists.
+    """
 
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
