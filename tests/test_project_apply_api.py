@@ -149,7 +149,10 @@ async def test_project_apply_failures(
         )
         debug(res.json())
         assert res.status_code == 422
-        assert "Output dataset already in use" in res.json()["detail"]
+        assert (
+            f"Output dataset {output_dataset.id} is already in use"
+            in res.json()["detail"]
+        )
 
 
 async def test_project_apply_missing_user_attributes(
