@@ -321,8 +321,11 @@ async def apply_workflow(
         output_dataset_id=output_dataset_id,
         workflow_id=workflow_id,
         workflow_dump=dict(
-            workflow.dict(),
-            task_list=[wf_task.dict() for wf_task in workflow.task_list],
+            workflow.dict(exclude={"task_list"}),
+            task_list=[
+                dict(wf_task.task.dict(), task=wf_task.dict())
+                for wf_task in workflow.task_list
+            ],
         ),
         **apply_workflow.dict(),
     )

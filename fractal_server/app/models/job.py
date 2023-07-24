@@ -61,6 +61,8 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
             ID of the workflow being applied.
         status:
             Workflow status
+        workflow_dump:
+            Copy of the submitted workflow at the current timestamp.
         start_timestamp:
             Timestamp of when the run began.
         end_timestamp:
