@@ -286,6 +286,19 @@ def call_single_task(
     except KeyError:
         updated_metadata["history"] = [history]
 
+    # Update history / new version
+    wftask_dump = wftask.dict(exclude={"task"})
+    wftask_dump["task"] = wftask.task.dict()
+    new_history_item = dict(
+        workflowtask=wftask_dump,
+        status="done",
+        parallelization=None,
+    )
+    try:
+        updated_metadata["history_next"].append(new_history_item)
+    except KeyError:
+        updated_metadata["history_next"] = [new_history_item]
+
     out_task_parameters = TaskParameters(
         input_paths=[task_pars.output_path],
         output_path=task_pars.output_path,
@@ -306,7 +319,7 @@ def call_single_parallel_task(
     """
     Call a single instance of a parallel task
 
-    Parallel tasks need to run in several instances across the parallelisation
+    Parallel tasks need to run in several instances across the parallelization
     parameters. This function is responsible of running each single one of
     those instances.
 
@@ -321,7 +334,7 @@ def call_single_parallel_task(
 
     Args:
         component:
-            The parallelisation parameter.
+            The parallelization parameter.
         wftask:
             The task to execute.
         task_pars:
@@ -419,7 +432,9 @@ def call_parallel_task(
     if not workflow_dir_user:
         workflow_dir_user = workflow_dir
 
-    component_list = task_pars_depend.metadata[wftask.parallelization_level]
+    component_list = task_pars_depend.metadata[
+        wftask.parallelization_level  # type: ignore[index]
+    ]
 
     # Backend-specific configuration
     try:
@@ -462,6 +477,22 @@ def call_parallel_task(
         task_pars_depend.metadata["history"].append(history)
     except KeyError:
         task_pars_depend.metadata["history"] = [history]
+
+    # Update history / new version
+    wftask_dump = wftask.dict(exclude={"task"})
+    wftask_dump["task"] = wftask.task.dict()
+    new_history_item = dict(
+        workflowtask=wftask_dump,
+        status="done",
+        parallelization=dict(
+            parallelization_level=wftask.parallelization_level,
+            component_list=component_list,
+        ),
+    )
+    try:
+        task_pars_depend.metadata["history_next"].append(new_history_item)
+    except KeyError:
+        task_pars_depend.metadata["history_next"] = [new_history_item]
 
     out_task_parameters = TaskParameters(
         input_paths=[task_pars_depend.output_path],
