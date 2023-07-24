@@ -434,6 +434,9 @@ async def test_project_apply_workflow_subset(
         )
         debug(res.json())
         assert res.json()["workflow_dump"] == dict(
-            workflow.dict(),
-            task_list=[wf_task.dict() for wf_task in workflow.task_list],
+            workflow.dict(exclude={"task_list"}),
+            task_list=[
+                dict(wf_task.task.dict(), task=wf_task.dict())
+                for wf_task in workflow.task_list
+            ],
         )
