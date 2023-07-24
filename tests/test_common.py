@@ -44,6 +44,12 @@ async def test_apply_wf_read():
         output_dataset_id=1,
         start_timestamp="2019-12-23T23:10:11.115310Z",
         status="good",
+        workflow_dump={
+            "name": "my workflow",
+            "id": 1,
+            "project_id": 1,
+            "task_list": [],
+        },
     )
 
     assert isinstance(x.start_timestamp, datetime)
