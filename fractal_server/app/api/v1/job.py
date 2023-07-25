@@ -12,12 +12,12 @@ from fastapi import status
 from fastapi.responses import StreamingResponse
 from sqlmodel import select
 
+from ....common.schemas import ApplyWorkflowRead
 from ....config import get_settings
 from ....syringe import Inject
 from ...db import AsyncSession
 from ...db import get_db
 from ...models import ApplyWorkflow
-from ...models import ApplyWorkflowRead
 from ...runner._common import METADATA_FILENAME
 from ...runner._common import SHUTDOWN_FILENAME
 from ...security import current_active_user

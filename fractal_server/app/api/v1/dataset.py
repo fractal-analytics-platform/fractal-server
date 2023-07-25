@@ -8,17 +8,17 @@ from fastapi import status
 from sqlmodel import or_
 from sqlmodel import select
 
+from ....common.schemas import DatasetCreate
+from ....common.schemas import DatasetRead
+from ....common.schemas import DatasetUpdate
+from ....common.schemas import ResourceCreate
+from ....common.schemas import ResourceRead
+from ....common.schemas import ResourceUpdate
 from ...db import AsyncSession
 from ...db import get_db
 from ...models import ApplyWorkflow
 from ...models import Dataset
-from ...models import DatasetCreate
-from ...models import DatasetRead
-from ...models import DatasetUpdate
 from ...models import Resource
-from ...models import ResourceCreate
-from ...models import ResourceRead
-from ...models import ResourceUpdate
 from ...security import current_active_user
 from ...security import User
 from ._aux_functions import _get_dataset_check_owner
