@@ -320,6 +320,13 @@ async def apply_workflow(
         input_dataset_id=input_dataset_id,
         output_dataset_id=output_dataset_id,
         workflow_id=workflow_id,
+        workflow_dump=dict(
+            workflow.dict(exclude={"task_list"}),
+            task_list=[
+                dict(wf_task.task.dict(exclude={"task"}), task=wf_task.dict())
+                for wf_task in workflow.task_list
+            ],
+        ),
         **apply_workflow.dict(),
     )
     db.add(job)
