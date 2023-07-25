@@ -225,7 +225,6 @@ async def test_project_apply_missing_user_attributes(
     override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm")
 
     async with MockCurrentUser(persist=True) as user:
-
         # Make sure that user.cache_dir was not set
         debug(user)
         assert user.cache_dir is None
@@ -425,3 +424,19 @@ async def test_project_apply_workflow_subset(
         )
         debug(res.json())
         assert res.status_code == 422
+
+        # Chech workflow_dump field
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
+            f"?input_dataset_id={dataset1.id}"
+            f"&output_dataset_id={dataset3.id}",
+            json=dict(first_task_index=0, last_task_index=1),
+        )
+        debug(res.json())
+        assert res.json()["workflow_dump"] == dict(
+            workflow.dict(exclude={"task_list"}),
+            task_list=[
+                dict(wf_task.task.dict(), task=wf_task.dict())
+                for wf_task in workflow.task_list
+            ],
+        )
