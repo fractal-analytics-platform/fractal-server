@@ -1,9 +1,11 @@
 from datetime import datetime
 from enum import Enum
+from typing import Any
 from typing import Optional
 
 from sqlalchemy import Column
 from sqlalchemy.types import DateTime
+from sqlalchemy.types import JSON
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
@@ -59,6 +61,8 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
             ID of the workflow being applied.
         status:
             Workflow status
+        workflow_dump:
+            Copy of the submitted workflow at the current timestamp.
         start_timestamp:
             Timestamp of when the run began.
         end_timestamp:
@@ -78,6 +82,9 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
         workflow:
             (Mapper attribute)
     """
+
+    class Config:
+        arbitrary_types_allowed = True
 
     id: Optional[int] = Field(default=None, primary_key=True)
     project_id: int = Field(foreign_key="project.id")
@@ -102,6 +109,8 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
         )
     )
     workflow: Workflow = Relationship()
+
+    workflow_dump: dict[str, Any] = Field(sa_column=Column(JSON))
 
     start_timestamp: datetime = Field(
         default_factory=get_timestamp,

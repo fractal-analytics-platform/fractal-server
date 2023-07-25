@@ -11,10 +11,15 @@ from fractal_server.app.models import Project
 from fractal_server.app.models import Resource
 
 PREFIX = "/api/v1"
+wf_dump = {
+    "name": "my workflow",
+    "id": 1,
+    "project_id": 1,
+    "task_list": [],
+}
 
 
 async def test_project_get(client, db, project_factory, MockCurrentUser):
-
     # unauthenticated
     res = await client.get(f"{PREFIX}/project/")
     assert res.status_code == 401
@@ -74,7 +79,6 @@ async def test_project_creation_name_constraint(
     assert res.status_code == 401
 
     async with MockCurrentUser(persist=True):
-
         # Create a first project named "new project"
         res = await client.post(f"{PREFIX}/project/", json=payload)
         assert res.status_code == 201
@@ -87,7 +91,6 @@ async def test_project_creation_name_constraint(
 
 async def test_project_edit_name_constraint(app, client, MockCurrentUser, db):
     async with MockCurrentUser(persist=True):
-
         # Create a first project named "name1"
         res = await client.post(f"{PREFIX}/project/", json=dict(name="name1"))
         assert res.status_code == 201
@@ -105,7 +108,6 @@ async def test_project_edit_name_constraint(app, client, MockCurrentUser, db):
         assert res.json()["detail"] == "Project name (name1) already in use"
 
     async with MockCurrentUser(persist=True):
-
         # Using another user, create a project named "name3"
         res = await client.post(f"{PREFIX}/project/", json=dict(name="name3"))
         assert res.status_code == 201
@@ -164,9 +166,7 @@ async def test_edit_project(
 
 
 async def test_add_dataset(app, client, MockCurrentUser, db):
-
     async with MockCurrentUser(persist=True):
-
         # CREATE A PROJECT
 
         res = await client.post(
@@ -244,9 +244,7 @@ async def test_add_dataset(app, client, MockCurrentUser, db):
 
 
 async def test_dataset_get(app, client, MockCurrentUser, db):
-
     async with MockCurrentUser(persist=True):
-
         # Create a project
         res = await client.post(
             f"{PREFIX}/project/",
@@ -276,9 +274,7 @@ async def test_dataset_get(app, client, MockCurrentUser, db):
 
 
 async def test_add_dataset_local_path_error(app, client, MockCurrentUser, db):
-
     async with MockCurrentUser(persist=True):
-
         # CREATE A PROJECT
 
         res = await client.post(
@@ -333,7 +329,6 @@ async def test_add_dataset_local_path_error(app, client, MockCurrentUser, db):
 async def test_delete_project(
     client, MockCurrentUser, db, job_factory, workflow_factory, tmp_path
 ):
-
     async with MockCurrentUser(persist=True):
         res = await client.get(f"{PREFIX}/project/")
         data = res.json()
@@ -367,6 +362,7 @@ async def test_delete_project(
             working_dir=(tmp_path / "some_working_dir").as_posix(),
             input_dataset_id=dataset_id,
             output_dataset_id=dataset_id,
+            worflow_dump=wf_dump,
         )
 
         # Check that a project-related job exists
@@ -497,6 +493,7 @@ async def test_job_list(
             working_dir=(tmp_path / "some_working_dir").as_posix(),
             input_dataset_id=input_dataset.id,
             output_dataset_id=output_dataset.id,
+            workflow_dump=wf_dump,
         )
         debug(job)
 
@@ -531,6 +528,7 @@ async def test_job_download_logs(
             working_dir=working_dir,
             input_dataset_id=input_dataset.id,
             output_dataset_id=output_dataset.id,
+            workflow_dump=wf_dump,
         )
         debug(job)
 
@@ -590,7 +588,6 @@ async def test_get_job_list(
     client,
 ):
     async with MockCurrentUser(persist=True) as user:
-
         project = await project_factory(user)
 
         res = await client.get(f"{PREFIX}/project/{project.id}/job/")
@@ -607,6 +604,7 @@ async def test_get_job_list(
                 input_dataset_id=dataset.id,
                 output_dataset_id=dataset.id,
                 workflow_id=workflow.id,
+                workflow_dump=wf_dump,
             )
 
         res = await client.get(f"{PREFIX}/project/{project.id}/job/")

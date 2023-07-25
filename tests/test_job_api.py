@@ -21,19 +21,25 @@ async def test_stop_job(
     tmp_path,
     override_settings_factory,
 ):
-
     override_settings_factory(FRACTAL_RUNNER_BACKEND=backend)
 
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
         wf = await workflow_factory(project_id=project.id)
         ds = await dataset_factory(project)
+        wf_dump = {
+            "name": "my workflow",
+            "id": 1,
+            "project_id": 1,
+            "task_list": [],
+        }
         job = await job_factory(
             working_dir=tmp_path.as_posix(),
             project_id=project.id,
             input_dataset_id=ds.id,
             output_dataset_id=ds.id,
             working_id=wf.id,
+            workflow_dump=wf_dump,
         )
 
         debug(job)
