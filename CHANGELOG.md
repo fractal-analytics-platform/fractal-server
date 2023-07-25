@@ -1,10 +1,11 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
-* ApplyWorkflow stores a copy of the Workflow at the time of submission (\#804)
 * Prevent execution of multiple jobs with the same output dataset (\#801).
-* Improve handling of errors raised in `get_slurm_config` (\#800).
+* Store a copy of the `Workflow` into `ApplyWorkflow` at the time of submission (\#804)
 * Raise an appropriate error if a task command is not executable (\#800).
+* Improve handling of errors raised in `get_slurm_config` (\#800).
 * Clarify documentation about `SlurmConfig` (\#798).
+* Move `tests/test_common.py` into `fractal-common` repository (\#808).
 
 # 1.3.4
 
