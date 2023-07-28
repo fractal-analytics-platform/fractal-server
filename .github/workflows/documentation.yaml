@@ -32,7 +32,6 @@ jobs:
         env:
           DEPLOYMENT_TYPE: development
           JWT_SECRET_KEY: 1234
-          DATA_DIR_ROOT: /tmp/fractal-server/
           FRACTAL_TASKS_DIR: /tmp/fractal-server/tasks/
           FRACTAL_RUNNER_WORKING_BASE_DIR: /tmp/fractal-server/artifacts/
         run: fractalctl openapi -f docs/openapi.json
@@ -68,7 +67,6 @@ jobs:
         env:
           DEPLOYMENT_TYPE: development
           JWT_SECRET_KEY: 1234
-          DATA_DIR_ROOT: /tmp/fractal-server/
           FRACTAL_TASKS_DIR: /tmp/fractal-server/tasks/
           FRACTAL_RUNNER_WORKING_BASE_DIR: /tmp/fractal-server/artifacts/
         run: fractalctl openapi -f docs/openapi.json
