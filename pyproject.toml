@@ -59,7 +59,7 @@ pytest-subprocess = "^1.4"
 pytest-docker = {extras = ["docker-compose-v1"], version = "^1.0"}
 pytest-pretty = "^1.0.1"
 
-[tool.poetry.group.doc.dependencies]
+[tool.poetry.group.docs.dependencies]
 mkdocs = "^1.4.2"
 mkdocstrings = {extras = ["python"], version = "^0.20"}
 mkdocs-material = "^8.5.9"
