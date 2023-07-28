@@ -10,7 +10,6 @@ jobs:
 
   docs:
     name: "Deploy docs"
-    needs: openapi
     runs-on: ubuntu-latest
     # if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
 
@@ -45,7 +44,6 @@ jobs:
 
   docs-build:
     name: "Test docs build"
-    needs: openapi
     runs-on: ubuntu-latest
     if: ${{ github.event_name != 'push' || github.ref != 'refs/heads/main' }}
 
