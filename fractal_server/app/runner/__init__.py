@@ -260,6 +260,11 @@ async def submit_workflow(
         logger.debug(f'FAILED workflow "{workflow.name}", TaskExecutionError.')
         logger.info(f'Workflow "{workflow.name}" failed (TaskExecutionError).')
 
+        # FIXME update `history_next`:
+        # 1. extract history_next from METADATA_FILE
+        # 2. append failed task (identified via e.workflow_task_id)
+        # 3. assign to output_dataset.meta, add and commit
+
         job.status = JobStatusType.FAILED
         job.end_timestamp = get_timestamp()
 
@@ -289,6 +294,13 @@ async def submit_workflow(
 
         logger.debug(f'FAILED workflow "{workflow.name}", unknown error.')
         logger.info(f'Workflow "{workflow.name}" failed (unkwnon error).')
+
+        # FIXME update `history_next`:
+        # 1. extract history_next from METADATA_FILE
+        # 2. append failed task (identified by comparing history_next with
+        #    workflow.task_list[start:end], for the appropriate start/end
+        #    indices)
+        # 3. assign to output_dataset.meta, add and commit
 
         job.status = JobStatusType.FAILED
         job.end_timestamp = get_timestamp()
