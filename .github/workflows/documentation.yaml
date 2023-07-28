@@ -33,7 +33,13 @@ jobs:
         DATA_DIR_ROOT: /tmp/fractal-server/
         FRACTAL_TASKS_DIR: /tmp/fractal-server/tasks/
         FRACTAL_RUNNER_WORKING_BASE_DIR: /tmp/fractal-server/artifacts/
-      run: fractalctl openapi -f docs/openapi.json
+      run: fractalctl openapi -f openapi.json
+
+    - name: Upload openapi schema
+      uses: actions/upload-artifact@v3
+      with:
+        name: openapi-schema
+        path: "docs/openapi.json"
 
   docs:
     name: "Deploy docs"
@@ -43,6 +49,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Download openapi schema
+        uses: actions/download-artifact@v3
+        with:
+          name: openapi-schema
+          path: "docs/"
 
       - name: Install current fractal-server
         run: python -m pip install -e .
@@ -65,6 +77,12 @@ jobs:
         with:
           fetch-depth: 1
           submodules: "recursive"
+
+      - name: Download openapi schema
+        uses: actions/download-artifact@v3
+        with:
+          name: openapi-schema
+          path: "docs/"
 
       - uses: actions/setup-python@v4
         with:
