@@ -49,7 +49,7 @@ jobs:
           DATA_DIR_ROOT: /tmp/fractal-server/
           FRACTAL_TASKS_DIR: /tmp/fractal-server/tasks/
           FRACTAL_RUNNER_WORKING_BASE_DIR: /tmp/fractal-server/artifacts/
-        run: poetry run fractalctl openapi -f docs/openapi.json
+        run: fractalctl openapi -f docs/openapi.json
 
       - name: MKDocs build
         run: mkdocs build --config-file mkdocs.yml --strict
