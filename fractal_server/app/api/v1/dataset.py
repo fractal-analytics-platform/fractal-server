@@ -1,11 +1,11 @@
 from typing import Optional
 
-from fastapi import APIRouter
+from fastapi import APIRouter  # type: ignore[import]
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
-from sqlmodel import or_
+from sqlmodel import or_  # type: ignore[import]
 from sqlmodel import select
 
 from ....common.schemas import DatasetCreate
@@ -14,10 +14,13 @@ from ....common.schemas import DatasetUpdate
 from ....common.schemas import ResourceCreate
 from ....common.schemas import ResourceRead
 from ....common.schemas import ResourceUpdate
+from ....common.schemas import WorkflowExport
+from ....common.schemas import WorkflowTaskExport
 from ...db import AsyncSession
 from ...db import get_db
 from ...models import ApplyWorkflow
 from ...models import Dataset
+from ...models import JobStatusType
 from ...models import Resource
 from ...security import current_active_user
 from ...security import User
@@ -43,7 +46,7 @@ async def create_dataset(
     Add new dataset to current project
     """
     await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+        project_id=project_id, user_id=user.id, db=db  # type: ignore[arg-type]
     )
     db_dataset = Dataset(project_id=project_id, **dataset.dict())
     db.add(db_dataset)
@@ -68,7 +71,10 @@ async def read_dataset(
     Get info on a dataset associated to the current project
     """
     output = await _get_dataset_check_owner(
-        project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,  # type: ignore[arg-type]
+        db=db,
     )
     dataset = output["dataset"]
     await db.close()
@@ -92,7 +98,7 @@ async def update_dataset(
     output = await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
-        user_id=user.id,
+        user_id=user.id,  # type: ignore[arg-type]
         db=db,
     )
     db_dataset = output["dataset"]
@@ -122,7 +128,7 @@ async def delete_dataset(
     output = await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
-        user_id=user.id,
+        user_id=user.id,  # type: ignore[arg-type]
         db=db,
     )
     dataset = output["dataset"]
@@ -169,7 +175,7 @@ async def create_resource(
     output = await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
-        user_id=user.id,
+        user_id=user.id,  # type: ignore[arg-type]
         db=db,
     )
     dataset = output["dataset"]
@@ -197,7 +203,7 @@ async def get_resource_list(
     await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
-        user_id=user.id,
+        user_id=user.id,  # type: ignore[arg-type]
         db=db,
     )
     stm = select(Resource).where(Resource.dataset_id == dataset_id)
@@ -225,7 +231,7 @@ async def update_resource(
     output = await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
-        user_id=user.id,
+        user_id=user.id,  # type: ignore[arg-type]
         db=db,
     )
     dataset = output["dataset"]
@@ -263,7 +269,7 @@ async def delete_resource(
     Delete a resource of a dataset
     """
     project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+        project_id=project_id, user_id=user.id, db=db  # type: ignore[arg-type]
     )
     resource = await db.get(Resource, resource_id)
     if not resource or resource.dataset_id not in (
@@ -277,3 +283,69 @@ async def delete_resource(
     await db.commit()
     await db.close()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get(
+    ("/project/{project_id}/dataset/{dataset_id}/export_history"),
+    response_model=WorkflowExport,
+)
+async def export_history_as_workflow(
+    project_id: int,
+    dataset_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[WorkflowExport]:
+    """
+    Extract a reproducible workflow from the dataset history
+    """
+    # Get the dataset DB entry
+    output = await _get_dataset_check_owner(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,  # type: ignore[arg-type]
+        db=db,
+    )
+    dataset = output["dataset"]
+
+    # Check whether there exists a job such that
+    # 1. `job.output_dataset_id == dataset_id`
+    # 2. `job.status` is either submitted or running
+    # Note: see
+    # https://sqlmodel.tiangolo.com/tutorial/where/#type-annotations-and-errors
+    # regarding the type-ignore in this code block
+    stm = (
+        select(ApplyWorkflow)
+        .where(ApplyWorkflow.output_dataset_id == dataset_id)
+        .where(
+            ApplyWorkflow.status.in_(  # type: ignore
+                [JobStatusType.SUBMITTED, JobStatusType.RUNNING]
+            )
+        )
+    )
+    res = await db.execute(stm)
+
+    # If at least one such job exists, then this endpoint should fail (what
+    # would "extract a reproducible workflow" mean when execution is
+    # in-progress?)
+    if res.scalars().all():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="FIXME",
+        )
+
+    # It such a job does not exist, continue with the endpoint. Note that this
+    # means that the history in the DB is up-to-date.
+
+    # Read history from DB
+    history_next = dataset.meta["history_next"]
+
+    # Construct reproducible workflow
+    task_list = []
+    for history_item in history_next:
+        wftask = history_item["workflowtask"]
+        wftask_status = history_item["status"]
+        if wftask_status == "done":
+            task_list.append(WorkflowTaskExport(**wftask))
+
+    workflow = WorkflowExport(task_list=task_list)
+    return workflow
