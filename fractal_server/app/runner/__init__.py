@@ -143,7 +143,6 @@ async def submit_workflow(
         # Prepare some of process_workflow arguments
         input_paths = input_dataset.paths
         output_path = output_dataset.paths[0]
-        workflow_id = workflow.id
         first_task_index = job.first_task_index
         last_task_index = job.last_task_index
 
