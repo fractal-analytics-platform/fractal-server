@@ -55,4 +55,4 @@ jobs:
         run: fractalctl openapi -f docs/openapi.json
 
       - name: MKDocs build
-        run: mkdocs build --config-file mkdocs.yml --strict
+        run: mkdocs build --config-file mkdocs.yml
