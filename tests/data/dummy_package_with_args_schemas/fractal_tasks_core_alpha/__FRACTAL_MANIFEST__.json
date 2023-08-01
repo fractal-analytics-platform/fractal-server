@@ -64,7 +64,9 @@
         "mem": "10M"
       },
       "name": "dummy",
-      "output_type": "Any"
+      "output_type": "Any",
+      "docs_info": "",
+      "docs_link":"http://www.example.org"
     },
     {
       "args_schema": {
@@ -127,7 +129,9 @@
         "parallelization_level": "index"
       },
       "name": "dummy parallel",
-      "output_type": "Any"
+      "output_type": "Any",
+      "docs_info": "This is a parallel task",
+      "docs_link": null
     }
   ]
 }
