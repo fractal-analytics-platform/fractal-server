@@ -840,7 +840,7 @@ async def test_background_collection_with_json_schemas(
         assert os.path.exists(task_file)
         assert os.path.isfile(task_file)
         # Check that docs_info and docs_link are correct
-        assert task.docs_info in ["", "This is a parallel task"]
+        assert task.docs_info in [None, "This is a parallel task"]
         assert task.docs_link in [None, "http://www.example.org"]
 
 
