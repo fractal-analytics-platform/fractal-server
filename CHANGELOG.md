@@ -1,5 +1,6 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+* Add `docs_info`and `docs_link` to Task model (\#814)
 * Prevent execution of multiple jobs with the same output dataset (\#801).
 * Store a copy of the `Workflow` into `ApplyWorkflow` at the time of submission (\#804)
 * Raise an appropriate error if a task command is not executable (\#800).
