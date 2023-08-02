@@ -133,8 +133,10 @@ gunicorn fractal_server.main:app --workers 2 --worker-class uvicorn.workers.Uvic
 
 ### Postgres setup
 
-TBD (see preliminary notes at https://github.com/fractal-analytics-platform/fractal-server/issues/388#issuecomment-1366713291)
+> See preliminary notes at<br>
+> https://github.com/fractal-analytics-platform/fractal-server/issues/388#issuecomment-1366713291.
 
 ### Fractal Server as a daemon/service
 
-TBD (see preliminary notes at https://github.com/fractal-analytics-platform/fractal-server/issues/388#issuecomment-1366719115).
+> See preliminary notes at<br>
+> https://github.com/fractal-analytics-platform/fractal-server/issues/388#issuecomment-1366719115.
