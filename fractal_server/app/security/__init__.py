@@ -73,8 +73,10 @@ class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
     Original Copyright: 2022 François Voron, released under MIT licence
 
     Database adapter for SQLModel working purely asynchronously.
-    :param user_model: SQLModel model of a DB representation of a user.
-    :param session: SQLAlchemy async session.
+
+    Args:
+        user_model: SQLModel model of a DB representation of a user.
+        session: SQLAlchemy async session.
     """
 
     session: AsyncSession
