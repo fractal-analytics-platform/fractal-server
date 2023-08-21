@@ -16,6 +16,7 @@ This module is the single entry point to the runner backend subsystem. Other
 subystems should only import this module and not its submodules or the
 individual backends.
 """
+import json
 import os
 from pathlib import Path
 from typing import Optional
@@ -30,6 +31,8 @@ from ..models import ApplyWorkflow
 from ..models import Dataset
 from ..models import JobStatusType
 from ..models import Workflow
+from ..models import WorkflowTask
+from ._common import METADATA_FILENAME
 from ._local import process_workflow as local_process_workflow
 from .common import close_job_logger
 from .common import JobExecutionError
@@ -260,10 +263,25 @@ async def submit_workflow(
         logger.debug(f'FAILED workflow "{workflow.name}", TaskExecutionError.')
         logger.info(f'Workflow "{workflow.name}" failed (TaskExecutionError).')
 
-        # FIXME update `history_next`:
-        # 1. extract history_next from METADATA_FILE
-        # 2. append failed task (identified via e.workflow_task_id)
-        # 3. assign to output_dataset.meta, add and commit
+        # Extract history_next from METADATA_FILENAME
+        with open(WORKFLOW_DIR / METADATA_FILENAME, "r") as f:
+            meta = json.load(f)
+            history_update = meta["history_next"]
+        # Append failed task (identified via e.workflow_task_id)
+        failed_wftask = db_sync.get(WorkflowTask, e.workflow_task_id)
+        failed_wftask_dump = failed_wftask.dict(exclude={"task"})
+        failed_wftask_dump["task"] = failed_wftask.task.dict()
+        new_history_item = dict(
+            workflowtask=failed_wftask_dump,
+            status="done",
+            parallelization=dict(
+                parallelization_level=failed_wftask.parallelization_level,
+            ),
+        )
+        history_update.append(new_history_item)
+        # Assign to output_dataset.meta, add and commit
+        output_dataset.meta["history_next"].extend(history_update)
+        db_sync.merge(output_dataset)
 
         job.status = JobStatusType.FAILED
         job.end_timestamp = get_timestamp()
@@ -283,6 +301,13 @@ async def submit_workflow(
         logger.debug(f'FAILED workflow "{workflow.name}", JobExecutionError.')
         logger.info(f'Workflow "{workflow.name}" failed (JobExecutionError).')
 
+        # FIXME update `history_next`:
+        # 1. extract history_next from METADATA_FILENAME
+        # 2. append failed task (identified by comparing history_next with
+        #    workflow.task_list[start:end], for the appropriate start/end
+        #    indices)
+        # 3. assign to output_dataset.meta, add and commit
+
         job.status = JobStatusType.FAILED
         job.end_timestamp = get_timestamp()
         error = e.assemble_error()
@@ -296,7 +321,7 @@ async def submit_workflow(
         logger.info(f'Workflow "{workflow.name}" failed (unkwnon error).')
 
         # FIXME update `history_next`:
-        # 1. extract history_next from METADATA_FILE
+        # 1. extract history_next from METADATA_FILENAME
         # 2. append failed task (identified by comparing history_next with
         #    workflow.task_list[start:end], for the appropriate start/end
         #    indices)
