@@ -427,7 +427,6 @@ async def test_collection_api_invalid_manifest(
 
 
 async def test_post_task(client, MockCurrentUser):
-
     async with MockCurrentUser(persist=True) as user:
         TASK_OWNER = user.username or user.slurm_user
         TASK_SOURCE = "some_source"
@@ -522,7 +521,6 @@ async def test_patch_task_auth(
     task_with_no_owner_id = task_with_no_owner.id
 
     async with MockCurrentUser(user_kwargs={"username": USER_1}):
-
         task = TaskCreate(
             name="task_name",
             command="task_command",
@@ -547,7 +545,6 @@ async def test_patch_task_auth(
         assert res.json()["name"] == "new_name_1"
 
     async with MockCurrentUser(user_kwargs={"slurm_user": USER_2}):
-
         update = TaskUpdate(name="new_name_2")
 
         # Test fail: (not user.is_superuser) and (owner != user)
@@ -571,7 +568,6 @@ async def test_patch_task_auth(
         )
 
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
-
         res = await client.get(f"{PREFIX}/{task_id}")
         assert res.json()["name"] == "new_name_1"
 
@@ -843,6 +839,9 @@ async def test_background_collection_with_json_schemas(
         debug(task_file)
         assert os.path.exists(task_file)
         assert os.path.isfile(task_file)
+        # Check that docs_info and docs_link are correct
+        assert task.docs_info in [None, "This is a parallel task"]
+        assert task.docs_link in [None, "http://www.example.org"]
 
 
 async def test_delete_task(
