@@ -3,6 +3,7 @@ import logging
 from typing import Any
 from typing import Optional
 
+from pydantic import HttpUrl
 from sqlalchemy import Column
 from sqlalchemy.types import JSON
 from sqlmodel import Field
@@ -44,6 +45,8 @@ class Task(_TaskBase, SQLModel, table=True):
         sa_column=Column(JSON), default=None
     )
     args_schema_version: Optional[str]
+    docs_info: Optional[str] = None
+    docs_link: Optional[HttpUrl] = None
 
     @property
     def parallelization_level(self) -> Optional[str]:
