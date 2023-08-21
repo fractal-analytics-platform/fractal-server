@@ -1285,20 +1285,6 @@ Markdown = ">=3.3"
 mkdocs = ">=1.1"
 
 [[package]]
-name = "mkdocs-coverage"
-version = "0.2.7"
-description = "MkDocs plugin to integrate your coverage HTML report into your site."
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "mkdocs_coverage-0.2.7-py3-none-any.whl", hash = "sha256:cfb11ab6c7d6c1e30495d0cbb78893937b0715387ea4862d269980300667b0e3"},
-    {file = "mkdocs_coverage-0.2.7.tar.gz", hash = "sha256:3616b2508f0197158e684cdb1a08e558c14d435ea3b79e34f71b2f024f6e022b"},
-]
-
-[package.dependencies]
-mkdocs = ">=1.2"
-
-[[package]]
 name = "mkdocs-gen-files"
 version = "0.4.0"
 description = "MkDocs plugin to programmatically generate documentation pages during the build"
@@ -2428,4 +2414,4 @@ slurm = ["cloudpickle", "clusterfutures"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "33dd4e02746ea89b94ef8d9b441b64d2af32483ff282996b8f4572c5a6d71c84"
+content-hash = "e5c5c1b3fb6493983c4fdb4087a29f574d43673f35b8fdb4f4e646476ea0056c"
