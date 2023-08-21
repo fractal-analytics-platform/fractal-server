@@ -1,14 +1,10 @@
-site_name: Fractal Analytics Platform
+site_name: Fractal Server
 
 repo_url: https://github.com/fractal-analytics-platform/fractal-server
-repo_name: fractal-server@github
-
-extra_css:
-  - css/mkdocstrings.css
+repo_name: fractal-server
 
 markdown_extensions:
 - admonition
-  #- callouts
 - pymdownx.details
 - pymdownx.emoji
 - pymdownx.magiclink
@@ -25,22 +21,25 @@ theme:
   name: "material"
   custom_dir: "docs/overrides"
   features:
-  - content.code.annotate
+    - content.code.annotate
+    - content.code.copy
   palette:
   - media: "(prefers-color-scheme: light)"
     scheme: default
     primary: teal
-    accent: purple
+    accent: green
     toggle:
       icon: material/weather-sunny
       name: Switch to dark mode
   - media: "(prefers-color-scheme: dark)"
     scheme: slate
-    primary: black
-    accent: lime
+    primary: teal
+    accent: green
     toggle:
       icon: material/weather-night
       name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github
 
 nav:
   - Home page: index.md
@@ -66,10 +65,25 @@ plugins:
       nav_file: SUMMARY.md
   - section-index
   - mkdocstrings:
+      default_handler: python
       handlers:
         python:
           options:
             show_signature_annotations: false
             docstring_section_style: "table"
+            docstring_style: "google"
+            show_source: true
             filters: []
+            show_root_full_path: false
   - render_swagger
+
+extra_css:
+  - extra.css
+
+copyright: |
+  © Copyright 2022
+  Friedrich Miescher Institute for Biomedical Research and
+  University of Zurich
+  (see <u><a href="https://github.com/fractal-analytics-platform/fractal-server/blob/main/LICENSE">
+  LICENSE
+  </a></u>).
