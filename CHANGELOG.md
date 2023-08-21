@@ -6,6 +6,7 @@
 * Improve handling of errors raised in `get_slurm_config` (\#800).
 * Clarify documentation about `SlurmConfig` (\#798).
 * Move `tests/test_common.py` into `fractal-common` repository (\#808).
+* Update documentation configuration and GitHub actions (\#811).
 
 # 1.3.4
 
