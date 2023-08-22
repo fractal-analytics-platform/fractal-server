@@ -1656,13 +1656,13 @@ testing = ["coverage (>=6.2)", "flaky (>=3.5.0)", "hypothesis (>=5.7.1)", "mypy 
 
 [[package]]
 name = "pytest-docker"
-version = "1.0.1"
-description = "Simple pytest fixtures for Docker and docker-compose based tests"
+version = "2.0.0"
+description = "Simple pytest fixtures for Docker and Docker Compose based tests"
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "pytest-docker-1.0.1.tar.gz", hash = "sha256:f6e8a1e660e2ba63a5bd28703cbb13636e0febd4623dafe047afa8254fb9db8f"},
-    {file = "pytest_docker-1.0.1-py3-none-any.whl", hash = "sha256:5dd39b10747f166d04946ba5b2bfb64e105b692679ca7191de9869d8f8f0640b"},
+    {file = "pytest-docker-2.0.0.tar.gz", hash = "sha256:3cc03a5b0f080807a49504197c16763811ba45863f26ae52c4411e499d4a2a86"},
+    {file = "pytest_docker-2.0.0-py3-none-any.whl", hash = "sha256:12c42c17de7cb26f166a578f5a415399e6f2b8bcb5c5321f054a5d4551a7ecc7"},
 ]
 
 [package.dependencies]
@@ -2303,4 +2303,4 @@ slurm = ["cloudpickle", "clusterfutures"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "deb413ee28bf222656edcf7610c3442ef931fad54565b89487545db484f233fb"
+content-hash = "de2252c9c6000986cd51097de16a54121a67640c0a408b6d4cbe6f841df2e413"
