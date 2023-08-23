@@ -186,7 +186,7 @@ def monkey_slurm(monkeypatch, docker_compose_project_name, docker_services):
 
     OrigPopen = subprocess.Popen
 
-    slurm_container = docker_compose_project_name + "_slurm-docker-master_1"
+    slurm_container = docker_compose_project_name + "-slurm-docker-master-1"
     logging.warning(f"{docker_compose_project_name=}")
     logging.warning(f"{slurm_container=}")
 
