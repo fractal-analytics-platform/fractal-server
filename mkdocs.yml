@@ -50,7 +50,7 @@ nav:
   - Code reference: reference/
   - Changelog: changelog.md
   - Web API: openapi.md
-  - Contribute: contribute.md
+  - Development: development.md
 
 watch:
   - fractal_server
