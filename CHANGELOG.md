@@ -12,6 +12,7 @@ Documentation:
     * Update documentation configuration and GitHub actions (\#811).
 * Tests:
     * Move `tests/test_common.py` into `fractal-common` repository (\#808).
+    * Switch to `docker compose` v2 and unpin `pyyaml` version (\#816).
 
 # 1.3.4
 
