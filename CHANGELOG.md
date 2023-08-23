@@ -1,13 +1,17 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
 * Add `docs_info`and `docs_link` to Task model (\#814)
 * Prevent execution of multiple jobs with the same output dataset (\#801).
 * Store a copy of the `Workflow` into `ApplyWorkflow` at the time of submission (\#804)
 * Raise an appropriate error if a task command is not executable (\#800).
 * Improve handling of errors raised in `get_slurm_config` (\#800).
-* Clarify documentation about `SlurmConfig` (\#798).
-* Move `tests/test_common.py` into `fractal-common` repository (\#808).
-* Update documentation configuration and GitHub actions (\#811).
+Documentation:
+    * Clarify documentation about `SlurmConfig` (\#798).
+    * Update documentation configuration and GitHub actions (\#811).
+* Tests:
+    * Move `tests/test_common.py` into `fractal-common` repository (\#808).
 
 # 1.3.4
 
