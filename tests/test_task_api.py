@@ -641,9 +641,7 @@ async def test_patch_task(
 
     # Test dictionaries update
     OTHER_META = {"key4": [4, 8, 15], "key0": [16, 23, 42]}
-    second_update = TaskUpdate(
-        meta=OTHER_META,
-    )
+    second_update = TaskUpdate(meta=OTHER_META, version=None)
     res = await registered_superuser_client.patch(
         f"{PREFIX}/{task.id}",
         json=second_update.dict(exclude_unset=True),
@@ -654,6 +652,7 @@ async def test_patch_task(
     assert res.json()["input_type"] == NEW_INPUT_TYPE
     assert res.json()["output_type"] == NEW_OUTPUT_TYPE
     assert res.json()["command"] == NEW_COMMAND
+    assert res.json()["version"] is None
     assert len(res.json()["meta"]) == 3
 
 
