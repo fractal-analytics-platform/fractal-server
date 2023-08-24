@@ -641,9 +641,7 @@ async def test_patch_task(
 
     # Test dictionaries update
     OTHER_META = {"key4": [4, 8, 15], "key0": [16, 23, 42]}
-    second_update = TaskUpdate(
-        meta=OTHER_META,
-    )
+    second_update = TaskUpdate(meta=OTHER_META, version=None)
     res = await registered_superuser_client.patch(
         f"{PREFIX}/{task.id}",
         json=second_update.dict(exclude_unset=True),
@@ -654,6 +652,7 @@ async def test_patch_task(
     assert res.json()["input_type"] == NEW_INPUT_TYPE
     assert res.json()["output_type"] == NEW_OUTPUT_TYPE
     assert res.json()["command"] == NEW_COMMAND
+    assert res.json()["version"] is None
     assert len(res.json()["meta"]) == 3
 
 
@@ -840,7 +839,7 @@ async def test_background_collection_with_json_schemas(
         assert os.path.exists(task_file)
         assert os.path.isfile(task_file)
         # Check that docs_info and docs_link are correct
-        assert task.docs_info in [None, "This is a parallel task"]
+        assert task.docs_info in ["", "This is a parallel task"]
         assert task.docs_link in [None, "http://www.example.org"]
 
 
