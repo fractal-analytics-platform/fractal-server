@@ -347,10 +347,3 @@ for client in settings.OAUTH_CLIENTS:
         ),
         prefix=f"/{client_name}",
     )
-
-    auth_router.include_router(
-        fastapi_users.get_oauth_associate_router(
-            _client, UserRead, settings.JWT_SECRET_KEY  # type: ignore
-        ),
-        prefix=f"/associate/{client_name}",
-    )
