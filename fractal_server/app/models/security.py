@@ -28,7 +28,7 @@ class OAuthAccount(SQLModel, table=True):
     __tablename__ = "oauthaccount"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user.id", nullable=False)
+    user_id: int = Field(foreign_key="user_oauth.id", nullable=False)
     user: Optional["UserOAuth"] = Relationship(back_populates="oauth_accounts")
     oauth_name: str = Field(index=True, nullable=False)
     access_token: str = Field(nullable=False)
