@@ -19,7 +19,7 @@ from sqlmodel import SQLModel
 from .linkuserproject import LinkUserProject
 
 
-class SQLModelBaseOAuthAccount(SQLModel):
+class OAuthAccount(SQLModel, table=True):
     """
     This class is from fastapi_users_db_sqlmodel
     Original Copyright: 2022 François Voron, released under MIT licence
@@ -29,6 +29,7 @@ class SQLModelBaseOAuthAccount(SQLModel):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id", nullable=False)
+    user: Optional["UserOAuth"] = Relationship(back_populates="oauth_accounts")
     oauth_name: str = Field(index=True, nullable=False)
     access_token: str = Field(nullable=False)
     expires_at: Optional[int] = Field(nullable=True)
@@ -76,8 +77,3 @@ class UserOAuth(SQLModel, table=True):
 
     class Config:
         orm_mode = True
-
-
-class OAuthAccount(SQLModelBaseOAuthAccount, table=True):
-    user_id: int = Field(foreign_key="user_oauth.id", nullable=False)
-    user: Optional[UserOAuth] = Relationship(back_populates="oauth_accounts")
