@@ -13,12 +13,12 @@ $ curl http://127.0.0.1:8000/api/alive/
 
 Every other `/api/` endpoint (and some `/auth/` endpoints) requires the authenticated user who's making the call to be _authorized_ to that specific endpoint.
 
-A user in Fractal Server is an instance of the [UserOAuth](http://localhost:8001/reference/fractal_server/app/models/security/#fractal_server.app.models.security.UserOAuth) class.<br>
+A user in Fractal Server is an instance of [UserOAuth](http://localhost:8001/reference/fractal_server/app/models/security/#fractal_server.app.models.security.UserOAuth).<br>
 The user attributes relevant for authorization are:
 
 - `is_active`,
 - `is_superuser`,
-- `is_verified` (not implemented yet),
+- `is_verified`,
 - `username` / `slurm_user`,
 - `id`.
 
@@ -60,3 +60,7 @@ These `/auth/` endpoints use the [`current_active_superuser`](https://github.com
 - all `/auth/users/...`,
 - POST `/auth/register`,
 - GET `/auth/userlist`.
+
+#### `is_verified`
+
+No endpoint currently requires `is_verified==True`.
