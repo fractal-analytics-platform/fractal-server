@@ -78,3 +78,14 @@ The following endpoints use the auxiliary function [`_get_task_check_owner`](htt
 
 - DELETE `/api/v1/task/{task_id}`,
 - PATCH `/api/v1/task/{task_id}`.
+
+#### `id`
+
+Every `Project` has a `user_list`, populated using the crossing table `LinkUserProject`.
+
+Every `ApplyWorkflow` (aka Job), `Dataset` or `Workflow` has a `project_id` attribute, and it's therefore _linked_ to a single Project.<br>
+Moreover, each `WorkflowTask` is linked to a single Workflow, so that we can consider also a WorkflowTask to be linked to a single Project.
+
+As a general rule, each endpoint that operates on a resource (`Project`, `ApplyWorkflow`, `Dataset`, `Workflow` or `WorkflowTasks`) requires the user to be in the `user_list` of the Project the resource is linked to.
+
+The check is done by the auxiliary function [`_get_project_check_owner`](https://fractal-analytics-platform.github.io/fractal-server/reference/fractal_server/app/api/v1/_aux_functions/#fractal_server.app.api.v1._aux_functions._get_project_check_owner).
