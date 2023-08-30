@@ -5,8 +5,8 @@
 * Add `docs_info`and `docs_link` to Task model (\#814)
 * Accept `TaskUpdate.version=None` in task-patch endpoint (\#818).
 * Store a copy of the `Workflow` into `ApplyWorkflow` at the time of submission (\#804)
+* Prevent execution of multiple jobs with the same output dataset (\#801).
 * Error handling:
-    * Prevent execution of multiple jobs with the same output dataset (\#801).
     * Raise an appropriate error if a task command is not executable (\#800).
     * Improve handling of errors raised in `get_slurm_config` (\#800).
 * Documentation:
