@@ -8,7 +8,7 @@
 * Raise an appropriate error if a task command is not executable (\#800).
 * Improve handling of errors raised in `get_slurm_config` (\#800).
 * Accept `TaskUpdate.version=None` in task-patch endpoint (\#818).
-Documentation:
+* Documentation:
     * Clarify documentation about `SlurmConfig` (\#798).
     * Update documentation configuration and GitHub actions (\#811).
 * Tests:
