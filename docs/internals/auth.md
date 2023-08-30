@@ -1,6 +1,10 @@
-## Authorization
+Fractal Server's authentication and authorisation system was implemented using [FastAPI Users](https://fastapi-users.github.io/).
 
-The only publically available endpoint of the Fractal Server API is `/api/alive/`:
+The [API](https://fractal-analytics-platform.github.io/fractal-server/openapi/) exposes two main routes: `/api/` and `/auth/`.
+
+
+Some "minor" `/auth/` endpoints do not require authentication.<br>
+Among the `/api/` endpoints, the only one that does not require authentication is `/api/alive/`.
 ```console
 $ curl http://127.0.0.1:8000/api/alive/
 
@@ -11,7 +15,9 @@ $ curl http://127.0.0.1:8000/api/alive/
 }
 ```
 
-Every other `/api/` endpoint (and some `/auth/` endpoints) requires the authenticated user who's making the call to be _authorized_ to that specific endpoint.
+Every other endpoint, instead, requires the _authenticated_ user to be _authorized_ to that specific endpoint.
+
+## Authorization
 
 A user in Fractal Server is an instance of [UserOAuth](http://localhost:8001/reference/fractal_server/app/models/security/#fractal_server.app.models.security.UserOAuth).<br>
 The user attributes relevant for authorization are:
@@ -22,7 +28,7 @@ The user attributes relevant for authorization are:
 - `username` / `slurm_user`,
 - `id`.
 
-#### `is_active`
+### `is_active`
 
 All `/api/` endpoints first check that the user (regular or superuser) is active, i.e. `is_active==True`.<br>
 This is implemented as a FastAPI dependency, using [fastapi_users.current_user](https://fastapi-users.github.io/fastapi-users/10.0/usage/current-user/#current_user):
@@ -45,7 +51,7 @@ This dependency is also required by:
 - GET `/auth/whoami`,
 - GET `/auth/userlist`.
 
-#### `is_superuser`
+### `is_superuser`
 
 Among the `/api/` endpoints, `is_superuser==True` allows access to
 
@@ -61,12 +67,12 @@ These `/auth/` endpoints use the [`current_active_superuser`](https://github.com
 - POST `/auth/register`,
 - GET `/auth/userlist`.
 
-#### `is_verified`
+### `is_verified`
 
 No endpoint currently requires `is_verified==True`.
 
 
-#### `username` / `slurm_user`
+### `username` / `slurm_user`
 
 These are optional attributes, which means they can also be `None`.
 
@@ -79,7 +85,7 @@ The following endpoints use the auxiliary function [`_get_task_check_owner`](htt
 - DELETE `/api/v1/task/{task_id}`,
 - PATCH `/api/v1/task/{task_id}`.
 
-#### `id`
+### `id`
 
 Every `Project` has a `user_list`, populated using the crossing table `LinkUserProject`.
 
@@ -89,3 +95,7 @@ Moreover, each `WorkflowTask` is linked to a single Workflow, so that we can con
 As a general rule, each endpoint that operates on a resource (`Project`, `ApplyWorkflow`, `Dataset`, `Workflow` or `WorkflowTasks`) requires the user to be in the `user_list` of the Project the resource is linked to.
 
 The check is done by the auxiliary function [`_get_project_check_owner`](https://fractal-analytics-platform.github.io/fractal-server/reference/fractal_server/app/api/v1/_aux_functions/#fractal_server.app.api.v1._aux_functions._get_project_check_owner).
+
+## Authentication
+
+🤷🏽
