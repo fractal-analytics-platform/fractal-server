@@ -64,3 +64,17 @@ These `/auth/` endpoints use the [`current_active_superuser`](https://github.com
 #### `is_verified`
 
 No endpoint currently requires `is_verified==True`.
+
+
+#### `username` / `slurm_user`
+
+These are optional attributes, which means they can also be `None`.
+
+When a `Task` is [created](https://fractal-analytics-platform.github.io/fractal-server/reference/fractal_server/app/api/v1/task/#fractal_server.app.api.v1.task.create_task), the attribute `Task.owner` is set equal to `username` or, if not present, to `slurm_user` (there must be at least one to create a Task).
+
+With a similar logic, we consider a user to be the _owner_ of a Task if `username==Task.owner` or, if `username` is `None`, we check that `slurm_user==Task.owner`.
+
+The following endpoints use the auxiliary function [`_get_task_check_owner`](https://fractal-analytics-platform.github.io/fractal-server/reference/fractal_server/app/api/v1/_aux_functions/#fractal_server.app.api.v1._aux_functions._get_task_check_owner), that  requires the user to be a superuser or the owner of the Task:
+
+- DELETE `/api/v1/task/{task_id}`,
+- PATCH `/api/v1/task/{task_id}`.
