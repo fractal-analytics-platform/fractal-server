@@ -20,12 +20,12 @@ The last three attributes (`slurm_user`, `username` and `cache_dir`) are Fractal
 
 ## Authentication
 
-### Backends
+### Login
 
-> An _authentication backend_ is composed of two parts:
->
-> - the <ins>transport</ins>, that manages how the token will be carried over the request,
-> - the <ins>strategy</ins>, which manages how the token is generated and secured.
+An _authentication backend_ is composed of two parts:
+
+- the <ins>transport</ins>, that manages how the token will be carried over the request,
+- the <ins>strategy</ins>, which manages how the token is generated and secured.
 
 Fractal Server provides two authentication backends, both using the [JWT](https://fastapi-users.github.io/fastapi-users/10.1/configuration/authentication/strategies/jwt/) strategy.<br>
 Each backend produces both [`/login`](https://fastapi-users.github.io/fastapi-users/12.1/usage/routes/#post-login) and [`/logout`](https://fastapi-users.github.io/fastapi-users/12.1/usage/routes/#post-logout) routes.
@@ -97,9 +97,17 @@ The user attributes relevant for authorization are:
 - `username` / `slurm_user`,
 - `id`.
 
+
 ### `is_active`
 
-All `/api/v1/` endpoints first check that the user (regular or superuser) is active, i.e. `is_active==True`.<br>
+Being an _active user_ (i.e. `is_active==True`) is required by
+
+- all `/api/v1/...`
+- all `/auth/users/...`,
+- POST `/auth/register`,
+- GET `/auth/userlist`,
+- GET `/auth/whoami`.
+
 This is implemented as a FastAPI dependency, using [fastapi_users.current_user](https://fastapi-users.github.io/fastapi-users/10.0/usage/current-user/#current_user):
 ```python
 current_active_user = fastapi_users.current_user(active=True)
@@ -111,12 +119,16 @@ async def am_i_active(
 ):
     return {f"User {user.id}":  "you are active"}
 ```
-A `401 Unauthorized` will be thrown if the authenticated user is not active.
-
 
 ### `is_superuser`
 
-Being a superuser (i.e. `is_superuser==True`) allows access to
+Being a _superuser_ (i.e. `is_superuser==True`) is required by
+
+- all `/auth/users/...`,
+- POST `/auth/register`,
+- GET `/auth/userlist`.
+
+It also gives authorisation to
 
 - PATCH `/api/v1/task/{task_id}`
 - DELETE `/api/v1/task/{task_id}`
@@ -143,7 +155,7 @@ The following endpoints require the user to be a superuser or the owner of the T
 
 ### `id`
 
-Each of these resources in Fractal Server is related to a single `Project`:
+Each of these resources in Fractal Server is related to a single `Project` (via the foreign key `project_id`):
 
 - `ApplyWorkflow` (aka Job),
 - `Dataset`,
@@ -153,6 +165,10 @@ Each of these resources in Fractal Server is related to a single `Project`:
 As a general rule, each endpoint that operates on one of these resources (or directly on the `Project`) requires the user to be in `Project.user_list`.
 
 ## User management
+
+The endpoints to manage users can be found under the route `/auth/`.
+
+We have [already talked](https://fractal-analytics-platform.github.io/fractal-server/internals/auth/#login) about `/login` and `/logout`. Let's present the others.
 
 To create a new user the request body must be a `UserCreate`, whereas to modify an existing user we need a `UserUpdate`:
 
@@ -170,7 +186,7 @@ To create a new user the request body must be a `UserCreate`, whereas to modify 
 
 ### Register new user
 
-The route [`/auth/register`](https://fastapi-users.github.io/fastapi-users/12.1/usage/routes/#register-router) is restricted to superuser and it's used to register a new user:
+New users can be registred by a superuser at [`/auth/register`](https://fastapi-users.github.io/fastapi-users/12.1/usage/routes/#register-router):
 
 ```console
 $ curl \
@@ -192,7 +208,22 @@ $ curl \
 }
 ```
 
-### Reset password
+Here we've just provided `email` and `password`,
+which are the only required fields of `UserCreate`.
+
+The other six
+
+- `is_active`,
+- `is_superuser`,
+- `is_verified`,
+- `slurm_user`,
+- `cache_dir`,
+- `username`
+
+are optional and their default values are shown
+
+
+### Forgot password
 
 🚧 🏗️
 
@@ -210,43 +241,5 @@ https://fastapi-users.github.io/fastapi-users/12.1/configuration/routers/verify/
 Users management is under the route `/auth/user/` and it's restricted to superusers.
 
 
----
 
-
-The [API](https://fractal-analytics-platform.github.io/fractal-server/openapi/) exposes two main routes: `/api/` and `/auth/`.
-
-
-Some "minor" `/auth/` endpoints do not require authentication.<br>
-Among the `/api/` endpoints, the only one that does not require authentication is `/api/alive/`.
-```console
-$ curl http://127.0.0.1:8000/api/alive/
-
-{
-    "alive":true,
-    "deployment_type":"testing",
-    "version":"1.3.5a1"
-}
-```
-
-Every other endpoint, instead, requires the _authenticated_ user to be _authorized_ to that specific endpoint.
-
-
-
-
-
-ACTIVE
-
-This dependency is also required by:
-
-- all `/auth/users/...`,
-- POST `/auth/register`,
-- GET `/auth/whoami`,
-- GET `/auth/userlist`.
-
-SUPERUSE
-
-These `/auth/` endpoints use the [`current_active_superuser`](https://github.com/fractal-analytics-platform/fractal-server/blob/main/fractal_server/app/security/__init__.py#L232C11-L232C35) dependency, and therefore require the (active) user to be a superuser:
-
-- all `/auth/users/...`,
-- POST `/auth/register`,
-- GET `/auth/userlist`.
+## OAuth2
