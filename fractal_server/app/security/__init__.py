@@ -195,6 +195,7 @@ def get_jwt_strategy() -> JWTStrategy:
     return JWTStrategy(
         secret=settings.JWT_SECRET_KEY,  # type: ignore
         lifetime_seconds=settings.JWT_EXPIRE_SECONDS,
+        token_audience=["fractal"],
     )
 
 
@@ -203,6 +204,7 @@ def get_jwt_cookie_strategy() -> JWTStrategy:
     return JWTStrategy(
         secret=settings.JWT_SECRET_KEY,  # type: ignore
         lifetime_seconds=settings.COOKIE_EXPIRE_SECONDS,
+        token_audience=["fractal"],
     )
 
 
