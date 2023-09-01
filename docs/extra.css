@@ -15,3 +15,7 @@ blockquote p {
   margin: 0;
   color: #333; /* Dark text color */
 }
+
+blockquote li {
+  color: #333;
+}
