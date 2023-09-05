@@ -32,7 +32,6 @@ from typing import Dict
 from typing import Generic
 from typing import Optional
 from typing import Type
-from typing import Union
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -306,51 +305,37 @@ async def list_users(
 settings = Inject(get_settings)
 
 for client in settings.OAUTH_CLIENTS:
-    # INIT CLIENTS
+
     client_name = client.CLIENT_NAME.lower()
-    _client: Optional[Union["GitHubOAuth2", "OAuth2"]] = None
-    if client_name == "github":
+
+    if client_name == "google":
+        from httpx_oauth.clients.google import GoogleOAuth2
+
+        _client = GoogleOAuth2(client.CLIENT_ID, client.CLIENT_SECRET)
+    elif client_name == "github":
         from httpx_oauth.clients.github import GitHubOAuth2
 
         _client = GitHubOAuth2(client.CLIENT_ID, client.CLIENT_SECRET)
-    else:  # GENERIC CLIENT
-        from httpx_oauth.oauth2 import OAuth2
+    else:
+        from httpx_oauth.clients.github import OpenID
 
-        if (
-            not client.CLIENT_SECRET
-            or not client.AUTHORIZE_ENDPOINT
-            or not client.ACCESS_TOKEN_ENDPOINT
-        ):
-            raise ValueError(
-                "Must specify CLIENT_SECRET, AUTHORIZE_ENDPOINT and "
-                "ACCESS_TOKEN_ENDPOINT to define custom OAuth2 client."
+        if not client.CONFIGURATION_ENDPOINT:
+            raise Exception(
+                f"Missing OAUTH_{client.CLIENT_NAME}_CONFIGURATION_ENDPOINT"
             )
-        _client = OAuth2(
+        _client = OpenID(
             client.CLIENT_ID,
             client.CLIENT_SECRET,
-            client.AUTHORIZE_ENDPOINT,
-            client.ACCESS_TOKEN_ENDPOINT,
-            refresh_token_endpoint=client.REFRESH_TOKEN_ENDPOINT,
-            revoke_token_endpoint=client.REVOKE_TOKEN_ENDPOINT,
+            client.CONFIGURATION_ENDPOINT,
         )
 
-    # ADD ROUTES
-    # GitHub OAuth
     auth_router.include_router(
         fastapi_users.get_oauth_router(
             _client,
             cookie_backend,
-            settings.JWT_SECRET_KEY,  # type: ignore
-            # WARNING:
-            # associate_by_email=True exposes to security risks if the OAuth
-            # provider does not verify emails.
+            settings.JWT_SECRET_KEY,
+            is_verified_by_default=True,
             associate_by_email=True,
         ),
         prefix=f"/{client_name}",
-    )
-    auth_router.include_router(
-        fastapi_users.get_oauth_associate_router(
-            _client, UserRead, settings.JWT_SECRET_KEY  # type: ignore
-        ),
-        prefix=f"/{client_name}/associate",
     )
