@@ -55,25 +55,15 @@ class OAuthClient(BaseModel):
             ID of client
         CLIENT_SECRET:
             Secret to authorise against the identity provider
-
-        AUTHORIZE_ENDPOINT:
-            Authorization endpoint
-        ACCESS_TOKEN_ENDPOINT:
-            Token endpoint
-        REFRESH_TOKEN_ENDPOINT:
-            Refresh token endpoint
-        REVOKE_TOKEN_ENDPOINT:
-            Revoke token endpoint
+        CONFIGURATION_ENDPOINT:
+            OpenID configuration endpoint,
+            allowing to discover the required endpoints automatically
     """
 
     CLIENT_NAME: str
     CLIENT_ID: str
     CLIENT_SECRET: str
-
-    AUTHORIZE_ENDPOINT: Optional[str]
-    ACCESS_TOKEN_ENDPOINT: Optional[str]
-    REFRESH_TOKEN_ENDPOINT: Optional[str]
-    REVOKE_TOKEN_ENDPOINT: Optional[str]
+    CONFIGURATION_ENDPOINT: Optional[str]
 
 
 class Settings(BaseSettings):
@@ -142,17 +132,8 @@ class Settings(BaseSettings):
                 CLIENT_NAME=client,
                 CLIENT_ID=getenv(f"{prefix}_CLIENT_ID", None),
                 CLIENT_SECRET=getenv(f"{prefix}_CLIENT_SECRET", None),
-                AUTHORIZE_ENDPOINT=getenv(
-                    f"{prefix}_AUTHORIZE_ENDPOINT", None
-                ),
-                ACCESS_TOKEN_ENDPOINT=getenv(
-                    f"{prefix}_ACCESS_TOKEN_ENDPOINT", None
-                ),
-                REFRESH_TOKEN_ENDPOINT=getenv(
-                    f"{prefix}_REFRESH_TOKEN_ENDPOINT", None
-                ),
-                REVOKE_TOKEN_ENDPOINT=getenv(
-                    f"{prefix}_REVOKE_TOKEN_ENDPOINT", None
+                CONFIGURATION_ENDPOINT=getenv(
+                    f"{prefix}_CONFIGURATION_ENDPOINT", None
                 ),
             )
             values["OAUTH_CLIENTS"].append(oauth_client)
