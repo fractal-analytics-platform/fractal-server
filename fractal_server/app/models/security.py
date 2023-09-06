@@ -21,8 +21,9 @@ from .linkuserproject import LinkUserProject
 
 class OAuthAccount(SQLModel, table=True):
     """
-    This class is from fastapi_users_db_sqlmodel
-    Original Copyright: 2022 François Voron, released under MIT licence
+    Based on SQLModelBaseOAuthAccount of fastapi_users_db_sqlmodel.
+    MIT License
+    Copyright (c) 2021 François Voron
     """
 
     __tablename__ = "oauthaccount"
