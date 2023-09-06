@@ -196,7 +196,6 @@ def get_jwt_strategy() -> JWTStrategy:
     return JWTStrategy(
         secret=settings.JWT_SECRET_KEY,  # type: ignore
         lifetime_seconds=settings.JWT_EXPIRE_SECONDS,
-        token_audience=["fractal"],
     )
 
 
@@ -205,7 +204,6 @@ def get_jwt_cookie_strategy() -> JWTStrategy:
     return JWTStrategy(
         secret=settings.JWT_SECRET_KEY,  # type: ignore
         lifetime_seconds=settings.COOKIE_EXPIRE_SECONDS,
-        token_audience=["fractal"],
     )
 
 
@@ -306,34 +304,34 @@ async def list_users(
 # app (cf. fractal_server.main)
 settings = Inject(get_settings)
 
-for client in settings.OAUTH_CLIENTS:
+for client_config in settings.OAUTH_CLIENTS_CONFIG:
 
-    client_name = client.CLIENT_NAME.lower()
+    client_name = client_config.CLIENT_NAME.lower()
 
     if client_name == "google":
         from httpx_oauth.clients.google import GoogleOAuth2
 
-        _client = GoogleOAuth2(client.CLIENT_ID, client.CLIENT_SECRET)
+        client = GoogleOAuth2(
+            client_config.CLIENT_ID, client_config.CLIENT_SECRET
+        )
     elif client_name == "github":
         from httpx_oauth.clients.github import GitHubOAuth2
 
-        _client = GitHubOAuth2(client.CLIENT_ID, client.CLIENT_SECRET)
+        client = GitHubOAuth2(
+            client_config.CLIENT_ID, client_config.CLIENT_SECRET
+        )
     else:
         from httpx_oauth.clients.github import OpenID
 
-        if not client.CONFIGURATION_ENDPOINT:
-            raise Exception(
-                f"Missing OAUTH_{client.CLIENT_NAME}_CONFIGURATION_ENDPOINT"
-            )
-        _client = OpenID(
-            client.CLIENT_ID,
-            client.CLIENT_SECRET,
-            client.CONFIGURATION_ENDPOINT,
+        client = OpenID(
+            client_config.CLIENT_ID,
+            client_config.CLIENT_SECRET,
+            client_config.CONFIGURATION_ENDPOINT,
         )
 
     auth_router.include_router(
         fastapi_users.get_oauth_router(
-            _client,
+            client,
             cookie_backend,
             settings.JWT_SECRET_KEY,
             is_verified_by_default=True,
@@ -341,3 +339,16 @@ for client in settings.OAUTH_CLIENTS:
         ),
         prefix=f"/{client_name}",
     )
+
+    # FastAPI Users also provide an association router
+    # (https://fastapi-users.github.io/fastapi-users/12.1/usage/routes/#oauth-association-router)
+    #
+    # auth_router.include_router(
+    #     fastapi_users.get_oauth_associate_router(
+    #         client, UserRead, settings.JWT_SECRET_KEY
+    #     ),
+    #     prefix=f"/{client_name}/associate",
+    # )
+    #
+    # for now we don't need it because we are using `associate_by_email=True`
+    # in the authorization router.

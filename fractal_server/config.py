@@ -40,9 +40,9 @@ T = TypeVar("T")
 load_dotenv(".fractal_server.env")
 
 
-class OAuthClient(BaseModel):
+class OAuthClientConfig(BaseModel):
     """
-    OAuth Client Model
+    OAuth Client Config Model
 
     This model wraps the variables that define a client against an Identity
     Provider. As some providers are supported by the libraries used within the
@@ -55,7 +55,7 @@ class OAuthClient(BaseModel):
             ID of client
         CLIENT_SECRET:
             Secret to authorise against the identity provider
-        CONFIGURATION_ENDPOINT:
+        OIDC_CONFIGURATION_ENDPOINT:
             OpenID configuration endpoint,
             allowing to discover the required endpoints automatically
     """
@@ -63,7 +63,17 @@ class OAuthClient(BaseModel):
     CLIENT_NAME: str
     CLIENT_ID: str
     CLIENT_SECRET: str
-    CONFIGURATION_ENDPOINT: Optional[str]
+    OIDC_CONFIGURATION_ENDPOINT: Optional[str]
+
+    @root_validator
+    def check_configuration(cls, values):
+        if values.get("CLIENT_NAME") not in ["GOOGLE", "GITHUB"]:
+            if not values.get("OIDC_CONFIGURATION_ENDPOINT"):
+                raise ValueError(
+                    f"Missing OAUTH_{values.get('CLIENT_NAME')}"
+                    "_OIDC_CONFIGURATION_ENDPOINT"
+                )
+        return values
 
 
 class Settings(BaseSettings):
@@ -90,7 +100,7 @@ class Settings(BaseSettings):
     # AUTH
     ###########################################################################
 
-    OAUTH_CLIENTS: list[OAuthClient] = Field(default_factory=list)
+    OAUTH_CLIENTS_CONFIG: list[OAuthClientConfig] = Field(default_factory=list)
 
     # JWT TOKEN
     JWT_EXPIRE_SECONDS: int = 180
@@ -106,7 +116,7 @@ class Settings(BaseSettings):
 
         This method collects the environment variables relative to a single
         OAuth client and saves them within the `Settings` object in the form
-        of an `OAuthClient` instance.
+        of an `OAuthClientConfig` instance.
 
         Fractal can support an arbitrary number of OAuth providers, which are
         automatically detected by parsing the environment variable names. In
@@ -116,7 +126,7 @@ class Settings(BaseSettings):
             OAUTH_FOO_CLIENT_SECRET
             ...
 
-        etc (cf. OAuthClient).
+        etc (cf. OAuthClientConfig).
         """
         oauth_env_variable_keys = [
             key for key in environ.keys() if "OAUTH" in key
@@ -125,18 +135,18 @@ class Settings(BaseSettings):
             var.split("_")[1] for var in oauth_env_variable_keys
         }
 
-        values["OAUTH_CLIENTS"] = []
+        values["OAUTH_CLIENTS_CONFIG"] = []
         for client in clients_available:
             prefix = f"OAUTH_{client}"
-            oauth_client = OAuthClient(
+            oauth_client_config = OAuthClientConfig(
                 CLIENT_NAME=client,
                 CLIENT_ID=getenv(f"{prefix}_CLIENT_ID", None),
                 CLIENT_SECRET=getenv(f"{prefix}_CLIENT_SECRET", None),
                 CONFIGURATION_ENDPOINT=getenv(
-                    f"{prefix}_CONFIGURATION_ENDPOINT", None
+                    f"{prefix}_OIDC_CONFIGURATION_ENDPOINT", None
                 ),
             )
-            values["OAUTH_CLIENTS"].append(oauth_client)
+            values["OAUTH_CLIENTS_CONFIG"].append(oauth_client_config)
         return values
 
     ###########################################################################
