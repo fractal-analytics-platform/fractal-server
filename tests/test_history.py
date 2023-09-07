@@ -89,8 +89,7 @@ async def test_get_workflowtask_status(
         assert res.status_code == 200
         statuses = res.json()["workflowtasks_status"]
         debug(statuses)
-
         for expected_status, IDs in RESULTS.items():
             for ID in IDs:
-                ID_str = str(ID)  # (JSON-object keys can only be strings)
+                ID_str = str(ID)  # JSON-object keys can only be strings
                 assert statuses[ID_str] == expected_status

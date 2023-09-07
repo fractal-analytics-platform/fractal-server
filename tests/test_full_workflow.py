@@ -194,6 +194,16 @@ async def test_full_workflow(
         debug(data)
         assert "dummy" in data["meta"]
 
+        # Check that history_next was updated correctly
+        res = await client.get(
+            f"api/v1/project/{project_id}/dataset/{output_dataset_id}/status"
+        )
+        debug(res.status_code)
+        assert res.status_code == 200
+        statuses = res.json()["workflowtasks_status"]
+        debug(statuses)
+        assert set(statuses.values()) == {"done"}
+
         # Check that all files in working_dir are RW for the user running the
         # server. Note that the same is **not** true for files in
         # working_dir_user.
@@ -316,6 +326,17 @@ async def test_failing_workflow_TaskExecutionError(
         # Check that ERROR_MESSAGE only appears once in the logs:
         assert len(job_status_data["log"].split(ERROR_MESSAGE)) == 2
 
+        # Check that history_next was updated correctly
+        res = await client.get(
+            f"api/v1/project/{project_id}/dataset/{dataset.id}/status"
+        )
+        debug(res.status_code)
+        assert res.status_code == 200
+        statuses = res.json()["workflowtasks_status"]
+        debug(statuses)
+        # FIXME ADD ASSERTION,
+        # e.g. comparing with statuses: {'1': 'done', '2': 'failed'}
+
 
 async def _auxiliary_scancel(slurm_user, sleep_time):
     # The _auxiliary_scancel and _auxiliary_run functions are used as in
@@ -436,6 +457,8 @@ async def test_failing_workflow_JobExecutionError(
         assert "JOB ERROR" in job_status_data["log"]
         assert "CANCELLED" in job_status_data["log"]
         assert "\\n" not in job_status_data["log"]
+
+        # FIXME: add check re: history_next
 
 
 async def test_non_python_task(
