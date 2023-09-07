@@ -277,12 +277,13 @@ async def submit_workflow(
         failed_wftask_dump["task"] = failed_wftask.task.dict()
         new_history_item = dict(
             workflowtask=failed_wftask_dump,
-            status="done",
+            status="failed",
             parallelization=dict(
                 parallelization_level=failed_wftask.parallelization_level,
             ),
         )
         history_update.append(new_history_item)
+
         # Assign to output_dataset.meta, add and commit
         if "history_next" in output_dataset.meta:
             output_dataset.meta["history_next"].extend(history_update)
