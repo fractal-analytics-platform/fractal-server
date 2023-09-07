@@ -6,6 +6,7 @@
 * Accept `TaskUpdate.version=None` in task-patch endpoint (\#818).
 * Store a copy of the `Workflow` into `ApplyWorkflow` at the time of submission (\#804)
 * Prevent execution of multiple jobs with the same output dataset (\#801).
+* Transform non-absolute `FRACTAL_TASKS_DIR` into absolute paths, relative to the current working directory (\#825).
 * Error handling:
     * Raise an appropriate error if a task command is not executable (\#800).
     * Improve handling of errors raised in `get_slurm_config` (\#800).
