@@ -227,7 +227,7 @@ async def submit_workflow(
         db_sync = next(DB.get_sync_db())
         db_sync.close()
 
-        output_dataset.meta = await process_workflow(
+        output_dataset_meta = await process_workflow(
             workflow=workflow,
             input_paths=input_paths,
             output_path=output_path,
@@ -248,6 +248,16 @@ async def submit_workflow(
         )
         logger.debug(f'END workflow "{workflow.name}"')
 
+        # Replace output_dataset.meta with output_meta, while handling the
+        # history_next entry in a special way (i.e. appending to and existing
+        # entry rather than replacing it)
+        new_meta = {}
+        for key, value in output_dataset_meta.items():
+            if key != "history_next":
+                new_meta[key] = value
+            else:
+                new_meta[key] = output_dataset.meta.get(key, []) + value
+        output_dataset.meta = new_meta
         db_sync.merge(output_dataset)
 
         job.status = JobStatusType.DONE
