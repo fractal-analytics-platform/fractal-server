@@ -90,8 +90,7 @@ async def test_get_workflowtask_status(
         statuses = res.json()["workflowtasks_status"]
         debug(statuses)
 
-        # FIXME: why are keys strings, rather than integers??
-
         for expected_status, IDs in RESULTS.items():
             for ID in IDs:
-                assert statuses[str(ID)] == expected_status  # FIXME remove str
+                ID_str = str(ID)  # (JSON-object keys can only be strings)
+                assert statuses[ID_str] == expected_status
