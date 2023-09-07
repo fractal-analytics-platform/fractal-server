@@ -1,5 +1,6 @@
 import json
-from typing import Literal
+from enum import Enum
+from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter  # type: ignore[import]
@@ -7,8 +8,8 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
-from pydantic import BaseModel
-from sqlalchemy.orm.exc import MultipleResultsFound
+from pydantic import BaseModel  # type: ignore[import]
+from sqlalchemy.orm.exc import MultipleResultsFound  # type: ignore[import]
 from sqlmodel import or_  # type: ignore[import]
 from sqlmodel import select
 
@@ -32,6 +33,8 @@ from ...security import User
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_workflow_check_owner
+
+# from typing import Literal
 
 
 router = APIRouter()
@@ -357,8 +360,33 @@ async def export_history_as_workflow(
     return workflow
 
 
+class WorkflowTaskStatusType(
+    str, Enum
+):  # FIXME move to another module?  # noqa
+    """
+    Define the available WorkflowTask statuses
+
+    FIXME: docstring
+
+    Attributes:
+        SUBMITTED: xxx
+        DONE: xxx
+        FAILED: xxx
+    """
+
+    SUBMITTED = "submitted"
+    DONE = "done"
+    FAILED = "failed"
+
+
 class DatasetStatusRead(BaseModel):
-    workflow_tasks_status: dict[int, Literal["done", "fail", "submitted"]]
+    workflowtasks_status: Optional[
+        dict[
+            int,
+            # Literal["done", "fail", "scheduled"]
+            WorkflowTaskStatusType,
+        ]
+    ] = None
 
 
 @router.get(
@@ -411,13 +439,15 @@ async def get_workflowtask_status(
         )
 
     # Initialize empty dictionary for workflowtasks status
-    workflow_tasks_status_dict = {}
+    workflow_tasks_status_dict: dict = {}
 
     # Lowest priority: read status from DB, which corresponds to jobs that are
     # not running
-    history_next = dataset.meta["history_next"]
-    for (wftask, wftask_status) in history_next:
-        workflow_tasks_status_dict[wftask.id] = wftask_status
+    history_next = dataset.meta.get("history_next", [])
+    for history_item in history_next:
+        wftask_id = history_item["workflowtask"]["id"]
+        wftask_status = history_item["status"]
+        workflow_tasks_status_dict[wftask_id] = wftask_status
 
     # If a job is running, then gather more up-to-date information
     if running_job is not None:
@@ -429,20 +459,27 @@ async def get_workflowtask_status(
             db=db,
         )
         # Mid priority: Set all WorkflowTask's that are part of the running job
-        # as "scheduled"
+        # as "submitted"
         start = running_job.first_task_index
-        end = running_job.last_task_index
+        end = running_job.last_task_index + 1
         for wftask in running_workflow.task_list[start:end]:
-            workflow_tasks_status_dict[wftask.id] = "scheduled"
+            workflow_tasks_status_dict[wftask.id] = "submitted"
 
         # Highest priority: Read status updates coming from the running-job
         # temporary file. Note: this file only contains information on
         # WorkflowTask's that ran through successfully
-        tmp_file = running_job.working_dir / METADATA_FILENAME
-        with tmp_file.open("r") as f:
-            history_next = json.load(f)
-        for (wftask, wftask_status) in history_next:
-            workflow_tasks_status_dict[wftask.id] = wftask_status
+        tmp_file = Path(running_job.working_dir) / METADATA_FILENAME
+        try:
+            with tmp_file.open("r") as f:
+                history_next = json.load(f).get("history_next", [])
+        except FileNotFoundError:
+            history_next = []
+        for history_item in history_next:
+            wftask_id = history_item["workflowtask"]["id"]
+            wftask_status = history_item["status"]
+            workflow_tasks_status_dict[wftask_id] = wftask_status
 
-    response_body = DatasetStatusRead(**workflow_tasks_status_dict)
+    response_body = DatasetStatusRead(
+        workflowtasks_status=workflow_tasks_status_dict
+    )
     return response_body
