@@ -82,7 +82,9 @@ async def patch_task(
 
     update = task_update.dict(exclude_unset=True)
     for key, value in update.items():
-        if isinstance(value, str):
+        if isinstance(value, str) or (
+            key == "version" and value is None
+        ):  # special case (issue 817)
             setattr(db_task, key, value)
         elif isinstance(value, dict):
             if key == "args_schema":
