@@ -264,9 +264,13 @@ async def submit_workflow(
         logger.info(f'Workflow "{workflow.name}" failed (TaskExecutionError).')
 
         # Extract history_next from METADATA_FILENAME
-        with open(WORKFLOW_DIR / METADATA_FILENAME, "r") as f:
-            meta = json.load(f)
-            history_update = meta["history_next"]
+        try:
+            with open(WORKFLOW_DIR / METADATA_FILENAME, "r") as f:
+                meta = json.load(f)
+                history_update = meta["history_next"]
+        except FileNotFoundError:
+            history_update = []
+
         # Append failed task (identified via e.workflow_task_id)
         failed_wftask = db_sync.get(WorkflowTask, e.workflow_task_id)
         failed_wftask_dump = failed_wftask.dict(exclude={"task"})
@@ -280,7 +284,10 @@ async def submit_workflow(
         )
         history_update.append(new_history_item)
         # Assign to output_dataset.meta, add and commit
-        output_dataset.meta["history_next"].extend(history_update)
+        if "history_next" in output_dataset.meta:
+            output_dataset.meta["history_next"].extend(history_update)
+        else:
+            output_dataset.meta["history_next"] = history_update
         db_sync.merge(output_dataset)
 
         job.status = JobStatusType.FAILED
