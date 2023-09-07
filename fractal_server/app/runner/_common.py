@@ -19,6 +19,7 @@ from typing import Optional
 
 from ...logger import get_logger
 from ..models import WorkflowTask
+from ..models import WorkflowTaskStatusType
 from .common import JobExecutionError
 from .common import TaskExecutionError
 from .common import TaskParameters
@@ -291,7 +292,7 @@ def call_single_task(
     wftask_dump["task"] = wftask.task.dict()
     new_history_item = dict(
         workflowtask=wftask_dump,
-        status="done",  # FIXME replace with enum attribute
+        status=WorkflowTaskStatusType.DONE,
         parallelization=None,
     )
     try:
