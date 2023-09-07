@@ -25,6 +25,7 @@ from pydantic import BaseModel
 from pydantic import BaseSettings
 from pydantic import Field
 from pydantic import root_validator
+from pydantic import validator
 from sqlalchemy.engine import URL
 
 import fractal_server
@@ -108,6 +109,21 @@ class Settings(BaseSettings):
 
     # COOKIE TOKEN
     COOKIE_EXPIRE_SECONDS: int = 86400
+
+    @validator("FRACTAL_TASKS_DIR", always=True)
+    def make_FRACTAL_TASKS_DIR_absolute(cls, v):
+        """
+        If `FRACTAL_TASKS_DIR` is not absolute, make it an absolute path (based
+        on the current working directory).
+        """
+        FRACTAL_TASKS_DIR_path = Path(v)
+        if not FRACTAL_TASKS_DIR_path.is_absolute():
+            FRACTAL_TASKS_DIR_path = FRACTAL_TASKS_DIR_path.resolve()
+            logging.warning(
+                f'FRACTAL_TASKS_DIR="{v}" is not an absolute path; '
+                f'converting it to "{str(FRACTAL_TASKS_DIR_path)}"'
+            )
+        return FRACTAL_TASKS_DIR_path
 
     @root_validator(pre=True)
     def collect_oauth_clients(cls, values):
@@ -236,7 +252,8 @@ class Settings(BaseSettings):
 
     FRACTAL_TASKS_DIR: Optional[Path]
     """
-    Directory under which all the tasks will be saved.
+    Directory under which all the tasks will be saved (either an absolute path
+    or a path relative to current working directory).
     """
 
     FRACTAL_RUNNER_BACKEND: Literal["local", "slurm"] = "local"
