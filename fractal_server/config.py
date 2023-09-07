@@ -113,9 +113,11 @@ class Settings(BaseSettings):
     @validator("FRACTAL_TASKS_DIR", always=True)
     def make_FRACTAL_TASKS_DIR_absolute(cls, v):
         """
-        If `FRACTAL_TASKS_DIR` is not absolute, make it an absolute path (based
+        If `FRACTAL_TASKS_DIR` is a non-absolute path, make it absolute (based
         on the current working directory).
         """
+        if v is None:
+            return None
         FRACTAL_TASKS_DIR_path = Path(v)
         if not FRACTAL_TASKS_DIR_path.is_absolute():
             FRACTAL_TASKS_DIR_path = FRACTAL_TASKS_DIR_path.resolve()
