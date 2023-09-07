@@ -32,6 +32,7 @@ from ..models import Dataset
 from ..models import JobStatusType
 from ..models import Workflow
 from ..models import WorkflowTask
+from ..models import WorkflowTaskStatusType
 from ._common import METADATA_FILENAME
 from ._local import process_workflow as local_process_workflow
 from .common import close_job_logger
@@ -287,7 +288,7 @@ async def submit_workflow(
         failed_wftask_dump["task"] = failed_wftask.task.dict()
         new_history_item = dict(
             workflowtask=failed_wftask_dump,
-            status="failed",  # FIXME replace with enum attribute
+            status=WorkflowTaskStatusType.FAILED,
             parallelization=dict(
                 parallelization_level=failed_wftask.parallelization_level,
             ),

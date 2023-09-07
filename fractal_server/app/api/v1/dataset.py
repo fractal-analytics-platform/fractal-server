@@ -1,5 +1,4 @@
 import json
-from enum import Enum
 from pathlib import Path
 from typing import Optional
 
@@ -27,6 +26,7 @@ from ...models import ApplyWorkflow
 from ...models import Dataset
 from ...models import JobStatusType
 from ...models import Resource
+from ...models import WorkflowTaskStatusType
 from ...runner._common import METADATA_FILENAME
 from ...security import current_active_user
 from ...security import User
@@ -360,30 +360,10 @@ async def export_history_as_workflow(
     return workflow
 
 
-class WorkflowTaskStatusType(
-    str, Enum
-):  # FIXME move to another module?  # noqa
-    """
-    Define the available WorkflowTask statuses
-
-    FIXME: docstring
-
-    Attributes:
-        SUBMITTED: xxx
-        DONE: xxx
-        FAILED: xxx
-    """
-
-    SUBMITTED = "submitted"
-    DONE = "done"
-    FAILED = "failed"
-
-
-class DatasetStatusRead(BaseModel):
+class DatasetStatusRead(BaseModel):  # FIXME move definition somewhere else?
     workflowtasks_status: Optional[
         dict[
             int,
-            # Literal["done", "fail", "scheduled"]
             WorkflowTaskStatusType,
         ]
     ] = None
