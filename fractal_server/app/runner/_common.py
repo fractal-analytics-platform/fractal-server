@@ -291,7 +291,7 @@ def call_single_task(
     wftask_dump["task"] = wftask.task.dict()
     new_history_item = dict(
         workflowtask=wftask_dump,
-        status="done",
+        status="done",  # FIXME replace with enum attribute
         parallelization=None,
     )
     try:

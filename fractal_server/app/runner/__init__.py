@@ -287,7 +287,7 @@ async def submit_workflow(
         failed_wftask_dump["task"] = failed_wftask.task.dict()
         new_history_item = dict(
             workflowtask=failed_wftask_dump,
-            status="failed",
+            status="failed",  # FIXME replace with enum attribute
             parallelization=dict(
                 parallelization_level=failed_wftask.parallelization_level,
             ),
