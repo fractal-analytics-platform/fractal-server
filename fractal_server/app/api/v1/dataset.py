@@ -295,7 +295,7 @@ async def delete_resource(
 
 
 @router.get(
-    ("/project/{project_id}/dataset/{dataset_id}/export_history"),
+    "/project/{project_id}/dataset/{dataset_id}/export_history/",
     response_model=WorkflowExport,
 )
 async def export_history_as_workflow(
@@ -373,7 +373,7 @@ class DatasetStatusRead(BaseModel):  # FIXME move definition somewhere else?
 
 
 @router.get(
-    "/project/{project_id}/dataset/{dataset_id}/status",
+    "/project/{project_id}/dataset/{dataset_id}/status/",
     response_model=DatasetStatusRead,
 )
 async def get_workflowtask_status(
