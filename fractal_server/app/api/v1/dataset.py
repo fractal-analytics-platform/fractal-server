@@ -7,7 +7,6 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
-from pydantic import BaseModel  # type: ignore[import]
 from sqlmodel import or_  # type: ignore[import]
 from sqlmodel import select
 
@@ -23,9 +22,9 @@ from ...db import AsyncSession
 from ...db import get_db
 from ...models import ApplyWorkflow
 from ...models import Dataset
+from ...models import DatasetStatusRead
 from ...models import JobStatusType
 from ...models import Resource
-from ...models import WorkflowTaskStatusType
 from ...runner._common import METADATA_FILENAME
 from ...security import current_active_user
 from ...security import User
@@ -366,15 +365,6 @@ async def export_history_as_workflow(
 
     workflow = WorkflowExport(name=name, task_list=task_list)
     return workflow
-
-
-class DatasetStatusRead(BaseModel):  # FIXME move definition somewhere else?
-    status: Optional[
-        dict[
-            int,
-            WorkflowTaskStatusType,
-        ]
-    ] = None
 
 
 @router.get(
