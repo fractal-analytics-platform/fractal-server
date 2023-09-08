@@ -454,8 +454,8 @@ async def get_workflowtask_status(
         )
         # Mid priority: Set all WorkflowTask's that are part of the running job
         # as "submitted"
-        start = running_job.first_task_index
-        end = running_job.last_task_index + 1
+        start = running_job.first_task_index_integer
+        end = running_job.last_task_index_integer + 1
         for wftask in running_workflow.task_list[start:end]:
             workflow_tasks_status_dict[wftask.id] = "submitted"
 
