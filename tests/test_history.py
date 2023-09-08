@@ -83,7 +83,7 @@ async def test_get_workflowtask_status(
 
         # Test endpoint
         res = await client.get(
-            f"api/v1/project/{project.id}/dataset/{output_dataset.id}/status"
+            f"api/v1/project/{project.id}/dataset/{output_dataset.id}/status/"
         )
         debug(res.status_code)
         assert res.status_code == 200

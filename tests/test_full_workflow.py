@@ -194,9 +194,9 @@ async def test_full_workflow(
         debug(data)
         assert "dummy" in data["meta"]
 
-        # Check that history_next was updated correctly
+        # Test get_workflowtask_status endpoint
         res = await client.get(
-            f"api/v1/project/{project_id}/dataset/{output_dataset_id}/status"
+            f"api/v1/project/{project_id}/dataset/{output_dataset_id}/status/"
         )
         debug(res.status_code)
         assert res.status_code == 200
@@ -260,7 +260,7 @@ async def test_failing_workflow_TaskExecutionError(
         project = await project_factory(user)
         project_id = project.id
         dataset = await dataset_factory(
-            project, name="dataset", type="Any", read_only=False
+            project, name="My Dataset", type="Any", read_only=False
         )
         await resource_factory(path=str(tmp777_path / "data"), dataset=dataset)
 
@@ -328,9 +328,9 @@ async def test_failing_workflow_TaskExecutionError(
         # Check that ERROR_MESSAGE only appears once in the logs:
         assert len(job_status_data["log"].split(ERROR_MESSAGE)) == 2
 
-        # Check that history_next was updated correctly
+        # Test get_workflowtask_status endpoint
         res = await client.get(
-            f"api/v1/project/{project_id}/dataset/{dataset.id}/status"
+            f"api/v1/project/{project_id}/dataset/{dataset.id}/status/"
         )
         debug(res.status_code)
         assert res.status_code == 200
@@ -343,6 +343,20 @@ async def test_failing_workflow_TaskExecutionError(
                 str(ID_NON_PARALLEL_WFTASK): "done",
                 str(ID_PARALLEL_WFTASK): "failed",
             }
+
+        # Test export_history_as_workflow endpoint, and that
+        res = await client.get(
+            f"api/v1/project/{project_id}/dataset/{dataset.id}/export_history/"
+        )
+        assert res.status_code == 200
+        exported_wf = res.json()
+        debug(exported_wf)
+        res = await client.post(
+            f"api/v1/project/{project_id}/workflow/import/",
+            json=exported_wf,
+        )
+        assert res.status_code == 201
+        debug(res.json())
 
 
 async def _auxiliary_scancel(slurm_user, sleep_time):
