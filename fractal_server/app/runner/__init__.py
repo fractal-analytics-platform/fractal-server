@@ -145,8 +145,8 @@ async def submit_workflow(
         # Prepare some of process_workflow arguments
         input_paths = input_dataset.paths
         output_path = output_dataset.paths[0]
-        first_task_index = job.first_task_index
-        last_task_index = job.last_task_index
+        first_task_index = job.first_task_index_integer
+        last_task_index = job.last_task_index_integer
 
         # Define and create server-side working folder
         project_id = workflow.project_id
@@ -312,7 +312,7 @@ async def submit_workflow(
             output_dataset,
             WORKFLOW_DIR / METADATA_FILENAME,
             workflow,
-            first_task_index,  # type: ignore
+            first_task_index,
             last_task_index,  # type: ignore
             logger,
         )
