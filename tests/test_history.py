@@ -65,11 +65,9 @@ async def test_get_workflowtask_status(
             history_next.append(dict(workflowtask=dict(id=ID), status=status))
             RESULTS[status].add(ID)
 
-        # Create output_dataset
+        # Create output_dataset and job
         meta = dict(history_next=history_next)
         output_dataset = await dataset_factory(project, meta=meta)
-
-        # Create job in relation with output_dataset and workflow
         job = await job_factory(  # noqa
             project_id=project.id,
             workflow_id=workflow.id,
@@ -79,7 +77,78 @@ async def test_get_workflowtask_status(
             first_task_index=0,
             last_task_index=3,
         )
-        debug(job)
+
+        # Test get_workflowtask_status endpoint
+        res = await client.get(
+            f"api/v1/project/{project.id}/dataset/{output_dataset.id}/status/"
+        )
+        debug(res.status_code)
+        assert res.status_code == 200
+        statuses = res.json()["status"]
+        debug(statuses)
+        for expected_status, IDs in RESULTS.items():
+            for ID in IDs:
+                ID_str = str(ID)  # JSON-object keys can only be strings
+                assert statuses[ID_str] == expected_status
+
+
+async def test_get_workflowtask_status_simple(
+    db,
+    MockCurrentUser,
+    tmp_path,
+    project_factory,
+    task_factory,
+    dataset_factory,
+    workflow_factory,
+    job_factory,
+    client,
+):
+    """
+    Same as test_get_workflowtask_status, but without any temporary metadata
+    file in `working_dir`.
+    """
+
+    RESULTS = dict(done=set(), failed=set(), submitted=set())
+    working_dir = tmp_path / "working_dir"
+
+    async with MockCurrentUser(persist=True) as user:
+        project = await project_factory(user)
+        task = await task_factory(name="task1", source="task1")
+        workflow = await workflow_factory(project_id=project.id, name="WF")
+        input_dataset = await dataset_factory(project)
+
+        # (B) The statuses for these IDs will be overwritten by "submitted",
+        # because they match with the task_list of the workflow associated to a
+        # job associated to output_dataset
+        history_next = []
+        for dummy_status in ["done", "failed", "submitted"]:
+            await workflow.insert_task(task_id=task.id, db=db)
+            ID = workflow.task_list[-1].id
+            history_next.append(
+                dict(workflowtask=dict(id=ID), status=dummy_status)
+            )
+            RESULTS["submitted"].add(ID)
+        await db.close()
+
+        # (C) The statuses for these IDs will be the final ones, as there are
+        # no corresponding WorkflowTasks
+        for shift, status in enumerate(["done", "failed", "submitted"]):
+            ID = 200 + shift
+            history_next.append(dict(workflowtask=dict(id=ID), status=status))
+            RESULTS[status].add(ID)
+
+        # Create output_dataset and job
+        meta = dict(history_next=history_next)
+        output_dataset = await dataset_factory(project, meta=meta)
+        job = await job_factory(  # noqa
+            project_id=project.id,
+            workflow_id=workflow.id,
+            input_dataset_id=input_dataset.id,
+            output_dataset_id=output_dataset.id,
+            working_dir=str(working_dir),
+            first_task_index=0,
+            last_task_index=3,
+        )
 
         # Test get_workflowtask_status endpoint
         res = await client.get(
