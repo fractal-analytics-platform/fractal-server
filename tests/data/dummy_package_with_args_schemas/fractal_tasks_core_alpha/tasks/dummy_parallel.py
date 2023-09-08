@@ -109,8 +109,7 @@ def dummy_parallel(
 
     logger.info("[dummy_parallel] EXITING")
 
-    # Return empty metadata, since the "HISTORY_LEGACY" will be filled by
-    # fractal
+    # Return empty metadata, since the "history" will be filled by fractal
     metadata_update: dict = {}
     return metadata_update
 
