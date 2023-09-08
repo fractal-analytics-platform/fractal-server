@@ -288,6 +288,7 @@ async def test_failing_workflow_TaskExecutionError(
         )
         debug(res.json())
         assert res.status_code == 201
+        ID_NON_PARALLEL_WFTASK = res.json()["id"]
 
         # Add a (parallel) dummy_parallel task
         debug(payload_parallel)
@@ -298,6 +299,7 @@ async def test_failing_workflow_TaskExecutionError(
         )
         debug(res.json())
         assert res.status_code == 201
+        ID_PARALLEL_WFTASK = res.json()["id"]
 
         # Execute workflow
         res = await client.post(
@@ -334,8 +336,13 @@ async def test_failing_workflow_TaskExecutionError(
         assert res.status_code == 200
         statuses = res.json()["workflowtasks_status"]
         debug(statuses)
-        # FIXME ADD ASSERTION,
-        # e.g. comparing with statuses: {'1': 'done', '2': 'failed'}
+        if failing_task == "non_parallel":
+            assert statuses == {str(ID_NON_PARALLEL_WFTASK): "failed"}
+        else:
+            assert statuses == {
+                str(ID_NON_PARALLEL_WFTASK): "done",
+                str(ID_PARALLEL_WFTASK): "failed",
+            }
 
 
 async def _auxiliary_scancel(slurm_user, sleep_time):
