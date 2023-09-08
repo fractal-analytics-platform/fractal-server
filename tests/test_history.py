@@ -87,7 +87,7 @@ async def test_get_workflowtask_status(
         )
         debug(res.status_code)
         assert res.status_code == 200
-        statuses = res.json()["workflowtasks_status"]
+        statuses = res.json()["status"]
         debug(statuses)
         for expected_status, IDs in RESULTS.items():
             for ID in IDs:
