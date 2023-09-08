@@ -287,7 +287,7 @@ def call_single_task(
     except KeyError:
         updated_metadata["HISTORY_LEGACY"] = [HISTORY_LEGACY]
 
-    # Update HISTORY_NEXT
+    # Update history
     wftask_dump = wftask.dict(exclude={"task"})
     wftask_dump["task"] = wftask.task.dict()
     new_history_item = dict(
@@ -296,9 +296,9 @@ def call_single_task(
         parallelization=None,
     )
     try:
-        updated_metadata["HISTORY_NEXT"].append(new_history_item)
+        updated_metadata["history"].append(new_history_item)
     except KeyError:
-        updated_metadata["HISTORY_NEXT"] = [new_history_item]
+        updated_metadata["history"] = [new_history_item]
 
     out_task_parameters = TaskParameters(
         input_paths=[task_pars.output_path],
@@ -479,7 +479,7 @@ def call_parallel_task(
     except KeyError:
         task_pars_depend.metadata["HISTORY_LEGACY"] = [HISTORY_LEGACY]
 
-    # Update HISTORY_NEXT
+    # Update history
     wftask_dump = wftask.dict(exclude={"task"})
     wftask_dump["task"] = wftask.task.dict()
     new_history_item = dict(
@@ -491,9 +491,9 @@ def call_parallel_task(
         ),
     )
     try:
-        task_pars_depend.metadata["HISTORY_NEXT"].append(new_history_item)
+        task_pars_depend.metadata["history"].append(new_history_item)
     except KeyError:
-        task_pars_depend.metadata["HISTORY_NEXT"] = [new_history_item]
+        task_pars_depend.metadata["history"] = [new_history_item]
 
     out_task_parameters = TaskParameters(
         input_paths=[task_pars_depend.output_path],

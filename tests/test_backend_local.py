@@ -162,9 +162,9 @@ def test_execute_single_parallel_task(tmp_path):
             logger_name=logger_name,
         )
         debug(res)
-        HISTORY_NEXT = res.metadata["HISTORY_NEXT"]
+        history = res.metadata["history"]
         assert MOCKPARALLELTASK_NAME in [
-            event["workflowtask"]["task"]["name"] for event in HISTORY_NEXT
+            event["workflowtask"]["task"]["name"] for event in history
         ]
     close_job_logger(job_logger)
 
@@ -237,13 +237,13 @@ def test_execute_multiple_tasks(tmp_path):
     with (tmp_path / "0.result.json").open("r") as f:
         data = json.load(f)
         debug(data[0]["metadata"])
-        data[0]["metadata"].pop("HISTORY_NEXT", None)
+        data[0]["metadata"].pop("history", None)
         data[0]["metadata"].pop("HISTORY_LEGACY", None)  # FIXME: remove
         assert data[0]["metadata"] == METADATA_0
     with (tmp_path / "1.result.json").open("r") as f:
         data = json.load(f)
         debug(data[0]["metadata"])
-        data[0]["metadata"].pop("HISTORY_NEXT", None)
+        data[0]["metadata"].pop("history", None)
         data[0]["metadata"].pop("HISTORY_LEGACY", None)  # FIXME: remove
         assert data[0]["metadata"] == METADATA_1
 
