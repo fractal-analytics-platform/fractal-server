@@ -296,9 +296,9 @@ def call_single_task(
         parallelization=None,
     )
     try:
-        updated_metadata["history_next"].append(new_history_item)
+        updated_metadata["HISTORY_NEXT"].append(new_history_item)
     except KeyError:
-        updated_metadata["history_next"] = [new_history_item]
+        updated_metadata["HISTORY_NEXT"] = [new_history_item]
 
     out_task_parameters = TaskParameters(
         input_paths=[task_pars.output_path],
@@ -491,9 +491,9 @@ def call_parallel_task(
         ),
     )
     try:
-        task_pars_depend.metadata["history_next"].append(new_history_item)
+        task_pars_depend.metadata["HISTORY_NEXT"].append(new_history_item)
     except KeyError:
-        task_pars_depend.metadata["history_next"] = [new_history_item]
+        task_pars_depend.metadata["HISTORY_NEXT"] = [new_history_item]
 
     out_task_parameters = TaskParameters(
         input_paths=[task_pars_depend.output_path],

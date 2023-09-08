@@ -247,11 +247,11 @@ async def submit_workflow(
         logger.debug(f'END workflow "{workflow.name}"')
 
         # Replace output_dataset.meta with output_dataset_meta, while handling
-        # the history_next property in a special way (i.e. appending to and
+        # the HISTORY_NEXT property in a special way (i.e. appending to and
         # existing entry rather than replacing it)
         new_meta = {}
         for key, value in output_dataset_meta.items():
-            if key != "history_next":
+            if key != "HISTORY_NEXT":
                 new_meta[key] = value
             else:
                 new_meta[key] = output_dataset.meta.get(key, []) + value
@@ -273,16 +273,16 @@ async def submit_workflow(
         logger.debug(f'FAILED workflow "{workflow.name}", TaskExecutionError.')
         logger.info(f'Workflow "{workflow.name}" failed (TaskExecutionError).')
 
-        # Assemble new history_next and assign it to output_dataset.meta
+        # Assemble new HISTORY_NEXT and assign it to output_dataset.meta
         failed_wftask = db_sync.get(WorkflowTask, e.workflow_task_id)
-        new_history_next = assemble_history_failed_job(
+        new_HISTORY_NEXT = assemble_history_failed_job(
             job,
             output_dataset,
             workflow,
             logger,
             failed_wftask=failed_wftask,
         )
-        output_dataset.meta["history_next"] = new_history_next
+        output_dataset.meta["HISTORY_NEXT"] = new_HISTORY_NEXT
         db_sync.merge(output_dataset)
 
         job.status = JobStatusType.FAILED
@@ -304,14 +304,14 @@ async def submit_workflow(
         logger.debug(f'FAILED workflow "{workflow.name}", JobExecutionError.')
         logger.info(f'Workflow "{workflow.name}" failed (JobExecutionError).')
 
-        # Assemble new history_next and assign it to output_dataset.meta
-        new_history_next = assemble_history_failed_job(
+        # Assemble new HISTORY_NEXT and assign it to output_dataset.meta
+        new_HISTORY_NEXT = assemble_history_failed_job(
             job,
             output_dataset,
             workflow,
             logger,
         )
-        output_dataset.meta["history_next"] = new_history_next
+        output_dataset.meta["HISTORY_NEXT"] = new_HISTORY_NEXT
         db_sync.merge(output_dataset)
 
         job.status = JobStatusType.FAILED
@@ -327,14 +327,14 @@ async def submit_workflow(
         logger.debug(f'FAILED workflow "{workflow.name}", unknown error.')
         logger.info(f'Workflow "{workflow.name}" failed (unkwnon error).')
 
-        # Assemble new history_next and assign it to output_dataset.meta
-        new_history_next = assemble_history_failed_job(
+        # Assemble new HISTORY_NEXT and assign it to output_dataset.meta
+        new_HISTORY_NEXT = assemble_history_failed_job(
             job,
             output_dataset,
             workflow,
             logger,
         )
-        output_dataset.meta["history_next"] = new_history_next
+        output_dataset.meta["HISTORY_NEXT"] = new_HISTORY_NEXT
         db_sync.merge(output_dataset)
 
         job.status = JobStatusType.FAILED

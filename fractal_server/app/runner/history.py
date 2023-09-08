@@ -33,7 +33,7 @@ def assemble_history_failed_job(
     failed_wftask: Optional[WorkflowTask] = None,
 ) -> list[dict[str, Any]]:
     """
-    Assemble `history_next` after a workflow-execution job fails.
+    Assemble `HISTORY_NEXT` after a workflow-execution job fails.
 
 
     Args:
@@ -45,31 +45,31 @@ def assemble_history_failed_job(
             The `workflow` associated to `failed_job`.
         logger: A logger instance.
         failed_wftask:
-            If set, append it to `history_next` during step 3; if `None`, infer
+            If set, append it to `HISTORY_NEXT` during step 3; if `None`, infer
             it by comparing the job task list and the one in
             `tmp_metadata_file`.
 
     Returns:
-        The new value of `history_next`, to be merged into
+        The new value of `HISTORY_NEXT`, to be merged into
         `output_dataset.meta`.
     """
 
-    # The final value of the history_next attribute should include up to three
+    # The final value of the HISTORY_NEXT attribute should include up to three
     # parts, coming from: the database, the temporary file, the failed-task
     # information.
 
-    # Part 1: Read exising history_next from DB
-    new_history_next = output_dataset.meta.get("history_next", [])
+    # Part 1: Read exising HISTORY_NEXT from DB
+    new_HISTORY_NEXT = output_dataset.meta.get("HISTORY_NEXT", [])
 
-    # Part 2: Extend history_next based on tmp_metadata_file
+    # Part 2: Extend HISTORY_NEXT based on tmp_metadata_file
     tmp_metadata_file = Path(job.working_dir) / METADATA_FILENAME  # type: ignore  # noqa
     try:
         with tmp_metadata_file.open("r") as f:
             tmp_file_meta = json.load(f)
-            tmp_file_history_next = tmp_file_meta.get("history_next", [])
-            new_history_next.extend(tmp_file_history_next)
+            tmp_file_HISTORY_NEXT = tmp_file_meta.get("HISTORY_NEXT", [])
+            new_HISTORY_NEXT.extend(tmp_file_HISTORY_NEXT)
     except FileNotFoundError:
-        tmp_file_history_next = []
+        tmp_file_HISTORY_NEXT = []
 
     # Part 3/A: Identify failed task, if needed
     if failed_wftask is None:
@@ -80,7 +80,7 @@ def assemble_history_failed_job(
         ]
         tmp_file_wftasks = [
             history_item["workflowtask"]
-            for history_item in tmp_file_history_next
+            for history_item in tmp_file_HISTORY_NEXT
         ]
         if len(job_wftasks) < len(tmp_file_wftasks):
             logger.error(
@@ -89,7 +89,7 @@ def assemble_history_failed_job(
         else:
             failed_wftask = job_wftasks[len(tmp_file_wftasks)]
 
-    # Part 3/B: Append failed task to history_next
+    # Part 3/B: Append failed task to HISTORY_NEXT
     if failed_wftask is not None:
         failed_wftask_dump = failed_wftask.dict(exclude={"task"})
         failed_wftask_dump["task"] = failed_wftask.task.dict()
@@ -100,6 +100,6 @@ def assemble_history_failed_job(
                 parallelization_level=failed_wftask.parallelization_level,
             ),
         )
-        new_history_next.append(new_history_item)
+        new_HISTORY_NEXT.append(new_history_item)
 
-    return new_history_next
+    return new_HISTORY_NEXT
