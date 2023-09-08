@@ -8,7 +8,6 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from pydantic import BaseModel  # type: ignore[import]
-from sqlalchemy.orm.exc import MultipleResultsFound  # type: ignore[import]
 from sqlmodel import or_  # type: ignore[import]
 from sqlmodel import select
 
@@ -401,8 +400,10 @@ async def get_workflowtask_status(
     dataset = output["dataset"]
 
     # Check whether there exists a job such that
-    # 1. `job.output_dataset_id == dataset_id`
-    # 2. `job.status` is either submitted or running
+    # 1. `job.output_dataset_id == dataset_id`, and
+    # 2. `job.status` is either submitted or running.
+    # If one such job exists, it will be used later. If there are multiple
+    # jobs, raise an error.
     # Note: see
     # https://sqlmodel.tiangolo.com/tutorial/where/#type-annotations-and-errors
     # regarding the type-ignore in this code block
@@ -416,15 +417,19 @@ async def get_workflowtask_status(
         )
     )
     res = await db.execute(stm)
-
-    # If one such job exists, it will be used later. If there are multiple
-    # jobs, this is an error.
-    try:
-        running_job = res.scalars().one_or_none()
-    except MultipleResultsFound as e:
+    running_jobs = res.scalars().all()
+    if len(running_jobs) == 0:
+        running_job = None
+    elif len(running_jobs) == 1:
+        running_job = running_jobs[0]
+    else:
+        string_ids = str([job.id for job in running_jobs])[1:-1]
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"FIXME. Original error:\n{str(e)}",
+            detail=(
+                f"Cannot get WorkflowTask statuses as dataset {dataset.id} "
+                f"is linked to multiple ongoing jobs: {string_ids}"
+            ),
         )
 
     # Initialize empty dictionary for workflowtasks status
