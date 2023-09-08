@@ -276,15 +276,22 @@ async def submit_workflow(
         logger.debug(f'FAILED workflow "{workflow.name}", TaskExecutionError.')
         logger.info(f'Workflow "{workflow.name}" failed (TaskExecutionError).')
 
-        # Extract history_next from METADATA_FILENAME
+        # The final value of the history_next attribute should include up to
+        # three parts, coming from: the database, the temporary file, the
+        # failed-task information.
+
+        # Part 1: Read exising history_next from DB
+        new_history_next = output_dataset.meta.get("history_next", [])
+
+        # Part 2: Extract history_next from METADATA_FILENAME
         try:
             with open(WORKFLOW_DIR / METADATA_FILENAME, "r") as f:
-                meta = json.load(f)
-                history_update = meta["history_next"]
+                tmp_file_meta = json.load(f)
+                new_history_next.extend(tmp_file_meta.get("history_next", []))
         except FileNotFoundError:
-            history_update = []
+            pass
 
-        # Append failed task (identified via e.workflow_task_id)
+        # Part 3: Append failed task (identified via e.workflow_task_id)
         failed_wftask = db_sync.get(WorkflowTask, e.workflow_task_id)
         failed_wftask_dump = failed_wftask.dict(exclude={"task"})
         failed_wftask_dump["task"] = failed_wftask.task.dict()
@@ -295,13 +302,10 @@ async def submit_workflow(
                 parallelization_level=failed_wftask.parallelization_level,
             ),
         )
-        history_update.append(new_history_item)
+        new_history_next.append(new_history_item)
 
-        # Assign to output_dataset.meta, add and commit
-        if "history_next" in output_dataset.meta:
-            output_dataset.meta["history_next"].extend(history_update)
-        else:
-            output_dataset.meta["history_next"] = history_update
+        # Assign to output_dataset.meta
+        output_dataset.meta["history_next"] = new_history_next
         db_sync.merge(output_dataset)
 
         job.status = JobStatusType.FAILED
@@ -322,12 +326,55 @@ async def submit_workflow(
         logger.debug(f'FAILED workflow "{workflow.name}", JobExecutionError.')
         logger.info(f'Workflow "{workflow.name}" failed (JobExecutionError).')
 
-        # FIXME update `history_next`:
-        # 1. extract history_next from METADATA_FILENAME
-        # 2. append failed task (identified by comparing history_next with
-        #    workflow.task_list[start:end], for the appropriate start/end
-        #    indices)
-        # 3. assign to output_dataset.meta, add and commit
+        # The final value of the history_next attribute should include up to
+        # three parts, coming from: the database, the temporary file, the
+        # failed-task information.
+
+        # FIXME: extract this part into a function
+
+        # Part 1: Read exising history_next from DB
+        new_history_next = output_dataset.meta.get("history_next", [])
+
+        # Part 2: Extract history_next from METADATA_FILENAME
+        try:
+            with open(WORKFLOW_DIR / METADATA_FILENAME, "r") as f:
+                tmp_file_meta = json.load(f)
+                tmp_file_history_next = tmp_file_meta.get("history_next", [])
+                new_history_next.extend(tmp_file_history_next)
+        except FileNotFoundError:
+            tmp_file_history_next = []
+
+        # Part 3: Append failed task (identified by comparison with job
+        # task_list
+        job_wftasks = workflow.task_list[
+            first_task_index : (last_task_index + 1)  # type: ignore  # noqa
+        ]
+        job_wftasks_ids = [wftask.id for wftask in job_wftasks]
+        tmp_file_wftasks_id = [
+            history_item["workflowtask"]["id"]
+            for history_item in tmp_file_history_next
+        ]
+        if len(job_wftasks_ids) < len(tmp_file_wftasks_id):
+            logger.error(
+                "SOMETHING WENT WRONG AND HISTORY WAS NOT UPDATED CORRECTLY"  # FIXME # noqa
+            )
+        else:
+            failed_wftask_id = job_wftasks_ids[len(tmp_file_wftasks_id)]
+            failed_wftask = db_sync.get(WorkflowTask, failed_wftask_id)
+            failed_wftask_dump = failed_wftask.dict(exclude={"task"})
+            failed_wftask_dump["task"] = failed_wftask.task.dict()
+            new_history_item = dict(
+                workflowtask=failed_wftask_dump,
+                status=WorkflowTaskStatusType.FAILED,
+                parallelization=dict(
+                    parallelization_level=failed_wftask.parallelization_level,
+                ),
+            )
+            new_history_next.append(new_history_item)
+
+        # Assign to output_dataset.meta
+        output_dataset.meta["history_next"] = new_history_next
+        db_sync.merge(output_dataset)
 
         job.status = JobStatusType.FAILED
         job.end_timestamp = get_timestamp()
@@ -336,6 +383,7 @@ async def submit_workflow(
         db_sync.merge(job)
         close_job_logger(logger)
         db_sync.commit()
+
     except Exception as e:
 
         logger.debug(f'FAILED workflow "{workflow.name}", unknown error.')
