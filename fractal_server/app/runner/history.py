@@ -15,9 +15,11 @@ import json
 import logging
 from pathlib import Path
 from typing import Any
+from typing import Optional
 
 from ..models import Dataset
 from ..models import Workflow
+from ..models import WorkflowTask
 from ..models import WorkflowTaskStatusType
 
 
@@ -28,6 +30,7 @@ def handle_history_failed_job(
     first_task_index: int,
     last_task_index: int,
     logger: logging.Logger,
+    failed_wftask: Optional[WorkflowTask] = None,
 ) -> list[dict[str, Any]]:
     """
     FIXME
@@ -39,9 +42,10 @@ def handle_history_failed_job(
     # parts, coming from: the database, the temporary file, the failed-task
     # information.
 
+    # Part 1: Read exising history_next from DB
     new_history_next = output_dataset.meta.get("history_next", [])
 
-    # Part 2: Extract history_next from METADATA_FILENAME
+    # Part 2: Extend history_next based on tmp_metadata_file
     try:
         with tmp_metadata_file.open("r") as f:
             tmp_file_meta = json.load(f)
@@ -50,20 +54,24 @@ def handle_history_failed_job(
     except FileNotFoundError:
         tmp_file_history_next = []
 
-    # Part 3: Append failed task (identified by comparison with job
-    # task_list
-    job_wftasks = workflow.task_list[
-        first_task_index : (last_task_index + 1)  # type: ignore  # noqa
-    ]
-    tmp_file_wftasks = [
-        history_item["workflowtask"] for history_item in tmp_file_history_next
-    ]
-    if len(job_wftasks) < len(tmp_file_wftasks):
-        logger.error(
-            "SOMETHING WENT WRONG AND HISTORY WAS NOT UPDATED CORRECTLY"  # FIXME # noqa
-        )
-    else:
-        failed_wftask = job_wftasks[len(tmp_file_wftasks)]
+    # Part 3/A: Identify failed task, if needed
+    if failed_wftask is None:
+        job_wftasks = workflow.task_list[
+            first_task_index : (last_task_index + 1)  # type: ignore  # noqa
+        ]
+        tmp_file_wftasks = [
+            history_item["workflowtask"]
+            for history_item in tmp_file_history_next
+        ]
+        if len(job_wftasks) < len(tmp_file_wftasks):
+            logger.error(
+                "SOMETHING WENT WRONG AND HISTORY WAS NOT UPDATED CORRECTLY"  # FIXME # noqa
+            )
+        else:
+            failed_wftask = job_wftasks[len(tmp_file_wftasks)]
+
+    # Part 3/B: Append failed task to history_next
+    if failed_wftask is not None:
         failed_wftask_dump = failed_wftask.dict(exclude={"task"})
         failed_wftask_dump["task"] = failed_wftask.task.dict()
         new_history_item = dict(
