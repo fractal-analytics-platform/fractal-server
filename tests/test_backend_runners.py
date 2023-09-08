@@ -14,7 +14,7 @@ Zurich.
 import logging
 import os
 
-import pytest
+import pytest  # type: ignore[import]
 from devtools import debug
 
 from fractal_server.app.models import Workflow
@@ -139,12 +139,13 @@ async def test_runner(
     close_job_logger(logger)
     debug(metadata)
     assert "dummy" in metadata
-    assert "dummy" in metadata
-    assert metadata["HISTORY_LEGACY"] == [
-        tk_dummy.name,
-        tk_dummy.name,
-        f"{tk_dummy_parallel.name}: ['0', '1', '2']",
-    ]
+    for event in metadata["HISTORY_NEXT"]:
+        assert event["status"] == "done"
+    event0, event1, event2 = metadata["HISTORY_NEXT"]
+    assert event0["workflowtask"]["task"]["name"] == tk_dummy.name
+    assert event1["workflowtask"]["task"]["name"] == tk_dummy.name
+    assert event2["workflowtask"]["task"]["name"] == tk_dummy_parallel.name
+    assert event2["parallelization"]["component_list"] == ["0", "1", "2"]
 
     # Check that the correct files are present in workflow_dir
     files_server = [f.name for f in workflow_dir.glob("*")]
