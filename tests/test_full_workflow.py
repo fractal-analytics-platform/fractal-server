@@ -490,7 +490,7 @@ async def test_failing_workflow_JobExecutionError(
         assert res.status_code == 200
         statuses = res.json()["status"]
         debug(statuses)
-        assert statuses[workflow_task_id] == "failed"
+        assert statuses[str(workflow_task_id)] == "failed"
 
 
 async def test_non_python_task(
