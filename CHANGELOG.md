@@ -2,7 +2,12 @@
 
 # Unreleased
 
-* Add `docs_info`and `docs_link` to Task model (\#814)
+* Review structure of dataset history (\#803):
+    * Re-define structure for `history` property of `Dataset.meta`;
+    * Introduce `"api/v1/project/{project_id}/dataset/{dataset_id}/status/"` endpoint;
+    * Introduce `"api/v1/project/{project_id}/dataset/{dataset_id}/export_history/"` endpoint;
+    * Move legacy history to `Dataset.meta["HISTORY_LEGACY"]`.
+* Add `docs_info` and `docs_link` to Task model (\#814)
 * Accept `TaskUpdate.version=None` in task-patch endpoint (\#818).
 * Store a copy of the `Workflow` into `ApplyWorkflow` at the time of submission (\#804)
 * Prevent execution of multiple jobs with the same output dataset (\#801).
