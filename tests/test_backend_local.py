@@ -15,7 +15,7 @@ import datetime
 import json
 from concurrent.futures import ThreadPoolExecutor
 
-import pytest
+import pytest  # type: ignore[import]
 from devtools import debug
 
 from .data.tasks_dummy import dummy as dummy_module
@@ -162,7 +162,11 @@ def test_execute_single_parallel_task(tmp_path):
             logger_name=logger_name,
         )
         debug(res)
-        assert MOCKPARALLELTASK_NAME in res.metadata["HISTORY_LEGACY"][0]
+        HISTORY_NEXT = res.metadata["HISTORY_NEXT"]
+        assert MOCKPARALLELTASK_NAME in [
+                event["workflowtask"]["task"]["name"]
+                for event in HISTORY_NEXT
+                ]
     close_job_logger(job_logger)
 
     # Validate results
@@ -189,8 +193,8 @@ def test_execute_multiple_tasks(tmp_path):
     TASK_NAME = "task0"
     METADATA_0 = {}
     METADATA_1 = dict(
-        dummy="dummy 0", index=["0", "1", "2"], HISTORY_LEGACY=[TASK_NAME]
-    )  # dummy task output
+        dummy="dummy 0", index=["0", "1", "2"],
+        )
 
     task_list = [
         MockWorkflowTask(
@@ -233,12 +237,14 @@ def test_execute_multiple_tasks(tmp_path):
     with (tmp_path / "0.result.json").open("r") as f:
         data = json.load(f)
         debug(data[0]["metadata"])
-        data[0]["metadata"].pop("HISTORY_NEXT", None)  # FIXME
+        data[0]["metadata"].pop("HISTORY_NEXT", None)
+        data[0]["metadata"].pop("HISTORY_LEGACY", None)  # FIXME: remove
         assert data[0]["metadata"] == METADATA_0
     with (tmp_path / "1.result.json").open("r") as f:
         data = json.load(f)
         debug(data[0]["metadata"])
-        data[0]["metadata"].pop("HISTORY_NEXT", None)  # FIXME
+        data[0]["metadata"].pop("HISTORY_NEXT", None)
+        data[0]["metadata"].pop("HISTORY_LEGACY", None)  # FIXME: remove
         assert data[0]["metadata"] == METADATA_1
 
 
