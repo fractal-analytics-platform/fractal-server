@@ -17,25 +17,41 @@ from pathlib import Path
 from typing import Any
 from typing import Optional
 
+from ..models import ApplyWorkflow
 from ..models import Dataset
 from ..models import Workflow
 from ..models import WorkflowTask
 from ..models import WorkflowTaskStatusType
+from ._common import METADATA_FILENAME
 
 
-def handle_history_failed_job(
+def assemble_history_failed_job(
+    job: ApplyWorkflow,
     output_dataset: Dataset,
-    tmp_metadata_file: Path,
     workflow: Workflow,
-    first_task_index: int,
-    last_task_index: int,
     logger: logging.Logger,
     failed_wftask: Optional[WorkflowTask] = None,
 ) -> list[dict[str, Any]]:
     """
-    FIXME
+    Assemble `history_next` after a workflow-execution job fails.
 
-    FIXME: define model for output
+
+    Args:
+        failed_job:
+            The failed `ApplyWorkflow` object.
+        output_dataset:
+            The `output_dataset` associated to `failed_job`.
+        workflow:
+            The `workflow` associated to `failed_job`.
+        logger: A logger instance.
+        failed_wftask:
+            If set, append it to `history_next` during step 3; if `None`, infer
+            it by comparing the job task list and the one in
+            `tmp_metadata_file`.
+
+    Returns:
+        The new value of `history_next`, to be merged into
+        `output_dataset.meta`.
     """
 
     # The final value of the history_next attribute should include up to three
@@ -46,6 +62,7 @@ def handle_history_failed_job(
     new_history_next = output_dataset.meta.get("history_next", [])
 
     # Part 2: Extend history_next based on tmp_metadata_file
+    tmp_metadata_file = Path(job.working_dir) / METADATA_FILENAME  # type: ignore  # noqa
     try:
         with tmp_metadata_file.open("r") as f:
             tmp_file_meta = json.load(f)

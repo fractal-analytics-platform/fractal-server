@@ -31,13 +31,12 @@ from ..models import Dataset
 from ..models import JobStatusType
 from ..models import Workflow
 from ..models import WorkflowTask
-from ._common import METADATA_FILENAME
 from ._local import process_workflow as local_process_workflow
 from .common import close_job_logger
 from .common import JobExecutionError
 from .common import TaskExecutionError
 from .common import validate_workflow_compatibility  # noqa: F401
-from .history import handle_history_failed_job
+from .history import assemble_history_failed_job
 
 
 _backends = {}
@@ -206,8 +205,8 @@ async def submit_workflow(
         logger.debug(f"input_paths: {input_paths}")
         logger.debug(f"output_path: {output_path}")
         logger.debug(f"job.id: {job.id}")
-        logger.debug(f"job.working_dir: {str(WORKFLOW_DIR)}")
-        logger.debug(f"job.workflow_dir_user: {str(WORKFLOW_DIR_USER)}")
+        logger.debug(f"job.working_dir: {job.working_dir}")
+        logger.debug(f"job.working_dir_user: {job.working_dir_user}")
         logger.debug(f"job.first_task_index: {job.first_task_index}")
         logger.debug(f"job.last_task_index: {job.last_task_index}")
         logger.debug(f'START workflow "{workflow.name}"')
@@ -274,18 +273,15 @@ async def submit_workflow(
         logger.debug(f'FAILED workflow "{workflow.name}", TaskExecutionError.')
         logger.info(f'Workflow "{workflow.name}" failed (TaskExecutionError).')
 
+        # Assemble new history_next and assign it to output_dataset.meta
         failed_wftask = db_sync.get(WorkflowTask, e.workflow_task_id)
-        new_history_next = handle_history_failed_job(
+        new_history_next = assemble_history_failed_job(
+            job,
             output_dataset,
-            WORKFLOW_DIR / METADATA_FILENAME,
             workflow,
-            first_task_index,  # type: ignore
-            last_task_index,  # type: ignore
             logger,
             failed_wftask=failed_wftask,
         )
-
-        # Assign to output_dataset.meta
         output_dataset.meta["history_next"] = new_history_next
         db_sync.merge(output_dataset)
 
@@ -308,16 +304,13 @@ async def submit_workflow(
         logger.debug(f'FAILED workflow "{workflow.name}", JobExecutionError.')
         logger.info(f'Workflow "{workflow.name}" failed (JobExecutionError).')
 
-        new_history_next = handle_history_failed_job(
+        # Assemble new history_next and assign it to output_dataset.meta
+        new_history_next = assemble_history_failed_job(
+            job,
             output_dataset,
-            WORKFLOW_DIR / METADATA_FILENAME,
             workflow,
-            first_task_index,
-            last_task_index,  # type: ignore
             logger,
         )
-
-        # Assign to output_dataset.meta
         output_dataset.meta["history_next"] = new_history_next
         db_sync.merge(output_dataset)
 
@@ -334,16 +327,13 @@ async def submit_workflow(
         logger.debug(f'FAILED workflow "{workflow.name}", unknown error.')
         logger.info(f'Workflow "{workflow.name}" failed (unkwnon error).')
 
-        new_history_next = handle_history_failed_job(
+        # Assemble new history_next and assign it to output_dataset.meta
+        new_history_next = assemble_history_failed_job(
+            job,
             output_dataset,
-            WORKFLOW_DIR / METADATA_FILENAME,
             workflow,
-            first_task_index,  # type: ignore
-            last_task_index,  # type: ignore
             logger,
         )
-
-        # Assign to output_dataset.meta
         output_dataset.meta["history_next"] = new_history_next
         db_sync.merge(output_dataset)
 
