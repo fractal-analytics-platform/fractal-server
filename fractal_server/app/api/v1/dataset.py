@@ -350,11 +350,11 @@ async def export_history_as_workflow(
     # means that the history in the DB is up-to-date.
 
     # Read history from DB
-    HISTORY_NEXT = dataset.meta["HISTORY_NEXT"]
+    history = dataset.meta["history"]
 
     # Construct reproducible workflow
     task_list = []
-    for history_item in HISTORY_NEXT:
+    for history_item in history:
         wftask = history_item["workflowtask"]
         wftask_status = history_item["status"]
         if wftask_status == "done":
@@ -427,8 +427,8 @@ async def get_workflowtask_status(
 
     # Lowest priority: read status from DB, which corresponds to jobs that are
     # not running
-    HISTORY_NEXT = dataset.meta.get("HISTORY_NEXT", [])
-    for history_item in HISTORY_NEXT:
+    history = dataset.meta.get("history", [])
+    for history_item in history:
         wftask_id = history_item["workflowtask"]["id"]
         wftask_status = history_item["status"]
         workflow_tasks_status_dict[wftask_id] = wftask_status
@@ -455,10 +455,10 @@ async def get_workflowtask_status(
         tmp_file = Path(running_job.working_dir) / METADATA_FILENAME
         try:
             with tmp_file.open("r") as f:
-                HISTORY_NEXT = json.load(f).get("HISTORY_NEXT", [])
+                history = json.load(f).get("history", [])
         except FileNotFoundError:
-            HISTORY_NEXT = []
-        for history_item in HISTORY_NEXT:
+            history = []
+        for history_item in history:
             wftask_id = history_item["workflowtask"]["id"]
             wftask_status = history_item["status"]
             workflow_tasks_status_dict[wftask_id] = wftask_status

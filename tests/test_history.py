@@ -24,16 +24,16 @@ async def test_get_workflowtask_status(
 
     # (A) These statuses will be written in the metadata file, and they will be
     # the final ones - as there existin no corresponding WorkflowTasks
-    HISTORY_NEXT = []
+    history = []
     for shift, status in enumerate(["done", "failed"]):
         ID = 100 + shift
-        HISTORY_NEXT.append(dict(workflowtask=dict(id=ID), status=status))
+        history.append(dict(workflowtask=dict(id=ID), status=status))
         RESULTS[status].add(ID)
 
     working_dir = tmp_path / "working_dir"
     working_dir.mkdir()
     with (working_dir / METADATA_FILENAME).open("w") as f:
-        tmp_meta = dict(HISTORY_NEXT=HISTORY_NEXT)
+        tmp_meta = dict(history=history)
         json.dump(tmp_meta, f)
     debug(working_dir / METADATA_FILENAME)
 
@@ -43,8 +43,8 @@ async def test_get_workflowtask_status(
         workflow = await workflow_factory(project_id=project.id, name="WF")
         input_dataset = await dataset_factory(project)
 
-        # Prepare output_dataset.meta["HISTORY_NEXT"]
-        HISTORY_NEXT = []
+        # Prepare output_dataset.meta["history"]
+        history = []
 
         # (B) The statuses for these IDs will be overwritten by "submitted",
         # because they match with the task_list of the workflow associated to a
@@ -52,9 +52,7 @@ async def test_get_workflowtask_status(
         for dummy_status in ["done", "failed", "submitted"]:
             await workflow.insert_task(task_id=task.id, db=db)
             ID = workflow.task_list[-1].id
-            HISTORY_NEXT.append(
-                dict(workflowtask=dict(id=ID), status=dummy_status)
-            )
+            history.append(dict(workflowtask=dict(id=ID), status=dummy_status))
             RESULTS["submitted"].add(ID)
         await db.close()
 
@@ -62,11 +60,11 @@ async def test_get_workflowtask_status(
         # no corresponding WorkflowTasks
         for shift, status in enumerate(["done", "failed", "submitted"]):
             ID = 200 + shift
-            HISTORY_NEXT.append(dict(workflowtask=dict(id=ID), status=status))
+            history.append(dict(workflowtask=dict(id=ID), status=status))
             RESULTS[status].add(ID)
 
         # Create output_dataset and job
-        meta = dict(HISTORY_NEXT=HISTORY_NEXT)
+        meta = dict(history=history)
         output_dataset = await dataset_factory(project, meta=meta)
         job = await job_factory(  # noqa
             project_id=project.id,
@@ -120,13 +118,11 @@ async def test_get_workflowtask_status_simple(
         # (B) The statuses for these IDs will be overwritten by "submitted",
         # because they match with the task_list of the workflow associated to a
         # job associated to output_dataset
-        HISTORY_NEXT = []
+        history = []
         for dummy_status in ["done", "failed", "submitted"]:
             await workflow.insert_task(task_id=task.id, db=db)
             ID = workflow.task_list[-1].id
-            HISTORY_NEXT.append(
-                dict(workflowtask=dict(id=ID), status=dummy_status)
-            )
+            history.append(dict(workflowtask=dict(id=ID), status=dummy_status))
             RESULTS["submitted"].add(ID)
         await db.close()
 
@@ -134,11 +130,11 @@ async def test_get_workflowtask_status_simple(
         # no corresponding WorkflowTasks
         for shift, status in enumerate(["done", "failed", "submitted"]):
             ID = 200 + shift
-            HISTORY_NEXT.append(dict(workflowtask=dict(id=ID), status=status))
+            history.append(dict(workflowtask=dict(id=ID), status=status))
             RESULTS[status].add(ID)
 
         # Create output_dataset and job
-        meta = dict(HISTORY_NEXT=HISTORY_NEXT)
+        meta = dict(history=history)
         output_dataset = await dataset_factory(project, meta=meta)
         job = await job_factory(  # noqa
             project_id=project.id,

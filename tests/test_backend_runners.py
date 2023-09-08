@@ -139,9 +139,9 @@ async def test_runner(
     close_job_logger(logger)
     debug(metadata)
     assert "dummy" in metadata
-    for event in metadata["HISTORY_NEXT"]:
+    for event in metadata["history"]:
         assert event["status"] == "done"
-    event0, event1, event2 = metadata["HISTORY_NEXT"]
+    event0, event1, event2 = metadata["history"]
     assert event0["workflowtask"]["task"]["name"] == tk_dummy.name
     assert event1["workflowtask"]["task"]["name"] == tk_dummy.name
     assert event2["workflowtask"]["task"]["name"] == tk_dummy_parallel.name

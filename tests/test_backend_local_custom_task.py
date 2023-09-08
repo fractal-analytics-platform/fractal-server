@@ -176,9 +176,8 @@ async def test_full_workflow(
         data = res.json()
         debug(data)
         assert "dummy" in data["meta"]
-        HISTORY_NEXT = data["meta"]["HISTORY_NEXT"]
-        assert HISTORY_NEXT[0]["workflowtask"]["task"]["name"] == TASK_NAME
+        history = data["meta"]["history"]
+        assert history[0]["workflowtask"]["task"]["name"] == TASK_NAME
         assert (
-            HISTORY_NEXT[1]["workflowtask"]["task"]["name"]
-            == PARALLEL_TASK_NAME
+            history[1]["workflowtask"]["task"]["name"] == PARALLEL_TASK_NAME
         )  # noqa
