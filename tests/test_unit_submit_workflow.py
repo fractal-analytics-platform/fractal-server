@@ -34,7 +34,7 @@ async def test_success_submit_workflows(
             project_id=project.id,
             input_dataset_id=dataset.id,
             output_dataset_id=dataset.id,
-            working_id=workflow.id,
+            workflow_id=workflow.id,
         )
         await resource_factory(dataset)
 
@@ -90,7 +90,7 @@ async def test_fail_submit_workflows_at_same_time(
             project_id=project.id,
             input_dataset_id=dataset.id,
             output_dataset_id=dataset.id,
-            working_id=workflow.id,
+            workflow_id=workflow.id,
         )
         await resource_factory(dataset)
 
@@ -139,7 +139,7 @@ async def test_fail_submit_workflows_wrong_IDs(
             project_id=project.id,
             input_dataset_id=dataset.id,
             output_dataset_id=dataset.id,
-            working_id=workflow.id,
+            workflow_id=workflow.id,
         )
         await resource_factory(dataset)
 
