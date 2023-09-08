@@ -11,6 +11,17 @@ from fractal_server.app.models import JobStatusType
 from fractal_server.app.runner import submit_workflow
 
 
+def _create_workflow_dump(_workflow) -> dict:
+    _workflow_dump = dict(
+        _workflow.dict(exclude={"task_list"}),
+        task_list=[
+            dict(wf_task.task.dict(exclude={"task"}), task=wf_task.dict())
+            for wf_task in _workflow.task_list
+        ],
+    )
+    return _workflow_dump
+
+
 async def test_success_submit_workflows(
     MockCurrentUser,
     db,
@@ -19,6 +30,7 @@ async def test_success_submit_workflows(
     dataset_factory,
     job_factory,
     resource_factory,
+    task_factory,
     tmp_path,
 ):
     """
@@ -28,6 +40,8 @@ async def test_success_submit_workflows(
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(name="task", source="task_source")
+        await workflow.insert_task(task_id=task.id, db=db)
         dataset = await dataset_factory(project)
         job0 = await job_factory(
             working_dir=tmp_path.as_posix(),
@@ -35,6 +49,7 @@ async def test_success_submit_workflows(
             input_dataset_id=dataset.id,
             output_dataset_id=dataset.id,
             workflow_id=workflow.id,
+            workflow_dump=_create_workflow_dump(workflow),
         )
         await resource_factory(dataset)
 
@@ -74,8 +89,10 @@ async def test_fail_submit_workflows_at_same_time(
     dataset_factory,
     job_factory,
     resource_factory,
+    task_factory,
     tmp_path,
     monkeypatch,
+    db,
 ):
     """
     WHEN `submit_worflow` is called twice at the "same time" (monkeypatched)
@@ -84,6 +101,8 @@ async def test_fail_submit_workflows_at_same_time(
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(name="task", source="task_source")
+        await workflow.insert_task(task_id=task.id, db=db)
         dataset = await dataset_factory(project)
         job = await job_factory(
             working_dir=tmp_path.as_posix(),
@@ -91,6 +110,7 @@ async def test_fail_submit_workflows_at_same_time(
             input_dataset_id=dataset.id,
             output_dataset_id=dataset.id,
             workflow_id=workflow.id,
+            workflow_dump=_create_workflow_dump(workflow),
         )
         await resource_factory(dataset)
 
@@ -125,6 +145,7 @@ async def test_fail_submit_workflows_wrong_IDs(
     dataset_factory,
     job_factory,
     resource_factory,
+    task_factory,
     tmp_path,
     db,
     override_settings_factory,
@@ -133,6 +154,8 @@ async def test_fail_submit_workflows_wrong_IDs(
 
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(name="task", source="task_source")
+        await workflow.insert_task(task_id=task.id, db=db)
         dataset = await dataset_factory(project)
         job = await job_factory(
             working_dir=tmp_path.as_posix(),
@@ -140,6 +163,7 @@ async def test_fail_submit_workflows_wrong_IDs(
             input_dataset_id=dataset.id,
             output_dataset_id=dataset.id,
             workflow_id=workflow.id,
+            workflow_dump=_create_workflow_dump(workflow),
         )
         await resource_factory(dataset)
 
