@@ -334,10 +334,18 @@ async def export_history_as_workflow(
     # If at least one such job exists, then this endpoint should fail (what
     # would "extract a reproducible workflow" mean when execution is
     # in-progress?)
-    if res.scalars().all():
+    jobs = res.scalars().all()
+    if jobs:
+        if len(jobs) == 1:
+            string_ids = str(jobs[0].id)
+        else:
+            string_ids = str([job.id for job in jobs])[1:-1]
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="FIXME",
+            detail=(
+                f"Cannot export history because dataset {dataset.id} "
+                f"is linked to ongoing job(s) {string_ids}."
+            ),
         )
 
     # It such a job does not exist, continue with the endpoint. Note that this
