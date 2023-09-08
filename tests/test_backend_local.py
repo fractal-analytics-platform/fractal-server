@@ -162,7 +162,7 @@ def test_execute_single_parallel_task(tmp_path):
             logger_name=logger_name,
         )
         debug(res)
-        assert MOCKPARALLELTASK_NAME in res.metadata["history"][0]
+        assert MOCKPARALLELTASK_NAME in res.metadata["HISTORY_LEGACY"][0]
     close_job_logger(job_logger)
 
     # Validate results
@@ -189,7 +189,7 @@ def test_execute_multiple_tasks(tmp_path):
     TASK_NAME = "task0"
     METADATA_0 = {}
     METADATA_1 = dict(
-        dummy="dummy 0", index=["0", "1", "2"], history=[TASK_NAME]
+        dummy="dummy 0", index=["0", "1", "2"], HISTORY_LEGACY=[TASK_NAME]
     )  # dummy task output
 
     task_list = [

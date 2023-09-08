@@ -140,7 +140,7 @@ async def test_runner(
     debug(metadata)
     assert "dummy" in metadata
     assert "dummy" in metadata
-    assert metadata["history"] == [
+    assert metadata["HISTORY_LEGACY"] == [
         tk_dummy.name,
         tk_dummy.name,
         f"{tk_dummy_parallel.name}: ['0', '1', '2']",

@@ -9,7 +9,7 @@
 # Institute for Biomedical Research and Pelkmans Lab from the University of
 # Zurich.
 """
-Helper functions to handle Dataset history
+Helper functions to handle Dataset history.
 """
 import json
 import logging

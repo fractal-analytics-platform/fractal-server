@@ -176,5 +176,5 @@ async def test_full_workflow(
         data = res.json()
         debug(data)
         assert "dummy" in data["meta"]
-        assert data["meta"]["history"][0] == TASK_NAME
-        assert data["meta"]["history"][1].startswith(PARALLEL_TASK_NAME)
+        assert data["meta"]["HISTORY_LEGACY"][0] == TASK_NAME
+        assert data["meta"]["HISTORY_LEGACY"][1].startswith(PARALLEL_TASK_NAME)
