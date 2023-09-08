@@ -249,9 +249,9 @@ async def submit_workflow(
         )
         logger.debug(f'END workflow "{workflow.name}"')
 
-        # Replace output_dataset.meta with output_meta, while handling the
-        # history_next entry in a special way (i.e. appending to and existing
-        # entry rather than replacing it)
+        # Replace output_dataset.meta with output_dataset_meta, while handling
+        # the history_next property in a special way (i.e. appending to and
+        # existing entry rather than replacing it)
         new_meta = {}
         for key, value in output_dataset_meta.items():
             if key != "history_next":
@@ -261,6 +261,7 @@ async def submit_workflow(
         output_dataset.meta = new_meta
         db_sync.merge(output_dataset)
 
+        # Update job DB entry
         job.status = JobStatusType.DONE
         job.end_timestamp = get_timestamp()
         with log_file_path.open("r") as f:
@@ -269,6 +270,7 @@ async def submit_workflow(
         db_sync.merge(job)
         close_job_logger(logger)
         db_sync.commit()
+
     except TaskExecutionError as e:
 
         logger.debug(f'FAILED workflow "{workflow.name}", TaskExecutionError.')
