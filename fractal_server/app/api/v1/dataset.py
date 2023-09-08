@@ -362,7 +362,7 @@ async def export_history_as_workflow(
 
 
 class DatasetStatusRead(BaseModel):  # FIXME move definition somewhere else?
-    workflowtasks_status: Optional[
+    status: Optional[
         dict[
             int,
             WorkflowTaskStatusType,
@@ -460,7 +460,5 @@ async def get_workflowtask_status(
             wftask_status = history_item["status"]
             workflow_tasks_status_dict[wftask_id] = wftask_status
 
-    response_body = DatasetStatusRead(
-        workflowtasks_status=workflow_tasks_status_dict
-    )
+    response_body = DatasetStatusRead(status=workflow_tasks_status_dict)
     return response_body
