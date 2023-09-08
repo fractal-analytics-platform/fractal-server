@@ -34,8 +34,6 @@ from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_workflow_check_owner
 
-# from typing import Literal
-
 
 router = APIRouter()
 
