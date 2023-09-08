@@ -194,7 +194,7 @@ async def test_get_workflowtask_status_fail(
 
         # Test export_history_as_workflow failure
         res = await client.get(
-            f"api/v1/project/{project.id}/" f"dataset/{dataset.id}/status/"
+            f"api/v1/project/{project.id}/dataset/{dataset.id}/status/"
         )
         assert res.status_code == 422
         debug(res.json()["detail"])
