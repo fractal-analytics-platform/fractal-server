@@ -2,7 +2,7 @@ import json
 
 from devtools import debug
 
-from fractal_server.app.runner import METADATA_FILENAME
+from fractal_server.app.runner._common import METADATA_FILENAME
 
 
 async def test_get_workflowtask_status(
