@@ -355,8 +355,11 @@ async def export_history_as_workflow(
         wftask_status = history_item["status"]
         if wftask_status == "done":
             task_list.append(WorkflowTaskExport(**wftask))
+    name = f"history_{dataset.name}"
+    for char in (" ", ".", "/", "\\"):
+        name = name.replace(char, "_")
 
-    workflow = WorkflowExport(task_list=task_list)
+    workflow = WorkflowExport(name=name, task_list=task_list)
     return workflow
 
 
