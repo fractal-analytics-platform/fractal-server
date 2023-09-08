@@ -74,7 +74,7 @@ def assemble_history_failed_job(
     # Part 3/A: Identify failed task, if needed
     if failed_wftask is None:
         first_task_index = job.first_task_index_integer
-        last_task_index = job.lasst_task_index_integer
+        last_task_index = job.last_task_index_integer
         job_wftasks = workflow.task_list[
             first_task_index : (last_task_index + 1)  # noqa
         ]
