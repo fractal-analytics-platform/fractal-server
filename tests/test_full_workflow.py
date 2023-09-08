@@ -428,6 +428,9 @@ async def test_failing_workflow_JobExecutionError(
             name="test_wf", project_id=project.id
         )
 
+        # FIXME: add two tasks, with the first one with raise_error=False and
+        # sleep_time=1
+
         # Add a dummy task
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
@@ -479,7 +482,15 @@ async def test_failing_workflow_JobExecutionError(
         assert "CANCELLED" in job_status_data["log"]
         assert "\\n" not in job_status_data["log"]
 
-        # FIXME: add check re: history_next
+        # Test get_workflowtask_status endpoint
+        res = await client.get(
+            f"api/v1/project/{project.id}/dataset/{dataset.id}/status/"
+        )
+        debug(res.status_code)
+        assert res.status_code == 200
+        statuses = res.json()["status"]
+        debug(statuses)
+        assert statuses[workflow_task_id] == "failed"
 
 
 async def test_non_python_task(
