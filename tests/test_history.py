@@ -95,6 +95,46 @@ async def test_get_workflowtask_status(
                 assert statuses[ID_str] == expected_status
 
 
+async def test_get_workflowtask_status_fail(
+    db,
+    MockCurrentUser,
+    tmp_path,
+    project_factory,
+    task_factory,
+    dataset_factory,
+    workflow_factory,
+    job_factory,
+    client,
+):
+    """
+    Fail due to multiple ongoing jobs being associated with a given dataset
+    """
+
+    async with MockCurrentUser(persist=True) as user:
+        project = await project_factory(user)
+        workflow = await workflow_factory(project_id=project.id, name="WF")
+        dataset = await dataset_factory(project)
+
+        # Create *two* jobs in relation with dataset
+        for ind in range(2):
+            job = await job_factory(  # noqa
+                project_id=project.id,
+                workflow_id=workflow.id,
+                input_dataset_id=dataset.id,
+                output_dataset_id=dataset.id,
+                working_dir=str(tmp_path / "working_dir"),
+                first_task_index=0,
+                last_task_index=0,
+            )
+
+        # Test export_history_as_workflow failure
+        res = await client.get(
+            f"api/v1/project/{project.id}/" f"dataset/{dataset.id}/status/"
+        )
+        assert res.status_code == 422
+        debug(res.json()["detail"])
+
+
 async def test_export_history_as_workflow_fail(
     db,
     MockCurrentUser,
