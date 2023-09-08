@@ -122,3 +122,23 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
     )
     status: JobStatusType = JobStatusType.SUBMITTED
     log: Optional[str] = None
+
+    @property
+    def first_task_index_integer(self) -> int:
+        """
+        Equivalent to self.first_task_index, but it is always an integer.
+        """
+        if self.first_task_index is None:
+            return 0
+        else:
+            return self.first_task_index
+
+    @property
+    def last_task_index_integer(self) -> int:
+        """
+        Equivalent to self.last_task_index, but it is always an integer.
+        """
+        if self.last_task_index is None:
+            return len(self.workflow_dump["task_list"])
+        else:
+            return self.last_task_index
