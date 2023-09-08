@@ -281,13 +281,13 @@ def call_single_task(
     updated_metadata.update(diff_metadata)
 
     # Assemble a TaskParameter object
-    history = f"{wftask.task.name}"
+    HISTORY_LEGACY = f"{wftask.task.name}"
     try:
-        updated_metadata["history"].append(history)
+        updated_metadata["HISTORY_LEGACY"].append(HISTORY_LEGACY)
     except KeyError:
-        updated_metadata["history"] = [history]
+        updated_metadata["HISTORY_LEGACY"] = [HISTORY_LEGACY]
 
-    # Update history / new version
+    # Update HISTORY_NEXT
     wftask_dump = wftask.dict(exclude={"task"})
     wftask_dump["task"] = wftask.task.dict()
     new_history_item = dict(
@@ -473,13 +473,13 @@ def call_parallel_task(
         pass  # noqa: 701
 
     # Assemble a TaskParameter object
-    history = f"{wftask.task.name}: {component_list}"
+    HISTORY_LEGACY = f"{wftask.task.name}: {component_list}"
     try:
-        task_pars_depend.metadata["history"].append(history)
+        task_pars_depend.metadata["HISTORY_LEGACY"].append(HISTORY_LEGACY)
     except KeyError:
-        task_pars_depend.metadata["history"] = [history]
+        task_pars_depend.metadata["HISTORY_LEGACY"] = [HISTORY_LEGACY]
 
-    # Update history / new version
+    # Update HISTORY_NEXT
     wftask_dump = wftask.dict(exclude={"task"})
     wftask_dump["task"] = wftask.task.dict()
     new_history_item = dict(

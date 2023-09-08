@@ -58,7 +58,7 @@ async def read_job(
         metadata_file = Path(job_read.working_dir) / METADATA_FILENAME
         with metadata_file.open("r") as f:
             metadata = json.load(f)
-        job_read.history = metadata["history"]
+        job_read.HISTORY_LEGACY = metadata["HISTORY_LEGACY"]
     except (KeyError, FileNotFoundError):
         pass
 
