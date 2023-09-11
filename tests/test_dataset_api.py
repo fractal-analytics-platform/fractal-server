@@ -94,13 +94,15 @@ async def test_delete_resource(
 
 
 async def test_delete_dataset_failure(
-    client,
+    db,
     MockCurrentUser,
     project_factory,
     job_factory,
     tmp_path,
     workflow_factory,
     dataset_factory,
+    task_factory,
+    client,
 ):
     """
     GIVEN a Dataset in a relationship with an ApplyWorkflow
@@ -112,6 +114,8 @@ async def test_delete_dataset_failure(
         # Populate the database with the appropriate objects
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(name="task", source="source")
+        await workflow.insert_task(task_id=task.id, db=db)
         input_ds = await dataset_factory(project)
         output_ds = await dataset_factory(project)
         dummy_ds = await dataset_factory(project)
