@@ -19,13 +19,20 @@ async def test_get_workflowtask_status(
     client,
 ):
     """
-    FIXME add docstring (with A/B/C)
+    This test reflects the behavior of
+    `/project/{project_id}/dataset/{dataset_id}/status/` which gives different
+    priority to different sources. From lowest to highest priority:
+
+    * Statuses already present in `output_dataset.meta["history"]`, in the
+        database;
+    * "submitted" status for all task in the current job;
+    * Temporary-file contents.
     """
 
     RESULTS = dict(done=set(), failed=set(), submitted=set())
 
     # (A) These statuses will be written in the metadata file, and they will be
-    # the final ones - as there existin no corresponding WorkflowTasks
+    # the final ones - as there exist no corresponding WorkflowTasks
     history = []
     for shift, status in enumerate(["done", "failed"]):
         ID = 100 + shift
