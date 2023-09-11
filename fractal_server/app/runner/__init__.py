@@ -205,8 +205,8 @@ async def submit_workflow(
         logger.debug(f"job.id: {job.id}")
         logger.debug(f"job.working_dir: {job.working_dir}")
         logger.debug(f"job.working_dir_user: {job.working_dir_user}")
-        logger.debug(f"job.first_task_index: {job.first_task_index_integer}")
-        logger.debug(f"job.last_task_index: {job.last_task_index_integer}")
+        logger.debug(f"job.first_task_index: {job.first_task_index}")
+        logger.debug(f"job.last_task_index: {job.last_task_index}")
         logger.debug(f'START workflow "{workflow.name}"')
 
     try:
@@ -234,8 +234,8 @@ async def submit_workflow(
             workflow_dir_user=WORKFLOW_DIR_USER,
             logger_name=logger_name,
             worker_init=worker_init,
-            first_task_index=job.first_task_index_integer,
-            last_task_index=job.last_task_index_integer,
+            first_task_index=job.first_task_index,
+            last_task_index=job.last_task_index,
         )
 
         logger.info(

@@ -11,12 +11,6 @@ from fractal_server.app.models import Project
 from fractal_server.app.models import Resource
 
 PREFIX = "/api/v1"
-wf_dump = {
-    "name": "my workflow",
-    "id": 1,
-    "project_id": 1,
-    "task_list": [],
-}
 
 
 async def test_project_get(client, db, project_factory, MockCurrentUser):
@@ -362,7 +356,6 @@ async def test_delete_project(
             working_dir=(tmp_path / "some_working_dir").as_posix(),
             input_dataset_id=dataset_id,
             output_dataset_id=dataset_id,
-            worflow_dump=wf_dump,
         )
 
         # Check that a project-related job exists
@@ -493,7 +486,6 @@ async def test_job_list(
             working_dir=(tmp_path / "some_working_dir").as_posix(),
             input_dataset_id=input_dataset.id,
             output_dataset_id=output_dataset.id,
-            workflow_dump=wf_dump,
         )
         debug(job)
 
@@ -528,7 +520,6 @@ async def test_job_download_logs(
             working_dir=working_dir,
             input_dataset_id=input_dataset.id,
             output_dataset_id=output_dataset.id,
-            workflow_dump=wf_dump,
         )
         debug(job)
 
@@ -604,7 +595,6 @@ async def test_get_job_list(
                 input_dataset_id=dataset.id,
                 output_dataset_id=dataset.id,
                 workflow_id=workflow.id,
-                workflow_dump=wf_dump,
             )
 
         res = await client.get(f"{PREFIX}/project/{project.id}/job/")

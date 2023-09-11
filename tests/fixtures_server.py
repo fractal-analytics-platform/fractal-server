@@ -447,6 +447,8 @@ async def job_factory(db: AsyncSession):
     Insert job in db
     """
     from fractal_server.app.models import ApplyWorkflow
+    from fractal_server.app.models import Workflow
+    from fractal_server.app.runner.common import set_start_and_last_task_index
 
     async def __job_factory(
         working_dir: Path, db: AsyncSession = db, **kwargs
@@ -461,6 +463,30 @@ async def job_factory(db: AsyncSession):
         )
         args = dict(**defaults)
         args.update(kwargs)
+
+        wf = await db.get(Workflow, args["workflow_id"])
+
+        num_tasks = len(wf.task_list)
+        first_task_index, last_task_index = set_start_and_last_task_index(
+            num_tasks,
+            args.get("first_task_index", None),
+            args.get("last_task_index", None),
+        )
+        args["first_task_index"] = first_task_index
+        args["last_task_index"] = last_task_index
+
+        if "workflow_dump" not in args:
+            args["workflow_dump"] = dict(
+                wf.dict(exclude={"task_list"}),
+                task_list=[
+                    dict(
+                        wf_task.task.dict(exclude={"task"}),
+                        task=wf_task.dict(),
+                    )
+                    for wf_task in wf.task_list
+                ],
+            )
+
         j = ApplyWorkflow(**args)
         db.add(j)
         await db.commit()

@@ -11,17 +11,6 @@ from fractal_server.app.models import JobStatusType
 from fractal_server.app.runner import submit_workflow
 
 
-def _create_workflow_dump(_workflow) -> dict:
-    _workflow_dump = dict(
-        _workflow.dict(exclude={"task_list"}),
-        task_list=[
-            dict(wf_task.task.dict(exclude={"task"}), task=wf_task.dict())
-            for wf_task in _workflow.task_list
-        ],
-    )
-    return _workflow_dump
-
-
 async def test_success_submit_workflows(
     MockCurrentUser,
     db,
@@ -49,7 +38,6 @@ async def test_success_submit_workflows(
             input_dataset_id=dataset.id,
             output_dataset_id=dataset.id,
             workflow_id=workflow.id,
-            workflow_dump=_create_workflow_dump(workflow),
         )
         await resource_factory(dataset)
 
@@ -110,7 +98,6 @@ async def test_fail_submit_workflows_at_same_time(
             input_dataset_id=dataset.id,
             output_dataset_id=dataset.id,
             workflow_id=workflow.id,
-            workflow_dump=_create_workflow_dump(workflow),
         )
         await resource_factory(dataset)
 
@@ -163,7 +150,6 @@ async def test_fail_submit_workflows_wrong_IDs(
             input_dataset_id=dataset.id,
             output_dataset_id=dataset.id,
             workflow_id=workflow.id,
-            workflow_dump=_create_workflow_dump(workflow),
         )
         await resource_factory(dataset)
 
