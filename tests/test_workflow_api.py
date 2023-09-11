@@ -943,9 +943,11 @@ async def test_delete_workflow_failure(
     MockCurrentUser,
     project_factory,
     job_factory,
+    task_factory,
     tmp_path,
     workflow_factory,
     dataset_factory,
+    db,
 ):
     """
     GIVEN a Workflow in a relationship with a Job
@@ -957,6 +959,8 @@ async def test_delete_workflow_failure(
 
         # Create a workflow and a job in relationship with it
         workflow_1 = await workflow_factory(project_id=project.id)
+        task1 = await task_factory(name="1", source="1")
+        await workflow_1.insert_task(task1.id, db=db)
         input_ds = await dataset_factory(project)
         output_ds = await dataset_factory(project)
         job = await job_factory(
