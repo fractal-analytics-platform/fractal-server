@@ -1,8 +1,10 @@
 import json
+import logging
 
 from devtools import debug
 
 from fractal_server.app.runner._common import METADATA_FILENAME
+from fractal_server.app.runner.history import assemble_history_failed_job  # type: ignore[import]  # noqa
 
 
 async def test_get_workflowtask_status(
@@ -258,3 +260,31 @@ async def test_export_history_as_workflow_fail(
         assert res.status_code == 422
         debug(res.json()["detail"])
         assert res.json()["detail"].startswith("Cannot export history")
+
+
+async def test_assemble_history_failed_job_fail(
+    MockCurrentUser,
+    tmp_path,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    job_factory,
+):
+    """
+    Test a failing branch for assemble_history_failed_job, where the failed
+    task cannot be identified.
+    """
+    async with MockCurrentUser(persist=True) as user:
+        project = await project_factory(user)
+        workflow = await workflow_factory(project_id=project.id, name="WF")
+        dataset = await dataset_factory(project)
+        job = await job_factory(
+            project_id=project.id,
+            workflow_id=workflow.id,
+            input_dataset_id=dataset.id,
+            output_dataset_id=dataset.id,
+            working_dir=str(tmp_path / "working_dir"),
+        )
+
+    logger = logging.getLogger(None)
+    assemble_history_failed_job(job, dataset, workflow, logger)
