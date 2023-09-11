@@ -1,7 +1,7 @@
 """add workflow_dump to applyworkflow
 
 Revision ID: a7f4d6137b53
-Revises: 70e77f1c38b0
+Revises: f384e1c0cf5d
 Create Date: 2023-07-24 16:53:02.569582
 
 """
@@ -11,7 +11,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "a7f4d6137b53"
-down_revision = "70e77f1c38b0"
+down_revision = "f384e1c0cf5d"
 branch_labels = None
 depends_on = None
 
