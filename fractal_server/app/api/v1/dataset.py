@@ -350,7 +350,7 @@ async def export_history_as_workflow(
     # means that the history in the DB is up-to-date.
 
     # Read history from DB
-    history = dataset.meta["history"]
+    history = dataset.meta.get("history", [])
 
     # Construct reproducible workflow
     task_list = []
