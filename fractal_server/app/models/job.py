@@ -139,6 +139,6 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
         Equivalent to self.last_task_index, but it is always an integer.
         """
         if self.last_task_index is None:
-            return len(self.workflow_dump["task_list"])
+            return len(self.workflow.task_list)
         else:
             return self.last_task_index
