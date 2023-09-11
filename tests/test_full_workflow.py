@@ -428,18 +428,25 @@ async def test_failing_workflow_JobExecutionError(
             name="test_wf", project_id=project.id
         )
 
-        # FIXME: add two tasks, with the first one with raise_error=False and
-        # sleep_time=1
+        # Add a short task, which will be run successfully
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
+            f"?task_id={collect_packages[0].id}",
+            json=dict(args={"raise_error": False, "sleep_time": 0.1}),
+        )
+        assert res.status_code == 201
+        wftask0_id = res.json()["id"]
+        debug(wftask0_id)
 
-        # Add a dummy task
+        # Add a long task, which will be stopped while running
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
             f"?task_id={collect_packages[0].id}",
             json=dict(args={"raise_error": False, "sleep_time": 200}),
         )
         assert res.status_code == 201
-        workflow_task_id = res.json()["id"]
-        debug(workflow_task_id)
+        wftask1_id = res.json()["id"]
+        debug(wftask1_id)
 
         # NOTE: the client.post call below is blocking, due to the way we are
         # running tests. For this reason, we call the scancel functionfrom a
@@ -490,7 +497,10 @@ async def test_failing_workflow_JobExecutionError(
         assert res.status_code == 200
         statuses = res.json()["status"]
         debug(statuses)
-        assert statuses[str(workflow_task_id)] == "failed"
+        assert statuses == {
+            str(wftask0_id): "done",
+            str(wftask1_id): "failed",
+        }
 
 
 async def test_non_python_task(
