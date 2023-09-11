@@ -183,6 +183,8 @@ async def test_get_workflowtask_status_fail(
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id, name="WF")
+        task = await task_factory()
+        await workflow.insert_task(task_id=task.id, db=db)
         dataset = await dataset_factory(project)
 
         # Create *two* jobs in relation with dataset
@@ -220,6 +222,8 @@ async def test_export_history_as_workflow_fail(
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id, name="WF")
+        task = await task_factory()
+        await workflow.insert_task(task_id=task.id, db=db)
         dataset = await dataset_factory(project)
 
         # Create job in relation with dataset
@@ -260,12 +264,14 @@ async def test_export_history_as_workflow_fail(
 
 
 async def test_assemble_history_failed_job_fail(
+    db,
     MockCurrentUser,
     tmp_path,
     project_factory,
     dataset_factory,
     workflow_factory,
     job_factory,
+    task_factory,
     caplog,
 ):
     """
@@ -275,6 +281,8 @@ async def test_assemble_history_failed_job_fail(
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id, name="WF")
+        task = await task_factory()
+        wftask = await workflow.insert_task(task_id=task.id, db=db)
         dataset = await dataset_factory(project)
         job = await job_factory(
             project_id=project.id,
@@ -284,9 +292,16 @@ async def test_assemble_history_failed_job_fail(
             working_dir=str(tmp_path / "working_dir"),
         )
 
+    from pathlib import Path
+
+    Path(job.working_dir).mkdir()
+    tmp_history = [dict(workflowtask={"id": wftask.id})]
+    with (Path(job.working_dir) / METADATA_FILENAME).open("w") as fp:
+        json.dump(dict(history=tmp_history), fp)
+
     logger = logging.getLogger(None)
     caplog.clear()
     history = assemble_history_failed_job(job, dataset, workflow, logger)
     assert "Cannot identify the failed task" in caplog.text
     debug(history)
-    assert history == []
+    assert history == tmp_history
