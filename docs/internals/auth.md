@@ -10,13 +10,12 @@ A user is an instance of the [`UserOAuth`](http://localhost:8001/reference/fract
 | is_active | bool | | true |
 | is_superuser | bool | | false |
 | is_verified | bool | | false |
-| slurm_user | string | * | null |
-| username | string | * | null |
-| cache_dir | string | * | null |
+| <span style="background-color:teal;color:white">&nbsp;slurm_user&nbsp;</span> | string | * | null |
+| <span style="background-color:teal;color:white">&nbsp;username&nbsp;</span> | string | * | null |
+| <span style="background-color:teal;color:white">&nbsp;cache_dir&nbsp;</span> | string | * | null |
 
-By "default" we mean the values that the attributes assume on initialization if not explicitly set otherwise.
+Colored attributes are Fractal specific, all the others are [provided](https://github.com/fastapi-users/fastapi-users-db-sqlmodel/blob/main/fastapi_users_db_sqlmodel/__init__.py) by FastAPI Users.
 
-The last three attributes (`slurm_user`, `username` and `cache_dir`) are Fractal specific, all the others are [provided](https://github.com/fastapi-users/fastapi-users-db-sqlmodel/blob/main/fastapi_users_db_sqlmodel/__init__.py) by FastAPI Users.
 
 ## Authentication
 
@@ -30,7 +29,7 @@ An _authentication backend_ is composed of two parts:
 Fractal Server provides two authentication backends, both using the [JWT](https://fastapi-users.github.io/fastapi-users/10.1/configuration/authentication/strategies/jwt/) strategy.<br>
 Each backend produces both [`/login`](https://fastapi-users.github.io/fastapi-users/12.1/usage/routes/#post-login) and [`/logout`](https://fastapi-users.github.io/fastapi-users/12.1/usage/routes/#post-logout) routes.
 
-> Since tokens are not stored in a database,`/logout` does not actually do anything.
+> ⚠️ Since tokens are not stored in a database,`/logout` does not actually do anything.
 >
 > We have it because FastAPI Users always generates the two endpoints together.
 
@@ -92,46 +91,55 @@ $ curl \
 
 ## OAuth2
 
-Fractal allows to authenticate using an external authentication client based on `OAuth2`.
+Fractal allows to authenticate using one or more external authentication clients based on `OAuth2`.
 
-We currently support `OpenID Connect` (aka `OIDC`), `GitHub` and `Google`, but there are many other clients available (see [here](https://frankie567.github.io/httpx-oauth/oauth2/)).
+The currently supported clients are `OpenID Connect` (aka `OIDC`), `GitHub` and `Google`, but there are many more available (see [here](https://frankie567.github.io/httpx-oauth/oauth2/)).
 
-To define a new OAuth Client add these variables to the environment, changing `NAME` as you wish:
-```
-OAUTH_NAME_CLIENT_ID=
-OAUTH_NAME_CLIENT_SECRET=
-
-OAUTH_NAME_CONFIGURATION_ENDPOINT=
-```
-If `NAME` is `GOOGLE` or `GITHUB`, you don't need the configuration endpoint.<br>
-Any other `NAME` will generate an OIDC client.
-
-### GitHub example
-
-Register an OAuth App on [GitHub](https://github.com/settings/developers) [Settings > Developer Settings > OAuth Apps > New Oauth App].<br>
-During registration, you should provide GitHub with two endpoints:
+You must have a registered OAuth App (e.g. [GitHub](https://github.com/settings/developers), [Google](https://console.cloud.google.com)) with its _Client ID_ and _Client Secret_.<br>
+During registration, you should provide two endpoints:
 
 - the `Homepage URL` (e.g. `http://127.0.0.1:8000/`),
 
-- the `Authorization callback URL` (e.g. `http://127.0.0.1:8000/auth/github/callback`).
+- the `Authorization callback URL` (e.g. `http://127.0.0.1:8000/auth/anyname/callback`).
 
+Add the following variables to the Fractal environment:
 
-Two string will be generated, the Client ID and the Client Secret, which you will proceed to add to Fractal's environment:
-```
-OAUTH_GITHUB_CLIENT_ID=abc123...
-OAUTH_GITHUB_CLIENT_SECRET=xyz789...
-```
+=== "OIDC"
 
-Now when Fractal Server starts, two new routes will be generated:
+    ```console
+    OAUTH_ANYNAME_CLIENT_ID=...
+    OAUTH_ANYNAME_CLIENT_SECRET=...
+    OAUTH_ANYNAME_OIDC_CONFIGURATION_ENDPOINT=https://yourclient.com/.well-known/openid-configuration
+    ```
 
-- `/auth/github/authorize` ,
-- `/auth/github/callback` (the one you gave to GitHub).
+=== "GitHub"
 
+    ```console
+    OAUTH_GITHUB_CLIENT_ID=...
+    OAUTH_GITHUB_CLIENT_SECRET=...
+    ```
+
+=== "Google"
+
+    ```console
+    OAUTH_GOOGLE_CLIENT_ID=...
+    OAUTH_GOOGLE_CLIENT_SECRET=...
+    ```
+
+> You can have just one GitHub client and one Google client, but as many OIDC client as you want, as long as you provide different names.
+
+When Fractal Server starts, two new routes will be generated for each client:
+
+- `/auth/client-name/authorize` ,
+- `/auth/client-name/callback` (the `Authorization callback URL` of the client).
+
+---
 
 Now a new user comes in.<br>
-She has a GitHub account, registred with her personal email `mcurie@uniws.pl`, and she wants to use it to sign up to Fractal.
+Let's say she has a GitHub account, registred with her personal email `fancy@university.edu`,
+and she wants to use it to sign up to Fractal.
 
-She make a call to the `/authorize` endpoint:
+She makes a call to the `/github/authorize` endpoint:
 
 ```
 $ curl \
@@ -141,38 +149,38 @@ $ curl \
 {
     "authorization_url":"https://github.com/login/oauth/authorize?
         response_type=code&
-        client_id=abc123...&
+        client_id=...&
         redirect_uri=http%3A%2F%2F127.0.0.1%3A8000%2Fauth%2Fgithub%2Fcallback&
         state=ey...&
         scope=user+user%3Aemail"
 }
 ```
 
-The next step requires her to visit the `authorization_url` using the browser.
+Now the `authorization_url` must be visited using a browser.
+After logging in to GitHub, she will be asked to grant the app the permissions it requires.
 
-> If a `redirect-uri-mismatch` error appears, try removing the `redirect_uri` query parameter from the `authorization_url`.
-
-She will be asked to log in to GitHub, and then to grant your app the permissions it requires.
-
-After that, she will be redirected back to our server, to the `/callback` endpoint, together with two query parameters:
+After that, she will be redirected back to our server, to the `/github/callback` endpoint, together with two query parameters:
 ```
-GET http://127.0.0.1:8000/auth/github/callback?
-        code=...&
-        state=...
-```
-The callback function will take care of exchanging `code` and `state` (plus, the Client Secret) for a token provided by GitHub.
-If we look at the Response Cookie of the callback, we find
-```
-"fastapiusersauth": {
-	"httpOnly": true,
-	"path": "/",
-	"samesite": "None",
-	"secure": true,
-	"value": "ey..."     <----- This is the ID token
-}
+http://127.0.0.1:8000/auth/github/callback?
+    code=...&
+    state=...
 ```
 
-The user can now make [authenticated calls](https://fractal-analytics-platform.github.io/fractal-server/internals/auth/#authenticated-calls) with the token contained in `value`:
+The callback function will take care of exchanging `code` and `state` (plus, the Client Secret) for two tokens:
+
+- the Access Token, which is stored in the database but it's not used by Fractal;
+- the ID Token, which can be found in the Response Cookie of the callback:
+    ```
+    "fastapiusersauth": {
+    	"httpOnly": true,
+    	"path": "/",
+    	"samesite": "None",
+    	"secure": true,
+    	"value": "ey..."     <----- This is the ID token
+    }
+    ```
+
+The user can now make [authenticated calls](https://fractal-analytics-platform.github.io/fractal-server/internals/auth/#authenticated-calls) using the ID token:
 
 ```
 curl \
@@ -182,7 +190,7 @@ curl \
 
 {
     "id":3,
-    "email":"mcurie@uniws.pl",
+    "email":"fancy@university.edu",
     "is_active":true,
     "is_superuser":false,
     "is_verified":true,
@@ -192,32 +200,8 @@ curl \
 }
 ```
 
-Note that users authenticated via OAuth are considered _verified_.
-
-If we decode the token, here's the payload we get:
-```
-{
-  "sub": "3",
-  "aud": [
-    "fractal"
-  ],
-  "exp": 1693926138
-}
-```
-
-> GitHub tokens expire in 24 hours.
-
-If the DB already had a user using the same e-mail, the new OAuth account would have been added to the existing user.
-
-If the user repeats the same process again while the token is still valid, a `500 Internal Server Error` will be raised during the callback.
-Otherwise ...🏗️🚧
-<!-- Nota per Yuri:
-Token expires at Sep 05 2023 17:02:18 .
-See what happens
-curl \
-    -X GET \
-    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwiYXVkIjpbImZyYWN0YWwiXSwiZXhwIjoxNjkzOTI2MTM4fQ.MqWhW0xRgCV9ZgZr1HcdynrIJ7z46IBzO7pyfTUaTU8" \
-    http://127.0.0.1:8000/auth/whoami -->
+Note that users authenticated via OAuth are considered _verified_.<br>
+If a user with the same email was already in the database, the two accounts would have been associated.
 
 ## Authorization
 
