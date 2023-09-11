@@ -4,6 +4,7 @@ from typing import Any
 from typing import Optional
 
 from sqlalchemy import Column
+from sqlalchemy.orm.exc import DetachedInstanceError
 from sqlalchemy.types import DateTime
 from sqlalchemy.types import JSON
 from sqlmodel import Field
@@ -138,7 +139,13 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
         """
         Equivalent to self.last_task_index, but it is always an integer.
         """
-        if self.last_task_index is None:
-            return len(self.workflow.task_list)
-        else:
+        if self.last_task_index is not None:
             return self.last_task_index
+        else:
+            try:
+                return len(self.workflow.task_list)
+            except DetachedInstanceError:
+                try:
+                    return len(self.workflow_dump["task_list"])
+                except Exception:
+                    return -1
