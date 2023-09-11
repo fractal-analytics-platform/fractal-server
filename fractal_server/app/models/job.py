@@ -93,8 +93,8 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
     workflow_id: int = Field(foreign_key="workflow.id")
     working_dir: Optional[str]
     working_dir_user: Optional[str]
-    first_task_index: Optional[int]
-    last_task_index: Optional[int]
+    first_task_index: int
+    last_task_index: int
 
     input_dataset: Dataset = Relationship(
         sa_relationship_kwargs=dict(
@@ -122,30 +122,3 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
     )
     status: JobStatusType = JobStatusType.SUBMITTED
     log: Optional[str] = None
-
-    @property
-    def first_task_index_integer(self) -> int:
-        """
-        Equivalent to self.first_task_index, but it is always an integer.
-        """
-        if self.first_task_index is None:
-            return 0
-        else:
-            return self.first_task_index
-
-    @property
-    def last_task_index_integer(self) -> int:
-        """
-        Equivalent to self.last_task_index, but it is always an integer.
-        """
-        if self.last_task_index is not None:
-            return self.last_task_index
-        else:
-            # NOTE: this will raise `sqlalchemy.orm.exc.DetachedInstanceError`
-            # if the `ApplyWorkflow.workflow` relation is not available (e.g.
-            # because the database session was closed), with a message like
-            # "sqlalchemy.orm.exc.DetachedInstanceError: Parent instance
-            # <ApplyWorkflow at 0x7f8bdd342140> is not bound to a Session; lazy
-            # load operation of attribute 'workflow' cannot proceed (Background
-            # on this error at: https://sqlalche.me/e/14/bhk3)".
-            return len(self.workflow.task_list)
