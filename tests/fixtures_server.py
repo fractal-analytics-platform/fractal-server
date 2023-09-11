@@ -30,6 +30,7 @@ from httpx import AsyncClient
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from fractal_server.app.db import get_db
 from fractal_server.config import get_settings
 from fractal_server.config import Settings
 from fractal_server.main import _create_first_user
@@ -211,7 +212,6 @@ async def db_create_tables(override_settings):
 
 @pytest.fixture
 async def db(db_create_tables):
-    from fractal_server.app.db import get_db
 
     async for session in get_db():
         yield session
@@ -464,28 +464,31 @@ async def job_factory(db: AsyncSession):
         args = dict(**defaults)
         args.update(kwargs)
 
-        wf = await db.get(Workflow, args["workflow_id"])
+        # FIXME: this is a workaround related to
+        # https://github.com/fractal-analytics-platform/fractal-server/issues/828
+        async for db_session in get_db():
+            wf = await db_session.get(Workflow, args["workflow_id"])
 
-        num_tasks = len(wf.task_list)
-        first_task_index, last_task_index = set_start_and_last_task_index(
-            num_tasks,
-            args.get("first_task_index", None),
-            args.get("last_task_index", None),
-        )
-        args["first_task_index"] = first_task_index
-        args["last_task_index"] = last_task_index
-
-        if "workflow_dump" not in args:
-            args["workflow_dump"] = dict(
-                wf.dict(exclude={"task_list"}),
-                task_list=[
-                    dict(
-                        wf_task.task.dict(exclude={"task"}),
-                        task=wf_task.dict(),
-                    )
-                    for wf_task in wf.task_list
-                ],
+            num_tasks = len(wf.task_list)
+            first_task_index, last_task_index = set_start_and_last_task_index(
+                num_tasks,
+                args.get("first_task_index", None),
+                args.get("last_task_index", None),
             )
+            args["first_task_index"] = first_task_index
+            args["last_task_index"] = last_task_index
+
+            if "workflow_dump" not in args:
+                args["workflow_dump"] = dict(
+                    wf.dict(exclude={"task_list"}),
+                    task_list=[
+                        dict(
+                            wf_task.task.dict(exclude={"task"}),
+                            task=wf_task.dict(),
+                        )
+                        for wf_task in wf.task_list
+                    ],
+                )
 
         j = ApplyWorkflow(**args)
         db.add(j)
