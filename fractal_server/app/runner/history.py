@@ -81,10 +81,15 @@ def assemble_history_failed_job(
         tmp_file_wftasks = [
             history_item["workflowtask"] for history_item in tmp_file_history
         ]
-        if len(job_wftasks) < len(tmp_file_wftasks):
+        if len(job_wftasks) <= len(tmp_file_wftasks):
+            n_tasks_job = len(job_wftasks)
+            n_tasks_tmp = len(tmp_file_wftasks)
             logger.error(
-                "SOMETHING WENT WRONG AND HISTORY WAS NOT UPDATED CORRECTLY"  # FIXME # noqa
+                "Cannot identify the failed task based on job task list "
+                f"(length {n_tasks_job}) and temporary-file task list "
+                f"(length {n_tasks_tmp})."
             )
+            logger.error("Failed task not appended to history.")
         else:
             failed_wftask = job_wftasks[len(tmp_file_wftasks)]
 
