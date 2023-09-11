@@ -269,6 +269,7 @@ async def test_assemble_history_failed_job_fail(
     dataset_factory,
     workflow_factory,
     job_factory,
+    caplog,
 ):
     """
     Test a failing branch for assemble_history_failed_job, where the failed
@@ -287,4 +288,8 @@ async def test_assemble_history_failed_job_fail(
         )
 
     logger = logging.getLogger(None)
-    assemble_history_failed_job(job, dataset, workflow, logger)
+    caplog.clear()
+    history = assemble_history_failed_job(job, dataset, workflow, logger)
+    assert "Cannot identify the failed task" in caplog.text
+    debug(history)
+    assert history == []
