@@ -142,7 +142,7 @@ class Settings(BaseSettings):
                 CLIENT_NAME=client,
                 CLIENT_ID=getenv(f"{prefix}_CLIENT_ID", None),
                 CLIENT_SECRET=getenv(f"{prefix}_CLIENT_SECRET", None),
-                CONFIGURATION_ENDPOINT=getenv(
+                OIDC_CONFIGURATION_ENDPOINT=getenv(
                     f"{prefix}_OIDC_CONFIGURATION_ENDPOINT", None
                 ),
             )
