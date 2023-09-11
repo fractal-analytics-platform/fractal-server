@@ -60,6 +60,7 @@ from ...config import get_settings
 from ...syringe import Inject
 from ..db import get_db
 from ..models.security import OAuthAccount
+from ..models.security import SQLModelBaseOAuthAccount
 from ..models.security import UserOAuth as User
 
 
@@ -77,13 +78,13 @@ class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
 
     session: AsyncSession
     user_model: Type[UP]
-    oauth_account_model: Optional[Type[OAuthAccount]]
+    oauth_account_model: Optional[Type[SQLModelBaseOAuthAccount]]
 
     def __init__(
         self,
         session: AsyncSession,
         user_model: Type[UP],
-        oauth_account_model: Optional[Type[OAuthAccount]] = None,
+        oauth_account_model: Optional[Type[SQLModelBaseOAuthAccount]] = None,
     ):
         self.session = session
         self.user_model = user_model
@@ -321,12 +322,12 @@ for client_config in settings.OAUTH_CLIENTS_CONFIG:
             client_config.CLIENT_ID, client_config.CLIENT_SECRET
         )
     else:
-        from httpx_oauth.clients.github import OpenID
+        from httpx_oauth.clients.openid import OpenID
 
         client = OpenID(
             client_config.CLIENT_ID,
             client_config.CLIENT_SECRET,
-            client_config.CONFIGURATION_ENDPOINT,
+            client_config.OIDC_CONFIGURATION_ENDPOINT,
         )
 
     auth_router.include_router(

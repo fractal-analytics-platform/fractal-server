@@ -19,9 +19,9 @@ from sqlmodel import SQLModel
 from .linkuserproject import LinkUserProject
 
 
-class OAuthAccount(SQLModel, table=True):
+class SQLModelBaseOAuthAccount(SQLModel):
     """
-    Based on SQLModelBaseOAuthAccount of fastapi_users_db_sqlmodel.
+    Based on fastapi_users_db_sqlmodel::SQLModelBaseOAuthAccount.
     MIT License
     Copyright (c) 2021 François Voron
     """
@@ -29,8 +29,7 @@ class OAuthAccount(SQLModel, table=True):
     __tablename__ = "oauthaccount"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user_oauth.id", nullable=False)
-    user: Optional["UserOAuth"] = Relationship(back_populates="oauth_accounts")
+    user_id: int = Field(foreign_key="user.id", nullable=False)
     oauth_name: str = Field(index=True, nullable=False)
     access_token: str = Field(nullable=False)
     expires_at: Optional[int] = Field(nullable=True)
@@ -40,6 +39,11 @@ class OAuthAccount(SQLModel, table=True):
 
     class Config:
         orm_mode = True
+
+
+class OAuthAccount(SQLModelBaseOAuthAccount, table=True):
+    user_id: int = Field(foreign_key="user_oauth.id", nullable=False)
+    user: Optional["UserOAuth"] = Relationship(back_populates="oauth_accounts")
 
 
 class UserOAuth(SQLModel, table=True):
@@ -68,7 +72,7 @@ class UserOAuth(SQLModel, table=True):
 
     oauth_accounts: list["OAuthAccount"] = Relationship(
         back_populates="user",
-        sa_relationship_kwargs={"lazy": "selectin", "cascade": "all, delete"},
+        sa_relationship_kwargs={"lazy": "joined", "cascade": "all, delete"},
     )
     project_list: list["Project"] = Relationship(  # noqa
         back_populates="user_list",
