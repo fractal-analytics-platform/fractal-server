@@ -237,6 +237,7 @@ async def test_get_job_check_owner(
     workflow_factory,
     dataset_factory,
     job_factory,
+    task_factory,
     db,
 ):
     async with MockCurrentUser(persist=True) as user:
@@ -244,6 +245,8 @@ async def test_get_job_check_owner(
         other_project = await project_factory(user, id=2)
 
         workflow = await workflow_factory(project_id=project.id)
+        t = await task_factory()
+        await workflow.insert_task(task_id=t.id, db=db)
 
         dataset = await dataset_factory(project)
 
