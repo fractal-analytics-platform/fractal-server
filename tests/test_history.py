@@ -81,8 +81,6 @@ async def test_get_workflowtask_status(
             input_dataset_id=input_dataset.id,
             output_dataset_id=output_dataset.id,
             working_dir=str(working_dir),
-            first_task_index=0,
-            last_task_index=3,
         )
 
         # Test get_workflowtask_status endpoint
@@ -151,8 +149,6 @@ async def test_get_workflowtask_status_simple(
             input_dataset_id=input_dataset.id,
             output_dataset_id=output_dataset.id,
             working_dir=str(working_dir),
-            first_task_index=0,
-            last_task_index=3,
         )
 
         # Test get_workflowtask_status endpoint
@@ -197,8 +193,6 @@ async def test_get_workflowtask_status_fail(
                 input_dataset_id=dataset.id,
                 output_dataset_id=dataset.id,
                 working_dir=str(tmp_path / "working_dir"),
-                first_task_index=0,
-                last_task_index=0,
             )
 
         # Test export_history_as_workflow failure
@@ -235,8 +229,6 @@ async def test_export_history_as_workflow_fail(
             input_dataset_id=dataset.id,
             output_dataset_id=dataset.id,
             working_dir=str(tmp_path / "working_dir"),
-            first_task_index=0,
-            last_task_index=0,
         )
 
         # Test export_history_as_workflow failure
@@ -255,8 +247,6 @@ async def test_export_history_as_workflow_fail(
             input_dataset_id=dataset.id,
             output_dataset_id=dataset.id,
             working_dir=str(tmp_path / "working_dir"),
-            first_task_index=0,
-            last_task_index=0,
         )
 
         # Test export_history_as_workflow failure
