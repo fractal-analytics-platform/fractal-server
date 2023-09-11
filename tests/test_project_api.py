@@ -321,7 +321,13 @@ async def test_add_dataset_local_path_error(app, client, MockCurrentUser, db):
 
 
 async def test_delete_project(
-    client, MockCurrentUser, db, job_factory, workflow_factory, tmp_path
+    client,
+    MockCurrentUser,
+    db,
+    job_factory,
+    workflow_factory,
+    tmp_path,
+    task_factory,
 ):
     async with MockCurrentUser(persist=True):
         res = await client.get(f"{PREFIX}/project/")
@@ -348,6 +354,8 @@ async def test_delete_project(
 
         # Add a workflow to the project
         wf = await workflow_factory(project_id=p["id"])
+        t = await task_factory()
+        await wf.insert_task(task_id=t.id, db=db)
 
         # Add a job to the project
         await job_factory(
@@ -465,7 +473,9 @@ async def test_job_list(
     dataset_factory,
     workflow_factory,
     job_factory,
+    task_factory,
     tmp_path,
+    db,
 ):
     async with MockCurrentUser(persist=True) as user:
         prj = await project_factory(user)
@@ -480,6 +490,8 @@ async def test_job_list(
         input_dataset = await dataset_factory(prj, name="input")
         output_dataset = await dataset_factory(prj, name="output")
         workflow = await workflow_factory(project_id=prj.id)
+        t = await task_factory()
+        await workflow.insert_task(task_id=t.id, db=db)
         job = await job_factory(
             project_id=prj.id,
             workflow_id=workflow.id,
@@ -504,6 +516,8 @@ async def test_job_download_logs(
     dataset_factory,
     workflow_factory,
     job_factory,
+    task_factory,
+    db,
     tmp_path,
 ):
     async with MockCurrentUser(persist=True) as user:
@@ -513,6 +527,8 @@ async def test_job_download_logs(
         input_dataset = await dataset_factory(prj, name="input")
         output_dataset = await dataset_factory(prj, name="output")
         workflow = await workflow_factory(project_id=prj.id)
+        t = await task_factory()
+        await workflow.insert_task(task_id=t.id, db=db)
         working_dir = (tmp_path / "workflow_dir_for_zipping").as_posix()
         job = await job_factory(
             project_id=prj.id,
@@ -576,6 +592,8 @@ async def test_get_job_list(
     dataset_factory,
     workflow_factory,
     job_factory,
+    db,
+    task_factory,
     client,
 ):
     async with MockCurrentUser(persist=True) as user:
@@ -586,6 +604,8 @@ async def test_get_job_list(
         assert len(res.json()) == 0
 
         workflow = await workflow_factory(project_id=project.id)
+        t = await task_factory()
+        await workflow.insert_task(task_id=t.id, db=db)
         dataset = await dataset_factory(project)
 
         N = 5
