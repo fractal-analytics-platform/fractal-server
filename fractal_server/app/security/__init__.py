@@ -287,7 +287,7 @@ async def list_users(
     """
     stm = select(User)
     res = await db.execute(stm)
-    user_list = res.scalars().all()
+    user_list = res.scalars().unique().all()
     await db.close()
     return user_list
 
@@ -339,16 +339,3 @@ for client_config in settings.OAUTH_CLIENTS_CONFIG:
         ),
         prefix=f"/{client_name}",
     )
-
-    # FastAPI Users also provide an association router
-    # (https://fastapi-users.github.io/fastapi-users/12.1/usage/routes/#oauth-association-router)
-    #
-    # auth_router.include_router(
-    #     fastapi_users.get_oauth_associate_router(
-    #         client, UserRead, settings.JWT_SECRET_KEY
-    #     ),
-    #     prefix=f"/{client_name}/associate",
-    # )
-    #
-    # for now we don't need it because we are using `associate_by_email=True`
-    # in the authorization router.
