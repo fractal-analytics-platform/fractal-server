@@ -4,7 +4,6 @@ from typing import Any
 from typing import Optional
 
 from sqlalchemy import Column
-from sqlalchemy.orm.exc import DetachedInstanceError
 from sqlalchemy.types import DateTime
 from sqlalchemy.types import JSON
 from sqlmodel import Field
@@ -142,10 +141,11 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
         if self.last_task_index is not None:
             return self.last_task_index
         else:
-            try:
-                return len(self.workflow.task_list)
-            except DetachedInstanceError:
-                try:
-                    return len(self.workflow_dump["task_list"])
-                except Exception:
-                    return -1
+            # NOTE: this will raise `sqlalchemy.orm.exc.DetachedInstanceError`
+            # if the `ApplyWorkflow.workflow` relation is not available (e.g.
+            # because the database session was closed), with a message like
+            # "sqlalchemy.orm.exc.DetachedInstanceError: Parent instance
+            # <ApplyWorkflow at 0x7f8bdd342140> is not bound to a Session; lazy
+            # load operation of attribute 'workflow' cannot proceed (Background
+            # on this error at: https://sqlalche.me/e/14/bhk3)".
+            return len(self.workflow.task_list)
