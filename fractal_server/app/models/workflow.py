@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Any
 from typing import Optional
 from typing import Union
@@ -174,3 +175,21 @@ class Workflow(_WorkflowBase, SQLModel, table=True):
     @property
     def output_type(self):
         return self.task_list[-1].task.output_type
+
+
+class WorkflowTaskStatusType(str, Enum):
+    """
+    Define the available values for the status of a `WorkflowTask`.
+
+    This kind of status is constructed in the
+    `api/v1/project/{project_id}/dataset/{dataset_id}/status` endpoint.
+
+    Attributes:
+        SUBMITTED: The `WorkflowTask` is part of a running job.
+        DONE: The most-recent execution of this `WorkflowTask` was successful.
+        FAILED: The most-recent execution of this `WorkflowTask` failed.
+    """
+
+    SUBMITTED = "submitted"
+    DONE = "done"
+    FAILED = "failed"

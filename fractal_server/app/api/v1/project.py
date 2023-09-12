@@ -9,6 +9,11 @@ from fastapi import status
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
+from ....common.schemas import ApplyWorkflowCreate
+from ....common.schemas import ApplyWorkflowRead
+from ....common.schemas import ProjectCreate
+from ....common.schemas import ProjectRead
+from ....common.schemas import ProjectUpdate
 from ....config import get_settings
 from ....logger import close_logger
 from ....logger import set_logger
@@ -18,15 +23,10 @@ from ...db import DBSyncSession
 from ...db import get_db
 from ...db import get_sync_db
 from ...models import ApplyWorkflow
-from ...models import ApplyWorkflowCreate
-from ...models import ApplyWorkflowRead
 from ...models import Dataset
 from ...models import JobStatusType
 from ...models import LinkUserProject
 from ...models import Project
-from ...models import ProjectCreate
-from ...models import ProjectRead
-from ...models import ProjectUpdate
 from ...runner import submit_workflow
 from ...runner import validate_workflow_compatibility
 from ...runner.common import set_start_and_last_task_index

@@ -93,8 +93,8 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
     workflow_id: int = Field(foreign_key="workflow.id")
     working_dir: Optional[str]
     working_dir_user: Optional[str]
-    first_task_index: Optional[int]
-    last_task_index: Optional[int]
+    first_task_index: int
+    last_task_index: int
 
     input_dataset: Dataset = Relationship(
         sa_relationship_kwargs=dict(
