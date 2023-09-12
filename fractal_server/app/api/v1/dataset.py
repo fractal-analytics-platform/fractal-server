@@ -359,9 +359,14 @@ async def export_history_as_workflow(
         wftask_status = history_item["status"]
         if wftask_status == "done":
             task_list.append(WorkflowTaskExport(**wftask))
-    name = f"history_{dataset.name}"
-    for char in (" ", ".", "/", "\\"):
-        name = name.replace(char, "_")
+
+    def _slugify_dataset_name(_name: str) -> str:
+        _new_name = _name
+        for char in (" ", ".", "/", "\\"):
+            _new_name = _new_name.replace(char, "_")
+        return _new_name
+
+    name = f"history_{_slugify_dataset_name(dataset.name)}"
 
     workflow = WorkflowExport(name=name, task_list=task_list)
     return workflow
