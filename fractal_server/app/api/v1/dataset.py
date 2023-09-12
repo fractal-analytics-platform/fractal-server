@@ -2,12 +2,12 @@ import json
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter  # type: ignore[import]
+from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
-from sqlmodel import or_  # type: ignore[import]
+from sqlmodel import or_
 from sqlmodel import select
 
 from ....common.schemas import DatasetCreate

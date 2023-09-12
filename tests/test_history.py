@@ -4,7 +4,9 @@ import logging
 from devtools import debug
 
 from fractal_server.app.runner._common import METADATA_FILENAME
-from fractal_server.app.runner.history import assemble_history_failed_job  # type: ignore[import]  # noqa
+from fractal_server.app.runner.history import (
+    assemble_history_failed_job,
+)  # noqa
 
 
 async def test_get_workflowtask_status(

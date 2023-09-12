@@ -14,7 +14,7 @@ Zurich.
 import logging
 import os
 
-import pytest  # type: ignore[import]
+import pytest
 from devtools import debug
 
 from fractal_server.app.models import Workflow

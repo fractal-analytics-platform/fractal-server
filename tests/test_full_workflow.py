@@ -21,7 +21,7 @@ import threading
 import time
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
 from devtools import debug
 
 from .fixtures_slurm import scancel_all_jobs_of_a_slurm_user
