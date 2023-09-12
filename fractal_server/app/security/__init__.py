@@ -334,7 +334,7 @@ for client_config in settings.OAUTH_CLIENTS_CONFIG:
             client,
             cookie_backend,
             settings.JWT_SECRET_KEY,
-            is_verified_by_default=True,
+            is_verified_by_default=False,
             associate_by_email=True,
         ),
         prefix=f"/{client_name}",
