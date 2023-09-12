@@ -526,8 +526,10 @@ async def test_job_download_logs(
         prj = await project_factory(user)
 
         # Create all needed objects in the database
-        input_dataset = await dataset_factory(project=prj.id, name="input")
-        output_dataset = await dataset_factory(prj, name="output")
+        input_dataset = await dataset_factory(project_id=prj.id, name="input")
+        output_dataset = await dataset_factory(
+            project_id=prj.id, name="output"
+        )
         workflow = await workflow_factory(project_id=prj.id)
         t = await task_factory()
         await workflow.insert_task(task_id=t.id, db=db)
@@ -608,7 +610,7 @@ async def test_get_job_list(
         workflow = await workflow_factory(project_id=project.id)
         t = await task_factory()
         await workflow.insert_task(task_id=t.id, db=db)
-        dataset = await dataset_factory(project)
+        dataset = await dataset_factory(project_id=project.id)
 
         N = 5
         for i in range(N):
