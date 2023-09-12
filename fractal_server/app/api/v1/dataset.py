@@ -7,6 +7,8 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 from sqlmodel import or_
 from sqlmodel import select
 
@@ -372,16 +374,13 @@ async def export_history_as_workflow(
     return workflow
 
 
-@router.get(
-    "/project/{project_id}/dataset/{dataset_id}/status/",
-    response_model=DatasetStatusRead,
-)
+@router.get("/project/{project_id}/dataset/{dataset_id}/status/")
 async def get_workflowtask_status(
     project_id: int,
     dataset_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-) -> Optional[DatasetStatusRead]:
+) -> Response:
     """
     Extract the status of all `WorkflowTask`s that ran on a given `Dataset`.
     """
@@ -468,5 +467,7 @@ async def get_workflowtask_status(
             wftask_status = history_item["status"]
             workflow_tasks_status_dict[wftask_id] = wftask_status
 
-    response_body = DatasetStatusRead(status=workflow_tasks_status_dict)
-    return response_body
+    dastaset_status = DatasetStatusRead(status=workflow_tasks_status_dict)
+    json_dataset_status = jsonable_encoder(dastaset_status.status)
+
+    return JSONResponse(content=json_dataset_status)

@@ -93,8 +93,9 @@ async def test_get_workflowtask_status(
         )
         debug(res.status_code)
         assert res.status_code == 200
-        statuses = res.json()["status"]
+        statuses = res.json()
         debug(statuses)
+
         for expected_status, IDs in RESULTS.items():
             for ID in IDs:
                 ID_str = str(ID)  # JSON-object keys can only be strings
@@ -163,7 +164,7 @@ async def test_get_workflowtask_status_simple(
         )
         debug(res.status_code)
         assert res.status_code == 200
-        statuses = res.json()["status"]
+        statuses = res.json()
         debug(statuses)
         for expected_status, IDs in RESULTS.items():
             for ID in IDs:

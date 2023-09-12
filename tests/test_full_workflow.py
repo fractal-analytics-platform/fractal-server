@@ -200,7 +200,7 @@ async def test_full_workflow(
         )
         debug(res.status_code)
         assert res.status_code == 200
-        statuses = res.json()["status"]
+        statuses = res.json()
         debug(statuses)
         assert set(statuses.values()) == {"done"}
 
@@ -337,7 +337,7 @@ async def test_failing_workflow_TaskExecutionError(
         )
         debug(res.status_code)
         assert res.status_code == 200
-        statuses = res.json()["status"]
+        statuses = res.json()
         debug(statuses)
         if failing_task == "non_parallel":
             assert statuses == {str(ID_NON_PARALLEL_WFTASK): "failed"}
@@ -498,7 +498,7 @@ async def test_failing_workflow_JobExecutionError(
         )
         debug(res.status_code)
         assert res.status_code == 200
-        statuses = res.json()["status"]
+        statuses = res.json()
         debug(statuses)
         assert statuses == {
             str(wftask0_id): "done",
