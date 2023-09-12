@@ -62,7 +62,7 @@ def assemble_history_failed_job(
     new_history = output_dataset.meta.get("history", [])
 
     # Part 2: Extend history based on tmp_metadata_file
-    tmp_metadata_file = Path(job.working_dir) / METADATA_FILENAME  # type: ignore  # noqa
+    tmp_metadata_file = Path(job.working_dir) / METADATA_FILENAME
     try:
         with tmp_metadata_file.open("r") as f:
             tmp_file_meta = json.load(f)
