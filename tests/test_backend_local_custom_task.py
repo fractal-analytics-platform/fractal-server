@@ -74,7 +74,7 @@ async def test_full_workflow(
         debug(project)
         project_id = project.id
         input_dataset = await dataset_factory(
-            project, name="input", type="image", read_only=True
+            project_id=project.id, name="input", type="image", read_only=True
         )
         input_dataset_id = input_dataset.id
 
@@ -176,5 +176,8 @@ async def test_full_workflow(
         data = res.json()
         debug(data)
         assert "dummy" in data["meta"]
-        assert data["meta"]["history"][0] == TASK_NAME
-        assert data["meta"]["history"][1].startswith(PARALLEL_TASK_NAME)
+        history = data["meta"]["history"]
+        assert history[0]["workflowtask"]["task"]["name"] == TASK_NAME
+        assert (
+            history[1]["workflowtask"]["task"]["name"] == PARALLEL_TASK_NAME
+        )  # noqa
