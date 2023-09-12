@@ -50,7 +50,7 @@ async def test_get_workflowtask_status(
         project = await project_factory(user)
         task = await task_factory(name="task1", source="task1")
         workflow = await workflow_factory(project_id=project.id, name="WF")
-        input_dataset = await dataset_factory(project)
+        input_dataset = await dataset_factory(project_id=project.id)
 
         # Prepare output_dataset.meta["history"]
         history = []
@@ -74,7 +74,9 @@ async def test_get_workflowtask_status(
 
         # Create output_dataset and job
         meta = dict(history=history)
-        output_dataset = await dataset_factory(project, meta=meta)
+        output_dataset = await dataset_factory(
+            project_id=project.id, meta=meta
+        )
         job = await job_factory(  # noqa
             project_id=project.id,
             workflow_id=workflow.id,
@@ -120,7 +122,7 @@ async def test_get_workflowtask_status_simple(
         project = await project_factory(user)
         task = await task_factory(name="task1", source="task1")
         workflow = await workflow_factory(project_id=project.id, name="WF")
-        input_dataset = await dataset_factory(project)
+        input_dataset = await dataset_factory(project_id=project.id)
 
         # (B) The statuses for these IDs will be overwritten by "submitted",
         # because they match with the task_list of the workflow associated to a
@@ -142,7 +144,9 @@ async def test_get_workflowtask_status_simple(
 
         # Create output_dataset and job
         meta = dict(history=history)
-        output_dataset = await dataset_factory(project, meta=meta)
+        output_dataset = await dataset_factory(
+            project_id=project.id, meta=meta
+        )
         job = await job_factory(  # noqa
             project_id=project.id,
             workflow_id=workflow.id,
@@ -185,7 +189,7 @@ async def test_get_workflowtask_status_fail(
         workflow = await workflow_factory(project_id=project.id, name="WF")
         task = await task_factory()
         await workflow.insert_task(task_id=task.id, db=db)
-        dataset = await dataset_factory(project)
+        dataset = await dataset_factory(project_id=project.id)
 
         # Create *two* jobs in relation with dataset
         for ind in range(2):
@@ -224,7 +228,7 @@ async def test_export_history_as_workflow_fail(
         workflow = await workflow_factory(project_id=project.id, name="WF")
         task = await task_factory()
         await workflow.insert_task(task_id=task.id, db=db)
-        dataset = await dataset_factory(project)
+        dataset = await dataset_factory(project_id=project.id)
 
         # Create job in relation with dataset
         job = await job_factory(  # noqa
@@ -283,7 +287,7 @@ async def test_assemble_history_failed_job_fail(
         workflow = await workflow_factory(project_id=project.id, name="WF")
         task = await task_factory()
         wftask = await workflow.insert_task(task_id=task.id, db=db)
-        dataset = await dataset_factory(project)
+        dataset = await dataset_factory(project_id=project.id)
         job = await job_factory(
             project_id=project.id,
             workflow_id=workflow.id,

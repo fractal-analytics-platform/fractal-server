@@ -961,8 +961,8 @@ async def test_delete_workflow_failure(
         workflow_1 = await workflow_factory(project_id=project.id)
         task1 = await task_factory(name="1", source="1")
         await workflow_1.insert_task(task1.id, db=db)
-        input_ds = await dataset_factory(project)
-        output_ds = await dataset_factory(project)
+        input_ds = await dataset_factory(project_id=project.id)
+        output_ds = await dataset_factory(project_id=project.id)
         job = await job_factory(
             project_id=project.id,
             workflow_id=workflow_1.id,

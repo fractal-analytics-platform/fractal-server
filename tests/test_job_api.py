@@ -28,7 +28,7 @@ async def test_stop_job(
         project = await project_factory(user)
         wf = await workflow_factory(project_id=project.id)
         t = await task_factory(name="task", source="source")
-        ds = await dataset_factory(project)
+        ds = await dataset_factory(project_id=project.id)
         await wf.insert_task(task_id=t.id, db=db)
         job = await job_factory(
             working_dir=tmp_path.as_posix(),
