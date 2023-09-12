@@ -469,4 +469,10 @@ async def get_workflowtask_status(
             workflow_tasks_status_dict[wftask_id] = wftask_status
 
     response_body = DatasetStatusRead(status=workflow_tasks_status_dict)
+    from fastapi.encoders import jsonable_encoder
+    from fastapi.responses import JSONResponse
+
+    json_data = jsonable_encoder(response_body)
+    return JSONResponse(content=json_data)
+
     return response_body
