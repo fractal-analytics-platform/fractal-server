@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# CLEAN UP
-# rm test.db
-# rm -r FRACTAL_TASKS_DIR
-
 # Create an empty db
 poetry run fractalctl set-db
 
