@@ -11,12 +11,6 @@ from fractal_server.app.models import Project
 from fractal_server.app.models import Resource
 
 PREFIX = "/api/v1"
-wf_dump = {
-    "name": "my workflow",
-    "id": 1,
-    "project_id": 1,
-    "task_list": [],
-}
 
 
 async def test_project_get(client, db, project_factory, MockCurrentUser):
@@ -327,7 +321,13 @@ async def test_add_dataset_local_path_error(app, client, MockCurrentUser, db):
 
 
 async def test_delete_project(
-    client, MockCurrentUser, db, job_factory, workflow_factory, tmp_path
+    client,
+    MockCurrentUser,
+    db,
+    job_factory,
+    workflow_factory,
+    tmp_path,
+    task_factory,
 ):
     async with MockCurrentUser(persist=True):
         res = await client.get(f"{PREFIX}/project/")
@@ -354,6 +354,8 @@ async def test_delete_project(
 
         # Add a workflow to the project
         wf = await workflow_factory(project_id=p["id"])
+        t = await task_factory()
+        await wf.insert_task(task_id=t.id, db=db)
 
         # Add a job to the project
         await job_factory(
@@ -362,7 +364,6 @@ async def test_delete_project(
             working_dir=(tmp_path / "some_working_dir").as_posix(),
             input_dataset_id=dataset_id,
             output_dataset_id=dataset_id,
-            worflow_dump=wf_dump,
         )
 
         # Check that a project-related job exists
@@ -400,7 +401,7 @@ async def test_edit_resource(
 ):
     async with MockCurrentUser(persist=True) as user:
         prj = await project_factory(user)
-        ds = await dataset_factory(project=prj)
+        ds = await dataset_factory(project_id=prj.id)
         orig_resource = await resource_factory(dataset=ds)
 
         payload = dict(path="/my/new/path")
@@ -425,8 +426,8 @@ async def test_delete_dataset(
 ):
     async with MockCurrentUser(persist=True) as user:
         prj = await project_factory(user)
-        ds0 = await dataset_factory(project=prj)
-        ds1 = await dataset_factory(project=prj)
+        ds0 = await dataset_factory(project_id=prj.id)
+        ds1 = await dataset_factory(project_id=prj.id)
 
         ds_ids = (ds0.id, ds1.id)
 
@@ -472,7 +473,9 @@ async def test_job_list(
     dataset_factory,
     workflow_factory,
     job_factory,
+    task_factory,
     tmp_path,
+    db,
 ):
     async with MockCurrentUser(persist=True) as user:
         prj = await project_factory(user)
@@ -484,16 +487,19 @@ async def test_job_list(
         assert len(res.json()) == 0
 
         # Create all needed objects in the database
-        input_dataset = await dataset_factory(prj, name="input")
-        output_dataset = await dataset_factory(prj, name="output")
+        input_dataset = await dataset_factory(project_id=prj.id, name="input")
+        output_dataset = await dataset_factory(
+            project_id=prj.id, name="output"
+        )
         workflow = await workflow_factory(project_id=prj.id)
+        t = await task_factory()
+        await workflow.insert_task(task_id=t.id, db=db)
         job = await job_factory(
             project_id=prj.id,
             workflow_id=workflow.id,
             working_dir=(tmp_path / "some_working_dir").as_posix(),
             input_dataset_id=input_dataset.id,
             output_dataset_id=output_dataset.id,
-            workflow_dump=wf_dump,
         )
         debug(job)
 
@@ -512,15 +518,21 @@ async def test_job_download_logs(
     dataset_factory,
     workflow_factory,
     job_factory,
+    task_factory,
+    db,
     tmp_path,
 ):
     async with MockCurrentUser(persist=True) as user:
         prj = await project_factory(user)
 
         # Create all needed objects in the database
-        input_dataset = await dataset_factory(prj, name="input")
-        output_dataset = await dataset_factory(prj, name="output")
+        input_dataset = await dataset_factory(project_id=prj.id, name="input")
+        output_dataset = await dataset_factory(
+            project_id=prj.id, name="output"
+        )
         workflow = await workflow_factory(project_id=prj.id)
+        t = await task_factory()
+        await workflow.insert_task(task_id=t.id, db=db)
         working_dir = (tmp_path / "workflow_dir_for_zipping").as_posix()
         job = await job_factory(
             project_id=prj.id,
@@ -528,7 +540,6 @@ async def test_job_download_logs(
             working_dir=working_dir,
             input_dataset_id=input_dataset.id,
             output_dataset_id=output_dataset.id,
-            workflow_dump=wf_dump,
         )
         debug(job)
 
@@ -585,6 +596,8 @@ async def test_get_job_list(
     dataset_factory,
     workflow_factory,
     job_factory,
+    db,
+    task_factory,
     client,
 ):
     async with MockCurrentUser(persist=True) as user:
@@ -595,7 +608,9 @@ async def test_get_job_list(
         assert len(res.json()) == 0
 
         workflow = await workflow_factory(project_id=project.id)
-        dataset = await dataset_factory(project)
+        t = await task_factory()
+        await workflow.insert_task(task_id=t.id, db=db)
+        dataset = await dataset_factory(project_id=project.id)
 
         N = 5
         for i in range(N):
@@ -604,7 +619,6 @@ async def test_get_job_list(
                 input_dataset_id=dataset.id,
                 output_dataset_id=dataset.id,
                 workflow_id=workflow.id,
-                workflow_dump=wf_dump,
             )
 
         res = await client.get(f"{PREFIX}/project/{project.id}/job/")

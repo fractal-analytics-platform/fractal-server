@@ -77,7 +77,7 @@ async def test_full_workflow(
         debug(project)
         project_id = project.id
         input_dataset = await dataset_factory(
-            project, name="input", type="image", read_only=True
+            project_id=project.id, name="input", type="image", read_only=True
         )
         input_dataset_id = input_dataset.id
 
@@ -194,6 +194,16 @@ async def test_full_workflow(
         debug(data)
         assert "dummy" in data["meta"]
 
+        # Test get_workflowtask_status endpoint
+        res = await client.get(
+            f"api/v1/project/{project_id}/dataset/{output_dataset_id}/status/"
+        )
+        debug(res.status_code)
+        assert res.status_code == 200
+        statuses = res.json()["status"]
+        debug(statuses)
+        assert set(statuses.values()) == {"done"}
+
         # Check that all files in working_dir are RW for the user running the
         # server. Note that the same is **not** true for files in
         # working_dir_user.
@@ -250,7 +260,10 @@ async def test_failing_workflow_TaskExecutionError(
         project = await project_factory(user)
         project_id = project.id
         dataset = await dataset_factory(
-            project, name="dataset", type="Any", read_only=False
+            project_id=project.id,
+            name="My Dataset",
+            type="Any",
+            read_only=False,
         )
         await resource_factory(path=str(tmp777_path / "data"), dataset=dataset)
 
@@ -278,6 +291,7 @@ async def test_failing_workflow_TaskExecutionError(
         )
         debug(res.json())
         assert res.status_code == 201
+        ID_NON_PARALLEL_WFTASK = res.json()["id"]
 
         # Add a (parallel) dummy_parallel task
         debug(payload_parallel)
@@ -288,6 +302,7 @@ async def test_failing_workflow_TaskExecutionError(
         )
         debug(res.json())
         assert res.status_code == 201
+        ID_PARALLEL_WFTASK = res.json()["id"]
 
         # Execute workflow
         res = await client.post(
@@ -315,6 +330,36 @@ async def test_failing_workflow_TaskExecutionError(
 
         # Check that ERROR_MESSAGE only appears once in the logs:
         assert len(job_status_data["log"].split(ERROR_MESSAGE)) == 2
+
+        # Test get_workflowtask_status endpoint
+        res = await client.get(
+            f"api/v1/project/{project_id}/dataset/{dataset.id}/status/"
+        )
+        debug(res.status_code)
+        assert res.status_code == 200
+        statuses = res.json()["status"]
+        debug(statuses)
+        if failing_task == "non_parallel":
+            assert statuses == {str(ID_NON_PARALLEL_WFTASK): "failed"}
+        else:
+            assert statuses == {
+                str(ID_NON_PARALLEL_WFTASK): "done",
+                str(ID_PARALLEL_WFTASK): "failed",
+            }
+
+        # Test export_history_as_workflow endpoint, and that
+        res = await client.get(
+            f"api/v1/project/{project_id}/dataset/{dataset.id}/export_history/"
+        )
+        assert res.status_code == 200
+        exported_wf = res.json()
+        debug(exported_wf)
+        res = await client.post(
+            f"api/v1/project/{project_id}/workflow/import/",
+            json=exported_wf,
+        )
+        assert res.status_code == 201
+        debug(res.json())
 
 
 async def _auxiliary_scancel(slurm_user, sleep_time):
@@ -375,7 +420,7 @@ async def test_failing_workflow_JobExecutionError(
     async with MockCurrentUser(persist=True, user_kwargs=user_kwargs) as user:
         project = await project_factory(user)
         dataset = await dataset_factory(
-            project, name="dataset", type="Any", read_only=False
+            project_id=project.id, name="dataset", type="Any", read_only=False
         )
         await resource_factory(
             path=str(tmp777_path / "input_dir"), dataset=dataset
@@ -386,15 +431,25 @@ async def test_failing_workflow_JobExecutionError(
             name="test_wf", project_id=project.id
         )
 
-        # Add a dummy task
+        # Add a short task, which will be run successfully
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
+            f"?task_id={collect_packages[0].id}",
+            json=dict(args={"raise_error": False, "sleep_time": 0.1}),
+        )
+        assert res.status_code == 201
+        wftask0_id = res.json()["id"]
+        debug(wftask0_id)
+
+        # Add a long task, which will be stopped while running
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
             f"?task_id={collect_packages[0].id}",
             json=dict(args={"raise_error": False, "sleep_time": 200}),
         )
         assert res.status_code == 201
-        workflow_task_id = res.json()["id"]
-        debug(workflow_task_id)
+        wftask1_id = res.json()["id"]
+        debug(wftask1_id)
 
         # NOTE: the client.post call below is blocking, due to the way we are
         # running tests. For this reason, we call the scancel functionfrom a
@@ -436,6 +491,19 @@ async def test_failing_workflow_JobExecutionError(
         assert "JOB ERROR" in job_status_data["log"]
         assert "CANCELLED" in job_status_data["log"]
         assert "\\n" not in job_status_data["log"]
+
+        # Test get_workflowtask_status endpoint
+        res = await client.get(
+            f"api/v1/project/{project.id}/dataset/{dataset.id}/status/"
+        )
+        debug(res.status_code)
+        assert res.status_code == 200
+        statuses = res.json()["status"]
+        debug(statuses)
+        assert statuses == {
+            str(wftask0_id): "done",
+            str(wftask1_id): "failed",
+        }
 
 
 async def test_non_python_task(
@@ -481,7 +549,7 @@ async def test_non_python_task(
 
         # Create datasets
         dataset = await dataset_factory(
-            project, name="dataset", type="zarr", read_only=False
+            project_id=project.id, name="dataset", type="zarr", read_only=False
         )
         await resource_factory(path=str(tmp_path / "data"), dataset=dataset)
 
@@ -602,7 +670,7 @@ async def test_non_executable_task_command(
 
         # Create dataset
         dataset = await dataset_factory(
-            project, name="input", type="zarr", read_only=False
+            project_id=project.id, name="input", type="zarr", read_only=False
         )
         await resource_factory(path=str(tmp_path / "dir"), dataset=dataset)
 
