@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 1.3.5
 
 * Review structure of dataset history (\#803):
     * Re-define structure for `history` property of `Dataset.meta`;
