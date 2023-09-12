@@ -8,7 +8,7 @@ async def test_get_resource(
 ):
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
-        dataset = await dataset_factory(project)
+        dataset = await dataset_factory(project_id=project.id)
         res = await client.get(
             f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/resource/"
         )
@@ -21,7 +21,7 @@ async def test_error_in_update(
 ):
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
-        dataset = await dataset_factory(project)
+        dataset = await dataset_factory(project_id=project.id)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/resource/",
             json=dict(path="/tmp/xyz"),
@@ -30,7 +30,7 @@ async def test_error_in_update(
         assert res.status_code == 201
         resource = res.json()
 
-        other_dataset = await dataset_factory(project)
+        other_dataset = await dataset_factory(project_id=project.id)
 
         res = await client.patch(
             f"{PREFIX}/project/{project.id}/dataset/{other_dataset.id}/"
@@ -49,7 +49,7 @@ async def test_delete_resource(
 ):
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
-        dataset = await dataset_factory(project)
+        dataset = await dataset_factory(project_id=project.id)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/resource/",
             json=dict(path="/tmp/xyz"),
@@ -74,7 +74,7 @@ async def test_delete_resource(
         assert res.status_code == 204
 
         other_project = await project_factory(user)
-        other_dataset = await dataset_factory(other_project)
+        other_dataset = await dataset_factory(project_id=other_project.id)
         res = await client.post(
             f"{PREFIX}/project/{other_project.id}/"
             f"dataset/{other_dataset.id}/resource/",
@@ -94,13 +94,15 @@ async def test_delete_resource(
 
 
 async def test_delete_dataset_failure(
-    client,
+    db,
     MockCurrentUser,
     project_factory,
     job_factory,
     tmp_path,
     workflow_factory,
     dataset_factory,
+    task_factory,
+    client,
 ):
     """
     GIVEN a Dataset in a relationship with an ApplyWorkflow
@@ -112,9 +114,11 @@ async def test_delete_dataset_failure(
         # Populate the database with the appropriate objects
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id)
-        input_ds = await dataset_factory(project)
-        output_ds = await dataset_factory(project)
-        dummy_ds = await dataset_factory(project)
+        task = await task_factory(name="task", source="source")
+        await workflow.insert_task(task_id=task.id, db=db)
+        input_ds = await dataset_factory(project_id=project.id)
+        output_ds = await dataset_factory(project_id=project.id)
+        dummy_ds = await dataset_factory(project_id=project.id)
 
         # Create a job in relationship with input_ds, output_ds and workflow
         job = await job_factory(
