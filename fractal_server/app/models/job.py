@@ -110,7 +110,7 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
     )
     workflow: Workflow = Relationship()
 
-    workflow_dump: dict[str, Any] = Field(sa_column=Column(JSON))
+    workflow_dump: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
 
     start_timestamp: datetime = Field(
         default_factory=get_timestamp,
