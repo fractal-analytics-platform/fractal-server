@@ -162,7 +162,10 @@ def test_execute_single_parallel_task(tmp_path):
             logger_name=logger_name,
         )
         debug(res)
-        assert MOCKPARALLELTASK_NAME in res.metadata["history"][0]
+        history = res.metadata["history"]
+        assert MOCKPARALLELTASK_NAME in [
+            event["workflowtask"]["task"]["name"] for event in history
+        ]
     close_job_logger(job_logger)
 
     # Validate results
@@ -189,8 +192,9 @@ def test_execute_multiple_tasks(tmp_path):
     TASK_NAME = "task0"
     METADATA_0 = {}
     METADATA_1 = dict(
-        dummy="dummy 0", index=["0", "1", "2"], history=[TASK_NAME]
-    )  # dummy task output
+        dummy="dummy 0",
+        index=["0", "1", "2"],
+    )
 
     task_list = [
         MockWorkflowTask(
@@ -232,11 +236,15 @@ def test_execute_multiple_tasks(tmp_path):
     debug(output)
     with (tmp_path / "0.result.json").open("r") as f:
         data = json.load(f)
-        debug(data)
+        debug(data[0]["metadata"])
+        data[0]["metadata"].pop("history", None)
+        data[0]["metadata"].pop("HISTORY_LEGACY", None)  # FIXME: remove
         assert data[0]["metadata"] == METADATA_0
     with (tmp_path / "1.result.json").open("r") as f:
         data = json.load(f)
-        debug(data)
+        debug(data[0]["metadata"])
+        data[0]["metadata"].pop("history", None)
+        data[0]["metadata"].pop("HISTORY_LEGACY", None)  # FIXME: remove
         assert data[0]["metadata"] == METADATA_1
 
 

@@ -12,12 +12,12 @@ from fastapi import status
 from fastapi.responses import StreamingResponse
 from sqlmodel import select
 
+from ....common.schemas import ApplyWorkflowRead
 from ....config import get_settings
 from ....syringe import Inject
 from ...db import AsyncSession
 from ...db import get_db
 from ...models import ApplyWorkflow
-from ...models import ApplyWorkflowRead
 from ...runner._common import METADATA_FILENAME
 from ...runner._common import SHUTDOWN_FILENAME
 from ...security import current_active_user
@@ -58,7 +58,7 @@ async def read_job(
         metadata_file = Path(job_read.working_dir) / METADATA_FILENAME
         with metadata_file.open("r") as f:
             metadata = json.load(f)
-        job_read.history = metadata["history"]
+        job_read.history = metadata["HISTORY_LEGACY"]
     except (KeyError, FileNotFoundError):
         pass
 
