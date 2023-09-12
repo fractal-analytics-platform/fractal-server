@@ -10,7 +10,7 @@
 * Make `first_task_index` and `last_task_index` properties of `ApplyWorkflow` required (\#803).
 * Add `docs_info` and `docs_link` to Task model (\#814)
 * Accept `TaskUpdate.version=None` in task-patch endpoint (\#818).
-* Store a copy of the `Workflow` into `ApplyWorkflow` at the time of submission (\#804)
+* Store a copy of the `Workflow` into the optional column `ApplyWorkflow.workflow_dump` at the time of submission (\#804, \#834).
 * Prevent execution of multiple jobs with the same output dataset (\#801).
 * Transform non-absolute `FRACTAL_TASKS_DIR` into absolute paths, relative to the current working directory (\#825).
 * Error handling:
