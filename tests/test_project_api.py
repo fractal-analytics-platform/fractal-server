@@ -401,7 +401,7 @@ async def test_edit_resource(
 ):
     async with MockCurrentUser(persist=True) as user:
         prj = await project_factory(user)
-        ds = await dataset_factory(project=prj)
+        ds = await dataset_factory(project_id=prj.id)
         orig_resource = await resource_factory(dataset=ds)
 
         payload = dict(path="/my/new/path")
@@ -426,8 +426,8 @@ async def test_delete_dataset(
 ):
     async with MockCurrentUser(persist=True) as user:
         prj = await project_factory(user)
-        ds0 = await dataset_factory(project=prj)
-        ds1 = await dataset_factory(project=prj)
+        ds0 = await dataset_factory(project_id=prj.id)
+        ds1 = await dataset_factory(project_id=prj.id)
 
         ds_ids = (ds0.id, ds1.id)
 
@@ -487,8 +487,10 @@ async def test_job_list(
         assert len(res.json()) == 0
 
         # Create all needed objects in the database
-        input_dataset = await dataset_factory(prj, name="input")
-        output_dataset = await dataset_factory(prj, name="output")
+        input_dataset = await dataset_factory(project_id=prj.id, name="input")
+        output_dataset = await dataset_factory(
+            project_id=prj.id, name="output"
+        )
         workflow = await workflow_factory(project_id=prj.id)
         t = await task_factory()
         await workflow.insert_task(task_id=t.id, db=db)
@@ -524,7 +526,7 @@ async def test_job_download_logs(
         prj = await project_factory(user)
 
         # Create all needed objects in the database
-        input_dataset = await dataset_factory(prj, name="input")
+        input_dataset = await dataset_factory(project=prj.id, name="input")
         output_dataset = await dataset_factory(prj, name="output")
         workflow = await workflow_factory(project_id=prj.id)
         t = await task_factory()

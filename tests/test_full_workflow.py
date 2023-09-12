@@ -77,7 +77,7 @@ async def test_full_workflow(
         debug(project)
         project_id = project.id
         input_dataset = await dataset_factory(
-            project, name="input", type="image", read_only=True
+            project_id=project.id, name="input", type="image", read_only=True
         )
         input_dataset_id = input_dataset.id
 
@@ -260,7 +260,10 @@ async def test_failing_workflow_TaskExecutionError(
         project = await project_factory(user)
         project_id = project.id
         dataset = await dataset_factory(
-            project, name="My Dataset", type="Any", read_only=False
+            project_id=project.id,
+            name="My Dataset",
+            type="Any",
+            read_only=False,
         )
         await resource_factory(path=str(tmp777_path / "data"), dataset=dataset)
 
@@ -417,7 +420,7 @@ async def test_failing_workflow_JobExecutionError(
     async with MockCurrentUser(persist=True, user_kwargs=user_kwargs) as user:
         project = await project_factory(user)
         dataset = await dataset_factory(
-            project, name="dataset", type="Any", read_only=False
+            project_id=project.id, name="dataset", type="Any", read_only=False
         )
         await resource_factory(
             path=str(tmp777_path / "input_dir"), dataset=dataset
@@ -546,7 +549,7 @@ async def test_non_python_task(
 
         # Create datasets
         dataset = await dataset_factory(
-            project, name="dataset", type="zarr", read_only=False
+            project_id=project.id, name="dataset", type="zarr", read_only=False
         )
         await resource_factory(path=str(tmp_path / "data"), dataset=dataset)
 
@@ -667,7 +670,7 @@ async def test_non_executable_task_command(
 
         # Create dataset
         dataset = await dataset_factory(
-            project, name="input", type="zarr", read_only=False
+            project_id=project.id, name="input", type="zarr", read_only=False
         )
         await resource_factory(path=str(tmp_path / "dir"), dataset=dataset)
 

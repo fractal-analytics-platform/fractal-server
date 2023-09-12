@@ -16,16 +16,20 @@ async def test_project_apply_failures(
     async with MockCurrentUser(persist=True) as user:
         project1 = await project_factory(user)
         project2 = await project_factory(user)
-        input_dataset = await dataset_factory(project1, name="input")
-        output_dataset = await dataset_factory(project1, name="output")
+        input_dataset = await dataset_factory(
+            project_id=project1.id, name="input"
+        )
+        output_dataset = await dataset_factory(
+            project_id=project1.id, name="output"
+        )
         output_dataset_read_only = await dataset_factory(
-            project1, name="output", read_only=True
+            project_id=project1.id, name="output", read_only=True
         )
         output_dataset_wrong_type = await dataset_factory(
-            project1, name="output", type="invalid_type"
+            project_id=project1.id, name="output", type="invalid_type"
         )
         output_dataset_two_resources = await dataset_factory(
-            project1, name="output"
+            project_id=project1.id, name="output"
         )
 
         await resource_factory(input_dataset)
@@ -144,9 +148,15 @@ async def test_project_apply_existing_job(
 
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
-        input_dataset = await dataset_factory(project, name="input")
-        output_dataset_A = await dataset_factory(project, name="output-A")
-        output_dataset_B = await dataset_factory(project, name="output-B")
+        input_dataset = await dataset_factory(
+            project_id=project.id, name="input"
+        )
+        output_dataset_A = await dataset_factory(
+            project_id=project.id, name="output-A"
+        )
+        output_dataset_B = await dataset_factory(
+            project_id=project.id, name="output-B"
+        )
         await resource_factory(input_dataset)
         await resource_factory(output_dataset_A)
         await resource_factory(output_dataset_B)
@@ -232,9 +242,11 @@ async def test_project_apply_missing_user_attributes(
         # Create project, datasets, workflow, task, workflowtask
         project = await project_factory(user)
         input_dataset = await dataset_factory(
-            project, name="input", type="zarr"
+            project_id=project.id, name="input", type="zarr"
         )
-        output_dataset = await dataset_factory(project, name="output")
+        output_dataset = await dataset_factory(
+            project_id=project.id, name="output"
+        )
         for dataset_id in [input_dataset.id, output_dataset.id]:
             res = await client.post(
                 f"{PREFIX}/project/{project.id}/"
@@ -285,9 +297,11 @@ async def test_project_apply_missing_resources(
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
         input_dataset = await dataset_factory(
-            project, name="input", type="zarr"
+            project_id=project.id, name="input", type="zarr"
         )
-        output_dataset = await dataset_factory(project, name="output")
+        output_dataset = await dataset_factory(
+            project_id=project.id, name="output"
+        )
         workflow = await workflow_factory(project_id=project.id)
         task = await task_factory()
         await workflow.insert_task(task.id, db=db)
@@ -319,9 +333,15 @@ async def test_project_apply_workflow_subset(
 ):
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
-        dataset1 = await dataset_factory(project, name="ds1", type="type1")
-        dataset2 = await dataset_factory(project, name="ds2", type="type2")
-        dataset3 = await dataset_factory(project, name="ds3", type="type3")
+        dataset1 = await dataset_factory(
+            project_id=project.id, name="ds1", type="type1"
+        )
+        dataset2 = await dataset_factory(
+            project_id=project.id, name="ds2", type="type2"
+        )
+        dataset3 = await dataset_factory(
+            project_id=project.id, name="ds3", type="type3"
+        )
 
         await resource_factory(dataset1)
         await resource_factory(dataset2)

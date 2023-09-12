@@ -74,7 +74,7 @@ async def test_full_workflow(
         debug(project)
         project_id = project.id
         input_dataset = await dataset_factory(
-            project, name="input", type="image", read_only=True
+            project_id=project.id, name="input", type="image", read_only=True
         )
         input_dataset_id = input_dataset.id
 

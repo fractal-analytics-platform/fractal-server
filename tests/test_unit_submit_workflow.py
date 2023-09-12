@@ -31,7 +31,7 @@ async def test_success_submit_workflows(
         workflow = await workflow_factory(project_id=project.id)
         task = await task_factory(name="task", source="task_source")
         await workflow.insert_task(task_id=task.id, db=db)
-        dataset = await dataset_factory(project)
+        dataset = await dataset_factory(project_id=project.id)
         job0 = await job_factory(
             working_dir=tmp_path.as_posix(),
             project_id=project.id,
@@ -91,7 +91,7 @@ async def test_fail_submit_workflows_at_same_time(
         workflow = await workflow_factory(project_id=project.id)
         task = await task_factory(name="task", source="task_source")
         await workflow.insert_task(task_id=task.id, db=db)
-        dataset = await dataset_factory(project)
+        dataset = await dataset_factory(project_id=project.id)
         job = await job_factory(
             working_dir=tmp_path.as_posix(),
             project_id=project.id,
@@ -143,7 +143,7 @@ async def test_fail_submit_workflows_wrong_IDs(
         workflow = await workflow_factory(project_id=project.id)
         task = await task_factory(name="task", source="task_source")
         await workflow.insert_task(task_id=task.id, db=db)
-        dataset = await dataset_factory(project)
+        dataset = await dataset_factory(project_id=project.id)
         job = await job_factory(
             working_dir=tmp_path.as_posix(),
             project_id=project.id,
