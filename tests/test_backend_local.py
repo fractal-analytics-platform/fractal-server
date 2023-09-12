@@ -15,7 +15,7 @@ import datetime
 import json
 from concurrent.futures import ThreadPoolExecutor
 
-import pytest  # type: ignore[import]
+import pytest
 from devtools import debug
 
 from .data.tasks_dummy import dummy as dummy_module
