@@ -7,7 +7,7 @@
     * Introduce `"api/v1/project/{project_id}/dataset/{dataset_id}/status/"` endpoint;
     * Introduce `"api/v1/project/{project_id}/dataset/{dataset_id}/export_history/"` endpoint;
     * Move legacy history to `Dataset.meta["HISTORY_LEGACY"]`.
-* Introduce `first_task_index_integer` and `last_task_index_integer` properties for `ApplyWorkflow` (\#803).
+* Make `first_task_index` and `last_task_index` properties of `ApplyWorkflow` required (\#803).
 * Add `docs_info` and `docs_link` to Task model (\#814)
 * Accept `TaskUpdate.version=None` in task-patch endpoint (\#818).
 * Store a copy of the `Workflow` into `ApplyWorkflow` at the time of submission (\#804)
