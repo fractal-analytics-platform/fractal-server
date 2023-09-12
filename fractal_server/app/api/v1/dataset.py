@@ -329,9 +329,9 @@ async def export_history_as_workflow(
     )
     res = await db.execute(stm)
 
-    # If at least one such job exists, then this endpoint should fail (what
-    # would "extract a reproducible workflow" mean when execution is
-    # in-progress?)
+    # If at least one such job exists, then this endpoint will fail. We do not
+    # support the use case of exporting a reproducible workflow when job
+    # execution is in progress; this may change in the future.
     jobs = res.scalars().all()
     if jobs:
         if len(jobs) == 1:
