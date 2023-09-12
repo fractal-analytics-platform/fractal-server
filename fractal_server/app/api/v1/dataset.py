@@ -51,7 +51,7 @@ async def create_dataset(
     Add new dataset to current project
     """
     await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db  # type: ignore[arg-type]
+        project_id=project_id, user_id=user.id, db=db
     )
     db_dataset = Dataset(project_id=project_id, **dataset.dict())
     db.add(db_dataset)
@@ -78,7 +78,7 @@ async def read_dataset(
     output = await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
-        user_id=user.id,  # type: ignore[arg-type]
+        user_id=user.id,
         db=db,
     )
     dataset = output["dataset"]
@@ -103,7 +103,7 @@ async def update_dataset(
     output = await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
-        user_id=user.id,  # type: ignore[arg-type]
+        user_id=user.id,
         db=db,
     )
     db_dataset = output["dataset"]
@@ -133,7 +133,7 @@ async def delete_dataset(
     output = await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
-        user_id=user.id,  # type: ignore[arg-type]
+        user_id=user.id,
         db=db,
     )
     dataset = output["dataset"]
@@ -180,7 +180,7 @@ async def create_resource(
     output = await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
-        user_id=user.id,  # type: ignore[arg-type]
+        user_id=user.id,
         db=db,
     )
     dataset = output["dataset"]
@@ -208,7 +208,7 @@ async def get_resource_list(
     await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
-        user_id=user.id,  # type: ignore[arg-type]
+        user_id=user.id,
         db=db,
     )
     stm = select(Resource).where(Resource.dataset_id == dataset_id)
@@ -236,7 +236,7 @@ async def update_resource(
     output = await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
-        user_id=user.id,  # type: ignore[arg-type]
+        user_id=user.id,
         db=db,
     )
     dataset = output["dataset"]
@@ -274,7 +274,7 @@ async def delete_resource(
     Delete a resource of a dataset
     """
     project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db  # type: ignore[arg-type]
+        project_id=project_id, user_id=user.id, db=db
     )
     resource = await db.get(Resource, resource_id)
     if not resource or resource.dataset_id not in (
@@ -307,7 +307,7 @@ async def export_history_as_workflow(
     output = await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
-        user_id=user.id,  # type: ignore[arg-type]
+        user_id=user.id,
         db=db,
     )
     dataset = output["dataset"]
@@ -322,7 +322,7 @@ async def export_history_as_workflow(
         select(ApplyWorkflow)
         .where(ApplyWorkflow.output_dataset_id == dataset_id)
         .where(
-            ApplyWorkflow.status.in_(  # type: ignore
+            ApplyWorkflow.status.in_(
                 [JobStatusType.SUBMITTED, JobStatusType.RUNNING]
             )
         )
@@ -384,7 +384,7 @@ async def get_workflowtask_status(
     output = await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
-        user_id=user.id,  # type: ignore[arg-type]
+        user_id=user.id,
         db=db,
     )
     dataset = output["dataset"]
@@ -439,7 +439,7 @@ async def get_workflowtask_status(
         running_workflow = await _get_workflow_check_owner(
             project_id=project_id,
             workflow_id=running_job.workflow_id,
-            user_id=user.id,  # type: ignore
+            user_id=user.id,
             db=db,
         )
         # Mid priority: Set all WorkflowTask's that are part of the running job
