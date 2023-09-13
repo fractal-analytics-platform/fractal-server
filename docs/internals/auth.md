@@ -193,14 +193,13 @@ curl \
     "email":"fancy@university.edu",
     "is_active":true,
     "is_superuser":false,
-    "is_verified":true,
+    "is_verified":false,
     "slurm_user":null,
     "cache_dir":null,
     "username":null
 }
 ```
 
-Note that users authenticated via OAuth are considered _verified_.<br>
 If a user with the same email was already in the database, the two accounts would have been associated.
 
 ## Authorization
