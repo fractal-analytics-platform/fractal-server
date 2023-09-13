@@ -95,14 +95,20 @@ Fractal allows to authenticate using one or more external authentication clients
 
 The currently supported clients are `OpenID Connect` (aka `OIDC`), `GitHub` and `Google`, but there are many more available (see [here](https://frankie567.github.io/httpx-oauth/oauth2/)).
 
-You must have a registered OAuth App (e.g. [GitHub](https://github.com/settings/developers), [Google](https://console.cloud.google.com)) with its _Client ID_ and _Client Secret_.<br>
+You can have just one `GitHub` client and one `Google` client, but as many `OIDC` client as you want, as long as you call them with different names.
+
+
+### Clients configuration
+
+For each client you must have a registered OAuth App (e.g. [GitHub](https://github.com/settings/developers), [Google](https://console.cloud.google.com)), with its _Client ID_ and _Client Secret_.
+
 During registration, you should provide two endpoints:
 
 - the `Homepage URL` (e.g. `http://127.0.0.1:8000/`),
 
 - the `Authorization callback URL` (e.g. `http://127.0.0.1:8000/auth/anyname/callback`).
 
-Add the following variables to the Fractal environment:
+To make Fractal Server aware of the clients, the following variables must be added to the environment:
 
 === "OIDC"
 
@@ -126,14 +132,19 @@ Add the following variables to the Fractal environment:
     OAUTH_GOOGLE_CLIENT_SECRET=...
     ```
 
-> You can have just one GitHub client and one Google client, but as many OIDC client as you want, as long as you provide different names.
-
 When Fractal Server starts, two new routes will be generated for each client:
 
 - `/auth/client-name/authorize` ,
 - `/auth/client-name/callback` (the `Authorization callback URL` of the client).
 
----
+> For `GitHub` and `Google` clients the `client-name` is (not surprisingly) `github` or `google`, while for `OIDC` clients it's whatever you put in place of `ANYNAME` in the environment variables.
+
+### Authorization Code Flow
+
+![authorization code flow](../img/auth.png "authorization code flow")
+
+
+### User story
 
 Now a new user comes in.<br>
 Let's say she has a GitHub account, registred with her personal email `fancy@university.edu`,
