@@ -36,6 +36,7 @@ from typing import Type
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Request
 from fastapi import status
 from fastapi_users import BaseUserManager
 from fastapi_users import FastAPIUsers
@@ -178,7 +179,14 @@ async def get_user_db(
 
 
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
-    pass
+    async def on_after_login(
+        self, user: User, request: Optional[Request] = None
+    ) -> None:
+        """
+        Perform logic after user login.
+        *You should overload this method to add your own logic.*
+        """
+        pass
 
 
 async def get_user_manager(
