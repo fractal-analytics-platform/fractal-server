@@ -141,16 +141,40 @@ When Fractal Server starts, two new routes will be generated for each client:
 
 ### Authorization Code Flow
 
+Authentication via OAuth2 client is based on the so called _Authorizion code flow_.
+
+The following image has been readapted from [this one](https://auth0.com/docs/get-started/authentication-and-authorization-flow/authorization-code-flow).<br>
+
 ![authorization code flow](../img/auth.png "authorization code flow")
 
+Let's now see how Fractal handles these steps.
 
-### User story
+- **1 &#8594; 4**<br>
+    The starting point is [`/auth/client-name/authorize`](https://github.com/fastapi-users/fastapi-users/blob/ff9fae631cdae00ebc15f051e54728b3c8d11420/fastapi_users/router/oauth.py#L59).<br>
+    Here an `authorization_url` is generated and provided to the user.<br>
+    This url will redirect the user to the _Authorization Server_, which is external to Fractal (e.g. GitHub or Google sites), together with a `state` code for increased security.<br>
+    The user must authenticate and grant Fractal the permissions it requires.
 
-Now a new user comes in.<br>
-Let's say she has a GitHub account, registred with her personal email `fancy@university.edu`,
-and she wants to use it to sign up to Fractal.
+- **5 &#8594; 8**<br>
+    The flow comes back to Fractal Server at [`/auth/client-name/callback`](https://github.com/fastapi-users/fastapi-users/blob/ff9fae631cdae00ebc15f051e54728b3c8d11420/fastapi_users/router/oauth.py#L101), together with the _Authorization Code_.<br>
+    A dependency of the callback function, [`oauth2_authorize_callback`](https://github.com/frankie567/httpx-oauth/blob/2e82654559b1687a6b25c86e31dc9290ae06cdba/httpx_oauth/integrations/fastapi.py#L10), takes care of exchanging this code for the _Access Token_.<br>
 
-She makes a call to the `/github/authorize` endpoint:
+- **9 &#8594; 10**<br>
+    The callback function uses the Access Token to obtain the mail and a user identifier from the _Resource Server_ (which, depending on the client, may or may not coincide with the Authorization Server).
+
+After that, the callback function does some extra steps:
+
+- it checks that `state` is still valid;
+- if a user with that email doesn't already exist, it creates one with a random password;
+- if the user has never authenticated with this OAuth client before, it adds in the database a new entry to `oauthaccount`, properly linked to the user; at subsequent logins that entry will just be updated;
+- it prepares a JWT token for the user and serves it in the Response Cookie.
+
+
+### GitHub example
+
+A new user comes in and wants to sign up to Fractal using her GitHub account, registred with her personal email `fancy@university.edu`.
+
+She makes a call to the `auth/github/authorize` endpoint:
 
 ```
 $ curl \
@@ -161,8 +185,8 @@ $ curl \
     "authorization_url":"https://github.com/login/oauth/authorize?
         response_type=code&
         client_id=...&
-        redirect_uri=http%3A%2F%2F127.0.0.1%3A8000%2Fauth%2Fgithub%2Fcallback&
-        state=ey...&
+        redirect_uri=...&
+        state=...&
         scope=user+user%3Aemail"
 }
 ```
@@ -170,28 +194,26 @@ $ curl \
 Now the `authorization_url` must be visited using a browser.
 After logging in to GitHub, she will be asked to grant the app the permissions it requires.
 
-After that, she will be redirected back to our server, to the `/github/callback` endpoint, together with two query parameters:
+After that, she will be redirected back to our server, at `auth/github/callback`, together with two query parameters:
 ```
 http://127.0.0.1:8000/auth/github/callback?
     code=...&
     state=...
 ```
 
-The callback function will take care of exchanging `code` and `state` (plus, the Client Secret) for two tokens:
+The callback function actually returns nothing, but if she looks at the response cookie she will find a JWT token
 
-- the Access Token, which is stored in the database but it's not used by Fractal;
-- the ID Token, which can be found in the Response Cookie of the callback:
-    ```
-    "fastapiusersauth": {
-    	"httpOnly": true,
-    	"path": "/",
-    	"samesite": "None",
-    	"secure": true,
-    	"value": "ey..."     <----- This is the ID token
-    }
-    ```
+```
+"fastapiusersauth": {
+	"httpOnly": true,
+	"path": "/",
+	"samesite": "None",
+	"secure": true,
+	"value": "ey..."     <----- This is the JWT token
+}
+```
 
-The user can now make [authenticated calls](https://fractal-analytics-platform.github.io/fractal-server/internals/auth/#authenticated-calls) using the ID token:
+The user can now make [authenticated calls](https://fractal-analytics-platform.github.io/fractal-server/internals/auth/#authenticated-calls) using that token:
 
 ```
 curl \
@@ -210,8 +232,6 @@ curl \
     "username":null
 }
 ```
-
-If a user with the same email was already in the database, the two accounts would have been associated.
 
 ## Authorization
 
