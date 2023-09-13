@@ -174,7 +174,7 @@ After that, the callback function does some extra steps:
 
 A new user comes in and wants to sign up to Fractal using her GitHub account, registred with her personal email `fancy@university.edu`.
 
-She makes a call to the `auth/github/authorize` endpoint:
+She makes a call to `/auth/github/authorize`:
 
 ```
 $ curl \
@@ -194,7 +194,8 @@ $ curl \
 Now the `authorization_url` must be visited using a browser.
 After logging in to GitHub, she will be asked to grant the app the permissions it requires.
 
-After that, she will be redirected back to our server, at `auth/github/callback`, together with two query parameters:
+After that, she will be redirected back to our server at `/auth/github/callback`, together with two query parameters:
+
 ```
 http://127.0.0.1:8000/auth/github/callback?
     code=...&
