@@ -383,15 +383,16 @@ async def test_failing_workflow_TaskExecutionError(
         assert res.status_code == 201
         debug(res.json())
 
-        # Check that output_dataset.meta is still valid
-        # https://github.com/fractal-analytics-platform/fractal-server/issues/842
-        res = await client.get(
-            f"{PREFIX}/project/{project.id}/dataset/{output_dataset.id}"
-        )
-        assert res.status_code == 200
-        output_dataset_json = res.json()
-        debug(output_dataset_json["meta"])
-        assert "index" in list(output_dataset_json["meta"].keys())
+        # If the first task went through, then check that output_dataset.meta
+        # was updated (ref issue #844)
+        if failing_task == "parallel":
+            res = await client.get(
+                f"{PREFIX}/project/{project.id}/dataset/{output_dataset.id}"
+            )
+            assert res.status_code == 200
+            output_dataset_json = res.json()
+            debug(output_dataset_json["meta"])
+            assert "index" in list(output_dataset_json["meta"].keys())
 
 
 async def _auxiliary_scancel(slurm_user, sleep_time):
