@@ -592,7 +592,7 @@ def get_slurm_config(
     slurm_dict["parallel_tasks_per_job"] = parallel_tasks_per_job
 
     # Put everything together
-    logger.error(
+    logger.info(
         "[get_slurm_config] Now create a SlurmConfig object based "
         f"on {slurm_dict=}"
     )
