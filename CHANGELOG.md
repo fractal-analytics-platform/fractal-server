@@ -2,6 +2,8 @@
 
 # 1.3.6
 
+* Update `output_dataset.meta` also when workflow execution fails (\#843).
+* Improve error message for unknown errors in job execution (\#843).
 * Fix log message incorrectly marked as "error" (\#846).
 
 # 1.3.5
