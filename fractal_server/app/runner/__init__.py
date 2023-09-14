@@ -17,6 +17,7 @@ subystems should only import this module and not its submodules or the
 individual backends.
 """
 import os
+import traceback
 from pathlib import Path
 from typing import Optional
 
@@ -333,10 +334,12 @@ async def submit_workflow(
         close_job_logger(logger)
         db_sync.commit()
 
-    except Exception as e:
+    except Exception:
 
         logger.debug(f'FAILED workflow "{workflow.name}", unknown error.')
         logger.info(f'Workflow "{workflow.name}" failed (unkwnon error).')
+
+        current_traceback = traceback.format_exc()
 
         # Assemble output_dataset.meta based on the last successful task, i.e.
         # based on METADATA_FILENAME
@@ -355,7 +358,7 @@ async def submit_workflow(
 
         job.status = JobStatusType.FAILED
         job.end_timestamp = get_timestamp()
-        job.log = f"UNKNOWN ERROR\nOriginal error: {str(e)}"
+        job.log = f"UNKNOWN ERROR\nOriginal error: {current_traceback}"
         db_sync.merge(job)
         close_job_logger(logger)
         db_sync.commit()
