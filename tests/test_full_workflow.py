@@ -216,6 +216,16 @@ async def test_full_workflow(
         debug(no_access)
         assert len(no_access) == 0
 
+        # Check that `output_dataset.meta` was updated with the `index`
+        # component list
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/dataset/{output_dataset_id}"
+        )
+        assert res.status_code == 200
+        output_dataset_json = res.json()
+        debug(output_dataset_json["meta"])
+        assert "index" in list(output_dataset_json["meta"].keys())
+
 
 @pytest.mark.slow
 @pytest.mark.parametrize("backend", backends_available)
