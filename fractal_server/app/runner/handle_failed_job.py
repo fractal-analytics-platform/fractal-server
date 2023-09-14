@@ -13,6 +13,7 @@ Helper functions to handle Dataset history.
 """
 import json
 import logging
+from copy import deepcopy
 from pathlib import Path
 from typing import Any
 from typing import Optional
@@ -35,14 +36,13 @@ def assemble_history_failed_job(
     """
     Assemble `history` after a workflow-execution job fails.
 
-
     Args:
-        failed_job:
+        job:
             The failed `ApplyWorkflow` object.
         output_dataset:
-            The `output_dataset` associated to `failed_job`.
+            The `output_dataset` associated to `job`.
         workflow:
-            The `workflow` associated to `failed_job`.
+            The `workflow` associated to `job`.
         logger: A logger instance.
         failed_wftask:
             If set, append it to `history` during step 3; if `None`, infer
@@ -105,3 +105,37 @@ def assemble_history_failed_job(
         new_history.append(new_history_item)
 
     return new_history
+
+
+def assemble_meta_failed_job(
+    job: ApplyWorkflow,
+    output_dataset: Dataset,
+) -> dict[str, Any]:
+    """
+    Assemble `Dataset.meta` (history excluded) for a failed workflow-execution.
+
+
+    Assemble new value of `output_dataset.meta` based on the last successful
+    task, i.e. based on the content of the temporary `METADATA_FILENAME` file.
+
+    Args:
+        job:
+            The failed `ApplyWorkflow` object.
+        output_dataset:
+            The `output_dataset` associated to `job`.
+
+    Returns:
+        The new value of `output_dataset.meta`, apart from its `history` key.
+    """
+
+    new_meta = deepcopy(output_dataset.meta)
+    metadata_file = Path(job.working_dir) / METADATA_FILENAME
+    try:
+        with metadata_file.open("r") as f:
+            metadata_update = json.load(f)
+        for key, value in metadata_update.items():
+            new_meta[key] = value
+    except FileNotFoundError:
+        pass
+
+    return new_meta
