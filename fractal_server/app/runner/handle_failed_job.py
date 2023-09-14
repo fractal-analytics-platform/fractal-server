@@ -114,7 +114,6 @@ def assemble_meta_failed_job(
     """
     Assemble `Dataset.meta` (history excluded) for a failed workflow-execution.
 
-
     Assemble new value of `output_dataset.meta` based on the last successful
     task, i.e. based on the content of the temporary `METADATA_FILENAME` file.
 
