@@ -190,6 +190,17 @@ class Settings(BaseSettings):
 
     SQLITE_PATH: Optional[str]
 
+    @root_validator
+    def check_database_settings(cls, values):
+        db_engine = values.get("DB_ENGINE")
+        if db_engine == "sqlite":
+            if not values.get("SQLITE_PATH"):
+                raise ValueError("SQLITE_PATH path cannot be None")
+        else:  # db_engine == "postgres"
+            if not values.get("POSTGRES_DB"):
+                raise ValueError("POSTGRES_DB path cannot be None")
+        return values
+
     @property
     def DATABASE_URL(self) -> URL:
         if self.DB_ENGINE == "sqlite":
@@ -344,14 +355,6 @@ class Settings(BaseSettings):
                 "production", "staging", "testing", "development"
             ]
             JWT_SECRET_KEY: str
-            DB_ENGINE: str = Field()
-
-            if DB_ENGINE == "postgres":
-                POSTGRES_USER: str
-                POSTGRES_PASSWORD: str
-                POSTGRES_DB: str
-            elif DB_ENGINE == "sqlite":
-                SQLITE_PATH: str
 
             FRACTAL_TASKS_DIR: Path
             FRACTAL_RUNNER_WORKING_BASE_DIR: Path
