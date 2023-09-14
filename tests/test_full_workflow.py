@@ -323,7 +323,7 @@ async def test_failing_workflow_UnknownError(
         assert job_status_data["status"] == "failed"
         assert job_status_data["end_timestamp"]
         assert "id: None" not in job_status_data["log"]
-        assert "ValueError" in job_status_data["log"]
+        assert "RuntimeError" in job_status_data["log"]
         assert "UNKNOWN ERROR" in job_status_data["log"]
         print(job_status_data["log"])
 
