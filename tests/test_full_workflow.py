@@ -229,6 +229,107 @@ async def test_full_workflow(
 
 @pytest.mark.slow
 @pytest.mark.parametrize("backend", backends_available)
+async def test_failing_workflow_UnknownError(
+    client,
+    MockCurrentUser,
+    testdata_path,
+    tmp777_path,
+    collect_packages,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    backend,
+    request,
+    override_settings_factory,
+    resource_factory,
+):
+    """
+    Run a parallel task on a dataset which does not have the appropriate
+    metadata (i.e. it lacks the corresponding parallelization_level component
+    list), to trigger an unknown error.
+    """
+
+    override_settings_factory(
+        FRACTAL_RUNNER_BACKEND=backend,
+        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path
+        / f"artifacts-{backend}-UnknownError",
+    )
+    if backend == "slurm":
+        override_settings_factory(
+            FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
+        )
+
+    debug(f"Testing with {backend=}")
+    if backend == "slurm":
+        request.getfixturevalue("monkey_slurm")
+        request.getfixturevalue("relink_python_interpreter")
+        request.getfixturevalue("cfut_jobs_finished")
+        user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
+        user_kwargs = dict(cache_dir=user_cache_dir)
+    else:
+        user_kwargs = {}
+    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs) as user:
+        # Create project, dataset, resource
+        project = await project_factory(user)
+        project_id = project.id
+        input_dataset = await dataset_factory(
+            project_id=project.id,
+            name="Input Dataset",
+            type="Any",
+            read_only=False,
+        )
+        output_dataset = await dataset_factory(
+            project_id=project.id,
+            name="Output Dataset",
+            type="Any",
+            read_only=False,
+        )
+        await resource_factory(
+            path=str(tmp777_path / "data_in"), dataset=input_dataset
+        )
+        await resource_factory(
+            path=str(tmp777_path / "data_out"), dataset=output_dataset
+        )
+
+        # Create workflow
+        workflow = await workflow_factory(
+            name="test_wf", project_id=project.id
+        )
+
+        # Add a (parallel) dummy_parallel task
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/workflow/{workflow.id}/wftask/"
+            f"?task_id={collect_packages[1].id}",
+            json={},
+        )
+        debug(res.json())
+        assert res.status_code == 201
+
+        # Execute workflow
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/workflow/{workflow.id}/apply/"
+            f"?input_dataset_id={input_dataset.id}"
+            f"&output_dataset_id={output_dataset.id}",
+            json={},
+        )
+        job_data = res.json()
+        assert res.status_code == 202
+        job_id = job_data["id"]
+
+        res = await client.get(f"{PREFIX}/project/{project_id}/job/{job_id}")
+        assert res.status_code == 200
+        job_status_data = res.json()
+        debug(job_status_data)
+        assert job_status_data["status"] == "failed"
+        assert job_status_data["end_timestamp"]
+        assert "id: None" not in job_status_data["log"]
+        assert "ValueError" in job_status_data["log"]
+        assert "UNKNOWN ERROR" in job_status_data["log"]
+        print(job_status_data["log"])
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("backend", backends_available)
 @pytest.mark.parametrize("failing_task", ["parallel", "non_parallel"])
 async def test_failing_workflow_TaskExecutionError(
     client,
