@@ -42,6 +42,7 @@ More details about user management are provided in the [User Management section]
 <a name="authentication"></a>
 
 ### Login
+<a name="login"></a>
 
 An _authentication backend_ is composed of two parts:
 
@@ -105,14 +106,14 @@ $ curl \
 }
 ```
 
-## OAuth2
+### OAuth2
 <a name="oauth2"></a>
 
 Fractal Server also allows a different authentication procedure, not through knowledge of a user's password but through external `OAuth2` authentication clients.
 
 Through the [`https-oauth` library](https://frankie567.github.io/httpx-oauth), we currently support `OpenID Connect` (aka `OIDC`), `GitHub` and `Google` (and [many more clients](https://frankie567.github.io/httpx-oauth/oauth2/#provided-clients) can be readily included).
 
-### Configuration
+#### Configuration
 
 To use a certain `OAuth2` client, you must first register the `fractal-server` application (see instructions for [GitHub](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app) and [Google](https://blog.rebex.net/howto-register-gmail-oauth)).
 During app registration, you should provide two endpoints:
@@ -167,7 +168,7 @@ When `fractal-server` starts, two new routes will be generated for each client:
 
 > For `GitHub` and `Google` clients the `client-name` is `github` or `google`, while for `OIDC` clients it comes from the environment variables (e.g. for `OAUTH_MYCLIENT_CLIENT_ID` the `client-name` is `MYCLIENT`).
 
-### Authorization Code Flow
+#### Authorization Code Flow
 
 Authentication via OAuth2 client is based on the [Authorizion Code Flow](https://auth0.com/docs/get-started/authentication-and-authorization-flow/authorization-code-flow), as described in this diagram
 <figure markdown>
@@ -198,8 +199,7 @@ After that, the callback endpoint performs some extra operations, which are not 
 - If the user has never authenticated with this `OAuth2` client before, it adds in the database a new entry to the `oauthaccount` table, properly linked to the `user_oauth` table`; at subsequent logins that entry will just be updated;
 - It prepares a JWT token for the user and serves it in the Response Cookie.
 
-
-### Full example
+#### Full example
 
 A given `fractal-server` instance is registered as a GitHub App, and `fractal-server` is configured accordingly. A new user comes in, who wants to sign up using her GitHub account (associated to `person@university.edu`).
 
@@ -261,28 +261,18 @@ curl \
 
 ## Authorization
 
-An authenticated user must be _authorized_ to access specific endpoints.
+On top of being authenticated, a user must be _authorized_ in order to perform specific actions in `fratal-server`:
 
-The user attributes relevant for authorization are:
+1. Some endpoints require the user to have a specific attribute (e.g. being `active` or being `superuser`);
+2. Access control is in-place for some database resources, and encode via database relationships with the User table (e.g. for `Project``);
+3. Additional business logic to regulate access may be defined within specific endpoints (e.g. for patching or removing a Task).
 
-- `is_active`,
-- `is_superuser`,
-- `is_verified`,
-- `username` / `slurm_user`,
-- `id`.
+The three cases are described more in detail below.
 
+### User attributes
 
-### `is_active`
-
-Being an _active user_ (i.e. `is_active==True`) is required by
-
-- all `/api/v1/...`
-- all `/auth/users/...`,
-- POST `/auth/register`,
-- GET `/auth/userlist`,
-- GET `/auth/whoami`.
-
-This is implemented as a FastAPI dependency, using [fastapi_users.current_user](https://fastapi-users.github.io/fastapi-users/10.0/usage/current-user/#current_user):
+Some endpoints require the user to have a specific attribute.
+This is implemented through a FastAPI dependencies, e.g. using [fastapi_users.current_user](https://fastapi-users.github.io/fastapi-users/10.0/usage/current-user/#current_user):
 ```python
 current_active_user = fastapi_users.current_user(active=True)
 
@@ -294,60 +284,59 @@ async def am_i_active(
     return {f"User {user.id}":  "you are active"}
 ```
 
-### `is_superuser`
+Being an _active user_ (i.e. `user.is_active==True`) is required by
 
-Being a _superuser_ (i.e. `is_superuser==True`) is required by
+- all `/api/v1/...` endpoints
+- all `/auth/users/...`,
+- POST `/auth/register`,
+- GET `/auth/userlist`,
+- GET `/auth/whoami`.
+
+Being a _superuser_ (i.e. `user.is_superuser==True`) is required by
 
 - all `/auth/users/...`,
 - POST `/auth/register`,
 - GET `/auth/userlist`.
 
-It also gives authorisation to
+and it also gives full access (without further checks) to
 
 - PATCH `/api/v1/task/{task_id}`
 - DELETE `/api/v1/task/{task_id}`
 
-without further checks.
+No endpoint currently requires the user to be _verified_ (i.e. having `user.is_verified==True`).
 
+### Database relationships
 
-### `is_verified`
+The following resources in the `fractal-server` database are always related to a single `Project` (via their foreign key `project_id`):
 
-No endpoint currently requires `is_verified==True`.
+- `Dataset`,
+- `Workflow`,
+- `WorkflowTask` (through `Workflow`).
+- `ApplyWorkflow` (i.e. a workflow-execution job),
 
+Each endpoint that operates on one of these resources (or directly on a `Project`) requires the user to be in the `Project.user_list`.
 
-### `username` / `slurm_user`
+> The `fractal-server` database structure is general, and the user/project relationships is a many-to-many one. However the API does not currently expose a feature to easily associate multiple users to the same project.
 
-These are optional attributes, which means they can also be `None`.
+### Endpoint logic
 
-When a `Task` is [created](https://fractal-analytics-platform.github.io/fractal-server/reference/fractal_server/app/api/v1/task/#fractal_server.app.api.v1.task.create_task), the attribute `Task.owner` is set equal to `username` or, if not present, to `slurm_user` (there must be at least one to create a Task).<br>
-With a similar logic, we consider a user to be the _owner_ of a Task if `username==Task.owner` or, if `username` is `None`, we check that `slurm_user==Task.owner`.
+The [User Model](#user-model) includes additional attributes `username` and `slurm_user`, which are optional and default to `None`. Apart from `slurm_user` being needed for [User Impersonation in SLURM](../runners/slurm/#user-impersonation), these two attributes are also used for additional access control to `Task` resources.
 
-The following endpoints require a non-superuser to be the owner of the Task:
+> ⚠️ This is an experimental feature, which will likely evolve in the future (possibly towards the implementation of user groups/roles).
+
+When a `Task` is [created](https://fractal-analytics-platform.github.io/fractal-server/reference/fractal_server/app/api/v1/task/#fractal_server.app.api.v1.task.create_task), the attribute `Task.owner` is set equal to `username` or, if not present, to `slurm_user` (there must be at least one to create a Task). With a similar logic, we consider a user to be the _owner_ of a Task if `username==Task.owner` or, if `username` is `None`, we check that `slurm_user==Task.owner`.
+The following endpoints require a non-superuser user to be the owner of the Task:
 
 - PATCH `/api/v1/task/{task_id}`,
 - DELETE `/api/v1/task/{task_id}`.
-
-### `id`
-
-Each of these resources in Fractal Server is related to a single `Project` (via the foreign key `project_id`):
-
-- `ApplyWorkflow` (aka Job),
-- `Dataset`,
-- `Workflow`,
-- `WorkflowTask` (actually, this is related to a single `Workflow`).
-
-As a general rule, each endpoint that operates on one of these resources (or directly on the `Project`) requires the user to be in `Project.user_list`.
-
 
 
 ## User Management
 <a name="user-management"></a>
 
-The endpoints to manage users can be found under the route `/auth/`.
+The endpoints to manage users can be found under the route `/auth/`. On top of the `login/logout` ones ([described above](#login)), several other endpoints are available, including all the ones exposed by FastAPI Users (see [here](https://fastapi-users.github.io/fastapi-users/12.1/usage/routes)). Here are more details for the most relevant endpoints.
 
-We have [already talked](https://fractal-analytics-platform.github.io/fractal-server/internals/auth/#login) about `/login` and `/logout`. Let's present the others.
-
-### Register new user
+### POST `/auth/register`
 
 🔐 *Restricted to superusers*.
 
@@ -373,18 +362,9 @@ $ curl \
 }
 ```
 
-Here we've just provided `email` and `password`,
-which are the only required fields of `UserCreate`.
-We could also have provided
+Here we provided `email` and `password`, which are the only required fields of `UserCreate`; we could also provide the following attributes: `is_active`, `is_superuser`, `is_verified`, `slurm_user`, `cache_dir`, `username`.
 
-- `is_active`,
-- `is_superuser`,
-- `is_verified`,
-- `slurm_user`,
-- `cache_dir`,
-- `username`.
-
-### Users list
+### GET `/auth/userlist`
 
 🔐 *Restricted to superusers*.
 
@@ -420,51 +400,9 @@ $ curl \
 ]
 ```
 
-### Forgot password
+### GET `/auth/whoami`
 
-🚧 🏗️
-
-https://fastapi-users.github.io/fastapi-users/12.1/configuration/routers/reset/
-
-### Verify email
-
-🚧 🏗️
-
-https://fastapi-users.github.io/fastapi-users/12.1/configuration/routers/verify/
-
-
-### Manage users
-
-🔐 *Restricted to superusers*.
-
-Users management is under the route `/auth/users/`.
-
-Details about status codes can be found [here](https://fastapi-users.github.io/fastapi-users/12.1/usage/routes/#users-router).
-
-#### GET `/me` - `/whoami`
-
-Returns the current active superuser:
-
-```
-curl \
-    -X GET \
-    -H "Authorization: Bearer ey..." \
-    http://127.0.0.1:8000/auth/users/me
-
-{
-    "id":1,
-    "email":"admin@fractal.xy",
-    "is_active":true,
-    "is_superuser":true,
-    "is_verified":false,
-    "slurm_user":null,
-    "cache_dir":null,
-    "username":"admin"
-}
-```
-
-> 🔓 We provide a not restricted version of this endpoint at `/auth/whoami`.
->
+At `/auth/whoami`, we expose a non-superuser-restricted version of "GET ``/auth/users/me`" (described below):
 ```
 curl \
     -X GET \
@@ -483,10 +421,37 @@ curl \
 }
 ```
 
-#### PATCH `/me`
+
+### `/users` endpoints
+
+🔐 *Restricted to superusers*.
+
+The additional user-management routes exposed by FastAPI Users in `/users` (see [here](https://fastapi-users.github.io/fastapi-users/12.1/usage/routes#users-router)) are available in `fractal-server` at  `/auth/users/`. For the moment all these routes are all restricted to superusers.
+
+**GET `/auth/users/me`**
+
+Returns the current active superuser:
+```
+curl \
+    -X GET \
+    -H "Authorization: Bearer ey..." \
+    http://127.0.0.1:8000/auth/users/me
+
+{
+    "id":1,
+    "email":"admin@fractal.xy",
+    "is_active":true,
+    "is_superuser":true,
+    "is_verified":false,
+    "slurm_user":null,
+    "cache_dir":null,
+    "username":"admin"
+}
+```
+
+**PATCH `/me`**
 
 Update the current active superuser. We must provide a `UserUpdate` instance, which is just like a [`UserCreate`](http://127.0.0.1:8001/internals/auth/#register-new-user) except that all attributes are optional.
-
 ```console
 $ curl \
     -X PATCH \
@@ -507,17 +472,16 @@ $ curl \
 }
 ```
 
-#### GET `/{id}`
+**GET `/{id}`**
 
-Returns the user with the `id` given in the route.
+Return the user with a given `id`.
 
-#### PATCH `/{id}`
+**PATCH `/{id}`**
 
-Update the user with the `id` given in the route.
+Update the user with a given `id`.
 
 Requires a `UserUpdate`, like in [PATCH `/me`](http://127.0.0.1:8001/internals/auth/#patch-me).
 
+**DELETE `/{id}`**
 
-#### DELETE `/{id}`
-
-Delete the user with the `id` given in the route.
+Delete the user with the given `id`.
