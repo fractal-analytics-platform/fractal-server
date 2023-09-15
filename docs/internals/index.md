@@ -1,24 +1,9 @@
-# Fractal Server
+# Fractal Server internal components
 
-Fractal Server is the server-side component of the Fractal Analytics Platform.
-It takes care of
+On top of exposing a web API to clients, `fractal-server` includes several internal subsystems:
 
-* user management
-* project management
-* workflows
-* running workflows on a computational backend
-* expose web API to clients
-
-To get started with Fractal Server, refer to
-
-* [Install and deploy](../install_and_deploy.md)
-* [Configuration](../configuration.md)
-
-## Fractal Server internals
-
-The server has a modular structure with several subsystem
-
-* [task collection](task_collection.md)
-* [computational backends](runners/index.md)
-* [API Auth](auth.md)
-* [database interface](database_interface.md)
+* [Authentication/Authorization](auth.md) of users, and user management;
+* [Database interface](database_interface.md), supporting SQLite and PostgreSQL;
+* [Basic logging](logs.md);
+* [Automated task collection](task_collection.md) for Fractal-compatible task packages;
+* [Computational backends](runners/index.md) to execute workflows;
