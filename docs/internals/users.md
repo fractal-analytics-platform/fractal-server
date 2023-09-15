@@ -1,8 +1,9 @@
-# Users
+# Fractal Users
 
 Fractal Server's _user_ model and _authentication/authorization_ systems are powered by the [FastAPI Users](https://fastapi-users.github.io/fastapi-users/latest/configuration/overview/).
 
-## Fractal users
+## User Model
+<a name="user-model"></a>
 
 A Fractal user corresponds to an instance of the [`UserOAuth`](http://localhost:8001/reference/fractal_server/app/models/security/#fractal_server.app.models.security.UserOAuth) class, with the following attributes:
 
@@ -35,7 +36,10 @@ The most common use cases for `fractal-server` are:
 1. The server is used by a single user (e.g. on their own machine, with the [local backend](../runners/local)); in this case you may simply customize and use the default user.
 2. The server has multiple users; in this case the admin may use the default user (or another user with superuser privileges) to create additional users (with no superuser privileges). For `fractal-server` to execute jobs on a SLURM cluster (through the corresponding [SLURM backend](../runners/slurm)), each Fractal must be associated to a cluster user via the `slurm_user` attribute (see [here](../runners/slurm/#user-impersonation) for more details about SLURM users).
 
+More details about user management are provided in the [User Management section](#user-management) below.
+
 ## Authentication
+<a name="authentication"></a>
 
 ### Login
 
@@ -108,6 +112,7 @@ $ curl \
 
 
 ## OAuth2
+<a name="oauth2"></a>
 
 Fractal allows to authenticate using one or more external authentication clients based on `OAuth2`.
 
@@ -333,8 +338,8 @@ As a general rule, each endpoint that operates on one of these resources (or dir
 
 
 
-
-## User management
+## User Management
+<a name="user-management"></a>
 
 The endpoints to manage users can be found under the route `/auth/`.
 
