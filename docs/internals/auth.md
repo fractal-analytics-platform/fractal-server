@@ -1,12 +1,16 @@
-Fractal Server's _user_ model and _authentication/authorization_ systems are powered by [FastAPI Users](https://fastapi-users.github.io/).
+# Fractal users, authentication and authorization
 
-A user is an instance of the [`UserOAuth`](http://localhost:8001/reference/fractal_server/app/models/security/#fractal_server.app.models.security.UserOAuth) class:
+Fractal Server's _user_ model and _authentication/authorization_ systems are powered by the [FastAPI Users](https://fastapi-users.github.io/fastapi-users/latest/configuration/overview/).
+
+## Fractal users
+
+A Fractal user corresponds to an instance of the [`UserOAuth`](http://localhost:8001/reference/fractal_server/app/models/security/#fractal_server.app.models.security.UserOAuth) class, with the following attributes:
 
 | Attribute | Type | Nullable | Default |
 | :--- | :---: | :---: | :---: |
 | id | integer | | incremental |
-| email | email | | |
-| hashed_password | string | | |
+| email | email | | - |
+| hashed_password | string | | - |
 | is_active | bool | | true |
 | is_superuser | bool | | false |
 | is_verified | bool | | false |
@@ -14,8 +18,22 @@ A user is an instance of the [`UserOAuth`](http://localhost:8001/reference/fract
 | <span style="background-color:teal;color:white">&nbsp;username&nbsp;</span> | string | * | null |
 | <span style="background-color:teal;color:white">&nbsp;cache_dir&nbsp;</span> | string | * | null |
 
-Colored attributes are Fractal specific, all the others are [provided](https://github.com/fastapi-users/fastapi-users-db-sqlmodel/blob/main/fastapi_users_db_sqlmodel/__init__.py) by FastAPI Users.
+The colored attributes are specific for Fractal users, while the other attributes are [provided](https://github.com/fastapi-users/fastapi-users-db-sqlmodel/blob/main/fastapi_users_db_sqlmodel/__init__.py) by FastAPI Users.
 
+In the startup phase, `fractal-server` always creates a default user, who also has the superuser privileges that are necessary for managing other users.
+The credentials for this user are defined via the environment variables
+[`FRACTAL_ADMIN_DEFAULT_EMAIL`](../../configuration/#fractal_server.config.Settings.FRACTAL_DEFAULT_ADMIN_EMAIL) (default: `admin@fractal.xy`)
+and
+[`FRACTAL_ADMIN_DEFAULT_PASSWORD`](../../configuration/#fractal_server.config.Settings.FRACTAL_DEFAULT_ADMIN_PASSWORD) (default: `1234`).
+
+> **⚠️ You should always modify the password of the default user;**
+> this can be done with API calls to the `PATCH /auth/users/{id}` endpoint of the [`fractal-server` API](../../openapi), directly (e.g. through the `curl` command) or via a client (e.g. the [Fractal command-line client](https://fractal-analytics-platform.github.io/fractal/reference/fractal/user/#user-edit)).
+> <mark>When the API instance is exposed to multiple users, skipping the default-user password update leads to a severe vulnerability! </mark>
+
+The most common use cases for `fractal-server` are:
+
+1. The server is used by a single user (e.g. on their own machine, with the [local backend](../runners/local)); in this case you may simply customize and use the default user.
+2. The server has multiple users; in this case the admin may use the default user (or another user with superuser privileges) to create additional users (with no superuser privileges). For `fractal-server` to execute jobs on a SLURM cluster (through the corresponding [SLURM backend](../runners/slurm)), each Fractal must be associated to a cluster user via the `slurm_user` attribute (see [here](../runners/slurm/#user-impersonation) for more details about SLURM users).
 
 ## Authentication
 
