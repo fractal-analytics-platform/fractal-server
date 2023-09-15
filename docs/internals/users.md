@@ -1,4 +1,4 @@
-# Fractal users, authentication and authorization
+# Users
 
 Fractal Server's _user_ model and _authentication/authorization_ systems are powered by the [FastAPI Users](https://fastapi-users.github.io/fastapi-users/latest/configuration/overview/).
 
