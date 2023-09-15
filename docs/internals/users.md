@@ -171,7 +171,7 @@ When `fractal-server` starts, two new routes will be generated for each client:
 
 Authentication via OAuth2 client is based on the [Authorizion Code Flow](https://auth0.com/docs/get-started/authentication-and-authorization-flow/authorization-code-flow), as described in this diagram
 <figure markdown>
-  ![Authorization Code Flow](../img/auth.png)
+  ![Authorization Code Flow](../assets/auth.png)
   <figcaption markdown>(adapted from https://auth0.com/docs/get-started/authentication-and-authorization-flow/authorization-code-flow, © 2023 Okta, Inc.)
   </figcaption>
 </figure>
