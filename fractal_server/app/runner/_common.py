@@ -433,7 +433,17 @@ def call_parallel_task(
     if not workflow_dir_user:
         workflow_dir_user = workflow_dir
 
-    component_list = task_pars_depend.metadata[wftask.parallelization_level]
+    try:
+        component_list = task_pars_depend.metadata[
+            wftask.parallelization_level
+        ]
+    except KeyError:
+        keys = list(task_pars_depend.metadata.keys())
+        raise RuntimeError(
+            "WorkflowTask parallelization_level "
+            f"('{wftask.parallelization_level}') is missing "
+            f"in metadata keys ({keys})."
+        )
 
     # Backend-specific configuration
     try:

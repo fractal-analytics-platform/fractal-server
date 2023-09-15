@@ -17,6 +17,7 @@ subystems should only import this module and not its submodules or the
 individual backends.
 """
 import os
+import traceback
 from pathlib import Path
 from typing import Optional
 
@@ -36,7 +37,8 @@ from .common import close_job_logger
 from .common import JobExecutionError
 from .common import TaskExecutionError
 from .common import validate_workflow_compatibility  # noqa: F401
-from .history import assemble_history_failed_job
+from .handle_failed_job import assemble_history_failed_job
+from .handle_failed_job import assemble_meta_failed_job
 
 
 _backends = {}
@@ -250,8 +252,10 @@ async def submit_workflow(
         new_meta = {}
         for key, value in output_dataset_meta.items():
             if key != "history":
+                # For non-history keys, replace with new value
                 new_meta[key] = value
             else:
+                # For history key, append to existing entry
                 new_meta[key] = output_dataset.meta.get(key, []) + value
         output_dataset.meta = new_meta
         db_sync.merge(output_dataset)
@@ -271,6 +275,10 @@ async def submit_workflow(
         logger.debug(f'FAILED workflow "{workflow.name}", TaskExecutionError.')
         logger.info(f'Workflow "{workflow.name}" failed (TaskExecutionError).')
 
+        # Assemble output_dataset.meta based on the last successful task, i.e.
+        # based on METADATA_FILENAME
+        new_meta = assemble_meta_failed_job(job, output_dataset)
+
         # Assemble new history and assign it to output_dataset.meta
         failed_wftask = db_sync.get(WorkflowTask, e.workflow_task_id)
         new_history = assemble_history_failed_job(
@@ -280,7 +288,8 @@ async def submit_workflow(
             logger,
             failed_wftask=failed_wftask,
         )
-        output_dataset.meta["history"] = new_history
+        new_meta["history"] = new_history
+        output_dataset.meta = new_meta
         db_sync.merge(output_dataset)
 
         job.status = JobStatusType.FAILED
@@ -302,6 +311,10 @@ async def submit_workflow(
         logger.debug(f'FAILED workflow "{workflow.name}", JobExecutionError.')
         logger.info(f'Workflow "{workflow.name}" failed (JobExecutionError).')
 
+        # Assemble output_dataset.meta based on the last successful task, i.e.
+        # based on METADATA_FILENAME
+        new_meta = assemble_meta_failed_job(job, output_dataset)
+
         # Assemble new history and assign it to output_dataset.meta
         new_history = assemble_history_failed_job(
             job,
@@ -309,7 +322,8 @@ async def submit_workflow(
             workflow,
             logger,
         )
-        output_dataset.meta["history"] = new_history
+        new_meta["history"] = new_history
+        output_dataset.meta = new_meta
         db_sync.merge(output_dataset)
 
         job.status = JobStatusType.FAILED
@@ -320,10 +334,16 @@ async def submit_workflow(
         close_job_logger(logger)
         db_sync.commit()
 
-    except Exception as e:
+    except Exception:
 
         logger.debug(f'FAILED workflow "{workflow.name}", unknown error.')
         logger.info(f'Workflow "{workflow.name}" failed (unkwnon error).')
+
+        current_traceback = traceback.format_exc()
+
+        # Assemble output_dataset.meta based on the last successful task, i.e.
+        # based on METADATA_FILENAME
+        new_meta = assemble_meta_failed_job(job, output_dataset)
 
         # Assemble new history and assign it to output_dataset.meta
         new_history = assemble_history_failed_job(
@@ -332,12 +352,13 @@ async def submit_workflow(
             workflow,
             logger,
         )
-        output_dataset.meta["history"] = new_history
+        new_meta["history"] = new_history
+        output_dataset.meta = new_meta
         db_sync.merge(output_dataset)
 
         job.status = JobStatusType.FAILED
         job.end_timestamp = get_timestamp()
-        job.log = f"UNKNOWN ERROR\nOriginal error: {str(e)}"
+        job.log = f"UNKNOWN ERROR\nOriginal error: {current_traceback}"
         db_sync.merge(job)
         close_job_logger(logger)
         db_sync.commit()
