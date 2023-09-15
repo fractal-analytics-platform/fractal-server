@@ -16,6 +16,9 @@ markdown_extensions:
 - pymdownx.tasklist
 - toc:
     permalink: true
+- attr_list
+- md_in_html
+
 
 theme:
   name: "material"
