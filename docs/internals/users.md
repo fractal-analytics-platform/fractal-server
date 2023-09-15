@@ -1,6 +1,6 @@
 # Fractal Users
 
-Fractal Server's _user_ model and _authentication/authorization_ systems are powered by the [FastAPI Users](https://fastapi-users.github.io/fastapi-users/latest/configuration/overview/).
+Fractal Server's user model and authentication/authorization systems are powered by the [FastAPI Users](https://fastapi-users.github.io/fastapi-users) library, and most of the components described below can be identified in the corresponding [overview](https://fastapi-users.github.io/fastapi-users/latest/configuration/overview).
 
 ## User Model
 <a name="user-model"></a>
@@ -27,8 +27,8 @@ The credentials for this user are defined via the environment variables
 and
 [`FRACTAL_ADMIN_DEFAULT_PASSWORD`](../../configuration/#fractal_server.config.Settings.FRACTAL_DEFAULT_ADMIN_PASSWORD) (default: `1234`).
 
-> **⚠️ You should always modify the password of the default user;**
-> this can be done with API calls to the `PATCH /auth/users/{id}` endpoint of the [`fractal-server` API](../../openapi), directly (e.g. through the `curl` command) or via a client (e.g. the [Fractal command-line client](https://fractal-analytics-platform.github.io/fractal/reference/fractal/user/#user-edit)).
+> **⚠️ You should always modify the password of the default user after it's created;**
+> this can be done with API calls to the `PATCH /auth/users/{id}` endpoint of the [`fractal-server` API](../../openapi), e.g. through the `curl` command or the [Fractal command-line client](https://fractal-analytics-platform.github.io/fractal/reference/fractal/user/#user-edit).
 > <mark>When the API instance is exposed to multiple users, skipping the default-user password update leads to a severe vulnerability! </mark>
 
 The most common use cases for `fractal-server` are:
@@ -48,12 +48,9 @@ An _authentication backend_ is composed of two parts:
 - the <ins>transport</ins>, that manages how the token will be carried over the request,
 - the <ins>strategy</ins>, which manages how the token is generated and secured.
 
-Fractal Server provides two authentication backends, both using the [JWT](https://fastapi-users.github.io/fastapi-users/10.1/configuration/authentication/strategies/jwt/) strategy.<br>
-Each backend produces both [`/login`](https://fastapi-users.github.io/fastapi-users/12.1/usage/routes/#post-login) and [`/logout`](https://fastapi-users.github.io/fastapi-users/12.1/usage/routes/#post-logout) routes.
+Fractal Server provides two authentication backends (Bearer and Cookie), both based the [JWT](https://fastapi-users.github.io/fastapi-users/10.1/configuration/authentication/strategies/jwt/) strategy. Each backend produces both [`/auth/login`](https://fastapi-users.github.io/fastapi-users/12.1/usage/routes/#post-login) and [`/auth/logout`](https://fastapi-users.github.io/fastapi-users/12.1/usage/routes/#post-logout) routes.
 
-> ⚠️ Since tokens are not stored in a database,`/logout` does not actually do anything.
->
-> We have it because FastAPI Users always generates the two endpoints together.
+> FastAPI Users provides the `logout` endpoint by default, but this is not relevant in `fractal-server` since we do not store tokens in the database.
 
 #### Bearer
 
@@ -87,11 +84,9 @@ $ curl \
 #HttpOnly_127.0.0.1	FALSE	/	TRUE	0	fastapiusersauth	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiYXVkIjpbImZyYWN0YWwiXSwiZXhwIjoxNjkzNjQ4MDI5fQ.UKRdbVjwys4grQrhpGyxcxcVbNSNJ29RQiFubpGYYUk
 ```
 
-
 ### Authenticated calls
 
-Once you have the token, you can use it to identify yourself by sending it along in the header of the request:
-
+Once you have the token, you can use it to identify yourself by sending it along in the header of an API request. Here is an example with an API request to `/auth/whoami`:
 ```console
 $ curl \
     -X GET \
@@ -110,35 +105,45 @@ $ curl \
 }
 ```
 
-
 ## OAuth2
 <a name="oauth2"></a>
 
-Fractal allows to authenticate using one or more external authentication clients based on `OAuth2`.
+Fractal Server also allows a different authentication procedure, not through knowledge of a user's password but through external `OAuth2` authentication clients.
 
-The currently supported clients are `OpenID Connect` (aka `OIDC`), `GitHub` and `Google`, but there are many more available (see [here](https://frankie567.github.io/httpx-oauth/oauth2/)).
+Through the [`https-oauth` library](https://frankie567.github.io/httpx-oauth), we currently support `OpenID Connect` (aka `OIDC`), `GitHub` and `Google` (and [many more clients](https://frankie567.github.io/httpx-oauth/oauth2/#provided-clients) can be readily included).
 
-You can have just one `GitHub` client and one `Google` client, but as many `OIDC` client as you want, as long as you call them with different names.
+### Configuration
 
-
-### Clients configuration
-
-For each client you must have a registered OAuth App (e.g. [GitHub](https://github.com/settings/developers), [Google](https://console.cloud.google.com)), with its _Client ID_ and _Client Secret_.
-
-During registration, you should provide two endpoints:
+To use a certain `OAuth2` client, you must first register the `fractal-server` application (see instructions for [GitHub](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app) and [Google](https://blog.rebex.net/howto-register-gmail-oauth)).
+During app registration, you should provide two endpoints:
 
 - the `Homepage URL` (e.g. `http://127.0.0.1:8000/`),
+- the `Authorization callback URL` (e.g. `http://127.0.0.1:8000/auth/github/callback`, where `github` could be any client name).
 
-- the `Authorization callback URL` (e.g. `http://127.0.0.1:8000/auth/anyname/callback`).
+and at the end of this procedure, you will kwnow the _Client ID_ and _Client Secret_ for the app.
 
-To make Fractal Server aware of the clients, the following variables must be added to the environment:
+> You can have just one `GitHub` client and one `Google` client, but as many `OIDC` client as you want, as long as you call them with different names.
 
-=== "OIDC"
+To add an `OAuth2` client, the following environment variables must be added to [`fractal-server` configuration](../../configuration/):
+
+=== "OIDC (single client)"
 
     ```console
-    OAUTH_ANYNAME_CLIENT_ID=...
-    OAUTH_ANYNAME_CLIENT_SECRET=...
-    OAUTH_ANYNAME_OIDC_CONFIGURATION_ENDPOINT=https://yourclient.com/.well-known/openid-configuration
+    OAUTH_MYCLIENT_CLIENT_ID=...
+    OAUTH_MYCLIENT_CLIENT_SECRET=...
+    OAUTH_MYCLIENT_OIDC_CONFIGURATION_ENDPOINT=https://client.com/.well-known/openid-configuration
+    ```
+
+=== "OIDC (multiple clients)"
+
+    ```console
+    OAUTH_MYCLIENT1_CLIENT_ID=...
+    OAUTH_MYCLIENT1_CLIENT_SECRET=...
+    OAUTH_MYCLIENT1_OIDC_CONFIGURATION_ENDPOINT=https://client1.com/.well-known/openid-configuration
+
+    OAUTH_MYCLIENT2_CLIENT_ID=...
+    OAUTH_MYCLIENT2_CLIENT_SECRET=...
+    OAUTH_MYCLIENT2_OIDC_CONFIGURATION_ENDPOINT=https://client2.com/.well-known/openid-configuration
     ```
 
 === "GitHub"
@@ -155,50 +160,50 @@ To make Fractal Server aware of the clients, the following variables must be add
     OAUTH_GOOGLE_CLIENT_SECRET=...
     ```
 
-When Fractal Server starts, two new routes will be generated for each client:
+When `fractal-server` starts, two new routes will be generated for each client:
 
 - `/auth/client-name/authorize` ,
 - `/auth/client-name/callback` (the `Authorization callback URL` of the client).
 
-> For `GitHub` and `Google` clients the `client-name` is (not surprisingly) `github` or `google`, while for `OIDC` clients it's whatever you put in place of `ANYNAME` in the environment variables.
+> For `GitHub` and `Google` clients the `client-name` is `github` or `google`, while for `OIDC` clients it comes from the environment variables (e.g. for `OAUTH_MYCLIENT_CLIENT_ID` the `client-name` is `MYCLIENT`).
 
 ### Authorization Code Flow
 
-Authentication via OAuth2 client is based on the so called _Authorizion code flow_.
+Authentication via OAuth2 client is based on the [Authorizion Code Flow](https://auth0.com/docs/get-started/authentication-and-authorization-flow/authorization-code-flow), as described in this diagram
+<figure markdown>
+  ![Authorization Code Flow](../img/auth.png)
+  <figcaption markdown>(adapted from https://auth0.com/docs/get-started/authentication-and-authorization-flow/authorization-code-flow, © 2023 Okta, Inc.)
+  </figcaption>
+</figure>
 
-The following image has been readapted from [this one](https://auth0.com/docs/get-started/authentication-and-authorization-flow/authorization-code-flow).<br>
+We can now review how `fractal-server` handles these steps:
 
-![authorization code flow](../img/auth.png "authorization code flow")
+- **Steps 1 &#8594; 4**<br>
+    * The starting point is [`/auth/client-name/authorize`](https://github.com/fastapi-users/fastapi-users/blob/ff9fae631cdae00ebc15f051e54728b3c8d11420/fastapi_users/router/oauth.py#L59);
+    * Here an `authorization_url` is generated and provided to the user;
+    * This URL will redirect the user to the Authorization Server (which is e.g. GitHub or Google, and not related to `fractal-server`), together with a `state` code for increased security;
+    * The user must authenticate and grant `fractal-server` the permissions it requires.
 
-Let's now see how Fractal handles these steps.
+- **Steps 5 &#8594; 8**<br>
+    * The flow comes back to `fractal-server` at [`/auth/client-name/callback`](https://github.com/fastapi-users/fastapi-users/blob/ff9fae631cdae00ebc15f051e54728b3c8d11420/fastapi_users/router/oauth.py#L101), together with the Authorization Code.
+    * A FastAPI dependency of the callback endpoint, [`oauth2_authorize_callback`](https://github.com/frankie567/httpx-oauth/blob/2e82654559b1687a6b25c86e31dc9290ae06cdba/httpx_oauth/integrations/fastapi.py#L10), takes care of exchanging this code for the Access Token.
 
-- **1 &#8594; 4**<br>
-    The starting point is [`/auth/client-name/authorize`](https://github.com/fastapi-users/fastapi-users/blob/ff9fae631cdae00ebc15f051e54728b3c8d11420/fastapi_users/router/oauth.py#L59).<br>
-    Here an `authorization_url` is generated and provided to the user.<br>
-    This url will redirect the user to the _Authorization Server_, which is external to Fractal (e.g. GitHub or Google sites), together with a `state` code for increased security.<br>
-    The user must authenticate and grant Fractal the permissions it requires.
+- **Steps 9 &#8594; 10**<br>
+    * The callback endpoint uses the Access Token to obtain the user's email address and an account identifier from the Resource Server (which, depending on the client, may coincide with the Authorization Server).
 
-- **5 &#8594; 8**<br>
-    The flow comes back to Fractal Server at [`/auth/client-name/callback`](https://github.com/fastapi-users/fastapi-users/blob/ff9fae631cdae00ebc15f051e54728b3c8d11420/fastapi_users/router/oauth.py#L101), together with the _Authorization Code_.<br>
-    A dependency of the callback function, [`oauth2_authorize_callback`](https://github.com/frankie567/httpx-oauth/blob/2e82654559b1687a6b25c86e31dc9290ae06cdba/httpx_oauth/integrations/fastapi.py#L10), takes care of exchanging this code for the _Access Token_.<br>
+After that, the callback endpoint performs some extra operations, which are not stricly part of the `OAuth2` protocol:
 
-- **9 &#8594; 10**<br>
-    The callback function uses the Access Token to obtain the mail and a user identifier from the _Resource Server_ (which, depending on the client, may or may not coincide with the Authorization Server).
-
-After that, the callback function does some extra steps:
-
-- it checks that `state` is still valid;
-- if a user with that email doesn't already exist, it creates one with a random password;
-- if the user has never authenticated with this OAuth client before, it adds in the database a new entry to `oauthaccount`, properly linked to the user; at subsequent logins that entry will just be updated;
-- it prepares a JWT token for the user and serves it in the Response Cookie.
+- It checks that `state` is still valid;
+- If a user with the given email address doesn't already exist, it creates one with a random password;
+- If the user has never authenticated with this `OAuth2` client before, it adds in the database a new entry to the `oauthaccount` table, properly linked to the `user_oauth` table`; at subsequent logins that entry will just be updated;
+- It prepares a JWT token for the user and serves it in the Response Cookie.
 
 
-### GitHub example
+### Full example
 
-A new user comes in and wants to sign up to Fractal using her GitHub account, registred with her personal email `fancy@university.edu`.
+A given `fractal-server` instance is registered as a GitHub App, and `fractal-server` is configured accordingly. A new user comes in, who wants to sign up using her GitHub account (associated to `person@university.edu`).
 
-She makes a call to `/auth/github/authorize`:
-
+First, she makes a call to `/auth/github/authorize`:
 ```
 $ curl \
     -X GET \
@@ -215,18 +220,16 @@ $ curl \
 ```
 
 Now the `authorization_url` must be visited using a browser.
-After logging in to GitHub, she will be asked to grant the app the permissions it requires.
+After logging in to GitHub, she is asked to grant the app the permissions it requires.
 
-After that, she will be redirected back to our server at `/auth/github/callback`, together with two query parameters:
-
+After that, she is redirected back to `fractal-server` at `/auth/github/callback`, together with two query parameters:
 ```
 http://127.0.0.1:8000/auth/github/callback?
     code=...&
     state=...
 ```
 
-The callback function actually returns nothing, but if she looks at the response cookie she will find a JWT token
-
+The callback function does not return anything, but the response cookie contains a JWT token
 ```
 "fastapiusersauth": {
 	"httpOnly": true,
@@ -237,8 +240,7 @@ The callback function actually returns nothing, but if she looks at the response
 }
 ```
 
-The user can now make [authenticated calls](https://fractal-analytics-platform.github.io/fractal-server/internals/auth/#authenticated-calls) using that token:
-
+The user can now make [authenticated calls](#authenticated-calls) using this token, as in
 ```
 curl \
     -X GET \
@@ -247,7 +249,7 @@ curl \
 
 {
     "id":3,
-    "email":"fancy@university.edu",
+    "email":"person@university.edu",
     "is_active":true,
     "is_superuser":false,
     "is_verified":false,
