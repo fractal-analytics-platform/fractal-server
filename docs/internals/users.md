@@ -109,9 +109,9 @@ $ curl \
 ### OAuth2
 <a name="oauth2"></a>
 
-Fractal Server also allows a different authentication procedure, not through knowledge of a user's password but through external `OAuth2` authentication clients.
+Fractal Server also allows a different authentication procedure, not based on the knowledge of a user's password but on external `OAuth2` authentication clients.
 
-Through the [`https-oauth` library](https://frankie567.github.io/httpx-oauth), we currently support `OpenID Connect` (aka `OIDC`), `GitHub` and `Google` (and [many more clients](https://frankie567.github.io/httpx-oauth/oauth2/#provided-clients) can be readily included).
+Through the [`httpx-oauth` library](https://frankie567.github.io/httpx-oauth), we currently support `OpenID Connect` (aka `OIDC`), `GitHub` and `Google` (and [many more clients](https://frankie567.github.io/httpx-oauth/oauth2/#provided-clients) can be readily included).
 
 #### Configuration
 
