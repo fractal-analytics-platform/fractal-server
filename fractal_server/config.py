@@ -180,15 +180,39 @@ class Settings(BaseSettings):
     # DATABASE
     ###########################################################################
     DB_ENGINE: Literal["sqlite", "postgres"] = "sqlite"
+    """
+    DB Engine
+    """
     DB_ECHO: bool = False
+    """
+    DB Echo
+    """
 
     POSTGRES_USER: Optional[str]
+    """
+    Postgres User.
+    """
     POSTGRES_PASSWORD: Optional[str]
+    """
+    Postgres Password
+    """
     POSTGRES_HOST: Optional[str] = "localhost"
+    """
+    Postgres Host
+    """
     POSTGRES_PORT: Optional[str] = "5432"
+    """
+    Postgres Port
+    """
     POSTGRES_DB: Optional[str]
+    """
+    Postgres DB name
+    """
 
     SQLITE_PATH: Optional[str]
+    """
+    Postgres SQLite Path
+    """
 
     @root_validator
     def check_database_settings(cls, values):
@@ -204,8 +228,6 @@ class Settings(BaseSettings):
     @property
     def DATABASE_URL(self) -> URL:
         if self.DB_ENGINE == "sqlite":
-            if not self.SQLITE_PATH:
-                raise ValueError("SQLITE_PATH path cannot be None")
             sqlite_path = abspath(self.SQLITE_PATH)
             url = URL.create(
                 drivername="sqlite+aiosqlite",
