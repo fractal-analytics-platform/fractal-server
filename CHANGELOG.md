@@ -1,5 +1,15 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Oauth2-related updates (\#822):
+    * Update configuration of OAuth2 clients, to support OIDC/GitHub/Google;
+    * Merge `SQLModelBaseOAuthAccount` and `OAuthAccount` models;
+    * Update `UserOAuth.oauth_accounts` relationship and fix `list_users` endpoint accordingly;
+    * Introduce dummy `UserManager.on_after_login` method;
+    * Rename `OAuthClient` into `OAuthClientConfig`;
+    * Revamp users-related parts of documentation.
+
 # 1.3.6
 
 * Update `output_dataset.meta` also when workflow execution fails (\#843).

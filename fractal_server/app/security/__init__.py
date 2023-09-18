@@ -32,11 +32,11 @@ from typing import Dict
 from typing import Generic
 from typing import Optional
 from typing import Type
-from typing import Union
 
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Request
 from fastapi import status
 from fastapi_users import BaseUserManager
 from fastapi_users import FastAPIUsers
@@ -61,7 +61,6 @@ from ...config import get_settings
 from ...syringe import Inject
 from ..db import get_db
 from ..models.security import OAuthAccount
-from ..models.security import SQLModelBaseOAuthAccount
 from ..models.security import UserOAuth as User
 
 
@@ -71,19 +70,21 @@ class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
     Original Copyright: 2022 François Voron, released under MIT licence
 
     Database adapter for SQLModel working purely asynchronously.
-    :param user_model: SQLModel model of a DB representation of a user.
-    :param session: SQLAlchemy async session.
+
+    Args:
+        user_model: SQLModel model of a DB representation of a user.
+        session: SQLAlchemy async session.
     """
 
     session: AsyncSession
     user_model: Type[UP]
-    oauth_account_model: Optional[Type[SQLModelBaseOAuthAccount]]
+    oauth_account_model: Optional[Type[OAuthAccount]]
 
     def __init__(
         self,
         session: AsyncSession,
         user_model: Type[UP],
-        oauth_account_model: Optional[Type[SQLModelBaseOAuthAccount]] = None,
+        oauth_account_model: Optional[Type[OAuthAccount]] = None,
     ):
         self.session = session
         self.user_model = user_model
@@ -178,7 +179,14 @@ async def get_user_db(
 
 
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
-    pass
+    async def on_after_login(
+        self, user: User, request: Optional[Request] = None
+    ) -> None:
+        """
+        Perform logic after user login.
+        *You should overload this method to add your own logic.*
+        """
+        pass
 
 
 async def get_user_manager(
@@ -287,7 +295,7 @@ async def list_users(
     """
     stm = select(User)
     res = await db.execute(stm)
-    user_list = res.scalars().all()
+    user_list = res.scalars().unique().all()
     await db.close()
     return user_list
 
@@ -304,52 +312,38 @@ async def list_users(
 # app (cf. fractal_server.main)
 settings = Inject(get_settings)
 
-for client in settings.OAUTH_CLIENTS:
-    # INIT CLIENTS
-    client_name = client.CLIENT_NAME.lower()
-    _client: Optional[Union["GitHubOAuth2", "OAuth2"]] = None
-    if client_name == "github":
+for client_config in settings.OAUTH_CLIENTS_CONFIG:
+
+    client_name = client_config.CLIENT_NAME.lower()
+
+    if client_name == "google":
+        from httpx_oauth.clients.google import GoogleOAuth2
+
+        client = GoogleOAuth2(
+            client_config.CLIENT_ID, client_config.CLIENT_SECRET
+        )
+    elif client_name == "github":
         from httpx_oauth.clients.github import GitHubOAuth2
 
-        _client = GitHubOAuth2(client.CLIENT_ID, client.CLIENT_SECRET)
-    else:  # GENERIC CLIENT
-        from httpx_oauth.oauth2 import OAuth2
+        client = GitHubOAuth2(
+            client_config.CLIENT_ID, client_config.CLIENT_SECRET
+        )
+    else:
+        from httpx_oauth.clients.openid import OpenID
 
-        if (
-            not client.CLIENT_SECRET
-            or not client.AUTHORIZE_ENDPOINT
-            or not client.ACCESS_TOKEN_ENDPOINT
-        ):
-            raise ValueError(
-                "Must specify CLIENT_SECRET, AUTHORIZE_ENDPOINT and "
-                "ACCESS_TOKEN_ENDPOINT to define custom OAuth2 client."
-            )
-        _client = OAuth2(
-            client.CLIENT_ID,
-            client.CLIENT_SECRET,
-            client.AUTHORIZE_ENDPOINT,
-            client.ACCESS_TOKEN_ENDPOINT,
-            refresh_token_endpoint=client.REFRESH_TOKEN_ENDPOINT,
-            revoke_token_endpoint=client.REVOKE_TOKEN_ENDPOINT,
+        client = OpenID(
+            client_config.CLIENT_ID,
+            client_config.CLIENT_SECRET,
+            client_config.OIDC_CONFIGURATION_ENDPOINT,
         )
 
-    # ADD ROUTES
-    # GitHub OAuth
     auth_router.include_router(
         fastapi_users.get_oauth_router(
-            _client,
+            client,
             cookie_backend,
-            settings.JWT_SECRET_KEY,  # type: ignore
-            # WARNING:
-            # associate_by_email=True exposes to security risks if the OAuth
-            # provider does not verify emails.
+            settings.JWT_SECRET_KEY,
+            is_verified_by_default=False,
             associate_by_email=True,
         ),
         prefix=f"/{client_name}",
-    )
-    auth_router.include_router(
-        fastapi_users.get_oauth_associate_router(
-            _client, UserRead, settings.JWT_SECRET_KEY  # type: ignore
-        ),
-        prefix=f"/{client_name}/associate",
     )
