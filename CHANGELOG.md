@@ -3,7 +3,7 @@
 # Unreleased
 
 * Oauth2-related updates (\#822):
-    * Update configuration of OAuth2 clients, to support GitHub/Google/OIDC;
+    * Update configuration of OAuth2 clients, to support OIDC/GitHub/Google;
     * Merge `SQLModelBaseOAuthAccount` and `OAuthAccount` models;
     * Update `UserOAuth.oauth_accounts` relationship and fix `list_users` endpoint accordingly;
     * Introduce dummy `UserManager.on_after_login` method;
