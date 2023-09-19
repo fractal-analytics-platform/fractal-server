@@ -316,7 +316,7 @@ def call_single_parallel_task(
     task_pars: TaskParameters,
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
-) -> None:
+) -> Path:
     """
     Call a single instance of a parallel task
 
@@ -384,6 +384,7 @@ def call_single_parallel_task(
         _call_command_wrapper(
             cmd, stdout=task_files.out, stderr=task_files.err
         )
+        return task_files.metadiff
     except TaskExecutionError as e:
         e.workflow_task_order = wftask.order
         e.workflow_task_id = wftask.id
@@ -477,17 +478,17 @@ def call_parallel_task(
     # Wait for execution of this chunk of tasks. Note: this is required *also*
     # because otherwise the shutdown of a FractalSlurmExecutor while running
     # map() may not work
-    for _ in map_iter:
-        pass  # noqa: 701
+    _meta_files: list = []
+    for file_path in map_iter:
+        with open(file_path, "r") as f:
+            meta_file = json.load(f)
+            _meta_files.append(meta_file)
 
-    pattern = "*_*.metadiff.json"
-    for meta_file in workflow_dir_user.glob(pattern=pattern):
-        with open(workflow_dir_user / meta_file.name, "r") as meta_file:
-            with open(
-                workflow_dir_user / "merged.metadiff.json", "a"
-            ) as merged_file:
-                for line in meta_file:
-                    merged_file.write(line)
+    # Assemble parallel task metadiff files
+    assembled_metadiff: dict = {}
+    for _meta in _meta_files:
+        for key, val in _meta.items():
+            assembled_metadiff.setdefault(key, []).append(val)
 
     # Assemble a TaskParameter object
     HISTORY_LEGACY = f"{wftask.task.name}: {component_list}"
