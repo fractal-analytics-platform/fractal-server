@@ -489,13 +489,15 @@ def call_parallel_task(
     for _meta in _meta_files:
         for key, val in _meta.items():
             assembled_metadiff.setdefault(key, []).append(val)
+    updated_metadata = task_pars_depend.metadata.copy()
+    updated_metadata.update(assembled_metadiff)
 
     # Assemble a TaskParameter object
     HISTORY_LEGACY = f"{wftask.task.name}: {component_list}"
     try:
-        task_pars_depend.metadata["HISTORY_LEGACY"].append(HISTORY_LEGACY)
+        updated_metadata["HISTORY_LEGACY"].append(HISTORY_LEGACY)
     except KeyError:
-        task_pars_depend.metadata["HISTORY_LEGACY"] = [HISTORY_LEGACY]
+        updated_metadata["HISTORY_LEGACY"] = [HISTORY_LEGACY]
 
     # Update history
     wftask_dump = wftask.dict(exclude={"task"})
@@ -503,21 +505,20 @@ def call_parallel_task(
     new_history_item = dict(
         workflowtask=wftask_dump,
         status="done",
-        metadiff=assembled_metadiff,
         parallelization=dict(
             parallelization_level=wftask.parallelization_level,
             component_list=component_list,
         ),
     )
     try:
-        task_pars_depend.metadata["history"].append(new_history_item)
+        updated_metadata["history"].append(new_history_item)
     except KeyError:
-        task_pars_depend.metadata["history"] = [new_history_item]
+        updated_metadata["history"] = [new_history_item]
 
     out_task_parameters = TaskParameters(
         input_paths=[task_pars_depend.output_path],
         output_path=task_pars_depend.output_path,
-        metadata=task_pars_depend.metadata,
+        metadata=updated_metadata,
     )
 
     return out_task_parameters
