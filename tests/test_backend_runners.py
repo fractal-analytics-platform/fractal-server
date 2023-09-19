@@ -145,6 +145,7 @@ async def test_runner(
     assert event0["workflowtask"]["task"]["name"] == tk_dummy.name
     assert event1["workflowtask"]["task"]["name"] == tk_dummy.name
     assert event2["workflowtask"]["task"]["name"] == tk_dummy_parallel.name
+    assert event2["metadiff"] == {}
     assert event2["parallelization"]["component_list"] == ["0", "1", "2"]
 
     # Check that the correct files are present in workflow_dir
