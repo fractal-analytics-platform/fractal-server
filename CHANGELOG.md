@@ -2,6 +2,7 @@
 
 # Unreleased
 
+* Add aggregate logic for metadiff.json files in parallel tasks execution (\#852)
 * Oauth2-related updates (\#822):
     * Update configuration of OAuth2 clients, to support OIDC/GitHub/Google;
     * Merge `SQLModelBaseOAuthAccount` and `OAuthAccount` models;
