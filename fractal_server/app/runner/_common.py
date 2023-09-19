@@ -479,6 +479,14 @@ def call_parallel_task(
     # map() may not work
     for _ in map_iter:
         pass  # noqa: 701
+    
+    pattern = '*_*.metadiff.json'
+    for meta_file in workflow_dir_user.glob(pattern=pattern):
+        with open(workflow_dir_user / meta_file.name, 'r') as meta_file:
+            with open(workflow_dir_user / 'merged.metadiff.json', 'a') as merged_file:
+                for line in meta_file:
+                    merged_file.write(line) 
+                
 
     # Assemble a TaskParameter object
     HISTORY_LEGACY = f"{wftask.task.name}: {component_list}"
