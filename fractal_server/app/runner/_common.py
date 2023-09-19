@@ -503,6 +503,7 @@ def call_parallel_task(
     new_history_item = dict(
         workflowtask=wftask_dump,
         status="done",
+        metadiff=assembled_metadiff,
         parallelization=dict(
             parallelization_level=wftask.parallelization_level,
             component_list=component_list,
