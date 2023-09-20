@@ -4,7 +4,7 @@ import logging
 from devtools import debug
 
 from fractal_server.app.runner._common import METADATA_FILENAME
-from fractal_server.app.runner.history import (
+from fractal_server.app.runner.handle_failed_job import (
     assemble_history_failed_job,
 )  # noqa
 
