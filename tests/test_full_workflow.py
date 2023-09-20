@@ -216,6 +216,117 @@ async def test_full_workflow(
         debug(no_access)
         assert len(no_access) == 0
 
+        # Check that `output_dataset.meta` was updated with the `index`
+        # component list
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/dataset/{output_dataset_id}"
+        )
+        assert res.status_code == 200
+        output_dataset_json = res.json()
+        debug(output_dataset_json["meta"])
+        assert "index" in list(output_dataset_json["meta"].keys())
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("backend", backends_available)
+async def test_failing_workflow_UnknownError(
+    client,
+    MockCurrentUser,
+    testdata_path,
+    tmp777_path,
+    collect_packages,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    backend,
+    request,
+    override_settings_factory,
+    resource_factory,
+):
+    """
+    Run a parallel task on a dataset which does not have the appropriate
+    metadata (i.e. it lacks the corresponding parallelization_level component
+    list), to trigger an unknown error.
+    """
+
+    override_settings_factory(
+        FRACTAL_RUNNER_BACKEND=backend,
+        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path
+        / f"artifacts-{backend}-UnknownError",
+    )
+    if backend == "slurm":
+        override_settings_factory(
+            FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
+        )
+
+    debug(f"Testing with {backend=}")
+    if backend == "slurm":
+        request.getfixturevalue("monkey_slurm")
+        request.getfixturevalue("relink_python_interpreter")
+        request.getfixturevalue("cfut_jobs_finished")
+        user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
+        user_kwargs = dict(cache_dir=user_cache_dir)
+    else:
+        user_kwargs = {}
+    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs) as user:
+        # Create project, dataset, resource
+        project = await project_factory(user)
+        project_id = project.id
+        input_dataset = await dataset_factory(
+            project_id=project.id,
+            name="Input Dataset",
+            type="Any",
+            read_only=False,
+        )
+        output_dataset = await dataset_factory(
+            project_id=project.id,
+            name="Output Dataset",
+            type="Any",
+            read_only=False,
+        )
+        await resource_factory(
+            path=str(tmp777_path / "data_in"), dataset=input_dataset
+        )
+        await resource_factory(
+            path=str(tmp777_path / "data_out"), dataset=output_dataset
+        )
+
+        # Create workflow
+        workflow = await workflow_factory(
+            name="test_wf", project_id=project.id
+        )
+
+        # Add a (parallel) dummy_parallel task
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/workflow/{workflow.id}/wftask/"
+            f"?task_id={collect_packages[1].id}",
+            json={},
+        )
+        debug(res.json())
+        assert res.status_code == 201
+
+        # Execute workflow
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/workflow/{workflow.id}/apply/"
+            f"?input_dataset_id={input_dataset.id}"
+            f"&output_dataset_id={output_dataset.id}",
+            json={},
+        )
+        job_data = res.json()
+        assert res.status_code == 202
+        job_id = job_data["id"]
+
+        res = await client.get(f"{PREFIX}/project/{project_id}/job/{job_id}")
+        assert res.status_code == 200
+        job_status_data = res.json()
+        debug(job_status_data)
+        assert job_status_data["status"] == "failed"
+        assert job_status_data["end_timestamp"]
+        assert "id: None" not in job_status_data["log"]
+        assert "RuntimeError" in job_status_data["log"]
+        assert "UNKNOWN ERROR" in job_status_data["log"]
+        print(job_status_data["log"])
+
 
 @pytest.mark.slow
 @pytest.mark.parametrize("backend", backends_available)
@@ -259,13 +370,24 @@ async def test_failing_workflow_TaskExecutionError(
         # Create project, dataset, resource
         project = await project_factory(user)
         project_id = project.id
-        dataset = await dataset_factory(
+        input_dataset = await dataset_factory(
             project_id=project.id,
-            name="My Dataset",
+            name="Input Dataset",
             type="Any",
             read_only=False,
         )
-        await resource_factory(path=str(tmp777_path / "data"), dataset=dataset)
+        output_dataset = await dataset_factory(
+            project_id=project.id,
+            name="Output Dataset",
+            type="Any",
+            read_only=False,
+        )
+        await resource_factory(
+            path=str(tmp777_path / "data_in"), dataset=input_dataset
+        )
+        await resource_factory(
+            path=str(tmp777_path / "data_out"), dataset=output_dataset
+        )
 
         # Create workflow
         workflow = await workflow_factory(
@@ -307,8 +429,8 @@ async def test_failing_workflow_TaskExecutionError(
         # Execute workflow
         res = await client.post(
             f"{PREFIX}/project/{project_id}/workflow/{workflow.id}/apply/"
-            f"?input_dataset_id={dataset.id}"
-            f"&output_dataset_id={dataset.id}",
+            f"?input_dataset_id={input_dataset.id}"
+            f"&output_dataset_id={output_dataset.id}",
             json={},
         )
         job_data = res.json()
@@ -333,7 +455,7 @@ async def test_failing_workflow_TaskExecutionError(
 
         # Test get_workflowtask_status endpoint
         res = await client.get(
-            f"api/v1/project/{project_id}/dataset/{dataset.id}/status/"
+            f"api/v1/project/{project_id}/dataset/{output_dataset.id}/status/"
         )
         debug(res.status_code)
         assert res.status_code == 200
@@ -349,7 +471,8 @@ async def test_failing_workflow_TaskExecutionError(
 
         # Test export_history_as_workflow endpoint, and that
         res = await client.get(
-            f"api/v1/project/{project_id}/dataset/{dataset.id}/export_history/"
+            f"api/v1/project/{project_id}/"
+            f"dataset/{output_dataset.id}/export_history/"
         )
         assert res.status_code == 200
         exported_wf = res.json()
@@ -360,6 +483,17 @@ async def test_failing_workflow_TaskExecutionError(
         )
         assert res.status_code == 201
         debug(res.json())
+
+        # If the first task went through, then check that output_dataset.meta
+        # was updated (ref issue #844)
+        if failing_task == "parallel":
+            res = await client.get(
+                f"{PREFIX}/project/{project.id}/dataset/{output_dataset.id}"
+            )
+            assert res.status_code == 200
+            output_dataset_json = res.json()
+            debug(output_dataset_json["meta"])
+            assert "index" in list(output_dataset_json["meta"].keys())
 
 
 async def _auxiliary_scancel(slurm_user, sleep_time):
@@ -419,11 +553,23 @@ async def test_failing_workflow_JobExecutionError(
     user_kwargs = dict(cache_dir=user_cache_dir)
     async with MockCurrentUser(persist=True, user_kwargs=user_kwargs) as user:
         project = await project_factory(user)
-        dataset = await dataset_factory(
-            project_id=project.id, name="dataset", type="Any", read_only=False
+        input_dataset = await dataset_factory(
+            project_id=project.id,
+            name="input_dataset",
+            type="Any",
+            read_only=False,
+        )
+        output_dataset = await dataset_factory(
+            project_id=project.id,
+            name="output_dataset",
+            type="Any",
+            read_only=False,
         )
         await resource_factory(
-            path=str(tmp777_path / "input_dir"), dataset=dataset
+            path=str(tmp777_path / "input_dir"), dataset=input_dataset
+        )
+        await resource_factory(
+            path=str(tmp777_path / "output_dir"), dataset=output_dataset
         )
 
         # Create workflow
@@ -469,8 +615,8 @@ async def test_failing_workflow_JobExecutionError(
         # Re-submit the modified workflow
         res_second_apply = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
-            f"?input_dataset_id={dataset.id}"
-            f"&output_dataset_id={dataset.id}",
+            f"?input_dataset_id={input_dataset.id}"
+            f"&output_dataset_id={output_dataset.id}",
             json={},
         )
         job_data = res_second_apply.json()
@@ -494,7 +640,7 @@ async def test_failing_workflow_JobExecutionError(
 
         # Test get_workflowtask_status endpoint
         res = await client.get(
-            f"api/v1/project/{project.id}/dataset/{dataset.id}/status/"
+            f"api/v1/project/{project.id}/dataset/{output_dataset.id}/status/"
         )
         debug(res.status_code)
         assert res.status_code == 200
