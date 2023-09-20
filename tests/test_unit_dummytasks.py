@@ -124,7 +124,7 @@ def test_dummy_parallel_direct_call(tmp_path):
             metadata={"before": "test"},
             message=FIRST_TEST_MESSAGE,
         )
-        assert not metadata_update
+        assert metadata_update == {"test_parallel": 1}
 
     assert out_path.exists()
     out_files = list(out_path.glob("*"))
