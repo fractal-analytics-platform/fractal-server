@@ -25,13 +25,6 @@ You can clone the `fractal-server` repository via
 ```
 git clone https://github.com/fractal-analytics-platform/fractal-server.git
 ```
-and then (from the `fractal-server` folder)
-```
-git submodule update --init
-```
-The second command is needed, since `fractal-server` includes
-[`fractal-common`](https://github.com/fractal-analytics-platform/fractal-common)
-as a git submodule.
 
 ### Install package
 
