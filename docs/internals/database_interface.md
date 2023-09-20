@@ -30,38 +30,7 @@ If the `SQLITE_PATH` file does not yet exist, it will be created by
 
 ## Postgres
 
-### Basics (Docker example)
-
-We must have an active PostgreSQL service, with an _host_, a _port_ and a
-default user.<br>
-Here we start one inside a Docker container:
-
-```console
-$ docker run \
-    --publish 1111:5432 \
-    --env POSTGRES_USER=default_user \
-    --env POSTGRES_PASSWORD=default_password \
-    --detach postgres
-```
-
-We must have a _database_ and (optionally) a _user_ dedicated to Fractal.<br>
-Here we create both in the containerized database, even adding a _password_ for the
-user:
-
-```console
-$ psql \
-    --host=localhost \
-    --port=1111 \
-    --username default_user \
-    --command "CREATE USER fractal_superuser WITH PASSWORD 'fractal_secret';" \
-    --command "CREATE DATABASE fractal_db OWNER fractal_superuser;"
-
-Password for user default_user: default_password
-CREATE ROLE
-CREATE DATABASE
-```
-
-### Setup
+### Prerequisites
 
 To use Postgres as database, Fractal Server must be installed with the
 `postgres` extra:
@@ -78,8 +47,27 @@ which require the following system dependencies:
 - libpq-dev,
 - gcc.
 
+We must have an active PostgreSQL service, with an _host_, a _port_ and a
+default user (e.g. `postgres`).<br>
+
+Here we create a database using `createdb`:
+
+```console
+$ createdb \
+    --host=localhost \
+    --port=1111 \
+    --username=postgres \
+    --no-password \
+    --owner=fractal_superuser \
+    fractal_db
+```
+
+
+### Setup
+
+
 Before running `fractalctl`, add these variables to the environment
-(here we use the values from our Docker example):
+(here we use the values from the Basics example):
 
 - required:
 
@@ -94,10 +82,12 @@ Before running `fractalctl`, add these variables to the environment
     POSTGRES_HOST=localhost             # default:  localhost
     POSTGRES_PORT=1111                  # default:  5432
     POSTGRES_USER=fractal_superuser
-    POSTGRES_PASSWORD=fractal_secret
+    POSTGRES_PASSWORD=
     ```
 
-Fractal Server will use a [SQLAlchemy](https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.engine.URL.create) function to generate the URL to connect to:
+Fractal Server will use a
+SQLAlchemy](https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.engine.URL.create)
+function to generate the URL to connect to:
 
 ```
 URL.create(
@@ -112,7 +102,8 @@ URL.create(
 
 `POSTGRES_HOST` can be either a URL or the path to a UNIX domain socket.
 
-We do not necessarily need to enter a user and password. If not specified, the system user will be used (i.e. `$ id -un`).
+We do not necessarily need to enter a user and password. If not specified,
+the system user will be used (i.e. `$ id -un`).
 
 
 ### Dump and restore
@@ -131,8 +122,6 @@ It is possible to dump data in various formats:
         --format=plain \
         --file=fractal_dump.txt \
         fractal_db
-
-    Password: fractal_secret
     ```
 
 === "Tar"
@@ -145,8 +134,6 @@ It is possible to dump data in various formats:
         --format=tar \
         --file=fractal_dump.tar \
         fractal_db
-
-    Password: fractal_secret
     ```
 
 === "Custom"
@@ -159,8 +146,6 @@ It is possible to dump data in various formats:
         --format=custom \
         --file=fractal_dump.sql \
         fractal_db
-
-    Password: fractal_secret
     ```
 
 === "Directory"
@@ -173,24 +158,19 @@ It is possible to dump data in various formats:
         --format=directory \
         --file=fractal_dump \
         fractal_db
-
-    Password: fractal_secret
     ```
 
 
 After creating a new empty database
 
 ```console
-$ psql \
+$ createdb \
     --host=localhost \
     --port=1111 \
-    --username default_user \
-    --command "CREATE DATABASE new_fractal_db OWNER fractal_superuser;"
-
-
-Password for user default_user: default_password
-CREATE DATABASE
-
+    --username=postgres \
+    --no-password \
+    --owner=fractal_superuser \
+    new_fractal_db
 ```
 
 we can populate it using the dumped data:
