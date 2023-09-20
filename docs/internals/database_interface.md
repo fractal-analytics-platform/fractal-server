@@ -30,7 +30,7 @@ If the `SQLITE_PATH` file does not yet exist, it will be created by
 
 ## Postgres
 
-### Prerequisites
+### Requirements
 
 To use Postgres as database, Fractal Server must be installed with the
 `postgres` extra:
@@ -67,7 +67,7 @@ $ createdb \
 
 
 Before running `fractalctl`, add these variables to the environment
-(here we use the values from the Basics example):
+(here we use the values from the Requirements example):
 
 - required:
 
