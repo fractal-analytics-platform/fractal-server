@@ -107,7 +107,7 @@ It is possible to dump data in various formats:
 === "Plain Text"
 
     ```console
-    $ /usr/local/Cellar/libpq/16.0/bin/pg_dump \
+    $ pg_dump \
         --host=localhost \
         --port=1111 \
         --username=fractal_superuser \
@@ -121,7 +121,7 @@ It is possible to dump data in various formats:
 === "Tar"
 
     ```console
-    $ /usr/local/Cellar/libpq/16.0/bin/pg_dump \
+    $ pg_dump \
         --host=localhost \
         --port=1111 \
         --username=fractal_superuser \
@@ -135,7 +135,7 @@ It is possible to dump data in various formats:
 === "Custom"
 
     ```console
-    $ /usr/local/Cellar/libpq/16.0/bin/pg_dump \
+    $ pg_dump \
         --host=localhost \
         --port=1111 \
         --username=fractal_superuser \
@@ -149,7 +149,7 @@ It is possible to dump data in various formats:
 === "Directory"
 
     ```console
-    $ /usr/local/Cellar/libpq/16.0/bin/pg_dump \
+    $ pg_dump \
         --host=localhost \
         --port=1111 \
         --username=fractal_superuser \
@@ -190,7 +190,7 @@ we can populate it using the dumped data:
 
 === "Tar"
     ```console
-    $ /usr/local/Cellar/libpq/16.0/bin/pg_restore \
+    $ pg_restore \
         --host=localhost \
         --port=1111 \
         --username=fractal_superuser \
@@ -202,7 +202,7 @@ we can populate it using the dumped data:
 
 === "Custom"
     ```console
-    $ /usr/local/Cellar/libpq/16.0/bin/pg_restore \
+    $ pg_restore \
         --host=localhost \
         --port=1111 \
         --username=fractal_superuser \
@@ -214,7 +214,7 @@ we can populate it using the dumped data:
 
 === "Directory"
     ```console
-    $ /usr/local/Cellar/libpq/16.0/bin/pg_restore \
+    $ pg_restore \
         --host=localhost \
         --port=1111 \
         --username=fractal_superuser \
