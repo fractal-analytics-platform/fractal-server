@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 1.3.7
 
 * Oauth2-related updates (\#822):
     * Update configuration of OAuth2 clients, to support OIDC/GitHub/Google;
