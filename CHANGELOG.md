@@ -1,7 +1,5 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
-
 * DB updates (\#855):
     * Add docstrings to DB-related variables in `Settings`;
     * Move DB-related variables validation to `Settings.check_db`;
