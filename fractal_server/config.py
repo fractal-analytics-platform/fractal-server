@@ -180,15 +180,39 @@ class Settings(BaseSettings):
     # DATABASE
     ###########################################################################
     DB_ENGINE: Literal["sqlite", "postgres"] = "sqlite"
+    """
+    Select which database engine to use.
+    """
     DB_ECHO: bool = False
+    """
+    If `True`, makes database operations verbose.
+    """
 
     POSTGRES_USER: Optional[str]
+    """
+    User to use when connecting to the PostgreSQL database.
+    """
     POSTGRES_PASSWORD: Optional[str]
+    """
+    Password to use when connecting to the PostgreSQL database.
+    """
     POSTGRES_HOST: Optional[str] = "localhost"
+    """
+    URL to the PostgreSQL server or path to a UNIX domain socket.
+    """
     POSTGRES_PORT: Optional[str] = "5432"
+    """
+    Port number to use when connecting to the PostgreSQL server.
+    """
     POSTGRES_DB: Optional[str]
+    """
+    Name of the PostgreSQL database to connect to.
+    """
 
     SQLITE_PATH: Optional[str]
+    """
+    File path where the SQLite database is located (or will be located).
+    """
 
     @property
     def DATABASE_URL(self) -> URL:
@@ -329,6 +353,9 @@ class Settings(BaseSettings):
     # BUSINESS LOGIC
     ###########################################################################
     def check_db(self) -> None:
+        """
+        Checks that db environment variables are properly set.
+        """
         if self.DB_ENGINE == "postgres":
             if not self.POSTGRES_DB:
                 raise FractalConfigurationError(
