@@ -38,7 +38,6 @@ Here we start one inside a Docker container:
 
 ```console
 $ docker run \
-    --name fractal_db_container \
     --publish 1111:5432 \
     --env POSTGRES_USER=default_user \
     --env POSTGRES_PASSWORD=default_password \
