@@ -346,6 +346,9 @@ def call_single_parallel_task(
             The user-side working directory for workflow execution (only
             relevant for multi-user executors).
 
+    Returns:
+        The `task_files.metadiff` path.
+
     Raises:
         TaskExecutionError: If the wrapped task raises a task-related error.
                             This function is responsible of adding debugging
@@ -475,7 +478,9 @@ def call_parallel_task(
     # therefore is blocking until the task are complete.
     map_iter = executor.map(partial_call_task, component_list, **extra_setup)
 
-    # Wait for execution of this chunk of tasks. Note: this is required *also*
+    # Wait for execution of this chunk of tasks. Note: even if we remove the
+    # need of accumulating `meta_file`s, we should still iterate over
+    # `map_iter` (as in `for _ in map_iter: pass`). This is required *also*
     # because otherwise the shutdown of a FractalSlurmExecutor while running
     # map() may not work
     _meta_files: list = []
