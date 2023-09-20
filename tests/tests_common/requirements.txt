@@ -1,5 +1,0 @@
-pydantic<2
-fastapi-users
-devtools
-pytest
-typing-extensions
