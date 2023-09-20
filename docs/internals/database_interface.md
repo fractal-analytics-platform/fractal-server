@@ -5,7 +5,7 @@ used as database.
 
 The choice and the various configurations are set through appropriate
 environment variables
-(see [Config](http://localhost:8001/configuration/)).
+(see [Config](https://fractal-analytics-platform.github.io/configuration/)).
 
 To make database operations verbose, set `DB_ECHO` equal to `true`, `True` or
 `1`.
