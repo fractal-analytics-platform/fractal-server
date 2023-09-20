@@ -346,6 +346,9 @@ def call_single_parallel_task(
             The user-side working directory for workflow execution (only
             relevant for multi-user executors).
 
+    Returns:
+        The `task_files.metadiff` path.
+
     Raises:
         TaskExecutionError: If the wrapped task raises a task-related error.
                             This function is responsible of adding debugging
