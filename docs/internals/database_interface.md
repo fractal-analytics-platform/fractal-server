@@ -1,6 +1,6 @@
 # Database Interface
 
-Fractal Server allows either <ins>SQLite</ins> or <ins>Postgres</ins> to be
+Fractal Server allows either _SQLite_ or _Postgres_ to be
 used as database.
 
 The choice and the various configurations are set through appropriate
@@ -12,14 +12,13 @@ To make database operations verbose, set `DB_ECHO` equal to `true`, `True` or
 
 ## SQLite
 
-SQLite is the default value for `DB_ENGINE`, but we can also set it explicitly:
+SQLite is the default value for `DB_ENGINE`, but you can also set it explicitly:
 
 ```
 DB_ENGINE=sqlite
 ```
 
-You must also provide the path to the database file,
-either absolute or relative:
+You must provide the path to the database file, either absolute or relative:
 
 ```
 SQLITE_PATH=/path/to/fractal_server.db
@@ -31,7 +30,7 @@ If the `SQLITE_PATH` file does not yet exist, it will be created by
 
 ## Postgres
 
-### Docker example
+### Basics (Docker example)
 
 We must have an active PostgreSQL service, with an _host_, a _port_ and a
 default user.<br>
@@ -47,7 +46,7 @@ $ docker run \
 ```
 
 We must have a _database_ and (optionally) a _user_ dedicated to Fractal.<br>
-Here we create both in the running container, even adding a _password_ for the
+Here we create both in the containerized database, even adding a _password_ for the
 user:
 
 ```console
@@ -73,30 +72,49 @@ $ pip install "fractal-server[postgres]"
 ```
 
 This will install two additional Python libraries, `asyncpg` and `psycopg2`,
-which require some system dependencies:
+which require the following system dependencies:
 
 - postgresql,
 - postgresql-contrib,
 - libpq-dev,
 - gcc.
 
-Before running `fractalctl`, add the following environment variables
+Before running `fractalctl`, add these variables to the environment
 (here we use the values from our Docker example):
 
-```
-DB_ENGINE=postgres
-POSTGRES_DB=fractal_db
+- required:
 
-POSTGRES_HOST=localhost             # default:  localhost
-POSTGRES_PORT=1111                  # default:  5432
-POSTGRES_USER=fractal_superuser     # default:  system user (`$ id -un`)
-POSTGRES_PASSWORD=fractal_secret    # default:  None
-```
+    ```
+    DB_ENGINE=postgres
+    POSTGRES_DB=fractal_db
+    ```
 
-Note that providing `POSTGRES_DB` is mandatory, while the other Postgres
-variables have default values.
+- optional:
+
+    ```
+    POSTGRES_HOST=localhost             # default:  localhost
+    POSTGRES_PORT=1111                  # default:  5432
+    POSTGRES_USER=fractal_superuser
+    POSTGRES_PASSWORD=fractal_secret
+    ```
+
+Fractal Server will use a [SQLAlchemy](https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.engine.URL.create) function to generate the URL to connect to:
+
+```
+URL.create(
+    drivername="postgresql+asyncpg",
+    username=self.POSTGRES_USER,
+    password=self.POSTGRES_PASSWORD,
+    host=self.POSTGRES_HOST,
+    port=self.POSTGRES_PORT,
+    database=self.POSTGRES_DB,
+)
+```
 
 `POSTGRES_HOST` can be either a URL or the path to a UNIX domain socket.
+
+We do not necessarily need to enter a user and password. If not specified, the system user will be used (i.e. `$ id -un`).
+
 
 ### Dump and restore
 
