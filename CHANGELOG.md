@@ -2,11 +2,10 @@
 
 # Unreleased
 
-* DB updates (\#855):
-    * Add docstrings to DB-related variables in `Settings`;
-    * Move DB-related variables validation to `Settings.check_db`;
-    * Add `check_db` during inline/offline migrations;
-    * Update `Database Interface` documentation page.
+* Database-related updates (\#855):
+    * Move validation of DB-related configuration into new method `Settings.check_db`;
+    * Call `check_db` method during inline/offline migrations;
+    * Revamp documentation on database interface and on the corresponding configuration variables.
 
 * Oauth2-related updates (\#822):
     * Update configuration of OAuth2 clients, to support OIDC/GitHub/Google;
