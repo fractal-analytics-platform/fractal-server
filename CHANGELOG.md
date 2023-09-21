@@ -1,11 +1,13 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
-# 1.3.7
+# Unreleased
 
 * Database-related updates (\#855):
     * Move validation of DB-related configuration into new method `Settings.check_db`;
     * Call `check_db` method during inline/offline migrations;
     * Revamp documentation on database interface and on the corresponding configuration variables.
+
+# 1.3.7
 
 * Oauth2-related updates (\#822):
     * Update configuration of OAuth2 clients, to support OIDC/GitHub/Google;
