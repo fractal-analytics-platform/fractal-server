@@ -4,6 +4,7 @@
 # Original authors:
 # Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
 # Tommaso Comparin <tommaso.comparin@exact-lab.it>
+# Yuri Chiucconi <yuri.chiucconi@exact-lab.it>
 # Marco Franzon <marco.franzon@exact-lab.it>
 #
 # This file is part of Fractal and was originally developed by eXact lab S.r.l.
@@ -171,15 +172,38 @@ class Settings(BaseSettings):
     # DATABASE
     ###########################################################################
     DB_ENGINE: Literal["sqlite", "postgres"] = "sqlite"
+    """
+    Select which database engine to use (supported: `sqlite` and `postgres`).
+    """
     DB_ECHO: bool = False
-
+    """
+    If `True`, make database operations verbose.
+    """
     POSTGRES_USER: Optional[str]
+    """
+    User to use when connecting to the PostgreSQL database.
+    """
     POSTGRES_PASSWORD: Optional[str]
+    """
+    Password to use when connecting to the PostgreSQL database.
+    """
     POSTGRES_HOST: Optional[str] = "localhost"
+    """
+    URL to the PostgreSQL server or path to a UNIX domain socket.
+    """
     POSTGRES_PORT: Optional[str] = "5432"
+    """
+    Port number to use when connecting to the PostgreSQL server.
+    """
     POSTGRES_DB: Optional[str]
+    """
+    Name of the PostgreSQL database to connect to.
+    """
 
     SQLITE_PATH: Optional[str]
+    """
+    File path where the SQLite database is located (or will be located).
+    """
 
     @property
     def DATABASE_URL(self) -> URL:
@@ -319,6 +343,20 @@ class Settings(BaseSettings):
     ###########################################################################
     # BUSINESS LOGIC
     ###########################################################################
+    def check_db(self) -> None:
+        """
+        Checks that db environment variables are properly set.
+        """
+        if self.DB_ENGINE == "postgres":
+            if not self.POSTGRES_DB:
+                raise FractalConfigurationError(
+                    "POSTGRES_DB cannot be None when DB_ENGINE=postgres"
+                )
+        else:
+            if not self.SQLITE_PATH:
+                raise FractalConfigurationError(
+                    "SQLITE_PATH cannot be None when DB_ENGINE=sqlite"
+                )
 
     def check(self):
         """
@@ -326,6 +364,7 @@ class Settings(BaseSettings):
 
         This method must be called before the server starts
         """
+        self.check_db()
 
         class StrictSettings(BaseSettings):
             class Config:
@@ -335,14 +374,6 @@ class Settings(BaseSettings):
                 "production", "staging", "testing", "development"
             ]
             JWT_SECRET_KEY: str
-            DB_ENGINE: str = Field()
-
-            if DB_ENGINE == "postgres":
-                POSTGRES_USER: str
-                POSTGRES_PASSWORD: str
-                POSTGRES_DB: str
-            elif DB_ENGINE == "sqlite":
-                SQLITE_PATH: str
 
             FRACTAL_TASKS_DIR: Path
             FRACTAL_RUNNER_WORKING_BASE_DIR: Path

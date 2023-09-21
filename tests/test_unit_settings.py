@@ -2,7 +2,6 @@ from pathlib import Path
 
 import pytest
 from devtools import debug
-from pydantic import ValidationError
 
 from fractal_server.config import FractalConfigurationError
 from fractal_server.config import Settings
@@ -37,9 +36,8 @@ def test_settings_injection(override_settings):
     ],
 )
 def test_settings_check(settings: Settings, raises: bool):
-    debug(settings)
     if raises:
-        with pytest.raises(ValidationError):
+        with pytest.raises(FractalConfigurationError):
             settings.check()
     else:
         settings.check()
