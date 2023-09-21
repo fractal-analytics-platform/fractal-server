@@ -1,11 +1,12 @@
 # Database Interface
 
-Fractal Server allows either _SQLite_ or _Postgres_ to be
-used as database.
+Fractal Server allows either _SQLite_ or _PostgreSQL_ to be used as database,
+and the choice is based on the
+[DB_ENGINE](../../configuration/#fractal_server.config.Settings.DB_ENGINE)
+environment variable; the other database-related configuration variables for
+each case are described below (and in the [configuration
+page](../../configuration/)).
 
-The choice and the various configurations are set through appropriate
-environment variables
-(see [Config](https://fractal-analytics-platform.github.io/configuration/)).
 
 To make database operations verbose, set `DB_ECHO` equal to `true`, `True` or
 `1`.
@@ -18,78 +19,83 @@ SQLite is the default value for `DB_ENGINE`, but you can also set it explicitly:
 DB_ENGINE=sqlite
 ```
 
-You must provide the path to the database file, either absolute or relative:
-
+You must always provide the path to the database file, either as absolute or relative path:
 ```
 SQLITE_PATH=/path/to/fractal_server.db
 ```
+If the `SQLITE_PATH` file does not exist, it will be created by `fractalctl
+set-db`.
 
-If the `SQLITE_PATH` file does not yet exist, it will be created by
-`fractalctl`.
 
-
-## Postgres
+## PostgreSQL
 
 ### Requirements
 
-To use Postgres as database, Fractal Server must be installed with the
+To use PostgreSQL as a database, Fractal Server must be installed with the
 `postgres` extra:
 
 ```console
 $ pip install "fractal-server[postgres]"
 ```
+which will install two additional Python libraries (`asyncpg` and `psycopg2`).
 
-This will install two additional Python libraries, `asyncpg` and `psycopg2`,
-which require the following system dependencies:
+**NOTE**: the following system libraries are required:
 
-- postgresql,
-- postgresql-contrib,
-- libpq-dev,
-- gcc.
-
-We must have an active PostgreSQL service, with an _host_, a _port_ and a
-default user (e.g. `postgres`).<br>
-
-Here we create a database using `createdb`:
-
-```console
-$ createdb \
-    --host=localhost \
-    --port=1111 \
-    --username=postgres \
-    --no-password \
-    --owner=fractal_superuser \
-    fractal_db
-```
+- `postgresql`,
+- `postgresql-contrib`,
+- `libpq-dev`,
+- `gcc`.
 
 
 ### Setup
 
+We assume that a PostgreSQL is active, with some _host_ (this can be e.g.
+`localhost` or a UNIX socket like `/var/run/postgresql/`), a _port_ (we use the
+default 5432 in the examples below) and a user (e.g. `postgres` or `fractal`).
 
-Before running `fractalctl`, add these variables to the environment
-(here we use the values from the Requirements example):
+> Note that a machine user may or may not require a password (e.g.  depending
+> on whether the machine username matches with the PostgreSQL username, and on
+> whether connection happens via a UNIX socket). See documentation here:
+> https://www.postgresql.org/docs/current/auth-pg-hba-conf.html.
 
-- required:
+Here we create a database called `fractal_db`, through the `createdb` command:
+
+```console
+$ createdb \
+    --host=localhost \
+    --port=5432 \
+    --username=postgres \
+    --no-password \
+    --owner=fractal \
+    fractal_db
+```
+
+All options of this command (and of the ones below) should be aligned with the
+configuration of a specific PostgreSQL instance. Within `fractal-server`, this
+is done by setting the following configuration variables (before running
+`fractalctl set-db` or `fractalctl start`):
+
+- Required:
 
     ```
     DB_ENGINE=postgres
     POSTGRES_DB=fractal_db
     ```
 
-- optional:
+- Optional:
 
     ```
-    POSTGRES_HOST=localhost             # default:  localhost
-    POSTGRES_PORT=1111                  # default:  5432
-    POSTGRES_USER=fractal_superuser
+    POSTGRES_HOST=localhost             # default: localhost
+    POSTGRES_PORT=5432                  # default: 5432
+    POSTGRES_USER=fractal               # example: fractal
     POSTGRES_PASSWORD=
     ```
 
-Fractal Server will use a
-SQLAlchemy](https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.engine.URL.create)
-function to generate the URL to connect to:
+`fractal-server` will then use the [`URL.create`
+function](https://docs.sqlalchemy.org/en/14/core/engines.html#sqlalchemy.engine.URL.create)
+from `SQLalchemy` to generate the appropriate URL to connect to:
 
-```
+```python
 URL.create(
     drivername="postgresql+asyncpg",
     username=self.POSTGRES_USER,
@@ -99,124 +105,55 @@ URL.create(
     database=self.POSTGRES_DB,
 )
 ```
-
-`POSTGRES_HOST` can be either a URL or the path to a UNIX domain socket.
-
-We do not necessarily need to enter a user and password. If not specified,
-the system user will be used (i.e. `$ id -un`).
+Note that `POSTGRES_HOST` can be either a URL or the path to a UNIX domain socket (e.g.
+`/var/run/postgresql`).
 
 
-### Dump and restore
+### Backup and restore
 
-To backup data, we use the utilities `pg_dump`, `pg_restore` and `psql`.
+To backup and restore data, one can use the utilities `pg_dump`, `pg_restore`
+and `psql`.
 
-It is possible to dump data in various formats:
+It is possible to dump/restore data in various formats (see [documentation of
+`pg_dump`](https://www.postgresql.org/docs/current/app-pgdump.html)), but in
+this example we stick with the default plain-text format.
 
-=== "Plain Text"
+```console
+$ pg_dump \
+    --host=localhost \
+    --port=5432\
+    --username=fractal \
+    --format=plain \
+    --file=fractal_dump.sql \
+    fractal_db
+```
 
-    ```console
-    $ pg_dump \
-        --host=localhost \
-        --port=1111 \
-        --username=fractal_superuser \
-        --format=plain \
-        --file=fractal_dump.txt \
-        fractal_db
-    ```
-
-=== "Tar"
-
-    ```console
-    $ pg_dump \
-        --host=localhost \
-        --port=1111 \
-        --username=fractal_superuser \
-        --format=tar \
-        --file=fractal_dump.tar \
-        fractal_db
-    ```
-
-=== "Custom"
-
-    ```console
-    $ pg_dump \
-        --host=localhost \
-        --port=1111 \
-        --username=fractal_superuser \
-        --format=custom \
-        --file=fractal_dump.sql \
-        fractal_db
-    ```
-
-=== "Directory"
-
-    ```console
-    $ pg_dump \
-        --host=localhost \
-        --port=1111 \
-        --username=fractal_superuser \
-        --format=directory \
-        --file=fractal_dump \
-        fractal_db
-    ```
-
-
-After creating a new empty database
-
+In order to restore a database from a dump, we first create a new empty one
+(`new_fractal_db`):
 ```console
 $ createdb \
     --host=localhost \
-    --port=1111 \
+    --port=5432\
     --username=postgres \
     --no-password \
-    --owner=fractal_superuser \
+    --owner=fractal \
     new_fractal_db
 ```
+and then we populate it using the dumped data:
 
-we can populate it using the dumped data:
+```console
+$ psql \
+    --host=localhost \
+    --port=5432\
+    --username=fractal \
+    --dbname=new_fractal_db < fractal_dump.sql
+```
 
-
-=== "Plain Text"
-    ```console
-    $ psql \
-        --host=localhost \
-        --port=1111 \
-        --username=fractal_superuser \
-        --dbname=new_fractal_db < fractal_dump.txt
-    ```
-
-=== "Tar"
-    ```console
-    $ pg_restore \
-        --host=localhost \
-        --port=1111 \
-        --username=fractal_superuser \
-        --single-transaction \
-        --format=tar \
-        --dbname=new_fractal_db \
-        fractal_dump.tar
-    ```
-
-=== "Custom"
-    ```console
-    $ pg_restore \
-        --host=localhost \
-        --port=1111 \
-        --username=fractal_superuser \
-        --single-transaction \
-        --format=custom \
-        --dbname=new_fractal_db \
-        fractal_dump.sql
-    ```
-
-=== "Directory"
-    ```console
-    $ pg_restore \
-        --host=localhost \
-        --port=1111 \
-        --username=fractal_superuser \
-        --single-transaction \
-        --format=directory \
-        --dbname=new_fractal_db \
-        fractal_dump
-    ```
+> One of the multiple ways to compress data is to use `gzip`, by adapting the
+> commands above as in:
+> ```console
+> $ pg_dump ... | gzip -c fractal_dump.sql.gz
+> $ gzip --decompress --keep fractal_dump.sql.gz
+> $ createdb ...
+> $ psql ... < fractal_dump.sql
+> ```
