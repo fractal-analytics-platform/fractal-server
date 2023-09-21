@@ -1,5 +1,9 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Configured sqlite WAL to avoid "database is locked" error
+
 # 1.3.7
 
 * Oauth2-related updates (\#822):
