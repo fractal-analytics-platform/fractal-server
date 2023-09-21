@@ -4,6 +4,7 @@
 # Original authors:
 # Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
 # Tommaso Comparin <tommaso.comparin@exact-lab.it>
+# Yuri Chiucconi <yuri.chiucconi@exact-lab.it>
 # Marco Franzon <marco.franzon@exact-lab.it>
 #
 # This file is part of Fractal and was originally developed by eXact lab S.r.l.
@@ -172,13 +173,12 @@ class Settings(BaseSettings):
     ###########################################################################
     DB_ENGINE: Literal["sqlite", "postgres"] = "sqlite"
     """
-    Select which database engine to use.
+    Select which database engine to use (supported: `sqlite` and `postgres`).
     """
     DB_ECHO: bool = False
     """
-    If `True`, makes database operations verbose.
+    If `True`, make database operations verbose.
     """
-
     POSTGRES_USER: Optional[str]
     """
     User to use when connecting to the PostgreSQL database.
