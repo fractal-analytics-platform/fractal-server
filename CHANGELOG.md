@@ -4,7 +4,7 @@
 
 * Backend runner:
     * Add aggregation logic for parallel-task updated metadata (\#852);
-    * Make updated-metadata collection robust for missing files (\#852).
+    * Make updated-metadata collection robust for missing files (\#852, \#863).
 * Database interface:
     * Move validation of DB-related configuration into new method `Settings.check_db` (\#855);
     * Call `check_db` method during inline/offline migrations (\#855);
