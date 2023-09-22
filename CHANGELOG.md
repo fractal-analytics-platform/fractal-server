@@ -1,6 +1,16 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
-* Change `fractal_server.common` from being a git-submodule to being a regular folder (\#859).
+# Unreleased
+
+* Backend runner:
+    * Add aggregation logic for parallel-task updated metadata (\#852);
+    * Make updated-metadata collection robust for missing files (\#852, \#863).
+* Database interface:
+    * Move validation of DB-related configuration into new method `Settings.check_db` (\#855);
+    * Call `check_db` method during inline/offline migrations (\#855);
+    * Revamp documentation on database interface and on the corresponding configuration variables (\#855).
+* Package:
+    * Change `fractal_server.common` from being a git-submodule to being a regular folder (\#859).
 
 # 1.3.7
 

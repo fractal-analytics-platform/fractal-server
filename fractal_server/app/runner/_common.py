@@ -14,6 +14,7 @@ from functools import lru_cache
 from functools import partial
 from pathlib import Path
 from shlex import split as shlex_split
+from typing import Any
 from typing import Callable
 from typing import Optional
 
@@ -193,6 +194,7 @@ def call_single_task(
     task_pars: TaskParameters,
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
+    logger_name: Optional[str] = None,
 ) -> TaskParameters:
     """
     Call a single task
@@ -226,6 +228,9 @@ def call_single_task(
             The user-side working directory for workflow execution (only
             relevant for multi-user executors). If `None`, it is set to be
             equal to `workflow_dir`.
+        logger_name:
+            Name of the logger
+
     Returns:
         out_task_parameters:
             A TaskParameters in which the previous output becomes the input
@@ -240,6 +245,9 @@ def call_single_task(
         JobExecutionError: If the wrapped task raises a job-related error.
         RuntimeError: If the `workflow_dir` is falsy.
     """
+
+    logger = get_logger(logger_name)
+
     if not workflow_dir_user:
         workflow_dir_user = workflow_dir
 
@@ -272,11 +280,17 @@ def call_single_task(
         e.task_name = wftask.task.name
         raise e
 
-    # NOTE:
-    # This assumes that the new metadata is printed to stdout
-    # and nothing else outputs to stdout
-    with task_files.metadiff.open("r") as f_metadiff:
-        diff_metadata = json.load(f_metadiff)
+    # This try/except block covers the case of a task that ran successfully but
+    # did not write the expected metadiff file (ref fractal-server issue #854).
+    try:
+        with task_files.metadiff.open("r") as f_metadiff:
+            diff_metadata = json.load(f_metadiff)
+    except FileNotFoundError as e:
+        logger.error(
+            f"Skip collection of updated metadata. Original error: {str(e)}"
+        )
+        diff_metadata = {}
+
     updated_metadata = task_pars.metadata.copy()
     updated_metadata.update(diff_metadata)
 
@@ -316,7 +330,7 @@ def call_single_parallel_task(
     task_pars: TaskParameters,
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
-) -> None:
+) -> Path:
     """
     Call a single instance of a parallel task
 
@@ -345,6 +359,9 @@ def call_single_parallel_task(
         workflow_dir_user:
             The user-side working directory for workflow execution (only
             relevant for multi-user executors).
+
+    Returns:
+        The `task_files.metadiff` path.
 
     Raises:
         TaskExecutionError: If the wrapped task raises a task-related error.
@@ -384,6 +401,7 @@ def call_single_parallel_task(
         _call_command_wrapper(
             cmd, stdout=task_files.out, stderr=task_files.err
         )
+        return task_files.metadiff
     except TaskExecutionError as e:
         e.workflow_task_order = wftask.order
         e.workflow_task_id = wftask.id
@@ -399,6 +417,7 @@ def call_parallel_task(
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
+    logger_name: Optional[str] = None,
 ) -> TaskParameters:
     """
     Collect results from the parallel instances of a parallel task
@@ -423,12 +442,15 @@ def call_parallel_task(
         submit_setup_call:
             An optional function that computes configuration parameters for
             the executor.
+        logger_name:
+            Name of the logger
 
     Returns:
         out_task_parameters:
             The output task parameters of the parallel task execution, ready to
             be passed on to the next task.
     """
+    logger = get_logger(logger_name)
 
     if not workflow_dir_user:
         workflow_dir_user = workflow_dir
@@ -474,18 +496,43 @@ def call_parallel_task(
     # therefore is blocking until the task are complete.
     map_iter = executor.map(partial_call_task, component_list, **extra_setup)
 
-    # Wait for execution of this chunk of tasks. Note: this is required *also*
-    # because otherwise the shutdown of a FractalSlurmExecutor while running
-    # map() may not work
-    for _ in map_iter:
-        pass  # noqa: 701
+    # Wait for execution of parallel tasks, and aggregate updated metadata (ref
+    # https://github.com/fractal-analytics-platform/fractal-server/issues/802).
+    # NOTE: Even if we remove the need of aggregating metadata, we must keep
+    # the iteration over `map_iter` (e.g. as in `for _ in map_iter: pass`), to
+    # make this call blocking. This is required *also* because otherwise the
+    # shutdown of a FractalSlurmExecutor while running map() may not work
+    aggregated_metadata_update: dict[str, Any] = {}
+    try:
+        for metadiff_path in map_iter:
+            with open(metadiff_path, "r") as f:
+                this_meta_update = json.load(f)
+                for key, val in this_meta_update.items():
+                    aggregated_metadata_update.setdefault(key, []).append(val)
+        if aggregated_metadata_update:
+            logger.warning(
+                "Aggregating parallel-taks updated metadata (with keys "
+                f"{list(aggregated_metadata_update.keys())}).\n"
+                "This feature is experimental and it may change in "
+                "future releases."
+            )
+    except FileNotFoundError as e:
+        logger.error(
+            "Skip collection and aggregation of parallel-task updated "
+            f"metadata. Original error: {str(e)}"
+        )
+        aggregated_metadata_update = {}
+
+    # Assemble parallel task metadiff files
+    updated_metadata = task_pars_depend.metadata.copy()
+    updated_metadata.update(aggregated_metadata_update)
 
     # Assemble a TaskParameter object
     HISTORY_LEGACY = f"{wftask.task.name}: {component_list}"
     try:
-        task_pars_depend.metadata["HISTORY_LEGACY"].append(HISTORY_LEGACY)
+        updated_metadata["HISTORY_LEGACY"].append(HISTORY_LEGACY)
     except KeyError:
-        task_pars_depend.metadata["HISTORY_LEGACY"] = [HISTORY_LEGACY]
+        updated_metadata["HISTORY_LEGACY"] = [HISTORY_LEGACY]
 
     # Update history
     wftask_dump = wftask.dict(exclude={"task"})
@@ -499,14 +546,14 @@ def call_parallel_task(
         ),
     )
     try:
-        task_pars_depend.metadata["history"].append(new_history_item)
+        updated_metadata["history"].append(new_history_item)
     except KeyError:
-        task_pars_depend.metadata["history"] = [new_history_item]
+        updated_metadata["history"] = [new_history_item]
 
     out_task_parameters = TaskParameters(
         input_paths=[task_pars_depend.output_path],
         output_path=task_pars_depend.output_path,
-        metadata=task_pars_depend.metadata,
+        metadata=updated_metadata,
     )
 
     return out_task_parameters
@@ -574,6 +621,7 @@ def execute_tasks(
                 workflow_dir=workflow_dir,
                 workflow_dir_user=workflow_dir_user,
                 submit_setup_call=submit_setup_call,
+                logger_name=logger_name,
             )
         else:
             # Call backend-specific submit_setup_call
@@ -599,6 +647,7 @@ def execute_tasks(
                 task_pars=current_task_pars,
                 workflow_dir=workflow_dir,
                 workflow_dir_user=workflow_dir_user,
+                logger_name=logger_name,
                 **extra_setup,
             )
             # Wait for the future result (blocking)
