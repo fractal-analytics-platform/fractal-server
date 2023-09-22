@@ -2,10 +2,13 @@
 
 # Unreleased
 
-* Database-related updates (\#855):
-    * Move validation of DB-related configuration into new method `Settings.check_db`;
-    * Call `check_db` method during inline/offline migrations;
-    * Revamp documentation on database interface and on the corresponding configuration variables.
+* Backend runner:
+    * Add aggregation logic for parallel-task updated metadata (\#852);
+    * Make updated-metadata collection robust for missing files (\#852).
+* Database interface:
+    * Move validation of DB-related configuration into new method `Settings.check_db` (\#855);
+    * Call `check_db` method during inline/offline migrations (\#855);
+    * Revamp documentation on database interface and on the corresponding configuration variables (\#855).
 
 # 1.3.7
 
