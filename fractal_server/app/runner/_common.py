@@ -286,8 +286,8 @@ def call_single_task(
         with task_files.metadiff.open("r") as f_metadiff:
             diff_metadata = json.load(f_metadiff)
     except FileNotFoundError as e:
-        logger.warning(
-            "Skip collection of updated metadata. " f"Original error: {str(e)}"
+        logger.error(
+            f"Skip collection of updated metadata. Original error: {str(e)}"
         )
         diff_metadata = {}
 
@@ -517,7 +517,7 @@ def call_parallel_task(
                 "future releases."
             )
     except FileNotFoundError as e:
-        logger.warning(
+        logger.error(
             "Skip collection and aggregation of parallel-task updated "
             f"metadata. Original error: {str(e)}"
         )
