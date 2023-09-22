@@ -22,6 +22,7 @@ from fractal_server.common.schemas import TaskManifestV1
 from fractal_server.common.schemas import TaskRead
 from fractal_server.common.schemas import TaskUpdate
 from fractal_server.common.schemas import UserCreate
+from fractal_server.common.schemas import UserUpdate
 from fractal_server.common.schemas import WorkflowCreate
 from fractal_server.common.schemas import WorkflowImport
 from fractal_server.common.schemas import WorkflowRead
@@ -242,6 +243,8 @@ def test_TaskCollectPip():
     with pytest.raises(ValidationError):
         c = TaskCollectPip(package="some/package")
     with pytest.raises(ValidationError):
+        c = TaskCollectPip(package="some/package.whl")
+    with pytest.raises(ValidationError):
         c = TaskCollectPip(package="/some/package.tar.gz")
     with pytest.raises(ValidationError):
         c = TaskCollectPip(package="some-package", package_extras="")
@@ -342,6 +345,8 @@ def test_user_create():
     assert u.slurm_user
     assert u.cache_dir
     assert u.username
+    with pytest.raises(ValidationError) as e:
+        UserUpdate(cache_dir=None)
 
 
 def test_fail_valstr():
