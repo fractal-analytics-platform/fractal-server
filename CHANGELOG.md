@@ -2,7 +2,16 @@
 
 # Unreleased
 
-* Add aggregate logic for metadiff.json files in parallel tasks execution (\#852)
+* Backend runner:
+    * Add aggregation logic for parallel-task updated metadata (\#852);
+    * Make updated-metadata collection robust for missing files (\#852).
+* Database interface:
+    * Move validation of DB-related configuration into new method `Settings.check_db` (\#855);
+    * Call `check_db` method during inline/offline migrations (\#855);
+    * Revamp documentation on database interface and on the corresponding configuration variables (\#855).
+
+# 1.3.7
+
 * Oauth2-related updates (\#822):
     * Update configuration of OAuth2 clients, to support OIDC/GitHub/Google;
     * Merge `SQLModelBaseOAuthAccount` and `OAuthAccount` models;
