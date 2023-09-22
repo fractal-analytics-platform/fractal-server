@@ -837,7 +837,7 @@ async def test_missing_metadiff(
             assert f in glob_list
 
         # Check that workflow.log includes expected warnings
-        with open(f"{working_dir}/workflow.out", "r") as f:
+        with open(f"{working_dir}/workflow.log", "r") as f:
             logs = f.read()
         assert "Skip collection of updated metadata" in logs
         assert (
