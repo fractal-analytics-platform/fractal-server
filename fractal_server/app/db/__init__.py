@@ -45,6 +45,7 @@ class DB:
     @classmethod
     def set_db(cls):
         settings = Inject(get_settings)
+        settings.check_db()
 
         if settings.DB_ENGINE == "sqlite":
             logger.warning(

@@ -112,8 +112,8 @@ def dummy_parallel(
 
     logger.info("[dummy_parallel] EXITING")
 
-    # Return empty metadata, since the "history" will be filled by fractal
-    metadata_update: Dict = {}
+    # Return test metadata, since the "history" will be filled by fractal
+    metadata_update: Dict = {"test_parallel": 1}
     return metadata_update
 
 
