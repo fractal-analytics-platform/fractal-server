@@ -755,22 +755,24 @@ async def test_missing_metadiff(
     tmp_path,
 ):
     """
-    Run task with `command="echo"`, which do not produce metadiff files -
+    Run task with command which does not produce metadiff files -
     see
     https://github.com/fractal-analytics-platform/fractal-server/issues/854.
     """
+    task_file = str(testdata_path / "echo_sleep_task.sh")
+    command = f"bash {task_file}"
     async with MockCurrentUser(persist=True) as user:
         task0 = await task_factory(
             name="task0",
             source="task0",
-            command="echo",  # note the "echo" dummy command
+            command=command,
             input_type="Any",
             output_type="Any",
         )
         task1 = await task_factory(
             name="task1",
             source="task1",
-            command="echo",  # note the "echo" dummy command
+            command=command,
             input_type="Any",
             output_type="Any",
             meta=dict(parallelization_level="index"),
