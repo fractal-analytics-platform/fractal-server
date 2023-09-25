@@ -16,11 +16,11 @@ __all__ = (
 
 class _ProjectBase(BaseModel):
     """
-    Base class for Project
+    Base class for `Project`.
 
     Attributes:
-        name: TBD
-        read_only: TBD
+        name:
+        read_only:
     """
 
     name: str
@@ -28,6 +28,13 @@ class _ProjectBase(BaseModel):
 
 
 class ProjectCreate(_ProjectBase):
+    """
+    Class for `Project` creation.
+
+    Attributes:
+        default_dataset_name:
+    """
+
     default_dataset_name: Optional[str] = "default"
 
     # Validators
@@ -38,11 +45,27 @@ class ProjectCreate(_ProjectBase):
 
 
 class ProjectRead(_ProjectBase):
+    """
+    Class for `Project` read from database.
+
+    Attributes:
+        id:
+        dataset_list:
+    """
+
     id: int
     dataset_list: list[DatasetRead] = []
 
 
 class ProjectUpdate(_ProjectBase):
+    """
+    Class for `Project` update.
+
+    Attributes:
+        name:
+        read_only:
+    """
+
     name: Optional[str]
     read_only: Optional[bool]
 

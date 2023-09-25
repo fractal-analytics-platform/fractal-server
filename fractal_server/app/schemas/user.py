@@ -15,12 +15,30 @@ __all__ = (
 
 
 class UserRead(schemas.BaseUser[int]):
+    """
+    Task for `User` read from database.
+
+    Attributes:
+        slurm_user:
+        cache_dir:
+        username:
+    """
+
     slurm_user: Optional[str]
     cache_dir: Optional[str]
     username: Optional[str]
 
 
 class UserUpdate(schemas.BaseUserUpdate):
+    """
+    Task for `User` update.
+
+    Attributes:
+        slurm_user:
+        cache_dir:
+        username:
+    """
+
     slurm_user: Optional[str]
     cache_dir: Optional[str]
     username: Optional[str]
@@ -36,6 +54,15 @@ class UserUpdate(schemas.BaseUserUpdate):
 
 
 class UserCreate(schemas.BaseUserCreate):
+    """
+    Task for `User` creation.
+
+    Attributes:
+        slurm_user:
+        cache_dir:
+        username:
+    """
+
     slurm_user: Optional[str]
     cache_dir: Optional[str]
     username: Optional[str]

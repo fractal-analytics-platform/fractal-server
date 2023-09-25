@@ -16,16 +16,24 @@ __all__ = (
 
 class _ApplyWorkflowBase(BaseModel):
     """
-    Base class for ApplyWorkflow
+    Base class for `ApplyWorkflow`.
 
     Attributes:
-        worker_init: TBD
+        worker_init:
     """
 
     worker_init: Optional[str]
 
 
 class ApplyWorkflowCreate(_ApplyWorkflowBase):
+    """
+    Class for `ApplyWorkflow` creation.
+
+    Attributes:
+        first_task_index:
+        last_task_index:
+    """
+
     first_task_index: Optional[int] = None
     last_task_index: Optional[int] = None
 
@@ -68,6 +76,27 @@ class ApplyWorkflowCreate(_ApplyWorkflowBase):
 
 
 class ApplyWorkflowRead(_ApplyWorkflowBase):
+    """
+    Class for `ApplyWorkflow` read from database.
+
+    Attributes:
+        id:
+        project_id:
+        workflow_id:
+        input_dataset_id:
+        output_dataset_id:
+        start_timestamp:
+        end_timestamp:
+        status:
+        log:
+        workflow_dump:
+        history:
+        working_dir:
+        working_dir_user:
+        first_task_index:
+        last_task_index:
+    """
+
     id: int
     project_id: int
     workflow_id: int

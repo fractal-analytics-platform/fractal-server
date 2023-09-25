@@ -21,36 +21,55 @@ __all__ = (
 
 class _ResourceBase(BaseModel):
     """
-    Base class for Resource
+    Base class for `Resource`.
+
+    Attributes:
+        path:
     """
 
     path: str
 
 
 class ResourceCreate(_ResourceBase):
+    """
+    Class for `Resource` creation.
+    """
+
     # Validators
     _path = validator("path", allow_reuse=True)(val_absolute_path("path"))
 
 
 class ResourceUpdate(_ResourceBase):
+    """
+    Class for `Resource` update.
+    """
+
     # Validators
     _path = validator("path", allow_reuse=True)(val_absolute_path("path"))
 
 
 class ResourceRead(_ResourceBase):
+    """
+    Class for `Resource` read from database.
+
+    Attributes:
+        id:
+        dataset_id:
+    """
+
     id: int
     dataset_id: int
 
 
 class _DatasetBase(BaseModel):
     """
-    Base class for Dataset
+    Base class for `Dataset`.
 
     Attributes:
-        name: TBD
-        type: TBD
-        meta: TBD
-        read_only: TBD
+        name:
+        type:
+        meta:
+        read_only:
     """
 
     name: str
@@ -60,6 +79,15 @@ class _DatasetBase(BaseModel):
 
 
 class DatasetUpdate(_DatasetBase):
+    """
+    Class for `Dataset` update.
+
+    Attributes:
+        name:
+        meta:
+        read_only:
+    """
+
     name: Optional[str]
     meta: Optional[dict[str, Any]] = None
     read_only: Optional[bool]
@@ -70,12 +98,26 @@ class DatasetUpdate(_DatasetBase):
 
 
 class DatasetCreate(_DatasetBase):
+    """
+    Class for `Dataset` creation.
+    """
+
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))
     _type = validator("type", allow_reuse=True)(valstr("type"))
 
 
 class DatasetRead(_DatasetBase):
+    """
+    Class for `Dataset` read from database.
+
+    Attributes:
+        id:
+        resource_list:
+        project_id:
+        read_only:
+    """
+
     id: int
     resource_list: list[ResourceRead]
     project_id: int

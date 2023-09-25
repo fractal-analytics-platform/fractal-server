@@ -13,7 +13,7 @@ __all__ = (
 
 class _StateBase(BaseModel):
     """
-    Base class for `State`
+    Base class for `State`.
 
     Attributes:
         id: Primary key
@@ -34,4 +34,11 @@ class _StateBase(BaseModel):
 
 
 class StateRead(_StateBase):
+    """
+    Class for `State` read from database.
+
+    Attributes:
+        id:
+    """
+
     id: Optional[int]
