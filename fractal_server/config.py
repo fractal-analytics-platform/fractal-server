@@ -106,10 +106,23 @@ class Settings(BaseSettings):
 
     # JWT TOKEN
     JWT_EXPIRE_SECONDS: int = 180
+    """
+    JWT token lifetime, in seconds.
+    """
+
     JWT_SECRET_KEY: Optional[str]
+    """
+    JWT secret
+
+    ⚠️ **IMPORTANT**: set this variable to a secure string, and do not disclose
+    it.
+    """
 
     # COOKIE TOKEN
     COOKIE_EXPIRE_SECONDS: int = 86400
+    """
+    Cookie token lifetime, in seconds.
+    """
 
     @validator("FRACTAL_TASKS_DIR", always=True)
     def make_FRACTAL_TASKS_DIR_absolute(cls, v):
@@ -245,8 +258,8 @@ class Settings(BaseSettings):
     Admin default email, used upon creation of the first superuser during
     server startup.
 
-    **IMPORTANT**: After the server startup, you should always edit the default
-    admin credentials.
+    ⚠️  **IMPORTANT**: After the server startup, you should always edit the
+    default admin credentials.
     """
 
     FRACTAL_DEFAULT_ADMIN_PASSWORD: str = "1234"
@@ -254,8 +267,8 @@ class Settings(BaseSettings):
     Admin default password, used upon creation of the first superuser during
     server startup.
 
-    **IMPORTANT**: After the server startup, you should always edit the default
-    admin credentials.
+    ⚠️ **IMPORTANT**: After the server startup, you should always edit the
+    default admin credentials.
     """
 
     FRACTAL_DEFAULT_ADMIN_USERNAME: str = "admin"
@@ -263,8 +276,8 @@ class Settings(BaseSettings):
     Admin default username, used upon creation of the first superuser during
     server startup.
 
-    **IMPORTANT**: After the server startup, you should always edit the default
-    admin credentials.
+    ⚠️ **IMPORTANT**: After the server startup, you should always edit the
+    default admin credentials.
     """
 
     FRACTAL_TASKS_DIR: Optional[Path]

@@ -62,13 +62,16 @@ either as enviromnent variables or in a file like `.fractal_server.env`.
 An example of such file is
 ```
 DEPLOYMENT_TYPE=testing
-JWT_SECRET_KEY=secret
+JWT_SECRET_KEY=XXX
 SQLITE_PATH=/some/path/to/fractal_server.db
 FRACTAL_TASKS_DIR=/some/path/to/the/task/environment/folder
 FRACTAL_RUNNER_WORKING_BASE_DIR=some_folder_name
 FRACTAL_RUNNER_BACKEND=slurm
 FRACTAL_SLURM_CONFIG_FILE=/some/path/to/slurm_config.json
 ```
+
+> ⚠️  **`JWT_SECRET_KEY=XXX` must be replaced with a more secure string, that
+> should not be disclosed.** ⚠️
 
 More details (including default values) are available in the [Configuration](../configuration/) page.
 
