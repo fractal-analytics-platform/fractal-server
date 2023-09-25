@@ -14,7 +14,7 @@ __all__ = ("TaskManifestV1", "ManifestV1")
 
 class _TaskManifestBase(BaseModel):
     """
-    Base class for `TaskManifest`
+    Base class for `TaskManifestV1`.
 
     Represents a task within a manfest
 
@@ -59,7 +59,7 @@ TaskManifestType = TypeVar("TaskManifestType", bound=_TaskManifestBase)
 
 class _ManifestBase(BaseModel):
     """
-    Manifest base class
+    Base class for `ManifestV1`.
 
     Packages containing tasks are required to include a special file
     `__FRACTAL_MANIFEST__.json` in order to be discovered and used by Fractal.
@@ -103,12 +103,19 @@ class _ManifestBase(BaseModel):
 
 
 class TaskManifestV1(_TaskManifestBase):
+    """
+    Task manifest schema version 1.
+    """
+
     pass
 
 
 class ManifestV1(_ManifestBase):
     """
-    Manifest schema version 1
+    Manifest schema version 1.
+
+    Attributes:
+        task_list:
     """
 
     task_list: list[TaskManifestV1]

@@ -16,6 +16,10 @@ __all__ = (
 
 
 class _TaskCollectBase(BaseModel):
+    """
+    Base class for `TaskCollectPip`.
+    """
+
     pass
 
 
@@ -82,12 +86,12 @@ class TaskCollectStatus(_TaskCollectBase):
     TaskCollectStatus class
 
     Attributes:
-        status: TBD
-        package: TBD
-        venv_path: TBD
-        task_list: TBD
-        log: TBD
-        info: TBD
+        status:
+        package:
+        venv_path:
+        task_list:
+        log:
+        info:
     """
 
     status: Literal["pending", "installing", "collecting", "fail", "OK"]

@@ -20,7 +20,7 @@ __all__ = (
 class _TaskBase(BaseModel):
     """
 
-    Base class for `Task` and `Task{Create,Read,Update,Import,Export}` models
+    Base class for `Task`.
 
     Attributes:
         source:
@@ -33,6 +33,23 @@ class _TaskBase(BaseModel):
 
 
 class TaskUpdate(_TaskBase):
+    """
+    Class for `Task` update.
+
+    Attributes:
+        name:
+        input_type:
+        output_type:
+        command:
+        source:
+        meta:
+        version:
+        args_schema:
+        args_schema_version:
+        docs_info:
+        docs_link:
+    """
+
     name: Optional[str]
     input_type: Optional[str]
     output_type: Optional[str]
@@ -60,14 +77,39 @@ class TaskUpdate(_TaskBase):
 
 
 class TaskImport(_TaskBase):
+    """
+    Class for `Task` import.
+    """
+
     pass
 
 
 class TaskExport(_TaskBase):
+    """
+    Class for `Task` export.
+    """
+
     pass
 
 
 class TaskRead(_TaskBase):
+    """
+    Class for `Task` read from database.
+
+    Attributes:
+        id:
+        name:
+        command:
+        input_type:
+        output_type:
+        meta:
+        version:
+        args_schema:
+        args_schema_version:
+        docs_info:
+        docs_link:
+    """
+
     id: int
     name: str
     command: str
@@ -83,6 +125,22 @@ class TaskRead(_TaskBase):
 
 
 class TaskCreate(_TaskBase):
+    """
+    Class for `Task` creation.
+
+    Attributes:
+        name:
+        command:
+        input_type:
+        output_type:
+        meta:
+        version:
+        args_schema:
+        args_schema_version:
+        docs_info:
+        docs_link:
+    """
+
     name: str
     command: str
     input_type: str
