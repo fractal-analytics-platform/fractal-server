@@ -26,10 +26,10 @@ from zipfile import ZipFile
 
 from pydantic import root_validator
 
-from ..common.schemas import ManifestV1
-from ..common.schemas import TaskCollectPip
-from ..common.schemas import TaskCollectStatus
-from ..common.schemas import TaskCreate
+from ..app.schemas import ManifestV1
+from ..app.schemas import TaskCollectPip
+from ..app.schemas import TaskCollectStatus
+from ..app.schemas import TaskCreate
 from ..config import get_settings
 from ..logger import get_logger
 from ..syringe import Inject

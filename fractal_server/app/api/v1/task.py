@@ -9,14 +9,14 @@ from fastapi import Response
 from fastapi import status
 from sqlmodel import select
 
-from ....common.schemas import TaskCreate
-from ....common.schemas import TaskRead
-from ....common.schemas import TaskUpdate
 from ....logger import set_logger
 from ...db import AsyncSession
 from ...db import get_db
 from ...models import Task
 from ...models import WorkflowTask
+from ...schemas import TaskCreate
+from ...schemas import TaskRead
+from ...schemas import TaskUpdate
 from ...security import current_active_user
 from ...security import User
 from ._aux_functions import _get_task_check_owner
