@@ -12,10 +12,6 @@ homepage = "https://github.com/fractal-analytics-platform/fractal-server"
 license = "BSD-3-Clause"
 exclude = [
 "fractal_server/.gitignore",
-"fractal_server/common/tests",
-"fractal_server/common/.git*",
-"fractal_server/common/requirements.txt",
-"fractal_server/common/.pre-commit-config.yaml",
 ]
 
 
@@ -105,7 +101,7 @@ fractalctl = "fractal_server.__main__:run"
 branch = true
 parallel = true
 relative_files = true
-omit = ["tests/*", "fractal_server/common/tests/*"]
+omit = ["tests/*"]
 
 [[tool.mypy.overrides]]
 module = ["devtools", "uvicorn", "sqlalchemy_utils"]
