@@ -9,8 +9,9 @@
     * Move validation of DB-related configuration into new method `Settings.check_db` (\#855);
     * Call `check_db` method during inline/offline migrations (\#855);
     * Revamp documentation on database interface and on the corresponding configuration variables (\#855).
-* Package:
+* Package and repository:
     * Change `fractal_server.common` from being a git-submodule to being a regular folder (\#859).
+    * Pin documentation dependencies (\#865).
 
 # 1.3.7
 
