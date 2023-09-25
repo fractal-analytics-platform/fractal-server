@@ -62,7 +62,7 @@ at the version provided instead of the system interpreter.
 
 Whenever the models are modified (either in
 [`app/models`](../reference/fractal_server/app/models/) or in
-[`common/schemas`](../reference/fractal_server/common/schemas)), you should
+[`app/schemas`](../reference/fractal_server/app/schemas)), you should
 update them via a migration. To check whether this is needed, run
 ```
 poetry run alembic check
