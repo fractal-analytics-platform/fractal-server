@@ -8,7 +8,7 @@ from .data import tasks_dummy as tasks_package
 from .data.tasks_dummy import dummy as dummy_module
 from .data.tasks_dummy.dummy import dummy
 from .data.tasks_dummy.dummy_parallel import dummy_parallel
-from fractal_server.common.schemas.manifest import ManifestV1
+from fractal_server.app.schemas.manifest import ManifestV1
 
 
 FIRST_TEST_MESSAGE = "first call"

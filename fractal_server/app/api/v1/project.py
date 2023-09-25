@@ -9,11 +9,6 @@ from fastapi import status
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
-from ....common.schemas import ApplyWorkflowCreate
-from ....common.schemas import ApplyWorkflowRead
-from ....common.schemas import ProjectCreate
-from ....common.schemas import ProjectRead
-from ....common.schemas import ProjectUpdate
 from ....config import get_settings
 from ....logger import close_logger
 from ....logger import set_logger
@@ -30,6 +25,11 @@ from ...models import Project
 from ...runner import submit_workflow
 from ...runner import validate_workflow_compatibility
 from ...runner.common import set_start_and_last_task_index
+from ...schemas import ApplyWorkflowCreate
+from ...schemas import ApplyWorkflowRead
+from ...schemas import ProjectCreate
+from ...schemas import ProjectRead
+from ...schemas import ProjectUpdate
 from ...security import current_active_user
 from ...security import User
 from ._aux_functions import _get_dataset_check_owner

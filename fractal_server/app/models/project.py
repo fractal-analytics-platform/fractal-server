@@ -8,9 +8,9 @@ from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
-from ...common.schemas.project import _DatasetBase
-from ...common.schemas.project import _ProjectBase
-from ...common.schemas.project import _ResourceBase
+from ..schemas.dataset import _DatasetBase
+from ..schemas.dataset import _ResourceBase
+from ..schemas.project import _ProjectBase
 from .linkuserproject import LinkUserProject
 from .security import UserOAuth as User
 from .workflow import Workflow

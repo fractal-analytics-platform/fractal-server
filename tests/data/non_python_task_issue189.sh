@@ -29,6 +29,8 @@ do
     esac
 done
 
+sleep 1
+
 if [[ -n $JSON_FILE && -n $METADATA_OUT ]]
 then
     cp "$JSON_FILE" "$METADATA_OUT"
