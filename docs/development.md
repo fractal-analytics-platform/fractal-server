@@ -12,14 +12,17 @@ To contribute code, please fork the repository and submit a pull request.
 
 Fractal uses [poetry](https://python-poetry.org/docs) to manage the development
 environment and dependencies, and to streamline the build and release
-operations. Version 1.3 is recommended, although 1.2.2 should also work.
+operations; at least version 1.3 is recommended.
 
-A simple way to install it is the command `pipx install poetry==1.3`; other
-options are described
+A simple way to install `poetry` is
+```console
+pipx install poetry==1.5`
+```
+while other options are described
 [here](https://python-poetry.org/docs#installing-with-the-official-installer).
 
 
-### Clone repositories
+### Clone repository
 
 You can clone the `fractal-server` repository via
 ```
@@ -39,7 +42,7 @@ with `poetry run`, as in `poetry run fractalctl start`.
 
 To install Fractal Server with some additional extras, use the [`-E`
 option](https://python-poetry.org/docs/pyproject/#extras), as in
-```
+```console
 poetry install -E slurm
 poetry install -E slurm -E postgres
 poetry install --all-extras
