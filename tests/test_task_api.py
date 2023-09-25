@@ -15,8 +15,8 @@ from fractal_server.app.api.v1.task_collection import create_package_dir_pip
 from fractal_server.app.api.v1.task_collection import TaskCollectStatus
 from fractal_server.app.models import State
 from fractal_server.app.models import Task
-from fractal_server.common.schemas.task import TaskCreate
-from fractal_server.common.schemas.task import TaskUpdate
+from fractal_server.app.schemas.task import TaskCreate
+from fractal_server.app.schemas.task import TaskUpdate
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 from fractal_server.tasks.collection import get_collection_path
