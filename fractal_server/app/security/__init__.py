@@ -54,14 +54,14 @@ from sqlalchemy.orm import selectinload
 from sqlmodel import func
 from sqlmodel import select
 
-from ...common.schemas.user import UserCreate
-from ...common.schemas.user import UserRead
-from ...common.schemas.user import UserUpdate
 from ...config import get_settings
 from ...syringe import Inject
 from ..db import get_db
 from ..models.security import OAuthAccount
 from ..models.security import UserOAuth as User
+from ..schemas.user import UserCreate
+from ..schemas.user import UserRead
+from ..schemas.user import UserUpdate
 
 
 class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):

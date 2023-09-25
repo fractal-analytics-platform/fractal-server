@@ -19,12 +19,6 @@ from fastapi import Response
 from fastapi import status
 from sqlmodel import select
 
-from ....common.schemas import WorkflowCreate
-from ....common.schemas import WorkflowExport
-from ....common.schemas import WorkflowImport
-from ....common.schemas import WorkflowRead
-from ....common.schemas import WorkflowTaskCreate
-from ....common.schemas import WorkflowUpdate
 from ....logger import close_logger
 from ....logger import set_logger
 from ...db import AsyncSession
@@ -32,6 +26,12 @@ from ...db import get_db
 from ...models import ApplyWorkflow
 from ...models import Task
 from ...models import Workflow
+from ...schemas import WorkflowCreate
+from ...schemas import WorkflowExport
+from ...schemas import WorkflowImport
+from ...schemas import WorkflowRead
+from ...schemas import WorkflowTaskCreate
+from ...schemas import WorkflowUpdate
 from ...security import current_active_user
 from ...security import User
 from ._aux_functions import _check_workflow_exists

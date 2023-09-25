@@ -12,10 +12,6 @@ from fastapi import Response
 from fastapi import status
 from pydantic.error_wrappers import ValidationError
 
-from ....common.schemas import StateRead
-from ....common.schemas import TaskCollectPip
-from ....common.schemas import TaskCollectStatus
-from ....common.schemas import TaskCreate
 from ....config import get_settings
 from ....logger import close_logger
 from ....logger import set_logger
@@ -35,6 +31,10 @@ from ...db import get_db
 from ...db import get_sync_db
 from ...models import State
 from ...models import Task
+from ...schemas import StateRead
+from ...schemas import TaskCollectPip
+from ...schemas import TaskCollectStatus
+from ...schemas import TaskCreate
 from ...security import current_active_user
 from ...security import User
 
