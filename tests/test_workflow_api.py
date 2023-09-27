@@ -353,7 +353,7 @@ async def test_patch_workflow(client, MockCurrentUser, project_factory):
     """
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
-        
+
         res = await client.post(
             f"api/v1/project/{project.id}/workflow/", json=dict(name="WF")
         )
@@ -425,7 +425,6 @@ async def test_patch_workflow_task(client, MockCurrentUser, project_factory):
         assert patched_workflow_task["args"] == payload["args"]
         assert patched_workflow_task["meta"] == payload["meta"]
         assert res.status_code == 200
-
 
         payload_up = dict(args={"a": {"c": 43}, "b": 123})
         res = await client.patch(
