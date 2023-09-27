@@ -160,8 +160,6 @@ async def update_workflow(
                 workflow.task_list[ind_wftask].order = new_order
         else:
             setattr(workflow, key, value)
-    
-    
 
     await db.commit()
     await db.refresh(workflow)
