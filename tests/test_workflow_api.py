@@ -353,15 +353,26 @@ async def test_patch_workflow(client, MockCurrentUser, project_factory):
     """
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
-        workflow = {"name": "WF"}
+        
+        # POST a Workflow with name `WF` 
         res = await client.post(
-            f"api/v1/project/{project.id}/workflow/", json=workflow
+            f"api/v1/project/{project.id}/workflow/", json=dict(name="WF")
         )
         wf_id = res.json()["id"]
         assert res.json()["name"] == "WF"
-
         res = await client.get(f"api/v1/project/{project.id}/workflow/")
         assert len(res.json()) == 1
+
+        # POST a second Workflow, with name `WF2` 
+        await client.post(
+            f"api/v1/project/{project.id}/workflow/", json=dict(name="WF2")
+        )
+        # faio to PATCH "WF" to "WF2"
+        res = await client.patch(
+            f"api/v1/project/{project.id}/workflow/{wf_id}",
+            json=dict(name="WF2"),
+        )
+        assert res.status_code == 422  # already in use
 
         patch = {"name": "new_WF"}
         res = await client.patch(
@@ -372,7 +383,7 @@ async def test_patch_workflow(client, MockCurrentUser, project_factory):
         assert new_workflow["name"] == "new_WF"
 
         res = await client.get(f"api/v1/project/{project.id}/workflow/")
-        assert len(res.json()) == 1
+        assert len(res.json()) == 2
 
 
 async def test_patch_workflow_task(client, MockCurrentUser, project_factory):
@@ -417,6 +428,7 @@ async def test_patch_workflow_task(client, MockCurrentUser, project_factory):
         assert patched_workflow_task["args"] == payload["args"]
         assert patched_workflow_task["meta"] == payload["meta"]
         assert res.status_code == 200
+
 
         payload_up = dict(args={"a": {"c": 43}, "b": 123})
         res = await client.patch(
