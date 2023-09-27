@@ -155,6 +155,11 @@ async def update_workflow(
                 workflow.task_list[ind_wftask].order = new_order
         else:
             setattr(workflow, key, value)
+    
+    await _check_workflow_exists(
+        name=workflow.name, project_id=project_id, db=db
+    )
+    
     await db.commit()
     await db.refresh(workflow)
     await db.close()
