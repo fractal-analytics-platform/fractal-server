@@ -11,6 +11,7 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from pydantic.error_wrappers import ValidationError
+from sqlmodel import select
 
 from ....config import get_settings
 from ....logger import close_logger
@@ -25,6 +26,7 @@ from ....tasks.collection import get_collection_log
 from ....tasks.collection import get_collection_path
 from ....tasks.collection import get_log_path
 from ....tasks.collection import inspect_package
+from ....tasks.collection import slugify_task_name
 from ...db import AsyncSession
 from ...db import DBSyncSession
 from ...db import get_db
@@ -215,6 +217,22 @@ async def collect_tasks_pip(
                 detail=f"Invalid package or manifest. Original error: {e}",
             )
 
+    # Check that tasks are not already in the DB
+    for new_task in task_pkg.package_manifest.task_list:
+        new_task_name_slug = slugify_task_name(new_task.name)
+        new_task_source = f"{task_pkg.package_source}:{new_task_name_slug}"
+        stm = select(Task).where(Task.source == new_task_source)
+        res = await db.execute(stm)
+        if res.scalars().all():
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "Cannot collect package. Task with source "
+                    f'"{new_task_source}" already exists in the database.'
+                ),
+            )
+
+    # Proceed with task collection
     try:
         venv_path = create_package_dir_pip(task_pkg=task_pkg)
     except FileExistsError:
