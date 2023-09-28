@@ -20,11 +20,49 @@ def test_settings_injection(override_settings):
 @pytest.mark.parametrize(
     ("settings_dict", "raises"),
     [
-        # missing JWT_SECRET_KEY
-        (dict(), True),
+        # valid
+        (
+            dict(
+                JWT_SECRET_KEY="secret",
+                FRACTAL_TASKS_DIR="/tmp",
+                FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
+                FRACTAL_RUNNER_BACKEND="local",
+                SQLITE_PATH="/tmp/db.db",
+            ),
+            False,
+        ),
+        # Missing JWT_SECRET_KEY
+        (
+            dict(
+                FRACTAL_TASKS_DIR="/tmp",
+                FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
+                FRACTAL_RUNNER_BACKEND="local",
+                SQLITE_PATH="/tmp/db.db",
+            ),
+            True,
+        ),
         # missing FRACTAL_TASKS_DIR
-        (dict(JWT_SECRET_KEY="secret"), True),
-        # check_db
+        (
+            dict(
+                JWT_SECRET_KEY="secret",
+                FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
+                FRACTAL_RUNNER_BACKEND="local",
+                SQLITE_PATH="/tmp/db.db",
+            ),
+            True,
+        ),
+        # check_db (sqlite)
+        # Missing SQLITE_PATH
+        (
+            dict(
+                JWT_SECRET_KEY="secret",
+                FRACTAL_TASKS_DIR="/tmp",
+                FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
+                FRACTAL_RUNNER_BACKEND="local",
+            ),
+            True,
+        ),
+        # check_db (postgres)
         # missing POSTGRES_DB
         (
             dict(
@@ -42,28 +80,6 @@ def test_settings_injection(override_settings):
                 FRACTAL_TASKS_DIR="/tmp",
                 DB_ENGINE="postgres",
                 POSTGRES_DB="fractal",
-                FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
-                FRACTAL_RUNNER_BACKEND="local",
-            ),
-            False,
-        ),
-        # missing SQLITE_PATH
-        (
-            dict(
-                JWT_SECRET_KEY="secret",
-                FRACTAL_TASKS_DIR="/tmp",
-                DB_ENGINE="sqlite",
-                FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
-                FRACTAL_RUNNER_BACKEND="local",
-            ),
-            True,
-        ),
-        (
-            dict(
-                JWT_SECRET_KEY="secret",
-                FRACTAL_TASKS_DIR="/tmp",
-                DB_ENGINE="sqlite",
-                SQLITE_PATH="/tmp/test.db",
                 FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
                 FRACTAL_RUNNER_BACKEND="local",
             ),
