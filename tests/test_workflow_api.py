@@ -353,15 +353,31 @@ async def test_patch_workflow(client, MockCurrentUser, project_factory):
     """
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
-        workflow = {"name": "WF"}
+
+        # POST a Workflow with name `WF`
         res = await client.post(
-            f"api/v1/project/{project.id}/workflow/", json=workflow
+            f"api/v1/project/{project.id}/workflow/", json=dict(name="WF")
         )
         wf_id = res.json()["id"]
         assert res.json()["name"] == "WF"
-
         res = await client.get(f"api/v1/project/{project.id}/workflow/")
         assert len(res.json()) == 1
+        assert res.status_code == 200
+
+        # POST a second Workflow, with name `WF2`
+        res = await client.post(
+            f"api/v1/project/{project.id}/workflow/", json=dict(name="WF2")
+        )
+        assert res.status_code == 201
+
+        # fail to PATCH "WF" to "WF2"
+        res = await client.patch(
+            f"api/v1/project/{project.id}/workflow/{wf_id}",
+            json=dict(name="WF2"),
+        )
+        assert res.status_code == 422
+        debug(res.json())
+        assert "already exists" in res.json()["detail"]
 
         patch = {"name": "new_WF"}
         res = await client.patch(
@@ -370,9 +386,10 @@ async def test_patch_workflow(client, MockCurrentUser, project_factory):
 
         new_workflow = await get_workflow(client, project.id, wf_id)
         assert new_workflow["name"] == "new_WF"
+        assert res.status_code == 200
 
         res = await client.get(f"api/v1/project/{project.id}/workflow/")
-        assert len(res.json()) == 1
+        assert len(res.json()) == 2
 
 
 async def test_patch_workflow_task(client, MockCurrentUser, project_factory):

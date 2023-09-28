@@ -134,6 +134,11 @@ async def update_workflow(
         project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
 
+    if patch.name:
+        await _check_workflow_exists(
+            name=patch.name, project_id=project_id, db=db
+        )
+
     for key, value in patch.dict(exclude_unset=True).items():
         if key == "reordered_workflowtask_ids":
             current_workflowtask_ids = [
@@ -155,6 +160,7 @@ async def update_workflow(
                 workflow.task_list[ind_wftask].order = new_order
         else:
             setattr(workflow, key, value)
+
     await db.commit()
     await db.refresh(workflow)
     await db.close()

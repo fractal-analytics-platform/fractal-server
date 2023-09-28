@@ -9,6 +9,8 @@
     * Move validation of DB-related configuration into new method `Settings.check_db` (\#855);
     * Call `check_db` method during inline/offline migrations (\#855);
     * Revamp documentation on database interface and on the corresponding configuration variables (\#855).
+* API:
+    * Prevent user from bypassing workflow-name constraint via the PATCH endpoint (\#867).
 * Package and repository:
     * Change `fractal_server.common` from being a git-submodule to being a regular folder (\#859).
     * Pin documentation dependencies (\#865).
