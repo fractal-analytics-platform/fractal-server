@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import pytest
 from devtools import debug
 
@@ -123,24 +121,4 @@ def test_settings_check(settings: Settings, raises: bool):
         with pytest.raises(FractalConfigurationError):
             settings.check()
     else:
-        settings.check()
-
-
-def test_FractalConfigurationError():
-    """
-    Stub test to verify some expected behaviors of Settings.check() method
-    """
-
-    settings = Settings(
-        JWT_SECRET_KEY="secret",
-        SQLITE_PATH="path",
-        FRACTAL_TASKS_DIR=Path("/tmp"),
-        FRACTAL_RUNNER_WORKING_BASE_DIR=Path("/tmp"),
-    )
-    debug(settings)
-    settings.check()
-
-    settings.FRACTAL_RUNNER_BACKEND = "invalid"
-    debug(settings)
-    with pytest.raises(FractalConfigurationError):
         settings.check()
