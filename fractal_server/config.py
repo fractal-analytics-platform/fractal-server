@@ -378,22 +378,13 @@ class Settings(BaseSettings):
                 "FRACTAL_RUNNER_WORKING_BASE_DIR cannot be None."
             )
 
-        if self.FRACTAL_RUNNER_BACKEND not in ["local", "slurm"]:
-            raise FractalConfigurationError(
-                f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
-                "is not allowed."
-            )
-
-        elif self.FRACTAL_RUNNER_BACKEND == "slurm":
-
+        info = f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
+        if self.FRACTAL_RUNNER_BACKEND == "slurm":
             if not self.FRACTAL_SLURM_CONFIG_FILE:
                 raise FractalConfigurationError(
-                    "Must set FRACTAL_SLURM_CONFIG_FILE when "
-                    "FRACTAL_RUNNER_BACKEND=slurm."
+                    f"Must set FRACTAL_SLURM_CONFIG_FILE when {info}"
                 )
-
             else:
-                info = "FRACTAL_RUNNER_BACKEND=slurm"
                 if not self.FRACTAL_SLURM_CONFIG_FILE.exists():
                     raise FractalConfigurationError(
                         f"{info} but FRACTAL_SLURM_CONFIG_FILE="
@@ -413,6 +404,18 @@ class Settings(BaseSettings):
                     raise FractalConfigurationError(
                         f"{info} but `squeue` command not found."
                     )
+        elif self.FRACTAL_RUNNER_BACKEND == "local":
+            if self.FRACTAL_LOCAL_CONFIG_FILE:
+                if not self.FRACTAL_LOCAL_CONFIG_FILE.exists():
+                    raise FractalConfigurationError(
+                        f"{info} but FRACTAL_LOCAL_CONFIG_FILE="
+                        f"{self.FRACTAL_LOCAL_CONFIG_FILE} not found."
+                    )
+        else:
+            raise FractalConfigurationError(
+                f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
+                "is not allowed (allowed 'local' or 'slurm')."
+            )
 
     def check(self):
         """
