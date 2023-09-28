@@ -404,18 +404,13 @@ class Settings(BaseSettings):
                     raise FractalConfigurationError(
                         f"{info} but `squeue` command not found."
                     )
-        elif self.FRACTAL_RUNNER_BACKEND == "local":
+        else:  # i.e. self.FRACTAL_RUNNER_BACKEND == "local"
             if self.FRACTAL_LOCAL_CONFIG_FILE:
                 if not self.FRACTAL_LOCAL_CONFIG_FILE.exists():
                     raise FractalConfigurationError(
                         f"{info} but FRACTAL_LOCAL_CONFIG_FILE="
                         f"{self.FRACTAL_LOCAL_CONFIG_FILE} not found."
                     )
-        else:
-            raise FractalConfigurationError(
-                f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
-                "is not allowed (allowed 'local' or 'slurm')."
-            )
 
     def check(self):
         """
@@ -423,24 +418,17 @@ class Settings(BaseSettings):
 
         This method must be called before the server starts
         """
-        self.check_db()
-        self.check_runner()
+        if not self.DEPLOYMENT_TYPE:
+            raise FractalConfigurationError("DEPLOYMENT_TYPE cannot be None")
 
-        if self.DEPLOYMENT_TYPE not in [
-            "production",
-            "staging",
-            "testing",
-            "development",
-        ]:
-            raise FractalConfigurationError(
-                "DEPLOYMENT_TYPE must be one of these: "
-                "['production', 'staging', 'testing', 'development'] "
-                f"(given {self.DEPLOYMENT_TYPE})."
-            )
         if not self.JWT_SECRET_KEY:
             raise FractalConfigurationError("JWT_SECRET_KEY cannot be None")
+
         if not self.FRACTAL_TASKS_DIR:
             raise FractalConfigurationError("FRACTAL_TASKS_DIR cannot be None")
+
+        self.check_db()
+        self.check_runner()
 
 
 def get_settings(settings=Settings()) -> Settings:
