@@ -11,7 +11,11 @@
     * Add `_check_project_exists` helper function (\#872).
 * Configuration variables:
     * Move validation of DB-related configuration into new method `Settings.check_db` (\#855);
-    * Call `check_db` method during inline/offline migrations (\#855);
+    * Remove `DEPLOYMENT_TYPE` variable and update `alive` endpoint (\#875);
+    * Introduce `Settings.check_db` method, and call it during inline/offline migrations (\#855);
+    * Introduce `Settings.check_runner` method (\#875);
+    * Fail if `FRACTAL_BACKEND_RUNNER="local"` and `FRACTAL_LOCAL_CONFIG_FILE` is set but missing on-disk (\#875);
+    * Clean up `Settings.check` method and improve its coverage (\#875);
 * Package, repository, documentation:
     * Change `fractal_server.common` from being a git-submodule to being a regular folder (\#859).
     * Pin documentation dependencies (\#865).
