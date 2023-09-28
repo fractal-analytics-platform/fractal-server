@@ -90,13 +90,6 @@ class Settings(BaseSettings):
 
     PROJECT_NAME: str = "Fractal Server"
     PROJECT_VERSION: str = fractal_server.__VERSION__
-    DEPLOYMENT_TYPE: Optional[
-        Literal["production", "staging", "testing", "development"]
-    ]
-    """
-    The deployment type of the server installation. It is important that
-    production deployments be marked as such to trigger server hardening.
-    """
 
     ###########################################################################
     # AUTH
@@ -418,8 +411,6 @@ class Settings(BaseSettings):
 
         This method must be called before the server starts
         """
-        if not self.DEPLOYMENT_TYPE:
-            raise FractalConfigurationError("DEPLOYMENT_TYPE cannot be None")
 
         if not self.JWT_SECRET_KEY:
             raise FractalConfigurationError("JWT_SECRET_KEY cannot be None")
