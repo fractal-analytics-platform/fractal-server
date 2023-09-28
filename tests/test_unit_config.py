@@ -217,27 +217,27 @@ def test_make_FRACTAL_TASKS_DIR_absolute():
 
 def test_OAuthClientConfig():
 
-    c = OAuthClientConfig(
+    config = OAuthClientConfig(
         CLIENT_NAME="GOOGLE",
         CLIENT_ID="123",
         CLIENT_SECRET="456",
     )
-    assert c.CLIENT_NAME
+    debug(config)
 
-    c = OAuthClientConfig(
+    config = OAuthClientConfig(
         CLIENT_NAME="GITHUB",
         CLIENT_ID="123",
         CLIENT_SECRET="456",
     )
-    assert c.CLIENT_NAME
+    debug(config)
 
-    c = OAuthClientConfig(
+    config = OAuthClientConfig(
         CLIENT_NAME="SOMETHING",
         CLIENT_ID="123",
         CLIENT_SECRET="456",
         OIDC_CONFIGURATION_ENDPOINT="endpoint",
     )
-    assert c.CLIENT_NAME
+    debug(config)
 
     with pytest.raises(FractalConfigurationError):
         OAuthClientConfig(
