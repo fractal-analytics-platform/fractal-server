@@ -198,7 +198,9 @@ class Settings(BaseSettings):
     def DATABASE_URL(self) -> URL:
         if self.DB_ENGINE == "sqlite":
             if not self.SQLITE_PATH:
-                raise ValueError("SQLITE_PATH path cannot be None")
+                raise FractalConfigurationError(
+                    "SQLITE_PATH path cannot be None"
+                )
             sqlite_path = abspath(self.SQLITE_PATH)
             url = URL.create(
                 drivername="sqlite+aiosqlite",
@@ -220,7 +222,9 @@ class Settings(BaseSettings):
     def DATABASE_SYNC_URL(self):
         if self.DB_ENGINE == "sqlite":
             if not self.SQLITE_PATH:
-                raise ValueError("SQLITE_PATH path cannot be None")
+                raise FractalConfigurationError(
+                    "SQLITE_PATH path cannot be None"
+                )
             return self.DATABASE_URL.set(drivername="sqlite")
         elif self.DB_ENGINE == "postgres":
             return self.DATABASE_URL.set(drivername="postgresql+psycopg2")
