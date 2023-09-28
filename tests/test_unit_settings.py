@@ -2,6 +2,7 @@ import pytest
 from devtools import debug
 
 from fractal_server.config import FractalConfigurationError
+from fractal_server.config import OAuthClientConfig
 from fractal_server.config import Settings
 from fractal_server.syringe import Inject
 
@@ -180,3 +181,32 @@ def test_make_FRACTAL_TASKS_DIR_absolute():
     )
     debug(settings.FRACTAL_TASKS_DIR)
     assert settings.FRACTAL_TASKS_DIR.is_absolute()
+
+
+def test_OAuthClientConfig():
+
+    OAuthClientConfig(
+        CLIENT_NAME="GOOGLE",
+        CLIENT_ID="123",
+        CLIENT_SECRET="456",
+    )
+
+    OAuthClientConfig(
+        CLIENT_NAME="GITHUB",
+        CLIENT_ID="123",
+        CLIENT_SECRET="456",
+    )
+
+    OAuthClientConfig(
+        CLIENT_NAME="SOMETHING",
+        CLIENT_ID="123",
+        CLIENT_SECRET="456",
+        OIDC_CONFIGURATION_ENDPOINT="endpoint",
+    )
+
+    with pytest.raises(FractalConfigurationError):
+        OAuthClientConfig(
+            CLIENT_NAME="SOMETHING",
+            CLIENT_ID="123",
+            CLIENT_SECRET="456",
+        )
