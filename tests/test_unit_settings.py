@@ -22,14 +22,107 @@ def test_settings_injection(override_settings):
 @pytest.mark.parametrize(
     ("settings", "raises"),
     [
+        # missing everything
         (Settings(), True),
+        # missing JWT_SECRET_KEY
+        (Settings(DEPLOYMENT_TYPE="testing"), True),
+        # missing FRACTAL_TASKS_DIR
+        (Settings(DEPLOYMENT_TYPE="testing", JWT_SECRET_KEY="secret"), True),
+        # check_db
+        # missing POSTGRES_DB
         (
             Settings(
-                DEPLOYMENT_TYPE="development",
+                DEPLOYMENT_TYPE="testing",
                 JWT_SECRET_KEY="secret",
-                SQLITE_PATH="path",
-                FRACTAL_TASKS_DIR=Path("/tmp"),
-                FRACTAL_RUNNER_WORKING_BASE_DIR=Path("/tmp"),
+                FRACTAL_TASKS_DIR="/tmp",
+                DB_ENGINE="postgres",
+            ),
+            True,
+        ),
+        (
+            Settings(
+                DEPLOYMENT_TYPE="testing",
+                JWT_SECRET_KEY="secret",
+                FRACTAL_TASKS_DIR="/tmp",
+                DB_ENGINE="postgres",
+                POSTGRES_DB="fractal",
+                FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
+                FRACTAL_RUNNER_BACKEND="local",
+            ),
+            False,
+        ),
+        # missing SQLITE_PATH
+        (
+            Settings(
+                DEPLOYMENT_TYPE="testing",
+                JWT_SECRET_KEY="secret",
+                FRACTAL_TASKS_DIR="/tmp",
+                DB_ENGINE="sqlite",
+            ),
+            True,
+        ),
+        (
+            Settings(
+                DEPLOYMENT_TYPE="testing",
+                JWT_SECRET_KEY="secret",
+                FRACTAL_TASKS_DIR="/tmp",
+                DB_ENGINE="sqlite",
+                SQLITE_PATH="/tmp/test.db",
+                FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
+                FRACTAL_RUNNER_BACKEND="local",
+            ),
+            False,
+        ),
+        # check_runner
+        # missing FRACTAL_RUNNER_WORKING_BASE_DIR
+        (
+            Settings(
+                DEPLOYMENT_TYPE="testing",
+                JWT_SECRET_KEY="secret",
+                FRACTAL_TASKS_DIR="/tmp",
+                DB_ENGINE="sqlite",
+                FRACTAL_RUNNER_BACKEND="local",
+                SQLITE_PATH="/tmp/test.db",
+            ),
+            True,
+        ),
+        # missing FRACTAL_SLURM_CONFIG_FILE
+        (
+            Settings(
+                DEPLOYMENT_TYPE="testing",
+                JWT_SECRET_KEY="secret",
+                FRACTAL_TASKS_DIR="/tmp",
+                DB_ENGINE="sqlite",
+                SQLITE_PATH="/tmp/test.db",
+                FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
+                FRACTAL_RUNNER_BACKEND="slurm",
+            ),
+            True,
+        ),
+        # not existing FRACTAL_SLURM_CONFIG_FILE (slurm)
+        (
+            Settings(
+                DEPLOYMENT_TYPE="testing",
+                JWT_SECRET_KEY="secret",
+                FRACTAL_TASKS_DIR="/tmp",
+                DB_ENGINE="sqlite",
+                SQLITE_PATH="/tmp/test.db",
+                FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
+                FRACTAL_RUNNER_BACKEND="slurm",
+                FRACTAL_SLURM_CONFIG_FILE="/not/existing/file.xy",
+            ),
+            True,
+        ),
+        # not existing FRACTAL_SLURM_CONFIG_FILE (local)
+        (
+            Settings(
+                DEPLOYMENT_TYPE="testing",
+                JWT_SECRET_KEY="secret",
+                FRACTAL_TASKS_DIR="/tmp",
+                DB_ENGINE="sqlite",
+                SQLITE_PATH="/tmp/test.db",
+                FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
+                FRACTAL_SLURM_CONFIG_FILE="/not/existing/file.xyz",
             ),
             False,
         ),
