@@ -363,13 +363,56 @@ class Settings(BaseSettings):
         if self.DB_ENGINE == "postgres":
             if not self.POSTGRES_DB:
                 raise FractalConfigurationError(
-                    "POSTGRES_DB cannot be None when DB_ENGINE=postgres"
+                    "POSTGRES_DB cannot be None when DB_ENGINE=postgres."
                 )
         else:
             if not self.SQLITE_PATH:
                 raise FractalConfigurationError(
-                    "SQLITE_PATH cannot be None when DB_ENGINE=sqlite"
+                    "SQLITE_PATH cannot be None when DB_ENGINE=sqlite."
                 )
+
+    def check_runner(self) -> None:
+
+        if not self.FRACTAL_RUNNER_WORKING_BASE_DIR:
+            raise FractalConfigurationError(
+                "FRACTAL_RUNNER_WORKING_BASE_DIR cannot be None."
+            )
+
+        if self.FRACTAL_RUNNER_BACKEND not in ["local", "slurm"]:
+            raise FractalConfigurationError(
+                f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
+                "is not allowed."
+            )
+
+        elif self.FRACTAL_RUNNER_BACKEND == "slurm":
+
+            if not self.FRACTAL_SLURM_CONFIG_FILE:
+                raise FractalConfigurationError(
+                    "Must set FRACTAL_SLURM_CONFIG_FILE when "
+                    "FRACTAL_RUNNER_BACKEND=slurm."
+                )
+
+            else:
+                info = "FRACTAL_RUNNER_BACKEND=slurm"
+                if not self.FRACTAL_SLURM_CONFIG_FILE.exists():
+                    raise FractalConfigurationError(
+                        f"{info} but FRACTAL_SLURM_CONFIG_FILE="
+                        f"{self.FRACTAL_SLURM_CONFIG_FILE} not found."
+                    )
+
+                from fractal_server.app.runner._slurm._slurm_config import (
+                    load_slurm_config_file,
+                )
+
+                load_slurm_config_file(self.FRACTAL_SLURM_CONFIG_FILE)
+                if not shutil.which("sbatch"):
+                    raise FractalConfigurationError(
+                        f"{info} but `sbatch` command not found."
+                    )
+                if not shutil.which("squeue"):
+                    raise FractalConfigurationError(
+                        f"{info} but `squeue` command not found."
+                    )
 
     def check(self):
         """
@@ -378,62 +421,23 @@ class Settings(BaseSettings):
         This method must be called before the server starts
         """
         self.check_db()
+        self.check_runner()
 
-        class StrictSettings(BaseSettings):
-            class Config:
-                extra = "allow"
-
-            DEPLOYMENT_TYPE: Literal[
-                "production", "staging", "testing", "development"
-            ]
-            JWT_SECRET_KEY: str
-
-            FRACTAL_TASKS_DIR: Path
-            FRACTAL_RUNNER_WORKING_BASE_DIR: Path
-
-            FRACTAL_RUNNER_BACKEND: str = Field()
-            if FRACTAL_RUNNER_BACKEND == "slurm":
-                FRACTAL_SLURM_CONFIG_FILE: Path
-
-        StrictSettings(**self.dict())
-
-        # Check that some variables are allowed
-        if self.FRACTAL_RUNNER_BACKEND not in ["local", "slurm"]:
+        if self.DEPLOYMENT_TYPE not in [
+            "production",
+            "staging",
+            "testing",
+            "development",
+        ]:
             raise FractalConfigurationError(
-                f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
-                "is not allowed"
+                "DEPLOYMENT_TYPE must be one of these: "
+                "['production', 'staging', 'testing', 'development'] "
+                f"(given {self.DEPLOYMENT_TYPE})."
             )
-
-        if self.FRACTAL_RUNNER_BACKEND == "slurm":
-            info = f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
-
-            # Check that FRACTAL_SLURM_CONFIG_FILE exists
-            if not self.FRACTAL_SLURM_CONFIG_FILE.exists():
-                raise FractalConfigurationError(
-                    f"{info} but {str(self.FRACTAL_SLURM_CONFIG_FILE)} "
-                    "is missing"
-                )
-
-            # Check that FRACTAL_SLURM_CONFIG_FILE content is valid
-            from fractal_server.app.runner._slurm._slurm_config import (
-                load_slurm_config_file,
-            )
-
-            _ = load_slurm_config_file(
-                config_path=self.FRACTAL_SLURM_CONFIG_FILE
-            )
-
-            # Check that sbatch command is available
-            if not shutil.which("sbatch"):
-                raise FractalConfigurationError(
-                    f"{info} but sbatch command not found."
-                )
-
-            # Check that squeue command is available
-            if not shutil.which("squeue"):
-                raise FractalConfigurationError(
-                    f"{info} but squeue command not found."
-                )
+        if not self.JWT_SECRET_KEY:
+            raise FractalConfigurationError("JWT_SECRET_KEY cannot be None")
+        if not self.FRACTAL_TASKS_DIR:
+            raise FractalConfigurationError("FRACTAL_TASKS_DIR cannot be None")
 
 
 def get_settings(settings=Settings()) -> Settings:
