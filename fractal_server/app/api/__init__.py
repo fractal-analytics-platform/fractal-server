@@ -33,6 +33,5 @@ async def alive():
     settings = Inject(get_settings)
     return dict(
         alive=True,
-        deployment_type=settings.DEPLOYMENT_TYPE,
         version=settings.PROJECT_VERSION,
     )

@@ -61,7 +61,6 @@ For this command to work properly, a set of variables need to be specified,
 either as enviromnent variables or in a file like `.fractal_server.env`.
 An example of such file is
 ```
-DEPLOYMENT_TYPE=testing
 JWT_SECRET_KEY=XXX
 SQLITE_PATH=/some/path/to/fractal_server.db
 FRACTAL_TASKS_DIR=/some/path/to/the/task/environment/folder
