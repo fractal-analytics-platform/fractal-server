@@ -150,3 +150,17 @@ def test_settings_check(settings_dict: dict[str, str], raises: bool):
             settings.check()
     else:
         settings.check()
+
+
+def test_make_FRACTAL_TASKS_DIR_absolute():
+    """
+    Test `Settings.make_FRACTAL_TASKS_DIR_absolute` validator.
+    """
+    settings = Settings(
+        JWT_SECRET_KEY="secret",
+        SQLITE_PATH="/tmp/test.db",
+        FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
+        FRACTAL_TASKS_DIR="relative-path",
+    )
+    debug(settings.FRACTAL_TASKS_DIR)
+    assert settings.FRACTAL_TASKS_DIR.is_absolute()
