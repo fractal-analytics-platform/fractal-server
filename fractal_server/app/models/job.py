@@ -12,7 +12,7 @@ from sqlmodel import SQLModel
 
 from ...utils import get_timestamp
 from ..schemas.applyworkflow import _ApplyWorkflowBase
-from .project import Dataset
+from .dataset import Dataset
 from .workflow import Workflow
 
 
