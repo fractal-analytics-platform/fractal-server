@@ -38,189 +38,142 @@ def _inspect_package_and_set_attributes(task_pkg) -> None:
     task_pkg.check()
 
 
-async def test_background_collection(
-    db,
-    client,
-    MockCurrentUser,
-    dummy_task_package,
-    override_settings_factory,
-    tmp_path,
-):
+async def test_failed_get_collection_info(client, MockCurrentUser):
     """
-    GIVEN a package and its installation environment
-    WHEN the background collection is called on it
-    THEN the tasks are collected and the state is updated to db accordingly
+    Get task-collection info for non-existing collection.
     """
-
-    override_settings_factory(
-        FRACTAL_TASKS_DIR=(tmp_path / "test_background_collection")
-    )
-
-    task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())
-
-    # Extract info form the wheel package (this would be part of the endpoint)
-    _inspect_package_and_set_attributes(task_pkg)
-    debug(task_pkg)
-
-    venv_path = create_package_dir_pip(task_pkg=task_pkg)
-    collection_status = TaskCollectStatus(
-        status="pending", venv_path=venv_path, package=task_pkg.package
-    )
-    # replacing with path because of non-serializable Path
-    collection_status_dict = collection_status.sanitised_dict()
-
-    state = State(data=collection_status_dict)
-    db.add(state)
-    await db.commit()
-    await db.refresh(state)
-    debug(state)
-    await _background_collect_pip(
-        state_id=state.id,
-        venv_path=venv_path,
-        task_pkg=task_pkg,
-    )
-    async with MockCurrentUser(persist=True):
-        res = await client.get(f"{PREFIX}/collect/{state.id}")
-    debug(res.json())
-    assert res.status_code == 200
-    out_state = res.json()
-    assert out_state["data"]["status"] == "OK"
-
-    task_list = (await db.execute(select(Task))).scalars().all()
-    debug(task_list)
-    assert len(task_list) == 2
+    invalid_state_id = 99999
+    async with MockCurrentUser():
+        res = await client.get(f"{PREFIX}/collect/{invalid_state_id}")
+    debug(res)
+    assert res.status_code == 404
 
 
 @pytest.mark.parametrize(
-    "level", [logging.DEBUG, logging.INFO, logging.WARNING]
+    "python_version",
+    [
+        None,
+        pytest.param(
+            "3.10",
+            marks=pytest.mark.skipif(
+                not shutil_which("python3.10"), reason="No python3.10 on host"
+            ),
+        ),
+    ],
 )
-async def test_background_collection_logs(
+async def test_collection(
     db,
     client,
-    MockCurrentUser,
     dummy_task_package,
-    override_settings_factory,
-    tmp_path,
-    level: int,
-):
-    """
-    GIVEN a package and its installation environment
-    WHEN the background collection is called, for a given FRACTAL_LOGGING_LEVEL
-    THEN the logs are always present
-    """
-    override_settings_factory(
-        FRACTAL_LOGGING_LEVEL=level,
-        FRACTAL_TASKS_DIR=(
-            tmp_path / f"test_background_collection_logs_{level}"
-        ),
-    )
-
-    task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())
-
-    # Extract info form the wheel package (this would be part of the endpoint)
-    _inspect_package_and_set_attributes(task_pkg)
-    debug(task_pkg)
-
-    venv_path = create_package_dir_pip(task_pkg=task_pkg)
-    debug(venv_path)
-    collection_status = TaskCollectStatus(
-        status="pending", venv_path=venv_path, package=task_pkg.package
-    )
-    # replacing with path because of non-serializable Path
-    collection_status_dict = collection_status.sanitised_dict()
-
-    state = State(data=collection_status_dict)
-    db.add(state)
-    await db.commit()
-    await db.refresh(state)
-    debug(state)
-    await _background_collect_pip(
-        state_id=state.id,
-        venv_path=venv_path,
-        task_pkg=task_pkg,
-    )
-    async with MockCurrentUser(persist=True):
-        res = await client.get(f"{PREFIX}/collect/{state.id}")
-    out_state = res.json()
-    debug(out_state)
-    assert res.status_code == 200
-    assert out_state["data"]["status"] == "OK"
-    debug(out_state["data"]["log"])
-    debug(out_state["data"]["info"])
-    assert out_state["data"]["log"]
-
-
-async def test_background_collection_failure(
-    db, dummy_task_package, override_settings_factory, tmp_path
-):
-    """
-    GIVEN a package and its installation environment
-    WHEN the background collection is called on it and it fails
-    THEN
-        * the log of the collection is saved to the state
-        * the installation directory is removed
-    """
-
-    override_settings_factory(
-        FRACTAL_TASKS_DIR=(tmp_path / "test_background_collection_failure")
-    )
-
-    task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())
-
-    # Extract info form the wheel package (this would be part of the endpoint)
-    _inspect_package_and_set_attributes(task_pkg)
-    debug(task_pkg)
-
-    venv_path = create_package_dir_pip(task_pkg=task_pkg)
-    collection_status = TaskCollectStatus(
-        status="pending", venv_path=venv_path, package=task_pkg.package
-    )
-    # replacing with path because of non-serializable Path
-    collection_status_dict = collection_status.sanitised_dict()
-    state = State(data=collection_status_dict)
-    db.add(state)
-    await db.commit()
-    await db.refresh(state)
-
-    task_pkg.package = "__NO_PACKAGE"
-    task_pkg.package_path = None
-
-    await _background_collect_pip(
-        state_id=state.id,
-        venv_path=venv_path,
-        task_pkg=task_pkg,
-    )
-
-    await db.refresh(state)
-    debug(state)
-    assert state.data["log"]
-    assert state.data["status"] == "fail"
-    assert state.data["info"].startswith("Original error")
-    assert not venv_path.exists()
-
-
-async def test_collection_api_missing_file(
-    client,
     MockCurrentUser,
-    tmp_path,
+    override_settings_factory,
+    python_version,
+    tmp_path: Path,
 ):
-    async with MockCurrentUser():
-        res = await client.post(
-            f"{PREFIX}/collect/pip/",
-            json=dict(package=str(tmp_path / "missing_file.whl")),
+    """
+    GIVEN a package in a format that `pip` understands
+    WHEN the api to collect tasks from that package is called
+    THEN
+        * a dedicated directory is created and returned
+        * in the background, an environment is created, the package is
+          installed and the task collected
+        * it is possible to GET the collection with the path to the folder to
+          check the status of the background process
+        * if called twice, the same tasks are returned without installing
+    """
+
+    override_settings_factory(FRACTAL_TASKS_DIR=(tmp_path / "test_collection"))
+
+    # Prepare and validate payload
+    task_pkg_dict = dict(package=str(dummy_task_package))
+    debug(task_pkg_dict)
+    _TaskCollectPip(**task_pkg_dict)
+
+    # Prepare expecte source
+    if python_version:
+        task_pkg_dict["python_version"] = python_version
+        EXPECTED_SOURCE = (
+            f"pip_local:fractal_tasks_dummy:0.1.0::py{python_version}"
         )
-        debug(res)
+    else:
+        EXPECTED_SOURCE = "pip_local:fractal_tasks_dummy:0.1.0::"
+    debug(EXPECTED_SOURCE)
+
+    async with MockCurrentUser():
+
+        # Trigger collection
+        res = await client.post(f"{PREFIX}/collect/pip/", json=task_pkg_dict)
+        debug(res.json())
+        assert res.status_code == 201
+        assert res.json()["data"]["status"] == "pending"
+        state = res.json()
+        state_id = state["id"]
+        data = state["data"]
+        venv_path = Path(data["venv_path"])
+        assert "fractal_tasks_dummy" in data["venv_path"]
+
+        # Get/check collection info
+        res = await client.get(f"{PREFIX}/collect/{state_id}")
+        assert res.status_code == 200
+        state = res.json()
+        data = state["data"]
+        task_list = data["task_list"]
+        task_names = (t["name"] for t in task_list)
+        assert data["status"] == "OK"
+        assert data["log"]
+        assert len(task_list) == 2
+        assert "dummy" in task_names
+        assert "dummy parallel" in task_names
+        assert task_list[0]["source"] == f"{EXPECTED_SOURCE}:dummy"
+        assert task_list[1]["source"] == f"{EXPECTED_SOURCE}:dummy_parallel"
+
+        # Check on-disk files
+        settings = Inject(get_settings)
+        full_path = settings.FRACTAL_TASKS_DIR / venv_path
+        assert get_collection_path(full_path).exists()
+        assert get_log_path(full_path).exists()
+
+        # Check source
+        if python_version:
+            python_bin = data["task_list"][0]["command"].split()[0]
+            version = await execute_command(f"{python_bin} --version")
+            assert python_version in version
+
+        # Collect again (already installed)
+        res = await client.post(f"{PREFIX}/collect/pip/", json=task_pkg_dict)
+        debug(res.json())
+        assert res.status_code == 200
+        state = res.json()
+        data = state["data"]
+        assert data["info"] == "Already installed"
+
+        # Check that *verbose* collection info contains logs
+        res = await client.get(f"{PREFIX}/collect/{state_id}?verbose=true")
+        assert res.status_code == 200
+        assert res.json()["data"]["log"] is not None
+
+        # Edit a task (via DB, since endpoint cannot modify source)
+        res = await client.get(f"{PREFIX}/")
+        assert res.status_code == 200
+        task_list = res.json()
+        db_task = await db.get(Task, task_list[0]["id"])
+        db_task.source = "some_new_source"
+        await db.merge(db_task)
+        await db.commit()
+        await db.close()
+
+        # Collect again, and check that collection fails
+        res = await client.post(f"{PREFIX}/collect/pip/", json=task_pkg_dict)
         debug(res.json())
         assert res.status_code == 422
-        assert "does not exist" in str(res.json())
 
 
-async def test_collection_api_local_package_with_extras(
+async def test_collection_local_package_with_extras(
     client,
     MockCurrentUser,
     dummy_task_package,
     override_settings_factory,
-    tmp_path,
+    tmp_path: Path,
 ):
     """
     Check that the package extras are correctly included in a local-package
@@ -253,214 +206,13 @@ async def test_collection_api_local_package_with_extras(
         assert ".whl[my_extra]" in log
 
 
-@pytest.mark.parametrize(
-    "python_version",
-    [
-        None,
-        pytest.param(
-            "3.10",
-            marks=pytest.mark.skipif(
-                not shutil_which("python3.10"), reason="No python3.10 on host"
-            ),
-        ),
-    ],
-)
-async def test_collection_api(
-    db,
-    client,
-    dummy_task_package,
-    MockCurrentUser,
-    python_version,
-    override_settings_factory,
-    tmp_path,
-):
-    """
-    GIVEN a package in a format that `pip` understands
-    WHEN the api to collect tasks from that package is called
-    THEN
-        * a dedicated directory is created and returned
-        * in the background, an environment is created, the package is
-          installed and the task collected
-        * it is possible to GET the collection with the path to the folder to
-          check the status of the background process
-        * if called twice, the same tasks are returned without installing
-    """
-
-    override_settings_factory(
-        FRACTAL_TASKS_DIR=(tmp_path / "test_collection_api")
-    )
-
-    task_collection = dict(package=dummy_task_package.as_posix())
-    PKG_SOURCE = "pip_local:fractal_tasks_dummy:0.1.0::"
-    if python_version:
-        task_collection["python_version"] = python_version
-        PKG_SOURCE = f"pip_local:fractal_tasks_dummy:0.1.0::py{python_version}"
-    debug(PKG_SOURCE)
-
-    async with MockCurrentUser():
-        res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
-        debug(res.json())
-        assert res.status_code == 201
-        assert res.json()["data"]["status"] == "pending"
-
-        state = res.json()
-        data = state["data"]
-        assert "fractal_tasks_dummy" in data["venv_path"]
-        venv_path = Path(data["venv_path"])
-
-        res = await client.get(f"{PREFIX}/collect/{state['id']}")
-        debug(res.json())
-        assert res.status_code == 200
-        state = res.json()
-        data = state["data"]
-
-        assert data["status"] == "OK"
-        task_list = data["task_list"]
-        assert data["log"]
-
-        task_names = (t["name"] for t in task_list)
-        assert len(task_list) == 2
-        assert "dummy" in task_names
-        assert "dummy parallel" in task_names
-
-        assert task_list[0]["source"] == f"{PKG_SOURCE}:dummy"
-        assert task_list[1]["source"] == f"{PKG_SOURCE}:dummy_parallel"
-
-        # using verbose option
-        res = await client.get(f"{PREFIX}/collect/{state['id']}?verbose=true")
-        debug(res.json())
-        state = res.json()
-        data = state["data"]
-        assert res.status_code == 200
-        assert data["log"] is not None
-
-        # check status of non-existing collection
-        invalid_state_id = 99999
-        res = await client.get(f"{PREFIX}/collect/{invalid_state_id}")
-        debug(res)
-        assert res.status_code == 404
-
-        settings = Inject(get_settings)
-        full_path = settings.FRACTAL_TASKS_DIR / venv_path
-        assert get_collection_path(full_path).exists()
-        assert get_log_path(full_path).exists()
-        if python_version:
-            python_bin = data["task_list"][0]["command"].split()[0]
-            version = await execute_command(f"{python_bin} --version")
-            assert python_version in version
-
-        # Collect again
-        res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
-        debug(res.json())
-        assert res.status_code == 200
-        state = res.json()
-        data = state["data"]
-        assert data["info"] == "Already installed"
-
-        # Edit a task (via DB, since endpoint cannot modify source)
-        res = await client.get(f"{PREFIX}/")
-        assert res.status_code == 200
-        task_list = res.json()
-        db_task = await db.get(Task, task_list[0]["id"])
-        db_task.source = "some_new_source"
-        await db.merge(db_task)
-        await db.commit()
-        await db.close()
-        # Collect again, and check that collection fails
-        res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
-        debug(res.json())
-        assert res.status_code == 422
-
-
-async def test_collection_api_invalid_manifest(
-    client,
-    dummy_task_package_invalid_manifest,
-    dummy_task_package_missing_manifest,
-    MockCurrentUser,
-    override_settings_factory,
-    tmp_path,
-):
-    """
-    GIVEN a package with invalid/missing manifest
-    WHEN the api to collect tasks from that package is called
-    THEN it returns 422 (Unprocessable Entity) with an informative message
-    """
-
-    override_settings_factory(
-        FRACTAL_TASKS_DIR=(tmp_path / "test_collection_api_invalid_manifest")
-    )
-
-    task_collection = dict(
-        package=dummy_task_package_invalid_manifest.as_posix()
-    )
-    debug(dummy_task_package_invalid_manifest)
-    async with MockCurrentUser(persist=True):
-        res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
-        debug(res.json())
-        assert res.status_code == 422
-        assert "not supported" in res.json()["detail"]
-
-    task_collection = dict(
-        package=dummy_task_package_missing_manifest.as_posix()
-    )
-    debug(dummy_task_package_missing_manifest)
-    async with MockCurrentUser(persist=True):
-        res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
-        debug(res.json())
-        assert res.status_code == 422
-        assert "does not include" in res.json()["detail"]
-
-
-async def test_task_collection_api_failure(
-    client, MockCurrentUser, testdata_path, override_settings_factory, tmp_path
-):
-    """
-    Try to collect a task package which triggers an error (namely its manifests
-    includes a task for which there does not exist the python script), and
-    handle failure.
-    """
-
-    override_settings_factory(
-        FRACTAL_TASKS_DIR=(tmp_path / "test_task_collection_api_failure")
-    )
-    debug(tmp_path)
-
-    path = str(
-        testdata_path
-        / "my-tasks-fail/dist/my_tasks_fail-0.1.0-py3-none-any.whl"
-    )
-    task_collection = dict(package=path)
-    debug(task_collection)
-
-    async with MockCurrentUser():
-        res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
-        debug(res.json())
-        assert res.status_code == 201
-        assert res.json()["data"]["status"] == "pending"
-        state = res.json()
-        data = state["data"]
-        assert "my_tasks_fail" in data["venv_path"]
-
-        res = await client.get(f"{PREFIX}/collect/{state['id']}?verbose=True")
-        debug(res.json())
-
-        assert res.status_code == 200
-        state = res.json()
-        data = state["data"]
-
-        assert "Cannot find executable" in data["info"]
-        assert data["status"] == "fail"
-        assert data["log"]  # This is because of verbose=True
-        assert "fail" in data["log"]
-
-
-async def test_background_collection_with_json_schemas(
+async def test_collection_with_json_schemas(
     db,
     client,
     MockCurrentUser,
     override_settings_factory,
-    tmp_path,
-    testdata_path,
+    tmp_path: Path,
+    testdata_path: Path,
 ):
     """
     GIVEN a package which
@@ -535,12 +287,118 @@ async def test_background_collection_with_json_schemas(
         assert task.docs_link in [None, "http://www.example.org"]
 
 
-async def test_issue_866(
+async def test_failed_collection_missing_wheel_file(
+    client,
+    MockCurrentUser,
+    tmp_path: Path,
+):
+    async with MockCurrentUser():
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=dict(package=str(tmp_path / "missing_file.whl")),
+        )
+        debug(res)
+        debug(res.json())
+        assert res.status_code == 422
+        assert "does not exist" in str(res.json())
+
+
+async def test_failed_collection_invalid_manifest(
+    client,
+    dummy_task_package_invalid_manifest,
+    dummy_task_package_missing_manifest,
+    MockCurrentUser,
+    override_settings_factory,
+    tmp_path: Path,
+):
+    """
+    GIVEN a package with invalid/missing manifest
+    WHEN the api to collect tasks from that package is called
+    THEN it returns 422 (Unprocessable Entity) with an informative message
+    """
+
+    override_settings_factory(
+        FRACTAL_TASKS_DIR=(
+            tmp_path / "test_failed_collection_invalid_manifest"
+        )
+    )
+
+    task_collection = dict(
+        package=dummy_task_package_invalid_manifest.as_posix()
+    )
+    debug(dummy_task_package_invalid_manifest)
+    async with MockCurrentUser(persist=True):
+        res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
+        debug(res.json())
+        assert res.status_code == 422
+        assert "not supported" in res.json()["detail"]
+
+    task_collection = dict(
+        package=dummy_task_package_missing_manifest.as_posix()
+    )
+    debug(dummy_task_package_missing_manifest)
+    async with MockCurrentUser(persist=True):
+        res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
+        debug(res.json())
+        assert res.status_code == 422
+        assert "does not include" in res.json()["detail"]
+
+
+async def test_failed_collection_missing_task_file(
+    client,
+    MockCurrentUser,
+    override_settings_factory,
+    testdata_path: Path,
+    tmp_path: Path,
+):
+    """
+    Try to collect a task package which triggers an error (namely its manifests
+    includes a task for which there does not exist the python script), and
+    handle failure.
+    """
+
+    override_settings_factory(
+        FRACTAL_TASKS_DIR=(
+            tmp_path / "test_failed_collection_missing_task_file"
+        )
+    )
+    debug(tmp_path)
+
+    path = str(
+        testdata_path
+        / "my-tasks-fail/dist/my_tasks_fail-0.1.0-py3-none-any.whl"
+    )
+    task_collection = dict(package=path)
+    debug(task_collection)
+
+    async with MockCurrentUser():
+        res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
+        debug(res.json())
+        assert res.status_code == 201
+        assert res.json()["data"]["status"] == "pending"
+        state = res.json()
+        data = state["data"]
+        assert "my_tasks_fail" in data["venv_path"]
+
+        res = await client.get(f"{PREFIX}/collect/{state['id']}?verbose=True")
+        debug(res.json())
+
+        assert res.status_code == 200
+        state = res.json()
+        data = state["data"]
+
+        assert "Cannot find executable" in data["info"]
+        assert data["status"] == "fail"
+        assert data["log"]  # This is because of verbose=True
+        assert "fail" in data["log"]
+
+
+async def test_failed_collection_existing_db_tasks(
     client,
     MockCurrentUser,
     dummy_task_package,
     override_settings_factory,
-    tmp_path,
+    tmp_path: Path,
 ):
     """
     Catch issue 866:
@@ -589,3 +447,109 @@ async def test_issue_866(
             ),
         )
         assert res.status_code == 422
+
+
+@pytest.mark.parametrize(
+    "level", [logging.DEBUG, logging.INFO, logging.WARNING]
+)
+async def test_logs(
+    db,
+    client,
+    MockCurrentUser,
+    dummy_task_package,
+    override_settings_factory,
+    tmp_path: Path,
+    level: int,
+):
+    """
+    GIVEN a package and its installation environment
+    WHEN the background collection is called, for a given FRACTAL_LOGGING_LEVEL
+    THEN the logs are always present
+    """
+    override_settings_factory(
+        FRACTAL_LOGGING_LEVEL=level,
+        FRACTAL_TASKS_DIR=(tmp_path / f"test_logs_{level}"),
+    )
+
+    task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())
+
+    # Extract info form the wheel package (this would be part of the endpoint)
+    _inspect_package_and_set_attributes(task_pkg)
+    debug(task_pkg)
+
+    venv_path = create_package_dir_pip(task_pkg=task_pkg)
+    debug(venv_path)
+    collection_status = TaskCollectStatus(
+        status="pending", venv_path=venv_path, package=task_pkg.package
+    )
+    # replacing with path because of non-serializable Path
+    collection_status_dict = collection_status.sanitised_dict()
+
+    state = State(data=collection_status_dict)
+    db.add(state)
+    await db.commit()
+    await db.refresh(state)
+    debug(state)
+    await _background_collect_pip(
+        state_id=state.id,
+        venv_path=venv_path,
+        task_pkg=task_pkg,
+    )
+    async with MockCurrentUser(persist=True):
+        res = await client.get(f"{PREFIX}/collect/{state.id}")
+    out_state = res.json()
+    debug(out_state)
+    assert res.status_code == 200
+    assert out_state["data"]["status"] == "OK"
+    debug(out_state["data"]["log"])
+    debug(out_state["data"]["info"])
+    assert out_state["data"]["log"]
+
+
+async def test_logs_failed_collection(
+    db, dummy_task_package, override_settings_factory, tmp_path: Path
+):
+    """
+    GIVEN a package and its installation environment
+    WHEN the background collection is called on it and it fails
+    THEN
+        * the log of the collection is saved to the state
+        * the installation directory is removed
+    """
+
+    override_settings_factory(
+        FRACTAL_TASKS_DIR=(tmp_path / "test_logs_failed_collection")
+    )
+
+    task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())
+
+    # Extract info form the wheel package (this would be part of the endpoint)
+    _inspect_package_and_set_attributes(task_pkg)
+    debug(task_pkg)
+
+    venv_path = create_package_dir_pip(task_pkg=task_pkg)
+    collection_status = TaskCollectStatus(
+        status="pending", venv_path=venv_path, package=task_pkg.package
+    )
+    # replacing with path because of non-serializable Path
+    collection_status_dict = collection_status.sanitised_dict()
+    state = State(data=collection_status_dict)
+    db.add(state)
+    await db.commit()
+    await db.refresh(state)
+
+    task_pkg.package = "__NO_PACKAGE"
+    task_pkg.package_path = None
+
+    await _background_collect_pip(
+        state_id=state.id,
+        venv_path=venv_path,
+        task_pkg=task_pkg,
+    )
+
+    await db.refresh(state)
+    debug(state)
+    assert state.data["log"]
+    assert state.data["status"] == "fail"
+    assert state.data["info"].startswith("Original error")
+    assert not venv_path.exists()
