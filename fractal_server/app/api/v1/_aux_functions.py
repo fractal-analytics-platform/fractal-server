@@ -186,6 +186,38 @@ async def _check_workflow_exists(
         )
 
 
+async def _check_project_exists(
+    *,
+    project_name: str,
+    user_id: int,
+    db: AsyncSession,
+) -> None:
+    """
+    Check that no other project with this name exists for this user.
+
+    Args:
+        project_name: Project name
+        user_id: User ID
+        db:
+
+    Raises:
+        HTTPException(status_code=422_UNPROCESSABLE_ENTITY):
+            If such a project already exists
+    """
+    stm = (
+        select(Project)
+        .join(LinkUserProject)
+        .where(Project.name == project_name)
+        .where(LinkUserProject.user_id == user_id)
+    )
+    res = await db.execute(stm)
+    if res.scalars().all():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Project name ({project_name}) already in use",
+        )
+
+
 async def _get_dataset_check_owner(
     *,
     project_id: int,
