@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from devtools import debug
 
@@ -109,6 +111,19 @@ def test_settings_injection(override_settings):
             ),
             False,
         ),
+        # valid FRACTAL_SLURM_CONFIG_FILE variable
+        (
+            dict(
+                JWT_SECRET_KEY="secret",
+                FRACTAL_TASKS_DIR="/tmp",
+                DB_ENGINE="sqlite",
+                SQLITE_PATH="/tmp/test.db",
+                FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
+                FRACTAL_RUNNER_BACKEND="slurm",
+                FRACTAL_SLURM_CONFIG_FILE="__REPLACE_WITH_VALID_PATH__",
+            ),
+            True,
+        ),
         # missing FRACTAL_SLURM_CONFIG_FILE variable
         (
             dict(
@@ -160,8 +175,24 @@ def test_settings_injection(override_settings):
         ),
     ],
 )
-def test_settings_check(settings_dict: dict[str, str], raises: bool):
+def test_settings_check(
+    settings_dict: dict[str, str], raises: bool, testdata_path: Path
+):
+
+    # Workaround to set FRACTAL_SLURM_CONFIG_FILE to a valid path, which
+    # requires the value of testdata_path
+    if (
+        settings_dict.get("FRACTAL_SLURM_CONFIG_FILE")
+        == "__REPLACE_WITH_VALID_PATH__"
+    ):
+        settings_dict["FRACTAL_SLURM_CONFIG_FILE"] = str(
+            testdata_path / "slurm_config.json"
+        )
+
+    # Create a Settings instance
     settings = Settings(**settings_dict)
+
+    # Run Settings.check method
     if raises:
         with pytest.raises(FractalConfigurationError):
             settings.check()
