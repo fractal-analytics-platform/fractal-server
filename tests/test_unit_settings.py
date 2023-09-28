@@ -31,6 +31,8 @@ def test_settings_injection(override_settings):
                 JWT_SECRET_KEY="secret",
                 FRACTAL_TASKS_DIR="/tmp",
                 DB_ENGINE="postgres",
+                FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
+                FRACTAL_RUNNER_BACKEND="local",
             ),
             True,
         ),
@@ -51,6 +53,8 @@ def test_settings_injection(override_settings):
                 JWT_SECRET_KEY="secret",
                 FRACTAL_TASKS_DIR="/tmp",
                 DB_ENGINE="sqlite",
+                FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
+                FRACTAL_RUNNER_BACKEND="local",
             ),
             True,
         ),
@@ -77,7 +81,18 @@ def test_settings_injection(override_settings):
             ),
             True,
         ),
-        # missing FRACTAL_SLURM_CONFIG_FILE
+        (
+            dict(
+                JWT_SECRET_KEY="secret",
+                FRACTAL_TASKS_DIR="/tmp",
+                DB_ENGINE="sqlite",
+                FRACTAL_RUNNER_BACKEND="local",
+                SQLITE_PATH="/tmp/test.db",
+                FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
+            ),
+            False,
+        ),
+        # missing FRACTAL_SLURM_CONFIG_FILE variable
         (
             dict(
                 JWT_SECRET_KEY="secret",
@@ -89,7 +104,7 @@ def test_settings_injection(override_settings):
             ),
             True,
         ),
-        # not existing FRACTAL_SLURM_CONFIG_FILE (slurm)
+        # not existing FRACTAL_SLURM_CONFIG_FILE (with slurm backend)
         (
             dict(
                 JWT_SECRET_KEY="secret",
@@ -102,7 +117,7 @@ def test_settings_injection(override_settings):
             ),
             True,
         ),
-        # not existing FRACTAL_SLURM_CONFIG_FILE (local)
+        # not existing FRACTAL_SLURM_CONFIG_FILE (with local backend)
         (
             dict(
                 JWT_SECRET_KEY="secret",
@@ -113,6 +128,18 @@ def test_settings_injection(override_settings):
                 FRACTAL_SLURM_CONFIG_FILE="/not/existing/file.xyz",
             ),
             False,
+        ),
+        # not existing FRACTAL_LOCAL_CONFIG_FILE
+        (
+            dict(
+                JWT_SECRET_KEY="secret",
+                FRACTAL_TASKS_DIR="/tmp",
+                DB_ENGINE="sqlite",
+                SQLITE_PATH="/tmp/test.db",
+                FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
+                FRACTAL_LOCAL_CONFIG_FILE="/not/existing/file.xyz",
+            ),
+            True,
         ),
     ],
 )
