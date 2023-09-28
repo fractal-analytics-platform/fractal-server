@@ -290,5 +290,5 @@ def test_collect_oauth_clients(monkeypatch):
         )
         debug(settings.OAUTH_CLIENTS_CONFIG)
         assert len(settings.OAUTH_CLIENTS_CONFIG) == 2
-        assert settings.OAUTH_CLIENTS_CONFIG[0].CLIENT_NAME == "GITHUB"
-        assert settings.OAUTH_CLIENTS_CONFIG[1].CLIENT_NAME == "MYCLIENT"
+        names = set(c.CLIENT_NAME for c in settings.OAUTH_CLIENTS_CONFIG)
+        assert names == {"GITHUB", "MYCLIENT"}
