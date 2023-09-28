@@ -447,6 +447,9 @@ async def test_failed_collection_existing_db_tasks(
             ),
         )
         assert res.status_code == 422
+        debug(res.json())
+        assert "Task with source" in res.json()["detail"]
+        assert "already exists in the database" in res.json()["detail"]
 
 
 @pytest.mark.parametrize(
