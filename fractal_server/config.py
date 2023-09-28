@@ -71,7 +71,7 @@ class OAuthClientConfig(BaseModel):
     def check_configuration(cls, values):
         if values.get("CLIENT_NAME") not in ["GOOGLE", "GITHUB"]:
             if not values.get("OIDC_CONFIGURATION_ENDPOINT"):
-                raise ValueError(
+                raise FractalConfigurationError(
                     f"Missing OAUTH_{values.get('CLIENT_NAME')}"
                     "_OIDC_CONFIGURATION_ENDPOINT"
                 )
