@@ -84,7 +84,6 @@ def check_python_has_venv(python_path: str, temp_path: Path):
 def get_patched_settings(temp_path: Path):
     settings = Settings()
     settings.JWT_SECRET_KEY = "secret_key"
-    settings.DEPLOYMENT_TYPE = "development"
 
     settings.FRACTAL_DEFAULT_ADMIN_USERNAME = "admin"
 
@@ -166,34 +165,6 @@ def override_settings_factory():
     finally:
         if get_settings_orig:
             Inject.override(get_settings, get_settings_orig[0])
-
-
-@pytest.fixture
-def unset_deployment_type():
-    """
-    Temporarily override the seetings with a version that would fail
-    `settings.check()`
-
-    Afterwards, restore any previous injection, if any.
-    """
-    settings = Settings()
-    settings.DEPLOYMENT_TYPE = None
-
-    def _get_settings():
-        return settings
-
-    try:
-        previous = Inject.pop(get_settings)
-    except RuntimeError:
-        previous = None
-
-    Inject.override(get_settings, _get_settings)
-    try:
-        yield
-    finally:
-        Inject.pop(get_settings)
-        if previous:
-            Inject.override(get_settings, previous)
 
 
 @pytest.fixture
