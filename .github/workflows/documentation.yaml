@@ -26,7 +26,6 @@ jobs:
 
       - name: extract openapi schema
         env:
-          DEPLOYMENT_TYPE: development
           JWT_SECRET_KEY: 1234
           FRACTAL_TASKS_DIR: /tmp/fractal-server/tasks/
           FRACTAL_RUNNER_WORKING_BASE_DIR: /tmp/fractal-server/artifacts/
@@ -57,7 +56,6 @@ jobs:
 
       - name: extract openapi schema
         env:
-          DEPLOYMENT_TYPE: development
           JWT_SECRET_KEY: 1234
           FRACTAL_TASKS_DIR: /tmp/fractal-server/tasks/
           FRACTAL_RUNNER_WORKING_BASE_DIR: /tmp/fractal-server/artifacts/

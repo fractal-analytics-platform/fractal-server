@@ -26,7 +26,6 @@ def _prepare_config_and_db(_tmp_path: Path):
         f"DB_ENGINE={DB_ENGINE}",
         f"FRACTAL_TASKS_DIR={cwd}/FRACTAL_TASKS_DIR",
         f"FRACTAL_RUNNER_WORKING_BASE_DIR={cwd}/artifacts",
-        "DEPLOYMENT_TYPE=testing",
         "JWT_SECRET_KEY=secret",
         "FRACTAL_LOGGING_LEVEL=10",
     ]

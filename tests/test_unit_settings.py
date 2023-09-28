@@ -22,17 +22,14 @@ def test_settings_injection(override_settings):
 @pytest.mark.parametrize(
     ("settings", "raises"),
     [
-        # missing everything
-        (Settings(), True),
         # missing JWT_SECRET_KEY
-        (Settings(DEPLOYMENT_TYPE="testing"), True),
+        (Settings(), True),
         # missing FRACTAL_TASKS_DIR
-        (Settings(DEPLOYMENT_TYPE="testing", JWT_SECRET_KEY="secret"), True),
+        (Settings(JWT_SECRET_KEY="secret"), True),
         # check_db
         # missing POSTGRES_DB
         (
             Settings(
-                DEPLOYMENT_TYPE="testing",
                 JWT_SECRET_KEY="secret",
                 FRACTAL_TASKS_DIR="/tmp",
                 DB_ENGINE="postgres",
@@ -41,7 +38,6 @@ def test_settings_injection(override_settings):
         ),
         (
             Settings(
-                DEPLOYMENT_TYPE="testing",
                 JWT_SECRET_KEY="secret",
                 FRACTAL_TASKS_DIR="/tmp",
                 DB_ENGINE="postgres",
@@ -54,7 +50,6 @@ def test_settings_injection(override_settings):
         # missing SQLITE_PATH
         (
             Settings(
-                DEPLOYMENT_TYPE="testing",
                 JWT_SECRET_KEY="secret",
                 FRACTAL_TASKS_DIR="/tmp",
                 DB_ENGINE="sqlite",
@@ -63,7 +58,6 @@ def test_settings_injection(override_settings):
         ),
         (
             Settings(
-                DEPLOYMENT_TYPE="testing",
                 JWT_SECRET_KEY="secret",
                 FRACTAL_TASKS_DIR="/tmp",
                 DB_ENGINE="sqlite",
@@ -77,7 +71,6 @@ def test_settings_injection(override_settings):
         # missing FRACTAL_RUNNER_WORKING_BASE_DIR
         (
             Settings(
-                DEPLOYMENT_TYPE="testing",
                 JWT_SECRET_KEY="secret",
                 FRACTAL_TASKS_DIR="/tmp",
                 DB_ENGINE="sqlite",
@@ -89,7 +82,6 @@ def test_settings_injection(override_settings):
         # missing FRACTAL_SLURM_CONFIG_FILE
         (
             Settings(
-                DEPLOYMENT_TYPE="testing",
                 JWT_SECRET_KEY="secret",
                 FRACTAL_TASKS_DIR="/tmp",
                 DB_ENGINE="sqlite",
@@ -102,7 +94,6 @@ def test_settings_injection(override_settings):
         # not existing FRACTAL_SLURM_CONFIG_FILE (slurm)
         (
             Settings(
-                DEPLOYMENT_TYPE="testing",
                 JWT_SECRET_KEY="secret",
                 FRACTAL_TASKS_DIR="/tmp",
                 DB_ENGINE="sqlite",
@@ -116,7 +107,6 @@ def test_settings_injection(override_settings):
         # not existing FRACTAL_SLURM_CONFIG_FILE (local)
         (
             Settings(
-                DEPLOYMENT_TYPE="testing",
                 JWT_SECRET_KEY="secret",
                 FRACTAL_TASKS_DIR="/tmp",
                 DB_ENGINE="sqlite",
@@ -142,7 +132,6 @@ def test_FractalConfigurationError():
     """
 
     settings = Settings(
-        DEPLOYMENT_TYPE="development",
         JWT_SECRET_KEY="secret",
         SQLITE_PATH="path",
         FRACTAL_TASKS_DIR=Path("/tmp"),
