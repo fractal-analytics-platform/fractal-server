@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fractal-server"
-version = "1.3.8a0"
+version = "1.3.8a1"
 description = "Server component of the Fractal analytics platform"
 authors = [
     "Jacopo Nespolo <jacopo.nespolo@exact-lab.it>",
@@ -58,7 +58,7 @@ pyyaml="^6.0.1"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs = "1.5.2"
-mkdocstrings = { extras = ["python"], version = "0.22.0" }
+mkdocstrings = { extras = ["python"], version = "1.3.8a1" }
 mkdocs-material = "9.1.21"
 mkdocs-gen-files = "0.4.0"
 mkdocs-literate-nav = "0.5.0"
@@ -79,7 +79,7 @@ filterwarnings = [
 ]
 
 [tool.bumpver]
-current_version = "1.3.8a0"
+current_version = "1.3.8a1"
 version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true
