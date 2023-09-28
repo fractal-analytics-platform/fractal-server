@@ -117,23 +117,6 @@ class Settings(BaseSettings):
     Cookie token lifetime, in seconds.
     """
 
-    @validator("FRACTAL_TASKS_DIR", always=True)
-    def make_FRACTAL_TASKS_DIR_absolute(cls, v):
-        """
-        If `FRACTAL_TASKS_DIR` is a non-absolute path, make it absolute (based
-        on the current working directory).
-        """
-        if v is None:
-            return None
-        FRACTAL_TASKS_DIR_path = Path(v)
-        if not FRACTAL_TASKS_DIR_path.is_absolute():
-            FRACTAL_TASKS_DIR_path = FRACTAL_TASKS_DIR_path.resolve()
-            logging.warning(
-                f'FRACTAL_TASKS_DIR="{v}" is not an absolute path; '
-                f'converting it to "{str(FRACTAL_TASKS_DIR_path)}"'
-            )
-        return FRACTAL_TASKS_DIR_path
-
     @root_validator(pre=True)
     def collect_oauth_clients(cls, values):
         """
@@ -278,6 +261,23 @@ class Settings(BaseSettings):
     Directory under which all the tasks will be saved (either an absolute path
     or a path relative to current working directory).
     """
+
+    @validator("FRACTAL_TASKS_DIR", always=True)
+    def make_FRACTAL_TASKS_DIR_absolute(cls, v):
+        """
+        If `FRACTAL_TASKS_DIR` is a non-absolute path, make it absolute (based
+        on the current working directory).
+        """
+        if v is None:
+            return None
+        FRACTAL_TASKS_DIR_path = Path(v)
+        if not FRACTAL_TASKS_DIR_path.is_absolute():
+            FRACTAL_TASKS_DIR_path = FRACTAL_TASKS_DIR_path.resolve()
+            logging.warning(
+                f'FRACTAL_TASKS_DIR="{v}" is not an absolute path; '
+                f'converting it to "{str(FRACTAL_TASKS_DIR_path)}"'
+            )
+        return FRACTAL_TASKS_DIR_path
 
     FRACTAL_RUNNER_BACKEND: Literal["local", "slurm"] = "local"
     """
