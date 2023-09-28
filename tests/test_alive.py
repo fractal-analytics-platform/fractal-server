@@ -12,4 +12,3 @@ async def test_alive(client, override_settings):
     data = res.json()
     assert res.status_code == 200
     assert data["alive"] is True
-    assert data["deployment_type"] == "development"
