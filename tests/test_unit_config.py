@@ -111,7 +111,8 @@ def test_settings_injection(override_settings):
             ),
             False,
         ),
-        # valid FRACTAL_SLURM_CONFIG_FILE variable
+        # valid FRACTAL_SLURM_CONFIG_FILE variable, but missing sbatch/squeue
+        # commands
         (
             dict(
                 JWT_SECRET_KEY="secret",
