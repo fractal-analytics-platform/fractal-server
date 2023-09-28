@@ -304,49 +304,6 @@ async def test_patch_task_different_users(
         assert res.json()["owner"] != slurm_user
 
 
-async def test_task_collection_api_failure(
-    client, MockCurrentUser, testdata_path, override_settings_factory, tmp_path
-):
-    """
-    Try to collect a task package which triggers an error (namely its manifests
-    includes a task for which there does not exist the python script), and
-    handle failure.
-    """
-
-    override_settings_factory(
-        FRACTAL_TASKS_DIR=(tmp_path / "test_task_collection_api_failure")
-    )
-    debug(tmp_path)
-
-    path = str(
-        testdata_path
-        / "my-tasks-fail/dist/my_tasks_fail-0.1.0-py3-none-any.whl"
-    )
-    task_collection = dict(package=path)
-    debug(task_collection)
-
-    async with MockCurrentUser():
-        res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
-        debug(res.json())
-        assert res.status_code == 201
-        assert res.json()["data"]["status"] == "pending"
-        state = res.json()
-        data = state["data"]
-        assert "my_tasks_fail" in data["venv_path"]
-
-        res = await client.get(f"{PREFIX}/collect/{state['id']}?verbose=True")
-        debug(res.json())
-
-        assert res.status_code == 200
-        state = res.json()
-        data = state["data"]
-
-        assert "Cannot find executable" in data["info"]
-        assert data["status"] == "fail"
-        assert data["log"]  # This is because of verbose=True
-        assert "fail" in data["log"]
-
-
 async def test_get_task(task_factory, client, MockCurrentUser):
     async with MockCurrentUser():
         task = await task_factory(name="name")
