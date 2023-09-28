@@ -14,6 +14,7 @@
 * Package and repository:
     * Change `fractal_server.common` from being a git-submodule to being a regular folder (\#859).
     * Pin documentation dependencies (\#865).
+    * Split `app/models/project.py` into two modules for dataset and project (\#871).
 
 # 1.3.7
 
