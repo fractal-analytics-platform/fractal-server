@@ -1,5 +1,6 @@
 import logging
 import os
+import shutil
 import time
 from pathlib import Path
 from shutil import which as shutil_which
@@ -532,3 +533,59 @@ async def test_background_collection_with_json_schemas(
         # Check that docs_info and docs_link are correct
         assert task.docs_info in ["", "This is a parallel task"]
         assert task.docs_link in [None, "http://www.example.org"]
+
+
+async def test_issue_866(
+    client,
+    MockCurrentUser,
+    dummy_task_package,
+    override_settings_factory,
+    tmp_path,
+):
+    """
+    Catch issue 866:
+
+    * collect tasks
+    * remove venv folders
+    * collect tasks again
+    """
+
+    _FRACTAL_TASKS_DIR = (
+        tmp_path / "test_collection_api_local_package_with_extras"
+    )
+    override_settings_factory(FRACTAL_TASKS_DIR=_FRACTAL_TASKS_DIR)
+
+    async with MockCurrentUser():
+
+        # First task collection
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=dict(
+                package=dummy_task_package.as_posix(),
+                package_extras="my_extra",
+            ),
+        )
+        collection_state_id = res.json()["id"]
+        venv_path = res.json()["data"]["venv_path"]
+        debug(collection_state_id)
+        debug(venv_path)
+        assert res.status_code == 201
+
+        # Check that task collection is complete
+        res = await client.get(f"{PREFIX}/collect/{collection_state_id}")
+        assert res.status_code == 200
+        debug(res.json())
+        assert res.json()["data"]["status"] == "OK"
+
+        # Remove task folder from disk
+        shutil.rmtree(_FRACTAL_TASKS_DIR / venv_path)
+
+        # Second task collection
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=dict(
+                package=dummy_task_package.as_posix(),
+                package_extras="my_extra",
+            ),
+        )
+        assert res.status_code == 422
