@@ -6,16 +6,17 @@
     * Add aggregation logic for parallel-task updated metadata (\#852);
     * Make updated-metadata collection robust for missing files (\#852, \#863).
 * Database interface:
-    * Move validation of DB-related configuration into new method `Settings.check_db` (\#855);
-    * Call `check_db` method during inline/offline migrations (\#855);
-    * Revamp documentation on database interface and on the corresponding configuration variables (\#855).
 * API:
     * Prevent user from bypassing workflow-name constraint via the PATCH endpoint (\#867).
     * Add `_check_project_exists` helper function (\#872).
-* Package and repository:
+* Configuration variables:
+    * Move validation of DB-related configuration into new method `Settings.check_db` (\#855);
+    * Call `check_db` method during inline/offline migrations (\#855);
+* Package, repository, documentation:
     * Change `fractal_server.common` from being a git-submodule to being a regular folder (\#859).
     * Pin documentation dependencies (\#865).
     * Split `app/models/project.py` into two modules for dataset and project (\#871).
+    * Revamp documentation on database interface and on the corresponding configuration variables (\#855).
 
 # 1.3.7
 
