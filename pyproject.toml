@@ -21,7 +21,7 @@ python-dotenv = "^0.20.0"
 fastapi = "^0.103.0"
 sqlmodel = "^0.0.8"
 aiosqlite = "^0.17.0"
-fastapi-users = {extras = ["oauth"], version = "^10.1"}
+fastapi-users = {extras = ["oauth"], version = "^12.1.0"}
 alembic = "^1.9.1"
 uvicorn = "^0.20.0"
 sqlalchemy = "^1.4"

@@ -664,29 +664,29 @@ all = ["email-validator (>=2.0.0)", "httpx (>=0.23.0)", "itsdangerous (>=1.1.0)"
 
 [[package]]
 name = "fastapi-users"
-version = "10.4.2"
+version = "12.1.2"
 description = "Ready-to-use and customizable users management for FastAPI"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "fastapi_users-10.4.2-py3-none-any.whl", hash = "sha256:ce33b3f3f5d765c132e79b20755d05d85e7c2e10dbd23b46ffeb2bb74de2ca82"},
-    {file = "fastapi_users-10.4.2.tar.gz", hash = "sha256:875d43e9c65902f652b939c9d4c95dbb586f01417cfee355ad47989d4dc44cf3"},
+    {file = "fastapi_users-12.1.2-py3-none-any.whl", hash = "sha256:768e3b17b9b89b5f5d3c303afefd69874da0fc97ebac16a86167d4c8d414d479"},
+    {file = "fastapi_users-12.1.2.tar.gz", hash = "sha256:9a9b44e0917c483aaba2bf80ea488b4ba6475b0fb24e2abfaf21e0b5c5db59bf"},
 ]
 
 [package.dependencies]
-email-validator = ">=1.1.0,<1.4"
+email-validator = ">=1.1.0,<2.1"
 fastapi = ">=0.65.2"
-httpx-oauth = {version = ">=0.4,<0.12", optional = true, markers = "extra == \"oauth\""}
+httpx-oauth = {version = ">=0.13", optional = true, markers = "extra == \"oauth\""}
 makefun = ">=1.11.2,<2.0.0"
 passlib = {version = "1.7.4", extras = ["bcrypt"]}
-pyjwt = {version = "2.6.0", extras = ["crypto"]}
+pyjwt = {version = "2.8.0", extras = ["crypto"]}
 python-multipart = "0.0.6"
 
 [package.extras]
-beanie = ["fastapi-users-db-beanie (>=1.0.0)"]
-oauth = ["httpx-oauth (>=0.4,<0.12)"]
-redis = ["redis (>=4.3.3,<5.0.0)"]
-sqlalchemy = ["fastapi-users-db-sqlalchemy (>=4.0.0)"]
+beanie = ["fastapi-users-db-beanie (>=3.0.0)"]
+oauth = ["httpx-oauth (>=0.13)"]
+redis = ["redis (>=4.3.3,<6.0.0)"]
+sqlalchemy = ["fastapi-users-db-sqlalchemy (>=6.0.0)"]
 
 [[package]]
 name = "filelock"
@@ -884,17 +884,17 @@ socks = ["socksio (==1.*)"]
 
 [[package]]
 name = "httpx-oauth"
-version = "0.11.2"
+version = "0.13.0"
 description = "Async OAuth client using HTTPX"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "httpx_oauth-0.11.2-py3-none-any.whl", hash = "sha256:11a2c79111e61a7bd70624606ad6a3013b6756ce4817dd5d5b44f70bacb45940"},
-    {file = "httpx_oauth-0.11.2.tar.gz", hash = "sha256:690e4d0a03b1974b9e600436a6d7a8c064e0707a3d86a41a12153cc797244ac6"},
+    {file = "httpx_oauth-0.13.0-py3-none-any.whl", hash = "sha256:245f04bc8340da4184d26ec0d589e35e7e8f5af6157f30b6e012c0896f80f875"},
+    {file = "httpx_oauth-0.13.0.tar.gz", hash = "sha256:ed7359053ac1b1652adbb18b074b6709bcee54e28fb76dd8062c408cfc4589c3"},
 ]
 
 [package.dependencies]
-httpx = ">=0.18,<0.24"
+httpx = ">=0.18,<0.25"
 
 [[package]]
 name = "identify"
@@ -1582,13 +1582,13 @@ plugins = ["importlib-metadata"]
 
 [[package]]
 name = "pyjwt"
-version = "2.6.0"
+version = "2.8.0"
 description = "JSON Web Token implementation in Python"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "PyJWT-2.6.0-py3-none-any.whl", hash = "sha256:d83c3d892a77bbb74d3e1a2cfa90afaadb60945205d1095d9221f04466f64c14"},
-    {file = "PyJWT-2.6.0.tar.gz", hash = "sha256:69285c7e31fc44f68a1feb309e948e0df53259d579295e6cfe2b1792329f05fd"},
+    {file = "PyJWT-2.8.0-py3-none-any.whl", hash = "sha256:59127c392cc44c2da5bb3192169a91f429924e17aff6534d70fdc02ab3e04320"},
+    {file = "PyJWT-2.8.0.tar.gz", hash = "sha256:57e28d156e3d5c10088e0c68abb90bfac3df82b40a71bd0daa20c65ccd5c23de"},
 ]
 
 [package.dependencies]
@@ -2304,4 +2304,4 @@ slurm = ["cloudpickle", "clusterfutures"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "fbdc3359c79503add8c0b60e01f398a83b5332e2d4bcbf61d1f59aeaa66b6a5d"
+content-hash = "87c5b2df5c9e7da207e0b21ed22611b8d71d3105a632340c1a80834127b19e36"
