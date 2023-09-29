@@ -21,6 +21,7 @@
     * Pin documentation dependencies (\#865).
     * Split `app/models/project.py` into two modules for dataset and project (\#871).
     * Revamp documentation on database interface and on the corresponding configuration variables (\#855).
+    * Update `fastapi` and `fastapi-users` to versions `^0.95.0` and `^12.1.0` respectively (\#877).
 
 # 1.3.7
 
