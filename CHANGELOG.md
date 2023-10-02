@@ -1,5 +1,8 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Update `fastapi` and `fastapi-users` to versions `^0.103.0` and `^12.1.0` respectively (\#877).
 
 # 1.3.9
 

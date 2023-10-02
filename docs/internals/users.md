@@ -1,6 +1,6 @@
 # Fractal Users
 
-Fractal Server's user model and authentication/authorization systems are powered by the [FastAPI Users](https://fastapi-users.github.io/fastapi-users) library, and most of the components described below can be identified in the corresponding [overview](https://fastapi-users.github.io/fastapi-users/latest/configuration/overview).
+Fractal Server's user model and authentication/authorization systems are powered by the [FastAPI Users](https://fastapi-users.github.io/fastapi-users/12.1/) library, and most of the components described below can be identified in the corresponding [overview](https://fastapi-users.github.io/fastapi-users/12.1/configuration/overview).
 
 ## User Model
 <a name="user-model"></a>
@@ -49,13 +49,13 @@ An _authentication backend_ is composed of two parts:
 - the <ins>transport</ins>, that manages how the token will be carried over the request,
 - the <ins>strategy</ins>, which manages how the token is generated and secured.
 
-Fractal Server provides two authentication backends (Bearer and Cookie), both based the [JWT](https://fastapi-users.github.io/fastapi-users/10.1/configuration/authentication/strategies/jwt/) strategy. Each backend produces both [`/auth/login`](https://fastapi-users.github.io/fastapi-users/12.1/usage/routes/#post-login) and [`/auth/logout`](https://fastapi-users.github.io/fastapi-users/12.1/usage/routes/#post-logout) routes.
+Fractal Server provides two authentication backends (Bearer and Cookie), both based the [JWT](https://fastapi-users.github.io/fastapi-users/12.1/configuration/authentication/strategies/jwt/) strategy. Each backend produces both [`/auth/login`](https://fastapi-users.github.io/fastapi-users/12.1/usage/routes/#post-login) and [`/auth/logout`](https://fastapi-users.github.io/fastapi-users/12.1/usage/routes/#post-logout) routes.
 
 > FastAPI Users provides the `logout` endpoint by default, but this is not relevant in `fractal-server` since we do not store tokens in the database.
 
 #### Bearer
 
-The [Bearer](https://fastapi-users.github.io/fastapi-users/10.1/configuration/authentication/transports/bearer/) transport backend provides login at `/auth/token/login`
+The [Bearer](https://fastapi-users.github.io/fastapi-users/12.1/configuration/authentication/transports/bearer/) transport backend provides login at `/auth/token/login`
 ```console
 $ curl \
     -X POST \
@@ -71,7 +71,7 @@ $ curl \
 
 #### Cookie
 
-The [Cookie](https://fastapi-users.github.io/fastapi-users/10.1/configuration/authentication/transports/cookie/) transport backend provides login at `/auth/login`
+The [Cookie](https://fastapi-users.github.io/fastapi-users/12.1/configuration/authentication/transports/cookie/) transport backend provides login at `/auth/login`
 
 ```console
 $ curl \
@@ -272,7 +272,7 @@ The three cases are described more in detail below.
 ### User attributes
 
 Some endpoints require the user to have a specific attribute.
-This is implemented through a FastAPI dependencies, e.g. using [fastapi_users.current_user](https://fastapi-users.github.io/fastapi-users/10.0/usage/current-user/#current_user):
+This is implemented through a FastAPI dependencies, e.g. using [fastapi_users.current_user](https://fastapi-users.github.io/fastapi-users/12.1/usage/current-user/#current_user):
 ```python
 current_active_user = fastapi_users.current_user(active=True)
 
