@@ -291,6 +291,11 @@ def call_single_task(
         )
         diff_metadata = {}
 
+    # Cover the case where the task wrote `null`, rather than a valid
+    # dictionary (ref fractal-server issue #878).
+    if diff_metadata is None:
+        diff_metadata = {}
+
     updated_metadata = task_pars.metadata.copy()
     updated_metadata.update(diff_metadata)
 
@@ -507,6 +512,11 @@ def call_parallel_task(
         for metadiff_path in map_iter:
             with open(metadiff_path, "r") as f:
                 this_meta_update = json.load(f)
+                # Cover the case where the task wrote `null`, rather than a
+                # valid dictionary (ref fractal-server issue #878).
+                if this_meta_update is None:
+                    this_meta_update = {}
+                # Include this_meta_update into aggregated_metadata_update
                 for key, val in this_meta_update.items():
                     aggregated_metadata_update.setdefault(key, []).append(val)
         if aggregated_metadata_update:
