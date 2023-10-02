@@ -11,9 +11,10 @@ from fastapi import HTTPException
 from fastapi import status
 from fastapi.responses import StreamingResponse
 from sqlmodel import select
+from typing_extensions import Annotated
 
 from ....config import get_settings
-from ....syringe import Inject
+from ....config import Settings
 from ...db import AsyncSession
 from ...db import get_db
 from ...models import ApplyWorkflow
@@ -137,6 +138,7 @@ async def get_job_list(
 async def stop_job(
     project_id: int,
     job_id: int,
+    settings: Annotated[Settings, Depends(get_settings)],
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[ApplyWorkflow]:
@@ -145,7 +147,7 @@ async def stop_job(
     """
 
     # This endpoint is only implemented for SLURM backend
-    settings = Inject(get_settings)
+
     backend = settings.FRACTAL_RUNNER_BACKEND
     if backend != "slurm":
         raise HTTPException(

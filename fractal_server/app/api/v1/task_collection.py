@@ -12,11 +12,12 @@ from fastapi import Response
 from fastapi import status
 from pydantic.error_wrappers import ValidationError
 from sqlmodel import select
+from typing_extensions import Annotated
 
 from ....config import get_settings
+from ....config import Settings
 from ....logger import close_logger
 from ....logger import set_logger
-from ....syringe import Inject
 from ....tasks.collection import _TaskCollectPip
 from ....tasks.collection import create_package_dir_pip
 from ....tasks.collection import create_package_environment_pip
@@ -172,6 +173,7 @@ async def collect_tasks_pip(
     task_collect: TaskCollectPip,
     background_tasks: BackgroundTasks,
     response: Response,
+    settings: Annotated[Settings, Depends(get_settings)],
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> StateRead:  # State[TaskCollectStatus]
@@ -255,7 +257,6 @@ async def collect_tasks_pip(
         response.status_code == status.HTTP_200_OK
         await db.close()
         return state
-    settings = Inject(get_settings)
 
     # Check that tasks are not already in the DB
     for new_task in task_pkg.package_manifest.task_list:

@@ -8,11 +8,12 @@ from fastapi import Response
 from fastapi import status
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
+from typing_extensions import Annotated
 
 from ....config import get_settings
+from ....config import Settings
 from ....logger import close_logger
 from ....logger import set_logger
-from ....syringe import Inject
 from ...db import AsyncSession
 from ...db import DBSyncSession
 from ...db import get_db
@@ -168,6 +169,7 @@ async def apply_workflow(
     background_tasks: BackgroundTasks,
     input_dataset_id: int,
     output_dataset_id: int,
+    settings: Annotated[Settings, Depends(get_settings)],
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
     db_sync: DBSyncSession = Depends(
@@ -229,7 +231,7 @@ async def apply_workflow(
         )
 
     # If backend is SLURM, check that the user has required attributes
-    settings = Inject(get_settings)
+
     backend = settings.FRACTAL_RUNNER_BACKEND
     if backend == "slurm":
         if not user.slurm_user:

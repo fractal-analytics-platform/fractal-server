@@ -24,7 +24,6 @@ from typing import Optional
 from ... import __VERSION__
 from ...config import get_settings
 from ...logger import set_logger
-from ...syringe import Inject
 from ...utils import get_timestamp
 from ..db import DB
 from ..models import ApplyWorkflow
@@ -54,7 +53,7 @@ except ModuleNotFoundError as e:
 
 
 def get_process_workflow():
-    settings = Inject(get_settings)
+    settings = get_settings()
     try:
         process_workflow = _backends[settings.FRACTAL_RUNNER_BACKEND]
     except KeyError:
@@ -139,7 +138,7 @@ async def submit_workflow(
             return
 
         # Select backend
-        settings = Inject(get_settings)
+        settings = get_settings()
         FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
         process_workflow = get_process_workflow()
 
