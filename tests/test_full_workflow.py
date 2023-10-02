@@ -785,6 +785,13 @@ async def test_metadiff(
             command=command_null,
             input_type="Any",
             output_type="Any",
+        )
+        task3 = await task_factory(
+            name="task3",
+            source="task3",
+            command=command_null,
+            input_type="Any",
+            output_type="Any",
             meta=dict(parallelization_level="index"),
         )
 
@@ -792,7 +799,7 @@ async def test_metadiff(
         workflow = await workflow_factory(
             name="test_wf", project_id=project.id
         )
-        for task in (task0, task1, task2):
+        for task in (task0, task1, task2, task3):
             res = await client.post(
                 f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
                 f"?task_id={task.id}",
@@ -844,14 +851,18 @@ async def test_metadiff(
             "1_par_B.args.json",
             "1_par_B.err",
             "1_par_B.out",
-            "2_par_A.args.json",
-            "2_par_A.err",
-            "2_par_A.out",
-            "2_par_B.args.json",
-            "2_par_B.err",
-            "2_par_B.out",
-            "2_par_A.metadiff.json",
-            "2_par_B.metadiff.json",
+            "2.args.json",
+            "2.err",
+            "2.out",
+            "2.metadiff.json",
+            "3_par_A.args.json",
+            "3_par_A.err",
+            "3_par_A.out",
+            "3_par_B.args.json",
+            "3_par_B.err",
+            "3_par_B.out",
+            "3_par_A.metadiff.json",
+            "3_par_B.metadiff.json",
             "workflow.log",
         ]
         for f in must_exist:
