@@ -1,4 +1,4 @@
-name: Publish on TestPyPI
+name: Publish package to PyPI
 on:
   push:
     tags:
@@ -28,10 +28,7 @@ jobs:
         run: pipx install poetry==1.5
 
       - name: Build package
-        run: poetry build --verbose
+        run: poetry build
 
-      - name: Publish to TestPyPI
-        env:
-          POETRY_PUBLISH_USERNAME: "__token__"
-          POETRY_PUBLISH_PASSWORD: ${{ secrets.PYPI_TOKEN}}
-        run: poetry publish --repository testpypi --username ${{ env.POETRY_PUBLISH_USERNAME }} --password ${{ env.POETRY_PUBLISH_PASSWORD }}
+      - name: Publish package to PyPI
+        run: poetry publish --username "__token__" --password ${{ secrets.PYPI_TOKEN}}
