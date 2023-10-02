@@ -13,6 +13,7 @@
 # Zurich.
 import logging
 import shutil
+from functools import lru_cache
 from os import environ
 from os import getenv
 from os.path import abspath
@@ -21,7 +22,6 @@ from typing import Literal
 from typing import Optional
 from typing import TypeVar
 
-from dotenv import load_dotenv
 from pydantic import BaseModel
 from pydantic import BaseSettings
 from pydantic import Field
@@ -37,9 +37,6 @@ class FractalConfigurationError(RuntimeError):
 
 
 T = TypeVar("T")
-
-
-load_dotenv(".fractal_server.env")
 
 
 class OAuthClientConfig(BaseModel):
@@ -87,6 +84,7 @@ class Settings(BaseSettings):
 
     class Config:
         case_sensitive = True
+        env_file = ".fractal_server.env"
 
     PROJECT_NAME: str = "Fractal Server"
     PROJECT_VERSION: str = fractal_server.__VERSION__
@@ -426,5 +424,7 @@ class Settings(BaseSettings):
         self.check_runner()
 
 
-def get_settings(settings=Settings()) -> Settings:
-    return settings
+# https://fastapi.tiangolo.com/advanced/settings/#creating-the-settings-only-once-with-lru_cache
+@lru_cache()
+def get_settings() -> Settings:
+    return Settings()
