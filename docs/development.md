@@ -106,16 +106,9 @@ to test updating the version bump.
 2. If the previous step looks good, remove `--dry` and re-run to actually bump the
 version and commit the changes locally.
 
-3. Test the build with:
-```
-poetry build
-```
-4. Finally, publish the updated package to PyPI with:
-```
-poetry publish --dry-run
-```
-replacing ``--dry-run`` with ``--username YOUR_USERNAME --password
-YOUR_PASSWORD`` when you made sure that everything looks good.
+This is it. Upon pushing a tag which matches some filters, a dedicated GitHub
+action will build the new package and publish to PyPI.
+
 
 
 ## Run tests
