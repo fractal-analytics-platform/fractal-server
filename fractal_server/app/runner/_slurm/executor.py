@@ -30,7 +30,6 @@ from cfut.util import random_string
 
 from ....config import get_settings
 from ....logger import set_logger
-from ....syringe import Inject
 from .._common import get_task_file_paths
 from .._common import SHUTDOWN_FILENAME
 from .._common import TaskFiles
@@ -220,7 +219,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         # Set the attribute slurm_poll_interval for self.wait_thread (see
         # cfut.SlurmWaitThread)
         if not slurm_poll_interval:
-            settings = Inject(get_settings)
+            settings = get_settings()
             slurm_poll_interval = settings.FRACTAL_SLURM_POLL_INTERVAL
         self.wait_thread.slurm_poll_interval = slurm_poll_interval
         self.wait_thread.slurm_user = self.slurm_user
@@ -646,7 +645,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                 ID of the SLURM job.
         """
         # Wait FRACTAL_SLURM_KILLWAIT_INTERVAL seconds
-        settings = Inject(get_settings)
+        settings = get_settings()
         settings.FRACTAL_SLURM_KILLWAIT_INTERVAL
         time.sleep(settings.FRACTAL_SLURM_KILLWAIT_INTERVAL)
         # Extract SLURM file paths
@@ -731,7 +730,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                 # filesystem operation; wait some time before considering it as
                 # missing
                 if not out_path.exists():
-                    settings = Inject(get_settings)
+                    settings = get_settings()
                     time.sleep(settings.FRACTAL_SLURM_OUTPUT_FILE_GRACE_TIME)
                 if not out_path.exists():
                     # Output pickle file is missing
@@ -931,7 +930,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         """
 
         # Prepare commands to be included in SLURM submission script
-        settings = Inject(get_settings)
+        settings = get_settings()
         python_worker_interpreter = (
             settings.FRACTAL_SLURM_WORKER_PYTHON or sys.executable
         )

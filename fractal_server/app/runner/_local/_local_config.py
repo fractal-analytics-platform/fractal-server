@@ -20,7 +20,6 @@ from pydantic import Extra
 from pydantic.error_wrappers import ValidationError
 
 from ....config import get_settings
-from ....syringe import Inject
 from ...models import WorkflowTask
 
 
@@ -87,7 +86,7 @@ def get_local_backend_config(
         parallel_tasks_per_job = wftask.meta[key]
     else:
         if not config_path:
-            settings = Inject(get_settings)
+            settings = get_settings()
             config_path = settings.FRACTAL_LOCAL_CONFIG_FILE
         if config_path is None:
             parallel_tasks_per_job = default

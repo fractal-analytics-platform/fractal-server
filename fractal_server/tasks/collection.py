@@ -32,7 +32,6 @@ from ..app.schemas import TaskCollectStatus
 from ..app.schemas import TaskCreate
 from ..config import get_settings
 from ..logger import get_logger
-from ..syringe import Inject
 from ..utils import execute_command
 
 
@@ -82,7 +81,7 @@ def get_absolute_venv_path(venv_path: Path) -> Path:
     if venv_path.is_absolute():
         package_path = venv_path
     else:
-        settings = Inject(get_settings)
+        settings = get_settings()
         package_path = settings.FRACTAL_TASKS_DIR / venv_path  # type: ignore
     return package_path
 
@@ -206,7 +205,7 @@ def create_package_dir_pip(
     """
     Create venv folder for a task package and return corresponding Path object
     """
-    settings = Inject(get_settings)
+    settings = get_settings()
     user = FRACTAL_PUBLIC_TASK_SUBDIR
     if task_pkg.package_version is None:
         raise ValueError(

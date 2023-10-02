@@ -21,7 +21,6 @@ from typing import Optional
 from typing import Union
 
 from .config import get_settings
-from .syringe import Inject
 
 
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -97,7 +96,7 @@ def set_logger(
 
     if not current_stream_handlers:
         stream_handler = logging.StreamHandler()
-        settings = Inject(get_settings)
+        settings = get_settings()
         stream_handler.setLevel(settings.FRACTAL_LOGGING_LEVEL)
         stream_handler.setFormatter(LOG_FORMATTER)
         logger.addHandler(stream_handler)
