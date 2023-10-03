@@ -638,8 +638,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         Note: this function should be called after values in
         `self.map_jobid_to_slurm_files` have been updated, so that they point
-        to `self.working_dir` files which are readable for the user running
-        fractal-server.  by the server
+        to `self.working_dir` files which are readable from `fractal-server`.
 
         Arguments:
             jobid:
