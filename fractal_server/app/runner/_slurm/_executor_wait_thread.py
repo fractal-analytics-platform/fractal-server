@@ -60,7 +60,7 @@ class FractalFileWaitThread(FileWaitThread):
         with self.lock:
             self.waiting[filenames] = jobid
 
-    def check_shutdown(self, i):
+    def check(self, i):
         """
         Do one shutdown-file-existence check.
 
@@ -96,7 +96,7 @@ class FractalFileWaitThread(FileWaitThread):
                 self.shutdown_callback()
                 return
             with self.lock:
-                self.check_shutdown(i)
+                self.check(i)
             time.sleep(self.interval)
 
 
