@@ -20,10 +20,10 @@ class FractalFileWaitThread(FileWaitThread):
 
     1. Each jobid in the waiting list is associated to a tuple of filenames,
        rather than a single one.
-    2. In the `check`, we skip checking for output-file existence (which would
-       require a `sudo -u user ls` call), and only check for the existence of
-       the shutdown file. All the logic to check whether a job is complete is
-       deferred to the `cfut.slurm.jobs_finished` function.
+    2. In the `check` method, we avoid output-file existence checks (which
+       would require `sudo -u user ls` calls), and we rather check for the
+       existence of the shutdown file. All the logic to check whether a job is
+       complete is deferred to the `cfut.slurm.jobs_finished` function.
     3. There are additional attributes (`slurm_user`, `shutdown_file` and
        `shutdown_callback`).
 
