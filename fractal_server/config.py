@@ -322,8 +322,7 @@ class Settings(BaseSettings):
     """
     Interval to wait (in seconds) before checking whether unfinished job are
     still running on SLURM (see `SlurmWaitThread` in
-    [`clusterfutures`]
-    (https://github.com/sampsyo/clusterfutures/blob/master/cfut/__init__.py)).
+    [`clusterfutures`](https://github.com/sampsyo/clusterfutures/blob/master/cfut/__init__.py)).
     """
 
     FRACTAL_SLURM_KILLWAIT_INTERVAL: Optional[int] = 45
