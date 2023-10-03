@@ -325,14 +325,6 @@ class Settings(BaseSettings):
     [`clusterfutures`](https://github.com/sampsyo/clusterfutures/blob/master/cfut/__init__.py)).
     """
 
-    FRACTAL_SLURM_KILLWAIT_INTERVAL: int = 45
-    """
-    Interval to wait (in seconds) when the execution of a SLURM-backend job
-    failed, before raising a `JobExecutionError`. Must be larger than [SLURM
-    `KillWait` timer](https://slurm.schedmd.com/slurm.conf.html#OPT_KillWait),
-    to make sure that stdout/stderr files have been written).
-    """
-
     FRACTAL_SLURM_OUTPUT_FILE_GRACE_TIME: int = 5
     """
     Interval to wait (in seconds) when the SLURM backend does not find an
