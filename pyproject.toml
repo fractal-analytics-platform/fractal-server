@@ -9,6 +9,8 @@ authors = [
 ]
 readme = "README.md"
 homepage = "https://github.com/fractal-analytics-platform/fractal-server"
+repository = "https://github.com/fractal-analytics-platform/fractal-server"
+documentation = "https://fractal-analytics-platform.github.io/fractal-server"
 license = "BSD-3-Clause"
 exclude = [
 "fractal_server/.gitignore",
