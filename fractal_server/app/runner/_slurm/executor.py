@@ -629,25 +629,19 @@ class FractalSlurmExecutor(SlurmExecutor):
         self, jobid: str, info: str
     ) -> JobExecutionError:
         """
-        Prepare the JobExecutionError for a given job
+        Prepare the `JobExecutionError` for a given job
 
-            1. Wait for `FRACTAL_SLURM_KILLWAIT_INTERVAL` seconds, so that
-               SLURM has time to complete the job cancellation.
-            2. Assign the SLURM-related file names as attributes of the
-               JobExecutionError instance.
-
-        Note: this function should be called after values in
-        `self.map_jobid_to_slurm_files` have been updated, so that they point
-        to `self.working_dir` files which are readable from `fractal-server`.
+        This method creates a `JobExecutionError` object and sets its attribute
+        to the appropriate SLURM-related file names. Note that the method shoul
+        always be called after values in `self.map_jobid_to_slurm_files` have
+        been updated, so that they point to `self.working_dir` files which are
+        readable from `fractal-server`.
 
         Arguments:
             jobid:
                 ID of the SLURM job.
+            info:
         """
-        # Wait FRACTAL_SLURM_KILLWAIT_INTERVAL seconds
-        settings = Inject(get_settings)
-        settings.FRACTAL_SLURM_KILLWAIT_INTERVAL
-        time.sleep(settings.FRACTAL_SLURM_KILLWAIT_INTERVAL)
         # Extract SLURM file paths
         with self.jobs_lock:
             (
