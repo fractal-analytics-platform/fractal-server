@@ -1,8 +1,15 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 1.3.10
 
-* Update `fastapi` and `fastapi-users` to versions `^0.103.0` and `^12.1.0` respectively (\#877).
+* Updates to SLURM interface:
+    * Remove `sudo`-requiring `ls` calls from `FractalFileWaitThread.check` (\#885);
+    * Remove `FRACTAL_SLURM_KILLWAIT_INTERVAL` variable and corresponding logic (\#885);
+    * Remove `_multiple_paths_exist_as_user` helper function (\#885);
+    * Review type hints and default values of SLURM-related configuration variables (\#885).
+* Dependencies:
+    * Update `fastapi` to version `^0.103.0` (\#877);
+    * Update `fastapi-users` to version `^12.1.0` (\#877).
 
 # 1.3.9
 
