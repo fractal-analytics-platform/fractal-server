@@ -325,7 +325,7 @@ class Settings(BaseSettings):
     [`clusterfutures`](https://github.com/sampsyo/clusterfutures/blob/master/cfut/__init__.py)).
     """
 
-    FRACTAL_SLURM_OUTPUT_FILE_GRACE_TIME: int = 5
+    FRACTAL_SLURM_ERROR_HANDLING_INTERVAL: int = 5
     """
     Interval to wait (in seconds) when the SLURM backend does not find an
     output pickle file - which could be due to several reasons (e.g. the SLURM
