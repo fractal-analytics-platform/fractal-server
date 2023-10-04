@@ -16,7 +16,6 @@ from fractal_server.app.api.v1.task_collection import create_package_dir_pip
 from fractal_server.app.api.v1.task_collection import TaskCollectStatus
 from fractal_server.app.models import State
 from fractal_server.app.models import Task
-from fractal_server.config import get_settings
 from fractal_server.tasks.collection import get_collection_path
 from fractal_server.tasks.collection import get_log_path
 from fractal_server.tasks.collection import inspect_package
@@ -84,6 +83,7 @@ async def test_collection(
     override_settings_runtime(
         FRACTAL_TASKS_DIR=str(tmp_path / "test_collection")
     )
+    from fractal_server.config import get_settings
 
     # Prepare and validate payload
     task_pkg_dict = dict(package=str(dummy_task_package))
@@ -99,7 +99,6 @@ async def test_collection(
     else:
         EXPECTED_SOURCE = "pip_local:fractal_tasks_dummy:0.1.0::"
     debug(EXPECTED_SOURCE)
-
     async with MockCurrentUser():
 
         # Trigger collection
@@ -130,7 +129,7 @@ async def test_collection(
 
         # Check on-disk files
         settings = get_settings()
-        full_path = settings.FRACTAL_TASKS_DIR / venv_path
+        full_path = Path(settings.FRACTAL_TASKS_DIR) / venv_path
         assert get_collection_path(full_path).exists()
         assert get_log_path(full_path).exists()
 
@@ -437,7 +436,7 @@ async def test_failed_collection_existing_db_tasks(
         assert res.json()["data"]["status"] == "OK"
 
         # Remove task folder from disk
-        shutil.rmtree(_FRACTAL_TASKS_DIR / venv_path)
+        shutil.rmtree(_FRACTAL_TASKS_DIR)
 
         # Second task collection
         res = await client.post(

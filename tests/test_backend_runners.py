@@ -67,7 +67,7 @@ async def test_runner(
         monkey_slurm_user = request.getfixturevalue("monkey_slurm_user")
     if backend == "slurm":
         override_settings_runtime(
-            FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
+            FRACTAL_SLURM_CONFIG_FILE=str(testdata_path / "slurm_config.json")
         )
         request.getfixturevalue("slurm_config")
 
