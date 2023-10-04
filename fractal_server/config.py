@@ -318,28 +318,20 @@ class Settings(BaseSettings):
     not specified, the same interpreter that runs the server is used.
     """
 
-    FRACTAL_SLURM_POLL_INTERVAL: Optional[int] = 60
+    FRACTAL_SLURM_POLL_INTERVAL: int = 5
     """
     Interval to wait (in seconds) before checking whether unfinished job are
     still running on SLURM (see `SlurmWaitThread` in
-    [`clusterfutures`]
-    (https://github.com/sampsyo/clusterfutures/blob/master/cfut/__init__.py)).
+    [`clusterfutures`](https://github.com/sampsyo/clusterfutures/blob/master/cfut/__init__.py)).
     """
 
-    FRACTAL_SLURM_KILLWAIT_INTERVAL: Optional[int] = 45
-    """
-    Interval to wait (in seconds) when the execution of a SLURM-backend job
-    failed, before raising a `JobExecutionError`. Must be larger than [SLURM
-    `KillWait` timer](https://slurm.schedmd.com/slurm.conf.html#OPT_KillWait),
-    to make sure that stdout/stderr files have been written).
-    """
-
-    FRACTAL_SLURM_OUTPUT_FILE_GRACE_TIME: Optional[int] = 4
+    FRACTAL_SLURM_ERROR_HANDLING_INTERVAL: int = 5
     """
     Interval to wait (in seconds) when the SLURM backend does not find an
-    output pickle file, which could be for multiple reasons (the SLURM job was
-    cancelled, or writing the file is taking long). After this interval, the
-    file is considered as missing.
+    output pickle file - which could be due to several reasons (e.g. the SLURM
+    job was cancelled or failed, or writing the file is taking long). If the
+    file is still missing after this time interval, this leads to a
+    `JobExecutionError`.
     """
 
     FRACTAL_CORS_ALLOW_ORIGIN: str = (
