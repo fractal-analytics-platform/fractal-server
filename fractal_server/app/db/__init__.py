@@ -5,6 +5,7 @@ https://testdriven.io/blog/fastapi-sqlmodel/#async-sqlmodel
 from typing import AsyncGenerator
 from typing import Generator
 
+from devtools import debug
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -14,7 +15,6 @@ from sqlalchemy.pool import StaticPool
 
 from ...config import get_settings
 from ...logger import set_logger
-
 
 print(__name__)
 logger = set_logger(__name__)
@@ -44,6 +44,7 @@ class DB:
     @classmethod
     def set_db(cls):
         settings = get_settings()
+        debug("FROM set_db", "---------------", settings)
         settings.check_db()
 
         if settings.DB_ENGINE == "sqlite":

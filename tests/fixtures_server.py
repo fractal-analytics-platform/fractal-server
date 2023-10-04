@@ -172,8 +172,6 @@ def monkeysession(tmp777_session_path):
         mp.setattr(
             "fractal_server.main.get_settings", lambda: patched_settings
         )
-        # mp.setattr("fractal_server.migrations.env.get_settings",
-        #  lambda: patched_settings)
         mp.setattr(
             "fractal_server.tasks.collection.get_settings",
             lambda: patched_settings,
@@ -184,6 +182,13 @@ def monkeysession(tmp777_session_path):
 
 @pytest.fixture
 async def db_create_tables(monkeysession):
+    from fractal_server.app.db import get_settings
+
+    debug(
+        "IN db_create_tables",
+        ".------------------------------------------",
+        get_settings(),
+    )
     from fractal_server.app.db import DB
     from fractal_server.app.models import SQLModel
 
@@ -198,7 +203,6 @@ async def db_create_tables(monkeysession):
 
 @pytest.fixture
 async def db(db_create_tables, monkeysession):
-
     async for session in get_db():
         yield session
 
