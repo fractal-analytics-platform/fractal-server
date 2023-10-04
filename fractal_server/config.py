@@ -318,7 +318,7 @@ class Settings(BaseSettings):
     not specified, the same interpreter that runs the server is used.
     """
 
-    FRACTAL_SLURM_POLL_INTERVAL: int = 60
+    FRACTAL_SLURM_POLL_INTERVAL: int = 5
     """
     Interval to wait (in seconds) before checking whether unfinished job are
     still running on SLURM (see `SlurmWaitThread` in
