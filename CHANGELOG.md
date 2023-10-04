@@ -2,7 +2,7 @@
 
 # Unreleased
 
-* Bump `mkdocs-render-swagger-plugin` to 0.1.0 (\#).
+* Bump `mkdocs-render-swagger-plugin` to 0.1.0 (\#889).
 
 # 1.3.10
 
