@@ -171,7 +171,7 @@ def override_settings_runtime(MTP=MODULES_TO_PATCH):
 
 
 @pytest.fixture
-async def db_create_tables(override_settings):
+async def db_create_tables():
     from fractal_server.app.db import DB
     from fractal_server.app.models import SQLModel
 
@@ -185,13 +185,13 @@ async def db_create_tables(override_settings):
 
 
 @pytest.fixture
-async def db(db_create_tables, override_settings):
+async def db(db_create_tables):
     async for session in get_db():
         yield session
 
 
 @pytest.fixture
-async def db_sync(db_create_tables, override_settings):
+async def db_sync(db_create_tables):
     from fractal_server.app.db import get_sync_db
 
     for session in get_sync_db():
@@ -199,13 +199,13 @@ async def db_sync(db_create_tables, override_settings):
 
 
 @pytest.fixture
-async def app(override_settings) -> AsyncGenerator[FastAPI, Any]:
+async def app() -> AsyncGenerator[FastAPI, Any]:
     app = FastAPI()
     yield app
 
 
 @pytest.fixture
-async def register_routers(app, override_settings):
+async def register_routers(app):
     from fractal_server.main import collect_routers
 
     collect_routers(app)
@@ -213,7 +213,7 @@ async def register_routers(app, override_settings):
 
 @pytest.fixture
 async def client(
-    app: FastAPI, override_settings, register_routers, db
+    app: FastAPI, register_routers, db
 ) -> AsyncGenerator[AsyncClient, Any]:
     async with AsyncClient(
         app=app, base_url="http://test"
@@ -223,7 +223,7 @@ async def client(
 
 @pytest.fixture
 async def registered_client(
-    app: FastAPI, override_settings, register_routers, db
+    app: FastAPI, register_routers, db
 ) -> AsyncGenerator[AsyncClient, Any]:
 
     EMAIL = "test@test.com"
@@ -261,7 +261,7 @@ async def registered_superuser_client(
 
 
 @pytest.fixture
-async def MockCurrentUser(app, db, override_settings):
+async def MockCurrentUser(app, db):
     from fractal_server.app.security import current_active_user
     from fractal_server.app.security import User
 
@@ -334,7 +334,7 @@ async def MockCurrentUser(app, db, override_settings):
 
 
 @pytest.fixture
-async def project_factory(db, override_settings):
+async def project_factory(db):
     """
     Factory that adds a project to the database
     """
@@ -354,7 +354,7 @@ async def project_factory(db, override_settings):
 
 
 @pytest.fixture
-async def dataset_factory(db: AsyncSession, override_settings):
+async def dataset_factory(db: AsyncSession):
     """
     Insert dataset in db
     """
@@ -377,7 +377,7 @@ async def dataset_factory(db: AsyncSession, override_settings):
 
 
 @pytest.fixture
-async def resource_factory(db, testdata_path, override_settings):
+async def resource_factory(db, testdata_path):
     from fractal_server.app.models import Dataset, Resource
 
     async def __resource_factory(dataset: Dataset, **kwargs):
@@ -396,7 +396,7 @@ async def resource_factory(db, testdata_path, override_settings):
 
 
 @pytest.fixture
-async def task_factory(db: AsyncSession, override_settings):
+async def task_factory(db: AsyncSession):
     """
     Insert task in db
     """
@@ -422,7 +422,7 @@ async def task_factory(db: AsyncSession, override_settings):
 
 
 @pytest.fixture
-async def job_factory(db: AsyncSession, override_settings):
+async def job_factory(db: AsyncSession):
     """
     Insert job in db
     """
@@ -477,7 +477,7 @@ async def job_factory(db: AsyncSession, override_settings):
 
 
 @pytest.fixture
-async def workflow_factory(db: AsyncSession, override_settings):
+async def workflow_factory(db: AsyncSession):
     """
     Insert workflow in db
     """
@@ -500,7 +500,7 @@ async def workflow_factory(db: AsyncSession, override_settings):
 
 
 @pytest.fixture
-async def workflowtask_factory(db: AsyncSession, override_settings):
+async def workflowtask_factory(db: AsyncSession):
     """
     Insert workflowtask in db
     """

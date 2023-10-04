@@ -436,7 +436,9 @@ async def test_failed_collection_existing_db_tasks(
         assert res.json()["data"]["status"] == "OK"
 
         # Remove task folder from disk
-        shutil.rmtree(_FRACTAL_TASKS_DIR)
+        debug(_FRACTAL_TASKS_DIR)
+        debug(venv_path)
+        shutil.rmtree(_FRACTAL_TASKS_DIR / venv_path)
 
         # Second task collection
         res = await client.post(
