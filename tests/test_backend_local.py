@@ -252,7 +252,6 @@ def test_execute_multiple_tasks(tmp_path):
 def test_call_parallel_task_max_tasks(
     tmp_path,
     max_tasks,
-    override_settings_factory,
 ):
     """
     GIVEN A single task, parallelized over two components

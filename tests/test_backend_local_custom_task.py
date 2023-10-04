@@ -13,26 +13,33 @@ Zurich.
 """
 import sys
 
+import pytest
 from devtools import debug
 
 
 PREFIX = "/api/v1"
 
 
+@pytest.mark.parametrize(
+    "override_settings",
+    [
+        {
+            "FRACTAL_RUNNER_BACKEND": "local",
+            "FRACTAL_RUNNER_WORKING_BASE_DIR": "tmp777_path/artifacts",
+        }
+    ],
+    indirect=True,
+)
 async def test_full_workflow(
     db,
+    override_settings,
     client,
     MockCurrentUser,
     testdata_path,
     tmp777_path,
     project_factory,
     dataset_factory,
-    override_settings_factory,
 ):
-    override_settings_factory(
-        FRACTAL_RUNNER_BACKEND="local",
-        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
-    )
 
     async with MockCurrentUser(persist=True) as user:
         # add custom task

@@ -50,7 +50,7 @@ async def test_runner(
     backend,
     request,
     testdata_path,
-    override_settings_factory,
+    override_settings_runtime,
 ):
     """
     GIVEN a non-trivial workflow
@@ -66,7 +66,7 @@ async def test_runner(
         request.getfixturevalue("cfut_jobs_finished")
         monkey_slurm_user = request.getfixturevalue("monkey_slurm_user")
     if backend == "slurm":
-        override_settings_factory(
+        override_settings_runtime(
             FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
         )
         request.getfixturevalue("slurm_config")

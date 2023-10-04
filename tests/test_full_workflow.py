@@ -34,7 +34,14 @@ backends_available = list(_backends.keys())
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("backend", backends_available)
+@pytest.mark.parametrize(
+    "override_settings, backend",
+    [
+        ({"FRACTAL_RUNNER_BACKEND": backend}, backend)
+        for backend in backends_available
+    ],
+    indirect=["override_settings"],
+)
 async def test_full_workflow(
     db,
     client,
@@ -44,17 +51,17 @@ async def test_full_workflow(
     collect_packages,
     project_factory,
     dataset_factory,
-    backend,
     request,
-    override_settings_factory,
+    backend,
+    override_settings,
+    override_settings_runtime,
 ):
 
-    override_settings_factory(
-        FRACTAL_RUNNER_BACKEND=backend,
+    override_settings_runtime(
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
     )
     if backend == "slurm":
-        override_settings_factory(
+        override_settings_runtime(
             FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
         )
 
@@ -228,7 +235,14 @@ async def test_full_workflow(
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("backend", backends_available)
+@pytest.mark.parametrize(
+    "override_settings, backend",
+    [
+        ({"FRACTAL_RUNNER_BACKEND": backend}, backend)
+        for backend in backends_available
+    ],
+    indirect=["override_settings"],
+)
 async def test_failing_workflow_UnknownError(
     client,
     MockCurrentUser,
@@ -238,10 +252,11 @@ async def test_failing_workflow_UnknownError(
     project_factory,
     dataset_factory,
     workflow_factory,
-    backend,
     request,
-    override_settings_factory,
     resource_factory,
+    backend,
+    override_settings,
+    override_settings_runtime,
 ):
     """
     Run a parallel task on a dataset which does not have the appropriate
@@ -249,13 +264,12 @@ async def test_failing_workflow_UnknownError(
     list), to trigger an unknown error.
     """
 
-    override_settings_factory(
-        FRACTAL_RUNNER_BACKEND=backend,
+    override_settings_runtime(
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path
         / f"artifacts-{backend}-UnknownError",
     )
     if backend == "slurm":
-        override_settings_factory(
+        override_settings_runtime(
             FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
         )
 
@@ -329,7 +343,14 @@ async def test_failing_workflow_UnknownError(
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("backend", backends_available)
+@pytest.mark.parametrize(
+    "override_settings, backend",
+    [
+        ({"FRACTAL_RUNNER_BACKEND": backend}, backend)
+        for backend in backends_available
+    ],
+    indirect=["override_settings"],
+)
 @pytest.mark.parametrize("failing_task", ["parallel", "non_parallel"])
 async def test_failing_workflow_TaskExecutionError(
     client,
@@ -340,20 +361,20 @@ async def test_failing_workflow_TaskExecutionError(
     project_factory,
     dataset_factory,
     workflow_factory,
-    backend,
     failing_task: str,
     request,
-    override_settings_factory,
     resource_factory,
+    backend,
+    override_settings,
+    override_settings_runtime,
 ):
 
-    override_settings_factory(
-        FRACTAL_RUNNER_BACKEND=backend,
+    override_settings_runtime(
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path
         / f"artifacts-{backend}-TaskExecutionError-{failing_task}",
     )
     if backend == "slurm":
-        override_settings_factory(
+        override_settings_runtime(
             FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
         )
 
@@ -518,10 +539,13 @@ def _auxiliary_run(slurm_user, sleep_time):
     loop.close()
 
 
-@pytest.mark.parametrize("backend", ["slurm"])
+@pytest.mark.parametrize(
+    "override_settings, backend",
+    [({"FRACTAL_RUNNER_BACKEND": "slurm"}, "slurm")],
+    indirect=["override_settings"],
+)
 @pytest.mark.slow
 async def test_failing_workflow_JobExecutionError(
-    backend,
     client,
     MockCurrentUser,
     testdata_path,
@@ -531,21 +555,22 @@ async def test_failing_workflow_JobExecutionError(
     dataset_factory,
     workflow_factory,
     request,
-    override_settings_factory,
     monkey_slurm,
     monkey_slurm_user,
     relink_python_interpreter,
     cfut_jobs_finished,
     resource_factory,
+    backend,
+    override_settings,
+    override_settings_runtime,
 ):
 
-    override_settings_factory(
-        FRACTAL_RUNNER_BACKEND=backend,
+    override_settings_runtime(
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path
         / f"artifacts-{backend}-test_failing_workflow_JobExecutionError",
     )
     if backend == "slurm":
-        override_settings_factory(
+        override_settings_runtime(
             FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
         )
 
@@ -878,7 +903,14 @@ async def test_metadiff(
         )
 
 
-@pytest.mark.parametrize("backend", backends_available)
+@pytest.mark.parametrize(
+    "override_settings, backend",
+    [
+        ({"FRACTAL_RUNNER_BACKEND": backend}, backend)
+        for backend in backends_available
+    ],
+    indirect=["override_settings"],
+)
 async def test_non_executable_task_command(
     db,
     client,
@@ -891,21 +923,21 @@ async def test_non_executable_task_command(
     dataset_factory,
     resource_factory,
     workflow_factory,
-    backend,
     request,
-    override_settings_factory,
     tmp_path,
+    backend,
+    override_settings,
+    override_settings_runtime,
 ):
     """
     Execute a workflow with a task which has an invalid `command` (i.e. it is
     not executable).
     """
-    override_settings_factory(
-        FRACTAL_RUNNER_BACKEND=backend,
+    override_settings_runtime(
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
     )
     if backend == "slurm":
-        override_settings_factory(
+        override_settings_runtime(
             FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
         )
 

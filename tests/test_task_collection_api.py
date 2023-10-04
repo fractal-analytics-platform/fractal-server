@@ -65,9 +65,9 @@ async def test_collection(
     client,
     dummy_task_package,
     MockCurrentUser,
-    override_settings_factory,
     python_version,
     tmp_path: Path,
+    override_settings_runtime,
 ):
     """
     GIVEN a package in a format that `pip` understands
@@ -81,7 +81,7 @@ async def test_collection(
         * if called twice, the same tasks are returned without installing
     """
 
-    override_settings_factory(FRACTAL_TASKS_DIR=(tmp_path / "test_collection"))
+    override_settings_runtime(FRACTAL_TASKS_DIR=(tmp_path / "test_collection"))
 
     # Prepare and validate payload
     task_pkg_dict = dict(package=str(dummy_task_package))
@@ -171,15 +171,15 @@ async def test_collection_local_package_with_extras(
     client,
     MockCurrentUser,
     dummy_task_package,
-    override_settings_factory,
     tmp_path: Path,
+    override_settings_runtime,
 ):
     """
     Check that the package extras are correctly included in a local-package
     collection.
     """
 
-    override_settings_factory(
+    override_settings_runtime(
         FRACTAL_TASKS_DIR=(
             tmp_path / "test_collection_api_local_package_with_extras"
         )
@@ -209,9 +209,9 @@ async def test_collection_with_json_schemas(
     db,
     client,
     MockCurrentUser,
-    override_settings_factory,
     tmp_path: Path,
     testdata_path: Path,
+    override_settings_runtime,
 ):
     """
     GIVEN a package which
@@ -225,7 +225,7 @@ async def test_collection_with_json_schemas(
         task files)
     """
 
-    override_settings_factory(
+    override_settings_runtime(
         FRACTAL_TASKS_DIR=(tmp_path / "test_background_collection")
     )
 
@@ -307,7 +307,7 @@ async def test_failed_collection_invalid_manifest(
     dummy_task_package_invalid_manifest,
     dummy_task_package_missing_manifest,
     MockCurrentUser,
-    override_settings_factory,
+    override_settings_runtime,
     tmp_path: Path,
 ):
     """
@@ -316,7 +316,7 @@ async def test_failed_collection_invalid_manifest(
     THEN it returns 422 (Unprocessable Entity) with an informative message
     """
 
-    override_settings_factory(
+    override_settings_runtime(
         FRACTAL_TASKS_DIR=(
             tmp_path / "test_failed_collection_invalid_manifest"
         )
@@ -346,7 +346,7 @@ async def test_failed_collection_invalid_manifest(
 async def test_failed_collection_missing_task_file(
     client,
     MockCurrentUser,
-    override_settings_factory,
+    override_settings_runtime,
     testdata_path: Path,
     tmp_path: Path,
 ):
@@ -356,7 +356,7 @@ async def test_failed_collection_missing_task_file(
     handle failure.
     """
 
-    override_settings_factory(
+    override_settings_runtime(
         FRACTAL_TASKS_DIR=(
             tmp_path / "test_failed_collection_missing_task_file"
         )
@@ -396,7 +396,7 @@ async def test_failed_collection_existing_db_tasks(
     client,
     MockCurrentUser,
     dummy_task_package,
-    override_settings_factory,
+    override_settings_runtime,
     tmp_path: Path,
 ):
     """
@@ -410,7 +410,7 @@ async def test_failed_collection_existing_db_tasks(
     _FRACTAL_TASKS_DIR = (
         tmp_path / "test_collection_api_local_package_with_extras"
     )
-    override_settings_factory(FRACTAL_TASKS_DIR=_FRACTAL_TASKS_DIR)
+    override_settings_runtime(FRACTAL_TASKS_DIR=_FRACTAL_TASKS_DIR)
 
     async with MockCurrentUser():
 
@@ -452,24 +452,29 @@ async def test_failed_collection_existing_db_tasks(
 
 
 @pytest.mark.parametrize(
-    "level", [logging.DEBUG, logging.INFO, logging.WARNING]
+    "override_settings",
+    [
+        ({"FRACTAL_LOGGING_LEVEL": level})
+        for level in [logging.DEBUG, logging.INFO, logging.WARNING]
+    ],
+    indirect=True,
 )
 async def test_logs(
     db,
     client,
     MockCurrentUser,
     dummy_task_package,
-    override_settings_factory,
     tmp_path: Path,
     level: int,
+    override_settings,
+    override_settings_runtime,
 ):
     """
     GIVEN a package and its installation environment
     WHEN the background collection is called, for a given FRACTAL_LOGGING_LEVEL
     THEN the logs are always present
     """
-    override_settings_factory(
-        FRACTAL_LOGGING_LEVEL=level,
+    override_settings_runtime(
         FRACTAL_TASKS_DIR=(tmp_path / f"test_logs_{level}"),
     )
 
@@ -509,7 +514,7 @@ async def test_logs(
 
 
 async def test_logs_failed_collection(
-    db, dummy_task_package, override_settings_factory, tmp_path: Path
+    db, dummy_task_package, override_settings_runtime, tmp_path: Path
 ):
     """
     GIVEN a package and its installation environment
@@ -519,7 +524,7 @@ async def test_logs_failed_collection(
         * the installation directory is removed
     """
 
-    override_settings_factory(
+    override_settings_runtime(
         FRACTAL_TASKS_DIR=(tmp_path / "test_logs_failed_collection")
     )
 

@@ -1,3 +1,4 @@
+import pytest
 from devtools import debug
 
 PREFIX = "/api/v1"
@@ -215,6 +216,9 @@ async def test_project_apply_existing_job(
         )
 
 
+@pytest.mark.parametrize(
+    "override_settings", [{"FRACTAL_RUNNER_BACKEND": "slurm"}], indirect=True
+)
 async def test_project_apply_missing_user_attributes(
     db,
     client,
@@ -224,15 +228,13 @@ async def test_project_apply_missing_user_attributes(
     resource_factory,
     workflow_factory,
     task_factory,
-    override_settings_factory,
+    override_settings,
 ):
     """
     When using the slurm backend, user.slurm_user and user.cache_dir become
     required attributes. If they are missing, the apply endpoint fails with a
     422 error.
     """
-
-    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm")
 
     async with MockCurrentUser(persist=True) as user:
         # Make sure that user.cache_dir was not set

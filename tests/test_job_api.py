@@ -9,12 +9,12 @@ backends_available = list(_backends.keys())
 
 
 @pytest.mark.parametrize(
-    "default_settings, backend",
+    "override_settings, backend",
     [
         ({"FRACTAL_RUNNER_BACKEND": backend}, backend)
         for backend in backends_available
     ],
-    indirect=["default_settings"],
+    indirect=["override_settings"],
 )
 async def test_stop_job(
     db,
@@ -26,10 +26,13 @@ async def test_stop_job(
     dataset_factory,
     tmp_path,
     task_factory,
-    default_settings,
+    override_settings,
     backend,
 ):
+    debug(dir(override_settings))
+    debug(override_settings.__dict__)
 
+    assert False
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
         wf = await workflow_factory(project_id=project.id)

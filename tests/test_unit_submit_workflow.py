@@ -135,7 +135,6 @@ async def test_fail_submit_workflows_wrong_IDs(
     task_factory,
     tmp_path,
     db,
-    override_settings_factory,
 ):
     async with MockCurrentUser(persist=True) as user:
 
