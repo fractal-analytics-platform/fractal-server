@@ -1,5 +1,9 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Bump `mkdocs-render-swagger-plugin` to 0.1.0 (\#).
+
 # 1.3.10
 
 Warning: updating to this version requires changes to the configuration variable
