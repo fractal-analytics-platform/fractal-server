@@ -13,7 +13,6 @@ from fastapi.responses import StreamingResponse
 from sqlmodel import select
 
 from ....config import get_settings
-from ....syringe import Inject
 from ...db import AsyncSession
 from ...db import get_db
 from ...models import ApplyWorkflow
@@ -145,7 +144,7 @@ async def stop_job(
     """
 
     # This endpoint is only implemented for SLURM backend
-    settings = Inject(get_settings)
+    settings = get_settings()
     backend = settings.FRACTAL_RUNNER_BACKEND
     if backend != "slurm":
         raise HTTPException(

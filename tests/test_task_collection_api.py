@@ -17,7 +17,6 @@ from fractal_server.app.api.v1.task_collection import TaskCollectStatus
 from fractal_server.app.models import State
 from fractal_server.app.models import Task
 from fractal_server.config import get_settings
-from fractal_server.syringe import Inject
 from fractal_server.tasks.collection import get_collection_path
 from fractal_server.tasks.collection import get_log_path
 from fractal_server.tasks.collection import inspect_package
@@ -128,7 +127,7 @@ async def test_collection(
         assert task_list[1]["source"] == f"{EXPECTED_SOURCE}:dummy_parallel"
 
         # Check on-disk files
-        settings = Inject(get_settings)
+        settings = get_settings()
         full_path = settings.FRACTAL_TASKS_DIR / venv_path
         assert get_collection_path(full_path).exists()
         assert get_log_path(full_path).exists()

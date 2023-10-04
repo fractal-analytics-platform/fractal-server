@@ -14,7 +14,6 @@ from sqlalchemy.pool import StaticPool
 
 from ...config import get_settings
 from ...logger import set_logger
-from ...syringe import Inject
 
 
 print(__name__)
@@ -44,7 +43,7 @@ class DB:
 
     @classmethod
     def set_db(cls):
-        settings = Inject(get_settings)
+        settings = get_settings()
         settings.check_db()
 
         if settings.DB_ENGINE == "sqlite":

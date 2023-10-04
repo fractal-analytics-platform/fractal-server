@@ -7,7 +7,6 @@ from devtools import debug
 
 from .fixtures_tasks import execute_command
 from fractal_server.config import get_settings
-from fractal_server.syringe import Inject
 from fractal_server.tasks.collection import _init_venv
 from fractal_server.tasks.collection import _pip_install
 from fractal_server.tasks.collection import _TaskCollectPip
@@ -291,7 +290,7 @@ def test_create_pkg_dir(task_pkg, expected_path):
     NOTE:
         expected_path relative to FRACTAL_TASKS_DIR
     """
-    settings = Inject(get_settings)
+    settings = get_settings()
     check = settings.FRACTAL_TASKS_DIR / expected_path
     if task_pkg.package_version is None:
         with pytest.raises(ValueError):

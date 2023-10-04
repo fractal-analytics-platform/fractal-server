@@ -12,7 +12,6 @@ from sqlmodel import select
 from ....config import get_settings
 from ....logger import close_logger
 from ....logger import set_logger
-from ....syringe import Inject
 from ...db import AsyncSession
 from ...db import DBSyncSession
 from ...db import get_db
@@ -229,7 +228,7 @@ async def apply_workflow(
         )
 
     # If backend is SLURM, check that the user has required attributes
-    settings = Inject(get_settings)
+    settings = get_settings()
     backend = settings.FRACTAL_RUNNER_BACKEND
     if backend == "slurm":
         if not user.slurm_user:

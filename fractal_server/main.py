@@ -29,7 +29,6 @@ from .app.security import get_user_db
 from .app.security import get_user_manager
 from .config import get_settings
 from .logger import set_logger
-from .syringe import Inject
 
 get_async_session_context = contextlib.asynccontextmanager(get_db)
 get_user_db_context = contextlib.asynccontextmanager(get_user_db)
@@ -65,7 +64,7 @@ def check_settings() -> None:
     Raises:
         ValidationError: If the configuration is invalid.
     """
-    settings = Inject(get_settings)
+    settings = get_settings()
     settings.check()
 
 
@@ -152,7 +151,7 @@ def start_application() -> FastAPI:
     """
     app = FastAPI()
     collect_routers(app)
-    settings = Inject(get_settings)
+    settings = get_settings()
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.FRACTAL_CORS_ALLOW_ORIGIN.split(";"),
@@ -180,7 +179,7 @@ async def on_startup() -> None:
 
     If the calls raise any error, the application startup is aborted.
     """
-    settings = Inject(get_settings)
+    settings = get_settings()
     await _create_first_user(
         email=settings.FRACTAL_DEFAULT_ADMIN_EMAIL,
         password=settings.FRACTAL_DEFAULT_ADMIN_PASSWORD,

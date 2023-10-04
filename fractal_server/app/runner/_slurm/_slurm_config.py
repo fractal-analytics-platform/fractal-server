@@ -25,7 +25,6 @@ from pydantic.error_wrappers import ValidationError
 from ....config import get_settings
 from ....logger import set_logger
 from ....logger import wrap_with_timing_logs
-from ....syringe import Inject
 from ...models import WorkflowTask
 
 logger = set_logger(__name__)
@@ -154,7 +153,7 @@ def load_slurm_config_file(
     """
 
     if not config_path:
-        settings = Inject(get_settings)
+        settings = get_settings()
         config_path = settings.FRACTAL_SLURM_CONFIG_FILE
 
     # Load file
