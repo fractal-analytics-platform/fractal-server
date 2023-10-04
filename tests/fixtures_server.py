@@ -181,13 +181,6 @@ def monkeysession(tmp777_session_path):
 
 @pytest.fixture
 async def db_create_tables(monkeysession):
-    from fractal_server.app.db import get_settings
-
-    debug(
-        "IN db_create_tables",
-        ".------------------------------------------",
-        get_settings(),
-    )
     from fractal_server.app.db import DB
     from fractal_server.app.models import SQLModel
 
