@@ -725,7 +725,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                 # missing
                 if not out_path.exists():
                     settings = Inject(get_settings)
-                    time.sleep(settings.FRACTAL_SLURM_OUTPUT_FILE_GRACE_TIME)
+                    time.sleep(settings.FRACTAL_SLURM_ERROR_HANDLING_INTERVAL)
                 if not out_path.exists():
                     # Output pickle file is missing
                     info = (
@@ -742,8 +742,8 @@ class FractalSlurmExecutor(SlurmExecutor):
                         "(e.g. because there is not enough space on disk, or "
                         "due to an overloaded NFS filesystem). "
                         "Note that the server configuration has "
-                        "FRACTAL_SLURM_OUTPUT_FILE_GRACE_TIME="
-                        f"{settings.FRACTAL_SLURM_OUTPUT_FILE_GRACE_TIME} "
+                        "FRACTAL_SLURM_ERROR_HANDLING_INTERVAL="
+                        f"{settings.FRACTAL_SLURM_ERROR_HANDLING_INTERVAL} "
                         "seconds.\n"
                     )
                     job_exc = self._prepare_JobExecutionError(jobid, info=info)
