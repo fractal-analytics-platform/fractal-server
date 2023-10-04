@@ -116,9 +116,8 @@ def get_patched_settings(temp_path: Path):
 
     settings.FRACTAL_SLURM_CONFIG_FILE = temp_path / "slurm_config.json"
 
-    settings.FRACTAL_SLURM_POLL_INTERVAL = 4
-    settings.FRACTAL_SLURM_KILLWAIT_INTERVAL = 4
-    settings.FRACTAL_SLURM_OUTPUT_FILE_GRACE_TIME = 1
+    settings.FRACTAL_SLURM_POLL_INTERVAL = 1
+    settings.FRACTAL_SLURM_ERROR_HANDLING_INTERVAL = 1
 
     settings.FRACTAL_LOGGING_LEVEL = logging.DEBUG
     return settings
