@@ -81,7 +81,9 @@ async def test_collection(
         * if called twice, the same tasks are returned without installing
     """
 
-    override_settings_runtime(FRACTAL_TASKS_DIR=(tmp_path / "test_collection"))
+    override_settings_runtime(
+        FRACTAL_TASKS_DIR=str(tmp_path / "test_collection")
+    )
 
     # Prepare and validate payload
     task_pkg_dict = dict(package=str(dummy_task_package))
@@ -180,7 +182,7 @@ async def test_collection_local_package_with_extras(
     """
 
     override_settings_runtime(
-        FRACTAL_TASKS_DIR=(
+        FRACTAL_TASKS_DIR=str(
             tmp_path / "test_collection_api_local_package_with_extras"
         )
     )
@@ -317,7 +319,7 @@ async def test_failed_collection_invalid_manifest(
     """
 
     override_settings_runtime(
-        FRACTAL_TASKS_DIR=(
+        FRACTAL_TASKS_DIR=str(
             tmp_path / "test_failed_collection_invalid_manifest"
         )
     )
@@ -357,7 +359,7 @@ async def test_failed_collection_missing_task_file(
     """
 
     override_settings_runtime(
-        FRACTAL_TASKS_DIR=(
+        FRACTAL_TASKS_DIR=str(
             tmp_path / "test_failed_collection_missing_task_file"
         )
     )
@@ -410,7 +412,7 @@ async def test_failed_collection_existing_db_tasks(
     _FRACTAL_TASKS_DIR = (
         tmp_path / "test_collection_api_local_package_with_extras"
     )
-    override_settings_runtime(FRACTAL_TASKS_DIR=_FRACTAL_TASKS_DIR)
+    override_settings_runtime(FRACTAL_TASKS_DIR=str(_FRACTAL_TASKS_DIR))
 
     async with MockCurrentUser():
 
@@ -452,21 +454,21 @@ async def test_failed_collection_existing_db_tasks(
 
 
 @pytest.mark.parametrize(
-    "override_settings",
+    "override_settings, level",
     [
-        ({"FRACTAL_LOGGING_LEVEL": level})
+        ({"FRACTAL_LOGGING_LEVEL": level}, level)
         for level in [logging.DEBUG, logging.INFO, logging.WARNING]
     ],
-    indirect=True,
+    indirect=["override_settings"],
 )
 async def test_logs(
     db,
     client,
     MockCurrentUser,
     dummy_task_package,
-    tmp_path: Path,
-    level: int,
+    tmp_path,
     override_settings,
+    level,
     override_settings_runtime,
 ):
     """
@@ -475,7 +477,7 @@ async def test_logs(
     THEN the logs are always present
     """
     override_settings_runtime(
-        FRACTAL_TASKS_DIR=(tmp_path / f"test_logs_{level}"),
+        FRACTAL_TASKS_DIR=str(tmp_path / f"test_logs_{level}"),
     )
 
     task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())
@@ -525,7 +527,7 @@ async def test_logs_failed_collection(
     """
 
     override_settings_runtime(
-        FRACTAL_TASKS_DIR=(tmp_path / "test_logs_failed_collection")
+        FRACTAL_TASKS_DIR=str(tmp_path / "test_logs_failed_collection")
     )
 
     task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())

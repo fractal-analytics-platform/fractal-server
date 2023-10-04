@@ -43,8 +43,9 @@ except ModuleNotFoundError:
 
 HAS_LOCAL_SBATCH = bool(shutil.which("sbatch"))
 
-
+# FIXME make this list a "session" fixture
 MODULES_TO_PATCH = [
+    "fractal_server.config",
     "fractal_server.app.api",
     "fractal_server.app.api.v1.job",
     "fractal_server.app.api.v1.project",
@@ -139,7 +140,7 @@ def get_default_test_settings(temp_path: Path):
 
 
 @pytest.fixture(scope="function", autouse=True)
-def override_settings(tmp777_session_path, request, mtp=MODULES_TO_PATCH):
+def override_settings(tmp777_session_path, request, MTP=MODULES_TO_PATCH):
     tmp_path = tmp777_session_path("server_folder")
     patched_settings = get_default_test_settings(tmp_path)
 
@@ -147,9 +148,26 @@ def override_settings(tmp777_session_path, request, mtp=MODULES_TO_PATCH):
         for k, v in request.param.items():
             setattr(patched_settings, k, v)
     with pytest.MonkeyPatch.context() as mp:
-        for module in mtp:
+        for module in MTP:
             mp.setattr(f"{module}.get_settings", lambda: patched_settings)
         yield
+
+
+@pytest.fixture(scope="function")
+def override_settings_runtime(MTP=MODULES_TO_PATCH):
+    from fractal_server.config import get_settings
+
+    settings = get_settings()
+
+    def _override_settings_runtime(**kwargs):
+        for k, v in kwargs.items():
+            setattr(settings, k, v)
+        with pytest.MonkeyPatch.context() as mp:
+            for module in MTP:
+                mp.setattr(f"{module}.get_settings", lambda: settings)
+            yield
+
+    yield _override_settings_runtime
 
 
 @pytest.fixture
