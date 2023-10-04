@@ -8,9 +8,15 @@ from fractal_server.app.runner._common import SHUTDOWN_FILENAME
 backends_available = list(_backends.keys())
 
 
-@pytest.mark.parametrize("backend", backends_available)
+@pytest.mark.parametrize(
+    "default_settings, backend",
+    [
+        ({"FRACTAL_RUNNER_BACKEND": backend}, backend)
+        for backend in backends_available
+    ],
+    indirect=["default_settings"],
+)
 async def test_stop_job(
-    backend,
     db,
     client,
     MockCurrentUser,
@@ -20,9 +26,9 @@ async def test_stop_job(
     dataset_factory,
     tmp_path,
     task_factory,
-    override_settings_factory,
+    default_settings,
+    backend,
 ):
-    override_settings_factory(FRACTAL_RUNNER_BACKEND=backend)
 
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
