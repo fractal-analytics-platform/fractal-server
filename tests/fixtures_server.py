@@ -149,7 +149,7 @@ def override_settings(tmp777_session_path, request, mtp=MODULES_TO_PATCH):
     with pytest.MonkeyPatch.context() as mp:
         for module in mtp:
             mp.setattr(f"{module}.get_settings", lambda: patched_settings)
-        yield mp
+        yield
 
 
 @pytest.fixture

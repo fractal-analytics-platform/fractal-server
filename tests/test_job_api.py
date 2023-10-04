@@ -29,10 +29,7 @@ async def test_stop_job(
     override_settings,
     backend,
 ):
-    debug(dir(override_settings))
-    debug(override_settings.__dict__)
 
-    assert False
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
         wf = await workflow_factory(project_id=project.id)
