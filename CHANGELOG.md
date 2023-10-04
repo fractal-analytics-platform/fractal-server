@@ -3,6 +3,7 @@
 # Unreleased
 
 * Bump `mkdocs-render-swagger-plugin` to 0.1.0 (\#889).
+* Fix `poetry install` command and `poetry` version in GitHub CI (\#889).
 
 # 1.3.10
 
