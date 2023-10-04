@@ -55,9 +55,7 @@ def docker_compose_file(pytestconfig, testdata_path: Path):
 
 
 @pytest.fixture(scope="session")
-def slurm_config(override_settings):
-    # NOTE: override_settings also loads all environment variables from
-    # get_patched_settings
+def slurm_config(monkeysession):
 
     config = {
         "partition": "main",
@@ -71,7 +69,7 @@ def slurm_config(override_settings):
             # "constraint": "gpuram32gb",
         },
     }
-    with override_settings.FRACTAL_SLURM_CONFIG_FILE.open("w") as f:
+    with monkeysession.FRACTAL_SLURM_CONFIG_FILE.open("w") as f:
         json.dump(config, f, indent=2)
     return config
 

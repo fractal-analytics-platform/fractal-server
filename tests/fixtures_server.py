@@ -31,10 +31,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from fractal_server.app.db import get_db
-from fractal_server.config import get_settings
 from fractal_server.config import Settings
 from fractal_server.main import _create_first_user
-from fractal_server.syringe import Inject
 
 try:
     import asyncpg  # noqa: F401
@@ -124,51 +122,68 @@ def get_patched_settings(temp_path: Path):
     return settings
 
 
-@pytest.fixture(scope="session", autouse=True)
-def override_settings(tmp777_session_path):
-    tmp_path = tmp777_session_path("server_folder")
-
-    settings = get_patched_settings(tmp_path)
-
-    def _get_settings():
-        return settings
-
-    Inject.override(get_settings, _get_settings)
-    try:
-        yield settings
-    finally:
-        Inject.pop(get_settings)
-
-
 @pytest.fixture(scope="function")
-def override_settings_factory():
-    from fractal_server.config import Settings
+def monkeysession(tmp777_session_path):
 
-    # NOTE: using a mutable variable so that we can modify it from within the
-    # inner function
-    get_settings_orig = []
+    tmp_path = tmp777_session_path("server_folder")
+    patched_settings = get_patched_settings(tmp_path)
 
-    def _overrride_settings_factory(**kwargs):
-        # NOTE: extract patched settings *before* popping out the patch!
-        settings = Settings(**Inject(get_settings).dict())
-        get_settings_orig.append(Inject.pop(get_settings))
-        for k, v in kwargs.items():
-            setattr(settings, k, v)
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(
+            "fractal_server.app.api.get_settings", lambda: patched_settings
+        )
+        mp.setattr(
+            "fractal_server.app.api.v1.job.get_settings",
+            lambda: patched_settings,
+        )
+        mp.setattr(
+            "fractal_server.app.api.v1.project.get_settings",
+            lambda: patched_settings,
+        )
+        mp.setattr(
+            "fractal_server.app.api.v1.task_collection.get_settings",
+            lambda: patched_settings,
+        )
+        mp.setattr(
+            "fractal_server.app.db.get_settings", lambda: patched_settings
+        )
+        mp.setattr(
+            "fractal_server.app.runner.get_settings", lambda: patched_settings
+        )
+        mp.setattr(
+            "fractal_server.app.runner._local._local_config.get_settings",
+            lambda: patched_settings,
+        )
+        mp.setattr(
+            "fractal_server.app.runner._slurm._slurm_config.get_settings",
+            lambda: patched_settings,
+        )
+        mp.setattr(
+            "fractal_server.app.runner._slurm.executor.get_settings",
+            lambda: patched_settings,
+        )
+        mp.setattr(
+            "fractal_server.app.security.get_settings",
+            lambda: patched_settings,
+        )
+        mp.setattr(
+            "fractal_server.logger.get_settings", lambda: patched_settings
+        )
+        mp.setattr(
+            "fractal_server.main.get_settings", lambda: patched_settings
+        )
+        # mp.setattr("fractal_server.migrations.env.get_settings",
+        #  lambda: patched_settings)
+        mp.setattr(
+            "fractal_server.tasks.collection.get_settings",
+            lambda: patched_settings,
+        )
 
-        def _get_settings():
-            return settings
-
-        Inject.override(get_settings, _get_settings)
-
-    try:
-        yield _overrride_settings_factory
-    finally:
-        if get_settings_orig:
-            Inject.override(get_settings, get_settings_orig[0])
+        yield mp
 
 
 @pytest.fixture
-async def db_create_tables(override_settings):
+async def db_create_tables(monkeysession):
     from fractal_server.app.db import DB
     from fractal_server.app.models import SQLModel
 
@@ -182,14 +197,14 @@ async def db_create_tables(override_settings):
 
 
 @pytest.fixture
-async def db(db_create_tables):
+async def db(db_create_tables, monkeysession):
 
     async for session in get_db():
         yield session
 
 
 @pytest.fixture
-async def db_sync(db_create_tables):
+async def db_sync(db_create_tables, monkeysession):
     from fractal_server.app.db import get_sync_db
 
     for session in get_sync_db():
@@ -197,13 +212,13 @@ async def db_sync(db_create_tables):
 
 
 @pytest.fixture
-async def app(override_settings) -> AsyncGenerator[FastAPI, Any]:
+async def app(monkeysession) -> AsyncGenerator[FastAPI, Any]:
     app = FastAPI()
     yield app
 
 
 @pytest.fixture
-async def register_routers(app, override_settings):
+async def register_routers(app, monkeysession):
     from fractal_server.main import collect_routers
 
     collect_routers(app)
@@ -211,7 +226,7 @@ async def register_routers(app, override_settings):
 
 @pytest.fixture
 async def client(
-    app: FastAPI, register_routers, db
+    app: FastAPI, monkeysession, register_routers, db
 ) -> AsyncGenerator[AsyncClient, Any]:
     async with AsyncClient(
         app=app, base_url="http://test"
@@ -221,7 +236,7 @@ async def client(
 
 @pytest.fixture
 async def registered_client(
-    app: FastAPI, register_routers, db
+    app: FastAPI, monkeysession, register_routers, db
 ) -> AsyncGenerator[AsyncClient, Any]:
 
     EMAIL = "test@test.com"
@@ -243,7 +258,7 @@ async def registered_client(
 
 @pytest.fixture
 async def registered_superuser_client(
-    app: FastAPI, register_routers, db
+    app: FastAPI, monkeysession, register_routers, db
 ) -> AsyncGenerator[AsyncClient, Any]:
     EMAIL = "some-admin@fractal.xy"
     PWD = "some-admin-password"
@@ -259,7 +274,7 @@ async def registered_superuser_client(
 
 
 @pytest.fixture
-async def MockCurrentUser(app, db):
+async def MockCurrentUser(app, db, monkeysession):
     from fractal_server.app.security import current_active_user
     from fractal_server.app.security import User
 
@@ -332,7 +347,7 @@ async def MockCurrentUser(app, db):
 
 
 @pytest.fixture
-async def project_factory(db):
+async def project_factory(db, monkeysession):
     """
     Factory that adds a project to the database
     """
@@ -352,7 +367,7 @@ async def project_factory(db):
 
 
 @pytest.fixture
-async def dataset_factory(db: AsyncSession):
+async def dataset_factory(db: AsyncSession, monkeysession):
     """
     Insert dataset in db
     """
@@ -375,7 +390,7 @@ async def dataset_factory(db: AsyncSession):
 
 
 @pytest.fixture
-async def resource_factory(db, testdata_path):
+async def resource_factory(db, testdata_path, monkeysession):
     from fractal_server.app.models import Dataset, Resource
 
     async def __resource_factory(dataset: Dataset, **kwargs):
@@ -394,7 +409,7 @@ async def resource_factory(db, testdata_path):
 
 
 @pytest.fixture
-async def task_factory(db: AsyncSession):
+async def task_factory(db: AsyncSession, monkeysession):
     """
     Insert task in db
     """
@@ -420,7 +435,7 @@ async def task_factory(db: AsyncSession):
 
 
 @pytest.fixture
-async def job_factory(db: AsyncSession):
+async def job_factory(db: AsyncSession, monkeysession):
     """
     Insert job in db
     """
@@ -475,7 +490,7 @@ async def job_factory(db: AsyncSession):
 
 
 @pytest.fixture
-async def workflow_factory(db: AsyncSession):
+async def workflow_factory(db: AsyncSession, monkeysession):
     """
     Insert workflow in db
     """
@@ -498,7 +513,7 @@ async def workflow_factory(db: AsyncSession):
 
 
 @pytest.fixture
-async def workflowtask_factory(db: AsyncSession):
+async def workflowtask_factory(db: AsyncSession, monkeysession):
     """
     Insert workflowtask in db
     """
