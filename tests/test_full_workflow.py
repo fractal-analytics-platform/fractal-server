@@ -33,7 +33,6 @@ PREFIX = "/api/v1"
 backends_available = list(_backends.keys())
 
 
-@pytest.mark.slow
 @pytest.mark.parametrize(
     "override_settings, backend",
     [
@@ -42,6 +41,7 @@ backends_available = list(_backends.keys())
     ],
     indirect=["override_settings"],
 )
+@pytest.mark.slow
 async def test_full_workflow(
     db,
     client,
@@ -56,7 +56,6 @@ async def test_full_workflow(
     override_settings,
     override_settings_runtime,
 ):
-
     override_settings_runtime(
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
     )
@@ -254,8 +253,8 @@ async def test_failing_workflow_UnknownError(
     workflow_factory,
     request,
     resource_factory,
-    backend,
     override_settings,
+    backend,
     override_settings_runtime,
 ):
     """
@@ -564,7 +563,6 @@ async def test_failing_workflow_JobExecutionError(
     override_settings,
     override_settings_runtime,
 ):
-
     override_settings_runtime(
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path
         / f"artifacts-{backend}-test_failing_workflow_JobExecutionError",

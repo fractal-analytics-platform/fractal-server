@@ -54,9 +54,8 @@ def docker_compose_file(pytestconfig, testdata_path: Path):
     return str(testdata_path / "slurm_docker_images/docker-compose.yml")
 
 
-@pytest.fixture(scope="session")
-def slurm_config(monkeysession):
-
+@pytest.fixture(scope="function")
+def slurm_config():
     config = {
         "partition": "main",
         "cpus_per_job": {"target": 2, "max": 2},
@@ -69,7 +68,12 @@ def slurm_config(monkeysession):
             # "constraint": "gpuram32gb",
         },
     }
-    with monkeysession.FRACTAL_SLURM_CONFIG_FILE.open("w") as f:
+    from fractal_server.config import get_settings
+
+    FRACTAL_SLURM_CONFIG_FILE = Path(
+        get_settings().get("FRACTAL_SLURM_CONFIG_FILE")
+    )
+    with FRACTAL_SLURM_CONFIG_FILE.open("w") as f:
         json.dump(config, f, indent=2)
     return config
 

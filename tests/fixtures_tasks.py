@@ -61,7 +61,8 @@ async def execute_command(cmd, **kwargs):
 
 @pytest.fixture(scope="session")
 async def dummy_task_package(
-    testdata_path, tmp_path_factory
+    testdata_path,
+    tmp_path_factory,
 ) -> AsyncGenerator[Path, None]:
     """
     Yields
@@ -88,7 +89,7 @@ async def dummy_task_package(
 
 @pytest.fixture
 async def dummy_task_package_invalid_manifest(
-    testdata_path, tmp_path
+    testdata_path, tmp_path, override_settings
 ) -> AsyncGenerator[Path, None]:
     from .data import tasks_dummy as task_package
 
@@ -119,7 +120,7 @@ async def dummy_task_package_invalid_manifest(
 
 @pytest.fixture
 async def dummy_task_package_missing_manifest(
-    testdata_path, tmp_path
+    testdata_path, tmp_path, override_settings
 ) -> AsyncGenerator[Path, None]:
     from .data import tasks_dummy as task_package
 
@@ -144,8 +145,10 @@ async def dummy_task_package_missing_manifest(
     yield wheel_path
 
 
-@pytest.fixture(scope="session")
-async def install_dummy_packages(tmp777_session_path, dummy_task_package):
+@pytest.fixture(scope="function")
+async def install_dummy_packages(
+    tmp777_session_path, dummy_task_package, override_settings
+):
     """
     NOTE that the system python3 on the slurm containers (AKA /usr/bin/python3)
     is 3.9, and relink_python_interpreter will map to it. Therefore this
@@ -186,7 +189,7 @@ async def install_dummy_packages(tmp777_session_path, dummy_task_package):
 
 
 @pytest.fixture(scope="function")
-async def collect_packages(db_sync, install_dummy_packages):
+async def collect_packages(db_sync, install_dummy_packages, override_settings):
     from fractal_server.app.api.v1.task_collection import _insert_tasks
 
     tasks = await _insert_tasks(task_list=install_dummy_packages, db=db_sync)
@@ -194,7 +197,7 @@ async def collect_packages(db_sync, install_dummy_packages):
 
 
 @pytest.fixture(scope="function")
-def relink_python_interpreter(collect_packages):
+def relink_python_interpreter(collect_packages, override_settings):
     """
     Rewire python executable in tasks
 

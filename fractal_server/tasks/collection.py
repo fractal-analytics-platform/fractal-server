@@ -30,9 +30,9 @@ from ..app.schemas import ManifestV1
 from ..app.schemas import TaskCollectPip
 from ..app.schemas import TaskCollectStatus
 from ..app.schemas import TaskCreate
-from ..config import get_settings
 from ..logger import get_logger
 from ..utils import execute_command
+from fractal_server.config import get_settings
 
 
 FRACTAL_PUBLIC_TASK_SUBDIR = ".fractal"
@@ -205,7 +205,9 @@ def create_package_dir_pip(
     """
     Create venv folder for a task package and return corresponding Path object
     """
+
     settings = get_settings()
+
     user = FRACTAL_PUBLIC_TASK_SUBDIR
     if task_pkg.package_version is None:
         raise ValueError(
@@ -213,7 +215,7 @@ def create_package_dir_pip(
             "with `version=None`."
         )
     package_dir = f"{task_pkg.package}{task_pkg.package_version}"
-    venv_path = settings.FRACTAL_TASKS_DIR / user / package_dir  # type: ignore
+    venv_path = Path(settings.FRACTAL_TASKS_DIR) / user / package_dir
     if create:
         venv_path.mkdir(exist_ok=False, parents=True)
     return venv_path

@@ -140,7 +140,9 @@ def get_default_test_settings(temp_path: Path):
 
 
 @pytest.fixture(scope="function", autouse=True)
-def override_settings(tmp777_session_path, request, MTP=MODULES_TO_PATCH):
+async def override_settings(
+    tmp777_session_path, request, MTP=MODULES_TO_PATCH
+):
     tmp_path = tmp777_session_path("server_folder")
     patched_settings = get_default_test_settings(tmp_path)
 
@@ -150,11 +152,13 @@ def override_settings(tmp777_session_path, request, MTP=MODULES_TO_PATCH):
     with pytest.MonkeyPatch.context() as mp:
         for module in MTP:
             mp.setattr(f"{module}.get_settings", lambda: patched_settings)
-        yield
+        yield mp
 
 
 @pytest.fixture(scope="function")
-def override_settings_runtime(MTP=MODULES_TO_PATCH):
+async def override_settings_runtime(
+    monkeypatch, override_settings, MTP=MODULES_TO_PATCH
+):
     from fractal_server.config import get_settings
 
     settings = get_settings()
@@ -162,12 +166,10 @@ def override_settings_runtime(MTP=MODULES_TO_PATCH):
     def _override_settings_runtime(**kwargs):
         for k, v in kwargs.items():
             setattr(settings, k, v)
-        with pytest.MonkeyPatch.context() as mp:
-            for module in MTP:
-                mp.setattr(f"{module}.get_settings", lambda: settings)
-            yield
+        for module in MTP:
+            monkeypatch.setattr(f"{module}.get_settings", lambda: settings)
 
-    yield _override_settings_runtime
+    return _override_settings_runtime
 
 
 @pytest.fixture
