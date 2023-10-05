@@ -23,7 +23,7 @@ PREFIX = "/api/v1"
 @pytest.mark.parametrize(
     "override_settings",
     [{"FRACTAL_RUNNER_BACKEND": "local"}],
-    indirect=["override_settings"],
+    indirect=True,
 )
 async def test_full_workflow(
     db,

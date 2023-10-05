@@ -68,11 +68,10 @@ def slurm_config():
             # "constraint": "gpuram32gb",
         },
     }
+
     from fractal_server.config import get_settings
 
-    FRACTAL_SLURM_CONFIG_FILE = Path(
-        get_settings().get("FRACTAL_SLURM_CONFIG_FILE")
-    )
+    FRACTAL_SLURM_CONFIG_FILE = Path(get_settings().FRACTAL_SLURM_CONFIG_FILE)
     with FRACTAL_SLURM_CONFIG_FILE.open("w") as f:
         json.dump(config, f, indent=2)
     return config
@@ -184,6 +183,7 @@ def monkey_slurm(monkeypatch, docker_compose_project_name, docker_services):
     containerised installation and redirect commands there. If no slurm
     container is present, xfail.
     """
+
     import subprocess
 
     OrigPopen = subprocess.Popen
@@ -294,14 +294,12 @@ def slurm_working_folders(
     tmp777_path: Path,
     monkey_slurm_user: str,
 ):
-
     root_path = tmp777_path
     user = monkey_slurm_user
 
     # Define working folders
     server_working_dir = root_path / "server"
     user_working_dir = root_path / "user"
-
     # Create server working folder
     umask = os.umask(0)
     server_working_dir.mkdir(parents=True, mode=0o755)
@@ -309,7 +307,6 @@ def slurm_working_folders(
 
     # Create user working folder
     _mkdir_as_user(folder=str(user_working_dir), user=user)
-
     yield (server_working_dir, user_working_dir)
 
     logging.warning("[slurm_working_folders] Start cleanup")
