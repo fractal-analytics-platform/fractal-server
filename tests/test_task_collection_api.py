@@ -398,8 +398,9 @@ async def test_failed_collection_existing_db_tasks(
     client,
     MockCurrentUser,
     dummy_task_package,
-    override_settings_runtime,
+    install_dummy_packages,
     tmp_path: Path,
+    override_settings_runtime,
 ):
     """
     Catch issue 866:
@@ -413,7 +414,6 @@ async def test_failed_collection_existing_db_tasks(
         tmp_path / "test_collection_api_local_package_with_extras"
     )
     override_settings_runtime(FRACTAL_TASKS_DIR=str(_FRACTAL_TASKS_DIR))
-
     async with MockCurrentUser():
 
         # First task collection
