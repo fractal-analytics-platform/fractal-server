@@ -16,6 +16,9 @@ exclude = [
 "fractal_server/.gitignore",
 ]
 
+[tool.poetry.urls]
+"Changelog" = "https://github.com/fractal-analytics-platform/fractal-server/blob/main/CHANGELOG.md"
+
 
 [tool.poetry.dependencies]
 python = "^3.9"
