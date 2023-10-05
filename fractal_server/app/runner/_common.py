@@ -335,7 +335,7 @@ def call_single_parallel_task(
     task_pars: TaskParameters,
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
-) -> Path:
+) -> Any:
     """
     Call a single instance of a parallel task
 
@@ -366,7 +366,8 @@ def call_single_parallel_task(
             relevant for multi-user executors).
 
     Returns:
-        The `task_files.metadiff` path.
+        The `json.load`-ed contents of the metadiff output file, or `None` if
+            the file is missing.
 
     Raises:
         TaskExecutionError: If the wrapped task raises a task-related error.
@@ -406,12 +407,20 @@ def call_single_parallel_task(
         _call_command_wrapper(
             cmd, stdout=task_files.out, stderr=task_files.err
         )
-        return task_files.metadiff
     except TaskExecutionError as e:
         e.workflow_task_order = wftask.order
         e.workflow_task_id = wftask.id
         e.task_name = wftask.task.name
         raise e
+
+    # JSON-load metadiff file and return its contents (or None)
+    try:
+        with task_files.metadiff.open("r") as f:
+            this_meta_update = json.load(f)
+    except FileNotFoundError:
+        this_meta_update = None
+
+    return this_meta_update
 
 
 def call_parallel_task(
@@ -430,6 +439,10 @@ def call_parallel_task(
     Prepare and submit for execution all the single calls of a parallel task,
     and return a single TaskParameters instance to be passed on to the
     next task.
+
+    **NOTE**: this function is executed by the same user that runs
+    `fractal-server`, and therefore may not have access to some of user's
+    files.
 
     Args:
         executor:
@@ -508,30 +521,22 @@ def call_parallel_task(
     # make this call blocking. This is required *also* because otherwise the
     # shutdown of a FractalSlurmExecutor while running map() may not work
     aggregated_metadata_update: dict[str, Any] = {}
-    try:
-        for metadiff_path in map_iter:
-            with open(metadiff_path, "r") as f:
-                this_meta_update = json.load(f)
-                # Cover the case where the task wrote `null`, rather than a
-                # valid dictionary (ref fractal-server issue #878).
-                if this_meta_update is None:
-                    this_meta_update = {}
-                # Include this_meta_update into aggregated_metadata_update
-                for key, val in this_meta_update.items():
-                    aggregated_metadata_update.setdefault(key, []).append(val)
-        if aggregated_metadata_update:
-            logger.warning(
-                "Aggregating parallel-taks updated metadata (with keys "
-                f"{list(aggregated_metadata_update.keys())}).\n"
-                "This feature is experimental and it may change in "
-                "future releases."
-            )
-    except FileNotFoundError as e:
-        logger.error(
-            "Skip collection and aggregation of parallel-task updated "
-            f"metadata. Original error: {str(e)}"
+    for this_meta_update in map_iter:
+        # Cover the case where the task wrote `null`, rather than a
+        # valid dictionary (ref fractal-server issue #878), or where the
+        # metadiff file was missing.
+        if this_meta_update is None:
+            this_meta_update = {}
+        # Include this_meta_update into aggregated_metadata_update
+        for key, val in this_meta_update.items():
+            aggregated_metadata_update.setdefault(key, []).append(val)
+    if aggregated_metadata_update:
+        logger.warning(
+            "Aggregating parallel-taks updated metadata (with keys "
+            f"{list(aggregated_metadata_update.keys())}).\n"
+            "This feature is experimental and it may change in "
+            "future releases."
         )
-        aggregated_metadata_update = {}
 
     # Assemble parallel task metadiff files
     updated_metadata = task_pars_depend.metadata.copy()
