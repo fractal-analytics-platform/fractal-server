@@ -335,7 +335,7 @@ def call_single_parallel_task(
     task_pars: TaskParameters,
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
-) -> Optional[Any]:
+) -> Any:
     """
     Call a single instance of a parallel task
 
