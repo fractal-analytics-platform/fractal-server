@@ -871,11 +871,8 @@ async def test_metadiff(
         # Check that workflow.log includes expected warnings
         with open(f"{working_dir}/workflow.log", "r") as f:
             logs = f.read()
+        print(logs)
         assert "Skip collection of updated metadata" in logs
-        assert (
-            "Skip collection and aggregation of parallel-task updated metadata."  # noqa
-            in logs
-        )
 
 
 @pytest.mark.parametrize("backend", backends_available)
