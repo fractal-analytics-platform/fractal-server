@@ -1,9 +1,14 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 1.3.11
 
-* Bump `mkdocs-render-swagger-plugin` to 0.1.0 (\#889).
-* Fix `poetry install` command and `poetry` version in GitHub CI (\#889).
+This is mainly a bugfix release for the `PermissionError` issue.
+
+* Fix `PermissionError`s in parallel-task metadata aggregation for the SLURM backend (\#893).
+* Documentation:
+    * Bump `mkdocs-render-swagger-plugin` to 0.1.0 (\#889).
+* Testing:
+    * Fix `poetry install` command and `poetry` version in GitHub CI (\#889).
 
 # 1.3.10
 
