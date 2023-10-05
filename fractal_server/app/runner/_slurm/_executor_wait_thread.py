@@ -108,6 +108,8 @@ class FractalSlurmWaitThread(FractalFileWaitThread):
     The function is copied from clusterfutures 0.5. Original Copyright: 2022
     Adrian Sampson, released under the MIT licence
 
+    **Note**: if `self.interval != 1` then this should be modified, but for
+    `clusterfutures` v0.5 `self.interval` is indeed equal to `1`.
 
     Changed from clusterfutures:
     * Rename `id_to_filename` to `id_to_filenames`
