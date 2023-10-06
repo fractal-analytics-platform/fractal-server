@@ -146,9 +146,7 @@ async def dummy_task_package_missing_manifest(
 
 
 @pytest.fixture(scope="function")
-async def install_dummy_packages(
-    tmp777_session_path, dummy_task_package, override_settings
-):
+async def install_dummy_packages(tmp777_session_path, dummy_task_package):
     """
     NOTE that the system python3 on the slurm containers (AKA /usr/bin/python3)
     is 3.9, and relink_python_interpreter will map to it. Therefore this
@@ -189,7 +187,7 @@ async def install_dummy_packages(
 
 
 @pytest.fixture(scope="function")
-async def collect_packages(db_sync, install_dummy_packages, override_settings):
+async def collect_packages(db_sync, install_dummy_packages):
     from fractal_server.app.api.v1.task_collection import _insert_tasks
 
     tasks = await _insert_tasks(task_list=install_dummy_packages, db=db_sync)
@@ -197,7 +195,7 @@ async def collect_packages(db_sync, install_dummy_packages, override_settings):
 
 
 @pytest.fixture(scope="function")
-def relink_python_interpreter(collect_packages, override_settings):
+def relink_python_interpreter(collect_packages):
     """
     Rewire python executable in tasks
 
