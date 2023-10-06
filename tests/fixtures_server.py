@@ -146,25 +146,23 @@ async def set_default_test_settings(tmp777_session_path):
 
 
 @pytest.fixture(scope="function")
-async def override_settings_startup(tmp777_session_path, request):
+async def override_settings_startup(tmp777_session_path, monkeypatch, request):
+    if not request.__dict__.get("param"):
+        return
+
     tmp_path = tmp777_session_path("server_folder")
     patched_settings = get_default_test_settings(tmp_path)
-
-    if not request.__dict__.get("param"):
-        raise ValueError(
-            "No arguments given to the fixture `override_settings_startup`."
-        )
 
     for k, v in request.param.items():
         setattr(patched_settings, k, v)
 
-    with pytest.MonkeyPatch.context() as mp:
-        for module in modules_to_patch:
-            try:
-                mp.setattr(f"{module}.get_settings", lambda: patched_settings)
-            except AttributeError:
-                pass
-        yield
+    for module in modules_to_patch:
+        try:
+            monkeypatch.setattr(
+                f"{module}.get_settings", lambda: patched_settings
+            )
+        except AttributeError:
+            pass
 
 
 @pytest.fixture(scope="function")
@@ -199,13 +197,13 @@ async def db_create_tables():
 
 
 @pytest.fixture
-async def db(db_create_tables):
+async def db(db_create_tables, override_settings_startup):
     async for session in get_db():
         yield session
 
 
 @pytest.fixture
-async def db_sync(db_create_tables):
+async def db_sync(db_create_tables, override_settings_startup):
     from fractal_server.app.db import get_sync_db
 
     for session in get_sync_db():
@@ -213,7 +211,7 @@ async def db_sync(db_create_tables):
 
 
 @pytest.fixture
-async def app() -> AsyncGenerator[FastAPI, Any]:
+async def app(override_settings_startup) -> AsyncGenerator[FastAPI, Any]:
     app = FastAPI()
     yield app
 
