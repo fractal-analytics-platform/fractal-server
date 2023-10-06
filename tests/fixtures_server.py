@@ -185,7 +185,7 @@ async def override_settings_runtime(monkeypatch):
 
 
 @pytest.fixture
-async def db_create_tables():
+async def db_create_tables(override_settings_startup):
     from fractal_server.app.db import DB
     from fractal_server.app.models import SQLModel
 
@@ -199,13 +199,13 @@ async def db_create_tables():
 
 
 @pytest.fixture
-async def db(db_create_tables, override_settings_startup):
+async def db(db_create_tables):
     async for session in get_db():
         yield session
 
 
 @pytest.fixture
-async def db_sync(db_create_tables, override_settings_startup):
+async def db_sync(db_create_tables):
     from fractal_server.app.db import get_sync_db
 
     for session in get_sync_db():
