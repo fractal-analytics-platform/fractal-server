@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 import shlex
@@ -52,29 +51,6 @@ def docker_compose_file(pytestconfig, testdata_path: Path):
             tar.add(f, arcname=f.relative_to(CODE_ROOT.parent))
 
     return str(testdata_path / "slurm_docker_images/docker-compose.yml")
-
-
-@pytest.fixture(scope="function")
-def slurm_config():
-    config = {
-        "partition": "main",
-        "cpus_per_job": {"target": 2, "max": 2},
-        "mem_per_job": {"target": 200, "max": 1000},
-        "number_of_jobs": {"target": 2, "max": 10},
-        "if_needs_gpu": {
-            # Possible overrides: partition, gres, constraint
-            # "partition": "gpu",
-            # "gres": "gpu:1",
-            # "constraint": "gpuram32gb",
-        },
-    }
-
-    from fractal_server.config import get_settings
-
-    FRACTAL_SLURM_CONFIG_FILE = Path(get_settings().FRACTAL_SLURM_CONFIG_FILE)
-    with FRACTAL_SLURM_CONFIG_FILE.open("w") as f:
-        json.dump(config, f, indent=2)
-    return config
 
 
 @pytest.fixture
