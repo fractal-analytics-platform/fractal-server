@@ -217,7 +217,9 @@ async def test_project_apply_existing_job(
 
 
 @pytest.mark.parametrize(
-    "override_settings", [{"FRACTAL_RUNNER_BACKEND": "slurm"}], indirect=True
+    "override_settings_startup",
+    [{"FRACTAL_RUNNER_BACKEND": "slurm"}],
+    indirect=True,
 )
 async def test_project_apply_missing_user_attributes(
     db,
@@ -228,7 +230,7 @@ async def test_project_apply_missing_user_attributes(
     resource_factory,
     workflow_factory,
     task_factory,
-    override_settings,
+    override_settings_startup,
 ):
     """
     When using the slurm backend, user.slurm_user and user.cache_dir become

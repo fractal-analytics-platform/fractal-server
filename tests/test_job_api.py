@@ -9,12 +9,12 @@ backends_available = list(_backends.keys())
 
 
 @pytest.mark.parametrize(
-    "override_settings, backend",
+    "override_settings_startup, backend",
     [
         ({"FRACTAL_RUNNER_BACKEND": backend}, backend)
         for backend in backends_available
     ],
-    indirect=["override_settings"],
+    indirect=["override_settings_startup"],
 )
 async def test_stop_job(
     db,
@@ -26,7 +26,7 @@ async def test_stop_job(
     dataset_factory,
     tmp_path,
     task_factory,
-    override_settings,
+    override_settings_startup,
     backend,
 ):
 

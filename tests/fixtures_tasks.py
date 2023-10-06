@@ -89,7 +89,7 @@ async def dummy_task_package(
 
 @pytest.fixture
 async def dummy_task_package_invalid_manifest(
-    testdata_path, tmp_path, override_settings
+    testdata_path, tmp_path
 ) -> AsyncGenerator[Path, None]:
     from .data import tasks_dummy as task_package
 
@@ -120,7 +120,7 @@ async def dummy_task_package_invalid_manifest(
 
 @pytest.fixture
 async def dummy_task_package_missing_manifest(
-    testdata_path, tmp_path, override_settings
+    testdata_path, tmp_path
 ) -> AsyncGenerator[Path, None]:
     from .data import tasks_dummy as task_package
 
@@ -145,7 +145,7 @@ async def dummy_task_package_missing_manifest(
     yield wheel_path
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 async def install_dummy_packages(tmp777_session_path, dummy_task_package):
     """
     NOTE that the system python3 on the slurm containers (AKA /usr/bin/python3)

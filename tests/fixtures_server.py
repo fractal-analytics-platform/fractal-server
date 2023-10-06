@@ -10,7 +10,9 @@ This file is part of Fractal and was originally developed by eXact lab S.r.l.
 Institute for Biomedical Research and Pelkmans Lab from the University of
 Zurich.
 """
+import glob
 import logging
+import os
 import random
 import shutil
 from dataclasses import dataclass
@@ -42,24 +44,6 @@ except ModuleNotFoundError:
     DB_ENGINE = "sqlite"
 
 HAS_LOCAL_SBATCH = bool(shutil.which("sbatch"))
-
-# FIXME make this list a "session" fixture
-MODULES_TO_PATCH = [
-    "fractal_server.config",
-    "fractal_server.app.api",
-    "fractal_server.app.api.v1.job",
-    "fractal_server.app.api.v1.project",
-    "fractal_server.app.api.v1.task_collection",
-    "fractal_server.app.db",
-    "fractal_server.app.runner",
-    "fractal_server.app.runner._local._local_config",
-    "fractal_server.app.runner._slurm._slurm_config",
-    "fractal_server.app.runner._slurm.executor",
-    "fractal_server.app.security",
-    "fractal_server.logger",
-    "fractal_server.main",
-    "fractal_server.tasks.collection",
-]
 
 
 def check_python_has_venv(python_path: str, temp_path: Path):
@@ -139,24 +123,36 @@ def get_default_test_settings(temp_path: Path):
     return settings
 
 
+modules_to_patch = [
+    module[:-3]
+    for module in glob.glob(
+        os.path.join("fractal_server", "**/*.py"), recursive=True
+    )
+    if "migrations" not in module
+]
+
+
 @pytest.fixture(scope="function", autouse=True)
-async def override_settings(
-    tmp777_session_path, request, MTP=MODULES_TO_PATCH
-):
+async def override_settings_startup(tmp777_session_path, request):
     tmp_path = tmp777_session_path("server_folder")
     patched_settings = get_default_test_settings(tmp_path)
 
     if request.__dict__.get("param"):
         for k, v in request.param.items():
             setattr(patched_settings, k, v)
+
     with pytest.MonkeyPatch.context() as mp:
-        for module in MTP:
-            mp.setattr(f"{module}.get_settings", lambda: patched_settings)
+        for module in modules_to_patch:
+            mp.setattr(
+                f"{module}.get_settings",
+                lambda: patched_settings,
+                raising=False,
+            )
         yield mp
 
 
 @pytest.fixture(scope="function")
-async def override_settings_runtime(monkeypatch, MTP=MODULES_TO_PATCH):
+async def override_settings_runtime(monkeypatch):
     from fractal_server.config import get_settings
 
     settings = get_settings()
@@ -164,8 +160,10 @@ async def override_settings_runtime(monkeypatch, MTP=MODULES_TO_PATCH):
     def _override_settings_runtime(**kwargs):
         for k, v in kwargs.items():
             setattr(settings, k, v)
-        for module in MTP:
-            monkeypatch.setattr(f"{module}.get_settings", lambda: settings)
+        for module in modules_to_patch:
+            monkeypatch.setattr(
+                f"{module}.get_settings", lambda: settings, raising=False
+            )
 
     return _override_settings_runtime
 

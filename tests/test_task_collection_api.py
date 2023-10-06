@@ -455,12 +455,12 @@ async def test_failed_collection_existing_db_tasks(
 
 
 @pytest.mark.parametrize(
-    "override_settings, level",
+    "override_settings_startup, level",
     [
         ({"FRACTAL_LOGGING_LEVEL": level}, level)
         for level in [logging.DEBUG, logging.INFO, logging.WARNING]
     ],
-    indirect=["override_settings"],
+    indirect=["override_settings_startup"],
 )
 async def test_logs(
     db,
@@ -468,7 +468,7 @@ async def test_logs(
     MockCurrentUser,
     dummy_task_package,
     tmp_path,
-    override_settings,
+    override_settings_startup,
     level,
     override_settings_runtime,
 ):
