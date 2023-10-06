@@ -131,6 +131,8 @@ modules_to_patch = [
     if "migrations" not in module
 ]
 
+# SETTINGS fixtures
+
 
 @pytest.fixture(scope="session", autouse=True)
 async def set_default_test_settings(tmp777_session_path):
@@ -145,7 +147,7 @@ async def set_default_test_settings(tmp777_session_path):
         yield
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 async def override_settings_startup(tmp777_session_path, monkeypatch, request):
     if not request.__dict__.get("param"):
         return
@@ -157,15 +159,12 @@ async def override_settings_startup(tmp777_session_path, monkeypatch, request):
         setattr(patched_settings, k, v)
 
     for module in modules_to_patch:
-        try:
-            monkeypatch.setattr(
-                f"{module}.get_settings", lambda: patched_settings
-            )
-        except AttributeError:
-            pass
+        monkeypatch.setattr(
+            f"{module}.get_settings", lambda: patched_settings, raising=False
+        )
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 async def override_settings_runtime(monkeypatch):
     from fractal_server.config import get_settings
 
@@ -180,6 +179,9 @@ async def override_settings_runtime(monkeypatch):
             )
 
     return _override_settings_runtime
+
+
+# DB fixtures
 
 
 @pytest.fixture
@@ -210,6 +212,9 @@ async def db_sync(db_create_tables, override_settings_startup):
         yield session
 
 
+# APP fixtures
+
+
 @pytest.fixture
 async def app(override_settings_startup) -> AsyncGenerator[FastAPI, Any]:
     app = FastAPI()
@@ -221,6 +226,9 @@ async def register_routers(app):
     from fractal_server.main import collect_routers
 
     collect_routers(app)
+
+
+# CLIENT fixtures
 
 
 @pytest.fixture
@@ -343,6 +351,9 @@ async def MockCurrentUser(app, db):
                 ] = self.previous_user
 
     return _MockCurrentUser
+
+
+# FACTORY fixtures
 
 
 @pytest.fixture
