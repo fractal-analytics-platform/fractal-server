@@ -140,10 +140,11 @@ async def set_default_test_settings(tmp777_session_path):
     patched_settings = get_default_test_settings(tmp_path)
     with pytest.MonkeyPatch.context() as mp:
         for module in modules_to_patch:
-            try:
-                mp.setattr(f"{module}.get_settings", lambda: patched_settings)
-            except AttributeError:
-                pass
+            mp.setattr(
+                f"{module}.get_settings",
+                lambda: patched_settings,
+                raising=False,
+            )
         yield
 
 
