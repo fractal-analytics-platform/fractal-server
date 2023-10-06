@@ -379,7 +379,7 @@ async def dataset_factory(db: AsyncSession, override_settings):
 
 
 @pytest.fixture
-async def resource_factory(db, testdata_path, override_ettings):
+async def resource_factory(db, testdata_path, override_settings):
     from fractal_server.app.models import Dataset, Resource
 
     async def __resource_factory(dataset: Dataset, **kwargs):
