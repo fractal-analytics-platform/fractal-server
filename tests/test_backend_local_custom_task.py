@@ -37,7 +37,7 @@ async def test_full_workflow(
     dataset_factory,
 ):
     override_settings_runtime(
-        FRACTAL_RUNNER_WORKING_BASE_DIR=str(tmp777_path / "artifacts")
+        FRACTAL_RUNNER_WORKING_BASE_DIR=(tmp777_path / "artifacts")
     )
     async with MockCurrentUser(persist=True) as user:
         # add custom task
