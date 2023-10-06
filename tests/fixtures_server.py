@@ -124,7 +124,7 @@ def get_default_test_settings(temp_path: Path):
 
 
 modules_to_patch = [
-    module[:-3]
+    module[:-3].replace("/", ".").replace(".__init__", "")
     for module in glob.glob(
         os.path.join("fractal_server", "**/*.py"), recursive=True
     )
@@ -132,23 +132,39 @@ modules_to_patch = [
 ]
 
 
-@pytest.fixture(scope="function", autouse=True)
+@pytest.fixture(scope="session", autouse=True)
+async def set_default_test_settings(tmp777_session_path):
+    tmp_path = tmp777_session_path("server_folder")
+    patched_settings = get_default_test_settings(tmp_path)
+    with pytest.MonkeyPatch.context() as mp:
+        for module in modules_to_patch:
+            try:
+                mp.setattr(f"{module}.get_settings", lambda: patched_settings)
+            except AttributeError:
+                pass
+        yield
+
+
+@pytest.fixture(scope="function")
 async def override_settings_startup(tmp777_session_path, request):
     tmp_path = tmp777_session_path("server_folder")
     patched_settings = get_default_test_settings(tmp_path)
 
-    if request.__dict__.get("param"):
-        for k, v in request.param.items():
-            setattr(patched_settings, k, v)
+    if not request.__dict__.get("param"):
+        raise ValueError(
+            "No arguments given to the fixture `override_settings_startup`."
+        )
+
+    for k, v in request.param.items():
+        setattr(patched_settings, k, v)
 
     with pytest.MonkeyPatch.context() as mp:
         for module in modules_to_patch:
-            mp.setattr(
-                f"{module}.get_settings",
-                lambda: patched_settings,
-                raising=False,
-            )
-        yield mp
+            try:
+                mp.setattr(f"{module}.get_settings", lambda: patched_settings)
+            except AttributeError:
+                pass
+        yield
 
 
 @pytest.fixture(scope="function")
