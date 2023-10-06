@@ -145,7 +145,7 @@ async def dummy_task_package_missing_manifest(
     yield wheel_path
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 async def install_dummy_packages(tmp777_session_path, dummy_task_package):
     """
     NOTE that the system python3 on the slurm containers (AKA /usr/bin/python3)
