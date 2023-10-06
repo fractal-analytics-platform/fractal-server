@@ -64,8 +64,7 @@ def check_settings() -> None:
     Raises:
         ValidationError: If the configuration is invalid.
     """
-    settings = get_settings()
-    settings.check()
+    get_settings().check()
 
 
 async def __on_startup() -> None:

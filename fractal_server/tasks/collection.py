@@ -81,8 +81,7 @@ def get_absolute_venv_path(venv_path: Path) -> Path:
     if venv_path.is_absolute():
         package_path = venv_path
     else:
-        settings = get_settings()
-        package_path = settings.FRACTAL_TASKS_DIR / venv_path  # type: ignore
+        package_path = get_settings().FRACTAL_TASKS_DIR / venv_path
     return package_path
 
 
