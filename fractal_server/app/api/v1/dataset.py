@@ -1,4 +1,5 @@
 import json
+import logging
 from pathlib import Path
 from typing import Optional
 
@@ -50,6 +51,9 @@ async def create_dataset(
     """
     Add new dataset to current project
     """
+    logging.debug(f"POST /project/{project_id}/dataset")
+    logging.debug(dataset)
+
     await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
@@ -75,6 +79,8 @@ async def read_dataset(
     """
     Get info on a dataset associated to the current project
     """
+    logging.debug(f"GET /project/{project_id}/dataset/{dataset_id}")
+
     output = await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
@@ -100,6 +106,9 @@ async def update_dataset(
     """
     Edit a dataset associated to the current project
     """
+    logging.debug(f"PATCH /project/{project_id}/dataset/{dataset_id}")
+    logging.debug(dataset_update)
+
     output = await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
@@ -130,6 +139,8 @@ async def delete_dataset(
     """
     Delete a dataset associated to the current project
     """
+    logging.debug(f"DELETE /project/{project_id}/dataset/{dataset_id}")
+
     output = await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
@@ -177,6 +188,9 @@ async def create_resource(
     """
     Add resource to an existing dataset
     """
+    logging.debug(f"POST /project/{project_id}/dataset/{dataset_id}/resource/")
+    logging.debug(resource)
+
     output = await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
@@ -205,6 +219,8 @@ async def get_resource_list(
     """
     Get resources from a dataset
     """
+    logging.debug(f"GET /project/{project_id}/dataset/{dataset_id}/resource/")
+
     await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
@@ -233,6 +249,12 @@ async def update_resource(
     """
     Edit a resource of a dataset
     """
+    logging.debug(
+        "PATCH "
+        f"/project/{project_id}/dataset/{dataset_id}/resource/{resource_id}"
+    )
+    logging.debug(resource_update)
+
     output = await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
@@ -273,6 +295,11 @@ async def delete_resource(
     """
     Delete a resource of a dataset
     """
+    logging.debug(
+        "DELETE "
+        f"/project/{project_id}/dataset/{dataset_id}/resource/{resource_id}"
+    )
+
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
@@ -303,6 +330,10 @@ async def export_history_as_workflow(
     """
     Extract a reproducible workflow from the dataset history.
     """
+    logging.debug(
+        f"GET /project/{project_id}/dataset/{dataset_id}/export_history/"
+    )
+
     # Get the dataset DB entry
     output = await _get_dataset_check_owner(
         project_id=project_id,
@@ -385,6 +416,8 @@ async def get_workflowtask_status(
     """
     Extract the status of all `WorkflowTask`s that ran on a given `Dataset`.
     """
+    logging.debug(f"GET /project/{project_id}/dataset/{dataset_id}/status/")
+
     # Get the dataset DB entry
     output = await _get_dataset_check_owner(
         project_id=project_id,
