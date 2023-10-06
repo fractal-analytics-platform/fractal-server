@@ -13,7 +13,6 @@
 # Zurich.
 import logging
 import shutil
-from functools import lru_cache
 from os import environ
 from os import getenv
 from os.path import abspath
@@ -419,7 +418,6 @@ class Settings(BaseSettings):
         self.check_runner()
 
 
-@lru_cache()
 def get_settings(settings=Settings()) -> Settings:
     logging.warn("Fractal Settings:")
     for k, v in settings.dict().items():
