@@ -168,18 +168,29 @@ async def override_settings_startup(tmp777_session_path, monkeypatch, request):
     Allows to change the default settings from `set_default_test_settings`.
     See `tests/test_unit_fixtures_settings.py` for usage.
     """
-    if not request.__dict__.get("param"):
-        return
 
     tmp_path = tmp777_session_path("server_folder")
     patched_settings = get_default_test_settings(tmp_path)
 
-    for k, v in request.param.items():
-        setattr(patched_settings, k, v)
+    try:
+        for k, v in request.param.items():
+            setattr(patched_settings, k, v)
+    except AttributeError:
+        return  # `request` has no `param`
 
-    for module in MODULES_TO_PATCH:
-        monkeypatch.setattr(
-            f"{module}.get_settings", lambda: patched_settings, raising=False
+    try:
+        Settings(**patched_settings.dict())  # run pydantic type checking
+        for module in MODULES_TO_PATCH:
+            monkeypatch.setattr(
+                f"{module}.get_settings",
+                lambda: patched_settings,
+                raising=False,
+            )
+    except ValidationError as e:
+        logging.warning(
+            "Error validating Settings in `override_settings_startup`.\n"
+            f"Arguments provided = {request.param.items()}\n"
+            f"Original error = {e}"
         )
 
 
