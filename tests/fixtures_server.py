@@ -29,6 +29,7 @@ from asgi_lifespan import LifespanManager
 from devtools import debug
 from fastapi import FastAPI
 from httpx import AsyncClient
+from pydantic.error_wrappers import ValidationError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -190,9 +191,18 @@ async def override_settings_runtime(monkeypatch, override_settings_startup):
         settings = get_settings()
         for k, v in kwargs.items():
             setattr(settings, k, v)
-        for module in MODULES_TO_PATCH:
-            monkeypatch.setattr(
-                f"{module}.get_settings", lambda: settings, raising=False
+
+        try:
+            Settings(**settings.dict())  # run pydantic type checking
+            for module in MODULES_TO_PATCH:
+                monkeypatch.setattr(
+                    f"{module}.get_settings", lambda: settings, raising=False
+                )
+        except ValidationError as e:
+            logging.warning(
+                "Error validating Settings in `override_settings_runtime`.\n"
+                f"Arguments provided = {kwargs}\n"
+                f"Original error = {e}"
             )
 
     return _override_settings_runtime
