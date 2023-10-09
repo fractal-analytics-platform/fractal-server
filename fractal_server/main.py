@@ -142,9 +142,6 @@ async def _create_first_user(
 
 
 class LogCORSMiddleware(CORSMiddleware):
-    def __init__(self, app, **kwargs):
-        super().__init__(app, **kwargs)
-
     async def __call__(
         self, scope: Scope, receive: Receive, send: Send
     ) -> None:
