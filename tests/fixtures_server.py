@@ -81,7 +81,7 @@ def check_python_has_venv(python_path: str, temp_path: Path):
         )
 
 
-def get_default_test_settings(temp_path: Path):
+def get_default_test_settings(temp_path: Path) -> Settings:
     """
     Initializes and returns an instance of Settings with default values we want
     to use in tests.
@@ -144,7 +144,7 @@ subdirectories, excluding all files within the 'migrations' subdirectory.
 
 
 @pytest.fixture(scope="session", autouse=True)
-async def set_default_test_settings(tmp777_session_path) -> None:
+async def set_default_test_settings(tmp777_session_path):
     """
     Initialize settings in test environent as returned from
     `get_default_test_settings`
