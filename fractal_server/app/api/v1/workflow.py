@@ -19,12 +19,6 @@ from fastapi import Response
 from fastapi import status
 from sqlmodel import select
 
-from ....common.schemas import WorkflowCreate
-from ....common.schemas import WorkflowExport
-from ....common.schemas import WorkflowImport
-from ....common.schemas import WorkflowRead
-from ....common.schemas import WorkflowTaskCreate
-from ....common.schemas import WorkflowUpdate
 from ....logger import close_logger
 from ....logger import set_logger
 from ...db import AsyncSession
@@ -32,6 +26,12 @@ from ...db import get_db
 from ...models import ApplyWorkflow
 from ...models import Task
 from ...models import Workflow
+from ...schemas import WorkflowCreate
+from ...schemas import WorkflowExport
+from ...schemas import WorkflowImport
+from ...schemas import WorkflowRead
+from ...schemas import WorkflowTaskCreate
+from ...schemas import WorkflowUpdate
 from ...security import current_active_user
 from ...security import User
 from ._aux_functions import _check_workflow_exists
@@ -134,6 +134,11 @@ async def update_workflow(
         project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
 
+    if patch.name:
+        await _check_workflow_exists(
+            name=patch.name, project_id=project_id, db=db
+        )
+
     for key, value in patch.dict(exclude_unset=True).items():
         if key == "reordered_workflowtask_ids":
             current_workflowtask_ids = [
@@ -155,6 +160,7 @@ async def update_workflow(
                 workflow.task_list[ind_wftask].order = new_order
         else:
             setattr(workflow, key, value)
+
     await db.commit()
     await db.refresh(workflow)
     await db.close()

@@ -9,11 +9,6 @@ from fastapi import status
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
-from ....common.schemas import ApplyWorkflowCreate
-from ....common.schemas import ApplyWorkflowRead
-from ....common.schemas import ProjectCreate
-from ....common.schemas import ProjectRead
-from ....common.schemas import ProjectUpdate
 from ....config import get_settings
 from ....logger import close_logger
 from ....logger import set_logger
@@ -30,8 +25,14 @@ from ...models import Project
 from ...runner import submit_workflow
 from ...runner import validate_workflow_compatibility
 from ...runner.common import set_start_and_last_task_index
+from ...schemas import ApplyWorkflowCreate
+from ...schemas import ApplyWorkflowRead
+from ...schemas import ProjectCreate
+from ...schemas import ProjectRead
+from ...schemas import ProjectUpdate
 from ...security import current_active_user
 from ...security import User
+from ._aux_functions import _check_project_exists
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_workflow_check_owner
@@ -70,18 +71,9 @@ async def create_project(
     """
 
     # Check that there is no project with the same user and name
-    stm = (
-        select(Project)
-        .join(LinkUserProject)
-        .where(Project.name == project.name)
-        .where(LinkUserProject.user_id == user.id)
+    await _check_project_exists(
+        project_name=project.name, user_id=user.id, db=db
     )
-    res = await db.execute(stm)
-    if res.scalars().all():
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Project name ({project.name}) already in use",
-        )
 
     db_project = Project.from_orm(project)
     db_project.dataset_list.append(Dataset(name=project.default_dataset_name))
@@ -132,17 +124,9 @@ async def update_project(
     )
 
     # Check that there is no project with the same user and name
-    stm = (
-        select(Project)
-        .join(LinkUserProject)
-        .where(Project.name == project_update.name)
-        .where(LinkUserProject.user_id == user.id)
-    )
-    res = await db.execute(stm)
-    if res.scalars().all():
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Project name ({project_update.name}) already in use",
+    if project_update.name is not None:
+        await _check_project_exists(
+            project_name=project_update.name, user_id=user.id, db=db
         )
 
     for key, value in project_update.dict(exclude_unset=True).items():

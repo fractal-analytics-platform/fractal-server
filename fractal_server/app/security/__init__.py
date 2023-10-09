@@ -37,6 +37,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Request
+from fastapi import Response
 from fastapi import status
 from fastapi_users import BaseUserManager
 from fastapi_users import FastAPIUsers
@@ -54,14 +55,14 @@ from sqlalchemy.orm import selectinload
 from sqlmodel import func
 from sqlmodel import select
 
-from ...common.schemas.user import UserCreate
-from ...common.schemas.user import UserRead
-from ...common.schemas.user import UserUpdate
 from ...config import get_settings
 from ...syringe import Inject
 from ..db import get_db
 from ..models.security import OAuthAccount
 from ..models.security import UserOAuth as User
+from ..schemas.user import UserCreate
+from ..schemas.user import UserRead
+from ..schemas.user import UserUpdate
 
 
 class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
@@ -180,7 +181,10 @@ async def get_user_db(
 
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     async def on_after_login(
-        self, user: User, request: Optional[Request] = None
+        self,
+        user: User,
+        request: Optional[Request] = None,
+        response: Optional[Response] = None,
     ) -> None:
         """
         Perform logic after user login.

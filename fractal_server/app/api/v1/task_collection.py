@@ -11,11 +11,8 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from pydantic.error_wrappers import ValidationError
+from sqlmodel import select
 
-from ....common.schemas import StateRead
-from ....common.schemas import TaskCollectPip
-from ....common.schemas import TaskCollectStatus
-from ....common.schemas import TaskCreate
 from ....config import get_settings
 from ....logger import close_logger
 from ....logger import set_logger
@@ -29,12 +26,17 @@ from ....tasks.collection import get_collection_log
 from ....tasks.collection import get_collection_path
 from ....tasks.collection import get_log_path
 from ....tasks.collection import inspect_package
+from ....tasks.collection import slugify_task_name
 from ...db import AsyncSession
 from ...db import DBSyncSession
 from ...db import get_db
 from ...db import get_sync_db
 from ...models import State
 from ...models import Task
+from ...schemas import StateRead
+from ...schemas import TaskCollectPip
+from ...schemas import TaskCollectStatus
+from ...schemas import TaskCreate
 from ...security import current_active_user
 from ...security import User
 
@@ -255,14 +257,30 @@ async def collect_tasks_pip(
         return state
     settings = Inject(get_settings)
 
+    # Check that tasks are not already in the DB
+    for new_task in task_pkg.package_manifest.task_list:
+        new_task_name_slug = slugify_task_name(new_task.name)
+        new_task_source = f"{task_pkg.package_source}:{new_task_name_slug}"
+        stm = select(Task).where(Task.source == new_task_source)
+        res = await db.execute(stm)
+        if res.scalars().all():
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "Cannot collect package. Task with source "
+                    f'"{new_task_source}" already exists in the database.'
+                ),
+            )
+
+    # All checks are OK, proceed with task collection
     full_venv_path = venv_path.relative_to(settings.FRACTAL_TASKS_DIR)
     collection_status = TaskCollectStatus(
         status="pending", venv_path=full_venv_path, package=task_pkg.package
     )
-    # replacing with path because of non-serializable Path
+
+    # Create State object (after casting venv_path to string)
     collection_status_dict = collection_status.dict()
     collection_status_dict["venv_path"] = str(collection_status.venv_path)
-
     state = State(data=collection_status_dict)
     db.add(state)
     await db.commit()

@@ -10,9 +10,9 @@ from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
-from ...common.schemas import _ApplyWorkflowBase
 from ...utils import get_timestamp
-from .project import Dataset
+from ..schemas.applyworkflow import _ApplyWorkflowBase
+from .dataset import Dataset
 from .workflow import Workflow
 
 

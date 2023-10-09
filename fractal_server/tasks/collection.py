@@ -26,10 +26,10 @@ from zipfile import ZipFile
 
 from pydantic import root_validator
 
-from ..common.schemas import ManifestV1
-from ..common.schemas import TaskCollectPip
-from ..common.schemas import TaskCollectStatus
-from ..common.schemas import TaskCreate
+from ..app.schemas import ManifestV1
+from ..app.schemas import TaskCollectPip
+from ..app.schemas import TaskCollectStatus
+from ..app.schemas import TaskCreate
 from ..config import get_settings
 from ..logger import get_logger
 from ..syringe import Inject
@@ -37,6 +37,10 @@ from ..utils import execute_command
 
 
 FRACTAL_PUBLIC_TASK_SUBDIR = ".fractal"
+
+
+def slugify_task_name(task_name: str) -> str:
+    return task_name.replace(" ", "_").lower()
 
 
 def get_python_interpreter(version: Optional[str] = None) -> str:
@@ -364,7 +368,7 @@ async def create_package_environment_pip(
             # Fill in attributes for TaskCreate
             task_executable = package_root / t.executable
             cmd = f"{python_bin.as_posix()} {task_executable.as_posix()}"
-            task_name_slug = t.name.replace(" ", "_").lower()
+            task_name_slug = slugify_task_name(t.name)
             task_source = f"{task_pkg.package_source}:{task_name_slug}"
             if not task_executable.exists():
                 raise FileNotFoundError(

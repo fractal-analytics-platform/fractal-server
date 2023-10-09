@@ -629,26 +629,19 @@ class FractalSlurmExecutor(SlurmExecutor):
         self, jobid: str, info: str
     ) -> JobExecutionError:
         """
-        Prepare the JobExecutionError for a given job
+        Prepare the `JobExecutionError` for a given job
 
-            1. Wait for `FRACTAL_SLURM_KILLWAIT_INTERVAL` seconds, so that
-               SLURM has time to complete the job cancellation.
-            2. Assign the SLURM-related file names as attributes of the
-               JobExecutionError instance.
-
-        Note: this function should be called after values in
-        `self.map_jobid_to_slurm_files` have been updated, so that they point
-        to `self.working_dir` files which are readable for the user running
-        fractal-server.  by the server
+        This method creates a `JobExecutionError` object and sets its attribute
+        to the appropriate SLURM-related file names. Note that the method shoul
+        always be called after values in `self.map_jobid_to_slurm_files` have
+        been updated, so that they point to `self.working_dir` files which are
+        readable from `fractal-server`.
 
         Arguments:
             jobid:
                 ID of the SLURM job.
+            info:
         """
-        # Wait FRACTAL_SLURM_KILLWAIT_INTERVAL seconds
-        settings = Inject(get_settings)
-        settings.FRACTAL_SLURM_KILLWAIT_INTERVAL
-        time.sleep(settings.FRACTAL_SLURM_KILLWAIT_INTERVAL)
         # Extract SLURM file paths
         with self.jobs_lock:
             (
@@ -732,7 +725,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                 # missing
                 if not out_path.exists():
                     settings = Inject(get_settings)
-                    time.sleep(settings.FRACTAL_SLURM_OUTPUT_FILE_GRACE_TIME)
+                    time.sleep(settings.FRACTAL_SLURM_ERROR_HANDLING_INTERVAL)
                 if not out_path.exists():
                     # Output pickle file is missing
                     info = (
@@ -749,8 +742,8 @@ class FractalSlurmExecutor(SlurmExecutor):
                         "(e.g. because there is not enough space on disk, or "
                         "due to an overloaded NFS filesystem). "
                         "Note that the server configuration has "
-                        "FRACTAL_SLURM_OUTPUT_FILE_GRACE_TIME="
-                        f"{settings.FRACTAL_SLURM_OUTPUT_FILE_GRACE_TIME} "
+                        "FRACTAL_SLURM_ERROR_HANDLING_INTERVAL="
+                        f"{settings.FRACTAL_SLURM_ERROR_HANDLING_INTERVAL} "
                         "seconds.\n"
                     )
                     job_exc = self._prepare_JobExecutionError(jobid, info=info)
