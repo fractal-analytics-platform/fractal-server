@@ -32,5 +32,6 @@ from .workflow import WorkflowTaskCreate  # noqa: F401
 from .workflow import WorkflowTaskExport  # noqa: F401
 from .workflow import WorkflowTaskImport  # noqa: F401
 from .workflow import WorkflowTaskRead  # noqa: F401
+from .workflow import WorkflowTaskStatusType  # noqa: F401
 from .workflow import WorkflowTaskUpdate  # noqa: F401
 from .workflow import WorkflowUpdate  # noqa: F401
