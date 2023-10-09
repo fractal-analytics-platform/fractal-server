@@ -123,30 +123,32 @@ def get_default_test_settings(temp_path: Path):
     return settings
 
 
-def modules_to_patch():
-    """
-    Retrieves the list of all Python module names within the 'fractal_server'
-    directory and its subdirectories, excluding all files within the
-    'migrations' subdirectory.
-    """
-    return [
-        module[:-3].replace("/", ".").replace(".__init__", "")
-        for module in glob.glob(
-            os.path.join("fractal_server", "**/*.py"), recursive=True
-        )
-        if "migrations" not in module
-    ]
+MODULES_TO_PATCH = [
+    module[:-3].replace("/", ".").replace(".__init__", "")
+    for module in glob.glob(
+        os.path.join("fractal_server", "**/*.py"), recursive=True
+    )
+    if "migrations" not in module
+]
+"""
+List of all Python module names within the 'fractal_server' directory and its
+subdirectories, excluding all files within the 'migrations' subdirectory.
+"""
 
 
 # SETTINGS fixtures
 
 
 @pytest.fixture(scope="session", autouse=True)
-async def set_default_test_settings(tmp777_session_path):
+def set_default_test_settings(tmp777_session_path) -> None:
+    """
+    Initialize settings in test environent as returned from
+    `get_default_test_settings`
+    """
     tmp_path = tmp777_session_path("server_folder")
     patched_settings = get_default_test_settings(tmp_path)
     with pytest.MonkeyPatch.context() as mp:
-        for module in modules_to_patch():
+        for module in MODULES_TO_PATCH:
             mp.setattr(
                 f"{module}.get_settings",
                 lambda: patched_settings,
@@ -166,7 +168,7 @@ async def override_settings_startup(tmp777_session_path, monkeypatch, request):
     for k, v in request.param.items():
         setattr(patched_settings, k, v)
 
-    for module in modules_to_patch():
+    for module in MODULES_TO_PATCH:
         monkeypatch.setattr(
             f"{module}.get_settings", lambda: patched_settings, raising=False
         )
@@ -180,7 +182,7 @@ async def override_settings_runtime(monkeypatch, override_settings_startup):
         settings = get_settings()
         for k, v in kwargs.items():
             setattr(settings, k, v)
-        for module in modules_to_patch():
+        for module in MODULES_TO_PATCH:
             monkeypatch.setattr(
                 f"{module}.get_settings", lambda: settings, raising=False
             )
