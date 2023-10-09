@@ -18,10 +18,14 @@ This module sets up the FastAPI application that serves the Fractal Server.
 import contextlib
 from typing import Optional
 
+from devtools import debug
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_users.exceptions import UserAlreadyExists
 from sqlalchemy.exc import IntegrityError
+from starlette.types import Receive
+from starlette.types import Scope
+from starlette.types import Send
 
 from .app.db import get_db
 from .app.schemas.user import UserCreate
@@ -137,6 +141,23 @@ async def _create_first_user(
         logger.warning(f"User {email} already exists")
 
 
+class LogCORSMiddleware(CORSMiddleware):
+    def __init__(self, app, **kwargs):
+        super().__init__(app, **kwargs)
+
+    async def __call__(
+        self, scope: Scope, receive: Receive, send: Send
+    ) -> None:
+        debug("🦄", receive)
+        debug("🦄🦄", dir(receive))
+        debug(send)
+        return await super().__call__(scope=scope, receive=receive, send=send)
+
+    async def dispatch(self, request, call_next):
+        debug("🐝🐝🐝🐝🐝🐝🐝🐝🐝🐝🐝🐝🐝")
+        return await call_next(request)
+
+
 def start_application() -> FastAPI:
     """
     Create and initialise the application
@@ -154,7 +175,7 @@ def start_application() -> FastAPI:
     collect_routers(app)
     settings = Inject(get_settings)
     app.add_middleware(
-        CORSMiddleware,
+        LogCORSMiddleware,
         allow_origins=settings.FRACTAL_CORS_ALLOW_ORIGIN.split(";"),
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=[
