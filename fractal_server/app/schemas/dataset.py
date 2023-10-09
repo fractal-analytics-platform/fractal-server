@@ -7,9 +7,12 @@ from pydantic import validator
 
 from ._validators import val_absolute_path
 from ._validators import valstr
+from fractal_server.app.models.workflow import WorkflowTaskStatusType
+from fractal_server.app.schemas.workflow import WorkflowTaskRead
 
 
 __all__ = (
+    "DatasetHistoryItem",
     "DatasetUpdate",
     "DatasetCreate",
     "DatasetRead",
@@ -61,6 +64,12 @@ class ResourceRead(_ResourceBase):
     dataset_id: int
 
 
+class DatasetHistoryItem(BaseModel):
+    worfklowtask: Optional[WorkflowTaskRead]
+    status: Optional[WorkflowTaskStatusType]
+    parallelization: Optional[dict]
+
+
 class _DatasetBase(BaseModel):
     """
     Base class for `Dataset`.
@@ -69,12 +78,14 @@ class _DatasetBase(BaseModel):
         name:
         type:
         meta:
+        history:
         read_only:
     """
 
     name: str
     type: Optional[str]
     meta: dict[str, Any] = Field(default={})
+    history: DatasetHistoryItem
     read_only: bool = False
 
 
