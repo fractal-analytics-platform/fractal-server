@@ -147,7 +147,7 @@ subdirectories, excluding all files within the 'migrations' subdirectory.
 async def set_default_test_settings(tmp777_session_path):
     """
     Initialize settings in test environent as returned from
-    `get_default_test_settings`
+    `get_default_test_settings`.
     """
     tmp_path = tmp777_session_path("server_folder")
     patched_settings = get_default_test_settings(tmp_path)
@@ -163,6 +163,10 @@ async def set_default_test_settings(tmp777_session_path):
 
 @pytest.fixture
 async def override_settings_startup(tmp777_session_path, monkeypatch, request):
+    """
+    Allows to change the default settings from `set_default_test_settings`.
+    See `tests/test_unit_fixtures_settings.py` for usage.
+    """
     if not request.__dict__.get("param"):
         return
 
