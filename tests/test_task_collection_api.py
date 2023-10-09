@@ -80,9 +80,7 @@ async def test_collection(
         * if called twice, the same tasks are returned without installing
     """
 
-    override_settings_runtime(
-        FRACTAL_TASKS_DIR=str(tmp_path / "test_collection")
-    )
+    override_settings_runtime(FRACTAL_TASKS_DIR=tmp_path / "test_collection")
     from fractal_server.config import get_settings
 
     # Prepare and validate payload
