@@ -256,7 +256,8 @@ async def submit_workflow(
                 new_meta[key] = value
             else:
                 # For history key, append to existing entry
-                new_meta[key] = output_dataset.meta.get(key, []) + value
+                # new_meta[key] = output_dataset.meta.get(key, []) + value
+                output_dataset.history = value
         output_dataset.meta = new_meta
         db_sync.merge(output_dataset)
 
@@ -281,14 +282,14 @@ async def submit_workflow(
 
         # Assemble new history and assign it to output_dataset.meta
         failed_wftask = db_sync.get(WorkflowTask, e.workflow_task_id)
-        new_history = assemble_history_failed_job(
+        output_dataset.history = assemble_history_failed_job(
             job,
             output_dataset,
             workflow,
             logger,
             failed_wftask=failed_wftask,
         )
-        new_meta["history"] = new_history
+        # new_meta["history"] = new_history
         output_dataset.meta = new_meta
         db_sync.merge(output_dataset)
 
@@ -316,13 +317,13 @@ async def submit_workflow(
         new_meta = assemble_meta_failed_job(job, output_dataset)
 
         # Assemble new history and assign it to output_dataset.meta
-        new_history = assemble_history_failed_job(
+        output_dataset.history = assemble_history_failed_job(
             job,
             output_dataset,
             workflow,
             logger,
         )
-        new_meta["history"] = new_history
+        # new_meta["history"] = new_history
         output_dataset.meta = new_meta
         db_sync.merge(output_dataset)
 
@@ -346,13 +347,13 @@ async def submit_workflow(
         new_meta = assemble_meta_failed_job(job, output_dataset)
 
         # Assemble new history and assign it to output_dataset.meta
-        new_history = assemble_history_failed_job(
+        output_dataset.history = assemble_history_failed_job(
             job,
             output_dataset,
             workflow,
             logger,
         )
-        new_meta["history"] = new_history
+        # new_meta["history"] = new_history
         output_dataset.meta = new_meta
         db_sync.merge(output_dataset)
 
