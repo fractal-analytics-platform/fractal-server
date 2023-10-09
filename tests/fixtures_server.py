@@ -187,7 +187,7 @@ async def override_settings_startup(tmp777_session_path, monkeypatch, request):
                 raising=False,
             )
     except ValidationError as e:
-        logging.warning(
+        logging.error(
             "Error validating Settings in `override_settings_startup`.\n"
             f"Arguments provided = {request.param.items()}\n"
             f"Original error = {e}"
@@ -210,7 +210,7 @@ async def override_settings_runtime(monkeypatch, override_settings_startup):
                     f"{module}.get_settings", lambda: settings, raising=False
                 )
         except ValidationError as e:
-            logging.warning(
+            logging.error(
                 "Error validating Settings in `override_settings_runtime`.\n"
                 f"Arguments provided = {kwargs}\n"
                 f"Original error = {e}"
