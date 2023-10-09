@@ -419,7 +419,7 @@ class Settings(BaseSettings):
 
 
 def get_settings(settings=Settings()) -> Settings:
-    logging.warn("Fractal Settings:")
+    logging.warning("Fractal Settings:")
     for k, v in settings.dict().items():
-        logging.warn(f"{k}: {v}")
+        logging.warning(f"{k}: {v}")
     return settings
