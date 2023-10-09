@@ -4,6 +4,59 @@
 
 * Configured sqlite WAL to avoid "database is locked" error
 
+# 1.3.11
+
+This is mainly a bugfix release for the `PermissionError` issue.
+
+* Fix `PermissionError`s in parallel-task metadata aggregation for the SLURM backend (\#893).
+* Documentation:
+    * Bump `mkdocs-render-swagger-plugin` to 0.1.0 (\#889).
+* Testing:
+    * Fix `poetry install` command and `poetry` version in GitHub CI (\#889).
+
+# 1.3.10
+
+Warning: updating to this version requires changes to the configuration variable
+
+* Updates to SLURM interface:
+    * Remove `sudo`-requiring `ls` calls from `FractalFileWaitThread.check` (\#885);
+    * Change default of `FRACTAL_SLURM_POLL_INTERVAL` to 5 seconds (\#885);
+    * Rename `FRACTAL_SLURM_OUTPUT_FILE_GRACE_TIME` configuration variables into `FRACTAL_SLURM_ERROR_HANDLING_INTERVAL` (\#885);
+    * Remove `FRACTAL_SLURM_KILLWAIT_INTERVAL` variable and corresponding logic (\#885);
+    * Remove `_multiple_paths_exist_as_user` helper function (\#885);
+    * Review type hints and default values of SLURM-related configuration variables (\#885).
+* Dependencies:
+    * Update `fastapi` to version `^0.103.0` (\#877);
+    * Update `fastapi-users` to version `^12.1.0` (\#877).
+
+# 1.3.9
+
+* Make updated-metadata collection robust for metadiff files consisting of a single `null` value (\#879).
+* Automate procedure for publishing package to PyPI (\#881).
+
+# 1.3.8
+
+* Backend runner:
+    * Add aggregation logic for parallel-task updated metadata (\#852);
+    * Make updated-metadata collection robust for missing files (\#852, \#863).
+* Database interface:
+* API:
+    * Prevent user from bypassing workflow-name constraint via the PATCH endpoint (\#867).
+    * Handle error upon task collection, when tasks exist in the database but not on-disk (\#874).
+    * Add `_check_project_exists` helper function (\#872).
+* Configuration variables:
+    * Remove `DEPLOYMENT_TYPE` variable and update `alive` endpoint (\#875);
+    * Introduce `Settings.check_db` method, and call it during inline/offline migrations (\#855);
+    * Introduce `Settings.check_runner` method (\#875);
+    * Fail if `FRACTAL_BACKEND_RUNNER` is `"local"` and `FRACTAL_LOCAL_CONFIG_FILE` is set but missing on-disk (\#875);
+    * Clean up `Settings.check` method and improve its coverage (\#875);
+* Package, repository, documentation:
+    * Change `fractal_server.common` from being a git-submodule to being a regular folder (\#859).
+    * Pin documentation dependencies (\#865).
+    * Split `app/models/project.py` into two modules for dataset and project (\#871).
+    * Revamp documentation on database interface and on the corresponding configuration variables (\#855).
+
+
 # 1.3.7
 
 * Oauth2-related updates (\#822):

@@ -12,26 +12,22 @@ To contribute code, please fork the repository and submit a pull request.
 
 Fractal uses [poetry](https://python-poetry.org/docs) to manage the development
 environment and dependencies, and to streamline the build and release
-operations. Version 1.3 is recommended, although 1.2.2 should also work.
+operations; at least version 1.3 is recommended.
 
-A simple way to install it is the command `pipx install poetry==1.3`; other
-options are described
+A simple way to install `poetry` is
+```console
+pipx install poetry==1.5`
+```
+while other options are described
 [here](https://python-poetry.org/docs#installing-with-the-official-installer).
 
 
-### Clone repositories
+### Clone repository
 
 You can clone the `fractal-server` repository via
 ```
 git clone https://github.com/fractal-analytics-platform/fractal-server.git
 ```
-and then (from the `fractal-server` folder)
-```
-git submodule update --init
-```
-The second command is needed, since `fractal-server` includes
-[`fractal-common`](https://github.com/fractal-analytics-platform/fractal-common)
-as a git submodule.
 
 ### Install package
 
@@ -46,7 +42,7 @@ with `poetry run`, as in `poetry run fractalctl start`.
 
 To install Fractal Server with some additional extras, use the [`-E`
 option](https://python-poetry.org/docs/pyproject/#extras), as in
-```
+```console
 poetry install -E slurm
 poetry install -E slurm -E postgres
 poetry install --all-extras
@@ -66,7 +62,7 @@ at the version provided instead of the system interpreter.
 
 Whenever the models are modified (either in
 [`app/models`](../reference/fractal_server/app/models/) or in
-[`common/schemas`](../reference/fractal_server/common/schemas)), you should
+[`app/schemas`](../reference/fractal_server/app/schemas)), you should
 update them via a migration. To check whether this is needed, run
 ```
 poetry run alembic check
@@ -110,16 +106,9 @@ to test updating the version bump.
 2. If the previous step looks good, remove `--dry` and re-run to actually bump the
 version and commit the changes locally.
 
-3. Test the build with:
-```
-poetry build
-```
-4. Finally, publish the updated package to PyPI with:
-```
-poetry publish --dry-run
-```
-replacing ``--dry-run`` with ``--username YOUR_USERNAME --password
-YOUR_PASSWORD`` when you made sure that everything looks good.
+This is it. Upon pushing a tag which matches some filters, a dedicated GitHub
+action will build the new package and publish to PyPI.
+
 
 
 ## Run tests

@@ -2,6 +2,7 @@
 Auxiliary functions to get object from the database or perform simple checks
 """
 import asyncio
+from typing import Literal
 from typing import Union
 
 from fastapi import HTTPException
@@ -26,15 +27,21 @@ async def _get_project_check_owner(
     db: AsyncSession,
 ) -> Project:
     """
-    Check that user is a member of project and return the project
+    Check that user is a member of project and return the project.
 
-    This function is at the basis of most access-control checks.
+    Args:
+        project_id:
+        user_id:
+        db:
+
+    Returns:
+        The project object
 
     Raises:
-        HTTPException(status_code=403_FORBIDDEN): If the user is not a
-                                                  member of the project
-        HTTPException(status_code=404_NOT_FOUND): If the project does not
-                                                  exist
+        HTTPException(status_code=403_FORBIDDEN):
+            If the user is not a member of the project
+        HTTPException(status_code=404_NOT_FOUND):
+            If the project does not exist
     """
     project, link_user_project = await asyncio.gather(
         db.get(Project, project_id),
@@ -60,7 +67,22 @@ async def _get_workflow_check_owner(
     db: AsyncSession,
 ) -> Workflow:
     """
-    Get a workflow and a project, after access control on the project
+    Get a workflow and a project, after access control on the project.
+
+    Args:
+        workflow_id:
+        project_id:
+        user_id:
+        db:
+
+    Returns:
+        The workflow object.
+
+    Raises:
+        HTTPException(status_code=404_NOT_FOUND):
+            If the workflow does not exist
+        HTTPException(status_code=422_UNPROCESSABLE_ENTITY):
+            If the workflow is not associated to the project
     """
 
     # Access control for project
@@ -91,16 +113,23 @@ async def _get_workflow_task_check_owner(
     db: AsyncSession,
 ) -> tuple[WorkflowTask, Workflow]:
     """
-    Check that user has rights to access a Workflow and a WorkflowTask and
-    return the WorkflowTask
+    Check that user has access to Workflow and WorkflowTask.
+
+    Args:
+        project_id:
+        workflow_id:
+        workflow_task_id:
+        user_id:
+        db:
+
+    Returns:
+        Tuple of WorkflowTask and Workflow objects.
 
     Raises:
-        HTTPException(status_code=404_NOT_FOUND): If the WorkflowTask does not
-                                                  exist
-        HTTPException(status_code=422_UNPROCESSABLE_ENTITY): If the
-                                                             WorkflowTask is
-                                                             not associated to
-                                                             the Workflow
+        HTTPException(status_code=404_NOT_FOUND):
+            If the WorkflowTask does not exist
+        HTTPException(status_code=422_UNPROCESSABLE_ENTITY):
+            If the WorkflowTask is not associated to the Workflow
     """
 
     # Access control for workflow
@@ -131,18 +160,18 @@ async def _check_workflow_exists(
     name: str,
     project_id: int,
     db: AsyncSession,
-):
+) -> None:
     """
-    Check that there is no existing workflow for the same project and with the
-    same name
+    Check that no other workflow of this project has the same name.
 
-    Arguments:
+    Args:
         name: Workflow name
         project_id: Project ID
+        db:
 
     Raises:
-        HTTPException(status_code=422_UNPROCESSABLE_ENTITY): If such a workflow
-                                                             already exists
+        HTTPException(status_code=422_UNPROCESSABLE_ENTITY):
+            If such a workflow already exists
     """
     stm = (
         select(Workflow)
@@ -153,7 +182,39 @@ async def _check_workflow_exists(
     if res.scalars().all():
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Workflow with {name=} and {project_id=} already in use",
+            detail=f"Workflow with {name=} and {project_id=} already exists.",
+        )
+
+
+async def _check_project_exists(
+    *,
+    project_name: str,
+    user_id: int,
+    db: AsyncSession,
+) -> None:
+    """
+    Check that no other project with this name exists for this user.
+
+    Args:
+        project_name: Project name
+        user_id: User ID
+        db:
+
+    Raises:
+        HTTPException(status_code=422_UNPROCESSABLE_ENTITY):
+            If such a project already exists
+    """
+    stm = (
+        select(Project)
+        .join(LinkUserProject)
+        .where(Project.name == project_name)
+        .where(LinkUserProject.user_id == user_id)
+    )
+    res = await db.execute(stm)
+    if res.scalars().all():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Project name ({project_name}) already in use",
         )
 
 
@@ -163,9 +224,23 @@ async def _get_dataset_check_owner(
     dataset_id: int,
     user_id: int,
     db: AsyncSession,
-) -> dict[str, Union[Dataset, Project]]:
+) -> dict[Literal["dataset", "project"], Union[Dataset, Project]]:
     """
     Get a dataset and a project, after access control on the project
+
+    Args:
+        project_id:
+        dataset_id:
+        user_id:
+        db:
+
+    Returns:
+        Dictionary with the dataset and project objects (keys: `dataset`,
+            `project`).
+
+    Raises:
+        HTTPException(status_code=422_UNPROCESSABLE_ENTITY):
+            If the dataset is not associated to the project
     """
 
     # Access control for project
@@ -192,9 +267,23 @@ async def _get_job_check_owner(
     job_id: int,
     user_id: int,
     db: AsyncSession,
-) -> dict[str, Union[ApplyWorkflow, Project]]:
+) -> dict[Literal["job", "project"], Union[ApplyWorkflow, Project]]:
     """
     Get a job and a project, after access control on the project
+
+    Args:
+        project_id:
+        job_id:
+        user_id:
+        db:
+
+    Returns:
+        Dictionary with the job and project objects (keys: `job`,
+            `project`).
+
+    Raises:
+        HTTPException(status_code=422_UNPROCESSABLE_ENTITY):
+            If the job is not associated to the project
     """
     # Access control for project
     project = await _get_project_check_owner(
@@ -221,9 +310,25 @@ async def _get_task_check_owner(
     db: AsyncSession,
 ) -> Task:
     """
+    Get a task, after access control.
+
     This check constitutes a preliminary version of access control:
     if the current user is not a superuser and differs from the task owner
     (including when `owner is None`), we raise an 403 HTTP Exception.
+
+    Args:
+        task_id:
+        user:
+        db:
+
+    Returns:
+        The task object.
+
+    Raises:
+        HTTPException(status_code=404_NOT_FOUND):
+            If the task does not exist
+        HTTPException(status_code=403_FORBIDDEN):
+            If the user does not have rights to edit this task.
     """
     task = await db.get(Task, task_id)
     if not task:

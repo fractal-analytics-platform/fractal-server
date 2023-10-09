@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fractal-server"
-version = "1.3.7"
+version = "1.3.11"
 description = "Server component of the Fractal analytics platform"
 authors = [
     "Jacopo Nespolo <jacopo.nespolo@exact-lab.it>",
@@ -9,23 +9,24 @@ authors = [
 ]
 readme = "README.md"
 homepage = "https://github.com/fractal-analytics-platform/fractal-server"
+repository = "https://github.com/fractal-analytics-platform/fractal-server"
+documentation = "https://fractal-analytics-platform.github.io/fractal-server"
 license = "BSD-3-Clause"
 exclude = [
 "fractal_server/.gitignore",
-"fractal_server/common/tests",
-"fractal_server/common/.git*",
-"fractal_server/common/requirements.txt",
-"fractal_server/common/.pre-commit-config.yaml",
 ]
+
+[tool.poetry.urls]
+"Changelog" = "https://github.com/fractal-analytics-platform/fractal-server/blob/main/CHANGELOG.md"
 
 
 [tool.poetry.dependencies]
 python = "^3.9"
 python-dotenv = "^0.20.0"
-fastapi = "^0.95.0"
+fastapi = "^0.103.0"
 sqlmodel = "^0.0.8"
 aiosqlite = "^0.17.0"
-fastapi-users = {extras = ["oauth"], version = "^10.1"}
+fastapi-users = {extras = ["oauth"], version = "^12.1.0"}
 alembic = "^1.9.1"
 uvicorn = "^0.20.0"
 sqlalchemy = "^1.4"
@@ -61,13 +62,13 @@ pytest-pretty = "^1.0.1"
 pyyaml="^6.0.1"
 
 [tool.poetry.group.docs.dependencies]
-mkdocs = "^1.4.2"
-mkdocstrings = {extras = ["python"], version = "^0.20"}
-mkdocs-material = "^9.1.19"
-mkdocs-gen-files = "^0.4.0"
-mkdocs-literate-nav = "^0.5.0"
-mkdocs-section-index = "^0.3.4"
-mkdocs-render-swagger-plugin = "^0.0.4"
+mkdocs = "1.5.2"
+mkdocstrings = { extras = ["python"], version = "0.22.0" }
+mkdocs-material = "9.1.21"
+mkdocs-gen-files = "0.4.0"
+mkdocs-literate-nav = "0.5.0"
+mkdocs-section-index = "0.3.5"
+mkdocs-render-swagger-plugin = "0.1.0"
 pyyaml="^6.0.1"
 
 
@@ -83,7 +84,7 @@ filterwarnings = [
 ]
 
 [tool.bumpver]
-current_version = "1.3.7"
+current_version = "1.3.11"
 version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true
@@ -92,10 +93,10 @@ push = true
 
 [tool.bumpver.file_patterns]
 "pyproject.toml" = [
-    'version = "{version}"',
+    'version = "{version}"$',
 ]
 "fractal_server/__init__.py" = [
-    '__VERSION__ = "{version}"'
+    '__VERSION__ = "{version}"$'
 ]
 
 [tool.poetry.scripts]
@@ -105,7 +106,7 @@ fractalctl = "fractal_server.__main__:run"
 branch = true
 parallel = true
 relative_files = true
-omit = ["tests/*", "fractal_server/common/tests/*"]
+omit = ["tests/*"]
 
 [[tool.mypy.overrides]]
 module = ["devtools", "uvicorn", "sqlalchemy_utils"]

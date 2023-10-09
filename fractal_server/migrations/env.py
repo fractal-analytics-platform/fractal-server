@@ -52,6 +52,7 @@ def run_migrations_offline() -> None:
 
     """
     settings = Inject(get_settings)
+    settings.check_db()
     context.configure(
         url=settings.DATABASE_URL,
         target_metadata=target_metadata,

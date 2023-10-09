@@ -33,7 +33,5 @@ sleep 1
 
 if [[ -n $JSON_FILE && -n $METADATA_OUT ]]
 then
-    cp "$JSON_FILE" "$METADATA_OUT"
-    echo "This goes to standard error" >&2
-    echo "This goes to standard output"
+    echo "null" > $METADATA_OUT
 fi

@@ -8,8 +8,8 @@ from sqlalchemy.types import JSON
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
-from ...common.schemas import _StateBase
 from ...utils import get_timestamp
+from ..schemas import _StateBase
 
 
 class State(_StateBase, SQLModel, table=True):

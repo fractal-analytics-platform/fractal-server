@@ -1,7 +1,8 @@
 """
 `models` module
 """
-from ...common.schemas import *  # noqa F401
+from ..schemas import *  # noqa F401
+from .dataset import *  # noqa: F403, F401
 from .job import *  # noqa: F403, F401
 from .project import *  # noqa: F403, F401
 from .security import *  # noqa: F403, F401

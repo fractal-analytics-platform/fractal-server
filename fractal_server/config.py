@@ -4,6 +4,7 @@
 # Original authors:
 # Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
 # Tommaso Comparin <tommaso.comparin@exact-lab.it>
+# Yuri Chiucconi <yuri.chiucconi@exact-lab.it>
 # Marco Franzon <marco.franzon@exact-lab.it>
 #
 # This file is part of Fractal and was originally developed by eXact lab S.r.l.
@@ -70,7 +71,7 @@ class OAuthClientConfig(BaseModel):
     def check_configuration(cls, values):
         if values.get("CLIENT_NAME") not in ["GOOGLE", "GITHUB"]:
             if not values.get("OIDC_CONFIGURATION_ENDPOINT"):
-                raise ValueError(
+                raise FractalConfigurationError(
                     f"Missing OAUTH_{values.get('CLIENT_NAME')}"
                     "_OIDC_CONFIGURATION_ENDPOINT"
                 )
@@ -89,13 +90,6 @@ class Settings(BaseSettings):
 
     PROJECT_NAME: str = "Fractal Server"
     PROJECT_VERSION: str = fractal_server.__VERSION__
-    DEPLOYMENT_TYPE: Optional[
-        Literal["production", "staging", "testing", "development"]
-    ]
-    """
-    The deployment type of the server installation. It is important that
-    production deployments be marked as such to trigger server hardening.
-    """
 
     ###########################################################################
     # AUTH
@@ -105,27 +99,23 @@ class Settings(BaseSettings):
 
     # JWT TOKEN
     JWT_EXPIRE_SECONDS: int = 180
+    """
+    JWT token lifetime, in seconds.
+    """
+
     JWT_SECRET_KEY: Optional[str]
+    """
+    JWT secret
+
+    ⚠️ **IMPORTANT**: set this variable to a secure string, and do not disclose
+    it.
+    """
 
     # COOKIE TOKEN
     COOKIE_EXPIRE_SECONDS: int = 86400
-
-    @validator("FRACTAL_TASKS_DIR", always=True)
-    def make_FRACTAL_TASKS_DIR_absolute(cls, v):
-        """
-        If `FRACTAL_TASKS_DIR` is a non-absolute path, make it absolute (based
-        on the current working directory).
-        """
-        if v is None:
-            return None
-        FRACTAL_TASKS_DIR_path = Path(v)
-        if not FRACTAL_TASKS_DIR_path.is_absolute():
-            FRACTAL_TASKS_DIR_path = FRACTAL_TASKS_DIR_path.resolve()
-            logging.warning(
-                f'FRACTAL_TASKS_DIR="{v}" is not an absolute path; '
-                f'converting it to "{str(FRACTAL_TASKS_DIR_path)}"'
-            )
-        return FRACTAL_TASKS_DIR_path
+    """
+    Cookie token lifetime, in seconds.
+    """
 
     @root_validator(pre=True)
     def collect_oauth_clients(cls, values):
@@ -171,21 +161,46 @@ class Settings(BaseSettings):
     # DATABASE
     ###########################################################################
     DB_ENGINE: Literal["sqlite", "postgres"] = "sqlite"
+    """
+    Select which database engine to use (supported: `sqlite` and `postgres`).
+    """
     DB_ECHO: bool = False
-
+    """
+    If `True`, make database operations verbose.
+    """
     POSTGRES_USER: Optional[str]
+    """
+    User to use when connecting to the PostgreSQL database.
+    """
     POSTGRES_PASSWORD: Optional[str]
+    """
+    Password to use when connecting to the PostgreSQL database.
+    """
     POSTGRES_HOST: Optional[str] = "localhost"
+    """
+    URL to the PostgreSQL server or path to a UNIX domain socket.
+    """
     POSTGRES_PORT: Optional[str] = "5432"
+    """
+    Port number to use when connecting to the PostgreSQL server.
+    """
     POSTGRES_DB: Optional[str]
+    """
+    Name of the PostgreSQL database to connect to.
+    """
 
     SQLITE_PATH: Optional[str]
+    """
+    File path where the SQLite database is located (or will be located).
+    """
 
     @property
     def DATABASE_URL(self) -> URL:
         if self.DB_ENGINE == "sqlite":
             if not self.SQLITE_PATH:
-                raise ValueError("SQLITE_PATH path cannot be None")
+                raise FractalConfigurationError(
+                    "SQLITE_PATH path cannot be None"
+                )
             sqlite_path = abspath(self.SQLITE_PATH)
             url = URL.create(
                 drivername="sqlite+aiosqlite",
@@ -207,7 +222,9 @@ class Settings(BaseSettings):
     def DATABASE_SYNC_URL(self):
         if self.DB_ENGINE == "sqlite":
             if not self.SQLITE_PATH:
-                raise ValueError("SQLITE_PATH path cannot be None")
+                raise FractalConfigurationError(
+                    "SQLITE_PATH path cannot be None"
+                )
             return self.DATABASE_URL.set(drivername="sqlite")
         elif self.DB_ENGINE == "postgres":
             return self.DATABASE_URL.set(drivername="postgresql+psycopg2")
@@ -221,8 +238,8 @@ class Settings(BaseSettings):
     Admin default email, used upon creation of the first superuser during
     server startup.
 
-    **IMPORTANT**: After the server startup, you should always edit the default
-    admin credentials.
+    ⚠️  **IMPORTANT**: After the server startup, you should always edit the
+    default admin credentials.
     """
 
     FRACTAL_DEFAULT_ADMIN_PASSWORD: str = "1234"
@@ -230,8 +247,8 @@ class Settings(BaseSettings):
     Admin default password, used upon creation of the first superuser during
     server startup.
 
-    **IMPORTANT**: After the server startup, you should always edit the default
-    admin credentials.
+    ⚠️ **IMPORTANT**: After the server startup, you should always edit the
+    default admin credentials.
     """
 
     FRACTAL_DEFAULT_ADMIN_USERNAME: str = "admin"
@@ -239,8 +256,8 @@ class Settings(BaseSettings):
     Admin default username, used upon creation of the first superuser during
     server startup.
 
-    **IMPORTANT**: After the server startup, you should always edit the default
-    admin credentials.
+    ⚠️ **IMPORTANT**: After the server startup, you should always edit the
+    default admin credentials.
     """
 
     FRACTAL_TASKS_DIR: Optional[Path]
@@ -248,6 +265,23 @@ class Settings(BaseSettings):
     Directory under which all the tasks will be saved (either an absolute path
     or a path relative to current working directory).
     """
+
+    @validator("FRACTAL_TASKS_DIR", always=True)
+    def make_FRACTAL_TASKS_DIR_absolute(cls, v):
+        """
+        If `FRACTAL_TASKS_DIR` is a non-absolute path, make it absolute (based
+        on the current working directory).
+        """
+        if v is None:
+            return None
+        FRACTAL_TASKS_DIR_path = Path(v)
+        if not FRACTAL_TASKS_DIR_path.is_absolute():
+            FRACTAL_TASKS_DIR_path = FRACTAL_TASKS_DIR_path.resolve()
+            logging.warning(
+                f'FRACTAL_TASKS_DIR="{v}" is not an absolute path; '
+                f'converting it to "{str(FRACTAL_TASKS_DIR_path)}"'
+            )
+        return FRACTAL_TASKS_DIR_path
 
     FRACTAL_RUNNER_BACKEND: Literal["local", "slurm"] = "local"
     """
@@ -284,28 +318,20 @@ class Settings(BaseSettings):
     not specified, the same interpreter that runs the server is used.
     """
 
-    FRACTAL_SLURM_POLL_INTERVAL: Optional[int] = 60
+    FRACTAL_SLURM_POLL_INTERVAL: int = 5
     """
     Interval to wait (in seconds) before checking whether unfinished job are
     still running on SLURM (see `SlurmWaitThread` in
-    [`clusterfutures`]
-    (https://github.com/sampsyo/clusterfutures/blob/master/cfut/__init__.py)).
+    [`clusterfutures`](https://github.com/sampsyo/clusterfutures/blob/master/cfut/__init__.py)).
     """
 
-    FRACTAL_SLURM_KILLWAIT_INTERVAL: Optional[int] = 45
-    """
-    Interval to wait (in seconds) when the execution of a SLURM-backend job
-    failed, before raising a `JobExecutionError`. Must be larger than [SLURM
-    `KillWait` timer](https://slurm.schedmd.com/slurm.conf.html#OPT_KillWait),
-    to make sure that stdout/stderr files have been written).
-    """
-
-    FRACTAL_SLURM_OUTPUT_FILE_GRACE_TIME: Optional[int] = 4
+    FRACTAL_SLURM_ERROR_HANDLING_INTERVAL: int = 5
     """
     Interval to wait (in seconds) when the SLURM backend does not find an
-    output pickle file, which could be for multiple reasons (the SLURM job was
-    cancelled, or writing the file is taking long). After this interval, the
-    file is considered as missing.
+    output pickle file - which could be due to several reasons (e.g. the SLURM
+    job was cancelled or failed, or writing the file is taking long). If the
+    file is still missing after this time interval, this leads to a
+    `JobExecutionError`.
     """
 
     FRACTAL_CORS_ALLOW_ORIGIN: str = (
@@ -319,6 +345,61 @@ class Settings(BaseSettings):
     ###########################################################################
     # BUSINESS LOGIC
     ###########################################################################
+    def check_db(self) -> None:
+        """
+        Checks that db environment variables are properly set.
+        """
+        if self.DB_ENGINE == "postgres":
+            if not self.POSTGRES_DB:
+                raise FractalConfigurationError(
+                    "POSTGRES_DB cannot be None when DB_ENGINE=postgres."
+                )
+        else:
+            if not self.SQLITE_PATH:
+                raise FractalConfigurationError(
+                    "SQLITE_PATH cannot be None when DB_ENGINE=sqlite."
+                )
+
+    def check_runner(self) -> None:
+
+        if not self.FRACTAL_RUNNER_WORKING_BASE_DIR:
+            raise FractalConfigurationError(
+                "FRACTAL_RUNNER_WORKING_BASE_DIR cannot be None."
+            )
+
+        info = f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
+        if self.FRACTAL_RUNNER_BACKEND == "slurm":
+            if not self.FRACTAL_SLURM_CONFIG_FILE:
+                raise FractalConfigurationError(
+                    f"Must set FRACTAL_SLURM_CONFIG_FILE when {info}"
+                )
+            else:
+                if not self.FRACTAL_SLURM_CONFIG_FILE.exists():
+                    raise FractalConfigurationError(
+                        f"{info} but FRACTAL_SLURM_CONFIG_FILE="
+                        f"{self.FRACTAL_SLURM_CONFIG_FILE} not found."
+                    )
+
+                from fractal_server.app.runner._slurm._slurm_config import (
+                    load_slurm_config_file,
+                )
+
+                load_slurm_config_file(self.FRACTAL_SLURM_CONFIG_FILE)
+                if not shutil.which("sbatch"):
+                    raise FractalConfigurationError(
+                        f"{info} but `sbatch` command not found."
+                    )
+                if not shutil.which("squeue"):
+                    raise FractalConfigurationError(
+                        f"{info} but `squeue` command not found."
+                    )
+        else:  # i.e. self.FRACTAL_RUNNER_BACKEND == "local"
+            if self.FRACTAL_LOCAL_CONFIG_FILE:
+                if not self.FRACTAL_LOCAL_CONFIG_FILE.exists():
+                    raise FractalConfigurationError(
+                        f"{info} but FRACTAL_LOCAL_CONFIG_FILE="
+                        f"{self.FRACTAL_LOCAL_CONFIG_FILE} not found."
+                    )
 
     def check(self):
         """
@@ -327,69 +408,14 @@ class Settings(BaseSettings):
         This method must be called before the server starts
         """
 
-        class StrictSettings(BaseSettings):
-            class Config:
-                extra = "allow"
+        if not self.JWT_SECRET_KEY:
+            raise FractalConfigurationError("JWT_SECRET_KEY cannot be None")
 
-            DEPLOYMENT_TYPE: Literal[
-                "production", "staging", "testing", "development"
-            ]
-            JWT_SECRET_KEY: str
-            DB_ENGINE: str = Field()
+        if not self.FRACTAL_TASKS_DIR:
+            raise FractalConfigurationError("FRACTAL_TASKS_DIR cannot be None")
 
-            if DB_ENGINE == "postgres":
-                POSTGRES_USER: str
-                POSTGRES_PASSWORD: str
-                POSTGRES_DB: str
-            elif DB_ENGINE == "sqlite":
-                SQLITE_PATH: str
-
-            FRACTAL_TASKS_DIR: Path
-            FRACTAL_RUNNER_WORKING_BASE_DIR: Path
-
-            FRACTAL_RUNNER_BACKEND: str = Field()
-            if FRACTAL_RUNNER_BACKEND == "slurm":
-                FRACTAL_SLURM_CONFIG_FILE: Path
-
-        StrictSettings(**self.dict())
-
-        # Check that some variables are allowed
-        if self.FRACTAL_RUNNER_BACKEND not in ["local", "slurm"]:
-            raise FractalConfigurationError(
-                f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
-                "is not allowed"
-            )
-
-        if self.FRACTAL_RUNNER_BACKEND == "slurm":
-            info = f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
-
-            # Check that FRACTAL_SLURM_CONFIG_FILE exists
-            if not self.FRACTAL_SLURM_CONFIG_FILE.exists():
-                raise FractalConfigurationError(
-                    f"{info} but {str(self.FRACTAL_SLURM_CONFIG_FILE)} "
-                    "is missing"
-                )
-
-            # Check that FRACTAL_SLURM_CONFIG_FILE content is valid
-            from fractal_server.app.runner._slurm._slurm_config import (
-                load_slurm_config_file,
-            )
-
-            _ = load_slurm_config_file(
-                config_path=self.FRACTAL_SLURM_CONFIG_FILE
-            )
-
-            # Check that sbatch command is available
-            if not shutil.which("sbatch"):
-                raise FractalConfigurationError(
-                    f"{info} but sbatch command not found."
-                )
-
-            # Check that squeue command is available
-            if not shutil.which("squeue"):
-                raise FractalConfigurationError(
-                    f"{info} but squeue command not found."
-                )
+        self.check_db()
+        self.check_runner()
 
 
 def get_settings(settings=Settings()) -> Settings:

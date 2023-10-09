@@ -33,13 +33,10 @@ jobs:
           - 5432:5432
 
     steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 1
-          submodules: "recursive"
+      - uses: actions/checkout@v4
 
       - name: Install poetry
-        run: pipx install poetry==1.3.2
+        run: pipx install poetry==1.5.1
 
       - name: Set up Python 3.9 (only needed to avoid issue \#498)
         if: ${{ matrix.python-version != '3.9' }}
@@ -59,7 +56,7 @@ jobs:
         uses: pre-commit/action@v3.0.0
 
       - name: Install dependencies
-        run: poetry install --with dev --no-interaction --all-extras
+        run: poetry install --with dev --without docs --no-interaction --all-extras
 
       - name: Test with pytest
         run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest
@@ -80,10 +77,9 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
-          fetch-depth: 1000
-          submodules: "recursive"
+          fetch-depth: 0
 
       - uses: actions/setup-python@v4
         with:

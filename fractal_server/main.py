@@ -24,9 +24,9 @@ from fastapi_users.exceptions import UserAlreadyExists
 from sqlalchemy.exc import IntegrityError
 
 from .app.db import get_db
+from .app.schemas.user import UserCreate
 from .app.security import get_user_db
 from .app.security import get_user_manager
-from .common.schemas.user import UserCreate
 from .config import get_settings
 from .logger import set_logger
 from .syringe import Inject
