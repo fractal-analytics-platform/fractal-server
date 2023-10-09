@@ -144,7 +144,7 @@ subdirectories, excluding all files within the 'migrations' subdirectory.
 
 
 @pytest.fixture(scope="session", autouse=True)
-def set_default_test_settings(tmp777_session_path) -> None:
+async def set_default_test_settings(tmp777_session_path) -> None:
     """
     Initialize settings in test environent as returned from
     `get_default_test_settings`
