@@ -82,6 +82,10 @@ def check_python_has_venv(python_path: str, temp_path: Path):
 
 
 def get_default_test_settings(temp_path: Path):
+    """
+    Initializes and returns an instance of Settings with default values we want
+    to use in tests.
+    """
     settings = Settings()
     settings.JWT_SECRET_KEY = "secret_key"
 
