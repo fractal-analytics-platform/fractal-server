@@ -77,3 +77,8 @@ def test_override_settings_runtime(override_settings_runtime):
     # settings, and that's why `startup_settings.JWT_SECRET_KEY` is
     # "secret_key-FANCY-TAIL" and not  "secret_key".
     assert startup_settings.JWT_SECRET_KEY == "secret_key-FANCY-TAIL"
+
+    override_settings_runtime(JWT_SECRET_KEY="brand_new_key")
+    # from fractal_server.config import get_settings
+    XXX = get_settings()
+    debug(XXX.JWT_SECRET_KEY)
