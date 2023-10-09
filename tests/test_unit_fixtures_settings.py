@@ -67,5 +67,13 @@ def test_override_settings_runtime(override_settings_runtime):
 
     new_settings = get_settings()
 
-    assert new_settings.JWT_SECRET_KEY == startup_settings.JWT_SECRET_KEY
-    assert new_settings.JWT_SECRET_KEY != startup_key
+    assert startup_key == "secret_key"  # from `get_default_test_settings`
+    assert new_settings.JWT_SECRET_KEY == "secret_key-FANCY-TAIL"
+
+    # NOTE: pytest first executes `override_settings_runtime`.
+    # In our case, this means running the necessary code in order to build
+    # `new_secret_key`.
+    # After that, the test is run again from the beginning with overriden
+    # settings, and that's why `startup_settings.JWT_SECRET_KEY` is
+    # "secret_key-FANCY-TAIL" and not  "secret_key".
+    assert startup_settings.JWT_SECRET_KEY == "secret_key-FANCY-TAIL"

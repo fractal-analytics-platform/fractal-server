@@ -149,6 +149,7 @@ async def set_default_test_settings(tmp777_session_path):
     """
     Initialize settings in test environent as returned from
     `get_default_test_settings`.
+    See `tests/test_unit_fixtures_settings.py` for usage.
     """
     tmp_path = tmp777_session_path("server_folder")
     patched_settings = get_default_test_settings(tmp_path)
@@ -196,6 +197,17 @@ async def override_settings_startup(tmp777_session_path, monkeypatch, request):
 
 @pytest.fixture
 async def override_settings_runtime(monkeypatch, override_settings_startup):
+    """
+    Allows to change the startup settings (either from
+    `set_default_test_settings` or `override_settings_startup`) at runtime in
+    tests.
+
+    Returns a callable that takes as arguments the specific settings to
+    override.
+
+    See `tests/test_unit_fixtures_settings.py` for usage.
+    """
+
     def _override_settings_runtime(**kwargs):
         from fractal_server.config import get_settings
 
