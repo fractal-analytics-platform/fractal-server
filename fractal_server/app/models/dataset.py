@@ -9,8 +9,9 @@ from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
 from ..schemas.dataset import _DatasetBase
+from ..schemas.dataset import _DatasetHistoryItem
 from ..schemas.dataset import _ResourceBase
-from .workflow import WorkflowTaskStatusType
+from ..schemas.workflow import WorkflowTaskStatusType
 
 
 class Resource(_ResourceBase, SQLModel, table=True):
@@ -58,6 +59,7 @@ class Dataset(_DatasetBase, SQLModel, table=True):
         }
     )
     meta: dict[str, Any] = Field(sa_column=Column(JSON), default={})
+    history: _DatasetHistoryItem = Field(sa_column=Column(JSON), default={})
 
     class Config:
         arbitrary_types_allowed = True

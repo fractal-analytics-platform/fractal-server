@@ -20,7 +20,7 @@ from typing import Optional
 
 from ...logger import get_logger
 from ..models import WorkflowTask
-from ..models import WorkflowTaskStatusType
+from ..schemas import WorkflowTaskStatusType
 from .common import JobExecutionError
 from .common import TaskExecutionError
 from .common import TaskParameters
