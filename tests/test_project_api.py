@@ -248,7 +248,13 @@ async def test_dataset_get(app, client, MockCurrentUser, db):
         project = res.json()
         debug(project)
         project_id = project["id"]
-        dataset_id = project["dataset_list"][0]["id"]
+
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/dataset/",
+            json=dict(name="test_name"),
+        )
+        assert res.status_code == 201
+        dataset_id = res.json()["id"]
 
         # Show existing dataset
         res = await client.get(
@@ -344,6 +350,13 @@ async def test_delete_project(
         debug(data)
         assert res.status_code == 200
         assert len(data) == 1
+        project_id = res.json()[0]["id"]
+
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/dataset/",
+            json=dict(name="test_name"),
+        )
+        assert res.status_code == 201
 
         # Check that a project-related dataset exists
         stm = select(Dataset).join(Project).where(Project.id == p["id"])
