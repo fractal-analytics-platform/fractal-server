@@ -82,6 +82,17 @@ async def read_dataset(
         db=db,
     )
     dataset = output["dataset"]
+    from fractal_server.app.schemas.dataset import _DatasetHistoryItem
+
+    history = [
+        _DatasetHistoryItem(
+            workflowtask=history_element["workflowtask"],
+            status=history_element["status"],
+            parallelization=history_element["parallelization"],
+        )
+        for history_element in dataset.history
+    ]
+    dataset.history = history
     await db.close()
     return dataset
 

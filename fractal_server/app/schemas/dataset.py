@@ -73,7 +73,7 @@ class _DatasetHistoryItem(BaseModel):
         parallelization:
     """
 
-    worfklowtask: WorkflowTaskRead
+    workflowtask: WorkflowTaskRead
     status: WorkflowTaskStatusType
     parallelization: Optional[dict]
 
@@ -93,7 +93,7 @@ class _DatasetBase(BaseModel):
     name: str
     type: Optional[str]
     meta: dict[str, Any] = Field(default={})
-    history: dict[str, Any] = Field(default={})
+    history: list[_DatasetHistoryItem] = Field(default=[])
     read_only: bool = False
 
 
@@ -109,6 +109,7 @@ class DatasetUpdate(_DatasetBase):
 
     name: Optional[str]
     meta: Optional[dict[str, Any]] = None
+    history: Optional[list[_DatasetHistoryItem]] = None
     read_only: Optional[bool]
 
     # Validators
