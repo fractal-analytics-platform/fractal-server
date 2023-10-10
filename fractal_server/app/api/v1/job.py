@@ -39,7 +39,7 @@ async def read_job(
     job_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-) -> Optional[ApplyWorkflow]:
+) -> Optional[ApplyWorkflowRead]:
     """
     Return info on an existing job
     """
@@ -52,7 +52,7 @@ async def read_job(
     )
     job = output["job"]
 
-    job_read = ApplyWorkflowRead(**job.dict())
+    # job_read = ApplyWorkflowRead(**job.dict())
 
     # FIXME: this operation is not reading from the DB, but from file
 
@@ -67,7 +67,7 @@ async def read_job(
     #     pass
 
     await db.close()
-    return job_read
+    return job
 
 
 @router.get(
