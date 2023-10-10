@@ -82,17 +82,6 @@ async def read_dataset(
         db=db,
     )
     dataset = output["dataset"]
-    from fractal_server.app.schemas.dataset import _DatasetHistoryItem
-
-    history = [
-        _DatasetHistoryItem(
-            workflowtask=history_element["workflowtask"],
-            status=history_element["status"],
-            parallelization=history_element["parallelization"],
-        )
-        for history_element in dataset.history
-    ]
-    dataset.history = history
     await db.close()
     return dataset
 
@@ -443,7 +432,7 @@ async def get_workflowtask_status(
 
     # Lowest priority: read status from DB, which corresponds to jobs that are
     # not running
-    history = dataset.history  # meta.get("history", [])
+    history = dataset.history or []  # meta.get("history", [])
     for history_item in history:
         wftask_id = history_item["workflowtask"]["id"]
         wftask_status = history_item["status"]
