@@ -73,8 +73,8 @@ class _DatasetHistoryItem(BaseModel):
         parallelization:
     """
 
-    worfklowtask: Optional[WorkflowTaskRead]
-    status: Optional[WorkflowTaskStatusType]
+    worfklowtask: WorkflowTaskRead
+    status: WorkflowTaskStatusType
     parallelization: Optional[dict]
 
 
