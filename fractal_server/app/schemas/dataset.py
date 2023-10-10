@@ -96,19 +96,6 @@ class _DatasetBase(BaseModel):
     history: list[_DatasetHistoryItem] = Field(default=[])
     read_only: bool = False
 
-    def sanitised_dict(self):
-        """ """
-        d = self.dict()
-        d.history = [
-            _DatasetHistoryItem(
-                workflowtask=history_element["workflowtask"],
-                status=history_element["status"],
-                parallelization=history_element["parallelization"],
-            )
-            for history_element in d.history
-        ]
-        return d
-
 
 class DatasetUpdate(_DatasetBase):
     """
