@@ -54,7 +54,7 @@ async def test_get_workflowtask_status(
         workflow = await workflow_factory(project_id=project.id, name="WF")
         input_dataset = await dataset_factory(project_id=project.id)
 
-        # Prepare output_dataset.meta["history"]
+        # Prepare output_dataset.history
         history = []
 
         # (B) The statuses for these IDs will be overwritten by "submitted",
@@ -75,9 +75,9 @@ async def test_get_workflowtask_status(
             RESULTS[status].add(ID)
 
         # Create output_dataset and job
-        meta = dict(history=history)
+        history = history
         output_dataset = await dataset_factory(
-            project_id=project.id, meta=meta
+            project_id=project.id, history=history
         )
         job = await job_factory(  # noqa
             project_id=project.id,
@@ -95,6 +95,7 @@ async def test_get_workflowtask_status(
         assert res.status_code == 200
         statuses = res.json()["status"]
         debug(statuses)
+        debug(RESULTS)
         for expected_status, IDs in RESULTS.items():
             for ID in IDs:
                 ID_str = str(ID)  # JSON-object keys can only be strings
