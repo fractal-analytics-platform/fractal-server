@@ -350,8 +350,8 @@ async def export_history_as_workflow(
     # means that the history in the DB is up-to-date.
 
     # Read history from DB
-    history = dataset.meta.get("history", [])
-
+    # history = dataset.meta.get("history", [])
+    history = dataset.history
     # Construct reproducible workflow
     task_list = []
     for history_item in history:
@@ -432,7 +432,7 @@ async def get_workflowtask_status(
 
     # Lowest priority: read status from DB, which corresponds to jobs that are
     # not running
-    history = dataset.meta.get("history", [])
+    history = dataset.history  # meta.get("history", [])
     for history_item in history:
         wftask_id = history_item["workflowtask"]["id"]
         wftask_status = history_item["status"]

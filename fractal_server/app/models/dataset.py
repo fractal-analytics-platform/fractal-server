@@ -43,7 +43,8 @@ class Dataset(_DatasetBase, SQLModel, table=True):
             ID of the project the workflow belongs to.
         meta:
             Metadata of the Dataset
-
+        history:
+            History of the Dataset
         resource_list:
             (Mapper attribute)
 
@@ -58,7 +59,7 @@ class Dataset(_DatasetBase, SQLModel, table=True):
         }
     )
     meta: dict[str, Any] = Field(sa_column=Column(JSON), default={})
-    history: dict[str, Any] = Field(sa_column=Column(JSON), default={})
+    history: list[dict[str, Any]] = Field(sa_column=Column(JSON))
 
     class Config:
         arbitrary_types_allowed = True

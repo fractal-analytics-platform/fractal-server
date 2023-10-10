@@ -145,9 +145,10 @@ async def test_get_workflowtask_status_simple(
             RESULTS[status].add(ID)
 
         # Create output_dataset and job
-        meta = dict(history=history)
+        meta = dict()
+        history = history
         output_dataset = await dataset_factory(
-            project_id=project.id, meta=meta
+            project_id=project.id, meta=meta, history=history
         )
         job = await job_factory(  # noqa
             project_id=project.id,
