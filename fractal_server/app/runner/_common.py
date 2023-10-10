@@ -554,7 +554,7 @@ def call_parallel_task(
     wftask_dump["task"] = wftask.task.dict()
     new_history_item = dict(
         workflowtask=wftask_dump,
-        status="done",
+        status=WorkflowTaskStatusType.DONE,
         parallelization=dict(
             parallelization_level=wftask.parallelization_level,
             component_list=component_list,

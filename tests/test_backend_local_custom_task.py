@@ -173,10 +173,12 @@ async def test_full_workflow(
         res = await client.get(
             f"{PREFIX}/project/{project_id}/dataset/{output_dataset_id}"
         )
+        debug(res)
+
         data = res.json()
         debug(data)
         assert "dummy" in data["meta"]
-        history = data["meta"]["history"]
+        history = data["history"]
         assert history[0]["workflowtask"]["task"]["name"] == TASK_NAME
         assert (
             history[1]["workflowtask"]["task"]["name"] == PARALLEL_TASK_NAME
