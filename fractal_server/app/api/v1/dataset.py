@@ -432,7 +432,7 @@ async def get_workflowtask_status(
 
     # Lowest priority: read status from DB, which corresponds to jobs that are
     # not running
-    history = dataset.history or []  # meta.get("history", [])
+    history = dataset.history
     for history_item in history:
         wftask_id = history_item["workflowtask"]["id"]
         wftask_status = history_item["status"]

@@ -64,6 +64,7 @@ def test_call_single_task(tmp_path):
         input_paths=[str(tmp_path)],
         output_path=str(tmp_path),
         metadata={},
+        history=[],
     )
 
     debug(wftask)
@@ -103,6 +104,7 @@ def test_execute_single_task(tmp_path):
         input_paths=[str(tmp_path)],
         output_path=str(tmp_path),
         metadata={},
+        history=[],
     )
 
     with FractalThreadPoolExecutor() as executor:
@@ -148,6 +150,7 @@ def test_execute_single_parallel_task(tmp_path):
         input_paths=[str(tmp_path)],
         output_path=str(output_path),
         metadata={"index": LIST_INDICES},
+        history=[],
     )
 
     debug(task_list)
@@ -162,7 +165,7 @@ def test_execute_single_parallel_task(tmp_path):
             logger_name=logger_name,
         )
         debug(res)
-        history = res.metadata["history"]
+        history = res.history
         assert MOCKPARALLELTASK_NAME in [
             event["workflowtask"]["task"]["name"] for event in history
         ]
@@ -221,6 +224,7 @@ def test_execute_multiple_tasks(tmp_path):
         input_paths=[str(tmp_path)],
         output_path=str(tmp_path),
         metadata=METADATA_0,
+        history=[],
     )
 
     with FractalThreadPoolExecutor() as executor:
@@ -287,6 +291,7 @@ def test_call_parallel_task_max_tasks(
         input_paths=[str(tmp_path)],
         output_path=tmp_path,
         metadata=dict(index=["0", "1"]),
+        history=[],
     )
     debug(task_pars)
 
@@ -365,6 +370,7 @@ def test_execute_tasks_with_wrong_submit_setup_call(parallel_task, tmp_path):
         metadata=dict(
             component=["some_item"],
         ),
+        history=[],
     )
 
     def _wrong_submit_setup_call(*args, **kwargs):
