@@ -52,20 +52,6 @@ async def read_job(
     )
     job = output["job"]
 
-    # job_read = ApplyWorkflowRead(**job.dict())
-
-    # FIXME: this operation is not reading from the DB, but from file
-
-    # job -> dataset_id
-    # dataset_id -> dataset.history
-    # try:
-    #     metadata_file = Path(job_read.working_dir) / METADATA_FILENAME
-    #     with metadata_file.open("r") as f:
-    #         metadata = json.load(f)
-    #     job_read.history = metadata["HISTORY_LEGACY"]
-    # except (KeyError, FileNotFoundError):
-    #     pass
-
     await db.close()
     return job
 
