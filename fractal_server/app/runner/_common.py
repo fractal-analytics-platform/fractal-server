@@ -299,6 +299,7 @@ def call_single_task(
     updated_metadata = task_pars.metadata.copy()
     updated_metadata.update(diff_metadata)
 
+    updated_history = task_pars.history.copy()
     # Assemble a TaskParameter object
     # HISTORY_LEGACY = f"{wftask.task.name}"
     # try:
@@ -314,15 +315,13 @@ def call_single_task(
         status=WorkflowTaskStatusType.DONE,
         parallelization=None,
     )
-    try:
-        updated_metadata["history"].append(new_history_item)
-    except KeyError:
-        updated_metadata["history"] = [new_history_item]
+    updated_history.append(new_history_item)
 
     out_task_parameters = TaskParameters(
         input_paths=[task_pars.output_path],
         output_path=task_pars.output_path,
         metadata=updated_metadata,
+        history=updated_history,
     )
 
     return out_task_parameters
@@ -542,13 +541,8 @@ def call_parallel_task(
     updated_metadata = task_pars_depend.metadata.copy()
     updated_metadata.update(aggregated_metadata_update)
 
+    updated_history = task_pars_depend.history.copy()
     # Assemble a TaskParameter object
-    # HISTORY_LEGACY = f"{wftask.task.name}: {component_list}"
-    # try:
-    #     updated_metadata["HISTORY_LEGACY"].append(HISTORY_LEGACY)
-    # except KeyError:
-    #     updated_metadata["HISTORY_LEGACY"] = [HISTORY_LEGACY]
-
     # Update history
     wftask_dump = wftask.dict(exclude={"task"})
     wftask_dump["task"] = wftask.task.dict()
@@ -560,15 +554,13 @@ def call_parallel_task(
             component_list=component_list,
         ),
     )
-    try:
-        updated_metadata["history"].append(new_history_item)
-    except KeyError:
-        updated_metadata["history"] = [new_history_item]
+    updated_history.append(new_history_item)
 
     out_task_parameters = TaskParameters(
         input_paths=[task_pars_depend.output_path],
         output_path=task_pars_depend.output_path,
         metadata=updated_metadata,
+        history=updated_history,
     )
 
     return out_task_parameters

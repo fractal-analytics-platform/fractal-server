@@ -181,6 +181,7 @@ class TaskParameters(BaseModel):
     input_paths: list[Path]
     output_path: Path
     metadata: dict[str, Any]
+    history: list[dict[str, Any]]
 
     class Config:
         arbitrary_types_allowed = True

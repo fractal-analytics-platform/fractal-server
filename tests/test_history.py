@@ -75,7 +75,6 @@ async def test_get_workflowtask_status(
             RESULTS[status].add(ID)
 
         # Create output_dataset and job
-        history = history
         output_dataset = await dataset_factory(
             project_id=project.id, history=history
         )

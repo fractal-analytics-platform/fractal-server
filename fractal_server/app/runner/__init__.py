@@ -4,7 +4,7 @@
 # Original authors:
 # Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
 # Tommaso Comparin <tommaso.comparin@exact-lab.it>
-#
+# Marco Franzon <marco.franzon@exact-lab.it>
 # This file is part of Fractal and was originally developed by eXact lab S.r.l.
 # <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
 # Institute for Biomedical Research and Pelkmans Lab from the University of
@@ -225,11 +225,12 @@ async def submit_workflow(
         db_sync = next(DB.get_sync_db())
         db_sync.close()
 
-        output_dataset_meta = await process_workflow(
+        output_dataset_meta_hist = await process_workflow(
             workflow=workflow,
             input_paths=input_paths,
             output_path=output_path,
             input_metadata=input_dataset.meta,
+            input_history=input_dataset.history,
             slurm_user=slurm_user,
             user_cache_dir=user_cache_dir,
             workflow_dir=WORKFLOW_DIR,
@@ -249,18 +250,9 @@ async def submit_workflow(
         # Replace output_dataset.meta with output_dataset_meta, while handling
         # the history property in a special way (i.e. appending to and
         # existing entry rather than replacing it)
-        output_dataset.history = output_dataset_meta.pop("history")
-        output_dataset.meta = output_dataset_meta
-        # new_meta = {}
-        # for key, value in output_dataset_meta.items():
-        #     if key != "history":
-        #         # For non-history keys, replace with new value
-        #         new_meta[key] = value
-        #     else:
-        #         # For history key, append to existing entry
-        #         # new_meta[key] = output_dataset.meta.get(key, []) + value
-        #         output_dataset.history = value
-        # output_dataset.meta = new_meta
+        output_dataset.history = output_dataset_meta_hist.pop("history")
+        output_dataset.meta = output_dataset_meta_hist.pop("metadata")
+
         db_sync.merge(output_dataset)
 
         # Update job DB entry
@@ -292,8 +284,6 @@ async def submit_workflow(
             failed_wftask=failed_wftask,
         )
 
-        # new_meta["history"] = new_history
-        # output_dataset.meta = new_meta
         db_sync.merge(output_dataset)
 
         job.status = JobStatusType.FAILED
@@ -326,8 +316,7 @@ async def submit_workflow(
             workflow,
             logger,
         )
-        # new_meta["history"] = new_history
-        # output_dataset.meta = new_meta
+
         db_sync.merge(output_dataset)
 
         job.status = JobStatusType.FAILED
@@ -357,8 +346,6 @@ async def submit_workflow(
             logger,
         )
 
-        # new_meta["history"] = new_history
-        # output_dataset.meta = new_meta
         db_sync.merge(output_dataset)
 
         job.status = JobStatusType.FAILED
