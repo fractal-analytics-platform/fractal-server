@@ -173,8 +173,6 @@ async def test_full_workflow(
         res = await client.get(
             f"{PREFIX}/project/{project_id}/dataset/{output_dataset_id}"
         )
-        debug(res)
-
         data = res.json()
         debug(data)
         assert "dummy" in data["meta"]
