@@ -238,13 +238,13 @@ def test_execute_multiple_tasks(tmp_path):
         data = json.load(f)
         debug(data[0]["metadata"])
         data[0]["metadata"].pop("history", None)
-        data[0]["metadata"].pop("HISTORY_LEGACY", None)  # FIXME: remove
+        # data[0]["metadata"].pop("HISTORY_LEGACY", None)  # FIXME: remove
         assert data[0]["metadata"] == METADATA_0
     with (tmp_path / "1.result.json").open("r") as f:
         data = json.load(f)
         debug(data[0]["metadata"])
         data[0]["metadata"].pop("history", None)
-        data[0]["metadata"].pop("HISTORY_LEGACY", None)  # FIXME: remove
+        # data[0]["metadata"].pop("HISTORY_LEGACY", None)  # FIXME: remove
         assert data[0]["metadata"] == METADATA_1
 
 
