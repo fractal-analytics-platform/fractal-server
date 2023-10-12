@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Do not automatically create a dataset upon project creation (\#897).
+* Remove `ProjectCreate.default_dataset_name` attribute (\#897).
+
 # 1.3.11
 
 This is mainly a bugfix release for the `PermissionError` issue.
