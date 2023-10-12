@@ -21,7 +21,6 @@ from pydantic import BaseModel
 from ...logger import close_logger as close_job_logger  # noqa F401
 from ..models import Dataset
 from ..models.workflow import Workflow
-from ..schemas import _DatasetHistoryItem
 
 
 class TaskExecutionError(RuntimeError):
@@ -185,7 +184,7 @@ class TaskParameters(BaseModel):
     input_paths: list[Path]
     output_path: Path
     metadata: dict[str, Any]
-    history: list[_DatasetHistoryItem]
+    history: list[dict[str, Any]]
 
     class Config:
         arbitrary_types_allowed = True
