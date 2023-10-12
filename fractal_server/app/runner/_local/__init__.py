@@ -30,7 +30,6 @@ from ..common import set_start_and_last_task_index
 from ..common import TaskParameters
 from ._submit_setup import _local_submit_setup
 from .executor import FractalThreadPoolExecutor
-from fractal_server.app.schemas.dataset import _DatasetHistoryItem
 
 
 def _process_workflow(
@@ -39,7 +38,7 @@ def _process_workflow(
     input_paths: list[Path],
     output_path: Path,
     input_metadata: dict[str, Any],
-    input_history: list[_DatasetHistoryItem],
+    input_history: list[dict[str, Any]],
     logger_name: str,
     workflow_dir: Path,
     first_task_index: int,
@@ -83,7 +82,7 @@ async def process_workflow(
     input_paths: list[Path],
     output_path: Path,
     input_metadata: dict[str, Any],
-    input_history: list[_DatasetHistoryItem],
+    input_history: list[dict[str, Any]],
     logger_name: str,
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,

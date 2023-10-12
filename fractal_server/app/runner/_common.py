@@ -300,7 +300,8 @@ def call_single_task(
     updated_metadata = task_pars.metadata.copy()
     updated_metadata.update(diff_metadata)
 
-    # Prepare updated_history
+    # Prepare updated_history (note: the expected type for history items is
+    # defined in `_DatasetHistoryItem`)
     wftask_dump = wftask.dict(exclude={"task"})
     wftask_dump["task"] = wftask.task.dict()
     new_history_item = dict(
@@ -536,7 +537,8 @@ def call_parallel_task(
     updated_metadata = task_pars_depend.metadata.copy()
     updated_metadata.update(aggregated_metadata_update)
 
-    # Prepare updated_history
+    # Prepare updated_history (note: the expected type for history items is
+    # defined in `_DatasetHistoryItem`)
     wftask_dump = wftask.dict(exclude={"task"})
     wftask_dump["task"] = wftask.task.dict()
     new_history_item = dict(
