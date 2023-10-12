@@ -301,12 +301,6 @@ def call_single_task(
 
     updated_history = task_pars.history.copy()
     # Assemble a TaskParameter object
-    # HISTORY_LEGACY = f"{wftask.task.name}"
-    # try:
-    #     updated_metadata["HISTORY_LEGACY"].append(HISTORY_LEGACY)
-    # except KeyError:
-    #     updated_metadata["HISTORY_LEGACY"] = [HISTORY_LEGACY]
-
     # Update history
     wftask_dump = wftask.dict(exclude={"task"})
     wftask_dump["task"] = wftask.task.dict()
