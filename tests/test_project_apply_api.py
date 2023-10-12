@@ -1,3 +1,5 @@
+import time
+
 from devtools import debug
 
 PREFIX = "/api/v1"
@@ -389,6 +391,10 @@ async def test_project_apply_workflow_subset(
         assert res.status_code == 202
         res = await client.get(f"{PREFIX}/project/{project.id}/job/{job_id}")
         assert res.json()["status"] == "failed"
+
+        # Wait, to avoid RuntimeError: Workflow dir ... already exists.
+        time.sleep(1)
+
         # Case B
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"

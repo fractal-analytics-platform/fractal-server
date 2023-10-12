@@ -18,7 +18,6 @@ from ...db import DBSyncSession
 from ...db import get_db
 from ...db import get_sync_db
 from ...models import ApplyWorkflow
-from ...models import Dataset
 from ...models import JobStatusType
 from ...models import LinkUserProject
 from ...models import Project
@@ -76,7 +75,6 @@ async def create_project(
     )
 
     db_project = Project.from_orm(project)
-    db_project.dataset_list.append(Dataset(name=project.default_dataset_name))
     db_project.user_list.append(user)
     try:
         db.add(db_project)
