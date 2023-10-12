@@ -60,7 +60,6 @@ async def test_post_dataset(app, client, MockCurrentUser, db):
         assert dataset["meta"] == payload["meta"]
 
         # EDIT DATASET
-
         payload1 = dict(name="new dataset name", meta={})
         res = await client.patch(
             f"{PREFIX}/project/{project_id}/dataset/{dataset['id']}",
@@ -228,6 +227,13 @@ async def test_patch_dataset(
         dataset = res.json()
         debug(dataset)
         assert dataset["name"] == NEW_NAME
+
+        # Check that history cannot be modified
+        res = await client.patch(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}",
+            json=dict(history=[]),
+        )
+        assert res.status_code == 422
 
 
 async def test_get_resource(
