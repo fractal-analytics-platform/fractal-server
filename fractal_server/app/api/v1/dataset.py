@@ -100,6 +100,13 @@ async def update_dataset(
     """
     Edit a dataset associated to the current project
     """
+
+    if dataset_update.history is not None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Cannot modify dataset history.",
+        )
+
     output = await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
