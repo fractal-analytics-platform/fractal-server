@@ -296,12 +296,11 @@ def call_single_task(
     if diff_metadata is None:
         diff_metadata = {}
 
+    # Prepare updated_metadata
     updated_metadata = task_pars.metadata.copy()
     updated_metadata.update(diff_metadata)
 
-    updated_history = task_pars.history.copy()
-    # Assemble a TaskParameter object
-    # Update history
+    # Prepare updated_history
     wftask_dump = wftask.dict(exclude={"task"})
     wftask_dump["task"] = wftask.task.dict()
     new_history_item = dict(
@@ -309,8 +308,10 @@ def call_single_task(
         status=WorkflowTaskStatusType.DONE,
         parallelization=None,
     )
+    updated_history = task_pars.history.copy()
     updated_history.append(new_history_item)
 
+    # Assemble a TaskParameter object
     out_task_parameters = TaskParameters(
         input_paths=[task_pars.output_path],
         output_path=task_pars.output_path,
@@ -531,13 +532,11 @@ def call_parallel_task(
             "future releases."
         )
 
-    # Assemble parallel task metadiff files
+    # Prepare updated_metadata
     updated_metadata = task_pars_depend.metadata.copy()
     updated_metadata.update(aggregated_metadata_update)
 
-    updated_history = task_pars_depend.history.copy()
-    # Assemble a TaskParameter object
-    # Update history
+    # Prepare updated_history
     wftask_dump = wftask.dict(exclude={"task"})
     wftask_dump["task"] = wftask.task.dict()
     new_history_item = dict(
@@ -548,8 +547,10 @@ def call_parallel_task(
             component_list=component_list,
         ),
     )
+    updated_history = task_pars_depend.history.copy()
     updated_history.append(new_history_item)
 
+    # Assemble a TaskParameter object
     out_task_parameters = TaskParameters(
         input_paths=[task_pars_depend.output_path],
         output_path=task_pars_depend.output_path,
