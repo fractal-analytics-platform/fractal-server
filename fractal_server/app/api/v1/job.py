@@ -24,8 +24,6 @@ from ...security import User
 from ._aux_functions import _get_job_check_owner
 from ._aux_functions import _get_project_check_owner
 
-# from ...runner._common import METADATA_FILENAME
-
 
 router = APIRouter()
 
