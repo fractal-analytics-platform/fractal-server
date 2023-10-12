@@ -3,6 +3,7 @@
 # Unreleased
 
 * Do not automatically create a dataset upon project creation (\#897).
+* Remove `ProjectCreate.default_dataset_name` attribute (\#897).
 
 # 1.3.11
 
