@@ -23,6 +23,7 @@ from ..models import Dataset
 from ..models import Workflow
 from ..models import WorkflowTask
 from ..models import WorkflowTaskStatusType
+from ._common import HISTORY_FILENAME
 from ._common import METADATA_FILENAME
 
 
@@ -59,14 +60,13 @@ def assemble_history_failed_job(
     # information.
 
     # Part 1: Read exising history from DB
-    new_history = output_dataset.meta.get("history", [])
+    new_history = output_dataset.history
 
     # Part 2: Extend history based on tmp_metadata_file
-    tmp_metadata_file = Path(job.working_dir) / METADATA_FILENAME
+    tmp_history_file = Path(job.working_dir) / HISTORY_FILENAME
     try:
-        with tmp_metadata_file.open("r") as f:
-            tmp_file_meta = json.load(f)
-            tmp_file_history = tmp_file_meta.get("history", [])
+        with tmp_history_file.open("r") as f:
+            tmp_file_history = json.load(f)
             new_history.extend(tmp_file_history)
     except FileNotFoundError:
         tmp_file_history = []

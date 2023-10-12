@@ -26,7 +26,7 @@ from .common import TaskExecutionError
 from .common import TaskParameters
 from .common import write_args_file
 
-
+HISTORY_FILENAME = "history.json"
 METADATA_FILENAME = "metadata.json"
 SHUTDOWN_FILENAME = "shutdown"
 
@@ -667,5 +667,9 @@ def execute_tasks(
         # Write most recent metadata to METADATA_FILENAME
         with open(workflow_dir / METADATA_FILENAME, "w") as f:
             json.dump(current_task_pars.metadata, f, indent=2)
+
+        # Write most recent metadata to HISTORY_FILENAME
+        with open(workflow_dir / HISTORY_FILENAME, "w") as f:
+            json.dump(current_task_pars.history, f, indent=2)
 
     return current_task_pars
