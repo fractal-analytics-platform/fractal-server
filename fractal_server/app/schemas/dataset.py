@@ -65,7 +65,7 @@ class ResourceRead(_ResourceBase):
 
 class _DatasetHistoryItem(BaseModel):
     """
-    Class for `Dataset.history` .
+    Class for an item of `Dataset.history`.
 
     Attributes:
         workflowtask:
