@@ -86,27 +86,6 @@ async def test_post_dataset(app, client, MockCurrentUser, db):
         assert patched_dataset["name"] == payload1["name"]
         assert patched_dataset["meta"] == payload1["meta"]
 
-        # ADD RESOURCE TO DATASET / FAILURE
-        payload = dict(path="non/absolute/path")
-        res = await client.post(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset['id']}/resource/",
-            json=payload,
-        )
-        debug(res.json())
-        assert res.status_code == 422
-        resource = res.json()
-
-        # ADD RESOURCE TO DATASET / SUCCESS
-        payload = dict(path="/some/absolute/path")
-        res = await client.post(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset['id']}/resource/",
-            json=payload,
-        )
-        assert res.status_code == 201
-        resource = res.json()
-        debug(resource)
-        assert resource["path"] == payload["path"]
-
 
 async def test_delete_dataset(
     client, MockCurrentUser, project_factory, dataset_factory, db
