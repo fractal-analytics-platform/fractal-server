@@ -70,7 +70,8 @@ class _DatasetHistoryItem(BaseModel):
     Attributes:
         workflowtask:
         status:
-        parallelization:
+        parallelization: If provided, it includes keys `parallelization_level`
+            and `component_list`.
     """
 
     workflowtask: WorkflowTaskRead
