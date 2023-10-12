@@ -3,7 +3,7 @@ import logging
 
 from devtools import debug
 
-from fractal_server.app.runner._common import METADATA_FILENAME
+from fractal_server.app.runner._common import HISTORY_FILENAME
 from fractal_server.app.runner.handle_failed_job import (
     assemble_history_failed_job,
 )  # noqa
@@ -25,7 +25,7 @@ async def test_get_workflowtask_status(
     `/project/{project_id}/dataset/{dataset_id}/status/` which gives different
     priority to different sources. From lowest to highest priority:
 
-    * Statuses already present in `output_dataset.meta["history"]`, in the
+    * Statuses already present in `output_dataset.history`, in the
         database;
     * "submitted" status for all task in the current job;
     * Temporary-file contents.
@@ -43,10 +43,9 @@ async def test_get_workflowtask_status(
 
     working_dir = tmp_path / "working_dir"
     working_dir.mkdir()
-    with (working_dir / METADATA_FILENAME).open("w") as f:
-        tmp_meta = dict(history=history)
-        json.dump(tmp_meta, f)
-    debug(working_dir / METADATA_FILENAME)
+    with (working_dir / HISTORY_FILENAME).open("w") as f:
+        json.dump(history, f)
+    debug(working_dir / HISTORY_FILENAME)
 
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
@@ -303,8 +302,8 @@ async def test_assemble_history_failed_job_fail(
 
     Path(job.working_dir).mkdir()
     tmp_history = [dict(workflowtask={"id": wftask.id})]
-    with (Path(job.working_dir) / METADATA_FILENAME).open("w") as fp:
-        json.dump(dict(history=tmp_history), fp)
+    with (Path(job.working_dir) / HISTORY_FILENAME).open("w") as fp:
+        json.dump(tmp_history, fp)
 
     logger = logging.getLogger(None)
     caplog.clear()

@@ -17,7 +17,7 @@ from ...models import Dataset
 from ...models import DatasetStatusRead
 from ...models import JobStatusType
 from ...models import Resource
-from ...runner._common import METADATA_FILENAME
+from ...runner._common import HISTORY_FILENAME
 from ...schemas import DatasetCreate
 from ...schemas import DatasetRead
 from ...schemas import DatasetUpdate
@@ -457,10 +457,10 @@ async def get_workflowtask_status(
         # Highest priority: Read status updates coming from the running-job
         # temporary file. Note: this file only contains information on
         # WorkflowTask's that ran through successfully
-        tmp_file = Path(running_job.working_dir) / METADATA_FILENAME
+        tmp_file = Path(running_job.working_dir) / HISTORY_FILENAME
         try:
             with tmp_file.open("r") as f:
-                history = json.load(f).get("history", [])
+                history = json.load(f)
         except FileNotFoundError:
             history = []
         for history_item in history:
