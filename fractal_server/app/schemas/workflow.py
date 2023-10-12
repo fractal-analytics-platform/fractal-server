@@ -191,7 +191,7 @@ class WorkflowExport(_WorkflowBase):
 
 class WorkflowTaskStatusType(str, Enum):
     """
-    Define the available values for the status of a `WorkflowTask`, to be
+    Define the available values for the status of a `WorkflowTask`.
 
     This model is used within the `Dataset.history` attribute, which is
     constructed in the runner and then used in the API (e.g. in the
