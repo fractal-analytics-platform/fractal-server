@@ -33,7 +33,7 @@ async def test_get_workflowtask_status(
 
     RESULTS = dict(done=set(), failed=set(), submitted=set())
 
-    # (A) These statuses will be written in the metadata file, and they will be
+    # (A) These statuses will be written in the history file, and they will be
     # the final ones - as there exist no corresponding WorkflowTasks
     history = []
     for shift, status in enumerate(["done", "failed"]):
@@ -112,7 +112,7 @@ async def test_get_workflowtask_status_simple(
     client,
 ):
     """
-    Same as test_get_workflowtask_status, but without any temporary metadata
+    Same as test_get_workflowtask_status, but without any temporary history
     file in `working_dir`.
     """
 
