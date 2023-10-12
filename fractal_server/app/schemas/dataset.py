@@ -18,6 +18,7 @@ __all__ = (
     "ResourceCreate",
     "ResourceRead",
     "ResourceUpdate",
+    "DatasetStatusRead",
 )
 
 
@@ -143,3 +144,17 @@ class DatasetRead(_DatasetBase):
     resource_list: list[ResourceRead]
     project_id: int
     read_only: bool
+
+
+class DatasetStatusRead(BaseModel):
+    """
+    Response type for the
+    `/project/{project_id}/dataset/{dataset_id}/status/` endpoint
+    """
+
+    status: Optional[
+        dict[
+            int,
+            WorkflowTaskStatusType,
+        ]
+    ] = None

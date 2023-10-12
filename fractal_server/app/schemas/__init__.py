@@ -5,6 +5,7 @@ from .applyworkflow import ApplyWorkflowCreate  # noqa: F401
 from .applyworkflow import ApplyWorkflowRead  # noqa: F401
 from .dataset import DatasetCreate  # noqa: F401
 from .dataset import DatasetRead  # noqa: F401
+from .dataset import DatasetStatusRead  # noqa: F401
 from .dataset import DatasetUpdate  # noqa: F401
 from .dataset import ResourceCreate  # noqa: F401
 from .dataset import ResourceRead  # noqa: F401
