@@ -106,6 +106,7 @@ class DatasetUpdate(_DatasetBase):
     Attributes:
         name:
         meta:
+        history:
         read_only:
     """
 
