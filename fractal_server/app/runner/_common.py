@@ -20,8 +20,6 @@ from typing import Optional
 
 from ...logger import get_logger
 from ..models import WorkflowTask
-from ..models import WorkflowTaskRead
-from ..schemas import _DatasetHistoryItem
 from ..schemas import WorkflowTaskStatusType
 from .common import JobExecutionError
 from .common import TaskExecutionError
@@ -298,22 +296,21 @@ def call_single_task(
     if diff_metadata is None:
         diff_metadata = {}
 
-    # Prepare updated metadata
     updated_metadata = task_pars.metadata.copy()
     updated_metadata.update(diff_metadata)
 
-    # Prepare updated history
+    updated_history = task_pars.history.copy()
+    # Assemble a TaskParameter object
+    # Update history
     wftask_dump = wftask.dict(exclude={"task"})
     wftask_dump["task"] = wftask.task.dict()
-    new_history_item = _DatasetHistoryItem(
-        workflowtask=WorkflowTaskRead(**wftask_dump),
+    new_history_item = dict(
+        workflowtask=wftask_dump,
         status=WorkflowTaskStatusType.DONE,
         parallelization=None,
     )
-    updated_history = task_pars.history.copy()
     updated_history.append(new_history_item)
 
-    # Assemble a TaskParameter object
     out_task_parameters = TaskParameters(
         input_paths=[task_pars.output_path],
         output_path=task_pars.output_path,
@@ -534,14 +531,16 @@ def call_parallel_task(
             "future releases."
         )
 
-    # Prepare updated metadata
+    # Assemble parallel task metadiff files
     updated_metadata = task_pars_depend.metadata.copy()
     updated_metadata.update(aggregated_metadata_update)
 
-    # Prepare updated history
+    updated_history = task_pars_depend.history.copy()
+    # Assemble a TaskParameter object
+    # Update history
     wftask_dump = wftask.dict(exclude={"task"})
     wftask_dump["task"] = wftask.task.dict()
-    new_history_item = _DatasetHistoryItem(
+    new_history_item = dict(
         workflowtask=wftask_dump,
         status=WorkflowTaskStatusType.DONE,
         parallelization=dict(
@@ -549,10 +548,8 @@ def call_parallel_task(
             component_list=component_list,
         ),
     )
-    updated_history = task_pars_depend.history.copy()
     updated_history.append(new_history_item)
 
-    # Assemble a TaskParameter object
     out_task_parameters = TaskParameters(
         input_paths=[task_pars_depend.output_path],
         output_path=task_pars_depend.output_path,
