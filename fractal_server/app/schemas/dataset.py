@@ -19,6 +19,7 @@ __all__ = (
     "ResourceRead",
     "ResourceUpdate",
     "DatasetStatusRead",
+    "_DatasetHistoryItem",
 )
 
 
