@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Any
 from typing import Optional
 
@@ -22,6 +23,7 @@ __all__ = (
     "WorkflowTaskExport",
     "WorkflowTaskRead",
     "WorkflowTaskUpdate",
+    "WorkflowTaskStatusType",
 )
 
 
@@ -185,3 +187,22 @@ class WorkflowExport(_WorkflowBase):
     """
 
     task_list: list[WorkflowTaskExport]
+
+
+class WorkflowTaskStatusType(str, Enum):
+    """
+    Define the available values for the status of a `WorkflowTask`.
+
+    This model is used within the `Dataset.history` attribute, which is
+    constructed in the runner and then used in the API (e.g. in the
+    `api/v1/project/{project_id}/dataset/{dataset_id}/status` endpoint).
+
+    Attributes:
+        SUBMITTED: The `WorkflowTask` is part of a running job.
+        DONE: The most-recent execution of this `WorkflowTask` was successful.
+        FAILED: The most-recent execution of this `WorkflowTask` failed.
+    """
+
+    SUBMITTED = "submitted"
+    DONE = "done"
+    FAILED = "failed"

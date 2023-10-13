@@ -14,12 +14,12 @@ from ...db import AsyncSession
 from ...db import get_db
 from ...models import ApplyWorkflow
 from ...models import Dataset
-from ...models import DatasetStatusRead
 from ...models import JobStatusType
 from ...models import Resource
-from ...runner._common import METADATA_FILENAME
+from ...runner._common import HISTORY_FILENAME
 from ...schemas import DatasetCreate
 from ...schemas import DatasetRead
+from ...schemas import DatasetStatusRead
 from ...schemas import DatasetUpdate
 from ...schemas import ResourceCreate
 from ...schemas import ResourceRead
@@ -100,6 +100,13 @@ async def update_dataset(
     """
     Edit a dataset associated to the current project
     """
+
+    if dataset_update.history is not None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Cannot modify dataset history.",
+        )
+
     output = await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=dataset_id,
@@ -350,7 +357,7 @@ async def export_history_as_workflow(
     # means that the history in the DB is up-to-date.
 
     # Read history from DB
-    history = dataset.meta.get("history", [])
+    history = dataset.history
 
     # Construct reproducible workflow
     task_list = []
@@ -432,7 +439,7 @@ async def get_workflowtask_status(
 
     # Lowest priority: read status from DB, which corresponds to jobs that are
     # not running
-    history = dataset.meta.get("history", [])
+    history = dataset.history
     for history_item in history:
         wftask_id = history_item["workflowtask"]["id"]
         wftask_status = history_item["status"]
@@ -457,10 +464,10 @@ async def get_workflowtask_status(
         # Highest priority: Read status updates coming from the running-job
         # temporary file. Note: this file only contains information on
         # WorkflowTask's that ran through successfully
-        tmp_file = Path(running_job.working_dir) / METADATA_FILENAME
+        tmp_file = Path(running_job.working_dir) / HISTORY_FILENAME
         try:
             with tmp_file.open("r") as f:
-                history = json.load(f).get("history", [])
+                history = json.load(f)
         except FileNotFoundError:
             history = []
         for history_item in history:
