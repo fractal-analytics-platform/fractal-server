@@ -30,6 +30,7 @@ from fractal_server.app.runner._local._local_config import LocalBackendConfig
 from fractal_server.app.runner._local.executor import FractalThreadPoolExecutor
 from fractal_server.app.runner.common import close_job_logger
 from fractal_server.app.runner.common import TaskParameters
+from fractal_server.app.schemas import WorkflowTaskStatusType
 from fractal_server.logger import set_logger
 
 
@@ -190,7 +191,7 @@ def test_execute_multiple_tasks(tmp_path):
     """
     GIVEN a workflow with two or more tasks
     WHEN it is passed to the task-submission function
-    THEN it is correctly executed
+    THEN it is correctly executed and the history is updated correctly
     """
     TASK_NAME = "task0"
     METADATA_0 = {}
@@ -220,11 +221,32 @@ def test_execute_multiple_tasks(tmp_path):
         logger_name=logger_name,
         log_file_path=str(tmp_path / "job.log"),
     )
+
+    # Construct pre-existing history. Note that the `.dict()` methods are
+    # needed since history items are typed as `dict[str, Any]`, and also used
+    # in a `json.dump` command.
+    existing_history = [
+        dict(
+            workflowtask=MockWorkflowTask(
+                task=MockTask(
+                    name="old-task",
+                    command="old-command",
+                    parallelization_level="component",
+                ).dict(),
+                args=dict(some_key="some_value"),
+            ).dict(),
+            status=WorkflowTaskStatusType.FAILED,
+            parallelization=dict(
+                component_list=["A", "B"],
+                parallelization_level="component",
+            ),
+        )
+    ]
     task_pars = TaskParameters(
         input_paths=[str(tmp_path)],
         output_path=str(tmp_path),
         metadata=METADATA_0,
-        history=[],
+        history=existing_history,
     )
 
     with FractalThreadPoolExecutor() as executor:
@@ -236,17 +258,21 @@ def test_execute_multiple_tasks(tmp_path):
             logger_name=logger_name,
         )
     close_job_logger(job_logger)
-
     debug(output)
+
+    # Check that history includes the existing item and the two new ones added
+    # via execute_tasks
+    history = output.history
+    assert len(history) == 3
+    assert history[:-2] == existing_history
+
     with (tmp_path / "0.result.json").open("r") as f:
         data = json.load(f)
         debug(data[0]["metadata"])
-        data[0]["metadata"].pop("history", None)
         assert data[0]["metadata"] == METADATA_0
     with (tmp_path / "1.result.json").open("r") as f:
         data = json.load(f)
         debug(data[0]["metadata"])
-        data[0]["metadata"].pop("history", None)
         assert data[0]["metadata"] == METADATA_1
 
 
