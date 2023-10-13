@@ -24,7 +24,7 @@ def upgrade() -> None:
 
     with op.batch_alter_table("dataset", schema=None) as batch_op:
         dataset = table("dataset", column("history"))
-        batch_op.execute(dataset.update().values(history=[]))
+        batch_op.execute(dataset.update().values(history=sa.JSON([])))
 
     with op.batch_alter_table("dataset", schema=None) as batch_op:
         batch_op.alter_column("dataset", nullable=False)
