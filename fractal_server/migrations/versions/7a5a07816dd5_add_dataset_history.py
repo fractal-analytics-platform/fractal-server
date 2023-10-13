@@ -1,4 +1,4 @@
-"""“add_dataset_history”
+"""Add Dataset.history
 
 Revision ID: 7a5a07816dd5
 Revises: 8f79bd162e35
