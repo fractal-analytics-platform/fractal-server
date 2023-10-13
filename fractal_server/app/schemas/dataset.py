@@ -95,7 +95,7 @@ class _DatasetBase(BaseModel):
     name: str
     type: Optional[str]
     meta: dict[str, Any] = Field(default={})
-    history: Optional[list[_DatasetHistoryItem]] = None
+    history: list[_DatasetHistoryItem]
     read_only: bool = False
 
 
@@ -134,15 +134,22 @@ class DatasetRead(_DatasetBase):
     """
     Class for `Dataset` read from database.
 
+    Note: starting with 1.3.12, the `Dataset.history` column is always present.
+    We make `history` optional here to avoid errors when working on a database
+    entry created with previous versions.
+
     Attributes:
         id:
-        resource_list:
         project_id:
-        read_only:
+        resource_list:
+        name:
+        meta:
+        history:
     """
 
     id: int
     resource_list: list[ResourceRead]
+    history: Optional[list[_DatasetHistoryItem]] = None
     project_id: int
     read_only: bool
 
