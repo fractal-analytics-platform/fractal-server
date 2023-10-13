@@ -1,12 +1,12 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 1.3.12
 
-* Deprecate history from `/project/{project_id}/job/{job_id}` endpoint (\#898).
-* Create a new history column in `Dataset` table (\#898).
-* Deprecate `HISTORY_LEGACY` (\#898).
 * Do not automatically create a dataset upon project creation (\#897).
 * Remove `ProjectCreate.default_dataset_name` attribute (\#897).
+* Deprecate history handling in `/project/{project_id}/job/{job_id}` endpoint (\#898).
+* Create a new history column in `Dataset` table (\#898).
+* Deprecate `HISTORY_LEGACY` (\#898).
 
 # 1.3.11
 
