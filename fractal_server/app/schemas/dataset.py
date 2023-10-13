@@ -95,7 +95,7 @@ class _DatasetBase(BaseModel):
     name: str
     type: Optional[str]
     meta: dict[str, Any] = Field(default={})
-    history: list[_DatasetHistoryItem] = Field(default=[])
+    history: Optional[list[_DatasetHistoryItem]] = None
     read_only: bool = False
 
 
