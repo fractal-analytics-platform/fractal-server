@@ -176,11 +176,15 @@ class TaskParameters(BaseModel):
         metadata:
             Dataset metadata, as found in the input dataset or as updated by
             the previous task.
+        history:
+            Dataset history, as found in the input dataset or as updated by
+            the previous task.
     """
 
     input_paths: list[Path]
     output_path: Path
     metadata: dict[str, Any]
+    history: list[dict[str, Any]]
 
     class Config:
         arbitrary_types_allowed = True

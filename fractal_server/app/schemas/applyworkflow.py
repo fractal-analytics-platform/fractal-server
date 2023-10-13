@@ -107,7 +107,6 @@ class ApplyWorkflowRead(_ApplyWorkflowBase):
     status: str
     log: Optional[str]
     workflow_dump: Optional[dict[str, Any]]
-    history: Optional[list[str]]
     working_dir: Optional[str]
     working_dir_user: Optional[str]
     first_task_index: Optional[int]

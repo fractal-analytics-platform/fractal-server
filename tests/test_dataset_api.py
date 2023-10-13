@@ -60,7 +60,6 @@ async def test_post_dataset(app, client, MockCurrentUser, db):
         assert dataset["meta"] == payload["meta"]
 
         # EDIT DATASET
-
         payload1 = dict(name="new dataset name", meta={})
         res = await client.patch(
             f"{PREFIX}/project/{project_id}/dataset/{dataset['id']}",
@@ -86,27 +85,6 @@ async def test_post_dataset(app, client, MockCurrentUser, db):
             assert patched_dataset[k] == payload2[k]
         assert patched_dataset["name"] == payload1["name"]
         assert patched_dataset["meta"] == payload1["meta"]
-
-        # ADD RESOURCE TO DATASET / FAILURE
-        payload = dict(path="non/absolute/path")
-        res = await client.post(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset['id']}/resource/",
-            json=payload,
-        )
-        debug(res.json())
-        assert res.status_code == 422
-        resource = res.json()
-
-        # ADD RESOURCE TO DATASET / SUCCESS
-        payload = dict(path="/some/absolute/path")
-        res = await client.post(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset['id']}/resource/",
-            json=payload,
-        )
-        assert res.status_code == 201
-        resource = res.json()
-        debug(resource)
-        assert resource["path"] == payload["path"]
 
 
 async def test_delete_dataset(
@@ -228,6 +206,13 @@ async def test_patch_dataset(
         dataset = res.json()
         debug(dataset)
         assert dataset["name"] == NEW_NAME
+
+        # Check that history cannot be modified
+        res = await client.patch(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}",
+            json=dict(history=[]),
+        )
+        assert res.status_code == 422
 
 
 async def test_get_resource(

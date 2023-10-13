@@ -26,7 +26,7 @@ from typing import Any
 from typing import Dict
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic.decorator import validate_arguments
 
 
 logging.basicConfig(
@@ -35,6 +35,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+@validate_arguments
 def dummy_parallel(
     *,
     input_paths: list[str],
@@ -120,22 +121,6 @@ def dummy_parallel(
 if __name__ == "__main__":
     from argparse import ArgumentParser
 
-    class TaskArguments(BaseModel):
-        """
-        Wrap task arguments to ease marshalling
-
-        This way we can automatically cast the input from command line onto
-        the correct type required by the task.
-        """
-
-        input_paths: list[str]
-        output_path: str
-        metadata: Optional[Dict[str, Any]] = None
-        component: str
-        message: str = "default message"
-        raise_error: bool = False
-        sleep_time: Optional[int] = None
-
     parser = ArgumentParser()
     parser.add_argument("-j", "--json", help="Read parameters from json file")
     parser.add_argument(
@@ -159,8 +144,7 @@ if __name__ == "__main__":
         with open(args.json, "r") as f:
             pars = json.load(f)
 
-    task_args = TaskArguments(**pars)
-    metadata_update = dummy_parallel(**task_args.dict())
+    metadata_update = dummy_parallel(**pars)
 
     if args.metadata_out:
         with open(args.metadata_out, "w") as fout:

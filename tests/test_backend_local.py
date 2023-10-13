@@ -30,6 +30,7 @@ from fractal_server.app.runner._local._local_config import LocalBackendConfig
 from fractal_server.app.runner._local.executor import FractalThreadPoolExecutor
 from fractal_server.app.runner.common import close_job_logger
 from fractal_server.app.runner.common import TaskParameters
+from fractal_server.app.schemas import WorkflowTaskStatusType
 from fractal_server.logger import set_logger
 
 
@@ -64,6 +65,7 @@ def test_call_single_task(tmp_path):
         input_paths=[str(tmp_path)],
         output_path=str(tmp_path),
         metadata={},
+        history=[],
     )
 
     debug(wftask)
@@ -103,6 +105,7 @@ def test_execute_single_task(tmp_path):
         input_paths=[str(tmp_path)],
         output_path=str(tmp_path),
         metadata={},
+        history=[],
     )
 
     with FractalThreadPoolExecutor() as executor:
@@ -148,6 +151,7 @@ def test_execute_single_parallel_task(tmp_path):
         input_paths=[str(tmp_path)],
         output_path=str(output_path),
         metadata={"index": LIST_INDICES},
+        history=[],
     )
 
     debug(task_list)
@@ -162,7 +166,7 @@ def test_execute_single_parallel_task(tmp_path):
             logger_name=logger_name,
         )
         debug(res)
-        history = res.metadata["history"]
+        history = res.history
         assert MOCKPARALLELTASK_NAME in [
             event["workflowtask"]["task"]["name"] for event in history
         ]
@@ -187,7 +191,7 @@ def test_execute_multiple_tasks(tmp_path):
     """
     GIVEN a workflow with two or more tasks
     WHEN it is passed to the task-submission function
-    THEN it is correctly executed
+    THEN it is correctly executed and the history is updated correctly
     """
     TASK_NAME = "task0"
     METADATA_0 = {}
@@ -217,10 +221,32 @@ def test_execute_multiple_tasks(tmp_path):
         logger_name=logger_name,
         log_file_path=str(tmp_path / "job.log"),
     )
+
+    # Construct pre-existing history. Note that the `.dict()` methods are
+    # needed since history items are typed as `dict[str, Any]`, and also used
+    # in a `json.dump` command.
+    existing_history = [
+        dict(
+            workflowtask=MockWorkflowTask(
+                task=MockTask(
+                    name="old-task",
+                    command="old-command",
+                    parallelization_level="component",
+                ).dict(),
+                args=dict(some_key="some_value"),
+            ).dict(),
+            status=WorkflowTaskStatusType.FAILED,
+            parallelization=dict(
+                component_list=["A", "B"],
+                parallelization_level="component",
+            ),
+        )
+    ]
     task_pars = TaskParameters(
         input_paths=[str(tmp_path)],
         output_path=str(tmp_path),
         metadata=METADATA_0,
+        history=existing_history,
     )
 
     with FractalThreadPoolExecutor() as executor:
@@ -232,19 +258,21 @@ def test_execute_multiple_tasks(tmp_path):
             logger_name=logger_name,
         )
     close_job_logger(job_logger)
-
     debug(output)
+
+    # Check that history includes the existing item and the two new ones added
+    # via execute_tasks
+    history = output.history
+    assert len(history) == 3
+    assert history[:-2] == existing_history
+
     with (tmp_path / "0.result.json").open("r") as f:
         data = json.load(f)
         debug(data[0]["metadata"])
-        data[0]["metadata"].pop("history", None)
-        data[0]["metadata"].pop("HISTORY_LEGACY", None)  # FIXME: remove
         assert data[0]["metadata"] == METADATA_0
     with (tmp_path / "1.result.json").open("r") as f:
         data = json.load(f)
         debug(data[0]["metadata"])
-        data[0]["metadata"].pop("history", None)
-        data[0]["metadata"].pop("HISTORY_LEGACY", None)  # FIXME: remove
         assert data[0]["metadata"] == METADATA_1
 
 
@@ -287,6 +315,7 @@ def test_call_parallel_task_max_tasks(
         input_paths=[str(tmp_path)],
         output_path=tmp_path,
         metadata=dict(index=["0", "1"]),
+        history=[],
     )
     debug(task_pars)
 
@@ -365,6 +394,7 @@ def test_execute_tasks_with_wrong_submit_setup_call(parallel_task, tmp_path):
         metadata=dict(
             component=["some_item"],
         ),
+        history=[],
     )
 
     def _wrong_submit_setup_call(*args, **kwargs):

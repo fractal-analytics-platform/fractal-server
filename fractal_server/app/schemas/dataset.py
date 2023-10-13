@@ -7,6 +7,8 @@ from pydantic import validator
 
 from ._validators import val_absolute_path
 from ._validators import valstr
+from .workflow import WorkflowTaskRead
+from .workflow import WorkflowTaskStatusType
 
 
 __all__ = (
@@ -16,6 +18,7 @@ __all__ = (
     "ResourceCreate",
     "ResourceRead",
     "ResourceUpdate",
+    "DatasetStatusRead",
 )
 
 
@@ -61,6 +64,22 @@ class ResourceRead(_ResourceBase):
     dataset_id: int
 
 
+class _DatasetHistoryItem(BaseModel):
+    """
+    Class for an item of `Dataset.history`.
+
+    Attributes:
+        workflowtask:
+        status:
+        parallelization: If provided, it includes keys `parallelization_level`
+            and `component_list`.
+    """
+
+    workflowtask: WorkflowTaskRead
+    status: WorkflowTaskStatusType
+    parallelization: Optional[dict]
+
+
 class _DatasetBase(BaseModel):
     """
     Base class for `Dataset`.
@@ -69,12 +88,14 @@ class _DatasetBase(BaseModel):
         name:
         type:
         meta:
+        history:
         read_only:
     """
 
     name: str
     type: Optional[str]
     meta: dict[str, Any] = Field(default={})
+    history: list[_DatasetHistoryItem] = Field(default=[])
     read_only: bool = False
 
 
@@ -85,11 +106,13 @@ class DatasetUpdate(_DatasetBase):
     Attributes:
         name:
         meta:
+        history:
         read_only:
     """
 
     name: Optional[str]
     meta: Optional[dict[str, Any]] = None
+    history: Optional[list[_DatasetHistoryItem]] = None
     read_only: Optional[bool]
 
     # Validators
@@ -122,3 +145,17 @@ class DatasetRead(_DatasetBase):
     resource_list: list[ResourceRead]
     project_id: int
     read_only: bool
+
+
+class DatasetStatusRead(BaseModel):
+    """
+    Response type for the
+    `/project/{project_id}/dataset/{dataset_id}/status/` endpoint
+    """
+
+    status: Optional[
+        dict[
+            int,
+            WorkflowTaskStatusType,
+        ]
+    ] = None
