@@ -1,4 +1,4 @@
-"""Drop task.default_args columns
+"""Drop Task.default_args columns
 
 Revision ID: f384e1c0cf5d
 Revises: 4c308bcaea2b

@@ -1,4 +1,4 @@
-"""Add task.args_schema and task.args_schema_version
+"""Add Task.args_schema and Task.args_schema_version
 
 Revision ID: 4c308bcaea2b
 Revises: 50a13d6138fd

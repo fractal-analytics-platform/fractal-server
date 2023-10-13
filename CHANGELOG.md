@@ -4,6 +4,14 @@
 
 * Configured sqlite WAL to avoid "database is locked" error
 
+# 1.3.12
+
+* Do not automatically create a dataset upon project creation (\#897).
+* Remove `ProjectCreate.default_dataset_name` attribute (\#897).
+* Deprecate history handling in `/project/{project_id}/job/{job_id}` endpoint (\#898).
+* Create a new history column in `Dataset` table (\#898).
+* Deprecate `HISTORY_LEGACY` (\#898).
+
 # 1.3.11
 
 This is mainly a bugfix release for the `PermissionError` issue.

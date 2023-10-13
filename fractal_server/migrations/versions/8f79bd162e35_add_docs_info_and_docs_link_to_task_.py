@@ -1,4 +1,4 @@
-"""add docs_info and docs_link to Task model
+"""Add Task.docs_info and Task.docs_link
 
 Revision ID: 8f79bd162e35
 Revises: a7f4d6137b53
