@@ -1,4 +1,4 @@
-"""add workflow_dump to applyworkflow
+"""Add ApplyWorkflow.workflow_dump
 
 Revision ID: a7f4d6137b53
 Revises: 70e77f1c38b0

@@ -20,13 +20,13 @@ from typing import Optional
 
 from ...logger import get_logger
 from ..models import WorkflowTask
-from ..models import WorkflowTaskStatusType
+from ..schemas import WorkflowTaskStatusType
 from .common import JobExecutionError
 from .common import TaskExecutionError
 from .common import TaskParameters
 from .common import write_args_file
 
-
+HISTORY_FILENAME = "history.json"
 METADATA_FILENAME = "metadata.json"
 SHUTDOWN_FILENAME = "shutdown"
 
@@ -259,7 +259,7 @@ def call_single_task(
 
     # write args file (by assembling task_pars and wftask.args)
     write_args_file(
-        task_pars.dict(),
+        task_pars.dict(exclude={"history"}),
         wftask.args or {},
         path=task_files.args,
     )
@@ -296,17 +296,12 @@ def call_single_task(
     if diff_metadata is None:
         diff_metadata = {}
 
+    # Prepare updated_metadata
     updated_metadata = task_pars.metadata.copy()
     updated_metadata.update(diff_metadata)
 
-    # Assemble a TaskParameter object
-    HISTORY_LEGACY = f"{wftask.task.name}"
-    try:
-        updated_metadata["HISTORY_LEGACY"].append(HISTORY_LEGACY)
-    except KeyError:
-        updated_metadata["HISTORY_LEGACY"] = [HISTORY_LEGACY]
-
-    # Update history
+    # Prepare updated_history (note: the expected type for history items is
+    # defined in `_DatasetHistoryItem`)
     wftask_dump = wftask.dict(exclude={"task"})
     wftask_dump["task"] = wftask.task.dict()
     new_history_item = dict(
@@ -314,15 +309,15 @@ def call_single_task(
         status=WorkflowTaskStatusType.DONE,
         parallelization=None,
     )
-    try:
-        updated_metadata["history"].append(new_history_item)
-    except KeyError:
-        updated_metadata["history"] = [new_history_item]
+    updated_history = task_pars.history.copy()
+    updated_history.append(new_history_item)
 
+    # Assemble a TaskParameter object
     out_task_parameters = TaskParameters(
         input_paths=[task_pars.output_path],
         output_path=task_pars.output_path,
         metadata=updated_metadata,
+        history=updated_history,
     )
 
     return out_task_parameters
@@ -391,7 +386,7 @@ def call_single_parallel_task(
 
     # write args file (by assembling task_pars, wftask.args and component)
     write_args_file(
-        task_pars.dict(),
+        task_pars.dict(exclude={"history"}),
         wftask.args or {},
         dict(component=component),
         path=task_files.args,
@@ -538,37 +533,31 @@ def call_parallel_task(
             "future releases."
         )
 
-    # Assemble parallel task metadiff files
+    # Prepare updated_metadata
     updated_metadata = task_pars_depend.metadata.copy()
     updated_metadata.update(aggregated_metadata_update)
 
-    # Assemble a TaskParameter object
-    HISTORY_LEGACY = f"{wftask.task.name}: {component_list}"
-    try:
-        updated_metadata["HISTORY_LEGACY"].append(HISTORY_LEGACY)
-    except KeyError:
-        updated_metadata["HISTORY_LEGACY"] = [HISTORY_LEGACY]
-
-    # Update history
+    # Prepare updated_history (note: the expected type for history items is
+    # defined in `_DatasetHistoryItem`)
     wftask_dump = wftask.dict(exclude={"task"})
     wftask_dump["task"] = wftask.task.dict()
     new_history_item = dict(
         workflowtask=wftask_dump,
-        status="done",
+        status=WorkflowTaskStatusType.DONE,
         parallelization=dict(
             parallelization_level=wftask.parallelization_level,
             component_list=component_list,
         ),
     )
-    try:
-        updated_metadata["history"].append(new_history_item)
-    except KeyError:
-        updated_metadata["history"] = [new_history_item]
+    updated_history = task_pars_depend.history.copy()
+    updated_history.append(new_history_item)
 
+    # Assemble a TaskParameter object
     out_task_parameters = TaskParameters(
         input_paths=[task_pars_depend.output_path],
         output_path=task_pars_depend.output_path,
         metadata=updated_metadata,
+        history=updated_history,
     )
 
     return out_task_parameters
@@ -675,5 +664,9 @@ def execute_tasks(
         # Write most recent metadata to METADATA_FILENAME
         with open(workflow_dir / METADATA_FILENAME, "w") as f:
             json.dump(current_task_pars.metadata, f, indent=2)
+
+        # Write most recent metadata to HISTORY_FILENAME
+        with open(workflow_dir / HISTORY_FILENAME, "w") as f:
+            json.dump(current_task_pars.history, f, indent=2)
 
     return current_task_pars

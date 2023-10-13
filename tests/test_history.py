@@ -3,7 +3,7 @@ import logging
 
 from devtools import debug
 
-from fractal_server.app.runner._common import METADATA_FILENAME
+from fractal_server.app.runner._common import HISTORY_FILENAME
 from fractal_server.app.runner.handle_failed_job import (
     assemble_history_failed_job,
 )  # noqa
@@ -25,7 +25,7 @@ async def test_get_workflowtask_status(
     `/project/{project_id}/dataset/{dataset_id}/status/` which gives different
     priority to different sources. From lowest to highest priority:
 
-    * Statuses already present in `output_dataset.meta["history"]`, in the
+    * Statuses already present in `output_dataset.history`, in the
         database;
     * "submitted" status for all task in the current job;
     * Temporary-file contents.
@@ -33,7 +33,7 @@ async def test_get_workflowtask_status(
 
     RESULTS = dict(done=set(), failed=set(), submitted=set())
 
-    # (A) These statuses will be written in the metadata file, and they will be
+    # (A) These statuses will be written in the history file, and they will be
     # the final ones - as there exist no corresponding WorkflowTasks
     history = []
     for shift, status in enumerate(["done", "failed"]):
@@ -43,10 +43,9 @@ async def test_get_workflowtask_status(
 
     working_dir = tmp_path / "working_dir"
     working_dir.mkdir()
-    with (working_dir / METADATA_FILENAME).open("w") as f:
-        tmp_meta = dict(history=history)
-        json.dump(tmp_meta, f)
-    debug(working_dir / METADATA_FILENAME)
+    with (working_dir / HISTORY_FILENAME).open("w") as f:
+        json.dump(history, f)
+    debug(working_dir / HISTORY_FILENAME)
 
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
@@ -54,7 +53,7 @@ async def test_get_workflowtask_status(
         workflow = await workflow_factory(project_id=project.id, name="WF")
         input_dataset = await dataset_factory(project_id=project.id)
 
-        # Prepare output_dataset.meta["history"]
+        # Prepare output_dataset.history
         history = []
 
         # (B) The statuses for these IDs will be overwritten by "submitted",
@@ -75,9 +74,8 @@ async def test_get_workflowtask_status(
             RESULTS[status].add(ID)
 
         # Create output_dataset and job
-        meta = dict(history=history)
         output_dataset = await dataset_factory(
-            project_id=project.id, meta=meta
+            project_id=project.id, history=history
         )
         job = await job_factory(  # noqa
             project_id=project.id,
@@ -95,6 +93,7 @@ async def test_get_workflowtask_status(
         assert res.status_code == 200
         statuses = res.json()["status"]
         debug(statuses)
+        debug(RESULTS)
         for expected_status, IDs in RESULTS.items():
             for ID in IDs:
                 ID_str = str(ID)  # JSON-object keys can only be strings
@@ -113,7 +112,7 @@ async def test_get_workflowtask_status_simple(
     client,
 ):
     """
-    Same as test_get_workflowtask_status, but without any temporary metadata
+    Same as test_get_workflowtask_status, but without any temporary history
     file in `working_dir`.
     """
 
@@ -145,9 +144,10 @@ async def test_get_workflowtask_status_simple(
             RESULTS[status].add(ID)
 
         # Create output_dataset and job
-        meta = dict(history=history)
+        meta = dict()
+        history = history
         output_dataset = await dataset_factory(
-            project_id=project.id, meta=meta
+            project_id=project.id, meta=meta, history=history
         )
         job = await job_factory(  # noqa
             project_id=project.id,
@@ -302,8 +302,8 @@ async def test_assemble_history_failed_job_fail(
 
     Path(job.working_dir).mkdir()
     tmp_history = [dict(workflowtask={"id": wftask.id})]
-    with (Path(job.working_dir) / METADATA_FILENAME).open("w") as fp:
-        json.dump(dict(history=tmp_history), fp)
+    with (Path(job.working_dir) / HISTORY_FILENAME).open("w") as fp:
+        json.dump(tmp_history, fp)
 
     logger = logging.getLogger(None)
     caplog.clear()

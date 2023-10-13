@@ -25,6 +25,8 @@ from sys import stdout
 from typing import Any
 from typing import Optional
 
+from pydantic.decorator import validate_arguments
+
 
 logging.basicConfig(
     level=logging.DEBUG, format="%(asctime)s; %(levelname)s; %(message)s"
@@ -34,6 +36,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+@validate_arguments
 def dummy(
     *,
     input_paths: list[str],
