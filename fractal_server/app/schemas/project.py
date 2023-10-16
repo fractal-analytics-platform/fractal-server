@@ -30,18 +30,10 @@ class _ProjectBase(BaseModel):
 class ProjectCreate(_ProjectBase):
     """
     Class for `Project` creation.
-
-    Attributes:
-        default_dataset_name:
     """
-
-    default_dataset_name: Optional[str] = "default"
 
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))
-    _default_dataset_name = validator(
-        "default_dataset_name", allow_reuse=True
-    )(valstr("default_dataset_name"))
 
 
 class ProjectRead(_ProjectBase):

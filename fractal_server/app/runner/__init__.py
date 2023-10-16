@@ -4,6 +4,7 @@
 # Original authors:
 # Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
 # Tommaso Comparin <tommaso.comparin@exact-lab.it>
+# Marco Franzon <marco.franzon@exact-lab.it>
 #
 # This file is part of Fractal and was originally developed by eXact lab S.r.l.
 # <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
@@ -225,11 +226,12 @@ async def submit_workflow(
         db_sync = next(DB.get_sync_db())
         db_sync.close()
 
-        output_dataset_meta = await process_workflow(
+        output_dataset_meta_hist = await process_workflow(
             workflow=workflow,
             input_paths=input_paths,
             output_path=output_path,
             input_metadata=input_dataset.meta,
+            input_history=input_dataset.history,
             slurm_user=slurm_user,
             user_cache_dir=user_cache_dir,
             workflow_dir=WORKFLOW_DIR,
@@ -246,18 +248,11 @@ async def submit_workflow(
         )
         logger.debug(f'END workflow "{workflow.name}"')
 
-        # Replace output_dataset.meta with output_dataset_meta, while handling
-        # the history property in a special way (i.e. appending to and
-        # existing entry rather than replacing it)
-        new_meta = {}
-        for key, value in output_dataset_meta.items():
-            if key != "history":
-                # For non-history keys, replace with new value
-                new_meta[key] = value
-            else:
-                # For history key, append to existing entry
-                new_meta[key] = output_dataset.meta.get(key, []) + value
-        output_dataset.meta = new_meta
+        # Replace output_dataset.meta and output_dataset.history with their
+        # up-to-date versions, obtained within process_workflow
+        output_dataset.history = output_dataset_meta_hist.pop("history")
+        output_dataset.meta = output_dataset_meta_hist.pop("metadata")
+
         db_sync.merge(output_dataset)
 
         # Update job DB entry
@@ -277,19 +272,18 @@ async def submit_workflow(
 
         # Assemble output_dataset.meta based on the last successful task, i.e.
         # based on METADATA_FILENAME
-        new_meta = assemble_meta_failed_job(job, output_dataset)
+        output_dataset.meta = assemble_meta_failed_job(job, output_dataset)
 
         # Assemble new history and assign it to output_dataset.meta
         failed_wftask = db_sync.get(WorkflowTask, e.workflow_task_id)
-        new_history = assemble_history_failed_job(
+        output_dataset.history = assemble_history_failed_job(
             job,
             output_dataset,
             workflow,
             logger,
             failed_wftask=failed_wftask,
         )
-        new_meta["history"] = new_history
-        output_dataset.meta = new_meta
+
         db_sync.merge(output_dataset)
 
         job.status = JobStatusType.FAILED
@@ -313,17 +307,16 @@ async def submit_workflow(
 
         # Assemble output_dataset.meta based on the last successful task, i.e.
         # based on METADATA_FILENAME
-        new_meta = assemble_meta_failed_job(job, output_dataset)
+        output_dataset.meta = assemble_meta_failed_job(job, output_dataset)
 
         # Assemble new history and assign it to output_dataset.meta
-        new_history = assemble_history_failed_job(
+        output_dataset.history = assemble_history_failed_job(
             job,
             output_dataset,
             workflow,
             logger,
         )
-        new_meta["history"] = new_history
-        output_dataset.meta = new_meta
+
         db_sync.merge(output_dataset)
 
         job.status = JobStatusType.FAILED
@@ -343,17 +336,16 @@ async def submit_workflow(
 
         # Assemble output_dataset.meta based on the last successful task, i.e.
         # based on METADATA_FILENAME
-        new_meta = assemble_meta_failed_job(job, output_dataset)
+        output_dataset.meta = assemble_meta_failed_job(job, output_dataset)
 
         # Assemble new history and assign it to output_dataset.meta
-        new_history = assemble_history_failed_job(
+        output_dataset.history = assemble_history_failed_job(
             job,
             output_dataset,
             workflow,
             logger,
         )
-        new_meta["history"] = new_history
-        output_dataset.meta = new_meta
+
         db_sync.merge(output_dataset)
 
         job.status = JobStatusType.FAILED
