@@ -179,7 +179,8 @@ def test_migrations_on_old_data(tmp_path: Path, testdata_path: Path):
         "JWT_SECRET_KEY=secret",
         "FRACTAL_LOGGING_LEVEL=10",
     ]
-    SQLITE_PATH = os.environ.pop("SQLITE_PATH")
+    if "SQLITE_PATH" in os.environ:
+        SQLITE_PATH = os.environ.pop("SQLITE_PATH")
     debug(f"Dropped {SQLITE_PATH=} from `os.environ`.")
     debug(f"SQLITE_PATH={cwd}/test.db")
     config = "\n".join(config_lines + ["\n"])
