@@ -69,7 +69,6 @@ async def test_runner(
         override_settings_factory(
             FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
         )
-        request.getfixturevalue("slurm_config")
 
     process_workflow = _backends[backend]
 
@@ -120,6 +119,7 @@ async def test_runner(
         input_paths=[str(workflow_dir)],
         output_path=str(tmp777_path),  # OK 777 here
         input_metadata={},
+        input_history=[],
         logger_name=logger_name,
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
@@ -129,7 +129,9 @@ async def test_runner(
 
     # process workflow
     try:
-        metadata = await process_workflow(**kwargs)
+        metadata_history = await process_workflow(**kwargs)
+        metadata = metadata_history.pop("metadata")
+        history = metadata_history.pop("history")
     except Exception as e:
         debug(str(e))
         logging.error(f"process_workflow for {backend=} failed.")
@@ -139,9 +141,9 @@ async def test_runner(
     close_job_logger(logger)
     debug(metadata)
     assert "dummy" in metadata
-    for event in metadata["history"]:
+    for event in history:
         assert event["status"] == "done"
-    event0, event1, event2 = metadata["history"]
+    event0, event1, event2 = history
     assert event0["workflowtask"]["task"]["name"] == tk_dummy.name
     assert event1["workflowtask"]["task"]["name"] == tk_dummy.name
     assert event2["workflowtask"]["task"]["name"] == tk_dummy_parallel.name

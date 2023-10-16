@@ -4,6 +4,7 @@
 # Original authors:
 # Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
 # Tommaso Comparin <tommaso.comparin@exact-lab.it>
+# Marco Franzon <marco.franzon@exact-lab.it>
 #
 # This file is part of Fractal and was originally developed by eXact lab S.r.l.
 # <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
@@ -35,6 +36,7 @@ def _process_workflow(
     input_paths: list[Path],
     output_path: Path,
     input_metadata: dict[str, Any],
+    input_history: list[dict[str, Any]],
     logger_name: str,
     workflow_dir: Path,
     workflow_dir_user: Path,
@@ -83,14 +85,17 @@ def _process_workflow(
                 input_paths=input_paths,
                 output_path=output_path,
                 metadata=input_metadata,
+                history=input_history,
             ),
             workflow_dir=workflow_dir,
             workflow_dir_user=workflow_dir_user,
             submit_setup_call=_slurm_submit_setup,
             logger_name=logger_name,
         )
-    output_dataset_metadata = output_task_pars.metadata
-    return output_dataset_metadata
+    output_dataset_metadata_history = dict(
+        metadata=output_task_pars.metadata, history=output_task_pars.history
+    )
+    return output_dataset_metadata_history
 
 
 async def process_workflow(
@@ -99,6 +104,7 @@ async def process_workflow(
     input_paths: list[Path],
     output_path: Path,
     input_metadata: dict[str, Any],
+    input_history: list[dict[str, Any]],
     logger_name: str,
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
@@ -122,11 +128,12 @@ async def process_workflow(
         last_task_index=last_task_index,
     )
 
-    output_dataset_metadata = await async_wrap(_process_workflow)(
+    output_dataset_metadata_history = await async_wrap(_process_workflow)(
         workflow=workflow,
         input_paths=input_paths,
         output_path=output_path,
         input_metadata=input_metadata,
+        input_history=input_history,
         logger_name=logger_name,
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
@@ -136,4 +143,4 @@ async def process_workflow(
         first_task_index=first_task_index,
         last_task_index=last_task_index,
     )
-    return output_dataset_metadata
+    return output_dataset_metadata_history
