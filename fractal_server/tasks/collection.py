@@ -83,7 +83,7 @@ def get_absolute_venv_path(venv_path: Path) -> Path:
         package_path = venv_path
     else:
         settings = Inject(get_settings)
-        package_path = settings.FRACTAL_TASKS_DIR / venv_path  # type: ignore
+        package_path = settings.FRACTAL_TASKS_DIR / venv_path
     return package_path
 
 
@@ -214,7 +214,7 @@ def create_package_dir_pip(
             "with `version=None`."
         )
     package_dir = f"{task_pkg.package}{task_pkg.package_version}"
-    venv_path = settings.FRACTAL_TASKS_DIR / user / package_dir  # type: ignore
+    venv_path = settings.FRACTAL_TASKS_DIR / user / package_dir
     if create:
         venv_path.mkdir(exist_ok=False, parents=True)
     return venv_path
