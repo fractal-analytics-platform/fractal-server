@@ -43,7 +43,9 @@ class Dataset(_DatasetBase, SQLModel, table=True):
         }
     )
     meta: dict[str, Any] = Field(sa_column=Column(JSON), default={})
-    history: list[dict[str, Any]] = Field(sa_column=Column(JSON), default=[])
+    history: list[dict[str, Any]] = Field(
+        sa_column=Column(JSON, server_default="[]", nullable=False)
+    )
 
     class Config:
         arbitrary_types_allowed = True
