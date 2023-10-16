@@ -69,7 +69,6 @@ async def test_runner(
         override_settings_factory(
             FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
         )
-        request.getfixturevalue("slurm_config")
 
     process_workflow = _backends[backend]
 
