@@ -33,6 +33,10 @@ jobs:
       - name: Install dependencies
         run: poetry install --with dev --without docs --no-interaction -E slurm -E gunicorn #--all-extras
 
+      - name: PRINT SQLITE VERSION
+        run: apt-cache show libsqlite3-0
+
+
       - name: Test with pytest
         env:
           SQLITE_PATH: something.db
