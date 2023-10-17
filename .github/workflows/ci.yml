@@ -33,6 +33,9 @@ jobs:
       - name: Install dependencies
         run: poetry install --with dev --without docs --no-interaction -E slurm -E gunicorn #--all-extras
 
+      - name: Update sqlite
+        run: apt-get install libsqlite3-0==3.37
+
       - name: PRINT SQLITE VERSION
         run: apt-cache show libsqlite3-0
 
