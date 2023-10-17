@@ -96,20 +96,29 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
     first_task_index: int
     last_task_index: int
 
+    archived: bool = False
+
     input_dataset: Dataset = Relationship(
         sa_relationship_kwargs=dict(
             lazy="selectin",
             primaryjoin="ApplyWorkflow.input_dataset_id==Dataset.id",
         )
     )
+    input_dataset_dump: Optional[dict[str, Any]] = Field(
+        sa_column=Column(JSON)
+    )
+
     output_dataset: Dataset = Relationship(
         sa_relationship_kwargs=dict(
             lazy="selectin",
             primaryjoin="ApplyWorkflow.output_dataset_id==Dataset.id",
         )
     )
-    workflow: Workflow = Relationship()
+    output_dataset_dump: Optional[dict[str, Any]] = Field(
+        sa_column=Column(JSON)
+    )
 
+    workflow: Workflow = Relationship()
     workflow_dump: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
 
     start_timestamp: datetime = Field(
