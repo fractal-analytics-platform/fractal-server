@@ -56,7 +56,7 @@ jobs:
         uses: pre-commit/action@v3.0.0
 
       - name: Install dependencies
-        run: poetry install --with dev --without docs --no-interaction --all-extras
+        run: poetry install --with dev --without docs --no-interaction -E slurm -E gunicorn #--all-extras
 
       - name: Test with pytest
         run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest tests/test_commands.py
