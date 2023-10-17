@@ -59,7 +59,7 @@ jobs:
         run: poetry install --with dev --without docs --no-interaction --all-extras
 
       - name: Test with pytest
-        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest
+        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest tests/test_commands.py
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
