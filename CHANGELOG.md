@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Dependencies:
+    * Add `sqlalchemy[asyncio]` extra, and do not directly require `greenlet` (\#895).
+
 # 1.3.12
 
 * Project creation:
