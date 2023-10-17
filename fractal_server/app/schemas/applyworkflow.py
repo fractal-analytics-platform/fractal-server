@@ -107,6 +107,8 @@ class ApplyWorkflowRead(_ApplyWorkflowBase):
     status: str
     log: Optional[str]
     workflow_dump: Optional[dict[str, Any]]
+    input_dataset_dump: Optional[dict[str, Any]]
+    output_dataset_dump: Optional[dict[str, Any]]
     working_dir: Optional[str]
     working_dir_user: Optional[str]
     first_task_index: Optional[int]
