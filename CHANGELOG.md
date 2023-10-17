@@ -4,6 +4,8 @@
 
 * Dependencies:
     * Add `sqlalchemy[asyncio]` extra, and do not directly require `greenlet` (\#895).
+* Testing:
+    * Use ubuntu-22 for GitHub CI (\#909).
 
 # 1.3.12
 
