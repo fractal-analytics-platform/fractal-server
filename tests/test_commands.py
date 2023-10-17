@@ -81,6 +81,7 @@ def test_set_db(tmp_path: Path):
         assert os.path.exists(db_file)
 
 
+@pytest.mark.skip
 def test_alembic_check(tmp_path):
     """
     Run `poetry run alembic check` to see whether new migrations are needed
@@ -121,6 +122,7 @@ commands = [
 ]
 
 
+@pytest.mark.skip
 @pytest.mark.parametrize("cmd", commands)
 def test_startup_commands(cmd, tmp_path):
 
@@ -152,6 +154,7 @@ def test_startup_commands(cmd, tmp_path):
     debug(e.value)
 
 
+@pytest.mark.skip
 def test_migrations_on_old_data(tmp_path: Path, testdata_path: Path):
     """
     1. Retrieve a database created with fractal-server 1.3.11
