@@ -18,42 +18,17 @@ jobs:
         python-version: ["3.10"]
 
 
-    services:
-      postgres:
-        image: postgres
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: fractal_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
     steps:
       - uses: actions/checkout@v4
 
       - name: Install poetry
         run: pipx install poetry==1.5.1
 
-      - name: Set up Python 3.9 (only needed to avoid issue \#498)
-        if: ${{ matrix.python-version != '3.9' }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.9
-          cache: "poetry"
-
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
           cache: "poetry"
-
-      - name: Run pre-commit
-        if: ${{ matrix.python-version == '3.10' }}
-        uses: pre-commit/action@v3.0.0
 
       - name: Install dependencies
         run: poetry install --with dev --without docs --no-interaction -E slurm -E gunicorn #--all-extras
