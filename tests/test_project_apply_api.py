@@ -466,3 +466,49 @@ async def test_project_apply_workflow_subset(
                 for wf_task in workflow.task_list
             ],
         )
+
+
+async def test_dump_on_apply(
+    db,
+    client,
+    MockCurrentUser,
+    project_factory,
+    dataset_factory,
+    resource_factory,
+    workflow_factory,
+    task_factory,
+):
+    async with MockCurrentUser(persist=True) as user:
+        project = await project_factory(user)
+        input_dataset = await dataset_factory(
+            project_id=project.id, name="input name", type="input type"
+        )
+        output_dataset = await dataset_factory(
+            project_id=project.id, name="output name", type="output type"
+        )
+
+        await resource_factory(input_dataset)
+        await resource_factory(output_dataset)
+
+        workflow = await workflow_factory(project_id=project.id)
+
+        task = await task_factory(
+            input_type="input type",
+            output_type="output type",
+            command="pwd",
+        )
+        await workflow.insert_task(task.id, db=db)
+        debug(workflow)
+
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
+            f"?input_dataset_id={input_dataset.id}"
+            f"&output_dataset_id={output_dataset.id}",
+            json={},
+        )
+        debug(res.json())
+        job_id = res.json()["id"]
+        assert res.status_code == 202
+        res = await client.get(f"{PREFIX}/project/{project.id}/job/{job_id}")
+        assert res.json().get("input_dataset_dump")
+        assert res.json().get("output_dataset_dump")
