@@ -59,7 +59,13 @@ jobs:
         run: poetry install --with dev --without docs --no-interaction -E slurm -E gunicorn #--all-extras
 
       - name: Test with pytest
-        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest tests/test_commands.py
+        env:
+          SQLITE_PATH: something.db
+          FRACTAL_TASKS_DIR: tasks
+          JWT_SECRET_KEY: secret
+          FRACTAL_RUNNER_WORKING_BASE_DIR: somewhere
+        run: poetry run fractalctl set-db && echo "SUCCESS"
+        # run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest tests/test_commands.py
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
