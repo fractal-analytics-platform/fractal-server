@@ -11,7 +11,9 @@ import pytest
 from devtools import debug
 
 import fractal_server
-from .fixtures_server import DB_ENGINE
+
+# from .fixtures_server import DB_ENGINE
+DB_ENGINE = "sqlite"
 
 
 FRACTAL_SERVER_DIR = Path(fractal_server.__file__).parent
