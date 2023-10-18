@@ -17,11 +17,13 @@ from .fixtures_server import DB_ENGINE
 FRACTAL_SERVER_DIR = Path(fractal_server.__file__).parent
 
 
-def _prepare_config_and_db(_tmp_path: Path):
-    if not _tmp_path.exists():
-        _tmp_path.mkdir(parents=True)
+@pytest.fixture(scope="function")
+async def set_test_db(tmp_path):
 
-    cwd = str(_tmp_path)
+    if not tmp_path.exists():
+        tmp_path.mkdir(parents=True)
+
+    cwd = str(tmp_path)
 
     # General config
     config_lines = [
@@ -69,25 +71,44 @@ def _prepare_config_and_db(_tmp_path: Path):
     debug(res.returncode)
     assert res.returncode == 0
 
+    yield
 
-def test_set_db(tmp_path: Path):
+    if DB_ENGINE == "postgres":
+        # Apply migrations on reverse until database is dropped, in order to
+        # keep tests stateless:
+        # https://alembic.sqlalchemy.org/en/latest/tutorial.html#downgrading
+        # Not required by SQLite. In that case we do not remove the `test.db`
+        # file, which can be read after the test.
+        cmd = "poetry run alembic downgrade base"
+        res = subprocess.run(
+            shlex.split(cmd),
+            encoding="utf-8",
+            capture_output=True,
+            cwd=FRACTAL_SERVER_DIR,
+        )
+        debug(res.stdout)
+        debug(res.stderr)
+        debug(res.returncode)
+        assert res.returncode == 0
+    # Removing env file (to keep tests stateless)
+    Path.unlink(FRACTAL_SERVER_DIR / ".fractal_server.env")
+
+
+def test_set_db(tmp_path: Path, set_test_db):
     """
     Run `poetry run fractalctl set-db`
     """
-    _prepare_config_and_db(tmp_path)
+    debug(DB_ENGINE)
     if DB_ENGINE == "sqlite":
         db_file = str(tmp_path / "test.db")
         debug(db_file)
         assert os.path.exists(db_file)
 
 
-def test_alembic_check(tmp_path):
+def test_alembic_check(set_test_db):
     """
     Run `poetry run alembic check` to see whether new migrations are needed
     """
-    # Set db
-    db_folder = tmp_path / "test_alembic_check"
-    _prepare_config_and_db(db_folder)
 
     # Run check
     cmd = "poetry run alembic check"
@@ -122,9 +143,7 @@ commands = [
 
 
 @pytest.mark.parametrize("cmd", commands)
-def test_startup_commands(cmd, tmp_path):
-
-    _prepare_config_and_db(tmp_path)
+def test_startup_commands(cmd, set_test_db):
 
     debug(cmd)
     p = subprocess.Popen(
@@ -152,7 +171,7 @@ def test_startup_commands(cmd, tmp_path):
     debug(e.value)
 
 
-def test_migrations_on_old_data(tmp_path: Path, testdata_path: Path):
+def test_migrations_on_old_data_sqlite(tmp_path: Path, testdata_path: Path):
     """
     1. Retrieve a database created with fractal-server 1.3.11
     2. Apply set-db, to update it to the current version
