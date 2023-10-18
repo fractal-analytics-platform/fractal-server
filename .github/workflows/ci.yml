@@ -15,8 +15,8 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [3.9, 3.10]
-        db: [sqlite, postgres]
+        python-version: ["3.9", "3.10"]
+        db: ["sqlite", "postgres"]
 
 
     services:
