@@ -12,6 +12,7 @@ Zurich.
 """
 import logging
 import os
+import pathlib
 import random
 import shlex
 import shutil
@@ -170,7 +171,7 @@ def override_settings_factory():
             Inject.override(get_settings, get_settings_orig[0])
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 async def prepare_config_and_db(tmp_path):
 
     FRACTAL_SERVER_DIR = Path(fractal_server.__file__).parent
@@ -229,7 +230,7 @@ async def prepare_config_and_db(tmp_path):
     yield
 
     if DB_ENGINE == "postgres":
-        psql = "psql -h localhost -p 5432 -U postgres -d postgres "
+        psql = "psql -h localhost -p 5432 -U postgres -d postgres"
         cmds = [
             f"{psql} -c 'DROP DATABASE IF EXISTS fractal_test;'",
             f"{psql} -c 'CREATE DATABASE fractal_test OWNER fractal;'",
@@ -245,6 +246,8 @@ async def prepare_config_and_db(tmp_path):
             debug(res.stderr)
             debug(res.returncode)
             assert res.returncode == 0
+
+    pathlib.Path.unlink(FRACTAL_SERVER_DIR / ".fractal_server.env")
 
 
 @pytest.fixture
