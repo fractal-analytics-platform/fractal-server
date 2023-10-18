@@ -7,6 +7,8 @@
 * Testing:
     * Use ubuntu-22 for GitHub CI (\#909).
     * Run GitHub CI both with SQLite and Postgres (\#915).
+* Documentation:
+    * Add information about minimal supported SQLite version (\#916).
 
 # 1.3.12
 
