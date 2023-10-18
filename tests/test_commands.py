@@ -21,6 +21,7 @@ def test_set_db(tmp_path: Path, prepare_config_and_db):
     """
     Run `poetry run fractalctl set-db`
     """
+    debug(DB_ENGINE)
     if DB_ENGINE == "sqlite":
         db_file = str(tmp_path / "test.db")
         debug(db_file)
