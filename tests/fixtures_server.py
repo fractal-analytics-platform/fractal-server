@@ -12,7 +12,6 @@ Zurich.
 """
 import logging
 import os
-import pathlib
 import random
 import shlex
 import shutil
@@ -247,7 +246,7 @@ async def prepare_config_and_db(tmp_path):
             debug(res.returncode)
             assert res.returncode == 0
 
-    pathlib.Path.unlink(FRACTAL_SERVER_DIR / ".fractal_server.env")
+    Path.unlink(FRACTAL_SERVER_DIR / ".fractal_server.env")
 
 
 @pytest.fixture
