@@ -2,6 +2,7 @@
 
 # Unreleased
 
+* Configure sqlite WAL to avoid "database is locked" errors (\#860).
 * Dependencies:
     * Add `sqlalchemy[asyncio]` extra, and do not directly require `greenlet` (\#895).
 * Testing:
@@ -73,6 +74,7 @@ Warning: updating to this version requires changes to the configuration variable
     * Pin documentation dependencies (\#865).
     * Split `app/models/project.py` into two modules for dataset and project (\#871).
     * Revamp documentation on database interface and on the corresponding configuration variables (\#855).
+
 
 # 1.3.7
 
