@@ -69,6 +69,24 @@ def _prepare_config_and_db(_tmp_path: Path):
     debug(res.returncode)
     assert res.returncode == 0
 
+    if DB_ENGINE == "postgres":
+        psql = "psql -h localhost -p 5432 -U postgres -d postgres "
+        cmds = [
+            f"{psql} -c 'DROP DATABASE IF EXISTS fractal_test;'",
+            f"{psql} -c 'CREATE DATABASE fractal_test OWNER fractal;'",
+        ]
+        for cmd in cmds:
+            res = subprocess.run(
+                shlex.split(cmd),
+                encoding="utf-8",
+                capture_output=True,
+                cwd=FRACTAL_SERVER_DIR,
+            )
+            debug(res.stdout)
+            debug(res.stderr)
+            debug(res.returncode)
+            assert res.returncode == 0
+
 
 def test_set_db(tmp_path: Path):
     """
