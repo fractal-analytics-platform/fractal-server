@@ -11,8 +11,11 @@ Institute for Biomedical Research and Pelkmans Lab from the University of
 Zurich.
 """
 import logging
+import os
 import random
+import shlex
 import shutil
+import subprocess
 from dataclasses import dataclass
 from dataclasses import field
 from pathlib import Path
@@ -30,6 +33,7 @@ from httpx import AsyncClient
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+import fractal_server
 from fractal_server.app.db import get_db
 from fractal_server.config import get_settings
 from fractal_server.config import Settings
@@ -164,6 +168,83 @@ def override_settings_factory():
     finally:
         if get_settings_orig:
             Inject.override(get_settings, get_settings_orig[0])
+
+
+@pytest.fixture
+async def prepare_config_and_db(tmp_path):
+
+    FRACTAL_SERVER_DIR = Path(fractal_server.__file__).parent
+
+    if not tmp_path.exists():
+        tmp_path.mkdir(parents=True)
+
+    cwd = str(tmp_path)
+
+    # General config
+    config_lines = [
+        f"DB_ENGINE={DB_ENGINE}",
+        f"FRACTAL_TASKS_DIR={cwd}/FRACTAL_TASKS_DIR",
+        f"FRACTAL_RUNNER_WORKING_BASE_DIR={cwd}/artifacts",
+        "JWT_SECRET_KEY=secret",
+        "FRACTAL_LOGGING_LEVEL=10",
+    ]
+
+    # DB_ENGINE-specific config
+    if DB_ENGINE == "postgres":
+        config_lines.extend(
+            [
+                "POSTGRES_USER=postgres",
+                "POSTGRES_PASSWORD=postgres",
+                "POSTGRES_DB=fractal_test",
+            ]
+        )
+    elif DB_ENGINE == "sqlite":
+        if "SQLITE_PATH" in os.environ:
+            SQLITE_PATH = os.environ.pop("SQLITE_PATH")
+            debug(f"Dropped {SQLITE_PATH=} from `os.environ`.")
+        config_lines.append(f"SQLITE_PATH={cwd}/test.db")
+        debug(f"SQLITE_PATH={cwd}/test.db")
+    else:
+        raise ValueError(f"Invalid {DB_ENGINE=}")
+
+    # Write config to file
+    config = "\n".join(config_lines + ["\n"])
+    with (FRACTAL_SERVER_DIR / ".fractal_server.env").open("w") as f:
+        f.write(config)
+
+    # Initialize db
+    cmd = "poetry run fractalctl set-db"
+    debug(cmd)
+    res = subprocess.run(
+        shlex.split(cmd),
+        encoding="utf-8",
+        capture_output=True,
+        cwd=FRACTAL_SERVER_DIR,
+    )
+    debug(res.stdout)
+    debug(res.stderr)
+    debug(res.returncode)
+    assert res.returncode == 0
+
+    yield
+
+    if DB_ENGINE == "postgres":
+        psql = "psql -h localhost -p 5432 -U postgres -d postgres "
+        cmds = [
+            f"{psql} -c 'DROP DATABASE IF EXISTS fractal_test;'",
+            f"{psql} -c 'CREATE DATABASE fractal_test OWNER fractal;'",
+        ]
+        for cmd in cmds:
+            res = subprocess.run(
+                shlex.split(cmd),
+                encoding="utf-8",
+                capture_output=True,
+                cwd=FRACTAL_SERVER_DIR,
+            )
+            debug(res.stdout)
+            debug(res.stderr)
+            debug(res.returncode)
+            assert res.returncode == 0
 
 
 @pytest.fixture
