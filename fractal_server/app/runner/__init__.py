@@ -248,9 +248,8 @@ async def submit_workflow(
         )
         logger.debug(f'END workflow "{workflow.name}"')
 
-        # Replace output_dataset.meta with output_dataset_meta, while handling
-        # the history property in a special way (i.e. appending to and
-        # existing entry rather than replacing it)
+        # Replace output_dataset.meta and output_dataset.history with their
+        # up-to-date versions, obtained within process_workflow
         output_dataset.history = output_dataset_meta_hist.pop("history")
         output_dataset.meta = output_dataset_meta_hist.pop("metadata")
 

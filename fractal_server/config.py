@@ -419,4 +419,9 @@ class Settings(BaseSettings):
 
 
 def get_settings(settings=Settings()) -> Settings:
+    logging.debug("Fractal Settings:")
+    for key, value in settings.dict().items():
+        if any(s in key.upper() for s in ["PASSWORD", "SECRET"]):
+            value = "*****"
+        logging.debug(f"{key}: {value}")
     return settings
