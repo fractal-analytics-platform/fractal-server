@@ -6,6 +6,7 @@ from typing import AsyncGenerator
 from typing import Generator
 
 from sqlalchemy import create_engine
+from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import Session as DBSyncSession
@@ -49,9 +50,9 @@ class DB:
 
         if settings.DB_ENGINE == "sqlite":
             logger.warning(
-                "SQLite is supported but discouraged in production. Given its "
-                "partial support for ForeignKey constraints, consistency of "
-                "the database cannot be guaranteed."
+                "SQLite is supported (for version >=3.37) but discouraged "
+                "in production. Given its partial support for ForeignKey "
+                "constraints, database consistency cannot be guaranteed."
             )
 
         # Set some sqlite-specific options
@@ -85,6 +86,13 @@ class DB:
         cls._sync_session_maker = sessionmaker(
             bind=cls._engine_sync, autocommit=False, autoflush=False
         )
+
+        @event.listens_for(cls._engine_sync, "connect")
+        def set_sqlite_pragma(dbapi_connection, connection_record):
+            if settings.DB_ENGINE == "sqlite":
+                cursor = dbapi_connection.cursor()
+                cursor.execute("PRAGMA journal_mode=WAL")
+                cursor.close()
 
     @classmethod
     async def get_db(cls) -> AsyncGenerator[AsyncSession, None]:

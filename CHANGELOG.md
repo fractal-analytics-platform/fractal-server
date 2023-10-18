@@ -2,12 +2,15 @@
 
 # Unreleased
 
+* Configure sqlite WAL to avoid "database is locked" errors (\#860).
 * Dependencies:
     * Add `sqlalchemy[asyncio]` extra, and do not directly require `greenlet` (\#895).
 * Testing:
     * Use ubuntu-22 for GitHub CI (\#909).
     * Run GitHub CI both with SQLite and Postgres (\#915).
     * Make `test_commands.py` tests stateless, also when running with Postgres (\#917).
+* Documentation:
+    * Add information about minimal supported SQLite version (\#916).
 
 # 1.3.12
 
@@ -72,6 +75,7 @@ Warning: updating to this version requires changes to the configuration variable
     * Pin documentation dependencies (\#865).
     * Split `app/models/project.py` into two modules for dataset and project (\#871).
     * Revamp documentation on database interface and on the corresponding configuration variables (\#855).
+
 
 # 1.3.7
 
