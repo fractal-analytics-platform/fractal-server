@@ -229,22 +229,17 @@ async def prepare_config_and_db(tmp_path):
     yield
 
     if DB_ENGINE == "postgres":
-        psql = "psql -h localhost -p 5432 -U postgres -d postgres"
-        cmds = [
-            f"{psql} -c 'DROP DATABASE IF EXISTS fractal_test;'",
-            f"{psql} -c 'CREATE DATABASE fractal_test OWNER fractal;'",
-        ]
-        for cmd in cmds:
-            res = subprocess.run(
-                shlex.split(cmd),
-                encoding="utf-8",
-                capture_output=True,
-                cwd=FRACTAL_SERVER_DIR,
-            )
-            debug(res.stdout)
-            debug(res.stderr)
-            debug(res.returncode)
-            assert res.returncode == 0
+        cmd = "poetry run alembic downgrade base"
+        res = subprocess.run(
+            shlex.split(cmd),
+            encoding="utf-8",
+            capture_output=True,
+            cwd=FRACTAL_SERVER_DIR,
+        )
+        debug(res.stdout)
+        debug(res.stderr)
+        debug(res.returncode)
+        assert res.returncode == 0
 
     Path.unlink(FRACTAL_SERVER_DIR / ".fractal_server.env")
 
