@@ -94,7 +94,7 @@ def test_startup_commands(cmd, prepare_config_and_db):
     debug(e.value)
 
 
-def test_migrations_on_old_data(tmp_path: Path, testdata_path: Path):
+def test_migrations_on_old_data_sqlite(tmp_path: Path, testdata_path: Path):
     """
     1. Retrieve a database created with fractal-server 1.3.11
     2. Apply set-db, to update it to the current version
