@@ -58,6 +58,8 @@ async def test_sync_db(db_sync, db):
     assert task_list[0].name == "mytask"
 
 
-@pytest.mark.skipif(DB_ENGINE == "sqlite")
+@pytest.mark.skipif(
+    DB_ENGINE == "sqlite", reason="Skip if DB is SQLite, pass if it's Postgres"
+)
 def test_DB_ENGINE_is_postgres():
     pass
