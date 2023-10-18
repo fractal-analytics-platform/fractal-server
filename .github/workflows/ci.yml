@@ -9,13 +9,14 @@ on:
 jobs:
 
   tests:
-    name: "Python ${{ matrix.python-version }}"
+    name: "Python ${{ matrix.python-version }} - ${{ matrix.db }}"
     runs-on: ubuntu-22.04
     timeout-minutes: 30
 
     strategy:
       matrix:
         python-version: ["3.9", "3.10"]
+        db: ["sqlite", "postgres"]
 
 
     services:
@@ -56,7 +57,11 @@ jobs:
         uses: pre-commit/action@v3.0.0
 
       - name: Install dependencies
-        run: poetry install --with dev --without docs --no-interaction --all-extras
+        run: |
+          if [[ ${{ matrix.db }} == "postgres" ]]; then
+            DB="-E postgres"
+          fi
+          poetry install --with dev --without docs --no-interaction -E slurm -E gunicorn $DB
 
       - name: Test with pytest
         run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest

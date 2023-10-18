@@ -1,4 +1,7 @@
+import pytest
 from devtools import debug
+
+from .fixtures_server import DB_ENGINE
 
 
 async def test_db_connection(db):
@@ -53,3 +56,10 @@ async def test_sync_db(db_sync, db):
     task_list = res.scalars().all()
     assert len(task_list) == 1
     assert task_list[0].name == "mytask"
+
+
+@pytest.mark.skipif(
+    DB_ENGINE == "sqlite", reason="Skip if DB is SQLite, pass if it's Postgres"
+)
+def test_DB_ENGINE_is_postgres():
+    pass
