@@ -3,14 +3,23 @@
 # Unreleased
 
 * Configured sqlite WAL to avoid "database is locked" error
+* Dependencies:
+    * Add `sqlalchemy[asyncio]` extra, and do not directly require `greenlet` (\#895).
+* Testing:
+    * Use ubuntu-22 for GitHub CI (\#909).
+    * Run GitHub CI both with SQLite and Postgres (\#915).
 
 # 1.3.12
 
-* Do not automatically create a dataset upon project creation (\#897).
-* Remove `ProjectCreate.default_dataset_name` attribute (\#897).
-* Deprecate history handling in `/project/{project_id}/job/{job_id}` endpoint (\#898).
-* Create a new history column in `Dataset` table (\#898).
-* Deprecate `HISTORY_LEGACY` (\#898).
+* Project creation:
+    * Do not automatically create a dataset upon project creation (\#897).
+    * Remove `ProjectCreate.default_dataset_name` attribute (\#897).
+* Dataset history:
+    * Create a new (**non-nullable**) history column in `Dataset` table (\#898, \#901).
+    * Deprecate history handling in `/project/{project_id}/job/{job_id}` endpoint (\#898).
+    * Deprecate `HISTORY_LEGACY` (\#898).
+* Testing:
+    * Remove obsolete fixture `slurm_config` (\#903).
 
 # 1.3.11
 
