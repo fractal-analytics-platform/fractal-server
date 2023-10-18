@@ -49,9 +49,9 @@ class DB:
 
         if settings.DB_ENGINE == "sqlite":
             logger.warning(
-                "SQLite is supported but discouraged in production. Given its "
-                "partial support for ForeignKey constraints, consistency of "
-                "the database cannot be guaranteed."
+                "SQLite is supported (for version >=3.37) but discouraged "
+                "in production. Given its partial support for ForeignKey "
+                "constraints, database consistency cannot be guaranteed."
             )
 
         # Set some sqlite-specific options
