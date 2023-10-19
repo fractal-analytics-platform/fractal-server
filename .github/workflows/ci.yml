@@ -15,8 +15,22 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.10"]
+        python-version: ["3.9", "3.10"]
 
+
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: fractal_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
 
     steps:
       - uses: actions/checkout@v4
@@ -24,30 +38,28 @@ jobs:
       - name: Install poetry
         run: pipx install poetry==1.5.1
 
+      - name: Set up Python 3.9 (only needed to avoid issue \#498)
+        if: ${{ matrix.python-version != '3.9' }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+          cache: "poetry"
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
           cache: "poetry"
 
+      - name: Run pre-commit
+        if: ${{ matrix.python-version == '3.10' }}
+        uses: pre-commit/action@v3.0.0
+
       - name: Install dependencies
-        run: poetry install --with dev --without docs --no-interaction -E slurm -E gunicorn #--all-extras
-
-      - name: Update sqlite
-        run: apt-get install libsqlite3-0==3.37
-
-      - name: PRINT SQLITE VERSION
-        run: apt-cache show libsqlite3-0
-
+        run: poetry install --with dev --without docs --no-interaction --all-extras
 
       - name: Test with pytest
-        env:
-          SQLITE_PATH: something.db
-          FRACTAL_TASKS_DIR: tasks
-          JWT_SECRET_KEY: secret
-          FRACTAL_RUNNER_WORKING_BASE_DIR: somewhere
-        run: poetry run fractalctl set-db && echo "SUCCESS"
-        # run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest tests/test_commands.py
+        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
