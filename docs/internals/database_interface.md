@@ -26,6 +26,16 @@ SQLITE_PATH=/path/to/fractal_server.db
 If the `SQLITE_PATH` file does not exist, it will be created by `fractalctl
 set-db`.
 
+> ⚠️  **Important warnings:**
+>
+> 1. SQLite is supported but discouraged in production. Given its partial
+>    support for ForeignKey constraints, consistency of the database cannot be
+>    guaranteed.
+> 2. The minimal required version for the sqlite system library is v3.37 (which
+>    is for instance the one in the
+>    [libsqlite3-0 package](https://packages.ubuntu.com/jammy/libsqlite3-0)
+>    package for Ubuntu 22.04LTS).
+
 
 ## PostgreSQL
 
