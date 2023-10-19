@@ -105,7 +105,7 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
         )
     )
     input_dataset_dump: Optional[dict[str, Any]] = Field(
-        sa_column=Column(JSON)
+        default=None, sa_column=Column(JSON)
     )
 
     output_dataset: Dataset = Relationship(
@@ -115,7 +115,7 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
         )
     )
     output_dataset_dump: Optional[dict[str, Any]] = Field(
-        sa_column=Column(JSON)
+        default=None, sa_column=Column(JSON)
     )
 
     workflow: Workflow = Relationship()
