@@ -131,3 +131,26 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
     )
     status: JobStatusType = JobStatusType.SUBMITTED
     log: Optional[str] = None
+
+
+class ArchivedApplyWorkflow(SQLModel, table=True):
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    project_id: int = Field(foreign_key="project.id")
+
+    input_dataset_dump: dict[str, Any] = Field(
+        nullable=False, sa_column=Column(JSON)
+    )
+    output_dataset_dump: dict[str, Any] = Field(
+        nullable=False, sa_column=Column(JSON)
+    )
+    workflow_dump: dict[str, Any] = Field(
+        nullable=False, sa_column=Column(JSON)
+    )
+
+    start_timestamp: datetime = Field(
+        nullable=False, sa_column=Column(DateTime(timezone=True))
+    )
+    end_timestamp: Optional[datetime] = Field(
+        nullable=False, sa_column=Column(DateTime(timezone=True))
+    )

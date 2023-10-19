@@ -7,6 +7,7 @@ from zipfile import ZipFile
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Response
 from fastapi import status
 from fastapi.responses import StreamingResponse
 from sqlmodel import select
@@ -16,6 +17,7 @@ from ....syringe import Inject
 from ...db import AsyncSession
 from ...db import get_db
 from ...models import ApplyWorkflow
+from ...models import ArchivedApplyWorkflow
 from ...runner._common import SHUTDOWN_FILENAME
 from ...schemas import ApplyWorkflowRead
 from ...security import current_active_user
@@ -162,3 +164,52 @@ async def stop_job(
         f.write(f"Trigger executor shutdown for {job.id=}, {project_id=}.")
 
     return job
+
+
+@router.post(
+    "/project/{project_id}/job/{job_id}/archive/",
+    status_code=201,
+    response_model=ArchivedApplyWorkflow,
+)
+async def archive_job(
+    project_id: int,
+    job_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[ArchivedApplyWorkflow]:
+
+    output = await _get_job_check_owner(
+        project_id=project_id,
+        job_id=job_id,
+        user_id=user.id,
+        db=db,
+    )
+    job = output["job"]
+
+    if job.archived:
+        return Response(status_code=status.HTTP_409_CONFLICT)
+
+    # For old data with dump==None
+    if not job.input_dataset_dump:
+        job.input_dataset_dump = job.input_dataset.dict()
+    if not job.output_dataset_dump:
+        job.output_dataset_dump = job.output_dataset.dict()
+
+    job.archived = True
+
+    archived_job = ArchivedApplyWorkflow(
+        project_id=project_id,
+        workflow_dump=job.workflow_dump,
+        input_dataset_dump=job.input_dataset_dump,
+        output_dataset_dump=job.output_dataset_dump,
+        start_timestamp=job.start_timestamp,
+        end_timestamp=job.end_timestamp,
+    )
+
+    db.add(job)
+    db.add(archived_job)
+    await db.commit()
+    await db.refresh(archived_job)
+    await db.close()
+
+    return archived_job

@@ -1,6 +1,9 @@
 import time
 
 from devtools import debug
+from sqlmodel import select
+
+from fractal_server.app.models.job import ArchivedApplyWorkflow
 
 PREFIX = "/api/v1"
 
@@ -498,7 +501,6 @@ async def test_dump_on_apply(
             command="pwd",
         )
         await workflow.insert_task(task.id, db=db)
-        debug(workflow)
 
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
@@ -506,9 +508,25 @@ async def test_dump_on_apply(
             f"&output_dataset_id={output_dataset.id}",
             json={},
         )
-        debug(res.json())
-        job_id = res.json()["id"]
         assert res.status_code == 202
+
+        job_id = res.json()["id"]
         res = await client.get(f"{PREFIX}/project/{project.id}/job/{job_id}")
+
         assert res.json().get("input_dataset_dump")
         assert res.json().get("output_dataset_dump")
+
+        archive = (
+            (await db.execute(select(ArchivedApplyWorkflow))).scalars().all()
+        )
+        assert len(archive) == 0
+
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/job/{job_id}/archive/", json={}
+        )
+        assert res.status_code == 201
+        debug(res)
+        archive = (
+            (await db.execute(select(ArchivedApplyWorkflow))).scalars().all()
+        )
+        assert len(archive) == 1
