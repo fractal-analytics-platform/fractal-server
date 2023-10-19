@@ -139,18 +139,18 @@ class ArchivedApplyWorkflow(SQLModel, table=True):
     project_id: int = Field(foreign_key="project.id")
 
     input_dataset_dump: dict[str, Any] = Field(
-        nullable=False, sa_column=Column(JSON)
+        sa_column=Column(JSON, nullable=False)
     )
     output_dataset_dump: dict[str, Any] = Field(
-        nullable=False, sa_column=Column(JSON)
+        sa_column=Column(JSON, nullable=False)
     )
     workflow_dump: dict[str, Any] = Field(
-        nullable=False, sa_column=Column(JSON)
+        sa_column=Column(JSON, nullable=False)
     )
 
     start_timestamp: datetime = Field(
-        nullable=False, sa_column=Column(DateTime(timezone=True))
+        sa_column=Column(DateTime(timezone=True), nullable=False)
     )
     end_timestamp: Optional[datetime] = Field(
-        nullable=False, sa_column=Column(DateTime(timezone=True))
+        sa_column=Column(DateTime(timezone=True), nullable=False)
     )
