@@ -1,9 +1,6 @@
 import time
 
 from devtools import debug
-from sqlmodel import select
-
-from fractal_server.app.models.job import ArchivedApplyWorkflow
 
 PREFIX = "/api/v1"
 
@@ -482,6 +479,9 @@ async def test_dump_on_apply(
     task_factory,
 ):
     async with MockCurrentUser(persist=True) as user:
+
+        # set up
+
         project = await project_factory(user)
         input_dataset = await dataset_factory(
             project_id=project.id, name="input name", type="input type"
@@ -502,6 +502,8 @@ async def test_dump_on_apply(
         )
         await workflow.insert_task(task.id, db=db)
 
+        # Apply a Workflow and assert databases are dumped
+
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
@@ -513,20 +515,41 @@ async def test_dump_on_apply(
         job_id = res.json()["id"]
         res = await client.get(f"{PREFIX}/project/{project.id}/job/{job_id}")
 
+        assert not res.json().get("archived")
         assert res.json().get("input_dataset_dump")
         assert res.json().get("output_dataset_dump")
 
-        archive = (
-            (await db.execute(select(ArchivedApplyWorkflow))).scalars().all()
-        )
-        assert len(archive) == 0
+        # Archive a Job and assert CRUD endpoints work
+
+        res = await client.get(f"{PREFIX}/project/{project.id}/archived_job/")
+        assert res.status_code == 200
+        assert len(res.json()) == 0
 
         res = await client.post(
             f"{PREFIX}/project/{project.id}/job/{job_id}/archive/", json={}
         )
         assert res.status_code == 201
-        debug(res)
-        archive = (
-            (await db.execute(select(ArchivedApplyWorkflow))).scalars().all()
+
+        res = await client.get(f"{PREFIX}/project/{project.id}/archived_job/")
+        assert res.status_code == 200
+        assert len(res.json()) == 1
+
+        archived_job_id = res.json()[0]["id"]
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/archived_job/{archived_job_id+1}"
         )
-        assert len(archive) == 1
+        assert res.status_code == 404
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/archived_job/{archived_job_id}"
+        )
+        assert res.status_code == 200
+
+        # Assert 409 from second archiviation
+
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/job/{job_id}/archive/", json={}
+        )
+        assert res.status_code == 409
+
+        res = await client.get(f"{PREFIX}/project/{project.id}/job/{job_id}")
+        assert res.json().get("archived")

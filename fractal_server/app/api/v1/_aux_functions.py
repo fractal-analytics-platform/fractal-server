@@ -11,6 +11,7 @@ from sqlmodel import select
 
 from ...db import AsyncSession
 from ...models import ApplyWorkflow
+from ...models import ArchivedApplyWorkflow
 from ...models import Dataset
 from ...models import LinkUserProject
 from ...models import Project
@@ -356,3 +357,25 @@ async def _get_task_check_owner(
                     ),
                 )
     return task
+
+
+async def _get_archived_job_check_owner(
+    *,
+    project_id: int,
+    archived_job_id: int,
+    user_id: int,
+    db: AsyncSession,
+) -> ArchivedApplyWorkflow:
+    await _get_project_check_owner(
+        project_id=project_id, user_id=user_id, db=db
+    )
+    stm = select(ArchivedApplyWorkflow).where(
+        ArchivedApplyWorkflow.id == archived_job_id
+    )
+    res = (await db.execute(stm)).scalars().first()
+    if not res:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="ArchivedApplyWorkflow not found",
+        )
+    return res

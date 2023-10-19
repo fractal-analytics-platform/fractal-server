@@ -22,9 +22,9 @@ from ...runner._common import SHUTDOWN_FILENAME
 from ...schemas import ApplyWorkflowRead
 from ...security import current_active_user
 from ...security import User
+from ._aux_functions import _get_archived_job_check_owner
 from ._aux_functions import _get_job_check_owner
 from ._aux_functions import _get_project_check_owner
-
 
 router = APIRouter()
 
@@ -212,4 +212,43 @@ async def archive_job(
     await db.refresh(archived_job)
     await db.close()
 
+    return archived_job
+
+
+@router.get(
+    "/project/{project_id}/archived_job/",
+    status_code=200,
+    response_model=list[ArchivedApplyWorkflow],
+)
+async def get_archived_job_list(
+    project_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[ArchivedApplyWorkflow]:
+    await _get_project_check_owner(
+        project_id=project_id, user_id=user.id, db=db
+    )
+    res = await db.execute(select(ArchivedApplyWorkflow))
+    archive = res.scalars().all()
+    await db.close()
+    return archive
+
+
+@router.get(
+    "/project/{project_id}/archived_job/{archived_job_id}",
+    status_code=200,
+    response_model=ArchivedApplyWorkflow,
+)
+async def get_archived_job(
+    project_id: int,
+    archived_job_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[ArchivedApplyWorkflow]:
+    archived_job = await _get_archived_job_check_owner(
+        project_id=project_id,
+        archived_job_id=archived_job_id,
+        user_id=user.id,
+        db=db,
+    )
     return archived_job
