@@ -113,6 +113,7 @@ class ApplyWorkflowRead(_ApplyWorkflowBase):
     working_dir_user: Optional[str]
     first_task_index: Optional[int]
     last_task_index: Optional[int]
+    archived: bool
 
     def sanitised_dict(self):
         d = self.dict()
