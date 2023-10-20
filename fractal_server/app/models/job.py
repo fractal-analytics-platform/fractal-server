@@ -152,5 +152,5 @@ class ArchivedApplyWorkflow(SQLModel, table=True):
         sa_column=Column(DateTime(timezone=True), nullable=False)
     )
     end_timestamp: Optional[datetime] = Field(
-        sa_column=Column(DateTime(timezone=True), nullable=False)
+        sa_column=Column(DateTime(timezone=True), nullable=True)
     )

@@ -26,7 +26,7 @@ def upgrade() -> None:
         sa.Column(
             "start_timestamp", sa.DateTime(timezone=True), nullable=False
         ),
-        sa.Column("end_timestamp", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("end_timestamp", sa.DateTime(timezone=True), nullable=True),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("project_id", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(

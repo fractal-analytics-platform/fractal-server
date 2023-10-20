@@ -468,7 +468,7 @@ async def test_project_apply_workflow_subset(
         )
 
 
-async def test_dump_on_apply(
+async def test_archive_job(
     db,
     client,
     MockCurrentUser,
