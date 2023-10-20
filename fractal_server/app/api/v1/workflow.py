@@ -24,6 +24,7 @@ from ....logger import set_logger
 from ...db import AsyncSession
 from ...db import get_db
 from ...models import ApplyWorkflow
+from ...models import ArchivedApplyWorkflow
 from ...models import Task
 from ...models import Workflow
 from ...schemas import WorkflowCreate
@@ -189,15 +190,24 @@ async def delete_workflow(
     # Check that no ApplyWorkflow is in relationship with the current Workflow
     stm = select(ApplyWorkflow).where(ApplyWorkflow.workflow_id == workflow_id)
     res = await db.execute(stm)
-    job = res.scalars().first()
-    if job:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                f"Cannot remove workflow {workflow_id}: "
-                f"it's still linked to job {job.id}."
-            ),
-        )
+    job_list = res.scalars().all()
+    if job_list:
+        logger = set_logger(None)
+        for job in job_list:
+            logger.warning(f"Archiving Job {job.id}")
+            archived_job = ArchivedApplyWorkflow(
+                project_id=project_id,
+                workflow_dump=job.workflow_dump,
+                input_dataset_dump=job.input_dataset.dict(),
+                output_dataset_dump=job.output_dataset.dict(),
+                start_timestamp=job.start_timestamp,
+                end_timestamp=job.end_timestamp,
+            )
+            db.add(archived_job)
+        for job in job_list:
+            logger.warning(f"Deleting Job {job.id}")
+            await db.delete(job)
+        close_logger(logger)
 
     await db.delete(workflow)
     await db.commit()
