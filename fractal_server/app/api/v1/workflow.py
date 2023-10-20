@@ -187,7 +187,7 @@ async def delete_workflow(
         project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
 
-    # Archive any ApplyWorkflow in relationship with the current Workflow
+    # Archive and delete any ApplyWorkflow in relationship with the Workflow
     stm = select(ApplyWorkflow).where(ApplyWorkflow.workflow_id == workflow_id)
     res = await db.execute(stm)
     job_list = res.scalars().all()
