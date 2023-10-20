@@ -481,7 +481,6 @@ async def test_dump_on_apply(
     async with MockCurrentUser(persist=True) as user:
 
         # set up
-
         project = await project_factory(user)
         input_dataset = await dataset_factory(
             project_id=project.id, name="input name", type="input type"
@@ -489,12 +488,9 @@ async def test_dump_on_apply(
         output_dataset = await dataset_factory(
             project_id=project.id, name="output name", type="output type"
         )
-
         await resource_factory(input_dataset)
         await resource_factory(output_dataset)
-
         workflow = await workflow_factory(project_id=project.id)
-
         task = await task_factory(
             input_type="input type",
             output_type="output type",
@@ -502,8 +498,7 @@ async def test_dump_on_apply(
         )
         await workflow.insert_task(task.id, db=db)
 
-        # Apply a Workflow and assert databases are dumped
-
+        # assert databases are dumped on Workflow apply
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
@@ -511,6 +506,7 @@ async def test_dump_on_apply(
             json={},
         )
         assert res.status_code == 202
+        assert not res.json()["archived"]
 
         job_id = res.json()["id"]
         res = await client.get(f"{PREFIX}/project/{project.id}/job/{job_id}")
@@ -519,37 +515,69 @@ async def test_dump_on_apply(
         assert res.json().get("input_dataset_dump")
         assert res.json().get("output_dataset_dump")
 
-        # Archive a Job and assert CRUD endpoints work
-
+        # assert 0 archived jobs
         res = await client.get(f"{PREFIX}/project/{project.id}/archived_job/")
         assert res.status_code == 200
         assert len(res.json()) == 0
 
+        # archive a Job
         res = await client.post(
             f"{PREFIX}/project/{project.id}/job/{job_id}/archive/", json={}
         )
         assert res.status_code == 201
 
+        # test GET list
         res = await client.get(f"{PREFIX}/project/{project.id}/archived_job/")
         assert res.status_code == 200
         assert len(res.json()) == 1
-
         archived_job_id = res.json()[0]["id"]
+
+        # test GET - 404
         res = await client.get(
             f"{PREFIX}/project/{project.id}/archived_job/{archived_job_id+1}"
         )
         assert res.status_code == 404
+        # test GET - 200
         res = await client.get(
             f"{PREFIX}/project/{project.id}/archived_job/{archived_job_id}"
         )
         assert res.status_code == 200
+        # assert `archived` arg is changed
+        res = await client.get(f"{PREFIX}/project/{project.id}/job/{job_id}")
+        assert res.json()["archived"]
 
-        # Assert 409 from second archiviation
-
+        # Assert 409 from second archiviation (already `archived`)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/job/{job_id}/archive/", json={}
         )
         assert res.status_code == 409
 
+        # test DELETE archived job
+        res = await client.delete(
+            f"{PREFIX}/project/{project.id}/job/{job_id}"
+        )
+        assert res.status_code == 204
         res = await client.get(f"{PREFIX}/project/{project.id}/job/{job_id}")
-        assert res.json().get("archived")
+        assert res.status_code == 404
+
+        # test DELETE not-archived job
+
+        res = await client.get(f"{PREFIX}/project/{project.id}/archived_job/")
+        assert len(res.json()) == 1
+
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
+            f"?input_dataset_id={input_dataset.id}"
+            f"&output_dataset_id={output_dataset.id}",
+            json={},
+        )
+        assert not res.json()["archived"]
+        job_id = res.json()["id"]
+
+        res = await client.delete(
+            f"{PREFIX}/project/{project.id}/job/{job_id}"
+        )
+        assert res.status_code == 204
+
+        res = await client.get(f"{PREFIX}/project/{project.id}/archived_job/")
+        assert len(res.json()) == 2

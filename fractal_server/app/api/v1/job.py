@@ -119,6 +119,37 @@ async def get_job_list(
     return job_list
 
 
+@router.delete("/project/{project_id}/job/{job_id}", status_code=204)
+async def delete_job(
+    project_id: int,
+    job_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    output = await _get_job_check_owner(
+        project_id=project_id,
+        job_id=job_id,
+        user_id=user.id,
+        db=db,
+    )
+    job = output["job"]
+
+    if not job.archived:
+        archived_job = ArchivedApplyWorkflow(
+            project_id=project_id,
+            workflow_dump=job.workflow_dump,
+            input_dataset_dump=job.input_dataset.dict(),
+            output_dataset_dump=job.output_dataset.dict(),
+            start_timestamp=job.start_timestamp,
+            end_timestamp=job.end_timestamp,
+        )
+        db.add(archived_job)
+
+    await db.delete(job)
+    await db.commit()
+    await db.close()
+
+
 @router.get(
     "/project/{project_id}/job/{job_id}/stop/",
     status_code=200,
