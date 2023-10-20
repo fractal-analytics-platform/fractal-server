@@ -968,8 +968,8 @@ async def test_archive_jobs_on_delete_workflow(
 ):
     """
     GIVEN a Workflow in a relationship with a Job
-    WHEN we try to DELETE that Workflow
-    THEN we fail with a 422
+    WHEN we DELETE that Workflow
+    THEN the Job is archived an deleted
     """
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
@@ -995,6 +995,8 @@ async def test_archive_jobs_on_delete_workflow(
             working_dir=(tmp_path / "some_working_dir2").as_posix(),
         )
 
+        res = await client.get(f"api/v1/project/{project.id}/job/")
+        assert len(res.json()) == 2
         res = await client.get(f"api/v1/project/{project.id}/archived_job/")
         assert len(res.json()) == 0
 
@@ -1003,6 +1005,8 @@ async def test_archive_jobs_on_delete_workflow(
         )
         assert res.status_code == 204
 
+        res = await client.get(f"api/v1/project/{project.id}/job/")
+        assert len(res.json()) == 0
         res = await client.get(f"api/v1/project/{project.id}/archived_job/")
         assert len(res.json()) == 2
 

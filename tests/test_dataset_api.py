@@ -132,7 +132,7 @@ async def test_delete_dataset(
         assert prj_dict["dataset_list"][0]["id"] == ds1.id
 
 
-async def test_delete_dataset_failure(
+async def test_archive_job_on_delete_dataset(
     db,
     MockCurrentUser,
     project_factory,
@@ -146,7 +146,7 @@ async def test_delete_dataset_failure(
     """
     GIVEN a Dataset in a relationship with an ApplyWorkflow
     WHEN we try to DELETE that Dataset via the correspondig endpoint
-    THEN we fail with a 422
+    THEN the ApplyWorkflow is archived and deleted.
     """
     async with MockCurrentUser(persist=True) as user:
 
@@ -155,32 +155,51 @@ async def test_delete_dataset_failure(
         workflow = await workflow_factory(project_id=project.id)
         task = await task_factory(name="task", source="source")
         await workflow.insert_task(task_id=task.id, db=db)
-        input_ds = await dataset_factory(project_id=project.id)
-        output_ds = await dataset_factory(project_id=project.id)
-        dummy_ds = await dataset_factory(project_id=project.id)
+        ds_1 = await dataset_factory(project_id=project.id)
+        ds_2 = await dataset_factory(project_id=project.id)
+        ds_3 = await dataset_factory(project_id=project.id)
 
-        # Create a job in relationship with input_ds, output_ds and workflow
-        job = await job_factory(
+        # Create a job in relationship with ds_1, ds_2 and workflow
+        await job_factory(
             project_id=project.id,
             workflow_id=workflow.id,
-            input_dataset_id=input_ds.id,
-            output_dataset_id=output_ds.id,
-            working_dir=(tmp_path / "some_working_dir").as_posix(),
+            input_dataset_id=ds_1.id,
+            output_dataset_id=ds_2.id,
+            working_dir=(tmp_path / "some_working_dir1").as_posix(),
+        )
+        # Create a job in relationship with ds_2, ds_3 and workflow
+        await job_factory(
+            project_id=project.id,
+            workflow_id=workflow.id,
+            input_dataset_id=ds_2.id,
+            output_dataset_id=ds_3.id,
+            working_dir=(tmp_path / "some_working_dir2").as_posix(),
         )
 
-        # Check that you cannot delete datasets in relationship with a job
-        for ds_id in (input_ds.id, output_ds.id):
-            res = await client.delete(
-                f"api/v1/project/{project.id}/dataset/{ds_id}"
-            )
-            assert res.status_code == 422
-            assert f"still linked to job {job.id}" in res.json()["detail"]
+        res = await client.get(f"api/v1/project/{project.id}/job/")
+        assert len(res.json()) == 2
+        res = await client.get(f"api/v1/project/{project.id}/archived_job/")
+        assert len(res.json()) == 0
 
-        # Test successful dataset deletion
         res = await client.delete(
-            f"api/v1/project/{project.id}/dataset/{dummy_ds.id}"
+            f"api/v1/project/{project.id}/dataset/{ds_1.id}"
         )
         assert res.status_code == 204
+
+        res = await client.get(f"api/v1/project/{project.id}/job/")
+        assert len(res.json()) == 1
+        res = await client.get(f"api/v1/project/{project.id}/archived_job/")
+        assert len(res.json()) == 1
+
+        res = await client.delete(
+            f"api/v1/project/{project.id}/dataset/{ds_3.id}"
+        )
+        assert res.status_code == 204
+
+        res = await client.get(f"api/v1/project/{project.id}/job/")
+        assert len(res.json()) == 0
+        res = await client.get(f"api/v1/project/{project.id}/archived_job/")
+        assert len(res.json()) == 2
 
 
 async def test_patch_dataset(
