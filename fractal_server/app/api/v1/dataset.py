@@ -10,9 +10,12 @@ from fastapi import status
 from sqlmodel import or_
 from sqlmodel import select
 
+from ....logger import close_logger
+from ....logger import set_logger
 from ...db import AsyncSession
 from ...db import get_db
 from ...models import ApplyWorkflow
+from ...models import ArchivedApplyWorkflow
 from ...models import Dataset
 from ...models import JobStatusType
 from ...models import Resource
@@ -153,15 +156,24 @@ async def delete_dataset(
         )
     )
     res = await db.execute(stm)
-    job = res.scalars().first()
-    if job:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                f"Cannot remove dataset {dataset_id}: "
-                f"it's still linked to job {job.id}."
-            ),
-        )
+    job_list = res.scalars().all()
+    if job_list:
+        logger = set_logger(None)
+        for job in job_list:
+            if not job.archived:
+                logger.warning(f"Archiving Job {job.id}")
+                archived_job = ArchivedApplyWorkflow(
+                    project_id=project_id,
+                    workflow_dump=job.workflow_dump,
+                    input_dataset_dump=job.input_dataset.dict(),
+                    output_dataset_dump=job.output_dataset.dict(),
+                    start_timestamp=job.start_timestamp,
+                    end_timestamp=job.end_timestamp,
+                )
+                db.add(archived_job)
+            logger.warning(f"Deleting Job {job.id}")
+            await db.delete(job)
+        close_logger(logger)
 
     await db.delete(dataset)
     await db.commit()

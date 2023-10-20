@@ -194,17 +194,17 @@ async def delete_workflow(
     if job_list:
         logger = set_logger(None)
         for job in job_list:
-            logger.warning(f"Archiving Job {job.id}")
-            archived_job = ArchivedApplyWorkflow(
-                project_id=project_id,
-                workflow_dump=job.workflow_dump,
-                input_dataset_dump=job.input_dataset.dict(),
-                output_dataset_dump=job.output_dataset.dict(),
-                start_timestamp=job.start_timestamp,
-                end_timestamp=job.end_timestamp,
-            )
-            db.add(archived_job)
-        for job in job_list:
+            if not job.archived:
+                logger.warning(f"Archiving Job {job.id}")
+                archived_job = ArchivedApplyWorkflow(
+                    project_id=project_id,
+                    workflow_dump=job.workflow_dump,
+                    input_dataset_dump=job.input_dataset.dict(),
+                    output_dataset_dump=job.output_dataset.dict(),
+                    start_timestamp=job.start_timestamp,
+                    end_timestamp=job.end_timestamp,
+                )
+                db.add(archived_job)
             logger.warning(f"Deleting Job {job.id}")
             await db.delete(job)
         close_logger(logger)
