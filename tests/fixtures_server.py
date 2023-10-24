@@ -178,6 +178,7 @@ async def db_create_tables(override_settings):
     yield
 
     metadata.drop_all(engine)
+    engine.dispose()
 
 
 @pytest.fixture
