@@ -95,9 +95,15 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
     workflow_id: Optional[int] = Field(
         foreign_key="workflow.id", nullable=True
     )
-    input_dataset_dump: dict[str, Any] = Field(sa_column=Column(JSON))
-    output_dataset_dump: dict[str, Any] = Field(sa_column=Column(JSON))
-    workflow_dump: dict[str, Any] = Field(sa_column=Column(JSON))
+    input_dataset_dump: dict[str, Any] = Field(
+        sa_column=Column(JSON, nullable=False, server_default="{}")
+    )
+    output_dataset_dump: dict[str, Any] = Field(
+        sa_column=Column(JSON, nullable=False, server_default="{}")
+    )
+    workflow_dump: dict[str, Any] = Field(
+        sa_column=Column(JSON, nullable=False, server_default="{}")
+    )
 
     working_dir: Optional[str]
     working_dir_user: Optional[str]
@@ -106,8 +112,7 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
 
     start_timestamp: datetime = Field(
         default_factory=get_timestamp,
-        nullable=False,
-        sa_column=Column(DateTime(timezone=True)),
+        sa_column=Column(DateTime(timezone=True), nullable=False),
     )
     end_timestamp: Optional[datetime] = Field(
         default=None, sa_column=Column(DateTime(timezone=True))
