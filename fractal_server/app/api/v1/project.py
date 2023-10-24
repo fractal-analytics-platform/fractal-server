@@ -302,6 +302,8 @@ async def apply_workflow(
         input_dataset_id=input_dataset_id,
         output_dataset_id=output_dataset_id,
         workflow_id=workflow_id,
+        input_dataset_dump=input_dataset.dict(),
+        output_dataset_dump=output_dataset.dict(),
         workflow_dump=dict(
             workflow.dict(exclude={"task_list"}),
             task_list=[

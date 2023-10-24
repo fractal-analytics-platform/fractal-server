@@ -7,13 +7,10 @@ from sqlalchemy import Column
 from sqlalchemy.types import DateTime
 from sqlalchemy.types import JSON
 from sqlmodel import Field
-from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
 from ...utils import get_timestamp
 from ..schemas.applyworkflow import _ApplyWorkflowBase
-from .dataset import Dataset
-from .workflow import Workflow
 
 
 class JobStatusType(str, Enum):
@@ -88,29 +85,24 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     project_id: int = Field(foreign_key="project.id")
-    input_dataset_id: int = Field(foreign_key="dataset.id")
-    output_dataset_id: int = Field(foreign_key="dataset.id")
-    workflow_id: int = Field(foreign_key="workflow.id")
+
+    input_dataset_id: Optional[int] = Field(
+        foreign_key="dataset.id", nullable=True
+    )
+    output_dataset_id: Optional[int] = Field(
+        foreign_key="dataset.id", nullable=True
+    )
+    workflow_id: Optional[int] = Field(
+        foreign_key="workflow.id", nullable=True
+    )
+    input_dataset_dump: dict[str, Any] = Field(sa_column=Column(JSON))
+    output_dataset_dump: dict[str, Any] = Field(sa_column=Column(JSON))
+    workflow_dump: dict[str, Any] = Field(sa_column=Column(JSON))
+
     working_dir: Optional[str]
     working_dir_user: Optional[str]
     first_task_index: int
     last_task_index: int
-
-    input_dataset: Dataset = Relationship(
-        sa_relationship_kwargs=dict(
-            lazy="selectin",
-            primaryjoin="ApplyWorkflow.input_dataset_id==Dataset.id",
-        )
-    )
-    output_dataset: Dataset = Relationship(
-        sa_relationship_kwargs=dict(
-            lazy="selectin",
-            primaryjoin="ApplyWorkflow.output_dataset_id==Dataset.id",
-        )
-    )
-    workflow: Workflow = Relationship()
-
-    workflow_dump: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
 
     start_timestamp: datetime = Field(
         default_factory=get_timestamp,
