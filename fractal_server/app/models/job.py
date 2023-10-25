@@ -84,8 +84,8 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
         arbitrary_types_allowed = True
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    project_id: int = Field(foreign_key="project.id")
 
+    project_id: Optional[int] = Field(foreign_key="project.id", nullable=True)
     input_dataset_id: Optional[int] = Field(
         foreign_key="dataset.id", nullable=True
     )
@@ -94,6 +94,10 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
     )
     workflow_id: Optional[int] = Field(
         foreign_key="workflow.id", nullable=True
+    )
+
+    user_dump: dict[str, Any] = Field(
+        sa_column=Column(JSON, nullable=False, server_default="{}")
     )
     input_dataset_dump: dict[str, Any] = Field(
         sa_column=Column(JSON, nullable=False, server_default="{}")
