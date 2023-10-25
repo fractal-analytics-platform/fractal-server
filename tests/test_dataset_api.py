@@ -146,7 +146,7 @@ async def test_delete_dataset_failure(
     """
     GIVEN a Dataset in a relationship with an ApplyWorkflow
     WHEN we try to DELETE that Dataset via the correspondig endpoint
-    THEN we succeed
+    THEN the corresponding `dataset_id` is set None
     """
     async with MockCurrentUser(persist=True) as user:
 
@@ -157,23 +157,43 @@ async def test_delete_dataset_failure(
         await workflow.insert_task(task_id=task.id, db=db)
         input_ds = await dataset_factory(project_id=project.id)
         output_ds = await dataset_factory(project_id=project.id)
-        dummy_ds = await dataset_factory(project_id=project.id)
 
         # Create a job in relationship with input_ds, output_ds and workflow
-        await job_factory(
+        job = await job_factory(
             project_id=project.id,
             workflow_id=workflow.id,
             input_dataset_id=input_ds.id,
             output_dataset_id=output_ds.id,
             working_dir=(tmp_path / "some_working_dir").as_posix(),
         )
+        assert job.input_dataset_id
+        assert job.output_dataset_id
 
-        # You can delete datasets in relationship with a job
-        # Test successful dataset deletion
+        # Assert that `Dataset.list_jobs_*` are correctly populated
+        await db.refresh(input_ds)
+        assert input_ds.list_jobs_input
+        assert not input_ds.list_jobs_output
+        await db.refresh(output_ds)
+        assert not output_ds.list_jobs_input
+        assert output_ds.list_jobs_output
+
         res = await client.delete(
-            f"api/v1/project/{project.id}/dataset/{dummy_ds.id}"
+            f"api/v1/project/{project.id}/dataset/{input_ds.id}"
         )
         assert res.status_code == 204
+
+        await db.refresh(job)
+        assert not job.input_dataset_id
+        assert job.output_dataset_id
+
+        res = await client.delete(
+            f"api/v1/project/{project.id}/dataset/{output_ds.id}"
+        )
+        assert res.status_code == 204
+
+        await db.refresh(job)
+        assert not job.input_dataset_id
+        assert not job.output_dataset_id
 
 
 async def test_patch_dataset(
