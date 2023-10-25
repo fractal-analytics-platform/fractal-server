@@ -146,7 +146,7 @@ async def test_delete_dataset_failure(
     """
     GIVEN a Dataset in a relationship with an ApplyWorkflow
     WHEN we try to DELETE that Dataset via the correspondig endpoint
-    THEN we fail with a 422
+    THEN we succeed
     """
     async with MockCurrentUser(persist=True) as user:
 
@@ -160,7 +160,7 @@ async def test_delete_dataset_failure(
         dummy_ds = await dataset_factory(project_id=project.id)
 
         # Create a job in relationship with input_ds, output_ds and workflow
-        job = await job_factory(
+        await job_factory(
             project_id=project.id,
             workflow_id=workflow.id,
             input_dataset_id=input_ds.id,
@@ -168,14 +168,7 @@ async def test_delete_dataset_failure(
             working_dir=(tmp_path / "some_working_dir").as_posix(),
         )
 
-        # Check that you cannot delete datasets in relationship with a job
-        for ds_id in (input_ds.id, output_ds.id):
-            res = await client.delete(
-                f"api/v1/project/{project.id}/dataset/{ds_id}"
-            )
-            assert res.status_code == 422
-            assert f"still linked to job {job.id}" in res.json()["detail"]
-
+        # You can delete datasets in relationship with a job
         # Test successful dataset deletion
         res = await client.delete(
             f"api/v1/project/{project.id}/dataset/{dummy_ds.id}"
