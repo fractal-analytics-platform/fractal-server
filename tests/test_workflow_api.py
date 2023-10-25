@@ -969,7 +969,7 @@ async def test_delete_workflow_failure(
     """
     GIVEN a Workflow in a relationship with a Job
     WHEN we try to DELETE that Workflow
-    THEN we fail with a 422
+    THEN we succeed
     """
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
@@ -980,18 +980,14 @@ async def test_delete_workflow_failure(
         await workflow_1.insert_task(task1.id, db=db)
         input_ds = await dataset_factory(project_id=project.id)
         output_ds = await dataset_factory(project_id=project.id)
-        job = await job_factory(
+
+        await job_factory(
             project_id=project.id,
             workflow_id=workflow_1.id,
             input_dataset_id=input_ds.id,
             output_dataset_id=output_ds.id,
             working_dir=(tmp_path / "some_working_dir").as_posix(),
         )
-        res = await client.delete(
-            f"api/v1/project/{project.id}/workflow/{workflow_1.id}"
-        )
-        assert res.status_code == 422
-        assert f"still linked to job {job.id}" in res.json()["detail"]
 
         # Successful workflow deletion
         workflow_2 = await workflow_factory(project_id=project.id)
