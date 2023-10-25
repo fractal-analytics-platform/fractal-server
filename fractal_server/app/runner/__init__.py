@@ -189,9 +189,9 @@ async def submit_workflow(
         db_sync.commit()
         # After Session.commit() is called, either explicitly or when using a
         # context manager, all objects associated with the Session are expired.
-        # https://docs.sqlalchemy.org/en/20/orm/
+        # https://docs.sqlalchemy.org/en/14/orm/
         #   session_basics.html#opening-and-closing-a-session
-        # https://docs.sqlalchemy.org/en/20/orm/
+        # https://docs.sqlalchemy.org/en/14/orm/
         #   session_state_management.html#refreshing-expiring
         db_sync.refresh(input_dataset)
         db_sync.refresh(output_dataset)
