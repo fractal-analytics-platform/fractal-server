@@ -3,6 +3,8 @@ from sqlmodel import select
 
 from fractal_server.app.models import Project
 from fractal_server.app.models import State
+from fractal_server.app.models.dataset import Dataset
+from fractal_server.app.models.job import ApplyWorkflow
 from fractal_server.app.models.workflow import Workflow
 from fractal_server.app.models.workflow import WorkflowTask
 
@@ -328,3 +330,62 @@ async def test_insert_task_with_meta_none(
         wf = Workflow(name="my wfl", project_id=project.id)
         args = dict(arg="test arg")
         await wf.insert_task(t0.id, db=db, args=args)
+
+
+async def test_delete_dataset_cascade(
+    db, client, MockCurrentUser, project_factory, dataset_factory, job_factory
+):
+    """
+    WHEN the Dataset is deleted
+    THEN
+        all related ApplyWorkflows have input_dataset_id=None and/or
+        output_dataset_id=None
+    """
+    async with MockCurrentUser(persist=True) as user:
+
+        project = await project_factory(user=user)
+        workflow = Workflow(
+            name="My Workflow",
+            project_id=project.id,
+        )
+        db.add(workflow)
+        await db.commit()
+        await db.refresh(workflow)
+
+        dataset = Dataset(id=42, name="My ds", project_id=project.id)
+        db.add(dataset)
+        await db.commit()
+        await db.refresh(dataset)
+
+        job = ApplyWorkflow(
+            project_id=project.id,
+            workflow_id=workflow.id,
+            input_dataset_id=dataset.id,
+            output_dataset_id=dataset.id,
+            workflow_dump={},
+            first_task_index=0,
+            last_task_index=0,
+        )
+        db.add(job)
+        await db.commit()
+        await db.refresh(job)
+        await db.close()
+        debug(job)
+
+        new_dataset = await db.get(Dataset, dataset.id)
+        assert len(new_dataset.list_jobs_input) == 1
+        assert len(new_dataset.list_jobs_output) == 1
+
+        new_job_1 = await db.get(ApplyWorkflow, job.id)
+        debug(new_job_1)
+        assert new_job_1.input_dataset_id == 42
+        assert new_job_1.output_dataset_id == 42
+
+        await db.delete(new_dataset)
+        await db.commit()
+        await db.close()
+
+        new_job_2 = await db.get(ApplyWorkflow, job.id)
+        debug(new_job_2)
+        assert new_job_2.input_dataset_id is None
+        assert new_job_2.output_dataset_id is None

@@ -13,6 +13,7 @@ from sqlmodel import SQLModel
 from ..db import AsyncSession
 from ..schemas.workflow import _WorkflowBase
 from ..schemas.workflow import _WorkflowTaskBase
+from .job import ApplyWorkflow
 from .task import Task
 
 
@@ -114,6 +115,7 @@ class Workflow(_WorkflowBase, SQLModel, table=True):
             cascade="all, delete-orphan",
         ),
     )
+    job_list: list["ApplyWorkflow"] = Relationship(back_populates="workflow")
 
     async def insert_task(
         self,

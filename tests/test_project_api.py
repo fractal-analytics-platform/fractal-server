@@ -205,10 +205,13 @@ async def test_delete_project(
         )
 
         # Check that a project-related job exists
-        stm = select(ApplyWorkflow).join(Project).where(Project.id == p["id"])
-        res = await db.execute(stm)
-        jobs = list(res)
-        assert len(jobs) == 1
+        stm = select(ApplyWorkflow).where(ApplyWorkflow.project_id == p["id"])
+        res = (await db.execute(stm)).scalars().all()
+        assert len(res) == 1
+        job = res[0]
+        assert job.project_id == p["id"]
+        assert job.input_dataset_id == job.output_dataset_id == dataset_id
+        assert job.workflow_id == wf.id
 
         # Delete the project
         res = await client.delete(f"{PREFIX}/project/{p['id']}")
@@ -226,9 +229,9 @@ async def test_delete_project(
         debug(datasets)
         assert len(datasets) == 0
 
-        # Check that project-related jobs were deleted
-        stm = select(ApplyWorkflow).join(Project).where(Project.id == p["id"])
-        jobs = await db.execute(stm)
-        jobs = list(jobs)
-        debug(jobs)
-        assert len(jobs) == 0
+        # Assert that total number of jobs is still 1, but without project_id
+        await db.refresh(job)
+        assert not job.project_id
+        assert not job.input_dataset_id
+        assert not job.output_dataset_id
+        assert not job.workflow_id

@@ -7,9 +7,11 @@ from sqlalchemy import Column
 from sqlalchemy.types import DateTime
 from sqlalchemy.types import JSON
 from sqlmodel import Field
+from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
 from ...utils import get_timestamp
+from ..models import Dataset
 from ..schemas.applyworkflow import _ApplyWorkflowBase
 
 
@@ -85,15 +87,32 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    project_id: Optional[int] = Field(foreign_key="project.id", nullable=True)
-    input_dataset_id: Optional[int] = Field(
-        foreign_key="dataset.id", nullable=True
+    project_id: Optional[int] = Field(foreign_key="project.id")
+    project: Optional["Project"] = Relationship(  # noqa: F821
+        back_populates="job_list"
     )
-    output_dataset_id: Optional[int] = Field(
-        foreign_key="dataset.id", nullable=True
+
+    workflow_id: Optional[int] = Field(foreign_key="workflow.id")
+    workflow: Optional["Workflow"] = Relationship(  # noqa: F821
+        back_populates="job_list"
     )
-    workflow_id: Optional[int] = Field(
-        foreign_key="workflow.id", nullable=True
+
+    input_dataset_id: Optional[int] = Field(foreign_key="dataset.id")
+    input_dataset: Dataset = Relationship(
+        sa_relationship_kwargs=dict(
+            back_populates="list_jobs_input",
+            lazy="selectin",
+            primaryjoin="ApplyWorkflow.input_dataset_id==Dataset.id",
+        )
+    )
+
+    output_dataset_id: Optional[int] = Field(foreign_key="dataset.id")
+    output_dataset: Dataset = Relationship(
+        sa_relationship_kwargs=dict(
+            back_populates="list_jobs_output",
+            lazy="selectin",
+            primaryjoin="ApplyWorkflow.output_dataset_id==Dataset.id",
+        )
     )
 
     user_dump: dict[str, Any] = Field(
