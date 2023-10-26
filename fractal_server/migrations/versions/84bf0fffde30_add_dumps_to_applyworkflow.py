@@ -1,16 +1,15 @@
 """Add dumps to ApplyWorkflow
 
-Revision ID: 5de5c94383c4
+Revision ID: 84bf0fffde30
 Revises: 99ea79d9e5d2
-Create Date: 2023-10-26 15:22:16.455725
+Create Date: 2023-10-26 16:11:44.061971
 
 """
 import sqlalchemy as sa
 from alembic import op
-from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "5de5c94383c4"
+revision = "84bf0fffde30"
 down_revision = "99ea79d9e5d2"
 branch_labels = None
 depends_on = None
@@ -41,14 +40,10 @@ def upgrade() -> None:
             )
         )
         batch_op.alter_column(
-            "workflow_dump",
-            existing_type=postgresql.JSON(astext_type=sa.Text()),
-            nullable=False,
+            "workflow_dump", existing_type=sa.JSON(), nullable=False
         )
         batch_op.alter_column(
-            "start_timestamp",
-            existing_type=postgresql.TIMESTAMP(timezone=True),
-            nullable=False,
+            "start_timestamp", existing_type=sa.DATETIME(), nullable=False
         )
         batch_op.alter_column(
             "project_id", existing_type=sa.INTEGER(), nullable=True
@@ -82,14 +77,10 @@ def downgrade() -> None:
             "project_id", existing_type=sa.INTEGER(), nullable=False
         )
         batch_op.alter_column(
-            "start_timestamp",
-            existing_type=postgresql.TIMESTAMP(timezone=True),
-            nullable=True,
+            "start_timestamp", existing_type=sa.DATETIME(), nullable=True
         )
         batch_op.alter_column(
-            "workflow_dump",
-            existing_type=postgresql.JSON(astext_type=sa.Text()),
-            nullable=True,
+            "workflow_dump", existing_type=sa.JSON(), nullable=True
         )
         batch_op.drop_column("output_dataset_dump")
         batch_op.drop_column("input_dataset_dump")
