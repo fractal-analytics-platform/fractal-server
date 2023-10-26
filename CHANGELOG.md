@@ -8,6 +8,7 @@
 * Testing:
     * Use ubuntu-22 for GitHub CI (\#909).
     * Run GitHub CI both with SQLite and Postgres (\#915).
+    * Disable `postgres` service in GitHub action when running tests with SQLite (\#931).
     * Make `test_commands.py` tests stateless, also when running with Postgres (\#917).
 * Documentation:
     * Add information about minimal supported SQLite version (\#916).
