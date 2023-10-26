@@ -37,4 +37,8 @@ class Project(_ProjectBase, SQLModel, table=True):
         },
     )
 
-    job_list: list[ApplyWorkflow] = Relationship(back_populates="project")
+    job_list: list[ApplyWorkflow] = Relationship(
+        sa_relationship_kwargs={
+            "lazy": "selectin",
+        }
+    )
