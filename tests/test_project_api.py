@@ -204,7 +204,7 @@ async def test_delete_project(
             output_dataset_id=dataset_id,
         )
 
-        # Check that a project-related job exists
+        # Check that a project-related job exists - via query
         stm = select(ApplyWorkflow).where(ApplyWorkflow.project_id == p["id"])
         res = (await db.execute(stm)).scalars().all()
         assert len(res) == 1
@@ -212,6 +212,11 @@ async def test_delete_project(
         assert job.project_id == p["id"]
         assert job.input_dataset_id == job.output_dataset_id == dataset_id
         assert job.workflow_id == wf.id
+
+        # Check that a project-related job exists - via relationship
+        project = await db.get(Project, project_id)
+        debug(project.job_list)
+        assert len(project.job_list) == 1
 
         # Delete the project
         res = await client.delete(f"{PREFIX}/project/{p['id']}")
