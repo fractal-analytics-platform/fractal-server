@@ -187,15 +187,22 @@ async def submit_workflow(
         job.status = JobStatusType.RUNNING
         db_sync.merge(job)
         db_sync.commit()
+
         # After Session.commit() is called, either explicitly or when using a
         # context manager, all objects associated with the Session are expired.
         # https://docs.sqlalchemy.org/en/14/orm/
         #   session_basics.html#opening-and-closing-a-session
         # https://docs.sqlalchemy.org/en/14/orm/
         #   session_state_management.html#refreshing-expiring
+
+        # See issue #928:
+        # https://github.com/fractal-analytics-platform/
+        #   fractal-server/issues/928
+
         db_sync.refresh(input_dataset)
         db_sync.refresh(output_dataset)
         db_sync.refresh(workflow)
+
         # Write logs
         logger_name = f"WF{workflow_id}_job{job_id}"
         log_file_path = WORKFLOW_DIR / "workflow.log"
