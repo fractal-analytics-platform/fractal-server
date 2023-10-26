@@ -21,7 +21,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres
+        image: ${{ ${{ matrix.db == "postgres" }} && "postgres" || "" }}
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: fractal_test
