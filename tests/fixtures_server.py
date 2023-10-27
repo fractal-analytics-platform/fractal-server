@@ -173,6 +173,7 @@ async def db_create_tables(override_settings):
     from fractal_server.app.db import DB
     from fractal_server.app.models import SQLModel
 
+    DB.set_db()
     engine = DB.engine_sync()
     metadata = SQLModel.metadata
     metadata.create_all(engine)
@@ -181,7 +182,6 @@ async def db_create_tables(override_settings):
 
     metadata.drop_all(engine)
     engine.dispose()
-    del DB._engine_sync
 
 
 @pytest.fixture
