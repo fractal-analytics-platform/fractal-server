@@ -113,17 +113,15 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
         )
     )
 
-    user_dump: str = Field(
-        sa_column=Column(String, nullable=False, server_default="")
-    )
+    user_dump: str = Field(sa_column=Column(String, nullable=False))
     input_dataset_dump: dict[str, Any] = Field(
-        sa_column=Column(JSON, nullable=False, server_default="{}")
+        sa_column=Column(JSON, nullable=False)
     )
     output_dataset_dump: dict[str, Any] = Field(
-        sa_column=Column(JSON, nullable=False, server_default="{}")
+        sa_column=Column(JSON, nullable=False)
     )
     workflow_dump: dict[str, Any] = Field(
-        sa_column=Column(JSON, nullable=False, server_default="{}")
+        sa_column=Column(JSON, nullable=False)
     )
 
     working_dir: Optional[str]

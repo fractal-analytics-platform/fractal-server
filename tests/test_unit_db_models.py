@@ -332,9 +332,7 @@ async def test_insert_task_with_meta_none(
         await wf.insert_task(t0.id, db=db, args=args)
 
 
-async def test_delete_dataset_cascade(
-    db, client, MockCurrentUser, project_factory, dataset_factory, job_factory
-):
+async def test_delete_dataset_cascade(db, MockCurrentUser, project_factory):
     """
     WHEN the Dataset is deleted
     THEN
@@ -352,40 +350,49 @@ async def test_delete_dataset_cascade(
         await db.commit()
         await db.refresh(workflow)
 
-        dataset = Dataset(id=42, name="My ds", project_id=project.id)
-        db.add(dataset)
+        dataset_in = Dataset(id=24, name="IN", project_id=project.id)
+        dataset_out = Dataset(id=42, name="OUT", project_id=project.id)
+        db.add(dataset_in)
+        db.add(dataset_out)
         await db.commit()
-        await db.refresh(dataset)
+        await db.refresh(dataset_in)
+        await db.refresh(dataset_out)
 
         job = ApplyWorkflow(
             project_id=project.id,
             workflow_id=workflow.id,
-            input_dataset_id=dataset.id,
-            output_dataset_id=dataset.id,
+            input_dataset_id=dataset_in.id,
+            output_dataset_id=dataset_out.id,
+            user_dump=user.email,
+            input_dataset_dump={},
+            output_dataset_dump={},
             workflow_dump={},
             first_task_index=0,
             last_task_index=0,
         )
         db.add(job)
         await db.commit()
+
+        # Assert that the Datasets and the Job are properly linked
+        await db.refresh(dataset_in)
+        assert len(dataset_in.list_jobs_input) == 1
+        assert len(dataset_in.list_jobs_output) == 0
+        await db.refresh(dataset_out)
+        assert len(dataset_out.list_jobs_input) == 0
+        assert len(dataset_out.list_jobs_output) == 1
         await db.refresh(job)
-        await db.close()
-        debug(job)
+        assert job.input_dataset_id == dataset_in.id == 24
+        assert job.input_dataset
+        assert job.output_dataset_id == dataset_out.id == 42
+        assert job.output_dataset
 
-        new_dataset = await db.get(Dataset, dataset.id)
-        assert len(new_dataset.list_jobs_input) == 1
-        assert len(new_dataset.list_jobs_output) == 1
-
-        new_job_1 = await db.get(ApplyWorkflow, job.id)
-        debug(new_job_1)
-        assert new_job_1.input_dataset_id == 42
-        assert new_job_1.output_dataset_id == 42
-
-        await db.delete(new_dataset)
+        # Delete `dataset_in`
+        await db.delete(dataset_in)
         await db.commit()
-        await db.close()
 
-        new_job_2 = await db.get(ApplyWorkflow, job.id)
-        debug(new_job_2)
-        assert new_job_2.input_dataset_id is None
-        assert new_job_2.output_dataset_id is None
+        # Assert that deletion has affected just job.input_dataset[_id]
+        await db.refresh(job)
+        assert not job.input_dataset_id
+        assert not job.input_dataset
+        assert job.output_dataset_id == dataset_out.id == 42
+        assert job.output_dataset
