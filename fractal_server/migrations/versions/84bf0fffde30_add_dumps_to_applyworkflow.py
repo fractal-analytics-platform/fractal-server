@@ -43,9 +43,6 @@ def upgrade() -> None:
             "workflow_dump", existing_type=sa.JSON(), nullable=False
         )
         batch_op.alter_column(
-            "start_timestamp", existing_type=sa.DATETIME(), nullable=False
-        )
-        batch_op.alter_column(
             "project_id", existing_type=sa.INTEGER(), nullable=True
         )
         batch_op.alter_column(
@@ -57,6 +54,11 @@ def upgrade() -> None:
         batch_op.alter_column(
             "output_dataset_id", existing_type=sa.INTEGER(), nullable=True
         )
+
+    with op.batch_alter_table("applyworkflow", schema=None) as batch_op:
+        batch_op.alter_column("user_dump", server_default=None)
+        batch_op.alter_column("input_dataset_dump", server_default=None)
+        batch_op.alter_column("output_dataset_dump", server_default=None)
 
     # ### end Alembic commands ###
 
@@ -75,9 +77,6 @@ def downgrade() -> None:
         )
         batch_op.alter_column(
             "project_id", existing_type=sa.INTEGER(), nullable=False
-        )
-        batch_op.alter_column(
-            "start_timestamp", existing_type=sa.DATETIME(), nullable=True
         )
         batch_op.alter_column(
             "workflow_dump", existing_type=sa.JSON(), nullable=True
