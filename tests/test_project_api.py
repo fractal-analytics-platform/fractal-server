@@ -215,8 +215,8 @@ async def test_delete_project(
 
         # Check that a project-related job exists - via relationship
         project = await db.get(Project, project_id)
-        debug(project.job_list)
         assert len(project.job_list) == 1
+        assert project.job_list[0].id == job.id
 
         # Delete the project
         res = await client.delete(f"{PREFIX}/project/{p['id']}")
@@ -236,7 +236,7 @@ async def test_delete_project(
 
         # Assert that total number of jobs is still 1, but without project_id
         await db.refresh(job)
-        assert not job.project_id
-        assert not job.input_dataset_id
-        assert not job.output_dataset_id
-        assert not job.workflow_id
+        assert job.project_id is None
+        assert job.input_dataset_id is None
+        assert job.output_dataset_id is None
+        assert job.workflow_id is None
