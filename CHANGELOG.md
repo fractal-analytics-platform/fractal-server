@@ -5,6 +5,7 @@
 * Configure sqlite WAL to avoid "database is locked" errors (\#860).
 * Dependencies:
     * Add `sqlalchemy[asyncio]` extra, and do not directly require `greenlet` (\#895).
+    * Fix `cloudpickle`-version definition in `pyproject.toml` (\#937).
 * Testing:
     * Use ubuntu-22 for GitHub CI (\#909).
     * Run GitHub CI both with SQLite and Postgres (\#915).
