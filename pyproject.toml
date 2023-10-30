@@ -24,7 +24,7 @@ exclude = [
 python = "^3.9"
 python-dotenv = "^0.20.0"
 fastapi = "^0.103.0"
-sqlmodel = "^0.0.9"
+sqlmodel = "^0.0.11"
 aiosqlite = "^0.17.0"
 fastapi-users = {extras = ["oauth"], version = "^12.1.0"}
 alembic = "^1.9.1"

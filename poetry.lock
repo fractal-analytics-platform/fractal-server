@@ -2146,17 +2146,17 @@ typing-extensions = ">=3.7.4"
 
 [[package]]
 name = "sqlmodel"
-version = "0.0.9"
+version = "0.0.11"
 description = "SQLModel, SQL databases in Python, designed for simplicity, compatibility, and robustness."
 optional = false
 python-versions = ">=3.7,<4.0"
 files = [
-    {file = "sqlmodel-0.0.9-py3-none-any.whl", hash = "sha256:29739ce1d7b02cfbbc38f42d83e975a13aa7238fc0b12b6b670d2a6d54e45957"},
-    {file = "sqlmodel-0.0.9.tar.gz", hash = "sha256:7e8bd40d6322a56dec3efe0ca05371c7c1dfd7aa0bc6826d45d0f16f2c72a4dc"},
+    {file = "sqlmodel-0.0.11-py3-none-any.whl", hash = "sha256:bc0d64c4b901d919d2f16bbd79aefb07cb268c29f7c1dd83a84758772ccc95c6"},
+    {file = "sqlmodel-0.0.11.tar.gz", hash = "sha256:fc33abbf7ec29caafabe3d0e1db61e33597857a289e5fd1ecdb91be702b26084"},
 ]
 
 [package.dependencies]
-pydantic = ">=1.8.2,<2.0.0"
+pydantic = ">=1.9.0,<2.0.0"
 SQLAlchemy = ">=1.4.36,<2.0.0"
 sqlalchemy2-stubs = "*"
 
@@ -2328,4 +2328,4 @@ slurm = ["cloudpickle", "clusterfutures"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "4f6d15078097c0ec8115cda6f71c26b152aeb229ac0ace9f03fd89cc4bc9153c"
+content-hash = "487ba9608d24bd0608ca3dc423b3cfed26397aa9d2cd1efed5c1c72c9fd31dfc"
