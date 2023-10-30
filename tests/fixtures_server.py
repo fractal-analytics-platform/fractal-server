@@ -92,8 +92,6 @@ def get_patched_settings(temp_path: Path):
         settings.SQLITE_PATH = f"{temp_path.as_posix()}/_test.db"
     elif DB_ENGINE == "postgres":
         settings.DB_ENGINE = "postgres"
-        # settings.POSTGRES_HOST = "/var/run/postgresql"
-        # settings.POSTGRES_USER = "tommaso"
         settings.POSTGRES_USER = "postgres"
         settings.POSTGRES_PASSWORD = "postgres"
         settings.POSTGRES_DB = "fractal_test"
