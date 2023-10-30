@@ -13,7 +13,6 @@ from sqlmodel import SQLModel
 
 from ...utils import get_timestamp
 from ..models import Dataset
-from ..models import Workflow
 from ..schemas.applyworkflow import _ApplyWorkflowBase
 
 
@@ -92,7 +91,7 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
     project_id: Optional[int] = Field(foreign_key="project.id")
 
     workflow_id: Optional[int] = Field(foreign_key="workflow.id")
-    workflow: Optional[Workflow] = Relationship(  # noqa: F821
+    workflow: Optional["Workflow"] = Relationship(  # noqa: F821
         back_populates="job_list"
     )
 
