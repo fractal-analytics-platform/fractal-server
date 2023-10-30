@@ -96,7 +96,7 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
     )
 
     input_dataset_id: Optional[int] = Field(foreign_key="dataset.id")
-    input_dataset: Dataset = Relationship(
+    input_dataset: Optional[Dataset] = Relationship(
         sa_relationship_kwargs=dict(
             back_populates="list_jobs_input",
             lazy="selectin",
@@ -105,7 +105,7 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
     )
 
     output_dataset_id: Optional[int] = Field(foreign_key="dataset.id")
-    output_dataset: Dataset = Relationship(
+    output_dataset: Optional[Dataset] = Relationship(
         sa_relationship_kwargs=dict(
             back_populates="list_jobs_output",
             lazy="selectin",
