@@ -239,6 +239,7 @@ async def test_get_job_check_owner(
     job_factory,
     task_factory,
     db,
+    tmp_path,
 ):
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user, id=1)
@@ -251,10 +252,11 @@ async def test_get_job_check_owner(
         dataset = await dataset_factory(project_id=project.id)
 
         job = await job_factory(
-            project,
+            project_id=project.id,
             input_dataset_id=dataset.id,
             output_dataset_id=dataset.id,
             workflow_id=workflow.id,
+            working_dir=tmp_path,
         )
 
         # Test success
