@@ -292,7 +292,7 @@ async def delete_resource(
     if not resource or resource.dataset_id != dataset.id:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Resource does not exist or does not belong to project",
+            detail="Resource does not exist or does not belong to dataset",
         )
     await db.delete(resource)
     await db.commit()
