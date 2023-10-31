@@ -382,5 +382,5 @@ async def test_delete_resource(
         )
         assert res.status_code == 422
         assert res.json()["detail"] == (
-            "Resource does not exist or does not belong to project"
+            "Resource does not exist or does not belong to dataset"
         )
