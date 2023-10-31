@@ -2,6 +2,7 @@
 
 # Unreleased
 
+* Improve delete-resource endpoint (\#943).
 * Expose JSON Schema for the `ManifestV1` Pydantic model (\#942).
 
 # 1.3.13

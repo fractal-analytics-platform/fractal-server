@@ -316,6 +316,7 @@ async def test_delete_resource(
     db, client, MockCurrentUser, project_factory, dataset_factory
 ):
     async with MockCurrentUser(persist=True) as user:
+        # Create resource
         project = await project_factory(user)
         dataset = await dataset_factory(project_id=project.id)
         res = await client.post(
@@ -325,22 +326,44 @@ async def test_delete_resource(
         debug(res)
         assert res.status_code == 201
         resource = res.json()
+        resource_id = resource["id"]
 
+        # Failures due to invalid project, dataset or resource
+
+        # Delete resource while using invalid project
+        res = await client.delete(
+            f"{PREFIX}/project/{987654321}/dataset/{dataset.id}/"
+            f"resource/{resource_id}"
+        )
+        assert res.status_code == 404
+        assert res.json()["detail"] == "Project not found"
+
+        # Delete resource while using invalid dataset
+        res = await client.delete(
+            f"{PREFIX}/project/{project.id}/dataset/{987654321}/"
+            f"resource/{resource_id}"
+        )
+        assert res.status_code == 404
+        assert res.json()["detail"] == "Dataset not found"
+
+        # Delete invalid resource
         res = await client.delete(
             f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/"
-            f"resource/{resource['id']+1}"
+            f"resource/987654321"
         )
         assert res.status_code == 422
         assert res.json()["detail"] == (
-            "Resource does not exist or does not belong to project"
+            "Resource does not exist or does not belong to dataset"
         )
 
+        # Successful deletion
         res = await client.delete(
             f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/"
-            f"resource/{resource['id']}"
+            f"resource/{resource_id}"
         )
         assert res.status_code == 204
 
+        # Create anohter project, dataset and resource
         other_project = await project_factory(user)
         other_dataset = await dataset_factory(project_id=other_project.id)
         res = await client.post(
@@ -350,12 +373,14 @@ async def test_delete_resource(
         )
         assert res.status_code == 201
         other_resource = res.json()
+        other_resource_id = other_resource["id"]
 
+        # Delete resource while using wrong project/dataset
         res = await client.delete(
             f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/"
-            f"resource/{other_resource['id']}"
+            f"resource/{other_resource_id}"
         )
         assert res.status_code == 422
         assert res.json()["detail"] == (
-            "Resource does not exist or does not belong to project"
+            "Resource does not exist or does not belong to dataset"
         )
