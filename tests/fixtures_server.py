@@ -468,7 +468,7 @@ async def job_factory(db: AsyncSession):
             input_dataset_id=input_dataset_id,
             input_dataset_dump=input_dataset.dict(),
             output_dataset_id=output_dataset_id,
-            input_dataset_dump=output_dataset.dict(),
+            output_dataset_dump=output_dataset.dict(),
             workflow_id=workflow_id,
             workflow_dump=dict(
                 workflow.dict(exclude={"task_list"}),
