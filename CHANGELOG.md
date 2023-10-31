@@ -2,6 +2,10 @@
 
 # Unreleased
 
+* Expose JSON Schema for the `ManifestV1` Pydantic model (\#942).
+
+# 1.3.13
+
 * Configure sqlite WAL to avoid "database is locked" errors (\#860).
 * Dependencies:
     * Add `sqlalchemy[asyncio]` extra, and do not directly require `greenlet` (\#895).
