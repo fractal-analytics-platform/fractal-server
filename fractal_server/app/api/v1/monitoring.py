@@ -9,6 +9,7 @@ from ...db import AsyncSession
 from ...db import get_db
 from ...models import ApplyWorkflow
 from ...models import Project
+from ...models import Workflow
 from ...schemas import ApplyWorkflowRead
 from ...schemas import ProjectRead
 from ...security import current_active_superuser
@@ -38,10 +39,26 @@ async def monitor_project(
 
 @router.get("/workflow/")
 async def monitor_workflow(
+    id: Optional[int] = None,
+    project_id: Optional[int] = None,
+    name: Optional[str] = None,
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_db),
 ):
-    pass
+    stm = select(Workflow)
+
+    if id:
+        stm = stm.where(Workflow.id == id)
+    if project_id:
+        stm = stm.where(Workflow.project_id == project_id)
+    if name:
+        stm = stm.where(Workflow.name.contains(name))
+
+    res = await db.execute(stm)
+    project_list = res.scalars().all()
+    await db.close()
+
+    return project_list
 
 
 @router.get("/dataset/")
@@ -54,16 +71,16 @@ async def monitor_dataset(
 
 @router.get("/job/")
 async def monitor_job(
-    id: Optional[int],
-    project_id: Optional[int],
-    input_dataset_id: Optional[int],
-    output_dataset_id: Optional[int],
-    workflow_id: Optional[int],
-    working_dir: Optional[str],
-    working_dir_user: Optional[str],
-    status: Optional[str],
-    start_timestamp: Optional[DateTime],
-    end_timestamp: Optional[DateTime],
+    id: Optional[int] = None,
+    project_id: Optional[int] = None,
+    input_dataset_id: Optional[int] = None,
+    output_dataset_id: Optional[int] = None,
+    workflow_id: Optional[int] = None,
+    working_dir: Optional[str] = None,
+    working_dir_user: Optional[str] = None,
+    status: Optional[str] = None,
+    start_timestamp: Optional[DateTime] = None,
+    end_timestamp: Optional[DateTime] = None,
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[list[ApplyWorkflowRead]]:
