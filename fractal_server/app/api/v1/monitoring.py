@@ -121,9 +121,11 @@ async def monitor_job(
     if workflow_id is not None:
         stm = stm.where(ApplyWorkflow.workflow_id == workflow_id)
     if working_dir is not None:
-        stm = stm.where(ApplyWorkflow.working_dir == working_dir)
+        stm = stm.where(ApplyWorkflow.working_dir.contains(working_dir))
     if working_dir_user is not None:
-        stm = stm.where(ApplyWorkflow.working_dir_user == working_dir_user)
+        stm = stm.where(
+            ApplyWorkflow.working_dir_user.contains(working_dir_user)
+        )
     if status is not None:
         stm = stm.where(ApplyWorkflow.status == status)
     if start_timestamp is not None:
