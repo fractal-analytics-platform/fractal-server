@@ -251,7 +251,7 @@ async def test_monitor_job(
             project_id=project.id,
             input_dataset_id=dataset1.id,
             output_dataset_id=dataset2.id,
-            working_id=workflow1.id,
+            workflow_id=workflow1.id,
             start_timestamp=datetime(2000, 1, 1),
         )
 
@@ -261,7 +261,7 @@ async def test_monitor_job(
             project_id=project.id,
             input_dataset_id=dataset2.id,
             output_dataset_id=dataset1.id,
-            working_id=workflow2.id,
+            workflow_id=workflow2.id,
             start_timestamp=datetime(2023, 1, 1),
             end_timestamp=datetime(2023, 11, 9),
         )
@@ -273,6 +273,11 @@ async def test_monitor_job(
         res = await client.get(f"{PREFIX}/monitoring/job/")
         assert res.status_code == 200
         assert len(res.json()) == 2
+
+        # get jobs by id
+        res = await client.get(f"{PREFIX}/monitoring/job/?id={job1.id}")
+        assert res.status_code == 200
+        assert len(res.json()) == 1
 
         # get jobs by project_id
         res = await client.get(
@@ -299,6 +304,18 @@ async def test_monitor_job(
         assert res.status_code == 200
         assert len(res.json()) == 1
         assert res.json()[0]["id"] == job2.id
+
+        # get jobs by workflow_id
+        res = await client.get(
+            f"{PREFIX}/monitoring/job/?workflow_id={workflow2.id}"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 1
+        res = await client.get(
+            f"{PREFIX}/monitoring/job/?workflow_id=123456789"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 0
 
         # get jobs by worfking_dir[_user]
         res = await client.get(f"{PREFIX}/monitoring/job/?working_dir=aaaa")
