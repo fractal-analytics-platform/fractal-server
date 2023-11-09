@@ -8,6 +8,7 @@ from sqlmodel import select
 from ...db import AsyncSession
 from ...db import get_db
 from ...models import ApplyWorkflow
+from ...models import Dataset
 from ...models import Project
 from ...models import Workflow
 from ...schemas import ApplyWorkflowRead
@@ -47,11 +48,11 @@ async def monitor_workflow(
 ):
     stm = select(Workflow)
 
-    if id:
+    if id is not None:
         stm = stm.where(Workflow.id == id)
-    if project_id:
+    if project_id is not None:
         stm = stm.where(Workflow.project_id == project_id)
-    if name:
+    if name is not None:
         stm = stm.where(Workflow.name.contains(name))
 
     res = await db.execute(stm)
@@ -63,10 +64,32 @@ async def monitor_workflow(
 
 @router.get("/dataset/")
 async def monitor_dataset(
+    id: Optional[int] = None,
+    project_id: Optional[int] = None,
+    name: Optional[str] = None,
+    type: Optional[str] = None,
+    read_only: Optional[bool] = None,
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_db),
 ):
-    pass
+    stm = select(Dataset)
+
+    if id is not None:
+        stm = stm.where(Dataset.id == id)
+    if project_id is not None:
+        stm = stm.where(Dataset.project_id == project_id)
+    if name is not None:
+        stm = stm.where(Dataset.name.contains(name))
+    if type is not None:
+        stm = stm.where(Dataset.type == type)
+    if read_only is not None:
+        stm = stm.where(Dataset.read_only == read_only)
+
+    res = await db.execute(stm)
+    dataset_list = res.scalars().all()
+    await db.close()
+
+    return dataset_list
 
 
 @router.get("/job/")
@@ -87,25 +110,25 @@ async def monitor_job(
 
     stm = select(ApplyWorkflow)
 
-    if id:
+    if id is not None:
         stm = stm.where(ApplyWorkflow.id == id)
-    if project_id:
+    if project_id is not None:
         stm = stm.where(ApplyWorkflow.project_id == project_id)
-    if input_dataset_id:
+    if input_dataset_id is not None:
         stm = stm.where(ApplyWorkflow.input_dataset_id == input_dataset_id)
-    if output_dataset_id:
+    if output_dataset_id is not None:
         stm = stm.where(ApplyWorkflow.output_dataset_id == output_dataset_id)
-    if workflow_id:
+    if workflow_id is not None:
         stm = stm.where(ApplyWorkflow.workflow_id == workflow_id)
-    if working_dir:
+    if working_dir is not None:
         stm = stm.where(ApplyWorkflow.working_dir == working_dir)
-    if working_dir_user:
+    if working_dir_user is not None:
         stm = stm.where(ApplyWorkflow.working_dir_user == working_dir_user)
-    if status:
+    if status is not None:
         stm = stm.where(ApplyWorkflow.status == status)
-    if start_timestamp:
+    if start_timestamp is not None:
         stm = stm.where(ApplyWorkflow.start_timestamp >= start_timestamp)
-    if end_timestamp:
+    if end_timestamp is not None:
         stm = stm.where(ApplyWorkflow.end_timestamp <= end_timestamp)
 
     res = await db.execute(stm)
