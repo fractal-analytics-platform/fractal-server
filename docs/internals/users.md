@@ -179,9 +179,6 @@ When `fractal-server` starts, two new routes will be generated for each client:
 > the callback URL should be opened in the browser itself.
 
 
-for
-from the command-lineform the cconnectinbaseneeded for the examples described in this page (which are all based on command-line  desoptionalvariablesthe
-
 #### Authorization Code Flow
 
 Authentication via OAuth2 client is based on the [Authorizion Code Flow](https://auth0.com/docs/get-started/authentication-and-authorization-flow/authorization-code-flow), as described in this diagram
