@@ -396,7 +396,7 @@ async def resource_factory(db, testdata_path):
         db.add(resource)
         await db.commit()
         await db.refresh(dataset)
-        return dataset.resource_list[-1]
+        return resource
 
     return __resource_factory
 
