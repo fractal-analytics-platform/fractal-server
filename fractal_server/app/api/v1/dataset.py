@@ -261,16 +261,19 @@ async def delete_resource(
     """
     Delete a resource of a dataset
     """
-    project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+    # Get the dataset DB entry
+    output = await _get_dataset_check_owner(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        db=db,
     )
+    dataset = output["dataset"]
     resource = await db.get(Resource, resource_id)
-    if not resource or resource.dataset_id not in (
-        ds.id for ds in project.dataset_list
-    ):
+    if not resource or resource.dataset_id != dataset.id:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Resource does not exist or does not belong to project",
+            detail="Resource does not exist or does not belong to dataset",
         )
     await db.delete(resource)
     await db.commit()
