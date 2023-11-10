@@ -2,9 +2,12 @@
 
 # Unreleased
 
+# 1.3.14
+
 * Make `Dataset.resource_list` an `ordering_list`, ordered by `Resource.id` (\#951).
-* Improve delete-resource endpoint (\#943).
+* Expose `redirect_url` for OAuth clients (\#953).
 * Expose JSON Schema for the `ManifestV1` Pydantic model (\#942).
+* Improve delete-resource endpoint (\#943).
 * Dependencies:
     * Upgrade sqlmodel to 0.0.11 (\#949).
 * Testing:

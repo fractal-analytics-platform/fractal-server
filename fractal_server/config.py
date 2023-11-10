@@ -60,12 +60,17 @@ class OAuthClientConfig(BaseModel):
         OIDC_CONFIGURATION_ENDPOINT:
             OpenID configuration endpoint,
             allowing to discover the required endpoints automatically
+        REDIRECT_URL:
+            String to be used as `redirect_url` argument for
+            `fastapi_users.get_oauth_router`, and then in
+            `httpx_oauth.integrations.fastapi.OAuth2AuthorizeCallback`.
     """
 
     CLIENT_NAME: str
     CLIENT_ID: str
     CLIENT_SECRET: str
     OIDC_CONFIGURATION_ENDPOINT: Optional[str]
+    REDIRECT_URL: Optional[str] = None
 
     @root_validator
     def check_configuration(cls, values):
@@ -153,6 +158,7 @@ class Settings(BaseSettings):
                 OIDC_CONFIGURATION_ENDPOINT=getenv(
                     f"{prefix}_OIDC_CONFIGURATION_ENDPOINT", None
                 ),
+                REDIRECT_URL=getenv(f"{prefix}_REDIRECT_URL", None),
             )
             values["OAUTH_CLIENTS_CONFIG"].append(oauth_client_config)
         return values
