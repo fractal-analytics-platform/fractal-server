@@ -384,3 +384,35 @@ async def test_delete_resource(
         assert res.json()["detail"] == (
             "Resource does not exist or does not belong to dataset"
         )
+
+
+async def test_post_resource_order(
+    db,
+    client,
+    MockCurrentUser,
+    project_factory,
+    dataset_factory,
+    resource_factory,
+):
+    async with MockCurrentUser(persist=True) as user:
+        project = await project_factory(user)
+        project_id = project.id
+        dataset = await dataset_factory(project_id=project.id, name="dataset")
+        dataset_id = dataset.id
+
+        resource_A = await resource_factory(dataset, id=2, path="/A")
+        debug(resource_A)
+        resource_B = await resource_factory(dataset, id=1, path="/B")
+        debug(resource_B)
+
+        res = await client.get(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}",
+        )
+        assert res.status_code == 200
+        dataset = res.json()
+        debug(dataset)
+
+        assert dataset["resource_list"][0]["id"] == 1
+        assert dataset["resource_list"][0]["path"] == "/B"
+        assert dataset["resource_list"][1]["id"] == 2
+        assert dataset["resource_list"][1]["path"] == "/A"
