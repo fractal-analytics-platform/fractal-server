@@ -1,0 +1,81 @@
+{
+  "title": "ManifestV1",
+  "description": "Manifest schema version 1.\n\nAttributes:\n    task_list:",
+  "type": "object",
+  "properties": {
+    "manifest_version": {
+      "title": "Manifest Version",
+      "type": "string"
+    },
+    "task_list": {
+      "title": "Task List",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/TaskManifestV1"
+      }
+    },
+    "has_args_schemas": {
+      "title": "Has Args Schemas",
+      "default": false,
+      "type": "boolean"
+    },
+    "args_schema_version": {
+      "title": "Args Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "manifest_version",
+    "task_list"
+  ],
+  "definitions": {
+    "TaskManifestV1": {
+      "title": "TaskManifestV1",
+      "description": "Task manifest schema version 1.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "executable": {
+          "title": "Executable",
+          "type": "string"
+        },
+        "input_type": {
+          "title": "Input Type",
+          "type": "string"
+        },
+        "output_type": {
+          "title": "Output Type",
+          "type": "string"
+        },
+        "meta": {
+          "title": "Meta",
+          "type": "object"
+        },
+        "args_schema": {
+          "title": "Args Schema",
+          "type": "object"
+        },
+        "docs_info": {
+          "title": "Docs Info",
+          "type": "string"
+        },
+        "docs_link": {
+          "title": "Docs Link",
+          "minLength": 1,
+          "maxLength": 2083,
+          "format": "uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "executable",
+        "input_type",
+        "output_type"
+      ]
+    }
+  }
+}
