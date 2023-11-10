@@ -348,6 +348,7 @@ for client_config in settings.OAUTH_CLIENTS_CONFIG:
             settings.JWT_SECRET_KEY,
             is_verified_by_default=False,
             associate_by_email=True,
+            redirect_url=client_config.REDIRECT_URL,
         ),
         prefix=f"/{client_name}",
     )
