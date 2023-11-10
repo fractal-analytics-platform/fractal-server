@@ -171,6 +171,14 @@ async def db_create_tables(override_settings):
     from fractal_server.app.db import DB
     from fractal_server.app.models import SQLModel
 
+    # Calling set_db guarantees that a new pair of sync/async engines is
+    # created every time. This is needed for our Postgresql-based CI, due to
+    # the presence of Enums. See
+    # https://github.com/fractal-analytics-platform/fractal-server/pull/934#issuecomment-1782842865
+    # and
+    # https://docs.sqlalchemy.org/en/14/dialects/postgresql.html#prepared-statement-cache.
+    DB.set_db()
+
     engine = DB.engine_sync()
     metadata = SQLModel.metadata
     metadata.create_all(engine)
@@ -178,6 +186,7 @@ async def db_create_tables(override_settings):
     yield
 
     metadata.drop_all(engine)
+    engine.dispose()
 
 
 @pytest.fixture
@@ -387,7 +396,7 @@ async def resource_factory(db, testdata_path):
         db.add(resource)
         await db.commit()
         await db.refresh(dataset)
-        return dataset.resource_list[-1]
+        return resource
 
     return __resource_factory
 
