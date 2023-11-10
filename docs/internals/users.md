@@ -147,7 +147,7 @@ To add an `OAuth2` client, the following environment variables must be added to 
     OAUTH_MYCLIENT2_CLIENT_ID=...
     OAUTH_MYCLIENT2_CLIENT_SECRET=...
     OAUTH_MYCLIENT2_OIDC_CONFIGURATION_ENDPOINT=https://client2.com/.well-known/openid-configuration
-    OAUTH_MYCLIENT1_REDIRECT_URL=...   # e.g. https://fractal-web.2.example.org/auth/login/oauth2
+    OAUTH_MYCLIENT2_REDIRECT_URL=...   # e.g. https://fractal-web.2.example.org/auth/login/oauth2
     ```
 
 === "GitHub"
