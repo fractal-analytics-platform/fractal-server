@@ -4,6 +4,8 @@
 
 * Improve delete-resource endpoint (\#943).
 * Expose JSON Schema for the `ManifestV1` Pydantic model (\#942).
+* Dependencies:
+    * Upgrade sqlmodel to 0.0.11 (\#949).
 * Testing:
     * Fix bug in local tests with Docker/SLURM (\#948).
 
