@@ -29,7 +29,7 @@ aiosqlite = "^0.17.0"
 fastapi-users = {extras = ["oauth"], version = "^12.1.0"}
 alembic = "^1.9.1"
 uvicorn = "^0.20.0"
-sqlalchemy = {extras = ["asyncio"], version = "1.4.41"}
+sqlalchemy = {extras = ["asyncio"], version = "^1.4"}
 pydantic = ">=1.10.8,<2"
 
 clusterfutures = { version = "^0.5", optional = true}
