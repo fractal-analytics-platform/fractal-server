@@ -2,6 +2,7 @@ from typing import Any
 from typing import Optional
 
 from sqlalchemy import Column
+from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.types import JSON
 from sqlmodel import Field
 from sqlmodel import Relationship
@@ -52,6 +53,8 @@ class Dataset(_DatasetBase, SQLModel, table=True):
     resource_list: list[Resource] = Relationship(
         sa_relationship_kwargs={
             "lazy": "selectin",
+            "order_by": "Resource.id",
+            "collection_class": ordering_list("id"),
             "cascade": "all, delete-orphan",
         }
     )

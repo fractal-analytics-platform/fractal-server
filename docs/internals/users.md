@@ -133,6 +133,7 @@ To add an `OAuth2` client, the following environment variables must be added to 
     OAUTH_MYCLIENT_CLIENT_ID=...
     OAUTH_MYCLIENT_CLIENT_SECRET=...
     OAUTH_MYCLIENT_OIDC_CONFIGURATION_ENDPOINT=https://client.com/.well-known/openid-configuration
+    OAUTH_MYCLIENT_REDIRECT_URL=...   # e.g. https://fractal-web.example.org/auth/login/oauth2
     ```
 
 === "OIDC (multiple clients)"
@@ -141,10 +142,12 @@ To add an `OAuth2` client, the following environment variables must be added to 
     OAUTH_MYCLIENT1_CLIENT_ID=...
     OAUTH_MYCLIENT1_CLIENT_SECRET=...
     OAUTH_MYCLIENT1_OIDC_CONFIGURATION_ENDPOINT=https://client1.com/.well-known/openid-configuration
+    OAUTH_MYCLIENT1_REDIRECT_URL=...   # e.g. https://fractal-web.1.example.org/auth/login/oauth2
 
     OAUTH_MYCLIENT2_CLIENT_ID=...
     OAUTH_MYCLIENT2_CLIENT_SECRET=...
     OAUTH_MYCLIENT2_OIDC_CONFIGURATION_ENDPOINT=https://client2.com/.well-known/openid-configuration
+    OAUTH_MYCLIENT2_REDIRECT_URL=...   # e.g. https://fractal-web.2.example.org/auth/login/oauth2
     ```
 
 === "GitHub"
@@ -152,6 +155,7 @@ To add an `OAuth2` client, the following environment variables must be added to 
     ```console
     OAUTH_GITHUB_CLIENT_ID=...
     OAUTH_GITHUB_CLIENT_SECRET=...
+    OAUTH_GITHUB_REDIRECT_URL=...   # e.g. https://fractal-web.example.org/auth/login/oauth2
     ```
 
 === "Google"
@@ -159,6 +163,7 @@ To add an `OAuth2` client, the following environment variables must be added to 
     ```console
     OAUTH_GOOGLE_CLIENT_ID=...
     OAUTH_GOOGLE_CLIENT_SECRET=...
+    OAUTH_GOOGLE_REDIRECT_URL=...   # e.g. https://fractal-web.example.org/auth/login/oauth2
     ```
 
 When `fractal-server` starts, two new routes will be generated for each client:
@@ -167,6 +172,14 @@ When `fractal-server` starts, two new routes will be generated for each client:
 - `/auth/client-name/callback` (the `Authorization callback URL` of the client).
 
 > For `GitHub` and `Google` clients the `client-name` is `github` or `google`, while for `OIDC` clients it comes from the environment variables (e.g. for `OAUTH_MYCLIENT_CLIENT_ID` the `client-name` is `MYCLIENT`).
+
+> Note that the `OAUTH_*_REDIRECT_URL` environment variable is optional. It is
+> not relevant for the examples described in this page, since they are all in
+> the command-line interface. However, it is required when OAuth authentication
+> is performed starting from a browser (e.g. through the [`fractal-web`
+> client](https://github.com/fractal-analytics-platform/fractal-web)), since
+> the callback URL should be opened in the browser itself.
+
 
 #### Authorization Code Flow
 
