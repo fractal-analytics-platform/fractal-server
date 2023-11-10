@@ -4,6 +4,7 @@
 
 * Improve delete-resource endpoint (\#943).
 * Expose JSON Schema for the `ManifestV1` Pydantic model (\#942).
+* Expose `redirect_url` for OAuth clients (\#953).
 * Dependencies:
     * Upgrade sqlmodel to 0.0.11 (\#949).
 * Testing:
