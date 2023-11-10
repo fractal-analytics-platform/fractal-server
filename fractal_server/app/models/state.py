@@ -31,6 +31,5 @@ class State(_StateBase, SQLModel, table=True):
     data: dict[str, Any] = Field(sa_column=Column(JSON), default={})
     timestamp: datetime = Field(
         default_factory=get_timestamp,
-        nullable=False,
         sa_column=Column(DateTime(timezone=True)),
     )

@@ -114,7 +114,6 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
 
     start_timestamp: datetime = Field(
         default_factory=get_timestamp,
-        nullable=False,
         sa_column=Column(DateTime(timezone=True)),
     )
     end_timestamp: Optional[datetime] = Field(
