@@ -61,7 +61,9 @@ class OAuthClientConfig(BaseModel):
             OpenID configuration endpoint,
             allowing to discover the required endpoints automatically
         REDIRECT_URL:
-            FIXME
+            String to be used as `redirect_url` argument for
+            `fastapi_users.get_oauth_router`, and then in
+            `httpx_oauth.integrations.fastapi.OAuth2AuthorizeCallback`.
     """
 
     CLIENT_NAME: str
