@@ -2,6 +2,9 @@
 
 # Unreleased
 
+
+# 1.3.14
+
 * Improve delete-resource endpoint (\#943).
 * Expose JSON Schema for the `ManifestV1` Pydantic model (\#942).
 * Expose `redirect_url` for OAuth clients (\#953).
