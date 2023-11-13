@@ -115,7 +115,9 @@ class Workflow(_WorkflowBase, SQLModel, table=True):
             cascade="all, delete-orphan",
         ),
     )
-    job_list: list[ApplyWorkflow] = Relationship(back_populates="workflow")
+    job_list: list[ApplyWorkflow] = Relationship(
+        sa_relationship_kwargs={"lazy": "selectin"}
+    )
 
     async def insert_task(
         self,

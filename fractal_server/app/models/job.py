@@ -91,9 +91,6 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
     project_id: Optional[int] = Field(foreign_key="project.id")
 
     workflow_id: Optional[int] = Field(foreign_key="workflow.id")
-    workflow: Optional["Workflow"] = Relationship(  # noqa: F821
-        back_populates="job_list"
-    )
 
     input_dataset_id: Optional[int] = Field(foreign_key="dataset.id")
     input_dataset: Optional[Dataset] = Relationship(
