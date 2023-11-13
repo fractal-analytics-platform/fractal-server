@@ -20,7 +20,10 @@ def upgrade() -> None:
     with op.batch_alter_table("applyworkflow", schema=None) as batch_op:
         batch_op.add_column(
             sa.Column(
-                "user_dump", sa.String(), server_default="", nullable=False
+                "user_dump",
+                sa.String(),
+                server_default="__UNDEFINED__",
+                nullable=False,
             )
         )
         batch_op.add_column(
