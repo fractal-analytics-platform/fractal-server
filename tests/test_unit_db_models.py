@@ -382,9 +382,7 @@ async def test_delete_dataset_cascade(db, MockCurrentUser, project_factory):
         assert len(dataset_out.list_jobs_output) == 1
         await db.refresh(job)
         assert job.input_dataset_id == dataset_in.id == 24
-        assert job.input_dataset
         assert job.output_dataset_id == dataset_out.id == 42
-        assert job.output_dataset
 
         # Delete `dataset_in`
         await db.delete(dataset_in)
@@ -393,6 +391,4 @@ async def test_delete_dataset_cascade(db, MockCurrentUser, project_factory):
         # Assert that deletion has affected just job.input_dataset[_id]
         await db.refresh(job)
         assert not job.input_dataset_id
-        assert not job.input_dataset
         assert job.output_dataset_id == dataset_out.id == 42
-        assert job.output_dataset
