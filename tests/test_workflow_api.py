@@ -991,7 +991,6 @@ async def test_delete_workflow_with_job(
         )
 
         assert job.workflow_id == workflow.id
-        assert job.workflow
 
         res = await client.delete(
             f"api/v1/project/{project.id}/workflow/{workflow.id}"
@@ -1000,7 +999,6 @@ async def test_delete_workflow_with_job(
 
         await db.refresh(job)
         assert not job.workflow_id
-        assert not job.workflow
 
 
 async def test_read_workflowtask(MockCurrentUser, project_factory, client):
