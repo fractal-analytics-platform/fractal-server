@@ -222,9 +222,10 @@ def test_migrations_on_old_data_sqlite(tmp_path: Path, testdata_path: Path):
     cur = con.cursor()
     out = cur.execute("SELECT history FROM dataset")
     history_column = out.fetchall()
-    history_column_flat = [item[0] for item in history_column]
+    history_column_flat = [item for item, *_ in history_column]
     assert None not in history_column_flat
 
     out = cur.execute("SELECT user_dump FROM applyworkflow")
     user_dump_column = out.fetchall()
-    assert user_dump_column[0][0] == ""
+    for user_dump, *_ in user_dump_column:
+        assert user_dump == "__UNDEFINED__"
