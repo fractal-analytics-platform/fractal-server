@@ -229,3 +229,24 @@ def test_migrations_on_old_data_sqlite(tmp_path: Path, testdata_path: Path):
     user_dump_column = out.fetchall()
     for user_dump, *_ in user_dump_column:
         assert user_dump == "__UNDEFINED__"
+
+    # Test that 'applyworkflow.user_dump' is not nullable:
+    # try and fail to insert the copy of a Job from the db without `user_dump`,
+    # then add `user_dump` and succeed.
+    values = cur.execute("SELECT * FROM applyworkflow").fetchone()
+    columns = [desc[0] for desc in cur.description]
+    data_dict = {
+        k: v
+        for k, v in zip(columns, values)
+        if (v is not None) and (k not in ["id", "user_dump"])
+    }
+    with pytest.raises(sqlite3.IntegrityError):
+        cur.execute(
+            f"INSERT INTO applyworkflow ({str(list(data_dict.keys()))[1:-1]}) "
+            f"VALUES ({str(list(data_dict.values()))[1:-1]});"
+        )
+    data_dict["user_dump"] = "test@fractal.com"
+    cur.execute(
+        f"INSERT INTO applyworkflow ({str(list(data_dict.keys()))[1:-1]}) "
+        f"VALUES ({str(list(data_dict.values()))[1:-1]});"
+    )
