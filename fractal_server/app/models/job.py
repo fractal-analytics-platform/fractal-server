@@ -8,11 +8,9 @@ from sqlalchemy import String
 from sqlalchemy.types import DateTime
 from sqlalchemy.types import JSON
 from sqlmodel import Field
-from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
 from ...utils import get_timestamp
-from ..models import Dataset
 from ..schemas.applyworkflow import _ApplyWorkflowBase
 
 
@@ -93,22 +91,7 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
     workflow_id: Optional[int] = Field(foreign_key="workflow.id")
 
     input_dataset_id: Optional[int] = Field(foreign_key="dataset.id")
-    input_dataset: Optional[Dataset] = Relationship(
-        sa_relationship_kwargs=dict(
-            back_populates="list_jobs_input",
-            lazy="selectin",
-            primaryjoin="ApplyWorkflow.input_dataset_id==Dataset.id",
-        )
-    )
-
     output_dataset_id: Optional[int] = Field(foreign_key="dataset.id")
-    output_dataset: Optional[Dataset] = Relationship(
-        sa_relationship_kwargs=dict(
-            back_populates="list_jobs_output",
-            lazy="selectin",
-            primaryjoin="ApplyWorkflow.output_dataset_id==Dataset.id",
-        )
-    )
 
     user_dump: str = Field(sa_column=Column(String, nullable=False))
     input_dataset_dump: dict[str, Any] = Field(
