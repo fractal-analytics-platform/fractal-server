@@ -222,16 +222,16 @@ def test_migrations_on_old_data_sqlite(tmp_path: Path, testdata_path: Path):
     cur = con.cursor()
     out = cur.execute("SELECT history FROM dataset")
     history_column = out.fetchall()
-    history_column_flat = [item for item, *_ in history_column]
+    history_column_flat = [item[0] for item in history_column]
     assert None not in history_column_flat
 
+    # 5. Check that 'applyworkflow.user_dump' has a server_default on migration
+    # but it's not nullable afterward.
     out = cur.execute("SELECT user_dump FROM applyworkflow")
     user_dump_column = out.fetchall()
-    for user_dump, *_ in user_dump_column:
-        assert user_dump == "__UNDEFINED__"
-
-    # Test that 'applyworkflow.user_dump' is not nullable:
-    # try and fail to insert the copy of a Job from the db without `user_dump`,
+    for user_dump in user_dump_column:
+        assert user_dump[0] == "__UNDEFINED__"
+    # Try and fail to insert the copy of a Job from the db without `user_dump`,
     # then add `user_dump` and succeed.
     values = cur.execute("SELECT * FROM applyworkflow").fetchone()
     columns = [desc[0] for desc in cur.description]
