@@ -224,3 +224,7 @@ def test_migrations_on_old_data_sqlite(tmp_path: Path, testdata_path: Path):
     history_column = out.fetchall()
     history_column_flat = [item[0] for item in history_column]
     assert None not in history_column_flat
+
+    out = cur.execute("SELECT user_dump FROM applyworkflow")
+    user_dump_column = out.fetchall()
+    assert user_dump_column[0][0] == ""
