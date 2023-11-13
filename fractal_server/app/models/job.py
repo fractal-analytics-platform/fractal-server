@@ -13,6 +13,7 @@ from sqlmodel import SQLModel
 from ...utils import get_timestamp
 from ..schemas.applyworkflow import _ApplyWorkflowBase
 from .dataset import Dataset
+from .workflow import Workflow
 
 
 class JobStatusType(str, Enum):
@@ -107,6 +108,7 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
             primaryjoin="ApplyWorkflow.output_dataset_id==Dataset.id",
         )
     )
+    workflow: Workflow = Relationship()
 
     workflow_dump: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
 
