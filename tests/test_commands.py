@@ -236,9 +236,9 @@ def test_migrations_on_old_data_sqlite(tmp_path: Path, testdata_path: Path):
     values = cur.execute("SELECT * FROM applyworkflow").fetchone()
     columns = [desc[0] for desc in cur.description]
     data_dict = {
-        col: value
-        for col, value in zip(columns, values)
-        if (col not in ["id", "user_dump"]) and (value is not None)
+        k: v
+        for k, v in zip(columns, values)
+        if (v is not None) and (k not in ["id", "user_dump"])
     }
     with pytest.raises(sqlite3.IntegrityError):
         cur.execute(
