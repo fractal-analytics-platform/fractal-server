@@ -95,7 +95,7 @@ def downgrade() -> None:
         batch_op.execute(
             "UPDATE applyworkflow "
             "SET workflow_dump = NULL "
-            "WHERE CAST(workflow_dump AS text) == '{}'"
+            "WHERE workflow_dump::jsonb = '{}'::jsonb;"
         )
         batch_op.drop_column("output_dataset_dump")
         batch_op.drop_column("input_dataset_dump")
