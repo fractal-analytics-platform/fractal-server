@@ -7,6 +7,8 @@ Create Date: 2023-10-26 16:11:44.061971
 """
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.sql import column
+from sqlalchemy.sql import table
 
 # revision identifiers, used by Alembic.
 revision = "84bf0fffde30"
@@ -47,6 +49,14 @@ def upgrade() -> None:
             "UPDATE applyworkflow "
             "SET workflow_dump = '{}' WHERE workflow_dump IS NULL;"
         )
+
+        applyworkflow = table("applyworkflow", column("workflow_dump"))
+        batch_op.execute(
+            applyworkflow.update()
+            .values(workflow_dump="{}")
+            .where(worflow_dump=None)
+        )
+
         batch_op.alter_column(
             "workflow_dump",
             existing_type=sa.JSON(),
@@ -92,11 +102,13 @@ def downgrade() -> None:
         batch_op.alter_column(
             "workflow_dump", existing_type=sa.JSON(), nullable=True
         )
+        applyworkflow = table("applyworkflow", column("workflow_dump"))
         batch_op.execute(
-            "UPDATE applyworkflow "
-            "SET workflow_dump = NULL "
-            "WHERE workflow_dump::jsonb = '{}'::jsonb;"
+            applyworkflow.update()
+            .values(workflow_dump=None)
+            .where(worflow_dump="{}")
         )
+
         batch_op.drop_column("output_dataset_dump")
         batch_op.drop_column("input_dataset_dump")
         batch_op.drop_column("user_dump")
