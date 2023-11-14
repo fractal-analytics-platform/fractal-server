@@ -226,7 +226,7 @@ def test_migrations_on_old_data_sqlite(tmp_path: Path, testdata_path: Path):
     assert None not in history_column_flat
 
     # 5. Check that 'applyworkflow.user_dump' has a server_default on migration
-    # but it's not nullable afterward.
+    # but it's not nullable afterwards.
     out = cur.execute("SELECT user_dump FROM applyworkflow")
     user_dump_column = out.fetchall()
     for user_dump in user_dump_column:
