@@ -243,10 +243,10 @@ def test_migrations_on_old_data_sqlite(tmp_path: Path, testdata_path: Path):
     with pytest.raises(sqlite3.IntegrityError):
         cur.execute(
             "INSERT INTO applyworkflow "
-            f"{tuple(data_dict.keys())} VALUES {tuple(data_dict.values())};"
+            f"{tuple(data_dict.keys())} VALUES {tuple(data_dict.values())});"
         )
     data_dict["user_dump"] = "test@fractal.com"
     cur.execute(
         "INSERT INTO applyworkflow "
-        f"{tuple(data_dict.keys())} VALUES {tuple(data_dict.values())};"
+        f"{tuple(data_dict.keys())} VALUES {tuple(data_dict.values())});"
     )

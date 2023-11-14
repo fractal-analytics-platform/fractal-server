@@ -7,8 +7,6 @@ Create Date: 2023-10-26 16:11:44.061971
 """
 import sqlalchemy as sa
 from alembic import op
-from sqlalchemy.sql import column
-from sqlalchemy.sql import table
 
 # revision identifiers, used by Alembic.
 revision = "84bf0fffde30"
@@ -44,20 +42,9 @@ def upgrade() -> None:
                 nullable=False,
             )
         )
-
-        applyworkflow = table("applyworkflow", column("workflow_dump"))
-        batch_op.execute(
-            applyworkflow.update()
-            .where(applyworkflow.c.workflow_dump == None)  # noqa
-            .values(workflow_dump="{}")
-        )
-
         batch_op.alter_column(
-            "workflow_dump",
-            existing_type=sa.JSON(),
-            nullable=False,
+            "workflow_dump", existing_type=sa.JSON(), nullable=False
         )
-
         batch_op.alter_column(
             "project_id", existing_type=sa.INTEGER(), nullable=True
         )
@@ -94,17 +81,9 @@ def downgrade() -> None:
         batch_op.alter_column(
             "project_id", existing_type=sa.INTEGER(), nullable=False
         )
-
         batch_op.alter_column(
             "workflow_dump", existing_type=sa.JSON(), nullable=True
         )
-        applyworkflow = table("applyworkflow", column("workflow_dump"))
-        batch_op.execute(
-            applyworkflow.update()
-            .where(applyworkflow.c.workflow_dump == "{}")
-            .values(workflow_dump=sa.sql.null())
-        )
-
         batch_op.drop_column("output_dataset_dump")
         batch_op.drop_column("input_dataset_dump")
         batch_op.drop_column("user_dump")
