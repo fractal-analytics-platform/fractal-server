@@ -53,8 +53,8 @@ def upgrade() -> None:
         applyworkflow = table("applyworkflow", column("workflow_dump"))
         batch_op.execute(
             applyworkflow.update()
-            .values(workflow_dump="{}")
             .where(worflow_dump=None)
+            .values(workflow_dump="{}")
         )
 
         batch_op.alter_column(
@@ -105,8 +105,8 @@ def downgrade() -> None:
         applyworkflow = table("applyworkflow", column("workflow_dump"))
         batch_op.execute(
             applyworkflow.update()
-            .values(workflow_dump=None)
             .where(worflow_dump="{}")
+            .values(workflow_dump=None)
         )
 
         batch_op.drop_column("output_dataset_dump")
