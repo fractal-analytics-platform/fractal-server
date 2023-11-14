@@ -42,9 +42,17 @@ def upgrade() -> None:
                 nullable=False,
             )
         )
-        batch_op.alter_column(
-            "workflow_dump", existing_type=sa.JSON(), nullable=False
+
+        batch_op.execute(
+            "UPDATE applyworkflow "
+            "SET workflow_dump = '{}' WHERE workflow_dump IS NULL;"
         )
+        batch_op.alter_column(
+            "workflow_dump",
+            existing_type=sa.JSON(),
+            nullable=False,
+        )
+
         batch_op.alter_column(
             "project_id", existing_type=sa.INTEGER(), nullable=True
         )
