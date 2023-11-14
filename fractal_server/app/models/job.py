@@ -100,8 +100,8 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
     output_dataset_dump: dict[str, Any] = Field(
         sa_column=Column(JSON, nullable=False)
     )
-    workflow_dump: dict[str, Any] = Field(
-        sa_column=Column(JSON, nullable=False)
+    workflow_dump: Optional[dict[str, Any]] = Field(
+        sa_column=Column(JSON, nullable=True)
     )
 
     working_dir: Optional[str]
