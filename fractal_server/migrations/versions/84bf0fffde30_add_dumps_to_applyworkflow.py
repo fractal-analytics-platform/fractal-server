@@ -45,15 +45,10 @@ def upgrade() -> None:
             )
         )
 
-        batch_op.execute(
-            "UPDATE applyworkflow "
-            "SET workflow_dump = '{}' WHERE workflow_dump IS NULL;"
-        )
-
         applyworkflow = table("applyworkflow", column("workflow_dump"))
         batch_op.execute(
             applyworkflow.update()
-            .where(worflow_dump=None)
+            .where(applyworkflow.c.workflow_dump == None)  # noqa
             .values(workflow_dump="{}")
         )
 
@@ -99,13 +94,14 @@ def downgrade() -> None:
         batch_op.alter_column(
             "project_id", existing_type=sa.INTEGER(), nullable=False
         )
+
         batch_op.alter_column(
             "workflow_dump", existing_type=sa.JSON(), nullable=True
         )
         applyworkflow = table("applyworkflow", column("workflow_dump"))
         batch_op.execute(
             applyworkflow.update()
-            .where(worflow_dump="{}")
+            .where(applyworkflow.c.workflow_dump == "{}")
             .values(workflow_dump=None)
         )
 
