@@ -92,6 +92,10 @@ def downgrade() -> None:
         batch_op.alter_column(
             "workflow_dump", existing_type=sa.JSON(), nullable=True
         )
+        batch_op.execute(
+            "UPDATE applyworkflow "
+            "SET workflow_dump = NULL WHERE workflow_dump IS '{}';"
+        )
         batch_op.drop_column("output_dataset_dump")
         batch_op.drop_column("input_dataset_dump")
         batch_op.drop_column("user_dump")
