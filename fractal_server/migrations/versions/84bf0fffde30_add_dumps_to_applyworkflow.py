@@ -102,7 +102,7 @@ def downgrade() -> None:
         batch_op.execute(
             applyworkflow.update()
             .where(applyworkflow.c.workflow_dump == "{}")
-            .values(workflow_dump=None)
+            .values(workflow_dump=sa.sql.null())
         )
 
         batch_op.drop_column("output_dataset_dump")
