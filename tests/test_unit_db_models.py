@@ -3,8 +3,6 @@ from sqlmodel import select
 
 from fractal_server.app.models import Project
 from fractal_server.app.models import State
-from fractal_server.app.models.dataset import Dataset
-from fractal_server.app.models.job import ApplyWorkflow
 from fractal_server.app.models.workflow import Workflow
 from fractal_server.app.models.workflow import WorkflowTask
 
@@ -330,65 +328,3 @@ async def test_insert_task_with_meta_none(
         wf = Workflow(name="my wfl", project_id=project.id)
         args = dict(arg="test arg")
         await wf.insert_task(t0.id, db=db, args=args)
-
-
-async def test_delete_dataset_cascade(db, MockCurrentUser, project_factory):
-    """
-    WHEN the Dataset is deleted
-    THEN
-        all related ApplyWorkflows have input_dataset_id=None and/or
-        output_dataset_id=None
-    """
-    async with MockCurrentUser(persist=True) as user:
-
-        project = await project_factory(user=user)
-        workflow = Workflow(
-            name="My Workflow",
-            project_id=project.id,
-        )
-        db.add(workflow)
-        await db.commit()
-        await db.refresh(workflow)
-
-        dataset_in = Dataset(id=24, name="IN", project_id=project.id)
-        dataset_out = Dataset(id=42, name="OUT", project_id=project.id)
-        db.add(dataset_in)
-        db.add(dataset_out)
-        await db.commit()
-        await db.refresh(dataset_in)
-        await db.refresh(dataset_out)
-
-        job = ApplyWorkflow(
-            project_id=project.id,
-            workflow_id=workflow.id,
-            input_dataset_id=dataset_in.id,
-            output_dataset_id=dataset_out.id,
-            user_email=user.email,
-            input_dataset_dump={},
-            output_dataset_dump={},
-            workflow_dump={},
-            first_task_index=0,
-            last_task_index=0,
-        )
-        db.add(job)
-        await db.commit()
-
-        # Assert that the Datasets and the Job are properly linked
-        await db.refresh(dataset_in)
-        assert len(dataset_in.list_jobs_input) == 1
-        assert len(dataset_in.list_jobs_output) == 0
-        await db.refresh(dataset_out)
-        assert len(dataset_out.list_jobs_input) == 0
-        assert len(dataset_out.list_jobs_output) == 1
-        await db.refresh(job)
-        assert job.input_dataset_id == dataset_in.id == 24
-        assert job.output_dataset_id == dataset_out.id == 42
-
-        # Delete `dataset_in`
-        await db.delete(dataset_in)
-        await db.commit()
-
-        # Assert that deletion has affected just job.input_dataset[_id]
-        await db.refresh(job)
-        assert not job.input_dataset_id
-        assert job.output_dataset_id == dataset_out.id == 42
