@@ -4,7 +4,6 @@ from typing import Any
 from typing import Optional
 
 from sqlalchemy import Column
-from sqlalchemy import String
 from sqlalchemy.types import DateTime
 from sqlalchemy.types import JSON
 from sqlmodel import Field
@@ -93,7 +92,7 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
     input_dataset_id: Optional[int] = Field(foreign_key="dataset.id")
     output_dataset_id: Optional[int] = Field(foreign_key="dataset.id")
 
-    user_dump: str = Field(sa_column=Column(String, nullable=False))
+    user_email: str = Field(nullable=False)
     input_dataset_dump: dict[str, Any] = Field(
         sa_column=Column(JSON, nullable=False)
     )

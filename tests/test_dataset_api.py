@@ -166,16 +166,18 @@ async def test_delete_dataset_failure(
             output_dataset_id=output_ds.id,
             working_dir=(tmp_path / "some_working_dir").as_posix(),
         )
-        assert job.input_dataset_id
-        assert job.output_dataset_id
+        assert job.input_dataset_id == input_ds.id
+        assert job.output_dataset_id == output_ds.id
 
         # Assert that `Dataset.list_jobs_*` are correctly populated
         await db.refresh(input_ds)
-        assert input_ds.list_jobs_input
-        assert not input_ds.list_jobs_output
+        assert len(input_ds.list_jobs_input) == 1
+        assert input_ds.list_jobs_input[0].id == job.id
+        assert input_ds.list_jobs_output == []
         await db.refresh(output_ds)
-        assert not output_ds.list_jobs_input
-        assert output_ds.list_jobs_output
+        assert output_ds.list_jobs_input == []
+        assert len(output_ds.list_jobs_output) == 1
+        assert output_ds.list_jobs_output[0].id == job.id
 
         res = await client.delete(
             f"api/v1/project/{project.id}/dataset/{input_ds.id}"
@@ -183,8 +185,8 @@ async def test_delete_dataset_failure(
         assert res.status_code == 204
 
         await db.refresh(job)
-        assert not job.input_dataset_id
-        assert job.output_dataset_id
+        assert job.input_dataset_id is None
+        assert job.output_dataset_id is not None
 
         res = await client.delete(
             f"api/v1/project/{project.id}/dataset/{output_ds.id}"
@@ -192,8 +194,8 @@ async def test_delete_dataset_failure(
         assert res.status_code == 204
 
         await db.refresh(job)
-        assert not job.input_dataset_id
-        assert not job.output_dataset_id
+        assert job.input_dataset_id is None
+        assert job.output_dataset_id is None
 
 
 async def test_patch_dataset(

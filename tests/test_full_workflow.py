@@ -75,7 +75,7 @@ async def test_full_workflow(
         project = await project_factory(user)
         assert project.dataset_list == []
         assert project.workflow_list == []
-        assert project.dataset_list == []
+        assert project.job_list == []
 
         project_id = project.id
         input_dataset = await dataset_factory(

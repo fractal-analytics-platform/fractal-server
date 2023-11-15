@@ -493,7 +493,7 @@ async def job_factory(db: AsyncSession):
             first_task_index=first_task_index,
             working_dir=working_dir,
             worker_init="WORKER_INIT string",
-            user_dump="user@example.org",
+            user_email="user@example.org",
         )
         args.update(**kwargs)
         job = ApplyWorkflow(**args)
