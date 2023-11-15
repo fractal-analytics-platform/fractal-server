@@ -15,6 +15,7 @@ from ...schemas import ApplyWorkflowRead
 from ...schemas import ProjectRead
 from ...security import current_active_superuser
 from ...security import User
+from fractal_server.app.schemas.workflow import WorkflowTaskStatusType
 
 router = APIRouter()
 
@@ -101,7 +102,7 @@ async def monitor_job(
     workflow_id: Optional[int] = None,
     working_dir: Optional[str] = None,
     working_dir_user: Optional[str] = None,
-    status: Optional[str] = None,
+    status: Optional[WorkflowTaskStatusType] = None,
     start_timestamp: Optional[DateTime] = None,
     end_timestamp: Optional[DateTime] = None,
     user: User = Depends(current_active_superuser),
