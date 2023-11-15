@@ -37,9 +37,8 @@ class Project(_ProjectBase, SQLModel, table=True):
         },
     )
 
-    job_list: list[ApplyWorkflow] = Relationship(  # noqa
+    job_list: list[ApplyWorkflow] = Relationship(
         sa_relationship_kwargs={
             "lazy": "selectin",
-            "cascade": "all, delete-orphan",
-        },
+        }
     )
