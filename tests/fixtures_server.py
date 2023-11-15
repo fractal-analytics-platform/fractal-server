@@ -432,52 +432,75 @@ async def job_factory(db: AsyncSession):
     """
     Insert job in db
     """
+    from fractal_server.app.models import Dataset
     from fractal_server.app.models import ApplyWorkflow
     from fractal_server.app.models import Workflow
     from fractal_server.app.runner.common import set_start_and_last_task_index
 
     async def __job_factory(
-        working_dir: Path, db: AsyncSession = db, **kwargs
+        project_id: int,
+        input_dataset_id: int,
+        output_dataset_id: int,
+        workflow_id: int,
+        working_dir: Path,
+        db: AsyncSession = db,
+        **kwargs,
     ):
-        defaults = dict(
-            project_id=1,
-            input_dataset_id=1,
-            output_dataset_id=2,
-            workflow_id=1,
-            worker_init="WORKER_INIT string",
-            working_dir=working_dir,
-        )
-        args = dict(**defaults)
-        args.update(kwargs)
+        workflow = await db.get(Workflow, workflow_id)
+        if not workflow:
+            raise IndexError(
+                "Error from job_factory: "
+                f"Workflow {workflow_id} does not exist."
+            )
 
-        wf = await db.get(Workflow, args["workflow_id"])
-
-        num_tasks = len(wf.task_list)
         first_task_index, last_task_index = set_start_and_last_task_index(
-            num_tasks,
-            args.get("first_task_index", None),
-            args.get("last_task_index", None),
+            len(workflow.task_list),
+            kwargs.get("first_task_index", None),
+            kwargs.get("last_task_index", None),
         )
-        args["first_task_index"] = first_task_index
-        args["last_task_index"] = last_task_index
 
-        if "workflow_dump" not in args:
-            args["workflow_dump"] = dict(
-                wf.dict(exclude={"task_list"}),
+        input_dataset = await db.get(Dataset, input_dataset_id)
+        if not input_dataset:
+            raise IndexError(
+                "Error from job_factory: "
+                f"Dataset {input_dataset_id} does not exist."
+            )
+        output_dataset = await db.get(Dataset, output_dataset_id)
+        if not output_dataset:
+            raise IndexError(
+                "Error from job_factory: "
+                f"Dataset {input_dataset_id} does not exist."
+            )
+
+        args = dict(
+            project_id=project_id,
+            input_dataset_id=input_dataset_id,
+            input_dataset_dump=input_dataset.dict(),
+            output_dataset_id=output_dataset_id,
+            output_dataset_dump=output_dataset.dict(),
+            workflow_id=workflow_id,
+            workflow_dump=dict(
+                workflow.dict(exclude={"task_list"}),
                 task_list=[
                     dict(
                         wf_task.task.dict(exclude={"task"}),
                         task=wf_task.dict(),
                     )
-                    for wf_task in wf.task_list
+                    for wf_task in workflow.task_list
                 ],
-            )
-
-        j = ApplyWorkflow(**args)
-        db.add(j)
+            ),
+            last_task_index=last_task_index,
+            first_task_index=first_task_index,
+            working_dir=working_dir,
+            worker_init="WORKER_INIT string",
+            user_email="user@example.org",
+        )
+        args.update(**kwargs)
+        job = ApplyWorkflow(**args)
+        db.add(job)
         await db.commit()
-        await db.refresh(j)
-        return j
+        await db.refresh(job)
+        return job
 
     return __job_factory
 

@@ -10,6 +10,7 @@ from sqlmodel import SQLModel
 
 from ..schemas.dataset import _DatasetBase
 from ..schemas.dataset import _ResourceBase
+from .job import ApplyWorkflow
 
 
 class Resource(_ResourceBase, SQLModel, table=True):
@@ -37,6 +38,19 @@ class Dataset(_DatasetBase, SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     project_id: int = Field(foreign_key="project.id")
+
+    list_jobs_input: list[ApplyWorkflow] = Relationship(  # noqa: F821
+        sa_relationship_kwargs=dict(
+            lazy="selectin",
+            primaryjoin="ApplyWorkflow.input_dataset_id==Dataset.id",
+        )
+    )
+    list_jobs_output: list[ApplyWorkflow] = Relationship(  # noqa: F821
+        sa_relationship_kwargs=dict(
+            lazy="selectin",
+            primaryjoin="ApplyWorkflow.output_dataset_id==Dataset.id",
+        )
+    )
     resource_list: list[Resource] = Relationship(
         sa_relationship_kwargs={
             "lazy": "selectin",
@@ -45,6 +59,7 @@ class Dataset(_DatasetBase, SQLModel, table=True):
             "cascade": "all, delete-orphan",
         }
     )
+
     meta: dict[str, Any] = Field(sa_column=Column(JSON), default={})
     history: list[dict[str, Any]] = Field(
         sa_column=Column(JSON, server_default="[]", nullable=False)
