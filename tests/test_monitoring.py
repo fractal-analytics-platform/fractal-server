@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from fractal_server.app.schemas.workflow import WorkflowTaskStatusType
+from fractal_server.app.models import JobStatusType
 
 API = "api/v1"
 
@@ -36,10 +36,11 @@ async def test_monitor_project(client, MockCurrentUser, project_factory):
 
     async with MockCurrentUser(
         persist=True, user_kwargs={"is_superuser": True}
-    ):
+    ) as superuser:
         res = await client.get(f"{API}/monitoring/project/")
         assert res.status_code == 200
         assert res.json() == []
+        await project_factory(superuser)
 
     async with MockCurrentUser(
         persist=True, user_kwargs={"is_superuser": False}
@@ -47,14 +48,23 @@ async def test_monitor_project(client, MockCurrentUser, project_factory):
         project1 = await project_factory(user)
         prj1_id = project1.id
         await project_factory(user)
+        user_id = user.id
 
     async with MockCurrentUser(
         persist=True, user_kwargs={"is_superuser": True}
     ):
         res = await client.get(f"{API}/monitoring/project/")
         assert res.status_code == 200
-        assert len(res.json()) == 2
+        assert len(res.json()) == 3
         res = await client.get(f"{API}/monitoring/project/?id={prj1_id}")
+        assert res.status_code == 200
+        assert len(res.json()) == 1
+        res = await client.get(f"{API}/monitoring/project/?user_id={user_id}")
+        assert res.status_code == 200
+        assert len(res.json()) == 2
+        res = await client.get(
+            f"{API}/monitoring/project/?user_id={user_id}&id={prj1_id}"
+        )
         assert res.status_code == 200
         assert len(res.json()) == 1
 
@@ -121,13 +131,15 @@ async def test_monitor_workflow(
 
         # get workflows by name
         res = await client.get(
-            f"{API}/monitoring/workflow/?name={workflow2a.name}"
+            f"{API}/monitoring/workflow/?name_contains={workflow2a.name}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 1
         assert res.json()[0]["name"] == workflow2a.name
 
-        res = await client.get(f"{API}/monitoring/workflow/?name=Workflow")
+        res = await client.get(
+            f"{API}/monitoring/workflow/?name_contains=wOrKfLoW"
+        )
         assert res.status_code == 200
         assert len(res.json()) == 3
 
@@ -146,13 +158,11 @@ async def test_monitor_dataset(
             project_id=project1.id,
             name="ds1a",
             type="zarr",
-            read_only=False,
         )
         await dataset_factory(
             project_id=project1.id,
             name="ds1b",
             type="image",
-            read_only=True,
         )
 
         project2 = await project_factory(user)
@@ -161,7 +171,6 @@ async def test_monitor_dataset(
             project_id=project2.id,
             name="ds2a",
             type="zarr",
-            read_only=True,
         )
 
     async with MockCurrentUser(
@@ -195,29 +204,26 @@ async def test_monitor_dataset(
 
         # get datasets by name
         res = await client.get(
-            f"{API}/monitoring/dataset/?project_id={project1.id}&name=a"
+            f"{API}/monitoring/dataset/"
+            f"?project_id={project1.id}&name_contains=a"
         )
         assert res.status_code == 200
         assert len(res.json()) == 1
         assert res.json()[0]["name"] == ds1a.name
         res = await client.get(
-            f"{API}/monitoring/dataset/?project_id={project1.id}&name=c"
+            f"{API}/monitoring/dataset/"
+            f"?project_id={project1.id}&name_contains=c"
         )
         assert res.status_code == 200
         assert len(res.json()) == 0
 
-        # get datasets by type and read_only
+        # get datasets by type
         res = await client.get(f"{API}/monitoring/dataset/?type=zarr")
         assert res.status_code == 200
         assert len(res.json()) == 2
-        res = await client.get(
-            f"{API}/monitoring/dataset/?type=zarr&read_only=true"
-        )
+        res = await client.get(f"{API}/monitoring/dataset/?type=image")
         assert res.status_code == 200
         assert len(res.json()) == 1
-        res = await client.get(f"{API}/monitoring/dataset/?read_only=true")
-        assert res.status_code == 200
-        assert len(res.json()) == 2
 
 
 async def test_monitor_job(
@@ -293,7 +299,7 @@ async def test_monitor_job(
         assert res.status_code == 200
         assert len(res.json()) == 0
 
-        # get jobs by input/output_dataset_id
+        # get jobs by [input/output]_dataset_id
         res = await client.get(
             f"{API}/monitoring/job/?input_dataset_id={dataset1.id}"
         )
@@ -317,58 +323,37 @@ async def test_monitor_job(
         assert res.status_code == 200
         assert len(res.json()) == 0
 
-        # get jobs by worfking_dir[_user]
-        res = await client.get(f"{API}/monitoring/job/?working_dir=aaaa")
-        assert res.status_code == 200
-        assert len(res.json()) == 1
-        res = await client.get(f"{API}/monitoring/job/?working_dir=1111")
-        assert res.status_code == 200
-        assert len(res.json()) == 2
-        res = await client.get(f"{API}/monitoring/job/?working_dir_user=bbbb")
-        assert res.status_code == 200
-        assert len(res.json()) == 1
-        res = await client.get(f"{API}/monitoring/job/?working_dir_user=2222")
-        assert res.status_code == 200
-        assert len(res.json()) == 2
-
         # get jobs by status
         res = await client.get(
-            f"{API}/monitoring/job/?status={WorkflowTaskStatusType.FAILED}"
+            f"{API}/monitoring/job/?status={JobStatusType.FAILED}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 0
         res = await client.get(
-            f"{API}/monitoring/job/?status={WorkflowTaskStatusType.SUBMITTED}"
+            f"{API}/monitoring/job/?status={JobStatusType.SUBMITTED}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 2
 
-        # get jobs by start/end_timestamp
+        # get jobs by [start/end]_timestamp_[min/max]
 
         res = await client.get(
-            f"{API}/monitoring/job/?start_timestamp=1999-01-01T00:00:01"
+            f"{API}/monitoring/job/?start_timestamp_min=1999-01-01T00:00:01"
         )
         assert res.status_code == 200
         assert len(res.json()) == 2
         res = await client.get(
-            f"{API}/monitoring/job/?start_timestamp=2010-01-01T00:00:01"
-        )
-        assert res.status_code == 200
-        assert len(res.json()) == 1
-        res = await client.get(
-            f"{API}/monitoring/job/?start_timestamp=2024-01-01T00:00:01"
+            f"{API}/monitoring/job/?start_timestamp_max=1999-01-01T00:00:01"
         )
         assert res.status_code == 200
         assert len(res.json()) == 0
-
         res = await client.get(
-            f"{API}/monitoring/job/?end_timestamp=3000-01-01T00:00:01"
-        )
-        assert res.status_code == 200
-        assert len(res.json()) == 1
-
-        res = await client.get(
-            f"{API}/monitoring/job/?end_timestamp=2000-01-01T00:00:01"
+            f"{API}/monitoring/job/?end_timestamp_min=3000-01-01T00:00:01"
         )
         assert res.status_code == 200
         assert len(res.json()) == 0
+        res = await client.get(
+            f"{API}/monitoring/job/?end_timestamp_max=3000-01-01T00:00:01"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 1

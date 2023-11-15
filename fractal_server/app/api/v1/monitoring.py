@@ -3,6 +3,7 @@ from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
+from sqlmodel import func
 from sqlmodel import select
 
 from ...db import AsyncSession
@@ -13,7 +14,9 @@ from ...models import JobStatusType
 from ...models import Project
 from ...models import Workflow
 from ...schemas import ApplyWorkflowRead
+from ...schemas import DatasetRead
 from ...schemas import ProjectRead
+from ...schemas import WorkflowRead
 from ...security import current_active_superuser
 from ...security import User
 
@@ -21,17 +24,21 @@ from ...security import User
 router = APIRouter()
 
 
-@router.get("/project/")
+@router.get("/project/", response_model=list[ProjectRead])
 async def monitor_project(
     id: Optional[int] = None,
+    user_id: Optional[int] = None,
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_db),
 ) -> list[ProjectRead]:
 
     stm = select(Project)
 
-    if id:
+    if id is not None:
         stm = stm.where(Project.id == id)
+
+    if user_id is not None:
+        stm = stm.where(Project.user_list.any(User.id == user_id))
 
     res = await db.execute(stm)
     project_list = res.scalars().all()
@@ -40,52 +47,53 @@ async def monitor_project(
     return project_list
 
 
-@router.get("/workflow/")
+@router.get("/workflow/", response_model=list[WorkflowRead])
 async def monitor_workflow(
     id: Optional[int] = None,
     project_id: Optional[int] = None,
-    name: Optional[str] = None,
+    name_contains: Optional[str] = None,
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_db),
-):
+) -> list[WorkflowRead]:
     stm = select(Workflow)
 
     if id is not None:
         stm = stm.where(Workflow.id == id)
     if project_id is not None:
         stm = stm.where(Workflow.project_id == project_id)
-    if name is not None:
-        stm = stm.where(Workflow.name.contains(name))
+    if name_contains is not None:
+        stm = stm.where(
+            func.lower(Workflow.name).contains(name_contains.lower())
+        )
 
     res = await db.execute(stm)
-    project_list = res.scalars().all()
+    workflow_list = res.scalars().all()
     await db.close()
 
-    return project_list
+    return workflow_list
 
 
-@router.get("/dataset/")
+@router.get("/dataset/", response_model=list[DatasetRead])
 async def monitor_dataset(
     id: Optional[int] = None,
     project_id: Optional[int] = None,
-    name: Optional[str] = None,
+    name_contains: Optional[str] = None,
     type: Optional[str] = None,
-    read_only: Optional[bool] = None,
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_db),
-):
+) -> list[DatasetRead]:
     stm = select(Dataset)
 
     if id is not None:
         stm = stm.where(Dataset.id == id)
     if project_id is not None:
         stm = stm.where(Dataset.project_id == project_id)
-    if name is not None:
-        stm = stm.where(Dataset.name.contains(name))
+    if name_contains is not None:
+        stm = stm.where(
+            func.lower(Dataset.name).contains(name_contains.lower())
+        )
     if type is not None:
         stm = stm.where(Dataset.type == type)
-    if read_only is not None:
-        stm = stm.where(Dataset.read_only == read_only)
 
     res = await db.execute(stm)
     dataset_list = res.scalars().all()
@@ -94,21 +102,21 @@ async def monitor_dataset(
     return dataset_list
 
 
-@router.get("/job/")
+@router.get("/job/", response_model=list[ApplyWorkflowRead])
 async def monitor_job(
     id: Optional[int] = None,
     project_id: Optional[int] = None,
     input_dataset_id: Optional[int] = None,
     output_dataset_id: Optional[int] = None,
     workflow_id: Optional[int] = None,
-    working_dir: Optional[str] = None,
-    working_dir_user: Optional[str] = None,
     status: Optional[JobStatusType] = None,
-    start_timestamp: Optional[DateTime] = None,
-    end_timestamp: Optional[DateTime] = None,
+    start_timestamp_min: Optional[DateTime] = None,
+    start_timestamp_max: Optional[DateTime] = None,
+    end_timestamp_min: Optional[DateTime] = None,
+    end_timestamp_max: Optional[DateTime] = None,
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_db),
-) -> Optional[list[ApplyWorkflowRead]]:
+) -> list[ApplyWorkflowRead]:
 
     stm = select(ApplyWorkflow)
 
@@ -122,18 +130,16 @@ async def monitor_job(
         stm = stm.where(ApplyWorkflow.output_dataset_id == output_dataset_id)
     if workflow_id is not None:
         stm = stm.where(ApplyWorkflow.workflow_id == workflow_id)
-    if working_dir is not None:
-        stm = stm.where(ApplyWorkflow.working_dir.contains(working_dir))
-    if working_dir_user is not None:
-        stm = stm.where(
-            ApplyWorkflow.working_dir_user.contains(working_dir_user)
-        )
     if status is not None:
         stm = stm.where(ApplyWorkflow.status == status)
-    if start_timestamp is not None:
-        stm = stm.where(ApplyWorkflow.start_timestamp >= start_timestamp)
-    if end_timestamp is not None:
-        stm = stm.where(ApplyWorkflow.end_timestamp <= end_timestamp)
+    if start_timestamp_min is not None:
+        stm = stm.where(ApplyWorkflow.start_timestamp >= start_timestamp_min)
+    if start_timestamp_max is not None:
+        stm = stm.where(ApplyWorkflow.start_timestamp <= start_timestamp_max)
+    if end_timestamp_min is not None:
+        stm = stm.where(ApplyWorkflow.end_timestamp >= end_timestamp_min)
+    if end_timestamp_max is not None:
+        stm = stm.where(ApplyWorkflow.end_timestamp <= end_timestamp_max)
 
     res = await db.execute(stm)
     job_list = res.scalars().all()
