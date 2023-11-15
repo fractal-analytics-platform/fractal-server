@@ -224,3 +224,29 @@ def test_migrations_on_old_data_sqlite(tmp_path: Path, testdata_path: Path):
     history_column = out.fetchall()
     history_column_flat = [item[0] for item in history_column]
     assert None not in history_column_flat
+
+    # 5. Check that 'applyworkflow.user_email' has a server_default on
+    # migration but it's not nullable afterwards.
+    out = cur.execute("SELECT user_email FROM applyworkflow")
+    user_email_column = out.fetchall()
+    for user_email in user_email_column:
+        assert user_email[0] == "__UNDEFINED__"
+    # Try and fail to insert the copy of a Job from the db without
+    # `user_email`, then add `user_email` and succeed.
+    values = cur.execute("SELECT * FROM applyworkflow").fetchone()
+    columns = [desc[0] for desc in cur.description]
+    data_dict = {
+        col: value
+        for col, value in zip(columns, values)
+        if (col not in ["id", "user_email"]) and (value is not None)
+    }
+    with pytest.raises(sqlite3.IntegrityError):
+        cur.execute(
+            "INSERT INTO applyworkflow "
+            f"{tuple(data_dict.keys())} VALUES {tuple(data_dict.values())};"
+        )
+    data_dict["user_email"] = "test@fractal.com"
+    cur.execute(
+        "INSERT INTO applyworkflow "
+        f"{tuple(data_dict.keys())} VALUES {tuple(data_dict.values())};"
+    )
