@@ -40,7 +40,7 @@ async def test_stop_job(
             project_id=project.id,
             input_dataset_id=ds.id,
             output_dataset_id=ds.id,
-            working_id=wf.id,
+            workflow_id=wf.id,
         )
 
         debug(job)
@@ -178,6 +178,7 @@ async def test_get_job_list(
     db,
     task_factory,
     client,
+    tmp_path,
 ):
     async with MockCurrentUser(persist=True) as user:
         project = await project_factory(user)
@@ -194,10 +195,11 @@ async def test_get_job_list(
         N = 5
         for i in range(N):
             await job_factory(
-                project,
+                project_id=project.id,
                 input_dataset_id=dataset.id,
                 output_dataset_id=dataset.id,
                 workflow_id=workflow.id,
+                working_dir=tmp_path,
             )
 
         res = await client.get(f"{PREFIX}/project/{project.id}/job/")

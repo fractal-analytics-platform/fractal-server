@@ -4,7 +4,9 @@ from pydantic import BaseModel
 from pydantic import validator
 
 from ._validators import valstr
+from .applyworkflow import ApplyWorkflowRead
 from .dataset import DatasetRead
+from .workflow import WorkflowRead
 
 
 __all__ = (
@@ -47,6 +49,8 @@ class ProjectRead(_ProjectBase):
 
     id: int
     dataset_list: list[DatasetRead] = []
+    workflow_list: list[WorkflowRead] = []
+    job_list: list[ApplyWorkflowRead] = []
 
 
 class ProjectUpdate(_ProjectBase):

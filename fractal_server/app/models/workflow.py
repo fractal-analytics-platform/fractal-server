@@ -13,6 +13,7 @@ from sqlmodel import SQLModel
 from ..db import AsyncSession
 from ..schemas.workflow import _WorkflowBase
 from ..schemas.workflow import _WorkflowTaskBase
+from .job import ApplyWorkflow
 from .task import Task
 
 
@@ -106,13 +107,16 @@ class Workflow(_WorkflowBase, SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     project_id: int = Field(foreign_key="project.id")
 
-    task_list: list["WorkflowTask"] = Relationship(
+    task_list: list[WorkflowTask] = Relationship(
         sa_relationship_kwargs=dict(
             lazy="selectin",
             order_by="WorkflowTask.order",
             collection_class=ordering_list("order"),
             cascade="all, delete-orphan",
         ),
+    )
+    job_list: list[ApplyWorkflow] = Relationship(
+        sa_relationship_kwargs={"lazy": "selectin"}
     )
 
     async def insert_task(
