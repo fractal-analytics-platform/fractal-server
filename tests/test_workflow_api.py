@@ -955,7 +955,7 @@ async def test_reorder_task_list_fail(
         assert res.status_code == 422
 
 
-async def test_delete_workflow_failure(
+async def test_delete_workflow_with_job(
     client,
     MockCurrentUser,
     project_factory,
@@ -968,37 +968,37 @@ async def test_delete_workflow_failure(
 ):
     """
     GIVEN a Workflow in a relationship with a Job
-    WHEN we try to DELETE that Workflow
-    THEN we fail with a 422
+    WHEN we DELETE that Workflow
+    THEN Job.workflow_id is set to None
     """
     async with MockCurrentUser(persist=True) as user:
+
         project = await project_factory(user)
 
         # Create a workflow and a job in relationship with it
-        workflow_1 = await workflow_factory(project_id=project.id)
-        task1 = await task_factory(name="1", source="1")
-        await workflow_1.insert_task(task1.id, db=db)
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(name="1", source="1")
+        await workflow.insert_task(task.id, db=db)
         input_ds = await dataset_factory(project_id=project.id)
         output_ds = await dataset_factory(project_id=project.id)
+
         job = await job_factory(
             project_id=project.id,
-            workflow_id=workflow_1.id,
+            workflow_id=workflow.id,
             input_dataset_id=input_ds.id,
             output_dataset_id=output_ds.id,
             working_dir=(tmp_path / "some_working_dir").as_posix(),
         )
-        res = await client.delete(
-            f"api/v1/project/{project.id}/workflow/{workflow_1.id}"
-        )
-        assert res.status_code == 422
-        assert f"still linked to job {job.id}" in res.json()["detail"]
 
-        # Successful workflow deletion
-        workflow_2 = await workflow_factory(project_id=project.id)
+        assert job.workflow_id == workflow.id
+
         res = await client.delete(
-            f"api/v1/project/{project.id}/workflow/{workflow_2.id}"
+            f"api/v1/project/{project.id}/workflow/{workflow.id}"
         )
         assert res.status_code == 204
+
+        await db.refresh(job)
+        assert job.workflow_id is None
 
 
 async def test_read_workflowtask(MockCurrentUser, project_factory, client):

@@ -62,6 +62,7 @@ def test_apply_workflow_read():
         start_timestamp="2019-12-23T23:10:11.115310Z",
         status="good",
         workflow_dump=dict(task_list=[]),
+        user_email="test@fractal.com",
     )
 
     assert isinstance(x.start_timestamp, datetime)
