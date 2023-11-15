@@ -9,24 +9,24 @@
 | fractal\_server/app/api/\_\_init\_\_.py                           |       23 |        0 |        2 |        1 |     96% |    32->31 |
 | fractal\_server/app/api/v1/\_\_init\_\_.py                        |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/api/v1/\_aux\_functions.py                    |       75 |        0 |       32 |        0 |    100% |           |
-| fractal\_server/app/api/v1/dataset.py                             |      178 |        0 |       60 |       10 |     96% |44->39, 69->65, 93->89, 131->127, 177->172, 206->202, 232->228, 273->269, 307->303, 389->385 |
+| fractal\_server/app/api/v1/dataset.py                             |      172 |        0 |       58 |       10 |     96% |43->38, 68->64, 92->88, 130->126, 158->153, 187->183, 213->209, 254->250, 288->284, 370->366 |
 | fractal\_server/app/api/v1/job.py                                 |       63 |        0 |       16 |        4 |     95% |34->30, 60->56, 102->98, 124->120 |
 | fractal\_server/app/api/v1/project.py                             |      128 |        6 |       34 |        6 |     93% |44->43, 63->62, 84-89, 98->97, 114->113, 140->139, 162->157 |
 | fractal\_server/app/api/v1/task.py                                |       86 |        1 |       34 |        6 |     94% |30->29, 46->45, 64->63, 97, 109->108, 155->154 |
 | fractal\_server/app/api/v1/task\_collection.py                    |      177 |        5 |       30 |        4 |     96% |171->154, 204, 244-245, 311->310, 334-335 |
-| fractal\_server/app/api/v1/workflow.py                            |      114 |        0 |       44 |        8 |     95% |49->45, 72->67, 102->98, 123->119, 175->171, 212->208, 245->240, 274->272 |
+| fractal\_server/app/api/v1/workflow.py                            |      108 |        0 |       42 |        8 |     95% |48->44, 71->66, 101->97, 122->118, 174->170, 198->194, 231->226, 260->258 |
 | fractal\_server/app/api/v1/workflowtask.py                        |       63 |        1 |       24 |        6 |     92% |42->37, 81->77, 102->98, 131->134, 142, 158->154 |
 | fractal\_server/app/db/\_\_init\_\_.py                            |       65 |       11 |       22 |        6 |     80% |31->30, 32-36, 39->38, 42-44, 47->46, 91->90, 98->97, 104-106, 111->110 |
 | fractal\_server/app/models/\_\_init\_\_.py                        |        8 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/models/dataset.py                             |       24 |        0 |        4 |        1 |     96% |    57->56 |
-| fractal\_server/app/models/job.py                                 |       39 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/app/models/dataset.py                             |       27 |        0 |        4 |        1 |     97% |    72->71 |
+| fractal\_server/app/models/job.py                                 |       36 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/linkuserproject.py                     |        5 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/project.py                             |       16 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/security.py                            |       34 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/state.py                               |       14 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/task.py                                |       48 |        0 |       12 |        3 |     95% |52->51, 59->58, 63->62 |
-| fractal\_server/app/models/workflow.py                            |       74 |        3 |       26 |        7 |     90% |60->59, 78, 85->84, 89->88, 165->168, 171->170, 172, 175->174, 176 |
-| fractal\_server/app/runner/\_\_init\_\_.py                        |      161 |        5 |       25 |        1 |     97% |53-54, 61-62, 182 |
+| fractal\_server/app/models/workflow.py                            |       76 |        3 |       26 |        7 |     90% |61->60, 79, 86->85, 90->89, 169->172, 175->174, 176, 179->178, 180 |
+| fractal\_server/app/runner/\_\_init\_\_.py                        |      164 |        5 |       25 |        1 |     97% |53-54, 61-62, 182 |
 | fractal\_server/app/runner/\_common.py                            |      181 |        6 |       48 |        6 |     95% |116, 127->126, 175-176, 179->exit, 186, 376, 378 |
 | fractal\_server/app/runner/\_local/\_\_init\_\_.py                |       23 |        1 |        4 |        1 |     93% |       155 |
 | fractal\_server/app/runner/\_local/\_local\_config.py             |       34 |        0 |        8 |        0 |    100% |           |
@@ -38,15 +38,15 @@
 | fractal\_server/app/runner/\_slurm/\_slurm\_config.py             |      207 |        9 |       82 |        8 |     94% |164-165, 182->186, 310, 328, 334, 349-356, 436-437, 512->516, 543->547 |
 | fractal\_server/app/runner/\_slurm/\_submit\_setup.py             |       12 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/\_slurm/\_subprocess\_run\_as\_user.py |       34 |        1 |       12 |        1 |     96% |        88 |
-| fractal\_server/app/runner/\_slurm/executor.py                    |      388 |       32 |      131 |        8 |     92% |128, 140, 214, 437, 531, 538, 753-762, 804-814, 829, 888, 973-978, 981-988, 1045->1044, 1110-1116 |
+| fractal\_server/app/runner/\_slurm/executor.py                    |      388 |       27 |      131 |        9 |     93% |128, 140, 214, 437, 531, 538, 760, 804-814, 829, 888, 973-978, 981-988, 1045->1044, 1110-1116 |
 | fractal\_server/app/runner/common.py                              |      110 |        6 |       42 |        9 |     90% |120, 131, 136, 141, 144->147, 148, 161, 244->243, 245->247 |
 | fractal\_server/app/runner/handle\_failed\_job.py                 |       49 |        0 |       14 |        0 |    100% |           |
 | fractal\_server/app/schemas/\_\_init\_\_.py                       |       35 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/\_validators.py                       |       31 |        0 |       16 |        0 |    100% |           |
-| fractal\_server/app/schemas/applyworkflow.py                      |       48 |        0 |       12 |        2 |     97% |46->45, 57->56 |
+| fractal\_server/app/schemas/applyworkflow.py                      |       51 |        0 |       12 |        2 |     97% |46->45, 57->56 |
 | fractal\_server/app/schemas/dataset.py                            |       46 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/manifest.py                           |       41 |        0 |       12 |        2 |     96% |92->91, 124->123 |
-| fractal\_server/app/schemas/project.py                            |       18 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/app/schemas/project.py                            |       22 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/state.py                              |       14 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/task.py                               |       62 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/task\_collection.py                   |       39 |        0 |        8 |        1 |     98% |    70->69 |
@@ -60,7 +60,7 @@
 | fractal\_server/tasks/\_\_init\_\_.py                             |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/tasks/collection.py                               |      205 |        6 |       76 |       14 |     93% |63, 85-86, 132->131, 136->135, 147, 160->159, 239->exit, 293, 311->exit, 316->exit, 321->exit, 513->exit, 544->exit, 553 |
 | fractal\_server/utils.py                                          |       22 |        0 |        2 |        0 |    100% |           |
-|                                                         **TOTAL** | **3707** |  **160** | **1038** |  **142** | **93%** |           |
+|                                                         **TOTAL** | **3707** |  **155** | **1034** |  **143** | **93%** |           |
 
 
 ## Setup coverage badge
