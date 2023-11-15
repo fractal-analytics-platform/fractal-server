@@ -9,13 +9,14 @@ from ...db import AsyncSession
 from ...db import get_db
 from ...models import ApplyWorkflow
 from ...models import Dataset
+from ...models import JobStatusType
 from ...models import Project
 from ...models import Workflow
 from ...schemas import ApplyWorkflowRead
 from ...schemas import ProjectRead
 from ...security import current_active_superuser
 from ...security import User
-from fractal_server.app.schemas.workflow import WorkflowTaskStatusType
+
 
 router = APIRouter()
 
@@ -102,7 +103,7 @@ async def monitor_job(
     workflow_id: Optional[int] = None,
     working_dir: Optional[str] = None,
     working_dir_user: Optional[str] = None,
-    status: Optional[WorkflowTaskStatusType] = None,
+    status: Optional[JobStatusType] = None,
     start_timestamp: Optional[DateTime] = None,
     end_timestamp: Optional[DateTime] = None,
     user: User = Depends(current_active_superuser),
