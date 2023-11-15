@@ -73,8 +73,10 @@ async def test_full_workflow(
         debug(user)
 
         project = await project_factory(user)
+        assert project.dataset_list == []
+        assert project.workflow_list == []
+        assert project.job_list == []
 
-        debug(project)
         project_id = project.id
         input_dataset = await dataset_factory(
             project_id=project.id, name="input", type="image", read_only=True
@@ -124,8 +126,9 @@ async def test_full_workflow(
         assert res.status_code == 201
 
         # CHECK WHERE WE ARE AT
-        res = await client.get(f"{PREFIX}/project/{project_id}")
-        debug(res.json())
+        await db.refresh(project)
+        assert len(project.dataset_list) == 2
+        debug(project)
 
         # CREATE WORKFLOW
         res = await client.post(
@@ -136,6 +139,8 @@ async def test_full_workflow(
         assert res.status_code == 201
         workflow_dict = res.json()
         workflow_id = workflow_dict["id"]
+        await db.refresh(project)
+        assert len(project.workflow_list) == 1
 
         # Add a dummy task
         res = await client.post(
@@ -174,6 +179,8 @@ async def test_full_workflow(
         job_data = res.json()
         debug(job_data)
         assert res.status_code == 202
+        await db.refresh(project)
+        assert len(project.job_list) == 1
 
         res = await client.get(
             f"{PREFIX}/project/{project_id}/job/{job_data['id']}"

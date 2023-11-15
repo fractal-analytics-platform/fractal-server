@@ -146,7 +146,7 @@ async def test_delete_dataset_failure(
     """
     GIVEN a Dataset in a relationship with an ApplyWorkflow
     WHEN we try to DELETE that Dataset via the correspondig endpoint
-    THEN we fail with a 422
+    THEN the corresponding `dataset_id` is set None
     """
     async with MockCurrentUser(persist=True) as user:
 
@@ -157,7 +157,6 @@ async def test_delete_dataset_failure(
         await workflow.insert_task(task_id=task.id, db=db)
         input_ds = await dataset_factory(project_id=project.id)
         output_ds = await dataset_factory(project_id=project.id)
-        dummy_ds = await dataset_factory(project_id=project.id)
 
         # Create a job in relationship with input_ds, output_ds and workflow
         job = await job_factory(
@@ -167,20 +166,36 @@ async def test_delete_dataset_failure(
             output_dataset_id=output_ds.id,
             working_dir=(tmp_path / "some_working_dir").as_posix(),
         )
+        assert job.input_dataset_id == input_ds.id
+        assert job.output_dataset_id == output_ds.id
 
-        # Check that you cannot delete datasets in relationship with a job
-        for ds_id in (input_ds.id, output_ds.id):
-            res = await client.delete(
-                f"api/v1/project/{project.id}/dataset/{ds_id}"
-            )
-            assert res.status_code == 422
-            assert f"still linked to job {job.id}" in res.json()["detail"]
+        # Assert that `Dataset.list_jobs_*` are correctly populated
+        await db.refresh(input_ds)
+        assert len(input_ds.list_jobs_input) == 1
+        assert input_ds.list_jobs_input[0].id == job.id
+        assert input_ds.list_jobs_output == []
+        await db.refresh(output_ds)
+        assert output_ds.list_jobs_input == []
+        assert len(output_ds.list_jobs_output) == 1
+        assert output_ds.list_jobs_output[0].id == job.id
 
-        # Test successful dataset deletion
         res = await client.delete(
-            f"api/v1/project/{project.id}/dataset/{dummy_ds.id}"
+            f"api/v1/project/{project.id}/dataset/{input_ds.id}"
         )
         assert res.status_code == 204
+
+        await db.refresh(job)
+        assert job.input_dataset_id is None
+        assert job.output_dataset_id is not None
+
+        res = await client.delete(
+            f"api/v1/project/{project.id}/dataset/{output_ds.id}"
+        )
+        assert res.status_code == 204
+
+        await db.refresh(job)
+        assert job.input_dataset_id is None
+        assert job.output_dataset_id is None
 
 
 async def test_patch_dataset(

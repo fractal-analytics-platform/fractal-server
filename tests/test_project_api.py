@@ -5,6 +5,7 @@ from sqlmodel import select
 from fractal_server.app.models import ApplyWorkflow
 from fractal_server.app.models import Dataset
 from fractal_server.app.models import Project
+from fractal_server.app.models import Workflow
 
 PREFIX = "/api/v1"
 
@@ -204,11 +205,19 @@ async def test_delete_project(
             output_dataset_id=dataset_id,
         )
 
-        # Check that a project-related job exists
-        stm = select(ApplyWorkflow).join(Project).where(Project.id == p["id"])
-        res = await db.execute(stm)
-        jobs = list(res)
-        assert len(jobs) == 1
+        # Check that a project-related job exists - via query
+        stm = select(ApplyWorkflow).where(ApplyWorkflow.project_id == p["id"])
+        res = (await db.execute(stm)).scalars().all()
+        assert len(res) == 1
+        job = res[0]
+        assert job.project_id == p["id"]
+        assert job.input_dataset_id == job.output_dataset_id == dataset_id
+        assert job.workflow_id == wf.id
+
+        # Check that a project-related job exists - via relationship
+        project = await db.get(Project, project_id)
+        assert len(project.job_list) == 1
+        assert project.job_list[0].id == job.id
 
         # Delete the project
         res = await client.delete(f"{PREFIX}/project/{p['id']}")
@@ -226,9 +235,16 @@ async def test_delete_project(
         debug(datasets)
         assert len(datasets) == 0
 
-        # Check that project-related jobs were deleted
-        stm = select(ApplyWorkflow).join(Project).where(Project.id == p["id"])
-        jobs = await db.execute(stm)
-        jobs = list(jobs)
-        debug(jobs)
-        assert len(jobs) == 0
+        # Check that project-related workflows were deleted
+        stm = select(Workflow).join(Project).where(Project.id == p["id"])
+        res = await db.execute(stm)
+        workflows = list(res)
+        debug(workflows)
+        assert len(workflows) == 0
+
+        # Assert that total number of jobs is still 1, but without project_id
+        await db.refresh(job)
+        assert job.project_id is None
+        assert job.input_dataset_id is None
+        assert job.output_dataset_id is None
+        assert job.workflow_id is None
