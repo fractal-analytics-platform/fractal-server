@@ -49,7 +49,7 @@ async def test_stop_job(
             f"api/v1/project/{project.id}/job/{job.id}/stop/"
         )
         if backend == "slurm":
-            assert res.status_code == 200
+            assert res.status_code == 204
 
             shutdown_file = tmp_path / SHUTDOWN_FILENAME
             debug(shutdown_file)
