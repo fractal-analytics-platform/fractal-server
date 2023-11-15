@@ -363,7 +363,7 @@ async def test_delete_dataset_cascade(db, MockCurrentUser, project_factory):
             workflow_id=workflow.id,
             input_dataset_id=dataset_in.id,
             output_dataset_id=dataset_out.id,
-            user_dump=user.email,
+            user_email=user.email,
             input_dataset_dump={},
             output_dataset_dump={},
             workflow_dump={},

@@ -998,7 +998,7 @@ async def test_delete_workflow_with_job(
         assert res.status_code == 204
 
         await db.refresh(job)
-        assert not job.workflow_id
+        assert job.workflow_id is None
 
 
 async def test_read_workflowtask(MockCurrentUser, project_factory, client):

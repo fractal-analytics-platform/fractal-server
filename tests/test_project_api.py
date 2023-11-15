@@ -5,6 +5,7 @@ from sqlmodel import select
 from fractal_server.app.models import ApplyWorkflow
 from fractal_server.app.models import Dataset
 from fractal_server.app.models import Project
+from fractal_server.app.models import Workflow
 
 PREFIX = "/api/v1"
 
@@ -233,6 +234,13 @@ async def test_delete_project(
         datasets = list(res)
         debug(datasets)
         assert len(datasets) == 0
+
+        # Check that project-related workflows were deleted
+        stm = select(Workflow).join(Project).where(Project.id == p["id"])
+        res = await db.execute(stm)
+        workflows = list(res)
+        debug(workflows)
+        assert len(workflows) == 0
 
         # Assert that total number of jobs is still 1, but without project_id
         await db.refresh(job)

@@ -20,7 +20,7 @@ def upgrade() -> None:
     with op.batch_alter_table("applyworkflow", schema=None) as batch_op:
         batch_op.add_column(
             sa.Column(
-                "user_dump",
+                "user_email",
                 sa.String(),
                 server_default="__UNDEFINED__",
                 nullable=False,
@@ -57,7 +57,7 @@ def upgrade() -> None:
         )
 
     with op.batch_alter_table("applyworkflow", schema=None) as batch_op:
-        batch_op.alter_column("user_dump", server_default=None)
+        batch_op.alter_column("user_email", server_default=None)
         batch_op.alter_column("input_dataset_dump", server_default=None)
         batch_op.alter_column("output_dataset_dump", server_default=None)
 
@@ -81,6 +81,6 @@ def downgrade() -> None:
         )
         batch_op.drop_column("output_dataset_dump")
         batch_op.drop_column("input_dataset_dump")
-        batch_op.drop_column("user_dump")
+        batch_op.drop_column("user_email")
 
     # ### end Alembic commands ###
