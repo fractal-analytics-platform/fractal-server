@@ -18,7 +18,6 @@ from ...db import DBSyncSession
 from ...db import get_db
 from ...db import get_sync_db
 from ...models import ApplyWorkflow
-from ...models import JobStatusType
 from ...models import LinkUserProject
 from ...models import Project
 from ...runner import submit_workflow
@@ -26,6 +25,7 @@ from ...runner import validate_workflow_compatibility
 from ...runner.common import set_start_and_last_task_index
 from ...schemas import ApplyWorkflowCreate
 from ...schemas import ApplyWorkflowRead
+from ...schemas import JobStatusType
 from ...schemas import ProjectCreate
 from ...schemas import ProjectRead
 from ...schemas import ProjectUpdate
@@ -308,7 +308,7 @@ async def apply_workflow(
         workflow_dump=dict(
             workflow.dict(exclude={"task_list"}),
             task_list=[
-                dict(wf_task.task.dict(exclude={"task"}), task=wf_task.dict())
+                dict(wf_task.dict(exclude={"task"}), task=wf_task.task.dict())
                 for wf_task in workflow.task_list
             ],
         ),
