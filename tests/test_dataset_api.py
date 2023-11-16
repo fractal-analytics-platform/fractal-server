@@ -146,7 +146,8 @@ async def test_delete_dataset_failure(
     """
     GIVEN a Dataset in a relationship with an ApplyWorkflow
     WHEN we try to DELETE that Dataset via the correspondig endpoint
-    THEN the corresponding `dataset_id` is set None
+    THEN if the ApplyWorkflow is running the delete will fail,
+         else the corresponding `dataset_id` is set None
     """
     async with MockCurrentUser(persist=True) as user:
 
@@ -178,6 +179,17 @@ async def test_delete_dataset_failure(
         assert output_ds.list_jobs_input == []
         assert len(output_ds.list_jobs_output) == 1
         assert output_ds.list_jobs_output[0].id == job.id
+
+        res = await client.delete(
+            f"api/v1/project/{project.id}/dataset/{input_ds.id}"
+        )
+        assert res.status_code == 422
+
+        res = await client.get(
+            f"api/v1/project/{project.id}/job/{job.id}/stop/"
+        )
+        debug(res.json())
+        assert res.status_code == 200
 
         res = await client.delete(
             f"api/v1/project/{project.id}/dataset/{input_ds.id}"
