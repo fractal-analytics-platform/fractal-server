@@ -7,6 +7,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from sqlmodel import or_
 from sqlmodel import select
 
 from ...db import AsyncSession
@@ -143,6 +144,38 @@ async def delete_dataset(
         db=db,
     )
     dataset = output["dataset"]
+
+    # Check whether there exists a job such that
+    # 1. `job.input_dataset_id == dataset_id`
+    # OR
+    # 1b. `job.output_dataset_id == dataset_id`
+    # 2. `job.status` is either `submitted` or `running`
+    # If at least one such job exists, then this endpoint will fail.
+    stm = (
+        select(ApplyWorkflow)
+        .where(
+            or_(
+                ApplyWorkflow.input_dataset_id == dataset_id,
+                ApplyWorkflow.output_dataset_id == dataset_id,
+            )
+        )
+        .where(
+            ApplyWorkflow.status.in_(
+                [JobStatusType.SUBMITTED, JobStatusType.RUNNING]
+            )
+        )
+    )
+    res = await db.execute(stm)
+    jobs = res.scalars().all()
+    if jobs:
+        string_ids = str([job.id for job in jobs])[1:-1]
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Cannot delete dataset {dataset.id} because"
+                f"is linked to ongoing job(s) {string_ids}."
+            ),
+        )
 
     await db.delete(dataset)
     await db.commit()
@@ -325,10 +358,7 @@ async def export_history_as_workflow(
     # execution is in progress; this may change in the future.
     jobs = res.scalars().all()
     if jobs:
-        if len(jobs) == 1:
-            string_ids = str(jobs[0].id)
-        else:
-            string_ids = str([job.id for job in jobs])[1:-1]
+        string_ids = str([job.id for job in jobs])[1:-1]
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
