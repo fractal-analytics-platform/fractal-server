@@ -48,7 +48,7 @@ gunicorn = ["gunicorn"]
 asgi-lifespan = "^2"
 pytest = "^7.2"
 httpx = "^0.23"
-devtools = "^0.10"
+devtools = "^0.12"
 pytest-asyncio = "^0.20"
 bumpver = "^2022.1120"
 pre-commit = "^2.19"
@@ -107,5 +107,5 @@ relative_files = true
 omit = ["tests/*"]
 
 [[tool.mypy.overrides]]
-module = ["devtools", "uvicorn"]
+module = ["devtools", "uvicorn", "pytest", "asgi_lifespan", "asyncpg"]
 ignore_missing_imports = true
