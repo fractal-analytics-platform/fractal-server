@@ -34,6 +34,13 @@ async def monitor_project(
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_db),
 ) -> list[ProjectRead]:
+    """
+    Query `project` table.
+
+    Args:
+        id: If not `None`, select a given `project.id`.
+        user_id: If not `None`, select a given `project.user_id`.
+    """
 
     stm = select(Project)
 
@@ -58,6 +65,15 @@ async def monitor_workflow(
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_db),
 ) -> list[WorkflowRead]:
+    """
+    Query `workflow` table.
+
+    Args:
+        id: If not `None`, select a given `workflow.id`.
+        project_id: If not `None`, select a given `workflow.project_id`.
+        name_contains: If not `None`, select workflows such that their
+            `name` attribute contains `name_contains` (case-insensitive).
+    """
     stm = select(Workflow)
 
     if id is not None:
@@ -86,6 +102,16 @@ async def monitor_dataset(
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_db),
 ) -> list[DatasetRead]:
+    """
+    Query `dataset` table.
+
+    Args:
+        id: If not `None`, select a given `dataset.id`.
+        project_id: If not `None`, select a given `dataset.project_id`.
+        name_contains: If not `None`, select datasets such that their
+            `name` attribute contains `name_contains` (case-insensitive).
+        type: If not `None`, select a given `dataset.type`.
+    """
     stm = select(Dataset)
 
     if id is not None:
@@ -122,7 +148,27 @@ async def monitor_job(
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_db),
 ) -> list[ApplyWorkflowRead]:
+    """
+    Query `ApplyWorkflow` table.
 
+    Args:
+        id: If not `None`, select a given `applyworkflow.id`.
+        project_id: If not `None`, select a given `applyworkflow.project_id`.
+        input_dataset_id: If not `None`, select a given
+            `applyworkflow.input_dataset_id`.
+        output_dataset_id: If not `None`, select a given
+            `applyworkflow.output_dataset_id`.
+        workflow_id: If not `None`, select a given `applyworkflow.workflow_id`.
+        status: If not `None`, select a given `applyworkflow.status`.
+        start_timestamp_min: If not `None`, select a rows with
+            `start_timestamp` after `start_timestamp_min`.
+        start_timestamp_max: If not `None`, select a rows with
+            `start_timestamp` before `start_timestamp_min`.
+        end_timestamp_min: If not `None`, select a rows with `end_timestamp`
+            after `end_timestamp_min`.
+        end_timestamp_max: If not `None`, select a rows with `end_timestamp`
+            before `end_timestamp_min`.
+    """
     stm = select(ApplyWorkflow)
 
     if id is not None:
