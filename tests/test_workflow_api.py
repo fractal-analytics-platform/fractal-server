@@ -1052,6 +1052,7 @@ async def test_delete_workflow_with_job(
             input_dataset_id=input_ds.id,
             output_dataset_id=output_ds.id,
             working_dir=(tmp_path / "some_working_dir").as_posix(),
+            status=JobStatusType.DONE,
         )
 
         assert job.workflow_id == workflow.id
