@@ -148,6 +148,29 @@ async def delete_project(
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
+
+    # Check that the Project is not linked to ongoing Jobs
+    stm = (
+        select(ApplyWorkflow)
+        .where(ApplyWorkflow.project_id == project_id)
+        .where(
+            ApplyWorkflow.status.in_(
+                [JobStatusType.SUBMITTED, JobStatusType.RUNNING]
+            )
+        )
+    )
+    res = await db.execute(stm)
+    jobs = res.scalars().all()
+    if jobs:
+        string_ids = str([job.id for job in jobs])[1:-1]
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Cannot delete project {project.id} because"
+                f"is linked to ongoing job(s) {string_ids}."
+            ),
+        )
+
     await db.delete(project)
     await db.commit()
     await db.close()
