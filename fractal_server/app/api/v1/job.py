@@ -38,13 +38,7 @@ async def get_user_jobs(
     """
 
     job_list = [
-        (
-            await _get_job_check_owner(
-                project_id=project.id, job_id=job.id, user_id=user.id, db=db
-            )
-        )["job"]
-        for project in user.project_list
-        for job in project.job_list
+        job for project in user.project_list for job in project.job_list
     ]
 
     return job_list
