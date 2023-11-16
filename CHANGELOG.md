@@ -5,7 +5,7 @@
 * API:
     * Make it possible to delete a `Dataset`, `Workflow` or `Project`, even when it is in relationship to an `ApplyWorkflow` (\#927).
     * Include `workflow_list` and `job_list` in `ProjectRead` response (\#927).
-    * New monitoring endpoinds restricted to superusers at `/api/v1/monitoring` (\#947).
+    * New monitoring endpoints restricted to superusers at `/monitoring` (\#947).
     * Change response of `/api/v1/project/{project_id}/job/{job_id}/stop/` endpoint to 204 no-content (\#967).
     * Fix construction of `ApplyWorkflow.workflow_dump`, within apply endpoint (\#968).
 * Database:
