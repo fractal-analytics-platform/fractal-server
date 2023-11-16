@@ -90,5 +90,5 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
     end_timestamp: Optional[datetime] = Field(
         default=None, sa_column=Column(DateTime(timezone=True))
     )
-    status: JobStatusType = JobStatusType.SUBMITTED
+    status: str = JobStatusType.SUBMITTED
     log: Optional[str] = None
