@@ -3,7 +3,7 @@ from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
-from sqlmodel import func
+from sqlalchemy import func
 from sqlmodel import select
 
 from ...db import AsyncSession
@@ -62,6 +62,7 @@ async def monitor_workflow(
     if project_id is not None:
         stm = stm.where(Workflow.project_id == project_id)
     if name_contains is not None:
+        # SQLAlchemy2: use icontains
         stm = stm.where(
             func.lower(Workflow.name).contains(name_contains.lower())
         )
@@ -89,6 +90,7 @@ async def monitor_dataset(
     if project_id is not None:
         stm = stm.where(Dataset.project_id == project_id)
     if name_contains is not None:
+        # SQLAlchemy2: use icontains
         stm = stm.where(
             func.lower(Dataset.name).contains(name_contains.lower())
         )
