@@ -256,7 +256,6 @@ async def test_get_user_jobs(
         await workflow2.insert_task(task_id=task.id, db=db)
         dataset2 = await dataset_factory(project_id=project.id)
 
-        await db.refresh(project)
         for _ in range(2):
             await job_factory(
                 working_dir=tmp_path.as_posix(),
@@ -266,7 +265,6 @@ async def test_get_user_jobs(
                 workflow_id=workflow2.id,
             )
 
-        await db.refresh(project2)
         res = await client.get(f"{PREFIX}/project/job/")
         assert res.status_code == 200
         assert len(res.json()) == 5
