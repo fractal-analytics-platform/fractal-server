@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import Enum
 from typing import Any
 from typing import Optional
 
@@ -12,6 +13,31 @@ __all__ = (
     "ApplyWorkflowCreate",
     "ApplyWorkflowRead",
 )
+
+
+class JobStatusType(str, Enum):
+    """
+    Define the available job statuses
+
+    Attributes:
+        SUBMITTED:
+            The workflow has been applied but not yet scheduled with an
+            executor. In this phase, due diligence takes place, such as
+            creating working directory, assemblying arguments, etc.
+        RUNNING:
+            The workflow was scheduled with an executor. Note that it might not
+            yet be running within the executor, e.g., jobs could still be
+            pending within a SLURM executor.
+        DONE:
+            The workflow was applied successfully
+        FAILED:
+            The workflow terminated with an error.
+    """
+
+    SUBMITTED = "submitted"
+    RUNNING = "running"
+    DONE = "done"
+    FAILED = "failed"
 
 
 class _ApplyWorkflowBase(BaseModel):
