@@ -7,6 +7,7 @@ from zipfile import ZipFile
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Response
 from fastapi import status
 from fastapi.responses import StreamingResponse
 from sqlmodel import select
@@ -158,14 +159,14 @@ async def get_job_list(
 
 @router.get(
     "/project/{project_id}/job/{job_id}/stop/",
-    status_code=200,
+    status_code=204,
 )
 async def stop_job(
     project_id: int,
     job_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-) -> Optional[ApplyWorkflow]:
+) -> Response:
     """
     Stop execution of a workflow job (only available for slurm backend)
     """
@@ -200,4 +201,4 @@ async def stop_job(
     with shutdown_file.open("w") as f:
         f.write(f"Trigger executor shutdown for {job.id=}, {project_id=}.")
 
-    return job
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
