@@ -3,6 +3,7 @@ Schemas for API request/response bodies
 """
 from .applyworkflow import ApplyWorkflowCreate  # noqa: F401
 from .applyworkflow import ApplyWorkflowRead  # noqa: F401
+from .applyworkflow import JobStatusType  # noqa: F401
 from .dataset import DatasetCreate  # noqa: F401
 from .dataset import DatasetRead  # noqa: F401
 from .dataset import DatasetStatusRead  # noqa: F401
