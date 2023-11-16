@@ -107,5 +107,5 @@ relative_files = true
 omit = ["tests/*"]
 
 [[tool.mypy.overrides]]
-module = ["devtools", "uvicorn"]
+module = ["devtools", "uvicorn", "pytest", "asgi_lifespan", "asyncpg"]
 ignore_missing_imports = true
