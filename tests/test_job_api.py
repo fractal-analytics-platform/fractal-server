@@ -188,6 +188,8 @@ async def test_get_job_list(
         assert len(res.json()) == 0
 
         workflow = await workflow_factory(project_id=project.id)
+        workflow2 = await workflow_factory(project_id=project.id)
+
         t = await task_factory()
         await workflow.insert_task(task_id=t.id, db=db)
         dataset = await dataset_factory(project_id=project.id)
@@ -206,3 +208,14 @@ async def test_get_job_list(
         debug(res)
         assert res.status_code == 200
         assert len(res.json()) == N
+
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/job/"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == N
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow2.id}/job/"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 0

@@ -22,9 +22,33 @@ from ...security import current_active_user
 from ...security import User
 from ._aux_functions import _get_job_check_owner
 from ._aux_functions import _get_project_check_owner
+from ._aux_functions import _get_workflow_check_owner
 
 
 router = APIRouter()
+
+
+@router.get(
+    "/project/{project_id}/workflow/{workflow_id}/job/",
+    response_model=list[ApplyWorkflowRead],
+)
+async def get_workflow_jobs(
+    project_id: int,
+    workflow_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> list[ApplyWorkflowRead]:
+    """
+    Returns all the jobs related to a specific workflow
+    """
+
+    workflow = await _get_workflow_check_owner(
+        project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
+    )
+    job_list = workflow.job_list
+    await db.close()
+
+    return job_list
 
 
 @router.get(
