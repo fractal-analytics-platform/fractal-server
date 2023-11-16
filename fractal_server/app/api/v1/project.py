@@ -308,7 +308,7 @@ async def apply_workflow(
         workflow_dump=dict(
             workflow.dict(exclude={"task_list"}),
             task_list=[
-                dict(wf_task.task.dict(exclude={"task"}), task=wf_task.dict())
+                dict(wf_task.dict(exclude={"task"}), task=wf_task.task.dict())
                 for wf_task in workflow.task_list
             ],
         ),
