@@ -10,7 +10,7 @@
 | fractal\_server/app/api/v1/\_\_init\_\_.py                        |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/api/v1/\_aux\_functions.py                    |       75 |        0 |       32 |        0 |    100% |           |
 | fractal\_server/app/api/v1/dataset.py                             |      172 |        0 |       58 |       10 |     96% |43->38, 68->64, 92->88, 130->126, 158->153, 187->183, 213->209, 254->250, 288->284, 370->366 |
-| fractal\_server/app/api/v1/job.py                                 |       64 |        0 |       16 |        4 |     95% |35->31, 61->57, 103->99, 125->121 |
+| fractal\_server/app/api/v1/job.py                                 |       75 |        0 |       22 |        6 |     94% |33->32, 51->47, 74->70, 100->96, 142->138, 164->160 |
 | fractal\_server/app/api/v1/project.py                             |      128 |        6 |       34 |        6 |     93% |44->43, 63->62, 84-89, 98->97, 114->113, 140->139, 162->157 |
 | fractal\_server/app/api/v1/task.py                                |       86 |        1 |       34 |        6 |     94% |30->29, 46->45, 64->63, 97, 109->108, 155->154 |
 | fractal\_server/app/api/v1/task\_collection.py                    |      177 |        5 |       30 |        4 |     96% |171->154, 204, 244-245, 311->310, 334-335 |
@@ -60,7 +60,7 @@
 | fractal\_server/tasks/\_\_init\_\_.py                             |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/tasks/collection.py                               |      205 |        6 |       76 |       14 |     93% |63, 85-86, 132->131, 136->135, 147, 160->159, 239->exit, 293, 311->exit, 316->exit, 321->exit, 513->exit, 544->exit, 553 |
 | fractal\_server/utils.py                                          |       22 |        0 |        2 |        0 |    100% |           |
-|                                                         **TOTAL** | **3708** |  **161** | **1034** |  **144** | **93%** |           |
+|                                                         **TOTAL** | **3719** |  **161** | **1040** |  **146** | **93%** |           |
 
 
 ## Setup coverage badge
