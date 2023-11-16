@@ -23,8 +23,10 @@ from ....logger import close_logger
 from ....logger import set_logger
 from ...db import AsyncSession
 from ...db import get_db
+from ...models import ApplyWorkflow
 from ...models import Task
 from ...models import Workflow
+from ...schemas import JobStatusType
 from ...schemas import WorkflowCreate
 from ...schemas import WorkflowExport
 from ...schemas import WorkflowImport
@@ -184,6 +186,27 @@ async def delete_workflow(
     workflow = await _get_workflow_check_owner(
         project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
+
+    stm = (
+        select(ApplyWorkflow)
+        .where(ApplyWorkflow.workflow_id == workflow.id)
+        .where(
+            ApplyWorkflow.status.in_(
+                [JobStatusType.SUBMITTED, JobStatusType.RUNNING]
+            )
+        )
+    )
+    res = await db.execute(stm)
+    jobs = res.scalars().all()
+    if jobs:
+        string_ids = str([job.id for job in jobs])[1:-1]
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Cannot delete workflow {workflow.id} because"
+                f"is linked to ongoing job(s) {string_ids}."
+            ),
+        )
 
     await db.delete(workflow)
     await db.commit()
