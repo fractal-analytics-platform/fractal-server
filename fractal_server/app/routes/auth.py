@@ -6,18 +6,18 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
-from ....config import get_settings
-from ....syringe import Inject
-from ...db import get_db
-from ...models.security import UserOAuth as User
-from ...schemas.user import UserCreate
-from ...schemas.user import UserRead
-from ...schemas.user import UserUpdate
-from ...security import cookie_backend
-from ...security import current_active_superuser
-from ...security import current_active_user
-from ...security import fastapi_users
-from ...security import token_backend
+from ...config import get_settings
+from ...syringe import Inject
+from ..db import get_db
+from ..models.security import UserOAuth as User
+from ..schemas.user import UserCreate
+from ..schemas.user import UserRead
+from ..schemas.user import UserUpdate
+from ..security import cookie_backend
+from ..security import current_active_superuser
+from ..security import current_active_user
+from ..security import fastapi_users
+from ..security import token_backend
 
 
 router_auth = APIRouter()
