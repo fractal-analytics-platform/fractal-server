@@ -1,10 +1,11 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 1.4.0 (unreleased)
 
 * API:
     * Make it possible to delete a `Dataset`, `Workflow` or `Project`, even when it is in relationship to an `ApplyWorkflow` (\#927).
     * Include `workflow_list` and `job_list` in `ProjectRead` response (\#927).
+    * Fix construction of `ApplyWorkflow.workflow_dump` in apply endpoint (\#968).
 * Database:
     * Make foreign-keys of `ApplyWorkflow` (`project_id`, `workflow_id`, `input_dataset_id`, `output_dataset_id`) optional (\#927).
     * Add columns `input_dataset_dump`, `output_dataset_dump` and `user_email` to `ApplyWorkflow` (\#927).
@@ -12,7 +13,6 @@
     * Make `ApplyWorkflow.start_timestamp` non-nullable (\#927).
     * Remove `"cascade": "all, delete-orphan"` from `Project.job_list` (\#927).
     * Add `Workflow.job_list` relation (\#927).
-    *  (\#927).
 * Runner:
     * Refresh DB objects within `submit_workflow` (\#927).
 
