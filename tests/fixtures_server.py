@@ -491,8 +491,8 @@ async def job_factory(db: AsyncSession):
                 workflow.dict(exclude={"task_list"}),
                 task_list=[
                     dict(
-                        wf_task.task.dict(exclude={"task"}),
-                        task=wf_task.dict(),
+                        wf_task.dict(exclude={"task"}),
+                        task=wf_task.task.dict(),
                     )
                     for wf_task in workflow.task_list
                 ],
