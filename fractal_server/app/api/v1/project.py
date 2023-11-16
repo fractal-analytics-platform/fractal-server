@@ -18,7 +18,6 @@ from ...db import DBSyncSession
 from ...db import get_db
 from ...db import get_sync_db
 from ...models import ApplyWorkflow
-from ...models import JobStatusType
 from ...models import LinkUserProject
 from ...models import Project
 from ...runner import submit_workflow
@@ -26,6 +25,7 @@ from ...runner import validate_workflow_compatibility
 from ...runner.common import set_start_and_last_task_index
 from ...schemas import ApplyWorkflowCreate
 from ...schemas import ApplyWorkflowRead
+from ...schemas import JobStatusType
 from ...schemas import ProjectCreate
 from ...schemas import ProjectRead
 from ...schemas import ProjectUpdate

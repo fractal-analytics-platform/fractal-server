@@ -30,9 +30,9 @@ from ...utils import get_timestamp
 from ..db import DB
 from ..models import ApplyWorkflow
 from ..models import Dataset
-from ..models import JobStatusType
 from ..models import Workflow
 from ..models import WorkflowTask
+from ..schemas import JobStatusType
 from ._local import process_workflow as local_process_workflow
 from .common import close_job_logger
 from .common import JobExecutionError

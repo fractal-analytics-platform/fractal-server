@@ -7,8 +7,8 @@ from devtools import debug
 
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import ApplyWorkflow
-from fractal_server.app.models import JobStatusType
 from fractal_server.app.runner import submit_workflow
+from fractal_server.app.schemas import JobStatusType
 
 
 async def test_success_submit_workflows(

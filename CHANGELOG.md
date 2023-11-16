@@ -17,6 +17,7 @@
     * Make `ApplyWorkflow.start_timestamp` non-nullable (\#927).
     * Remove `"cascade": "all, delete-orphan"` from `Project.job_list` (\#927).
     * Add `Workflow.job_list` relation (\#927).
+    * Do not use `Enum`s as column types (e.g. for `ApplyWorkflow.status`), but only for (de-)serialization (\#974).
 * Runner:
     * Refresh DB objects within `submit_workflow` (\#927).
 * Testing:
