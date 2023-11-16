@@ -1,3 +1,6 @@
+"""
+Definition of `/monitoring` routes.
+"""
 from datetime import datetime
 from typing import Optional
 
@@ -6,25 +9,25 @@ from fastapi import Depends
 from sqlalchemy import func
 from sqlmodel import select
 
-from ...db import AsyncSession
-from ...db import get_db
-from ...models import ApplyWorkflow
-from ...models import Dataset
-from ...models import JobStatusType
-from ...models import Project
-from ...models import Workflow
-from ...schemas import ApplyWorkflowRead
-from ...schemas import DatasetRead
-from ...schemas import ProjectRead
-from ...schemas import WorkflowRead
-from ...security import current_active_superuser
-from ...security import User
+from ..db import AsyncSession
+from ..db import get_db
+from ..models import ApplyWorkflow
+from ..models import Dataset
+from ..models import JobStatusType
+from ..models import Project
+from ..models import Workflow
+from ..schemas import ApplyWorkflowRead
+from ..schemas import DatasetRead
+from ..schemas import ProjectRead
+from ..schemas import WorkflowRead
+from ..security import current_active_superuser
+from ..security import User
 
 
-router = APIRouter()
+router_monitoring = APIRouter()
 
 
-@router.get("/project/", response_model=list[ProjectRead])
+@router_monitoring.get("/project/", response_model=list[ProjectRead])
 async def monitor_project(
     id: Optional[int] = None,
     user_id: Optional[int] = None,
@@ -47,7 +50,7 @@ async def monitor_project(
     return project_list
 
 
-@router.get("/workflow/", response_model=list[WorkflowRead])
+@router_monitoring.get("/workflow/", response_model=list[WorkflowRead])
 async def monitor_workflow(
     id: Optional[int] = None,
     project_id: Optional[int] = None,
@@ -74,7 +77,7 @@ async def monitor_workflow(
     return workflow_list
 
 
-@router.get("/dataset/", response_model=list[DatasetRead])
+@router_monitoring.get("/dataset/", response_model=list[DatasetRead])
 async def monitor_dataset(
     id: Optional[int] = None,
     project_id: Optional[int] = None,
@@ -104,7 +107,7 @@ async def monitor_dataset(
     return dataset_list
 
 
-@router.get("/job/", response_model=list[ApplyWorkflowRead])
+@router_monitoring.get("/job/", response_model=list[ApplyWorkflowRead])
 async def monitor_job(
     id: Optional[int] = None,
     project_id: Optional[int] = None,
