@@ -15,6 +15,8 @@
     *  (\#927).
 * Runner:
     * Refresh DB objects within `submit_workflow` (\#927).
+* Testing:
+    * Improve `test_full_workflow.py` (\#971).
 
 # 1.3.14
 
