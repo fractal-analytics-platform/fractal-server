@@ -4,8 +4,9 @@
 
 * API:
     * Make it possible to delete a `Dataset`, `Workflow` or `Project`, even when it is in relationship to an `ApplyWorkflow` (\#927).
-    * Include `workflow_list` and `job_list` in `ProjectRead` response (\#927).
+    * New `GET` endpoints `api/v1/project/job/` and `api/v1/project/{project_id}/workflow/{workflow_id}/job/` (\#969).
     * Change response of `/api/v1/project/{project_id}/job/{job_id}/stop/` endpoint to 204 no-content (\#967).
+    * Include `workflow_list` and `job_list` in `ProjectRead` response (\#927).
     * Fix construction of `ApplyWorkflow.workflow_dump`, within apply endpoint (\#968).
 * Database:
     * Make foreign-keys of `ApplyWorkflow` (`project_id`, `workflow_id`, `input_dataset_id`, `output_dataset_id`) optional (\#927).
