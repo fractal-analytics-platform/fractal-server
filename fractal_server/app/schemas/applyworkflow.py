@@ -17,7 +17,7 @@ __all__ = (
 
 class JobStatusType(str, Enum):
     """
-    Define the job status available
+    Define the available job statuses
 
     Attributes:
         SUBMITTED:
