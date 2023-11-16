@@ -144,6 +144,46 @@ async def delete_dataset(
     )
     dataset = output["dataset"]
 
+    #!
+
+    # Check whether there exists a job such that
+    # 1a. `job.input_dataset_id == dataset_id``
+    # OR
+    # 1b. `job.output_dataset_id == dataset_id`
+    # 2. `job.status` is either submitted or running
+    # Note: see
+    # https://sqlmodel.tiangolo.com/tutorial/where/#type-annotations-and-errors
+    # regarding the type-ignore in this code block
+    stm = (
+        select(ApplyWorkflow)
+        .where(ApplyWorkflow.output_dataset_id == dataset_id)
+        .where(
+            ApplyWorkflow.status.in_(
+                [JobStatusType.SUBMITTED, JobStatusType.RUNNING]
+            )
+        )
+    )
+    res = await db.execute(stm)
+
+    # If at least one such job exists, then this endpoint will fail. We do not
+    # support the use case of exporting a reproducible workflow when job
+    # execution is in progress; this may change in the future.
+    jobs = res.scalars().all()
+    if jobs:
+        if len(jobs) == 1:
+            string_ids = str(jobs[0].id)
+        else:
+            string_ids = str([job.id for job in jobs])[1:-1]
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Cannot export history because dataset {dataset.id} "
+                f"is linked to ongoing job(s) {string_ids}."
+            ),
+        )
+
+    #!
+
     await db.delete(dataset)
     await db.commit()
     await db.close()
