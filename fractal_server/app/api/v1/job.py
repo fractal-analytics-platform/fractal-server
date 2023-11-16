@@ -31,7 +31,6 @@ router = APIRouter()
 @router.get("/project/job/", response_model=list[ApplyWorkflowRead])
 async def get_user_jobs(
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
 ) -> list[ApplyWorkflowRead]:
     """
     Returns all the jobs of the current user
