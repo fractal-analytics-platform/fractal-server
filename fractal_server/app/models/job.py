@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Any
 from typing import Optional
 
+from pydantic import validator
 from sqlalchemy import Column
 from sqlalchemy.types import DateTime
 from sqlalchemy.types import JSON
@@ -11,6 +12,7 @@ from sqlmodel import SQLModel
 from ...utils import get_timestamp
 from ..schemas import JobStatusType
 from ..schemas.applyworkflow import _ApplyWorkflowBase
+from ..schemas.applyworkflow import _ApplyWorkflowWithValidStatus
 
 
 class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
@@ -92,3 +94,8 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
     )
     status: str = JobStatusType.SUBMITTED
     log: Optional[str] = None
+
+    @validator("status")
+    def check_job_status_type(cls, v):
+        _ApplyWorkflowWithValidStatus(status=v)
+        return v

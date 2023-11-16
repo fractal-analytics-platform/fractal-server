@@ -40,6 +40,14 @@ class JobStatusType(str, Enum):
     FAILED = "failed"
 
 
+class _ApplyWorkflowWithValidStatus(BaseModel):
+    """
+    Model to be used for a validator, within `ApplyWorkflow` model
+    """
+
+    status: JobStatusType = JobStatusType.SUBMITTED
+
+
 class _ApplyWorkflowBase(BaseModel):
     """
     Base class for `ApplyWorkflow`.
