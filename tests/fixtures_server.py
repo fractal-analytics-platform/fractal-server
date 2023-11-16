@@ -344,6 +344,7 @@ async def project_factory(db):
     """
     Factory that adds a project to the database
     """
+
     from fractal_server.app.models import Project
 
     async def __project_factory(user, **kwargs):
@@ -433,6 +434,7 @@ async def job_factory(db: AsyncSession):
     Insert job in db
     """
     from fractal_server.app.models import Dataset
+    from fractal_server.app.models import Project
     from fractal_server.app.models import ApplyWorkflow
     from fractal_server.app.models import Workflow
     from fractal_server.app.runner.common import set_start_and_last_task_index
@@ -447,7 +449,7 @@ async def job_factory(db: AsyncSession):
         **kwargs,
     ):
         workflow = await db.get(Workflow, workflow_id)
-        if not workflow:
+        if workflow is None:
             raise IndexError(
                 "Error from job_factory: "
                 f"Workflow {workflow_id} does not exist."
@@ -460,16 +462,22 @@ async def job_factory(db: AsyncSession):
         )
 
         input_dataset = await db.get(Dataset, input_dataset_id)
-        if not input_dataset:
+        if input_dataset is None:
             raise IndexError(
                 "Error from job_factory: "
                 f"Dataset {input_dataset_id} does not exist."
             )
         output_dataset = await db.get(Dataset, output_dataset_id)
-        if not output_dataset:
+        if output_dataset is None:
             raise IndexError(
                 "Error from job_factory: "
                 f"Dataset {input_dataset_id} does not exist."
+            )
+        project = await db.get(Project, project_id)
+        if project is None:
+            raise IndexError(
+                "Error from job_factory: "
+                f"Project {project_id} does not exist."
             )
 
         args = dict(
@@ -483,8 +491,8 @@ async def job_factory(db: AsyncSession):
                 workflow.dict(exclude={"task_list"}),
                 task_list=[
                     dict(
-                        wf_task.task.dict(exclude={"task"}),
-                        task=wf_task.dict(),
+                        wf_task.dict(exclude={"task"}),
+                        task=wf_task.task.dict(),
                     )
                     for wf_task in workflow.task_list
                 ],
@@ -498,6 +506,8 @@ async def job_factory(db: AsyncSession):
         args.update(**kwargs)
         job = ApplyWorkflow(**args)
         db.add(job)
+        project.job_list.append(job)
+        db.add(project)
         await db.commit()
         await db.refresh(job)
         return job

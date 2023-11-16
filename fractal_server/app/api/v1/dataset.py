@@ -14,13 +14,13 @@ from ...db import AsyncSession
 from ...db import get_db
 from ...models import ApplyWorkflow
 from ...models import Dataset
-from ...models import JobStatusType
 from ...models import Resource
 from ...runner._common import HISTORY_FILENAME
 from ...schemas import DatasetCreate
 from ...schemas import DatasetRead
 from ...schemas import DatasetStatusRead
 from ...schemas import DatasetUpdate
+from ...schemas import JobStatusType
 from ...schemas import ResourceCreate
 from ...schemas import ResourceRead
 from ...schemas import ResourceUpdate

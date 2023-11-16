@@ -7,6 +7,7 @@ from zipfile import ZipFile
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Response
 from fastapi import status
 from fastapi.responses import StreamingResponse
 from sqlmodel import select
@@ -22,9 +23,48 @@ from ...security import current_active_user
 from ...security import User
 from ._aux_functions import _get_job_check_owner
 from ._aux_functions import _get_project_check_owner
+from ._aux_functions import _get_workflow_check_owner
 
 
 router = APIRouter()
+
+
+@router.get("/project/job/", response_model=list[ApplyWorkflowRead])
+async def get_user_jobs(
+    user: User = Depends(current_active_user),
+) -> list[ApplyWorkflowRead]:
+    """
+    Returns all the jobs of the current user
+    """
+
+    job_list = [
+        job for project in user.project_list for job in project.job_list
+    ]
+
+    return job_list
+
+
+@router.get(
+    "/project/{project_id}/workflow/{workflow_id}/job/",
+    response_model=list[ApplyWorkflowRead],
+)
+async def get_workflow_jobs(
+    project_id: int,
+    workflow_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[list[ApplyWorkflowRead]]:
+    """
+    Returns all the jobs related to a specific workflow
+    """
+
+    workflow = await _get_workflow_check_owner(
+        project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
+    )
+    job_list = workflow.job_list
+    await db.close()
+
+    return job_list
 
 
 @router.get(
@@ -119,14 +159,14 @@ async def get_job_list(
 
 @router.get(
     "/project/{project_id}/job/{job_id}/stop/",
-    status_code=200,
+    status_code=204,
 )
 async def stop_job(
     project_id: int,
     job_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-) -> Optional[ApplyWorkflow]:
+) -> Response:
     """
     Stop execution of a workflow job (only available for slurm backend)
     """
@@ -161,4 +201,4 @@ async def stop_job(
     with shutdown_file.open("w") as f:
         f.write(f"Trigger executor shutdown for {job.id=}, {project_id=}.")
 
-    return job
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
