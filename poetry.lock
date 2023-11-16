@@ -553,21 +553,19 @@ test-randomorder = ["pytest-randomly"]
 
 [[package]]
 name = "devtools"
-version = "0.10.0"
+version = "0.12.2"
 description = "Python's missing debug print command, and more."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "devtools-0.10.0-py3-none-any.whl", hash = "sha256:b0bc02043bb032cdfb93e227226e2fea1aaea8f5a31fca25fabc4eadca22f228"},
-    {file = "devtools-0.10.0.tar.gz", hash = "sha256:6eb7c4fa7c4b90e5cfe623537a9961d1dc3199d8be0981802c6931cd8f02418f"},
+    {file = "devtools-0.12.2-py3-none-any.whl", hash = "sha256:c366e3de1df4cdd635f1ad8cbcd3af01a384d7abda71900e68d43b04eb6aaca7"},
+    {file = "devtools-0.12.2.tar.gz", hash = "sha256:efceab184cb35e3a11fa8e602cc4fadacaa2e859e920fc6f87bf130b69885507"},
 ]
 
 [package.dependencies]
 asttokens = ">=2.0.0,<3.0.0"
 executing = ">=1.1.1"
-
-[package.extras]
-pygments = ["pygments (>=2.2.0)"]
+pygments = ">=2.15.0"
 
 [[package]]
 name = "distlib"
@@ -2284,4 +2282,4 @@ slurm = ["cloudpickle", "clusterfutures"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "8a81731248d501a9d7de382f675ac1a0585a241909432705e8966a7d7b4a8166"
+content-hash = "dcaf99a3011b0746c60b366dbb49faefd03c1c1925b6ff9eb8d370d9cfdd9e80"
