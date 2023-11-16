@@ -52,7 +52,7 @@ async def get_workflow_jobs(
     workflow_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
-) -> list[ApplyWorkflowRead]:
+) -> Optional[list[ApplyWorkflowRead]]:
     """
     Returns all the jobs related to a specific workflow
     """
