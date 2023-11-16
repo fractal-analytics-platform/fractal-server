@@ -7,6 +7,7 @@ from ...config import get_settings
 from ...syringe import Inject
 from .v1.dataset import router as dataset_router
 from .v1.job import router as job_router
+from .v1.monitoring import router as router_monitoring  # noqa
 from .v1.project import router as project_router
 from .v1.task import router as task_router
 from .v1.task_collection import router as taskcollection_router
