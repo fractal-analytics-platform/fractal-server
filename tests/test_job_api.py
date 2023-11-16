@@ -188,6 +188,8 @@ async def test_get_job_list(
         assert len(res.json()) == 0
 
         workflow = await workflow_factory(project_id=project.id)
+        workflow2 = await workflow_factory(project_id=project.id)
+
         t = await task_factory()
         await workflow.insert_task(task_id=t.id, db=db)
         dataset = await dataset_factory(project_id=project.id)
@@ -206,3 +208,68 @@ async def test_get_job_list(
         debug(res)
         assert res.status_code == 200
         assert len(res.json()) == N
+
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/job/"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == N
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow2.id}/job/"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 0
+
+
+async def test_get_user_jobs(
+    MockCurrentUser,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    task_factory,
+    job_factory,
+    db,
+    client,
+    tmp_path,
+):
+
+    async with MockCurrentUser(persist=True, user_kwargs={"id": 123}) as user:
+
+        task = await task_factory()
+
+        project = await project_factory(user)
+        workflow = await workflow_factory(project_id=project.id)
+        await workflow.insert_task(task_id=task.id, db=db)
+        dataset = await dataset_factory(project_id=project.id)
+
+        for _ in range(3):
+            await job_factory(
+                working_dir=tmp_path.as_posix(),
+                project_id=project.id,
+                input_dataset_id=dataset.id,
+                output_dataset_id=dataset.id,
+                workflow_id=workflow.id,
+            )
+
+        project2 = await project_factory(user)
+        workflow2 = await workflow_factory(project_id=project.id)
+        await workflow2.insert_task(task_id=task.id, db=db)
+        dataset2 = await dataset_factory(project_id=project.id)
+
+        for _ in range(2):
+            await job_factory(
+                working_dir=tmp_path.as_posix(),
+                project_id=project2.id,
+                input_dataset_id=dataset2.id,
+                output_dataset_id=dataset2.id,
+                workflow_id=workflow2.id,
+            )
+
+        res = await client.get(f"{PREFIX}/project/job/")
+        assert res.status_code == 200
+        assert len(res.json()) == 5
+
+    async with MockCurrentUser(persist=True, user_kwargs={"id": 321}):
+        res = await client.get(f"{PREFIX}/project/job/")
+        assert res.status_code == 200
+        assert len(res.json()) == 0
