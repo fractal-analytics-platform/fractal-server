@@ -1,4 +1,4 @@
-from datetime import datetime as DateTime
+from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter
@@ -112,10 +112,10 @@ async def monitor_job(
     output_dataset_id: Optional[int] = None,
     workflow_id: Optional[int] = None,
     status: Optional[JobStatusType] = None,
-    start_timestamp_min: Optional[DateTime] = None,
-    start_timestamp_max: Optional[DateTime] = None,
-    end_timestamp_min: Optional[DateTime] = None,
-    end_timestamp_max: Optional[DateTime] = None,
+    start_timestamp_min: Optional[datetime] = None,
+    start_timestamp_max: Optional[datetime] = None,
+    end_timestamp_min: Optional[datetime] = None,
+    end_timestamp_max: Optional[datetime] = None,
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_db),
 ) -> list[ApplyWorkflowRead]:
