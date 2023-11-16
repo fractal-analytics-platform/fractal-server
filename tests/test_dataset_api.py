@@ -3,7 +3,7 @@ from sqlmodel import select
 
 from fractal_server.app.models import Dataset
 from fractal_server.app.models import Resource
-
+from fractal_server.app.schemas import JobStatusType
 
 PREFIX = "api/v1"
 
@@ -166,6 +166,7 @@ async def test_delete_dataset_failure(
             input_dataset_id=input_ds.id,
             output_dataset_id=output_ds.id,
             working_dir=(tmp_path / "some_working_dir").as_posix(),
+            status=JobStatusType.DONE,
         )
         assert job.input_dataset_id == input_ds.id
         assert job.output_dataset_id == output_ds.id
@@ -179,17 +180,6 @@ async def test_delete_dataset_failure(
         assert output_ds.list_jobs_input == []
         assert len(output_ds.list_jobs_output) == 1
         assert output_ds.list_jobs_output[0].id == job.id
-
-        res = await client.delete(
-            f"api/v1/project/{project.id}/dataset/{input_ds.id}"
-        )
-        assert res.status_code == 422
-
-        res = await client.get(
-            f"api/v1/project/{project.id}/job/{job.id}/stop/"
-        )
-        debug(res.json())
-        assert res.status_code == 200
 
         res = await client.delete(
             f"api/v1/project/{project.id}/dataset/{input_ds.id}"
@@ -208,6 +198,58 @@ async def test_delete_dataset_failure(
         await db.refresh(job)
         assert job.input_dataset_id is None
         assert job.output_dataset_id is None
+
+        # Assert tha we cannot stop a dataset linked to a running job
+        ds_deletable_1 = await dataset_factory(id=1001, project_id=project.id)
+        ds_deletable_2 = await dataset_factory(project_id=project.id)
+        ds_not_deletable_1 = await dataset_factory(project_id=project.id)
+        ds_not_deletable_2 = await dataset_factory(project_id=project.id)
+
+        common_args = {
+            "project_id": project.id,
+            "workflow_id": workflow.id,
+            "working_dir": (tmp_path / "some_working_dir").as_posix(),
+        }
+        await job_factory(
+            input_dataset_id=ds_deletable_1.id,
+            output_dataset_id=ds_not_deletable_1.id,
+            status=JobStatusType.DONE,
+            **common_args,
+        )
+        await job_factory(
+            input_dataset_id=ds_not_deletable_2.id,
+            output_dataset_id=ds_deletable_2.id,
+            status=JobStatusType.FAILED,
+            **common_args,
+        )
+        await job_factory(
+            input_dataset_id=ds_not_deletable_1.id,
+            output_dataset_id=ds_not_deletable_2.id,
+            status=JobStatusType.SUBMITTED,  # this is why ds are not deletable
+            **common_args,
+        )
+        await job_factory(
+            input_dataset_id=ds_not_deletable_2.id,
+            output_dataset_id=ds_not_deletable_1.id,
+            status=JobStatusType.RUNNING,  # this is why ds are not deletable
+            **common_args,
+        )
+        res = await client.delete(
+            f"api/v1/project/{project.id}/dataset/{ds_deletable_1.id}"
+        )
+        assert res.status_code == 204
+        res = await client.delete(
+            f"api/v1/project/{project.id}/dataset/{ds_deletable_2.id}"
+        )
+        assert res.status_code == 204
+        res = await client.delete(
+            f"api/v1/project/{project.id}/dataset/{ds_not_deletable_1.id}"
+        )
+        assert res.status_code == 422
+        res = await client.delete(
+            f"api/v1/project/{project.id}/dataset/{ds_not_deletable_1.id}"
+        )
+        assert res.status_code == 422
 
 
 async def test_patch_dataset(
