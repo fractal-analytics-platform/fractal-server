@@ -303,8 +303,18 @@ async def apply_workflow(
         output_dataset_id=output_dataset_id,
         workflow_id=workflow_id,
         user_email=user.email,
-        input_dataset_dump=input_dataset.dict(),
-        output_dataset_dump=output_dataset.dict(),
+        input_dataset_dump=dict(
+            input_dataset.dict(exclude={"resource_list"}),
+            resource_list=[
+                resource.dict() for resource in input_dataset.resource_list
+            ],
+        ),
+        output_dataset_dump=dict(
+            output_dataset.dict(exclude={"resource_list"}),
+            resource_list=[
+                resource.dict() for resource in output_dataset.resource_list
+            ],
+        ),
         workflow_dump=dict(
             workflow.dict(exclude={"task_list"}),
             task_list=[

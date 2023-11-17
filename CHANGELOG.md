@@ -11,9 +11,11 @@
         * Include `workflow_list` and `job_list` attributes for `ProjectRead`, which affects all `GET`-project endpoints (\#927).
         * Make it possible to delete a `Dataset`, `Workflow` or `Project`, even when it is in relationship to an `ApplyWorkflow` (\#927).
         * Align `ApplyWorkflowRead` with new `ApplyWorkflow`, which has optional foreign keys `project_id`, `workflow_id`, `input_dataset_id`, and `output_dataset_id` (\#984).
+        * Define types for `ApplyWorkflowRead` "dump" attributes (\#990).
     * Internal changes:
         * Move all routes definitions into `fractal_server/app/routes` (\#976).
         * Fix construction of `ApplyWorkflow.workflow_dump`, within apply endpoint (\#968).
+        * Fix construction of `ApplyWorkflow` attributes `input_dataset_dump` and `output_dataset_dump`, within apply endpoint (\#990).
 * Database:
     * Make foreign-keys of `ApplyWorkflow` (`project_id`, `workflow_id`, `input_dataset_id`, `output_dataset_id`) optional (\#927).
     * Add columns `input_dataset_dump`, `output_dataset_dump` and `user_email` to `ApplyWorkflow` (\#927).
