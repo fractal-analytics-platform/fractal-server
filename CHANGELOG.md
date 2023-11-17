@@ -10,6 +10,7 @@
         * Change response of `/api/v1/project/{project_id}/job/{job_id}/stop/` endpoint to 204 no-content (\#967).
         * Include `workflow_list` and `job_list` attributes for `ProjectRead`, which affects all `GET`-project endpoints (\#927).
         * Make it possible to delete a `Dataset`, `Workflow` or `Project`, even when it is in relationship to an `ApplyWorkflow` (\#927).
+        * Align `ApplyWorkflowRead` with new `ApplyWorkflow`, which has optional foreign keys `project_id`, `workflow_id`, `input_dataset_id`, and `output_dataset_id` (\#984).
     * Internal changes:
         * Move all routes definitions into `fractal_server/app/routes` (\#976).
         * Fix construction of `ApplyWorkflow.workflow_dump`, within apply endpoint (\#968).
