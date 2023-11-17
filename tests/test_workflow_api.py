@@ -10,6 +10,7 @@ from fractal_server.app.models import WorkflowExport
 from fractal_server.app.models import WorkflowImport
 from fractal_server.app.models import WorkflowRead
 from fractal_server.app.models import WorkflowTask
+from fractal_server.app.schemas import JobStatusType
 
 
 async def get_workflow(client, p_id, wf_id):
@@ -81,7 +82,16 @@ async def test_post_workflow(db, client, MockCurrentUser, project_factory):
 
 
 async def test_delete_workflow(
-    db, client, MockCurrentUser, project_factory, collect_packages
+    db,
+    client,
+    MockCurrentUser,
+    project_factory,
+    workflow_factory,
+    task_factory,
+    dataset_factory,
+    job_factory,
+    tmp_path,
+    collect_packages,
 ):
     """
     GIVEN a Workflow with two Tasks
@@ -139,6 +149,60 @@ async def test_delete_workflow(
         res = list(res)
         debug(res)
         assert len(res) == 0
+
+        # Assert you cannot delete a Workflow linked to an ongoing Job
+        wf_deletable_1 = await workflow_factory(project_id=project.id)
+        wf_deletable_2 = await workflow_factory(project_id=project.id)
+        wf_not_deletable_1 = await workflow_factory(project_id=project.id)
+        wf_not_deletable_2 = await workflow_factory(project_id=project.id)
+        task = await task_factory(name="task", source="source")
+        await wf_deletable_1.insert_task(task_id=task.id, db=db)
+        await wf_deletable_2.insert_task(task_id=task.id, db=db)
+        await wf_not_deletable_1.insert_task(task_id=task.id, db=db)
+        await wf_not_deletable_2.insert_task(task_id=task.id, db=db)
+        dataset = await dataset_factory(project_id=project.id)
+        common_args = {
+            "project_id": project.id,
+            "input_dataset_id": dataset.id,
+            "output_dataset_id": dataset.id,
+            "working_dir": (tmp_path / "some_working_dir").as_posix(),
+        }
+        await job_factory(
+            workflow_id=wf_deletable_1.id,
+            status=JobStatusType.DONE,
+            **common_args,
+        )
+        await job_factory(
+            workflow_id=wf_deletable_2.id,
+            status=JobStatusType.FAILED,
+            **common_args,
+        )
+        await job_factory(
+            workflow_id=wf_not_deletable_1.id,
+            status=JobStatusType.SUBMITTED,
+            **common_args,
+        )
+        await job_factory(
+            workflow_id=wf_not_deletable_2.id,
+            status=JobStatusType.RUNNING,
+            **common_args,
+        )
+        res = await client.delete(
+            f"api/v1/project/{project.id}/workflow/{wf_deletable_1.id}"
+        )
+        assert res.status_code == 204
+        res = await client.delete(
+            f"api/v1/project/{project.id}/workflow/{wf_deletable_2.id}"
+        )
+        assert res.status_code == 204
+        res = await client.delete(
+            f"api/v1/project/{project.id}/workflow/{wf_not_deletable_1.id}"
+        )
+        assert res.status_code == 422
+        res = await client.delete(
+            f"api/v1/project/{project.id}/workflow/{wf_not_deletable_2.id}"
+        )
+        assert res.status_code == 422
 
 
 async def test_get_workflow(client, MockCurrentUser, project_factory):
@@ -988,6 +1052,7 @@ async def test_delete_workflow_with_job(
             input_dataset_id=input_ds.id,
             output_dataset_id=output_ds.id,
             working_dir=(tmp_path / "some_working_dir").as_posix(),
+            status=JobStatusType.DONE,
         )
 
         assert job.workflow_id == workflow.id
