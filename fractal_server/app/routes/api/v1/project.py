@@ -162,7 +162,7 @@ async def delete_project(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
-                f"Cannot delete project {project.id} because"
+                f"Cannot delete project {project.id} because it "
                 f"is linked to active job(s) {string_ids}."
             ),
         )
