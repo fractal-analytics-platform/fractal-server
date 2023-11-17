@@ -461,3 +461,19 @@ async def get_workflowtask_status(
 
     response_body = DatasetStatusRead(status=workflow_tasks_status_dict)
     return response_body
+
+
+@router.get("/project/dataset/", response_model=list[DatasetRead])
+async def get_user_datasets(
+    user: User = Depends(current_active_user),
+) -> list[DatasetRead]:
+    """
+    Returns all the datasets of the current user
+    """
+    dataset_list = [
+        dataset
+        for project in user.project_list
+        for dataset in project.dataset_list
+    ]
+
+    return dataset_list
