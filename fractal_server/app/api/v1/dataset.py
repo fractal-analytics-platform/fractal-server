@@ -28,6 +28,7 @@ from ...schemas import WorkflowExport
 from ...schemas import WorkflowTaskExport
 from ...security import current_active_user
 from ...security import User
+from ._aux_functions import _get_active_jobs_statement
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_workflow_check_owner
@@ -151,18 +152,10 @@ async def delete_dataset(
     # 1b. `job.output_dataset_id == dataset_id`
     # 2. `job.status` is either `submitted` or `running`
     # If at least one such job exists, then this endpoint will fail.
-    stm = (
-        select(ApplyWorkflow)
-        .where(
-            or_(
-                ApplyWorkflow.input_dataset_id == dataset_id,
-                ApplyWorkflow.output_dataset_id == dataset_id,
-            )
-        )
-        .where(
-            ApplyWorkflow.status.in_(
-                [JobStatusType.SUBMITTED, JobStatusType.RUNNING]
-            )
+    stm = _get_active_jobs_statement().where(
+        or_(
+            ApplyWorkflow.input_dataset_id == dataset_id,
+            ApplyWorkflow.output_dataset_id == dataset_id,
         )
     )
     res = await db.execute(stm)

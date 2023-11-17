@@ -26,7 +26,6 @@ from ...db import get_db
 from ...models import ApplyWorkflow
 from ...models import Task
 from ...models import Workflow
-from ...schemas import JobStatusType
 from ...schemas import WorkflowCreate
 from ...schemas import WorkflowExport
 from ...schemas import WorkflowImport
@@ -36,6 +35,7 @@ from ...schemas import WorkflowUpdate
 from ...security import current_active_user
 from ...security import User
 from ._aux_functions import _check_workflow_exists
+from ._aux_functions import _get_active_jobs_statement
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_workflow_check_owner
 
@@ -188,14 +188,8 @@ async def delete_workflow(
     )
 
     # Check that the Workflow is not linked to ongoing Jobs
-    stm = (
-        select(ApplyWorkflow)
-        .where(ApplyWorkflow.workflow_id == workflow.id)
-        .where(
-            ApplyWorkflow.status.in_(
-                [JobStatusType.SUBMITTED, JobStatusType.RUNNING]
-            )
-        )
+    stm = _get_active_jobs_statement().where(
+        ApplyWorkflow.workflow_id == workflow.id
     )
     res = await db.execute(stm)
     jobs = res.scalars().all()
