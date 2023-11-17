@@ -380,7 +380,7 @@ async def dataset_factory(db: AsyncSession):
         project = await db.get(Project, project_id)
         if project is None:
             raise IndexError(
-                "Error from workflow_factory: "
+                "Error from dataset_factory: "
                 f"Project {project_id} does not exist."
             )
 
