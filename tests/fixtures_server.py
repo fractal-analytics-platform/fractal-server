@@ -366,6 +366,7 @@ async def dataset_factory(db: AsyncSession):
     Insert dataset in db
     """
     from fractal_server.app.models import Dataset
+    from fractal_server.app.models import Project
 
     async def __dataset_factory(db: AsyncSession = db, **kwargs):
         defaults = dict(
@@ -374,8 +375,19 @@ async def dataset_factory(db: AsyncSession):
         )
         args = dict(**defaults)
         args.update(kwargs)
+
+        project_id = args["project_id"]
+        project = await db.get(Project, project_id)
+        if project is None:
+            raise IndexError(
+                "Error from dataset_factory: "
+                f"Project {project_id} does not exist."
+            )
+
         _dataset = Dataset(**args)
         db.add(_dataset)
+        project.dataset_list.append(_dataset)
+        db.add(project)
         await db.commit()
         await db.refresh(_dataset)
         return _dataset
@@ -521,6 +533,7 @@ async def workflow_factory(db: AsyncSession):
     Insert workflow in db
     """
     from fractal_server.app.models import Workflow
+    from fractal_server.app.models import Project
 
     async def __workflow_factory(db: AsyncSession = db, **kwargs):
         defaults = dict(
@@ -529,8 +542,19 @@ async def workflow_factory(db: AsyncSession):
         )
         args = dict(**defaults)
         args.update(kwargs)
+
+        project_id = args["project_id"]
+        project = await db.get(Project, project_id)
+        if project is None:
+            raise IndexError(
+                "Error from workflow_factory: "
+                f"Project {project_id} does not exist."
+            )
+
         w = Workflow(**args)
         db.add(w)
+        project.workflow_list.append(w)
+        db.add(project)
         await db.commit()
         await db.refresh(w)
         return w

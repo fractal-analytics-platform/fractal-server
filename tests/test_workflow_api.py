@@ -230,6 +230,29 @@ async def test_get_workflow(client, MockCurrentUser, project_factory):
         assert res.json() == workflow
 
 
+async def test_get_user_workflows(
+    client, MockCurrentUser, project_factory, workflow_factory, db
+):
+    """
+    Test /api/v1/project/workflow/
+    """
+
+    async with MockCurrentUser(persist=True, user_kwargs={}) as user:
+        debug(user)
+
+        project1 = await project_factory(user, name="p1")
+        project2 = await project_factory(user, name="p2")
+        await workflow_factory(project_id=project1.id, name="wf1a")
+        await workflow_factory(project_id=project1.id, name="wf1b")
+        await workflow_factory(project_id=project2.id, name="wf2a")
+
+        res = await client.get("/api/v1/project/workflow/")
+        assert res.status_code == 200
+        debug(res.json())
+        assert len(res.json()) == 3
+        assert set(wf["name"] for wf in res.json()) == {"wf1a", "wf1b", "wf2a"}
+
+
 async def test_post_worfkflow_task(client, MockCurrentUser, project_factory):
     """
     GIVEN a Workflow with a list of WorkflowTasks
