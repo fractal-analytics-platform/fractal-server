@@ -146,12 +146,8 @@ async def delete_dataset(
     )
     dataset = output["dataset"]
 
-    # Check whether there exists a job such that
-    # 1. `job.input_dataset_id == dataset_id`
-    # OR
-    # 1b. `job.output_dataset_id == dataset_id`
-    # 2. `job.status` is either `submitted` or `running`
-    # If at least one such job exists, then this endpoint will fail.
+    # Fail if there exists jobs that are active (that is, pending or running)
+    # and in relation with the current dataset.
     stm = _get_active_jobs_statement().where(
         or_(
             ApplyWorkflow.input_dataset_id == dataset_id,

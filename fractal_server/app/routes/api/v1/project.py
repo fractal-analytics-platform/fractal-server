@@ -150,7 +150,8 @@ async def delete_project(
         project_id=project_id, user_id=user.id, db=db
     )
 
-    # Check that the Project is not linked to ongoing Jobs
+    # Fail if there exists jobs that are active (that is, pending or running)
+    # and in relation with the current project.
     stm = _get_active_jobs_statement().where(
         ApplyWorkflow.project_id == project_id
     )
