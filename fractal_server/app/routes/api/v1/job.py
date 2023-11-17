@@ -145,7 +145,7 @@ async def get_job_list(
     db: AsyncSession = Depends(get_db),
 ) -> Optional[list[ApplyWorkflowRead]]:
     """
-    Get list of jobs associated to the current project
+    Get job list for given project
     """
     await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
