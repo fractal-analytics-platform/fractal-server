@@ -53,7 +53,7 @@ def test_apply_workflow_create():
 
 
 def test_apply_workflow_read():
-    x = ApplyWorkflowRead(
+    job1 = ApplyWorkflowRead(
         id=1,
         project_id=1,
         workflow_id=1,
@@ -65,9 +65,21 @@ def test_apply_workflow_read():
         user_email="test@fractal.com",
     )
 
-    assert isinstance(x.start_timestamp, datetime)
-    y = x.sanitised_dict()
-    assert isinstance(y["start_timestamp"], str)
+    assert isinstance(job1.start_timestamp, datetime)
+    job1_sanitised = job1.sanitised_dict()
+    assert isinstance(job1_sanitised["start_timestamp"], str)
+
+    job2 = ApplyWorkflowRead(
+        id=1,
+        start_timestamp="2019-12-23T23:10:11.115310Z",
+        status="good",
+        workflow_dump=dict(task_list=[]),
+        user_email="test@fractal.com",
+    )
+    assert job2.project_id is None
+    assert job2.input_dataset_id is None
+    assert job2.output_dataset_id is None
+    assert job2.workflow_id is None
 
 
 def test_dataset_create():
