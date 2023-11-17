@@ -160,7 +160,7 @@ async def delete_dataset(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
-                f"Cannot delete dataset {dataset.id} because"
+                f"Cannot delete dataset {dataset.id} because it "
                 f"is linked to active job(s) {string_ids}."
             ),
         )

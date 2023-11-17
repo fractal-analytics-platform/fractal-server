@@ -199,7 +199,7 @@ async def delete_workflow(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
-                f"Cannot delete workflow {workflow.id} because"
+                f"Cannot delete workflow {workflow.id} because it "
                 f"is linked to active job(s) {string_ids}."
             ),
         )
