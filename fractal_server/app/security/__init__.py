@@ -33,7 +33,6 @@ from typing import Generic
 from typing import Optional
 from typing import Type
 
-from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Request
@@ -60,9 +59,6 @@ from ...syringe import Inject
 from ..db import get_db
 from ..models.security import OAuthAccount
 from ..models.security import UserOAuth as User
-from ..schemas.user import UserCreate
-from ..schemas.user import UserRead
-from ..schemas.user import UserUpdate
 
 
 class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
@@ -249,106 +245,3 @@ async def current_active_superuser(user=Depends(current_active_user)):
             detail="This action is restricted to superusers",
         )
     return user
-
-
-# AUTH ROUTES
-
-auth_router = APIRouter()
-
-auth_router.include_router(
-    fastapi_users.get_auth_router(token_backend),
-    prefix="/token",
-)
-auth_router.include_router(
-    fastapi_users.get_auth_router(cookie_backend),
-)
-auth_router.include_router(
-    fastapi_users.get_register_router(UserRead, UserCreate),
-    dependencies=[Depends(current_active_superuser)],
-)
-auth_router.include_router(
-    fastapi_users.get_reset_password_router(),
-)
-auth_router.include_router(
-    fastapi_users.get_verify_router(UserRead),
-)
-auth_router.include_router(
-    fastapi_users.get_users_router(UserRead, UserUpdate),
-    prefix="/users",
-    dependencies=[Depends(current_active_superuser)],
-)
-
-
-@auth_router.get("/whoami", response_model=UserRead)
-async def whoami(
-    user: User = Depends(current_active_user),
-):
-    """
-    Return current user
-    """
-    return user
-
-
-@auth_router.get("/userlist", response_model=list[UserRead])
-async def list_users(
-    user: User = Depends(current_active_superuser),
-    db: AsyncSession = Depends(get_db),
-):
-    """
-    Return list of all users
-    """
-    stm = select(User)
-    res = await db.execute(stm)
-    user_list = res.scalars().unique().all()
-    await db.close()
-    return user_list
-
-
-# OAUTH CLIENTS
-
-# NOTE: settings.OAUTH_CLIENTS are collected by
-# Settings.collect_oauth_clients(). If no specific client is specified in the
-# environment variables (e.g. by setting OAUTH_FOO_CLIENT_ID and
-# OAUTH_FOO_CLIENT_SECRET), this list is empty
-
-# FIXME:Dependency injection should be wrapped within a function call to make
-# it truly lazy. This function could then be called on startup of the FastAPI
-# app (cf. fractal_server.main)
-settings = Inject(get_settings)
-
-for client_config in settings.OAUTH_CLIENTS_CONFIG:
-
-    client_name = client_config.CLIENT_NAME.lower()
-
-    if client_name == "google":
-        from httpx_oauth.clients.google import GoogleOAuth2
-
-        client = GoogleOAuth2(
-            client_config.CLIENT_ID, client_config.CLIENT_SECRET
-        )
-    elif client_name == "github":
-        from httpx_oauth.clients.github import GitHubOAuth2
-
-        client = GitHubOAuth2(
-            client_config.CLIENT_ID, client_config.CLIENT_SECRET
-        )
-    else:
-        from httpx_oauth.clients.openid import OpenID
-
-        client = OpenID(
-            client_config.CLIENT_ID,
-            client_config.CLIENT_SECRET,
-            client_config.OIDC_CONFIGURATION_ENDPOINT,
-        )
-
-    auth_router.include_router(
-        fastapi_users.get_oauth_router(
-            client,
-            cookie_backend,
-            settings.JWT_SECRET_KEY,
-            is_verified_by_default=False,
-            associate_by_email=True,
-            redirect_url=client_config.REDIRECT_URL,
-        ),
-        prefix=f"/{client_name}",
-    )
