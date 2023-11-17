@@ -9,7 +9,7 @@
     * New behaviors or responses of existing endpoints:
         * Change response of `/api/v1/project/{project_id}/job/{job_id}/stop/` endpoint to 204 no-content (\#967).
         * Include `workflow_list` and `job_list` attributes for `ProjectRead`, which affects all `GET`-project endpoints (\#927).
-        * Make it possible to delete a `Dataset`, `Workflow` or `Project`, even when it is in relationship to an `ApplyWorkflow` (\#927).
+        * Make it possible to delete a `Dataset`, `Workflow` or `Project`, even when it is in relationship to an `ApplyWorkflow` - provided that the `ApplyWorkflow` is not pending or running (\#927, \#973).
         * Align `ApplyWorkflowRead` with new `ApplyWorkflow`, which has optional foreign keys `project_id`, `workflow_id`, `input_dataset_id`, and `output_dataset_id` (\#984).
         * Define types for `ApplyWorkflowRead` "dump" attributes (\#990).
     * Internal changes:

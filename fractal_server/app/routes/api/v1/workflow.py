@@ -23,6 +23,7 @@ from .....logger import close_logger
 from .....logger import set_logger
 from ....db import AsyncSession
 from ....db import get_db
+from ....models import ApplyWorkflow
 from ....models import Task
 from ....models import Workflow
 from ....schemas import WorkflowCreate
@@ -34,6 +35,7 @@ from ....schemas import WorkflowUpdate
 from ....security import current_active_user
 from ....security import User
 from ._aux_functions import _check_workflow_exists
+from ._aux_functions import _get_active_jobs_statement
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_workflow_check_owner
 
@@ -184,6 +186,23 @@ async def delete_workflow(
     workflow = await _get_workflow_check_owner(
         project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
+
+    # Fail if there exist jobs that are active (that is, pending or running)
+    # and in relation with the current workflow.
+    stm = _get_active_jobs_statement().where(
+        ApplyWorkflow.workflow_id == workflow.id
+    )
+    res = await db.execute(stm)
+    jobs = res.scalars().all()
+    if jobs:
+        string_ids = str([job.id for job in jobs])[1:-1]
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Cannot delete workflow {workflow.id} because it "
+                f"is linked to active job(s) {string_ids}."
+            ),
+        )
 
     await db.delete(workflow)
     await db.commit()

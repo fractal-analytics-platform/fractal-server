@@ -32,6 +32,7 @@ from ....schemas import ProjectUpdate
 from ....security import current_active_user
 from ....security import User
 from ._aux_functions import _check_project_exists
+from ._aux_functions import _get_active_jobs_statement
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_workflow_check_owner
@@ -148,6 +149,24 @@ async def delete_project(
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
+
+    # Fail if there exist jobs that are active (that is, pending or running)
+    # and in relation with the current project.
+    stm = _get_active_jobs_statement().where(
+        ApplyWorkflow.project_id == project_id
+    )
+    res = await db.execute(stm)
+    jobs = res.scalars().all()
+    if jobs:
+        string_ids = str([job.id for job in jobs])[1:-1]
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Cannot delete project {project.id} because it "
+                f"is linked to active job(s) {string_ids}."
+            ),
+        )
+
     await db.delete(project)
     await db.commit()
     await db.close()
