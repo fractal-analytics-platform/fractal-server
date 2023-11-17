@@ -27,7 +27,12 @@
 * Testing:
     * Improve `test_full_workflow.py` (\#971).
 
-# 1.3.14
+# 1.3.14 (do not use!)
+
+> **WARNING**: This version introduces a change that is then reverted in 1.4.0,
+> namely it sets the `ApplyWorkflow.status` type to `Enum`, when used with
+> PostgreSQL. It is recommended to **not** use it, and upgrade to 1.4.0
+> directly.
 
 * Make `Dataset.resource_list` an `ordering_list`, ordered by `Resource.id` (\#951).
 * Expose `redirect_url` for OAuth clients (\#953).
