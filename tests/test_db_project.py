@@ -1,7 +1,7 @@
 import pytest
 from fastapi import HTTPException
 
-from fractal_server.app.api.v1.project import _get_project_check_owner
+from fractal_server.app.routes.api.v1.project import _get_project_check_owner
 
 
 async def test_proejct_membership(db, project_factory, MockCurrentUser):
