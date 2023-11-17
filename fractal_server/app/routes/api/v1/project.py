@@ -163,7 +163,7 @@ async def delete_project(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
                 f"Cannot delete project {project.id} because"
-                f"is linked to ongoing job(s) {string_ids}."
+                f"is linked to active job(s) {string_ids}."
             ),
         )
 
