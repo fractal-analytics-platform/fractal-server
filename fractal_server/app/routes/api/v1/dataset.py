@@ -20,7 +20,6 @@ from ....schemas import DatasetCreate
 from ....schemas import DatasetRead
 from ....schemas import DatasetStatusRead
 from ....schemas import DatasetUpdate
-from ....schemas import JobStatusType
 from ....schemas import ResourceCreate
 from ....schemas import ResourceRead
 from ....schemas import ResourceUpdate
@@ -162,7 +161,7 @@ async def delete_dataset(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
                 f"Cannot delete dataset {dataset.id} because"
-                f"is linked to ongoing job(s) {string_ids}."
+                f"is linked to active job(s) {string_ids}."
             ),
         )
 
@@ -331,15 +330,10 @@ async def export_history_as_workflow(
     # Note: see
     # https://sqlmodel.tiangolo.com/tutorial/where/#type-annotations-and-errors
     # regarding the type-ignore in this code block
-    stm = (
-        select(ApplyWorkflow)
-        .where(ApplyWorkflow.output_dataset_id == dataset_id)
-        .where(
-            ApplyWorkflow.status.in_(
-                [JobStatusType.SUBMITTED, JobStatusType.RUNNING]
-            )
-        )
+    stm = _get_active_jobs_statement().where(
+        ApplyWorkflow.output_dataset_id == dataset_id
     )
+
     res = await db.execute(stm)
 
     # If at least one such job exists, then this endpoint will fail. We do not
@@ -352,7 +346,7 @@ async def export_history_as_workflow(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
                 f"Cannot export history because dataset {dataset.id} "
-                f"is linked to ongoing job(s) {string_ids}."
+                f"is linked to active job(s) {string_ids}."
             ),
         )
 
@@ -412,14 +406,8 @@ async def get_workflowtask_status(
     # Note: see
     # https://sqlmodel.tiangolo.com/tutorial/where/#type-annotations-and-errors
     # regarding the type-ignore in this code block
-    stm = (
-        select(ApplyWorkflow)
-        .where(ApplyWorkflow.output_dataset_id == dataset_id)
-        .where(
-            ApplyWorkflow.status.in_(  # type: ignore
-                [JobStatusType.SUBMITTED, JobStatusType.RUNNING]
-            )
-        )
+    stm = _get_active_jobs_statement().where(
+        ApplyWorkflow.output_dataset_id == dataset_id
     )
     res = await db.execute(stm)
     running_jobs = res.scalars().all()
@@ -433,7 +421,7 @@ async def get_workflowtask_status(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
                 f"Cannot get WorkflowTask statuses as dataset {dataset.id} "
-                f"is linked to multiple ongoing jobs: {string_ids}"
+                f"is linked to multiple active jobs: {string_ids}"
             ),
         )
 
