@@ -53,6 +53,15 @@ def test_apply_workflow_create():
 
 
 def test_apply_workflow_read():
+    WORKFLOW_DUMP = dict(id=1, project_id=1, name="wf", task_list=[])
+    DATASET_DUMP = dict(
+        id=1,
+        project_id=1,
+        name="ds",
+        type="zarr",
+        read_only=False,
+        resource_list=[dict(id=1, dataset_id=1, path="/tmp")],
+    )
     job1 = ApplyWorkflowRead(
         id=1,
         project_id=1,
@@ -61,7 +70,9 @@ def test_apply_workflow_read():
         output_dataset_id=1,
         start_timestamp="2019-12-23T23:10:11.115310Z",
         status="good",
-        workflow_dump=dict(task_list=[]),
+        workflow_dump=WORKFLOW_DUMP,
+        input_dataset_dump=DATASET_DUMP,
+        output_dataset_dump=DATASET_DUMP,
         user_email="test@fractal.com",
     )
 
@@ -73,7 +84,9 @@ def test_apply_workflow_read():
         id=1,
         start_timestamp="2019-12-23T23:10:11.115310Z",
         status="good",
-        workflow_dump=dict(task_list=[]),
+        workflow_dump=WORKFLOW_DUMP,
+        input_dataset_dump=DATASET_DUMP,
+        output_dataset_dump=DATASET_DUMP,
         user_email="test@fractal.com",
     )
     assert job2.project_id is None
