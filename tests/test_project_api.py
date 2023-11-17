@@ -6,6 +6,7 @@ from fractal_server.app.models import ApplyWorkflow
 from fractal_server.app.models import Dataset
 from fractal_server.app.models import Project
 from fractal_server.app.models import Workflow
+from fractal_server.app.schemas import JobStatusType
 
 PREFIX = "/api/v1"
 
@@ -203,6 +204,7 @@ async def test_delete_project(
             working_dir=(tmp_path / "some_working_dir").as_posix(),
             input_dataset_id=dataset_id,
             output_dataset_id=dataset_id,
+            status=JobStatusType.DONE,
         )
 
         # Check that a project-related job exists - via query
@@ -248,3 +250,51 @@ async def test_delete_project(
         assert job.input_dataset_id is None
         assert job.output_dataset_id is None
         assert job.workflow_id is None
+
+
+async def test_delete_project_ongoing_jobs(
+    client,
+    MockCurrentUser,
+    db,
+    project_factory,
+    job_factory,
+    dataset_factory,
+    workflow_factory,
+    tmp_path,
+    task_factory,
+):
+    async with MockCurrentUser(persist=True) as user:
+
+        async def get_project_id_linked_to_job(status: JobStatusType) -> int:
+            p = await project_factory(user)
+            d = await dataset_factory(project_id=p.id)
+            w = await workflow_factory(project_id=p.id)
+            t = await task_factory(
+                name=f"task_{status}", source=f"source_{status}"
+            )
+            await w.insert_task(task_id=t.id, db=db)
+            await job_factory(
+                project_id=p.id,
+                workflow_id=w.id,
+                input_dataset_id=d.id,
+                output_dataset_id=d.id,
+                working_dir=(tmp_path / "some_working_dir").as_posix(),
+                status=status,
+            )
+            return p.id
+
+        prj_done = await get_project_id_linked_to_job(JobStatusType.DONE)
+        prj_failed = await get_project_id_linked_to_job(JobStatusType.FAILED)
+        prj_running = await get_project_id_linked_to_job(JobStatusType.RUNNING)
+        prj_submitted = await get_project_id_linked_to_job(
+            JobStatusType.SUBMITTED
+        )
+
+        res = await client.delete(f"api/v1/project/{prj_done}")
+        assert res.status_code == 204
+        res = await client.delete(f"api/v1/project/{prj_failed}")
+        assert res.status_code == 204
+        res = await client.delete(f"api/v1/project/{prj_running}")
+        assert res.status_code == 422
+        res = await client.delete(f"api/v1/project/{prj_submitted}")
+        assert res.status_code == 422
