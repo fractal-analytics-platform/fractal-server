@@ -10,7 +10,7 @@
     * New behaviors or responses of existing endpoints:
         * Change response of `/api/v1/project/{project_id}/job/{job_id}/stop/` endpoint to 204 no-content (\#967).
         * Include `workflow_list` and `job_list` attributes for `ProjectRead`, which affects all `GET`-project endpoints (\#927).
-        * Make it possible to delete a `Dataset`, `Workflow` or `Project`, even when it is in relationship to an `ApplyWorkflow` (\#927).
+        * Make it possible to delete a `Dataset`, `Workflow` or `Project`, even when it is in relationship to an `ApplyWorkflow` - provided that the `ApplyWorkflow` is not pending or running (\#927, \#973).
         * Align `ApplyWorkflowRead` with new `ApplyWorkflow`, which has optional foreign keys `project_id`, `workflow_id`, `input_dataset_id`, and `output_dataset_id` (\#984).
     * Internal changes:
         * Move all routes definitions into `fractal_server/app/routes` (\#976).
@@ -28,7 +28,12 @@
 * Testing:
     * Improve `test_full_workflow.py` (\#971).
 
-# 1.3.14
+# 1.3.14 (do not use!)
+
+> **WARNING**: This version introduces a change that is then reverted in 1.4.0,
+> namely it sets the `ApplyWorkflow.status` type to `Enum`, when used with
+> PostgreSQL. It is recommended to **not** use it, and upgrade to 1.4.0
+> directly.
 
 * Make `Dataset.resource_list` an `ordering_list`, ordered by `Resource.id` (\#951).
 * Expose `redirect_url` for OAuth clients (\#953).
