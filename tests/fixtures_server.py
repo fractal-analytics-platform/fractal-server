@@ -401,7 +401,7 @@ async def resource_factory(db, testdata_path):
 
     async def __resource_factory(dataset: Dataset, **kwargs):
         """
-        Add a new resorce to dataset
+        Add a new resource to dataset
         """
         defaults = dict(path=(testdata_path / "png").as_posix())
         defaults.update(kwargs)
@@ -495,10 +495,21 @@ async def job_factory(db: AsyncSession):
         args = dict(
             project_id=project_id,
             input_dataset_id=input_dataset_id,
-            input_dataset_dump=input_dataset.dict(),
             output_dataset_id=output_dataset_id,
-            output_dataset_dump=output_dataset.dict(),
             workflow_id=workflow_id,
+            input_dataset_dump=dict(
+                input_dataset.dict(exclude={"resource_list"}),
+                resource_list=[
+                    resource.dict() for resource in input_dataset.resource_list
+                ],
+            ),
+            output_dataset_dump=dict(
+                output_dataset.dict(exclude={"resource_list"}),
+                resource_list=[
+                    resource.dict()
+                    for resource in output_dataset.resource_list
+                ],
+            ),
             workflow_dump=dict(
                 workflow.dict(exclude={"task_list"}),
                 task_list=[
