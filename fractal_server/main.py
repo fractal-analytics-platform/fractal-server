@@ -46,18 +46,17 @@ def collect_routers(app: FastAPI) -> None:
         app:
             The application to register the routers to.
     """
-    from .app.api import router_default
-    from .app.api import router_v1
-    from .app.api import router_monitoring
+    from .app.routes.api import router_api
+    from .app.routes.api.v1 import router_api_v1
+    from .app.routes.monitoring import router_monitoring
+    from .app.routes.auth import router_auth
 
-    from .app.security import auth_router
-
-    app.include_router(router_default, prefix="/api")
-    app.include_router(router_v1, prefix="/api/v1")
+    app.include_router(router_api, prefix="/api")
+    app.include_router(router_api_v1, prefix="/api/v1")
     app.include_router(
         router_monitoring, prefix="/monitoring", tags=["Monitoring"]
     )
-    app.include_router(auth_router, prefix="/auth", tags=["auth"])
+    app.include_router(router_auth, prefix="/auth", tags=["auth"])
 
 
 def check_settings() -> None:
