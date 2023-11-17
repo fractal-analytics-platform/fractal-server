@@ -1,14 +1,28 @@
 import pytest
 from fastapi import HTTPException
 
-from fractal_server.app.api.v1._aux_functions import _check_workflow_exists
-from fractal_server.app.api.v1._aux_functions import _get_active_jobs_statement
-from fractal_server.app.api.v1._aux_functions import _get_dataset_check_owner
-from fractal_server.app.api.v1._aux_functions import _get_job_check_owner
-from fractal_server.app.api.v1._aux_functions import _get_project_check_owner
-from fractal_server.app.api.v1._aux_functions import _get_task_check_owner
-from fractal_server.app.api.v1._aux_functions import _get_workflow_check_owner
-from fractal_server.app.api.v1._aux_functions import (
+from fractal_server.app.routes.api.v1._aux_functions import (
+    _check_workflow_exists,
+)
+from fractal_server.app.routes.api.v1._aux_functions import (
+    _get_active_jobs_statement,
+)
+from fractal_server.app.routes.api.v1._aux_functions import (
+    _get_dataset_check_owner,
+)
+from fractal_server.app.routes.api.v1._aux_functions import (
+    _get_job_check_owner,
+)
+from fractal_server.app.routes.api.v1._aux_functions import (
+    _get_project_check_owner,
+)
+from fractal_server.app.routes.api.v1._aux_functions import (
+    _get_task_check_owner,
+)
+from fractal_server.app.routes.api.v1._aux_functions import (
+    _get_workflow_check_owner,
+)
+from fractal_server.app.routes.api.v1._aux_functions import (
     _get_workflow_task_check_owner,
 )
 

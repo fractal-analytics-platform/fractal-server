@@ -20,14 +20,14 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 
-from ...db import AsyncSession
-from ...db import get_db
-from ...models import Task
-from ...schemas import WorkflowTaskCreate
-from ...schemas import WorkflowTaskRead
-from ...schemas import WorkflowTaskUpdate
-from ...security import current_active_user
-from ...security import User
+from ....db import AsyncSession
+from ....db import get_db
+from ....models import Task
+from ....schemas import WorkflowTaskCreate
+from ....schemas import WorkflowTaskRead
+from ....schemas import WorkflowTaskUpdate
+from ....security import current_active_user
+from ....security import User
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import _get_workflow_task_check_owner
 
