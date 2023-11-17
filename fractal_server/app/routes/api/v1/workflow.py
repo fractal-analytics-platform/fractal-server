@@ -316,3 +316,19 @@ async def import_workflow(
 
     await db.close()
     return db_workflow
+
+
+@router.get("/project/workflow/", response_model=list[WorkflowRead])
+async def get_user_workflows(
+    user: User = Depends(current_active_user),
+) -> list[WorkflowRead]:
+    """
+    Returns all the workflows of the current user
+    """
+    workflow_list = [
+        workflow
+        for project in user.project_list
+        for workflow in project.workflow_list
+    ]
+
+    return workflow_list
