@@ -306,7 +306,6 @@ async def get_user_workflows(
     """
     Returns all the workflows of the current user
     """
-
     workflow_list = [
         workflow
         for project in user.project_list
