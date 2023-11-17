@@ -324,21 +324,14 @@ async def export_history_as_workflow(
     )
     dataset = output["dataset"]
 
-    # Check whether there exists a job such that
-    # 1. `job.output_dataset_id == dataset_id`
-    # 2. `job.status` is either submitted or running
-    # Note: see
-    # https://sqlmodel.tiangolo.com/tutorial/where/#type-annotations-and-errors
-    # regarding the type-ignore in this code block
+    # Check whether there exists an active job such that `job.output_dataset_id
+    # == dataset_id`. If at least one such job exists, then this endpoint will
+    # fail. We do not support the use case of exporting a reproducible workflow
+    # when job execution is in progress; this may change in the future.
     stm = _get_active_jobs_statement().where(
         ApplyWorkflow.output_dataset_id == dataset_id
     )
-
     res = await db.execute(stm)
-
-    # If at least one such job exists, then this endpoint will fail. We do not
-    # support the use case of exporting a reproducible workflow when job
-    # execution is in progress; this may change in the future.
     jobs = res.scalars().all()
     if jobs:
         string_ids = str([job.id for job in jobs])[1:-1]
