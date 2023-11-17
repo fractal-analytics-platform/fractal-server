@@ -13,11 +13,11 @@ from fastapi import FastAPI
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from fractal_server.app.api import router_default
 from fractal_server.app.db import DBSyncSession
 from fractal_server.app.db import get_db
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import State
+from fractal_server.app.routes.api import router_api
 from fractal_server.logger import set_logger
 
 logger = set_logger(__name__)
@@ -57,7 +57,7 @@ async def bgtask_async_db(state_id: int):
 # New endpoints and client
 
 
-@router_default.get("/test_async")
+@router_api.get("/test_async")
 async def run_background_task_async(
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
@@ -75,7 +75,7 @@ async def run_background_task_async(
     background_tasks.add_task(bgtask_async_db, state_id)
 
 
-@router_default.get("/test_sync")
+@router_api.get("/test_sync")
 async def run_background_task_sync(
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
@@ -101,7 +101,7 @@ async def client_for_bgtasks(
 ) -> AsyncGenerator[AsyncClient, Any]:
     """Client wich includes the two new endpoints."""
 
-    app.include_router(router_default, prefix="/test_bgtasks")
+    app.include_router(router_api, prefix="/test_bgtasks")
     async with AsyncClient(
         app=app, base_url="http://test"
     ) as client, LifespanManager(app):
