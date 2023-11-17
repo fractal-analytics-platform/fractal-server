@@ -7,9 +7,10 @@
         * New monitoring endpoints restricted to superusers at `/monitoring` (\#947).
         * New `GET` endpoints `api/v1/project/job/` and `api/v1/project/{project_id}/workflow/{workflow_id}/job/` (\#969).
         * New `GET` endpoints `api/v1/project/dataset/` and `api/v1/project/workflow/` (\#988).
+        * New `GET` endpoint `api/v1/project/{project_id}/dataset/` (\#993).
     * New behaviors or responses of existing endpoints:
         * Change response of `/api/v1/project/{project_id}/job/{job_id}/stop/` endpoint to 204 no-content (\#967).
-        * Include `workflow_list` and `job_list` attributes for `ProjectRead`, which affects all `GET`-project endpoints (\#927).
+        * Remove `dataset_list` attribute from `ProjectRead`, which affects all `GET` endpoints that return some project (\#993).
         * Make it possible to delete a `Dataset`, `Workflow` or `Project`, even when it is in relationship to an `ApplyWorkflow` - provided that the `ApplyWorkflow` is not pending or running (\#927, \#973).
         * Align `ApplyWorkflowRead` with new `ApplyWorkflow`, which has optional foreign keys `project_id`, `workflow_id`, `input_dataset_id`, and `output_dataset_id` (\#984).
         * Define types for `ApplyWorkflowRead` "dump" attributes (\#990).

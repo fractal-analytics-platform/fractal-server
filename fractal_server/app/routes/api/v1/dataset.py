@@ -63,6 +63,24 @@ async def create_dataset(
 
 
 @router.get(
+    "/project/{project_id}/dataset/",
+    response_model=list[DatasetRead],
+)
+async def read_dataset_list(
+    project_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[list[DatasetRead]]:
+    """
+    Get dataset list for given project
+    """
+    project = await _get_project_check_owner(
+        project_id=project_id, user_id=user.id, db=db
+    )
+    return project.dataset_list
+
+
+@router.get(
     "/project/{project_id}/dataset/{dataset_id}",
     response_model=DatasetRead,
 )

@@ -53,16 +53,12 @@ async def get_workflow_list(
     db: AsyncSession = Depends(get_db),
 ) -> Optional[list[WorkflowRead]]:
     """
-    Get list of workflows associated to the current project
+    Get workflow list for given project
     """
-    await _get_project_check_owner(
+    project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
-    stm = select(Workflow).where(Workflow.project_id == project_id)
-    res = await db.execute(stm)
-    workflow_list = res.scalars().all()
-    await db.close()
-    return workflow_list
+    return project.workflow_list
 
 
 @router.post(

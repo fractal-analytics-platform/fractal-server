@@ -120,11 +120,11 @@ async def test_delete_dataset(
 
         ds_ids = (ds0.id, ds1.id)
 
-        res = await client.get(f"{PREFIX}/project/{prj.id}")
-        prj_dict = res.json()
-        assert len(prj_dict["dataset_list"]) == 2
-        assert prj_dict["dataset_list"][0]["id"] in ds_ids
-        assert prj_dict["dataset_list"][1]["id"] in ds_ids
+        res = await client.get(f"{PREFIX}/project/{prj.id}/dataset/")
+        dataset_list = res.json()
+        assert len(dataset_list) == 2
+        assert dataset_list[0]["id"] in ds_ids
+        assert dataset_list[1]["id"] in ds_ids
 
         # Add a resource to verify that the cascade works
         payload = dict(path="/some/absolute/path")
@@ -149,10 +149,10 @@ async def test_delete_dataset(
         res = await db.execute(stm)
         assert len([r for r in res]) == 0
 
-        res = await client.get(f"{PREFIX}/project/{prj.id}")
-        prj_dict = res.json()
-        assert len(prj_dict["dataset_list"]) == 1
-        assert prj_dict["dataset_list"][0]["id"] == ds1.id
+        res = await client.get(f"{PREFIX}/project/{prj.id}/dataset/")
+        dataset_list = res.json()
+        assert len(dataset_list) == 1
+        assert dataset_list[0]["id"] == ds1.id
 
 
 async def test_delete_dataset_failure(
