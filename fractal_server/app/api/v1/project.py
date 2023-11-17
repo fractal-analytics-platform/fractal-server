@@ -32,6 +32,7 @@ from ...schemas import ProjectUpdate
 from ...security import current_active_user
 from ...security import User
 from ._aux_functions import _check_project_exists
+from ._aux_functions import _get_active_jobs_statement
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_workflow_check_owner
@@ -150,14 +151,8 @@ async def delete_project(
     )
 
     # Check that the Project is not linked to ongoing Jobs
-    stm = (
-        select(ApplyWorkflow)
-        .where(ApplyWorkflow.project_id == project_id)
-        .where(
-            ApplyWorkflow.status.in_(
-                [JobStatusType.SUBMITTED, JobStatusType.RUNNING]
-            )
-        )
+    stm = _get_active_jobs_statement().where(
+        ApplyWorkflow.project_id == project_id
     )
     res = await db.execute(stm)
     jobs = res.scalars().all()

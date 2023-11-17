@@ -2,6 +2,7 @@ import pytest
 from fastapi import HTTPException
 
 from fractal_server.app.api.v1._aux_functions import _check_workflow_exists
+from fractal_server.app.api.v1._aux_functions import _get_active_jobs_statement
 from fractal_server.app.api.v1._aux_functions import _get_dataset_check_owner
 from fractal_server.app.api.v1._aux_functions import _get_job_check_owner
 from fractal_server.app.api.v1._aux_functions import _get_project_check_owner
@@ -343,3 +344,11 @@ async def test_get_task_check_owner(
             task_id=taskB.id, user=superuser, db=db
         )
         assert _task.id == taskB.id
+
+
+async def test_get_active_jobs_statement():
+
+    stm = _get_active_jobs_statement()
+    from sqlmodel.sql.expression import SelectOfScalar
+
+    assert type(stm) is SelectOfScalar

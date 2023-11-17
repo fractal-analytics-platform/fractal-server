@@ -8,6 +8,7 @@ from typing import Union
 from fastapi import HTTPException
 from fastapi import status
 from sqlmodel import select
+from sqlmodel.sql.expression import SelectOfScalar
 
 from ...db import AsyncSession
 from ...models import ApplyWorkflow
@@ -17,6 +18,7 @@ from ...models import Project
 from ...models import Task
 from ...models import Workflow
 from ...models import WorkflowTask
+from ...schemas import JobStatusType
 from ...security import User
 
 
@@ -356,3 +358,17 @@ async def _get_task_check_owner(
                     ),
                 )
     return task
+
+
+def _get_active_jobs_statement() -> SelectOfScalar:
+    """
+    Returns:
+        A sqlmodel statement that select all ApplyWorkflows s.t.
+        ApplyWorkflows.status is SUBMITTED or RUNNING.
+    """
+    stm = select(ApplyWorkflow).where(
+        ApplyWorkflow.status.in_(
+            [JobStatusType.SUBMITTED, JobStatusType.RUNNING]
+        )
+    )
+    return stm
