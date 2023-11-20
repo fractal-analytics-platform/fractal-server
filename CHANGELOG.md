@@ -20,7 +20,7 @@
         * Move all routes definitions into `fractal_server/app/routes` (\#976).
         * Fix construction of `ApplyWorkflow.workflow_dump`, within apply endpoint (\#968).
         * Fix construction of `ApplyWorkflow` attributes `input_dataset_dump` and `output_dataset_dump`, within apply endpoint (\#990).
-        * Remove `asyncio.gather`, in view of SQLAlchemy2 migration (\#1004).
+        * Remove `asyncio.gather`, in view of SQLAlchemy2 update (\#1004).
 * Database:
     * Make foreign-keys of `ApplyWorkflow` (`project_id`, `workflow_id`, `input_dataset_id`, `output_dataset_id`) optional (\#927).
     * Add columns `input_dataset_dump`, `output_dataset_dump` and `user_email` to `ApplyWorkflow` (\#927).
