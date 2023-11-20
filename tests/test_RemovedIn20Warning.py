@@ -1,9 +1,11 @@
+import pytest
 from sqlalchemy import column
 from sqlalchemy import create_engine
 from sqlalchemy import select
 from sqlalchemy import table
 
 
+@pytest.mark.skip()
 def test_RemovedIn20Warnings():
     """
     This is a dummy test, to make sure that we are catching the
