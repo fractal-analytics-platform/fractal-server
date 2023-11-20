@@ -63,10 +63,13 @@ We assume that a PostgreSQL is active, with some _host_ (this can be e.g.
 `localhost` or a UNIX socket like `/var/run/postgresql/`), a _port_ (we use the
 default 5432 in the examples below) and a user (e.g. `postgres` or `fractal`).
 
-> Note that a machine user may or may not require a password (e.g.  depending
-> on whether the machine username matches with the PostgreSQL username, and on
-> whether connection happens via a UNIX socket). See documentation here:
-> https://www.postgresql.org/docs/current/auth-pg-hba-conf.html.
+> ⚠️ Notes:
+>
+> 1. The postgres user must be created from outside `fractal-server`.
+> 2. A given machine user may or may not require a password (e.g. depending on
+>    whether the machine username matches with the PostgreSQL username, and on
+>    whether connection happens via a UNIX socket). See documentation here:
+>    https://www.postgresql.org/docs/current/auth-pg-hba-conf.html.
 
 Here we create a database called `fractal_db`, through the `createdb` command:
 
