@@ -314,7 +314,7 @@ async def import_workflow(
     return db_workflow
 
 
-@router.get("/project/workflow/", response_model=list[WorkflowRead])
+@router.get("/workflow/", response_model=list[WorkflowRead])
 async def get_user_workflows(
     user: User = Depends(current_active_user),
 ) -> list[WorkflowRead]:
