@@ -28,7 +28,7 @@ and
 [`FRACTAL_ADMIN_DEFAULT_PASSWORD`](../../configuration/#fractal_server.config.Settings.FRACTAL_DEFAULT_ADMIN_PASSWORD) (default: `1234`).
 
 > **⚠️ You should always modify the password of the default user after it's created;**
-> this can be done with API calls to the `PATCH /auth/users/{id}` endpoint of the [`fractal-server` API](../../openapi), e.g. through the `curl` command or the [Fractal command-line client](https://fractal-analytics-platform.github.io/fractal-client/reference/fractal-client/user/#user-edit).
+> this can be done with API calls to the `PATCH /auth/users/{id}` endpoint of the [`fractal-server` API](../../openapi), e.g. through the `curl` command or the [Fractal command-line client](https://fractal-analytics-platform.github.io/fractal-client/reference/fractal/user/#user-edit).
 > <mark>When the API instance is exposed to multiple users, skipping the default-user password update leads to a severe vulnerability! </mark>
 
 The most common use cases for `fractal-server` are:
