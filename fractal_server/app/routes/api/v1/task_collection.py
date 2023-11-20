@@ -307,7 +307,7 @@ async def collect_tasks_pip(
     return state
 
 
-@router.get("/collect/{state_id}", response_model=StateRead)
+@router.get("/collect/{state_id}/", response_model=StateRead)
 async def check_collection_status(
     state_id: int,
     user: User = Depends(current_active_user),

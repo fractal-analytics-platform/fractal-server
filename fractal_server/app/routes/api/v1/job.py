@@ -66,7 +66,7 @@ async def get_workflow_jobs(
 
 
 @router.get(
-    "/project/{project_id}/job/{job_id}",
+    "/project/{project_id}/job/{job_id}/",
     response_model=ApplyWorkflowRead,
 )
 async def read_job(
