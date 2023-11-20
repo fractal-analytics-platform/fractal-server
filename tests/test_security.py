@@ -160,6 +160,12 @@ async def test_add_superuser(registered_superuser_client):
     assert res.json()["is_superuser"]
 
 
+async def test_delete_user_method_not_allowed(registered_superuser_client):
+    res = await registered_superuser_client.delete(f"{PREFIX}/users/1")
+    assert res.status_code == 405
+
+
+@pytest.mark.skip(reason="DELETE endpoint is currently disabled")
 async def test_delete_user(registered_client, registered_superuser_client):
     """
     Check that DELETE/{user_id} returns some of the correct responses:
