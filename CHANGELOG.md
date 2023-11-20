@@ -4,10 +4,10 @@
 
 * API:
     * Major endpoint changes:
-        * Add trailing slash to _all_ endpoints' paths (\#XXX).
+        * Add trailing slash to _all_ endpoints' paths (\#1003).
         * Add new monitoring endpoints restricted to superusers at `/monitoring` (\#947).
-        * Add new `GET` endpoints `api/v1/job/` and `api/v1/project/{project_id}/workflow/{workflow_id}/job/` (\#969, \#XXX).
-        * Add new `GET` endpoints `api/v1/dataset/` and `api/v1/workflow/` (\#988, \#XXX).
+        * Add new `GET` endpoints `api/v1/job/` and `api/v1/project/{project_id}/workflow/{workflow_id}/job/` (\#969, \#1003).
+        * Add new `GET` endpoints `api/v1/dataset/` and `api/v1/workflow/` (\#988, \#1003).
         * Add new `GET` endpoint `api/v1/project/{project_id}/dataset/` (\#993).
         * Remove `DELETE /auth/users/{id}/` endpoint (\#994).
     * New behaviors or responses of existing endpoints:
