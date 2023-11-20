@@ -126,3 +126,9 @@ for client_config in settings.OAUTH_CLIENTS_CONFIG:
         ),
         prefix=f"/{client_name}",
     )
+
+
+# Add trailing slash to all routes' paths
+for route in router_auth.routes:
+    if not route.path.endswith("/"):
+        route.path = f"{route.path}/"

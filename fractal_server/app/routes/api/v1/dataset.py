@@ -81,7 +81,7 @@ async def read_dataset_list(
 
 
 @router.get(
-    "/project/{project_id}/dataset/{dataset_id}",
+    "/project/{project_id}/dataset/{dataset_id}/",
     response_model=DatasetRead,
 )
 async def read_dataset(
@@ -105,7 +105,7 @@ async def read_dataset(
 
 
 @router.patch(
-    "/project/{project_id}/dataset/{dataset_id}",
+    "/project/{project_id}/dataset/{dataset_id}/",
     response_model=DatasetRead,
 )
 async def update_dataset(
@@ -143,7 +143,7 @@ async def update_dataset(
 
 
 @router.delete(
-    "/project/{project_id}/dataset/{dataset_id}",
+    "/project/{project_id}/dataset/{dataset_id}/",
     status_code=204,
 )
 async def delete_dataset(
@@ -246,7 +246,7 @@ async def get_resource_list(
 
 
 @router.patch(
-    "/project/{project_id}/dataset/{dataset_id}/resource/{resource_id}",
+    "/project/{project_id}/dataset/{dataset_id}/resource/{resource_id}/",
     response_model=ResourceRead,
 )
 async def update_resource(
@@ -287,7 +287,7 @@ async def update_resource(
 
 
 @router.delete(
-    "/project/{project_id}/dataset/{dataset_id}/resource/{resource_id}",
+    "/project/{project_id}/dataset/{dataset_id}/resource/{resource_id}/",
     status_code=204,
 )
 async def delete_resource(
