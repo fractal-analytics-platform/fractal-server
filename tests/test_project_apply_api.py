@@ -374,7 +374,7 @@ async def test_project_apply_workflow_subset(
         debug(res.json())
         job_id = res.json()["id"]
         assert res.status_code == 202
-        res = await client.get(f"{PREFIX}/project/{project.id}/job/{job_id}")
+        res = await client.get(f"{PREFIX}/project/{project.id}/job/{job_id}/")
         assert res.json()["status"] == "failed"
 
         # These two jobs (with valid first_task_index and last_task_index) are
@@ -389,7 +389,7 @@ async def test_project_apply_workflow_subset(
         debug(res.json())
         job_id = res.json()["id"]
         assert res.status_code == 202
-        res = await client.get(f"{PREFIX}/project/{project.id}/job/{job_id}")
+        res = await client.get(f"{PREFIX}/project/{project.id}/job/{job_id}/")
         assert res.json()["status"] == "failed"
 
         # Wait, to avoid RuntimeError: Workflow dir ... already exists.
@@ -405,7 +405,7 @@ async def test_project_apply_workflow_subset(
         debug(res.json())
         job_id = res.json()["id"]
         assert res.status_code == 202
-        res = await client.get(f"{PREFIX}/project/{project.id}/job/{job_id}")
+        res = await client.get(f"{PREFIX}/project/{project.id}/job/{job_id}/")
         assert res.json()["status"] == "failed"
 
         # Jobs with invalid first_task_index and last_task_index are not

@@ -136,7 +136,7 @@ async def test_patch_task_auth(
         # Test success: owner == user
         update = TaskUpdate(name="new_name_1")
         res = await client.patch(
-            f"{PREFIX}/{task_id}", json=update.dict(exclude_unset=True)
+            f"{PREFIX}/{task_id}/", json=update.dict(exclude_unset=True)
         )
         assert res.status_code == 200
         assert res.json()["name"] == "new_name_1"
@@ -146,7 +146,7 @@ async def test_patch_task_auth(
 
         # Test fail: (not user.is_superuser) and (owner != user)
         res = await client.patch(
-            f"{PREFIX}/{task_id}", json=update.dict(exclude_unset=True)
+            f"{PREFIX}/{task_id}/", json=update.dict(exclude_unset=True)
         )
         assert res.status_code == 403
         assert res.json()["detail"] == (
@@ -156,7 +156,7 @@ async def test_patch_task_auth(
 
         # Test fail: (not user.is_superuser) and (owner == None)
         res = await client.patch(
-            f"{PREFIX}/{task_with_no_owner_id}",
+            f"{PREFIX}/{task_with_no_owner_id}/",
             json=update.dict(exclude_unset=True),
         )
         assert res.status_code == 403
@@ -165,13 +165,13 @@ async def test_patch_task_auth(
         )
 
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
-        res = await client.get(f"{PREFIX}/{task_id}")
+        res = await client.get(f"{PREFIX}/{task_id}/")
         assert res.json()["name"] == "new_name_1"
 
         # Test success: (owner != user) but (user.is_superuser)
         update = TaskUpdate(name="new_name_3")
         res = await client.patch(
-            f"{PREFIX}/{task_id}", json=update.dict(exclude_unset=True)
+            f"{PREFIX}/{task_id}/", json=update.dict(exclude_unset=True)
         )
         assert res.status_code == 200
         assert res.json()["name"] == "new_name_3"
@@ -179,7 +179,7 @@ async def test_patch_task_auth(
         # Test success: (owner == None) but (user.is_superuser)
         update = TaskUpdate(name="new_name_4")
         res = await client.patch(
-            f"{PREFIX}/{task_with_no_owner_id}",
+            f"{PREFIX}/{task_with_no_owner_id}/",
             json=update.dict(exclude_unset=True),
         )
         assert res.status_code == 200
@@ -215,7 +215,7 @@ async def test_patch_task(
 
     # Test fails with `source`
     res = await registered_superuser_client.patch(
-        f"{PREFIX}/{task.id}", json=update.dict(exclude_unset=True)
+        f"{PREFIX}/{task.id}/", json=update.dict(exclude_unset=True)
     )
     debug(res, res.json())
     assert res.status_code == 422
@@ -223,7 +223,7 @@ async def test_patch_task(
 
     # Test successuful without `source`
     res = await registered_superuser_client.patch(
-        f"{PREFIX}/{task.id}",
+        f"{PREFIX}/{task.id}/",
         json=update.dict(exclude_unset=True, exclude={"source"}),
     )
     assert res.status_code == 200
@@ -240,7 +240,7 @@ async def test_patch_task(
     OTHER_META = {"key4": [4, 8, 15], "key0": [16, 23, 42]}
     second_update = TaskUpdate(meta=OTHER_META, version=None)
     res = await registered_superuser_client.patch(
-        f"{PREFIX}/{task.id}",
+        f"{PREFIX}/{task.id}/",
         json=second_update.dict(exclude_unset=True),
     )
     debug(res, res.json())
@@ -282,7 +282,7 @@ async def test_patch_task_different_users(
         payload["slurm_user"] = slurm_user
     if payload:
         res = await registered_superuser_client.patch(
-            "/auth/users/me",
+            "/auth/users/me/",
             json=payload,
         )
         debug(res.json())
@@ -293,7 +293,7 @@ async def test_patch_task_different_users(
     payload = TaskUpdate(name=NEW_NAME).dict(exclude_unset=True)
     debug(payload)
     res = await registered_superuser_client.patch(
-        f"{PREFIX}/{task.id}", json=payload
+        f"{PREFIX}/{task.id}/", json=payload
     )
     debug(res.json())
     assert res.status_code == 200
@@ -307,11 +307,11 @@ async def test_patch_task_different_users(
 async def test_get_task(task_factory, client, MockCurrentUser):
     async with MockCurrentUser():
         task = await task_factory(name="name")
-        res = await client.get(f"{PREFIX}/{task.id}")
+        res = await client.get(f"{PREFIX}/{task.id}/")
         debug(res)
         debug(res.json())
         assert res.status_code == 200
-        res = await client.get(f"{PREFIX}/{task.id+999}")
+        res = await client.get(f"{PREFIX}/{task.id+999}/")
         assert res.status_code == 404
         assert res.json()["detail"] == "Task not found"
 
@@ -333,14 +333,14 @@ async def test_delete_task(
         await workflowtask_factory(workflow_id=workflow.id, task_id=taskA.id)
 
         # test 422
-        res = await client.delete(f"{PREFIX}/{taskA.id}")
+        res = await client.delete(f"{PREFIX}/{taskA.id}/")
         assert res.status_code == 422
         assert "Cannot remove Task" in res.json()["detail"][0]
 
         # test success
         task_list = (await db.execute(select(Task))).scalars().all()
         assert len(task_list) == 2
-        res = await client.delete(f"{PREFIX}/{taskB.id}")
+        res = await client.delete(f"{PREFIX}/{taskB.id}/")
         assert res.status_code == 204
         task_list = (await db.execute(select(Task))).scalars().all()
         assert len(task_list) == 1
@@ -374,7 +374,7 @@ async def test_patch_args_schema(MockCurrentUser, client):
             args_schema=dict(key2=0, key3=3, key4=4),
             args_schema_version=NEW_VERSION,
         )
-        res = await client.patch(f"{PREFIX}/{task_id}", json=payload)
+        res = await client.patch(f"{PREFIX}/{task_id}/", json=payload)
         assert res.status_code == 200
         new_args_schema = res.json()["args_schema"]
         assert new_args_schema == payload["args_schema"]
