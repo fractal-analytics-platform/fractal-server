@@ -95,7 +95,7 @@ async def create_project(
     return db_project
 
 
-@router.get("/{project_id}", response_model=ProjectRead)
+@router.get("/{project_id}/", response_model=ProjectRead)
 async def read_project(
     project_id: int,
     user: User = Depends(current_active_user),
@@ -111,7 +111,7 @@ async def read_project(
     return project
 
 
-@router.patch("/{project_id}", response_model=ProjectRead)
+@router.patch("/{project_id}/", response_model=ProjectRead)
 async def update_project(
     project_id: int,
     project_update: ProjectUpdate,
@@ -137,7 +137,7 @@ async def update_project(
     return project
 
 
-@router.delete("/{project_id}", status_code=204)
+@router.delete("/{project_id}/", status_code=204)
 async def delete_project(
     project_id: int,
     user: User = Depends(current_active_user),

@@ -243,7 +243,7 @@ async def registered_client(
             username=EMAIL,
             password=PWD,
         )
-        res = await client.post("auth/token/login", data=data_login)
+        res = await client.post("auth/token/login/", data=data_login)
         token = res.json()["access_token"]
         client.headers["Authorization"] = f"Bearer {token}"
         yield client
@@ -260,7 +260,7 @@ async def registered_superuser_client(
         app=app, base_url="http://test"
     ) as client, LifespanManager(app):
         data_login = dict(username=EMAIL, password=PWD)
-        res = await client.post("auth/token/login", data=data_login)
+        res = await client.post("auth/token/login/", data=data_login)
         token = res.json()["access_token"]
         client.headers["Authorization"] = f"Bearer {token}"
         yield client

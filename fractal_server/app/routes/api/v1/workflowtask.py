@@ -75,7 +75,7 @@ async def create_workflowtask(
 
 
 @router.get(
-    "/project/{project_id}/workflow/{workflow_id}/wftask/{workflow_task_id}",
+    "/project/{project_id}/workflow/{workflow_id}/wftask/{workflow_task_id}/",
     response_model=WorkflowTaskRead,
 )
 async def read_workflowtask(
@@ -96,7 +96,7 @@ async def read_workflowtask(
 
 
 @router.patch(
-    "/project/{project_id}/workflow/{workflow_id}/wftask/{workflow_task_id}",
+    "/project/{project_id}/workflow/{workflow_id}/wftask/{workflow_task_id}/",
     response_model=WorkflowTaskRead,
 )
 async def update_workflowtask(
@@ -152,7 +152,7 @@ async def update_workflowtask(
 
 
 @router.delete(
-    "/project/{project_id}/workflow/{workflow_id}/wftask/{workflow_task_id}",
+    "/project/{project_id}/workflow/{workflow_id}/wftask/{workflow_task_id}/",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_workflowtask(

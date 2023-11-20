@@ -83,14 +83,6 @@ async def test_full_workflow(
         )
         input_dataset_id = input_dataset.id
 
-        # EDIT DEFAULT DATASET TO SET TYPE IMAGE
-        res = await client.patch(
-            f"{PREFIX}/project/{project_id}/dataset/{input_dataset_id}",
-            json={"type": "image", "read_only": True},
-        )
-        debug(res.json())
-        assert res.status_code == 200
-
         # ADD TEST IMAGES AS RESOURCE TO INPUT DATASET
         res = await client.post(
             f"{PREFIX}/project/{project_id}/"
@@ -188,7 +180,7 @@ async def test_full_workflow(
         assert len(project.job_list) == 1
 
         res = await client.get(
-            f"{PREFIX}/project/{project_id}/job/{job_data['id']}"
+            f"{PREFIX}/project/{project_id}/job/{job_data['id']}/"
         )
         assert res.status_code == 200
         job_status_data = res.json()
@@ -200,7 +192,7 @@ async def test_full_workflow(
 
         # Verify output
         res = await client.get(
-            f"{PREFIX}/project/{project_id}/dataset/{output_dataset_id}"
+            f"{PREFIX}/project/{project_id}/dataset/{output_dataset_id}/"
         )
         data = res.json()
         debug(data)
@@ -231,7 +223,7 @@ async def test_full_workflow(
         # Check that `output_dataset.meta` was updated with the `index`
         # component list
         res = await client.get(
-            f"{PREFIX}/project/{project_id}/dataset/{output_dataset_id}"
+            f"{PREFIX}/project/{project_id}/dataset/{output_dataset_id}/"
         )
         assert res.status_code == 200
         output_dataset_json = res.json()
@@ -328,7 +320,7 @@ async def test_failing_workflow_UnknownError(
         assert res.status_code == 202
         job_id = job_data["id"]
 
-        res = await client.get(f"{PREFIX}/project/{project_id}/job/{job_id}")
+        res = await client.get(f"{PREFIX}/project/{project_id}/job/{job_id}/")
         assert res.status_code == 200
         job_status_data = res.json()
         debug(job_status_data)
@@ -449,7 +441,7 @@ async def test_failing_workflow_TaskExecutionError(
         assert res.status_code == 202
         job_id = job_data["id"]
 
-        res = await client.get(f"{PREFIX}/project/{project_id}/job/{job_id}")
+        res = await client.get(f"{PREFIX}/project/{project_id}/job/{job_id}/")
         assert res.status_code == 200
         job_status_data = res.json()
         debug(job_status_data)
@@ -500,7 +492,7 @@ async def test_failing_workflow_TaskExecutionError(
         # was updated (ref issue #844)
         if failing_task == "parallel":
             res = await client.get(
-                f"{PREFIX}/project/{project_id}/dataset/{output_dataset.id}"
+                f"{PREFIX}/project/{project_id}/dataset/{output_dataset.id}/"
             )
             assert res.status_code == 200
             output_dataset_json = res.json()
@@ -639,7 +631,7 @@ async def test_failing_workflow_JobExecutionError(
         debug(job_id)
 
         # Query status of the job
-        res = await client.get(f"{PREFIX}/project/{project_id}/job/{job_id}")
+        res = await client.get(f"{PREFIX}/project/{project_id}/job/{job_id}/")
         assert res.status_code == 200
         job_status_data = res.json()
         debug(job_status_data)
@@ -726,7 +718,7 @@ async def test_non_python_task(
 
         # Check that the workflow execution is complete
         res = await client.get(
-            f"{PREFIX}/project/{project_id}/job/{job_data['id']}"
+            f"{PREFIX}/project/{project_id}/job/{job_data['id']}/"
         )
         assert res.status_code == 200
         job_status_data = res.json()
@@ -843,7 +835,7 @@ async def test_metadiff(
 
         # Check that the workflow execution is complete
         res = await client.get(
-            f"{PREFIX}/project/{project_id}/job/{job_data['id']}"
+            f"{PREFIX}/project/{project_id}/job/{job_data['id']}/"
         )
         assert res.status_code == 200
         job_status_data = res.json()
@@ -981,7 +973,7 @@ async def test_non_executable_task_command(
 
         # Check that the workflow execution failed as expected
         res = await client.get(
-            f"{PREFIX}/project/{project_id}/job/{job_data['id']}"
+            f"{PREFIX}/project/{project_id}/job/{job_data['id']}/"
         )
         assert res.status_code == 200
         job = res.json()

@@ -3,17 +3,19 @@
 # 1.4.0 (unreleased)
 
 * API:
-    * New endpoints:
-        * New monitoring endpoints restricted to superusers at `/monitoring` (\#947).
-        * New `GET` endpoints `api/v1/project/job/` and `api/v1/project/{project_id}/workflow/{workflow_id}/job/` (\#969).
-        * New `GET` endpoints `api/v1/project/dataset/` and `api/v1/project/workflow/` (\#988).
-        * New `GET` endpoint `api/v1/project/{project_id}/dataset/` (\#993).
+    * Major endpoint changes:
+        * Add trailing slash to _all_ endpoints' paths (\#1003).
+        * Add new monitoring endpoints restricted to superusers at `/monitoring` (\#947).
+        * Add new `GET` endpoints `api/v1/job/` and `api/v1/project/{project_id}/workflow/{workflow_id}/job/` (\#969, \#1003).
+        * Add new `GET` endpoints `api/v1/dataset/` and `api/v1/workflow/` (\#988, \#1003).
+        * Add new `GET` endpoint `api/v1/project/{project_id}/dataset/` (\#993).
+        * Remove `DELETE /auth/users/{id}/` endpoint (\#994).
     * New behaviors or responses of existing endpoints:
         * Change response of `/api/v1/project/{project_id}/job/{job_id}/stop/` endpoint to 204 no-content (\#967).
         * Remove `dataset_list` attribute from `ProjectRead`, which affects all `GET` endpoints that return some project (\#993).
         * Make it possible to delete a `Dataset`, `Workflow` or `Project`, even when it is in relationship to an `ApplyWorkflow` - provided that the `ApplyWorkflow` is not pending or running (\#927, \#973).
         * Align `ApplyWorkflowRead` with new `ApplyWorkflow`, which has optional foreign keys `project_id`, `workflow_id`, `input_dataset_id`, and `output_dataset_id` (\#984).
-        * Define types for `ApplyWorkflowRead` "dump" attributes (\#990).
+        * Define types for `ApplyWorkflowRead` "dump" attributes (\#990). **WARNING**: reverted with \#999.
     * Internal changes:
         * Move all routes definitions into `fractal_server/app/routes` (\#976).
         * Fix construction of `ApplyWorkflow.workflow_dump`, within apply endpoint (\#968).

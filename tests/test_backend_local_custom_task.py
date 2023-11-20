@@ -162,7 +162,7 @@ async def test_full_workflow(
         assert res.status_code == 202
 
         res = await client.get(
-            f"{PREFIX}/project/{project_id}/job/{job_data['id']}"
+            f"{PREFIX}/project/{project_id}/job/{job_data['id']}/"
         )
         assert res.status_code == 200
         job_status_data = res.json()
@@ -171,7 +171,7 @@ async def test_full_workflow(
 
         # Verify output
         res = await client.get(
-            f"{PREFIX}/project/{project_id}/dataset/{output_dataset_id}"
+            f"{PREFIX}/project/{project_id}/dataset/{output_dataset_id}/"
         )
         data = res.json()
         debug(data)

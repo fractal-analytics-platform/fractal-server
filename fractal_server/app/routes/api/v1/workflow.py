@@ -93,7 +93,7 @@ async def create_workflow(
 
 
 @router.get(
-    "/project/{project_id}/workflow/{workflow_id}",
+    "/project/{project_id}/workflow/{workflow_id}/",
     response_model=WorkflowRead,
 )
 async def read_workflow(
@@ -114,7 +114,7 @@ async def read_workflow(
 
 
 @router.patch(
-    "/project/{project_id}/workflow/{workflow_id}",
+    "/project/{project_id}/workflow/{workflow_id}/",
     response_model=WorkflowRead,
 )
 async def update_workflow(
@@ -166,7 +166,7 @@ async def update_workflow(
 
 
 @router.delete(
-    "/project/{project_id}/workflow/{workflow_id}",
+    "/project/{project_id}/workflow/{workflow_id}/",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_workflow(
@@ -314,7 +314,7 @@ async def import_workflow(
     return db_workflow
 
 
-@router.get("/project/workflow/", response_model=list[WorkflowRead])
+@router.get("/workflow/", response_model=list[WorkflowRead])
 async def get_user_workflows(
     user: User = Depends(current_active_user),
 ) -> list[WorkflowRead]:

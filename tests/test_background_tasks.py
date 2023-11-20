@@ -57,7 +57,7 @@ async def bgtask_async_db(state_id: int):
 # New endpoints and client
 
 
-@router_api.get("/test_async")
+@router_api.get("/test_async/")
 async def run_background_task_async(
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
@@ -75,7 +75,7 @@ async def run_background_task_async(
     background_tasks.add_task(bgtask_async_db, state_id)
 
 
-@router_api.get("/test_sync")
+@router_api.get("/test_sync/")
 async def run_background_task_sync(
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
@@ -103,18 +103,20 @@ async def client_for_bgtasks(
 
     app.include_router(router_api, prefix="/test_bgtasks")
     async with AsyncClient(
-        app=app, base_url="http://test"
+        app=app, base_url="http://"
     ) as client, LifespanManager(app):
         yield client
 
 
 async def test_async_db(db, client_for_bgtasks):
     """Call the run_background_task_async endpoint"""
-    res = await client_for_bgtasks.get("http://test_bgtasks/test_async")
+    res = await client_for_bgtasks.get("/test_bgtasks/test_async/")
     debug(res)
+    assert res.status_code == 200
 
 
 async def test_sync_db(db, db_sync, client_for_bgtasks):
     """Call the run_background_task_sync endpoint"""
-    res = await client_for_bgtasks.get("http://test_bgtasks/test_sync")
+    res = await client_for_bgtasks.get("/test_bgtasks/test_sync/")
     debug(res)
+    assert res.status_code == 200

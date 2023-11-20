@@ -34,16 +34,16 @@ async def test_get_project(client, db, project_factory, MockCurrentUser):
         assert len(data) == 1
 
         project_id = data[0]["id"]
-        res = await client.get(f"{PREFIX}/project/{project_id}")
+        res = await client.get(f"{PREFIX}/project/{project_id}/")
         assert res.status_code == 200
         assert res.json()["id"] == project_id
 
         # fail on non existent project
-        res = await client.get(f"{PREFIX}/project/123456")
+        res = await client.get(f"{PREFIX}/project/123456/")
         assert res.status_code == 404
 
         # fail on other owner's project
-        res = await client.get(f"{PREFIX}/project/{other_project.id}")
+        res = await client.get(f"{PREFIX}/project/{other_project.id}/")
         assert res.status_code == 403
 
 
@@ -98,7 +98,7 @@ async def test_patch_project_name_constraint(app, client, MockCurrentUser, db):
 
         # Fail in editing the name of prj2 to "name1"
         res = await client.patch(
-            f"{PREFIX}/project/{prj2['id']}", json=dict(name="name1")
+            f"{PREFIX}/project/{prj2['id']}/", json=dict(name="name1")
         )
         assert res.status_code == 422
         assert res.json()["detail"] == "Project name (name1) already in use"
@@ -110,7 +110,7 @@ async def test_patch_project_name_constraint(app, client, MockCurrentUser, db):
         prj3 = res.json()
         # Edit the name of prj3 to "name1" without errors
         res = await client.patch(
-            f"{PREFIX}/project/{prj3['id']}", json=dict(name="name1")
+            f"{PREFIX}/project/{prj3['id']}/", json=dict(name="name1")
         )
         debug(res.json())
         assert res.status_code == 200
@@ -149,7 +149,7 @@ async def test_patch_project(
             payload["read_only"] = new_read_only
         debug(payload)
         res = await client.patch(
-            f"{PREFIX}/project/{project_id}", json=payload
+            f"{PREFIX}/project/{project_id}/", json=payload
         )
         new_project = res.json()
         debug(new_project)
@@ -222,7 +222,7 @@ async def test_delete_project(
         assert project.job_list[0].id == job.id
 
         # Delete the project
-        res = await client.delete(f"{PREFIX}/project/{p['id']}")
+        res = await client.delete(f"{PREFIX}/project/{p['id']}/")
         assert res.status_code == 204
 
         # Check that the project was deleted
@@ -290,11 +290,11 @@ async def test_delete_project_ongoing_jobs(
             JobStatusType.SUBMITTED
         )
 
-        res = await client.delete(f"api/v1/project/{prj_done}")
+        res = await client.delete(f"api/v1/project/{prj_done}/")
         assert res.status_code == 204
-        res = await client.delete(f"api/v1/project/{prj_failed}")
+        res = await client.delete(f"api/v1/project/{prj_failed}/")
         assert res.status_code == 204
-        res = await client.delete(f"api/v1/project/{prj_running}")
+        res = await client.delete(f"api/v1/project/{prj_running}/")
         assert res.status_code == 422
-        res = await client.delete(f"api/v1/project/{prj_submitted}")
+        res = await client.delete(f"api/v1/project/{prj_submitted}/")
         assert res.status_code == 422
