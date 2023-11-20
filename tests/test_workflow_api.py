@@ -14,7 +14,7 @@ from fractal_server.app.schemas import JobStatusType
 
 
 async def get_workflow(client, p_id, wf_id):
-    res = await client.get(f"api/v1/project/{p_id}/workflow/{wf_id}")
+    res = await client.get(f"api/v1/project/{p_id}/workflow/{wf_id}/")
     assert res.status_code == 200
     return res.json()
 
@@ -137,11 +137,11 @@ async def test_delete_workflow(
         assert len(res) == 1
 
         # Delete the Workflow
-        res = await client.delete(f"api/v1/project/{p_id}/workflow/{wf_id}")
+        res = await client.delete(f"api/v1/project/{p_id}/workflow/{wf_id}/")
         assert res.status_code == 204
 
         # Check that the Workflow was deleted
-        res = await client.get(f"api/v1/project/{p_id}/workflow/{wf_id}")
+        res = await client.get(f"api/v1/project/{p_id}/workflow/{wf_id}/")
         assert res.status_code == 404
 
         # Check that the WorkflowTask was deleted
@@ -188,19 +188,19 @@ async def test_delete_workflow(
             **common_args,
         )
         res = await client.delete(
-            f"api/v1/project/{project.id}/workflow/{wf_deletable_1.id}"
+            f"api/v1/project/{project.id}/workflow/{wf_deletable_1.id}/"
         )
         assert res.status_code == 204
         res = await client.delete(
-            f"api/v1/project/{project.id}/workflow/{wf_deletable_2.id}"
+            f"api/v1/project/{project.id}/workflow/{wf_deletable_2.id}/"
         )
         assert res.status_code == 204
         res = await client.delete(
-            f"api/v1/project/{project.id}/workflow/{wf_not_deletable_1.id}"
+            f"api/v1/project/{project.id}/workflow/{wf_not_deletable_1.id}/"
         )
         assert res.status_code == 422
         res = await client.delete(
-            f"api/v1/project/{project.id}/workflow/{wf_not_deletable_2.id}"
+            f"api/v1/project/{project.id}/workflow/{wf_not_deletable_2.id}/"
         )
         assert res.status_code == 422
 
@@ -223,7 +223,7 @@ async def test_get_workflow(client, MockCurrentUser, project_factory):
             json=workflow,
         )
         wf_id = res.json()["id"]
-        res = await client.get(f"/api/v1/project/{p_id}/workflow/{wf_id}")
+        res = await client.get(f"/api/v1/project/{p_id}/workflow/{wf_id}/")
 
         assert res.status_code == 200
         workflow.update({"id": wf_id, "project_id": p_id})
@@ -234,7 +234,7 @@ async def test_get_user_workflows(
     client, MockCurrentUser, project_factory, workflow_factory, db
 ):
     """
-    Test /api/v1/project/workflow/
+    Test /api/v1/workflow/
     """
 
     async with MockCurrentUser(persist=True, user_kwargs={}) as user:
@@ -246,7 +246,7 @@ async def test_get_user_workflows(
         await workflow_factory(project_id=project1.id, name="wf1b")
         await workflow_factory(project_id=project2.id, name="wf2a")
 
-        res = await client.get("/api/v1/project/workflow/")
+        res = await client.get("/api/v1/workflow/")
         assert res.status_code == 200
         debug(res.json())
         assert len(res.json()) == 3
@@ -379,7 +379,10 @@ async def test_delete_workflow_task(
         # Remove the WorkflowTask in the middle
         wf_task_id = wftasks[1]["id"]
         res = await client.delete(
-            f"api/v1/project/{project.id}/workflow/{wf_id}/wftask/{wf_task_id}"
+            (
+                "api/v1/"
+                f"project/{project.id}/workflow/{wf_id}/wftask/{wf_task_id}/"
+            )
         )
         assert res.status_code == 204
 
@@ -459,7 +462,7 @@ async def test_patch_workflow(client, MockCurrentUser, project_factory):
 
         # fail to PATCH "WF" to "WF2"
         res = await client.patch(
-            f"api/v1/project/{project.id}/workflow/{wf_id}",
+            f"api/v1/project/{project.id}/workflow/{wf_id}/",
             json=dict(name="WF2"),
         )
         assert res.status_code == 422
@@ -468,7 +471,7 @@ async def test_patch_workflow(client, MockCurrentUser, project_factory):
 
         patch = {"name": "new_WF"}
         res = await client.patch(
-            f"api/v1/project/{project.id}/workflow/{wf_id}", json=patch
+            f"api/v1/project/{project.id}/workflow/{wf_id}/", json=patch
         )
 
         new_workflow = await get_workflow(client, project.id, wf_id)
@@ -512,7 +515,7 @@ async def test_patch_workflow_task(client, MockCurrentUser, project_factory):
         payload = dict(args={"a": 123, "d": 321}, meta={"executor": "cpu-low"})
         res = await client.patch(
             f"api/v1/project/{project.id}/workflow/{workflow['id']}/"
-            f"wftask/{workflow['task_list'][0]['id']}",
+            f"wftask/{workflow['task_list'][0]['id']}/",
             json=payload,
         )
 
@@ -525,7 +528,7 @@ async def test_patch_workflow_task(client, MockCurrentUser, project_factory):
         payload_up = dict(args={"a": {"c": 43}, "b": 123})
         res = await client.patch(
             f"api/v1/project/{project.id}/workflow/{workflow['id']}/"
-            f"wftask/{workflow['task_list'][0]['id']}",
+            f"wftask/{workflow['task_list'][0]['id']}/",
             json=payload_up,
         )
         patched_workflow_task_up = res.json()
@@ -537,7 +540,7 @@ async def test_patch_workflow_task(client, MockCurrentUser, project_factory):
         new_args.pop("a")
         res = await client.patch(
             f"api/v1/project/{project.id}/workflow/{workflow['id']}/"
-            f"wftask/{workflow['task_list'][0]['id']}",
+            f"wftask/{workflow['task_list'][0]['id']}/",
             json=dict(args=new_args),
         )
         patched_workflow_task = res.json()
@@ -548,7 +551,7 @@ async def test_patch_workflow_task(client, MockCurrentUser, project_factory):
         # Remove all arguments
         res = await client.patch(
             f"api/v1/project/{project.id}/workflow/{workflow['id']}/"
-            f"wftask/{workflow['task_list'][0]['id']}",
+            f"wftask/{workflow['task_list'][0]['id']}/",
             json=dict(args={}),
         )
         patched_workflow_task = res.json()
@@ -616,7 +619,7 @@ async def test_patch_workflow_task_with_args_schema(
         payload = dict(args={"a": 123, "b": "two", "e": "something"})
         res = await client.patch(
             f"api/v1/project/{project.id}/workflow/{wf_id}/"
-            f"wftask/{wftask_id}",
+            f"wftask/{wftask_id}/",
             json=payload,
         )
         patched_workflow_task = res.json()
@@ -628,7 +631,10 @@ async def test_patch_workflow_task_with_args_schema(
 
         # Second update: remove all values
         res = await client.patch(
-            f"api/v1/project/{project.id}/workflow/{wf_id}/wftask/{wftask_id}",
+            (
+                "api/v1/"
+                f"project/{project.id}/workflow/{wf_id}/wftask/{wftask_id}/"
+            ),
             json=dict(args={}),
         )
         patched_workflow_task = res.json()
@@ -691,7 +697,7 @@ async def test_patch_workflow_task_failures(
         res = await client.patch(
             (
                 f"api/v1/project/{project.id}/workflow/{workflow1['id']}/"
-                f"wftask/{workflow_task_1['id']}"
+                f"wftask/{workflow_task_1['id']}/"
             ),
             json=payload,
         )
@@ -703,7 +709,7 @@ async def test_patch_workflow_task_failures(
         res = await client.patch(
             (
                 f"api/v1/project/{project.id}/workflow/{WORKFLOW_ID}/"
-                f"wftask/{WORKFLOW_TASK_ID}"
+                f"wftask/{WORKFLOW_TASK_ID}/"
             ),
             json={"args": {"a": 123, "d": 321}},
         )
@@ -716,7 +722,7 @@ async def test_patch_workflow_task_failures(
         res = await client.patch(
             (
                 f"api/v1/project/{project.id}/workflow/{WORKFLOW_ID}/"
-                f"wftask/{WORKFLOW_TASK_ID}"
+                f"wftask/{WORKFLOW_TASK_ID}/"
             ),
             json={"args": {"a": 123, "d": 321}},
         )
@@ -729,7 +735,7 @@ async def test_patch_workflow_task_failures(
         res = await client.patch(
             (
                 f"api/v1/project/{project.id}/workflow/{WORKFLOW_ID}/"
-                f"wftask/{WORKFLOW_TASK_ID}"
+                f"wftask/{WORKFLOW_TASK_ID}/"
             ),
             json={"args": {"a": 123, "d": 321}},
         )
@@ -924,7 +930,7 @@ async def test_reorder_task_list(
 
         # Make no-op API call to reorder an empty task list
         res = await client.patch(
-            f"api/v1/project/{project.id}/workflow/{wf_id}",
+            f"api/v1/project/{project.id}/workflow/{wf_id}/",
             json=dict(reordered_workflowtask_ids=[]),
         )
         assert res.status_code == 200
@@ -955,7 +961,7 @@ async def test_reorder_task_list(
         # update the name attribute)
         NEW_WF_NAME = "new-wf-name"
         res = await client.patch(
-            f"api/v1/project/{project.id}/workflow/{wf_id}",
+            f"api/v1/project/{project.id}/workflow/{wf_id}/",
             json=dict(
                 name=NEW_WF_NAME,
                 reordered_workflowtask_ids=reordered_workflowtask_ids,
@@ -1015,7 +1021,7 @@ async def test_reorder_task_list_fail(
         # Invalid payload (not a permutation) leads to pydantic validation
         # error
         res = await client.patch(
-            f"api/v1/project/{project.id}/workflow/{wf_id}",
+            f"api/v1/project/{project.id}/workflow/{wf_id}/",
             json=dict(reordered_workflowtask_ids=[2, 1, 3, 1]),
         )
         debug(res.json())
@@ -1025,7 +1031,7 @@ async def test_reorder_task_list_fail(
 
         # Invalid payload (wrong length) leads to custom fractal-server error
         res = await client.patch(
-            f"api/v1/project/{project.id}/workflow/{wf_id}",
+            f"api/v1/project/{project.id}/workflow/{wf_id}/",
             json=dict(reordered_workflowtask_ids=[1, 2, 3, 4]),
         )
         debug(res.json())
@@ -1034,7 +1040,7 @@ async def test_reorder_task_list_fail(
 
         # Invalid payload (wrong values) leads to custom fractal-server error
         res = await client.patch(
-            f"api/v1/project/{project.id}/workflow/{wf_id}",
+            f"api/v1/project/{project.id}/workflow/{wf_id}/",
             json=dict(reordered_workflowtask_ids=[2, 1, 33]),
         )
         debug(res.json())
@@ -1081,7 +1087,7 @@ async def test_delete_workflow_with_job(
         assert job.workflow_id == workflow.id
 
         res = await client.delete(
-            f"api/v1/project/{project.id}/workflow/{workflow.id}"
+            f"api/v1/project/{project.id}/workflow/{workflow.id}/"
         )
         assert res.status_code == 204
 
@@ -1111,7 +1117,7 @@ async def test_read_workflowtask(MockCurrentUser, project_factory, client):
         assert res.status_code == 201
         wft_id = res.json()["id"]
         res = await client.get(
-            f"api/v1/project/{project.id}/workflow/{wf_id}/wftask/{wft_id}"
+            f"api/v1/project/{project.id}/workflow/{wf_id}/wftask/{wft_id}/"
         )
         assert res.status_code == 200
         assert res.json()["task"] == t

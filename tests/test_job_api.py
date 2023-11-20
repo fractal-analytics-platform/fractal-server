@@ -265,11 +265,11 @@ async def test_get_user_jobs(
                 workflow_id=workflow2.id,
             )
 
-        res = await client.get(f"{PREFIX}/project/job/")
+        res = await client.get(f"{PREFIX}/job/")
         assert res.status_code == 200
         assert len(res.json()) == 5
 
     async with MockCurrentUser(persist=True, user_kwargs={"id": 321}):
-        res = await client.get(f"{PREFIX}/project/job/")
+        res = await client.get(f"{PREFIX}/job/")
         assert res.status_code == 200
         assert len(res.json()) == 0

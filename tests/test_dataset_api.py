@@ -18,7 +18,7 @@ async def test_get_dataset(
         dataset_id = dataset.id
         # Show existing dataset
         res = await client.get(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}",
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
         )
         assert res.status_code == 200
         dataset = res.json()
@@ -27,7 +27,7 @@ async def test_get_dataset(
         # Show missing dataset
         invalid_dataset_id = 999
         res = await client.get(
-            f"{PREFIX}/project/{project_id}/dataset/{invalid_dataset_id}",
+            f"{PREFIX}/project/{project_id}/dataset/{invalid_dataset_id}/",
         )
         assert res.status_code == 404
 
@@ -36,7 +36,7 @@ async def test_get_user_datasets(
     client, MockCurrentUser, project_factory, dataset_factory, db
 ):
     """
-    Test /api/v1/project/workflow/
+    Test /api/v1/dataset/
     """
 
     async with MockCurrentUser(persist=True, user_kwargs={}) as user:
@@ -48,7 +48,7 @@ async def test_get_user_datasets(
         await dataset_factory(project_id=project1.id, name="ds1b")
         await dataset_factory(project_id=project2.id, name="ds2a")
 
-        res = await client.get("/api/v1/project/dataset/")
+        res = await client.get("/api/v1/dataset/")
         assert res.status_code == 200
         debug(res.json())
         assert len(res.json()) == 3
@@ -85,7 +85,7 @@ async def test_post_dataset(app, client, MockCurrentUser, db):
         # EDIT DATASET
         payload1 = dict(name="new dataset name", meta={})
         res = await client.patch(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset['id']}",
+            f"{PREFIX}/project/{project_id}/dataset/{dataset['id']}/",
             json=payload1,
         )
         patched_dataset = res.json()
@@ -98,7 +98,7 @@ async def test_post_dataset(app, client, MockCurrentUser, db):
 
         payload2 = dict(type="new type", read_only=(not dataset["read_only"]))
         res = await client.patch(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset['id']}",
+            f"{PREFIX}/project/{project_id}/dataset/{dataset['id']}/",
             json=payload2,
         )
         patched_dataset = res.json()
@@ -140,7 +140,7 @@ async def test_delete_dataset(
 
         # Delete dataset
         res = await client.delete(
-            f"{PREFIX}/project/{prj.id}/dataset/{ds0.id}"
+            f"{PREFIX}/project/{prj.id}/dataset/{ds0.id}/"
         )
         assert res.status_code == 204
 
@@ -205,7 +205,7 @@ async def test_delete_dataset_failure(
         assert output_ds.list_jobs_output[0].id == job.id
 
         res = await client.delete(
-            f"api/v1/project/{project.id}/dataset/{input_ds.id}"
+            f"api/v1/project/{project.id}/dataset/{input_ds.id}/"
         )
         assert res.status_code == 204
 
@@ -214,7 +214,7 @@ async def test_delete_dataset_failure(
         assert job.output_dataset_id is not None
 
         res = await client.delete(
-            f"api/v1/project/{project.id}/dataset/{output_ds.id}"
+            f"api/v1/project/{project.id}/dataset/{output_ds.id}/"
         )
         assert res.status_code == 204
 
@@ -258,19 +258,19 @@ async def test_delete_dataset_failure(
             **common_args,
         )
         res = await client.delete(
-            f"api/v1/project/{project.id}/dataset/{ds_deletable_1.id}"
+            f"api/v1/project/{project.id}/dataset/{ds_deletable_1.id}/"
         )
         assert res.status_code == 204
         res = await client.delete(
-            f"api/v1/project/{project.id}/dataset/{ds_deletable_2.id}"
+            f"api/v1/project/{project.id}/dataset/{ds_deletable_2.id}/"
         )
         assert res.status_code == 204
         res = await client.delete(
-            f"api/v1/project/{project.id}/dataset/{ds_not_deletable_1.id}"
+            f"api/v1/project/{project.id}/dataset/{ds_not_deletable_1.id}/"
         )
         assert res.status_code == 422
         res = await client.delete(
-            f"api/v1/project/{project.id}/dataset/{ds_not_deletable_1.id}"
+            f"api/v1/project/{project.id}/dataset/{ds_not_deletable_1.id}/"
         )
         assert res.status_code == 422
 
@@ -286,13 +286,13 @@ async def test_patch_dataset(
 
         NEW_NAME = "something-new"
         res = await client.patch(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}",
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
             json=dict(name=NEW_NAME),
         )
         assert res.status_code == 200
 
         res = await client.get(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}",
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
         )
         assert res.status_code == 200
         dataset = res.json()
@@ -301,7 +301,7 @@ async def test_patch_dataset(
 
         # Check that history cannot be modified
         res = await client.patch(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}",
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
             json=dict(history=[]),
         )
         assert res.status_code == 422
@@ -362,7 +362,7 @@ async def test_patch_resource(
         payload = dict(path="/my/new/path")
         res = await client.patch(
             f"{PREFIX}/project/{prj.id}/dataset/{ds.id}/"
-            f"resource/{orig_resource.id}",
+            f"resource/{orig_resource.id}/",
             json=payload,
         )
         data = res.json()
@@ -394,7 +394,7 @@ async def test_patch_resource_failure(
 
         res = await client.patch(
             f"{PREFIX}/project/{project.id}/dataset/{other_dataset.id}/"
-            f"resource/{resource['id']}",
+            f"resource/{resource['id']}/",
             json=dict(path="/tmp/abc"),
         )
         assert res.status_code == 422
@@ -425,7 +425,7 @@ async def test_delete_resource(
         # Delete resource while using invalid project
         res = await client.delete(
             f"{PREFIX}/project/{987654321}/dataset/{dataset.id}/"
-            f"resource/{resource_id}"
+            f"resource/{resource_id}/"
         )
         assert res.status_code == 404
         assert res.json()["detail"] == "Project not found"
@@ -433,7 +433,7 @@ async def test_delete_resource(
         # Delete resource while using invalid dataset
         res = await client.delete(
             f"{PREFIX}/project/{project.id}/dataset/{987654321}/"
-            f"resource/{resource_id}"
+            f"resource/{resource_id}/"
         )
         assert res.status_code == 404
         assert res.json()["detail"] == "Dataset not found"
@@ -441,7 +441,7 @@ async def test_delete_resource(
         # Delete invalid resource
         res = await client.delete(
             f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/"
-            f"resource/987654321"
+            f"resource/987654321/"
         )
         assert res.status_code == 422
         assert res.json()["detail"] == (
@@ -451,7 +451,7 @@ async def test_delete_resource(
         # Successful deletion
         res = await client.delete(
             f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/"
-            f"resource/{resource_id}"
+            f"resource/{resource_id}/"
         )
         assert res.status_code == 204
 
@@ -467,10 +467,10 @@ async def test_delete_resource(
         other_resource = res.json()
         other_resource_id = other_resource["id"]
 
-        # Delete resource while using wrong project/dataset
+        # Delete resource while using wrong (project, dataset) pair
         res = await client.delete(
             f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/"
-            f"resource/{other_resource_id}"
+            f"resource/{other_resource_id}/"
         )
         assert res.status_code == 422
         assert res.json()["detail"] == (
@@ -498,7 +498,7 @@ async def test_post_resource_order(
         debug(resource_B)
 
         res = await client.get(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}",
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
         )
         assert res.status_code == 200
         dataset = res.json()

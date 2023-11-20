@@ -48,7 +48,7 @@ async def test_failed_get_collection_info(client, MockCurrentUser):
     """
     invalid_state_id = 99999
     async with MockCurrentUser():
-        res = await client.get(f"{PREFIX}/collect/{invalid_state_id}")
+        res = await client.get(f"{PREFIX}/collect/{invalid_state_id}/")
     debug(res)
     assert res.status_code == 404
 
@@ -117,7 +117,7 @@ async def test_collection(
         assert "fractal_tasks_dummy" in data["venv_path"]
 
         # Get/check collection info
-        res = await client.get(f"{PREFIX}/collect/{state_id}")
+        res = await client.get(f"{PREFIX}/collect/{state_id}/")
         assert res.status_code == 200
         state = res.json()
         data = state["data"]
@@ -152,7 +152,7 @@ async def test_collection(
         assert data["info"] == "Already installed"
 
         # Check that *verbose* collection info contains logs
-        res = await client.get(f"{PREFIX}/collect/{state_id}?verbose=true")
+        res = await client.get(f"{PREFIX}/collect/{state_id}/?verbose=true")
         assert res.status_code == 200
         assert res.json()["data"]["log"] is not None
 
@@ -203,7 +203,7 @@ async def test_collection_local_package_with_extras(
         assert res.status_code == 201
 
         # Get logs
-        res = await client.get(f"{PREFIX}/collect/{res.json()['id']}")
+        res = await client.get(f"{PREFIX}/collect/{res.json()['id']}/")
         debug(res.json())
         assert res.status_code == 200
         log = res.json()["data"]["log"]
@@ -265,7 +265,7 @@ async def test_collection_with_json_schemas(
     async with MockCurrentUser(persist=True):
         status = "pending"
         while status == "pending":
-            res = await client.get(f"{PREFIX}/collect/{state.id}")
+            res = await client.get(f"{PREFIX}/collect/{state.id}/")
             debug(res.json())
             assert res.status_code == 200
             status = res.json()["data"]["status"]
@@ -384,7 +384,7 @@ async def test_failed_collection_missing_task_file(
         data = state["data"]
         assert "my_tasks_fail" in data["venv_path"]
 
-        res = await client.get(f"{PREFIX}/collect/{state['id']}?verbose=True")
+        res = await client.get(f"{PREFIX}/collect/{state['id']}/?verbose=True")
         debug(res.json())
 
         assert res.status_code == 200
@@ -434,7 +434,7 @@ async def test_failed_collection_existing_db_tasks(
         assert res.status_code == 201
 
         # Check that task collection is complete
-        res = await client.get(f"{PREFIX}/collect/{collection_state_id}")
+        res = await client.get(f"{PREFIX}/collect/{collection_state_id}/")
         assert res.status_code == 200
         debug(res.json())
         assert res.json()["data"]["status"] == "OK"
@@ -503,7 +503,7 @@ async def test_logs(
         task_pkg=task_pkg,
     )
     async with MockCurrentUser(persist=True):
-        res = await client.get(f"{PREFIX}/collect/{state.id}")
+        res = await client.get(f"{PREFIX}/collect/{state.id}/")
     out_state = res.json()
     debug(out_state)
     assert res.status_code == 200
