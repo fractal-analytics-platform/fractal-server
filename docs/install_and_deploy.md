@@ -25,6 +25,8 @@ visible from a private network) for communicating with the Fractal client.
 
 ## How to install
 
+> ⚠️  The minimal supported Python version for fractal-server is 3.9.
+
 Fractal Server is hosted on [the PyPI
 index](https://pypi.org/project/fractal-server), and it can be installed with
 `pip` via
