@@ -121,8 +121,7 @@ Note that `POSTGRES_HOST` can be either a URL or the path to a UNIX domain socke
 
 ### Backup and restore
 
-To backup and restore data, one can use the utilities `pg_dump`, `pg_restore`
-and `psql`.
+To backup and restore data, one can use the utilities `pg_dump` and `psql`.
 
 It is possible to dump/restore data in various formats (see [documentation of
 `pg_dump`](https://www.postgresql.org/docs/current/app-pgdump.html)), but in
