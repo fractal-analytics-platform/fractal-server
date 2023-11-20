@@ -1,7 +1,6 @@
 """
 Auxiliary functions to get object from the database or perform simple checks
 """
-import asyncio
 from typing import Literal
 from typing import Union
 
@@ -45,10 +44,9 @@ async def _get_project_check_owner(
         HTTPException(status_code=404_NOT_FOUND):
             If the project does not exist
     """
-    project, link_user_project = await asyncio.gather(
-        db.get(Project, project_id),
-        db.get(LinkUserProject, (project_id, user_id)),
-    )
+    project = await db.get(Project, project_id)
+    link_user_project = await db.get(LinkUserProject, (project_id, user_id))
+
     if not project:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
