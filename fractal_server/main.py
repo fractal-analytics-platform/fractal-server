@@ -123,7 +123,7 @@ async def _create_first_user(
                 UserOAuth.is_superuser == True  # noqa: E712
             )
             res = await session.execute(stm)
-            existing_superuser = res.scalars().unique().first()
+            existing_superuser = res.scalars().first()
             if existing_superuser is not None:
                 logger.info(
                     f"{existing_superuser.email} superuser already exists,"
