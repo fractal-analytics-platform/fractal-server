@@ -33,7 +33,6 @@ PREFIX = "/api/v1"
 backends_available = list(_backends.keys())
 
 
-@pytest.mark.slow
 @pytest.mark.parametrize("backend", backends_available)
 async def test_full_workflow(
     db,
@@ -231,7 +230,6 @@ async def test_full_workflow(
         assert "index" in list(output_dataset_json["meta"].keys())
 
 
-@pytest.mark.slow
 @pytest.mark.parametrize("backend", backends_available)
 async def test_failing_workflow_UnknownError(
     client,
@@ -332,7 +330,6 @@ async def test_failing_workflow_UnknownError(
         print(job_status_data["log"])
 
 
-@pytest.mark.slow
 @pytest.mark.parametrize("backend", backends_available)
 @pytest.mark.parametrize("failing_task", ["parallel", "non_parallel"])
 async def test_failing_workflow_TaskExecutionError(
@@ -524,7 +521,6 @@ def _auxiliary_run(slurm_user, sleep_time):
 
 @pytest.mark.skip(reason="This test is possibly causing issue #954")
 @pytest.mark.parametrize("backend", ["slurm"])
-@pytest.mark.slow
 async def test_failing_workflow_JobExecutionError(
     backend,
     client,
