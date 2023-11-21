@@ -5,7 +5,7 @@ Fractal Server's user model and authentication/authorization systems are powered
 ## User Model
 <a name="user-model"></a>
 
-A Fractal user corresponds to an instance of the [`UserOAuth`](http://localhost:8001/reference/fractal_server/app/models/security/#fractal_server.app.models.security.UserOAuth) class, with the following attributes:
+A Fractal user corresponds to an instance of the [`UserOAuth`](../../reference/fractal_server/app/models/security/#fractal_server.app.models.security.UserOAuth) class, with the following attributes:
 
 | Attribute | Type | Nullable | Default |
 | :--- | :---: | :---: | :---: |
@@ -28,7 +28,7 @@ and
 [`FRACTAL_ADMIN_DEFAULT_PASSWORD`](../../configuration/#fractal_server.config.Settings.FRACTAL_DEFAULT_ADMIN_PASSWORD) (default: `1234`).
 
 > **⚠️ You should always modify the password of the default user after it's created;**
-> this can be done with API calls to the `PATCH /auth/users/{id}` endpoint of the [`fractal-server` API](../../openapi), e.g. through the `curl` command or the [Fractal command-line client](https://fractal-analytics-platform.github.io/fractal/reference/fractal/user/#user-edit).
+> this can be done with API calls to the `PATCH /auth/users/{id}` endpoint of the [`fractal-server` API](../../openapi), e.g. through the `curl` command or the [Fractal command-line client](https://fractal-analytics-platform.github.io/fractal-client/reference/fractal/user/#user-edit).
 > <mark>When the API instance is exposed to multiple users, skipping the default-user password update leads to a severe vulnerability! </mark>
 
 The most common use cases for `fractal-server` are:
@@ -61,7 +61,7 @@ $ curl \
     -X POST \
     -H "Content-Type: application/x-www-form-urlencoded" \
     -d "username=admin@fractal.xy&password=1234" \
-    http://127.0.0.1:8000/auth/token/login
+    http://127.0.0.1:8000/auth/token/login/
 
 {
     "access_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiYXVkIjpbImZyYWN0YWwiXSwiZXhwIjoxNjkzNTc1MzM1fQ.UmkhBKxgBM2mxXlrTlt5HXqtDDOe_mMYiMkKUS5jbXU",
@@ -79,7 +79,7 @@ $ curl \
     -H "Content-Type: application/x-www-form-urlencoded" \
     -d "username=admin@fractal.xy&password=1234" \
     --cookie-jar - \
-    http://127.0.0.1:8000/auth/login
+    http://127.0.0.1:8000/auth/login/
 
 
 #HttpOnly_127.0.0.1	FALSE	/	TRUE	0	fastapiusersauth	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiYXVkIjpbImZyYWN0YWwiXSwiZXhwIjoxNjkzNjQ4MDI5fQ.UKRdbVjwys4grQrhpGyxcxcVbNSNJ29RQiFubpGYYUk
@@ -92,7 +92,7 @@ Once you have the token, you can use it to identify yourself by sending it along
 $ curl \
     -X GET \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwiYXVkIjpbImZyYWN0YWwiXSwiZXhwIjoxNjkzOTI2MTM4fQ.MqWhW0xRgCV9ZgZr1HcdynrIJ7z46IBzO7pyfTUaTU8" \
-    http://127.0.0.1:8000/auth/whoami
+    http://127.0.0.1:8000/auth/whoami/
 
 {
     "id":1,
@@ -119,7 +119,7 @@ To use a certain `OAuth2` client, you must first register the `fractal-server` a
 During app registration, you should provide two endpoints:
 
 - the `Homepage URL` (e.g. `http://127.0.0.1:8000/`),
-- the `Authorization callback URL` (e.g. `http://127.0.0.1:8000/auth/github/callback`, where `github` could be any client name).
+- the `Authorization callback URL` (e.g. `http://127.0.0.1:8000/auth/github/callback/`, where `github` could be any client name).
 
 and at the end of this procedure, you will kwnow the _Client ID_ and _Client Secret_ for the app.
 
@@ -220,10 +220,10 @@ First, she makes a call to `/auth/github/authorize`:
 ```
 $ curl \
     -X GET \
-    http://127.0.0.1:8000/auth/github/authorize
+    http://127.0.0.1:8000/auth/github/authorize/
 
 {
-    "authorization_url":"https://github.com/login/oauth/authorize?
+    "authorization_url":"https://github.com/login/oauth/authorize/?
         response_type=code&
         client_id=...&
         redirect_uri=...&
@@ -237,7 +237,7 @@ After logging in to GitHub, she is asked to grant the app the permissions it req
 
 After that, she is redirected back to `fractal-server` at `/auth/github/callback`, together with two query parameters:
 ```
-http://127.0.0.1:8000/auth/github/callback?
+http://127.0.0.1:8000/auth/github/callback/?
     code=...&
     state=...
 ```
@@ -258,7 +258,7 @@ The user can now make [authenticated calls](#authenticated-calls) using this tok
 curl \
     -X GET \
     -H "Authorization: Bearer ey..." \
-    http://127.0.0.1:8000/auth/whoami
+    http://127.0.0.1:8000/auth/whoami/
 
 {
     "id":3,
@@ -301,20 +301,20 @@ Being an _active user_ (i.e. `user.is_active==True`) is required by
 
 - all `/api/v1/...` endpoints
 - all `/auth/users/...`,
-- POST `/auth/register`,
-- GET `/auth/userlist`,
-- GET `/auth/whoami`.
+- POST `/auth/register/`,
+- GET `/auth/userlist/`,
+- GET `/auth/whoami/`.
 
 Being a _superuser_ (i.e. `user.is_superuser==True`) is required by
 
 - all `/auth/users/...`,
-- POST `/auth/register`,
-- GET `/auth/userlist`.
+- POST `/auth/register/`,
+- GET `/auth/userlist/`.
 
 and it also gives full access (without further checks) to
 
-- PATCH `/api/v1/task/{task_id}`
-- DELETE `/api/v1/task/{task_id}`
+- PATCH `/api/v1/task/{task_id}/`
+- DELETE `/api/v1/task/{task_id}/`
 
 No endpoint currently requires the user to be _verified_ (i.e. having `user.is_verified==True`).
 
@@ -337,11 +337,11 @@ The [User Model](#user-model) includes additional attributes `username` and `slu
 
 > ⚠️ This is an experimental feature, which will likely evolve in the future (possibly towards the implementation of user groups/roles).
 
-When a `Task` is [created](https://fractal-analytics-platform.github.io/fractal-server/reference/fractal_server/app/routes/api/v1/task/#fractal_server.app.routes.api.v1.task.create_task), the attribute `Task.owner` is set equal to `username` or, if not present, to `slurm_user` (there must be at least one to create a Task). With a similar logic, we consider a user to be the _owner_ of a Task if `username==Task.owner` or, if `username` is `None`, we check that `slurm_user==Task.owner`.
+When a `Task` is [created](../..//reference/fractal_server/app/routes/api/routes/v1/task/#fractal_server.app.routes.api.v1.task.create_task), the attribute `Task.owner` is set equal to `username` or, if not present, to `slurm_user` (there must be at least one to create a Task). With a similar logic, we consider a user to be the _owner_ of a Task if `username==Task.owner` or, if `username` is `None`, we check that `slurm_user==Task.owner`.
 The following endpoints require a non-superuser user to be the owner of the Task:
 
-- PATCH `/api/v1/task/{task_id}`,
-- DELETE `/api/v1/task/{task_id}`.
+- PATCH `/api/v1/task/{task_id}/`,
+- DELETE `/api/v1/task/{task_id}/`.
 
 
 ## User Management
@@ -361,7 +361,7 @@ $ curl \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer ey..." \
     -d '{"email": "user@example.com", "password": "password"}' \
-    http://127.0.0.1:8000/auth/register
+    http://127.0.0.1:8000/auth/register/
 
 {
     "id":2,
@@ -387,7 +387,7 @@ The route `/auth/userlist` returns the list of all registred users:
 $ curl \
     -X GET \
     -H "Authorization: Bearer ey..." \
-    http://127.0.0.1:8000/auth/userlist
+    http://127.0.0.1:8000/auth/userlist/
 
 [
     {
@@ -420,7 +420,7 @@ At `/auth/whoami`, we expose a non-superuser-restricted version of "GET ``/auth/
 curl \
     -X GET \
     -H "Authorization: Bearer ey..." \
-    http://127.0.0.1:8000/auth/whoami
+    http://127.0.0.1:8000/auth/whoami/
 
 {
     "id":2,
@@ -441,14 +441,14 @@ curl \
 
 The additional user-management routes exposed by FastAPI Users in `/users` (see [here](https://fastapi-users.github.io/fastapi-users/12.1/usage/routes#users-router)) are available in `fractal-server` at  `/auth/users/`. For the moment all these routes are all restricted to superusers.
 
-**GET `/auth/users/me`**
+**GET `/auth/users/me/`**
 
 Returns the current active superuser:
 ```
 curl \
     -X GET \
     -H "Authorization: Bearer ey..." \
-    http://127.0.0.1:8000/auth/users/me
+    http://127.0.0.1:8000/auth/users/me/
 
 {
     "id":1,
@@ -464,14 +464,14 @@ curl \
 
 **PATCH `/me`**
 
-Update the current active superuser. We must provide a `UserUpdate` instance, which is just like a [`UserCreate`](http://127.0.0.1:8001/internals/auth/#register-new-user) except that all attributes are optional.
+Update the current active superuser. We must provide a `UserUpdate` instance, which is like a [`UserCreate`](../../reference/fractal_server/app/schemas/user#fractal_server.app.schemas.user.UserCreate) except that all attributes are optional.
 ```console
 $ curl \
     -X PATCH \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiYXVkIjpbImZyYWN0YWwiXSwiZXhwIjoxNjkzNzMzNTY5fQ.ea8wdZHaGYpCwl60pdDBw6BMumc43xcss1rCtaPP1GM" \
     -d '{"slurm_user": "slurm1"}' \
-    http://127.0.0.1:8000/auth/users/me
+    http://127.0.0.1:8000/auth/users/me/
 
 {
     "id":1,
@@ -485,16 +485,16 @@ $ curl \
 }
 ```
 
-**GET `/{id}`**
+**GET `/{id}/`**
 
 Return the user with a given `id`.
 
-**PATCH `/{id}`**
+**PATCH `/{id}/`**
 
 Update the user with a given `id`.
 
-Requires a `UserUpdate`, like in [PATCH `/me`](http://127.0.0.1:8001/internals/auth/#patch-me).
+Requires a [`UserUpdate`](../../reference/fractal_server/app/schemas/user#fractal_server.app.schemas.user.UserUpdate).
 
-**DELETE `/{id}`**
+**DELETE `/{id}/`**
 
 Delete the user with the given `id`.
