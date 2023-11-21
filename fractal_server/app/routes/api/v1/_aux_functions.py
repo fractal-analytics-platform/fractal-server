@@ -46,7 +46,6 @@ async def _get_project_check_owner(
     """
     project = await db.get(Project, project_id)
     link_user_project = await db.get(LinkUserProject, (project_id, user_id))
-
     if not project:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
