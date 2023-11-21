@@ -186,3 +186,4 @@ def test_indirect_shutdown_during_map(
             list(res)
         debug(e.value)
         assert "shutdown" in str(e.value)
+    _thread.join()
