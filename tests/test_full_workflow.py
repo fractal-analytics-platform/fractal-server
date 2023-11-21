@@ -655,6 +655,7 @@ async def test_failing_workflow_JobExecutionError(
             str(wftask0_id): "done",
             str(wftask1_id): "failed",
         }
+        _thread.join()
 
 
 async def test_non_python_task(
