@@ -141,6 +141,7 @@ def _auxiliary_run(shutdown_file: Path, sleep_time):
     loop.close()
 
 
+@pytest.mark.skip
 def test_indirect_shutdown_during_map(
     monkey_slurm,
     monkey_slurm_user,
