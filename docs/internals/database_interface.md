@@ -31,7 +31,7 @@ set-db`.
 > 1. SQLite is supported but discouraged in production. Given its partial
 >    support for ForeignKey constraints, consistency of the database cannot be
 >    guaranteed.
-> 2. The minimal required version for the sqlite system library is v3.37 (which
+> 2. The minimum required version for the sqlite system library is v3.37 (which
 >    is for instance the one in the
 >    [libsqlite3-0 package](https://packages.ubuntu.com/jammy/libsqlite3-0)
 >    package for Ubuntu 22.04LTS).
@@ -63,10 +63,13 @@ We assume that a PostgreSQL is active, with some _host_ (this can be e.g.
 `localhost` or a UNIX socket like `/var/run/postgresql/`), a _port_ (we use the
 default 5432 in the examples below) and a user (e.g. `postgres` or `fractal`).
 
-> Note that a machine user may or may not require a password (e.g.  depending
-> on whether the machine username matches with the PostgreSQL username, and on
-> whether connection happens via a UNIX socket). See documentation here:
-> https://www.postgresql.org/docs/current/auth-pg-hba-conf.html.
+> ⚠️ Notes:
+>
+> 1. The postgres user must be created from outside `fractal-server`.
+> 2. A given machine user may or may not require a password (e.g. depending on
+>    whether the machine username matches with the PostgreSQL username, and on
+>    whether connection happens via a UNIX socket). See documentation here:
+>    https://www.postgresql.org/docs/current/auth-pg-hba-conf.html.
 
 Here we create a database called `fractal_db`, through the `createdb` command:
 
@@ -121,8 +124,7 @@ Note that `POSTGRES_HOST` can be either a URL or the path to a UNIX domain socke
 
 ### Backup and restore
 
-To backup and restore data, one can use the utilities `pg_dump`, `pg_restore`
-and `psql`.
+To backup and restore data, one can use the utilities `pg_dump` and `psql`.
 
 It is possible to dump/restore data in various formats (see [documentation of
 `pg_dump`](https://www.postgresql.org/docs/current/app-pgdump.html)), but in
