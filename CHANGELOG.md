@@ -34,7 +34,7 @@
 * Testing:
     * Improve `test_full_workflow.py` (\#971).
     * Update `pytest-asyncio` to v0.21 (\#1008).
-    * Mitigate issues related to [error in CI](https://github.com/fractal-analytics-platform/fractal-server/issues/954) (\#1012).
+    * Fix CI issue related to event loop and asyncpg (\#1012).
 
 # 1.3.14 (do not use!)
 
