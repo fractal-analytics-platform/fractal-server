@@ -92,14 +92,24 @@ async def test_monitor_workflow(
 
     async with MockCurrentUser(
         persist=True, user_kwargs={"is_superuser": True}
-    ):
+    ) as superuser:
+        project3 = await project_factory(superuser)
+        await workflow_factory(project_id=project3.id, name="super")
+
         # get all workflows
         res = await client.get(f"{PREFIX}/workflow/")
+        assert res.status_code == 200
+        assert len(res.json()) == 4
+
+        # get workflows by user_id
+        res = await client.get(f"{PREFIX}/workflow/?user_id={user.id}")
         assert res.status_code == 200
         assert len(res.json()) == 3
 
         # get workflows by id
-        res = await client.get(f"{PREFIX}/workflow/?id={workflow1a.id}")
+        res = await client.get(
+            f"{PREFIX}/workflow/?user_id={user.id}&id={workflow1a.id}"
+        )
         assert res.status_code == 200
         assert len(res.json()) == 1
         assert res.json()[0]["name"] == workflow1a.name
@@ -169,9 +179,21 @@ async def test_monitor_dataset(
 
     async with MockCurrentUser(
         persist=True, user_kwargs={"is_superuser": True}
-    ):
+    ) as superuser:
+        super_project = await project_factory(superuser)
+        await dataset_factory(
+            project_id=super_project.id,
+            name="super-d",
+            type="zarr",
+        )
+
         # get all datasets
         res = await client.get(f"{PREFIX}/dataset/")
+        assert res.status_code == 200
+        assert len(res.json()) == 4
+
+        # get datasets by user_id
+        res = await client.get(f"{PREFIX}/dataset/?user_id={user.id}")
         assert res.status_code == 200
         assert len(res.json()) == 3
 
@@ -206,7 +228,9 @@ async def test_monitor_dataset(
         assert len(res.json()) == 0
 
         # get datasets by type
-        res = await client.get(f"{PREFIX}/dataset/?type=zarr")
+        res = await client.get(
+            f"{PREFIX}/dataset/?type=zarr&user_id={user.id}"
+        )
         assert res.status_code == 200
         assert len(res.json()) == 2
         res = await client.get(f"{PREFIX}/dataset/?type=image")
@@ -269,6 +293,14 @@ async def test_monitor_job(
         res = await client.get(f"{PREFIX}/job/")
         assert res.status_code == 200
         assert len(res.json()) == 2
+
+        # get jobs by user_id
+        res = await client.get(f"{PREFIX}/job/?user_id={user.id}")
+        assert res.status_code == 200
+        assert len(res.json()) == 2
+        res = await client.get(f"{PREFIX}/job/?user_id={user.id + 1}")
+        assert res.status_code == 200
+        assert len(res.json()) == 0
 
         # get jobs by id
         res = await client.get(f"{PREFIX}/job/?id={job1.id}")

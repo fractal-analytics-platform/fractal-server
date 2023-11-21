@@ -60,6 +60,7 @@ async def monitor_project(
 @router_monitoring.get("/workflow/", response_model=list[WorkflowRead])
 async def monitor_workflow(
     id: Optional[int] = None,
+    user_id: Optional[int] = None,
     project_id: Optional[int] = None,
     name_contains: Optional[str] = None,
     user: User = Depends(current_active_superuser),
@@ -76,6 +77,10 @@ async def monitor_workflow(
     """
     stm = select(Workflow)
 
+    if user_id is not None:
+        stm = stm.join(Project).where(
+            Project.user_list.any(User.id == user_id)
+        )
     if id is not None:
         stm = stm.where(Workflow.id == id)
     if project_id is not None:
@@ -96,6 +101,7 @@ async def monitor_workflow(
 @router_monitoring.get("/dataset/", response_model=list[DatasetRead])
 async def monitor_dataset(
     id: Optional[int] = None,
+    user_id: Optional[int] = None,
     project_id: Optional[int] = None,
     name_contains: Optional[str] = None,
     type: Optional[str] = None,
@@ -114,6 +120,10 @@ async def monitor_dataset(
     """
     stm = select(Dataset)
 
+    if user_id is not None:
+        stm = stm.join(Project).where(
+            Project.user_list.any(User.id == user_id)
+        )
     if id is not None:
         stm = stm.where(Dataset.id == id)
     if project_id is not None:
@@ -136,6 +146,7 @@ async def monitor_dataset(
 @router_monitoring.get("/job/", response_model=list[ApplyWorkflowRead])
 async def monitor_job(
     id: Optional[int] = None,
+    user_id: Optional[int] = None,
     project_id: Optional[int] = None,
     input_dataset_id: Optional[int] = None,
     output_dataset_id: Optional[int] = None,
@@ -173,6 +184,10 @@ async def monitor_job(
 
     if id is not None:
         stm = stm.where(ApplyWorkflow.id == id)
+    if user_id is not None:
+        stm = stm.join(Project).where(
+            Project.user_list.any(User.id == user_id)
+        )
     if project_id is not None:
         stm = stm.where(ApplyWorkflow.project_id == project_id)
     if input_dataset_id is not None:
