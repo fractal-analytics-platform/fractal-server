@@ -129,7 +129,7 @@ async def _create_first_user(
                     f"{existing_superuser.email} superuser already exists,"
                     f" skip creation of {email}"
                 )
-                return
+                return None
 
             async with get_user_db_context(session) as user_db:
                 async with get_user_manager_context(user_db) as user_manager:
