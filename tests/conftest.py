@@ -33,6 +33,7 @@ def event_loop():
     _event_loop = asyncio.new_event_loop()
     _event_loop.set_debug(True)
     yield _event_loop
+    _event_loop.close()
 
 
 @pytest.fixture(scope="session")
