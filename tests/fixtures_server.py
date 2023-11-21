@@ -37,7 +37,7 @@ from fractal_server.main import _create_first_user
 from fractal_server.syringe import Inject
 
 try:
-    import asyncpg  # noqa: F401
+    import psycopg  # noqa: F401
 
     DB_ENGINE = "postgres"
 except ModuleNotFoundError:
