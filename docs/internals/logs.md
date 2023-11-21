@@ -14,7 +14,7 @@ a logger created with
 [`set_logger`](../../reference/fractal_server/logger/#fractal_server.logger.set_logger)
 are defined as follows:
 
-* The minimal logging level for logs to appear in the console is set by
+* The minimum logging level for logs to appear in the console is set by
   [`FRACTAL_LOGGING_LEVEL`](../../configuration/#fractal_server.config.Settings.FRACTAL_LOGGING_LEVEL);
 * The `FileHandler` logger handlers are alwasy set at the `DEBUG` level, that
   is, they write all log records.
