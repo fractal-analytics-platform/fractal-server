@@ -516,10 +516,12 @@ async def _auxiliary_scancel(slurm_user, sleep_time):
 def _auxiliary_run(slurm_user, sleep_time):
     # The _auxiliary_scancel and _auxiliary_run functions are used as in
     # https://stackoverflow.com/a/59645689/19085332
+    logging.critical("START of _auxiliary_run")
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(_auxiliary_scancel(slurm_user, sleep_time))
     loop.close()
+    logging.critical("END of _auxiliary_run")
 
 
 @pytest.mark.parametrize("backend", ["slurm"])
@@ -655,6 +657,10 @@ async def test_failing_workflow_JobExecutionError(
             str(wftask0_id): "done",
             str(wftask1_id): "failed",
         }
+
+        logging.critical("IS ALIVE?")
+        logging.critical(_thread.is_alive())
+        _thread.join()
 
 
 async def test_non_python_task(
