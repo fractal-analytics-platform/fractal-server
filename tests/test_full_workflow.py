@@ -519,7 +519,6 @@ def _auxiliary_run(slurm_user, sleep_time):
     loop.close()
 
 
-@pytest.mark.skip(reason="This test is possibly causing issue #954")
 @pytest.mark.parametrize("backend", ["slurm"])
 async def test_failing_workflow_JobExecutionError(
     backend,
