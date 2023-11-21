@@ -1,8 +1,6 @@
-import asyncio
-import logging
-import threading
+import shlex
+import subprocess
 import time
-from pathlib import Path
 
 import pytest
 from devtools import debug
@@ -114,33 +112,6 @@ def test_indirect_shutdown_during_submit(
         raise e
 
 
-async def _write_shutdown_file(shutdown_file: Path, sleep_time):
-    # The _auxiliary_scancel and _auxiliary_run functions are used as in
-    # https://stackoverflow.com/a/59645689/19085332
-    logging.warning(f"[_write_shutdown_file] run START {time.perf_counter()=}")
-    # Wait `scancel_sleep_time` seconds, to let the SLURM job pass from PENDING
-    # to RUNNING
-    time.sleep(sleep_time)
-
-    debug(run_squeue())
-    # Scancel all jobs of the current SLURM user
-    logging.warning(f"[_write_shutdown_file] run WRITE {time.perf_counter()=}")
-    # Trigger shutdown
-    with shutdown_file.open("w") as f:
-        f.write("")
-    assert shutdown_file.exists()
-    logging.warning(f"[_write_shutdown_file] run END {time.perf_counter()=}")
-
-
-def _auxiliary_run(shutdown_file: Path, sleep_time):
-    # The _write_shutdown_file and _auxiliary_run functions are used as in
-    # https://stackoverflow.com/a/59645689/19085332
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(_write_shutdown_file(shutdown_file, sleep_time))
-    loop.close()
-
-
 def test_indirect_shutdown_during_map(
     monkey_slurm,
     monkey_slurm_user,
@@ -154,18 +125,23 @@ def test_indirect_shutdown_during_map(
 
     shutdown_file = tmp_path / "shutdown"
 
-    # NOTE: the executor.map call below is blocking. For this reason, we call
-    # the scancel function from a different thread, so that we can make it
-    # happen during the workflow execution The following block is based on
-    # https://stackoverflow.com/a/59645689/19085332
-
+    # NOTE: the executor.map call below is blocking. For this reason, we write
+    # the shutdown file from a subprocess.Popen, so that we can make it happen
+    # during the execution.
     shutdown_sleep_time = 2
-    logging.warning(f"PRE THREAD START {time.perf_counter()=}")
-    _thread = threading.Thread(
-        target=_auxiliary_run, args=(shutdown_file, shutdown_sleep_time)
+    tmp_script = (tmp_path / "script.sh").as_posix()
+    debug(tmp_script)
+    with open(tmp_script, "w") as f:
+        f.write(f"sleep {shutdown_sleep_time}\n")
+        f.write(f"cat NOTHING > {shutdown_file.as_posix()}\n")
+
+    tmp_stdout = open((tmp_path / "stdout").as_posix(), "w")
+    tmp_stderr = open((tmp_path / "stderr").as_posix(), "w")
+    subprocess.Popen(
+        shlex.split(f"bash {tmp_script}"),
+        stdout=tmp_stdout,
+        stderr=tmp_stderr,
     )
-    _thread.start()
-    logging.warning(f"POST THREAD START {time.perf_counter()=}")
 
     with FractalSlurmExecutor(
         slurm_user=monkey_slurm_user,
@@ -186,4 +162,6 @@ def test_indirect_shutdown_during_map(
             list(res)
         debug(e.value)
         assert "shutdown" in str(e.value)
-    _thread.join()
+
+    tmp_stdout.close()
+    tmp_stderr.close()
