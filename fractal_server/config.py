@@ -215,7 +215,7 @@ class Settings(BaseSettings):
             return url
         elif "postgres":
             url = URL.create(
-                drivername="postgresql+asyncpg",
+                drivername="postgresql+psycopg_async",
                 username=self.POSTGRES_USER,
                 password=self.POSTGRES_PASSWORD,
                 host=self.POSTGRES_HOST,
