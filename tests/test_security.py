@@ -114,11 +114,21 @@ async def test_edit_user(registered_client, registered_superuser_client):
     )
     assert res.status_code == 403
 
-    # PATCH/me with non-superuser user
-    res = await registered_client.patch(
+    # PATCH /users/me do not exists
+    res = await registered_superuser_client.patch(
         f"{PREFIX}/users/me/", json={"slurm_user": "asd"}
     )
-    assert res.status_code == 403
+    assert res.status_code == 404
+
+    # Users can change their `cache_dir` and `password` using `PATCH /me`
+    new_cache_dir = "/n/e/w/c/a/c/h/e/d/i/r"
+    res = await registered_client.patch(
+        f"{PREFIX}/me/", json={"cache_dir": new_cache_dir}
+    )
+    assert res.status_code == 200
+    res = await registered_client.get(f"{PREFIX}/whoami/")
+    assert res.json()["cache_dir"] == new_cache_dir
+    # FIXME test "password"
 
     # PATCH/{user_id} with superuser
     res = await registered_superuser_client.patch(

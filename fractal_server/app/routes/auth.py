@@ -17,8 +17,8 @@ from ..security import cookie_backend
 from ..security import current_active_superuser
 from ..security import current_active_user
 from ..security import fastapi_users
+from ..security import get_user_manager
 from ..security import token_backend
-
 
 router_auth = APIRouter()
 
@@ -43,8 +43,11 @@ router_auth.include_router(
 # Include users routes, after removing DELETE endpoint (ref
 # https://github.com/fastapi-users/fastapi-users/discussions/606)
 users_router = fastapi_users.get_users_router(UserRead, UserUpdate)
+
 users_router.routes = [
-    route for route in users_router.routes if route.name != "users:delete_user"
+    route
+    for route in users_router.routes
+    if route.name not in ["users:delete_user", "users:patch_current_user"]
 ]
 router_auth.include_router(
     users_router,
@@ -53,10 +56,25 @@ router_auth.include_router(
 )
 
 
-@router_auth.get("/whoami", response_model=UserRead)
-async def whoami(
-    user: User = Depends(current_active_user),
+@router_auth.patch("/me", response_model=UserRead)
+async def patch_current_user(
+    user_update: UserUpdate,
+    current_user: User = Depends(current_active_user),
+    user_manager=Depends(get_user_manager),
 ):
+    updates = {
+        k: getattr(user_update, k)
+        for k in ["cache_dir", "password"]  # "slurm_accouts" to be added
+        if getattr(user_update, k) is not None
+    }
+
+    return await user_manager.update(
+        UserUpdate(**updates), current_user, safe=True
+    )
+
+
+@router_auth.get("/whoami", response_model=UserRead)
+async def whoami(user: User = Depends(current_active_user)):
     """
     Return current user
     """
