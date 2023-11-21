@@ -33,6 +33,7 @@
     * Refresh DB objects within `submit_workflow` (\#927).
 * Testing:
     * Improve `test_full_workflow.py` (\#971).
+    * Update `pytest-asyncio` to v0.21 (\#1008).
 
 # 1.3.14 (do not use!)
 
