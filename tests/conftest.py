@@ -21,13 +21,6 @@ def check_basetemp(tpath: Path):
         )
 
 
-def pytest_configure(config):
-    """
-    See https://docs.pytest.org/en/stable/how-to/mark.html#registering-marks
-    """
-    config.addinivalue_line("markers", "slow: marks tests as slow")
-
-
 @pytest.fixture(scope="session")
 def event_loop():
     _event_loop = asyncio.new_event_loop()
