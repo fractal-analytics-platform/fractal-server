@@ -233,7 +233,7 @@ class Settings(BaseSettings):
                 )
             return self.DATABASE_URL.set(drivername="sqlite")
         elif self.DB_ENGINE == "postgres":
-            return self.DATABASE_URL.set(drivername="postgresql+psycopg2")
+            return self.DATABASE_URL.set(drivername="postgresql+psycopg")
 
     ###########################################################################
     # FRACTAL SPECIFIC
