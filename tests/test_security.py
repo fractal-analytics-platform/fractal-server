@@ -125,7 +125,7 @@ async def test_edit_user(registered_client, registered_superuser_client):
     # Users can change their `cache_dir` and `password` using `PATCH /me`
     new_cache_dir = "/n/e/w/c/a/c/h/e/d/i/r"
     res = await registered_client.patch(
-        f"{PREFIX}/me/", json={"cache_dir": new_cache_dir}
+        f"{PREFIX}/current-user/", json={"cache_dir": new_cache_dir}
     )
     assert res.status_code == 200
     res = await registered_client.get(f"{PREFIX}/current-user/")
