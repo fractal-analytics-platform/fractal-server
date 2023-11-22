@@ -20,6 +20,7 @@ from ..security import current_active_user
 from ..security import fastapi_users
 from ..security import get_user_manager
 from ..security import token_backend
+from ..security import UserManager
 
 router_auth = APIRouter()
 
@@ -68,7 +69,7 @@ router_auth.include_router(
 async def patch_current_user(
     user_update: UserUpdateStrict,
     current_user: User = Depends(current_active_user),
-    user_manager=Depends(get_user_manager),
+    user_manager: UserManager = Depends(get_user_manager),
 ):
     return await user_manager.update(
         UserUpdate(**user_update.dict(exclude_unset=True)),

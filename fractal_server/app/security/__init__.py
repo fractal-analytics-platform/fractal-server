@@ -35,8 +35,6 @@ from typing import Type
 
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Request
-from fastapi import Response
 from fastapi import status
 from fastapi_users import BaseUserManager
 from fastapi_users import FastAPIUsers
@@ -176,17 +174,14 @@ async def get_user_db(
 
 
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
-    async def on_after_login(
-        self,
-        user: User,
-        request: Optional[Request] = None,
-        response: Optional[Response] = None,
-    ) -> None:
-        """
-        Perform logic after user login.
-        *You should overload this method to add your own logic.*
-        """
-        pass
+    async def validate_password(self, password: str, user: User) -> None:
+        # check password length
+        min_len = 4
+        if len(password) < min_len:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"The password must have at least {min_len} char",
+            )
 
 
 async def get_user_manager(
