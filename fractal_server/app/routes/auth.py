@@ -48,7 +48,12 @@ users_router = fastapi_users.get_users_router(UserRead, UserUpdate)
 users_router.routes = [
     route
     for route in users_router.routes
-    if route.name not in ["users:delete_user", "users:patch_current_user"]
+    if route.name
+    not in [
+        "users:current_user",
+        "users:delete_user",
+        "users:patch_current_user",
+    ]
 ]
 router_auth.include_router(
     users_router,
@@ -57,7 +62,7 @@ router_auth.include_router(
 )
 
 
-@router_auth.patch("/me", response_model=UserRead)
+@router_auth.patch("/current-user", response_model=UserRead)
 async def patch_current_user(
     user_update: UserUpdateStrict,
     current_user: User = Depends(current_active_user),
@@ -68,7 +73,7 @@ async def patch_current_user(
     )
 
 
-@router_auth.get("/whoami", response_model=UserRead)
+@router_auth.get("/current-user", response_model=UserRead)
 async def whoami(user: User = Depends(current_active_user)):
     """
     Return current user
