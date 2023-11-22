@@ -41,10 +41,12 @@ router_auth.include_router(
     fastapi_users.get_verify_router(UserRead),
 )
 
-# Include users routes, after removing DELETE endpoint (ref
-# https://github.com/fastapi-users/fastapi-users/discussions/606)
 users_router = fastapi_users.get_users_router(UserRead, UserUpdate)
 
+# We remove `/auth/users/me` endpoints to implement our own
+# at `/auth/current-user/`.
+# We also remove `DELETE /auth/users/{user_id}`
+# (ref https://github.com/fastapi-users/fastapi-users/discussions/606)
 users_router.routes = [
     route
     for route in users_router.routes
