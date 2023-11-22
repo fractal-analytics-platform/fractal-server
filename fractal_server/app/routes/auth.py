@@ -13,6 +13,7 @@ from ..models.security import UserOAuth as User
 from ..schemas.user import UserCreate
 from ..schemas.user import UserRead
 from ..schemas.user import UserUpdate
+from ..schemas.user import UserUpdateStrict
 from ..security import cookie_backend
 from ..security import current_active_superuser
 from ..security import current_active_user
@@ -58,18 +59,12 @@ router_auth.include_router(
 
 @router_auth.patch("/me", response_model=UserRead)
 async def patch_current_user(
-    user_update: UserUpdate,
+    user_update: UserUpdateStrict,
     current_user: User = Depends(current_active_user),
     user_manager=Depends(get_user_manager),
 ):
-    updates = {
-        k: getattr(user_update, k)
-        for k in ["cache_dir", "password"]  # "slurm_accouts" to be added
-        if getattr(user_update, k) is not None
-    }
-
     return await user_manager.update(
-        UserUpdate(**updates), current_user, safe=True
+        UserUpdate(**user_update.dict()), current_user, safe=True
     )
 
 
