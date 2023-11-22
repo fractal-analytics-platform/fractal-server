@@ -16,12 +16,12 @@ from ..models import Dataset
 from ..models import JobStatusType
 from ..models import Project
 from ..models import Workflow
+from ..models.security import UserOAuth as User
 from ..schemas import ApplyWorkflowRead
 from ..schemas import DatasetRead
 from ..schemas import ProjectRead
 from ..schemas import WorkflowRead
 from ..security import current_active_superuser
-from ..security import User
 
 
 router_monitoring = APIRouter()
