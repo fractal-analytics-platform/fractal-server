@@ -3,8 +3,6 @@ Definition of `/auth` routes.
 """
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
@@ -70,13 +68,6 @@ async def patch_current_user(
     current_user: User = Depends(current_active_user),
     user_manager=Depends(get_user_manager),
 ):
-
-    if user_update.dict(exclude_unset=True) == {}:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Nothing to update",
-        )
-
     return await user_manager.update(
         UserUpdate(**user_update.dict(exclude_unset=True)),
         current_user,
