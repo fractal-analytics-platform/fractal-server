@@ -2,6 +2,7 @@ from typing import Optional
 
 from fastapi_users import schemas
 from pydantic import BaseModel
+from pydantic import Extra
 from pydantic import validator
 
 from ._validators import val_absolute_path
@@ -54,7 +55,7 @@ class UserUpdate(schemas.BaseUserUpdate):
     )
 
 
-class UserUpdateStrict(BaseModel):
+class UserUpdateStrict(BaseModel, extra=Extra.forbid):
     """
     Attributes that every user can self-edit
     """
