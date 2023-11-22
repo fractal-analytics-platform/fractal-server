@@ -116,7 +116,9 @@ async def test_edit_user(registered_client, registered_superuser_client):
     )
     assert res.status_code == 403
 
-    # PATCH /users/me do not exists
+    # GET and PATCH /users/me do not exist
+    res = await registered_superuser_client.get(f"{PREFIX}/users/me/")
+    assert res.status_code == 404
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/me/", json={"slurm_user": "asd"}
     )
