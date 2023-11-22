@@ -62,7 +62,7 @@ router_auth.include_router(
 )
 
 
-@router_auth.patch("/current-user", response_model=UserRead)
+@router_auth.patch("/current-user/", response_model=UserRead)
 async def patch_current_user(
     user_update: UserUpdateStrict,
     current_user: User = Depends(current_active_user),
@@ -75,7 +75,7 @@ async def patch_current_user(
     )
 
 
-@router_auth.get("/current-user", response_model=UserRead)
+@router_auth.get("/current-user/", response_model=UserRead)
 async def whoami(user: User = Depends(current_active_user)):
     """
     Return current user
@@ -83,7 +83,7 @@ async def whoami(user: User = Depends(current_active_user)):
     return user
 
 
-@router_auth.get("/userlist", response_model=list[UserRead])
+@router_auth.get("/userlist/", response_model=list[UserRead])
 async def list_users(
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_db),
