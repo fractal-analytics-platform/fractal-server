@@ -59,10 +59,10 @@ async def test_list_users(registered_client, registered_superuser_client):
 
     # Create two users
     res = await registered_superuser_client.post(
-        f"{PREFIX}/register/", json=dict(email="0@asd.asd", password="12")
+        f"{PREFIX}/register/", json=dict(email="0@asd.asd", password="12345")
     )
     res = await registered_superuser_client.post(
-        f"{PREFIX}/register/", json=dict(email="1@asd.asd", password="12")
+        f"{PREFIX}/register/", json=dict(email="1@asd.asd", password="12345")
     )
 
     # Non-superuser user is not allowed
@@ -82,7 +82,7 @@ async def test_show_user(registered_client, registered_superuser_client):
 
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/",
-        json=dict(email="to_show@asd.asd", password="12"),
+        json=dict(email="to_show@asd.asd", password="12345"),
     )
     user_id = res.json()["id"]
     assert res.status_code == 201
@@ -105,7 +105,7 @@ async def test_edit_user(registered_client, registered_superuser_client):
 
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/",
-        json=dict(email="to_patch@asd.asd", password="12"),
+        json=dict(email="to_patch@asd.asd", password="12345"),
     )
     user_id = res.json()["id"]
     assert res.status_code == 201
@@ -132,7 +132,16 @@ async def test_edit_user(registered_client, registered_superuser_client):
     assert res.status_code == 200
     res = await registered_client.get(f"{PREFIX}/current-user/")
     assert res.json()["cache_dir"] == new_cache_dir
-    # FIXME test "password"
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"password": "foo"}
+    )
+    debug(res.json())
+    assert res.status_code == 422  # Password too short
+
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"password": "foo!"}
+    )
+    assert res.status_code == 200
 
     # PATCH/{user_id} with superuser
     res = await registered_superuser_client.patch(
@@ -159,7 +168,7 @@ async def test_add_superuser(registered_superuser_client):
     # Create non-superuser user
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/",
-        json=dict(email="future_superuser@asd.asd", password="12"),
+        json=dict(email="future_superuser@asd.asd", password="12345"),
     )
     debug(res.json())
     user_id = res.json()["id"]
@@ -192,9 +201,10 @@ async def test_delete_user(registered_client, registered_superuser_client):
 
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/",
-        json=dict(email="to_delete@asd.asd", password="12"),
+        json=dict(email="to_delete@asd.asd", password="1234"),
     )
     user_id = res.json()["id"]
+    debug(res.json)
     assert res.status_code == 201
 
     # Test delete endpoint
