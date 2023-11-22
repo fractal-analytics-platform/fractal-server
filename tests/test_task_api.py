@@ -281,11 +281,21 @@ async def test_patch_task_different_users(
     if slurm_user:
         payload["slurm_user"] = slurm_user
     if payload:
+        res = await registered_superuser_client.get("/auth/current-user/")
+        superuser_id = res.json()["id"]
+
         res = await registered_superuser_client.patch(
-            "/auth/users/me/",
+            "/auth/current-user/",
             json=payload,
         )
+        debug(payload)
         debug(res.json())
+        assert res.status_code == 422
+
+        res = await registered_superuser_client.patch(
+            f"/auth/users/{superuser_id}/",
+            json=payload,
+        )
         assert res.status_code == 200
 
     # Patch task
