@@ -1,6 +1,7 @@
 from typing import Optional
 
 from fastapi_users import schemas
+from pydantic import BaseModel
 from pydantic import validator
 
 from ._validators import val_absolute_path
@@ -48,6 +49,19 @@ class UserUpdate(schemas.BaseUserUpdate):
         valstr("slurm_user")
     )
     _username = validator("username", allow_reuse=True)(valstr("username"))
+    _cache_dir = validator("cache_dir", allow_reuse=True)(
+        val_absolute_path("cache_dir")
+    )
+
+
+class UserUpdateStrict(BaseModel):
+    """
+    Attributes that every user can self-edit
+    """
+
+    cache_dir: Optional[str]
+    password: Optional[str]
+
     _cache_dir = validator("cache_dir", allow_reuse=True)(
         val_absolute_path("cache_dir")
     )
