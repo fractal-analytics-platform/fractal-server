@@ -5,21 +5,23 @@ from devtools import debug
 PREFIX = "/auth"
 
 
-async def test_whoami(client, registered_client, registered_superuser_client):
+async def test_get_current_user(
+    client, registered_client, registered_superuser_client
+):
 
     # Anonymous user
-    res = await client.get(f"{PREFIX}/whoami/")
+    res = await client.get(f"{PREFIX}/current-user/")
     debug(res.json())
     assert res.status_code == 401
 
     # Registered non-superuser user
-    res = await registered_client.get(f"{PREFIX}/whoami/")
+    res = await registered_client.get(f"{PREFIX}/current-user/")
     debug(res.json())
     assert res.status_code == 200
     assert not res.json()["is_superuser"]
 
     # Registered superuser
-    res = await registered_superuser_client.get(f"{PREFIX}/whoami/")
+    res = await registered_superuser_client.get(f"{PREFIX}/current-user/")
     debug(res.json())
     assert res.status_code == 200
     assert res.json()["is_superuser"]
@@ -126,7 +128,7 @@ async def test_edit_user(registered_client, registered_superuser_client):
         f"{PREFIX}/me/", json={"cache_dir": new_cache_dir}
     )
     assert res.status_code == 200
-    res = await registered_client.get(f"{PREFIX}/whoami/")
+    res = await registered_client.get(f"{PREFIX}/current-user/")
     assert res.json()["cache_dir"] == new_cache_dir
     # FIXME test "password"
 

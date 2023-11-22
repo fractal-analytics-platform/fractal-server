@@ -87,12 +87,12 @@ $ curl \
 
 ### Authenticated calls
 
-Once you have the token, you can use it to identify yourself by sending it along in the header of an API request. Here is an example with an API request to `/auth/whoami`:
+Once you have the token, you can use it to identify yourself by sending it along in the header of an API request. Here is an example with an API request to `/auth/current-user/`:
 ```console
 $ curl \
     -X GET \
     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwiYXVkIjpbImZyYWN0YWwiXSwiZXhwIjoxNjkzOTI2MTM4fQ.MqWhW0xRgCV9ZgZr1HcdynrIJ7z46IBzO7pyfTUaTU8" \
-    http://127.0.0.1:8000/auth/whoami/
+    http://127.0.0.1:8000/auth/current-user/
 
 {
     "id":1,
@@ -258,7 +258,7 @@ The user can now make [authenticated calls](#authenticated-calls) using this tok
 curl \
     -X GET \
     -H "Authorization: Bearer ey..." \
-    http://127.0.0.1:8000/auth/whoami/
+    http://127.0.0.1:8000/auth/current-user/
 
 {
     "id":3,
@@ -303,7 +303,7 @@ Being an _active user_ (i.e. `user.is_active==True`) is required by
 - all `/auth/users/...`,
 - POST `/auth/register/`,
 - GET `/auth/userlist/`,
-- GET `/auth/whoami/`.
+- GET `/auth/current-user/`.
 
 Being a _superuser_ (i.e. `user.is_superuser==True`) is required by
 
@@ -413,14 +413,15 @@ $ curl \
 ]
 ```
 
-### GET `/auth/whoami`
+### GET `/auth/current-user/`
 
-At `/auth/whoami`, we expose a non-superuser-restricted version of "GET ``/auth/users/me`" (described below):
+At `/auth/current-user/` authenticated users can get informations about themself:
+
 ```
 curl \
     -X GET \
     -H "Authorization: Bearer ey..." \
-    http://127.0.0.1:8000/auth/whoami/
+    http://127.0.0.1:8000/auth/current-user/
 
 {
     "id":2,
@@ -440,50 +441,6 @@ curl \
 🔐 *Restricted to superusers*.
 
 The additional user-management routes exposed by FastAPI Users in `/users` (see [here](https://fastapi-users.github.io/fastapi-users/12.1/usage/routes#users-router)) are available in `fractal-server` at  `/auth/users/`. For the moment all these routes are all restricted to superusers.
-
-**GET `/auth/users/me/`**
-
-Returns the current active superuser:
-```
-curl \
-    -X GET \
-    -H "Authorization: Bearer ey..." \
-    http://127.0.0.1:8000/auth/users/me/
-
-{
-    "id":1,
-    "email":"admin@fractal.xy",
-    "is_active":true,
-    "is_superuser":true,
-    "is_verified":false,
-    "slurm_user":null,
-    "cache_dir":null,
-    "username":"admin"
-}
-```
-
-**PATCH `/me`**
-
-Update the current active superuser. We must provide a `UserUpdate` instance, which is like a [`UserCreate`](../../reference/fractal_server/app/schemas/user#fractal_server.app.schemas.user.UserCreate) except that all attributes are optional.
-```console
-$ curl \
-    -X PATCH \
-    -H "Content-Type: application/json" \
-    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiYXVkIjpbImZyYWN0YWwiXSwiZXhwIjoxNjkzNzMzNTY5fQ.ea8wdZHaGYpCwl60pdDBw6BMumc43xcss1rCtaPP1GM" \
-    -d '{"slurm_user": "slurm1"}' \
-    http://127.0.0.1:8000/auth/users/me/
-
-{
-    "id":1,
-    "email":"admin@fractal.xy",
-    "is_active":true,
-    "is_superuser":true,
-    "is_verified":false,
-    "slurm_user":"slurm1",
-    "cache_dir":null,
-    "username":"admin"
-}
-```
 
 **GET `/{id}/`**
 
