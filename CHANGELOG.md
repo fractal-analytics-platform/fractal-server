@@ -20,6 +20,7 @@
         * Move all routes definitions into `fractal_server/app/routes` (\#976).
         * Fix construction of `ApplyWorkflow.workflow_dump`, within apply endpoint (\#968).
         * Fix construction of `ApplyWorkflow` attributes `input_dataset_dump` and `output_dataset_dump`, within apply endpoint (\#990).
+        * Remove `asyncio.gather`, in view of SQLAlchemy2 update (\#1004).
 * Database:
     * Make foreign-keys of `ApplyWorkflow` (`project_id`, `workflow_id`, `input_dataset_id`, `output_dataset_id`) optional (\#927).
     * Add columns `input_dataset_dump`, `output_dataset_dump` and `user_email` to `ApplyWorkflow` (\#927).
@@ -28,11 +29,14 @@
     * Remove `"cascade": "all, delete-orphan"` from `Project.job_list` (\#927).
     * Add `Workflow.job_list` relation (\#927).
     * Do not use `Enum`s as column types (e.g. for `ApplyWorkflow.status`), but only for (de-)serialization (\#974).
+* App:
+    * Skip creation of first-superuser when one superuser already exists (\#1006).
 * Runner:
     * Refresh DB objects within `submit_workflow` (\#927).
 * Testing:
     * Improve `test_full_workflow.py` (\#971).
     * Update `pytest-asyncio` to v0.21 (\#1008).
+    * Fix CI issue related to event loop and asyncpg (\#1012).
 
 # 1.3.14 (do not use!)
 

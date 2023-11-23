@@ -1,4 +1,3 @@
-import asyncio
 from copy import deepcopy  # noqa
 from typing import Optional
 
@@ -36,8 +35,7 @@ async def get_list_task(
     """
     stm = select(Task)
     res = await db.execute(stm)
-    task_list = res.scalars().unique().fetchall()
-    await asyncio.gather(*[db.refresh(t) for t in task_list])
+    task_list = res.scalars().all()
     await db.close()
     return task_list
 
