@@ -248,7 +248,7 @@ class Settings(BaseSettings):
     default admin credentials.
     """
 
-    FRACTAL_DEFAULT_ADMIN_PASSWORD: str = "1234"
+    FRACTAL_DEFAULT_ADMIN_PASSWORD: str = "12345"
     """
     Admin default password, used upon creation of the first superuser during
     server startup.
