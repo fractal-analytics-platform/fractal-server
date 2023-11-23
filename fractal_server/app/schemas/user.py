@@ -3,6 +3,7 @@ from typing import Optional
 from fastapi_users import schemas
 from pydantic import BaseModel
 from pydantic import Extra
+from pydantic import root_validator
 from pydantic import validator
 
 from ._validators import val_absolute_path
@@ -53,6 +54,20 @@ class UserUpdate(schemas.BaseUserUpdate):
     _cache_dir = validator("cache_dir", allow_reuse=True)(
         val_absolute_path("cache_dir")
     )
+
+    @root_validator(pre=True)
+    def remove_boolean_none_and_none_email(cls, value):
+        return {
+            k: v
+            for k, v in value.items()
+            if not (
+                v is None
+                and (
+                    cls.schema()["properties"][k]["type"] == "boolean"
+                    or k == "email"
+                )
+            )
+        }
 
 
 class UserUpdateStrict(BaseModel, extra=Extra.forbid):
