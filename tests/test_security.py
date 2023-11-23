@@ -1,6 +1,6 @@
 import pytest
 from devtools import debug
-
+from sqlalchemy.exc import IntegrityError
 
 PREFIX = "/auth"
 
@@ -197,6 +197,102 @@ async def test_edit_current_user(registered_client, app):
     res = await registered_client.patch(
         f"{PREFIX}/current-user/", json={"foo": "bar"}
     )
+    assert res.status_code == 422
+
+
+async def test_edit_users_as_superuser(registered_superuser_client):
+
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/register/",
+        json=dict(email="test@fractal.xy", password="12345"),
+    )
+    assert res.status_code == 201
+    expected_status = res.json()
+
+    correct_update = dict(
+        email="patch@fractal.xy",
+        is_active=False,
+        is_superuser=True,
+        is_verified=True,
+        slurm_user="slurm_patch",
+        cache_dir="/patch",
+        username="user_patch",
+    )
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{expected_status['id']}/",
+        json=correct_update,
+    )
+    assert res.status_code == 200
+    for k, v in res.json().items():
+        if k not in correct_update:
+            assert v == expected_status[k]
+        else:
+            assert v != expected_status[k]
+            assert v == correct_update[k]
+    expected_status == res.json()
+
+    # EMAIL
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{expected_status['id']}/",
+        json=dict(email="hello, world!"),
+    )
+    assert res.status_code == 422
+    # FIXME
+    for attribute in ["email", "is_active", "is_superuser", "is_verified"]:
+        with pytest.raises(IntegrityError):
+            res = await registered_superuser_client.patch(
+                f"{PREFIX}/users/{expected_status['id']}/",
+                json={attribute: None},
+            )
+
+    # SLURM_USER
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{expected_status['id']}/",
+        json={"slurm_user": ""},
+    )
+    # String attribute 'slurm_user' cannot be empty
+    assert res.status_code == 422
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{expected_status['id']}/",
+        json={"slurm_user": None},
+    )
+    # String attribute 'slurm_user' cannot be None
+    assert res.status_code == 422
+
+    # CACHE_DIR
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{expected_status['id']}/",
+        json={"cache_dir": ""},
+    )
+    # String attribute 'cache_dir' cannot be empty
+    assert res.status_code == 422
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{expected_status['id']}/",
+        json={"cache_dir": "not_abs"},
+    )
+    # String attribute 'cache_dir' must be an absolute path (given 'not_abs').
+    assert res.status_code == 422
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{expected_status['id']}/",
+        json={"cache_dir": None},
+    )
+    # String attribute 'cache_dir' cannot be None
+    assert res.status_code == 422
+
+    # USERNAME
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{expected_status['id']}/",
+        json={"username": ""},
+    )
+    # String attribute 'username' cannot be empty
+    debug(res.json())
+    assert res.status_code == 422
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{expected_status['id']}/",
+        json={"username": None},
+    )
+    # String attribute 'username' cannot be None
+    debug(res.json())
     assert res.status_code == 422
 
 
