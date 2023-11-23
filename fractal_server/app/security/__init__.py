@@ -36,9 +36,9 @@ from typing import Type
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Request
-from fastapi import Response
 from fastapi import status
 from fastapi_users import BaseUserManager
+from fastapi_users import exceptions
 from fastapi_users import FastAPIUsers
 from fastapi_users import IntegerIDMixin
 from fastapi_users.authentication import AuthenticationBackend
@@ -48,6 +48,7 @@ from fastapi_users.authentication import JWTStrategy
 from fastapi_users.db.base import BaseUserDatabase
 from fastapi_users.models import ID
 from fastapi_users.models import OAP
+from fastapi_users.models import UOAP
 from fastapi_users.models import UP
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -176,17 +177,69 @@ async def get_user_db(
 
 
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
-    async def on_after_login(
+    async def oauth_callback(
         self,
-        user: User,
+        oauth_name: str,
+        access_token: str,
+        account_id: str,
+        account_email: str,
+        expires_at: Optional[int] = None,
+        refresh_token: Optional[str] = None,
         request: Optional[Request] = None,
-        response: Optional[Response] = None,
-    ) -> None:
+        *,
+        associate_by_email: bool = False,
+        is_verified_by_default: bool = False,
+    ) -> UOAP:
         """
-        Perform logic after user login.
-        *You should overload this method to add your own logic.*
+        Adapted from
+        https://github.com/
+            fastapi-users/fastapi-users/blob/master/fastapi_users/manager.py
         """
-        pass
+        oauth_account_dict = {
+            "oauth_name": oauth_name,
+            "access_token": access_token,
+            "account_id": account_id,
+            "account_email": account_email,
+            "expires_at": expires_at,
+            "refresh_token": refresh_token,
+        }
+
+        try:
+            user = await self.get_by_oauth_account(oauth_name, account_id)
+        except exceptions.UserNotExists:
+            try:
+                # Associate account
+                user = await self.get_by_email(account_email)
+                if not associate_by_email:
+                    raise exceptions.UserAlreadyExists()
+                user = await self.user_db.add_oauth_account(
+                    user, oauth_account_dict
+                )
+            except exceptions.UserNotExists:
+                # Create account
+                password = self.password_helper.generate()
+                user_dict = {
+                    "email": account_email,
+                    "hashed_password": self.password_helper.hash(password),
+                    "is_verified": False,  # Fractal specific: see issue #959.
+                }
+                user = await self.user_db.create(user_dict)
+                user = await self.user_db.add_oauth_account(
+                    user, oauth_account_dict
+                )
+                await self.on_after_register(user, request)
+        else:
+            # Update oauth
+            for existing_oauth_account in user.oauth_accounts:
+                if (
+                    existing_oauth_account.account_id == account_id
+                    and existing_oauth_account.oauth_name == oauth_name
+                ):
+                    user = await self.user_db.update_oauth_account(
+                        user, existing_oauth_account, oauth_account_dict
+                    )
+
+        return user
 
 
 async def get_user_manager(
