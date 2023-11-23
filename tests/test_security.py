@@ -155,7 +155,7 @@ async def test_edit_current_user(registered_client, app):
     )
     assert res.status_code == 400
     res = await registered_client.patch(
-        f"{PREFIX}/current-user/", json={"password": "abcd"}
+        f"{PREFIX}/current-user/", json={"password": "abc"}
     )
     assert res.status_code == 400
     # Password too long

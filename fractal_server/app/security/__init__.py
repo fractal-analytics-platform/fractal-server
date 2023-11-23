@@ -178,7 +178,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     async def validate_password(self, password: str, user: User) -> None:
         # check password length
         min_length, max_length = 4, 100
-        if len(password) <= min_length:
+        if len(password) < min_length:
             raise InvalidPasswordException(
                 f"The password is too short (minimum length: {min_length})."
             )
