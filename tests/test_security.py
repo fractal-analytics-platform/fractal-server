@@ -33,7 +33,7 @@ async def test_register_user(registered_client, registered_superuser_client):
     """
 
     EMAIL = "asd@asd.asd"
-    payload_register = dict(email=EMAIL, password="1234")
+    payload_register = dict(email=EMAIL, password="12345")
 
     # Non-superuser user
     res = await registered_client.post(
@@ -133,13 +133,16 @@ async def test_edit_user(registered_client, registered_superuser_client):
     res = await registered_client.get(f"{PREFIX}/current-user/")
     assert res.json()["cache_dir"] == new_cache_dir
     res = await registered_client.patch(
-        f"{PREFIX}/current-user/", json={"password": "foo"}
+        f"{PREFIX}/current-user/", json={"password": "fooo"}
     )
-    debug(res.json())
-    assert res.status_code == 422  # Password too short
+    assert res.status_code == 400  # Password too short
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"password": 26 * "fooo"}
+    )
+    assert res.status_code == 400  # Password too long
 
     res = await registered_client.patch(
-        f"{PREFIX}/current-user/", json={"password": "foo!"}
+        f"{PREFIX}/current-user/", json={"password": "cinco"}
     )
     assert res.status_code == 200
 

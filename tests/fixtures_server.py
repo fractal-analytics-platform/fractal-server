@@ -233,7 +233,7 @@ async def registered_client(
 ) -> AsyncGenerator[AsyncClient, Any]:
 
     EMAIL = "test@test.com"
-    PWD = "1234"
+    PWD = "12345"
     await _create_first_user(email=EMAIL, password=PWD, is_superuser=False)
 
     async with AsyncClient(
