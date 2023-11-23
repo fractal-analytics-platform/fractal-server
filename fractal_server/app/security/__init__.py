@@ -222,7 +222,8 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
                 user_dict = {
                     "email": account_email,
                     "hashed_password": self.password_helper.hash(password),
-                    "is_verified": False,  # Fractal specific: see issue #959.
+                    "is_verified": is_verified_by_default,
+                    "is_active": False,  # Fractal specific: see issue #959.
                 }
                 user = await self.user_db.create(user_dict)
                 user = await self.user_db.add_oauth_account(
