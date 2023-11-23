@@ -194,6 +194,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         Adapted from
         https://github.com/
             fastapi-users/fastapi-users/blob/master/fastapi_users/manager.py
+        Override original.
         """
         oauth_account_dict = {
             "oauth_name": oauth_name,
