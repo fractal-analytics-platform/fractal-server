@@ -1,6 +1,5 @@
 import pytest
 from devtools import debug
-from sqlalchemy.exc import IntegrityError
 
 PREFIX = "/auth"
 
@@ -222,6 +221,7 @@ async def test_edit_users_as_superuser(registered_superuser_client):
         f"{PREFIX}/users/{expected_status['id']}/",
         json=correct_update,
     )
+
     assert res.status_code == 200
     for k, v in res.json().items():
         if k not in correct_update:
@@ -229,7 +229,7 @@ async def test_edit_users_as_superuser(registered_superuser_client):
         else:
             assert v != expected_status[k]
             assert v == correct_update[k]
-    expected_status == res.json()
+    expected_status = res.json()
 
     # EMAIL
     res = await registered_superuser_client.patch(
@@ -237,13 +237,14 @@ async def test_edit_users_as_superuser(registered_superuser_client):
         json=dict(email="hello, world!"),
     )
     assert res.status_code == 422
-    # FIXME
+
     for attribute in ["email", "is_active", "is_superuser", "is_verified"]:
-        with pytest.raises(IntegrityError):
-            res = await registered_superuser_client.patch(
-                f"{PREFIX}/users/{expected_status['id']}/",
-                json={attribute: None},
-            )
+        res = await registered_superuser_client.patch(
+            f"{PREFIX}/users/{expected_status['id']}/",
+            json={attribute: None},
+        )
+        assert res.status_code == 200
+        assert res.json() == expected_status  # nothing patched
 
     # SLURM_USER
     res = await registered_superuser_client.patch(
