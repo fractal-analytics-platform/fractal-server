@@ -101,68 +101,102 @@ async def test_show_user(registered_client, registered_superuser_client):
     assert res.status_code == 200
 
 
-async def test_edit_user(registered_client, registered_superuser_client):
+async def test_edit_current_user(registered_client, app):
 
-    res = await registered_superuser_client.post(
-        f"{PREFIX}/register/",
-        json=dict(email="to_patch@asd.asd", password="12345"),
-    )
-    user_id = res.json()["id"]
-    assert res.status_code == 201
-
-    # PATCH/{user_id} with non-superuser user
-    res = await registered_client.patch(
-        f"{PREFIX}/users/{user_id}/", json={"slurm_user": "my_slurm_user"}
-    )
-    assert res.status_code == 403
-
-    # GET and PATCH /users/me do not exist
-    res = await registered_superuser_client.get(f"{PREFIX}/users/me/")
-    assert res.status_code == 404
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/me/", json={"slurm_user": "asd"}
-    )
-    assert res.status_code == 404
-
-    # Users can change their `cache_dir` and `password` using `PATCH /me`
-    new_cache_dir = "/n/e/w/c/a/c/h/e/d/i/r"
-    res = await registered_client.patch(
-        f"{PREFIX}/current-user/", json={"cache_dir": new_cache_dir}
-    )
-    assert res.status_code == 200
     res = await registered_client.get(f"{PREFIX}/current-user/")
-    assert res.json()["cache_dir"] == new_cache_dir
-    res = await registered_client.patch(
-        f"{PREFIX}/current-user/", json={"password": "fooo"}
-    )
-    assert res.status_code == 400  # Password too short
-    res = await registered_client.patch(
-        f"{PREFIX}/current-user/", json={"password": 26 * "fooo"}
-    )
-    assert res.status_code == 400  # Password too long
+    expected_status = res.json()
+
+    res = await registered_client.patch(f"{PREFIX}/current-user/", json={})
+    assert res.status_code == 200
+    assert res.json() == expected_status
+
+    # CACHE_DIR
 
     res = await registered_client.patch(
-        f"{PREFIX}/current-user/", json={"password": "cinco"}
+        f"{PREFIX}/current-user/", json={"cache_dir": "/tmp"}
+    )
+    assert res.status_code == 200
+    expected_status["cache_dir"] = "/tmp"
+    assert res.json() == expected_status
+
+    # From val_absolute_path:
+    # - String attribute 'cache_dir' cannot be empty
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"cache_dir": ""}
+    )
+    assert res.status_code == 422
+    # - String attribute 'cache_dir' must be an absolute path (given 'not_abs')
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"cache_dir": "not_abs"}
+    )
+    assert res.status_code == 422
+    # - String attribute '{attribute}' cannot be None
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"cache_dir": None}
+    )
+    assert res.status_code == 422
+
+    # PASSWORD
+
+    # FIXME  payload: {"password": null}
+    # FIXME  request-body is valid, but the endpoint raises a 422
+    #        (through the user manager and fastapi-users)
+    # ValueError: "UserOAuth" object has no field "password"
+    # Enters SQLModelUserDatabaseAsync.update with {"password":None}
+    # (regular password update enters with {"hashed_password":"..."})
+    with pytest.raises(ValueError):
+        res = await registered_client.patch(
+            f"{PREFIX}/current-user/", json={"password": None}
+        )
+
+    # Password too short
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"password": ""}
+    )
+    assert res.status_code == 400
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"password": "abcd"}
+    )
+    assert res.status_code == 400
+    # Password too long
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"password": "x" * 101}
+    )
+    assert res.status_code == 400
+    # Password changed
+    NEW_PASSWORD = "x" * 100
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"password": NEW_PASSWORD}
     )
     assert res.status_code == 200
 
-    # PATCH/{user_id} with superuser
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{user_id}/",
-        json={
-            "slurm_user": "my_slurm_user",
-            "cache_dir": "/some/absolute/path",
-        },
-    )
-    assert res.status_code == 200
-    assert res.json()["slurm_user"] == "my_slurm_user"
-    assert res.json()["cache_dir"] == "/some/absolute/path"
+    from httpx import AsyncClient
+    from asgi_lifespan import LifespanManager
 
-    # PATCH/{user_id} with superuser, but with invalid payload
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{user_id}/", json={"cache_dir": "non/absolute/path"}
+    async with AsyncClient(
+        app=app, base_url="http://test"
+    ) as client, LifespanManager(app):
+        res = await client.post(
+            "auth/token/login/",
+            data=dict(
+                username=expected_status["email"],
+                password="12345",  # default password of registred_clint
+            ),
+        )
+        assert res.status_code == 400  # LOGIN_BAD_CREDENTIALS
+        res = await client.post(
+            "auth/token/login/",
+            data=dict(
+                username=expected_status["email"],
+                password=NEW_PASSWORD,
+            ),
+        )
+        assert res.status_code == 200
+
+    # NO EXTRA
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"foo": "bar"}
     )
-    debug(res.json())
     assert res.status_code == 422
 
 
