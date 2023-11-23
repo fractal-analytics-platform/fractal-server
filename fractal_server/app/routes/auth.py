@@ -3,6 +3,11 @@ Definition of `/auth` routes.
 """
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import status
+from fastapi_users import exceptions
+from fastapi_users import schemas
+from fastapi_users.router.common import ErrorCode
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
@@ -71,11 +76,28 @@ async def patch_current_user(
     current_user: User = Depends(current_active_user),
     user_manager: UserManager = Depends(get_user_manager),
 ):
-    return await user_manager.update(
-        UserUpdate(**user_update.dict(exclude_unset=True)),
-        current_user,
-        safe=True,
-    )
+
+    try:
+        user = await user_manager.update(
+            UserUpdate(**user_update.dict(exclude_unset=True)),
+            current_user,
+            safe=True,
+        )
+    except exceptions.InvalidPasswordException as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "code": ErrorCode.UPDATE_USER_INVALID_PASSWORD,
+                "reason": e.reason,
+            },
+        )
+    except exceptions.UserAlreadyExists:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ErrorCode.UPDATE_USER_EMAIL_ALREADY_EXISTS,
+        )
+
+    return schemas.model_validate(User, user)
 
 
 @router_auth.get("/current-user/", response_model=UserRead)
