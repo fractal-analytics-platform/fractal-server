@@ -91,11 +91,6 @@ async def patch_current_user(
                 "reason": e.reason,
             },
         )
-    except exceptions.UserAlreadyExists:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ErrorCode.UPDATE_USER_EMAIL_ALREADY_EXISTS,
-        )
 
     return schemas.model_validate(User, user)
 
