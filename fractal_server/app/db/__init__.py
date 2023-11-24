@@ -112,7 +112,12 @@ class DB:
         """
         Get sync database session
         """
-        with cls._sync_session_maker() as sync_session:
+        try:
+            session_maker = cls._sync_session_maker()
+        except AttributeError:
+            cls.set_db()
+            session_maker = cls._sync_session_maker()
+        with session_maker as sync_session:
             yield sync_session
 
 
