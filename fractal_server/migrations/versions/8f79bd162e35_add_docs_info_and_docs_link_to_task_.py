@@ -22,12 +22,12 @@ def upgrade() -> None:
     with op.batch_alter_table("task", schema=None) as batch_op:
         batch_op.add_column(
             sa.Column(
-                "docs_info", sqlmodel.sql.sqltypes.AutoString(), nullable=False
+                "docs_info", sqlmodel.sql.sqltypes.AutoString(), nullable=True
             )
         )
         batch_op.add_column(
             sa.Column(
-                "docs_link", sqlmodel.sql.sqltypes.AutoString(), nullable=False
+                "docs_link", sqlmodel.sql.sqltypes.AutoString(), nullable=True
             )
         )
 
