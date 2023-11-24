@@ -57,7 +57,13 @@ class UserUpdate(schemas.BaseUserUpdate):
 
     @root_validator(pre=True)
     def cant_set_none(cls, values):
-        for attribute in ["is_active", "is_verified", "is_superuser", "email"]:
+        for attribute in [
+            "is_active",
+            "is_verified",
+            "is_superuser",
+            "email",
+            "password",
+        ]:
             if attribute in values:
                 if values.get(attribute) is None:
                     raise ValueError(f"Cannot set {attribute}=None")
@@ -75,6 +81,7 @@ class UserUpdateStrict(BaseModel, extra=Extra.forbid):
     _cache_dir = validator("cache_dir", allow_reuse=True)(
         val_absolute_path("cache_dir")
     )
+    _password = validator("password", allow_reuse=True)(valstr("password"))
 
 
 class UserCreate(schemas.BaseUserCreate):
