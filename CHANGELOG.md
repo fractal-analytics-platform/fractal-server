@@ -29,6 +29,7 @@
     * Remove `"cascade": "all, delete-orphan"` from `Project.job_list` (\#927).
     * Add `Workflow.job_list` relation (\#927).
     * Do not use `Enum`s as column types (e.g. for `ApplyWorkflow.status`), but only for (de-)serialization (\#974).
+    * Script for updating DB from 1.4.0 to 1.4.1 (\#1010)
 * App:
     * Skip creation of first-superuser when one superuser already exists (\#1006).
 * Runner:
