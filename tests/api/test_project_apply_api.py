@@ -17,7 +17,7 @@ async def test_project_apply_failures(
     workflow_factory,
     task_factory,
 ):
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project1 = await project_factory(user)
         project2 = await project_factory(user)
         input_dataset = await dataset_factory(
@@ -150,7 +150,7 @@ async def test_project_apply_existing_job(
     exists.
     """
 
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         input_dataset = await dataset_factory(
             project_id=project.id, name="input"
@@ -238,7 +238,7 @@ async def test_project_apply_missing_user_attributes(
 
     override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm")
 
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         # Make sure that user.cache_dir was not set
         debug(user)
         assert user.cache_dir is None
@@ -298,7 +298,7 @@ async def test_project_apply_missing_resources(
     db,
     client,
 ):
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         input_dataset = await dataset_factory(
             project_id=project.id, name="input", type="zarr"
@@ -335,7 +335,7 @@ async def test_project_apply_workflow_subset(
     workflow_factory,
     task_factory,
 ):
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         dataset1 = await dataset_factory(
             project_id=project.id, name="ds1", type="type1"

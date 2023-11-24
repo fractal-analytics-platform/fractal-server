@@ -26,7 +26,7 @@ async def test_success_submit_workflows(
     WHEN `submit_worflow` is called twice at different times
     THEN two different folders are created
     """
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id)
         task = await task_factory(name="task", source="task_source")
@@ -86,7 +86,7 @@ async def test_fail_submit_workflows_at_same_time(
     WHEN `submit_worflow` is called twice at the "same time" (monkeypatched)
     THEN a RuntimeError is raised
     """
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id)
         task = await task_factory(name="task", source="task_source")
@@ -137,7 +137,7 @@ async def test_fail_submit_workflows_wrong_IDs(
     db,
     override_settings_factory,
 ):
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
 
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id)
