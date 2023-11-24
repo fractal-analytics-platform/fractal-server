@@ -16,13 +16,11 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.9", "3.10"]
-        db: ["postgres"]  # FIXME add sqlite
 
     services:
       postgres:
         # Disable postgres service when using sqlite, through the workaround
         # described in https://github.com/actions/runner/issues/822
-        image: ${{ (matrix.db == 'postgres') && 'postgres' || '' }}
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: fractal_test
@@ -37,7 +35,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Load database
+      - name: Load postgres database
         env:
           PGPASSWORD: postgres
         run: psql -U postgres -h localhost -d fractal_test -f tests/data/migration_1.3_to_1.4/clean_db_fractal_1.3.13.sql
@@ -52,12 +50,17 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: "poetry"
 
+      - name: Load sqlite database
+        run: \
+          pip install db-to-sqlite[postgresql] && \
+          db-to-sqlite "postgresql://postgres:postgres@localhost/fractal_test" tests/data/migration_1.3_to_1.4/clean_db_fractal_1.3.13.sql.sqlite3 --all
+
       - name: Install dependencies
         run: |
-          if [[ ${{ matrix.db }} == "postgres" ]]; then
-            DB="-E postgres"
-          fi
-          poetry install --with dev --without docs --no-interaction -E slurm -E gunicorn $DB
+          poetry install --with dev --without docs --no-interaction -E slurm -E gunicorn -E postgres
 
-      - name: Set db
-        run: cp tests/data/migration_1.3_to_1.4/.fractal_server.env . && poetry run fractalctl set-db
+      - name: Set db postgres
+        run: cp tests/data/migration_1.3_to_1.4/.fractal_server_postgres.env .fractal_server.env && poetry run fractalctl set-db
+
+      - name: Set db sqlite
+        run: cp tests/data/migration_1.3_to_1.4/.fractal_server_postgres.env .fractal_server.env && poetry run fractalctl set-db
