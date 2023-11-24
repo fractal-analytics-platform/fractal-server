@@ -262,7 +262,7 @@ async def test_collection_with_json_schemas(
         venv_path=venv_path,
         task_pkg=task_pkg,
     )
-    async with MockCurrentUser(persist=True):
+    async with MockCurrentUser():
         status = "pending"
         while status == "pending":
             res = await client.get(f"{PREFIX}/collect/{state.id}/")
@@ -331,7 +331,7 @@ async def test_failed_collection_invalid_manifest(
         package=dummy_task_package_invalid_manifest.as_posix()
     )
     debug(dummy_task_package_invalid_manifest)
-    async with MockCurrentUser(persist=True):
+    async with MockCurrentUser():
         res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
         debug(res.json())
         assert res.status_code == 422
@@ -341,7 +341,7 @@ async def test_failed_collection_invalid_manifest(
         package=dummy_task_package_missing_manifest.as_posix()
     )
     debug(dummy_task_package_missing_manifest)
-    async with MockCurrentUser(persist=True):
+    async with MockCurrentUser():
         res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
         debug(res.json())
         assert res.status_code == 422
@@ -502,7 +502,7 @@ async def test_logs(
         venv_path=venv_path,
         task_pkg=task_pkg,
     )
-    async with MockCurrentUser(persist=True):
+    async with MockCurrentUser():
         res = await client.get(f"{PREFIX}/collect/{state.id}/")
     out_state = res.json()
     debug(out_state)

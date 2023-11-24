@@ -29,7 +29,7 @@ async def test_stop_job(
 ):
     override_settings_factory(FRACTAL_RUNNER_BACKEND=backend)
 
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         wf = await workflow_factory(project_id=project.id)
         t = await task_factory(name="task", source="source")
@@ -69,7 +69,7 @@ async def test_job_list(
     tmp_path,
     db,
 ):
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         prj = await project_factory(user)
 
         # Test that the endpoint returns an empty job list
@@ -114,7 +114,7 @@ async def test_job_download_logs(
     db,
     tmp_path,
 ):
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         prj = await project_factory(user)
 
         # Create all needed objects in the database
@@ -180,7 +180,7 @@ async def test_get_job_list(
     client,
     tmp_path,
 ):
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
 
         res = await client.get(f"{PREFIX}/project/{project.id}/job/")
@@ -233,7 +233,7 @@ async def test_get_user_jobs(
     tmp_path,
 ):
 
-    async with MockCurrentUser(persist=True, user_kwargs={"id": 123}) as user:
+    async with MockCurrentUser(user_kwargs={"id": 123}) as user:
 
         task = await task_factory()
 
@@ -269,7 +269,7 @@ async def test_get_user_jobs(
         assert res.status_code == 200
         assert len(res.json()) == 5
 
-    async with MockCurrentUser(persist=True, user_kwargs={"id": 321}):
+    async with MockCurrentUser(user_kwargs={"id": 321}):
         res = await client.get(f"{PREFIX}/job/")
         assert res.status_code == 200
         assert len(res.json()) == 0

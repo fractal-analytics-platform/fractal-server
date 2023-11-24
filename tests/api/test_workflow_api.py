@@ -33,7 +33,7 @@ async def add_task(client, index):
 
 
 async def test_post_workflow(db, client, MockCurrentUser, project_factory):
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project_id = None
         res = await client.post(
             f"api/v1/project/{project_id}/workflow/",
@@ -98,7 +98,7 @@ async def test_delete_workflow(
     WHEN the endpoint that deletes a Workflow is called
     THEN the Workflow and its associated WorkflowTasks are removed from the db
     """
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
 
         # Create project
         project = await project_factory(user)
@@ -211,8 +211,7 @@ async def test_get_workflow(client, MockCurrentUser, project_factory):
     WHEN the endpoint to GET a Workflow by its id is called
     THEN the Workflow is returned
     """
-    async with MockCurrentUser(persist=True) as user:
-        # Create project
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         p_id = project.id
         # Create workflow
@@ -250,7 +249,7 @@ async def test_get_user_workflows(
     Test /api/v1/workflow/
     """
 
-    async with MockCurrentUser(persist=True, user_kwargs={}) as user:
+    async with MockCurrentUser(user_kwargs={}) as user:
         debug(user)
 
         project1 = await project_factory(user, name="p1")
@@ -273,7 +272,7 @@ async def test_post_worfkflow_task(client, MockCurrentUser, project_factory):
         the Workflow.task_list is called
     THEN the new WorkflowTask is inserted in Workflow.task_list
     """
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         workflow = {"name": "My Workflow"}
         res = await client.post(
@@ -354,7 +353,7 @@ async def test_delete_workflow_task(
     THEN the selected WorkflowTask is properly removed
         from Workflow.task_list
     """
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         workflow = {"name": "My Workflow"}
         res = await client.post(
@@ -417,7 +416,7 @@ async def test_get_project_workflows(
         to that Project is called
     THEN the list of all its Workflows is returned
     """
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         other_project = await project_factory(user)
         workflow1 = {"name": "WF1"}
@@ -454,7 +453,7 @@ async def test_patch_workflow(client, MockCurrentUser, project_factory):
     WHEN the endpoint to PATCH a Workflow is called
     THEN the Workflow is updated
     """
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
 
         # POST a Workflow with name `WF`
@@ -501,7 +500,7 @@ async def test_patch_workflow_task(client, MockCurrentUser, project_factory):
     WHEN the endpoint to PATCH a WorkflowTask is called
     THEN the WorkflowTask is updated
     """
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         workflow = {"name": "WF"}
         res = await client.post(
@@ -596,7 +595,7 @@ async def test_patch_workflow_task_with_args_schema(
 
     args_schema = _Arguments.schema()
 
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         # Create DB objects
         project = await project_factory(user)
         workflow = {"name": "WF"}
@@ -666,7 +665,7 @@ async def test_patch_workflow_task_failures(
     WHEN the endpoint to PATCH a WorkflowTask is called with invalid arguments
     THEN the correct status code is returned
     """
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
 
         # Prepare two workflows, with one task each
         project = await project_factory(user)
@@ -786,7 +785,7 @@ async def test_import_export_workflow(
     debug(workflow_from_file)
 
     # Create project
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         prj = await project_factory(user)
 
     # Import workflow into project
@@ -852,7 +851,7 @@ async def test_export_workflow_log(
     """
 
     # Create project and task
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         TASK_OWNER = "someone"
         task = await task_factory(owner=TASK_OWNER, source="some-source")
         prj = await project_factory(user)
@@ -886,7 +885,7 @@ async def test_import_export_workflow_fail(
     testdata_path,
     task_factory,
 ):
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         prj = await project_factory(user)
 
     await task_factory(name="valid", source="test_source")
@@ -930,7 +929,7 @@ async def test_reorder_task_list(
 
     num_tasks = len(reordered_workflowtask_ids)
 
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
 
         # Create project and empty workflow
         project = await project_factory(user)
@@ -1011,7 +1010,7 @@ async def test_reorder_task_list_fail(
     """
     num_tasks = 3
 
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         # Create project, workflow, tasks, workflowtasks
         project = await project_factory(user)
         payload = {"name": "WF"}
@@ -1077,7 +1076,7 @@ async def test_delete_workflow_with_job(
     WHEN we DELETE that Workflow
     THEN Job.workflow_id is set to None
     """
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
 
         project = await project_factory(user)
 
@@ -1109,7 +1108,7 @@ async def test_delete_workflow_with_job(
 
 
 async def test_read_workflowtask(MockCurrentUser, project_factory, client):
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         workflow = {"name": "My Workflow"}
         res = await client.post(
