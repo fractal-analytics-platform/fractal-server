@@ -1,0 +1,60 @@
+name: ci
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+
+  tests:
+    name: "Python ${{ matrix.python-version }} - ${{ matrix.db }}"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10"]
+        db: ["postgres"]  # FIXME add sqlite
+
+    services:
+      postgres:
+        # Disable postgres service when using sqlite, through the workaround
+        # described in https://github.com/actions/runner/issues/822
+        image: ${{ (matrix.db == 'postgres') && 'postgres' || '' }}
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: fractal_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install poetry
+        run: pipx install poetry==1.5.1
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "poetry"
+
+      - name: Install dependencies
+        run: |
+          if [[ ${{ matrix.db }} == "postgres" ]]; then
+            DB="-E postgres"
+          fi
+          poetry install --with dev --without docs --no-interaction -E slurm -E gunicorn $DB
+
+      - name: Load database
+        run: psql -d fractal_test -f tests/data/migration_1.3_to_1.4/clean_db_fractal_1.3.13.sql  # FIXME this is OK only when testing 1.4.0, but later we will need to use the fixed one
+
+      - name: Set db
+        run: poetry run fractalctl set-db
