@@ -16,12 +16,16 @@ with next(get_sync_db()) as db:
     rows = applyworkflows.scalars().all()
 
     for row in rows:
+
+        # get correspondent workflow, input_dataset, output_dataset
         workflow = db.get(Workflow, row.workflow_id)
 
         input_dataset = db.get(Dataset, row.input_dataset_id)
 
         output_dataset = db.get(Dataset, row.output_dataset_id)
 
+        # build correct dumps using the same method used in
+        # fractal_server.app.routes.api.v1.project
         input_dataset_dump = dict(
             input_dataset.dict(exclude={"resource_list"}),
             resource_list=[
