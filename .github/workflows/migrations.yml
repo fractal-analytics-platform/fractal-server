@@ -51,9 +51,8 @@ jobs:
           cache: "poetry"
 
       - name: Load sqlite database
-        run: \
-          pip install db-to-sqlite[postgresql] && \
-          db-to-sqlite "postgresql://postgres:postgres@localhost/fractal_test" tests/data/migration_1.3_to_1.4/clean_db_fractal_1.3.13.sql.sqlite3 --all
+        run: |
+          pip install db-to-sqlite[postgresql] && db-to-sqlite "postgresql://postgres:postgres@localhost/fractal_test" tests/data/migration_1.3_to_1.4/clean_db_fractal_1.3.13.sql.sqlite3 --all
 
       - name: Install dependencies
         run: |
