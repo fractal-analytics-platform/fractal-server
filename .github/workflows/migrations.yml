@@ -63,4 +63,4 @@ jobs:
         run: cp tests/data/migration_1.3_to_1.4/.fractal_server_postgres.env .fractal_server.env && poetry run fractalctl set-db
 
       - name: Set db sqlite
-        run: cp tests/data/migration_1.3_to_1.4/.fractal_server_postgres.env .fractal_server.env && poetry run fractalctl set-db
+        run: cp tests/data/migration_1.3_to_1.4/.fractal_server_sqlite.env .fractal_server.env && poetry run fractalctl set-db
