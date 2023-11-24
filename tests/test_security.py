@@ -137,22 +137,17 @@ async def test_edit_current_user(registered_client, app):
 
     # PASSWORD
 
-    # FIXME  payload: {"password": null}
-    # FIXME  request-body is valid, but the endpoint raises a 422
-    #        (through the user manager and fastapi-users)
-    # ValueError: "UserOAuth" object has no field "password"
-    # Enters SQLModelUserDatabaseAsync.update with {"password":None}
-    # (regular password update enters with {"hashed_password":"..."})
-    with pytest.raises(ValueError):
-        res = await registered_client.patch(
-            f"{PREFIX}/current-user/", json={"password": None}
-        )
-
-    # Password too short
+    # Invalid password
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"password": None}
+    )
+    assert res.status_code == 422
     res = await registered_client.patch(
         f"{PREFIX}/current-user/", json={"password": ""}
     )
-    assert res.status_code == 400
+    assert res.status_code == 422
+
+    # Password too short
     res = await registered_client.patch(
         f"{PREFIX}/current-user/", json={"password": "abc"}
     )
