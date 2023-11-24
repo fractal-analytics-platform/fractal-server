@@ -37,6 +37,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Load database
+        env:
+          PGPASSWORD: postgres
+        run: psql -U postgres -h localhost -d fractal_test -f tests/data/migration_1.3_to_1.4/clean_db_fractal_1.3.13.sql
+          # FIXME this is OK only when testing 1.4.0, but later we will need to use the fixed one
+
       - name: Install poetry
         run: pipx install poetry==1.5.1
 
@@ -45,12 +51,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: "poetry"
-
-      - name: Load database
-        env:
-          PGPASSWORD: postgres
-        run: psql -U postgres -h localhost -d fractal_test -f tests/data/migration_1.3_to_1.4/clean_db_fractal_1.3.13.sql
-          # FIXME this is OK only when testing 1.4.0, but later we will need to use the fixed one
 
       - name: Install dependencies
         run: |
