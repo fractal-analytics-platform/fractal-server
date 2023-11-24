@@ -54,13 +54,7 @@ jobs:
           poetry install --with dev --without docs --no-interaction -E slurm -E gunicorn $DB
 
       - name: Load database
-        env:
-          DB_ENGINE: postgres
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: fractal_test
-
-        run: psql -d fractal_test -f tests/data/migration_1.3_to_1.4/clean_db_fractal_1.3.13.sql  # FIXME this is OK only when testing 1.4.0, but later we will need to use the fixed one
+        run: cp test/data/migration_1.3_to_1.4/.fractal_server.env . && psql -d fractal_test -f tests/data/migration_1.3_to_1.4/clean_db_fractal_1.3.13.sql  # FIXME this is OK only when testing 1.4.0, but later we will need to use the fixed one
 
       - name: Set db
         run: poetry run fractalctl set-db
