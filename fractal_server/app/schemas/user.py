@@ -56,18 +56,12 @@ class UserUpdate(schemas.BaseUserUpdate):
     )
 
     @root_validator(pre=True)
-    def remove_boolean_none_and_none_email(cls, value):
-        return {
-            k: v
-            for k, v in value.items()
-            if not (
-                v is None
-                and (
-                    cls.schema()["properties"][k]["type"] == "boolean"
-                    or k == "email"
-                )
-            )
-        }
+    def cant_set_none(cls, values):
+        for attribute in ["is_active", "is_verified", "is_superuser", "email"]:
+            if attribute in values:
+                if values.get(attribute) is None:
+                    raise ValueError(f"Cannot set {attribute}=None")
+        return values
 
 
 class UserUpdateStrict(BaseModel, extra=Extra.forbid):

@@ -243,8 +243,7 @@ async def test_edit_users_as_superuser(registered_superuser_client):
             f"{PREFIX}/users/{expected_status['id']}/",
             json={attribute: None},
         )
-        assert res.status_code == 200
-        assert res.json() == expected_status  # nothing patched
+        assert res.status_code == 422
 
     # SLURM_USER
     res = await registered_superuser_client.patch(
