@@ -21,6 +21,7 @@ jobs:
       postgres:
         # Disable postgres service when using sqlite, through the workaround
         # described in https://github.com/actions/runner/issues/822
+        image: postgres
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: fractal_test
