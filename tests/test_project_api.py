@@ -17,10 +17,10 @@ async def test_get_project(client, db, project_factory, MockCurrentUser):
     assert res.status_code == 401
 
     # authenticated
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         other_project = await project_factory(user)
 
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         res = await client.get(f"{PREFIX}/project/")
         debug(res)
         assert res.status_code == 200
@@ -55,7 +55,7 @@ async def test_post_project(app, client, MockCurrentUser, db):
     data = res.json()
     assert res.status_code == 401
 
-    async with MockCurrentUser(persist=True):
+    async with MockCurrentUser():
         res = await client.post(f"{PREFIX}/project/", json=payload)
         data = res.json()
         assert res.status_code == 201
@@ -74,7 +74,7 @@ async def test_post_project_name_constraint(app, client, MockCurrentUser, db):
     res = await client.post(f"{PREFIX}/project/", json=payload)
     assert res.status_code == 401
 
-    async with MockCurrentUser(persist=True):
+    async with MockCurrentUser():
         # Create a first project named "new project"
         res = await client.post(f"{PREFIX}/project/", json=payload)
         assert res.status_code == 201
@@ -86,7 +86,7 @@ async def test_post_project_name_constraint(app, client, MockCurrentUser, db):
 
 
 async def test_patch_project_name_constraint(app, client, MockCurrentUser, db):
-    async with MockCurrentUser(persist=True):
+    async with MockCurrentUser():
         # Create a first project named "name1"
         res = await client.post(f"{PREFIX}/project/", json=dict(name="name1"))
         assert res.status_code == 201
@@ -103,7 +103,7 @@ async def test_patch_project_name_constraint(app, client, MockCurrentUser, db):
         assert res.status_code == 422
         assert res.json()["detail"] == "Project name (name1) already in use"
 
-    async with MockCurrentUser(persist=True):
+    async with MockCurrentUser():
         # Using another user, create a project named "name3"
         res = await client.post(f"{PREFIX}/project/", json=dict(name="name3"))
         assert res.status_code == 201
@@ -130,7 +130,7 @@ async def test_patch_project(
     Test that the project can be patched correctly, with any possible
     combination of set/unset attributes.
     """
-    async with MockCurrentUser(persist=True):
+    async with MockCurrentUser():
         # Create project
         payload = dict(
             name="old name",
@@ -171,7 +171,7 @@ async def test_delete_project(
     tmp_path,
     task_factory,
 ):
-    async with MockCurrentUser(persist=True):
+    async with MockCurrentUser():
         res = await client.get(f"{PREFIX}/project/")
         data = res.json()
         assert len(data) == 0
@@ -263,7 +263,7 @@ async def test_delete_project_ongoing_jobs(
     tmp_path,
     task_factory,
 ):
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
 
         async def get_project_id_linked_to_job(status: JobStatusType) -> int:
             p = await project_factory(user)

@@ -211,7 +211,7 @@ async def test_MockCurrentUser_fixture(
     user_kwargs = dict(
         cache_dir=cache_dir, username=username, slurm_user=slurm_user
     )
-    async with MockCurrentUser(persist=False, user_kwargs=user_kwargs) as user:
+    async with MockCurrentUser(user_kwargs=user_kwargs) as user:
         debug(user)
         assert user.cache_dir == cache_dir
         assert user.username == username

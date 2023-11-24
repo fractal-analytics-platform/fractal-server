@@ -5,7 +5,7 @@ from fractal_server.app.routes.api.v1.project import _get_project_check_owner
 
 
 async def test_proejct_membership(db, project_factory, MockCurrentUser):
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         prj = await project_factory(user=user)
 
         # existing project and member user

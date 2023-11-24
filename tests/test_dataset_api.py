@@ -11,7 +11,7 @@ PREFIX = "api/v1"
 async def test_get_dataset(
     app, client, MockCurrentUser, db, project_factory, dataset_factory
 ):
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         dataset = await dataset_factory(project_id=project.id)
         project_id = project.id
@@ -39,7 +39,7 @@ async def test_get_user_datasets(
     Test /api/v1/dataset/
     """
 
-    async with MockCurrentUser(persist=True, user_kwargs={}) as user:
+    async with MockCurrentUser(user_kwargs={}) as user:
         debug(user)
 
         project1 = await project_factory(user, name="p1")
@@ -56,7 +56,7 @@ async def test_get_user_datasets(
 
 
 async def test_post_dataset(app, client, MockCurrentUser, db):
-    async with MockCurrentUser(persist=True):
+    async with MockCurrentUser():
         # CREATE A PROJECT
 
         res = await client.post(
@@ -113,7 +113,7 @@ async def test_post_dataset(app, client, MockCurrentUser, db):
 async def test_delete_dataset(
     client, MockCurrentUser, project_factory, dataset_factory, db
 ):
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         prj = await project_factory(user)
         ds0 = await dataset_factory(project_id=prj.id)
         ds1 = await dataset_factory(project_id=prj.id)
@@ -172,7 +172,7 @@ async def test_delete_dataset_failure(
     THEN if the ApplyWorkflow is running the delete will fail,
          else the corresponding `dataset_id` is set None
     """
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
 
         # Populate the database with the appropriate objects
         project = await project_factory(user)
@@ -278,7 +278,7 @@ async def test_delete_dataset_failure(
 async def test_patch_dataset(
     app, client, MockCurrentUser, db, project_factory, dataset_factory
 ):
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         dataset = await dataset_factory(project_id=project.id)
         project_id = project.id
@@ -310,7 +310,7 @@ async def test_patch_dataset(
 async def test_get_resource(
     db, client, MockCurrentUser, project_factory, dataset_factory
 ):
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         dataset = await dataset_factory(project_id=project.id)
         res = await client.get(
@@ -323,7 +323,7 @@ async def test_get_resource(
 async def test_post_resource(
     db, client, MockCurrentUser, project_factory, dataset_factory
 ):
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         project_id = project.id
         dataset = await dataset_factory(project_id=project.id, name="dataset")
@@ -354,7 +354,7 @@ async def test_post_resource(
 async def test_patch_resource(
     client, MockCurrentUser, project_factory, dataset_factory, resource_factory
 ):
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         prj = await project_factory(user)
         ds = await dataset_factory(project_id=prj.id)
         orig_resource = await resource_factory(dataset=ds)
@@ -379,7 +379,7 @@ async def test_patch_resource(
 async def test_patch_resource_failure(
     db, client, MockCurrentUser, project_factory, dataset_factory
 ):
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         dataset = await dataset_factory(project_id=project.id)
         res = await client.post(
@@ -407,7 +407,7 @@ async def test_patch_resource_failure(
 async def test_delete_resource(
     db, client, MockCurrentUser, project_factory, dataset_factory
 ):
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         # Create resource
         project = await project_factory(user)
         dataset = await dataset_factory(project_id=project.id)
@@ -486,7 +486,7 @@ async def test_post_resource_order(
     dataset_factory,
     resource_factory,
 ):
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         project_id = project.id
         dataset = await dataset_factory(project_id=project.id, name="dataset")

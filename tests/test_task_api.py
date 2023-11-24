@@ -14,7 +14,7 @@ async def test_task_get_list(db, client, task_factory, MockCurrentUser):
     t1 = await task_factory(name="task1", source="source1")
     t2 = await task_factory(index=2, subtask_list=[t0, t1])
 
-    async with MockCurrentUser(persist=True):
+    async with MockCurrentUser():
         res = await client.get(f"{PREFIX}/")
         data = res.json()
         assert res.status_code == 200
@@ -24,7 +24,7 @@ async def test_task_get_list(db, client, task_factory, MockCurrentUser):
 
 
 async def test_post_task(client, MockCurrentUser):
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         TASK_OWNER = user.username or user.slurm_user
         TASK_SOURCE = "some_source"
 
@@ -70,7 +70,7 @@ async def test_post_task(client, MockCurrentUser):
     # Case 1: (username, slurm_user) = (None, None)
     user_kwargs = dict(username=None, slurm_user=None)
     payload["source"] = "source_1"
-    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs):
+    async with MockCurrentUser(user_kwargs=user_kwargs):
         res = await client.post(f"{PREFIX}/", json=payload)
         assert res.status_code == 422
         assert res.json()["detail"] == (
@@ -80,21 +80,21 @@ async def test_post_task(client, MockCurrentUser):
     # Case 2: (username, slurm_user) = (not None, not None)
     user_kwargs = dict(username=USERNAME, slurm_user=SLURM_USER)
     payload["source"] = "source_2"
-    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs):
+    async with MockCurrentUser(user_kwargs=user_kwargs):
         res = await client.post(f"{PREFIX}/", json=payload)
         assert res.status_code == 201
         assert res.json()["owner"] == USERNAME
     # Case 3: (username, slurm_user) = (None, not None)
     user_kwargs = dict(username=None, slurm_user=SLURM_USER)
     payload["source"] = "source_3"
-    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs):
+    async with MockCurrentUser(user_kwargs=user_kwargs):
         res = await client.post(f"{PREFIX}/", json=payload)
         assert res.status_code == 201
         assert res.json()["owner"] == SLURM_USER
     # Case 4: (username, slurm_user) = (not None, None)
     user_kwargs = dict(username=USERNAME, slurm_user=None)
     payload["source"] = "source_4"
-    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs):
+    async with MockCurrentUser(user_kwargs=user_kwargs):
         res = await client.post(f"{PREFIX}/", json=payload)
         assert res.status_code == 201
         assert res.json()["owner"] == USERNAME
@@ -353,7 +353,7 @@ async def test_patch_args_schema(MockCurrentUser, client):
     the PATCH endpoint.
     """
 
-    async with MockCurrentUser(persist=True):
+    async with MockCurrentUser():
         task = TaskCreate(
             name="task_name",
             command="task_command",
