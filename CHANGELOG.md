@@ -29,6 +29,7 @@
     * Remove `"cascade": "all, delete-orphan"` from `Project.job_list` (\#927).
     * Add `Workflow.job_list` relation (\#927).
     * Do not use `Enum`s as column types (e.g. for `ApplyWorkflow.status`), but only for (de-)serialization (\#974).
+    * Add script for updating DB from 1.4.0 to 1.4.1 (\#1010)
 * App:
     * Fix missing try/except in sync session (\#1020).
     * Skip creation of first-superuser when one superuser already exists (\#1006).
@@ -38,6 +39,7 @@
     * Improve `test_full_workflow.py` (\#971).
     * Update `pytest-asyncio` to v0.21 (\#1008).
     * Fix CI issue related to event loop and asyncpg (\#1012).
+    * Add GitHub Action testing database migrations (\#1010).
 
 # 1.3.14 (do not use!)
 
