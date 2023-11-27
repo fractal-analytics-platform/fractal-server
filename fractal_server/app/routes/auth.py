@@ -96,7 +96,7 @@ async def patch_current_user(
 
 
 @router_auth.get("/current-user/", response_model=UserRead)
-async def whoami(user: User = Depends(current_active_user)):
+async def get_current_user(user: User = Depends(current_active_user)):
     """
     Return current user
     """
