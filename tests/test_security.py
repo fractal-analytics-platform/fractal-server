@@ -5,75 +5,78 @@ from devtools import debug
 PREFIX = "/auth"
 
 
-async def test_whoami(client, registered_client, registered_superuser_client):
+async def test_whoami(client, MockCurrentUser):
 
     # Anonymous user
     res = await client.get(f"{PREFIX}/whoami/")
     debug(res.json())
     assert res.status_code == 401
 
-    # Registered non-superuser user
-    res = await registered_client.get(f"{PREFIX}/whoami/")
-    debug(res.json())
-    assert res.status_code == 200
-    assert not res.json()["is_superuser"]
+    async with MockCurrentUser(user_kwargs={"is_superuser": False}):
+        # Registered non-superuser user
+        res = await client.get(f"{PREFIX}/whoami/")
+        debug(res.json())
+        assert res.status_code == 200
+        assert not res.json()["is_superuser"]
 
-    # Registered superuser
-    res = await registered_superuser_client.get(f"{PREFIX}/whoami/")
-    debug(res.json())
-    assert res.status_code == 200
-    assert res.json()["is_superuser"]
+    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+        # Registered superuser
+        res = await client.get(f"{PREFIX}/whoami/")
+        debug(res.json())
+        assert res.status_code == 200
+        assert res.json()["is_superuser"]
 
 
-async def test_register_user(registered_client, registered_superuser_client):
+async def test_register_user(client, MockCurrentUser):
     """
     Test that user registration is only allowed to a superuser
     """
 
-    EMAIL = "asd@asd.asd"
-    payload_register = dict(email=EMAIL, password="1234")
+    payload_register = dict(email="asd@asd.asd", password="1234")
 
-    # Non-superuser user
-    res = await registered_client.post(
-        f"{PREFIX}/register/", json=payload_register
-    )
-    debug(res.json())
-    assert res.status_code == 403
+    async with MockCurrentUser(user_kwargs={"is_superuser": False}):
+        # Non-superuser user
+        res = await client.post(f"{PREFIX}/register/", json=payload_register)
+        debug(res.json())
+        assert res.status_code == 401
 
-    # Superuser
-    res = await registered_superuser_client.post(
-        f"{PREFIX}/register/", json=payload_register
-    )
-    debug(res.status_code)
-    debug(res.json())
-    assert res.json()["email"] == EMAIL
-    assert res.status_code == 201
+    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+        # Superuser
+        res = await client.post(f"{PREFIX}/register/", json=payload_register)
+        debug(res.status_code)
+        debug(res.json())
+        assert res.json()["email"] == payload_register["email"]
+        assert res.status_code == 201
 
 
-async def test_list_users(registered_client, registered_superuser_client):
+async def test_list_users(client, MockCurrentUser):
     """
     Test listing users
     """
 
-    # Create two users
-    res = await registered_superuser_client.post(
-        f"{PREFIX}/register/", json=dict(email="0@asd.asd", password="12")
-    )
-    res = await registered_superuser_client.post(
-        f"{PREFIX}/register/", json=dict(email="1@asd.asd", password="12")
-    )
+    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+        # Create two users
+        res = await client.post(
+            f"{PREFIX}/register/", json=dict(email="0@asd.asd", password="12")
+        )
+        res = await client.post(
+            f"{PREFIX}/register/", json=dict(email="1@asd.asd", password="12")
+        )
 
-    # Non-superuser user is not allowed
-    res = await registered_client.get(f"{PREFIX}/userlist/")
-    assert res.status_code == 403
+    async with MockCurrentUser(user_kwargs={"is_superuser": False}) as sudo:
+        # Non-superuser user is not allowed
+        res = await client.get(f"{PREFIX}/userlist/")
+        debug(res, sudo)
+        assert res.status_code == 401
 
-    # Superuser can list
-    res = await registered_superuser_client.get(f"{PREFIX}/userlist/")
-    debug(res.json())
-    list_emails = [u["email"] for u in res.json()]
-    assert "0@asd.asd" in list_emails
-    assert "1@asd.asd" in list_emails
-    assert res.status_code == 200
+    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+        # Superuser can list
+        res = await client.get(f"{PREFIX}/userlist/")
+        debug(res.json())
+        list_emails = [u["email"] for u in res.json()]
+        assert "0@asd.asd" in list_emails
+        assert "1@asd.asd" in list_emails
+        assert res.status_code == 200
 
 
 async def test_show_user(registered_client, registered_superuser_client):

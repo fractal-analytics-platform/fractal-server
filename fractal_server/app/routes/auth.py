@@ -71,6 +71,9 @@ async def list_users(
     """
     Return list of all users
     """
+    from devtools import debug
+
+    debug(user)
     stm = select(User)
     res = await db.execute(stm)
     user_list = res.scalars().unique().all()
