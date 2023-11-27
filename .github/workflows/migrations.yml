@@ -47,7 +47,7 @@ jobs:
         run: psql -U postgres -h localhost -d fractal_test -f tests/data/migration_1.3_to_1.4/clean_db_fractal_1.3.13.sql
 
       - name: Convert postgres database into sqlite
-        run: pipx run db-to-sqlite[postgresql] "postgresql://postgres:postgres@localhost/fractal_test" tests/data/migration_1.3_to_1.4/clean_db_fractal_1.3.13.sql.sqlite3 --all
+        run: pipx run db-to-sqlite[postgresql]==1.5 "postgresql://postgres:postgres@localhost/fractal_test" tests/data/migration_1.3_to_1.4/clean_db_fractal_1.3.13.sql.sqlite3 --all
 
       - name: Install poetry
         run: pipx install poetry==1.5.1
