@@ -3,7 +3,6 @@ from typing import Optional
 from fastapi_users import schemas
 from pydantic import BaseModel
 from pydantic import Extra
-from pydantic import root_validator
 from pydantic import validator
 
 from ._validators import val_absolute_path
@@ -55,19 +54,17 @@ class UserUpdate(schemas.BaseUserUpdate):
         val_absolute_path("cache_dir")
     )
 
-    @root_validator(pre=True)
-    def cant_set_none(cls, values):
-        for attribute in [
-            "is_active",
-            "is_verified",
-            "is_superuser",
-            "email",
-            "password",
-        ]:
-            if attribute in values:
-                if values.get(attribute) is None:
-                    raise ValueError(f"Cannot set {attribute}=None")
-        return values
+    @validator(
+        "is_active",
+        "is_verified",
+        "is_superuser",
+        "email",
+        "password",
+    )
+    def cant_set_none(cls, v, field):
+        if v is None:
+            raise ValueError(f"Cannot set {field.name}=None")
+        return v
 
 
 class UserUpdateStrict(BaseModel, extra=Extra.forbid):

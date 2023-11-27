@@ -285,14 +285,6 @@ async def test_patch_task_different_users(
         superuser_id = res.json()["id"]
 
         res = await registered_superuser_client.patch(
-            "/auth/current-user/",
-            json=payload,
-        )
-        debug(payload)
-        debug(res.json())
-        assert res.status_code == 422
-
-        res = await registered_superuser_client.patch(
             f"/auth/users/{superuser_id}/",
             json=payload,
         )

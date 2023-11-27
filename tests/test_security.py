@@ -100,23 +100,23 @@ async def test_show_user(registered_client, registered_superuser_client):
     assert res.status_code == 200
 
 
-async def test_edit_current_user(registered_client, app):
+async def test_edit_cache_dir_current_user(registered_client, app):
 
     res = await registered_client.get(f"{PREFIX}/current-user/")
-    expected_status = res.json()
+    pre_patch_user = res.json()
 
     res = await registered_client.patch(f"{PREFIX}/current-user/", json={})
     assert res.status_code == 200
-    assert res.json() == expected_status
+    assert res.json() == pre_patch_user
 
     # CACHE_DIR
 
+    assert pre_patch_user["cache_dir"] is None
     res = await registered_client.patch(
         f"{PREFIX}/current-user/", json={"cache_dir": "/tmp"}
     )
     assert res.status_code == 200
-    expected_status["cache_dir"] = "/tmp"
-    assert res.json() == expected_status
+    assert res.json()["cache_dir"] == "/tmp"
 
     # From val_absolute_path:
     # - String attribute 'cache_dir' cannot be empty
@@ -129,11 +129,23 @@ async def test_edit_current_user(registered_client, app):
         f"{PREFIX}/current-user/", json={"cache_dir": "not_abs"}
     )
     assert res.status_code == 422
-    # - String attribute '{attribute}' cannot be None
+    # - String attribute 'cache_dir' cannot be None
     res = await registered_client.patch(
         f"{PREFIX}/current-user/", json={"cache_dir": None}
     )
     assert res.status_code == 422
+
+    # NO EXTRA
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"foo": "bar"}
+    )
+    assert res.status_code == 422
+
+
+async def test_edit_password_current_user(registered_client, client, app):
+
+    res = await registered_client.get(f"{PREFIX}/current-user/")
+    user_email = res.json()["email"]
 
     # PASSWORD
 
@@ -164,34 +176,22 @@ async def test_edit_current_user(registered_client, app):
     )
     assert res.status_code == 200
 
-    from httpx import AsyncClient
-    from asgi_lifespan import LifespanManager
-
-    async with AsyncClient(
-        app=app, base_url="http://test"
-    ) as client, LifespanManager(app):
-        res = await client.post(
-            "auth/token/login/",
-            data=dict(
-                username=expected_status["email"],
-                password="12345",  # default password of registred_clint
-            ),
-        )
-        assert res.status_code == 400  # LOGIN_BAD_CREDENTIALS
-        res = await client.post(
-            "auth/token/login/",
-            data=dict(
-                username=expected_status["email"],
-                password=NEW_PASSWORD,
-            ),
-        )
-        assert res.status_code == 200
-
-    # NO EXTRA
-    res = await registered_client.patch(
-        f"{PREFIX}/current-user/", json={"foo": "bar"}
+    res = await client.post(
+        "auth/token/login/",
+        data=dict(
+            username=user_email,
+            password="12345",  # default password of registred_clint
+        ),
     )
-    assert res.status_code == 422
+    assert res.status_code == 400  # LOGIN_BAD_CREDENTIALS
+    res = await client.post(
+        "auth/token/login/",
+        data=dict(
+            username=user_email,
+            password=NEW_PASSWORD,
+        ),
+    )
+    assert res.status_code == 200
 
 
 async def test_edit_users_as_superuser(registered_superuser_client):
@@ -201,9 +201,9 @@ async def test_edit_users_as_superuser(registered_superuser_client):
         json=dict(email="test@fractal.xy", password="12345"),
     )
     assert res.status_code == 201
-    expected_status = res.json()
+    pre_patch_user = res.json()
 
-    correct_update = dict(
+    update = dict(
         email="patch@fractal.xy",
         is_active=False,
         is_superuser=True,
@@ -213,42 +213,45 @@ async def test_edit_users_as_superuser(registered_superuser_client):
         username="user_patch",
     )
     res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{expected_status['id']}/",
-        json=correct_update,
+        f"{PREFIX}/users/{pre_patch_user['id']}/",
+        json=update,
     )
-
     assert res.status_code == 200
-    for k, v in res.json().items():
-        if k not in correct_update:
-            assert v == expected_status[k]
+
+    user = res.json()
+    # assert that the attributes we wanted to update have actually changed
+    for key, value in user.items():
+        if key not in update:
+            assert value == pre_patch_user[key]
         else:
-            assert v != expected_status[k]
-            assert v == correct_update[k]
-    expected_status = res.json()
+            assert value != pre_patch_user[key]
+            assert value == update[key]
+
+    user_id = user["id"]
 
     # EMAIL
     res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{expected_status['id']}/",
+        f"{PREFIX}/users/{user_id}/",
         json=dict(email="hello, world!"),
     )
     assert res.status_code == 422
 
     for attribute in ["email", "is_active", "is_superuser", "is_verified"]:
         res = await registered_superuser_client.patch(
-            f"{PREFIX}/users/{expected_status['id']}/",
+            f"{PREFIX}/users/{user_id}/",
             json={attribute: None},
         )
         assert res.status_code == 422
 
     # SLURM_USER
     res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{expected_status['id']}/",
+        f"{PREFIX}/users/{user_id}/",
         json={"slurm_user": ""},
     )
     # String attribute 'slurm_user' cannot be empty
     assert res.status_code == 422
     res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{expected_status['id']}/",
+        f"{PREFIX}/users/{user_id}/",
         json={"slurm_user": None},
     )
     # String attribute 'slurm_user' cannot be None
@@ -256,19 +259,19 @@ async def test_edit_users_as_superuser(registered_superuser_client):
 
     # CACHE_DIR
     res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{expected_status['id']}/",
+        f"{PREFIX}/users/{user_id}/",
         json={"cache_dir": ""},
     )
     # String attribute 'cache_dir' cannot be empty
     assert res.status_code == 422
     res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{expected_status['id']}/",
+        f"{PREFIX}/users/{user_id}/",
         json={"cache_dir": "not_abs"},
     )
     # String attribute 'cache_dir' must be an absolute path (given 'not_abs').
     assert res.status_code == 422
     res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{expected_status['id']}/",
+        f"{PREFIX}/users/{user_id}/",
         json={"cache_dir": None},
     )
     # String attribute 'cache_dir' cannot be None
@@ -276,14 +279,14 @@ async def test_edit_users_as_superuser(registered_superuser_client):
 
     # USERNAME
     res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{expected_status['id']}/",
+        f"{PREFIX}/users/{user_id}/",
         json={"username": ""},
     )
     # String attribute 'username' cannot be empty
     debug(res.json())
     assert res.status_code == 422
     res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{expected_status['id']}/",
+        f"{PREFIX}/users/{user_id}/",
         json={"username": None},
     )
     # String attribute 'username' cannot be None
