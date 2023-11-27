@@ -76,13 +76,19 @@ async def patch_current_user(
     current_user: User = Depends(current_active_user),
     user_manager: UserManager = Depends(get_user_manager),
 ):
+    # FIXME this is always local
+    backend = Inject(get_settings).FRACTAL_RUNNER_BACKEND
 
+    if backend == "slurm":
+        if user_update.dict(exclude_unset=True).get("cache_dir") is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Cannot set 'cache_dir' to None with slurm backend",
+            )
+
+    update = UserUpdate(**user_update.dict(exclude_unset=True))
     try:
-        user = await user_manager.update(
-            UserUpdate(**user_update.dict(exclude_unset=True)),
-            current_user,
-            safe=True,
-        )
+        user = await user_manager.update(update, current_user, safe=True)
     except exceptions.InvalidPasswordException as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -90,6 +96,11 @@ async def patch_current_user(
                 "code": ErrorCode.UPDATE_USER_INVALID_PASSWORD,
                 "reason": e.reason,
             },
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(e),
         )
 
     return schemas.model_validate(User, user)
