@@ -415,8 +415,7 @@ $ curl \
 
 ### GET `/auth/current-user/`
 
-At `/auth/current-user/` authenticated users can get informations about themself:
-
+At `/auth/current-user/`, authenticated users can get informations about themself:
 ```
 curl \
     -X GET \
@@ -431,6 +430,30 @@ curl \
     "is_verified":false,
     "slurm_user":null,
     "cache_dir":null,
+    "username":null
+}
+```
+
+### PATCH `/auth/current-user/`
+
+At `/auth/current-user/`, authenticated users can modify some of their
+attributes (namely `cache_dir`, as of fractal-server 1.4.0):
+```
+curl \
+    -X PATCH \
+    -H "Authorization: Bearer ey..." \
+    -H "Content-Type: application/json" \
+    -d '{"cache_dir": "/tmp/somewhere"}' \
+    http://127.0.0.1:8000/auth/current-user/
+
+{
+    "id":2,
+    "email":"user@example.com",
+    "is_active":true,
+    "is_superuser":false,
+    "is_verified":false,
+    "slurm_user":null,
+    "cache_dir":"/tmp/somewhere",
     "username":null
 }
 ```
