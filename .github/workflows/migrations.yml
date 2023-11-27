@@ -1,5 +1,12 @@
 name: migrations
 
+# Based on a dump of a existing postgresql database, valid for a given
+# fractal-server version, apply current migrations and verify that they go
+# through. The main goal is to identify cases where current data make a table
+# definition invalid in a way that wouldn't be detected when starting from an
+# empty database; typical example: a coulmn has a null value, and we later
+# alter it to make it non-nullable.
+
 on:
   push:
     branches: ["main"]
@@ -8,19 +15,17 @@ on:
 
 jobs:
 
-  tests:
+  migrations:
     name: "Python ${{ matrix.python-version }} - ${{ matrix.db }}"
     runs-on: ubuntu-22.04
-    timeout-minutes: 30
+    timeout-minutes: 20
 
     strategy:
       matrix:
-        python-version: ["3.9", "3.10"]
+        python-version: ["3.9", "3.10", "3.11"]
 
     services:
       postgres:
-        # Disable postgres service when using sqlite, through the workaround
-        # described in https://github.com/actions/runner/issues/822
         image: postgres
         env:
           POSTGRES_PASSWORD: postgres
@@ -36,11 +41,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Load postgres database
+      - name: Load database dump into postgres database
         env:
           PGPASSWORD: postgres
         run: psql -U postgres -h localhost -d fractal_test -f tests/data/migration_1.3_to_1.4/clean_db_fractal_1.3.13.sql
-          # FIXME this is OK only when testing 1.4.0, but later we will need to use the fixed one
+
+      - name: Convert postgres database into sqlite
+        run: pipx run db-to-sqlite[postgresql] "postgresql://postgres:postgres@localhost/fractal_test" tests/data/migration_1.3_to_1.4/clean_db_fractal_1.3.13.sql.sqlite3 --all
 
       - name: Install poetry
         run: pipx install poetry==1.5.1
@@ -51,16 +58,12 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: "poetry"
 
-      - name: Load sqlite database
+      - name: Install fractal-server dependencies
         run: |
-          pip install db-to-sqlite[postgresql] && db-to-sqlite "postgresql://postgres:postgres@localhost/fractal_test" tests/data/migration_1.3_to_1.4/clean_db_fractal_1.3.13.sql.sqlite3 --all
+          poetry install --without dev --without docs --no-interaction -E postgres
 
-      - name: Install dependencies
-        run: |
-          poetry install --with dev --without docs --no-interaction -E slurm -E gunicorn -E postgres
-
-      - name: Set db postgres
+      - name: Apply migration to postgres database
         run: cp tests/data/migration_1.3_to_1.4/.fractal_server_postgres.env .fractal_server.env && poetry run fractalctl set-db
 
-      - name: Set db sqlite
+      - name: Apply migration to sqlite database
         run: cp tests/data/migration_1.3_to_1.4/.fractal_server_sqlite.env .fractal_server.env && poetry run fractalctl set-db
