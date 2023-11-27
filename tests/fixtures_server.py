@@ -327,7 +327,10 @@ async def MockCurrentUser(app, db):
             app.dependency_overrides[
                 current_active_user
             ] = self.current_active_user_override()
-            if self.user_kwargs.get("is_superuser") is True:
+            if (
+                self.user_kwargs is not None
+                and self.user_kwargs.get("is_superuser") is True
+            ):
                 app.dependency_overrides[
                     current_active_superuser
                 ] = self.current_active_user_override()
