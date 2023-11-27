@@ -5,7 +5,7 @@
 * API:
     * Major endpoint changes:
         * Add trailing slash to _all_ endpoints' paths (\#1003).
-        * Add new monitoring endpoints restricted to superusers at `/monitoring` (\#947).
+        * Add new monitoring endpoints restricted to superusers at `/monitoring` (\#947, \#1009).
         * Add new `GET` endpoints `api/v1/job/` and `api/v1/project/{project_id}/workflow/{workflow_id}/job/` (\#969, \#1003).
         * Add new `GET` endpoints `api/v1/dataset/` and `api/v1/workflow/` (\#988, \#1003).
         * Add new `GET` endpoint `api/v1/project/{project_id}/dataset/` (\#993).
@@ -22,6 +22,7 @@
         * Move all routes definitions into `fractal_server/app/routes` (\#976).
         * Fix construction of `ApplyWorkflow.workflow_dump`, within apply endpoint (\#968).
         * Fix construction of `ApplyWorkflow` attributes `input_dataset_dump` and `output_dataset_dump`, within apply endpoint (\#990).
+        * Remove `asyncio.gather`, in view of SQLAlchemy2 update (\#1004).
 * Database:
     * Make foreign-keys of `ApplyWorkflow` (`project_id`, `workflow_id`, `input_dataset_id`, `output_dataset_id`) optional (\#927).
     * Add columns `input_dataset_dump`, `output_dataset_dump` and `user_email` to `ApplyWorkflow` (\#927).
@@ -30,10 +31,17 @@
     * Remove `"cascade": "all, delete-orphan"` from `Project.job_list` (\#927).
     * Add `Workflow.job_list` relation (\#927).
     * Do not use `Enum`s as column types (e.g. for `ApplyWorkflow.status`), but only for (de-)serialization (\#974).
+    * Add script for updating DB from 1.4.0 to 1.4.1 (\#1010)
+* App:
+    * Fix missing try/except in sync session (\#1020).
+    * Skip creation of first-superuser when one superuser already exists (\#1006).
 * Runner:
     * Refresh DB objects within `submit_workflow` (\#927).
 * Testing:
     * Improve `test_full_workflow.py` (\#971).
+    * Update `pytest-asyncio` to v0.21 (\#1008).
+    * Fix CI issue related to event loop and asyncpg (\#1012).
+    * Add GitHub Action testing database migrations (\#1010).
 
 # 1.3.14 (do not use!)
 

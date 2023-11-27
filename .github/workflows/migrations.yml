@@ -1,0 +1,69 @@
+name: migrations
+
+# Based on a dump of a existing postgresql database, valid for a given
+# fractal-server version, apply current migrations and verify that they go
+# through. The main goal is to identify cases where current data make a table
+# definition invalid in a way that wouldn't be detected when starting from an
+# empty database; typical example: a coulmn has a null value, and we later
+# alter it to make it non-nullable.
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+
+  migrations:
+    name: "Python ${{ matrix.python-version }} - ${{ matrix.db }}"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11"]
+
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: fractal_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Load database dump into postgres database
+        env:
+          PGPASSWORD: postgres
+        run: psql -U postgres -h localhost -d fractal_test -f tests/data/migration_1.3_to_1.4/clean_db_fractal_1.3.13.sql
+
+      - name: Convert postgres database into sqlite
+        run: pipx run db-to-sqlite[postgresql]==1.5 "postgresql://postgres:postgres@localhost/fractal_test" tests/data/migration_1.3_to_1.4/clean_db_fractal_1.3.13.sql.sqlite3 --all
+
+      - name: Install poetry
+        run: pipx install poetry==1.5.1
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "poetry"
+
+      - name: Install fractal-server dependencies
+        run: |
+          poetry install --without dev --without docs --no-interaction -E postgres
+
+      - name: Apply migration to postgres database
+        run: cp tests/data/migration_1.3_to_1.4/.fractal_server_postgres.env .fractal_server.env && poetry run fractalctl set-db
+
+      - name: Apply migration to sqlite database
+        run: cp tests/data/migration_1.3_to_1.4/.fractal_server_sqlite.env .fractal_server.env && poetry run fractalctl set-db
