@@ -1,6 +1,8 @@
 import pytest
 from devtools import debug
 
+from fractal_server.app.runner import _backends
+
 PREFIX = "/auth"
 
 
@@ -129,17 +131,33 @@ async def test_edit_cache_dir_current_user(registered_client, app):
         f"{PREFIX}/current-user/", json={"cache_dir": "not_abs"}
     )
     assert res.status_code == 422
-    # - String attribute 'cache_dir' cannot be None
-    res = await registered_client.patch(
-        f"{PREFIX}/current-user/", json={"cache_dir": None}
-    )
-    assert res.status_code == 422
 
     # NO EXTRA
     res = await registered_client.patch(
-        f"{PREFIX}/current-user/", json={"foo": "bar"}
+        f"{PREFIX}/current-user/", json={"cache_dir": "/tmp", "foo": "bar"}
     )
     assert res.status_code == 422
+
+
+@pytest.mark.parametrize("backend", list(_backends.keys()))
+async def test_set_cache_dir_none(backend, registered_client):
+
+    await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"cache_dir": "/tmp"}
+    )
+
+    res = await registered_client.get(f"{PREFIX}/current-user/")
+    assert res.json()["cache_dir"] == "/tmp"
+
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"cache_dir": None}
+    )
+    if backend == "slurm":
+        assert res.status_code == 422
+    else:  # i.e. backend == "local"
+        assert res.status_code == 200
+        res = await registered_client.get(f"{PREFIX}/current-user/")
+        assert res.json()["cache_dir"] is None
 
 
 async def test_edit_password_current_user(registered_client, client, app):
@@ -154,14 +172,14 @@ async def test_edit_password_current_user(registered_client, client, app):
         f"{PREFIX}/current-user/", json={"password": None}
     )
     assert res.status_code == 422
-    res = await registered_client.patch(
-        f"{PREFIX}/current-user/", json={"password": ""}
-    )
-    assert res.status_code == 422
 
     # Password too short
     res = await registered_client.patch(
         f"{PREFIX}/current-user/", json={"password": "abc"}
+    )
+    assert res.status_code == 400
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"password": ""}
     )
     assert res.status_code == 400
     # Password too long
@@ -170,7 +188,7 @@ async def test_edit_password_current_user(registered_client, client, app):
     )
     assert res.status_code == 400
     # Password changed
-    NEW_PASSWORD = "x" * 100
+    NEW_PASSWORD = "1234"
     res = await registered_client.patch(
         f"{PREFIX}/current-user/", json={"password": NEW_PASSWORD}
     )

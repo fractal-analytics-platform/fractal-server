@@ -51,7 +51,7 @@ class UserUpdate(schemas.BaseUserUpdate):
     )
     _username = validator("username", allow_reuse=True)(valstr("username"))
     _cache_dir = validator("cache_dir", allow_reuse=True)(
-        val_absolute_path("cache_dir")
+        val_absolute_path("cache_dir", accept_none=True)
     )
 
     @validator(
@@ -59,7 +59,6 @@ class UserUpdate(schemas.BaseUserUpdate):
         "is_verified",
         "is_superuser",
         "email",
-        "password",
     )
     def cant_set_none(cls, v, field):
         if v is None:
@@ -76,9 +75,11 @@ class UserUpdateStrict(BaseModel, extra=Extra.forbid):
     password: Optional[str]
 
     _cache_dir = validator("cache_dir", allow_reuse=True)(
-        val_absolute_path("cache_dir")
+        val_absolute_path("cache_dir", accept_none=True)
     )
-    _password = validator("password", allow_reuse=True)(valstr("password"))
+    _password = validator("password", allow_reuse=True)(
+        valstr("password", accept_none=True)
+    )
 
 
 class UserCreate(schemas.BaseUserCreate):
