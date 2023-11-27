@@ -269,6 +269,7 @@ async def registered_superuser_client(
 @pytest.fixture
 async def MockCurrentUser(app, db):
     from fractal_server.app.security import current_active_user
+    from fractal_server.app.security import current_active_superuser
     from fractal_server.app.security import User
 
     def _random_email():
@@ -326,6 +327,10 @@ async def MockCurrentUser(app, db):
             app.dependency_overrides[
                 current_active_user
             ] = self.current_active_user_override()
+            if self.user_kwargs.get("is_superuser") is True:
+                app.dependency_overrides[
+                    current_active_superuser
+                ] = self.current_active_user_override()
             return self.user
 
         async def __aexit__(self, *args, **kwargs):

@@ -9,13 +9,13 @@ async def test_unauthorized_to_monitor(client, MockCurrentUser):
 
     async with MockCurrentUser(user_kwargs={"is_superuser": False}):
         res = await client.get(f"{PREFIX}/project/")
-        assert res.status_code == 403
+        assert res.status_code == 401
         res = await client.get(f"{PREFIX}/workflow/")
-        assert res.status_code == 403
+        assert res.status_code == 401
         res = await client.get(f"{PREFIX}/dataset/")
-        assert res.status_code == 403
+        assert res.status_code == 401
         res = await client.get(f"{PREFIX}/job/")
-        assert res.status_code == 403
+        assert res.status_code == 401
 
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
         res = await client.get(f"{PREFIX}/project/")
