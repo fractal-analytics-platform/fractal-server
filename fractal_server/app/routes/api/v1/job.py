@@ -19,6 +19,7 @@ from ....models import ApplyWorkflow
 from ....runner._common import SHUTDOWN_FILENAME
 from ....schemas import ApplyWorkflowRead
 from ....schemas import ApplyWorkflowUpdate
+from ....schemas import JobStatusType
 from ....security import current_active_superuser
 from ....security import current_active_user
 from ....security import User
@@ -222,6 +223,12 @@ async def update_job(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Job {job_id} not found",
+        )
+
+    if job_update.status != JobStatusType.FAILED:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Cannot set job status to {job_update.status}",
         )
 
     setattr(job, "status", job_update.status)

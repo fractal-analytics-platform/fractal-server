@@ -69,6 +69,12 @@ async def test_patch_job(
                 json={"status": "something_invalid"},
             )
             assert res.status_code == 422
+            # Fail due to invalid payload (status not failed)
+            res = await registered_superuser_client.patch(
+                f"{PREFIX}/job/{job.id}/",
+                json={"status": "done"},
+            )
+            assert res.status_code == 422
             # Fail due to non-existing job
             res = await registered_superuser_client.patch(
                 f"{PREFIX}/job/{123456789}/",
