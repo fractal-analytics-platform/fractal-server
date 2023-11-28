@@ -153,7 +153,6 @@ async def test_edit_password_current_user(registered_client, client, app):
     res = await registered_client.patch(
         f"{PREFIX}/current-user/", json={"password": None}
     )
-    debug(res)
     assert res.status_code == 422
 
     # Password not valid

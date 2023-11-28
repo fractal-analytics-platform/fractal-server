@@ -77,12 +77,7 @@ async def patch_current_user(
     user_manager: UserManager = Depends(get_user_manager),
 ):
 
-    try:
-        update = UserUpdate(**user_update.dict(exclude_unset=True))
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)
-        )
+    update = UserUpdate(**user_update.dict(exclude_unset=True))
 
     try:
         user = await user_manager.update(update, current_user, safe=True)
