@@ -146,6 +146,18 @@ async def test_patch_current_user_no_extra(registered_client):
     assert res.status_code == 422
 
 
+async def test_patch_current_user_password_fails(registered_client, client):
+    """
+    This test exists for the same reason that test_patch_current_user_password
+    is skipped.
+    """
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"password": "something"}
+    )
+    assert res.status_code == 422
+
+
+@pytest.mark.skip(reason="Users cannot edit their own password for the moment")
 async def test_patch_current_user_password(registered_client, client):
     """
     Test several scenarios for updating `password` for the current user.
