@@ -100,8 +100,10 @@ async def test_show_user(registered_client, registered_superuser_client):
     assert res.status_code == 200
 
 
-async def test_edit_cache_dir_current_user(registered_client, app):
-
+async def test_patch_current_user_cache_dir(registered_client, app):
+    """
+    Test several scenarios for updating `cache_dir` for the current user.
+    """
     res = await registered_client.get(f"{PREFIX}/current-user/")
     pre_patch_user = res.json()
 
@@ -109,8 +111,7 @@ async def test_edit_cache_dir_current_user(registered_client, app):
     assert res.status_code == 200
     assert res.json() == pre_patch_user
 
-    # CACHE_DIR
-
+    # Successful update
     assert pre_patch_user["cache_dir"] is None
     res = await registered_client.patch(
         f"{PREFIX}/current-user/", json={"cache_dir": "/tmp"}
@@ -118,73 +119,87 @@ async def test_edit_cache_dir_current_user(registered_client, app):
     assert res.status_code == 200
     assert res.json()["cache_dir"] == "/tmp"
 
-    # From val_absolute_path:
-    # - String attribute 'cache_dir' cannot be empty
+    # Failed update due to empty string
     res = await registered_client.patch(
         f"{PREFIX}/current-user/", json={"cache_dir": ""}
     )
     assert res.status_code == 422
-    # - String attribute 'cache_dir' must be an absolute path (given 'not_abs')
-    res = await registered_client.patch(
-        f"{PREFIX}/current-user/", json={"cache_dir": "not_abs"}
-    )
-    assert res.status_code == 422
 
+    # Failed update due to null value
     res = await registered_client.patch(
         f"{PREFIX}/current-user/", json={"cache_dir": None}
     )
     assert res.status_code == 422
 
-    # NO EXTRA
+    # Failed update due to non-absolute path
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"cache_dir": "not_abs"}
+    )
+    assert res.status_code == 422
+
+
+async def test_patch_current_user_no_extra(registered_client, app):
+    """
+    Test that the PATCH-current-user endpoint fails when extra attributes are
+    provided.
+    """
     res = await registered_client.patch(
         f"{PREFIX}/current-user/", json={"cache_dir": "/tmp", "foo": "bar"}
     )
     assert res.status_code == 422
 
 
-async def test_edit_password_current_user(registered_client, client, app):
-
+async def test_patch_current_user_password(registered_client, client, app):
+    """
+    Test several scenarios for updating `password` for the current user.
+    """
     res = await registered_client.get(f"{PREFIX}/current-user/")
     user_email = res.json()["email"]
 
-    # PASSWORD
-
-    # Invalid password
+    # Fail due to null password
     res = await registered_client.patch(
         f"{PREFIX}/current-user/", json={"password": None}
     )
     assert res.status_code == 422
 
-    # Password not valid
+    # Fail due to empty-string password
     res = await registered_client.patch(
         f"{PREFIX}/current-user/", json={"password": ""}
     )
     assert res.status_code == 422
-    # Password too short
+
+    # Fail due to invalid password (too short)
     res = await registered_client.patch(
         f"{PREFIX}/current-user/", json={"password": "abc"}
     )
     assert res.status_code == 400
-    # Password too long
+    assert "too short" in res.json()["detail"]["reason"]
+
+    # Fail due to invalid password (too long)
     res = await registered_client.patch(
         f"{PREFIX}/current-user/", json={"password": "x" * 101}
     )
     assert res.status_code == 400
-    # Password changed
-    NEW_PASSWORD = "1234"
+    assert "too long" in res.json()["detail"]["reason"]
+
+    # Successful password update
+    NEW_PASSWORD = "my-new-password"
     res = await registered_client.patch(
         f"{PREFIX}/current-user/", json={"password": NEW_PASSWORD}
     )
     assert res.status_code == 200
 
+    # Check that old password is not valid any more
     res = await client.post(
         "auth/token/login/",
         data=dict(
             username=user_email,
-            password="12345",  # default password of registred_clint
+            password="12345",  # default password of registered_client
         ),
     )
-    assert res.status_code == 400  # LOGIN_BAD_CREDENTIALS
+    assert res.status_code == 400
+
+    # Check that new password is valid
     res = await client.post(
         "auth/token/login/",
         data=dict(
