@@ -57,11 +57,23 @@ async def test_patch_job(
         async with MockCurrentUser(
             user_kwargs={"id": 222222, "is_superuser": True}
         ):
+            # Fail due to invalid payload (missing attribute "status")
+            res = await registered_superuser_client.patch(
+                f"{PREFIX}/project/{project.id}/job/{job.id}/",
+                json={"working_dir": "/tmp"},
+            )
+            assert res.status_code == 422
+            # Fail due to invalid payload (status not part of JobStatusType)
+            res = await registered_superuser_client.patch(
+                f"{PREFIX}/project/{project.id}/job/{job.id}/",
+                json={"status": "something_invalid"},
+            )
+            assert res.status_code == 422
+            # Successfully apply patch
             res = await registered_superuser_client.patch(
                 f"{PREFIX}/project/{project.id}/job/{job.id}/",
                 json={"status": NEW_STATUS},
             )
-            debug(res.json())
             assert res.status_code == 200
             assert res.json()["status"] == NEW_STATUS
         # Read job as job owner (standard user)
