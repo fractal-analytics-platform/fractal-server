@@ -288,8 +288,9 @@ def test_task_update():
     debug(t)
     assert list(t.dict(exclude_none=True).keys()) == ["name"]
     assert list(t.dict(exclude_unset=True).keys()) == ["name"]
-    # TaskUpdate.version's validator has accept_none==True
-    TaskUpdate(name="task", version="")
+    # Some failures
+    with pytest.raises(ValidationError):
+        TaskUpdate(name="task", version="")
     TaskUpdate(name="task", version=None)
     # Successful cretion, with mutliple fields set
     t = TaskUpdate(

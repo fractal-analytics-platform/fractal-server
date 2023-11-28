@@ -10,7 +10,7 @@ def valstr(attribute: str, accept_none: bool = False):
     """
 
     def val(string: str):
-        if (string is None) or (string == ""):
+        if string is None:
             if accept_none:
                 return string
             else:
