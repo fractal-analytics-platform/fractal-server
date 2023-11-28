@@ -65,11 +65,11 @@ async def test_list_users(registered_client, registered_superuser_client):
     )
 
     # Non-superuser user is not allowed
-    res = await registered_client.get(f"{PREFIX}/userlist/")
+    res = await registered_client.get(f"{PREFIX}/users/")
     assert res.status_code == 403
 
     # Superuser can list
-    res = await registered_superuser_client.get(f"{PREFIX}/userlist/")
+    res = await registered_superuser_client.get(f"{PREFIX}/users/")
     debug(res.json())
     list_emails = [u["email"] for u in res.json()]
     assert "0@asd.asd" in list_emails
