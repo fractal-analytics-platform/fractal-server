@@ -140,7 +140,18 @@ async def test_edit_cache_dir_current_user(registered_client, app):
 
 
 @pytest.mark.parametrize("backend", list(_backends.keys()))
-async def test_set_cache_dir_none(backend, registered_client):
+async def test_set_cache_dir_none_current_user(
+    backend,
+    registered_client,
+    override_settings_factory,
+    tmp777_path,
+    testdata_path,
+):
+
+    override_settings_factory(
+        FRACTAL_RUNNER_BACKEND=backend,
+        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
+    )
 
     await registered_client.patch(
         f"{PREFIX}/current-user/", json={"cache_dir": "/tmp"}
@@ -153,6 +164,9 @@ async def test_set_cache_dir_none(backend, registered_client):
         f"{PREFIX}/current-user/", json={"cache_dir": None}
     )
     if backend == "slurm":
+        override_settings_factory(
+            FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
+        )
         assert res.status_code == 422
     else:  # i.e. backend == "local"
         assert res.status_code == 200
@@ -275,26 +289,6 @@ async def test_edit_users_as_superuser(registered_superuser_client):
     # String attribute 'slurm_user' cannot be None
     assert res.status_code == 422
 
-    # CACHE_DIR
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{user_id}/",
-        json={"cache_dir": ""},
-    )
-    # String attribute 'cache_dir' cannot be empty
-    assert res.status_code == 422
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{user_id}/",
-        json={"cache_dir": "not_abs"},
-    )
-    # String attribute 'cache_dir' must be an absolute path (given 'not_abs').
-    assert res.status_code == 422
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{user_id}/",
-        json={"cache_dir": None},
-    )
-    # String attribute 'cache_dir' cannot be None
-    assert res.status_code == 422
-
     # USERNAME
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{user_id}/",
@@ -310,6 +304,41 @@ async def test_edit_users_as_superuser(registered_superuser_client):
     # String attribute 'username' cannot be None
     debug(res.json())
     assert res.status_code == 422
+
+
+@pytest.mark.parametrize("backend", list(_backends.keys()))
+async def test_set_cache_dir_none_as_superuser(
+    backend,
+    registered_superuser_client,
+    override_settings_factory,
+    tmp777_path,
+    testdata_path,
+):
+
+    override_settings_factory(
+        FRACTAL_RUNNER_BACKEND=backend,
+        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
+    )
+    res = await registered_superuser_client.post(
+        f"{PREFIX}/register/",
+        json=dict(email="test@fractal.xy", password="12345"),
+    )
+    assert res.status_code == 201
+    user_id = res.json()["id"]
+
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user_id}/", json={"cache_dir": "/tmp"}
+    )
+    assert res.status_code == 200
+
+    res = await registered_superuser_client.get(f"{PREFIX}/users/{user_id}/")
+    debug(res)
+    assert res.json()["cache_dir"] == "/tmp"
+
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user_id}/", json={"cache_dir": None}
+    )
+    assert res.status_code == 200
 
 
 async def test_add_superuser(registered_superuser_client):
