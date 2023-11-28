@@ -1,8 +1,6 @@
 import pytest
 from devtools import debug
 
-from fractal_server.app.runner import _backends
-
 PREFIX = "/auth"
 
 
@@ -132,46 +130,16 @@ async def test_edit_cache_dir_current_user(registered_client, app):
     )
     assert res.status_code == 422
 
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"cache_dir": None}
+    )
+    assert res.status_code == 422
+
     # NO EXTRA
     res = await registered_client.patch(
         f"{PREFIX}/current-user/", json={"cache_dir": "/tmp", "foo": "bar"}
     )
     assert res.status_code == 422
-
-
-@pytest.mark.parametrize("backend", list(_backends.keys()))
-async def test_set_cache_dir_none_current_user(
-    backend,
-    registered_client,
-    override_settings_factory,
-    tmp777_path,
-    testdata_path,
-):
-
-    override_settings_factory(
-        FRACTAL_RUNNER_BACKEND=backend,
-        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
-    )
-
-    await registered_client.patch(
-        f"{PREFIX}/current-user/", json={"cache_dir": "/tmp"}
-    )
-
-    res = await registered_client.get(f"{PREFIX}/current-user/")
-    assert res.json()["cache_dir"] == "/tmp"
-
-    res = await registered_client.patch(
-        f"{PREFIX}/current-user/", json={"cache_dir": None}
-    )
-    if backend == "slurm":
-        override_settings_factory(
-            FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
-        )
-        assert res.status_code == 422
-    else:  # i.e. backend == "local"
-        assert res.status_code == 200
-        res = await registered_client.get(f"{PREFIX}/current-user/")
-        assert res.json()["cache_dir"] is None
 
 
 async def test_edit_password_current_user(registered_client, client, app):
@@ -185,15 +153,17 @@ async def test_edit_password_current_user(registered_client, client, app):
     res = await registered_client.patch(
         f"{PREFIX}/current-user/", json={"password": None}
     )
+    debug(res)
     assert res.status_code == 422
 
+    # Password not valid
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"password": ""}
+    )
+    assert res.status_code == 422
     # Password too short
     res = await registered_client.patch(
         f"{PREFIX}/current-user/", json={"password": "abc"}
-    )
-    assert res.status_code == 400
-    res = await registered_client.patch(
-        f"{PREFIX}/current-user/", json={"password": ""}
     )
     assert res.status_code == 400
     # Password too long
@@ -305,40 +275,10 @@ async def test_edit_users_as_superuser(registered_superuser_client):
     debug(res.json())
     assert res.status_code == 422
 
-
-@pytest.mark.parametrize("backend", list(_backends.keys()))
-async def test_set_cache_dir_none_as_superuser(
-    backend,
-    registered_superuser_client,
-    override_settings_factory,
-    tmp777_path,
-    testdata_path,
-):
-
-    override_settings_factory(
-        FRACTAL_RUNNER_BACKEND=backend,
-        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
-    )
-    res = await registered_superuser_client.post(
-        f"{PREFIX}/register/",
-        json=dict(email="test@fractal.xy", password="12345"),
-    )
-    assert res.status_code == 201
-    user_id = res.json()["id"]
-
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{user_id}/", json={"cache_dir": "/tmp"}
-    )
-    assert res.status_code == 200
-
-    res = await registered_superuser_client.get(f"{PREFIX}/users/{user_id}/")
-    debug(res)
-    assert res.json()["cache_dir"] == "/tmp"
-
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{user_id}/", json={"cache_dir": None}
     )
-    assert res.status_code == 200
+    assert res.status_code == 422
 
 
 async def test_add_superuser(registered_superuser_client):
