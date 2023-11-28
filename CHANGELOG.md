@@ -43,6 +43,8 @@
     * Update `pytest-asyncio` to v0.21 (\#1008).
     * Fix CI issue related to event loop and asyncpg (\#1012).
     * Add GitHub Action testing database migrations (\#1010).
+* Documentation:
+    * Add OAuth2 example endpoints to Web API page (\#1034).
 
 # 1.3.14 (do not use!)
 
