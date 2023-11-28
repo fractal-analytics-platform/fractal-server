@@ -37,6 +37,8 @@
 * App:
     * Fix missing try/except in sync session (\#1020).
     * Skip creation of first-superuser when one superuser already exists (\#1006).
+* Dependencies:
+    * Pin sqlalchemy to 1.4.50 and upgrade asyncpg to 0.29.0 (\#1036).
 * Runner:
     * Refresh DB objects within `submit_workflow` (\#927).
 * Testing:
