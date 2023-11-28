@@ -96,6 +96,7 @@ async def get_current_user(user: User = Depends(current_active_user)):
 
 @router_auth.get("/users/", response_model=list[UserRead])
 async def list_users(
+    user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_db),
 ):
     """
