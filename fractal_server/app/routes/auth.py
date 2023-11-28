@@ -34,9 +34,6 @@ router_auth.include_router(
     dependencies=[Depends(current_active_superuser)],
 )
 router_auth.include_router(
-    fastapi_users.get_reset_password_router(),
-)
-router_auth.include_router(
     fastapi_users.get_verify_router(UserRead),
 )
 
