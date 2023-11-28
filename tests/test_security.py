@@ -96,7 +96,7 @@ async def test_show_user(registered_client, registered_superuser_client):
     assert res.status_code == 200
 
 
-async def test_patch_current_user_cache_dir(registered_client, app):
+async def test_patch_current_user_cache_dir(registered_client):
     """
     Test several scenarios for updating `cache_dir` for the current user.
     """
@@ -134,7 +134,7 @@ async def test_patch_current_user_cache_dir(registered_client, app):
     assert res.status_code == 422
 
 
-async def test_patch_current_user_no_extra(registered_client, app):
+async def test_patch_current_user_no_extra(registered_client):
     """
     Test that the PATCH-current-user endpoint fails when extra attributes are
     provided.
@@ -145,7 +145,7 @@ async def test_patch_current_user_no_extra(registered_client, app):
     assert res.status_code == 422
 
 
-async def test_patch_current_user_password(registered_client, client, app):
+async def test_patch_current_user_password(registered_client, client):
     """
     Test several scenarios for updating `password` for the current user.
     """
@@ -353,7 +353,6 @@ async def test_delete_user(registered_client, registered_superuser_client):
 @pytest.mark.parametrize("slurm_user", ("test01", None))
 async def test_MockCurrentUser_fixture(
     db,
-    app,
     MockCurrentUser,
     cache_dir,
     username,
