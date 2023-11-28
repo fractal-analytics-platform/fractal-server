@@ -94,30 +94,6 @@ async def read_job(
     return job
 
 
-@router.patch(
-    "/project/{project_id}/job/{job_id}/",
-    response_model=ApplyWorkflowRead,
-)
-async def update_job(
-    job_update: ApplyWorkflowUpdate,
-    project_id: int,
-    job_id: int,
-    user: User = Depends(current_active_superuser),
-    db: AsyncSession = Depends(get_db),
-) -> Optional[ApplyWorkflowRead]:
-    """
-    Change the status of an existing job.
-    """
-    job = await db.get(ApplyWorkflow, job_id)
-    if job is None:
-        raise HTTPException()
-    setattr(job, "status", job_update.status)
-    await db.commit()
-    await db.refresh(job)
-    await db.close()
-    return job
-
-
 @router.get(
     "/project/{project_id}/job/{job_id}/download/",
     response_class=StreamingResponse,
@@ -223,3 +199,33 @@ async def stop_job(
         f.write(f"Trigger executor shutdown for {job.id=}, {project_id=}.")
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.patch(
+    "/project/{project_id}/job/{job_id}/",
+    response_model=ApplyWorkflowRead,
+)
+async def update_job(
+    job_update: ApplyWorkflowUpdate,
+    project_id: int,
+    job_id: int,
+    user: User = Depends(current_active_superuser),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[ApplyWorkflowRead]:
+    """
+    Change the status of an existing job.
+
+    This endpoint is only open to superusers, and it does not apply
+    project-based access-control to jobs.
+    """
+    job = await db.get(ApplyWorkflow, job_id)
+    if job is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Job {job_id} not found",
+        )
+        setattr(job, "status", job_update.status)
+    await db.commit()
+    await db.refresh(job)
+    await db.close()
+    return job
