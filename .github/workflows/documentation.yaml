@@ -63,9 +63,6 @@ jobs:
           OAUTH_GITHUB_CLIENT_SECRET: github_fake_client_secret
           OAUTH_GOOGLE_CLIENT_ID: google_fake_client_id
           OAUTH_GOOGLE_CLIENT_SECRET: google_fake_client_secret
-          OAUTH_OIDC_CLIENT_ID: oidc_fake_client_id
-          OAUTH_OIDC_CLIENT_SECRET: oicd_fake_client_secret
-          OAUTH_OIDC_OIDC_CONFIGURATION_ENDPOINT: https://fakesite.com/.well-known/openid-configuration
 
         run: fractalctl openapi -f docs/openapi.json
 
