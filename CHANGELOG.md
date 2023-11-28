@@ -13,6 +13,8 @@
         * Move `PATCH /auth/users/me/` to `PATCH /auth/current-user/` (\#1013).
         * Remove `DELETE /auth/users/{id}/` endpoint (\#994).
         * Remove `GET /auth/users/me/` (\#1013).
+        * Remove `POST` `/auth/forgot-password/`, `/auth/reset-password/`, `/auth/request-verify-token/`, `/auth/verify/` (\#1033).
+        * Move `GET /auth/userlist/` to `GET /auth/users/` (\#1033).
     * New behaviors or responses of existing endpoints:
         * Change response of `/api/v1/project/{project_id}/job/{job_id}/stop/` endpoint to 204 no-content (\#967).
         * Remove `dataset_list` attribute from `ProjectRead`, which affects all `GET` endpoints that return some project (\#993).
