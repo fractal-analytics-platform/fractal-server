@@ -69,6 +69,12 @@ async def test_patch_job(
                 json={"status": "something_invalid"},
             )
             assert res.status_code == 422
+            # Fail due to non-existing job
+            res = await registered_superuser_client.patch(
+                f"{PREFIX}/project/{project.id}/job/{123456789}/",
+                json={"status": NEW_STATUS},
+            )
+            assert res.status_code == 404
             # Successfully apply patch
             res = await registered_superuser_client.patch(
                 f"{PREFIX}/project/{project.id}/job/{job.id}/",
