@@ -270,7 +270,7 @@ async def test_patch_task_different_users(
     endpoint returns correctly.
     """
 
-    task = await task_factory(name="task", owner=owner, version="1.2.3")
+    task = await task_factory(name="task", owner=owner)
     debug(task)
     assert task.owner == owner
 
@@ -292,7 +292,7 @@ async def test_patch_task_different_users(
 
     # Patch task
     NEW_NAME = "new name"
-    payload = TaskUpdate(name=NEW_NAME, version=None).dict(exclude_unset=True)
+    payload = TaskUpdate(name=NEW_NAME).dict(exclude_unset=True)
     debug(payload)
     res = await registered_superuser_client.patch(
         f"{PREFIX}/{task.id}/", json=payload
