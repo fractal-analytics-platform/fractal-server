@@ -50,14 +50,12 @@ def collect_routers(app: FastAPI) -> None:
     """
     from .app.routes.api import router_api
     from .app.routes.api.v1 import router_api_v1
-    from .app.routes.monitoring import router_monitoring
+    from .app.routes.admin import router_admin
     from .app.routes.auth import router_auth
 
     app.include_router(router_api, prefix="/api")
     app.include_router(router_api_v1, prefix="/api/v1")
-    app.include_router(
-        router_monitoring, prefix="/monitoring", tags=["Monitoring"]
-    )
+    app.include_router(router_admin, prefix="/admin", tags=["Admin area"])
     app.include_router(router_auth, prefix="/auth", tags=["auth"])
 
 
