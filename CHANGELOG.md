@@ -5,12 +5,15 @@
 * API:
     * Major endpoint changes:
         * Add trailing slash to _all_ endpoints' paths (\#1003).
-        * Add new monitoring endpoints restricted to superusers at `/monitoring` (\#947, \#1009).
+        * Add new admin-area endpoints restricted to superusers at `/admin` (\#947, \#1009, \#1032).
         * Add new `GET` endpoints `api/v1/job/` and `api/v1/project/{project_id}/workflow/{workflow_id}/job/` (\#969, \#1003).
         * Add new `GET` endpoints `api/v1/dataset/` and `api/v1/workflow/` (\#988, \#1003).
         * Add new `GET` endpoint `api/v1/project/{project_id}/dataset/` (\#993).
-        * Remove `DELETE /auth/users/{id}/` endpoint (\#994).
         * Add superuser-only `PATCH /api/v1/job/{job_id}/` endpoint (\#1030).
+        * Move `GET /auth/whoami/` to `GET /auth/current-user/` (\#1013).
+        * Move `PATCH /auth/users/me/` to `PATCH /auth/current-user/` (\#1013).
+        * Remove `DELETE /auth/users/{id}/` endpoint (\#994).
+        * Remove `GET /auth/users/me/` (\#1013).
     * New behaviors or responses of existing endpoints:
         * Change response of `/api/v1/project/{project_id}/job/{job_id}/stop/` endpoint to 204 no-content (\#967).
         * Remove `dataset_list` attribute from `ProjectRead`, which affects all `GET` endpoints that return some project (\#993).
