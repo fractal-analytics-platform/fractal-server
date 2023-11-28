@@ -74,12 +74,10 @@ class UserUpdateStrict(BaseModel, extra=Extra.forbid):
     """
 
     cache_dir: Optional[str]
-    password: Optional[str]
 
     _cache_dir = validator("cache_dir", allow_reuse=True)(
         val_absolute_path("cache_dir")
     )
-    _password = validator("password", allow_reuse=True)(valstr("password"))
 
 
 class UserCreate(schemas.BaseUserCreate):
