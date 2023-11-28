@@ -146,3 +146,14 @@ class ApplyWorkflowRead(_ApplyWorkflowBase):
         d["start_timestamp"] = str(self.start_timestamp)
         d["end_timestamp"] = str(self.end_timestamp)
         return d
+
+
+class ApplyWorkflowUpdate(BaseModel):
+    """
+    Class for updating a job status.
+
+    Attributes:
+        status: New job status.
+    """
+
+    status: JobStatusType

@@ -15,8 +15,12 @@ from .....config import get_settings
 from .....syringe import Inject
 from ....db import AsyncSession
 from ....db import get_db
+from ....models import ApplyWorkflow
 from ....runner._common import SHUTDOWN_FILENAME
 from ....schemas import ApplyWorkflowRead
+from ....schemas import ApplyWorkflowUpdate
+from ....schemas import JobStatusType
+from ....security import current_active_superuser
 from ....security import current_active_user
 from ....security import User
 from ._aux_functions import _get_job_check_owner
@@ -196,3 +200,39 @@ async def stop_job(
         f.write(f"Trigger executor shutdown for {job.id=}, {project_id=}.")
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.patch(
+    "/job/{job_id}/",
+    response_model=ApplyWorkflowRead,
+)
+async def update_job(
+    job_update: ApplyWorkflowUpdate,
+    job_id: int,
+    user: User = Depends(current_active_superuser),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[ApplyWorkflowRead]:
+    """
+    Change the status of an existing job.
+
+    This endpoint is only open to superusers, and it does not apply
+    project-based access-control to jobs.
+    """
+    job = await db.get(ApplyWorkflow, job_id)
+    if job is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Job {job_id} not found",
+        )
+
+    if job_update.status != JobStatusType.FAILED:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Cannot set job status to {job_update.status}",
+        )
+
+    setattr(job, "status", job_update.status)
+    await db.commit()
+    await db.refresh(job)
+    await db.close()
+    return job
