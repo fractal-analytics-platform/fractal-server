@@ -103,6 +103,7 @@ async def test_patch_current_user_cache_dir(registered_client):
     res = await registered_client.get(f"{PREFIX}/current-user/")
     pre_patch_user = res.json()
 
+    # Successful API call with empty payload
     res = await registered_client.patch(f"{PREFIX}/current-user/", json={})
     assert res.status_code == 200
     assert res.json() == pre_patch_user
