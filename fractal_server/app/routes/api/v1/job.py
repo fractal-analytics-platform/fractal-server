@@ -15,8 +15,11 @@ from .....config import get_settings
 from .....syringe import Inject
 from ....db import AsyncSession
 from ....db import get_db
+from ....models import ApplyWorkflow
 from ....runner._common import SHUTDOWN_FILENAME
 from ....schemas import ApplyWorkflowRead
+from ....schemas import ApplyWorkflowUpdate
+from ....security import current_active_superuser
 from ....security import current_active_user
 from ....security import User
 from ._aux_functions import _get_job_check_owner
@@ -87,6 +90,30 @@ async def read_job(
     )
     job = output["job"]
 
+    await db.close()
+    return job
+
+
+@router.patch(
+    "/project/{project_id}/job/{job_id}/",
+    response_model=ApplyWorkflowRead,
+)
+async def update_job(
+    job_update: ApplyWorkflowUpdate,
+    project_id: int,
+    job_id: int,
+    user: User = Depends(current_active_superuser),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[ApplyWorkflowRead]:
+    """
+    Change the status of an existing job.
+    """
+    job = await db.get(ApplyWorkflow, job_id)
+    if job is None:
+        raise HTTPException()
+    setattr(job, "status", job_update.status)
+    await db.commit()
+    await db.refresh(job)
     await db.close()
     return job
 
