@@ -257,35 +257,36 @@ async def test_edit_users_as_superuser(registered_superuser_client):
         assert res.status_code == 422
 
     # SLURM_USER
+    # String attribute 'slurm_user' cannot be empty
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{user_id}/",
-        json={"slurm_user": ""},
+        json={"slurm_user": "      "},
     )
-    # String attribute 'slurm_user' cannot be empty
+    assert res.status_code == 422
+    # String attribute 'slurm_user' cannot be None
     assert res.status_code == 422
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{user_id}/",
         json={"slurm_user": None},
     )
-    # String attribute 'slurm_user' cannot be None
     assert res.status_code == 422
 
     # USERNAME
+    # String attribute 'username' cannot be empty
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{user_id}/",
-        json={"username": ""},
+        json={"username": "   "},
     )
-    # String attribute 'username' cannot be empty
-    debug(res.json())
     assert res.status_code == 422
+    # String attribute 'username' cannot be None
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{user_id}/",
         json={"username": None},
     )
-    # String attribute 'username' cannot be None
-    debug(res.json())
     assert res.status_code == 422
 
+    # CACHE_DIR
+    # String attribute 'cache_dir' cannot be None
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{user_id}/", json={"cache_dir": None}
     )
