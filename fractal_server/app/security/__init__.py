@@ -34,8 +34,6 @@ from typing import Optional
 from typing import Type
 
 from fastapi import Depends
-from fastapi import Request
-from fastapi import Response
 from fastapi_users import BaseUserManager
 from fastapi_users import FastAPIUsers
 from fastapi_users import IntegerIDMixin
@@ -44,6 +42,7 @@ from fastapi_users.authentication import BearerTransport
 from fastapi_users.authentication import CookieTransport
 from fastapi_users.authentication import JWTStrategy
 from fastapi_users.db.base import BaseUserDatabase
+from fastapi_users.exceptions import InvalidPasswordException
 from fastapi_users.models import ID
 from fastapi_users.models import OAP
 from fastapi_users.models import UP
@@ -174,17 +173,17 @@ async def get_user_db(
 
 
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
-    async def on_after_login(
-        self,
-        user: User,
-        request: Optional[Request] = None,
-        response: Optional[Response] = None,
-    ) -> None:
-        """
-        Perform logic after user login.
-        *You should overload this method to add your own logic.*
-        """
-        pass
+    async def validate_password(self, password: str, user: User) -> None:
+        # check password length
+        min_length, max_length = 4, 100
+        if len(password) < min_length:
+            raise InvalidPasswordException(
+                f"The password is too short (minimum length: {min_length})."
+            )
+        elif len(password) > max_length:
+            raise InvalidPasswordException(
+                f"The password is too long (maximum length: {min_length})."
+            )
 
 
 async def get_user_manager(

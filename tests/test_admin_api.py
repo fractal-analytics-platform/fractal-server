@@ -2,10 +2,10 @@ from datetime import datetime
 
 from fractal_server.app.models import JobStatusType
 
-PREFIX = "/monitoring"
+PREFIX = "/admin"
 
 
-async def test_unauthorized_to_monitor(client, MockCurrentUser):
+async def test_unauthorized_to_admin(client, MockCurrentUser):
 
     async with MockCurrentUser(user_kwargs={"is_superuser": False}):
         res = await client.get(f"{PREFIX}/project/")
@@ -28,7 +28,7 @@ async def test_unauthorized_to_monitor(client, MockCurrentUser):
         assert res.status_code == 200
 
 
-async def test_monitor_project(client, MockCurrentUser, project_factory):
+async def test_view_project(client, MockCurrentUser, project_factory):
 
     async with MockCurrentUser(
         user_kwargs={"is_superuser": True}
@@ -61,7 +61,7 @@ async def test_monitor_project(client, MockCurrentUser, project_factory):
         assert len(res.json()) == 1
 
 
-async def test_monitor_workflow(
+async def test_view_workflow(
     client, MockCurrentUser, project_factory, workflow_factory
 ):
 
@@ -138,7 +138,7 @@ async def test_monitor_workflow(
         assert len(res.json()) == 3
 
 
-async def test_monitor_dataset(
+async def test_view_dataset(
     client, MockCurrentUser, project_factory, dataset_factory
 ):
 
@@ -226,7 +226,7 @@ async def test_monitor_dataset(
         assert len(res.json()) == 1
 
 
-async def test_monitor_job(
+async def test_view_job(
     db,
     client,
     MockCurrentUser,

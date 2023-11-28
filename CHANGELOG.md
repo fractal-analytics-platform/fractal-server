@@ -5,11 +5,14 @@
 * API:
     * Major endpoint changes:
         * Add trailing slash to _all_ endpoints' paths (\#1003).
-        * Add new monitoring endpoints restricted to superusers at `/monitoring` (\#947, \#1009).
+        * Add new admin-area endpoints restricted to superusers at `/admin` (\#947, \#1009, \#1032).
         * Add new `GET` endpoints `api/v1/job/` and `api/v1/project/{project_id}/workflow/{workflow_id}/job/` (\#969, \#1003).
         * Add new `GET` endpoints `api/v1/dataset/` and `api/v1/workflow/` (\#988, \#1003).
         * Add new `GET` endpoint `api/v1/project/{project_id}/dataset/` (\#993).
+        * Move `GET /auth/whoami/` to `GET /auth/current-user/` (\#1013).
+        * Move `PATCH /auth/users/me/` to `PATCH /auth/current-user/` (\#1013).
         * Remove `DELETE /auth/users/{id}/` endpoint (\#994).
+        * Remove `GET /auth/users/me/` (\#1013).
     * New behaviors or responses of existing endpoints:
         * Change response of `/api/v1/project/{project_id}/job/{job_id}/stop/` endpoint to 204 no-content (\#967).
         * Remove `dataset_list` attribute from `ProjectRead`, which affects all `GET` endpoints that return some project (\#993).
@@ -29,7 +32,9 @@
     * Remove `"cascade": "all, delete-orphan"` from `Project.job_list` (\#927).
     * Add `Workflow.job_list` relation (\#927).
     * Do not use `Enum`s as column types (e.g. for `ApplyWorkflow.status`), but only for (de-)serialization (\#974).
+    * Add script for updating DB from 1.4.0 to 1.4.1 (\#1010)
 * App:
+    * Fix missing try/except in sync session (\#1020).
     * Skip creation of first-superuser when one superuser already exists (\#1006).
 * Runner:
     * Refresh DB objects within `submit_workflow` (\#927).
@@ -37,6 +42,7 @@
     * Improve `test_full_workflow.py` (\#971).
     * Update `pytest-asyncio` to v0.21 (\#1008).
     * Fix CI issue related to event loop and asyncpg (\#1012).
+    * Add GitHub Action testing database migrations (\#1010).
 
 # 1.3.14 (do not use!)
 

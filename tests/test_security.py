@@ -1,14 +1,13 @@
 import pytest
 from devtools import debug
 
-
 PREFIX = "/auth"
 
 
-async def test_whoami(client, MockCurrentUser):
+async def test_get_current_user(client, MockCurrentUser):
 
     # Anonymous user
-    res = await client.get(f"{PREFIX}/whoami/")
+    res = await client.get(f"{PREFIX}/current-user/")
     debug(res.json())
     assert res.status_code == 401
 
@@ -32,7 +31,8 @@ async def test_register_user(client, MockCurrentUser):
     Test that user registration is only allowed to a superuser
     """
 
-    payload_register = dict(email="asd@asd.asd", password="1234")
+    EMAIL = "asd@asd.asd"
+    payload_register = dict(email=EMAIL, password="12345")
 
     async with MockCurrentUser(user_kwargs={"is_superuser": False}):
         # Non-superuser user
@@ -83,7 +83,7 @@ async def test_show_user(registered_client, registered_superuser_client):
 
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/",
-        json=dict(email="to_show@asd.asd", password="12"),
+        json=dict(email="to_show@asd.asd", password="12345"),
     )
     user_id = res.json()["id"]
     assert res.status_code == 201
@@ -92,54 +92,206 @@ async def test_show_user(registered_client, registered_superuser_client):
     res = await registered_client.get(f"{PREFIX}/users/{user_id}/")
     assert res.status_code == 403
 
-    # GET/me with non-superuser user
-    res = await registered_client.get(f"{PREFIX}/users/me/")
-    assert res.status_code == 403
-
     # GET/{user_id} with superuser user
     res = await registered_superuser_client.get(f"{PREFIX}/users/{user_id}/")
     debug(res.json())
     assert res.status_code == 200
 
 
-async def test_edit_user(registered_client, registered_superuser_client):
+async def test_patch_current_user_cache_dir(registered_client):
+    """
+    Test several scenarios for updating `cache_dir` for the current user.
+    """
+    res = await registered_client.get(f"{PREFIX}/current-user/")
+    pre_patch_user = res.json()
+
+    # Successful API call with empty payload
+    res = await registered_client.patch(f"{PREFIX}/current-user/", json={})
+    assert res.status_code == 200
+    assert res.json() == pre_patch_user
+
+    # Successful update
+    assert pre_patch_user["cache_dir"] is None
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"cache_dir": "/tmp"}
+    )
+    assert res.status_code == 200
+    assert res.json()["cache_dir"] == "/tmp"
+
+    # Failed update due to empty string
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"cache_dir": ""}
+    )
+    assert res.status_code == 422
+
+    # Failed update due to null value
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"cache_dir": None}
+    )
+    assert res.status_code == 422
+
+    # Failed update due to non-absolute path
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"cache_dir": "not_abs"}
+    )
+    assert res.status_code == 422
+
+
+async def test_patch_current_user_no_extra(registered_client):
+    """
+    Test that the PATCH-current-user endpoint fails when extra attributes are
+    provided.
+    """
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"cache_dir": "/tmp", "foo": "bar"}
+    )
+    assert res.status_code == 422
+
+
+async def test_patch_current_user_password(registered_client, client):
+    """
+    Test several scenarios for updating `password` for the current user.
+    """
+    res = await registered_client.get(f"{PREFIX}/current-user/")
+    user_email = res.json()["email"]
+
+    # Fail due to null password
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"password": None}
+    )
+    assert res.status_code == 422
+
+    # Fail due to empty-string password
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"password": ""}
+    )
+    assert res.status_code == 422
+
+    # Fail due to invalid password (too short)
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"password": "abc"}
+    )
+    assert res.status_code == 400
+    assert "too short" in res.json()["detail"]["reason"]
+
+    # Fail due to invalid password (too long)
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"password": "x" * 101}
+    )
+    assert res.status_code == 400
+    assert "too long" in res.json()["detail"]["reason"]
+
+    # Successful password update
+    NEW_PASSWORD = "my-new-password"
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"password": NEW_PASSWORD}
+    )
+    assert res.status_code == 200
+
+    # Check that old password is not valid any more
+    res = await client.post(
+        "auth/token/login/",
+        data=dict(
+            username=user_email,
+            password="12345",  # default password of registered_client
+        ),
+    )
+    assert res.status_code == 400
+
+    # Check that new password is valid
+    res = await client.post(
+        "auth/token/login/",
+        data=dict(
+            username=user_email,
+            password=NEW_PASSWORD,
+        ),
+    )
+    assert res.status_code == 200
+
+
+async def test_edit_users_as_superuser(registered_superuser_client):
 
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/",
-        json=dict(email="to_patch@asd.asd", password="12"),
+        json=dict(email="test@fractal.xy", password="12345"),
     )
-    user_id = res.json()["id"]
     assert res.status_code == 201
+    pre_patch_user = res.json()
 
-    # PATCH/{user_id} with non-superuser user
-    res = await registered_client.patch(
-        f"{PREFIX}/users/{user_id}/", json={"slurm_user": "my_slurm_user"}
+    update = dict(
+        email="patch@fractal.xy",
+        is_active=False,
+        is_superuser=True,
+        is_verified=True,
+        slurm_user="slurm_patch",
+        cache_dir="/patch",
+        username="user_patch",
     )
-    assert res.status_code == 403
-
-    # PATCH/me with non-superuser user
-    res = await registered_client.patch(
-        f"{PREFIX}/users/me/", json={"slurm_user": "asd"}
-    )
-    assert res.status_code == 403
-
-    # PATCH/{user_id} with superuser
     res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{user_id}/",
-        json={
-            "slurm_user": "my_slurm_user",
-            "cache_dir": "/some/absolute/path",
-        },
+        f"{PREFIX}/users/{pre_patch_user['id']}/",
+        json=update,
     )
     assert res.status_code == 200
-    assert res.json()["slurm_user"] == "my_slurm_user"
-    assert res.json()["cache_dir"] == "/some/absolute/path"
 
-    # PATCH/{user_id} with superuser, but with invalid payload
+    user = res.json()
+    # assert that the attributes we wanted to update have actually changed
+    for key, value in user.items():
+        if key not in update:
+            assert value == pre_patch_user[key]
+        else:
+            assert value != pre_patch_user[key]
+            assert value == update[key]
+
+    user_id = user["id"]
+
+    # EMAIL
     res = await registered_superuser_client.patch(
-        f"{PREFIX}/users/{user_id}/", json={"cache_dir": "non/absolute/path"}
+        f"{PREFIX}/users/{user_id}/",
+        json=dict(email="hello, world!"),
     )
-    debug(res.json())
+    assert res.status_code == 422
+
+    for attribute in ["email", "is_active", "is_superuser", "is_verified"]:
+        res = await registered_superuser_client.patch(
+            f"{PREFIX}/users/{user_id}/",
+            json={attribute: None},
+        )
+        assert res.status_code == 422
+
+    # SLURM_USER
+    # String attribute 'slurm_user' cannot be empty
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user_id}/",
+        json={"slurm_user": "      "},
+    )
+    assert res.status_code == 422
+    # String attribute 'slurm_user' cannot be None
+    assert res.status_code == 422
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user_id}/",
+        json={"slurm_user": None},
+    )
+    assert res.status_code == 422
+
+    # USERNAME
+    # String attribute 'username' cannot be empty
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user_id}/",
+        json={"username": "   "},
+    )
+    assert res.status_code == 422
+    # String attribute 'username' cannot be None
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user_id}/",
+        json={"username": None},
+    )
+    assert res.status_code == 422
+
+    # CACHE_DIR
+    # String attribute 'cache_dir' cannot be None
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{user_id}/", json={"cache_dir": None}
+    )
     assert res.status_code == 422
 
 
@@ -148,7 +300,7 @@ async def test_add_superuser(registered_superuser_client):
     # Create non-superuser user
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/",
-        json=dict(email="future_superuser@asd.asd", password="12"),
+        json=dict(email="future_superuser@asd.asd", password="12345"),
     )
     debug(res.json())
     user_id = res.json()["id"]
@@ -181,9 +333,10 @@ async def test_delete_user(registered_client, registered_superuser_client):
 
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/",
-        json=dict(email="to_delete@asd.asd", password="12"),
+        json=dict(email="to_delete@asd.asd", password="1234"),
     )
     user_id = res.json()["id"]
+    debug(res.json)
     assert res.status_code == 201
 
     # Test delete endpoint
@@ -204,7 +357,6 @@ async def test_delete_user(registered_client, registered_superuser_client):
 @pytest.mark.parametrize("slurm_user", ("test01", None))
 async def test_MockCurrentUser_fixture(
     db,
-    app,
     MockCurrentUser,
     cache_dir,
     username,
