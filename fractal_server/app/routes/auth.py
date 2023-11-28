@@ -64,9 +64,8 @@ async def whoami(
     return user
 
 
-@router_auth.get("/userlist", response_model=list[UserRead])
+@router_auth.get("/users/", response_model=list[UserRead])
 async def list_users(
-    user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_db),
 ):
     """
