@@ -202,12 +202,11 @@ async def stop_job(
 
 
 @router.patch(
-    "/project/{project_id}/job/{job_id}/",
+    "/job/{job_id}/",
     response_model=ApplyWorkflowRead,
 )
 async def update_job(
     job_update: ApplyWorkflowUpdate,
-    project_id: int,
     job_id: int,
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_db),
@@ -224,7 +223,8 @@ async def update_job(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Job {job_id} not found",
         )
-        setattr(job, "status", job_update.status)
+
+    setattr(job, "status", job_update.status)
     await db.commit()
     await db.refresh(job)
     await db.close()

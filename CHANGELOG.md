@@ -10,7 +10,7 @@
         * Add new `GET` endpoints `api/v1/dataset/` and `api/v1/workflow/` (\#988, \#1003).
         * Add new `GET` endpoint `api/v1/project/{project_id}/dataset/` (\#993).
         * Remove `DELETE /auth/users/{id}/` endpoint (\#994).
-        * Add superuser-only `PATCH /project/{project_id}/job/{job_id}/` endpoint (\#1030).
+        * Add superuser-only `PATCH /api/v1/job/{job_id}/` endpoint (\#1030).
     * New behaviors or responses of existing endpoints:
         * Change response of `/api/v1/project/{project_id}/job/{job_id}/stop/` endpoint to 204 no-content (\#967).
         * Remove `dataset_list` attribute from `ProjectRead`, which affects all `GET` endpoints that return some project (\#993).
