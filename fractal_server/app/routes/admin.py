@@ -1,5 +1,5 @@
 """
-Definition of `/monitoring` routes.
+Definition of `/admin` routes.
 """
 from datetime import datetime
 from typing import Optional
@@ -24,11 +24,11 @@ from ..schemas import WorkflowRead
 from ..security import current_active_superuser
 
 
-router_monitoring = APIRouter()
+router_admin = APIRouter()
 
 
-@router_monitoring.get("/project/", response_model=list[ProjectRead])
-async def monitor_project(
+@router_admin.get("/project/", response_model=list[ProjectRead])
+async def view_project(
     id: Optional[int] = None,
     user_id: Optional[int] = None,
     user: User = Depends(current_active_superuser),
@@ -57,8 +57,8 @@ async def monitor_project(
     return project_list
 
 
-@router_monitoring.get("/workflow/", response_model=list[WorkflowRead])
-async def monitor_workflow(
+@router_admin.get("/workflow/", response_model=list[WorkflowRead])
+async def view_workflow(
     id: Optional[int] = None,
     user_id: Optional[int] = None,
     project_id: Optional[int] = None,
@@ -98,8 +98,8 @@ async def monitor_workflow(
     return workflow_list
 
 
-@router_monitoring.get("/dataset/", response_model=list[DatasetRead])
-async def monitor_dataset(
+@router_admin.get("/dataset/", response_model=list[DatasetRead])
+async def view_dataset(
     id: Optional[int] = None,
     user_id: Optional[int] = None,
     project_id: Optional[int] = None,
@@ -143,8 +143,8 @@ async def monitor_dataset(
     return dataset_list
 
 
-@router_monitoring.get("/job/", response_model=list[ApplyWorkflowRead])
-async def monitor_job(
+@router_admin.get("/job/", response_model=list[ApplyWorkflowRead])
+async def view_job(
     id: Optional[int] = None,
     user_id: Optional[int] = None,
     project_id: Optional[int] = None,
