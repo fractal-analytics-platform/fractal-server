@@ -1,6 +1,8 @@
 from typing import Optional
 
 from fastapi_users import schemas
+from pydantic import BaseModel
+from pydantic import Extra
 from pydantic import validator
 
 from ._validators import val_absolute_path
@@ -51,6 +53,33 @@ class UserUpdate(schemas.BaseUserUpdate):
     _cache_dir = validator("cache_dir", allow_reuse=True)(
         val_absolute_path("cache_dir")
     )
+
+    @validator(
+        "is_active",
+        "is_verified",
+        "is_superuser",
+        "email",
+        "password",
+        always=False,
+    )
+    def cant_set_none(cls, v, field):
+        if v is None:
+            raise ValueError(f"Cannot set {field.name}=None")
+        return v
+
+
+class UserUpdateStrict(BaseModel, extra=Extra.forbid):
+    """
+    Attributes that every user can self-edit
+    """
+
+    cache_dir: Optional[str]
+    password: Optional[str]
+
+    _cache_dir = validator("cache_dir", allow_reuse=True)(
+        val_absolute_path("cache_dir")
+    )
+    _password = validator("password", allow_reuse=True)(valstr("password"))
 
 
 class UserCreate(schemas.BaseUserCreate):

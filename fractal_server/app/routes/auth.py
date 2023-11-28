@@ -3,6 +3,11 @@ Definition of `/auth` routes.
 """
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import status
+from fastapi_users import exceptions
+from fastapi_users import schemas
+from fastapi_users.router.common import ErrorCode
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
@@ -13,12 +18,14 @@ from ..models.security import UserOAuth as User
 from ..schemas.user import UserCreate
 from ..schemas.user import UserRead
 from ..schemas.user import UserUpdate
+from ..schemas.user import UserUpdateStrict
 from ..security import cookie_backend
 from ..security import current_active_superuser
 from ..security import current_active_user
 from ..security import fastapi_users
+from ..security import get_user_manager
 from ..security import token_backend
-
+from ..security import UserManager
 
 router_auth = APIRouter()
 
@@ -34,9 +41,12 @@ router_auth.include_router(
     dependencies=[Depends(current_active_superuser)],
 )
 
-# Include users routes, after removing DELETE endpoint (ref
-# https://github.com/fastapi-users/fastapi-users/discussions/606)
 users_router = fastapi_users.get_users_router(UserRead, UserUpdate)
+
+# We remove `/auth/users/me` endpoints to implement our own
+# at `/auth/current-user/`.
+# We also remove `DELETE /auth/users/{user_id}`
+# (ref https://github.com/fastapi-users/fastapi-users/discussions/606)
 users_router.routes = [
     route
     for route in users_router.routes
@@ -54,10 +64,30 @@ router_auth.include_router(
 )
 
 
-@router_auth.get("/whoami", response_model=UserRead)
-async def whoami(
-    user: User = Depends(current_active_user),
+@router_auth.patch("/current-user/", response_model=UserRead)
+async def patch_current_user(
+    user_update: UserUpdateStrict,
+    current_user: User = Depends(current_active_user),
+    user_manager: UserManager = Depends(get_user_manager),
 ):
+
+    update = UserUpdate(**user_update.dict(exclude_unset=True))
+
+    try:
+        user = await user_manager.update(update, current_user, safe=True)
+    except exceptions.InvalidPasswordException as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "code": ErrorCode.UPDATE_USER_INVALID_PASSWORD,
+                "reason": e.reason,
+            },
+        )
+    return schemas.model_validate(User, user)
+
+
+@router_auth.get("/current-user/", response_model=UserRead)
+async def get_current_user(user: User = Depends(current_active_user)):
     """
     Return current user
     """
