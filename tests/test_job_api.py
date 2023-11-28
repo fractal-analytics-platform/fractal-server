@@ -49,7 +49,7 @@ async def test_patch_job(
         assert res.json()["status"] == ORIGINAL_STATUS
         # Patch job as job owner (standard user) and fail
         res = await client.patch(
-            f"{PREFIX}/project/{project.id}/job/{job.id}/",
+            f"{PREFIX}/job/{job.id}/",
             json={"status": NEW_STATUS},
         )
         assert res.status_code == 403
@@ -59,28 +59,29 @@ async def test_patch_job(
         ):
             # Fail due to invalid payload (missing attribute "status")
             res = await registered_superuser_client.patch(
-                f"{PREFIX}/project/{project.id}/job/{job.id}/",
+                f"{PREFIX}/job/{job.id}/",
                 json={"working_dir": "/tmp"},
             )
             assert res.status_code == 422
             # Fail due to invalid payload (status not part of JobStatusType)
             res = await registered_superuser_client.patch(
-                f"{PREFIX}/project/{project.id}/job/{job.id}/",
+                f"{PREFIX}/job/{job.id}/",
                 json={"status": "something_invalid"},
             )
             assert res.status_code == 422
             # Fail due to non-existing job
             res = await registered_superuser_client.patch(
-                f"{PREFIX}/project/{project.id}/job/{123456789}/",
+                f"{PREFIX}/job/{123456789}/",
                 json={"status": NEW_STATUS},
             )
             assert res.status_code == 404
             # Successfully apply patch
             res = await registered_superuser_client.patch(
-                f"{PREFIX}/project/{project.id}/job/{job.id}/",
+                f"{PREFIX}/job/{job.id}/",
                 json={"status": NEW_STATUS},
             )
             assert res.status_code == 200
+            debug(res.json())
             assert res.json()["status"] == NEW_STATUS
         # Read job as job owner (standard user)
         res = await client.get(f"{PREFIX}/project/{project.id}/job/{job.id}/")
