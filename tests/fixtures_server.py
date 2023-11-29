@@ -324,7 +324,6 @@ async def MockCurrentUser(app, db):
             self.previous_user = app.dependency_overrides.get(
                 current_active_user, None
             )
-            debug("🚀", current_active_user, self.previous_user)
             app.dependency_overrides[
                 current_active_user
             ] = self.current_active_user_override()
@@ -335,7 +334,6 @@ async def MockCurrentUser(app, db):
                 self.previous_superuser = app.dependency_overrides.get(
                     current_active_superuser, None
                 )
-                debug("🐝", current_active_superuser, self.previous_superuser)
                 app.dependency_overrides[
                     current_active_superuser
                 ] = self.current_active_user_override()
@@ -347,9 +345,7 @@ async def MockCurrentUser(app, db):
                     current_active_user
                 ] = self.previous_user
             if hasattr(self, "previous_superuser"):
-                debug("🐷")
                 if self.previous_superuser is not None:
-                    debug("👹")
                     app.dependency_overrides[
                         current_active_superuser
                     ] = self.previous_superuser
