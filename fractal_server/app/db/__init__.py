@@ -63,7 +63,9 @@ class DB:
                 connect_args={"check_same_thread": False},
             )
         else:
-            engine_kwargs_async = {}
+            engine_kwargs_async = {
+                "pool_pre_ping": True,
+            }
             engine_kwargs_sync = {}
 
         cls._engine_async = create_async_engine(
