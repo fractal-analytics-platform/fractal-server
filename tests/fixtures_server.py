@@ -298,13 +298,8 @@ async def MockCurrentUser(app, db):
                 defaults.update(self.user_kwargs)
             self.user = User(name=self.name, **defaults)
 
-        def current_active_user_override(self):
-            def __current_active_user_override():
-                return self.user
-
-            return __current_active_user_override
-
         async def __aenter__(self):
+
             self._create_user()
 
             try:
@@ -323,16 +318,15 @@ async def MockCurrentUser(app, db):
             db.expunge(self.user)
 
             # Dependencies override
-            app.dependency_overrides[
-                current_active_user
-            ] = self.current_active_user_override()
+            app.dependency_overrides[current_active_user] = lambda: self.user
             if (
                 self.user_kwargs is not None
                 and self.user_kwargs.get("is_superuser") is True
             ):
                 app.dependency_overrides[
                     current_active_superuser
-                ] = self.current_active_user_override()
+                ] = lambda: self.user
+
             return self.user
 
         async def __aexit__(self, *args, **kwargs):
