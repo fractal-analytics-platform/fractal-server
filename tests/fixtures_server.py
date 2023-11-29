@@ -317,6 +317,13 @@ async def MockCurrentUser(app, db):
             # on user from other sessions
             db.expunge(self.user)
 
+            self.previous_user_override = app.dependency_overrides.get(
+                current_active_user, None
+            )
+            self.previous_superuser_override = app.dependency_overrides.get(
+                current_active_user, None
+            )
+
             # Dependencies override
             app.dependency_overrides[current_active_user] = lambda: self.user
             if (
@@ -330,11 +337,21 @@ async def MockCurrentUser(app, db):
             return self.user
 
         async def __aexit__(self, *args, **kwargs):
-            # Dependencies restore
-            app.dependency_overrides[current_active_user] = current_active_user
-            app.dependency_overrides[
-                current_active_superuser
-            ] = current_active_superuser
+            # Restore current_active_user
+            if self.previous_user_override is not None:
+                app.dependency_overrides[
+                    current_active_user
+                ] = self.previous_user_override
+            else:
+                del app.dependency_overrides[current_active_user]
+            # Restore current_active_superuser (if overriden)
+            if self.previous_superuser_override is not None:
+                app.dependency_overrides[
+                    current_active_superuser
+                ] = self.previous_superuser_override
+            else:
+                if current_active_superuser in app.dependency_overrides:
+                    del app.dependency_overrides[current_active_superuser]
 
     return _MockCurrentUser
 
