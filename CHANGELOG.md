@@ -35,6 +35,7 @@
     * Remove `"cascade": "all, delete-orphan"` from `Project.job_list` (\#927).
     * Add `Workflow.job_list` relation (\#927).
     * Do not use `Enum`s as column types (e.g. for `ApplyWorkflow.status`), but only for (de-)serialization (\#974).
+    * Set `pool_pre_ping` option to `True`, for asyncpg driver (\#1037).
     * Add script for updating DB from 1.4.0 to 1.4.1 (\#1010)
 * App:
     * Fix missing try/except in sync session (\#1020).
