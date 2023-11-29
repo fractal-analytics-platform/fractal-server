@@ -282,7 +282,7 @@ async def MockCurrentUser(app, db):
         """
 
         name: str = "User Name"
-        user_kwargs: Optional[Dict[str, Any]] = None
+        user_kwargs: Optional[Dict[str, Any]] = {}
         scopes: Optional[List[str]] = field(
             default_factory=lambda: ["project"]
         )
