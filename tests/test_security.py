@@ -57,16 +57,20 @@ async def test_list_users(client, MockCurrentUser):
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
         # Create two users
         res = await client.post(
-            f"{PREFIX}/register/", json=dict(email="0@asd.asd", password="12")
+            f"{PREFIX}/register/",
+            json=dict(email="0@asd.asd", password="x" * 5),
         )
+        assert res.status_code == 201
         res = await client.post(
-            f"{PREFIX}/register/", json=dict(email="1@asd.asd", password="12")
+            f"{PREFIX}/register/",
+            json=dict(email="1@asd.asd", password="y" * 5),
         )
+        assert res.status_code == 201
 
-    async with MockCurrentUser(user_kwargs={"is_superuser": False}) as sudo:
+    async with MockCurrentUser(user_kwargs={"is_superuser": False}):
         # Non-superuser user is not allowed
         res = await client.get(f"{PREFIX}/users/")
-        debug(res, sudo)
+        assert res.json()["detail"] == "Unauthorized"
         assert res.status_code == 401
 
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
