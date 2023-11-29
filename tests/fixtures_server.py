@@ -293,9 +293,8 @@ async def MockCurrentUser(app, db):
                 email=self.email,
                 hashed_password="fake_hashed_password",
                 slurm_user="test01",
+                **self.user_kwargs,
             )
-            if self.user_kwargs:
-                defaults.update(self.user_kwargs)
             self.user = User(name=self.name, **defaults)
 
         async def __aenter__(self):
@@ -333,10 +332,7 @@ async def MockCurrentUser(app, db):
 
             # Dependencies override
             app.dependency_overrides[current_active_user] = lambda: self.user
-            if (
-                self.user_kwargs is not None
-                and self.user_kwargs.get("is_superuser") is True
-            ):
+            if self.user_kwargs.get("is_superuser") is True:
                 app.dependency_overrides[
                     current_active_superuser
                 ] = lambda: self.user
