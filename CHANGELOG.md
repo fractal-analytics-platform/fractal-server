@@ -9,10 +9,13 @@
         * Add new `GET` endpoints `api/v1/job/` and `api/v1/project/{project_id}/workflow/{workflow_id}/job/` (\#969, \#1003).
         * Add new `GET` endpoints `api/v1/dataset/` and `api/v1/workflow/` (\#988, \#1003).
         * Add new `GET` endpoint `api/v1/project/{project_id}/dataset/` (\#993).
+        * Add superuser-only `PATCH /api/v1/job/{job_id}/` endpoint (\#1030).
         * Move `GET /auth/whoami/` to `GET /auth/current-user/` (\#1013).
-        * Move `PATCH /auth/users/me/` to `PATCH /auth/current-user/` (\#1013).
+        * Move `PATCH /auth/users/me/` to `PATCH /auth/current-user/` (\#1013, \#1035).
         * Remove `DELETE /auth/users/{id}/` endpoint (\#994).
         * Remove `GET /auth/users/me/` (\#1013).
+        * Remove `POST` `/auth/forgot-password/`, `/auth/reset-password/`, `/auth/request-verify-token/`, `/auth/verify/` (\#1033).
+        * Move `GET /auth/userlist/` to `GET /auth/users/` (\#1033).
     * New behaviors or responses of existing endpoints:
         * Change response of `/api/v1/project/{project_id}/job/{job_id}/stop/` endpoint to 204 no-content (\#967).
         * Remove `dataset_list` attribute from `ProjectRead`, which affects all `GET` endpoints that return some project (\#993).
@@ -36,6 +39,8 @@
 * App:
     * Fix missing try/except in sync session (\#1020).
     * Skip creation of first-superuser when one superuser already exists (\#1006).
+* Dependencies:
+    * Pin sqlalchemy to 1.4.50 and upgrade asyncpg to 0.29.0 (\#1036).
 * Runner:
     * Refresh DB objects within `submit_workflow` (\#927).
 * Testing:

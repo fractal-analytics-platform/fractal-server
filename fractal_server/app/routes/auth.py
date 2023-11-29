@@ -40,12 +40,6 @@ router_auth.include_router(
     fastapi_users.get_register_router(UserRead, UserCreate),
     dependencies=[Depends(current_active_superuser)],
 )
-router_auth.include_router(
-    fastapi_users.get_reset_password_router(),
-)
-router_auth.include_router(
-    fastapi_users.get_verify_router(UserRead),
-)
 
 users_router = fastapi_users.get_users_router(UserRead, UserUpdate)
 
@@ -100,7 +94,7 @@ async def get_current_user(user: User = Depends(current_active_user)):
     return user
 
 
-@router_auth.get("/userlist/", response_model=list[UserRead])
+@router_auth.get("/users/", response_model=list[UserRead])
 async def list_users(
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_db),

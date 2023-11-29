@@ -65,13 +65,13 @@ async def test_list_users(client, MockCurrentUser):
 
     async with MockCurrentUser(user_kwargs={"is_superuser": False}) as sudo:
         # Non-superuser user is not allowed
-        res = await client.get(f"{PREFIX}/userlist/")
+        res = await client.get(f"{PREFIX}/users/")
         debug(res, sudo)
         assert res.status_code == 401
 
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
         # Superuser can list
-        res = await client.get(f"{PREFIX}/userlist/")
+        res = await client.get(f"{PREFIX}/users/")
         debug(res.json())
         list_emails = [u["email"] for u in res.json()]
         assert "0@asd.asd" in list_emails
@@ -148,6 +148,18 @@ async def test_patch_current_user_no_extra(registered_client):
     assert res.status_code == 422
 
 
+async def test_patch_current_user_password_fails(registered_client, client):
+    """
+    This test exists for the same reason that test_patch_current_user_password
+    is skipped.
+    """
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/", json={"password": "something"}
+    )
+    assert res.status_code == 422
+
+
+@pytest.mark.skip(reason="Users cannot edit their own password for the moment")
 async def test_patch_current_user_password(registered_client, client):
     """
     Test several scenarios for updating `password` for the current user.
