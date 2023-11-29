@@ -282,7 +282,7 @@ async def MockCurrentUser(app, db):
         """
 
         name: str = "User Name"
-        user_kwargs: Optional[Dict[str, Any]] = {}
+        user_kwargs: Optional[Dict[str, Any]] = field(default_factory=dict)
         scopes: Optional[List[str]] = field(
             default_factory=lambda: ["project"]
         )
@@ -319,9 +319,9 @@ async def MockCurrentUser(app, db):
                     db.add(self.user)
                     await db.commit()
                     await db.refresh(self.user)
-                # Removing object from test db session, so that we can operate
-                # on user from other sessions
-                db.expunge(self.user)
+            # Removing object from test db session, so that we can operate
+            # on user from other sessions
+            db.expunge(self.user)
 
             self.previous_user_override = app.dependency_overrides.get(
                 current_active_user, None
