@@ -776,37 +776,37 @@ async def test_import_export_workflow(
     async with MockCurrentUser() as user:
         prj = await project_factory(user)
 
-    # Import workflow into project
-    payload = WorkflowImport(**workflow_from_file).dict(exclude_none=True)
-    debug(payload)
-    res = await client.post(
-        f"/api/v1/project/{prj.id}/workflow/import/", json=payload
-    )
-    debug(res.json())
-    assert res.status_code == 201
-    workflow_imported = res.json()
-    debug(workflow_imported)
+        # Import workflow into project
+        payload = WorkflowImport(**workflow_from_file).dict(exclude_none=True)
+        debug(payload)
+        res = await client.post(
+            f"/api/v1/project/{prj.id}/workflow/import/", json=payload
+        )
+        debug(res.json())
+        assert res.status_code == 201
+        workflow_imported = res.json()
+        debug(workflow_imported)
 
-    # Check that output can be cast to WorkflowRead
-    WorkflowRead(**workflow_imported)
+        # Check that output can be cast to WorkflowRead
+        WorkflowRead(**workflow_imported)
 
-    # Export workflow
-    workflow_id = workflow_imported["id"]
-    res = await client.get(
-        f"/api/v1/project/{prj.id}/workflow/{workflow_id}/export/"
-    )
-    debug(res)
-    debug(res.status_code)
-    workflow_exported = res.json()
-    debug(workflow_exported)
-    assert "id" not in workflow_exported
-    assert "project_id" not in workflow_exported
-    for wftask in workflow_exported["task_list"]:
-        assert "id" not in wftask
-        assert "task_id" not in wftask
-        assert "workflow_id" not in wftask
-        assert "id" not in wftask["task"]
-    assert res.status_code == 200
+        # Export workflow
+        workflow_id = workflow_imported["id"]
+        res = await client.get(
+            f"/api/v1/project/{prj.id}/workflow/{workflow_id}/export/"
+        )
+        debug(res)
+        debug(res.status_code)
+        workflow_exported = res.json()
+        debug(workflow_exported)
+        assert "id" not in workflow_exported
+        assert "project_id" not in workflow_exported
+        for wftask in workflow_exported["task_list"]:
+            assert "id" not in wftask
+            assert "task_id" not in wftask
+            assert "workflow_id" not in wftask
+            assert "id" not in wftask["task"]
+        assert res.status_code == 200
 
     # Check that the exported workflow is an extension of the one in the
     # original JSON file
@@ -845,25 +845,25 @@ async def test_export_workflow_log(
         prj = await project_factory(user)
         wf = await workflow_factory(project_id=prj.id)
 
-    # Insert WorkflowTasks
-    res = await client.post(
-        (
-            f"api/v1/project/{prj.id}/workflow/{wf.id}/wftask/"
-            f"?task_id={task.id}"
-        ),
-        json={},
-    )
-    assert res.status_code == 201
+        # Insert WorkflowTasks
+        res = await client.post(
+            (
+                f"api/v1/project/{prj.id}/workflow/{wf.id}/wftask/"
+                f"?task_id={task.id}"
+            ),
+            json={},
+        )
+        assert res.status_code == 201
 
-    # Export workflow
-    caplog.clear()
-    caplog.set_level(logging.WARNING)
-    res = await client.get(
-        f"/api/v1/project/{prj.id}/workflow/{wf.id}/export/"
-    )
-    assert res.status_code == 200
-    debug(caplog.text)
-    assert "not meant to be portable" in caplog.text
+        # Export workflow
+        caplog.clear()
+        caplog.set_level(logging.WARNING)
+        res = await client.get(
+            f"/api/v1/project/{prj.id}/workflow/{wf.id}/export/"
+        )
+        assert res.status_code == 200
+        debug(caplog.text)
+        assert "not meant to be portable" in caplog.text
 
 
 async def test_import_export_workflow_fail(
@@ -876,18 +876,18 @@ async def test_import_export_workflow_fail(
     async with MockCurrentUser() as user:
         prj = await project_factory(user)
 
-    await task_factory(name="valid", source="test_source")
-    payload = {
-        "name": "MyWorkflow",
-        "task_list": [
-            {"order": 0, "task": {"name": "dummy", "source": "xyz"}}
-        ],
-    }
-    res = await client.post(
-        f"/api/v1/project/{prj.id}/workflow/import/", json=payload
-    )
-    assert res.status_code == 422
-    assert "Found 0 tasks with source" in res.json()["detail"]
+        await task_factory(name="valid", source="test_source")
+        payload = {
+            "name": "MyWorkflow",
+            "task_list": [
+                {"order": 0, "task": {"name": "dummy", "source": "xyz"}}
+            ],
+        }
+        res = await client.post(
+            f"/api/v1/project/{prj.id}/workflow/import/", json=payload
+        )
+        assert res.status_code == 422
+        assert "Found 0 tasks with source" in res.json()["detail"]
 
 
 reorder_cases = []

@@ -300,22 +300,29 @@ async def MockCurrentUser(app, db):
 
         async def __aenter__(self):
 
-            self._create_user()
+            if self.user_kwargs.get("id") is not None:
+                db_user = await db.get(User, self.user_kwargs.get("id"))
+            else:
+                db_user = None
 
-            try:
-                db.add(self.user)
-                await db.commit()
-                await db.refresh(self.user)
-            except IntegrityError:
-                # Safety net, in case of non-unique email addresses
-                await db.rollback()
-                self.user.email = _random_email()
-                db.add(self.user)
-                await db.commit()
-                await db.refresh(self.user)
-            # Removing object from test db session, so that we can operate
-            # on user from other sessions
-            db.expunge(self.user)
+            if db_user is not None:
+                self.user = db_user
+            else:
+                self._create_user()
+                try:
+                    db.add(self.user)
+                    await db.commit()
+                    await db.refresh(self.user)
+                except IntegrityError:
+                    # Safety net, in case of non-unique email addresses
+                    await db.rollback()
+                    self.user.email = _random_email()
+                    db.add(self.user)
+                    await db.commit()
+                    await db.refresh(self.user)
+                # Removing object from test db session, so that we can operate
+                # on user from other sessions
+                db.expunge(self.user)
 
             self.previous_user_override = app.dependency_overrides.get(
                 current_active_user, None
