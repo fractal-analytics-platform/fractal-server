@@ -13,14 +13,14 @@ async def test_get_current_user(client, MockCurrentUser):
 
     async with MockCurrentUser(user_kwargs={"is_superuser": False}):
         # Registered non-superuser user
-        res = await client.get(f"{PREFIX}/whoami/")
+        res = await client.get(f"{PREFIX}/current-user/")
         debug(res.json())
         assert res.status_code == 200
         assert not res.json()["is_superuser"]
 
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
         # Registered superuser
-        res = await client.get(f"{PREFIX}/whoami/")
+        res = await client.get(f"{PREFIX}/current-user/")
         debug(res.json())
         assert res.status_code == 200
         assert res.json()["is_superuser"]
