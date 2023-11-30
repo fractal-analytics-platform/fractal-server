@@ -47,6 +47,7 @@
 * Runner:
     * Refresh DB objects within `submit_workflow` (\#927).
 * Testing:
+    * Add `await db_engine.dispose()` in `db_create_tables` fixture (\#1047).
     * Set `debug=False` in `event_loop` fixture (\#1044).
     * Improve `test_full_workflow.py` (\#971).
     * Update `pytest-asyncio` to v0.21 (\#1008).
