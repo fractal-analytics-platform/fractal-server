@@ -51,6 +51,8 @@
     * Add GitHub Action testing database migrations (\#1010).
 * Documentation:
     * Add OAuth2 example endpoints to Web API page (\#1034, \#1038).
+* Development:
+    * Use poetry 1.7.1 (\#1043).
 
 # 1.3.14 (do not use!)
 
