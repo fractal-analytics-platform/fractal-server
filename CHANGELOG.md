@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# 1.4.1 (unreleased)
+
+* API:
+    * Use `DatasetRead` and `WorkflowRead` models for "dump" attributes of `ApplyWorkflowRead` (\#XXXX).
+
 # 1.4.0 (unreleased)
 
 * API:
