@@ -35,6 +35,10 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
             Workflow status
         workflow_dump:
             Copy of the submitted workflow at the current timestamp.
+        input_dataset_dump:
+            Copy of the input_dataset at the current timestamp.
+        output_dataset_dump:
+            Copy of the output_dataset at the current timestamp.
         start_timestamp:
             Timestamp of when the run began.
         end_timestamp:
@@ -44,15 +48,6 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
         log:
             forward of the workflow logs. Usually this attribute is only
             populated upon failure.
-
-        project:
-            (Mapper attribute)
-        input_dataset:
-            (Mapper attribute)
-        output_dataset:
-            (Mapper attribute)
-        workflow:
-            (Mapper attribute)
     """
 
     class Config:
