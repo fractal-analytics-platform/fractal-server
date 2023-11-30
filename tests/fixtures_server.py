@@ -180,6 +180,7 @@ async def db_create_tables(override_settings):
     DB.set_db()
 
     engine = DB.engine_sync()
+    engine_async = DB.engine_async()
     metadata = SQLModel.metadata
     metadata.create_all(engine)
 
@@ -187,6 +188,7 @@ async def db_create_tables(override_settings):
 
     metadata.drop_all(engine)
     engine.dispose()
+    await engine_async.dispose()
 
 
 @pytest.fixture
