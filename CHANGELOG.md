@@ -47,6 +47,7 @@
 * Runner:
     * Refresh DB objects within `submit_workflow` (\#927).
 * Testing:
+    * Set `debug=False` in `event_loop` fixture (\#1044).
     * Improve `test_full_workflow.py` (\#971).
     * Update `pytest-asyncio` to v0.21 (\#1008).
     * Fix CI issue related to event loop and asyncpg (\#1012).
