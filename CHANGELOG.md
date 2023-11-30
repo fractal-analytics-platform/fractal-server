@@ -3,9 +3,9 @@
 # 1.4.1 (unreleased)
 
 * API:
-    * Use `DatasetRead` and `WorkflowRead` models for "dump" attributes of `ApplyWorkflowRead` (\#XXXX).
+    * Use `DatasetRead` and `WorkflowRead` models for "dump" attributes of `ApplyWorkflowRead` (\#1049).
 * Database:
-    * Make `ApplyWorkflow.workflow_dump` column non-nullable (\#XXXX).
+    * Make `ApplyWorkflow.workflow_dump` column non-nullable (\#1049).
 
 # 1.4.0 (unreleased)
 
