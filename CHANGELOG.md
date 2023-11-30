@@ -41,7 +41,9 @@
     * Fix missing try/except in sync session (\#1020).
     * Skip creation of first-superuser when one superuser already exists (\#1006).
 * Dependencies:
-    * Pin sqlalchemy to 1.4.50 and upgrade asyncpg to 0.29.0 (\#1036).
+    * Update sqlalchemy to version `>=2.0.23,<2.1` (\#1044).
+    * Update sqlmodel to version 0.0.12 (\#1044).
+    * Upgrade asyncpg to version 0.29.0 (\#1036).
 * Runner:
     * Refresh DB objects within `submit_workflow` (\#927).
 * Testing:
@@ -49,6 +51,7 @@
     * Update `pytest-asyncio` to v0.21 (\#1008).
     * Fix CI issue related to event loop and asyncpg (\#1012).
     * Add GitHub Action testing database migrations (\#1010).
+    * Use greenlet v3 in `poetry.lock` (\#1044).
 * Documentation:
     * Add OAuth2 example endpoints to Web API page (\#1034, \#1038).
 * Development:
