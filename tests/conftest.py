@@ -24,7 +24,6 @@ def check_basetemp(tpath: Path):
 @pytest.fixture(scope="session")
 def event_loop():
     _event_loop = asyncio.new_event_loop()
-    _event_loop.set_debug(True)
     yield _event_loop
     _event_loop.close()
 
