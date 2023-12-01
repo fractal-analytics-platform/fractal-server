@@ -17,12 +17,12 @@
 | fractal\_server/app/models/task.py                                |       48 |        0 |       12 |        3 |     95% |52->51, 59->58, 63->62 |
 | fractal\_server/app/models/workflow.py                            |       76 |        3 |       26 |        7 |     90% |61->60, 79, 86->85, 90->89, 169->172, 175->174, 176, 179->178, 180 |
 | fractal\_server/app/routes/\_\_init\_\_.py                        |        0 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/routes/admin.py                               |       92 |        0 |       52 |        4 |     97% |31->30, 61->60, 102->101, 147->146 |
+| fractal\_server/app/routes/admin.py                               |      107 |        0 |       58 |        5 |     97% |34->33, 64->63, 105->104, 150->149, 224->220 |
 | fractal\_server/app/routes/api/\_\_init\_\_.py                    |        8 |        0 |        2 |        1 |     90% |    14->13 |
 | fractal\_server/app/routes/api/v1/\_\_init\_\_.py                 |       16 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v1/\_aux\_functions.py             |       80 |        0 |       32 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v1/dataset.py                      |      185 |        0 |       66 |       12 |     95% |44->39, 69->65, 87->83, 111->107, 149->145, 197->192, 226->222, 252->248, 293->289, 327->323, 394->390, 485->484 |
-| fractal\_server/app/routes/api/v1/job.py                          |       85 |        0 |       28 |        7 |     94% |35->34, 53->49, 76->72, 102->98, 144->140, 162->158, 209->205 |
+| fractal\_server/app/routes/api/v1/job.py                          |       69 |        0 |       22 |        6 |     93% |31->30, 49->45, 72->68, 98->94, 140->136, 158->154 |
 | fractal\_server/app/routes/api/v1/project.py                      |      135 |        6 |       38 |        6 |     93% |45->44, 64->63, 85-90, 99->98, 115->114, 141->140, 181->176 |
 | fractal\_server/app/routes/api/v1/task.py                         |       84 |        1 |       32 |        6 |     94% |29->28, 44->43, 62->61, 95, 107->106, 153->152 |
 | fractal\_server/app/routes/api/v1/task\_collection.py             |      177 |        5 |       30 |        4 |     96% |171->154, 204, 244-245, 311->310, 334-335 |
@@ -63,7 +63,7 @@
 | fractal\_server/tasks/\_\_init\_\_.py                             |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/tasks/collection.py                               |      205 |        6 |       76 |       14 |     93% |63, 85-86, 132->131, 136->135, 147, 160->159, 239->exit, 293, 311->exit, 316->exit, 321->exit, 513->exit, 544->exit, 553 |
 | fractal\_server/utils.py                                          |       22 |        0 |        2 |        0 |    100% |           |
-|                                                         **TOTAL** | **3911** |  **170** | **1134** |  **159** | **93%** |           |
+|                                                         **TOTAL** | **3910** |  **170** | **1134** |  **159** | **93%** |           |
 
 
 ## Setup coverage badge
