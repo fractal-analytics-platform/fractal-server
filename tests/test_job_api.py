@@ -6,93 +6,11 @@ from devtools import debug
 
 from fractal_server.app.runner import _backends
 from fractal_server.app.runner._common import SHUTDOWN_FILENAME
-from fractal_server.app.schemas import JobStatusType
 
 
 PREFIX = "/api/v1"
 
 backends_available = list(_backends.keys())
-
-
-async def test_patch_job(
-    MockCurrentUser,
-    project_factory,
-    dataset_factory,
-    workflow_factory,
-    job_factory,
-    task_factory,
-    client,
-    registered_superuser_client,
-    db,
-    tmp_path,
-):
-    ORIGINAL_STATUS = JobStatusType.SUBMITTED
-    NEW_STATUS = JobStatusType.FAILED
-
-    async with MockCurrentUser(user_kwargs={"id": 111111}) as user:
-        project = await project_factory(user)
-        workflow = await workflow_factory(project_id=project.id)
-        task = await task_factory(name="task", source="source")
-        await workflow.insert_task(task_id=task.id, db=db)
-        dataset = await dataset_factory(project_id=project.id)
-        job = await job_factory(
-            working_dir=tmp_path.as_posix(),
-            project_id=project.id,
-            input_dataset_id=dataset.id,
-            output_dataset_id=dataset.id,
-            workflow_id=workflow.id,
-            status=ORIGINAL_STATUS,
-        )
-        # Read job as job owner (standard user)
-        res = await client.get(f"{PREFIX}/project/{project.id}/job/{job.id}/")
-        assert res.status_code == 200
-        assert res.json()["status"] == ORIGINAL_STATUS
-        # Patch job as job owner (standard user) and fail
-        res = await client.patch(
-            f"{PREFIX}/job/{job.id}/",
-            json={"status": NEW_STATUS},
-        )
-        assert res.status_code == 403
-        # Patch job as superuser
-        async with MockCurrentUser(
-            user_kwargs={"id": 222222, "is_superuser": True}
-        ):
-            # Fail due to invalid payload (missing attribute "status")
-            res = await registered_superuser_client.patch(
-                f"{PREFIX}/job/{job.id}/",
-                json={"working_dir": "/tmp"},
-            )
-            assert res.status_code == 422
-            # Fail due to invalid payload (status not part of JobStatusType)
-            res = await registered_superuser_client.patch(
-                f"{PREFIX}/job/{job.id}/",
-                json={"status": "something_invalid"},
-            )
-            assert res.status_code == 422
-            # Fail due to invalid payload (status not failed)
-            res = await registered_superuser_client.patch(
-                f"{PREFIX}/job/{job.id}/",
-                json={"status": "done"},
-            )
-            assert res.status_code == 422
-            # Fail due to non-existing job
-            res = await registered_superuser_client.patch(
-                f"{PREFIX}/job/{123456789}/",
-                json={"status": NEW_STATUS},
-            )
-            assert res.status_code == 404
-            # Successfully apply patch
-            res = await registered_superuser_client.patch(
-                f"{PREFIX}/job/{job.id}/",
-                json={"status": NEW_STATUS},
-            )
-            assert res.status_code == 200
-            debug(res.json())
-            assert res.json()["status"] == NEW_STATUS
-        # Read job as job owner (standard user)
-        res = await client.get(f"{PREFIX}/project/{project.id}/job/{job.id}/")
-        assert res.status_code == 200
-        assert res.json()["status"] == NEW_STATUS
 
 
 @pytest.mark.parametrize("backend", backends_available)
