@@ -2,14 +2,18 @@
 Definition of `/admin` routes.
 """
 from datetime import datetime
+from io import BytesIO
 from pathlib import Path
 from typing import Optional
+from zipfile import ZIP_DEFLATED
+from zipfile import ZipFile
 
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
+from fastapi.responses import StreamingResponse
 from sqlalchemy import func
 from sqlmodel import select
 
@@ -291,3 +295,41 @@ async def stop_job(
         f.write(f"Trigger executor shutdown for {job.id=}.")
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router_admin.get(
+    "/job/{job_id}/download/",
+    response_class=StreamingResponse,
+)
+async def download_job_logs(
+    job_id: int,
+    user: User = Depends(current_active_superuser),
+    db: AsyncSession = Depends(get_db),
+) -> StreamingResponse:
+    """
+    Download job folder
+    """
+    job = await db.get(ApplyWorkflow, job_id)
+    if job is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Job {job_id} not found",
+        )
+
+    working_dir_str = job.dict()["working_dir"]
+    working_dir_path = Path(working_dir_str)
+
+    PREFIX_ZIP = working_dir_path.name
+    zip_filename = f"{PREFIX_ZIP}_archive.zip"
+    byte_stream = BytesIO()
+    with ZipFile(byte_stream, mode="w", compression=ZIP_DEFLATED) as zipfile:
+        for fpath in working_dir_path.glob("*"):
+            zipfile.write(filename=str(fpath), arcname=str(fpath.name))
+
+    await db.close()
+
+    return StreamingResponse(
+        iter([byte_stream.getvalue()]),
+        media_type="application/x-zip-compressed",
+        headers={"Content-Disposition": f"attachment;filename={zip_filename}"},
+    )
