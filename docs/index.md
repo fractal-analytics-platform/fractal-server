@@ -12,17 +12,13 @@ repository](https://github.com/fractal-analytics-platform/fractal-server).
 
 ## Licence and Copyright
 
-Fractal was conceived in the [Liberali Lab](https://liberalilab.org) at the
-Friedrich Miescher Institute for Biomedical Research and in the [Pelkmans
-Lab](https://pelkmanslab.org) at the University of Zurich. The core development
-is done under contract by [eXact lab S.r.l.](https://www.exact-lab.it).
+Fractal was conceived in the Liberali Lab at the Friedrich Miescher Institute for Biomedical Research and in the Pelkmans Lab at the University of Zurich by [@jluethi](https://github.com/jluethi) and [@gusqgm](https://github.com/gusqgm). The Fractal project is now developed at the [BioVisionCenter](https://www.biovisioncenter.uzh.ch/en.html) at the University of Zurich and the project lead is with [@jluethi](https://github.com/jluethi). The core development is done under contract by [eXact lab S.r.l.](https://www.exact-lab.it/).
 
 Unless otherwise stated in each individual module, all Fractal components are
 released according to a [BSD 3-Clause
 License](https://github.com/fractal-analytics-platform/fractal-server/blob/main/LICENSE),
 and Copyright is with Friedrich Miescher Institute for Biomedical Research and
 University of Zurich.
-
 
 The SLURM compatibility layer is based on
 [clusterfutures](https://github.com/sampsyo/clusterfutures), by

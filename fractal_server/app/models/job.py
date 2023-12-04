@@ -24,17 +24,23 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
         id:
             Primary key.
         project_id:
-            ID of the project the workflow belongs to.
+            ID of the project the workflow belongs to, or `None` if the project
+            was deleted.
         input_dataset_id:
-            ID of the input dataset.
+            ID of the input dataset, or `None` if the dataset was deleted.
         output_dataset_id:
-            ID of the output dataset.
+            ID of the output dataset, or `None` if the dataset was deleted.
         workflow_id:
-            ID of the workflow being applied.
+            ID of the workflow being applied, or `None` if the workflow was
+            deleted.
         status:
-            Workflow status
+            Job status
         workflow_dump:
-            Copy of the submitted workflow at the current timestamp.
+            Copy of the submitted workflow at submission.
+        input_dataset_dump:
+            Copy of the input_dataset at submission.
+        output_dataset_dump:
+            Copy of the output_dataset at submission.
         start_timestamp:
             Timestamp of when the run began.
         end_timestamp:
@@ -42,17 +48,9 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
         status:
             Status of the run.
         log:
-            forward of the workflow logs. Usually this attribute is only
-            populated upon failure.
-
-        project:
-            (Mapper attribute)
-        input_dataset:
-            (Mapper attribute)
-        output_dataset:
-            (Mapper attribute)
-        workflow:
-            (Mapper attribute)
+            Forward of the workflow logs.
+        user_email:
+            Email address of the user who submitted the job.
     """
 
     class Config:
@@ -74,8 +72,8 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
     output_dataset_dump: dict[str, Any] = Field(
         sa_column=Column(JSON, nullable=False)
     )
-    workflow_dump: Optional[dict[str, Any]] = Field(
-        sa_column=Column(JSON, nullable=True)
+    workflow_dump: dict[str, Any] = Field(
+        sa_column=Column(JSON, nullable=False)
     )
 
     working_dir: Optional[str]

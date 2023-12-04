@@ -75,6 +75,9 @@ def test_apply_workflow_read():
         output_dataset_dump=DATASET_DUMP,
         user_email="test@fractal.com",
     )
+    assert isinstance(job1.workflow_dump, WorkflowRead)
+    assert isinstance(job1.input_dataset_dump, DatasetRead)
+    assert isinstance(job1.output_dataset_dump, DatasetRead)
 
     assert isinstance(job1.start_timestamp, datetime)
     job1_sanitised = job1.sanitised_dict()
