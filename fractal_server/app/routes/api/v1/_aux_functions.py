@@ -9,8 +9,6 @@ from fastapi import status
 from sqlmodel import select
 from sqlmodel.sql.expression import SelectOfScalar
 
-from .....config import get_settings
-from .....syringe import Inject
 from ....db import AsyncSession
 from ....models import ApplyWorkflow
 from ....models import Dataset
@@ -371,19 +369,3 @@ def _get_active_jobs_statement() -> SelectOfScalar:
         )
     )
     return stm
-
-
-def _check_backend_is_slurm():
-    """
-    Raise 422 if FRACTAL_RUNNER_BACKEND is not 'slurm'.
-    """
-    settings = Inject(get_settings)
-    backend = settings.FRACTAL_RUNNER_BACKEND
-    if backend != "slurm":
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                "Stopping a job execution is not implemented for "
-                f"FRACTAL_RUNNER_BACKEND={backend}."
-            ),
-        )
