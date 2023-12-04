@@ -1,16 +1,11 @@
 """
 Auxiliary functions to get object from the database or perform simple checks
 """
-from io import BytesIO
-from pathlib import Path
 from typing import Literal
 from typing import Union
-from zipfile import ZIP_DEFLATED
-from zipfile import ZipFile
 
 from fastapi import HTTPException
 from fastapi import status
-from fastapi.responses import StreamingResponse
 from sqlmodel import select
 from sqlmodel.sql.expression import SelectOfScalar
 
@@ -24,7 +19,6 @@ from ....models import Project
 from ....models import Task
 from ....models import Workflow
 from ....models import WorkflowTask
-from ....runner._common import SHUTDOWN_FILENAME
 from ....schemas import JobStatusType
 from ....security import User
 
@@ -393,36 +387,3 @@ def _check_backend_is_slurm():
                 f"FRACTAL_RUNNER_BACKEND={backend}."
             ),
         )
-
-
-def _write_shutdown_file(*, job: ApplyWorkflow):
-    """
-    Note: we are **not** marking the job as failed (by setting its `status`
-    attribute) here, since this will be done by the runner backend as soon as
-    it detects the shutdown-trigerring file and performs the actual shutdown.
-    """
-    shutdown_file = Path(job.working_dir) / SHUTDOWN_FILENAME
-    with shutdown_file.open("w") as f:
-        f.write(f"Trigger executor shutdown for {job.id=}.")
-
-
-async def _get_streaming_response(
-    *, job: ApplyWorkflow, db: AsyncSession
-) -> StreamingResponse:
-    working_dir_str = job.dict()["working_dir"]
-    working_dir_path = Path(working_dir_str)
-
-    PREFIX_ZIP = working_dir_path.name
-    zip_filename = f"{PREFIX_ZIP}_archive.zip"
-    byte_stream = BytesIO()
-    with ZipFile(byte_stream, mode="w", compression=ZIP_DEFLATED) as zipfile:
-        for fpath in working_dir_path.glob("*"):
-            zipfile.write(filename=str(fpath), arcname=str(fpath.name))
-
-    await db.close()
-
-    return StreamingResponse(
-        iter([byte_stream.getvalue()]),
-        media_type="application/x-zip-compressed",
-        headers={"Content-Disposition": f"attachment;filename={zip_filename}"},
-    )

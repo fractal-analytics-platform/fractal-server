@@ -11,12 +11,12 @@ from ....db import get_db
 from ....schemas import ApplyWorkflowRead
 from ....security import current_active_user
 from ....security import User
+from ...aux._job import _get_streaming_response
+from ...aux._job import _write_shutdown_file
 from ._aux_functions import _check_backend_is_slurm
 from ._aux_functions import _get_job_check_owner
 from ._aux_functions import _get_project_check_owner
-from ._aux_functions import _get_streaming_response
 from ._aux_functions import _get_workflow_check_owner
-from ._aux_functions import _write_shutdown_file
 
 
 router = APIRouter()
