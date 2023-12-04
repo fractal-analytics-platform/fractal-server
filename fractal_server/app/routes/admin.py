@@ -2,15 +2,19 @@
 Definition of `/admin` routes.
 """
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import status as fastapi_status
+from fastapi import Response
+from fastapi import status
 from sqlalchemy import func
 from sqlmodel import select
 
+from ...config import get_settings
+from ...syringe import Inject
 from ..db import AsyncSession
 from ..db import get_db
 from ..models import ApplyWorkflow
@@ -19,13 +23,13 @@ from ..models import JobStatusType
 from ..models import Project
 from ..models import Workflow
 from ..models.security import UserOAuth as User
+from ..runner._common import SHUTDOWN_FILENAME
 from ..schemas import ApplyWorkflowRead
 from ..schemas import ApplyWorkflowUpdate
 from ..schemas import DatasetRead
 from ..schemas import ProjectRead
 from ..schemas import WorkflowRead
 from ..security import current_active_superuser
-
 
 router_admin = APIRouter()
 
@@ -236,13 +240,13 @@ async def update_job(
     job = await db.get(ApplyWorkflow, job_id)
     if job is None:
         raise HTTPException(
-            status_code=fastapi_status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Job {job_id} not found",
         )
 
     if job_update.status != JobStatusType.FAILED:
         raise HTTPException(
-            status_code=fastapi_status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Cannot set job status to {job_update.status}",
         )
 
@@ -251,3 +255,39 @@ async def update_job(
     await db.refresh(job)
     await db.close()
     return job
+
+
+@router_admin.get("/job/{job_id}/stop/", status_code=204)
+async def stop_job(
+    job_id: int,
+    user: User = Depends(current_active_superuser),
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    """
+    Stop execution of a workflow job (only available for slurm backend)
+    """
+
+    # This endpoint is only implemented for SLURM backend
+    settings = Inject(get_settings)
+    backend = settings.FRACTAL_RUNNER_BACKEND
+    if backend != "slurm":
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Stopping a job execution is not implemented for "
+                f"FRACTAL_RUNNER_BACKEND={backend}."
+            ),
+        )
+
+    job = await db.get(ApplyWorkflow, job_id)
+    if job is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Job {job_id} not found",
+        )
+
+    shutdown_file = Path(job.working_dir) / SHUTDOWN_FILENAME
+    with shutdown_file.open("w") as f:
+        f.write(f"Trigger executor shutdown for {job.id=}.")
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
