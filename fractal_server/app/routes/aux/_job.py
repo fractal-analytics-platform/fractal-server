@@ -12,6 +12,11 @@ from ...runner._common import SHUTDOWN_FILENAME
 
 def _write_shutdown_file(*, job: ApplyWorkflow):
     """
+    Write job's shutdown file.
+
+    Args:
+        job:
+
     Note: we are **not** marking the job as failed (by setting its `status`
     attribute) here, since this will be done by the runner backend as soon as
     it detects the shutdown-trigerring file and performs the actual shutdown.
@@ -24,6 +29,13 @@ def _write_shutdown_file(*, job: ApplyWorkflow):
 async def _get_streaming_response(
     *, job: ApplyWorkflow, db: AsyncSession
 ) -> StreamingResponse:
+    """
+    Get Job's streaming response.
+
+    Args:
+        job:
+        db:
+    """
     working_dir_str = job.dict()["working_dir"]
     working_dir_path = Path(working_dir_str)
 
