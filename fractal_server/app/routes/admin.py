@@ -2,12 +2,15 @@
 Definition of `/admin` routes.
 """
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import status as fastapi_status
+from fastapi import Response
+from fastapi import status
+from fastapi.responses import StreamingResponse
 from sqlalchemy import func
 from sqlmodel import select
 
@@ -25,7 +28,9 @@ from ..schemas import DatasetRead
 from ..schemas import ProjectRead
 from ..schemas import WorkflowRead
 from ..security import current_active_superuser
-
+from .aux._job import _write_shutdown_file
+from .aux._job import _zip_folder_to_byte_stream
+from .aux._runner import _check_backend_is_slurm
 
 router_admin = APIRouter()
 
@@ -236,13 +241,13 @@ async def update_job(
     job = await db.get(ApplyWorkflow, job_id)
     if job is None:
         raise HTTPException(
-            status_code=fastapi_status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Job {job_id} not found",
         )
 
     if job_update.status != JobStatusType.FAILED:
         raise HTTPException(
-            status_code=fastapi_status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Cannot set job status to {job_update.status}",
         )
 
@@ -251,3 +256,61 @@ async def update_job(
     await db.refresh(job)
     await db.close()
     return job
+
+
+@router_admin.get("/job/{job_id}/stop/", status_code=204)
+async def stop_job(
+    job_id: int,
+    user: User = Depends(current_active_superuser),
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    """
+    Stop execution of a workflow job.
+
+    Only available for slurm backend.
+    """
+
+    _check_backend_is_slurm()
+
+    job = await db.get(ApplyWorkflow, job_id)
+    if job is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Job {job_id} not found",
+        )
+
+    _write_shutdown_file(job=job)
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router_admin.get(
+    "/job/{job_id}/download/",
+    response_class=StreamingResponse,
+)
+async def download_job_logs(
+    job_id: int,
+    user: User = Depends(current_active_superuser),
+    db: AsyncSession = Depends(get_db),
+) -> StreamingResponse:
+    """
+    Download job folder
+    """
+    # Get job from DB
+    job = await db.get(ApplyWorkflow, job_id)
+    if job is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Job {job_id} not found",
+        )
+    # Create and return byte stream for zipped log folder
+    PREFIX_ZIP = Path(job.working_dir).name
+    zip_filename = f"{PREFIX_ZIP}_archive.zip"
+    byte_stream = _zip_folder_to_byte_stream(
+        folder=job.working_dir, zip_filename=zip_filename
+    )
+    return StreamingResponse(
+        iter([byte_stream.getvalue()]),
+        media_type="application/x-zip-compressed",
+        headers={"Content-Disposition": f"attachment;filename={zip_filename}"},
+    )
