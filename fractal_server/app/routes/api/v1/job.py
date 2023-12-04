@@ -1,24 +1,20 @@
-from io import BytesIO
 from pathlib import Path
 from typing import Optional
-from zipfile import ZIP_DEFLATED
-from zipfile import ZipFile
 
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from fastapi.responses import StreamingResponse
 
-from .....config import get_settings
-from .....syringe import Inject
 from ....db import AsyncSession
 from ....db import get_db
-from ....runner._common import SHUTDOWN_FILENAME
 from ....schemas import ApplyWorkflowRead
 from ....security import current_active_user
 from ....security import User
+from ...aux._job import _write_shutdown_file
+from ...aux._job import _zip_folder_to_byte_stream
+from ...aux._runner import _check_backend_is_slurm
 from ._aux_functions import _get_job_check_owner
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_workflow_check_owner
@@ -112,20 +108,12 @@ async def download_job_logs(
     )
     job = output["job"]
 
-    # Extract job's working_dir attribute
-    working_dir_str = job.dict()["working_dir"]
-    working_dir_path = Path(working_dir_str)
-
-    # Create zip byte stream
-    PREFIX_ZIP = working_dir_path.name
+    # Create and return byte stream for zipped log folder
+    PREFIX_ZIP = Path(job.working_dir).name
     zip_filename = f"{PREFIX_ZIP}_archive.zip"
-    byte_stream = BytesIO()
-    with ZipFile(byte_stream, mode="w", compression=ZIP_DEFLATED) as zipfile:
-        for fpath in working_dir_path.glob("*"):
-            zipfile.write(filename=str(fpath), arcname=str(fpath.name))
-
-    await db.close()
-
+    byte_stream = _zip_folder_to_byte_stream(
+        folder=job.working_dir, zip_filename=zip_filename
+    )
     return StreamingResponse(
         iter([byte_stream.getvalue()]),
         media_type="application/x-zip-compressed",
@@ -166,16 +154,7 @@ async def stop_job(
     """
 
     # This endpoint is only implemented for SLURM backend
-    settings = Inject(get_settings)
-    backend = settings.FRACTAL_RUNNER_BACKEND
-    if backend != "slurm":
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                "Stopping a job execution is not implemented for "
-                f"FRACTAL_RUNNER_BACKEND={backend}."
-            ),
-        )
+    _check_backend_is_slurm()
 
     # Get job from DB
     output = await _get_job_check_owner(
@@ -186,13 +165,6 @@ async def stop_job(
     )
     job = output["job"]
 
-    # Note: we are **not** marking the job as failed (by setting its `status`
-    # attribute) here, since this will be done by the runner backend as soon as
-    # it detects the shutdown-trigerring file and performs the actual shutdown.
-
-    # Write shutdown file
-    shutdown_file = Path(job.working_dir) / SHUTDOWN_FILENAME
-    with shutdown_file.open("w") as f:
-        f.write(f"Trigger executor shutdown for {job.id=}, {project_id=}.")
+    _write_shutdown_file(job=job)
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
