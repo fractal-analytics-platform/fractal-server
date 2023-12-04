@@ -17,8 +17,6 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import func
 from sqlmodel import select
 
-from ...config import get_settings
-from ...syringe import Inject
 from ..db import AsyncSession
 from ..db import get_db
 from ..models import ApplyWorkflow
@@ -27,13 +25,14 @@ from ..models import JobStatusType
 from ..models import Project
 from ..models import Workflow
 from ..models.security import UserOAuth as User
-from ..runner._common import SHUTDOWN_FILENAME
 from ..schemas import ApplyWorkflowRead
 from ..schemas import ApplyWorkflowUpdate
 from ..schemas import DatasetRead
 from ..schemas import ProjectRead
 from ..schemas import WorkflowRead
 from ..security import current_active_superuser
+from .api.v1._aux_functions import _only_slurm
+from .api.v1._aux_functions import _stop_job
 
 router_admin = APIRouter()
 
@@ -268,20 +267,12 @@ async def stop_job(
     db: AsyncSession = Depends(get_db),
 ) -> Response:
     """
-    Stop execution of a workflow job (only available for slurm backend)
+    Stop execution of a workflow job.
+
+    Only available for slurm backend.
     """
 
-    # This endpoint is only implemented for SLURM backend
-    settings = Inject(get_settings)
-    backend = settings.FRACTAL_RUNNER_BACKEND
-    if backend != "slurm":
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                "Stopping a job execution is not implemented for "
-                f"FRACTAL_RUNNER_BACKEND={backend}."
-            ),
-        )
+    _only_slurm()
 
     job = await db.get(ApplyWorkflow, job_id)
     if job is None:
@@ -290,9 +281,7 @@ async def stop_job(
             detail=f"Job {job_id} not found",
         )
 
-    shutdown_file = Path(job.working_dir) / SHUTDOWN_FILENAME
-    with shutdown_file.open("w") as f:
-        f.write(f"Trigger executor shutdown for {job.id=}.")
+    _stop_job(job=job)
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
