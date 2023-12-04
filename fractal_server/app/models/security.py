@@ -12,6 +12,8 @@
 from typing import Optional
 
 from pydantic import EmailStr
+from sqlalchemy import Column
+from sqlalchemy.types import JSON
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
@@ -63,6 +65,9 @@ class UserOAuth(SQLModel, table=True):
     is_verified: bool = Field(False, nullable=False)
 
     slurm_user: Optional[str]
+    slurm_accounts: list[str] = Field(
+        sa_column=Column(JSON, server_default="[]", nullable=False)
+    )
     cache_dir: Optional[str]
     username: Optional[str]
 
