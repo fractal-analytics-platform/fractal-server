@@ -28,8 +28,8 @@ from ..schemas import ProjectRead
 from ..schemas import WorkflowRead
 from ..security import current_active_superuser
 from .api.v1._aux_functions import _check_backend_is_slurm
-from .api.v1._aux_functions import _get_streaming_response
-from .api.v1._aux_functions import _write_shutdown_file
+from .aux._job import _get_streaming_response
+from .aux._job import _write_shutdown_file
 
 router_admin = APIRouter()
 
