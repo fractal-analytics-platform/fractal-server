@@ -379,7 +379,7 @@ def _get_active_jobs_statement() -> SelectOfScalar:
     return stm
 
 
-def _only_slurm():
+def _check_backend_is_slurm():
     """
     Raise 422 if FRACTAL_RUNNER_BACKEND is not 'slurm'.
     """
@@ -395,7 +395,7 @@ def _only_slurm():
         )
 
 
-def _stop_job(*, job: ApplyWorkflow):
+def _write_shutdown_file(*, job: ApplyWorkflow):
     """
     Note: we are **not** marking the job as failed (by setting its `status`
     attribute) here, since this will be done by the runner backend as soon as
