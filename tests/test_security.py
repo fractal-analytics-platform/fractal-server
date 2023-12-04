@@ -110,11 +110,33 @@ async def test_patch_current_user_cache_dir(registered_client):
 
     # Successful update
     assert pre_patch_user["cache_dir"] is None
+    assert pre_patch_user["slurm_accounts"] == []
     res = await registered_client.patch(
-        f"{PREFIX}/current-user/", json={"cache_dir": "/tmp"}
+        f"{PREFIX}/current-user/",
+        json={"cache_dir": "/tmp", "slurm_accounts": ["foo", "bar"]},
     )
     assert res.status_code == 200
     assert res.json()["cache_dir"] == "/tmp"
+    assert res.json()["slurm_accounts"] == ["foo", "bar"]
+
+    # slurm_accounts, if present, must be a valid list
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/",
+        json={"slurm_accounts": [42, "Foo", False]},
+    )
+    assert res.status_code == 200
+    assert res.json()["slurm_accounts"] != [42, "Foo", False]
+    assert res.json()["slurm_accounts"] == ["42", "Foo", "False"]
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/",
+        json={"slurm_accounts": "NOT A LIST"},
+    )
+    assert res.status_code == 422
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/",
+        json={"slurm_accounts": [{"NOT": "VALID"}]},
+    )
+    assert res.status_code == 422
 
     # Failed update due to empty string
     res = await registered_client.patch(

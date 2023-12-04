@@ -88,6 +88,7 @@ async def _create_first_user(
     password: str,
     is_superuser: bool = False,
     slurm_user: Optional[str] = None,
+    slurm_accounts: Optional[list[str]] = None,
     cache_dir: Optional[str] = None,
     username: Optional[str] = None,
 ) -> None:
@@ -138,6 +139,8 @@ async def _create_first_user(
                     )
                     if slurm_user:
                         kwargs["slurm_user"] = slurm_user
+                    if slurm_accounts:
+                        kwargs["slurm_accounts"] = slurm_accounts
                     if cache_dir:
                         kwargs["cache_dir"] = cache_dir
                     if username:

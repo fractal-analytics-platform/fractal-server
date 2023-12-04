@@ -341,13 +341,27 @@ def test_user_create():
     u = UserCreate(email="a@b.c", password="asd")
     debug(u)
     assert u.slurm_user is None
+    assert u.slurm_accounts == []
     # With valid slurm_user attribute
     u = UserCreate(email="a@b.c", password="asd", slurm_user="slurm_user")
-    debug(u)
     assert u.slurm_user
     # With invalid slurm_user attribute
     with pytest.raises(ValidationError):
-        u = UserCreate(email="a@b.c", password="asd", slurm_user="  ")
+        UserCreate(email="a@b.c", password="asd", slurm_user="  ")
+    # With valid slurm_accounts attribute
+    u = UserCreate(email="a@b.c", password="asd", slurm_accounts=["a", "b"])
+    assert u.slurm_accounts == ["a", "b"]
+    u = UserCreate(
+        email="a@b.c", password="asd", slurm_accounts=[1, "a", True]
+    )
+    assert u.slurm_accounts == ["1", "a", "True"]
+    with pytest.raises(ValidationError):
+        UserCreate(
+            email="a@b.c",
+            password="asd",
+            slurm_accounts=[1, "a", {"NOT": "VALID"}],
+        )
+
     # With valid cache_dir
     CACHE_DIR = "/xxx"
     u = UserCreate(email="a@b.c", password="asd", cache_dir=f"{CACHE_DIR}   ")
