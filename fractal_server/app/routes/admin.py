@@ -2,6 +2,7 @@
 Definition of `/admin` routes.
 """
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter
@@ -27,8 +28,8 @@ from ..schemas import DatasetRead
 from ..schemas import ProjectRead
 from ..schemas import WorkflowRead
 from ..security import current_active_superuser
-from .aux._job import _get_streaming_response
 from .aux._job import _write_shutdown_file
+from .aux._job import _zip_folder_to_byte_stream
 from .aux._runner import _check_backend_is_slurm
 
 router_admin = APIRouter()
@@ -295,12 +296,21 @@ async def download_job_logs(
     """
     Download job folder
     """
+    # Get job from DB
     job = await db.get(ApplyWorkflow, job_id)
     if job is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Job {job_id} not found",
         )
-
-    sr: StreamingResponse = await _get_streaming_response(job=job, db=db)
-    return sr
+    # Create and return byte stream for zipped log folder
+    PREFIX_ZIP = Path(job.working_dir).name
+    zip_filename = f"{PREFIX_ZIP}_archive.zip"
+    byte_stream = _zip_folder_to_byte_stream(
+        folder=job.working_dir, zip_filename=zip_filename
+    )
+    return StreamingResponse(
+        iter([byte_stream.getvalue()]),
+        media_type="application/x-zip-compressed",
+        headers={"Content-Disposition": f"attachment;filename={zip_filename}"},
+    )
