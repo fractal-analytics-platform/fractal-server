@@ -7,6 +7,8 @@
 * Database:
     * Make `ApplyWorkflow.workflow_dump` column non-nullable (\#1049).
     * Add script for adding `ApplyWorkflow.user_email` (\#1058).
+* Testing:
+    *  Only use ubuntu-22.04 in GitHub actions (\#1061).
 
 # 1.4.0
 
