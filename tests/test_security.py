@@ -245,7 +245,11 @@ async def test_edit_users_as_superuser(registered_superuser_client):
 
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/",
-        json=dict(email="test@fractal.xy", password="12345"),
+        json=dict(
+            email="test@fractal.xy",
+            password="12345",
+            slurm_accounts=["foo", "bar"],
+        ),
     )
     assert res.status_code == 201
     pre_patch_user = res.json()
@@ -258,6 +262,7 @@ async def test_edit_users_as_superuser(registered_superuser_client):
         slurm_user="slurm_patch",
         cache_dir="/patch",
         username="user_patch",
+        slurm_accounts=["BAR", "FOO"],
     )
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{pre_patch_user['id']}/",
