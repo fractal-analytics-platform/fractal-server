@@ -550,6 +550,10 @@ async def test_download_job_logs(
         with (Path(working_dir) / LOG_FILE).open("w") as f:
             f.write(LOG_CONTENT)
 
+        # Test 404
+        res = await client.get(f"{PREFIX}/job/{job.id + 42}/download/")
+        assert res.status_code == 404
+
         # Test that the endpoint returns a list with the new job
         res = await client.get(f"{PREFIX}/job/{job.id}/download/")
         assert res.status_code == 200
