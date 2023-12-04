@@ -29,6 +29,7 @@ class UserRead(schemas.BaseUser[int]):
     slurm_user: Optional[str]
     cache_dir: Optional[str]
     username: Optional[str]
+    slurm_accounts: list[str]
 
 
 class UserUpdate(schemas.BaseUserUpdate):
@@ -44,6 +45,7 @@ class UserUpdate(schemas.BaseUserUpdate):
     slurm_user: Optional[str]
     cache_dir: Optional[str]
     username: Optional[str]
+    slurm_accounts: Optional[list[str]]
 
     # Validators
     _slurm_user = validator("slurm_user", allow_reuse=True)(
@@ -74,6 +76,7 @@ class UserUpdateStrict(BaseModel, extra=Extra.forbid):
     """
 
     cache_dir: Optional[str]
+    slurm_accounts: Optional[list[str]]
 
     _cache_dir = validator("cache_dir", allow_reuse=True)(
         val_absolute_path("cache_dir")
@@ -93,6 +96,7 @@ class UserCreate(schemas.BaseUserCreate):
     slurm_user: Optional[str]
     cache_dir: Optional[str]
     username: Optional[str]
+    slurm_accounts: Optional[list[str]] = []
 
     # Validators
     _slurm_user = validator("slurm_user", allow_reuse=True)(
