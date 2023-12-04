@@ -27,9 +27,9 @@ from ..schemas import DatasetRead
 from ..schemas import ProjectRead
 from ..schemas import WorkflowRead
 from ..security import current_active_superuser
+from .api.v1._aux_functions import _check_backend_is_slurm
 from .api.v1._aux_functions import _get_streaming_response
-from .api.v1._aux_functions import _only_slurm
-from .api.v1._aux_functions import _stop_job
+from .api.v1._aux_functions import _write_shutdown_file
 
 router_admin = APIRouter()
 
@@ -269,7 +269,7 @@ async def stop_job(
     Only available for slurm backend.
     """
 
-    _only_slurm()
+    _check_backend_is_slurm()
 
     job = await db.get(ApplyWorkflow, job_id)
     if job is None:
@@ -278,7 +278,7 @@ async def stop_job(
             detail=f"Job {job_id} not found",
         )
 
-    _stop_job(job=job)
+    _write_shutdown_file(job=job)
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 

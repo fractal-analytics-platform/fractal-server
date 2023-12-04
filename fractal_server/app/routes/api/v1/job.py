@@ -11,12 +11,12 @@ from ....db import get_db
 from ....schemas import ApplyWorkflowRead
 from ....security import current_active_user
 from ....security import User
+from ._aux_functions import _check_backend_is_slurm
 from ._aux_functions import _get_job_check_owner
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_streaming_response
 from ._aux_functions import _get_workflow_check_owner
-from ._aux_functions import _only_slurm
-from ._aux_functions import _stop_job
+from ._aux_functions import _write_shutdown_file
 
 
 router = APIRouter()
@@ -144,7 +144,7 @@ async def stop_job(
     """
 
     # This endpoint is only implemented for SLURM backend
-    _only_slurm()
+    _check_backend_is_slurm()
 
     # Get job from DB
     output = await _get_job_check_owner(
@@ -155,6 +155,6 @@ async def stop_job(
     )
     job = output["job"]
 
-    _stop_job(job=job)
+    _write_shutdown_file(job=job)
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
