@@ -9,7 +9,6 @@ from fastapi.responses import StreamingResponse
 
 from ....db import AsyncSession
 from ....db import get_db
-from ....models import ApplyWorkflow
 from ....schemas import ApplyWorkflowRead
 from ....security import current_active_user
 from ....security import User
@@ -107,7 +106,7 @@ async def download_job_logs(
         user_id=user.id,
         db=db,
     )
-    job: ApplyWorkflow = output["job"]
+    job = output["job"]
 
     # Create and return byte stream for zipped log folder
     PREFIX_ZIP = Path(job.working_dir).name
