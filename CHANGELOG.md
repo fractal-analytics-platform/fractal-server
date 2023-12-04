@@ -1,6 +1,10 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
-# 1.4.0 (unreleased)
+
+* Database:
+    * Add script for adding `ApplyWorkflow.user_email` (\#1058).
+
+# 1.4.0
 
 * API:
     * Major endpoint changes:
