@@ -504,6 +504,10 @@ async def test_stop_job(
             shutdown_file = tmp_path / SHUTDOWN_FILENAME
             debug(shutdown_file)
             assert shutdown_file.exists()
+            res = await registered_superuser_client.get(
+                f"{PREFIX}/job/{job.id + 42}/stop/",
+            )
+            assert res.status_code == 404
         else:
             assert res.status_code == 422
 
