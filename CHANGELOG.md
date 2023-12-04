@@ -11,6 +11,8 @@
     *  Only use ubuntu-22.04 in GitHub actions (\#1061).
 * Dependencies:
     * Pin `bcrypt` to 4.0.1 to avoid warning in passlib (\#1060).
+* Runner:
+    *  Set SLURM-job working directory to `job.working_dir_user` through `--chdir` option (\#1064).
 
 # 1.4.0
 
