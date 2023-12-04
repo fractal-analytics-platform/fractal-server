@@ -2,11 +2,7 @@
 Definition of `/admin` routes.
 """
 from datetime import datetime
-from io import BytesIO
-from pathlib import Path
 from typing import Optional
-from zipfile import ZIP_DEFLATED
-from zipfile import ZipFile
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -31,6 +27,7 @@ from ..schemas import DatasetRead
 from ..schemas import ProjectRead
 from ..schemas import WorkflowRead
 from ..security import current_active_superuser
+from .api.v1._aux_functions import _get_streaming_response
 from .api.v1._aux_functions import _only_slurm
 from .api.v1._aux_functions import _stop_job
 
@@ -305,20 +302,5 @@ async def download_job_logs(
             detail=f"Job {job_id} not found",
         )
 
-    working_dir_str = job.dict()["working_dir"]
-    working_dir_path = Path(working_dir_str)
-
-    PREFIX_ZIP = working_dir_path.name
-    zip_filename = f"{PREFIX_ZIP}_archive.zip"
-    byte_stream = BytesIO()
-    with ZipFile(byte_stream, mode="w", compression=ZIP_DEFLATED) as zipfile:
-        for fpath in working_dir_path.glob("*"):
-            zipfile.write(filename=str(fpath), arcname=str(fpath.name))
-
-    await db.close()
-
-    return StreamingResponse(
-        iter([byte_stream.getvalue()]),
-        media_type="application/x-zip-compressed",
-        headers={"Content-Disposition": f"attachment;filename={zip_filename}"},
-    )
+    sr: StreamingResponse = await _get_streaming_response(job=job, db=db)
+    return sr
