@@ -1,8 +1,4 @@
-from io import BytesIO
-from pathlib import Path
 from typing import Optional
-from zipfile import ZIP_DEFLATED
-from zipfile import ZipFile
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -17,6 +13,7 @@ from ....security import current_active_user
 from ....security import User
 from ._aux_functions import _get_job_check_owner
 from ._aux_functions import _get_project_check_owner
+from ._aux_functions import _get_streaming_response
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import _only_slurm
 from ._aux_functions import _stop_job
@@ -110,25 +107,8 @@ async def download_job_logs(
     )
     job = output["job"]
 
-    # Extract job's working_dir attribute
-    working_dir_str = job.dict()["working_dir"]
-    working_dir_path = Path(working_dir_str)
-
-    # Create zip byte stream
-    PREFIX_ZIP = working_dir_path.name
-    zip_filename = f"{PREFIX_ZIP}_archive.zip"
-    byte_stream = BytesIO()
-    with ZipFile(byte_stream, mode="w", compression=ZIP_DEFLATED) as zipfile:
-        for fpath in working_dir_path.glob("*"):
-            zipfile.write(filename=str(fpath), arcname=str(fpath.name))
-
-    await db.close()
-
-    return StreamingResponse(
-        iter([byte_stream.getvalue()]),
-        media_type="application/x-zip-compressed",
-        headers={"Content-Disposition": f"attachment;filename={zip_filename}"},
-    )
+    sr: StreamingResponse = await _get_streaming_response(job=job, db=db)
+    return sr
 
 
 @router.get(
@@ -175,6 +155,6 @@ async def stop_job(
     )
     job = output["job"]
 
-    _stop_job(job)
+    _stop_job(job=job)
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
