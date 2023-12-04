@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter
@@ -8,11 +9,12 @@ from fastapi.responses import StreamingResponse
 
 from ....db import AsyncSession
 from ....db import get_db
+from ....models import ApplyWorkflow
 from ....schemas import ApplyWorkflowRead
 from ....security import current_active_user
 from ....security import User
-from ...aux._job import _get_streaming_response
 from ...aux._job import _write_shutdown_file
+from ...aux._job import _zip_folder_to_byte_stream
 from ...aux._runner import _check_backend_is_slurm
 from ._aux_functions import _get_job_check_owner
 from ._aux_functions import _get_project_check_owner
@@ -105,10 +107,19 @@ async def download_job_logs(
         user_id=user.id,
         db=db,
     )
-    job = output["job"]
+    job: ApplyWorkflow = output["job"]
 
-    sr: StreamingResponse = await _get_streaming_response(job=job, db=db)
-    return sr
+    # Create and return byte stream for zipped log folder
+    PREFIX_ZIP = Path(job.working_dir).name
+    zip_filename = f"{PREFIX_ZIP}_archive.zip"
+    byte_stream = _zip_folder_to_byte_stream(
+        folder=job.working_dir, zip_filename=zip_filename
+    )
+    return StreamingResponse(
+        iter([byte_stream.getvalue()]),
+        media_type="application/x-zip-compressed",
+        headers={"Content-Disposition": f"attachment;filename={zip_filename}"},
+    )
 
 
 @router.get(
