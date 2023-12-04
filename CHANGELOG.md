@@ -1,7 +1,11 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# 1.4.1 (unreleased)
 
+* API:
+    * Use `DatasetRead` and `WorkflowRead` models for "dump" attributes of `ApplyWorkflowRead` (\#1049).
 * Database:
+    * Make `ApplyWorkflow.workflow_dump` column non-nullable (\#1049).
     * Add script for adding `ApplyWorkflow.user_email` (\#1058).
 
 # 1.4.0
@@ -41,8 +45,8 @@
     * Do not use `Enum`s as column types (e.g. for `ApplyWorkflow.status`), but only for (de-)serialization (\#974).
     * Set `pool_pre_ping` option to `True`, for asyncpg driver (\#1037).
     * Add script for updating DB from 1.4.0 to 1.4.1 (\#1010)
-* App:
     * Fix missing try/except in sync session (\#1020).
+* App:
     * Skip creation of first-superuser when one superuser already exists (\#1006).
 * Dependencies:
     * Update sqlalchemy to version `>=2.0.23,<2.1` (\#1044).
