@@ -26,6 +26,8 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
         project_id:
             ID of the project the workflow belongs to, or `None` if the project
             was deleted.
+        user_email:
+        slurm_account:
         input_dataset_id:
             ID of the input dataset, or `None` if the dataset was deleted.
         output_dataset_id:
@@ -66,6 +68,8 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
     output_dataset_id: Optional[int] = Field(foreign_key="dataset.id")
 
     user_email: str = Field(nullable=False)
+    slurm_account: Optional[str]
+
     input_dataset_dump: dict[str, Any] = Field(
         sa_column=Column(JSON, nullable=False)
     )
