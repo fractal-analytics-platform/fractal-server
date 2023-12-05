@@ -96,7 +96,7 @@ class UserCreate(schemas.BaseUserCreate):
     slurm_user: Optional[str]
     cache_dir: Optional[str]
     username: Optional[str]
-    slurm_accounts: Optional[list[str]] = []
+    slurm_accounts: Optional[list[str]]
 
     # Validators
     _slurm_user = validator("slurm_user", allow_reuse=True)(

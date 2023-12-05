@@ -32,7 +32,10 @@ async def test_register_user(registered_client, registered_superuser_client):
     """
 
     EMAIL = "asd@asd.asd"
-    payload_register = dict(email=EMAIL, password="12345")
+    SLURM = ["test1", "test2"]
+    payload_register = dict(
+        email=EMAIL, password="12345", slurm_accounts=SLURM
+    )
 
     # Non-superuser user
     res = await registered_client.post(
@@ -45,10 +48,10 @@ async def test_register_user(registered_client, registered_superuser_client):
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/", json=payload_register
     )
-    debug(res.status_code)
     debug(res.json())
-    assert res.json()["email"] == EMAIL
     assert res.status_code == 201
+    assert res.json()["email"] == EMAIL
+    assert res.json()["slurm_accounts"] == SLURM
 
 
 async def test_list_users(registered_client, registered_superuser_client):
@@ -110,14 +113,15 @@ async def test_patch_current_user_cache_dir(registered_client):
 
     # Successful update
     assert pre_patch_user["cache_dir"] is None
-    assert pre_patch_user["slurm_accounts"] == []
+    NEW_SLURM_ACCOUNTS = ["foo", "bar"]
+    assert pre_patch_user["slurm_accounts"] != NEW_SLURM_ACCOUNTS
     res = await registered_client.patch(
         f"{PREFIX}/current-user/",
-        json={"cache_dir": "/tmp", "slurm_accounts": ["foo", "bar"]},
+        json={"cache_dir": "/tmp", "slurm_accounts": NEW_SLURM_ACCOUNTS},
     )
     assert res.status_code == 200
     assert res.json()["cache_dir"] == "/tmp"
-    assert res.json()["slurm_accounts"] == ["foo", "bar"]
+    assert res.json()["slurm_accounts"] == NEW_SLURM_ACCOUNTS
 
     # slurm_accounts, if present, must be a valid list
     res = await registered_client.patch(

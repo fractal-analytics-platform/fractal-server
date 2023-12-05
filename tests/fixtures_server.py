@@ -236,7 +236,10 @@ async def registered_client(
 
     EMAIL = "test@test.com"
     PWD = "12345"
-    await _create_first_user(email=EMAIL, password=PWD, is_superuser=False)
+    SLURM = ["test1", "test2"]
+    await _create_first_user(
+        email=EMAIL, password=PWD, is_superuser=False, slurm_accounts=SLURM
+    )
 
     async with AsyncClient(
         app=app, base_url="http://test"
