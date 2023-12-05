@@ -75,6 +75,9 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
     workflow_dump: dict[str, Any] = Field(
         sa_column=Column(JSON, nullable=False)
     )
+    project_dump: dict[str, Any] = Field(
+        sa_column=Column(JSON, nullable=False)
+    )
 
     working_dir: Optional[str]
     working_dir_user: Optional[str]

@@ -466,3 +466,6 @@ async def test_project_apply_workflow_subset(
                 for wf_task in workflow.task_list
             ],
         )
+        assert res.json()["project_dump"] == project.dict(
+            include={"name", "read_only", "id"}
+        )

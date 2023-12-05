@@ -7,6 +7,7 @@ from pydantic import validator
 
 from ._validators import valstr
 from .dataset import DatasetRead
+from .project import ProjectRead
 from .workflow import WorkflowRead
 
 __all__ = (
@@ -109,15 +110,18 @@ class ApplyWorkflowRead(_ApplyWorkflowBase):
     Attributes:
         id:
         project_id:
+        project_dump:
+        user_email:
         workflow_id:
+        workflow_dump:
         input_dataset_id:
+        input_dataset_dump:
         output_dataset_id:
+        output_dataset_dump:
         start_timestamp:
         end_timestamp:
         status:
         log:
-        workflow_dump:
-        history:
         working_dir:
         working_dir_user:
         first_task_index:
@@ -126,6 +130,7 @@ class ApplyWorkflowRead(_ApplyWorkflowBase):
 
     id: int
     project_id: Optional[int]
+    project_dump: Optional[ProjectRead]
     user_email: str
     workflow_id: Optional[int]
     workflow_dump: Optional[WorkflowRead]
