@@ -86,6 +86,7 @@ class TaskCollectPip(_TaskCollectBase):
             raise ValueError(
                 "Cannot provide `package_version` for a Wheel (.whl) file."
             )
+        return v
 
 
 class TaskCollectStatus(_TaskCollectBase):
