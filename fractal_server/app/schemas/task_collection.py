@@ -80,6 +80,14 @@ class TaskCollectPip(_TaskCollectBase):
                 )
         return value
 
+    @validator("package_version")
+    def package_version_validator(cls, v, values):
+        if v is not None:
+            if values["package"].endswith(".whl"):
+                raise ValueError(
+                    "Cannot provide `package_version` for a Wheel (.whl) file."
+                )
+
 
 class TaskCollectStatus(_TaskCollectBase):
     """
