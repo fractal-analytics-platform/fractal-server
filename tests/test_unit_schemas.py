@@ -348,6 +348,7 @@ def test_user_create():
     # With invalid slurm_user attribute
     with pytest.raises(ValidationError):
         UserCreate(email="a@b.c", password="asd", slurm_user="  ")
+
     # With valid slurm_accounts attribute
     u = UserCreate(email="a@b.c", password="asd", slurm_accounts=["a", "b"])
     assert u.slurm_accounts == ["a", "b"]
@@ -355,11 +356,19 @@ def test_user_create():
         email="a@b.c", password="asd", slurm_accounts=[1, "a", True]
     )
     assert u.slurm_accounts == ["1", "a", "True"]
+
     with pytest.raises(ValidationError):
         UserCreate(
             email="a@b.c",
             password="asd",
-            slurm_accounts=[1, "a", {"NOT": "VALID"}],
+            slurm_accounts=["a", {"NOT": "VALID"}],
+        )
+    with pytest.raises(ValidationError):
+        # repetitions
+        UserCreate(
+            email="a@b.c",
+            password="asd",
+            slurm_accounts=["foo", "bar", "foo", "rab"],
         )
 
     # With valid cache_dir

@@ -3,6 +3,7 @@ from typing import Optional
 from fastapi_users import schemas
 from pydantic import BaseModel
 from pydantic import Extra
+from pydantic import Field
 from pydantic import validator
 
 from ._validators import val_absolute_path
@@ -56,6 +57,12 @@ class UserUpdate(schemas.BaseUserUpdate):
         val_absolute_path("cache_dir")
     )
 
+    @validator("slurm_accounts")
+    def is_unique(cls, v: list[str]) -> list[str]:
+        if len(set(v)) != len(v):
+            raise ValueError("`slurm_accounts` list has repetitions")
+        return v
+
     @validator(
         "is_active",
         "is_verified",
@@ -96,9 +103,15 @@ class UserCreate(schemas.BaseUserCreate):
     slurm_user: Optional[str]
     cache_dir: Optional[str]
     username: Optional[str]
-    slurm_accounts: Optional[list[str]]
+    slurm_accounts: list[str] = Field(default_factory=list)
 
     # Validators
+    @validator("slurm_accounts")
+    def is_unique(cls, v: list[str]) -> list[str]:
+        if len(set(v)) != len(v):
+            raise ValueError("`slurm_accounts` list has repetitions")
+        return v
+
     _slurm_user = validator("slurm_user", allow_reuse=True)(
         valstr("slurm_user")
     )
