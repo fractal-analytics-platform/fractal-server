@@ -315,6 +315,19 @@ async def apply_workflow(
             ),
         )
 
+    if apply_workflow.slurm_account is not None:
+        if apply_workflow.slurm_account not in user.slurm_accounts:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    f"SLURM account '{apply_workflow.slurm_account}' is not "
+                    "among those available to the current user"
+                ),
+            )
+    else:
+        if len(user.slurm_accounts) > 0:
+            apply_workflow.slurm_account = user.slurm_accounts[0]
+
     # Add new ApplyWorkflow object to DB
     job = ApplyWorkflow(
         project_id=project_id,
