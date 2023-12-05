@@ -113,6 +113,7 @@ async def _create_first_user(
         password: New user's password
         is_superuser: `True` if the new user is a superuser
         slurm_user: SLURM username associated to the new user
+        slurm_accounts: list of SLURM accounts associated to the new user
     """
     try:
         async with get_async_session_context() as session:
@@ -137,13 +138,13 @@ async def _create_first_user(
                         password=password,
                         is_superuser=is_superuser,
                     )
-                    if slurm_user:
+                    if slurm_user is not None:
                         kwargs["slurm_user"] = slurm_user
-                    if slurm_accounts:
+                    if slurm_accounts is not None:
                         kwargs["slurm_accounts"] = slurm_accounts
-                    if cache_dir:
+                    if cache_dir is not None:
                         kwargs["cache_dir"] = cache_dir
-                    if username:
+                    if username is not None:
                         kwargs["username"] = username
                     user = await user_manager.create(UserCreate(**kwargs))
                     logger.info(f"User {user.email} created")

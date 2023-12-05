@@ -441,7 +441,7 @@ async def test_project_apply_workflow_subset(
         debug(res.json())
         assert res.status_code == 422
 
-        # Case D (start_end and last_task_index exchanged)
+        # Case D (first_task_index and last_task_index exchanged)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={dataset1.id}"
