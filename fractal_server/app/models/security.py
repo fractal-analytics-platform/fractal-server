@@ -12,6 +12,7 @@
 from typing import Optional
 
 from pydantic import EmailStr
+from sqlalchemy.ext.orderinglist import ordering_list
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
@@ -68,12 +69,21 @@ class UserOAuth(SQLModel, table=True):
 
     oauth_accounts: list["OAuthAccount"] = Relationship(
         back_populates="user",
-        sa_relationship_kwargs={"lazy": "joined", "cascade": "all, delete"},
+        sa_relationship_kwargs={
+            "lazy": "joined",
+            "cascade": "all, delete",
+            "order_by": "OAuthAccount.id",
+            "collection_class": ordering_list("id"),
+        },
     )
     project_list: list["Project"] = Relationship(  # noqa
         back_populates="user_list",
         link_model=LinkUserProject,
-        sa_relationship_kwargs={"lazy": "selectin"},
+        sa_relationship_kwargs={
+            "lazy": "selectin",
+            "order_by": "Project.name",
+            "collection_class": ordering_list("project"),
+        },
     )
 
     class Config:

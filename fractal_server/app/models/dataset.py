@@ -43,21 +43,25 @@ class Dataset(_DatasetBase, SQLModel, table=True):
         sa_relationship_kwargs=dict(
             lazy="selectin",
             primaryjoin="ApplyWorkflow.input_dataset_id==Dataset.id",
+            order_by="ApplyWorkflow.id",
+            collection_class=ordering_list("id"),
         )
     )
     list_jobs_output: list[ApplyWorkflow] = Relationship(  # noqa: F821
         sa_relationship_kwargs=dict(
             lazy="selectin",
             primaryjoin="ApplyWorkflow.output_dataset_id==Dataset.id",
+            order_by="ApplyWorkflow.id",
+            collection_class=ordering_list("id"),
         )
     )
     resource_list: list[Resource] = Relationship(
-        sa_relationship_kwargs={
-            "lazy": "selectin",
-            "order_by": "Resource.id",
-            "collection_class": ordering_list("id"),
-            "cascade": "all, delete-orphan",
-        }
+        sa_relationship_kwargs=dict(
+            lazy="selectin",
+            order_by="Resource.id",
+            collection_class=ordering_list("id"),
+            cascade="all, delete-orphan",
+        )
     )
 
     meta: dict[str, Any] = Field(sa_column=Column(JSON), default={})

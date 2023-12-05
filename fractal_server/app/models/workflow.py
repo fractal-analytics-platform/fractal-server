@@ -116,7 +116,11 @@ class Workflow(_WorkflowBase, SQLModel, table=True):
         ),
     )
     job_list: list[ApplyWorkflow] = Relationship(
-        sa_relationship_kwargs={"lazy": "selectin"}
+        sa_relationship_kwargs={
+            "lazy": "selectin",
+            "order_by": "ApplyWorkflow.id",
+            "collection_class": ordering_list("id"),
+        }
     )
 
     async def insert_task(
