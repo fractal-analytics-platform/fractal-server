@@ -287,7 +287,7 @@ async def test_edit_users_as_superuser(registered_superuser_client):
         json=update,
     )
     assert res.status_code == 422
-    update["slurm_accounts"].pop(0)  # remove repeted slurm account
+    update["slurm_accounts"].pop(0)  # remove repeated slurm account
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{pre_patch_user['id']}/",
         json=update,
