@@ -85,6 +85,12 @@ class UserUpdateStrict(BaseModel, extra=Extra.forbid):
     cache_dir: Optional[str]
     slurm_accounts: Optional[list[str]]
 
+    @validator("slurm_accounts")
+    def is_unique(cls, v: list[str]) -> list[str]:
+        if len(set(v)) != len(v):
+            raise ValueError("`slurm_accounts` list has repetitions")
+        return v
+
     _cache_dir = validator("cache_dir", allow_reuse=True)(
         val_absolute_path("cache_dir")
     )
