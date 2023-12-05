@@ -1031,10 +1031,14 @@ class FractalSlurmExecutor(SlurmExecutor):
             [
                 f"#SBATCH --err={slurm_err_path}",
                 f"#SBATCH --out={slurm_out_path}",
+                f"#SBATCH --chdir={self.working_dir_user}",
             ]
         )
         script_lines = slurm_config.sort_script_lines(script_lines)
         logger.debug(script_lines)
+
+        # Always print output of `pwd`
+        script_lines.append('echo "Working directory (pwd): `pwd`"\n')
 
         # Complete script preamble
         script_lines.append("\n")
