@@ -341,7 +341,7 @@ async def apply_workflow(
                 for wf_task in workflow.task_list
             ],
         ),
-        **apply_workflow.dict(),
+        **apply_workflow.dict(exclude_unset=True),
     )
     db.add(job)
     await db.commit()
