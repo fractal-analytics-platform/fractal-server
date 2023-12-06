@@ -4,7 +4,6 @@ from typing import Union
 
 from pydantic import validator
 from sqlalchemy import Column
-from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.types import JSON
 from sqlmodel import Field
 from sqlmodel import Relationship
@@ -111,7 +110,6 @@ class Workflow(_WorkflowBase, SQLModel, table=True):
         sa_relationship_kwargs=dict(
             lazy="selectin",
             order_by="WorkflowTask.order",
-            collection_class=ordering_list("order"),
             cascade="all, delete-orphan",
         ),
     )
@@ -119,7 +117,6 @@ class Workflow(_WorkflowBase, SQLModel, table=True):
         sa_relationship_kwargs={
             "lazy": "selectin",
             "order_by": "ApplyWorkflow.id",
-            "collection_class": ordering_list("id"),
         }
     )
 
