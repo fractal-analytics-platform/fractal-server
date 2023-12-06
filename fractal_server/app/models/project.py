@@ -1,5 +1,6 @@
 from typing import Optional
 
+from sqlalchemy.ext.orderinglist import ordering_list
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
@@ -21,6 +22,7 @@ class Project(_ProjectBase, SQLModel, table=True):
         sa_relationship_kwargs={
             "lazy": "selectin",
             "order_by": "UserOAuth.email",
+            "collection_class": ordering_list("email"),
         },
     )
 
@@ -29,6 +31,7 @@ class Project(_ProjectBase, SQLModel, table=True):
             "lazy": "selectin",
             "cascade": "all, delete-orphan",
             "order_by": "Dataset.name",
+            "collection_class": ordering_list("name"),
         }
     )
 
@@ -37,6 +40,7 @@ class Project(_ProjectBase, SQLModel, table=True):
             "lazy": "selectin",
             "cascade": "all, delete-orphan",
             "order_by": "Workflow.name",
+            "collection_class": ordering_list("name"),
         },
     )
 
@@ -44,5 +48,6 @@ class Project(_ProjectBase, SQLModel, table=True):
         sa_relationship_kwargs={
             "lazy": "selectin",
             "order_by": "ApplyWorkflow.id",
+            "collection_class": ordering_list("id"),
         }
     )

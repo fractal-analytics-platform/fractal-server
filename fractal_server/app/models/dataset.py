@@ -2,6 +2,7 @@ from typing import Any
 from typing import Optional
 
 from sqlalchemy import Column
+from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.types import JSON
 from sqlmodel import Field
 from sqlmodel import Relationship
@@ -43,6 +44,7 @@ class Dataset(_DatasetBase, SQLModel, table=True):
             lazy="selectin",
             primaryjoin="ApplyWorkflow.input_dataset_id==Dataset.id",
             order_by="ApplyWorkflow.id",
+            collection_class=ordering_list("id"),
         )
     )
     list_jobs_output: list[ApplyWorkflow] = Relationship(  # noqa: F821
@@ -50,12 +52,14 @@ class Dataset(_DatasetBase, SQLModel, table=True):
             lazy="selectin",
             primaryjoin="ApplyWorkflow.output_dataset_id==Dataset.id",
             order_by="ApplyWorkflow.id",
+            collection_class=ordering_list("id"),
         )
     )
     resource_list: list[Resource] = Relationship(
         sa_relationship_kwargs=dict(
             lazy="selectin",
             order_by="Resource.id",
+            collection_class=ordering_list("id"),
             cascade="all, delete-orphan",
         )
     )
