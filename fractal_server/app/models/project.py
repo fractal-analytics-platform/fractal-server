@@ -22,7 +22,6 @@ class Project(_ProjectBase, SQLModel, table=True):
         sa_relationship_kwargs={
             "lazy": "selectin",
             "order_by": "UserOAuth.email",
-            "collection_class": ordering_list("email"),
         },
     )
 
