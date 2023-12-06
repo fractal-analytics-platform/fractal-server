@@ -328,3 +328,80 @@ async def test_insert_task_with_meta_none(
         wf = Workflow(name="my wfl", project_id=project.id)
         args = dict(arg="test arg")
         await wf.insert_task(t0.id, db=db, args=args)
+
+
+async def test_sorted_relationships(
+    db,
+    MockCurrentUser,
+    project_factory,
+    workflow_factory,
+    dataset_factory,
+    resource_factory,
+    task_factory,
+    job_factory,
+    tmp_path,
+):
+
+    async with MockCurrentUser(persist=True) as user:
+
+        NAMES = ["B", "A1", "A2", "BB", "B", "A"]
+        IDS = [10, 1, 9, 2, 8, 3, 7, 4, 6, 5]
+
+        project = await project_factory(user)
+
+        # Project.workflow_list is sorted by Workflow.name
+        for name in NAMES:
+            await workflow_factory(project_id=project.id, name=name)
+        await db.refresh(project)
+        assert [wf.name for wf in project.workflow_list] == sorted(NAMES)
+
+        # Project.dataset_list is sorted by Dataset.name
+        for name in NAMES:
+            await dataset_factory(project_id=project.id, name=name)
+        await db.refresh(project)
+        assert [ds.name for ds in project.dataset_list] == sorted(NAMES)
+
+        # Dataset.resource_list is sorted by Resource.id
+        dataset = project.dataset_list[0]
+        for resource_id in IDS:
+            await resource_factory(dataset, id=resource_id)
+        await db.refresh(dataset)
+        assert [res.id for res in dataset.resource_list] == sorted(IDS)
+
+        # Workflow.task_list is sorted by Task.order
+        workflow = project.workflow_list[0]
+        for i in range(len(IDS)):
+            task = await task_factory(
+                input_type=f"type{i}",
+                output_type=f"type{i+1}",
+                source=f"test:{i}to{i+1}",
+            )
+            await workflow.insert_task(task.id, db=db, order=IDS[i])
+
+        await db.refresh(workflow)
+        assert [task.id for task in workflow.task_list] != list(
+            range(len(IDS))
+        )
+        assert [task.order for task in workflow.task_list] == list(
+            range(len(IDS))  # this is not `sorted(IDS)` because order is 0..N
+        )
+
+        # Project.job_list, Workflow.job_list and Dataset.list_jobs_{in,out}put
+        # are sorted by ApplyWorkflow.id
+        for i in IDS:
+            await job_factory(
+                id=i,
+                project_id=project.id,
+                workflow_id=workflow.id,
+                input_dataset_id=dataset.id,
+                output_dataset_id=dataset.id,
+                working_dir=(tmp_path / "some_working_dir").as_posix(),
+            )
+        await db.refresh(project)
+        await db.refresh(workflow)
+        await db.refresh(dataset)
+
+        assert [job.id for job in project.job_list] == sorted(IDS)
+        assert [job.id for job in workflow.job_list] == sorted(IDS)
+        assert [job.id for job in dataset.list_jobs_input] == sorted(IDS)
+        assert [job.id for job in dataset.list_jobs_output] == sorted(IDS)
