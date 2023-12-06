@@ -531,10 +531,11 @@ async def job_factory(db: AsyncSession):
         args.update(**kwargs)
         job = ApplyWorkflow(**args)
         db.add(job)
+        await db.commit()
+        await db.refresh(job)
         project.job_list.append(job)
         db.add(project)
         await db.commit()
-        await db.refresh(job)
         return job
 
     return __job_factory
