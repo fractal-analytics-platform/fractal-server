@@ -5,7 +5,7 @@
 * API:
     * Add `GET /admin/job/{job_id}/stop/` and `GET /admin/job/{job_id}/download/` endpoints (\#1059).
     * Use `DatasetRead` and `WorkflowRead` models for "dump" attributes of `ApplyWorkflowRead` (\#1049).
-    * Sort all list relationships between models (\#1071).
+    * Sort all list `Relationship`s between models (\#1071).
 * Database:
     * Make `ApplyWorkflow.workflow_dump` column non-nullable (\#1049).
     * Add script for adding `ApplyWorkflow.user_email` (\#1058).
