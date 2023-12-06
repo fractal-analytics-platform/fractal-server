@@ -82,7 +82,7 @@ class UserOAuth(SQLModel, table=True):
         sa_relationship_kwargs={
             "lazy": "selectin",
             "order_by": "Project.name",
-            "collection_class": ordering_list("project"),
+            "collection_class": ordering_list("name"),
         },
     )
 
