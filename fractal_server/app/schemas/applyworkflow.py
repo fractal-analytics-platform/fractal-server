@@ -4,6 +4,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import validator
+from pydantic.types import StrictStr
 
 from ._validators import valstr
 from .dataset import DatasetRead
@@ -63,7 +64,7 @@ class ApplyWorkflowCreate(_ApplyWorkflowBase):
 
     first_task_index: Optional[int] = None
     last_task_index: Optional[int] = None
-    slurm_account: Optional[str] = None
+    slurm_account: Optional[StrictStr] = None
 
     # Validators
     _worker_init = validator("worker_init", allow_reuse=True)(
