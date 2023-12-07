@@ -130,14 +130,17 @@ async def test_patch_current_user_cache_dir(registered_client):
     assert res.json()["cache_dir"] == "/tmp"
     assert res.json()["slurm_accounts"] == NEW_SLURM_ACCOUNTS
 
-    # slurm_accounts, if present, must be a valid list without repetitions
+    # slurm_accounts must be a list of StrictStr without repetitions
     res = await registered_client.patch(
         f"{PREFIX}/current-user/",
-        json={"slurm_accounts": [42, "Foo", False]},
+        json={"slurm_accounts": [42, "Foo"]},
     )
-    assert res.status_code == 200
-    assert res.json()["slurm_accounts"] != [42, "Foo", False]
-    assert res.json()["slurm_accounts"] == ["42", "Foo", "False"]
+    assert res.status_code == 422
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/",
+        json={"slurm_accounts": ["Foo", True]},
+    )
+    assert res.status_code == 422
     res = await registered_client.patch(
         f"{PREFIX}/current-user/",
         json={"slurm_accounts": "NOT A LIST"},

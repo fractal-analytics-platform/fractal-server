@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import Field
 from pydantic import validator
+from pydantic.types import StrictStr
 
 from ._validators import val_absolute_path
 from ._validators import val_unique_list
@@ -47,7 +48,7 @@ class UserUpdate(schemas.BaseUserUpdate):
     slurm_user: Optional[str]
     cache_dir: Optional[str]
     username: Optional[str]
-    slurm_accounts: Optional[list[str]]
+    slurm_accounts: Optional[list[StrictStr]]
 
     # Validators
     _slurm_user = validator("slurm_user", allow_reuse=True)(
@@ -82,7 +83,7 @@ class UserUpdateStrict(BaseModel, extra=Extra.forbid):
     """
 
     cache_dir: Optional[str]
-    slurm_accounts: Optional[list[str]]
+    slurm_accounts: Optional[list[StrictStr]]
 
     _slurm_accounts = validator("slurm_accounts", allow_reuse=True)(
         val_unique_list("slurm_accounts")
@@ -106,7 +107,7 @@ class UserCreate(schemas.BaseUserCreate):
     slurm_user: Optional[str]
     cache_dir: Optional[str]
     username: Optional[str]
-    slurm_accounts: list[str] = Field(default_factory=list)
+    slurm_accounts: list[StrictStr] = Field(default_factory=list)
 
     # Validators
 
