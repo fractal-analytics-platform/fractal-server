@@ -87,9 +87,6 @@ async def _create_first_user(
     email: str,
     password: str,
     is_superuser: bool = False,
-    slurm_user: Optional[str] = None,
-    slurm_accounts: Optional[list[str]] = None,
-    cache_dir: Optional[str] = None,
     username: Optional[str] = None,
 ) -> None:
     """
@@ -138,12 +135,6 @@ async def _create_first_user(
                         password=password,
                         is_superuser=is_superuser,
                     )
-                    if slurm_user is not None:
-                        kwargs["slurm_user"] = slurm_user
-                    if slurm_accounts is not None:
-                        kwargs["slurm_accounts"] = slurm_accounts
-                    if cache_dir is not None:
-                        kwargs["cache_dir"] = cache_dir
                     if username is not None:
                         kwargs["username"] = username
                     user = await user_manager.create(UserCreate(**kwargs))
