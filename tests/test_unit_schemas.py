@@ -352,10 +352,10 @@ def test_user_create():
     # With valid slurm_accounts attribute
     u = UserCreate(email="a@b.c", password="asd", slurm_accounts=["a", "b"])
     assert u.slurm_accounts == ["a", "b"]
-    u = UserCreate(
-        email="a@b.c", password="asd", slurm_accounts=[1, "a", True]
-    )
-    assert u.slurm_accounts == ["1", "a", "True"]
+    with pytest.raises(ValidationError):
+        UserCreate(
+            email="a@b.c", password="asd", slurm_accounts=[1, "a", True]
+        )
 
     with pytest.raises(ValidationError):
         UserCreate(
