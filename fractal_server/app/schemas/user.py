@@ -7,6 +7,7 @@ from pydantic import Field
 from pydantic import validator
 
 from ._validators import val_absolute_path
+from ._validators import val_unique_list
 from ._validators import valstr
 
 
@@ -57,11 +58,9 @@ class UserUpdate(schemas.BaseUserUpdate):
         val_absolute_path("cache_dir")
     )
 
-    @validator("slurm_accounts")
-    def is_unique(cls, v: list[str]) -> list[str]:
-        if len(set(v)) != len(v):
-            raise ValueError("`slurm_accounts` list has repetitions")
-        return v
+    _slurm_accounts = validator("slurm_accounts", allow_reuse=True)(
+        val_unique_list("slurm_accounts")
+    )
 
     @validator(
         "is_active",
@@ -85,11 +84,9 @@ class UserUpdateStrict(BaseModel, extra=Extra.forbid):
     cache_dir: Optional[str]
     slurm_accounts: Optional[list[str]]
 
-    @validator("slurm_accounts")
-    def is_unique(cls, v: list[str]) -> list[str]:
-        if len(set(v)) != len(v):
-            raise ValueError("`slurm_accounts` list has repetitions")
-        return v
+    _slurm_accounts = validator("slurm_accounts", allow_reuse=True)(
+        val_unique_list("slurm_accounts")
+    )
 
     _cache_dir = validator("cache_dir", allow_reuse=True)(
         val_absolute_path("cache_dir")
@@ -112,12 +109,10 @@ class UserCreate(schemas.BaseUserCreate):
     slurm_accounts: list[str] = Field(default_factory=list)
 
     # Validators
-    @validator("slurm_accounts")
-    def is_unique(cls, v: list[str]) -> list[str]:
-        if len(set(v)) != len(v):
-            raise ValueError("`slurm_accounts` list has repetitions")
-        return v
 
+    _slurm_accounts = validator("slurm_accounts", allow_reuse=True)(
+        val_unique_list("slurm_accounts")
+    )
     _slurm_user = validator("slurm_user", allow_reuse=True)(
         valstr("slurm_user")
     )
