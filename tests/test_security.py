@@ -36,19 +36,22 @@ async def test_register_user(registered_client, registered_superuser_client):
         email=EMAIL, password="12345", slurm_accounts=["A", "A", "B"]
     )
 
-    # Non-superuser user
+    # Non-superuser user: FORBIDDEN
     res = await registered_client.post(
         f"{PREFIX}/register/", json=payload_register
     )
     debug(res.json())
     assert res.status_code == 403
 
-    # Superuser
+    # Superuser:
+    # cannot register a user with repeated slurm_accounts
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/", json=payload_register
     )
     assert res.status_code == 422
-    payload_register["slurm_accounts"].pop(0)  # remove repetition
+    # remove (pop) one of the two "A" in slurm_accounts
+    payload_register["slurm_accounts"].pop(0)
+    # succeed without the repetition
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/", json=payload_register
     )
@@ -286,8 +289,11 @@ async def test_edit_users_as_superuser(registered_superuser_client):
         f"{PREFIX}/users/{pre_patch_user['id']}/",
         json=update,
     )
+    # Fail because of repeated "FOO" in update.slurm_accounts
     assert res.status_code == 422
-    update["slurm_accounts"].pop(0)  # remove repeated slurm account
+    # remove (pop) one of the two "FOO" in update.slurm_accounts
+    update["slurm_accounts"].pop(0)
+    # succeed without the repetition
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{pre_patch_user['id']}/",
         json=update,
