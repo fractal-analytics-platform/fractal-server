@@ -33,7 +33,7 @@ async def test_register_user(registered_client, registered_superuser_client):
 
     EMAIL = "asd@asd.asd"
     payload_register = dict(
-        email=EMAIL, password="12345", slurm_accounts=["A", "A", "B"]
+        email=EMAIL, password="12345", slurm_accounts=["A", "B"]
     )
 
     # Non-superuser user: FORBIDDEN
@@ -43,15 +43,7 @@ async def test_register_user(registered_client, registered_superuser_client):
     debug(res.json())
     assert res.status_code == 403
 
-    # Superuser:
-    # cannot register a user with repeated slurm_accounts
-    res = await registered_superuser_client.post(
-        f"{PREFIX}/register/", json=payload_register
-    )
-    assert res.status_code == 422
-    # remove (pop) one of the two "A" in slurm_accounts
-    payload_register["slurm_accounts"].pop(0)
-    # succeed without the repetition
+    # Superuser: ALLOWED
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/", json=payload_register
     )
@@ -133,34 +125,10 @@ async def test_patch_current_user_cache_dir(registered_client):
     # slurm_accounts must be a list of StrictStr without repetitions
     res = await registered_client.patch(
         f"{PREFIX}/current-user/",
-        json={"slurm_accounts": [42, "Foo"]},
-    )
-    assert res.status_code == 422
-    res = await registered_client.patch(
-        f"{PREFIX}/current-user/",
-        json={"slurm_accounts": ["Foo", True]},
-    )
-    assert res.status_code == 422
-    res = await registered_client.patch(
-        f"{PREFIX}/current-user/",
-        json={"slurm_accounts": "NOT A LIST"},
-    )
-    assert res.status_code == 422
-    res = await registered_client.patch(
-        f"{PREFIX}/current-user/",
-        json={"slurm_accounts": [{"NOT": "VALID"}]},
-    )
-    assert res.status_code == 422
-    res = await registered_client.patch(
-        f"{PREFIX}/current-user/",
-        json={"slurm_accounts": ["a", "b", "a"]},
-    )
-    assert res.status_code == 422
-    res = await registered_client.patch(
-        f"{PREFIX}/current-user/",
         json={"slurm_accounts": ["a", "b", "c"]},
     )
     assert res.status_code == 200
+    assert res.json()["slurm_accounts"] == ["a", "b", "c"]
 
     # Failed update due to empty string
     res = await registered_client.patch(

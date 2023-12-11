@@ -23,6 +23,7 @@ from fractal_server.app.schemas import TaskRead
 from fractal_server.app.schemas import TaskUpdate
 from fractal_server.app.schemas import UserCreate
 from fractal_server.app.schemas import UserUpdate
+from fractal_server.app.schemas import UserUpdateStrict
 from fractal_server.app.schemas import WorkflowCreate
 from fractal_server.app.schemas import WorkflowImport
 from fractal_server.app.schemas import WorkflowRead
@@ -349,9 +350,11 @@ def test_user_create():
     with pytest.raises(ValidationError):
         UserCreate(email="a@b.c", password="asd", slurm_user="  ")
 
-    # With valid slurm_accounts attribute
+    # slurm_accounts must be a list of StrictStr without repetitions
+
     u = UserCreate(email="a@b.c", password="asd", slurm_accounts=["a", "b"])
     assert u.slurm_accounts == ["a", "b"]
+
     with pytest.raises(ValidationError):
         UserCreate(
             email="a@b.c", password="asd", slurm_accounts=[1, "a", True]
@@ -399,6 +402,22 @@ def test_user_create():
     assert u.username
     with pytest.raises(ValidationError) as e:
         UserUpdate(cache_dir=None)
+
+
+def test_user_update_strict():
+
+    with pytest.raises(ValidationError):
+        UserUpdateStrict(slurm_accounts=[42, "Foo"])
+    with pytest.raises(ValidationError):
+        UserUpdateStrict(slurm_accounts=["Foo", True])
+    with pytest.raises(ValidationError):
+        UserUpdateStrict(slurm_accounts="NOT A LIST")
+    with pytest.raises(ValidationError):
+        UserUpdateStrict(slurm_accounts=[{"NOT": "VALID"}])
+    with pytest.raises(ValidationError):
+        UserUpdateStrict(slurm_accounts=["a", "b", "a"])
+
+    UserUpdateStrict(slurm_accounts=["a", "b", "c"])
 
 
 def test_fail_valstr():
