@@ -7,6 +7,7 @@ from pydantic.error_wrappers import ValidationError
 from fractal_server.app.schemas import _StateBase
 from fractal_server.app.schemas import ApplyWorkflowCreate
 from fractal_server.app.schemas import ApplyWorkflowRead
+from fractal_server.app.schemas import ApplyWorkflowUpdate
 from fractal_server.app.schemas import DatasetCreate
 from fractal_server.app.schemas import DatasetRead
 from fractal_server.app.schemas import DatasetUpdate
@@ -35,22 +36,45 @@ from fractal_server.app.schemas import WorkflowUpdate
 
 
 def test_apply_workflow_create():
-    # Valid ApplyWorkflowCreate instance
-    valid_args = dict(worker_init="WORKER INIT")
-    job = ApplyWorkflowCreate(**valid_args)
-    debug(job)
 
-    with pytest.raises(ValueError) as e:
-        job = ApplyWorkflowCreate(first_task_index=-1)
-    debug(e)
+    # ApplyWorkflowCreate
+    valid_args = dict(
+        worker_init="worker init",
+        first_task_index=1,
+        last_task_index=10,
+        slurm_account="slurm account",
+    )
+    ApplyWorkflowCreate(**valid_args)
+    with pytest.raises(ValueError):
+        invalid_args = {**valid_args, "worker_init": " "}
+        ApplyWorkflowCreate(**invalid_args)
+    with pytest.raises(ValueError):
+        invalid_args = {**valid_args, "worker_init": None}
+        ApplyWorkflowCreate(**invalid_args)
+    with pytest.raises(ValueError):
+        invalid_args = {**valid_args, "first_task_index": -1}
+        ApplyWorkflowCreate(**invalid_args)
+    with pytest.raises(ValueError):
+        invalid_args = {**valid_args, "last_task_index": -1}
+        ApplyWorkflowCreate(**invalid_args)
+    with pytest.raises(ValueError):
+        invalid_args = {
+            **valid_args,
+            "first_task_index": 2,
+            "last_task_index": 0,
+        }
+        ApplyWorkflowCreate(**invalid_args)
 
-    with pytest.raises(ValueError) as e:
-        job = ApplyWorkflowCreate(last_task_index=-1)
-    debug(e)
 
-    with pytest.raises(ValueError) as e:
-        job = ApplyWorkflowCreate(first_task_index=2, last_task_index=0)
-    debug(e)
+def test_apply_workflow_update():
+    for status in ["submitted", "running", "done", "failed"]:
+        ApplyWorkflowUpdate(status=status)
+    with pytest.raises(ValueError):
+        ApplyWorkflowUpdate(status=" ")
+    with pytest.raises(ValueError):
+        ApplyWorkflowUpdate(status=None)
+    with pytest.raises(ValueError):
+        ApplyWorkflowUpdate(status="foo")
 
 
 def test_apply_workflow_read():
