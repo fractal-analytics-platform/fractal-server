@@ -350,12 +350,10 @@ async def test_sorted_relationships(
         project = await project_factory(user)
 
         # Project.workflow_list is sorted by Workflow.name
-        for name in NAMES:
-            await workflow_factory(project_id=project.id, name=name)
+        for _id in IDS:
+            await workflow_factory(id=_id, project_id=project.id, name=_id)
         await db.refresh(project)
-        assert [wf.name for wf in project.workflow_list] == sorted(
-            NAMES, key=str.casefold
-        )
+        assert [wf.id for wf in project.workflow_list] == sorted(IDS)
 
         # Project.dataset_list is sorted by Dataset.name
         for name in NAMES:

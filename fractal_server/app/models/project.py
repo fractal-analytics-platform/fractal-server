@@ -38,8 +38,8 @@ class Project(_ProjectBase, SQLModel, table=True):
         sa_relationship_kwargs={
             "lazy": "selectin",
             "cascade": "all, delete-orphan",
-            "order_by": "func.upper(Workflow.name)",
-            "collection_class": ordering_list("name"),
+            "order_by": "Workflow.id",
+            "collection_class": ordering_list("id"),
         },
     )
 
