@@ -81,7 +81,7 @@ class UserOAuth(SQLModel, table=True):
         link_model=LinkUserProject,
         sa_relationship_kwargs={
             "lazy": "selectin",
-            "order_by": "Project.name",
+            "order_by": "func.upper(Project.name)",
         },
     )
 

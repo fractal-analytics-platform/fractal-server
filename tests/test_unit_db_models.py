@@ -344,7 +344,7 @@ async def test_sorted_relationships(
 
     async with MockCurrentUser(persist=True) as user:
 
-        NAMES = ["B", "A1", "A2", "BB", "B", "A"]
+        NAMES = ["B", "A1", "a1", "A2", "BB", "A"]
         IDS = [10, 1, 9, 2, 8, 3, 7, 4, 6, 5]
 
         project = await project_factory(user)
@@ -353,13 +353,17 @@ async def test_sorted_relationships(
         for name in NAMES:
             await workflow_factory(project_id=project.id, name=name)
         await db.refresh(project)
-        assert [wf.name for wf in project.workflow_list] == sorted(NAMES)
+        assert [wf.name for wf in project.workflow_list] == sorted(
+            NAMES, key=str.casefold
+        )
 
         # Project.dataset_list is sorted by Dataset.name
         for name in NAMES:
             await dataset_factory(project_id=project.id, name=name)
         await db.refresh(project)
-        assert [ds.name for ds in project.dataset_list] == sorted(NAMES)
+        assert [ds.name for ds in project.dataset_list] == sorted(
+            NAMES, key=str.casefold
+        )
 
         # Dataset.resource_list is sorted by Resource.id
         dataset = project.dataset_list[0]

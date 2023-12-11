@@ -21,7 +21,7 @@ class Project(_ProjectBase, SQLModel, table=True):
         back_populates="project_list",
         sa_relationship_kwargs={
             "lazy": "selectin",
-            "order_by": "UserOAuth.email",
+            "order_by": "func.upper(UserOAuth.email)",
         },
     )
 
@@ -29,7 +29,7 @@ class Project(_ProjectBase, SQLModel, table=True):
         sa_relationship_kwargs={
             "lazy": "selectin",
             "cascade": "all, delete-orphan",
-            "order_by": "Dataset.name",
+            "order_by": "func.upper(Dataset.name)",
             "collection_class": ordering_list("name"),
         }
     )
@@ -38,7 +38,7 @@ class Project(_ProjectBase, SQLModel, table=True):
         sa_relationship_kwargs={
             "lazy": "selectin",
             "cascade": "all, delete-orphan",
-            "order_by": "Workflow.name",
+            "order_by": "func.upper(Workflow.name)",
             "collection_class": ordering_list("name"),
         },
     )
