@@ -192,15 +192,13 @@ async def apply_workflow(
     ),  # FIXME: why both sync and async?  # noqa
 ) -> Optional[ApplyWorkflowRead]:
 
-    project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
-    )
     output = await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=input_dataset_id,
         user_id=user.id,
         db=db,
     )
+    project = output["project"]
     input_dataset = output["dataset"]
 
     output = await _get_dataset_check_owner(
