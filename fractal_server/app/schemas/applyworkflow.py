@@ -1,6 +1,8 @@
 from datetime import datetime
 from enum import Enum
+from typing import Any
 from typing import Optional
+from typing import Union
 
 from pydantic import BaseModel
 from pydantic import validator
@@ -130,7 +132,7 @@ class ApplyWorkflowRead(_ApplyWorkflowBase):
 
     id: int
     project_id: Optional[int]
-    project_dump: Optional[ProjectRead]
+    project_dump: Optional[Union[ProjectRead, dict[str, Any]]]
     user_email: str
     workflow_id: Optional[int]
     workflow_dump: Optional[WorkflowRead]
