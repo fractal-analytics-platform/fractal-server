@@ -566,8 +566,6 @@ async def workflow_factory(db: AsyncSession):
 
         w = Workflow(**args)
         db.add(w)
-        project.workflow_list.append(w)
-        db.add(project)
         await db.commit()
         await db.refresh(w)
         return w
