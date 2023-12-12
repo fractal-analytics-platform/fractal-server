@@ -467,5 +467,5 @@ async def test_project_apply_workflow_subset(
             ],
         )
         assert res.json()["project_dump"] == project.dict(
-            include={"name", "read_only", "id"}
+            exclude={"user_list", "dataset_list", "workflow_list", "job_list"}
         )
