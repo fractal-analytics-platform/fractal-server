@@ -69,7 +69,7 @@ def val_unique_list(attribute: str):
     def val(must_be_unique: list):
         if must_be_unique is not None:
             if len(set(must_be_unique)) != len(must_be_unique):
-                raise ValueError("`slurm_accounts` list has repetitions")
+                raise ValueError(f"`{attribute}` list has repetitions")
         return must_be_unique
 
     return val
