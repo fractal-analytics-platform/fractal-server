@@ -127,7 +127,7 @@ async def view_dataset(
             `name` attribute contains `name_contains` (case-insensitive).
         type: If not `None`, select a given `dataset.type`.
     """
-    stm = select(Dataset)
+    stm = select(Dataset).options(selectinload(Dataset.project))
 
     if user_id is not None:
         stm = stm.join(Project).where(
@@ -189,7 +189,7 @@ async def view_job(
         end_timestamp_max: If not `None`, select a rows with `end_timestamp`
             before `end_timestamp_min`.
     """
-    stm = select(ApplyWorkflow)
+    stm = select(ApplyWorkflow).options(selectinload(ApplyWorkflow.project))
 
     if id is not None:
         stm = stm.where(ApplyWorkflow.id == id)

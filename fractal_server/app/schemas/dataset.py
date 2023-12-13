@@ -145,7 +145,7 @@ class DatasetRead(_DatasetBase):
     id: int
     resource_list: list[ResourceRead]
     read_only: bool
-    project: ProjectRead
+    project: Optional[ProjectRead]
 
 
 class DatasetStatusRead(BaseModel):

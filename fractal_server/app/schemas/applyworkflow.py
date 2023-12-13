@@ -7,6 +7,7 @@ from pydantic import validator
 
 from ._validators import valstr
 from .dataset import DatasetRead
+from .project import ProjectRead
 from .workflow import WorkflowRead
 
 __all__ = (
@@ -125,7 +126,7 @@ class ApplyWorkflowRead(_ApplyWorkflowBase):
     """
 
     id: int
-    project_id: Optional[int]
+    project: Optional[ProjectRead]
     user_email: str
     workflow_id: Optional[int]
     workflow_dump: Optional[WorkflowRead]
