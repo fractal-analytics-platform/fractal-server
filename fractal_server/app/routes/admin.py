@@ -12,6 +12,7 @@ from fastapi import Response
 from fastapi import status
 from fastapi.responses import StreamingResponse
 from sqlalchemy import func
+from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
 from ..db import AsyncSession
@@ -83,7 +84,7 @@ async def view_workflow(
         name_contains: If not `None`, select workflows such that their
             `name` attribute contains `name_contains` (case-insensitive).
     """
-    stm = select(Workflow)
+    stm = select(Workflow).options(selectinload(Workflow.project))
 
     if user_id is not None:
         stm = stm.join(Project).where(
