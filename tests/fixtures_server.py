@@ -550,10 +550,11 @@ async def workflow_factory(db: AsyncSession):
     from fractal_server.app.models import Project
 
     async def __workflow_factory(db: AsyncSession = db, **kwargs):
-        args = dict(
+        defaults = dict(
             name="my workflow",
             project_id=1,
         )
+        args = dict(**defaults)
         args.update(kwargs)
 
         project_id = args["project_id"]
@@ -566,6 +567,8 @@ async def workflow_factory(db: AsyncSession):
 
         w = Workflow(**args)
         db.add(w)
+        project.workflow_list.append(w)
+        db.add(project)
         await db.commit()
         await db.refresh(w)
         return w
