@@ -7,6 +7,7 @@ from pydantic import validator
 
 from ._validators import val_absolute_path
 from ._validators import valstr
+from .project import ProjectRead
 from .workflow import WorkflowTaskRead
 from .workflow import WorkflowTaskStatusType
 
@@ -143,8 +144,8 @@ class DatasetRead(_DatasetBase):
 
     id: int
     resource_list: list[ResourceRead]
-    project_id: int
     read_only: bool
+    project: ProjectRead
 
 
 class DatasetStatusRead(BaseModel):

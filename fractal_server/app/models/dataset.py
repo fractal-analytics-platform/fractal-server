@@ -38,14 +38,17 @@ class Dataset(_DatasetBase, SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     project_id: int = Field(foreign_key="project.id")
+    project: "Project" = Relationship(  # noqa: F821
+        back_populates="dataset_list"
+    )
 
-    list_jobs_input: list[ApplyWorkflow] = Relationship(  # noqa: F821
+    list_jobs_input: list[ApplyWorkflow] = Relationship(
         sa_relationship_kwargs=dict(
             lazy="selectin",
             primaryjoin="ApplyWorkflow.input_dataset_id==Dataset.id",
         )
     )
-    list_jobs_output: list[ApplyWorkflow] = Relationship(  # noqa: F821
+    list_jobs_output: list[ApplyWorkflow] = Relationship(
         sa_relationship_kwargs=dict(
             lazy="selectin",
             primaryjoin="ApplyWorkflow.output_dataset_id==Dataset.id",
