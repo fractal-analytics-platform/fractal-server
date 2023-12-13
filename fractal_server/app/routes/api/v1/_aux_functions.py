@@ -257,6 +257,7 @@ async def _get_dataset_check_owner(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Invalid {project_id=} for {dataset_id=}",
         )
+    dataset.project = project
     return dict(dataset=dataset, project=project)
 
 

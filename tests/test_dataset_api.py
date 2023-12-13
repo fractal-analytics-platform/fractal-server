@@ -22,8 +22,7 @@ async def test_get_dataset(
         )
         assert res.status_code == 200
         dataset = res.json()
-        debug(dataset)
-        assert dataset["project_id"] == project_id
+        assert dataset["project"]["id"] == project_id
         # Show missing dataset
         invalid_dataset_id = 999
         res = await client.get(
@@ -79,8 +78,8 @@ async def test_post_dataset(app, client, MockCurrentUser, db):
         assert res.status_code == 201
         dataset = res.json()
         assert dataset["name"] == payload["name"]
-        assert dataset["project_id"] == project_id
         assert dataset["meta"] == payload["meta"]
+        assert dataset["project"]["id"] == project_id
 
         # EDIT DATASET
         payload1 = dict(name="new dataset name", meta={})
