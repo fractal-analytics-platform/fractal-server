@@ -4,6 +4,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import validator
+from pydantic.types import StrictStr
 
 from ._validators import valstr
 from .dataset import DatasetDump
@@ -59,10 +60,12 @@ class ApplyWorkflowCreate(_ApplyWorkflowBase):
     Attributes:
         first_task_index:
         last_task_index:
+        slurm_account:
     """
 
     first_task_index: Optional[int] = None
     last_task_index: Optional[int] = None
+    slurm_account: Optional[StrictStr] = None
 
     # Validators
     _worker_init = validator("worker_init", allow_reuse=True)(
@@ -109,15 +112,18 @@ class ApplyWorkflowRead(_ApplyWorkflowBase):
     Attributes:
         id:
         project_id:
+        user_email:
+        slurm_account:
         workflow_id:
+        workflow_dump:
         input_dataset_id:
+        input_dataset_dump:
         output_dataset_id:
+        output_dataset_dump:
         start_timestamp:
         end_timestamp:
         status:
         log:
-        workflow_dump:
-        history:
         working_dir:
         working_dir_user:
         first_task_index:
@@ -127,6 +133,7 @@ class ApplyWorkflowRead(_ApplyWorkflowBase):
     id: int
     project_id: Optional[int]
     user_email: str
+    slurm_account: Optional[str]
     workflow_id: Optional[int]
     workflow_dump: Optional[WorkflowDump]
     input_dataset_id: Optional[int]

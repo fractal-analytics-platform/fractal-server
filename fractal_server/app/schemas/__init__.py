@@ -27,6 +27,7 @@ from .task_collection import TaskCollectPip  # noqa: F401
 from .task_collection import TaskCollectStatus  # noqa: F401
 from .user import UserCreate  # noqa: F401
 from .user import UserUpdate  # noqa: F401
+from .user import UserUpdateStrict  # noqa: F401
 from .workflow import WorkflowCreate  # noqa: F401
 from .workflow import WorkflowExport  # noqa: F401
 from .workflow import WorkflowImport  # noqa: F401
