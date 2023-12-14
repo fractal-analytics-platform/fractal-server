@@ -4,7 +4,7 @@
 
 * API:
     * Add `GET /admin/job/{job_id}/stop/` and `GET /admin/job/{job_id}/download/` endpoints (\#1059).
-    * Use `DatasetRead` and `WorkflowRead` models for "dump" attributes of `ApplyWorkflowRead` (\#1049).
+    * Use `DatasetDump` and `WorkflowDump` models for "dump" attributes of `ApplyWorkflowRead` (\#1049, \#1082).
     * Add `slurm_accounts` to `User` schemas and add `slurm_account` to `ApplyWorkflow` schemas (\#1067).
     * Prevent providing a `package_version` for task collection from a `.whl` local package (\#1069).
     * Prevent providing a `package_version` for a Task collection from a `.whl` local package (\#1069).
@@ -14,8 +14,10 @@
     * Add `UserOAuth.slurm_accounts` and `ApplyWorkflow.slurm_account` columns (\#1067).
     * Add script for adding `ApplyWorkflow.user_email` (\#1058).
     * Add `Dataset.project` and `Workflow.project` relationships (\#1082).
+    * Avoid using `Project` relationships `dataset_list` or `workflow_list` within some `GET` endpoints (\#1082).
 * Testing:
-    *  Only use ubuntu-22.04 in GitHub actions (\#1061).
+    * Only use ubuntu-22.04 in GitHub actions (\#1061).
+    * Improve unit testing of database models (\#1082).
 * Dependencies:
     * Pin `bcrypt` to 4.0.1 to avoid warning in passlib (\#1060).
 * Runner:
