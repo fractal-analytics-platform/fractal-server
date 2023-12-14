@@ -6,9 +6,12 @@ from fastapi import Depends
 from fastapi import Response
 from fastapi import status
 from fastapi.responses import StreamingResponse
+from sqlmodel import select
 
 from ....db import AsyncSession
 from ....db import get_db
+from ....models import ApplyWorkflow
+from ....models import Project
 from ....schemas import ApplyWorkflowRead
 from ....security import current_active_user
 from ....security import User
@@ -26,14 +29,16 @@ router = APIRouter()
 @router.get("/job/", response_model=list[ApplyWorkflowRead])
 async def get_user_jobs(
     user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
 ) -> list[ApplyWorkflowRead]:
     """
     Returns all the jobs of the current user
     """
 
-    job_list = [
-        job for project in user.project_list for job in project.job_list
-    ]
+    stm = select(ApplyWorkflow)
+    stm = stm.join(Project).where(Project.user_list.any(User.id == user.id))
+    res = await db.execute(stm)
+    job_list = res.scalars().all()
 
     return job_list
 

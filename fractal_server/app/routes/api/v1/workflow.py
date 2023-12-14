@@ -24,6 +24,7 @@ from .....logger import set_logger
 from ....db import AsyncSession
 from ....db import get_db
 from ....models import ApplyWorkflow
+from ....models import Project
 from ....models import Task
 from ....models import Workflow
 from ....schemas import WorkflowCreate
@@ -324,14 +325,13 @@ async def import_workflow(
 @router.get("/workflow/", response_model=list[WorkflowRead])
 async def get_user_workflows(
     user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
 ) -> list[WorkflowRead]:
     """
     Returns all the workflows of the current user
     """
-    workflow_list = [
-        workflow
-        for project in user.project_list
-        for workflow in project.workflow_list
-    ]
-
+    stm = select(Workflow)
+    stm = stm.join(Project).where(Project.user_list.any(User.id == user.id))
+    res = await db.execute(stm)
+    workflow_list = res.scalars().all()
     return workflow_list
