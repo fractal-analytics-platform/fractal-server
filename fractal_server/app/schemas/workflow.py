@@ -128,7 +128,7 @@ class WorkflowRead(_WorkflowBase):
 
     id: int
     project_id: int
-    project: ProjectRead
+    project: Optional[ProjectRead]
     task_list: list[WorkflowTaskRead]
 
 
