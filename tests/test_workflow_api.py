@@ -235,6 +235,13 @@ async def test_get_workflow(client, MockCurrentUser, project_factory):
         assert res.json()["name"] == WORFKLOW_NAME
         assert res.json()["project"] == EXPECTED_PROJECT
 
+        # Get list of project workflows
+        res = await client.get(f"/api/v1/project/{p_id}/workflow/")
+        assert res.status_code == 200
+        workflows = res.json()
+        assert len(workflows) == 1
+        assert workflows[0]["project"] == EXPECTED_PROJECT
+
 
 async def test_get_user_workflows(
     client, MockCurrentUser, project_factory, workflow_factory, db
