@@ -74,12 +74,14 @@ async def read_dataset_list(
     """
     Get dataset list for given project
     """
+    # Access control
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
-    for ds in project.dataset_list:
-        await db.refresh(ds)
-    return project.dataset_list
+    # Find datasets of the current project
+    stm = select(Dataset).where(Dataset.project_id == project.id)
+    dataset_list = (await db.execute(stm)).scalars().all()
+    return dataset_list
 
 
 @router.get(
