@@ -60,6 +60,7 @@ class ApplyWorkflowCreate(_ApplyWorkflowBase):
     Attributes:
         first_task_index:
         last_task_index:
+        slurm_account:
     """
 
     first_task_index: Optional[int] = None
