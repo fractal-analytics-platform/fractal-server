@@ -21,12 +21,13 @@ __all__ = (
 
 class UserRead(schemas.BaseUser[int]):
     """
-    Task for `User` read from database.
+    Schema for `User` read from database.
 
     Attributes:
         slurm_user:
         cache_dir:
         username:
+        slurm_accounts:
     """
 
     slurm_user: Optional[str]
@@ -37,12 +38,13 @@ class UserRead(schemas.BaseUser[int]):
 
 class UserUpdate(schemas.BaseUserUpdate):
     """
-    Task for `User` update.
+    Schema for `User` update.
 
     Attributes:
         slurm_user:
         cache_dir:
         username:
+        slurm_accounts:
     """
 
     slurm_user: Optional[str]
@@ -79,7 +81,11 @@ class UserUpdate(schemas.BaseUserUpdate):
 
 class UserUpdateStrict(BaseModel, extra=Extra.forbid):
     """
-    Attributes that every user can self-edit
+    Schema for `User` self-editing.
+
+    Attributes:
+        cache_dir:
+        slurm_accounts:
     """
 
     cache_dir: Optional[str]
@@ -96,12 +102,13 @@ class UserUpdateStrict(BaseModel, extra=Extra.forbid):
 
 class UserCreate(schemas.BaseUserCreate):
     """
-    Task for `User` creation.
+    Schema for `User` creation.
 
     Attributes:
         slurm_user:
         cache_dir:
         username:
+        slurm_accounts:
     """
 
     slurm_user: Optional[str]
