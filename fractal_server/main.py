@@ -109,8 +109,7 @@ async def _create_first_user(
         email: New user's email
         password: New user's password
         is_superuser: `True` if the new user is a superuser
-        slurm_user: SLURM username associated to the new user
-        slurm_accounts: list of SLURM accounts associated to the new user
+        username:
     """
     try:
         async with get_async_session_context() as session:
