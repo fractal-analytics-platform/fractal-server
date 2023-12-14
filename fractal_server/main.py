@@ -96,14 +96,14 @@ async def _create_first_user(
     the relevant informations. If the user alredy exists, for example after a
     restart, it returns a message to inform that user already exists.
 
-    WARNING: This function is only meant to create the first user, and then it
-    catches and ignores IntegrityError (when multiple workers may be trying to
-    concurrently create the first user). This is not the expected behavior for
-    regular user creation, which must rather happen via the /auth/register
-    endpoint.
+    **WARNING**: This function is only meant to create the first user, and then
+    it catches and ignores `IntegrityError`s (when multiple workers may be
+    trying to concurrently create the first user). This is not the expected
+    behavior for regular user creation, which must rather happen via the
+    /auth/register endpoint.
 
     See [fastapi_users docs](https://fastapi-users.github.io/fastapi-users/
-    10.2/cookbook/create-user-programmatically)
+    12.1/cookbook/create-user-programmatically)
 
     Arguments:
         email: New user's email
