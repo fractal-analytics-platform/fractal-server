@@ -44,6 +44,13 @@ async def test_get_dataset(client, MockCurrentUser, project_factory):
         )
         assert res.status_code == 404
 
+        # Get list of project datasets
+        res = await client.get(f"/api/v1/project/{p_id}/dataset/")
+        assert res.status_code == 200
+        datasets = res.json()
+        assert len(datasets) == 1
+        assert datasets[0]["project"] == EXPECTED_PROJECT
+
 
 async def test_get_user_datasets(
     client, MockCurrentUser, project_factory, dataset_factory, db
