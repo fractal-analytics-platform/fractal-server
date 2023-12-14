@@ -58,6 +58,9 @@ async def get_workflow_list(
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
+    for wf in project.workflow_list:
+        await db.refresh(wf)
+
     return project.workflow_list
 
 
