@@ -32,23 +32,24 @@ async def test_register_user(registered_client, registered_superuser_client):
     """
 
     EMAIL = "asd@asd.asd"
-    payload_register = dict(email=EMAIL, password="12345")
+    payload_register = dict(
+        email=EMAIL, password="12345", slurm_accounts=["A", "B"]
+    )
 
-    # Non-superuser user
+    # Non-superuser user: FORBIDDEN
     res = await registered_client.post(
         f"{PREFIX}/register/", json=payload_register
     )
     debug(res.json())
     assert res.status_code == 403
 
-    # Superuser
+    # Superuser: ALLOWED
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/", json=payload_register
     )
-    debug(res.status_code)
-    debug(res.json())
-    assert res.json()["email"] == EMAIL
     assert res.status_code == 201
+    assert res.json()["email"] == EMAIL
+    assert res.json()["slurm_accounts"] == payload_register["slurm_accounts"]
 
 
 async def test_list_users(registered_client, registered_superuser_client):
@@ -98,7 +99,8 @@ async def test_show_user(registered_client, registered_superuser_client):
 
 async def test_patch_current_user_cache_dir(registered_client):
     """
-    Test several scenarios for updating `cache_dir` for the current user.
+    Test several scenarios for updating `slurm_accounts` and `cache_dir`
+    for the current user.
     """
     res = await registered_client.get(f"{PREFIX}/current-user/")
     pre_patch_user = res.json()
@@ -110,11 +112,23 @@ async def test_patch_current_user_cache_dir(registered_client):
 
     # Successful update
     assert pre_patch_user["cache_dir"] is None
+    NEW_SLURM_ACCOUNTS = ["foo", "bar"]
+    assert pre_patch_user["slurm_accounts"] != NEW_SLURM_ACCOUNTS
     res = await registered_client.patch(
-        f"{PREFIX}/current-user/", json={"cache_dir": "/tmp"}
+        f"{PREFIX}/current-user/",
+        json={"cache_dir": "/tmp", "slurm_accounts": NEW_SLURM_ACCOUNTS},
     )
     assert res.status_code == 200
     assert res.json()["cache_dir"] == "/tmp"
+    assert res.json()["slurm_accounts"] == NEW_SLURM_ACCOUNTS
+
+    # slurm_accounts must be a list of StrictStr without repetitions
+    res = await registered_client.patch(
+        f"{PREFIX}/current-user/",
+        json={"slurm_accounts": ["a", "b", "c"]},
+    )
+    assert res.status_code == 200
+    assert res.json()["slurm_accounts"] == ["a", "b", "c"]
 
     # Failed update due to empty string
     res = await registered_client.patch(
@@ -223,7 +237,11 @@ async def test_edit_users_as_superuser(registered_superuser_client):
 
     res = await registered_superuser_client.post(
         f"{PREFIX}/register/",
-        json=dict(email="test@fractal.xy", password="12345"),
+        json=dict(
+            email="test@fractal.xy",
+            password="12345",
+            slurm_accounts=["foo", "bar"],
+        ),
     )
     assert res.status_code == 201
     pre_patch_user = res.json()
@@ -236,13 +254,22 @@ async def test_edit_users_as_superuser(registered_superuser_client):
         slurm_user="slurm_patch",
         cache_dir="/patch",
         username="user_patch",
+        slurm_accounts=["FOO", "BAR", "FOO"],
     )
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{pre_patch_user['id']}/",
         json=update,
     )
+    # Fail because of repeated "FOO" in update.slurm_accounts
+    assert res.status_code == 422
+    # remove one of the two "FOO" in update.slurm_accounts
+    update["slurm_accounts"] = ["FOO", "BAR"]
+    # succeed without the repetition
+    res = await registered_superuser_client.patch(
+        f"{PREFIX}/users/{pre_patch_user['id']}/",
+        json=update,
+    )
     assert res.status_code == 200
-
     user = res.json()
     # assert that the attributes we wanted to update have actually changed
     for key, value in user.items():
