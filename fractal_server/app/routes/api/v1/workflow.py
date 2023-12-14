@@ -67,11 +67,6 @@ async def get_workflow_list(
     workflow_list = (await db.execute(stm)).scalars().all()
     return workflow_list
 
-    for wf in project.workflow_list:
-        await db.refresh(wf)
-
-    return project.workflow_list
-
 
 @router.post(
     "/project/{project_id}/workflow/",
