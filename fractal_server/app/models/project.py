@@ -24,7 +24,6 @@ class Project(_ProjectBase, SQLModel, table=True):
     )
 
     dataset_list: list[Dataset] = Relationship(
-        back_populates="project",
         sa_relationship_kwargs={
             "lazy": "selectin",
             "cascade": "all, delete-orphan",
@@ -32,7 +31,6 @@ class Project(_ProjectBase, SQLModel, table=True):
     )
 
     workflow_list: list[Workflow] = Relationship(
-        back_populates="project",
         sa_relationship_kwargs={
             "lazy": "selectin",
             "cascade": "all, delete-orphan",
