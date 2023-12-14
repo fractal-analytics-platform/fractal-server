@@ -6,6 +6,7 @@
     * Add `GET /admin/job/{job_id}/stop/` and `GET /admin/job/{job_id}/download/` endpoints (\#1059).
     * Use `DatasetRead` and `WorkflowRead` models for "dump" attributes of `ApplyWorkflowRead` (\#1049).
     * Add `slurm_accounts` to `User` schemas and add `slurm_account` to `ApplyWorkflow` schemas (\#1067).
+    * Prevent providing a `package_version` for task collection from a `.whl` local package (\#1069).
 * Database:
     * Make `ApplyWorkflow.workflow_dump` column non-nullable (\#1049).
     * Add `UserOAuth.slurm_accounts` and `ApplyWorkflow.slurm_account` columns (\#1067).
@@ -14,6 +15,8 @@
     *  Only use ubuntu-22.04 in GitHub actions (\#1061).
 * Dependencies:
     * Pin `bcrypt` to 4.0.1 to avoid warning in passlib (\#1060).
+* Runner:
+    *  Set SLURM-job working directory to `job.working_dir_user` through `--chdir` option (\#1064).
 
 # 1.4.0
 
