@@ -9,7 +9,6 @@ from fractal_server.app.schemas import ApplyWorkflowCreate
 from fractal_server.app.schemas import ApplyWorkflowRead
 from fractal_server.app.schemas import ApplyWorkflowUpdate
 from fractal_server.app.schemas import DatasetCreate
-from fractal_server.app.schemas import DatasetDump
 from fractal_server.app.schemas import DatasetRead
 from fractal_server.app.schemas import DatasetUpdate
 from fractal_server.app.schemas import ManifestV1
@@ -28,7 +27,6 @@ from fractal_server.app.schemas import UserCreate
 from fractal_server.app.schemas import UserUpdate
 from fractal_server.app.schemas import UserUpdateStrict
 from fractal_server.app.schemas import WorkflowCreate
-from fractal_server.app.schemas import WorkflowDump
 from fractal_server.app.schemas import WorkflowImport
 from fractal_server.app.schemas import WorkflowRead
 from fractal_server.app.schemas import WorkflowTaskCreate
@@ -36,6 +34,8 @@ from fractal_server.app.schemas import WorkflowTaskImport
 from fractal_server.app.schemas import WorkflowTaskRead
 from fractal_server.app.schemas import WorkflowTaskUpdate
 from fractal_server.app.schemas import WorkflowUpdate
+from fractal_server.app.schemas.applyworkflow import DatasetDump
+from fractal_server.app.schemas.applyworkflow import WorkflowDump
 
 
 def test_apply_workflow_create():

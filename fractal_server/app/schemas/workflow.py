@@ -14,7 +14,6 @@ from .task import TaskRead
 
 __all__ = (
     "WorkflowCreate",
-    "WorkflowDump",
     "WorkflowRead",
     "WorkflowUpdate",
     "WorkflowImport",
@@ -117,13 +116,7 @@ class _WorkflowBase(BaseModel):
     name: str
 
 
-class WorkflowDump(_WorkflowBase):
-    id: int
-    project_id: int
-    task_list: list[WorkflowTaskRead]
-
-
-class WorkflowRead(WorkflowDump):
+class WorkflowRead(_WorkflowBase):
     """
     Task for `Workflow` read from database.
 
@@ -134,6 +127,9 @@ class WorkflowRead(WorkflowDump):
         project:
     """
 
+    id: int
+    project_id: int
+    task_list: list[WorkflowTaskRead]
     project: ProjectRead
 
 

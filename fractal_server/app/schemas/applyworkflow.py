@@ -7,14 +7,53 @@ from pydantic import validator
 from pydantic.types import StrictStr
 
 from ._validators import valstr
-from .dataset import DatasetDump
-from .workflow import WorkflowDump
 
 __all__ = (
     "_ApplyWorkflowBase",
     "ApplyWorkflowCreate",
     "ApplyWorkflowRead",
 )
+
+
+class TaskDump(BaseModel):
+    id: int
+    source: str
+    name: str
+    command: str
+    input_type: str
+    output_type: str
+    owner: Optional[str]
+    version: Optional[str]
+
+
+class WorkflowTaskDump(BaseModel):
+    id: int
+    order: Optional[int]
+    workflow_id: int
+    task_id: int
+    task: TaskDump
+
+
+class WorkflowDump(BaseModel):
+    id: int
+    name: str
+    project_id: int
+    task_list: list[WorkflowTaskDump]
+
+
+class ResourceDump(BaseModel):
+    id: int
+    path: str
+    dataset_id: int
+
+
+class DatasetDump(BaseModel):
+    id: int
+    name: str
+    type: Optional[str]
+    read_only: bool
+    resource_list: list[ResourceDump]
+    project_id: int
 
 
 class JobStatusType(str, Enum):
