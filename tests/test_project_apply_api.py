@@ -451,7 +451,7 @@ async def test_project_apply_workflow_subset(
         debug(res.json())
         assert res.status_code == 422
 
-        # Chech workflow_dump field
+        # Check workflow_dump field
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={dataset1.id}"
