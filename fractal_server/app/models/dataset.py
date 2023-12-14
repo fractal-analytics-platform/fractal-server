@@ -38,6 +38,10 @@ class Dataset(_DatasetBase, SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     project_id: int = Field(foreign_key="project.id")
+    project: "Project" = Relationship(  # noqa: F821
+        back_populates="dataset_list",
+        sa_relationship_kwargs=dict(lazy="selectin"),
+    )
 
     list_jobs_input: list[ApplyWorkflow] = Relationship(  # noqa: F821
         sa_relationship_kwargs=dict(
