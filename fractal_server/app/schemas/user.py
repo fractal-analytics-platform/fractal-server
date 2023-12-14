@@ -3,9 +3,12 @@ from typing import Optional
 from fastapi_users import schemas
 from pydantic import BaseModel
 from pydantic import Extra
+from pydantic import Field
 from pydantic import validator
+from pydantic.types import StrictStr
 
 from ._validators import val_absolute_path
+from ._validators import val_unique_list
 from ._validators import valstr
 
 
@@ -18,32 +21,36 @@ __all__ = (
 
 class UserRead(schemas.BaseUser[int]):
     """
-    Task for `User` read from database.
+    Schema for `User` read from database.
 
     Attributes:
         slurm_user:
         cache_dir:
         username:
+        slurm_accounts:
     """
 
     slurm_user: Optional[str]
     cache_dir: Optional[str]
     username: Optional[str]
+    slurm_accounts: list[str]
 
 
 class UserUpdate(schemas.BaseUserUpdate):
     """
-    Task for `User` update.
+    Schema for `User` update.
 
     Attributes:
         slurm_user:
         cache_dir:
         username:
+        slurm_accounts:
     """
 
     slurm_user: Optional[str]
     cache_dir: Optional[str]
     username: Optional[str]
+    slurm_accounts: Optional[list[StrictStr]]
 
     # Validators
     _slurm_user = validator("slurm_user", allow_reuse=True)(
@@ -52,6 +59,10 @@ class UserUpdate(schemas.BaseUserUpdate):
     _username = validator("username", allow_reuse=True)(valstr("username"))
     _cache_dir = validator("cache_dir", allow_reuse=True)(
         val_absolute_path("cache_dir")
+    )
+
+    _slurm_accounts = validator("slurm_accounts", allow_reuse=True)(
+        val_unique_list("slurm_accounts")
     )
 
     @validator(
@@ -70,10 +81,19 @@ class UserUpdate(schemas.BaseUserUpdate):
 
 class UserUpdateStrict(BaseModel, extra=Extra.forbid):
     """
-    Attributes that every user can self-edit
+    Schema for `User` self-editing.
+
+    Attributes:
+        cache_dir:
+        slurm_accounts:
     """
 
     cache_dir: Optional[str]
+    slurm_accounts: Optional[list[StrictStr]]
+
+    _slurm_accounts = validator("slurm_accounts", allow_reuse=True)(
+        val_unique_list("slurm_accounts")
+    )
 
     _cache_dir = validator("cache_dir", allow_reuse=True)(
         val_absolute_path("cache_dir")
@@ -82,19 +102,25 @@ class UserUpdateStrict(BaseModel, extra=Extra.forbid):
 
 class UserCreate(schemas.BaseUserCreate):
     """
-    Task for `User` creation.
+    Schema for `User` creation.
 
     Attributes:
         slurm_user:
         cache_dir:
         username:
+        slurm_accounts:
     """
 
     slurm_user: Optional[str]
     cache_dir: Optional[str]
     username: Optional[str]
+    slurm_accounts: list[StrictStr] = Field(default_factory=list)
 
     # Validators
+
+    _slurm_accounts = validator("slurm_accounts", allow_reuse=True)(
+        val_unique_list("slurm_accounts")
+    )
     _slurm_user = validator("slurm_user", allow_reuse=True)(
         valstr("slurm_user")
     )
