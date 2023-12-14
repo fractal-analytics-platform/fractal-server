@@ -1,10 +1,11 @@
 from devtools import debug
 from sqlmodel import select
 
+from fractal_server.app.models import Dataset
 from fractal_server.app.models import Project
 from fractal_server.app.models import State
-from fractal_server.app.models.workflow import Workflow
-from fractal_server.app.models.workflow import WorkflowTask
+from fractal_server.app.models import Workflow
+from fractal_server.app.models import WorkflowTask
 
 
 async def test_project_name_not_unique(MockCurrentUser, db, project_factory):
@@ -328,3 +329,109 @@ async def test_insert_task_with_meta_none(
         wf = Workflow(name="my wfl", project_id=project.id)
         args = dict(arg="test arg")
         await wf.insert_task(t0.id, db=db, args=args)
+
+
+async def test_project_relationships(db):
+    """
+    Test Project/Workflow and Project/Dataset relationships
+    """
+    # Establish relationships via foreign key
+    proj = Project(name="proj", id=1)
+    wf1 = Workflow(name="wf1", project_id=1, id=11)
+    ds1 = Dataset(name="ds1", project_id=1, id=111)
+    db.add(proj)
+    db.add(wf1)
+    db.add(ds1)
+    await db.commit()
+
+    # Test relationships
+    await db.refresh(proj)
+    assert [wf.name for wf in proj.workflow_list] == ["wf1"]
+    assert [ds.name for ds in proj.dataset_list] == ["ds1"]
+    for wf in proj.workflow_list:
+        assert wf.project.name == "proj"
+    for ds in proj.dataset_list:
+        assert ds.project.name == "proj"
+
+    # Establish relationships via InstrumentedList's
+    proj.dataset_list.append(Dataset(name="ds2"))
+    proj.workflow_list.append(Workflow(name="wf2"))
+    await db.merge(proj)
+    await db.commit()
+
+    # Test relationships
+    await db.refresh(proj)
+    assert [wf.name for wf in proj.workflow_list] == ["wf1", "wf2"]
+    assert [ds.name for ds in proj.dataset_list] == ["ds1", "ds2"]
+    for wf in proj.workflow_list:
+        assert wf.project.name == "proj"
+    for ds in proj.dataset_list:
+        assert ds.project.name == "proj"
+
+    # Establish relationships via {Dataset,Workflow}.project
+    ds3 = Dataset(name="ds3", project=proj)
+    wf3 = Workflow(name="wf3", project=proj)
+    db.add(ds3)
+    db.add(wf3)
+    await db.commit()
+
+    # Test relationships
+    await db.refresh(proj)
+    assert [wf.name for wf in proj.workflow_list] == ["wf1", "wf2", "wf3"]
+    assert [ds.name for ds in proj.dataset_list] == ["ds1", "ds2", "ds3"]
+    for wf in proj.workflow_list:
+        assert wf.project.name == "proj"
+    for ds in proj.dataset_list:
+        assert ds.project.name == "proj"
+
+    # Delete Workflow
+    await db.delete(wf3)
+    await db.commit()
+
+    # Test relationships
+    await db.refresh(proj)
+    assert [wf.name for wf in proj.workflow_list] == ["wf1", "wf2"]
+    assert [ds.name for ds in proj.dataset_list] == ["ds1", "ds2", "ds3"]
+    for wf in proj.workflow_list:
+        assert wf.project.name == "proj"
+    for ds in proj.dataset_list:
+        assert ds.project.name == "proj"
+
+    # Test that wf3 was deleted (while wf1 still exists)
+    stm = select(Workflow).where(Workflow.name == "wf3")
+    res = await db.execute(stm)
+    assert res.scalars().one_or_none() is None
+    stm = select(Workflow).where(Workflow.name == "wf1")
+    res = await db.execute(stm)
+    assert res.scalars().one_or_none() is not None
+
+    # Break relationship via InstrumentedList remove method
+    proj.workflow_list.remove(wf1)
+    await db.merge(proj)
+    await db.commit()
+
+    # Test relationships
+    await db.refresh(proj)
+    assert [wf.name for wf in proj.workflow_list] == ["wf2"]
+    assert [ds.name for ds in proj.dataset_list] == ["ds1", "ds2", "ds3"]
+    for wf in proj.workflow_list:
+        assert wf.project.name == "proj"
+    for ds in proj.dataset_list:
+        assert ds.project.name == "proj"
+
+    # Test that wf1 was deleted (while wf2 still exists)
+    stm = select(Workflow).where(Workflow.name == "wf1")
+    res = await db.execute(stm)
+    assert res.scalars().one_or_none() is None
+    stm = select(Workflow).where(Workflow.name == "wf2")
+    res = await db.execute(stm)
+    assert res.scalars().one_or_none() is not None
+
+    # Delete project
+    await db.delete(proj)
+
+    # Test that all datasets/workflows were deleted
+    res = await db.execute(select(Workflow))
+    assert res.scalars().one_or_none() is None
+    res = await db.execute(select(Dataset))
+    assert res.scalars().one_or_none() is None
