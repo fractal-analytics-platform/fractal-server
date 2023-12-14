@@ -8,10 +8,12 @@ from fractal_server.app.schemas import _StateBase
 from fractal_server.app.schemas import ApplyWorkflowCreate
 from fractal_server.app.schemas import ApplyWorkflowRead
 from fractal_server.app.schemas import DatasetCreate
+from fractal_server.app.schemas import DatasetDump
 from fractal_server.app.schemas import DatasetRead
 from fractal_server.app.schemas import DatasetUpdate
 from fractal_server.app.schemas import ManifestV1
 from fractal_server.app.schemas import ProjectCreate
+from fractal_server.app.schemas import ProjectRead
 from fractal_server.app.schemas import ResourceCreate
 from fractal_server.app.schemas import ResourceRead
 from fractal_server.app.schemas import StateRead
@@ -24,6 +26,7 @@ from fractal_server.app.schemas import TaskUpdate
 from fractal_server.app.schemas import UserCreate
 from fractal_server.app.schemas import UserUpdate
 from fractal_server.app.schemas import WorkflowCreate
+from fractal_server.app.schemas import WorkflowDump
 from fractal_server.app.schemas import WorkflowImport
 from fractal_server.app.schemas import WorkflowRead
 from fractal_server.app.schemas import WorkflowTaskCreate
@@ -75,9 +78,9 @@ def test_apply_workflow_read():
         output_dataset_dump=DATASET_DUMP,
         user_email="test@fractal.com",
     )
-    assert isinstance(job1.workflow_dump, WorkflowRead)
-    assert isinstance(job1.input_dataset_dump, DatasetRead)
-    assert isinstance(job1.output_dataset_dump, DatasetRead)
+    assert isinstance(job1.workflow_dump, WorkflowDump)
+    assert isinstance(job1.input_dataset_dump, DatasetDump)
+    assert isinstance(job1.output_dataset_dump, DatasetDump)
 
     assert isinstance(job1.start_timestamp, datetime)
     job1_sanitised = job1.sanitised_dict()
@@ -117,17 +120,23 @@ def test_dataset_create():
 def test_dataset_read():
     # Successful creation - empty resource_list
     d = DatasetRead(
-        id=1, project_id=1, resource_list=[], name="n", read_only=True
+        id=1,
+        project_id=1,
+        project=ProjectRead(id=1, name="project", read_only=False),
+        resource_list=[],
+        name="n",
+        read_only=True,
     )
     debug(d)
     # Successful creation - non-trivial resource_list
     r1 = ResourceRead(id=1, dataset_id=1, path="/something")
     r2 = ResourceRead(id=1, dataset_id=1, path="/something")
     rlist = [r1, r2]
-    d = DatasetRead(
-        id=1, project_id=1, resource_list=rlist, name="n", read_only=False
-    )
-    debug(d)
+    with pytest.raises(ValidationError):
+        # missing "project"
+        DatasetRead(
+            id=1, project_id=1, resource_list=rlist, name="n", read_only=False
+        )
 
 
 def test_dataset_update():
@@ -446,7 +455,13 @@ def test_workflow_import():
 
 
 def test_workflow_read_empty_task_list():
-    w = WorkflowRead(id=1, name="workflow", project_id=1, task_list=[])
+    w = WorkflowRead(
+        id=1,
+        name="workflow",
+        project_id=1,
+        task_list=[],
+        project=ProjectRead(id=1, name="project", read_only=False),
+    )
     debug(w)
 
 
@@ -466,7 +481,11 @@ def test_workflow_read_non_empty_task_list():
     wft2 = WorkflowTaskRead(id=2, task_id=1, workflow_id=1, task=t1)
     # Create a WorkflowRead
     w = WorkflowRead(
-        id=1, name="workflow", project_id=1, task_list=[wft1, wft2]
+        id=1,
+        name="workflow",
+        project_id=1,
+        task_list=[wft1, wft2],
+        project=ProjectRead(id=1, name="project", read_only=False),
     )
     debug(w)
 

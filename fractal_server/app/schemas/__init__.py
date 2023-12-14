@@ -6,6 +6,7 @@ from .applyworkflow import ApplyWorkflowRead  # noqa: F401
 from .applyworkflow import ApplyWorkflowUpdate  # noqa: F401
 from .applyworkflow import JobStatusType  # noqa: F401
 from .dataset import DatasetCreate  # noqa: F401
+from .dataset import DatasetDump  # noqa: F401
 from .dataset import DatasetRead  # noqa: F401
 from .dataset import DatasetStatusRead  # noqa: F401
 from .dataset import DatasetUpdate  # noqa: F401
@@ -28,6 +29,7 @@ from .task_collection import TaskCollectStatus  # noqa: F401
 from .user import UserCreate  # noqa: F401
 from .user import UserUpdate  # noqa: F401
 from .workflow import WorkflowCreate  # noqa: F401
+from .workflow import WorkflowDump  # noqa: F401
 from .workflow import WorkflowExport  # noqa: F401
 from .workflow import WorkflowImport  # noqa: F401
 from .workflow import WorkflowRead  # noqa: F401
