@@ -262,8 +262,8 @@ async def test_edit_users_as_superuser(registered_superuser_client):
     )
     # Fail because of repeated "FOO" in update.slurm_accounts
     assert res.status_code == 422
-    # remove (pop) one of the two "FOO" in update.slurm_accounts
-    update["slurm_accounts"].pop(0)
+    # remove one of the two "FOO" in update.slurm_accounts
+    update["slurm_accounts"] = ["FOO", "BAR"]
     # succeed without the repetition
     res = await registered_superuser_client.patch(
         f"{PREFIX}/users/{pre_patch_user['id']}/",
