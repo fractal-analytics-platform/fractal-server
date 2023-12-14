@@ -6,8 +6,8 @@ from pydantic import BaseModel
 from pydantic import validator
 
 from ._validators import valstr
-from .dataset import DatasetRead
-from .workflow import WorkflowRead
+from .dataset import DatasetDump
+from .workflow import WorkflowDump
 
 __all__ = (
     "_ApplyWorkflowBase",
@@ -128,11 +128,11 @@ class ApplyWorkflowRead(_ApplyWorkflowBase):
     project_id: Optional[int]
     user_email: str
     workflow_id: Optional[int]
-    workflow_dump: Optional[WorkflowRead]
+    workflow_dump: Optional[WorkflowDump]
     input_dataset_id: Optional[int]
-    input_dataset_dump: Optional[DatasetRead]
+    input_dataset_dump: Optional[DatasetDump]
     output_dataset_id: Optional[int]
-    output_dataset_dump: Optional[DatasetRead]
+    output_dataset_dump: Optional[DatasetDump]
     start_timestamp: datetime
     end_timestamp: Optional[datetime]
     status: str

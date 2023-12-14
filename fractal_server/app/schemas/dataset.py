@@ -14,6 +14,7 @@ from .workflow import WorkflowTaskStatusType
 __all__ = (
     "DatasetUpdate",
     "DatasetCreate",
+    "DatasetDump",
     "DatasetRead",
     "ResourceCreate",
     "ResourceRead",
@@ -130,22 +131,26 @@ class DatasetCreate(_DatasetBase):
     _type = validator("type", allow_reuse=True)(valstr("type"))
 
 
-class DatasetRead(_DatasetBase):
+class DatasetDump(_DatasetBase):
+    id: int
+    resource_list: list[ResourceRead]
+    project_id: int
+    read_only: bool
+
+
+class DatasetRead(DatasetDump):
     """
     Class for `Dataset` read from database.
 
     Attributes:
         id:
+        read_only:
         resource_list:
         project_id:
-        read_only:
+        project:
     """
 
-    id: int
-    resource_list: list[ResourceRead]
-    project_id: int
-    read_only: bool
-    project: Optional[ProjectRead]
+    project: ProjectRead
 
 
 class DatasetStatusRead(BaseModel):
