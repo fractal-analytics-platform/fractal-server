@@ -55,9 +55,18 @@ async def get_workflow_list(
     """
     Get workflow list for given project
     """
+    # Access control
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
+    # Find workflows of the current project. Note: this select/where approach
+    # has much better scaling than refreshing all elements of
+    # `project.workflow_list` - ref
+    # https://github.com/fractal-analytics-platform/fractal-server/pull/1082#issuecomment-1856676097.
+    stm = select(Workflow).where(Workflow.project_id == project.id)
+    workflow_list = (await db.execute(stm)).scalars().all()
+    return workflow_list
+
     for wf in project.workflow_list:
         await db.refresh(wf)
 
