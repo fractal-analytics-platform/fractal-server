@@ -7,9 +7,9 @@ from pydantic import validator
 
 from ._validators import val_absolute_path
 from ._validators import valstr
+from .project import ProjectRead
 from .workflow import WorkflowTaskRead
 from .workflow import WorkflowTaskStatusType
-
 
 __all__ = (
     "DatasetUpdate",
@@ -144,6 +144,7 @@ class DatasetRead(_DatasetBase):
     id: int
     resource_list: list[ResourceRead]
     project_id: int
+    project: ProjectRead
     read_only: bool
 
 
