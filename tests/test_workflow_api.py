@@ -443,8 +443,8 @@ async def test_get_project_workflows(
 
         res = await client.get(f"api/v1/project/{project.id}/workflow/")
 
-        workflow_list = res.json()
-        assert len(workflow_list) == 3
+        workflows = res.json()
+        assert len(workflows) == 3
         assert len((await db.execute(select(Workflow))).scalars().all()) == 4
 
 
