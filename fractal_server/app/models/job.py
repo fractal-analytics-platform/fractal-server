@@ -26,8 +26,6 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
         project_id:
             ID of the project the workflow belongs to, or `None` if the project
             was deleted.
-        user_email:
-        slurm_account:
         input_dataset_id:
             ID of the input dataset, or `None` if the dataset was deleted.
         output_dataset_id:
@@ -53,6 +51,12 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
             Forward of the workflow logs.
         user_email:
             Email address of the user who submitted the job.
+        slurm_account:
+            Account to be used when submitting the job to SLURM (see "account"
+            option in [`sbatch`
+            documentation](https://slurm.schedmd.com/sbatch.html#SECTION_OPTIONS)).
+        first_task_index:
+        last_task_index:
     """
 
     class Config:
@@ -61,9 +65,7 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     project_id: Optional[int] = Field(foreign_key="project.id")
-
     workflow_id: Optional[int] = Field(foreign_key="workflow.id")
-
     input_dataset_id: Optional[int] = Field(foreign_key="dataset.id")
     output_dataset_id: Optional[int] = Field(foreign_key="dataset.id")
 
