@@ -100,6 +100,10 @@ async def _get_workflow_check_owner(
             detail=(f"Invalid {project_id=} for {workflow_id=}."),
         )
 
+    # Refresh so that workflow.project relationship is loaded (see discussion
+    # in issue #1063)
+    await db.refresh(workflow)
+
     return workflow
 
 
@@ -257,6 +261,11 @@ async def _get_dataset_check_owner(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Invalid {project_id=} for {dataset_id=}",
         )
+
+    # Refresh so that dataset.project relationship is loaded (see discussion
+    # in issue #1063)
+    await db.refresh(dataset)
+
     return dict(dataset=dataset, project=project)
 
 

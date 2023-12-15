@@ -8,28 +8,48 @@ from fractal_server.app.schemas import JobStatusType
 PREFIX = "api/v1"
 
 
-async def test_get_dataset(
-    app, client, MockCurrentUser, db, project_factory, dataset_factory
-):
+async def test_get_dataset(client, MockCurrentUser, project_factory):
+    """
+    GIVEN a Dataset in the db
+    WHEN the endpoint to GET a Dataset by its id is called
+    THEN the Dataset is returned
+    """
     async with MockCurrentUser(persist=True) as user:
+        # Create project
         project = await project_factory(user)
-        dataset = await dataset_factory(project_id=project.id)
-        project_id = project.id
-        dataset_id = dataset.id
-        # Show existing dataset
-        res = await client.get(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
+        p_id = project.id
+        # Create dataset
+        DATASET_NAME = "My Dataset"
+        payload = dict(name=DATASET_NAME, task_list=[])
+        res = await client.post(
+            f"api/v1/project/{p_id}/dataset/",
+            json=payload,
         )
+        assert res.status_code == 201
+        ds_id = res.json()["id"]
+        # Get project (useful to check dataset.project relationship)
+        res = await client.get(f"/api/v1/project/{p_id}/")
         assert res.status_code == 200
-        dataset = res.json()
-        debug(dataset)
-        assert dataset["project_id"] == project_id
-        # Show missing dataset
+        EXPECTED_PROJECT = res.json()
+        # Get dataset, and check relationship
+        res = await client.get(f"/api/v1/project/{p_id}/dataset/{ds_id}/")
+        assert res.status_code == 200
+        debug(res.json())
+        assert res.json()["name"] == DATASET_NAME
+        assert res.json()["project"] == EXPECTED_PROJECT
+        # Get missing dataset
         invalid_dataset_id = 999
         res = await client.get(
-            f"{PREFIX}/project/{project_id}/dataset/{invalid_dataset_id}/",
+            f"{PREFIX}/project/{p_id}/dataset/{invalid_dataset_id}/",
         )
         assert res.status_code == 404
+
+        # Get list of project datasets
+        res = await client.get(f"/api/v1/project/{p_id}/dataset/")
+        assert res.status_code == 200
+        datasets = res.json()
+        assert len(datasets) == 1
+        assert datasets[0]["project"] == EXPECTED_PROJECT
 
 
 async def test_get_user_datasets(
@@ -121,10 +141,10 @@ async def test_delete_dataset(
         ds_ids = (ds0.id, ds1.id)
 
         res = await client.get(f"{PREFIX}/project/{prj.id}/dataset/")
-        dataset_list = res.json()
-        assert len(dataset_list) == 2
-        assert dataset_list[0]["id"] in ds_ids
-        assert dataset_list[1]["id"] in ds_ids
+        datasets = res.json()
+        assert len(datasets) == 2
+        assert datasets[0]["id"] in ds_ids
+        assert datasets[1]["id"] in ds_ids
 
         # Add a resource to verify that the cascade works
         payload = dict(path="/some/absolute/path")
@@ -150,9 +170,9 @@ async def test_delete_dataset(
         assert len([r for r in res]) == 0
 
         res = await client.get(f"{PREFIX}/project/{prj.id}/dataset/")
-        dataset_list = res.json()
-        assert len(dataset_list) == 1
-        assert dataset_list[0]["id"] == ds1.id
+        datasets = res.json()
+        assert len(datasets) == 1
+        assert datasets[0]["id"] == ds1.id
 
 
 async def test_delete_dataset_failure(

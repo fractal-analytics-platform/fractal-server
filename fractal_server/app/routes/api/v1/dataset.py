@@ -14,6 +14,7 @@ from ....db import AsyncSession
 from ....db import get_db
 from ....models import ApplyWorkflow
 from ....models import Dataset
+from ....models import Project
 from ....models import Resource
 from ....runner._common import HISTORY_FILENAME
 from ....schemas import DatasetCreate
@@ -74,10 +75,17 @@ async def read_dataset_list(
     """
     Get dataset list for given project
     """
+    # Access control
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
-    return project.dataset_list
+    # Find datasets of the current project. Note: this select/where approach
+    # has much better scaling than refreshing all elements of
+    # `project.dataset_list` - ref
+    # https://github.com/fractal-analytics-platform/fractal-server/pull/1082#issuecomment-1856676097.
+    stm = select(Dataset).where(Dataset.project_id == project.id)
+    dataset_list = (await db.execute(stm)).scalars().all()
+    return dataset_list
 
 
 @router.get(
@@ -484,14 +492,13 @@ async def get_workflowtask_status(
 @router.get("/dataset/", response_model=list[DatasetRead])
 async def get_user_datasets(
     user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
 ) -> list[DatasetRead]:
     """
     Returns all the datasets of the current user
     """
-    dataset_list = [
-        dataset
-        for project in user.project_list
-        for dataset in project.dataset_list
-    ]
-
+    stm = select(Dataset)
+    stm = stm.join(Project).where(Project.user_list.any(User.id == user.id))
+    res = await db.execute(stm)
+    dataset_list = res.scalars().all()
     return dataset_list

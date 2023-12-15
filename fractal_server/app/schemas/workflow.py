@@ -7,10 +7,10 @@ from pydantic import validator
 
 from ._validators import valint
 from ._validators import valstr
+from .project import ProjectRead
 from .task import TaskExport
 from .task import TaskImport
 from .task import TaskRead
-
 
 __all__ = (
     "WorkflowCreate",
@@ -124,11 +124,13 @@ class WorkflowRead(_WorkflowBase):
         id:
         project_id:
         task_list:
+        project:
     """
 
     id: int
     project_id: int
     task_list: list[WorkflowTaskRead]
+    project: ProjectRead
 
 
 class WorkflowCreate(_WorkflowBase):

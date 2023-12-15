@@ -24,6 +24,7 @@ from .....logger import set_logger
 from ....db import AsyncSession
 from ....db import get_db
 from ....models import ApplyWorkflow
+from ....models import Project
 from ....models import Task
 from ....models import Workflow
 from ....schemas import WorkflowCreate
@@ -55,10 +56,17 @@ async def get_workflow_list(
     """
     Get workflow list for given project
     """
+    # Access control
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
-    return project.workflow_list
+    # Find workflows of the current project. Note: this select/where approach
+    # has much better scaling than refreshing all elements of
+    # `project.workflow_list` - ref
+    # https://github.com/fractal-analytics-platform/fractal-server/pull/1082#issuecomment-1856676097.
+    stm = select(Workflow).where(Workflow.project_id == project.id)
+    workflow_list = (await db.execute(stm)).scalars().all()
+    return workflow_list
 
 
 @router.post(
@@ -317,14 +325,13 @@ async def import_workflow(
 @router.get("/workflow/", response_model=list[WorkflowRead])
 async def get_user_workflows(
     user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
 ) -> list[WorkflowRead]:
     """
     Returns all the workflows of the current user
     """
-    workflow_list = [
-        workflow
-        for project in user.project_list
-        for workflow in project.workflow_list
-    ]
-
+    stm = select(Workflow)
+    stm = stm.join(Project).where(Project.user_list.any(User.id == user.id))
+    res = await db.execute(stm)
+    workflow_list = res.scalars().all()
     return workflow_list

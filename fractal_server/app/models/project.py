@@ -27,7 +27,7 @@ class Project(_ProjectBase, SQLModel, table=True):
         sa_relationship_kwargs={
             "lazy": "selectin",
             "cascade": "all, delete-orphan",
-        }
+        },
     )
 
     workflow_list: list[Workflow] = Relationship(
