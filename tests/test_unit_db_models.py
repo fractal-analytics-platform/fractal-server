@@ -7,11 +7,12 @@ from fractal_server.app.models import Dataset
 from fractal_server.app.models import Project
 from fractal_server.app.models import Resource
 from fractal_server.app.models import State
+from fractal_server.app.models import Task
 from fractal_server.app.models import Workflow
 from fractal_server.app.models import WorkflowTask
 
 
-async def test_project(db):
+async def test_projects(db):
 
     p1 = Project(id=1, name="project", read_only=True)
     p2 = Project(name="project")
@@ -32,7 +33,52 @@ async def test_project(db):
         assert project.job_list == []
 
 
-async def test_project_and_workflow(db):
+async def test_tasks(db):
+    args = dict(
+        name="name",
+        command="command",
+        source="source",
+        input_type="input_type",
+        output_type="output_type",
+    )
+    task1 = Task(**args)
+    db.add(task1)
+    await db.commit()
+    await db.close()
+
+    task_query = await db.execute(select(Task))
+    db_task = task_query.scalars().one()
+
+    for arg, value in args.items():
+        assert getattr(db_task, arg) == value
+    # test_defaults
+    assert db_task.meta == {}
+    assert db_task.owner is None
+    assert db_task.version is None
+    assert db_task.args_schema is None
+    assert db_task.args_schema_version is None
+    assert db_task.docs_info is None
+    assert db_task.docs_link is None
+
+    # `Task.source` has unique constraint
+    broken_task = Task(**args)  # == task1
+    with pytest.raises(IntegrityError):
+        db.add(broken_task)
+        await db.commit()
+    await db.rollback()
+    # change `.source`
+    args["source"] = "different source"
+    task2 = Task(**args)
+    db.add(task2)
+    await db.commit()
+    await db.close()
+
+    task_query = await db.execute(select(Task))
+    task_list = task_query.scalars().all()
+    assert len(task_list) == 2
+
+
+async def test_project_and_workflows(db):
 
     project = Project(name="project")
     # using `.project` relationship
@@ -84,7 +130,7 @@ async def test_project_and_workflow(db):
     assert db_workflow2.project == db_project
 
 
-async def test_project_and_dataset(db):
+async def test_project_and_datasets(db):
 
     project = Project(name="project")
     # using `.project` relationship
@@ -141,7 +187,7 @@ async def test_project_and_dataset(db):
     assert db_dataset2.project == db_project
 
 
-async def test_dataset_and_resource(db):
+async def test_dataset_and_resources(db):
 
     project = Project(name="project")
     resource1 = Resource(id=100, path="/rsc1")
