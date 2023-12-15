@@ -18,8 +18,10 @@ from ....db import DBSyncSession
 from ....db import get_db
 from ....db import get_sync_db
 from ....models import ApplyWorkflow
+from ....models import Dataset
 from ....models import LinkUserProject
 from ....models import Project
+from ....models import Workflow
 from ....runner import submit_workflow
 from ....runner import validate_workflow_compatibility
 from ....runner.common import set_start_and_last_task_index
@@ -167,7 +169,23 @@ async def delete_project(
             ),
         )
 
+    # Cascade-deletion of workflows and datasets
+    stm = select(Workflow).where(Workflow.project_id == project_id)
+    res = await db.execute(stm)
+    workflows = res.scalars().all()
+
+    stm = select(Dataset).where(Dataset.project_id == project_id)
+    res = await db.execute(stm)
+    datasets = res.scalars().all()
+
+    for wf in workflows:
+        await db.delete(wf)
+
+    for ds in datasets:
+        await db.delete(ds)
+
     await db.delete(project)
+
     await db.commit()
     await db.close()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
