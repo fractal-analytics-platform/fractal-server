@@ -169,25 +169,35 @@ async def delete_project(
             ),
         )
 
-    # Cascade-deletion of workflows and datasets
+    # Cascade operations
+
+    # Workflows
     stm = select(Workflow).where(Workflow.project_id == project_id)
     res = await db.execute(stm)
     workflows = res.scalars().all()
-
-    stm = select(Dataset).where(Dataset.project_id == project_id)
-    res = await db.execute(stm)
-    datasets = res.scalars().all()
-
     for wf in workflows:
         await db.delete(wf)
 
+    # Dataset
+    stm = select(Dataset).where(Dataset.project_id == project_id)
+    res = await db.execute(stm)
+    datasets = res.scalars().all()
     for ds in datasets:
         await db.delete(ds)
 
-    await db.delete(project)
+    # Job
+    stm = select(ApplyWorkflow).where(ApplyWorkflow.project_id == project_id)
+    res = await db.execute(stm)
+    jobs = res.scalars().all()
+    for job in jobs:
+        job.project_id = None
+        await db.merge(job)
 
     await db.commit()
-    await db.close()
+
+    await db.delete(project)
+    await db.commit()
+
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
