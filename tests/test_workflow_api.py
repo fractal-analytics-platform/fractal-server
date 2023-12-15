@@ -212,22 +212,35 @@ async def test_get_workflow(client, MockCurrentUser, project_factory):
     THEN the Workflow is returned
     """
     async with MockCurrentUser(persist=True) as user:
+        # Create project
         project = await project_factory(user)
         p_id = project.id
-        workflow = {
-            "name": "My Workflow",
-            "task_list": [],
-        }
+        # Create workflow
+        WORFKLOW_NAME = "My Workflow"
+        payload = dict(name=WORFKLOW_NAME, task_list=[])
         res = await client.post(
             f"api/v1/project/{p_id}/workflow/",
-            json=workflow,
+            json=payload,
         )
+        assert res.status_code == 201
         wf_id = res.json()["id"]
-        res = await client.get(f"/api/v1/project/{p_id}/workflow/{wf_id}/")
-
+        # Get project (useful to check workflow.project relationship)
+        res = await client.get(f"/api/v1/project/{p_id}/")
         assert res.status_code == 200
-        workflow.update({"id": wf_id, "project_id": p_id})
-        assert res.json() == workflow
+        EXPECTED_PROJECT = res.json()
+        # Get workflow, and check relationship
+        res = await client.get(f"/api/v1/project/{p_id}/workflow/{wf_id}/")
+        assert res.status_code == 200
+        debug(res.json())
+        assert res.json()["name"] == WORFKLOW_NAME
+        assert res.json()["project"] == EXPECTED_PROJECT
+
+        # Get list of project workflows
+        res = await client.get(f"/api/v1/project/{p_id}/workflow/")
+        assert res.status_code == 200
+        workflows = res.json()
+        assert len(workflows) == 1
+        assert workflows[0]["project"] == EXPECTED_PROJECT
 
 
 async def test_get_user_workflows(
@@ -430,8 +443,8 @@ async def test_get_project_workflows(
 
         res = await client.get(f"api/v1/project/{project.id}/workflow/")
 
-        workflow_list = res.json()
-        assert len(workflow_list) == 3
+        workflows = res.json()
+        assert len(workflows) == 3
         assert len((await db.execute(select(Workflow))).scalars().all()) == 4
 
 
