@@ -15,7 +15,6 @@ async def test_project(db):
     db.add(p1)
     db.add(p2)
     await db.commit()
-
     await db.close()
 
     project_query = await db.execute(select(Project))
@@ -24,6 +23,11 @@ async def test_project(db):
     assert len(project_list) == 2
     # assert that `id` is auto-incremented
     assert project_list[1].id == project_list[0].id + 1
+    for project in project_list:
+        assert project.user_list == []
+        assert project.dataset_list == []
+        assert project.workflow_list == []
+        assert project.job_list == []
 
 
 async def test_project_and_workflow(db):
@@ -34,8 +38,8 @@ async def test_project_and_workflow(db):
     db.add(project)
     db.add(w1)
     await db.commit()
+    await db.close()
 
-    # assert Project-Workflow relationship is working
     project_query = await db.execute(select(Project))
     db_project = project_query.scalars().one()
     workflow_query = await db.execute(select(Workflow))
@@ -44,12 +48,14 @@ async def test_project_and_workflow(db):
     assert len(db_project.workflow_list) == 1
     assert db_project.workflow_list[0] == db_w1
     assert db_w1.project_id == db_project.id
+    assert db_w1.project == db_project
+    assert db_w1.task_list == []
+    assert db_w1.job_list == []
 
     # use `project_id` attribute
     w2 = Workflow(name="workflow2", project_id=db_project.id)
     db.add(w2)
     await db.commit()
-
     await db.close()
 
     project_query = await db.execute(select(Project))
@@ -62,7 +68,55 @@ async def test_project_and_workflow(db):
     assert db_project.workflow_list == [db_w1, db_w2]
     assert db_w1.name == "workflow1"
     assert db_w2.name == "workflow2"
+    assert db_w2.project_id == db_project.id
     assert db_w2.project == db_project
+
+
+async def test_project_and_dataset(db):
+
+    project = Project(name="project")
+    # use `project` relationship
+    d1 = Dataset(name="dataset1", project=project)
+    db.add(project)
+    db.add(d1)
+    await db.commit()
+    await db.close()
+
+    project_query = await db.execute(select(Project))
+    db_project = project_query.scalars().one()
+    dataset_query = await db.execute(select(Dataset))
+    db_d1 = dataset_query.scalars().one()
+
+    assert len(db_project.dataset_list) == 1
+    assert db_project.dataset_list[0] == db_d1
+    assert db_d1.project_id == db_project.id
+    assert db_d1.project == db_project
+    assert db_d1.type is None
+    assert db_d1.read_only is False
+    assert db_d1.list_jobs_input == []
+    assert db_d1.list_jobs_output == []
+    assert db_d1.resource_list == []
+    assert db_d1.meta == {}
+    assert db_d1.history == []
+
+    # use `project_id` attribute
+    d2 = Dataset(name="dataset2", project_id=db_project.id)
+    db.add(d2)
+    await db.commit()
+    await db.close()
+
+    project_query = await db.execute(select(Project))
+    db_project = project_query.scalars().one()
+
+    dataset_query = await db.execute(select(Dataset))
+    db_d1, db_d2 = dataset_query.scalars().all()
+
+    assert len(db_project.dataset_list) == 2
+    assert db_project.dataset_list == [db_d1, db_d2]
+    assert db_d1.name == "dataset1"
+    assert db_d2.name == "dataset2"
+    assert db_d2.project_id == db_project.id
+    assert db_d2.project == db_project
 
 
 async def test_project_name_not_unique(MockCurrentUser, db, project_factory):
