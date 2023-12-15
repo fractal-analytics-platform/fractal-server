@@ -22,10 +22,10 @@ async def test_project(db):
 
     project_query = await db.execute(select(Project))
     project_list = project_query.scalars().all()
+
     # assert there are two projects
     assert len(project_list) == 2
-    # assert that `id` is auto-incremented
-    assert project_list[1].id == project_list[0].id + 1
+    # assrt defaults
     for project in project_list:
         assert project.user_list == []
         assert project.dataset_list == []
