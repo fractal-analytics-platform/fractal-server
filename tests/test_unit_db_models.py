@@ -8,6 +8,63 @@ from fractal_server.app.models import Workflow
 from fractal_server.app.models import WorkflowTask
 
 
+async def test_project(db):
+
+    p1 = Project(id=1, name="project", read_only=True)
+    p2 = Project(name="project")
+    db.add(p1)
+    db.add(p2)
+    await db.commit()
+
+    await db.close()
+
+    project_query = await db.execute(select(Project))
+    project_list = project_query.scalars().all()
+    # assert there are two projects
+    assert len(project_list) == 2
+    # assert that `id` is auto-incremented
+    assert project_list[1].id == project_list[0].id + 1
+
+
+async def test_project_and_workflow(db):
+
+    project = Project(name="project")
+    # use `project` relationship
+    w1 = Workflow(name="workflow1", project=project)
+    db.add(project)
+    db.add(w1)
+    await db.commit()
+
+    # assert Project-Workflow relationship is working
+    project_query = await db.execute(select(Project))
+    db_project = project_query.scalars().one()
+    workflow_query = await db.execute(select(Workflow))
+    db_w1 = workflow_query.scalars().one()
+
+    assert len(db_project.workflow_list) == 1
+    assert db_project.workflow_list[0] == db_w1
+    assert db_w1.project_id == db_project.id
+
+    # use `project_id` attribute
+    w2 = Workflow(name="workflow2", project_id=db_project.id)
+    db.add(w2)
+    await db.commit()
+
+    await db.close()
+
+    project_query = await db.execute(select(Project))
+    db_project = project_query.scalars().one()
+
+    workflow_query = await db.execute(select(Workflow))
+    db_w1, db_w2 = workflow_query.scalars().all()
+
+    assert len(db_project.workflow_list) == 2
+    assert db_project.workflow_list == [db_w1, db_w2]
+    assert db_w1.name == "workflow1"
+    assert db_w2.name == "workflow2"
+    assert db_w2.project == db_project
+
+
 async def test_project_name_not_unique(MockCurrentUser, db, project_factory):
     """
     GIVEN the fractal_server database
