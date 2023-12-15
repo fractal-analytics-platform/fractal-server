@@ -14,7 +14,7 @@ from fractal_server.app.models import WorkflowTask
 
 async def test_projects(db):
 
-    p1 = Project(id=1, name="project", read_only=True)
+    p1 = Project(name="project", read_only=True)
     p2 = Project(name="project")
     db.add(p1)
     db.add(p2)
