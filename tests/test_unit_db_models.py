@@ -130,6 +130,63 @@ async def test_project_and_workflows(db):
     assert db_workflow2.project == db_project
 
 
+async def test_workflows_tasks_and_workflowtasks(db):
+
+    # DB accepts totally empty WorkflowTasks
+    db.add(WorkflowTask())
+    await db.commit()
+    await db.close()
+    wftask_query = await db.execute(select(WorkflowTask))
+    db_wftask = wftask_query.scalars().one()
+    # test defaults
+    assert db_wftask.task_id is None
+    assert db_wftask.meta is None
+    assert db_wftask.args is None
+    assert db_wftask.workflow_id is None
+    assert db_wftask.order is None
+    assert db_wftask.task is None
+    # delete
+    await db.delete(db_wftask)
+    wftask_query = await db.execute(select(WorkflowTask))
+    assert wftask_query.scalars().one_or_none() is None
+
+    project = Project(name="project")
+    workflow = Workflow(name="workflow", project=project)
+    tasks_common_args = dict(
+        name="name",
+        command="command",
+        input_type="input_type",
+        output_type="output_type",
+    )
+    task1 = Task(**tasks_common_args, source="source1")
+    task2 = Task(**tasks_common_args, source="source2")
+    task3 = Task(**tasks_common_args, source="source3")
+    db.add(project)
+    db.add(workflow)
+    db.add(task1)
+    db.add(task2)
+    db.add(task3)
+    await db.commit()
+    await db.close()
+
+    workflow_query = await db.execute(select(Workflow))
+    db_workflow = workflow_query.scalars().one()
+    assert db_workflow.task_list == []
+    task_query = await db.execute(select(Task))
+    task_list = task_query.scalars().all()
+    assert len(task_list) == 3
+
+    for task in task_list:
+        db.add(WorkflowTask(workflow_id=db_workflow.id, task_id=task.id))
+    await db.commit()
+    await db.close()
+
+    workflow_query = await db.execute(select(Workflow))
+    db_workflow = workflow_query.scalars().one()
+    for i, task in enumerate(db_workflow.task_list):
+        assert task.order == i
+
+
 async def test_project_and_datasets(db):
 
     project = Project(name="project")
