@@ -142,7 +142,7 @@ class Settings(BaseSettings):
         etc (cf. OAuthClientConfig).
         """
         oauth_env_variable_keys = [
-            key for key in environ.keys() if "OAUTH" in key
+            key for key in environ.keys() if key.startswith("OAUTH_")
         ]
         clients_available = {
             var.split("_")[1] for var in oauth_env_variable_keys
