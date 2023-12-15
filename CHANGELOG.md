@@ -7,7 +7,6 @@
     * Use `DatasetDump` and `WorkflowDump` models for "dump" attributes of `ApplyWorkflowRead` (\#1049, \#1082).
     * Add `slurm_accounts` to `User` schemas and add `slurm_account` to `ApplyWorkflow` schemas (\#1067).
     * Prevent providing a `package_version` for task collection from a `.whl` local package (\#1069).
-    * Prevent providing a `package_version` for a Task collection from a `.whl` local package (\#1069).
     * Add `DatasetRead.project` and `WorkflowRead.project` attributes (\#1082).
 * Database:
     * Make `ApplyWorkflow.workflow_dump` column non-nullable (\#1049).
