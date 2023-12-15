@@ -23,9 +23,8 @@ async def test_project(db):
     project_query = await db.execute(select(Project))
     project_list = project_query.scalars().all()
 
-    # assert there are two projects
     assert len(project_list) == 2
-    # assrt defaults
+    # test defaults
     for project in project_list:
         assert project.user_list == []
         assert project.dataset_list == []
@@ -36,7 +35,7 @@ async def test_project(db):
 async def test_project_and_workflow(db):
 
     project = Project(name="project")
-    # use `project` relationship
+    # using `.project` relationship
     workflow1 = Workflow(name="workflow1", project=project)
     db.add(project)
     db.add(workflow1)
@@ -56,13 +55,15 @@ async def test_project_and_workflow(db):
     db_workflow1 = workflow_query.scalars().one()
 
     assert len(db_project.workflow_list) == 1
+    # test relationships
     assert db_project.workflow_list[0] == db_workflow1
     assert db_workflow1.project_id == db_project.id
     assert db_workflow1.project == db_project
+    # test defaults
     assert db_workflow1.task_list == []
     assert db_workflow1.job_list == []
 
-    # use `project_id` attribute
+    # using `.project_id` attribute
     workflow2 = Workflow(name="workflow2", project_id=db_project.id)
     db.add(workflow2)
     await db.commit()
@@ -75,6 +76,7 @@ async def test_project_and_workflow(db):
     db_workflow1, db_workflow2 = workflow_query.scalars().all()
 
     assert len(db_project.workflow_list) == 2
+    # test relationships
     assert db_project.workflow_list == [db_workflow1, db_workflow2]
     assert db_workflow1.name == workflow1.name
     assert db_workflow2.name == workflow2.name
@@ -85,7 +87,7 @@ async def test_project_and_workflow(db):
 async def test_project_and_dataset(db):
 
     project = Project(name="project")
-    # use `project` relationship
+    # using `.project` relationship
     dataset1 = Dataset(name="dataset1", project=project)
     db.add(project)
     db.add(dataset1)
@@ -105,9 +107,11 @@ async def test_project_and_dataset(db):
     db_dataset1 = dataset_query.scalars().one()
 
     assert len(db_project.dataset_list) == 1
+    # test relationships
     assert db_project.dataset_list[0] == db_dataset1
     assert db_dataset1.project_id == db_project.id
     assert db_dataset1.project == db_project
+    # test defaults
     assert db_dataset1.type is None
     assert db_dataset1.read_only is False
     assert db_dataset1.list_jobs_input == []
@@ -116,7 +120,7 @@ async def test_project_and_dataset(db):
     assert db_dataset1.meta == {}
     assert db_dataset1.history == []
 
-    # use `project_id` attribute
+    # using `.project_id` attribute
     dataset2 = Dataset(name="dataset2", project_id=db_project.id)
     db.add(dataset2)
     await db.commit()
@@ -129,6 +133,7 @@ async def test_project_and_dataset(db):
     db_dataset1, db_dataset2 = dataset_query.scalars().all()
 
     assert len(db_project.dataset_list) == 2
+    # test relationships
     assert db_project.dataset_list == [db_dataset1, db_dataset2]
     assert db_dataset1.name == "dataset1"
     assert db_dataset2.name == "dataset2"
@@ -140,6 +145,7 @@ async def test_dataset_and_resource(db):
 
     project = Project(name="project")
     resource1 = Resource(id=100, path="/rsc1")
+    # using `Dataset.resource_list`
     dataset = Dataset(
         name="dataset2", project=project, resource_list=[resource1]
     )
@@ -160,9 +166,11 @@ async def test_dataset_and_resource(db):
     resource_query = await db.execute(select(Resource))
     db_resource1 = resource_query.scalars().one()
 
+    # test relationships
     assert db_dataset.resource_list == [db_resource1]
     assert db_resource1.dataset_id == db_dataset.id
 
+    # using `.dataset_id` attribute
     resource2 = Resource(id=20, path="/rsc2", dataset_id=db_dataset.id)
     db.add(resource2)
     await db.commit()
@@ -172,8 +180,8 @@ async def test_dataset_and_resource(db):
     db_dataset = dataset_query.scalars().one()
     # assert Dataset.resource_list is ordered by Resource.id
     assert [rsc.id for rsc in db_dataset.resource_list] == [
-        resource2.id,
-        resource1.id,  # 20, 100
+        resource2.id,  # 20,
+        resource1.id,  # 100,
     ]
 
 
