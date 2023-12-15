@@ -388,7 +388,6 @@ async def dataset_factory(db: AsyncSession):
 
         _dataset = Dataset(**args)
         db.add(_dataset)
-        project.dataset_list.append(_dataset)
         db.add(project)
         await db.commit()
         await db.refresh(_dataset)
@@ -531,7 +530,6 @@ async def job_factory(db: AsyncSession):
         args.update(**kwargs)
         job = ApplyWorkflow(**args)
         db.add(job)
-        project.job_list.append(job)
         db.add(project)
         await db.commit()
         await db.refresh(job)
@@ -566,7 +564,6 @@ async def workflow_factory(db: AsyncSession):
 
         w = Workflow(**args)
         db.add(w)
-        project.workflow_list.append(w)
         db.add(project)
         await db.commit()
         await db.refresh(w)
