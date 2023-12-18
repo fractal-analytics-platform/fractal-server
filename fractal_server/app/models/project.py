@@ -5,11 +5,8 @@ from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
 from ..schemas.project import _ProjectBase
-from .dataset import Dataset
-from .job import ApplyWorkflow
 from .linkuserproject import LinkUserProject
 from .security import UserOAuth
-from .workflow import Workflow
 
 
 class Project(_ProjectBase, SQLModel, table=True):
@@ -21,24 +18,4 @@ class Project(_ProjectBase, SQLModel, table=True):
         sa_relationship_kwargs={
             "lazy": "selectin",
         },
-    )
-
-    dataset_list: list[Dataset] = Relationship(
-        sa_relationship_kwargs={
-            "lazy": "selectin",
-            "cascade": "all, delete-orphan",
-        }
-    )
-
-    workflow_list: list[Workflow] = Relationship(
-        sa_relationship_kwargs={
-            "lazy": "selectin",
-            "cascade": "all, delete-orphan",
-        },
-    )
-
-    job_list: list[ApplyWorkflow] = Relationship(
-        sa_relationship_kwargs={
-            "lazy": "selectin",
-        }
     )

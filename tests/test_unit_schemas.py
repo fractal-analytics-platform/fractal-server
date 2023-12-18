@@ -7,11 +7,13 @@ from pydantic.error_wrappers import ValidationError
 from fractal_server.app.schemas import _StateBase
 from fractal_server.app.schemas import ApplyWorkflowCreate
 from fractal_server.app.schemas import ApplyWorkflowRead
+from fractal_server.app.schemas import ApplyWorkflowUpdate
 from fractal_server.app.schemas import DatasetCreate
 from fractal_server.app.schemas import DatasetRead
 from fractal_server.app.schemas import DatasetUpdate
 from fractal_server.app.schemas import ManifestV1
 from fractal_server.app.schemas import ProjectCreate
+from fractal_server.app.schemas import ProjectRead
 from fractal_server.app.schemas import ResourceCreate
 from fractal_server.app.schemas import ResourceRead
 from fractal_server.app.schemas import StateRead
@@ -23,6 +25,7 @@ from fractal_server.app.schemas import TaskRead
 from fractal_server.app.schemas import TaskUpdate
 from fractal_server.app.schemas import UserCreate
 from fractal_server.app.schemas import UserUpdate
+from fractal_server.app.schemas import UserUpdateStrict
 from fractal_server.app.schemas import WorkflowCreate
 from fractal_server.app.schemas import WorkflowImport
 from fractal_server.app.schemas import WorkflowRead
@@ -31,25 +34,50 @@ from fractal_server.app.schemas import WorkflowTaskImport
 from fractal_server.app.schemas import WorkflowTaskRead
 from fractal_server.app.schemas import WorkflowTaskUpdate
 from fractal_server.app.schemas import WorkflowUpdate
+from fractal_server.app.schemas.applyworkflow import DatasetDump
+from fractal_server.app.schemas.applyworkflow import WorkflowDump
 
 
 def test_apply_workflow_create():
-    # Valid ApplyWorkflowCreate instance
-    valid_args = dict(worker_init="WORKER INIT")
-    job = ApplyWorkflowCreate(**valid_args)
-    debug(job)
 
-    with pytest.raises(ValueError) as e:
-        job = ApplyWorkflowCreate(first_task_index=-1)
-    debug(e)
+    # ApplyWorkflowCreate
+    valid_args = dict(
+        worker_init="worker init",
+        first_task_index=1,
+        last_task_index=10,
+        slurm_account="slurm account",
+    )
+    ApplyWorkflowCreate(**valid_args)
+    with pytest.raises(ValueError):
+        invalid_args = {**valid_args, "worker_init": " "}
+        ApplyWorkflowCreate(**invalid_args)
+    with pytest.raises(ValueError):
+        invalid_args = {**valid_args, "worker_init": None}
+        ApplyWorkflowCreate(**invalid_args)
+    with pytest.raises(ValueError):
+        invalid_args = {**valid_args, "first_task_index": -1}
+        ApplyWorkflowCreate(**invalid_args)
+    with pytest.raises(ValueError):
+        invalid_args = {**valid_args, "last_task_index": -1}
+        ApplyWorkflowCreate(**invalid_args)
+    with pytest.raises(ValueError):
+        invalid_args = {
+            **valid_args,
+            "first_task_index": 2,
+            "last_task_index": 0,
+        }
+        ApplyWorkflowCreate(**invalid_args)
 
-    with pytest.raises(ValueError) as e:
-        job = ApplyWorkflowCreate(last_task_index=-1)
-    debug(e)
 
-    with pytest.raises(ValueError) as e:
-        job = ApplyWorkflowCreate(first_task_index=2, last_task_index=0)
-    debug(e)
+def test_apply_workflow_update():
+    for status in ["submitted", "running", "done", "failed"]:
+        ApplyWorkflowUpdate(status=status)
+    with pytest.raises(ValueError):
+        ApplyWorkflowUpdate(status=" ")
+    with pytest.raises(ValueError):
+        ApplyWorkflowUpdate(status=None)
+    with pytest.raises(ValueError):
+        ApplyWorkflowUpdate(status="foo")
 
 
 def test_apply_workflow_read():
@@ -75,9 +103,9 @@ def test_apply_workflow_read():
         output_dataset_dump=DATASET_DUMP,
         user_email="test@fractal.com",
     )
-    assert isinstance(job1.workflow_dump, WorkflowRead)
-    assert isinstance(job1.input_dataset_dump, DatasetRead)
-    assert isinstance(job1.output_dataset_dump, DatasetRead)
+    assert isinstance(job1.workflow_dump, WorkflowDump)
+    assert isinstance(job1.input_dataset_dump, DatasetDump)
+    assert isinstance(job1.output_dataset_dump, DatasetDump)
 
     assert isinstance(job1.start_timestamp, datetime)
     job1_sanitised = job1.sanitised_dict()
@@ -117,17 +145,23 @@ def test_dataset_create():
 def test_dataset_read():
     # Successful creation - empty resource_list
     d = DatasetRead(
-        id=1, project_id=1, resource_list=[], name="n", read_only=True
+        id=1,
+        project_id=1,
+        project=ProjectRead(id=1, name="project", read_only=False),
+        resource_list=[],
+        name="n",
+        read_only=True,
     )
     debug(d)
     # Successful creation - non-trivial resource_list
     r1 = ResourceRead(id=1, dataset_id=1, path="/something")
     r2 = ResourceRead(id=1, dataset_id=1, path="/something")
     rlist = [r1, r2]
-    d = DatasetRead(
-        id=1, project_id=1, resource_list=rlist, name="n", read_only=False
-    )
-    debug(d)
+    with pytest.raises(ValidationError):
+        # missing "project"
+        DatasetRead(
+            id=1, project_id=1, resource_list=rlist, name="n", read_only=False
+        )
 
 
 def test_dataset_update():
@@ -262,27 +296,30 @@ def test_state_read():
 
 def test_TaskCollectPip():
     # Successful creation
-    c = TaskCollectPip(package="some-package")
-    debug(c)
-    assert c
-    c = TaskCollectPip(package="/some/package.whl")
-    debug(c)
-    assert c
+    TaskCollectPip(package="some-package")
+    TaskCollectPip(package="some-package", package_version="0.0.1")
+    TaskCollectPip(package="/some/package.whl")
     # Failed creation
     with pytest.raises(ValidationError):
-        c = TaskCollectPip(package="some/package")
+        TaskCollectPip(package="some/package")
     with pytest.raises(ValidationError):
-        c = TaskCollectPip(package="some/package.whl")
+        TaskCollectPip(package="some/package.whl")
     with pytest.raises(ValidationError):
-        c = TaskCollectPip(package="/some/package.tar.gz")
+        TaskCollectPip(package="/some/package.whl", package_version="0.0.1")
     with pytest.raises(ValidationError):
-        c = TaskCollectPip(package="some-package", package_extras="")
+        TaskCollectPip(package="/some/package.tar.gz")
     with pytest.raises(ValidationError):
-        c = TaskCollectPip(package="some-package", package_extras=None)
+        TaskCollectPip(package="some-package", package_extras="")
+    with pytest.raises(ValidationError):
+        TaskCollectPip(package="some-package", package_extras=None)
 
-    c = TaskCollectPip(package="some-package", pinned_package_versions={})
+    TaskCollectPip(package="some-package", pinned_package_versions={})
+    TaskCollectPip(
+        package="some-package",
+        pinned_package_versions={"numpy": "1.22.0", "pydantic": "1.10.10"},
+    )
     with pytest.raises(ValidationError):
-        c = TaskCollectPip(package="some-package", pinned_package_versions=1)
+        TaskCollectPip(package="some-package", pinned_package_versions=1)
 
 
 def test_task_update():
@@ -341,13 +378,38 @@ def test_user_create():
     u = UserCreate(email="a@b.c", password="asd")
     debug(u)
     assert u.slurm_user is None
+    assert u.slurm_accounts == []
     # With valid slurm_user attribute
     u = UserCreate(email="a@b.c", password="asd", slurm_user="slurm_user")
-    debug(u)
     assert u.slurm_user
     # With invalid slurm_user attribute
     with pytest.raises(ValidationError):
-        u = UserCreate(email="a@b.c", password="asd", slurm_user="  ")
+        UserCreate(email="a@b.c", password="asd", slurm_user="  ")
+
+    # slurm_accounts must be a list of StrictStr without repetitions
+
+    u = UserCreate(email="a@b.c", password="asd", slurm_accounts=["a", "b"])
+    assert u.slurm_accounts == ["a", "b"]
+
+    with pytest.raises(ValidationError):
+        UserCreate(
+            email="a@b.c", password="asd", slurm_accounts=[1, "a", True]
+        )
+
+    with pytest.raises(ValidationError):
+        UserCreate(
+            email="a@b.c",
+            password="asd",
+            slurm_accounts=["a", {"NOT": "VALID"}],
+        )
+    with pytest.raises(ValidationError):
+        # repetitions
+        UserCreate(
+            email="a@b.c",
+            password="asd",
+            slurm_accounts=["foo", "bar", "foo", "rab"],
+        )
+
     # With valid cache_dir
     CACHE_DIR = "/xxx"
     u = UserCreate(email="a@b.c", password="asd", cache_dir=f"{CACHE_DIR}   ")
@@ -376,6 +438,22 @@ def test_user_create():
     assert u.username
     with pytest.raises(ValidationError) as e:
         UserUpdate(cache_dir=None)
+
+
+def test_user_update_strict():
+
+    with pytest.raises(ValidationError):
+        UserUpdateStrict(slurm_accounts=[42, "Foo"])
+    with pytest.raises(ValidationError):
+        UserUpdateStrict(slurm_accounts=["Foo", True])
+    with pytest.raises(ValidationError):
+        UserUpdateStrict(slurm_accounts="NOT A LIST")
+    with pytest.raises(ValidationError):
+        UserUpdateStrict(slurm_accounts=[{"NOT": "VALID"}])
+    with pytest.raises(ValidationError):
+        UserUpdateStrict(slurm_accounts=["a", "b", "a"])
+
+    UserUpdateStrict(slurm_accounts=["a", "b", "c"])
 
 
 def test_fail_valstr():
@@ -443,7 +521,13 @@ def test_workflow_import():
 
 
 def test_workflow_read_empty_task_list():
-    w = WorkflowRead(id=1, name="workflow", project_id=1, task_list=[])
+    w = WorkflowRead(
+        id=1,
+        name="workflow",
+        project_id=1,
+        task_list=[],
+        project=ProjectRead(id=1, name="project", read_only=False),
+    )
     debug(w)
 
 
@@ -463,7 +547,11 @@ def test_workflow_read_non_empty_task_list():
     wft2 = WorkflowTaskRead(id=2, task_id=1, workflow_id=1, task=t1)
     # Create a WorkflowRead
     w = WorkflowRead(
-        id=1, name="workflow", project_id=1, task_list=[wft1, wft2]
+        id=1,
+        name="workflow",
+        project_id=1,
+        task_list=[wft1, wft2],
+        project=ProjectRead(id=1, name="project", read_only=False),
     )
     debug(w)
 

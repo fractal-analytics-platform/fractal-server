@@ -87,8 +87,6 @@ async def _create_first_user(
     email: str,
     password: str,
     is_superuser: bool = False,
-    slurm_user: Optional[str] = None,
-    cache_dir: Optional[str] = None,
     username: Optional[str] = None,
 ) -> None:
     """
@@ -98,20 +96,20 @@ async def _create_first_user(
     the relevant informations. If the user alredy exists, for example after a
     restart, it returns a message to inform that user already exists.
 
-    WARNING: This function is only meant to create the first user, and then it
-    catches and ignores IntegrityError (when multiple workers may be trying to
-    concurrently create the first user). This is not the expected behavior for
-    regular user creation, which must rather happen via the /auth/register
-    endpoint.
+    **WARNING**: This function is only meant to create the first user, and then
+    it catches and ignores `IntegrityError`s (when multiple workers may be
+    trying to concurrently create the first user). This is not the expected
+    behavior for regular user creation, which must rather happen via the
+    /auth/register endpoint.
 
     See [fastapi_users docs](https://fastapi-users.github.io/fastapi-users/
-    10.2/cookbook/create-user-programmatically)
+    12.1/cookbook/create-user-programmatically)
 
     Arguments:
         email: New user's email
         password: New user's password
         is_superuser: `True` if the new user is a superuser
-        slurm_user: SLURM username associated to the new user
+        username:
     """
     try:
         async with get_async_session_context() as session:
@@ -136,11 +134,7 @@ async def _create_first_user(
                         password=password,
                         is_superuser=is_superuser,
                     )
-                    if slurm_user:
-                        kwargs["slurm_user"] = slurm_user
-                    if cache_dir:
-                        kwargs["cache_dir"] = cache_dir
-                    if username:
+                    if username is not None:
                         kwargs["username"] = username
                     user = await user_manager.create(UserCreate(**kwargs))
                     logger.info(f"User {user.email} created")

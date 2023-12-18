@@ -68,9 +68,6 @@ async def test_full_workflow(
         debug(user)
 
         project = await project_factory(user)
-        assert project.dataset_list == []
-        assert project.workflow_list == []
-        assert project.job_list == []
 
         project_id = project.id
         input_dataset = await dataset_factory(
@@ -122,12 +119,16 @@ async def test_full_workflow(
         workflow_dict = res.json()
         workflow_id = workflow_dict["id"]
 
-        # Check project's relations. Note that this has to go directly through
-        # the db, since ProjectRead does not include the "list" attributes
-        await db.refresh(project)
-        assert len(project.dataset_list) == 2
-        assert len(project.workflow_list) == 1
-        assert len(project.job_list) == 0
+        # Check project-related objects
+        res = await client.get(f"{PREFIX}/project/{project_id}/workflow/")
+        assert res.status_code == 200
+        assert len(res.json()) == 1
+        res = await client.get(f"{PREFIX}/project/{project_id}/dataset/")
+        assert res.status_code == 200
+        assert len(res.json()) == 2
+        res = await client.get(f"{PREFIX}/project/{project_id}/job/")
+        assert res.status_code == 200
+        assert len(res.json()) == 0
 
         # Add a dummy task
         res = await client.post(
@@ -167,12 +168,16 @@ async def test_full_workflow(
         debug(job_data)
         assert res.status_code == 202
 
-        # Check project's relations. Note that this has to go directly through
-        # the db, since ProjectRead does not include the "list" attributes
-        await db.refresh(project)
-        assert len(project.dataset_list) == 2
-        assert len(project.workflow_list) == 1
-        assert len(project.job_list) == 1
+        # Check project-related objects
+        res = await client.get(f"{PREFIX}/project/{project_id}/workflow/")
+        assert res.status_code == 200
+        assert len(res.json()) == 1
+        res = await client.get(f"{PREFIX}/project/{project_id}/dataset/")
+        assert res.status_code == 200
+        assert len(res.json()) == 2
+        res = await client.get(f"{PREFIX}/project/{project_id}/job/")
+        assert res.status_code == 200
+        assert len(res.json()) == 1
 
         res = await client.get(
             f"{PREFIX}/project/{project_id}/job/{job_data['id']}/"

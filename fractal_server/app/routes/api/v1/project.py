@@ -18,8 +18,10 @@ from ....db import DBSyncSession
 from ....db import get_db
 from ....db import get_sync_db
 from ....models import ApplyWorkflow
+from ....models import Dataset
 from ....models import LinkUserProject
 from ....models import Project
+from ....models import Workflow
 from ....runner import submit_workflow
 from ....runner import validate_workflow_compatibility
 from ....runner.common import set_start_and_last_task_index
@@ -167,9 +169,35 @@ async def delete_project(
             ),
         )
 
+    # Cascade operations
+
+    # Workflows
+    stm = select(Workflow).where(Workflow.project_id == project_id)
+    res = await db.execute(stm)
+    workflows = res.scalars().all()
+    for wf in workflows:
+        await db.delete(wf)
+
+    # Dataset
+    stm = select(Dataset).where(Dataset.project_id == project_id)
+    res = await db.execute(stm)
+    datasets = res.scalars().all()
+    for ds in datasets:
+        await db.delete(ds)
+
+    # Job
+    stm = select(ApplyWorkflow).where(ApplyWorkflow.project_id == project_id)
+    res = await db.execute(stm)
+    jobs = res.scalars().all()
+    for job in jobs:
+        job.project_id = None
+        await db.merge(job)
+
+    await db.commit()
+
     await db.delete(project)
     await db.commit()
-    await db.close()
+
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -316,6 +344,19 @@ async def apply_workflow(
                 "in pending/running job(s)."
             ),
         )
+
+    if apply_workflow.slurm_account is not None:
+        if apply_workflow.slurm_account not in user.slurm_accounts:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    f"SLURM account '{apply_workflow.slurm_account}' is not "
+                    "among those available to the current user"
+                ),
+            )
+    else:
+        if len(user.slurm_accounts) > 0:
+            apply_workflow.slurm_account = user.slurm_accounts[0]
 
     # Add new ApplyWorkflow object to DB
     job = ApplyWorkflow(

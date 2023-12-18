@@ -1,10 +1,11 @@
 from devtools import debug
 from sqlmodel import select
 
+from fractal_server.app.models import Dataset
 from fractal_server.app.models import Project
 from fractal_server.app.models import State
-from fractal_server.app.models.workflow import Workflow
-from fractal_server.app.models.workflow import WorkflowTask
+from fractal_server.app.models import Workflow
+from fractal_server.app.models import WorkflowTask
 
 
 async def test_project_name_not_unique(MockCurrentUser, db, project_factory):
@@ -202,52 +203,6 @@ async def test_cascade_delete_workflow(
         )
 
 
-async def test_cascade_delete_project(
-    db, client, MockCurrentUser, project_factory, task_factory
-):
-    """
-    GIVEN a Project
-    WHEN the Project is deleted
-    THEN all the related Workflows are deleted
-    """
-
-    async with MockCurrentUser(persist=True) as user:
-        project = await project_factory(user=user)
-        project_id = project.id
-
-        workflow1 = Workflow(
-            name="My first Workflow",
-            project_id=project.id,
-        )
-        workflow2 = Workflow(
-            name="My second Workflow",
-            project_id=project.id,
-        )
-        db.add(workflow1)
-        db.add(workflow2)
-        await db.commit()
-
-        await db.refresh(project)
-        await db.refresh(workflow1)
-        await db.refresh(workflow2)
-
-        before_delete_wf_ids = [wf.id for wf in project.workflow_list]
-
-        await db.delete(project)
-        await db.commit()
-
-        assert not await db.get(Project, project_id)
-
-        after_delete_wf_ids = (
-            (await db.execute(select(Workflow.id))).scalars().all()
-        )
-
-        debug(set(before_delete_wf_ids), set(after_delete_wf_ids))
-        assert not set(after_delete_wf_ids).intersection(
-            set(before_delete_wf_ids)
-        )
-
-
 async def test_state_table(db):
     """
     GIVEN the State table
@@ -328,3 +283,36 @@ async def test_insert_task_with_meta_none(
         wf = Workflow(name="my wfl", project_id=project.id)
         args = dict(arg="test arg")
         await wf.insert_task(t0.id, db=db, args=args)
+
+
+async def test_project_relationships(db):
+    """
+    Test Project/Workflow and Project/Dataset relationships
+    """
+    # Establish relationships via foreign key
+    proj = Project(name="proj", id=1)
+    wf1 = Workflow(name="wf1", project_id=1, id=11)
+    ds1 = Dataset(name="ds1", project_id=1, id=111)
+    db.add(proj)
+    db.add(wf1)
+    db.add(ds1)
+    await db.commit()
+
+    # Test relationships
+    await db.refresh(wf1)
+    await db.refresh(ds1)
+    assert wf1.project.name == proj.name
+    assert ds1.project.name == proj.name
+
+    # Establish relationships via {Dataset,Workflow}.project
+    ds3 = Dataset(name="ds3", project=proj)
+    wf3 = Workflow(name="wf3", project=proj)
+    db.add(ds3)
+    db.add(wf3)
+    await db.commit()
+
+    # Test relationships
+    await db.refresh(wf3)
+    await db.refresh(ds3)
+    assert wf3.project.name == proj.name
+    assert ds3.project.name == proj.name
