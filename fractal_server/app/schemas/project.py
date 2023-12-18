@@ -41,6 +41,8 @@ class ProjectRead(_ProjectBase):
 
     Attributes:
         id:
+        name:
+        read_only:
     """
 
     id: int

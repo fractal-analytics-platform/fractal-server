@@ -2,6 +2,8 @@ import time
 
 from devtools import debug
 
+from fractal_server.app.schemas.applyworkflow import WorkflowDump
+
 PREFIX = "/api/v1"
 
 
@@ -441,7 +443,7 @@ async def test_project_apply_workflow_subset(
         debug(res.json())
         assert res.status_code == 422
 
-        # Case D (start_end and last_task_index exchanged)
+        # Case D (first_task_index and last_task_index exchanged)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={dataset1.id}"
@@ -451,21 +453,123 @@ async def test_project_apply_workflow_subset(
         debug(res.json())
         assert res.status_code == 422
 
-        # Chech workflow_dump field
+        # Check workflow_dump field
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={dataset1.id}"
             f"&output_dataset_id={dataset3.id}",
             json=dict(first_task_index=0, last_task_index=1),
         )
-        debug(res.json())
-        assert res.json()["workflow_dump"] == dict(
-            workflow.dict(exclude={"task_list"}),
-            task_list=[
-                dict(wf_task.dict(exclude={"task"}), task=wf_task.task.dict())
-                for wf_task in workflow.task_list
-            ],
-        )
+        expected_workflow_dump = WorkflowDump(
+            **dict(
+                workflow.dict(exclude={"task_list"}),
+                task_list=[
+                    dict(
+                        wf_task.dict(exclude={"task"}),
+                        task=wf_task.task.dict(),
+                    )
+                    for wf_task in workflow.task_list
+                ],
+            )
+        ).dict()
+        debug(expected_workflow_dump)
+        assert res.json()["workflow_dump"] == expected_workflow_dump
         assert res.json()["project_dump"] == project.dict(
             exclude={"user_list", "dataset_list", "workflow_list", "job_list"}
         )
+
+
+async def test_project_apply_slurm_account(
+    MockCurrentUser,
+    project_factory,
+    dataset_factory,
+    resource_factory,
+    workflow_factory,
+    task_factory,
+    client,
+    db,
+):
+    async with MockCurrentUser(persist=True) as user:
+        project = await project_factory(user)
+        dataset = await dataset_factory(
+            project_id=project.id, name="ds1", type="type1"
+        )
+
+        await resource_factory(dataset)
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(
+            input_type="type1",
+            output_type="type1",
+            source="source",
+            command="ls",
+        )
+        await workflow.insert_task(task.id, db=db)
+
+        # User has an empty SLURM accounts list
+        assert user.slurm_accounts == []
+
+        # If no slurm_account is provided, it's automatically set to None
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
+            f"?input_dataset_id={dataset.id}&output_dataset_id={dataset.id}",
+            json={},
+        )
+        assert res.status_code == 202
+        assert res.json()["slurm_account"] is None
+
+        # If a slurm_account is provided, we get a 422
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
+            f"?input_dataset_id={dataset.id}&output_dataset_id={dataset.id}",
+            json=dict(slurm_account="NOT IN THE LIST"),
+        )
+        assert res.status_code == 422
+
+    SLURM_LIST = ["foo", "bar", "rab", "oof"]
+    async with MockCurrentUser(
+        persist=True, user_kwargs={"slurm_accounts": SLURM_LIST}
+    ) as user2:
+        project = await project_factory(user2)
+        dataset = await dataset_factory(
+            project_id=project.id, name="ds2", type="type2"
+        )
+        await resource_factory(dataset)
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(
+            input_type="type2",
+            output_type="type2",
+            source="source2",
+            command="ls",
+        )
+        await workflow.insert_task(task.id, db=db)
+
+        # User has a non empty SLURM accounts list
+        assert user2.slurm_accounts == SLURM_LIST
+
+        # If no slurm_account is provided, we use the first one of the list
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
+            f"?input_dataset_id={dataset.id}&output_dataset_id={dataset.id}",
+            json={},
+        )
+        assert res.status_code == 202
+        assert res.json()["slurm_account"] == SLURM_LIST[0]
+
+        # If a slurm_account from the list is provided, we use it
+        for account in SLURM_LIST:
+            res = await client.post(
+                f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
+                f"?input_dataset_id={dataset.id}"
+                f"&output_dataset_id={dataset.id}",
+                json=dict(slurm_account=account),
+            )
+            assert res.status_code == 202
+            assert res.json()["slurm_account"] == account
+
+        # If a slurm_account outside the list is provided, we get a 422
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
+            f"?input_dataset_id={dataset.id}&output_dataset_id={dataset.id}",
+            json=dict(slurm_account="NOT IN THE LIST"),
+        )
+        assert res.status_code == 422
