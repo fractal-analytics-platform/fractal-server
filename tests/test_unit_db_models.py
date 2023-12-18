@@ -3,6 +3,7 @@ from devtools import debug
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
+from fractal_server.app.models import ApplyWorkflow
 from fractal_server.app.models import Dataset
 from fractal_server.app.models import Project
 from fractal_server.app.models import Resource
@@ -19,7 +20,7 @@ async def test_projects(db):
     db.add(p1)
     db.add(p2)
     await db.commit()
-    await db.close()
+    db.expunge_all()
 
     project_query = await db.execute(select(Project))
     project_list = project_query.scalars().all()
@@ -41,7 +42,7 @@ async def test_tasks(db):
     task1 = Task(**args)
     db.add(task1)
     await db.commit()
-    await db.close()
+    db.expunge_all()
 
     task_query = await db.execute(select(Task))
     db_task = task_query.scalars().one()
@@ -68,7 +69,7 @@ async def test_tasks(db):
     task2 = Task(**args)
     db.add(task2)
     await db.commit()
-    await db.close()
+    db.expunge_all()
 
     task_query = await db.execute(select(Task))
     task_list = task_query.scalars().all()
@@ -83,7 +84,7 @@ async def test_project_and_workflows(db):
     db.add(project)
     db.add(workflow1)
     await db.commit()
-    await db.close()
+    db.expunge_all()
 
     with pytest.raises(IntegrityError):
         # missing relatioship with project
@@ -108,7 +109,7 @@ async def test_project_and_workflows(db):
     workflow2 = Workflow(name="workflow2", project_id=db_project.id)
     db.add(workflow2)
     await db.commit()
-    await db.close()
+    db.expunge_all()
 
     project_query = await db.execute(select(Project))
     db_project = project_query.scalars().one()
@@ -128,7 +129,7 @@ async def test_workflows_tasks_and_workflowtasks(db):
     # DB accepts totally empty WorkflowTasks
     db.add(WorkflowTask())
     await db.commit()
-    await db.close()
+    db.expunge_all()
     wftask_query = await db.execute(select(WorkflowTask))
     db_wftask = wftask_query.scalars().one()
     # test defaults
@@ -160,7 +161,7 @@ async def test_workflows_tasks_and_workflowtasks(db):
     db.add(task2)
     db.add(task3)
     await db.commit()
-    await db.close()
+    db.expunge_all()
 
     workflow_query = await db.execute(select(Workflow))
     db_workflow = workflow_query.scalars().one()
@@ -172,7 +173,7 @@ async def test_workflows_tasks_and_workflowtasks(db):
     for task in task_list:
         db.add(WorkflowTask(workflow_id=db_workflow.id, task_id=task.id))
     await db.commit()
-    await db.close()
+    db.expunge_all()
 
     workflow_query = await db.execute(select(Workflow))
     db_workflow = workflow_query.scalars().one()
@@ -188,7 +189,7 @@ async def test_project_and_datasets(db):
     db.add(project)
     db.add(dataset1)
     await db.commit()
-    await db.close()
+    db.expunge_all()
 
     with pytest.raises(IntegrityError):
         # missing relatioship with project
@@ -218,7 +219,7 @@ async def test_project_and_datasets(db):
     dataset2 = Dataset(name="dataset2", project_id=db_project.id)
     db.add(dataset2)
     await db.commit()
-    await db.close()
+    db.expunge_all()
 
     project_query = await db.execute(select(Project))
     db_project = project_query.scalars().one()
@@ -244,7 +245,7 @@ async def test_dataset_and_resources(db):
     db.add(project)
     db.add(dataset)
     await db.commit()
-    await db.close()
+    db.expunge_all()
 
     with pytest.raises(IntegrityError):
         # missing relatioship with dataset
@@ -266,7 +267,7 @@ async def test_dataset_and_resources(db):
     resource2 = Resource(id=20, path="/rsc2", dataset_id=db_dataset.id)
     db.add(resource2)
     await db.commit()
-    await db.close()
+    db.expunge_all()
 
     dataset_query = await db.execute(select(Dataset))
     db_dataset = dataset_query.scalars().one()
@@ -275,6 +276,85 @@ async def test_dataset_and_resources(db):
         resource2.id,  # 20,
         resource1.id,  # 100,
     ]
+
+
+async def test_jobs(db):
+    required_args = dict(
+        user_email="test@fractal.xy",
+        input_dataset_dump={},
+        output_dataset_dump={},
+        workflow_dump={},
+        first_task_index=0,
+        last_task_index=0,
+    )
+    # test that every arg of default_args is required:
+    # fails if one arg is removed, succeed if all args are there
+    for arg in required_args:
+        with pytest.raises(IntegrityError):
+            job = ApplyWorkflow(
+                **{k: v for k, v in required_args.items() if k != arg}
+            )
+            db.add(job)
+            await db.commit()
+        await db.rollback()
+    job = ApplyWorkflow(**required_args)
+    db.add(job)
+    await db.commit()
+    db.expunge_all()
+    job_query = await db.execute(select(ApplyWorkflow))
+    db_job = job_query.scalars().one()
+    # delete
+    await db.delete(db_job)
+    job_query = await db.execute(select(WorkflowTask))
+    assert job_query.scalars().one_or_none() is None
+
+    project = Project(name="project")
+    input_dataset = Dataset(name="input dataset", project=project)
+    output_dataset = Dataset(name="output dataset", project=project)
+    workflow = Workflow(name="workflow", project=project)
+    db.add(project)
+    db.add(input_dataset)
+    db.add(output_dataset)
+    db.add(workflow)
+    await db.commit()
+    db.expunge_all()
+
+    project_query = await db.execute(select(Project))
+    db_project = project_query.scalars().one()
+    dataset_query = await db.execute(select(Dataset))
+    db_input_dataset, db_output_dataset = dataset_query.scalars().all()
+    assert db_input_dataset.name == "input dataset"
+    workflow_query = await db.execute(select(Workflow))
+    db_workflow = workflow_query.scalars().one()
+
+    N_JOBS = 3
+    for _ in range(N_JOBS):
+        job = ApplyWorkflow(
+            **required_args,
+            project_id=db_project.id,
+            workflow_id=db_workflow.id,
+            input_dataset_id=db_input_dataset.id,
+            output_dataset_id=db_output_dataset.id,
+        )
+        db.add(job)
+    await db.commit()
+    db.expunge_all()
+
+    # test relationships
+    dataset_query = await db.execute(select(Dataset))
+    db_input_dataset, db_output_dataset = dataset_query.scalars().all()
+    assert db_input_dataset.name == "input dataset"
+    assert db_output_dataset.name == "output dataset"
+    workflow_query = await db.execute(select(Workflow))
+    db_workflow = workflow_query.scalars().one()
+    job_query = await db.execute(select(ApplyWorkflow))
+    db_jobs = job_query.scalars().all()
+
+    assert len(db_jobs) == N_JOBS
+    assert len(db_input_dataset.list_jobs_input) == N_JOBS
+    assert len(db_input_dataset.list_jobs_output) == 0
+    assert len(db_output_dataset.list_jobs_input) == 0
+    assert len(db_output_dataset.list_jobs_output) == N_JOBS
 
 
 async def test_project_name_not_unique(MockCurrentUser, db, project_factory):
