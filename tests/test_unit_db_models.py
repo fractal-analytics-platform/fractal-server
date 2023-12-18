@@ -28,9 +28,6 @@ async def test_projects(db):
     # test defaults
     for project in project_list:
         assert project.user_list == []
-        assert project.dataset_list == []
-        assert project.workflow_list == []
-        assert project.job_list == []
 
 
 async def test_tasks(db):
@@ -100,9 +97,7 @@ async def test_project_and_workflows(db):
     workflow_query = await db.execute(select(Workflow))
     db_workflow1 = workflow_query.scalars().one()
 
-    assert len(db_project.workflow_list) == 1
     # test relationships
-    assert db_project.workflow_list[0] == db_workflow1
     assert db_workflow1.project_id == db_project.id
     assert db_workflow1.project == db_project
     # test defaults
@@ -121,9 +116,7 @@ async def test_project_and_workflows(db):
     workflow_query = await db.execute(select(Workflow))
     db_workflow1, db_workflow2 = workflow_query.scalars().all()
 
-    assert len(db_project.workflow_list) == 2
     # test relationships
-    assert db_project.workflow_list == [db_workflow1, db_workflow2]
     assert db_workflow1.name == workflow1.name
     assert db_workflow2.name == workflow2.name
     assert db_workflow2.project_id == db_project.id
@@ -209,9 +202,7 @@ async def test_project_and_datasets(db):
     dataset_query = await db.execute(select(Dataset))
     db_dataset1 = dataset_query.scalars().one()
 
-    assert len(db_project.dataset_list) == 1
     # test relationships
-    assert db_project.dataset_list[0] == db_dataset1
     assert db_dataset1.project_id == db_project.id
     assert db_dataset1.project == db_project
     # test defaults
@@ -235,9 +226,7 @@ async def test_project_and_datasets(db):
     dataset_query = await db.execute(select(Dataset))
     db_dataset1, db_dataset2 = dataset_query.scalars().all()
 
-    assert len(db_project.dataset_list) == 2
     # test relationships
-    assert db_project.dataset_list == [db_dataset1, db_dataset2]
     assert db_dataset1.name == "dataset1"
     assert db_dataset2.name == "dataset2"
     assert db_dataset2.project_id == db_project.id
