@@ -14,6 +14,7 @@
     * Add script for adding `ApplyWorkflow.user_email` (\#1058).
     * Add `Dataset.project` and `Workflow.project` relationships (\#1082).
     * Avoid using `Project` relationships `dataset_list` or `workflow_list` within some `GET` endpoints (\#1082).
+    * Fully remove `Project` relationships `dataset_list`, `workflow_list` and `job_list` (\#1091).
 * Testing:
     * Only use ubuntu-22.04 in GitHub actions (\#1061).
     * Improve unit testing of database models (\#1082).

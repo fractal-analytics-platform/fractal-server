@@ -483,52 +483,6 @@ async def test_cascade_delete_workflow(
         )
 
 
-async def test_cascade_delete_project(
-    db, client, MockCurrentUser, project_factory, task_factory
-):
-    """
-    GIVEN a Project
-    WHEN the Project is deleted
-    THEN all the related Workflows are deleted
-    """
-
-    async with MockCurrentUser(persist=True) as user:
-        project = await project_factory(user=user)
-        project_id = project.id
-
-        workflow1 = Workflow(
-            name="My first Workflow",
-            project_id=project.id,
-        )
-        workflow2 = Workflow(
-            name="My second Workflow",
-            project_id=project.id,
-        )
-        db.add(workflow1)
-        db.add(workflow2)
-        await db.commit()
-
-        await db.refresh(project)
-        await db.refresh(workflow1)
-        await db.refresh(workflow2)
-
-        before_delete_wf_ids = [wf.id for wf in project.workflow_list]
-
-        await db.delete(project)
-        await db.commit()
-
-        assert not await db.get(Project, project_id)
-
-        after_delete_wf_ids = (
-            (await db.execute(select(Workflow.id))).scalars().all()
-        )
-
-        debug(set(before_delete_wf_ids), set(after_delete_wf_ids))
-        assert not set(after_delete_wf_ids).intersection(
-            set(before_delete_wf_ids)
-        )
-
-
 async def test_state_table(db):
     """
     GIVEN the State table
@@ -625,28 +579,10 @@ async def test_project_relationships(db):
     await db.commit()
 
     # Test relationships
-    await db.refresh(proj)
-    assert [wf.name for wf in proj.workflow_list] == ["wf1"]
-    assert [ds.name for ds in proj.dataset_list] == ["ds1"]
-    for wf in proj.workflow_list:
-        assert wf.project.name == "proj"
-    for ds in proj.dataset_list:
-        assert ds.project.name == "proj"
-
-    # Establish relationships via InstrumentedList's
-    proj.dataset_list.append(Dataset(name="ds2"))
-    proj.workflow_list.append(Workflow(name="wf2"))
-    await db.merge(proj)
-    await db.commit()
-
-    # Test relationships
-    await db.refresh(proj)
-    assert [wf.name for wf in proj.workflow_list] == ["wf1", "wf2"]
-    assert [ds.name for ds in proj.dataset_list] == ["ds1", "ds2"]
-    for wf in proj.workflow_list:
-        assert wf.project.name == "proj"
-    for ds in proj.dataset_list:
-        assert ds.project.name == "proj"
+    await db.refresh(wf1)
+    await db.refresh(ds1)
+    assert wf1.project.name == proj.name
+    assert ds1.project.name == proj.name
 
     # Establish relationships via {Dataset,Workflow}.project
     ds3 = Dataset(name="ds3", project=proj)
@@ -656,62 +592,7 @@ async def test_project_relationships(db):
     await db.commit()
 
     # Test relationships
-    await db.refresh(proj)
-    assert [wf.name for wf in proj.workflow_list] == ["wf1", "wf2", "wf3"]
-    assert [ds.name for ds in proj.dataset_list] == ["ds1", "ds2", "ds3"]
-    for wf in proj.workflow_list:
-        assert wf.project.name == "proj"
-    for ds in proj.dataset_list:
-        assert ds.project.name == "proj"
-
-    # Delete Workflow
-    await db.delete(wf3)
-    await db.commit()
-
-    # Test relationships
-    await db.refresh(proj)
-    assert [wf.name for wf in proj.workflow_list] == ["wf1", "wf2"]
-    assert [ds.name for ds in proj.dataset_list] == ["ds1", "ds2", "ds3"]
-    for wf in proj.workflow_list:
-        assert wf.project.name == "proj"
-    for ds in proj.dataset_list:
-        assert ds.project.name == "proj"
-
-    # Test that wf3 was deleted (while wf1 still exists)
-    stm = select(Workflow).where(Workflow.name == "wf3")
-    res = await db.execute(stm)
-    assert res.scalars().one_or_none() is None
-    stm = select(Workflow).where(Workflow.name == "wf1")
-    res = await db.execute(stm)
-    assert res.scalars().one_or_none() is not None
-
-    # Break relationship via InstrumentedList remove method
-    proj.workflow_list.remove(wf1)
-    await db.merge(proj)
-    await db.commit()
-
-    # Test relationships
-    await db.refresh(proj)
-    assert [wf.name for wf in proj.workflow_list] == ["wf2"]
-    assert [ds.name for ds in proj.dataset_list] == ["ds1", "ds2", "ds3"]
-    for wf in proj.workflow_list:
-        assert wf.project.name == "proj"
-    for ds in proj.dataset_list:
-        assert ds.project.name == "proj"
-
-    # Test that wf1 was deleted (while wf2 still exists)
-    stm = select(Workflow).where(Workflow.name == "wf1")
-    res = await db.execute(stm)
-    assert res.scalars().one_or_none() is None
-    stm = select(Workflow).where(Workflow.name == "wf2")
-    res = await db.execute(stm)
-    assert res.scalars().one_or_none() is not None
-
-    # Delete project
-    await db.delete(proj)
-
-    # Test that all datasets/workflows were deleted
-    res = await db.execute(select(Workflow))
-    assert res.scalars().one_or_none() is None
-    res = await db.execute(select(Dataset))
-    assert res.scalars().one_or_none() is None
+    await db.refresh(wf3)
+    await db.refresh(ds3)
+    assert wf3.project.name == proj.name
+    assert ds3.project.name == proj.name

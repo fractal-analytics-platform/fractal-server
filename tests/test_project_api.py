@@ -216,11 +216,6 @@ async def test_delete_project(
         assert job.input_dataset_id == job.output_dataset_id == dataset_id
         assert job.workflow_id == wf.id
 
-        # Check that a project-related job exists - via relationship
-        project = await db.get(Project, project_id)
-        assert len(project.job_list) == 1
-        assert project.job_list[0].id == job.id
-
         # Delete the project
         res = await client.delete(f"{PREFIX}/project/{p['id']}/")
         assert res.status_code == 204
