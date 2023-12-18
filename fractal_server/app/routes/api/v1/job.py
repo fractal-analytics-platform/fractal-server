@@ -141,7 +141,12 @@ async def get_job_list(
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
-    return project.job_list
+
+    stm = select(ApplyWorkflow).where(ApplyWorkflow.project_id == project.id)
+    res = await db.execute(stm)
+    job_list = res.scalars().all()
+
+    return job_list
 
 
 @router.get(
