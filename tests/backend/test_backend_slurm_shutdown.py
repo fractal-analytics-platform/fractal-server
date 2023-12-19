@@ -5,7 +5,7 @@ import time
 import pytest
 from devtools import debug
 
-from .fixtures_slurm import run_squeue
+from ..fixtures_slurm import run_squeue
 from fractal_server.app.runner._slurm.executor import FractalSlurmExecutor
 from fractal_server.app.runner.common import JobExecutionError
 

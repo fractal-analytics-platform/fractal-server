@@ -9,7 +9,7 @@ import pytest
 from devtools import debug
 from sqlmodel import select
 
-from .fixtures_tasks import execute_command
+from ..fixtures_tasks import execute_command
 from fractal_server.app.models import State
 from fractal_server.app.models import Task
 from fractal_server.app.routes.api.v1.task_collection import (

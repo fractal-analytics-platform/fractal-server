@@ -6,8 +6,8 @@ from typing import Callable
 import pytest
 from devtools import debug
 
-from .fixtures_slurm import run_squeue
-from .fixtures_slurm import scancel_all_jobs_of_a_slurm_user
+from ..fixtures_slurm import run_squeue
+from ..fixtures_slurm import scancel_all_jobs_of_a_slurm_user
 from fractal_server.app.runner._slurm.executor import (
     FractalSlurmExecutor,
 )  # noqa
