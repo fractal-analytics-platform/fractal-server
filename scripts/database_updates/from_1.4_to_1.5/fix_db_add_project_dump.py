@@ -10,6 +10,7 @@ from sqlalchemy.exc import IntegrityError
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.job import ApplyWorkflow
 from fractal_server.app.models.project import Project
+from fractal_server.app.schemas.applyworkflow import ProjectDump
 
 with next(get_sync_db()) as db:
 
@@ -20,7 +21,7 @@ with next(get_sync_db()) as db:
 
     # Loop over jobs
     for row in sorted(rows, key=lambda x: x.id):
-        if not row.project_dump:  # protects from overriding
+        if row.project_dump == {}:  # protects from overriding
             if row.project_id is None:
                 logging.warning(f"Job with ID {row.id:4d} has project_id=None")
                 project_dump = dict(
@@ -33,13 +34,12 @@ with next(get_sync_db()) as db:
                         f"Job {row.id} has project_id={row.project_id}, "
                         f"but the Project {row.project_id} does not exist"
                     )
-                project_dump = project.dict(
-                    include={"id", "name", "read_only"}
-                )
+                project_dump = project.dict(exclude={"user_list"})
 
             logging.warning(
                 f"Handling job with ID {row.id:4d}, setting {project_dump=}"
             )
+            ProjectDump(project_dump)
             row.project_dump = project_dump
             db.add(row)
             db.commit()

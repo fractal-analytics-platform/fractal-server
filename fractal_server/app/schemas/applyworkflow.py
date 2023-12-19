@@ -1,15 +1,13 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any
 from typing import Optional
-from typing import Union
 
 from pydantic import BaseModel
+from pydantic import Extra
 from pydantic import validator
 from pydantic.types import StrictStr
 
 from ._validators import valstr
-from .project import ProjectRead
 
 
 __all__ = (
@@ -17,6 +15,12 @@ __all__ = (
     "ApplyWorkflowCreate",
     "ApplyWorkflowRead",
 )
+
+
+class ProjectDump(BaseModel, extra=Extra.forbid):
+    id: int
+    name: str
+    read_only: bool
 
 
 class TaskDump(BaseModel):
@@ -176,7 +180,7 @@ class ApplyWorkflowRead(_ApplyWorkflowBase):
 
     id: int
     project_id: Optional[int]
-    project_dump: Optional[Union[ProjectRead, dict[str, Any]]]
+    project_dump: Optional[ProjectDump]
     user_email: str
     slurm_account: Optional[str]
     workflow_id: Optional[int]
