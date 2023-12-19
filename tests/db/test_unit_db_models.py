@@ -297,10 +297,40 @@ async def test_project_and_datasets(db):
     db_dataset1, db_dataset2 = dataset_query.scalars().all()
 
     # test relationships
-    assert db_dataset1.name == "dataset1"
-    assert db_dataset2.name == "dataset2"
+    assert db_dataset1.name == dataset1.name
+    assert db_dataset2.name == dataset2.name
     assert db_dataset2.project_id == db_project.id
     assert db_dataset2.project == db_project
+
+    # delete just one dataset
+    await db.delete(db_dataset2)
+
+    dataset_query = await db.execute(select(Dataset))
+    db_dataset = dataset_query.scalars().one()
+    assert db_dataset.name == dataset1.name
+
+    # delete the project
+    project_query = await db.execute(select(Project))
+    db_project = project_query.scalars().one()
+    await db.delete(db_project)
+    if DB_ENGINE == "postgres":
+        with pytest.raises(IntegrityError):
+            # Dataset.project_id violates fk-contraint in Postgres
+            await db.commit()
+    else:
+        # SQLite does not handle fk-constraints well
+        await db.commit()
+        db.expunge_all()
+
+        project_query = await db.execute(select(Project))
+        db_project = project_query.scalars().one_or_none()
+        assert db_project is None
+
+        dataset_query = await db.execute(select(Dataset))
+        db_dataset = dataset_query.scalars().one_or_none()
+        assert db_dataset is not None  # no cascade
+        assert db_dataset.project_id is not None  # fk is not null
+        assert db_dataset.project is None  # relationship is null
 
 
 async def test_dataset_and_resources(db):
