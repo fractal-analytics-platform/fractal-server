@@ -34,8 +34,6 @@ from typing import Optional
 from typing import Type
 
 from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import status
 from fastapi_users import BaseUserManager
 from fastapi_users import FastAPIUsers
 from fastapi_users import IntegerIDMixin
@@ -232,15 +230,11 @@ fastapi_users = FastAPIUsers[User, int](
 )
 
 
-# Create dependencies for active user and for superuser
+# Create dependencies for users
 current_active_user = fastapi_users.current_user(active=True)
-
-
-async def current_active_superuser(user=Depends(current_active_user)):
-    # See https://github.com/fastapi-users/fastapi-users/discussions/454
-    if not user.is_superuser:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="This action is restricted to superusers",
-        )
-    return user
+current_active_verified_user = fastapi_users.current_user(
+    active=True, verified=True
+)
+current_active_superuser = fastapi_users.current_user(
+    active=True, superuser=True
+)

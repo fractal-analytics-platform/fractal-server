@@ -16,7 +16,7 @@ from ....models import WorkflowTask
 from ....schemas import TaskCreate
 from ....schemas import TaskRead
 from ....schemas import TaskUpdate
-from ....security import current_active_user
+from ....security import current_active_verified_user
 from ....security import User
 from ._aux_functions import _get_task_check_owner
 
@@ -27,7 +27,7 @@ logger = set_logger(__name__)
 
 @router.get("/", response_model=list[TaskRead])
 async def get_list_task(
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[TaskRead]:
     """
@@ -43,7 +43,7 @@ async def get_list_task(
 @router.get("/{task_id}/", response_model=TaskRead)
 async def get_task(
     task_id: int,
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_db),
 ) -> TaskRead:
     """
@@ -62,7 +62,7 @@ async def get_task(
 async def patch_task(
     task_id: int,
     task_update: TaskUpdate,
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[TaskRead]:
     """
@@ -106,7 +106,7 @@ async def patch_task(
 @router.post("/", response_model=TaskRead, status_code=status.HTTP_201_CREATED)
 async def create_task(
     task: TaskCreate,
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[TaskRead]:
     """
@@ -152,7 +152,7 @@ async def create_task(
 @router.delete("/{task_id}/", status_code=204)
 async def delete_task(
     task_id: int,
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
     """

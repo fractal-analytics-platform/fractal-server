@@ -26,7 +26,7 @@ from ....models import Task
 from ....schemas import WorkflowTaskCreate
 from ....schemas import WorkflowTaskRead
 from ....schemas import WorkflowTaskUpdate
-from ....security import current_active_user
+from ....security import current_active_verified_user
 from ....security import User
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import _get_workflow_task_check_owner
@@ -44,7 +44,7 @@ async def create_workflowtask(
     workflow_id: int,
     task_id: int,
     new_task: WorkflowTaskCreate,
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[WorkflowTaskRead]:
     """
@@ -82,7 +82,7 @@ async def read_workflowtask(
     project_id: int,
     workflow_id: int,
     workflow_task_id: int,
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_db),
 ):
     workflow_task, _ = await _get_workflow_task_check_owner(
@@ -104,7 +104,7 @@ async def update_workflowtask(
     workflow_id: int,
     workflow_task_id: int,
     workflow_task_update: WorkflowTaskUpdate,
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[WorkflowTaskRead]:
     """
@@ -159,7 +159,7 @@ async def delete_workflowtask(
     project_id: int,
     workflow_id: int,
     workflow_task_id: int,
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
     """
