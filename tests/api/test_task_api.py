@@ -262,7 +262,8 @@ async def test_patch_task(
 @pytest.mark.parametrize("owner", (None, "another_owner"))
 async def test_patch_task_different_users(
     db,
-    registered_superuser_client,
+    MockCurrentUser,
+    client,
     task_factory,
     username,
     slurm_user,
@@ -284,30 +285,34 @@ async def test_patch_task_different_users(
         payload["username"] = username
     if slurm_user:
         payload["slurm_user"] = slurm_user
-    if payload:
-        res = await registered_superuser_client.get("/auth/current-user/")
+
+    async with MockCurrentUser(user_kwargs=dict(is_superuser=True)) as user:
+        debug(user)
+        res = await client.get("/auth/current-user/")
+        debug(res.json())
+        assert res.status_code == 200
         superuser_id = res.json()["id"]
 
-        res = await registered_superuser_client.patch(
-            f"/auth/users/{superuser_id}/",
-            json=payload,
-        )
-        assert res.status_code == 200
+        if payload:
+            res = await client.patch(
+                f"/auth/users/{superuser_id}/",
+                json=payload,
+            )
+            assert res.status_code == 200
 
     # Patch task
     NEW_NAME = "new name"
     payload = TaskUpdate(name=NEW_NAME).dict(exclude_unset=True)
     debug(payload)
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/{task.id}/", json=payload
-    )
-    debug(res.json())
-    assert res.status_code == 200
-    assert res.json()["owner"] == owner
-    if username:
-        assert res.json()["owner"] != username
-    if slurm_user:
-        assert res.json()["owner"] != slurm_user
+    async with MockCurrentUser(user_kwargs=dict(is_superuser=True)):
+        res = await client.patch(f"{PREFIX}/{task.id}/", json=payload)
+        debug(res.json())
+        assert res.status_code == 200
+        assert res.json()["owner"] == owner
+        if username:
+            assert res.json()["owner"] != username
+        if slurm_user:
+            assert res.json()["owner"] != slurm_user
 
 
 async def test_get_task(task_factory, client, MockCurrentUser):
