@@ -14,8 +14,6 @@ from fractal_server.app.models import WorkflowTask
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 
-DB_ENGINE = Inject(get_settings).DB_ENGINE
-
 
 async def test_projects(db):
 
@@ -150,6 +148,8 @@ async def test_project_and_workflows(db):
     project_query = await db.execute(select(Project))
     db_project = project_query.scalars().one()
     await db.delete(db_project)
+
+    DB_ENGINE = Inject(get_settings).DB_ENGINE
     if DB_ENGINE == "postgres":
         with pytest.raises(IntegrityError):
             # Workflow.project_id violates fk-contraint in Postgres
@@ -313,6 +313,8 @@ async def test_project_and_datasets(db):
     project_query = await db.execute(select(Project))
     db_project = project_query.scalars().one()
     await db.delete(db_project)
+
+    DB_ENGINE = Inject(get_settings).DB_ENGINE
     if DB_ENGINE == "postgres":
         with pytest.raises(IntegrityError):
             # Dataset.project_id violates fk-contraint in Postgres
@@ -529,6 +531,8 @@ async def test_jobs(db):
     project_query = await db.execute(select(Project))
     db_project = project_query.scalars().one()
     await db.delete(db_project)
+
+    DB_ENGINE = Inject(get_settings).DB_ENGINE
     if DB_ENGINE == "postgres":
         with pytest.raises(IntegrityError):
             await db.commit()
