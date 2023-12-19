@@ -33,7 +33,7 @@ from ....schemas import WorkflowImport
 from ....schemas import WorkflowRead
 from ....schemas import WorkflowTaskCreate
 from ....schemas import WorkflowUpdate
-from ....security import current_active_user
+from ....security import current_active_verified_user
 from ....security import User
 from ._aux_functions import _check_workflow_exists
 from ._aux_functions import _get_active_jobs_statement
@@ -50,7 +50,7 @@ router = APIRouter()
 )
 async def get_workflow_list(
     project_id: int,
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[list[WorkflowRead]]:
     """
@@ -77,7 +77,7 @@ async def get_workflow_list(
 async def create_workflow(
     project_id: int,
     workflow: WorkflowCreate,
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[WorkflowRead]:
     """
@@ -107,7 +107,7 @@ async def create_workflow(
 async def read_workflow(
     project_id: int,
     workflow_id: int,
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[WorkflowRead]:
     """
@@ -129,7 +129,7 @@ async def update_workflow(
     project_id: int,
     workflow_id: int,
     patch: WorkflowUpdate,
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[WorkflowRead]:
     """
@@ -180,7 +180,7 @@ async def update_workflow(
 async def delete_workflow(
     project_id: int,
     workflow_id: int,
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
     """
@@ -221,7 +221,7 @@ async def delete_workflow(
 async def export_worfklow(
     project_id: int,
     workflow_id: int,
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[WorkflowExport]:
     """
@@ -254,7 +254,7 @@ async def export_worfklow(
 async def import_workflow(
     project_id: int,
     workflow: WorkflowImport,
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[WorkflowRead]:
     """
@@ -324,7 +324,7 @@ async def import_workflow(
 
 @router.get("/workflow/", response_model=list[WorkflowRead])
 async def get_user_workflows(
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[WorkflowRead]:
     """

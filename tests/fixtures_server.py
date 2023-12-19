@@ -270,7 +270,9 @@ async def registered_superuser_client(
 
 @pytest.fixture
 async def MockCurrentUser(app, db):
+    from fractal_server.app.security import current_active_verified_user
     from fractal_server.app.security import current_active_user
+    from fractal_server.app.security import current_active_superuser
     from fractal_server.app.security import User
 
     def _random_email():
@@ -295,16 +297,17 @@ async def MockCurrentUser(app, db):
                 email=self.email,
                 hashed_password="fake_hashed_password",
                 slurm_user="test01",
+                is_verified=True,
             )
             if self.user_kwargs:
                 defaults.update(self.user_kwargs)
             self.user = User(name=self.name, **defaults)
 
-        def current_active_user_override(self):
-            def __current_active_user_override():
+        def current_user_override(self):
+            def __current_user_override():
                 return self.user
 
-            return __current_active_user_override
+            return __current_user_override
 
         async def __aenter__(self):
             self._create_user()
@@ -324,19 +327,56 @@ async def MockCurrentUser(app, db):
                 # Removing object from test db session, so that we can operate
                 # on user from other sessions
                 db.expunge(self.user)
-            self.previous_user = app.dependency_overrides.get(
-                current_active_user, None
-            )
-            app.dependency_overrides[
-                current_active_user
-            ] = self.current_active_user_override()
+
+            if self.user.is_active:
+                self.previous_active_user = app.dependency_overrides.get(
+                    current_active_user, None
+                )
+                app.dependency_overrides[
+                    current_active_verified_user
+                ] = self.current_user_override()
+            else:
+                self.previous_active_user = None
+
+            if self.user.is_active and self.user.is_verified:
+                self.previous_active_verified_user = (
+                    app.dependency_overrides.get(  # noqa
+                        current_active_verified_user, None
+                    )
+                )
+                app.dependency_overrides[
+                    current_active_user
+                ] = self.current_user_override()
+            else:
+                self.previous_active_verified_user = None
+            if self.user.is_active and self.user.is_superuser:
+                self.previous_active_superuser = app.dependency_overrides.get(
+                    current_active_superuser, None
+                )
+                app.dependency_overrides[
+                    current_active_superuser
+                ] = self.current_user_override()
+            else:
+                self.previous_active_superuser = None
+
             return self.user
 
         async def __aexit__(self, *args, **kwargs):
-            if self.previous_user:
+
+            if self.previous_active_verified_user:
+                app.dependency_overrides[
+                    current_active_verified_user
+                ] = self.previous_active_verified_user
+
+            if self.previous_active_user:
                 app.dependency_overrides[
                     current_active_user
-                ] = self.previous_user
+                ] = self.previous_active_user
+
+            if self.previous_active_superuser:
+                app.dependency_overrides[
+                    current_active_superuser
+                ] = self.previous_active_superuser
 
     return _MockCurrentUser
 

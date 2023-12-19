@@ -37,7 +37,7 @@ from ....schemas import StateRead
 from ....schemas import TaskCollectPip
 from ....schemas import TaskCollectStatus
 from ....schemas import TaskCreate
-from ....security import current_active_user
+from ....security import current_active_verified_user
 from ....security import User
 
 router = APIRouter()
@@ -172,7 +172,7 @@ async def collect_tasks_pip(
     task_collect: TaskCollectPip,
     background_tasks: BackgroundTasks,
     response: Response,
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_db),
 ) -> StateRead:  # State[TaskCollectStatus]
     """
@@ -310,7 +310,7 @@ async def collect_tasks_pip(
 @router.get("/collect/{state_id}/", response_model=StateRead)
 async def check_collection_status(
     state_id: int,
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_active_verified_user),
     verbose: bool = False,
     db: AsyncSession = Depends(get_db),
 ) -> StateRead:  # State[TaskCollectStatus]
