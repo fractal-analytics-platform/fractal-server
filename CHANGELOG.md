@@ -8,6 +8,7 @@ Warning: this update requires running some fix-db scripts (more details TBD - se
     * Add `ApplyWorkflow.project_dump` column (\#1070).
 * Testing:
    * Extended systematic testing of database models (\#1078).
+   * Remove `persist` from `MockCurrentUser` (\#1098).
 
 # 1.4.1
 

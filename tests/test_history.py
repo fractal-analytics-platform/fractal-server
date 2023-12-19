@@ -47,7 +47,7 @@ async def test_get_workflowtask_status(
         json.dump(history, f)
     debug(working_dir / HISTORY_FILENAME)
 
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         task = await task_factory(name="task1", source="task1")
         workflow = await workflow_factory(project_id=project.id, name="WF")
@@ -119,7 +119,7 @@ async def test_get_workflowtask_status_simple(
     RESULTS = dict(done=set(), failed=set(), submitted=set())
     working_dir = tmp_path / "working_dir"
 
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         task = await task_factory(name="task1", source="task1")
         workflow = await workflow_factory(project_id=project.id, name="WF")
@@ -186,7 +186,7 @@ async def test_get_workflowtask_status_fail(
     Fail due to multiple ongoing jobs being associated with a given dataset
     """
 
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id, name="WF")
         task = await task_factory()
@@ -225,7 +225,7 @@ async def test_export_history_as_workflow_fail(
     """
     Fail because of existing jobs linked to the dataset
     """
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id, name="WF")
         task = await task_factory()
@@ -284,7 +284,7 @@ async def test_assemble_history_failed_job_fail(
     Test a failing branch for assemble_history_failed_job, where the failed
     task cannot be identified.
     """
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id, name="WF")
         task = await task_factory()
