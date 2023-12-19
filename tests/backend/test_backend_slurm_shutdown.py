@@ -5,9 +5,9 @@ import time
 import pytest
 from devtools import debug
 
-from ..fixtures_slurm import run_squeue
 from fractal_server.app.runner._slurm.executor import FractalSlurmExecutor
 from fractal_server.app.runner.common import JobExecutionError
+from tests.fixtures_slurm import run_squeue
 
 
 def test_direct_shutdown_during_submit(

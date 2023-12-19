@@ -3,14 +3,14 @@ import json
 import pytest
 from devtools import debug
 
-from ..fixtures_tasks import MockTask
-from ..fixtures_tasks import MockWorkflowTask
 from fractal_server.app.runner._local._local_config import (
     get_local_backend_config,
 )
 from fractal_server.app.runner._local._local_config import (
     LocalBackendConfigError,
 )
+from tests.fixtures_tasks import MockTask
+from tests.fixtures_tasks import MockWorkflowTask
 
 
 def test_get_local_backend_config(tmp_path):
