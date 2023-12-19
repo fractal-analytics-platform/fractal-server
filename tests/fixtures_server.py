@@ -333,6 +333,7 @@ async def MockCurrentUser(app, db):
             self.update_current_active_superuser = (
                 self.user.is_active and self.user.is_superuser
             )
+            debug(self.update_current_active_superuser)
 
             if self.update_current_active_user:
                 self.previous_active_user = app.dependency_overrides.get(
@@ -365,19 +366,20 @@ async def MockCurrentUser(app, db):
         async def __aexit__(self, *args, **kwargs):
 
             if self.update_current_active_user:
-                app.dependency_overrides[
-                    current_active_verified_user
-                ] = self.previous_active_verified_user
-
+                if self.previous_active_user:
+                    app.dependency_overrides[
+                        current_active_user
+                    ] = self.previous_active_user
             if self.update_current_active_verified_user:
-                app.dependency_overrides[
-                    current_active_user
-                ] = self.previous_active_user
-
+                if self.previous_active_verified_user:
+                    app.dependency_overrides[
+                        current_active_verified_user
+                    ] = self.previous_active_verified_user
             if self.update_current_active_superuser:
-                app.dependency_overrides[
-                    current_active_superuser
-                ] = self.previous_active_superuser
+                if self.previous_active_superuser:
+                    app.dependency_overrides[
+                        current_active_superuser
+                    ] = self.previous_active_superuser
 
     return _MockCurrentUser
 
