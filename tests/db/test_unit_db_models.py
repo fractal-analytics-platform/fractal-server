@@ -627,26 +627,46 @@ async def test_workflow_insert_task_with_args_schema(
     WHEN the Task is inserted into the Workflow
     THEN the WorkflowTask.args attribute is set correctly
     """
-    from pydantic import BaseModel
-    from typing import Optional
-
     async with MockCurrentUser(persist=True) as user:
 
-        # Prepare models to generate a valid JSON Schema
-        class _InnerArgument(BaseModel):
-            x: int
-            y: int = 2
-
-        class _Arguments(BaseModel):
-            arg_no_default: int
-            arg_default_one: str = "one"
-            arg_default_none: Optional[str] = None
-            innerA: _InnerArgument
-            innerB: _InnerArgument = _InnerArgument(x=11)
-
         # Create a task with a valid args_schema
-        args_schema = _Arguments.schema()
-        debug(args_schema)
+        args_schema = {
+            "title": "_Arguments",
+            "type": "object",
+            "properties": {
+                "arg_no_default": {
+                    "title": "Arg No Default",
+                    "type": "integer",
+                },
+                "arg_default_one": {
+                    "title": "Arg Default One",
+                    "default": "one",
+                    "type": "string",
+                },
+                "arg_default_none": {
+                    "title": "Arg Default None",
+                    "type": "string",
+                },
+                "innerA": {"$ref": "#/definitions/_InnerArgument"},
+                "innerB": {
+                    "title": "Innerb",
+                    "default": {"x": 11, "y": 2},
+                    "allOf": [{"$ref": "#/definitions/_InnerArgument"}],
+                },
+            },
+            "required": ["arg_no_default", "innerA"],
+            "definitions": {
+                "_InnerArgument": {
+                    "title": "_InnerArgument",
+                    "type": "object",
+                    "properties": {
+                        "x": {"title": "X", "type": "integer"},
+                        "y": {"title": "Y", "default": 2, "type": "integer"},
+                    },
+                    "required": ["x"],
+                }
+            },
+        }
         t0 = await task_factory(source="source0", args_schema=args_schema)
 
         # Create project and workflow
@@ -769,19 +789,34 @@ async def test_task_default_args_from_args_schema(
     GIVEN a Task with args_schema
     THEN the default_args_from_args_schema property works as expected
     """
-
-    from pydantic import BaseModel
-    from typing import Optional
-
-    # Prepare models to generate a valid JSON Schema
-    class _Arguments(BaseModel):
-        a: int
-        b: str = "one"
-        c: Optional[str] = None
-        d: list[int] = [1, 2, 3]
-
-    args_schema = _Arguments.schema()
-    debug(args_schema)
+    args_schema = {
+        "title": "_Arguments",
+        "type": "object",
+        "properties": {
+            "a": {
+                "title": "A",
+                "type": "integer",
+            },
+            "b": {
+                "title": "B",
+                "default": "one",
+                "type": "string",
+            },
+            "c": {
+                "title": "C",
+                "type": "string",
+            },
+            "d": {
+                "title": "D",
+                "default": [1, 2, 3],
+                "type": "array",
+                "items": {
+                    "type": "integer",
+                },
+            },
+        },
+        "required": ["a"],
+    }
     expected_default_args = {"b": "one", "d": [1, 2, 3]}
 
     async with MockCurrentUser(persist=True):
