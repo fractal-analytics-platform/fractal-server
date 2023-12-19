@@ -474,6 +474,9 @@ async def test_project_apply_workflow_subset(
         ).dict()
         debug(expected_workflow_dump)
         assert res.json()["workflow_dump"] == expected_workflow_dump
+        assert res.json()["project_dump"] == project.dict(
+            exclude={"user_list"}
+        )
 
 
 async def test_project_apply_slurm_account(
@@ -491,6 +494,7 @@ async def test_project_apply_slurm_account(
         dataset = await dataset_factory(
             project_id=project.id, name="ds1", type="type1"
         )
+
         await resource_factory(dataset)
         workflow = await workflow_factory(project_id=project.id)
         task = await task_factory(
