@@ -219,12 +219,14 @@ async def apply_workflow(
         get_sync_db
     ),  # FIXME: why both sync and async?  # noqa
 ) -> Optional[ApplyWorkflowRead]:
+
     output = await _get_dataset_check_owner(
         project_id=project_id,
         dataset_id=input_dataset_id,
         user_id=user.id,
         db=db,
     )
+    project = output["project"]
     input_dataset = output["dataset"]
 
     output = await _get_dataset_check_owner(
@@ -382,7 +384,8 @@ async def apply_workflow(
                 for wf_task in workflow.task_list
             ],
         ),
-        **apply_workflow.dict(exclude_unset=True),
+        project_dump=project.dict(exclude={"user_list"}),
+        **apply_workflow.dict(),
     )
     db.add(job)
     await db.commit()

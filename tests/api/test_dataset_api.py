@@ -175,7 +175,7 @@ async def test_delete_dataset(
         assert datasets[0]["id"] == ds1.id
 
 
-async def test_delete_dataset_failure(
+async def test_delete_dataset_cascade_jobs(
     db,
     MockCurrentUser,
     project_factory,
