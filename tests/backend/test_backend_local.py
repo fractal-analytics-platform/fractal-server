@@ -18,10 +18,10 @@ from concurrent.futures import ThreadPoolExecutor
 import pytest
 from devtools import debug
 
-from .data.tasks_dummy import dummy as dummy_module
-from .data.tasks_dummy import dummy_parallel as dummy_parallel_module
-from .fixtures_tasks import MockTask
-from .fixtures_tasks import MockWorkflowTask
+from ..data.tasks_dummy import dummy as dummy_module
+from ..data.tasks_dummy import dummy_parallel as dummy_parallel_module
+from ..fixtures_tasks import MockTask
+from ..fixtures_tasks import MockWorkflowTask
 from fractal_server.app.runner._common import _call_command_wrapper
 from fractal_server.app.runner._common import call_parallel_task
 from fractal_server.app.runner._common import call_single_task

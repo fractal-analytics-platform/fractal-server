@@ -3,8 +3,8 @@ import json
 import pytest
 from devtools import debug
 
-from .fixtures_tasks import MockTask
-from .fixtures_tasks import MockWorkflowTask
+from ..fixtures_tasks import MockTask
+from ..fixtures_tasks import MockWorkflowTask
 from fractal_server.app.runner._slurm._slurm_config import _parse_mem_value
 from fractal_server.app.runner._slurm._slurm_config import (
     get_default_slurm_config,

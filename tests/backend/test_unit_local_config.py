@@ -3,8 +3,8 @@ import json
 import pytest
 from devtools import debug
 
-from .fixtures_tasks import MockTask
-from .fixtures_tasks import MockWorkflowTask
+from ..fixtures_tasks import MockTask
+from ..fixtures_tasks import MockWorkflowTask
 from fractal_server.app.runner._local._local_config import (
     get_local_backend_config,
 )
