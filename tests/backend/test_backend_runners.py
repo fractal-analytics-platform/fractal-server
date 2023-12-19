@@ -72,7 +72,7 @@ async def test_runner(
 
     process_workflow = _backends[backend]
 
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         prj = await project_factory(user=user)
 
     # Add dummy task as a Task
