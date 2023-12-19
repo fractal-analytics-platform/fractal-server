@@ -11,6 +11,10 @@ from fractal_server.app.models import State
 from fractal_server.app.models import Task
 from fractal_server.app.models import Workflow
 from fractal_server.app.models import WorkflowTask
+from fractal_server.config import get_settings
+from fractal_server.syringe import Inject
+
+DB_ENGINE = Inject(get_settings).DB_ENGINE
 
 
 async def test_projects(db):
@@ -142,24 +146,28 @@ async def test_project_and_workflows(db):
     db_workflow = workflow_query.scalars().one()
     assert db_workflow.name == workflow1.name
 
-    # delete the project (cascade deletion is not managed by the ORM)
+    # delete the project
     project_query = await db.execute(select(Project))
     db_project = project_query.scalars().one()
     await db.delete(db_project)
-    # commit and expunge are required to ensure that both `db_project` and
-    # `db_workflow.project` are null
-    await db.commit()
-    db.expunge_all()
+    if DB_ENGINE == "postgres":
+        with pytest.raises(IntegrityError):
+            # Workflow.project_id violates fk-contraint in Postgres
+            await db.commit()
+    else:
+        # SQLite does not handle fk-constraints well
+        await db.commit()
+        db.expunge_all()
 
-    project_query = await db.execute(select(Project))
-    db_project = project_query.scalars().one_or_none()
-    assert db_project is None
+        project_query = await db.execute(select(Project))
+        db_project = project_query.scalars().one_or_none()
+        assert db_project is None
 
-    workflow_query = await db.execute(select(Workflow))
-    db_workflow = workflow_query.scalars().one_or_none()
-    assert db_workflow is not None  # cascade must be ensured through endpoints
-    assert db_workflow.project_id is not None  # fk is not null
-    assert db_workflow.project is None  # relationship is null
+        workflow_query = await db.execute(select(Workflow))
+        db_workflow = workflow_query.scalars().one_or_none()
+        assert db_workflow is not None  # no cascade
+        assert db_workflow.project_id is not None  # fk is not null
+        assert db_workflow.project is None  # relationship is null
 
 
 async def test_workflows_tasks_and_workflowtasks(db):
@@ -213,10 +221,33 @@ async def test_workflows_tasks_and_workflowtasks(db):
     await db.commit()
     db.expunge_all()
 
+    workflowtask_query = await db.execute(select(WorkflowTask))
+    db_workflowtask_list = workflowtask_query.scalars().all()
+    assert len(db_workflowtask_list) == 3
     workflow_query = await db.execute(select(Workflow))
     db_workflow = workflow_query.scalars().one()
+    assert len(db_workflow.task_list) == 3
     for i, task in enumerate(db_workflow.task_list):
         assert task.order == i
+
+    task4 = Task(**tasks_common_args, source="source4")
+    db.add(task4)
+    await db.commit()
+    await db_workflow.insert_task(
+        db=db, task_id=task4.id, order=1, meta={"meta": "test"}
+    )
+    db.expunge_all()
+
+    workflow_query = await db.execute(select(Workflow))
+    db_workflow = workflow_query.scalars().one()
+    assert len(db_workflow.task_list) == 4
+    assert db_workflow.task_list[1].meta == {"meta": "test"}
+
+    # test cascade (Workflow deletion removes all related WorkflowTasks)
+    await db.delete(db_workflow)
+    workflowtask_query = await db.execute(select(WorkflowTask))
+    db_workflowtask = workflowtask_query.scalars().one_or_none()
+    assert db_workflowtask is None
 
 
 async def test_project_and_datasets(db):
