@@ -326,50 +326,55 @@ async def MockCurrentUser(app, db):
             # on user from other sessions
             db.expunge(self.user)
 
-            if self.user.is_active:
+            self.update_current_active_user = self.user.is_active
+            self.update_current_active_verified_user = (
+                self.user.is_active and self.user.is_verified
+            )
+            self.update_current_active_superuser = (
+                self.user.is_active and self.user.is_superuser
+            )
+
+            if self.update_current_active_user:
                 self.previous_active_user = app.dependency_overrides.get(
                     current_active_user, None
                 )
                 app.dependency_overrides[
-                    current_active_verified_user
+                    current_active_user
                 ] = self.current_user_override()
-            else:
-                self.previous_active_user = None
 
-            if self.user.is_active and self.user.is_verified:
+            if self.update_current_active_verified_user:
                 self.previous_active_verified_user = (
                     app.dependency_overrides.get(  # noqa
                         current_active_verified_user, None
                     )
                 )
                 app.dependency_overrides[
-                    current_active_user
+                    current_active_verified_user
                 ] = self.current_user_override()
-            else:
-                self.previous_active_verified_user = None
-            if self.user.is_active and self.user.is_superuser:
+
+            if self.update_current_active_superuser:
                 self.previous_active_superuser = app.dependency_overrides.get(
                     current_active_superuser, None
                 )
                 app.dependency_overrides[
                     current_active_superuser
                 ] = self.current_user_override()
-            else:
-                self.previous_active_superuser = None
+
+            return self.user
 
         async def __aexit__(self, *args, **kwargs):
 
-            if self.previous_active_verified_user:
+            if self.update_current_active_user:
                 app.dependency_overrides[
                     current_active_verified_user
                 ] = self.previous_active_verified_user
 
-            if self.previous_active_user:
+            if self.update_current_active_verified_user:
                 app.dependency_overrides[
                     current_active_user
                 ] = self.previous_active_user
 
-            if self.previous_active_superuser:
+            if self.update_current_active_superuser:
                 app.dependency_overrides[
                     current_active_superuser
                 ] = self.previous_active_superuser
