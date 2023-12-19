@@ -376,6 +376,26 @@ async def test_dataset_and_resources(db):
         resource1.id,  # 100,
     ]
 
+    resource_query = await db.execute(select(Resource))
+    db_resource1, db_resource2 = resource_query.scalars().all()
+    await db.delete(db_resource2)
+    await db.commit()
+    db.expunge_all()
+
+    resource_query = await db.execute(select(Resource))
+    db_resource = resource_query.scalars().one()
+    dataset_query = await db.execute(select(Dataset))
+    db_dataset = dataset_query.scalars().one()
+    assert db_dataset.resource_list == [db_resource]
+
+    await db.delete(db_dataset)
+    await db.commit()
+    db.expunge_all()
+    # test cascade
+    resource_query = await db.execute(select(Resource))
+    db_resource = resource_query.scalars().one_or_none()
+    assert db_resource is None
+
 
 async def test_jobs(db):
     required_args = dict(
