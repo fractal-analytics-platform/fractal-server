@@ -64,7 +64,7 @@ async def test_full_workflow(
     else:
         user_kwargs = {}
 
-    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs) as user:
+    async with MockCurrentUser(user_kwargs=user_kwargs) as user:
         debug(user)
 
         project = await project_factory(user)
@@ -271,7 +271,7 @@ async def test_failing_workflow_UnknownError(
         user_kwargs = dict(cache_dir=user_cache_dir)
     else:
         user_kwargs = {}
-    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs) as user:
+    async with MockCurrentUser(user_kwargs=user_kwargs) as user:
         # Create project, dataset, resource
         project = await project_factory(user)
         project_id = project.id
@@ -367,7 +367,7 @@ async def test_failing_workflow_TaskExecutionError(
         user_kwargs = dict(cache_dir=user_cache_dir)
     else:
         user_kwargs = {}
-    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs) as user:
+    async with MockCurrentUser(user_kwargs=user_kwargs) as user:
         # Create project, dataset, resource
         project = await project_factory(user)
         project_id = project.id
@@ -529,7 +529,7 @@ async def test_failing_workflow_JobExecutionError(
 
     user_cache_dir = str(tmp777_path / "user_cache_dir")
     user_kwargs = dict(cache_dir=user_cache_dir)
-    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs) as user:
+    async with MockCurrentUser(user_kwargs=user_kwargs) as user:
         project = await project_factory(user)
         project_id = project.id
         input_dataset = await dataset_factory(
@@ -661,7 +661,7 @@ async def test_non_python_task(
     Run a full workflow with a single bash task, which simply writes something
     to stderr and stdout
     """
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         # Create project
         project = await project_factory(user)
         project_id = project.id
@@ -758,7 +758,7 @@ async def test_metadiff(
     task_file2 = str(testdata_path / "non_python_task_issue878.sh")
     command = f"bash {task_file}"
     command_null = f"bash {task_file2}"
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         task0 = await task_factory(
             name="task0",
             source="task0",
@@ -913,7 +913,7 @@ async def test_non_executable_task_command(
     else:
         user_kwargs = {}
 
-    async with MockCurrentUser(persist=True, user_kwargs=user_kwargs) as user:
+    async with MockCurrentUser(user_kwargs=user_kwargs) as user:
         # Create task
         task = await task_factory(
             name="invalid-task-command",

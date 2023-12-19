@@ -561,7 +561,7 @@ async def test_project_name_not_unique(MockCurrentUser, db, project_factory):
     THEN no exception is raised
     """
     PROJ_NAME = "project name"
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         p0 = await project_factory(user, name=PROJ_NAME)
         p1 = await project_factory(user, name=PROJ_NAME)
 
@@ -576,7 +576,7 @@ async def test_project_name_not_unique(MockCurrentUser, db, project_factory):
 async def test_task_workflow_association(
     db, project_factory, MockCurrentUser, task_factory
 ):
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         t0 = await task_factory(source="source0")
         t1 = await task_factory(source="source1")
@@ -631,7 +631,7 @@ async def test_workflow_insert_task_with_args_schema(
     WHEN the Task is inserted into the Workflow
     THEN the WorkflowTask.args attribute is set correctly
     """
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
 
         # Create a task with a valid args_schema
         args_schema = {
@@ -729,7 +729,7 @@ async def test_cascade_delete_workflow(
     WHEN the Workflow is deleted
     THEN all the related WorkflowTask are deleted
     """
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
 
         project = await project_factory(user=user)
 
@@ -823,7 +823,7 @@ async def test_task_default_args_from_args_schema(
     }
     expected_default_args = {"b": "one", "d": [1, 2, 3]}
 
-    async with MockCurrentUser(persist=True):
+    async with MockCurrentUser():
         task = await task_factory(
             name="task with schema",
             source="source0",
@@ -837,7 +837,7 @@ async def test_task_default_args_from_args_schema(
         assert task.default_args_from_args_schema == expected_default_args
 
     invalid_args_schema = {"something": "else"}
-    async with MockCurrentUser(persist=True):
+    async with MockCurrentUser():
         task = await task_factory(
             name="task with schema",
             source="source1",
@@ -858,7 +858,7 @@ async def test_insert_task_with_meta_none(
     Test insertion of a task which has `task.meta=None`, see
     https://github.com/fractal-analytics-platform/fractal-server/issues/770
     """
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         t0 = await task_factory(source="source0", meta=None)
         wf = Workflow(name="my wfl", project_id=project.id)

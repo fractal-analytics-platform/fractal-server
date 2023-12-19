@@ -17,9 +17,7 @@ PREFIX = "/admin"
 
 async def test_unauthorized_to_admin(client, MockCurrentUser):
 
-    async with MockCurrentUser(
-        persist=True, user_kwargs={"is_superuser": False}
-    ):
+    async with MockCurrentUser(user_kwargs={"is_superuser": False}):
         res = await client.get(f"{PREFIX}/project/")
         assert res.status_code == 403
         res = await client.get(f"{PREFIX}/workflow/")
@@ -29,9 +27,7 @@ async def test_unauthorized_to_admin(client, MockCurrentUser):
         res = await client.get(f"{PREFIX}/job/")
         assert res.status_code == 403
 
-    async with MockCurrentUser(
-        persist=True, user_kwargs={"is_superuser": True}
-    ):
+    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
         res = await client.get(f"{PREFIX}/project/")
         assert res.status_code == 200
         res = await client.get(f"{PREFIX}/workflow/")
@@ -45,24 +41,20 @@ async def test_unauthorized_to_admin(client, MockCurrentUser):
 async def test_view_project(client, MockCurrentUser, project_factory):
 
     async with MockCurrentUser(
-        persist=True, user_kwargs={"is_superuser": True}
+        user_kwargs={"is_superuser": True}
     ) as superuser:
         res = await client.get(f"{PREFIX}/project/")
         assert res.status_code == 200
         assert res.json() == []
         await project_factory(superuser)
 
-    async with MockCurrentUser(
-        persist=True, user_kwargs={"is_superuser": False}
-    ) as user:
+    async with MockCurrentUser(user_kwargs={"is_superuser": False}) as user:
         project1 = await project_factory(user)
         prj1_id = project1.id
         await project_factory(user)
         user_id = user.id
 
-    async with MockCurrentUser(
-        persist=True, user_kwargs={"is_superuser": True}
-    ):
+    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
         res = await client.get(f"{PREFIX}/project/")
         assert res.status_code == 200
         assert len(res.json()) == 3
@@ -83,9 +75,7 @@ async def test_view_workflow(
     client, MockCurrentUser, project_factory, workflow_factory
 ):
 
-    async with MockCurrentUser(
-        persist=True, user_kwargs={"is_superuser": False}
-    ) as user:
+    async with MockCurrentUser(user_kwargs={"is_superuser": False}) as user:
 
         project1 = await project_factory(user)
         workflow1a = await workflow_factory(
@@ -101,7 +91,7 @@ async def test_view_workflow(
         )
 
     async with MockCurrentUser(
-        persist=True, user_kwargs={"is_superuser": True}
+        user_kwargs={"is_superuser": True}
     ) as superuser:
         project3 = await project_factory(superuser)
         await workflow_factory(project_id=project3.id, name="super")
@@ -162,9 +152,7 @@ async def test_view_dataset(
     client, MockCurrentUser, project_factory, dataset_factory
 ):
 
-    async with MockCurrentUser(
-        persist=True, user_kwargs={"is_superuser": False}
-    ) as user:
+    async with MockCurrentUser(user_kwargs={"is_superuser": False}) as user:
 
         project1 = await project_factory(user)
 
@@ -188,7 +176,7 @@ async def test_view_dataset(
         )
 
     async with MockCurrentUser(
-        persist=True, user_kwargs={"is_superuser": True}
+        user_kwargs={"is_superuser": True}
     ) as superuser:
         super_project = await project_factory(superuser)
         await dataset_factory(
@@ -259,9 +247,7 @@ async def test_view_job(
     task_factory,
     job_factory,
 ):
-    async with MockCurrentUser(
-        persist=True, user_kwargs={"is_superuser": False}
-    ) as user:
+    async with MockCurrentUser(user_kwargs={"is_superuser": False}) as user:
 
         project = await project_factory(user)
 
@@ -296,9 +282,7 @@ async def test_view_job(
             end_timestamp=datetime(2023, 11, 9),
         )
 
-    async with MockCurrentUser(
-        persist=True, user_kwargs={"is_superuser": True}
-    ):
+    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
         # get all jobs
         res = await client.get(f"{PREFIX}/job/")
         assert res.status_code == 200

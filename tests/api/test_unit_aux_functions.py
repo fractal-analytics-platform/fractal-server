@@ -32,10 +32,10 @@ async def test_get_project_check_owner(
     project_factory,
     db,
 ):
-    async with MockCurrentUser(persist=True) as other_user:
+    async with MockCurrentUser() as other_user:
         other_project = await project_factory(other_user)
 
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
 
         # Test success
@@ -66,11 +66,11 @@ async def test_get_workflow_check_owner(
     workflow_factory,
     db,
 ):
-    async with MockCurrentUser(persist=True) as other_user:
+    async with MockCurrentUser() as other_user:
         other_project = await project_factory(other_user)
         other_workflow = await workflow_factory(project_id=other_project.id)
 
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id)
 
@@ -116,7 +116,7 @@ async def test_get_workflow_task_check_owner(
     workflowtask_factory,
     db,
 ):
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id)
         task = await task_factory(source="A")
@@ -171,7 +171,7 @@ async def test_check_workflow_exists(
     workflow_factory,
     db,
 ):
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id)
 
@@ -207,7 +207,7 @@ async def test_get_dataset_check_owner(
     dataset_factory,
     db,
 ):
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         other_project = await project_factory(user)
         dataset = await dataset_factory(project_id=project.id)
@@ -256,7 +256,7 @@ async def test_get_job_check_owner(
     db,
     tmp_path,
 ):
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user, id=1)
         other_project = await project_factory(user, id=2)
 
