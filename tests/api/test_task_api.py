@@ -279,36 +279,25 @@ async def test_patch_task_different_users(
     debug(task)
     assert task.owner == owner
 
-    # Update user
-    payload = {}
+    # User kwargs
+    user_payload = {}
     if username:
-        payload["username"] = username
+        user_payload["username"] = username
     if slurm_user:
-        payload["slurm_user"] = slurm_user
-
-    async with MockCurrentUser(user_kwargs=dict(is_superuser=True)) as user:
-        debug(user)
-        res = await client.get("/auth/current-user/")
-        debug(res.json())
-        assert res.status_code == 200
-        superuser_id = res.json()["id"]
-
-        if payload:
-            res = await client.patch(
-                f"/auth/users/{superuser_id}/",
-                json=payload,
-            )
-            assert res.status_code == 200
+        user_payload["slurm_user"] = slurm_user
 
     # Patch task
     NEW_NAME = "new name"
     payload = TaskUpdate(name=NEW_NAME).dict(exclude_unset=True)
     debug(payload)
-    async with MockCurrentUser(user_kwargs=dict(is_superuser=True)):
+    async with MockCurrentUser(
+        user_kwargs=dict(is_superuser=True, **user_payload)
+    ):
         res = await client.patch(f"{PREFIX}/{task.id}/", json=payload)
         debug(res.json())
         assert res.status_code == 200
         assert res.json()["owner"] == owner
+        assert res.json()["name"] == NEW_NAME
         if username:
             assert res.json()["owner"] != username
         if slurm_user:
