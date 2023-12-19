@@ -9,7 +9,6 @@ import pytest
 from devtools import debug
 from sqlmodel import select
 
-from ..fixtures_tasks import execute_command
 from fractal_server.app.models import State
 from fractal_server.app.models import Task
 from fractal_server.app.routes.api.v1.task_collection import (
@@ -25,6 +24,7 @@ from fractal_server.syringe import Inject
 from fractal_server.tasks.collection import get_collection_path
 from fractal_server.tasks.collection import get_log_path
 from fractal_server.tasks.collection import inspect_package
+from tests.fixtures_tasks import execute_command
 
 PREFIX = "/api/v1/task"
 
