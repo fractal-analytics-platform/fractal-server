@@ -400,10 +400,10 @@ async def test_dataset_and_resources(db):
 async def test_jobs(db):
     required_args = dict(
         user_email="test@fractal.xy",
+        project_dump={},
         input_dataset_dump={},
         output_dataset_dump={},
         workflow_dump={},
-        project_dump={},
         first_task_index=0,
         last_task_index=0,
     )
@@ -471,10 +471,66 @@ async def test_jobs(db):
     db_jobs = job_query.scalars().all()
 
     assert len(db_jobs) == N_JOBS
+    for job in db_jobs:
+        assert job.workflow_id is not None
+        assert job.input_dataset_id is not None
+        assert job.output_dataset_id is not None
+        assert job.project_id is not None
     assert len(db_input_dataset.list_jobs_input) == N_JOBS
     assert len(db_input_dataset.list_jobs_output) == 0
     assert len(db_output_dataset.list_jobs_input) == 0
     assert len(db_output_dataset.list_jobs_output) == N_JOBS
+
+    # delete workflow
+    await db.delete(db_workflow)
+    await db.commit()
+    db.expunge_all()
+    job_query = await db.execute(select(ApplyWorkflow))
+    db_jobs = job_query.scalars().all()
+    for job in db_jobs:
+        assert job.workflow_id is None
+        assert job.input_dataset_id is not None
+        assert job.output_dataset_id is not None
+        assert job.project_id is not None
+
+    # delete input_dataset
+    input_dataset_query = await db.execute(
+        select(Dataset).where(Dataset.name == input_dataset.name)
+    )
+    db_input_dataset = input_dataset_query.scalars().one()
+    await db.delete(db_input_dataset)
+    await db.commit()
+    db.expunge_all()
+    job_query = await db.execute(select(ApplyWorkflow))
+    db_jobs = job_query.scalars().all()
+    for job in db_jobs:
+        assert job.workflow_id is None
+        assert job.input_dataset_id is None
+        assert job.output_dataset_id is not None
+        assert job.project_id is not None
+
+    # delete output_dataset
+    output_dataset_query = await db.execute(
+        select(Dataset).where(Dataset.name == output_dataset.name)
+    )
+    db_output_dataset = output_dataset_query.scalars().one()
+    await db.delete(db_output_dataset)
+    await db.commit()
+    db.expunge_all()
+    job_query = await db.execute(select(ApplyWorkflow))
+    db_jobs = job_query.scalars().all()
+    for job in db_jobs:
+        assert job.workflow_id is None
+        assert job.input_dataset_id is None
+        assert job.output_dataset_id is None
+        assert job.project_id is not None
+
+    # delete project
+    project_query = await db.execute(select(Project))
+    db_project = project_query.scalars().one()
+    await db.delete(db_project)
+    with pytest.raises(IntegrityError):
+        await db.commit()
 
 
 async def test_project_name_not_unique(MockCurrentUser, db, project_factory):
