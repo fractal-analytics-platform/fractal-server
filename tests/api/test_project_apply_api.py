@@ -489,7 +489,7 @@ async def test_project_apply_slurm_account(
     client,
     db,
 ):
-    async with MockCurrentUser(persist=True) as user:
+    async with MockCurrentUser() as user:
         project = await project_factory(user)
         dataset = await dataset_factory(
             project_id=project.id, name="ds1", type="type1"
@@ -527,7 +527,7 @@ async def test_project_apply_slurm_account(
 
     SLURM_LIST = ["foo", "bar", "rab", "oof"]
     async with MockCurrentUser(
-        persist=True, user_kwargs={"slurm_accounts": SLURM_LIST}
+        user_kwargs={"slurm_accounts": SLURM_LIST}
     ) as user2:
         project = await project_factory(user2)
         dataset = await dataset_factory(
