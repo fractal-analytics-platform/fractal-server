@@ -561,6 +561,14 @@ async def job_factory(db: AsyncSession):
                     for wf_task in workflow.task_list
                 ],
             ),
+            project_dump=project.dict(
+                exclude={
+                    "user_list",
+                    "dataset_list",
+                    "workflow_list",
+                    "job_list",
+                }
+            ),
             last_task_index=last_task_index,
             first_task_index=first_task_index,
             working_dir=working_dir,
