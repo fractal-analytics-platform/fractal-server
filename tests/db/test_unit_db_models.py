@@ -529,8 +529,25 @@ async def test_jobs(db):
     project_query = await db.execute(select(Project))
     db_project = project_query.scalars().one()
     await db.delete(db_project)
-    with pytest.raises(IntegrityError):
+    if DB_ENGINE == "postgres":
+        with pytest.raises(IntegrityError):
+            await db.commit()
+    else:
+        # SQLite does not handle fk-constraints well
         await db.commit()
+        db.expunge_all()
+
+        project_query = await db.execute(select(Project))
+        db_project = project_query.scalars().one_or_none()
+        assert db_project is None
+
+        job_query = await db.execute(select(ApplyWorkflow))
+        db_jobs = job_query.scalars().all()
+        for job in db_jobs:
+            assert job.workflow_id is None
+            assert job.input_dataset_id is None
+            assert job.output_dataset_id is None
+            assert job.project_id is not None  # fk not set to null by sqlite
 
 
 async def test_project_name_not_unique(MockCurrentUser, db, project_factory):
