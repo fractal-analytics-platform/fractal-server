@@ -29,6 +29,11 @@ async def test_projects(db):
     # test defaults
     for project in project_list:
         assert project.user_list == []
+        # delete
+        await db.delete(project)
+
+    project_query = await db.execute(select(Project))
+    assert project_query.scalars().one_or_none() is None
 
 
 async def test_tasks(db):
@@ -74,6 +79,13 @@ async def test_tasks(db):
     task_query = await db.execute(select(Task))
     task_list = task_query.scalars().all()
     assert len(task_list) == 2
+
+    for task in task_list:
+        # delete
+        await db.delete(task)
+
+    task_query = await db.execute(select(Task))
+    assert task_query.scalars().one_or_none() is None
 
 
 async def test_project_and_workflows(db):
@@ -122,6 +134,32 @@ async def test_project_and_workflows(db):
     assert db_workflow2.name == workflow2.name
     assert db_workflow2.project_id == db_project.id
     assert db_workflow2.project == db_project
+
+    # delete just one workflow
+    await db.delete(db_workflow2)
+
+    workflow_query = await db.execute(select(Workflow))
+    db_workflow = workflow_query.scalars().one()
+    assert db_workflow.name == workflow1.name
+
+    # delete the project (cascade deletion is not managed by the ORM)
+    project_query = await db.execute(select(Project))
+    db_project = project_query.scalars().one()
+    await db.delete(db_project)
+    # commit and expunge are required to ensure that both `db_project` and
+    # `db_workflow.project` are null
+    await db.commit()
+    db.expunge_all()
+
+    project_query = await db.execute(select(Project))
+    db_project = project_query.scalars().one_or_none()
+    assert db_project is None
+
+    workflow_query = await db.execute(select(Workflow))
+    db_workflow = workflow_query.scalars().one_or_none()
+    assert db_workflow is not None  # cascade must be ensured through endpoints
+    assert db_workflow.project_id is not None  # fk is not null
+    assert db_workflow.project is None  # relationship is null
 
 
 async def test_workflows_tasks_and_workflowtasks(db):
