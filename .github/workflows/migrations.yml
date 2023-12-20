@@ -17,7 +17,7 @@ on:
 env:
   TARGET_VERSION: 1.4.1
   SQLFILENAME: clean_db_fractal_${TARGET_VERSION}.sql
-  ROOTDIR: tests/data/testing_databaseas
+  ROOTDIR: tests/data/testing_databases
 
 jobs:
 
