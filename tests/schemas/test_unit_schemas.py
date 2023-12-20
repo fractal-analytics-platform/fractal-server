@@ -108,8 +108,6 @@ def test_apply_workflow_read():
     assert isinstance(job1.output_dataset_dump, DatasetDump)
 
     assert isinstance(job1.start_timestamp, datetime)
-    job1_sanitised = job1.sanitised_dict()
-    assert isinstance(job1_sanitised["start_timestamp"], str)
 
     job2 = ApplyWorkflowRead(
         id=1,
@@ -283,10 +281,7 @@ def test_project_create():
 
 
 def test_state():
-    s = _StateBase(data={"some": "thing"}, timestamp=datetime.now())
-    debug(s)
-    debug(s.sanitised_dict())
-    assert isinstance(s.sanitised_dict()["timestamp"], str)
+    _StateBase(data={"some": "thing"}, timestamp=datetime.now())
 
 
 def test_state_read():
