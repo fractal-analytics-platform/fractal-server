@@ -2,8 +2,12 @@
 
 # 1.4.2 (not released)
 
-Warning: this update requires running some fix-db scripts (more details TBD - see issue #1094).
+WARNINGS:
+1. This update requires running some fix-db scripts (more details TBD - see issue #1094).
+2. Starting from this versions, non-verified users have no access to `/api/v1/` endpoints.
 
+* API:
+    * Prevent access to `/api/v1/` endpoints to non-verified users (\#1099).
 * Database:
     * Add `ApplyWorkflow.project_dump` column (\#1070).
 * Testing:
