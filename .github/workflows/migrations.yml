@@ -70,6 +70,10 @@ jobs:
         run: |
           cp tests/data/testing_databases/.fractal_server_postgres.env .fractal_server.env
           poetry run fractalctl set-db
+          poetry run scripts/database_updates/from_1.4.1_to_1.4.2/fix_db_add_project_dump.py  # FIXME: see issue 1094
 
       - name: Apply migration to sqlite database
-        run: cp tests/data/testing_databases/.fractal_server_sqlite.env .fractal_server.env && poetry run fractalctl set-db
+        run: |
+          cp tests/data/testing_databases/.fractal_server_sqlite.env .fractal_server.env
+          poetry run fractalctl set-db
+          poetry run scripts/database_updates/from_1.4.1_to_1.4.2/fix_db_add_project_dump.py  # FIXME: see issue 1094
