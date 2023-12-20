@@ -71,10 +71,10 @@ jobs:
         run: |
           cp $ROOTDIR/.fractal_server_postgres.env .fractal_server.env
           poetry run fractalctl set-db
-          poetry run python scripts/database_updates/from_1.4.1_to_1.4.2/fix_db_add_project_dump.py  # FIXME: see issue 1094
+          poetry run python scripts/fix_db/current.py  # FIXME: see issue 1094
 
       - name: Apply migration and fix-db script (sqlite)
         run: |
           echo -e "DB_ENGINE=sqlite\nSQLITE_PATH=${ROOTDIR}/clean_db_fractal_${TARGET_VERSION}.sql.sqlite3" > .fractal_server.env
           poetry run fractalctl set-db
-          poetry run python scripts/database_updates/from_1.4.1_to_1.4.2/fix_db_add_project_dump.py  # FIXME: see issue 1094
+          poetry run python scripts/fix_db/current.py  # FIXME: see issue 1094
