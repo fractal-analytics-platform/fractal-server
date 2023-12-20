@@ -199,12 +199,6 @@ class ApplyWorkflowRead(_ApplyWorkflowBase):
     first_task_index: Optional[int]
     last_task_index: Optional[int]
 
-    def sanitised_dict(self):
-        d = self.dict()
-        d["start_timestamp"] = str(self.start_timestamp)
-        d["end_timestamp"] = str(self.end_timestamp)
-        return d
-
 
 class ApplyWorkflowUpdate(BaseModel):
     """
