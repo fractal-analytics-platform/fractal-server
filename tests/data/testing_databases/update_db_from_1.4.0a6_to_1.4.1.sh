@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Wed 20 Dec 13:31:09 CET 2023
+# This is an example of how to programmatically apply migrations and/or fix-db
+# scripts with different fractal-server version, which is useful to create DB
+# dumps updated as of a given fractal-server version.
+
 INPUT_DUMP=clean_db_fractal_1.4.0a6.sql
 OUPUT_DUMP=clean_db_fractal_1.4.1.sql
 
