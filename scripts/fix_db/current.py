@@ -3,6 +3,7 @@ Loop over jobs.
 If the corresponding project still exists, set the project_dump.
 """
 import logging
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -33,7 +34,10 @@ with next(get_sync_db()) as db:
                     f"[Job {job.id:4d}] project_id=None, use dummy data"
                 )
                 project_dump = dict(
-                    id=-1, name="__UNDEFINED__", read_only=True
+                    id=-1,
+                    name="__UNDEFINED__",
+                    read_only=True,
+                    timestamp_created=datetime(1, 1, 1, 0, 0, 0),
                 )
             else:
                 project = db.get(Project, job.project_id)
@@ -43,7 +47,7 @@ with next(get_sync_db()) as db:
                         f"project_id={job.project_id}, "
                         f"but Project {job.project_id} does not exist"
                     )
-                project_dump = project.dict(exclude={"user_list"})
+                project_dump = project.make_dump()
 
             logging.warning(f"[Job {job.id:4d}] setting {project_dump=}")
             ProjectDump(**project_dump)
