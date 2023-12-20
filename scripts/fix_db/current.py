@@ -1,6 +1,6 @@
 """
 Loop over jobs.
-If the corresponing project still exists, set the project_dump.
+If the corresponding project still exists, set the project_dump.
 """
 import logging
 
@@ -17,41 +17,41 @@ with next(get_sync_db()) as db:
 
     # Get list of jobs
     stm = select(ApplyWorkflow)
-    applyworkflows = db.execute(stm)
-    rows = applyworkflows.scalars().all()
+    res = db.execute(stm)
+    jobs = res.scalars().all()
 
     # Loop over jobs
-    for row in sorted(rows, key=lambda x: x.id):
-        if row.project_dump != {}:
+    for job in sorted(jobs, key=lambda x: x.id):
+        if job.project_dump != {}:
+            # Do not overwrite existing data
             logging.warning(
-                f"[Job {row.id:4d}] project_dump attribute non-empty, skip"
+                f"[Job {job.id:4d}] project_dump attribute non-empty, skip"
             )
         else:
-            # protects from overriding
-            if row.project_id is None:
+            if job.project_id is None:
                 logging.warning(
-                    f"[Job {row.id:4d}] project_id=None, use dummy data"
+                    f"[Job {job.id:4d}] project_id=None, use dummy data"
                 )
                 project_dump = dict(
                     id=-1, name="__UNDEFINED__", read_only=True
                 )
             else:
-                project = db.get(Project, row.project_id)
+                project = db.get(Project, job.project_id)
                 if project is None:
                     raise IntegrityError(
-                        f"[Job {row.id:4d}] "
-                        f"project_id={row.project_id}, "
-                        f"but Project {row.project_id} does not exist"
+                        f"[Job {job.id:4d}] "
+                        f"project_id={job.project_id}, "
+                        f"but Project {job.project_id} does not exist"
                     )
                 project_dump = project.dict(exclude={"user_list"})
 
-            logging.warning(f"[Job {row.id:4d}] setting {project_dump=}")
+            logging.warning(f"[Job {job.id:4d}] setting {project_dump=}")
             ProjectDump(**project_dump)
-            row.project_dump = project_dump
-            db.add(row)
+            job.project_dump = project_dump
+            db.add(job)
             db.commit()
 
             # Also validate that the row can be cast into ApplyWorkflowRead
-            db.refresh(row)
-            db.expunge(row)
-            ApplyWorkflowRead(**row.dict())
+            db.refresh(job)
+            db.expunge(job)
+            ApplyWorkflowRead(**job.dict())
