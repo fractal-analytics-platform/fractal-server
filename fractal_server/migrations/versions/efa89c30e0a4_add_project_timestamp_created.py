@@ -5,9 +5,10 @@ Revises: 97f444d47249
 Create Date: 2023-12-20 10:06:52.139917
 
 """
+from datetime import datetime
+
 import sqlalchemy as sa
 from alembic import op
-
 
 # revision identifiers, used by Alembic.
 revision = "efa89c30e0a4"
@@ -21,7 +22,10 @@ def upgrade() -> None:
     with op.batch_alter_table("project", schema=None) as batch_op:
         batch_op.add_column(
             sa.Column(
-                "timestamp_created", sa.DateTime(timezone=True), nullable=False
+                "timestamp_created",
+                sa.DateTime(timezone=True),
+                nullable=False,
+                server_default=datetime(1, 1, 1, 0, 0, 0, 0),
             )
         )
 
