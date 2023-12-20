@@ -39,7 +39,7 @@ with next(get_sync_db()) as db:
             logging.warning(
                 f"Handling job with ID {row.id:4d}, setting {project_dump=}"
             )
-            ProjectDump(project_dump)
+            ProjectDump(**project_dump)
             row.project_dump = project_dump
             db.add(row)
             db.commit()
