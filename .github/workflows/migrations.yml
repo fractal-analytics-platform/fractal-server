@@ -62,17 +62,17 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: "poetry"
 
-      - name: Install fractal-server dependencies
+      - name: Install fractal-server
         run: |
           poetry install --without dev --without docs --no-interaction -E postgres
 
-      - name: Apply migration to postgres database
+      - name: Apply migration and fix-db script (postgres)
         run: |
           cp tests/data/testing_databases/.fractal_server_postgres.env .fractal_server.env
           poetry run fractalctl set-db
           poetry run python scripts/database_updates/from_1.4.1_to_1.4.2/fix_db_add_project_dump.py  # FIXME: see issue 1094
 
-      - name: Apply migration to sqlite database
+      - name: Apply migration and fix-db script (sqlite)
         run: |
           cp tests/data/testing_databases/.fractal_server_sqlite.env .fractal_server.env
           poetry run fractalctl set-db
