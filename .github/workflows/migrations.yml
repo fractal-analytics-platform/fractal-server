@@ -52,7 +52,7 @@ jobs:
         run: psql -U postgres -h localhost -d fractal_test -f $ROOTDIR/clean_db_fractal_${TARGET_VERSION}.sql
 
       - name: Convert postgres database into sqlite
-        run: pipx run db-to-sqlite[postgresql]==1.5 "postgresql://postgres:postgres@localhost/fractal_test" $ROOTDIR/${clean_db_fractal_${TARGET_VERSION}.sql}.sqlite3 --all
+        run: pipx run db-to-sqlite[postgresql]==1.5 "postgresql://postgres:postgres@localhost/fractal_test" $ROOTDIR/clean_db_fractal_${TARGET_VERSION}.sql.sqlite3 --all
 
       - name: Install poetry
         run: pipx install poetry==1.7.1
