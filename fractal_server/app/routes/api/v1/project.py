@@ -384,7 +384,7 @@ async def apply_workflow(
                 for wf_task in workflow.task_list
             ],
         ),
-        project_dump=project.dict(exclude={"user_list"}),
+        project_dump=project.make_dump(),
         **apply_workflow.dict(),
     )
     db.add(job)
