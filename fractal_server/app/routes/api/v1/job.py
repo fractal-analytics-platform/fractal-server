@@ -13,7 +13,7 @@ from ....db import get_db
 from ....models import ApplyWorkflow
 from ....models import Project
 from ....schemas import ApplyWorkflowRead
-from ....security import current_active_verified_user
+from ....security import current_active_user
 from ....security import User
 from ...aux._job import _write_shutdown_file
 from ...aux._job import _zip_folder_to_byte_stream
@@ -28,7 +28,7 @@ router = APIRouter()
 
 @router.get("/job/", response_model=list[ApplyWorkflowRead])
 async def get_user_jobs(
-    user: User = Depends(current_active_verified_user),
+    user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[ApplyWorkflowRead]:
     """
@@ -50,7 +50,7 @@ async def get_user_jobs(
 async def get_workflow_jobs(
     project_id: int,
     workflow_id: int,
-    user: User = Depends(current_active_verified_user),
+    user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[list[ApplyWorkflowRead]]:
     """
@@ -73,7 +73,7 @@ async def get_workflow_jobs(
 async def read_job(
     project_id: int,
     job_id: int,
-    user: User = Depends(current_active_verified_user),
+    user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[ApplyWorkflowRead]:
     """
@@ -99,7 +99,7 @@ async def read_job(
 async def download_job_logs(
     project_id: int,
     job_id: int,
-    user: User = Depends(current_active_verified_user),
+    user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> StreamingResponse:
     """
@@ -132,7 +132,7 @@ async def download_job_logs(
 )
 async def get_job_list(
     project_id: int,
-    user: User = Depends(current_active_verified_user),
+    user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[list[ApplyWorkflowRead]]:
     """
@@ -156,7 +156,7 @@ async def get_job_list(
 async def stop_job(
     project_id: int,
     job_id: int,
-    user: User = Depends(current_active_verified_user),
+    user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
     """

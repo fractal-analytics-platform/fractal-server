@@ -26,7 +26,7 @@ from ....schemas import ResourceRead
 from ....schemas import ResourceUpdate
 from ....schemas import WorkflowExport
 from ....schemas import WorkflowTaskExport
-from ....security import current_active_verified_user
+from ....security import current_active_user
 from ....security import User
 from ._aux_functions import _get_active_jobs_statement
 from ._aux_functions import _get_dataset_check_owner
@@ -45,7 +45,7 @@ router = APIRouter()
 async def create_dataset(
     project_id: int,
     dataset: DatasetCreate,
-    user: User = Depends(current_active_verified_user),
+    user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[DatasetRead]:
     """
@@ -69,7 +69,7 @@ async def create_dataset(
 )
 async def read_dataset_list(
     project_id: int,
-    user: User = Depends(current_active_verified_user),
+    user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[list[DatasetRead]]:
     """
@@ -95,7 +95,7 @@ async def read_dataset_list(
 async def read_dataset(
     project_id: int,
     dataset_id: int,
-    user: User = Depends(current_active_verified_user),
+    user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[DatasetRead]:
     """
@@ -120,7 +120,7 @@ async def update_dataset(
     project_id: int,
     dataset_id: int,
     dataset_update: DatasetUpdate,
-    user: User = Depends(current_active_verified_user),
+    user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[DatasetRead]:
     """
@@ -157,7 +157,7 @@ async def update_dataset(
 async def delete_dataset(
     project_id: int,
     dataset_id: int,
-    user: User = Depends(current_active_verified_user),
+    user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
     """
@@ -206,7 +206,7 @@ async def create_resource(
     project_id: int,
     dataset_id: int,
     resource: ResourceCreate,
-    user: User = Depends(current_active_verified_user),
+    user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[ResourceRead]:
     """
@@ -234,7 +234,7 @@ async def create_resource(
 async def get_resource_list(
     project_id: int,
     dataset_id: int,
-    user: User = Depends(current_active_verified_user),
+    user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[list[ResourceRead]]:
     """
@@ -262,7 +262,7 @@ async def update_resource(
     dataset_id: int,
     resource_id: int,
     resource_update: ResourceUpdate,
-    user: User = Depends(current_active_verified_user),
+    user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[ResourceRead]:
     """
@@ -302,7 +302,7 @@ async def delete_resource(
     project_id: int,
     dataset_id: int,
     resource_id: int,
-    user: User = Depends(current_active_verified_user),
+    user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
     """
@@ -335,7 +335,7 @@ async def delete_resource(
 async def export_history_as_workflow(
     project_id: int,
     dataset_id: int,
-    user: User = Depends(current_active_verified_user),
+    user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[WorkflowExport]:
     """
@@ -402,7 +402,7 @@ async def export_history_as_workflow(
 async def get_workflowtask_status(
     project_id: int,
     dataset_id: int,
-    user: User = Depends(current_active_verified_user),
+    user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[DatasetStatusRead]:
     """
@@ -491,7 +491,7 @@ async def get_workflowtask_status(
 
 @router.get("/dataset/", response_model=list[DatasetRead])
 async def get_user_datasets(
-    user: User = Depends(current_active_verified_user),
+    user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[DatasetRead]:
     """
