@@ -2,11 +2,9 @@
 `db` module, loosely adapted from
 https://testdriven.io/blog/fastapi-sqlmodel/#async-sqlmodel
 """
-import json
 from typing import AsyncGenerator
 from typing import Generator
 
-from pydantic.json import pydantic_encoder
 from sqlalchemy import create_engine
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -70,25 +68,16 @@ class DB:
             }
             engine_kwargs_sync = {}
 
-        def _custom_json_serializer(*args, **kwargs) -> str:
-            """
-            https://stackoverflow.com/questions/66808442/
-                writing-a-pydantic-object-into-a-sqlalchemy-json-column
-            """
-            return json.dumps(*args, default=pydantic_encoder, **kwargs)
-
         cls._engine_async = create_async_engine(
             settings.DATABASE_URL,
             echo=settings.DB_ECHO,
             future=True,
-            json_serializer=_custom_json_serializer,
             **engine_kwargs_async,
         )
         cls._engine_sync = create_engine(
             settings.DATABASE_SYNC_URL,
             echo=settings.DB_ECHO,
             future=True,
-            json_serializer=_custom_json_serializer,
             **engine_kwargs_sync,
         )
 
