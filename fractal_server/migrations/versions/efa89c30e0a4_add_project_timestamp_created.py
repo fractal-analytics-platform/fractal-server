@@ -29,6 +29,9 @@ def upgrade() -> None:
             )
         )
 
+    with op.batch_alter_table("project", schema=None) as batch_op:
+        batch_op.alter_column("timestamp_created", server_default=None)
+
     # ### end Alembic commands ###
 
 
