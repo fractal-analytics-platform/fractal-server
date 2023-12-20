@@ -13,6 +13,10 @@ on:
   pull_request:
     branches: ["main"]
 
+
+env:
+  TARGET_VERSION: 1.4.0a6
+
 jobs:
 
   migrations:
@@ -44,10 +48,10 @@ jobs:
       - name: Load database dump into postgres database
         env:
           PGPASSWORD: postgres
-        run: psql -U postgres -h localhost -d fractal_test -f tests/data/testing_databases/clean_db_fractal_1.4.0a6.sql
+        run: psql -U postgres -h localhost -d fractal_test -f tests/data/testing_databases/clean_db_fractal_${TARGET_VERSION}.sql
 
       - name: Convert postgres database into sqlite
-        run: pipx run db-to-sqlite[postgresql]==1.5 "postgresql://postgres:postgres@localhost/fractal_test" tests/data/testing_databases/clean_db_fractal_1.4.0a6.sql.sqlite3 --all
+        run: pipx run db-to-sqlite[postgresql]==1.5 "postgresql://postgres:postgres@localhost/fractal_test" tests/data/testing_databases/clean_db_fractal_${TARGET_VERSION}.sql.sqlite3 --all
 
       - name: Install poetry
         run: pipx install poetry==1.7.1
