@@ -10,6 +10,7 @@ This file is part of Fractal and was originally developed by eXact lab S.r.l.
 Institute for Biomedical Research and Pelkmans Lab from the University of
 Zurich.
 """
+import json
 import logging
 import random
 import shutil
@@ -519,14 +520,7 @@ async def job_factory(db: AsyncSession):
                     for wf_task in workflow.task_list
                 ],
             ),
-            project_dump=project.dict(
-                exclude={
-                    "user_list",
-                    "dataset_list",
-                    "workflow_list",
-                    "job_list",
-                }
-            ),
+            project_dump=json.loads(project.json(exclude={"user_list"})),
             last_task_index=last_task_index,
             first_task_index=first_task_index,
             working_dir=working_dir,
