@@ -1,6 +1,7 @@
 import time
 
 from devtools import debug
+from pydantic.json import pydantic_encoder
 
 from fractal_server.app.schemas.applyworkflow import WorkflowDump
 
@@ -474,9 +475,10 @@ async def test_project_apply_workflow_subset(
         ).dict()
         debug(expected_workflow_dump)
         assert res.json()["workflow_dump"] == expected_workflow_dump
-        assert res.json()["project_dump"] == project.dict(
-            exclude={"user_list"}
-        )
+        assert res.json()["project_dump"] == {
+            **project.dict(exclude={"user_list"}),
+            "timestamp_created": pydantic_encoder(project.timestamp_created),
+        }
 
 
 async def test_project_apply_slurm_account(
