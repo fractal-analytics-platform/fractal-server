@@ -3,14 +3,14 @@ import json
 import pytest
 from devtools import debug
 
-from .fixtures_tasks import MockTask
-from .fixtures_tasks import MockWorkflowTask
 from fractal_server.app.runner._slurm._slurm_config import _parse_mem_value
 from fractal_server.app.runner._slurm._slurm_config import (
     get_default_slurm_config,
 )
 from fractal_server.app.runner._slurm._slurm_config import get_slurm_config
 from fractal_server.app.runner._slurm._slurm_config import SlurmConfigError
+from tests.fixtures_tasks import MockTask
+from tests.fixtures_tasks import MockWorkflowTask
 
 
 @pytest.mark.parametrize("fail", [True, False])

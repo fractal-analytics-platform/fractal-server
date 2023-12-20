@@ -288,7 +288,6 @@ async def MockCurrentUser(app, db):
             default_factory=lambda: ["project"]
         )
         email: Optional[str] = field(default_factory=_random_email)
-        persist: Optional[bool] = True
 
         def _create_user(self):
             defaults = dict(
@@ -309,21 +308,20 @@ async def MockCurrentUser(app, db):
         async def __aenter__(self):
             self._create_user()
 
-            if self.persist:
-                try:
-                    db.add(self.user)
-                    await db.commit()
-                    await db.refresh(self.user)
-                except IntegrityError:
-                    # Safety net, in case of non-unique email addresses
-                    await db.rollback()
-                    self.user.email = _random_email()
-                    db.add(self.user)
-                    await db.commit()
-                    await db.refresh(self.user)
-                # Removing object from test db session, so that we can operate
-                # on user from other sessions
-                db.expunge(self.user)
+            try:
+                db.add(self.user)
+                await db.commit()
+                await db.refresh(self.user)
+            except IntegrityError:
+                # Safety net, in case of non-unique email addresses
+                await db.rollback()
+                self.user.email = _random_email()
+                db.add(self.user)
+                await db.commit()
+                await db.refresh(self.user)
+            # Removing object from test db session, so that we can operate
+            # on user from other sessions
+            db.expunge(self.user)
             self.previous_user = app.dependency_overrides.get(
                 current_active_user, None
             )
@@ -520,6 +518,14 @@ async def job_factory(db: AsyncSession):
                     )
                     for wf_task in workflow.task_list
                 ],
+            ),
+            project_dump=project.dict(
+                exclude={
+                    "user_list",
+                    "dataset_list",
+                    "workflow_list",
+                    "job_list",
+                }
             ),
             last_task_index=last_task_index,
             first_task_index=first_task_index,

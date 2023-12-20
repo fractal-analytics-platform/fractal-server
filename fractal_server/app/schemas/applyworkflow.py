@@ -3,16 +3,24 @@ from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel
+from pydantic import Extra
 from pydantic import validator
 from pydantic.types import StrictStr
 
 from ._validators import valstr
+
 
 __all__ = (
     "_ApplyWorkflowBase",
     "ApplyWorkflowCreate",
     "ApplyWorkflowRead",
 )
+
+
+class ProjectDump(BaseModel, extra=Extra.forbid):
+    id: int
+    name: str
+    read_only: bool
 
 
 class TaskDump(BaseModel):
@@ -151,6 +159,7 @@ class ApplyWorkflowRead(_ApplyWorkflowBase):
     Attributes:
         id:
         project_id:
+        project_dump:
         user_email:
         slurm_account:
         workflow_id:
@@ -171,6 +180,7 @@ class ApplyWorkflowRead(_ApplyWorkflowBase):
 
     id: int
     project_id: Optional[int]
+    project_dump: Optional[ProjectDump]
     user_email: str
     slurm_account: Optional[str]
     workflow_id: Optional[int]

@@ -9,7 +9,6 @@ import pytest
 from devtools import debug
 from sqlmodel import select
 
-from .fixtures_tasks import execute_command
 from fractal_server.app.models import State
 from fractal_server.app.models import Task
 from fractal_server.app.routes.api.v1.task_collection import (
@@ -25,6 +24,7 @@ from fractal_server.syringe import Inject
 from fractal_server.tasks.collection import get_collection_path
 from fractal_server.tasks.collection import get_log_path
 from fractal_server.tasks.collection import inspect_package
+from tests.fixtures_tasks import execute_command
 
 PREFIX = "/api/v1/task"
 
@@ -262,7 +262,7 @@ async def test_collection_with_json_schemas(
         venv_path=venv_path,
         task_pkg=task_pkg,
     )
-    async with MockCurrentUser(persist=True):
+    async with MockCurrentUser():
         status = "pending"
         while status == "pending":
             res = await client.get(f"{PREFIX}/collect/{state.id}/")
@@ -331,7 +331,7 @@ async def test_failed_collection_invalid_manifest(
         package=dummy_task_package_invalid_manifest.as_posix()
     )
     debug(dummy_task_package_invalid_manifest)
-    async with MockCurrentUser(persist=True):
+    async with MockCurrentUser():
         res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
         debug(res.json())
         assert res.status_code == 422
@@ -341,7 +341,7 @@ async def test_failed_collection_invalid_manifest(
         package=dummy_task_package_missing_manifest.as_posix()
     )
     debug(dummy_task_package_missing_manifest)
-    async with MockCurrentUser(persist=True):
+    async with MockCurrentUser():
         res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
         debug(res.json())
         assert res.status_code == 422
@@ -502,7 +502,7 @@ async def test_logs(
         venv_path=venv_path,
         task_pkg=task_pkg,
     )
-    async with MockCurrentUser(persist=True):
+    async with MockCurrentUser():
         res = await client.get(f"{PREFIX}/collect/{state.id}/")
     out_state = res.json()
     debug(out_state)
