@@ -1,5 +1,15 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# 1.4.2 (not released)
+
+Warning: this update requires running some fix-db scripts (more details TBD - see issue #1094).
+
+* Database:
+    * Add `ApplyWorkflow.project_dump` column (\#1070).
+* Testing:
+   * Extended systematic testing of database models (\#1078).
+   * Remove `persist` from `MockCurrentUser` (\#1098).
+
 # 1.4.1
 
 * API:
@@ -15,6 +25,7 @@
     * Add `Dataset.project` and `Workflow.project` relationships (\#1082).
     * Avoid using `Project` relationships `dataset_list` or `workflow_list` within some `GET` endpoints (\#1082).
     * Fully remove `Project` relationships `dataset_list`, `workflow_list` and `job_list` (\#1091).
+
 * Testing:
     * Only use ubuntu-22.04 in GitHub actions (\#1061).
     * Improve unit testing of database models (\#1082).
