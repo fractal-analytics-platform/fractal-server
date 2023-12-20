@@ -27,3 +27,8 @@ class Project(_ProjectBase, SQLModel, table=True):
             "lazy": "selectin",
         },
     )
+
+    def make_dump(self):
+        d = self.dict(exclude={"user_list", "timestamp_created"})
+        d["timestamp_created"] = str(self.timestamp_created)
+        return d
