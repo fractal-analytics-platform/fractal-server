@@ -21,6 +21,7 @@ class ProjectDump(BaseModel, extra=Extra.forbid):
     id: int
     name: str
     read_only: bool
+    timestamp_created: datetime
 
 
 class TaskDump(BaseModel):
