@@ -31,7 +31,7 @@ from ....schemas import JobStatusType
 from ....schemas import ProjectCreate
 from ....schemas import ProjectRead
 from ....schemas import ProjectUpdate
-from ....security import current_active_verified_user
+from ....security import current_active_user
 from ....security import User
 from ._aux_functions import _check_project_exists
 from ._aux_functions import _get_active_jobs_statement
@@ -45,7 +45,7 @@ router = APIRouter()
 
 @router.get("/", response_model=list[ProjectRead])
 async def get_list_project(
-    user: User = Depends(current_active_verified_user),
+    user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[Project]:
     """
@@ -65,7 +65,7 @@ async def get_list_project(
 @router.post("/", response_model=ProjectRead, status_code=201)
 async def create_project(
     project: ProjectCreate,
-    user: User = Depends(current_active_verified_user),
+    user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[ProjectRead]:
     """
@@ -100,7 +100,7 @@ async def create_project(
 @router.get("/{project_id}/", response_model=ProjectRead)
 async def read_project(
     project_id: int,
-    user: User = Depends(current_active_verified_user),
+    user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[ProjectRead]:
     """
@@ -117,7 +117,7 @@ async def read_project(
 async def update_project(
     project_id: int,
     project_update: ProjectUpdate,
-    user: User = Depends(current_active_verified_user),
+    user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
     project = await _get_project_check_owner(
@@ -142,7 +142,7 @@ async def update_project(
 @router.delete("/{project_id}/", status_code=204)
 async def delete_project(
     project_id: int,
-    user: User = Depends(current_active_verified_user),
+    user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
     """
@@ -213,7 +213,7 @@ async def apply_workflow(
     background_tasks: BackgroundTasks,
     input_dataset_id: int,
     output_dataset_id: int,
-    user: User = Depends(current_active_verified_user),
+    user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
     db_sync: DBSyncSession = Depends(
         get_sync_db
