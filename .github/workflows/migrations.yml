@@ -13,6 +13,11 @@ on:
   pull_request:
     branches: ["main"]
 
+
+env:
+  TARGET_VERSION: 1.4.1
+  ROOTDIR: tests/data/testing_databases
+
 jobs:
 
   migrations:
@@ -44,10 +49,7 @@ jobs:
       - name: Load database dump into postgres database
         env:
           PGPASSWORD: postgres
-        run: psql -U postgres -h localhost -d fractal_test -f tests/data/migration_1.3_to_1.4/clean_db_fractal_1.4.0a6.sql
-
-      - name: Convert postgres database into sqlite
-        run: pipx run db-to-sqlite[postgresql]==1.5 "postgresql://postgres:postgres@localhost/fractal_test" tests/data/migration_1.3_to_1.4/clean_db_fractal_1.4.0a6.sql.sqlite3 --all
+        run: psql -U postgres -h localhost -d fractal_test -f $ROOTDIR/clean_db_fractal_${TARGET_VERSION}.sql
 
       - name: Install poetry
         run: pipx install poetry==1.7.1
@@ -58,12 +60,21 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: "poetry"
 
-      - name: Install fractal-server dependencies
+      - name: Install fractal-server
         run: |
           poetry install --without dev --without docs --no-interaction -E postgres
 
-      - name: Apply migration to postgres database
-        run: cp tests/data/migration_1.3_to_1.4/.fractal_server_postgres.env .fractal_server.env && poetry run fractalctl set-db
+      - name: Apply migration and fix-db script (postgres)
+        run: |
+          cp $ROOTDIR/.fractal_server_postgres.env .fractal_server.env
+          poetry run fractalctl set-db
+          poetry run python scripts/fix_db/current.py  # FIXME: see issue 1094
 
-      - name: Apply migration to sqlite database
-        run: cp tests/data/migration_1.3_to_1.4/.fractal_server_sqlite.env .fractal_server.env && poetry run fractalctl set-db
+      - name: Convert postgres database into sqlite
+        run: pipx run db-to-sqlite[postgresql]==1.5 "postgresql://postgres:postgres@localhost/fractal_test" $ROOTDIR/clean_db_fractal_${TARGET_VERSION}.sql.sqlite3 --all
+
+      - name: Apply migration and fix-db script (sqlite)
+        run: |
+          echo -e "DB_ENGINE=sqlite\nSQLITE_PATH=${ROOTDIR}/clean_db_fractal_${TARGET_VERSION}.sql.sqlite3" > .fractal_server.env
+          poetry run fractalctl set-db
+          poetry run python scripts/fix_db/current.py  # FIXME: see issue 1094
