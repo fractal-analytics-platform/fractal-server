@@ -25,7 +25,7 @@ def upgrade() -> None:
                 "timestamp_created",
                 sa.DateTime(timezone=True),
                 nullable=False,
-                server_default=datetime(1, 1, 1, 0, 0, 0, 0),
+                server_default=str(datetime(1, 1, 1, 0, 0, 0, 0)),
             )
         )
 
