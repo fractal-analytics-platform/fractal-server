@@ -44,10 +44,10 @@ jobs:
       - name: Load database dump into postgres database
         env:
           PGPASSWORD: postgres
-        run: psql -U postgres -h localhost -d fractal_test -f tests/data/migration_1.3_to_1.4/clean_db_fractal_1.4.0a6.sql
+        run: psql -U postgres -h localhost -d fractal_test -f tests/data/testing_databases/clean_db_fractal_1.4.0a6.sql
 
       - name: Convert postgres database into sqlite
-        run: pipx run db-to-sqlite[postgresql]==1.5 "postgresql://postgres:postgres@localhost/fractal_test" tests/data/migration_1.3_to_1.4/clean_db_fractal_1.4.0a6.sql.sqlite3 --all
+        run: pipx run db-to-sqlite[postgresql]==1.5 "postgresql://postgres:postgres@localhost/fractal_test" tests/data/testing_databases/clean_db_fractal_1.4.0a6.sql.sqlite3 --all
 
       - name: Install poetry
         run: pipx install poetry==1.7.1
@@ -63,7 +63,7 @@ jobs:
           poetry install --without dev --without docs --no-interaction -E postgres
 
       - name: Apply migration to postgres database
-        run: cp tests/data/migration_1.3_to_1.4/.fractal_server_postgres.env .fractal_server.env && poetry run fractalctl set-db
+        run: cp tests/data/testing_databases/.fractal_server_postgres.env .fractal_server.env && poetry run fractalctl set-db
 
       - name: Apply migration to sqlite database
-        run: cp tests/data/migration_1.3_to_1.4/.fractal_server_sqlite.env .fractal_server.env && poetry run fractalctl set-db
+        run: cp tests/data/testing_databases/.fractal_server_sqlite.env .fractal_server.env && poetry run fractalctl set-db
