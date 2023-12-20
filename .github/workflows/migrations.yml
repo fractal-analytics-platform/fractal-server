@@ -15,7 +15,7 @@ on:
 
 
 env:
-  TARGET_VERSION: 1.4.0a6
+  TARGET_VERSION: 1.4.1
 
 jobs:
 
