@@ -52,5 +52,6 @@ with next(get_sync_db()) as db:
             db.commit()
 
             # Also validate that the row can be cast into ApplyWorkflowRead
+            db.refresh(row)
             db.expunge(row)
             ApplyWorkflowRead(**row.dict())
