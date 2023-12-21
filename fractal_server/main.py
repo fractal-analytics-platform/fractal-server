@@ -87,6 +87,7 @@ async def _create_first_user(
     email: str,
     password: str,
     is_superuser: bool = False,
+    is_verified: bool = False,
     username: Optional[str] = None,
 ) -> None:
     """
@@ -109,6 +110,7 @@ async def _create_first_user(
         email: New user's email
         password: New user's password
         is_superuser: `True` if the new user is a superuser
+        is_verified: `True` if the new user is verifie
         username:
     """
     try:
@@ -133,6 +135,7 @@ async def _create_first_user(
                         email=email,
                         password=password,
                         is_superuser=is_superuser,
+                        is_verified=is_verified,
                     )
                     if username is not None:
                         kwargs["username"] = username
@@ -196,7 +199,8 @@ async def on_startup() -> None:
     await _create_first_user(
         email=settings.FRACTAL_DEFAULT_ADMIN_EMAIL,
         password=settings.FRACTAL_DEFAULT_ADMIN_PASSWORD,
-        is_superuser=True,
         username=settings.FRACTAL_DEFAULT_ADMIN_USERNAME,
+        is_superuser=True,
+        is_verified=True,
     )
     await __on_startup()
