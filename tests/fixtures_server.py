@@ -19,7 +19,6 @@ from pathlib import Path
 from typing import Any
 from typing import AsyncGenerator
 from typing import Dict
-from typing import List
 from typing import Optional
 
 import pytest
@@ -286,9 +285,6 @@ async def MockCurrentUser(app, db):
 
         name: str = "User Name"
         user_kwargs: Optional[Dict[str, Any]] = None
-        scopes: Optional[List[str]] = field(
-            default_factory=lambda: ["project"]
-        )
         email: Optional[str] = field(default_factory=_random_email)
 
         def _create_user(self):
