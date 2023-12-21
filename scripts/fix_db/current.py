@@ -6,6 +6,7 @@ import json
 import logging
 from datetime import datetime
 
+from sqlalchemy import func
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
@@ -14,8 +15,27 @@ from fractal_server.app.models.job import ApplyWorkflow
 from fractal_server.app.models.project import Project
 from fractal_server.app.schemas.applyworkflow import ApplyWorkflowRead
 from fractal_server.app.schemas.applyworkflow import ProjectDump
+from fractal_server.app.schemas.project import ProjectRead
 
 with next(get_sync_db()) as db:
+    # Get list of all projects with their related job
+    stm = (
+        select(Project, func.min(ApplyWorkflow.start_timestamp))
+        .select_from(Project)
+        .join(ApplyWorkflow)
+        .where(Project.id == ApplyWorkflow.project_id)
+        .group_by(Project.id)
+    )
+    projects_timestamps = db.execute(stm).scalars().all()
+    for project, min_job_timestamp in projects_timestamps:
+        if project.timestamp_created == str(datetime(1, 1, 1, 0, 0, 0, 0)):
+            project.timestamp_created = min_job_timestamp
+            db.add(project)
+    db.commit()
+    for project, _ in projects_timestamps:
+        db.refresh(project)
+        db.expunge(project)
+        ProjectRead(**project.dict())
 
     # Get list of jobs
     stm = select(ApplyWorkflow)
