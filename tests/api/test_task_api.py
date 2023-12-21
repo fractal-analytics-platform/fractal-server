@@ -11,7 +11,7 @@ PREFIX = "/api/v1/task"
 
 async def test_non_verified_user(client, MockCurrentUser):
     """
-    Test that a non-verified users is not authhorized to make POST/PATCH task
+    Test that a non-verified user is not authorized to make POST/PATCH task
     cals.
     """
     async with MockCurrentUser(user_kwargs=dict(is_verified=False)):

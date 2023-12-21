@@ -12,7 +12,7 @@ async def test_project_apply_failures_non_verified_user(
     MockCurrentUser,
 ):
     """
-    Test that a non-verified users is not authhorized to make an call
+    Test that non-verified users are not authorized to make calls
     to `/api/v1/project/123/workflow/123/apply/`.
     """
     async with MockCurrentUser(user_kwargs=dict(is_verified=False)):
