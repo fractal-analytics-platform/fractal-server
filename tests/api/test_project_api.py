@@ -37,6 +37,7 @@ async def test_get_project(client, db, project_factory, MockCurrentUser):
         res = await client.get(f"{PREFIX}/project/{project_id}/")
         assert res.status_code == 200
         assert res.json()["id"] == project_id
+        assert res.json()["timestamp_created"].endswith("+00:00")
 
         # fail on non existent project
         res = await client.get(f"{PREFIX}/project/123456/")
