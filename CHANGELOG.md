@@ -7,7 +7,7 @@ WARNINGS:
 2. Starting from this versions, non-verified users have no access to `/api/v1/` endpoints.
 
 * API:
-    * Prevent access to `/api/v1/` endpoints to non-verified users (\#1099).
+    * Prevent access to task-collection and workflow-apply endpoints to non-verified users (\#1099).
 * Database:
     * Add `ApplyWorkflow.project_dump` column (\#1070).
     * Provide more meaningful names to fix-db scripts (\#1107).
