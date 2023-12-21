@@ -214,7 +214,8 @@ async def test_get_job_list(
             settings = Inject(get_settings)
             if settings.DB_ENGINE == "postgres":
                 assert job["start_timestamp"].endswith("+00:00")
-            assert job["project_dump"]["timestamp_created"].endswith("+00:00")
+                project_dump = job["project_dump"]
+                assert project_dump["timestamp_created"].endswith("+00:00")
 
         res = await client.get(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/job/"
