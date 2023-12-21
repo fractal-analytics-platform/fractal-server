@@ -18,7 +18,6 @@ from dataclasses import field
 from pathlib import Path
 from typing import Any
 from typing import AsyncGenerator
-from typing import Dict
 from typing import Optional
 
 import pytest
@@ -284,10 +283,18 @@ async def MockCurrentUser(app, db):
         """
 
         name: str = "User Name"
-        user_kwargs: Optional[Dict[str, Any]] = None
+        user_kwargs: Optional[dict[str, Any]] = None
         email: Optional[str] = field(default_factory=_random_email)
+        previous_dependencies: dict = field(default_factory=dict)
 
-        def _create_user(self):
+        async def __aenter__(self):
+
+            # FIXME: if user_kwargs has an "id" key-value pair, then we should
+            # try to `db.get(User, id)` (and create a new one if it does not
+            # exist). This would allow to re-use the same user again, if it is
+            # not deleted after closing this context manager.
+
+            # Create new user
             defaults = dict(
                 email=self.email,
                 hashed_password="fake_hashed_password",
@@ -296,15 +303,6 @@ async def MockCurrentUser(app, db):
             if self.user_kwargs:
                 defaults.update(self.user_kwargs)
             self.user = User(name=self.name, **defaults)
-
-        def current_user_override(self):
-            def __current_user_override():
-                return self.user
-
-            return __current_user_override
-
-        async def __aenter__(self):
-            self._create_user()
 
             try:
                 db.add(self.user)
@@ -321,60 +319,35 @@ async def MockCurrentUser(app, db):
             # on user from other sessions
             db.expunge(self.user)
 
-            self.update_current_active_user = self.user.is_active
-            self.update_current_active_verified_user = (
-                self.user.is_active and self.user.is_verified
-            )
-            self.update_current_active_superuser = (
-                self.user.is_active and self.user.is_superuser
-            )
-            debug(self.update_current_active_superuser)
-
-            if self.update_current_active_user:
-                self.previous_active_user = app.dependency_overrides.get(
-                    current_active_user, None
-                )
-                app.dependency_overrides[
+            # Boolean flags determining which dependencies must be overridden
+            self.previous_dependencies: dict
+            if self.user.is_active:
+                self.previous_dependencies[
                     current_active_user
-                ] = self.current_user_override()
-
-            if self.update_current_active_verified_user:
-                self.previous_active_verified_user = (
-                    app.dependency_overrides.get(  # noqa
-                        current_active_verified_user, None
-                    )
-                )
-                app.dependency_overrides[
-                    current_active_verified_user
-                ] = self.current_user_override()
-
-            if self.update_current_active_superuser:
-                self.previous_active_superuser = app.dependency_overrides.get(
+                ] = app.dependency_overrides.get(current_active_user, None)
+            if self.user.is_active and self.user.is_superuser:
+                self.previous_dependencies[
+                    current_active_superuser
+                ] = app.dependency_overrides.get(
                     current_active_superuser, None
                 )
-                app.dependency_overrides[
-                    current_active_superuser
-                ] = self.current_user_override()
+            if self.user.is_active and self.user.is_verified:
+                self.previous_dependencies[
+                    current_active_verified_user
+                ] = app.dependency_overrides.get(
+                    current_active_verified_user, None
+                )
+
+            for dep in self.previous_dependencies.keys():
+                app.dependency_overrides[dep] = lambda: self.user
 
             return self.user
 
         async def __aexit__(self, *args, **kwargs):
 
-            if self.update_current_active_user:
-                if self.previous_active_user:
-                    app.dependency_overrides[
-                        current_active_user
-                    ] = self.previous_active_user
-            if self.update_current_active_verified_user:
-                if self.previous_active_verified_user:
-                    app.dependency_overrides[
-                        current_active_verified_user
-                    ] = self.previous_active_verified_user
-            if self.update_current_active_superuser:
-                if self.previous_active_superuser:
-                    app.dependency_overrides[
-                        current_active_superuser
-                    ] = self.previous_active_superuser
+            for dep, previous_dep in self.previous_dependencies.items():
+                if previous_dep is not None:
+                    app.dependency_overrides[dep] = previous_dep
 
     return _MockCurrentUser
 
