@@ -1,3 +1,4 @@
+import json
 import time
 
 from devtools import debug
@@ -492,8 +493,8 @@ async def test_project_apply_workflow_subset(
         ).dict()
         debug(expected_workflow_dump)
         assert res.json()["workflow_dump"] == expected_workflow_dump
-        assert res.json()["project_dump"] == project.dict(
-            exclude={"user_list"}
+        assert res.json()["project_dump"] == json.loads(
+            project.json(exclude={"user_list"})
         )
 
 

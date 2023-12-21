@@ -24,14 +24,6 @@ class _StateBase(BaseModel):
     data: dict[str, Any]
     timestamp: datetime
 
-    def sanitised_dict(self):
-        """
-        Return `self.dict()` after casting `self.timestamp` to a string
-        """
-        d = self.dict()
-        d["timestamp"] = str(self.timestamp)
-        return d
-
 
 class StateRead(_StateBase):
     """

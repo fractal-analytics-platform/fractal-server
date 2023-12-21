@@ -13,6 +13,7 @@ WARNINGS:
 * Database:
     * Add `ApplyWorkflow.project_dump` column (\#1070).
     * Provide more meaningful names to fix-db scripts (\#1107).
+    * Add `Project.timestamp_created` column (\#1102).
 * Testing:
     * Extended systematic testing of database models (\#1078).
     * Review `MockCurrentUser` fixture, to handle different kinds of users (\#1099).
