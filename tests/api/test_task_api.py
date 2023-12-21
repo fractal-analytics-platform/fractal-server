@@ -9,6 +9,19 @@ from fractal_server.app.schemas.task import TaskUpdate
 PREFIX = "/api/v1/task"
 
 
+async def test_non_verified_user(client, MockCurrentUser):
+    """
+    Test that a non-verified users is not authhorized to make POST/PATCH task
+    cals.
+    """
+    async with MockCurrentUser(user_kwargs=dict(is_verified=False)):
+        res = await client.post(f"{PREFIX}/", json={})
+        assert res.status_code == 401
+
+        res = await client.patch(f"{PREFIX}/123/", json={})
+        assert res.status_code == 401
+
+
 async def test_task_get_list(db, client, task_factory, MockCurrentUser):
     t0 = await task_factory(name="task0", source="source0")
     t1 = await task_factory(name="task1", source="source1")
