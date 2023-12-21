@@ -756,7 +756,7 @@ async def test_metadiff(
     task_file2 = str(testdata_path / "non_python_task_issue878.sh")
     command = f"bash {task_file}"
     command_null = f"bash {task_file2}"
-    async with MockCurrentUser() as user:
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         task0 = await task_factory(
             name="task0",
             source="task0",
