@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
@@ -46,6 +47,7 @@ class ProjectRead(_ProjectBase):
     """
 
     id: int
+    timestamp_created: datetime
 
 
 class ProjectUpdate(_ProjectBase):

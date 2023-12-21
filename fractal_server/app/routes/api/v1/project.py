@@ -1,3 +1,4 @@
+import json
 from typing import Optional
 
 from fastapi import APIRouter
@@ -385,7 +386,8 @@ async def apply_workflow(
                 for wf_task in workflow.task_list
             ],
         ),
-        project_dump=project.dict(exclude={"user_list"}),
+        # we use (project.json + json.loads) to serialize datetime
+        project_dump=json.loads(project.json(exclude={"user_list"})),
         **apply_workflow.dict(),
     )
     db.add(job)

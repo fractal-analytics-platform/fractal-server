@@ -69,6 +69,11 @@ async def test_view_project(client, MockCurrentUser, project_factory):
         )
         assert res.status_code == 200
         assert len(res.json()) == 1
+        res = await client.get(
+            f"{PREFIX}/project/?user_id={user_id}&id={prj1_id}"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 1
 
 
 async def test_view_workflow(
