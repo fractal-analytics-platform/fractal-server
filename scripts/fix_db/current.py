@@ -24,7 +24,7 @@ with next(get_sync_db()) as db:
         if project.timestamp_created == str(datetime(1, 1, 1, 0, 0, 0, 0)):
             logging.warning(
                 f"[Project {project.id:4d}] "
-                f"timestamp_created={str(datetime(1, 1, 1, 0, 0, 0, 0))}, "
+                f"timestamp_created={project.timestamp_created}, "
                 "use dummy data"
             )
             stm = select(ApplyWorkflow).where(

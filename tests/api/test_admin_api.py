@@ -53,9 +53,6 @@ async def test_view_project(client, MockCurrentUser, project_factory):
         prj1_id = project1.id
         await project_factory(user)
         user_id = user.id
-        # TIMESTAMP_CREATED = project1.timestamp_created.isoformat().replace(
-        #     "+00:00",""
-        # )
 
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
         res = await client.get(f"{PREFIX}/project/")
@@ -77,20 +74,6 @@ async def test_view_project(client, MockCurrentUser, project_factory):
         )
         assert res.status_code == 200
         assert len(res.json()) == 1
-
-        # res = await client.get(
-        #     f"{PREFIX}/project/?timestamp_created_min={TIMESTAMP_CREATED}"
-        # )
-        # debug(f"{PREFIX}/project/?timestamp_created_min={TIMESTAMP_CREATED}")
-        # debug(TIMESTAMP_CREATED)
-        # debug(res.json())
-        # assert res.status_code == 200
-        # assert len(res.json()) == 2
-        # res = await client.get(
-        #     f"{PREFIX}/project/?timestamp_created_max={TIMESTAMP_CREATED}"
-        # )
-        # assert res.status_code == 200
-        # assert len(res.json()) == 2
 
 
 async def test_view_workflow(
