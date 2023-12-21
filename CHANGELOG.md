@@ -7,6 +7,7 @@ Warning: this update requires running some fix-db scripts (more details TBD - se
 * Database:
     * Add `ApplyWorkflow.project_dump` column (\#1070).
     * Provide more meaningful names to fix-db scripts (\#1107).
+    * Add `Project.timestamp_created` column (\#1102).
 * Testing:
     * Extended systematic testing of database models (\#1078).
     * Remove `persist` from `MockCurrentUser` (\#1098).
