@@ -8,15 +8,12 @@ from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
 from ...utils import get_timestamp
-from ...utils import serialize_timestamp
 from ..schemas.project import _ProjectBase
 from .linkuserproject import LinkUserProject
 from .security import UserOAuth
 
 
 class Project(_ProjectBase, SQLModel, table=True):
-    class Config:
-        json_encoders = {datetime: serialize_timestamp}
 
     id: Optional[int] = Field(default=None, primary_key=True)
     timestamp_created: datetime = Field(
