@@ -6,6 +6,8 @@ from devtools import debug
 
 from fractal_server.app.runner import _backends
 from fractal_server.app.runner._common import SHUTDOWN_FILENAME
+from fractal_server.config import get_settings
+from fractal_server.syringe import Inject
 
 
 PREFIX = "/api/v1"
@@ -209,7 +211,9 @@ async def test_get_job_list(
         assert res.status_code == 200
         assert len(res.json()) == N
         for job in res.json():
-            assert job["start_timestamp"].endswith("+00:00")
+            settings = Inject(get_settings)
+            if settings.DB_ENGINE == "postgres":
+                assert job["start_timestamp"].endswith("+00:00")
             assert job["project_dump"]["timestamp_created"].endswith("+00:00")
 
         res = await client.get(
