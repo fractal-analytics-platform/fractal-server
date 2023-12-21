@@ -188,9 +188,9 @@ async def test_patch_task_auth(
 
 async def test_patch_task(
     db,
-    registered_client,
-    registered_superuser_client,
     task_factory,
+    MockCurrentUser,
+    client,
 ):
     task = await task_factory(name="task")
 
@@ -214,43 +214,47 @@ async def test_patch_task(
     )
 
     # Test fails with `source`
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/{task.id}/", json=update.dict(exclude_unset=True)
-    )
-    debug(res, res.json())
-    assert res.status_code == 422
-    assert res.json()["detail"] == "patch_task endpoint cannot set `source`"
+    async with MockCurrentUser(user_kwargs=dict(is_superuser=True)) as user:
+        debug(user)
+        res = await client.patch(
+            f"{PREFIX}/{task.id}/", json=update.dict(exclude_unset=True)
+        )
+        debug(res, res.json())
+        assert res.status_code == 422
+        assert (
+            res.json()["detail"] == "patch_task endpoint cannot set `source`"
+        )
 
-    # Test successuful without `source`
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/{task.id}/",
-        json=update.dict(exclude_unset=True, exclude={"source"}),
-    )
-    assert res.status_code == 200
-    assert res.json()["name"] == NEW_NAME
-    assert res.json()["input_type"] == NEW_INPUT_TYPE
-    assert res.json()["output_type"] == NEW_OUTPUT_TYPE
-    assert res.json()["command"] == NEW_COMMAND
-    assert res.json()["meta"] == NEW_META
-    assert res.json()["source"] == old_source
-    assert res.json()["version"] == NEW_VERSION
-    assert res.json()["owner"] is None
+        # Test successuful without `source`
+        res = await client.patch(
+            f"{PREFIX}/{task.id}/",
+            json=update.dict(exclude_unset=True, exclude={"source"}),
+        )
+        assert res.status_code == 200
+        assert res.json()["name"] == NEW_NAME
+        assert res.json()["input_type"] == NEW_INPUT_TYPE
+        assert res.json()["output_type"] == NEW_OUTPUT_TYPE
+        assert res.json()["command"] == NEW_COMMAND
+        assert res.json()["meta"] == NEW_META
+        assert res.json()["source"] == old_source
+        assert res.json()["version"] == NEW_VERSION
+        assert res.json()["owner"] is None
 
-    # Test dictionaries update
-    OTHER_META = {"key4": [4, 8, 15], "key0": [16, 23, 42]}
-    second_update = TaskUpdate(meta=OTHER_META, version=None)
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/{task.id}/",
-        json=second_update.dict(exclude_unset=True),
-    )
-    debug(res, res.json())
-    assert res.status_code == 200
-    assert res.json()["name"] == NEW_NAME
-    assert res.json()["input_type"] == NEW_INPUT_TYPE
-    assert res.json()["output_type"] == NEW_OUTPUT_TYPE
-    assert res.json()["command"] == NEW_COMMAND
-    assert res.json()["version"] is None
-    assert len(res.json()["meta"]) == 3
+        # Test dictionaries update
+        OTHER_META = {"key4": [4, 8, 15], "key0": [16, 23, 42]}
+        second_update = TaskUpdate(meta=OTHER_META, version=None)
+        res = await client.patch(
+            f"{PREFIX}/{task.id}/",
+            json=second_update.dict(exclude_unset=True),
+        )
+        debug(res, res.json())
+        assert res.status_code == 200
+        assert res.json()["name"] == NEW_NAME
+        assert res.json()["input_type"] == NEW_INPUT_TYPE
+        assert res.json()["output_type"] == NEW_OUTPUT_TYPE
+        assert res.json()["command"] == NEW_COMMAND
+        assert res.json()["version"] is None
+        assert len(res.json()["meta"]) == 3
 
 
 @pytest.mark.parametrize("username", (None, "myself"))
@@ -258,7 +262,8 @@ async def test_patch_task(
 @pytest.mark.parametrize("owner", (None, "another_owner"))
 async def test_patch_task_different_users(
     db,
-    registered_superuser_client,
+    MockCurrentUser,
+    client,
     task_factory,
     username,
     slurm_user,
@@ -274,36 +279,29 @@ async def test_patch_task_different_users(
     debug(task)
     assert task.owner == owner
 
-    # Update user
-    payload = {}
+    # User kwargs
+    user_payload = {}
     if username:
-        payload["username"] = username
+        user_payload["username"] = username
     if slurm_user:
-        payload["slurm_user"] = slurm_user
-    if payload:
-        res = await registered_superuser_client.get("/auth/current-user/")
-        superuser_id = res.json()["id"]
-
-        res = await registered_superuser_client.patch(
-            f"/auth/users/{superuser_id}/",
-            json=payload,
-        )
-        assert res.status_code == 200
+        user_payload["slurm_user"] = slurm_user
 
     # Patch task
     NEW_NAME = "new name"
     payload = TaskUpdate(name=NEW_NAME).dict(exclude_unset=True)
     debug(payload)
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/{task.id}/", json=payload
-    )
-    debug(res.json())
-    assert res.status_code == 200
-    assert res.json()["owner"] == owner
-    if username:
-        assert res.json()["owner"] != username
-    if slurm_user:
-        assert res.json()["owner"] != slurm_user
+    async with MockCurrentUser(
+        user_kwargs=dict(is_superuser=True, **user_payload)
+    ):
+        res = await client.patch(f"{PREFIX}/{task.id}/", json=payload)
+        debug(res.json())
+        assert res.status_code == 200
+        assert res.json()["owner"] == owner
+        assert res.json()["name"] == NEW_NAME
+        if username:
+            assert res.json()["owner"] != username
+        if slurm_user:
+            assert res.json()["owner"] != slurm_user
 
 
 async def test_get_task(task_factory, client, MockCurrentUser):

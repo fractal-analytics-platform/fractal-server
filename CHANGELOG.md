@@ -2,13 +2,18 @@
 
 # 1.4.2 (not released)
 
-Warning: this update requires running some fix-db scripts (more details TBD - see issue #1094).
+WARNINGS:
+1. This update requires running some fix-db scripts (more details TBD - see issue #1094).
+2. Starting from this versions, non-verified users have limited access to `/api/v1/` endpoints.
 
+* API:
+    * Prevent access to task-collection and workflow-apply endpoints to non-verified users (\#1099).
 * Database:
     * Add `ApplyWorkflow.project_dump` column (\#1070).
     * Provide more meaningful names to fix-db scripts (\#1107).
 * Testing:
     * Extended systematic testing of database models (\#1078).
+    * Review `MockCurrentUser` fixture, to handle different kinds of users (\#1099).
     * Remove `persist` from `MockCurrentUser` (\#1098).
     * Update `migrations.yml` GitHub Action to use up-to-date database and also test fix-db script (\#1101).
     * Add more schema-based validation to fix-db current script (\#1107).
