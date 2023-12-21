@@ -13,6 +13,7 @@ WARNINGS:
     * Provide more meaningful names to fix-db scripts (\#1107).
 * Testing:
     * Extended systematic testing of database models (\#1078).
+    * Review `MockCurrentUser` fixture, to handle different kinds of users (\#1099).
     * Remove `persist` from `MockCurrentUser` (\#1098).
     * Update `migrations.yml` GitHub Action to use up-to-date database and also test fix-db script (\#1101).
     * Add more schema-based validation to fix-db current script (\#1107).
