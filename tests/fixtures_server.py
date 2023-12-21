@@ -292,7 +292,6 @@ async def MockCurrentUser(app, db):
                 email=self.email,
                 hashed_password="fake_hashed_password",
                 slurm_user="test01",
-                is_verified=True,
             )
             if self.user_kwargs:
                 defaults.update(self.user_kwargs)
