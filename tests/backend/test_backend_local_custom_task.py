@@ -34,7 +34,7 @@ async def test_full_workflow(
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
     )
 
-    async with MockCurrentUser() as user:
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         # add custom task
         task_path = str(testdata_path / "tasks_dummy/dummy.py")
         command = f"{sys.executable} {task_path}"
