@@ -208,6 +208,9 @@ async def test_get_job_list(
         debug(res)
         assert res.status_code == 200
         assert len(res.json()) == N
+        for job in res.json():
+            assert job["start_timestamp"].endswith("+00:00")
+            assert job["project_dump"]["timestamp_created"].endswith("+00:00")
 
         res = await client.get(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/job/"
