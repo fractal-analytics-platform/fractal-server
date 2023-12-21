@@ -3,7 +3,6 @@ import os
 import shlex
 import subprocess
 from pathlib import Path
-from typing import List
 
 import pytest
 from devtools import debug
@@ -174,7 +173,7 @@ def monkey_slurm(monkeypatch, docker_compose_project_name, docker_services):
     )
 
     class PopenLog:
-        calls: List[OrigPopen] = []
+        calls: list[OrigPopen] = []
 
         @classmethod
         def add_call(cls, call):
