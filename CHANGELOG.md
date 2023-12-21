@@ -4,7 +4,7 @@
 
 WARNINGS:
 1. This update requires running some fix-db scripts (more details TBD - see issue #1094).
-2. Starting from this versions, non-verified users have no access to `/api/v1/` endpoints.
+2. Starting from this versions, non-verified users have limited access to `/api/v1/` endpoints.
 
 * API:
     * Prevent access to task-collection and workflow-apply endpoints to non-verified users (\#1099).
