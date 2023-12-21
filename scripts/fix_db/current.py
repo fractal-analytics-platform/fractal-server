@@ -22,18 +22,30 @@ with next(get_sync_db()) as db:
     projects = db.execute(stm).scalars().all()
     for project in projects:
         if project.timestamp_created == str(datetime(1, 1, 1, 0, 0, 0, 0)):
+            logging.warning(
+                f"[Project {project.id:4d}] "
+                f"timestamp_created={str(datetime(1, 1, 1, 0, 0, 0, 0))}, "
+                "use dummy data"
+            )
             stm = select(ApplyWorkflow).where(
                 ApplyWorkflow.project_id == project.id
             )
             jobs = db.execute(stm).scalars().all()
-            min_timestamp = min([job.start_timestamp for job in jobs])
-            project.timestamp_created = min_timestamp
+            timestamp_created = min([job.start_timestamp for job in jobs])
+            logging.warning(
+                f"[Project {project.id:4d}] setting {timestamp_created=}"
+            )
+            project.timestamp_created = timestamp_created
             db.add(project)
-    db.commit()
-    for project in projects:
-        db.refresh(project)
-        db.expunge(project)
-        ProjectRead(**project.dict())
+            db.commit()
+            db.refresh(project)
+            db.expunge(project)
+            ProjectRead(**project.dict())
+        else:
+            logging.warning(
+                f"[Project {project.id:4d}] timestamp_created attribute valid,"
+                " skip"
+            )
 
     # Get list of jobs
     stm = select(ApplyWorkflow)
