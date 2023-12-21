@@ -319,8 +319,8 @@ async def MockCurrentUser(app, db):
             # on user from other sessions
             db.expunge(self.user)
 
-            # Boolean flags determining which dependencies must be overridden
-            self.previous_dependencies: dict
+            # Find out which dependencies should be overridden, and store their
+            # pre-override value
             if self.user.is_active:
                 self.previous_dependencies[
                     current_active_user
@@ -338,13 +338,14 @@ async def MockCurrentUser(app, db):
                     current_active_verified_user, None
                 )
 
+            # Override dependencies in the FastAPI app
             for dep in self.previous_dependencies.keys():
                 app.dependency_overrides[dep] = lambda: self.user
 
             return self.user
 
         async def __aexit__(self, *args, **kwargs):
-
+            # Reset overridden dependencies to the original ones
             for dep, previous_dep in self.previous_dependencies.items():
                 if previous_dep is not None:
                     app.dependency_overrides[dep] = previous_dep
