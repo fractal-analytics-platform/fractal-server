@@ -55,7 +55,7 @@ async def test_failed_get_collection_info(client, MockCurrentUser):
 
 async def test_collection_non_verified_user(client, MockCurrentUser):
     """
-    Test that a non-verified users is not authhorized to make an call
+    Test that non-verified users are not authorized to make calls
     to `/api/v1/task/collect/pip/`.
     """
     async with MockCurrentUser(user_kwargs=dict(is_verified=False)):
