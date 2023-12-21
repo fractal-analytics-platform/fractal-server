@@ -54,7 +54,6 @@ async def test_full_workflow(
         )
 
     debug(f"Testing with {backend=}")
-
     user_kwargs = {"is_verified": True}
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
@@ -660,7 +659,7 @@ async def test_non_python_task(
     Run a full workflow with a single bash task, which simply writes something
     to stderr and stdout
     """
-    async with MockCurrentUser() as user:
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         # Create project
         project = await project_factory(user)
         project_id = project.id
