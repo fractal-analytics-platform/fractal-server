@@ -30,8 +30,6 @@ async def test_unauthorized_to_admin(client, MockCurrentUser):
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
         res = await client.get(f"{PREFIX}/project/")
         assert res.status_code == 200
-        return
-
         res = await client.get(f"{PREFIX}/workflow/")
         assert res.status_code == 200
         res = await client.get(f"{PREFIX}/dataset/")
