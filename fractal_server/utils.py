@@ -30,14 +30,6 @@ def get_timestamp() -> datetime:
     return datetime.now(tz=timezone.utc)
 
 
-def serialize_timestamp(timestamp: datetime) -> str:
-    ts = timestamp.isoformat()
-    if ts.endswith("+00:00"):
-        return ts.replace("+00:00", "Z")
-    else:
-        return ts
-
-
 async def execute_command(
     *,
     cwd: Path,
