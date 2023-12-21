@@ -39,8 +39,6 @@ router_admin = APIRouter()
 async def view_project(
     id: Optional[int] = None,
     user_id: Optional[int] = None,
-    timestamp_created_min: Optional[datetime] = None,
-    timestamp_created_max: Optional[datetime] = None,
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_db),
 ) -> list[ProjectRead]:
@@ -59,10 +57,6 @@ async def view_project(
 
     if user_id is not None:
         stm = stm.where(Project.user_list.any(User.id == user_id))
-    if timestamp_created_min is not None:
-        stm = stm.where(Project.timestamp_created >= timestamp_created_min)
-    if timestamp_created_max is not None:
-        stm = stm.where(Project.timestamp_created <= timestamp_created_max)
 
     res = await db.execute(stm)
     project_list = res.scalars().all()

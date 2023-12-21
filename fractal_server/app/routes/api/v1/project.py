@@ -385,6 +385,7 @@ async def apply_workflow(
                 for wf_task in workflow.task_list
             ],
         ),
+        # we use (project.json + json.loads) to serialize datetime
         project_dump=json.loads(project.json(exclude={"user_list"})),
         **apply_workflow.dict(),
     )
