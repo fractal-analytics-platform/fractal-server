@@ -89,7 +89,7 @@ WARNINGS:
     * Skip creation of first-superuser when one superuser already exists (\#1006).
 * Dependencies:
     * Update sqlalchemy to version `>=2.0.23,<2.1` (\#1044).
-    * Update `sqlmodel` to version 0.0.12 (\#1044).
+    * Update sqlmodel to version 0.0.12 (\#1044).
     * Upgrade asyncpg to version 0.29.0 (\#1036).
 * Runner:
     * Refresh DB objects within `submit_workflow` (\#927).
@@ -118,7 +118,7 @@ WARNINGS:
 * Expose JSON Schema for the `ManifestV1` Pydantic model (\#942).
 * Improve delete-resource endpoint (\#943).
 * Dependencies:
-    * Upgrade `sqlmodel` to 0.0.11 (\#949).
+    * Upgrade sqlmodel to 0.0.11 (\#949).
 * Testing:
     * Fix bug in local tests with Docker/SLURM (\#948).
 
