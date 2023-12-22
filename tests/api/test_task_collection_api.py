@@ -315,7 +315,16 @@ async def test_failed_collection_missing_wheel_file(
         debug(res)
         debug(res.json())
         assert res.status_code == 422
-        assert "does not exist" in str(res.json())
+        assert "does not exist" in res.json()["detail"]
+
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=dict(package="asd.whl"),
+        )
+        assert (
+            "looks like a filename" in res.json()["detail"]
+            and "[notice]" not in res.json()["detail"]
+        )  # issue 1117
 
 
 async def test_failed_collection_invalid_manifest(
