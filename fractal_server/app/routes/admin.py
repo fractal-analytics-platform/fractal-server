@@ -2,6 +2,7 @@
 Definition of `/admin` routes.
 """
 from datetime import datetime
+from datetime import timezone
 from pathlib import Path
 from typing import Optional
 
@@ -252,6 +253,7 @@ async def update_job(
         )
 
     setattr(job, "status", job_update.status)
+    setattr(job, "end_timestamp", datetime.now(tz=timezone.utc))
     await db.commit()
     await db.refresh(job)
     await db.close()
