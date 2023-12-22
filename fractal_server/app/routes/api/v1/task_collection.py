@@ -213,6 +213,7 @@ async def collect_tasks_pip(
             task_pkg.package_manifest = pkg_info["pkg_manifest"]
             task_pkg.check()
         except Exception as e:
+            e = e.split("[notice]")[0]
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=f"Invalid package or manifest. Original error: {e}",
