@@ -68,7 +68,7 @@ with next(get_sync_db()) as db:
                     id=-1,
                     name="__UNDEFINED__",
                     read_only=True,
-                    timestamp_created=datetime(1, 1, 1, 0, 0, 0),
+                    timestamp_created=str(datetime(1, 1, 1, 0, 0, 0)),
                 )
             else:
                 project = db.get(Project, job.project_id)
