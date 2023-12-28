@@ -2,7 +2,7 @@ from datetime import datetime
 
 import pytest
 from devtools import debug
-from pydantic.v1.error_wrappers import ValidationError
+from pydantic.error_wrappers import ValidationError
 
 from fractal_server.app.schemas import _StateBase
 from fractal_server.app.schemas import ApplyWorkflowCreate

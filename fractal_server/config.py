@@ -22,11 +22,11 @@ from typing import Optional
 from typing import TypeVar
 
 from dotenv import load_dotenv
-from pydantic.v1 import BaseModel
-from pydantic.v1 import BaseSettings
-from pydantic.v1 import Field
-from pydantic.v1 import root_validator
-from pydantic.v1 import validator
+from pydantic import BaseModel
+from pydantic import BaseSettings
+from pydantic import Field
+from pydantic import root_validator
+from pydantic import validator
 from sqlalchemy.engine import URL
 
 import fractal_server

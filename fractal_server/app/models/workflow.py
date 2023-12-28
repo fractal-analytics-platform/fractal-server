@@ -2,7 +2,7 @@ from typing import Any
 from typing import Optional
 from typing import Union
 
-from pydantic.v1 import validator
+from pydantic import validator
 from sqlalchemy import Column
 from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.types import JSON

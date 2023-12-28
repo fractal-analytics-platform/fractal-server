@@ -1,9 +1,9 @@
 from typing import Any
 from typing import Optional
 
-from pydantic.v1 import BaseModel
-from pydantic.v1 import Field
-from pydantic.v1 import validator
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic import validator
 
 from ._validators import val_absolute_path
 from ._validators import valstr

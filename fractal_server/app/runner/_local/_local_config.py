@@ -15,9 +15,9 @@ import json
 from pathlib import Path
 from typing import Optional
 
-from pydantic.v1 import BaseModel
-from pydantic.v1 import Extra
-from pydantic.v1.error_wrappers import ValidationError
+from pydantic import BaseModel
+from pydantic import Extra
+from pydantic.error_wrappers import ValidationError
 
 from ....config import get_settings
 from ....syringe import Inject

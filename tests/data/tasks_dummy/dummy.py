@@ -26,7 +26,7 @@ from typing import Any
 from typing import Dict
 from typing import Optional
 
-from pydantic.v1.decorator import validate_arguments
+from pydantic.decorator import validate_arguments
 
 
 logging.basicConfig(

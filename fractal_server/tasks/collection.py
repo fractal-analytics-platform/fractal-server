@@ -24,7 +24,7 @@ from typing import Optional
 from typing import Union
 from zipfile import ZipFile
 
-from pydantic.v1 import root_validator
+from pydantic import root_validator
 
 from ..app.schemas import ManifestV1
 from ..app.schemas import TaskCollectPip

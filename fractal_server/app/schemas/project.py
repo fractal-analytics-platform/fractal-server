@@ -1,8 +1,8 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic.v1 import BaseModel
-from pydantic.v1 import validator
+from pydantic import BaseModel
+from pydantic import validator
 
 from ._validators import valstr
 

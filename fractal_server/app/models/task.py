@@ -3,7 +3,7 @@ import logging
 from typing import Any
 from typing import Optional
 
-from pydantic.v1 import HttpUrl
+from pydantic import HttpUrl
 from sqlalchemy import Column
 from sqlalchemy.types import JSON
 from sqlmodel import Field
