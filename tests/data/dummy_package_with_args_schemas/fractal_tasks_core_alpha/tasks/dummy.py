@@ -25,7 +25,7 @@ from sys import stdout
 from typing import Any
 from typing import Optional
 
-from pydantic.decorator import validate_arguments
+from pydantic.v1.decorator import validate_arguments
 
 
 logging.basicConfig(

@@ -16,7 +16,7 @@ from typing import Any
 from typing import Callable
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from ...logger import close_logger as close_job_logger  # noqa F401
 from ..models import Dataset

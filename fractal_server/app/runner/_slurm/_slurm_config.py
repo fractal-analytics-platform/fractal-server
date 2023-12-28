@@ -17,10 +17,10 @@ from pathlib import Path
 from typing import Optional
 from typing import Union
 
-from pydantic import BaseModel
-from pydantic import Extra
-from pydantic import Field
-from pydantic.error_wrappers import ValidationError
+from pydantic.v1 import BaseModel
+from pydantic.v1 import Extra
+from pydantic.v1 import Field
+from pydantic.v1.error_wrappers import ValidationError
 
 from ....config import get_settings
 from ....logger import set_logger

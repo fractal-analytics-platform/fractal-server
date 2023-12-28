@@ -6,8 +6,8 @@ from typing import Optional
 
 import pytest
 from devtools import debug  # noqa
-from pydantic import BaseModel
-from pydantic import validator
+from pydantic.v1 import BaseModel
+from pydantic.v1 import validator
 
 from .fixtures_server import HAS_LOCAL_SBATCH
 

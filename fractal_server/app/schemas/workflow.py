@@ -2,8 +2,8 @@ from enum import Enum
 from typing import Any
 from typing import Optional
 
-from pydantic import BaseModel
-from pydantic import validator
+from pydantic.v1 import BaseModel
+from pydantic.v1 import validator
 
 from ._validators import valint
 from ._validators import valstr

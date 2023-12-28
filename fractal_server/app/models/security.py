@@ -11,7 +11,7 @@
 # University of Zurich
 from typing import Optional
 
-from pydantic import EmailStr
+from pydantic.v1 import EmailStr
 from sqlalchemy import Column
 from sqlalchemy.types import JSON
 from sqlmodel import Field

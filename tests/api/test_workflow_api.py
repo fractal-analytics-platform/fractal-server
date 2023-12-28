@@ -583,7 +583,7 @@ async def test_patch_workflow_task_with_args_schema(
         the task defaults
     """
 
-    from pydantic import BaseModel
+    from pydantic.v1 import BaseModel
     from typing import Optional
 
     # Prepare models to generate a valid JSON Schema

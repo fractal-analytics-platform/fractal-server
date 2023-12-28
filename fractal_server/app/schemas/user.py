@@ -1,11 +1,11 @@
 from typing import Optional
 
 from fastapi_users import schemas
-from pydantic import BaseModel
-from pydantic import Extra
-from pydantic import Field
-from pydantic import validator
-from pydantic.types import StrictStr
+from pydantic.v1 import BaseModel
+from pydantic.v1 import Extra
+from pydantic.v1 import Field
+from pydantic.v1 import validator
+from pydantic.v1.types import StrictStr
 
 from ._validators import val_absolute_path
 from ._validators import val_unique_list

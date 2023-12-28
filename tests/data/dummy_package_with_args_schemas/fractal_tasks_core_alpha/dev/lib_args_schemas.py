@@ -10,11 +10,11 @@ from typing import Any
 
 import fractal_tasks_core_alpha
 from docstring_parser import parse
-from pydantic.decorator import ALT_V_ARGS
-from pydantic.decorator import ALT_V_KWARGS
-from pydantic.decorator import V_DUPLICATE_KWARGS
-from pydantic.decorator import V_POSITIONAL_ONLY_NAME
-from pydantic.decorator import ValidatedFunction
+from pydantic.v1.decorator import ALT_V_ARGS
+from pydantic.v1.decorator import ALT_V_KWARGS
+from pydantic.v1.decorator import V_DUPLICATE_KWARGS
+from pydantic.v1.decorator import V_POSITIONAL_ONLY_NAME
+from pydantic.v1.decorator import ValidatedFunction
 
 
 _Schema = dict[str, Any]

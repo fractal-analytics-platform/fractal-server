@@ -1,10 +1,10 @@
 from typing import Any
 from typing import Optional
 
-from pydantic import BaseModel
-from pydantic import Field
-from pydantic import HttpUrl
-from pydantic import validator
+from pydantic.v1 import BaseModel
+from pydantic.v1 import Field
+from pydantic.v1 import HttpUrl
+from pydantic.v1 import validator
 
 from ._validators import valstr
 

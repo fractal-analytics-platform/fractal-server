@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 
 __all__ = (

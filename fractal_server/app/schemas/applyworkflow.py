@@ -2,10 +2,10 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel
-from pydantic import Extra
-from pydantic import validator
-from pydantic.types import StrictStr
+from pydantic.v1 import BaseModel
+from pydantic.v1 import Extra
+from pydantic.v1 import validator
+from pydantic.v1.types import StrictStr
 
 from ._validators import valstr
 
