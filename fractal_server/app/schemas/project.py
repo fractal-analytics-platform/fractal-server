@@ -59,8 +59,8 @@ class ProjectUpdate(_ProjectBase):
         read_only:
     """
 
-    name: Optional[str]
-    read_only: Optional[bool]
+    name: Optional[str] = None
+    read_only: Optional[bool] = None
 
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))

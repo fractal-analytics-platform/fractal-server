@@ -44,7 +44,7 @@ class Task(_TaskBase, SQLModel, table=True):
     args_schema: Optional[dict[str, Any]] = Field(
         sa_column=Column(JSON), default=None
     )
-    args_schema_version: Optional[str]
+    args_schema_version: Optional[str] = None
     docs_info: Optional[str] = None
     docs_link: Optional[HttpUrl] = None
 

@@ -31,13 +31,13 @@ class TaskDump(BaseModel):
     command: str
     input_type: str
     output_type: str
-    owner: Optional[str]
-    version: Optional[str]
+    owner: Optional[str] = None
+    version: Optional[str] = None
 
 
 class WorkflowTaskDump(BaseModel):
     id: int
-    order: Optional[int]
+    order: Optional[int] = None
     workflow_id: int
     task_id: int
     task: TaskDump
@@ -59,7 +59,7 @@ class ResourceDump(BaseModel):
 class DatasetDump(BaseModel):
     id: int
     name: str
-    type: Optional[str]
+    type: Optional[str] = None
     read_only: bool
     resource_list: list[ResourceDump]
     project_id: int
@@ -98,7 +98,7 @@ class _ApplyWorkflowBase(BaseModel):
         worker_init:
     """
 
-    worker_init: Optional[str]
+    worker_init: Optional[str] = None
 
 
 class ApplyWorkflowCreate(_ApplyWorkflowBase):
@@ -120,6 +120,10 @@ class ApplyWorkflowCreate(_ApplyWorkflowBase):
         valstr("worker_init")
     )
 
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it
+    # by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators
+    # for more information.
     @validator("first_task_index", always=True)
     def first_task_index_non_negative(cls, v, values):
         """
@@ -131,6 +135,10 @@ class ApplyWorkflowCreate(_ApplyWorkflowBase):
             )
         return v
 
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it
+    # by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators
+    # for more information.
     @validator("last_task_index", always=True)
     def first_last_task_indices(cls, v, values):
         """
@@ -180,24 +188,24 @@ class ApplyWorkflowRead(_ApplyWorkflowBase):
     """
 
     id: int
-    project_id: Optional[int]
-    project_dump: Optional[ProjectDump]
+    project_id: Optional[int] = None
+    project_dump: Optional[ProjectDump] = None
     user_email: str
-    slurm_account: Optional[str]
-    workflow_id: Optional[int]
-    workflow_dump: Optional[WorkflowDump]
-    input_dataset_id: Optional[int]
-    input_dataset_dump: Optional[DatasetDump]
-    output_dataset_id: Optional[int]
-    output_dataset_dump: Optional[DatasetDump]
+    slurm_account: Optional[str] = None
+    workflow_id: Optional[int] = None
+    workflow_dump: Optional[WorkflowDump] = None
+    input_dataset_id: Optional[int] = None
+    input_dataset_dump: Optional[DatasetDump] = None
+    output_dataset_id: Optional[int] = None
+    output_dataset_dump: Optional[DatasetDump] = None
     start_timestamp: datetime
-    end_timestamp: Optional[datetime]
+    end_timestamp: Optional[datetime] = None
     status: str
-    log: Optional[str]
-    working_dir: Optional[str]
-    working_dir_user: Optional[str]
-    first_task_index: Optional[int]
-    last_task_index: Optional[int]
+    log: Optional[str] = None
+    working_dir: Optional[str] = None
+    working_dir_user: Optional[str] = None
+    first_task_index: Optional[int] = None
+    last_task_index: Optional[int] = None
 
 
 class ApplyWorkflowUpdate(BaseModel):

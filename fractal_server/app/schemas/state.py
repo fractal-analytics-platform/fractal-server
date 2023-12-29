@@ -33,4 +33,4 @@ class StateRead(_StateBase):
         id:
     """
 
-    id: Optional[int]
+    id: Optional[int] = None

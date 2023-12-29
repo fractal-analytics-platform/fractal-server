@@ -23,10 +23,12 @@ from typing import TypeVar
 
 from dotenv import load_dotenv
 from pydantic import BaseModel
-from pydantic import BaseSettings
 from pydantic import Field
+from pydantic import model_validator
 from pydantic import root_validator
 from pydantic import validator
+from pydantic_settings import BaseSettings
+from pydantic_settings import SettingsConfigDict
 from sqlalchemy.engine import URL
 
 import fractal_server
@@ -69,7 +71,7 @@ class OAuthClientConfig(BaseModel):
     CLIENT_NAME: str
     CLIENT_ID: str
     CLIENT_SECRET: str
-    OIDC_CONFIGURATION_ENDPOINT: Optional[str]
+    OIDC_CONFIGURATION_ENDPOINT: Optional[str] = None
     REDIRECT_URL: Optional[str] = None
 
     @root_validator
@@ -90,8 +92,7 @@ class Settings(BaseSettings):
     The attributes of this class are set from the environtment.
     """
 
-    class Config:
-        case_sensitive = True
+    model_config = SettingsConfigDict(case_sensitive=True)
 
     PROJECT_NAME: str = "Fractal Server"
     PROJECT_VERSION: str = fractal_server.__VERSION__
@@ -122,7 +123,8 @@ class Settings(BaseSettings):
     Cookie token lifetime, in seconds.
     """
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def collect_oauth_clients(cls, values):
         """
         Automatic collection of OAuth Clients
@@ -272,6 +274,10 @@ class Settings(BaseSettings):
     or a path relative to current working directory).
     """
 
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it
+    # by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators
+    # for more information.
     @validator("FRACTAL_TASKS_DIR", always=True)
     def make_FRACTAL_TASKS_DIR_absolute(cls, v):
         """
@@ -327,8 +333,10 @@ class Settings(BaseSettings):
     FRACTAL_SLURM_POLL_INTERVAL: int = 5
     """
     Interval to wait (in seconds) before checking whether unfinished job are
-    still running on SLURM (see `SlurmWaitThread` in
-    [`clusterfutures`](https://github.com/sampsyo/clusterfutures/blob/master/cfut/__init__.py)).
+    still running on SLURM
+    (see `SlurmWaitThread` in [`clusterfutures`]
+    (https://github.com/sampsyo/clusterfutures/blob/master/cfut/__init__.py)
+    ).
     """
 
     FRACTAL_SLURM_ERROR_HANDLING_INTERVAL: int = 5

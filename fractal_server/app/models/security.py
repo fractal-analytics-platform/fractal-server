@@ -11,6 +11,7 @@
 # University of Zurich
 from typing import Optional
 
+from pydantic import ConfigDict
 from pydantic import EmailStr
 from sqlalchemy import Column
 from sqlalchemy.types import JSON
@@ -51,9 +52,7 @@ class OAuthAccount(SQLModel, table=True):
     refresh_token: Optional[str] = Field(nullable=True)
     account_id: str = Field(index=True, nullable=False)
     account_email: str = Field(nullable=False)
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserOAuth(SQLModel, table=True):
@@ -107,6 +106,4 @@ class UserOAuth(SQLModel, table=True):
         link_model=LinkUserProject,
         sa_relationship_kwargs={"lazy": "selectin"},
     )
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

@@ -3,6 +3,7 @@ from typing import Any
 from typing import Optional
 
 from pydantic import BaseModel
+from pydantic import field_validator
 from pydantic import validator
 
 from ._validators import valint
@@ -44,7 +45,7 @@ class WorkflowTaskCreate(_WorkflowTaskBase):
         order:
     """
 
-    order: Optional[int]
+    order: Optional[int] = None
     # Validators
     _order = validator("order", allow_reuse=True)(valint("order", min_val=0))
 
@@ -62,7 +63,7 @@ class WorkflowTaskRead(_WorkflowTaskBase):
     """
 
     id: int
-    order: Optional[int]
+    order: Optional[int] = None
     workflow_id: int
     task_id: int
     task: TaskRead
@@ -96,7 +97,8 @@ class WorkflowTaskUpdate(_WorkflowTaskBase):
     """
 
     # Validators
-    @validator("meta")
+    @field_validator("meta")
+    @classmethod
     def check_no_parallelisation_level(cls, m):
         if "parallelization_level" in m:
             raise ValueError(
@@ -151,13 +153,14 @@ class WorkflowUpdate(_WorkflowBase):
         reordered_workflowtask_ids:
     """
 
-    name: Optional[str]
-    reordered_workflowtask_ids: Optional[list[int]]
+    name: Optional[str] = None
+    reordered_workflowtask_ids: Optional[list[int]] = None
 
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))
 
-    @validator("reordered_workflowtask_ids")
+    @field_validator("reordered_workflowtask_ids")
+    @classmethod
     def check_positive_and_unique(cls, value):
         if any(i < 0 for i in value):
             raise ValueError("Negative `id` in `reordered_workflowtask_ids`")

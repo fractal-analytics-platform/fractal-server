@@ -26,6 +26,10 @@ class MockWorkflowTask(BaseModel):
     meta: dict = {}
     executor: Optional[str] = "default"
 
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it
+    # by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators
+    # for more information.
     @validator("meta", pre=True)
     def merge_meta(cls, meta, values):
         """

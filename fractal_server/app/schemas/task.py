@@ -50,17 +50,17 @@ class TaskUpdate(_TaskBase):
         docs_link:
     """
 
-    name: Optional[str]
-    input_type: Optional[str]
-    output_type: Optional[str]
-    command: Optional[str]
-    source: Optional[str]
-    meta: Optional[dict[str, Any]]
-    version: Optional[str]
-    args_schema: Optional[dict[str, Any]]
-    args_schema_version: Optional[str]
-    docs_info: Optional[str]
-    docs_link: Optional[HttpUrl]
+    name: Optional[str] = None
+    input_type: Optional[str] = None
+    output_type: Optional[str] = None
+    command: Optional[str] = None
+    source: Optional[str] = None
+    meta: Optional[dict[str, Any]] = None
+    version: Optional[str] = None
+    args_schema: Optional[dict[str, Any]] = None
+    args_schema_version: Optional[str] = None
+    docs_info: Optional[str] = None
+    docs_link: Optional[HttpUrl] = None
 
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))
@@ -116,12 +116,12 @@ class TaskRead(_TaskBase):
     input_type: str
     output_type: str
     meta: Optional[dict[str, Any]] = Field(default={})
-    owner: Optional[str]
-    version: Optional[str]
-    args_schema: Optional[dict[str, Any]]
-    args_schema_version: Optional[str]
-    docs_info: Optional[str]
-    docs_link: Optional[HttpUrl]
+    owner: Optional[str] = None
+    version: Optional[str] = None
+    args_schema: Optional[dict[str, Any]] = None
+    args_schema_version: Optional[str] = None
+    docs_info: Optional[str] = None
+    docs_link: Optional[HttpUrl] = None
 
 
 class TaskCreate(_TaskBase):
@@ -146,11 +146,11 @@ class TaskCreate(_TaskBase):
     input_type: str
     output_type: str
     meta: Optional[dict[str, Any]] = Field(default={})
-    version: Optional[str]
-    args_schema: Optional[dict[str, Any]]
-    args_schema_version: Optional[str]
-    docs_info: Optional[str]
-    docs_link: Optional[HttpUrl]
+    version: Optional[str] = None
+    args_schema: Optional[dict[str, Any]] = None
+    args_schema_version: Optional[str] = None
+    docs_info: Optional[str] = None
+    docs_link: Optional[HttpUrl] = None
 
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))

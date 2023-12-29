@@ -24,7 +24,7 @@ from typing import Optional
 from typing import Union
 from zipfile import ZipFile
 
-from pydantic import root_validator
+from pydantic import model_validator
 
 from ..app.schemas import ManifestV1
 from ..app.schemas import TaskCollectPip
@@ -132,7 +132,8 @@ class _TaskCollectPip(TaskCollectPip):
     def is_local_package(self) -> bool:
         return bool(self.package_path)
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def check_local_package(cls, values):
         """
         Checks if package corresponds to an existing path on the filesystem

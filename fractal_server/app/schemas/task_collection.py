@@ -4,6 +4,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import field_validator
 from pydantic import validator
 
 from ._validators import valstr
@@ -66,7 +67,8 @@ class TaskCollectPip(_TaskCollectBase):
         valstr("python_version")
     )
 
-    @validator("package")
+    @field_validator("package")
+    @classmethod
     def package_validator(cls, value):
         if "/" in value:
             if not value.endswith(".whl"):
@@ -80,6 +82,10 @@ class TaskCollectPip(_TaskCollectBase):
                 )
         return value
 
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it
+    # by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators
+    # for more information.
     @validator("package_version")
     def package_version_validator(cls, v, values):
         if v is not None:
@@ -107,8 +113,8 @@ class TaskCollectStatus(_TaskCollectBase):
     package: str
     venv_path: Path
     task_list: Optional[list[TaskRead]] = Field(default=[])
-    log: Optional[str]
-    info: Optional[str]
+    log: Optional[str] = None
+    info: Optional[str] = None
 
     def sanitised_dict(self):
         """

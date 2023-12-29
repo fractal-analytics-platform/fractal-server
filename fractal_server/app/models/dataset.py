@@ -1,6 +1,7 @@
 from typing import Any
 from typing import Optional
 
+from pydantic import ConfigDict
 from sqlalchemy import Column
 from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.types import JSON
@@ -67,9 +68,7 @@ class Dataset(_DatasetBase, SQLModel, table=True):
     history: list[dict[str, Any]] = Field(
         sa_column=Column(JSON, server_default="[]", nullable=False)
     )
-
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     @property
     def paths(self) -> list[str]:
