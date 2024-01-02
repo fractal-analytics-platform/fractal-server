@@ -116,7 +116,7 @@ async def test_project_and_workflows(db):
 
     # test relationships
     assert db_workflow1.project_id == db_project.id
-    assert db_workflow1.project == db_project
+    assert db_workflow1.project.model_dump() == db_project.model_dump()
     # test defaults
     assert db_workflow1.task_list == []
     assert db_workflow1.job_list == []
@@ -137,7 +137,7 @@ async def test_project_and_workflows(db):
     assert db_workflow1.name == workflow1.name
     assert db_workflow2.name == workflow2.name
     assert db_workflow2.project_id == db_project.id
-    assert db_workflow2.project == db_project
+    assert db_workflow2.project.model_dump() == db_project.model_dump()
 
     # delete just one workflow
     await db.delete(db_workflow2)

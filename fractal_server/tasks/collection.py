@@ -258,7 +258,11 @@ def _load_manifest_from_wheel(
         raise ValueError(msg)
     with wheel.open(manifest) as manifest_fd:
         manifest_dict = json.load(manifest_fd)
-    manifest_version = str(manifest_dict["manifest_version"])
+    if isinstance(manifest_dict["manifest_version"], int):
+        manifest_dict["manifest_version"] = str(
+            manifest_dict["manifest_version"]
+        )
+    manifest_version = manifest_dict["manifest_version"]
     if manifest_version == "1":
         pkg_manifest = ManifestV1(**manifest_dict)
         return pkg_manifest
