@@ -145,6 +145,6 @@ def test_manifest_validation():
     with manifest_path.open("r") as f:
         manifest_dict = json.load(f)
 
-    if manifest_dict["manifest_version"] == 1:
+    if manifest_dict["manifest_version"] == "1":
         manifest_obj = ManifestV1(**manifest_dict)
     debug(manifest_obj)
