@@ -109,7 +109,7 @@ class Settings(BaseSettings):
     JWT token lifetime, in seconds.
     """
 
-    JWT_SECRET_KEY: Optional[str]
+    JWT_SECRET_KEY: Optional[str] = None
     """
     JWT secret
 
@@ -176,11 +176,11 @@ class Settings(BaseSettings):
     """
     If `True`, make database operations verbose.
     """
-    POSTGRES_USER: Optional[str]
+    POSTGRES_USER: Optional[str] = None
     """
     User to use when connecting to the PostgreSQL database.
     """
-    POSTGRES_PASSWORD: Optional[str]
+    POSTGRES_PASSWORD: Optional[str] = None
     """
     Password to use when connecting to the PostgreSQL database.
     """
@@ -192,12 +192,12 @@ class Settings(BaseSettings):
     """
     Port number to use when connecting to the PostgreSQL server.
     """
-    POSTGRES_DB: Optional[str]
+    POSTGRES_DB: Optional[str] = None
     """
     Name of the PostgreSQL database to connect to.
     """
 
-    SQLITE_PATH: Optional[str]
+    SQLITE_PATH: Optional[str] = None
     """
     File path where the SQLite database is located (or will be located).
     """
@@ -298,7 +298,7 @@ class Settings(BaseSettings):
     Select which runner backend to use.
     """
 
-    FRACTAL_RUNNER_WORKING_BASE_DIR: Optional[Path]
+    FRACTAL_RUNNER_WORKING_BASE_DIR: Optional[Path] = None
     """
     Base directory for running jobs / workflows. All artifacts required to set
     up, run and tear down jobs are placed in subdirs of this directory.
