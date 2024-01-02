@@ -4,6 +4,8 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Extra
+from pydantic import Field
+from pydantic import field_validator
 from pydantic import validator
 from pydantic.types import StrictStr
 
@@ -111,8 +113,10 @@ class ApplyWorkflowCreate(_ApplyWorkflowBase):
         slurm_account:
     """
 
-    first_task_index: Optional[int] = None
-    last_task_index: Optional[int] = None
+    first_task_index: Optional[int] = Field(
+        default=None, validate_default=True
+    )
+    last_task_index: Optional[int] = Field(default=None, validate_default=True)
     slurm_account: Optional[StrictStr] = None
 
     # Validators
@@ -120,12 +124,9 @@ class ApplyWorkflowCreate(_ApplyWorkflowBase):
         valstr("worker_init")
     )
 
-    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it
-    # by `field_validator` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators
-    # for more information.
-    @validator("first_task_index", always=True)
-    def first_task_index_non_negative(cls, v, values):
+    @field_validator("first_task_index")
+    @classmethod
+    def first_task_index_non_negative(cls, v):
         """
         Check that `first_task_index` is non-negative.
         """
@@ -135,12 +136,9 @@ class ApplyWorkflowCreate(_ApplyWorkflowBase):
             )
         return v
 
-    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it
-    # by `field_validator` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators
-    # for more information.
-    @validator("last_task_index", always=True)
-    def first_last_task_indices(cls, v, values):
+    @field_validator("last_task_index")
+    @classmethod
+    def first_last_task_indices(cls, v, info):
         """
         Check that `last_task_index` is non-negative, and that it is not
         smaller than `first_task_index`.
@@ -150,7 +148,7 @@ class ApplyWorkflowCreate(_ApplyWorkflowBase):
                 f"last_task_index cannot be negative (given: {v})"
             )
 
-        first_task_index = values.get("first_task_index")
+        first_task_index = info.data.get("first_task_index")
         last_task_index = v
         if first_task_index is not None and last_task_index is not None:
             if first_task_index > last_task_index:

@@ -82,14 +82,11 @@ class TaskCollectPip(_TaskCollectBase):
                 )
         return value
 
-    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it
-    # by `field_validator` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators
-    # for more information.
-    @validator("package_version")
-    def package_version_validator(cls, v, values):
+    @field_validator("package_version")
+    @classmethod
+    def package_version_validator(cls, v, info):
         if v is not None:
-            if values["package"].endswith(".whl"):
+            if info.data["package"].endswith(".whl"):
                 raise ValueError(
                     "Cannot provide version when package is a Wheel file."
                 )

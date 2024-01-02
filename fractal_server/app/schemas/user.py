@@ -4,6 +4,7 @@ from fastapi_users import schemas
 from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import Field
+from pydantic import field_validator
 from pydantic import validator
 from pydantic.types import StrictStr
 
@@ -65,21 +66,17 @@ class UserUpdate(schemas.BaseUserUpdate):
         val_unique_list("slurm_accounts")
     )
 
-    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it
-    # by `field_validator` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators
-    # for more information.
-    @validator(
+    @field_validator(
         "is_active",
         "is_verified",
         "is_superuser",
         "email",
         "password",
-        always=False,
     )
-    def cant_set_none(cls, v, field):
+    @classmethod
+    def cant_set_none(cls, v, info):
         if v is None:
-            raise ValueError(f"Cannot set {field.name}=None")
+            raise ValueError(f"Cannot set {info.field_name}=None")
         return v
 
 

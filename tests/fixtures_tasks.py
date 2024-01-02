@@ -7,7 +7,7 @@ from typing import Optional
 import pytest
 from devtools import debug  # noqa
 from pydantic import BaseModel
-from pydantic import validator
+from pydantic import field_validator
 
 from .fixtures_server import HAS_LOCAL_SBATCH
 
@@ -26,17 +26,14 @@ class MockWorkflowTask(BaseModel):
     meta: dict = {}
     executor: Optional[str] = "default"
 
-    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it
-    # by `field_validator` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators
-    # for more information.
-    @validator("meta", pre=True)
-    def merge_meta(cls, meta, values):
+    @field_validator("meta")
+    @classmethod
+    def merge_meta(cls, meta, info):
         """
         This validator merges the task.meta and meta dictionaries, in the same
         way as it takes place in Workflow.insert_task.
         """
-        task_meta = values.get("task").meta
+        task_meta = info.data.get("task").meta
         if task_meta:
             meta = {**task_meta, **meta}
         return meta

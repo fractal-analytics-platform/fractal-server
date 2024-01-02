@@ -88,7 +88,7 @@ class _ManifestBase(BaseModel):
     has_args_schemas: bool = False
     args_schema_version: Optional[str] = None
 
-    @model_validator()
+    @model_validator(mode="after")
     @classmethod
     def _check_args_schemas_are_present(cls, values):
         has_args_schemas = values["has_args_schemas"]

@@ -24,9 +24,8 @@ from typing import TypeVar
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import field_validator
 from pydantic import model_validator
-from pydantic import root_validator
-from pydantic import validator
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 from sqlalchemy.engine import URL
@@ -74,7 +73,8 @@ class OAuthClientConfig(BaseModel):
     OIDC_CONFIGURATION_ENDPOINT: Optional[str] = None
     REDIRECT_URL: Optional[str] = None
 
-    @root_validator
+    @model_validator(mode="before")
+    @classmethod
     def check_configuration(cls, values):
         if values.get("CLIENT_NAME") not in ["GOOGLE", "GITHUB"]:
             if not values.get("OIDC_CONFIGURATION_ENDPOINT"):
@@ -268,17 +268,15 @@ class Settings(BaseSettings):
     default admin credentials.
     """
 
-    FRACTAL_TASKS_DIR: Optional[Path]
+    FRACTAL_TASKS_DIR: Optional[Path] = Field(
+        default=None, validate_default=True
+    )
     """
     Directory under which all the tasks will be saved (either an absolute path
     or a path relative to current working directory).
     """
 
-    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it
-    # by `field_validator` manually.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators
-    # for more information.
-    @validator("FRACTAL_TASKS_DIR", always=True)
+    @field_validator("FRACTAL_TASKS_DIR")
     def make_FRACTAL_TASKS_DIR_absolute(cls, v):
         """
         If `FRACTAL_TASKS_DIR` is a non-absolute path, make it absolute (based
@@ -314,12 +312,12 @@ class Settings(BaseSettings):
     see details [here](../internals/logs/).
     """
 
-    FRACTAL_LOCAL_CONFIG_FILE: Optional[Path]
+    FRACTAL_LOCAL_CONFIG_FILE: Optional[Path] = None
     """
     Path of JSON file with configuration for the local backend.
     """
 
-    FRACTAL_SLURM_CONFIG_FILE: Optional[Path]
+    FRACTAL_SLURM_CONFIG_FILE: Optional[Path] = None
     """
     Path of JSON file with configuration for the SLURM backend.
     """
@@ -375,7 +373,6 @@ class Settings(BaseSettings):
                 )
 
     def check_runner(self) -> None:
-
         if not self.FRACTAL_RUNNER_WORKING_BASE_DIR:
             raise FractalConfigurationError(
                 "FRACTAL_RUNNER_WORKING_BASE_DIR cannot be None."

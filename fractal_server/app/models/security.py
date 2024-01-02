@@ -15,6 +15,7 @@ from pydantic import ConfigDict
 from pydantic import EmailStr
 from sqlalchemy import Column
 from sqlalchemy.types import JSON
+from sqlmodel import AutoString
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
@@ -83,7 +84,9 @@ class UserOAuth(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     email: EmailStr = Field(
-        sa_column_kwargs={"unique": True, "index": True}, nullable=False
+        sa_column_kwargs={"unique": True, "index": True},
+        nullable=False,
+        sa_type=AutoString,
     )
     hashed_password: str
     is_active: bool = Field(True, nullable=False)
