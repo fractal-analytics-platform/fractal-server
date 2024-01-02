@@ -91,8 +91,8 @@ class _ManifestBase(BaseModel):
     @model_validator(mode="after")
     @classmethod
     def _check_args_schemas_are_present(cls, values):
-        has_args_schemas = values["has_args_schemas"]
-        task_list = values["task_list"]
+        has_args_schemas = values.has_args_schemas
+        task_list = values.task_list
         if has_args_schemas:
             for task in task_list:
                 if task.args_schema is None:
