@@ -276,7 +276,7 @@ async def test_project_and_datasets(db):
 
     # test relationships
     assert db_dataset1.project_id == db_project.id
-    assert db_dataset1.project == db_project
+    assert db_dataset1.project.model_dump() == db_project.model_dump()
     # test defaults
     assert db_dataset1.type is None
     assert db_dataset1.read_only is False
@@ -302,7 +302,7 @@ async def test_project_and_datasets(db):
     assert db_dataset1.name == dataset1.name
     assert db_dataset2.name == dataset2.name
     assert db_dataset2.project_id == db_project.id
-    assert db_dataset2.project == db_project
+    assert db_dataset2.project.model_dump() == db_project.model_dump()
 
     # delete just one dataset
     await db.delete(db_dataset2)
