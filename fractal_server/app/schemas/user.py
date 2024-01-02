@@ -48,10 +48,10 @@ class UserUpdate(schemas.BaseUserUpdate):
         slurm_accounts:
     """
 
-    slurm_user: Optional[str]
-    cache_dir: Optional[str]
-    username: Optional[str]
-    slurm_accounts: Optional[list[StrictStr]]
+    slurm_user: Optional[str] = None
+    cache_dir: Optional[str] = None
+    username: Optional[str] = None
+    slurm_accounts: Optional[list[StrictStr]] = None
 
     # Validators
     _slurm_user = validator("slurm_user", allow_reuse=True)(
@@ -112,9 +112,9 @@ class UserCreate(schemas.BaseUserCreate):
         slurm_accounts:
     """
 
-    slurm_user: Optional[str]
-    cache_dir: Optional[str]
-    username: Optional[str]
+    slurm_user: Optional[str] = None
+    cache_dir: Optional[str] = None
+    username: Optional[str] = None
     slurm_accounts: list[StrictStr] = Field(default_factory=list)
 
     # Validators
