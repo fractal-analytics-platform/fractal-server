@@ -494,7 +494,7 @@ async def test_project_apply_workflow_subset(
         debug(expected_workflow_dump)
         assert res.json()["workflow_dump"] == expected_workflow_dump
         assert res.json()["project_dump"] == json.loads(
-            project.json(exclude={"user_list"})
+            project.model_dump_json(exclude={"user_list"})
         )
 
 

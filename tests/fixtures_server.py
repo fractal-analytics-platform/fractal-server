@@ -535,7 +535,9 @@ async def job_factory(db: AsyncSession):
                     for wf_task in workflow.task_list
                 ],
             ),
-            project_dump=json.loads(project.json(exclude={"user_list"})),
+            project_dump=json.loads(
+                project.model_dump_json(exclude={"user_list"})
+            ),
             last_task_index=last_task_index,
             first_task_index=first_task_index,
             working_dir=str(working_dir),

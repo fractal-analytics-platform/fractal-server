@@ -391,8 +391,10 @@ async def apply_workflow(
                 for wf_task in workflow.task_list
             ],
         ),
-        # we use (project.json + json.loads) to serialize datetime
-        project_dump=json.loads(project.json(exclude={"user_list"})),
+        # we use (project.model_dump_json + json.loads) to serialize datetime
+        project_dump=json.loads(
+            project.model_dump_json(exclude={"user_list"})
+        ),
         **apply_workflow.model_dump(),
     )
     db.add(job)

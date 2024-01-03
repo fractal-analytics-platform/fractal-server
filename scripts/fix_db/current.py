@@ -78,7 +78,9 @@ with next(get_sync_db()) as db:
                         f"project_id={job.project_id}, "
                         f"but Project {job.project_id} does not exist"
                     )
-                project_dump = json.loads(project.json(exclude={"user_list"}))
+                project_dump = json.loads(
+                    project.model_dump_json(exclude={"user_list"})
+                )
 
             logging.warning(f"[Job {job.id:4d}] setting {project_dump=}")
             ProjectDump(**project_dump)
