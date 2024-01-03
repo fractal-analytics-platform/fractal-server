@@ -114,8 +114,8 @@ class TaskCollectStatus(_TaskCollectBase):
 
     def sanitised_dict(self):
         """
-        Return `self.dict()` after casting `self.venv_path` to a string
+        Return `self.model_dump()` after casting `self.venv_path` to a string
         """
-        d = self.dict()
+        d = self.model_dump()
         d["venv_path"] = str(self.venv_path)
         return d

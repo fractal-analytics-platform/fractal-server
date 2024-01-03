@@ -79,7 +79,7 @@ async def patch_task(
     # Retrieve task from database
     db_task = await _get_task_check_owner(task_id=task_id, user=user, db=db)
 
-    update = task_update.dict(exclude_unset=True)
+    update = task_update.model_dump(exclude_unset=True)
     for key, value in update.items():
         if isinstance(value, str) or (
             key == "version" and value is None
@@ -142,7 +142,7 @@ async def create_task(
         )
 
     # Add task
-    db_task = Task(**task.dict(), owner=owner)
+    db_task = Task(**task.model_dump(), owner=owner)
     db.add(db_task)
     await db.commit()
     await db.refresh(db_task)

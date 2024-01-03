@@ -92,7 +92,7 @@ async def create_workflow(
         name=workflow.name, project_id=project_id, db=db
     )
 
-    db_workflow = Workflow(project_id=project_id, **workflow.dict())
+    db_workflow = Workflow(project_id=project_id, **workflow.model_dump())
     db.add(db_workflow)
     await db.commit()
     await db.refresh(db_workflow)
@@ -144,7 +144,7 @@ async def update_workflow(
             name=patch.name, project_id=project_id, db=db
         )
 
-    for key, value in patch.dict(exclude_unset=True).items():
+    for key, value in patch.model_dump(exclude_unset=True).items():
         if key == "reordered_workflowtask_ids":
             current_workflowtask_ids = [
                 wftask.id for wftask in workflow.task_list
@@ -295,7 +295,7 @@ async def import_workflow(
     # Create new Workflow (with empty task_list)
     db_workflow = Workflow(
         project_id=project_id,
-        **workflow.dict(exclude_none=True, exclude={"task_list"}),
+        **workflow.model_dump(exclude_none=True, exclude={"task_list"}),
     )
     db.add(db_workflow)
     await db.commit()
@@ -309,11 +309,11 @@ async def import_workflow(
             task_id = source_to_id[source]
             # Prepare new_wf_task
             new_wf_task = WorkflowTaskCreate(
-                **wf_task.dict(exclude_none=True),
+                **wf_task.model_dump(exclude_none=True),
             )
             # Insert task
             await db_workflow.insert_task(
-                **new_wf_task.dict(),
+                **new_wf_task.model_dump(),
                 task_id=task_id,
                 db=db,
             )

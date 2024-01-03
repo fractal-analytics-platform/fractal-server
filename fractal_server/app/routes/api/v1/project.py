@@ -132,7 +132,7 @@ async def update_project(
             project_name=project_update.name, user_id=user.id, db=db
         )
 
-    for key, value in project_update.dict(exclude_unset=True).items():
+    for key, value in project_update.model_dump(exclude_unset=True).items():
         setattr(project, key, value)
 
     await db.commit()
@@ -368,27 +368,32 @@ async def apply_workflow(
         workflow_id=workflow_id,
         user_email=user.email,
         input_dataset_dump=dict(
-            input_dataset.dict(exclude={"resource_list"}),
+            input_dataset.model_dump(exclude={"resource_list"}),
             resource_list=[
-                resource.dict() for resource in input_dataset.resource_list
+                resource.model_dump()
+                for resource in input_dataset.resource_list
             ],
         ),
         output_dataset_dump=dict(
-            output_dataset.dict(exclude={"resource_list"}),
+            output_dataset.model_dump(exclude={"resource_list"}),
             resource_list=[
-                resource.dict() for resource in output_dataset.resource_list
+                resource.model_dump()
+                for resource in output_dataset.resource_list
             ],
         ),
         workflow_dump=dict(
-            workflow.dict(exclude={"task_list"}),
+            workflow.model_dump(exclude={"task_list"}),
             task_list=[
-                dict(wf_task.dict(exclude={"task"}), task=wf_task.task.dict())
+                dict(
+                    wf_task.model_dump(exclude={"task"}),
+                    task=wf_task.task.model_dump(),
+                )
                 for wf_task in workflow.task_list
             ],
         ),
         # we use (project.json + json.loads) to serialize datetime
         project_dump=json.loads(project.json(exclude={"user_list"})),
-        **apply_workflow.dict(),
+        **apply_workflow.model_dump(),
     )
     db.add(job)
     await db.commit()

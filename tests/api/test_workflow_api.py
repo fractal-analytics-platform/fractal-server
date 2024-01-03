@@ -789,7 +789,9 @@ async def test_import_export_workflow(
         prj = await project_factory(user)
 
     # Import workflow into project
-    payload = WorkflowImport(**workflow_from_file).dict(exclude_none=True)
+    payload = WorkflowImport(**workflow_from_file).model_dump(
+        exclude_none=True
+    )
     debug(payload)
     res = await client.post(
         f"/api/v1/project/{prj.id}/workflow/import/", json=payload
@@ -822,8 +824,8 @@ async def test_import_export_workflow(
 
     # Check that the exported workflow is an extension of the one in the
     # original JSON file
-    wf_old = WorkflowExport(**workflow_from_file).dict(exclude_none=True)
-    wf_new = WorkflowExport(**workflow_exported).dict(exclude_none=True)
+    wf_old = WorkflowExport(**workflow_from_file).model_dump(exclude_none=True)
+    wf_new = WorkflowExport(**workflow_exported).model_dump(exclude_none=True)
     assert len(wf_old["task_list"]) == len(wf_new["task_list"])
     for task_old, task_new in zip(wf_old["task_list"], wf_new["task_list"]):
         assert task_old.keys() <= task_new.keys()

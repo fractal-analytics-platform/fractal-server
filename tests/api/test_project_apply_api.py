@@ -481,16 +481,16 @@ async def test_project_apply_workflow_subset(
         )
         expected_workflow_dump = WorkflowDump(
             **dict(
-                workflow.dict(exclude={"task_list"}),
+                workflow.model_dump(exclude={"task_list"}),
                 task_list=[
                     dict(
-                        wf_task.dict(exclude={"task"}),
-                        task=wf_task.task.dict(),
+                        wf_task.model_dump(exclude={"task"}),
+                        task=wf_task.task.model_dump(),
                     )
                     for wf_task in workflow.task_list
                 ],
             )
-        ).dict()
+        ).model_dump()
         debug(expected_workflow_dump)
         assert res.json()["workflow_dump"] == expected_workflow_dump
         assert res.json()["project_dump"] == json.loads(

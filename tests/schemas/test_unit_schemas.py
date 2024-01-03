@@ -172,22 +172,30 @@ def test_dataset_update():
     # exclude_unset=True
 
     payload = dict(name="name")
-    dataset_update_dict = DatasetUpdate(**payload).dict(exclude_unset=True)
+    dataset_update_dict = DatasetUpdate(**payload).model_dump(
+        exclude_unset=True
+    )
     debug(dataset_update_dict)
     assert dataset_update_dict.keys() == payload.keys()
 
     payload = dict(type="type")
-    dataset_update_dict = DatasetUpdate(**payload).dict(exclude_unset=True)
+    dataset_update_dict = DatasetUpdate(**payload).model_dump(
+        exclude_unset=True
+    )
     debug(dataset_update_dict)
     assert dataset_update_dict.keys() == payload.keys()
 
     payload = dict(read_only=True)
-    dataset_update_dict = DatasetUpdate(**payload).dict(exclude_unset=True)
+    dataset_update_dict = DatasetUpdate(**payload).model_dump(
+        exclude_unset=True
+    )
     debug(dataset_update_dict)
     assert dataset_update_dict.keys() == payload.keys()
 
     payload = dict(read_only=True, name="name")
-    dataset_update_dict = DatasetUpdate(**payload).dict(exclude_unset=True)
+    dataset_update_dict = DatasetUpdate(**payload).model_dump(
+        exclude_unset=True
+    )
     debug(dataset_update_dict)
     assert dataset_update_dict.keys() == payload.keys()
 
@@ -326,8 +334,8 @@ def test_task_update():
     # Successful creation, with many unset fields
     t = TaskUpdate(name="name")
     debug(t)
-    assert list(t.dict(exclude_none=True).keys()) == ["name"]
-    assert list(t.dict(exclude_unset=True).keys()) == ["name"]
+    assert list(t.model_dump(exclude_none=True).keys()) == ["name"]
+    assert list(t.model_dump(exclude_unset=True).keys()) == ["name"]
     # Some failures
     with pytest.raises(ValidationError):
         TaskUpdate(name="task", version="")

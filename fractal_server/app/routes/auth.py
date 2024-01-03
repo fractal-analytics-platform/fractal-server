@@ -71,7 +71,7 @@ async def patch_current_user(
     user_manager: UserManager = Depends(get_user_manager),
 ):
 
-    update = UserUpdate(**user_update.dict(exclude_unset=True))
+    update = UserUpdate(**user_update.model_dump(exclude_unset=True))
 
     try:
         user = await user_manager.update(update, current_user, safe=True)

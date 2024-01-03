@@ -385,7 +385,7 @@ async def test_patch_resource(
         for key, value in payload.items():
             assert data[key] == value
 
-        for key, value in orig_resource.dict().items():
+        for key, value in orig_resource.model_dump().items():
             if key not in payload:
                 assert data[key] == value
 

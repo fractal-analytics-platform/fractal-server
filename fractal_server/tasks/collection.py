@@ -388,7 +388,7 @@ async def create_package_environment_pip(
             else:
                 additional_attrs = {}
             this_task = TaskCreate(
-                **t.dict(),
+                **t.model_dump(),
                 command=cmd,
                 version=task_pkg.package_version,
                 **additional_attrs,

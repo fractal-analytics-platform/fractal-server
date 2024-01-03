@@ -65,7 +65,7 @@ async def create_workflowtask(
 
     async with db:
         workflow_task = await workflow.insert_task(
-            **new_task.dict(),
+            **new_task.model_dump(),
             task_id=task_id,
             db=db,
         )
@@ -119,7 +119,9 @@ async def update_workflowtask(
         db=db,
     )
 
-    for key, value in workflow_task_update.dict(exclude_unset=True).items():
+    for key, value in workflow_task_update.model_dump(
+        exclude_unset=True
+    ).items():
         if key == "args":
 
             # Get default arguments via a Task property method

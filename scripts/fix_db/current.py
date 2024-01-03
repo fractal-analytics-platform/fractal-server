@@ -40,7 +40,7 @@ with next(get_sync_db()) as db:
             db.commit()
             db.refresh(project)
             db.expunge(project)
-            ProjectRead(**project.dict())
+            ProjectRead(**project.model_dump())
         else:
             logging.warning(
                 f"[Project {project.id:4d}] timestamp_created attribute valid,"
@@ -89,4 +89,4 @@ with next(get_sync_db()) as db:
             # Also validate that the row can be cast into ApplyWorkflowRead
             db.refresh(job)
             db.expunge(job)
-            ApplyWorkflowRead(**job.dict())
+            ApplyWorkflowRead(**job.model_dump())

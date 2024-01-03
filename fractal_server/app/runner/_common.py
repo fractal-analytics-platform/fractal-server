@@ -259,7 +259,7 @@ def call_single_task(
 
     # write args file (by assembling task_pars and wftask.args)
     write_args_file(
-        task_pars.dict(exclude={"history"}),
+        task_pars.model_dump(exclude={"history"}),
         wftask.args or {},
         path=task_files.args,
     )
@@ -302,8 +302,8 @@ def call_single_task(
 
     # Prepare updated_history (note: the expected type for history items is
     # defined in `_DatasetHistoryItem`)
-    wftask_dump = wftask.dict(exclude={"task"})
-    wftask_dump["task"] = wftask.task.dict()
+    wftask_dump = wftask.model_dump(exclude={"task"})
+    wftask_dump["task"] = wftask.task.model_dump()
     new_history_item = dict(
         workflowtask=wftask_dump,
         status=WorkflowTaskStatusType.DONE,
@@ -386,7 +386,7 @@ def call_single_parallel_task(
 
     # write args file (by assembling task_pars, wftask.args and component)
     write_args_file(
-        task_pars.dict(exclude={"history"}),
+        task_pars.model_dump(exclude={"history"}),
         wftask.args or {},
         dict(component=component),
         path=task_files.args,
@@ -539,8 +539,8 @@ def call_parallel_task(
 
     # Prepare updated_history (note: the expected type for history items is
     # defined in `_DatasetHistoryItem`)
-    wftask_dump = wftask.dict(exclude={"task"})
-    wftask_dump["task"] = wftask.task.dict()
+    wftask_dump = wftask.model_dump(exclude={"task"})
+    wftask_dump["task"] = wftask.task.model_dump()
     new_history_item = dict(
         workflowtask=wftask_dump,
         status=WorkflowTaskStatusType.DONE,
