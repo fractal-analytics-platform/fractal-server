@@ -6,7 +6,6 @@ from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import Field
 from pydantic import field_validator
-from pydantic import validator
 from pydantic.types import StrictStr
 
 from ._validators import valstr
@@ -120,9 +119,7 @@ class ApplyWorkflowCreate(_ApplyWorkflowBase):
     slurm_account: Optional[StrictStr] = None
 
     # Validators
-    _worker_init = validator("worker_init", allow_reuse=True)(
-        valstr("worker_init")
-    )
+    _worker_init = field_validator("worker_init")(valstr("worker_init"))
 
     @field_validator("first_task_index")
     @classmethod

@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import validator
+from pydantic import field_validator
 
 from ._validators import valstr
 
@@ -33,7 +33,7 @@ class ProjectCreate(_ProjectBase):
     """
 
     # Validators
-    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _name = field_validator("name")(valstr("name"))
 
 
 class ProjectRead(_ProjectBase):
@@ -63,4 +63,4 @@ class ProjectUpdate(_ProjectBase):
     read_only: Optional[bool] = None
 
     # Validators
-    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _name = field_validator("name")(valstr("name"))

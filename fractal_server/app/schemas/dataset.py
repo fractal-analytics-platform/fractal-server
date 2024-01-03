@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import validator
+from pydantic import field_validator
 
 from ._validators import val_absolute_path
 from ._validators import valstr
@@ -39,7 +39,7 @@ class ResourceCreate(_ResourceBase):
     """
 
     # Validators
-    _path = validator("path", allow_reuse=True)(val_absolute_path("path"))
+    _path = field_validator("path")(val_absolute_path("path"))
 
 
 class ResourceUpdate(_ResourceBase):
@@ -48,7 +48,7 @@ class ResourceUpdate(_ResourceBase):
     """
 
     # Validators
-    _path = validator("path", allow_reuse=True)(val_absolute_path("path"))
+    _path = field_validator("path")(val_absolute_path("path"))
 
 
 class ResourceRead(_ResourceBase):
@@ -116,8 +116,8 @@ class DatasetUpdate(_DatasetBase):
     read_only: Optional[bool] = None
 
     # Validators
-    _name = validator("name", allow_reuse=True)(valstr("name"))
-    _type = validator("type", allow_reuse=True)(valstr("type"))
+    _name = field_validator("name")(valstr("name"))
+    _type = field_validator("type")(valstr("type"))
 
 
 class DatasetCreate(_DatasetBase):
@@ -126,8 +126,8 @@ class DatasetCreate(_DatasetBase):
     """
 
     # Validators
-    _name = validator("name", allow_reuse=True)(valstr("name"))
-    _type = validator("type", allow_reuse=True)(valstr("type"))
+    _name = field_validator("name")(valstr("name"))
+    _type = field_validator("type")(valstr("type"))
 
 
 class DatasetRead(_DatasetBase):

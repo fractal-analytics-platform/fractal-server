@@ -3,8 +3,8 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import field_validator
 from pydantic import HttpUrl
-from pydantic import validator
 
 from ._validators import valstr
 
@@ -29,7 +29,7 @@ class _TaskBase(BaseModel):
     """
 
     source: str
-    _source = validator("source", allow_reuse=True)(valstr("source"))
+    _source = field_validator("source")(valstr("source"))
 
 
 class TaskUpdate(_TaskBase):
@@ -63,17 +63,11 @@ class TaskUpdate(_TaskBase):
     docs_link: Optional[HttpUrl] = None
 
     # Validators
-    _name = validator("name", allow_reuse=True)(valstr("name"))
-    _input_type = validator("input_type", allow_reuse=True)(
-        valstr("input_type")
-    )
-    _output_type = validator("output_type", allow_reuse=True)(
-        valstr("output_type")
-    )
-    _command = validator("command", allow_reuse=True)(valstr("command"))
-    _version = validator("version", allow_reuse=True)(
-        valstr("version", accept_none=True)
-    )
+    _name = field_validator("name")(valstr("name"))
+    _input_type = field_validator("input_type")(valstr("input_type"))
+    _output_type = field_validator("output_type")(valstr("output_type"))
+    _command = field_validator("command")(valstr("command"))
+    _version = field_validator("version")(valstr("version", accept_none=True))
 
 
 class TaskImport(_TaskBase):
@@ -153,15 +147,11 @@ class TaskCreate(_TaskBase):
     docs_link: Optional[HttpUrl] = None
 
     # Validators
-    _name = validator("name", allow_reuse=True)(valstr("name"))
-    _input_type = validator("input_type", allow_reuse=True)(
-        valstr("input_type")
-    )
-    _output_type = validator("output_type", allow_reuse=True)(
-        valstr("output_type")
-    )
-    _command = validator("command", allow_reuse=True)(valstr("command"))
-    _version = validator("version", allow_reuse=True)(valstr("version"))
-    _args_schema_version = validator("args_schema_version", allow_reuse=True)(
+    _name = field_validator("name")(valstr("name"))
+    _input_type = field_validator("input_type")(valstr("input_type"))
+    _output_type = field_validator("output_type")(valstr("output_type"))
+    _command = field_validator("command")(valstr("command"))
+    _version = field_validator("version")(valstr("version"))
+    _args_schema_version = field_validator("args_schema_version")(
         valstr("args_schema_version")
     )

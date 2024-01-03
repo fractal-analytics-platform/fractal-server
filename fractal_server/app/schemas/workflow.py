@@ -4,7 +4,6 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import field_validator
-from pydantic import validator
 
 from ._validators import valint
 from ._validators import valstr
@@ -47,7 +46,7 @@ class WorkflowTaskCreate(_WorkflowTaskBase):
 
     order: Optional[int] = None
     # Validators
-    _order = validator("order", allow_reuse=True)(valint("order", min_val=0))
+    _order = field_validator("order")(valint("order", min_val=0))
 
 
 class WorkflowTaskRead(_WorkflowTaskBase):
@@ -141,7 +140,7 @@ class WorkflowCreate(_WorkflowBase):
     """
 
     # Validators
-    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _name = field_validator("name")(valstr("name"))
 
 
 class WorkflowUpdate(_WorkflowBase):
@@ -157,7 +156,7 @@ class WorkflowUpdate(_WorkflowBase):
     reordered_workflowtask_ids: Optional[list[int]] = None
 
     # Validators
-    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _name = field_validator("name")(valstr("name"))
 
     @field_validator("reordered_workflowtask_ids")
     @classmethod
@@ -180,7 +179,7 @@ class WorkflowImport(_WorkflowBase):
     task_list: list[WorkflowTaskImport]
 
     # Validators
-    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _name = field_validator("name")(valstr("name"))
 
 
 class WorkflowExport(_WorkflowBase):

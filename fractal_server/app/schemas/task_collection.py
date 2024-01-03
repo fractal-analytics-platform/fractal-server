@@ -5,7 +5,6 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import field_validator
-from pydantic import validator
 
 from ._validators import valstr
 from .task import TaskRead
@@ -57,13 +56,13 @@ class TaskCollectPip(_TaskCollectBase):
     python_version: Optional[str] = None
     pinned_package_versions: Optional[dict[str, str]] = None
 
-    _package_version = validator("package_version", allow_reuse=True)(
+    _package_version = field_validator("package_version")(
         valstr("package_version")
     )
-    _package_extras = validator("package_extras", allow_reuse=True)(
+    _package_extras = field_validator("package_extras")(
         valstr("package_extras")
     )
-    _python_version = validator("python_version", allow_reuse=True)(
+    _python_version = field_validator("python_version")(
         valstr("python_version")
     )
 
