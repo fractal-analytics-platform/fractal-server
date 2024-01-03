@@ -1,4 +1,6 @@
-locust -f general_bench.py \
+#poetry run python populate_db.py
+
+locust -f api_bench.py \
 --host http://0.0.0.0:8000 \
 --users 1 \
 --spawn-rate 10 \
