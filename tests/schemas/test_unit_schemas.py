@@ -108,8 +108,6 @@ def test_apply_workflow_read():
     assert isinstance(job1.output_dataset_dump, DatasetDump)
 
     assert isinstance(job1.start_timestamp, datetime)
-    job1_sanitised = job1.sanitised_dict()
-    assert isinstance(job1_sanitised["start_timestamp"], str)
 
     job2 = ApplyWorkflowRead(
         id=1,
@@ -147,7 +145,12 @@ def test_dataset_read():
     d = DatasetRead(
         id=1,
         project_id=1,
-        project=ProjectRead(id=1, name="project", read_only=False),
+        project=ProjectRead(
+            id=1,
+            name="project",
+            read_only=False,
+            timestamp_created=datetime.now(),
+        ),
         resource_list=[],
         name="n",
         read_only=True,
@@ -278,10 +281,7 @@ def test_project_create():
 
 
 def test_state():
-    s = _StateBase(data={"some": "thing"}, timestamp=datetime.now())
-    debug(s)
-    debug(s.sanitised_dict())
-    assert isinstance(s.sanitised_dict()["timestamp"], str)
+    _StateBase(data={"some": "thing"}, timestamp=datetime.now())
 
 
 def test_state_read():
@@ -526,7 +526,12 @@ def test_workflow_read_empty_task_list():
         name="workflow",
         project_id=1,
         task_list=[],
-        project=ProjectRead(id=1, name="project", read_only=False),
+        project=ProjectRead(
+            id=1,
+            name="project",
+            read_only=False,
+            timestamp_created=datetime.now(),
+        ),
     )
     debug(w)
 
@@ -551,7 +556,12 @@ def test_workflow_read_non_empty_task_list():
         name="workflow",
         project_id=1,
         task_list=[wft1, wft2],
-        project=ProjectRead(id=1, name="project", read_only=False),
+        project=ProjectRead(
+            id=1,
+            name="project",
+            read_only=False,
+            timestamp_created=datetime.now(),
+        ),
     )
     debug(w)
 
