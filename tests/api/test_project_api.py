@@ -7,6 +7,9 @@ from fractal_server.app.models import Dataset
 from fractal_server.app.models import Project
 from fractal_server.app.models import Workflow
 from fractal_server.app.schemas import JobStatusType
+from fractal_server.config import get_settings
+from fractal_server.syringe import Inject
+
 
 PREFIX = "/api/v1"
 
@@ -37,6 +40,9 @@ async def test_get_project(client, db, project_factory, MockCurrentUser):
         res = await client.get(f"{PREFIX}/project/{project_id}/")
         assert res.status_code == 200
         assert res.json()["id"] == project_id
+        settings = Inject(get_settings)
+        if settings.DB_ENGINE == "postgres":
+            assert res.json()["timestamp_created"].endswith("+00:00")
 
         # fail on non existent project
         res = await client.get(f"{PREFIX}/project/123456/")

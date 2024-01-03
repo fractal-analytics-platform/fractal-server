@@ -9,6 +9,19 @@ from fractal_server.app.schemas.task import TaskUpdate
 PREFIX = "/api/v1/task"
 
 
+async def test_non_verified_user(client, MockCurrentUser):
+    """
+    Test that a non-verified user is not authorized to make POST/PATCH task
+    cals.
+    """
+    async with MockCurrentUser(user_kwargs=dict(is_verified=False)):
+        res = await client.post(f"{PREFIX}/", json={})
+        assert res.status_code == 401
+
+        res = await client.patch(f"{PREFIX}/123/", json={})
+        assert res.status_code == 401
+
+
 async def test_task_get_list(db, client, task_factory, MockCurrentUser):
     t0 = await task_factory(name="task0", source="source0")
     t1 = await task_factory(name="task1", source="source1")
@@ -24,7 +37,7 @@ async def test_task_get_list(db, client, task_factory, MockCurrentUser):
 
 
 async def test_post_task(client, MockCurrentUser):
-    async with MockCurrentUser() as user:
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         TASK_OWNER = user.username or user.slurm_user
         TASK_SOURCE = "some_source"
 
@@ -68,7 +81,7 @@ async def test_post_task(client, MockCurrentUser):
     SLURM_USER = "some_slurm_user"
     USERNAME = "some_username"
     # Case 1: (username, slurm_user) = (None, None)
-    user_kwargs = dict(username=None, slurm_user=None)
+    user_kwargs = dict(username=None, slurm_user=None, is_verified=True)
     payload["source"] = "source_1"
     async with MockCurrentUser(user_kwargs=user_kwargs):
         res = await client.post(f"{PREFIX}/", json=payload)
@@ -78,21 +91,23 @@ async def test_post_task(client, MockCurrentUser):
             "`username` or `slurm_user` attributes."
         )
     # Case 2: (username, slurm_user) = (not None, not None)
-    user_kwargs = dict(username=USERNAME, slurm_user=SLURM_USER)
+    user_kwargs = dict(
+        username=USERNAME, slurm_user=SLURM_USER, is_verified=True
+    )
     payload["source"] = "source_2"
     async with MockCurrentUser(user_kwargs=user_kwargs):
         res = await client.post(f"{PREFIX}/", json=payload)
         assert res.status_code == 201
         assert res.json()["owner"] == USERNAME
     # Case 3: (username, slurm_user) = (None, not None)
-    user_kwargs = dict(username=None, slurm_user=SLURM_USER)
+    user_kwargs = dict(username=None, slurm_user=SLURM_USER, is_verified=True)
     payload["source"] = "source_3"
     async with MockCurrentUser(user_kwargs=user_kwargs):
         res = await client.post(f"{PREFIX}/", json=payload)
         assert res.status_code == 201
         assert res.json()["owner"] == SLURM_USER
     # Case 4: (username, slurm_user) = (not None, None)
-    user_kwargs = dict(username=USERNAME, slurm_user=None)
+    user_kwargs = dict(username=USERNAME, slurm_user=None, is_verified=True)
     payload["source"] = "source_4"
     async with MockCurrentUser(user_kwargs=user_kwargs):
         res = await client.post(f"{PREFIX}/", json=payload)
@@ -117,7 +132,9 @@ async def test_patch_task_auth(
     task_with_no_owner = await task_factory()
     task_with_no_owner_id = task_with_no_owner.id
 
-    async with MockCurrentUser(user_kwargs={"username": USER_1}):
+    async with MockCurrentUser(
+        user_kwargs={"username": USER_1, "is_verified": True}
+    ):
         task = TaskCreate(
             name="task_name",
             command="task_command",
@@ -141,7 +158,9 @@ async def test_patch_task_auth(
         assert res.status_code == 200
         assert res.json()["name"] == "new_name_1"
 
-    async with MockCurrentUser(user_kwargs={"slurm_user": USER_2}):
+    async with MockCurrentUser(
+        user_kwargs={"slurm_user": USER_2, "is_verified": True}
+    ):
         update = TaskUpdate(name="new_name_2")
 
         # Test fail: (not user.is_superuser) and (owner != user)
@@ -164,7 +183,9 @@ async def test_patch_task_auth(
             "Only a superuser can modify a Task with `owner=None`."
         )
 
-    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+    async with MockCurrentUser(
+        user_kwargs={"is_superuser": True, "is_verified": True}
+    ):
         res = await client.get(f"{PREFIX}/{task_id}/")
         assert res.json()["name"] == "new_name_1"
 
@@ -188,9 +209,9 @@ async def test_patch_task_auth(
 
 async def test_patch_task(
     db,
-    registered_client,
-    registered_superuser_client,
     task_factory,
+    MockCurrentUser,
+    client,
 ):
     task = await task_factory(name="task")
 
@@ -214,43 +235,49 @@ async def test_patch_task(
     )
 
     # Test fails with `source`
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/{task.id}/", json=update.dict(exclude_unset=True)
-    )
-    debug(res, res.json())
-    assert res.status_code == 422
-    assert res.json()["detail"] == "patch_task endpoint cannot set `source`"
+    async with MockCurrentUser(
+        user_kwargs=dict(is_superuser=True, is_verified=True)
+    ) as user:
+        debug(user)
+        res = await client.patch(
+            f"{PREFIX}/{task.id}/", json=update.dict(exclude_unset=True)
+        )
+        debug(res, res.json())
+        assert res.status_code == 422
+        assert (
+            res.json()["detail"] == "patch_task endpoint cannot set `source`"
+        )
 
-    # Test successuful without `source`
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/{task.id}/",
-        json=update.dict(exclude_unset=True, exclude={"source"}),
-    )
-    assert res.status_code == 200
-    assert res.json()["name"] == NEW_NAME
-    assert res.json()["input_type"] == NEW_INPUT_TYPE
-    assert res.json()["output_type"] == NEW_OUTPUT_TYPE
-    assert res.json()["command"] == NEW_COMMAND
-    assert res.json()["meta"] == NEW_META
-    assert res.json()["source"] == old_source
-    assert res.json()["version"] == NEW_VERSION
-    assert res.json()["owner"] is None
+        # Test successuful without `source`
+        res = await client.patch(
+            f"{PREFIX}/{task.id}/",
+            json=update.dict(exclude_unset=True, exclude={"source"}),
+        )
+        assert res.status_code == 200
+        assert res.json()["name"] == NEW_NAME
+        assert res.json()["input_type"] == NEW_INPUT_TYPE
+        assert res.json()["output_type"] == NEW_OUTPUT_TYPE
+        assert res.json()["command"] == NEW_COMMAND
+        assert res.json()["meta"] == NEW_META
+        assert res.json()["source"] == old_source
+        assert res.json()["version"] == NEW_VERSION
+        assert res.json()["owner"] is None
 
-    # Test dictionaries update
-    OTHER_META = {"key4": [4, 8, 15], "key0": [16, 23, 42]}
-    second_update = TaskUpdate(meta=OTHER_META, version=None)
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/{task.id}/",
-        json=second_update.dict(exclude_unset=True),
-    )
-    debug(res, res.json())
-    assert res.status_code == 200
-    assert res.json()["name"] == NEW_NAME
-    assert res.json()["input_type"] == NEW_INPUT_TYPE
-    assert res.json()["output_type"] == NEW_OUTPUT_TYPE
-    assert res.json()["command"] == NEW_COMMAND
-    assert res.json()["version"] is None
-    assert len(res.json()["meta"]) == 3
+        # Test dictionaries update
+        OTHER_META = {"key4": [4, 8, 15], "key0": [16, 23, 42]}
+        second_update = TaskUpdate(meta=OTHER_META, version=None)
+        res = await client.patch(
+            f"{PREFIX}/{task.id}/",
+            json=second_update.dict(exclude_unset=True),
+        )
+        debug(res, res.json())
+        assert res.status_code == 200
+        assert res.json()["name"] == NEW_NAME
+        assert res.json()["input_type"] == NEW_INPUT_TYPE
+        assert res.json()["output_type"] == NEW_OUTPUT_TYPE
+        assert res.json()["command"] == NEW_COMMAND
+        assert res.json()["version"] is None
+        assert len(res.json()["meta"]) == 3
 
 
 @pytest.mark.parametrize("username", (None, "myself"))
@@ -258,7 +285,8 @@ async def test_patch_task(
 @pytest.mark.parametrize("owner", (None, "another_owner"))
 async def test_patch_task_different_users(
     db,
-    registered_superuser_client,
+    MockCurrentUser,
+    client,
     task_factory,
     username,
     slurm_user,
@@ -274,36 +302,29 @@ async def test_patch_task_different_users(
     debug(task)
     assert task.owner == owner
 
-    # Update user
-    payload = {}
+    # User kwargs
+    user_payload = {}
     if username:
-        payload["username"] = username
+        user_payload["username"] = username
     if slurm_user:
-        payload["slurm_user"] = slurm_user
-    if payload:
-        res = await registered_superuser_client.get("/auth/current-user/")
-        superuser_id = res.json()["id"]
-
-        res = await registered_superuser_client.patch(
-            f"/auth/users/{superuser_id}/",
-            json=payload,
-        )
-        assert res.status_code == 200
+        user_payload["slurm_user"] = slurm_user
 
     # Patch task
     NEW_NAME = "new name"
     payload = TaskUpdate(name=NEW_NAME).dict(exclude_unset=True)
     debug(payload)
-    res = await registered_superuser_client.patch(
-        f"{PREFIX}/{task.id}/", json=payload
-    )
-    debug(res.json())
-    assert res.status_code == 200
-    assert res.json()["owner"] == owner
-    if username:
-        assert res.json()["owner"] != username
-    if slurm_user:
-        assert res.json()["owner"] != slurm_user
+    async with MockCurrentUser(
+        user_kwargs=dict(is_superuser=True, is_verified=True, **user_payload)
+    ):
+        res = await client.patch(f"{PREFIX}/{task.id}/", json=payload)
+        debug(res.json())
+        assert res.status_code == 200
+        assert res.json()["owner"] == owner
+        assert res.json()["name"] == NEW_NAME
+        if username:
+            assert res.json()["owner"] != username
+        if slurm_user:
+            assert res.json()["owner"] != slurm_user
 
 
 async def test_get_task(task_factory, client, MockCurrentUser):
@@ -355,7 +376,7 @@ async def test_patch_args_schema(MockCurrentUser, client):
     the PATCH endpoint.
     """
 
-    async with MockCurrentUser():
+    async with MockCurrentUser(user_kwargs={"is_verified": True}):
         task = TaskCreate(
             name="task_name",
             command="task_command",

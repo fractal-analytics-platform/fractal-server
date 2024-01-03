@@ -54,15 +54,13 @@ async def test_full_workflow(
         )
 
     debug(f"Testing with {backend=}")
-
+    user_kwargs = {"is_verified": True}
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
         request.getfixturevalue("cfut_jobs_finished")
         user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
-        user_kwargs = dict(cache_dir=user_cache_dir)
-    else:
-        user_kwargs = {}
+        user_kwargs["cache_dir"] = user_cache_dir
 
     async with MockCurrentUser(user_kwargs=user_kwargs) as user:
         debug(user)
@@ -263,14 +261,14 @@ async def test_failing_workflow_UnknownError(
         )
 
     debug(f"Testing with {backend=}")
+    user_kwargs = {"is_verified": True}
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
         request.getfixturevalue("cfut_jobs_finished")
         user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
-        user_kwargs = dict(cache_dir=user_cache_dir)
-    else:
-        user_kwargs = {}
+        user_kwargs["cache_dir"] = user_cache_dir
+
     async with MockCurrentUser(user_kwargs=user_kwargs) as user:
         # Create project, dataset, resource
         project = await project_factory(user)
@@ -359,14 +357,14 @@ async def test_failing_workflow_TaskExecutionError(
         )
 
     debug(f"Testing with {backend=}")
+    user_kwargs = {"is_verified": True}
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
         request.getfixturevalue("cfut_jobs_finished")
         user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
-        user_kwargs = dict(cache_dir=user_cache_dir)
-    else:
-        user_kwargs = {}
+        user_kwargs["cache_dir"] = user_cache_dir
+
     async with MockCurrentUser(user_kwargs=user_kwargs) as user:
         # Create project, dataset, resource
         project = await project_factory(user)
@@ -528,7 +526,7 @@ async def test_failing_workflow_JobExecutionError(
         )
 
     user_cache_dir = str(tmp777_path / "user_cache_dir")
-    user_kwargs = dict(cache_dir=user_cache_dir)
+    user_kwargs = dict(cache_dir=user_cache_dir, is_verified=True)
     async with MockCurrentUser(user_kwargs=user_kwargs) as user:
         project = await project_factory(user)
         project_id = project.id
@@ -661,7 +659,7 @@ async def test_non_python_task(
     Run a full workflow with a single bash task, which simply writes something
     to stderr and stdout
     """
-    async with MockCurrentUser() as user:
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         # Create project
         project = await project_factory(user)
         project_id = project.id
@@ -758,7 +756,7 @@ async def test_metadiff(
     task_file2 = str(testdata_path / "non_python_task_issue878.sh")
     command = f"bash {task_file}"
     command_null = f"bash {task_file2}"
-    async with MockCurrentUser() as user:
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         task0 = await task_factory(
             name="task0",
             source="task0",
@@ -903,15 +901,13 @@ async def test_non_executable_task_command(
         )
 
     debug(f"Testing with {backend=}")
-
+    user_kwargs = {"is_verified": True}
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
         request.getfixturevalue("cfut_jobs_finished")
         user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
-        user_kwargs = dict(cache_dir=user_cache_dir)
-    else:
-        user_kwargs = {}
+        user_kwargs["cache_dir"] = user_cache_dir
 
     async with MockCurrentUser(user_kwargs=user_kwargs) as user:
         # Create task

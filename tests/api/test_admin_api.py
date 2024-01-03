@@ -19,13 +19,13 @@ async def test_unauthorized_to_admin(client, MockCurrentUser):
 
     async with MockCurrentUser(user_kwargs={"is_superuser": False}):
         res = await client.get(f"{PREFIX}/project/")
-        assert res.status_code == 403
+        assert res.status_code == 401
         res = await client.get(f"{PREFIX}/workflow/")
-        assert res.status_code == 403
+        assert res.status_code == 401
         res = await client.get(f"{PREFIX}/dataset/")
-        assert res.status_code == 403
+        assert res.status_code == 401
         res = await client.get(f"{PREFIX}/job/")
-        assert res.status_code == 403
+        assert res.status_code == 401
 
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
         res = await client.get(f"{PREFIX}/project/")
@@ -64,6 +64,11 @@ async def test_view_project(client, MockCurrentUser, project_factory):
         res = await client.get(f"{PREFIX}/project/?user_id={user_id}")
         assert res.status_code == 200
         assert len(res.json()) == 2
+        res = await client.get(
+            f"{PREFIX}/project/?user_id={user_id}&id={prj1_id}"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 1
         res = await client.get(
             f"{PREFIX}/project/?user_id={user_id}&id={prj1_id}"
         )
@@ -403,7 +408,7 @@ async def test_patch_job(
             f"{PREFIX}/job/{job.id}/",
             json={"status": NEW_STATUS},
         )
-        assert res.status_code == 403
+        assert res.status_code == 401
         # Patch job as superuser
         async with MockCurrentUser(
             user_kwargs={"id": 222222, "is_superuser": True}
@@ -440,6 +445,7 @@ async def test_patch_job(
             assert res.status_code == 200
             debug(res.json())
             assert res.json()["status"] == NEW_STATUS
+
         # Read job as job owner (standard user)
         res = await client.get(f"/api/v1/project/{project.id}/job/{job.id}/")
         assert res.status_code == 200
