@@ -53,6 +53,18 @@ async def test_failed_get_collection_info(client, MockCurrentUser):
     assert res.status_code == 404
 
 
+async def test_collection_non_verified_user(client, MockCurrentUser):
+    """
+    Test that non-verified users are not authorized to make calls
+    to `/api/v1/task/collect/pip/`.
+    """
+    async with MockCurrentUser(user_kwargs=dict(is_verified=False)):
+        res = await client.post(
+            f"{PREFIX}/collect/pip/", json={"package": "fractal-tasks-core"}
+        )
+        assert res.status_code == 401
+
+
 @pytest.mark.parametrize(
     "python_version",
     [
@@ -93,7 +105,7 @@ async def test_collection(
     debug(task_pkg_dict)
     _TaskCollectPip(**task_pkg_dict)
 
-    # Prepare expecte source
+    # Prepare expected source
     if python_version:
         task_pkg_dict["python_version"] = python_version
         EXPECTED_SOURCE = (
@@ -103,8 +115,7 @@ async def test_collection(
         EXPECTED_SOURCE = "pip_local:fractal_tasks_dummy:0.1.0::"
     debug(EXPECTED_SOURCE)
 
-    async with MockCurrentUser():
-
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
         # Trigger collection
         res = await client.post(f"{PREFIX}/collect/pip/", json=task_pkg_dict)
         debug(res.json())
@@ -190,7 +201,7 @@ async def test_collection_local_package_with_extras(
         )
     )
 
-    async with MockCurrentUser():
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
         # Task collection
         res = await client.post(
             f"{PREFIX}/collect/pip/",
@@ -296,7 +307,7 @@ async def test_failed_collection_missing_wheel_file(
     MockCurrentUser,
     tmp_path: Path,
 ):
-    async with MockCurrentUser():
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             json=dict(package=str(tmp_path / "missing_file.whl")),
@@ -331,7 +342,7 @@ async def test_failed_collection_invalid_manifest(
         package=dummy_task_package_invalid_manifest.as_posix()
     )
     debug(dummy_task_package_invalid_manifest)
-    async with MockCurrentUser():
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
         res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
         debug(res.json())
         assert res.status_code == 422
@@ -341,7 +352,7 @@ async def test_failed_collection_invalid_manifest(
         package=dummy_task_package_missing_manifest.as_posix()
     )
     debug(dummy_task_package_missing_manifest)
-    async with MockCurrentUser():
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
         res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
         debug(res.json())
         assert res.status_code == 422
@@ -375,7 +386,7 @@ async def test_failed_collection_missing_task_file(
     task_collection = dict(package=path)
     debug(task_collection)
 
-    async with MockCurrentUser():
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
         res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
         debug(res.json())
         assert res.status_code == 201
@@ -417,8 +428,7 @@ async def test_failed_collection_existing_db_tasks(
     )
     override_settings_factory(FRACTAL_TASKS_DIR=_FRACTAL_TASKS_DIR)
 
-    async with MockCurrentUser():
-
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
         # First task collection
         res = await client.post(
             f"{PREFIX}/collect/pip/",

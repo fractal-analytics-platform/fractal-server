@@ -1,3 +1,4 @@
+import json
 import time
 
 from devtools import debug
@@ -5,6 +6,24 @@ from devtools import debug
 from fractal_server.app.schemas.applyworkflow import WorkflowDump
 
 PREFIX = "/api/v1"
+
+
+async def test_project_apply_failures_non_verified_user(
+    client,
+    MockCurrentUser,
+):
+    """
+    Test that non-verified users are not authorized to make calls
+    to `/api/v1/project/123/workflow/123/apply/`.
+    """
+    async with MockCurrentUser(user_kwargs=dict(is_verified=False)):
+        res = await client.post(
+            f"{PREFIX}/project/123/workflow/123/apply/"
+            f"?input_dataset_id=123"
+            f"&output_dataset_id=123",
+            json={},
+        )
+        assert res.status_code == 401
 
 
 async def test_project_apply_failures(
@@ -17,7 +36,7 @@ async def test_project_apply_failures(
     workflow_factory,
     task_factory,
 ):
-    async with MockCurrentUser() as user:
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         project1 = await project_factory(user)
         project2 = await project_factory(user)
         input_dataset = await dataset_factory(
@@ -150,7 +169,7 @@ async def test_project_apply_existing_job(
     exists.
     """
 
-    async with MockCurrentUser() as user:
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         project = await project_factory(user)
         input_dataset = await dataset_factory(
             project_id=project.id, name="input"
@@ -238,7 +257,7 @@ async def test_project_apply_missing_user_attributes(
 
     override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm")
 
-    async with MockCurrentUser() as user:
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         # Make sure that user.cache_dir was not set
         debug(user)
         assert user.cache_dir is None
@@ -298,7 +317,7 @@ async def test_project_apply_missing_resources(
     db,
     client,
 ):
-    async with MockCurrentUser() as user:
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         project = await project_factory(user)
         input_dataset = await dataset_factory(
             project_id=project.id, name="input", type="zarr"
@@ -335,7 +354,7 @@ async def test_project_apply_workflow_subset(
     workflow_factory,
     task_factory,
 ):
-    async with MockCurrentUser() as user:
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         project = await project_factory(user)
         dataset1 = await dataset_factory(
             project_id=project.id, name="ds1", type="type1"
@@ -474,8 +493,8 @@ async def test_project_apply_workflow_subset(
         ).dict()
         debug(expected_workflow_dump)
         assert res.json()["workflow_dump"] == expected_workflow_dump
-        assert res.json()["project_dump"] == project.dict(
-            exclude={"user_list"}
+        assert res.json()["project_dump"] == json.loads(
+            project.json(exclude={"user_list"})
         )
 
 
@@ -489,7 +508,7 @@ async def test_project_apply_slurm_account(
     client,
     db,
 ):
-    async with MockCurrentUser() as user:
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         project = await project_factory(user)
         dataset = await dataset_factory(
             project_id=project.id, name="ds1", type="type1"
@@ -527,7 +546,7 @@ async def test_project_apply_slurm_account(
 
     SLURM_LIST = ["foo", "bar", "rab", "oof"]
     async with MockCurrentUser(
-        user_kwargs={"slurm_accounts": SLURM_LIST}
+        user_kwargs={"slurm_accounts": SLURM_LIST, "is_verified": True}
     ) as user2:
         project = await project_factory(user2)
         dataset = await dataset_factory(

@@ -21,6 +21,7 @@ class ProjectDump(BaseModel, extra=Extra.forbid):
     id: int
     name: str
     read_only: bool
+    timestamp_created: datetime
 
 
 class TaskDump(BaseModel):
@@ -197,12 +198,6 @@ class ApplyWorkflowRead(_ApplyWorkflowBase):
     working_dir_user: Optional[str]
     first_task_index: Optional[int]
     last_task_index: Optional[int]
-
-    def sanitised_dict(self):
-        d = self.dict()
-        d["start_timestamp"] = str(self.start_timestamp)
-        d["end_timestamp"] = str(self.end_timestamp)
-        return d
 
 
 class ApplyWorkflowUpdate(BaseModel):
