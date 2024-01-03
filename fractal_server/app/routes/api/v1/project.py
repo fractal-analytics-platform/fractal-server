@@ -1,3 +1,4 @@
+import json
 from typing import Optional
 
 from fastapi import APIRouter
@@ -32,6 +33,7 @@ from ....schemas import ProjectCreate
 from ....schemas import ProjectRead
 from ....schemas import ProjectUpdate
 from ....security import current_active_user
+from ....security import current_active_verified_user
 from ....security import User
 from ._aux_functions import _check_project_exists
 from ._aux_functions import _get_active_jobs_statement
@@ -213,7 +215,7 @@ async def apply_workflow(
     background_tasks: BackgroundTasks,
     input_dataset_id: int,
     output_dataset_id: int,
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_db),
     db_sync: DBSyncSession = Depends(
         get_sync_db
@@ -384,7 +386,8 @@ async def apply_workflow(
                 for wf_task in workflow.task_list
             ],
         ),
-        project_dump=project.dict(exclude={"user_list"}),
+        # we use (project.json + json.loads) to serialize datetime
+        project_dump=json.loads(project.json(exclude={"user_list"})),
         **apply_workflow.dict(),
     )
     db.add(job)

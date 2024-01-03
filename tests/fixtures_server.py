@@ -10,6 +10,7 @@ This file is part of Fractal and was originally developed by eXact lab S.r.l.
 Institute for Biomedical Research and Pelkmans Lab from the University of
 Zurich.
 """
+import json
 import logging
 import random
 import shutil
@@ -18,8 +19,6 @@ from dataclasses import field
 from pathlib import Path
 from typing import Any
 from typing import AsyncGenerator
-from typing import Dict
-from typing import List
 from typing import Optional
 
 import pytest
@@ -270,7 +269,9 @@ async def registered_superuser_client(
 
 @pytest.fixture
 async def MockCurrentUser(app, db):
+    from fractal_server.app.security import current_active_verified_user
     from fractal_server.app.security import current_active_user
+    from fractal_server.app.security import current_active_superuser
     from fractal_server.app.security import User
 
     def _random_email():
@@ -283,13 +284,18 @@ async def MockCurrentUser(app, db):
         """
 
         name: str = "User Name"
-        user_kwargs: Optional[Dict[str, Any]] = None
-        scopes: Optional[List[str]] = field(
-            default_factory=lambda: ["project"]
-        )
+        user_kwargs: Optional[dict[str, Any]] = None
         email: Optional[str] = field(default_factory=_random_email)
+        previous_dependencies: dict = field(default_factory=dict)
 
-        def _create_user(self):
+        async def __aenter__(self):
+
+            # FIXME: if user_kwargs has an "id" key-value pair, then we should
+            # try to `db.get(User, id)` (and create a new one if it does not
+            # exist). This would allow to re-use the same user again, if it is
+            # not deleted after closing this context manager.
+
+            # Create new user
             defaults = dict(
                 email=self.email,
                 hashed_password="fake_hashed_password",
@@ -298,15 +304,6 @@ async def MockCurrentUser(app, db):
             if self.user_kwargs:
                 defaults.update(self.user_kwargs)
             self.user = User(name=self.name, **defaults)
-
-        def current_active_user_override(self):
-            def __current_active_user_override():
-                return self.user
-
-            return __current_active_user_override
-
-        async def __aenter__(self):
-            self._create_user()
 
             try:
                 db.add(self.user)
@@ -322,19 +319,37 @@ async def MockCurrentUser(app, db):
             # Removing object from test db session, so that we can operate
             # on user from other sessions
             db.expunge(self.user)
-            self.previous_user = app.dependency_overrides.get(
-                current_active_user, None
-            )
-            app.dependency_overrides[
-                current_active_user
-            ] = self.current_active_user_override()
+
+            # Find out which dependencies should be overridden, and store their
+            # pre-override value
+            if self.user.is_active:
+                self.previous_dependencies[
+                    current_active_user
+                ] = app.dependency_overrides.get(current_active_user, None)
+            if self.user.is_active and self.user.is_superuser:
+                self.previous_dependencies[
+                    current_active_superuser
+                ] = app.dependency_overrides.get(
+                    current_active_superuser, None
+                )
+            if self.user.is_active and self.user.is_verified:
+                self.previous_dependencies[
+                    current_active_verified_user
+                ] = app.dependency_overrides.get(
+                    current_active_verified_user, None
+                )
+
+            # Override dependencies in the FastAPI app
+            for dep in self.previous_dependencies.keys():
+                app.dependency_overrides[dep] = lambda: self.user
+
             return self.user
 
         async def __aexit__(self, *args, **kwargs):
-            if self.previous_user:
-                app.dependency_overrides[
-                    current_active_user
-                ] = self.previous_user
+            # Reset overridden dependencies to the original ones
+            for dep, previous_dep in self.previous_dependencies.items():
+                if previous_dep is not None:
+                    app.dependency_overrides[dep] = previous_dep
 
     return _MockCurrentUser
 
@@ -519,14 +534,7 @@ async def job_factory(db: AsyncSession):
                     for wf_task in workflow.task_list
                 ],
             ),
-            project_dump=project.dict(
-                exclude={
-                    "user_list",
-                    "dataset_list",
-                    "workflow_list",
-                    "job_list",
-                }
-            ),
+            project_dump=json.loads(project.json(exclude={"user_list"})),
             last_task_index=last_task_index,
             first_task_index=first_task_index,
             working_dir=working_dir,

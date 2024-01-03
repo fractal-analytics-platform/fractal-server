@@ -17,6 +17,7 @@ from ....schemas import TaskCreate
 from ....schemas import TaskRead
 from ....schemas import TaskUpdate
 from ....security import current_active_user
+from ....security import current_active_verified_user
 from ....security import User
 from ._aux_functions import _get_task_check_owner
 
@@ -62,7 +63,7 @@ async def get_task(
 async def patch_task(
     task_id: int,
     task_update: TaskUpdate,
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[TaskRead]:
     """
@@ -106,7 +107,7 @@ async def patch_task(
 @router.post("/", response_model=TaskRead, status_code=status.HTTP_201_CREATED)
 async def create_task(
     task: TaskCreate,
-    user: User = Depends(current_active_user),
+    user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[TaskRead]:
     """
