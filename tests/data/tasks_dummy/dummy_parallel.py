@@ -26,7 +26,7 @@ from typing import Any
 from typing import Dict
 from typing import Optional
 
-from pydantic.decorator import validate_arguments
+from pydantic import validate_call
 
 
 logging.basicConfig(
@@ -35,7 +35,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-@validate_arguments
+@validate_call
 def dummy_parallel(
     *,
     input_paths: list[str],
