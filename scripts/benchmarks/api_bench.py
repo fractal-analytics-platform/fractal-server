@@ -7,18 +7,18 @@ from locust import task
 
 class FastAPIUser(HttpUser):
 
-    wait_time = between(1, 3)  # Time between requests in seconds
+    wait_time = between(1, 3)  # time between requests in seconds
 
     def on_start(self):
-        # This method is called when a Locust user starts executing.
+        # this method is called when a Locust user starts executing.
 
-        # Example: Perform login and save the authentication token
+        # perform login and save the authentication token
         login_response = self.client.post(
             "/auth/token/login/",
             data={"username": "admin@fractal.xy", "password": "1234"},
         )
 
-        # print(login_response.json())
+        print(login_response.json())
         if login_response.status_code == 200:
             self.auth_token = login_response.json().get("access_token")
         else:
@@ -42,12 +42,37 @@ class FastAPIUser(HttpUser):
                 for path, path_data in swagger_data.get("paths", {}).items()
                 if "get" in path_data
             ]
+
             # print(paths)
+            patterns = [
+                re.compile(r"/api/v1/task/"),
+                re.compile(r"/auth/users/"),
+                re.compile(r"/admin/"),
+                re.compile(r"/status/"),
+                re.compile(r"/download/"),
+                re.compile(r"/export/"),
+                re.compile(r"/import/"),
+                re.compile(r"/export_history/"),
+                re.compile(r"/workflow/"),
+                re.compile(r"/job/"),
+            ]
+
+            cleaned_paths = [
+                path
+                for path in paths
+                if not any(pattern.search(path) for pattern in patterns)
+            ]
+            print(cleaned_paths)
+
             headers = {"Authorization": f"Bearer {self.auth_token}"}
 
             pattern = re.compile(r"\{.*?\}")
+            # /api/v1/project/{project_id} -> /api/v1/project/X
 
             # Iterate through each path and test the corresponding endpoint
-            paths_with_param = [re.sub(pattern, "1", path) for path in paths]
-            for path in paths_with_param:
-                response = self.client.get(path, headers=headers)
+            for i in range(1, 10):
+                paths_with_param = [
+                    re.sub(pattern, str(i), path) for path in cleaned_paths
+                ]
+                for path in paths_with_param:
+                    response = self.client.get(path, headers=headers)
