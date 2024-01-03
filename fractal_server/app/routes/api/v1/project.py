@@ -79,7 +79,7 @@ async def create_project(
         project_name=project.name, user_id=user.id, db=db
     )
 
-    db_project = Project.from_orm(project)
+    db_project = Project.model_validate(project, from_attributes=True)
     db_project.user_list.append(user)
     try:
         db.add(db_project)

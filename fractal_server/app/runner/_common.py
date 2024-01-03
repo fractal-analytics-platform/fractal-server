@@ -610,7 +610,7 @@ def execute_tasks(
 
     logger = get_logger(logger_name)
 
-    current_task_pars = task_pars.copy()
+    current_task_pars = task_pars.model_copy()
 
     for this_wftask in task_list:
         logger.debug(

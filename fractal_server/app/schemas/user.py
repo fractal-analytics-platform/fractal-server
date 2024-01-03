@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi_users import schemas
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
 from pydantic.types import StrictStr
@@ -74,7 +74,7 @@ class UserUpdate(schemas.BaseUserUpdate):
         return v
 
 
-class UserUpdateStrict(BaseModel, extra=Extra.forbid):
+class UserUpdateStrict(BaseModel):
     """
     Schema for `User` self-editing.
 
@@ -82,6 +82,8 @@ class UserUpdateStrict(BaseModel, extra=Extra.forbid):
         cache_dir:
         slurm_accounts:
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     cache_dir: Optional[str] = None
     slurm_accounts: Optional[list[StrictStr]] = None

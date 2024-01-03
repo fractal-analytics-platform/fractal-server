@@ -145,7 +145,9 @@ async def _insert_tasks(
     """
     Insert tasks into database
     """
-    task_db_list = [Task.from_orm(t) for t in task_list]
+    task_db_list = [
+        Task.model_validate(t, from_attributes=True) for t in task_list
+    ]
     db.add_all(task_db_list)
     db.commit()
     for t in task_db_list:

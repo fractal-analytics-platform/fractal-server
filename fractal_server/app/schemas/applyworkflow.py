@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
 from pydantic.types import StrictStr
@@ -18,7 +18,10 @@ __all__ = (
 )
 
 
-class ProjectDump(BaseModel, extra=Extra.forbid):
+class ProjectDump(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
+
     id: int
     name: str
     read_only: bool
