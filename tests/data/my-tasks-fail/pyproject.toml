@@ -7,7 +7,7 @@ packages = [{include = "my_tasks_fail"}]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-pydantic = "^1.10.1"
+pydantic = "^2.5.0"
 
 [build-system]
 requires = ["poetry-core"]
