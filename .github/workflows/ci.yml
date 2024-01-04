@@ -98,13 +98,15 @@ jobs:
        run: |
         export DB_ENGINE=sqlite
         export SQLITE_PATH=./simplest_fractal_db.db
+        export FRACTAL_TASKS_DIR=/tmp/FRACTAL_TASKS_DIR
+        export FRACTAL_RUNNER_WORKING_BASE_DIR=/tmp/artifacts
+        export JWT_SECRET_KEY=secret
+        export FRACTAL_LOGGING_LEVEL=10
         cd scripts/benchmarks/
         poetry run sh serve.sh
 
      - name: Benchmark with locust
        run: |
-        export DB_ENGINE=sqlite
-        export SQLITE_PATH=./simplest_fractal_db.db
         cd scripts/benchmarks/
         poetry run sh benchmark.sh
 
