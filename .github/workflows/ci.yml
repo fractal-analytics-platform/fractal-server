@@ -99,7 +99,7 @@ jobs:
         export DB_ENGINE=sqlite
         export SQLITE_PATH=./simplest_fractal_db.db
         cd scripts/benchmarks/
-        python run sh serve.sh
+        poetry run sh serve.sh
 
      - name: Benchmark with locust
        run: |
