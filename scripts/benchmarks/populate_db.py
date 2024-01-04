@@ -53,7 +53,8 @@ def populate_admin_user() -> None:
         user = res.scalars().first()
 
         for i in range(0, 10):
-            project = Project.from_orm(ProjectCreate(name=f"test_{i}_pro"))
+            project_create = ProjectCreate(name=f"test_{i}_pro")
+            project = Project(**project_create.dict())
             project.user_list.append(user)
             db.add(project)
             db.commit()
