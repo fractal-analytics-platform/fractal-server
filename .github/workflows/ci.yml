@@ -98,7 +98,8 @@ jobs:
        run: |
         export DB_ENGINE=sqlite
         export SQLITE_PATH=./simplest_fractal_db.db
-        poetry run sh scripts/benchmarks/benchmark.sh
+        cd scripts/benchmarks/
+        poetry run sh benchmark.sh
 
 
   coverage:

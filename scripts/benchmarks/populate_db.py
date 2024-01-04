@@ -52,6 +52,9 @@ def populate_admin_user() -> None:
         res = db.execute(stm)
         user = res.scalars().first()
 
+        if user is None:
+            raise
+
         for i in range(0, 10):
             project_create = ProjectCreate(name=f"test_{i}_pro")
             project = Project(**project_create.dict())
