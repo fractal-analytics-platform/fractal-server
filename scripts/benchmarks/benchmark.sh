@@ -17,7 +17,7 @@ sleep 3
 
 python populate_db.py
 
-curl -X GET http://127.0.0.1/api/alive/
+curl -X GET http://127.0.0.1:8000/api/alive/
 
 # locust -f api_bench.py \
 # --host http://127.0.0.1:8000 \
