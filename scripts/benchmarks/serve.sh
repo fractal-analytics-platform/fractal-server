@@ -10,7 +10,7 @@ gunicorn "fractal_server.main:app" \
     --bind=$BIND \
     --workers=$N_WORKERS \
     --worker-class=$WORKER_CLASS \
-    --deamon
+    --daemon
 
 # let gunicorn takes its time
 sleep 3
