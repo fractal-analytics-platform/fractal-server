@@ -80,17 +80,16 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-     - name: Checkout Repository
      - uses: actions/checkout@4
        with:
          fetch-depth: 0
-     - name: Install poetry
-       run: pipx install poetry==1.7.1
 
-     - name: Set up Python
      - uses: actions/setup-python@v4
        with:
          python-version: "3.10"
+
+     - name: Install poetry
+       run: pipx install poetry==1.7.1
 
      - name: Install dependencies
        run: poetry install --with dev --without docs --no-interaction -E gunicorn
