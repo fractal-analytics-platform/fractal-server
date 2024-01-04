@@ -105,6 +105,7 @@ jobs:
        run: |
         export DB_ENGINE=sqlite
         export SQLITE_PATH=./simplest_fractal_db.db
+        cd scripts/benchmarks/
         poetry run sh benchmark.sh
 
 
