@@ -12,6 +12,8 @@ gunicorn "fractal_server.main:app" \
     --worker-class=$WORKER_CLASS \
     --daemon
 
+sleep 3
+
 python populate_db.py
 
 locust -f api_bench.py \
