@@ -9,8 +9,7 @@ fractalctl set-db
 gunicorn "fractal_server.main:app" \
     --bind=$BIND \
     --workers=$N_WORKERS \
-    --worker-class=$WORKER_CLASS \
-    --daemon
+    --worker-class=$WORKER_CLASS
 
 # let gunicorn takes its time
 sleep 3
