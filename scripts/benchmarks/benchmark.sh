@@ -12,7 +12,7 @@ gunicorn "fractal_server.main:app" \
     --worker-class=$WORKER_CLASS \
     --daemon
 
-poetry run python populate_db.py
+python populate_db.py
 
 locust -f api_bench.py \
 --host http://0.0.0.0:8000 \
