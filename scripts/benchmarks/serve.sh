@@ -1,7 +1,7 @@
 #!/bin/bash
 
 N_WORKERS=1
-BIND=127.0.0.1:8000
+BIND=0.0.0.0:8000
 WORKER_CLASS=uvicorn.workers.UvicornWorker
 
 fractalctl set-db
