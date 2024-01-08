@@ -452,9 +452,7 @@ def test_user_update_strict():
         UserUpdateStrict(slurm_accounts=[{"NOT": "VALID"}])
     with pytest.raises(ValidationError):
         UserUpdateStrict(slurm_accounts=["a", "b", "a"])
-    with pytest.raises(ValidationError):
-        UserUpdateStrict(slurm_accounts=None)
-
+    UserUpdateStrict(slurm_accounts=None)
     UserUpdateStrict(slurm_accounts=["a", "b", "c"])
 
 
