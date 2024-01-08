@@ -18,6 +18,11 @@ __all__ = (
 
 
 class ProjectDump(BaseModel, extra=Extra.forbid):
+    class Config:
+        json_encoders = {
+            datetime: lambda dt: dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+        }
+
     id: int
     name: str
     read_only: bool
