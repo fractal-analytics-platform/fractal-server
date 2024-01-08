@@ -191,9 +191,33 @@ async def delete_dataset(
             ),
         )
 
+    # Cascade operations: set foreign-keys to null for jobs which are in
+    # relationship with the current dataset
+    # input_dataset
+    stm = select(ApplyWorkflow).where(
+        ApplyWorkflow.input_dataset_id == dataset_id
+    )
+    res = await db.execute(stm)
+    jobs = res.scalars().all()
+    for job in jobs:
+        job.input_dataset_id = None
+        await db.merge(job)
+    await db.commit()
+    # output_dataset
+    stm = select(ApplyWorkflow).where(
+        ApplyWorkflow.output_dataset_id == dataset_id
+    )
+    res = await db.execute(stm)
+    jobs = res.scalars().all()
+    for job in jobs:
+        job.output_dataset_id = None
+        await db.merge(job)
+    await db.commit()
+
+    # Delete dataset
     await db.delete(dataset)
     await db.commit()
-    await db.close()
+
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
