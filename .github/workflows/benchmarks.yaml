@@ -49,8 +49,9 @@ jobs:
         --headless \
         --html bench.html
 
+
      - uses: stefanzweifel/git-auto-commit-action@v5
        with:
          commit_message: Update bench.html
          branch: benchmark-api
-         file_pattern: bench.html
+         file_pattern: scripts/benchmarks/bench.html
