@@ -26,4 +26,4 @@ It does some actions:
 2. Filter the endpoints, based on their action (we keep just the GET endpoints)
 3. Subtitute the right number where an url is in the format like `.../{id}/`
 
-Then a `test.html` file will be generated with a summary about response time and number of failures.
+Then a `bench.html` file will be generated with a summary about response time and number of failures.
