@@ -68,7 +68,7 @@ with next(get_sync_db()) as db:
                     id=-1,
                     name="__UNDEFINED__",
                     read_only=True,
-                    timestamp_created=datetime(1, 1, 1, 0, 0, 0),
+                    timestamp_created=str(datetime(1, 1, 1, 0, 0, 0)),
                 )
             else:
                 project = db.get(Project, job.project_id)
@@ -81,8 +81,8 @@ with next(get_sync_db()) as db:
                 project_dump = json.loads(project.json(exclude={"user_list"}))
 
             logging.warning(f"[Job {job.id:4d}] setting {project_dump=}")
-            project_dump = ProjectDump(**project_dump)
-            job.project_dump = project_dump.dict()
+            ProjectDump(**project_dump)
+            job.project_dump = project_dump
             db.add(job)
             db.commit()
 
