@@ -40,7 +40,7 @@ jobs:
 
      - name: Benchmark with locust
        run: |
-        cd scripts/benchmarks/
+        cd benchmarks/
         poetry run locust -f api_bench.py \
         --host http://0.0.0.0:8000 \
         --users 1 \
