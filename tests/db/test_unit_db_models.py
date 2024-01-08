@@ -16,7 +16,6 @@ from fractal_server.syringe import Inject
 
 
 async def test_projects(db):
-
     p1 = Project(name="project", read_only=True)
     p2 = Project(name="project")
     assert p1.timestamp_created is not None
@@ -93,7 +92,6 @@ async def test_tasks(db):
 
 
 async def test_project_and_workflows(db):
-
     project = Project(name="project")
     # using `.project` relationship
     workflow1 = Workflow(name="workflow1", project=project)
@@ -172,7 +170,6 @@ async def test_project_and_workflows(db):
 
 
 async def test_workflows_tasks_and_workflowtasks(db):
-
     # DB accepts totally empty WorkflowTasks
     db.add(WorkflowTask())
     await db.commit()
@@ -252,7 +249,6 @@ async def test_workflows_tasks_and_workflowtasks(db):
 
 
 async def test_project_and_datasets(db):
-
     project = Project(name="project")
     # using `.project` relationship
     dataset1 = Dataset(name="dataset1", project=project)
@@ -335,7 +331,6 @@ async def test_project_and_datasets(db):
 
 
 async def test_dataset_and_resources(db):
-
     project = Project(name="project")
     resource1 = Resource(id=100, path="/rsc1")
     # using `Dataset.resource_list`
@@ -398,7 +393,6 @@ async def test_dataset_and_resources(db):
     assert db_resource is None
 
 
-@pytest.mark.skip()
 async def test_jobs(db):
     required_args = dict(
         user_email="test@fractal.xy",
@@ -479,75 +473,86 @@ async def test_jobs(db):
         assert job.output_dataset_id is not None
         assert job.project_id is not None
 
-    # delete workflow
-    await db.delete(db_workflow)
-    await db.commit()
-    db.expunge_all()
-    job_query = await db.execute(select(ApplyWorkflow))
-    db_jobs = job_query.scalars().all()
-    for job in db_jobs:
-        assert job.workflow_id is None
-        assert job.input_dataset_id is not None
-        assert job.output_dataset_id is not None
-        assert job.project_id is not None
+    DB_ENGINE = Inject(get_settings).DB_ENGINE
 
-    # delete input_dataset
+    # Test deletion of related objects.
+    # NOTE: Since there are no cascade relationships between Dataset/Workflow
+    # and ApplyWorkflow, foreign-keys would remain non-null even after delete
+    # operations, leading to integrity errors.
+    workflow_query = await db.execute(select(Workflow))
+    db_workflow = workflow_query.scalars().one()
     input_dataset_query = await db.execute(
         select(Dataset).where(Dataset.name == input_dataset.name)
     )
     db_input_dataset = input_dataset_query.scalars().one()
-    await db.delete(db_input_dataset)
-    await db.commit()
-    db.expunge_all()
-    job_query = await db.execute(select(ApplyWorkflow))
-    db_jobs = job_query.scalars().all()
-    for job in db_jobs:
-        assert job.workflow_id is None
-        assert job.input_dataset_id is None
-        assert job.output_dataset_id is not None
-        assert job.project_id is not None
-
-    # delete output_dataset
     output_dataset_query = await db.execute(
         select(Dataset).where(Dataset.name == output_dataset.name)
     )
     db_output_dataset = output_dataset_query.scalars().one()
-    await db.delete(db_output_dataset)
-    await db.commit()
-    db.expunge_all()
+
+    # Failed deletions
+    for db_object in (db_workflow, db_input_dataset, db_output_dataset):
+        if DB_ENGINE == "postgres":
+            with pytest.raises(IntegrityError):
+                await db.delete(db_object)
+                await db.commit()
+            await db.rollback()
+        else:
+            # Skip this block when using sqlite, since its implementation of
+            # foreign-key constraints may actually allow these delete
+            # operations.
+            pass
+
+    # Successful deletions (after making foreign keys null)
     job_query = await db.execute(select(ApplyWorkflow))
     db_jobs = job_query.scalars().all()
+    assert len(db_jobs) == N_JOBS
     for job in db_jobs:
-        assert job.workflow_id is None
-        assert job.input_dataset_id is None
-        assert job.output_dataset_id is None
-        assert job.project_id is not None
+        job.workflow_id = None
+        job.input_dataset_id = None
+        job.output_dataset_id = None
+        await db.merge(job)
+    await db.commit()
+    workflow_query = await db.execute(select(Workflow))
+    db_workflow = workflow_query.scalars().one()
+    input_dataset_query = await db.execute(
+        select(Dataset).where(Dataset.name == input_dataset.name)
+    )
+    db_input_dataset = input_dataset_query.scalars().one()
+    output_dataset_query = await db.execute(
+        select(Dataset).where(Dataset.name == output_dataset.name)
+    )
+    db_output_dataset = output_dataset_query.scalars().one()
+    await db.delete(db_workflow)
+    await db.delete(db_input_dataset)
+    await db.delete(db_output_dataset)
+    await db.commit()
 
-    # delete project
+    # Failed project deletion
+    project_query = await db.execute(select(Project))
+    db_project = project_query.scalars().one()
+    if DB_ENGINE == "postgres":
+        with pytest.raises(IntegrityError):
+            await db.delete(db_project)
+            await db.commit()
+        await db.rollback()
+    else:
+        # Skip this block when using sqlite, since its implementation of
+        # foreign-key constraints may actually allow these delete operations.
+        pass
+
+    # Successful project deletion (after making foreign keys null)
+    job_query = await db.execute(select(ApplyWorkflow))
+    db_jobs = job_query.scalars().all()
+    assert len(db_jobs) == N_JOBS
+    for job in db_jobs:
+        job.project_id = None
+        await db.merge(job)
+    await db.commit()
     project_query = await db.execute(select(Project))
     db_project = project_query.scalars().one()
     await db.delete(db_project)
-
-    DB_ENGINE = Inject(get_settings).DB_ENGINE
-    if DB_ENGINE == "postgres":
-        with pytest.raises(IntegrityError):
-            await db.commit()
-    else:
-        # SQLite does not handle fk-constraints well
-        await db.commit()
-        db.expunge_all()
-
-        project_query = await db.execute(select(Project))
-        db_project = project_query.scalars().one_or_none()
-        assert db_project is None
-
-        job_query = await db.execute(select(ApplyWorkflow))
-        db_jobs = job_query.scalars().all()
-        for job in db_jobs:
-            assert job.workflow_id is None
-            assert job.input_dataset_id is None
-            assert job.output_dataset_id is None
-            assert job.project_id is not None  # fk not set to null by sqlite
+    await db.commit()
 
 
 async def test_project_name_not_unique(MockCurrentUser, db, project_factory):
@@ -628,7 +633,6 @@ async def test_workflow_insert_task_with_args_schema(
     THEN the WorkflowTask.args attribute is set correctly
     """
     async with MockCurrentUser() as user:
-
         # Create a task with a valid args_schema
         args_schema = {
             "title": "_Arguments",
@@ -726,7 +730,6 @@ async def test_cascade_delete_workflow(
     THEN all the related WorkflowTask are deleted
     """
     async with MockCurrentUser() as user:
-
         project = await project_factory(user=user)
 
         workflow = Workflow(
