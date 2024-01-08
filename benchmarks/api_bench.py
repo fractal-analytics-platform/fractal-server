@@ -62,7 +62,7 @@ class FastAPIUser(HttpUser):
                 for path in paths
                 if not any(pattern.search(path) for pattern in patterns)
             ]
-            print(cleaned_paths)
+            # print(cleaned_paths)
 
             headers = {"Authorization": f"Bearer {self.auth_token}"}
 
