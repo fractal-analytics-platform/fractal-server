@@ -185,6 +185,28 @@ async def delete_project(
     res = await db.execute(stm)
     datasets = res.scalars().all()
     for ds in datasets:
+        # Cascade operations: set foreign-keys to null for jobs which are in
+        # relationship with the current dataset
+        # input_dataset
+        stm = select(ApplyWorkflow).where(
+            ApplyWorkflow.input_dataset_id == ds.id
+        )
+        res = await db.execute(stm)
+        jobs = res.scalars().all()
+        for job in jobs:
+            job.input_dataset_id = None
+            await db.merge(job)
+        await db.commit()
+        # output_dataset
+        stm = select(ApplyWorkflow).where(
+            ApplyWorkflow.output_dataset_id == ds.id
+        )
+        res = await db.execute(stm)
+        jobs = res.scalars().all()
+        for job in jobs:
+            job.output_dataset_id = None
+            await db.merge(job)
+        await db.commit()
         await db.delete(ds)
 
     # Job
