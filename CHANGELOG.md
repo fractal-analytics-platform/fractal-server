@@ -10,10 +10,15 @@ WARNINGS:
     * Prevent access to `GET/PATCH` task endpoints for non-verified users (\#1114).
     * Prevent access to task-collection and workflow-apply endpoints for non-verified users (\#1099).
     * Make first-admin-user verified (\#1110).
+* API (internal):
+    * Implement cascade operations explicitly, in `DELETE` endpoints for datasets, workflows and projects (\#1130).
+    * Update `GET /project/{project_id}/workflow/{workflow_id}/job/` to avoid using `Workflow.job_list` (\#1130).
 * Database:
     * Add `ApplyWorkflow.project_dump` column (\#1070).
     * Provide more meaningful names to fix-db scripts (\#1107).
     * Add `Project.timestamp_created` column (\#1102).
+    * Remove `Dataset.list_jobs_input` and `Dataset.list_jobs_output` relationships (\#1130).
+    * Remove `Workflow.job_list` (\#1130).
 * Testing:
     * Extended systematic testing of database models (\#1078).
     * Review `MockCurrentUser` fixture, to handle different kinds of users (\#1099).
