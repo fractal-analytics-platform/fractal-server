@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fractal-server"
-version = "1.4.1"
+version = "1.4.2a0"
 description = "Server component of the Fractal analytics platform"
 authors = [
     "Jacopo Nespolo <jacopo.nespolo@exact-lab.it>",
@@ -24,7 +24,7 @@ exclude = [
 python = "^3.9"
 python-dotenv = "^0.20.0"
 fastapi = "^0.103.0"
-sqlmodel = "^0.0.12"
+sqlmodel = "^0.0.14"
 sqlalchemy = {extras = ["asyncio"], version = ">=2.0.23,<2.1"}
 aiosqlite = "^0.17.0"
 fastapi-users = {extras = ["oauth"], version = "^12.1.0"}
@@ -59,6 +59,7 @@ pytest-subprocess = "^1.4"
 pytest-docker = {version = "^2.0"}
 pytest-pretty = "^1.0.1"
 pyyaml="^6.0.1"
+locust = "^2.20.0"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs = "1.5.2"
@@ -83,7 +84,7 @@ filterwarnings = [
 ]
 
 [tool.bumpver]
-current_version = "1.4.1"
+current_version = "1.4.2a0"
 version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true
@@ -105,7 +106,7 @@ fractalctl = "fractal_server.__main__:run"
 branch = true
 parallel = true
 relative_files = true
-omit = ["tests/*"]
+omit = ["tests/*", "benchmarks/*"]
 
 [[tool.mypy.overrides]]
 module = ["devtools", "uvicorn", "pytest", "asgi_lifespan", "asyncpg"]

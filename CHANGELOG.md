@@ -10,6 +10,7 @@ WARNINGS:
     * Prevent access to `GET/PATCH` task endpoints for non-verified users (\#1114).
     * Prevent access to task-collection and workflow-apply endpoints for non-verified users (\#1099).
     * Make first-admin-user verified (\#1110).
+    * Add the automatic setting of `ApplyWorkflow.end_timestamp` when patching `ApplyWorkflow.status` via `PATCH /admin/job/{job_id}` (\#1121).
 * Database:
     * Add `ApplyWorkflow.project_dump` column (\#1070).
     * Provide more meaningful names to fix-db scripts (\#1107).
@@ -20,6 +21,10 @@ WARNINGS:
     * Remove `persist` from `MockCurrentUser` (\#1098).
     * Update `migrations.yml` GitHub Action to use up-to-date database and also test fix-db script (\#1101).
     * Add more schema-based validation to fix-db current script (\#1107).
+* Dependencies:
+    * Update `sqlmodel` to version 0.0.14 (\#1124).
+* Benchmarks:
+    * Add automatic benchmark system for API's performances (\#1123)
 
 # 1.4.1
 
