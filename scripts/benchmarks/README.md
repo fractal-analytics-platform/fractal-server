@@ -5,7 +5,7 @@
 
 ## Notes
 
-It is possible to run benchmarks on uvicorn or gunicorn (use `serve.sh` script) deployment.
+It is possible to run benchmarks on gunicorn (use `serve.sh` script) deployment.
 
 Executing `bench_api_time.sh` will be execute the `api_bench.py` file with locust cli.
 It does some actions:

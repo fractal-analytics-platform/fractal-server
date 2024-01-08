@@ -74,49 +74,6 @@ jobs:
           name: coverage-data
           path: ".coverage*"
 
-
-  benchmark_api:
-    name: Benchmark
-    runs-on: ubuntu-22.04
-
-    steps:
-     - uses: actions/checkout@v4
-       with:
-         fetch-depth: 0
-
-     - uses: actions/setup-python@v4
-       with:
-         python-version: "3.10"
-
-     - name: Install poetry
-       run: pipx install poetry==1.7.1
-
-     - name: Install dependencies
-       run: poetry install --with dev --without docs --no-interaction -E gunicorn
-
-     - name: Run Fractal with Gunicorn
-       run: |
-        export DB_ENGINE=sqlite
-        export SQLITE_PATH=./simplest_fractal_db.db
-        export FRACTAL_TASKS_DIR=/tmp/FRACTAL_TASKS_DIR
-        export FRACTAL_RUNNER_WORKING_BASE_DIR=/tmp/artifacts
-        export JWT_SECRET_KEY=secret
-        export FRACTAL_LOGGING_LEVEL=10
-        cd scripts/benchmarks/
-        poetry run sh serve.sh
-
-     - name: Benchmark with locust
-       run: |
-        cd scripts/benchmarks/
-        poetry run locust -f api_bench.py \
-        --host http://0.0.0.0:8000 \
-        --users 1 \
-        --spawn-rate 10 \
-        --run-time 10s \
-        --headless \
-        --html test.html
-
-
   coverage:
     name: Coverage
     runs-on: ubuntu-22.04
