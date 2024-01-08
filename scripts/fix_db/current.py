@@ -82,7 +82,7 @@ with next(get_sync_db()) as db:
 
             logging.warning(f"[Job {job.id:4d}] setting {project_dump=}")
             project_dump = ProjectDump(**project_dump)
-            job.project_dump = project_dump.json()
+            job.project_dump = project_dump.dict()
             db.add(job)
             db.commit()
 
