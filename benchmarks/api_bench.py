@@ -18,7 +18,7 @@ class FastAPIUser(HttpUser):
             data={"username": "admin@fractal.xy", "password": "1234"},
         )
 
-        print(login_response.json())
+        # print(login_response.json())
         if login_response.status_code == 200:
             self.auth_token = login_response.json().get("access_token")
         else:
