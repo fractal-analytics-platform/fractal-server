@@ -2,7 +2,6 @@
 Definition of `/admin` routes.
 """
 from datetime import datetime
-from datetime import timezone
 from pathlib import Path
 from typing import Optional
 
@@ -15,6 +14,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import func
 from sqlmodel import select
 
+from ...utils import get_timestamp
 from ..db import AsyncSession
 from ..db import get_db
 from ..models import ApplyWorkflow
@@ -253,7 +253,7 @@ async def update_job(
         )
 
     setattr(job, "status", job_update.status)
-    setattr(job, "end_timestamp", datetime.now(tz=timezone.utc))
+    setattr(job, "end_timestamp", get_timestamp())
     await db.commit()
     await db.refresh(job)
     await db.close()
