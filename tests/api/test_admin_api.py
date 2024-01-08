@@ -403,12 +403,15 @@ async def test_patch_job(
         res = await client.get(f"/api/v1/project/{project.id}/job/{job.id}/")
         assert res.status_code == 200
         assert res.json()["status"] == ORIGINAL_STATUS
+        assert res.json()["end_timestamp"] is None
+
         # Patch job as job owner (standard user) and fail
         res = await client.patch(
             f"{PREFIX}/job/{job.id}/",
             json={"status": NEW_STATUS},
         )
         assert res.status_code == 401
+
         # Patch job as superuser
         async with MockCurrentUser(
             user_kwargs={"id": 222222, "is_superuser": True}
@@ -445,11 +448,13 @@ async def test_patch_job(
             assert res.status_code == 200
             debug(res.json())
             assert res.json()["status"] == NEW_STATUS
+            assert res.json()["end_timestamp"] is not None
 
         # Read job as job owner (standard user)
         res = await client.get(f"/api/v1/project/{project.id}/job/{job.id}/")
         assert res.status_code == 200
         assert res.json()["status"] == NEW_STATUS
+        assert res.json()["end_timestamp"] is not None
 
 
 @pytest.mark.parametrize("backend", backends_available)
