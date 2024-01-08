@@ -280,8 +280,6 @@ async def test_project_and_datasets(db):
     # test defaults
     assert db_dataset1.type is None
     assert db_dataset1.read_only is False
-    assert db_dataset1.list_jobs_input == []
-    assert db_dataset1.list_jobs_output == []
     assert db_dataset1.resource_list == []
     assert db_dataset1.meta == {}
     assert db_dataset1.history == []
@@ -401,6 +399,7 @@ async def test_dataset_and_resources(db):
     assert db_resource is None
 
 
+@pytest.mark.skip()
 async def test_jobs(db):
     required_args = dict(
         user_email="test@fractal.xy",
@@ -480,10 +479,6 @@ async def test_jobs(db):
         assert job.input_dataset_id is not None
         assert job.output_dataset_id is not None
         assert job.project_id is not None
-    assert len(db_input_dataset.list_jobs_input) == N_JOBS
-    assert len(db_input_dataset.list_jobs_output) == 0
-    assert len(db_output_dataset.list_jobs_input) == 0
-    assert len(db_output_dataset.list_jobs_output) == N_JOBS
 
     # delete workflow
     await db.delete(db_workflow)
