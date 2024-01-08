@@ -27,6 +27,8 @@ WARNINGS:
     * Add more schema-based validation to fix-db current script (\#1107).
 * Dependencies:
     * Update `sqlmodel` to version 0.0.14 (\#1124).
+* Benchmarks:
+    * Add automatic benchmark system for API's performances (\#1123)
 
 # 1.4.1
 
