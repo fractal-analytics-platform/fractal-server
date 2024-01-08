@@ -21,6 +21,8 @@ WARNINGS:
     * Remove `persist` from `MockCurrentUser` (\#1098).
     * Update `migrations.yml` GitHub Action to use up-to-date database and also test fix-db script (\#1101).
     * Add more schema-based validation to fix-db current script (\#1107).
+* Dependencies:
+    * Update `sqlmodel` to version 0.0.14 (\#1124).
 
 # 1.4.1
 
