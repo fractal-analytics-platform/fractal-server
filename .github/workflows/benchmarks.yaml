@@ -56,4 +56,5 @@ jobs:
          commit_message: Update bench.html
          branch: benchmark-api
          push_options: '--force'
+         skip_checkout: true
          file_pattern: benchmarks/bench.html
