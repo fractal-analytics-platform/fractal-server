@@ -55,4 +55,5 @@ jobs:
        with:
          commit_message: Update bench.html
          branch: benchmark-api
+         push_options: '--force'
          file_pattern: benchmarks/bench.html
