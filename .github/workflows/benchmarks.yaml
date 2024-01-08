@@ -51,6 +51,7 @@ jobs:
 
 
      - uses: stefanzweifel/git-auto-commit-action@v5
+       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
        with:
          commit_message: Update bench.html
          branch: benchmark-api
