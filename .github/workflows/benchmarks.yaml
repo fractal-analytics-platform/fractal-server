@@ -35,7 +35,7 @@ jobs:
         export FRACTAL_RUNNER_WORKING_BASE_DIR=/tmp/artifacts
         export JWT_SECRET_KEY=secret
         export FRACTAL_LOGGING_LEVEL=10
-        cd scripts/benchmarks/
+        cd benchmarks/
         poetry run sh serve.sh
 
      - name: Benchmark with locust
@@ -54,4 +54,4 @@ jobs:
        with:
          commit_message: Update bench.html
          branch: benchmark-api
-         file_pattern: scripts/benchmarks/bench.html
+         file_pattern: benchmarks/bench.html
