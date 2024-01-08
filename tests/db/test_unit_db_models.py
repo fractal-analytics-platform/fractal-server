@@ -119,7 +119,6 @@ async def test_project_and_workflows(db):
     assert db_workflow1.project == db_project
     # test defaults
     assert db_workflow1.task_list == []
-    assert db_workflow1.job_list == []
 
     # using `.project_id` attribute
     workflow2 = Workflow(name="workflow2", project_id=db_project.id)
