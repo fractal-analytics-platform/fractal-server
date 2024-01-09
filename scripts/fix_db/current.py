@@ -5,6 +5,7 @@ If the corresponding project still exists, set the project_dump.
 import json
 import logging
 from datetime import datetime
+from datetime import timezone
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -21,7 +22,9 @@ with next(get_sync_db()) as db:
     stm = select(Project)
     projects = db.execute(stm).scalars().all()
     for project in projects:
-        if project.timestamp_created == str(datetime(1, 1, 1, 0, 0, 0, 0)):
+        if project.timestamp_created == str(
+            datetime(2000, 1, 1, tzinfo=timezone.utc)
+        ):
             logging.warning(
                 f"[Project {project.id:4d}] "
                 f"timestamp_created={project.timestamp_created}, "
