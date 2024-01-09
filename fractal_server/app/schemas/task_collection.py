@@ -56,9 +56,6 @@ class TaskCollectPip(_TaskCollectBase):
     python_version: Optional[str] = None
     pinned_package_versions: Optional[dict[str, str]] = None
 
-    _package_version = validator("package_version", allow_reuse=True)(
-        valstr("package_version")
-    )
     _package_extras = validator("package_extras", allow_reuse=True)(
         valstr("package_extras")
     )
@@ -82,11 +79,13 @@ class TaskCollectPip(_TaskCollectBase):
 
     @validator("package_version")
     def package_version_validator(cls, v, values):
-        if v is not None:
-            if values["package"].endswith(".whl"):
-                raise ValueError(
-                    "Cannot provide version when package is a Wheel file."
-                )
+
+        valstr("package_version")(v)
+
+        if values["package"].endswith(".whl"):
+            raise ValueError(
+                "Cannot provide version when package is a Wheel file."
+            )
         return v
 
 

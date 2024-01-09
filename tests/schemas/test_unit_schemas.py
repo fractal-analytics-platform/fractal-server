@@ -305,6 +305,8 @@ def test_TaskCollectPip():
     with pytest.raises(ValidationError):
         TaskCollectPip(package="some/package.whl")
     with pytest.raises(ValidationError):
+        TaskCollectPip(package="some-package", package_version=None)
+    with pytest.raises(ValidationError):
         TaskCollectPip(package="/some/package.whl", package_version="0.0.1")
     with pytest.raises(ValidationError):
         TaskCollectPip(package="/some/package.tar.gz")
@@ -314,7 +316,7 @@ def test_TaskCollectPip():
         TaskCollectPip(package="some-package", package_extras=None)
 
     TaskCollectPip(package="some-package", pinned_package_versions={})
-    TaskCollectPip(package="some-package", package_version=None)
+
     TaskCollectPip(
         package="some-package",
         pinned_package_versions={"numpy": "1.22.0", "pydantic": "1.10.10"},
