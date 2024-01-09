@@ -97,7 +97,6 @@ class WorkflowTaskUpdate(_WorkflowTaskBase):
 
     # Validators
     @validator("meta")
-    @classmethod
     def check_no_parallelisation_level(cls, m):
         if "parallelization_level" in m:
             raise ValueError(
@@ -159,7 +158,6 @@ class WorkflowUpdate(_WorkflowBase):
     _name = validator("name", allow_reuse=True)(valstr("name"))
 
     @validator("reordered_workflowtask_ids")
-    @classmethod
     def check_positive_and_unique(cls, value):
         if any(i < 0 for i in value):
             raise ValueError("Negative `id` in `reordered_workflowtask_ids`")

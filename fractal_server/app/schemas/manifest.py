@@ -89,7 +89,6 @@ class _ManifestBase(BaseModel):
     args_schema_version: Optional[str]
 
     @root_validator()
-    @classmethod
     def _check_args_schemas_are_present(cls, values):
         has_args_schemas = values["has_args_schemas"]
         task_list = values["task_list"]
@@ -122,7 +121,6 @@ class ManifestV1(_ManifestBase):
     task_list: list[TaskManifestV1]
 
     @validator("manifest_version")
-    @classmethod
     def manifest_version_1(cls, value):
         if value != "1":
             raise ValueError(f"Wrong manifest version (given {value})")

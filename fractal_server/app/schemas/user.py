@@ -73,7 +73,6 @@ class UserUpdate(schemas.BaseUserUpdate):
         "password",
         always=False,
     )
-    @classmethod
     def cant_set_none(cls, v, field):
         if v is None:
             raise ValueError(f"Cannot set {field.name}=None")
