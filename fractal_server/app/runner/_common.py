@@ -301,8 +301,8 @@ def call_single_task(
     updated_metadata.update(diff_metadata)
     # Prepare updated_history (note: the expected type for history items is
     # defined in `_DatasetHistoryItem`)
-    wftask_dump = wftask.dict(exclude={"task"})
-    wftask_dump["task"] = wftask.task.dict()
+    wftask_dump = wftask.model_dump(exclude={"task"})
+    wftask_dump["task"] = wftask.task.model_dump()
     new_history_item = dict(
         workflowtask=wftask_dump,
         status=WorkflowTaskStatusType.DONE,
