@@ -10,7 +10,6 @@ from sqlmodel import SQLModel
 
 from ..schemas.dataset import _DatasetBase
 from ..schemas.dataset import _ResourceBase
-from .job import ApplyWorkflow
 
 
 class Resource(_ResourceBase, SQLModel, table=True):
@@ -42,18 +41,6 @@ class Dataset(_DatasetBase, SQLModel, table=True):
         sa_relationship_kwargs=dict(lazy="selectin"),
     )
 
-    list_jobs_input: list[ApplyWorkflow] = Relationship(  # noqa: F821
-        sa_relationship_kwargs=dict(
-            lazy="selectin",
-            primaryjoin="ApplyWorkflow.input_dataset_id==Dataset.id",
-        )
-    )
-    list_jobs_output: list[ApplyWorkflow] = Relationship(  # noqa: F821
-        sa_relationship_kwargs=dict(
-            lazy="selectin",
-            primaryjoin="ApplyWorkflow.output_dataset_id==Dataset.id",
-        )
-    )
     resource_list: list[Resource] = Relationship(
         sa_relationship_kwargs={
             "lazy": "selectin",
