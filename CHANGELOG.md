@@ -10,6 +10,7 @@ WARNINGS:
     * Prevent access to `GET/PATCH` task endpoints for non-verified users (\#1114).
     * Prevent access to task-collection and workflow-apply endpoints for non-verified users (\#1099).
     * Make first-admin-user verified (\#1110).
+    * Add the automatic setting of `ApplyWorkflow.end_timestamp` when patching `ApplyWorkflow.status` via `PATCH /admin/job/{job_id}` (\#1121).
 * API (internal):
     * Implement cascade operations explicitly, in `DELETE` endpoints for datasets, workflows and projects (\#1130).
     * Update `GET /project/{project_id}/workflow/{workflow_id}/job/` to avoid using `Workflow.job_list` (\#1130).
