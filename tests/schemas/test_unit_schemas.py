@@ -314,6 +314,7 @@ def test_TaskCollectPip():
         TaskCollectPip(package="some-package", package_extras=None)
 
     TaskCollectPip(package="some-package", pinned_package_versions={})
+    TaskCollectPip(package="some-package", package_version=None)
     TaskCollectPip(
         package="some-package",
         pinned_package_versions={"numpy": "1.22.0", "pydantic": "1.10.10"},
