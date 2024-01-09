@@ -56,13 +56,12 @@ async def get_workflow_jobs(
     """
     Returns all the jobs related to a specific workflow
     """
-
-    workflow = await _get_workflow_check_owner(
+    await _get_workflow_check_owner(
         project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
-    job_list = workflow.job_list
-    await db.close()
-
+    stm = select(ApplyWorkflow).where(ApplyWorkflow.workflow_id == workflow_id)
+    res = await db.execute(stm)
+    job_list = res.scalars().all()
     return job_list
 
 
