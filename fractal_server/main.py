@@ -116,18 +116,19 @@ async def _create_first_user(
     try:
         async with get_async_session_context() as session:
 
-            # If a superuser already exists, exit
-            stm = select(UserOAuth).where(
-                UserOAuth.is_superuser == True  # noqa: E712
-            )
-            res = await session.execute(stm)
-            existing_superuser = res.scalars().first()
-            if existing_superuser is not None:
-                logger.info(
-                    f"{existing_superuser.email} superuser already exists,"
-                    f" skip creation of {email}"
+            if is_superuser is True:
+                # If a superuser already exists, exit
+                stm = select(UserOAuth).where(
+                    UserOAuth.is_superuser == True  # noqa: E712
                 )
-                return None
+                res = await session.execute(stm)
+                existing_superuser = res.scalars().first()
+                if existing_superuser is not None:
+                    logger.info(
+                        f"{existing_superuser.email} superuser already exists,"
+                        f" skip creation of {email}"
+                    )
+                    return None
 
             async with get_user_db_context(session) as user_db:
                 async with get_user_manager_context(user_db) as user_manager:
