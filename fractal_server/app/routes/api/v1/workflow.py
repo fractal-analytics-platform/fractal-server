@@ -184,7 +184,7 @@ async def delete_workflow(
     db: AsyncSession = Depends(get_db),
 ) -> Response:
     """
-    Delte a workflow
+    Delete a workflow
     """
 
     workflow = await _get_workflow_check_owner(
@@ -208,6 +208,17 @@ async def delete_workflow(
             ),
         )
 
+    # Cascade operations: set foreign-keys to null for jobs which are in
+    # relationship with the current workflow
+    stm = select(ApplyWorkflow).where(ApplyWorkflow.workflow_id == workflow_id)
+    res = await db.execute(stm)
+    jobs = res.scalars().all()
+    for job in jobs:
+        job.workflow_id = None
+        await db.merge(job)
+    await db.commit()
+
+    # Delete workflow
     await db.delete(workflow)
     await db.commit()
 
