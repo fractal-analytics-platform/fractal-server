@@ -10,6 +10,7 @@ WARNINGS:
     * Prevent access to `GET/PATCH` task endpoints for non-verified users (\#1114).
     * Prevent access to task-collection and workflow-apply endpoints for non-verified users (\#1099).
     * Make first-admin-user verified (\#1110).
+    * Change `ProjectDump.timestamp_created` type from `datetime` to `str` (\#1120).
 * Database:
     * Add `ApplyWorkflow.project_dump` column (\#1070).
     * Provide more meaningful names to fix-db scripts (\#1107).
