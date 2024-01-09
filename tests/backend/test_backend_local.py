@@ -222,7 +222,7 @@ def test_execute_multiple_tasks(tmp_path):
         log_file_path=str(tmp_path / "job.log"),
     )
 
-    # Construct pre-existing history. Note that the `.dict()` methods are
+    # Construct pre-existing history. Note that the `.model_dump()` methods are
     # needed since history items are typed as `dict[str, Any]`, and also used
     # in a `json.dump` command.
     existing_history = [
@@ -232,9 +232,9 @@ def test_execute_multiple_tasks(tmp_path):
                     name="old-task",
                     command="old-command",
                     parallelization_level="component",
-                ).dict(),
+                ).model_dump(),
                 args=dict(some_key="some_value"),
-            ).dict(),
+            ).model_dump(),
             status=WorkflowTaskStatusType.FAILED,
             parallelization=dict(
                 component_list=["A", "B"],
