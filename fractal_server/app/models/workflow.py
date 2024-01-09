@@ -49,8 +49,10 @@ class WorkflowTask(_WorkflowTaskBase, SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    workflow_id: Optional[int] = Field(foreign_key="workflow.id")
-    task_id: Optional[int] = Field(foreign_key="task.id")
+    workflow_id: Optional[int] = Field(
+        foreign_key="workflow.id", nullable=False
+    )
+    task_id: Optional[int] = Field(foreign_key="task.id", nullable=False)
     order: Optional[int]
     meta: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
     args: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
