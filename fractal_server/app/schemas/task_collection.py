@@ -67,7 +67,6 @@ class TaskCollectPip(_TaskCollectBase):
     )
 
     @validator("package")
-    @classmethod
     def package_validator(cls, value):
         if "/" in value:
             if not value.endswith(".whl"):
@@ -82,7 +81,6 @@ class TaskCollectPip(_TaskCollectBase):
         return value
 
     @validator("package_version")
-    @classmethod
     def package_version_validator(cls, v, values):
         if v is not None:
             if values["package"].endswith(".whl"):
