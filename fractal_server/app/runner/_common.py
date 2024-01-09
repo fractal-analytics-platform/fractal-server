@@ -538,8 +538,8 @@ def call_parallel_task(
 
     # Prepare updated_history (note: the expected type for history items is
     # defined in `_DatasetHistoryItem`)
-    wftask_dump = wftask.model_dump(exclude={"task"})
-    wftask_dump["task"] = wftask.task.model_dump()
+    wftask_dump = wftask.dict(exclude={"task"})
+    wftask_dump["task"] = wftask.task.dict()
     new_history_item = dict(
         workflowtask=wftask_dump,
         status=WorkflowTaskStatusType.DONE,
