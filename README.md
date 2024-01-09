@@ -49,7 +49,7 @@
 | fractal\_server/app/runner/handle\_failed\_job.py                 |       49 |        0 |       14 |        0 |    100% |           |
 | fractal\_server/app/schemas/\_\_init\_\_.py                       |       38 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/\_validators.py                       |       38 |        0 |       20 |        1 |     98% |    70->73 |
-| fractal\_server/app/schemas/applyworkflow.py                      |       94 |        0 |       12 |        2 |     98% |124->123, 135->134 |
+| fractal\_server/app/schemas/applyworkflow.py                      |       94 |        0 |       12 |        2 |     98% |125->124, 136->135 |
 | fractal\_server/app/schemas/dataset.py                            |       48 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/manifest.py                           |       41 |        0 |       12 |        2 |     96% |92->91, 124->123 |
 | fractal\_server/app/schemas/project.py                            |       18 |        0 |        0 |        0 |    100% |           |
