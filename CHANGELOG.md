@@ -33,7 +33,7 @@ WARNINGS:
 * Benchmarks:
     * Add automatic benchmark system for API's performances (\#1123)
 * App (internal):
-    * Function `_create_first_user` skips the check for the existence of a superuser if `is_superuser` is False (\#1035).
+    * Function `_create_first_user` skips the check for the existence of a superuser if `is_superuser` is False (\#1036).
 
 # 1.4.1
 
