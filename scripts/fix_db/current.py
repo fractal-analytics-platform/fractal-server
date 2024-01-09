@@ -89,4 +89,4 @@ with next(get_sync_db()) as db:
             # Also validate that the row can be cast into ApplyWorkflowRead
             db.refresh(job)
             db.expunge(job)
-            ApplyWorkflowRead(**job.dict())
+            ApplyWorkflowRead(**job.model_dump())
