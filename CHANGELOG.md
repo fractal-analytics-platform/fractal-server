@@ -22,6 +22,8 @@ WARNINGS:
     * Add `Project.timestamp_created` column, with timezone-aware default (\#1102, \#1131).
     * Remove `Dataset.list_jobs_input` and `Dataset.list_jobs_output` relationships (\#1130).
     * Remove `Workflow.job_list` (\#1130).
+* Runner:
+    * Use `slurm_account` from apply-workflow endpoint, with top priority (\#1145).
 * Testing:
     * Extended systematic testing of database models (\#1078).
     * Review `MockCurrentUser` fixture, to handle different kinds of users (\#1099).
