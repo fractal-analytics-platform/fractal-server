@@ -1,7 +1,9 @@
 """
 Auxiliary functions to get object from the database or perform simple checks
 """
+from typing import Any
 from typing import Literal
+from typing import Optional
 from typing import Union
 
 from fastapi import HTTPException
@@ -378,3 +380,56 @@ def _get_active_jobs_statement() -> SelectOfScalar:
         )
     )
     return stm
+
+
+async def _workflow_insert_task(
+    workflow_id: int,
+    task_id: int,
+    *,
+    args: Optional[dict[str, Any]] = None,
+    meta: Optional[dict[str, Any]] = None,
+    order: Optional[int] = None,
+    db: AsyncSession,
+) -> WorkflowTask:
+    """
+    Insert a new WorkflowTask into Workflow.task_list
+
+    Args:
+        task_id: TBD
+        args: TBD
+        meta: TBD
+        order: TBD
+        db: TBD
+        commit: TBD
+    """
+    db_workflow = await db.get(Workflow, workflow_id)
+    if order is None:
+        order = len(db_workflow.task_list)
+
+    # Get task from db, and extract default arguments via a Task property
+    # method
+    db_task = await db.get(Task, task_id)
+    default_args = db_task.default_args_from_args_schema
+    # Override default_args with args
+    actual_args = default_args.copy()
+    if args is not None:
+        for k, v in args.items():
+            actual_args[k] = v
+    if not actual_args:
+        actual_args = None
+
+    # Combine meta (higher priority) and db_task.meta (lower priority)
+    wt_meta = (db_task.meta or {}).copy()
+    wt_meta.update(meta or {})
+    if not wt_meta:
+        wt_meta = None
+
+    # Create DB entry
+    wf_task = WorkflowTask(task_id=task_id, args=actual_args, meta=wt_meta)
+    db.add(wf_task)
+    db_workflow.task_list.insert(order, wf_task)
+    db_workflow.task_list.reorder()  # type: ignore
+    await db.commit()
+    await db.refresh(wf_task)
+
+    return wf_task
