@@ -29,6 +29,8 @@ WARNINGS:
     * Update `migrations.yml` GitHub Action to use up-to-date database and also test fix-db script (\#1101).
     * Add more schema-based validation to fix-db current script (\#1107).
     * Small improvement in schema coverage (\#1125).
+* Runner:
+    * Include more info in error message upon `sbatch` failure (\#1142).
 * Dependencies:
     * Update `sqlmodel` to version 0.0.14 (\#1124).
 * Benchmarks:
@@ -49,7 +51,6 @@ WARNINGS:
     * Add `Dataset.project` and `Workflow.project` relationships (\#1082).
     * Avoid using `Project` relationships `dataset_list` or `workflow_list` within some `GET` endpoints (\#1082).
     * Fully remove `Project` relationships `dataset_list`, `workflow_list` and `job_list` (\#1091).
-
 * Testing:
     * Only use ubuntu-22.04 in GitHub actions (\#1061).
     * Improve unit testing of database models (\#1082).
