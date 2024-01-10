@@ -7,8 +7,8 @@ from pydantic import validator
 
 from ._validators import val_absolute_path
 from ._validators import valstr
+from .dumps import WorkflowTaskDump
 from .project import ProjectRead
-from .workflow import WorkflowTaskRead
 from .workflow import WorkflowTaskStatusType
 
 __all__ = (
@@ -75,7 +75,7 @@ class _DatasetHistoryItem(BaseModel):
             and `component_list`.
     """
 
-    workflowtask: WorkflowTaskRead
+    workflowtask: WorkflowTaskDump
     status: WorkflowTaskStatusType
     parallelization: Optional[dict]
 
