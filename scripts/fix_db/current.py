@@ -14,7 +14,7 @@ from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.job import ApplyWorkflow
 from fractal_server.app.models.project import Project
 from fractal_server.app.schemas.applyworkflow import ApplyWorkflowRead
-from fractal_server.app.schemas.applyworkflow import ProjectDump
+from fractal_server.app.schemas.dumps import ProjectDump
 from fractal_server.app.schemas.project import ProjectRead
 
 
