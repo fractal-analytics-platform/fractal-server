@@ -207,6 +207,21 @@ class FractalSlurmExecutor(SlurmExecutor):
         self.slurm_user = slurm_user
 
         self.common_script_lines = common_script_lines or []
+        # Check that SLURM account is not set here
+        try:
+            invalid_line = next(
+                line
+                for line in self.common_script_lines
+                if line.startswith("#SBATCH --account=")
+            )
+            raise RuntimeError(
+                f"Invalid line in `worker_init` variable: '{invalid_line}'.\n"
+                "SLURM account must be set via the query parameter of the "
+                "apply-workflow endpoint, or by modifying the user properties."
+            )
+        except StopIteration:
+            pass
+
         self.working_dir = working_dir
         if not _path_exists_as_user(
             path=str(working_dir_user), user=self.slurm_user
