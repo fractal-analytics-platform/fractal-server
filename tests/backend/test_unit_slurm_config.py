@@ -341,11 +341,13 @@ def test_slurm_submit_setup(
         meta=dict(key="value"),
         task=MockTask(name="name", source="source", command="command"),
     )
-    _slurm_submit_setup(
+    slurm_config = _slurm_submit_setup(
         wftask=wftask,
         workflow_dir=tmp_path,
         workflow_dir_user=tmp_path,
     )
+    debug(slurm_config)
+    assert slurm_config["slurm_config"].account is None
 
     # Account in `wftask.meta` --> fail
     wftask = MockWorkflowTask(
