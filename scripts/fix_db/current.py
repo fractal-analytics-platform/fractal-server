@@ -18,7 +18,9 @@ from fractal_server.app.schemas.applyworkflow import ProjectDump
 from fractal_server.app.schemas.project import ProjectRead
 
 
-REFERENCE_TIMESTAMP_STRING = str(datetime(2000, 1, 1, tzinfo=timezone.utc))
+REFERENCE_TIMESTAMP = datetime(2000, 1, 1, tzinfo=timezone.utc)
+REFERENCE_TIMESTAMP_STRING = str(REFERENCE_TIMESTAMP)
+
 
 with next(get_sync_db()) as db:
     # Get list of all projects with their related job
@@ -26,7 +28,7 @@ with next(get_sync_db()) as db:
     projects = db.execute(stm).scalars().all()
     for project in projects:
         timestamp_created = project.timestamp_created
-        if timestamp_created != REFERENCE_TIMESTAMP_STRING:
+        if timestamp_created != REFERENCE_TIMESTAMP:
             logging.warning(
                 f"[Project {project.id:4d}] {timestamp_created=} -> skip."
             )
