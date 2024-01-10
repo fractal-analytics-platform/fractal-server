@@ -25,6 +25,9 @@ from fractal_server.app.routes.api.v1._aux_functions import (
 from fractal_server.app.routes.api.v1._aux_functions import (
     _get_workflow_task_check_owner,
 )
+from fractal_server.app.routes.api.v1._aux_functions import (
+    _workflow_insert_task,
+)
 
 
 async def test_get_project_check_owner(
@@ -262,7 +265,9 @@ async def test_get_job_check_owner(
 
         workflow = await workflow_factory(project_id=project.id)
         t = await task_factory()
-        await workflow.insert_task(task_id=t.id, db=db)
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=t.id, db=db
+        )
 
         dataset = await dataset_factory(project_id=project.id)
 
