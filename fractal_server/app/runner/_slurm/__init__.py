@@ -76,6 +76,7 @@ def _process_workflow(
         working_dir=workflow_dir,
         working_dir_user=workflow_dir_user,
         common_script_lines=worker_init,
+        slurm_account=slurm_account,
     ) as executor:
         output_task_pars = execute_tasks(
             executor=executor,

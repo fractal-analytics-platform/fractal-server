@@ -189,6 +189,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         common_script_lines: Optional[list[str]] = None,
         slurm_poll_interval: Optional[int] = None,
         keep_pickle_files: bool = False,
+        slurm_account: Optional[str] = None,
         *args,
         **kwargs,
     ):
@@ -207,6 +208,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         self.slurm_user = slurm_user
 
         self.common_script_lines = common_script_lines or []
+
         # Check that SLURM account is not set here
         try:
             invalid_line = next(
@@ -221,6 +223,12 @@ class FractalSlurmExecutor(SlurmExecutor):
             )
         except StopIteration:
             pass
+
+        # Set SLURM account (if provided) as part of `common_script_lines`
+        if slurm_account is not None:
+            self.common_script_lines.append(
+                f"#SBATCH --account={slurm_account}"
+            )
 
         self.working_dir = working_dir
         if not _path_exists_as_user(
