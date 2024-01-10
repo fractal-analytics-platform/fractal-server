@@ -29,12 +29,13 @@ WARNINGS:
     * Update `migrations.yml` GitHub Action to use up-to-date database and also test fix-db script (\#1101).
     * Add more schema-based validation to fix-db current script (\#1107).
     * Small improvement in schema coverage (\#1125).
+    * Add unit test for `security` module (\#1036).
 * Dependencies:
     * Update `sqlmodel` to version 0.0.14 (\#1124).
 * Benchmarks:
     * Add automatic benchmark system for API's performances (\#1123)
 * App (internal):
-    * Function `_create_first_user` skips the check for the existence of a superuser if `is_superuser` is False (\#1036).
+    * Move `_create_first_user` from `main` to `security` module, and allow it to create multiple regular users (\#1036).
 
 # 1.4.1
 
