@@ -18,7 +18,7 @@ WARNINGS:
 * Database:
     * Add `ApplyWorkflow.project_dump` column (\#1070).
     * Provide more meaningful names to fix-db scripts (\#1107).
-    * Add `Project.timestamp_created` column (\#1102).
+    * Add `Project.timestamp_created` column, with timezone-aware default (\#1102, \#1131).
     * Remove `Dataset.list_jobs_input` and `Dataset.list_jobs_output` relationships (\#1130).
     * Remove `Workflow.job_list` (\#1130).
 * Testing:
