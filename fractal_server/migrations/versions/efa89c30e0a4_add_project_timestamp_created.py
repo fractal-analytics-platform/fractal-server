@@ -6,6 +6,7 @@ Create Date: 2023-12-20 10:06:52.139917
 
 """
 from datetime import datetime
+from datetime import timezone
 
 import sqlalchemy as sa
 from alembic import op
@@ -25,7 +26,7 @@ def upgrade() -> None:
                 "timestamp_created",
                 sa.DateTime(timezone=True),
                 nullable=False,
-                server_default=str(datetime(1, 1, 1, 0, 0, 0, 0)),
+                server_default=str(datetime(2000, 1, 1, tzinfo=timezone.utc)),
             )
         )
 
