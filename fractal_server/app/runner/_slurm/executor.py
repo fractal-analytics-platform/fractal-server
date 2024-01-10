@@ -178,6 +178,7 @@ class FractalSlurmExecutor(SlurmExecutor):
     working_dir_user: Path
     map_jobid_to_slurm_files: dict[str, tuple[str, str, str]]
     keep_pickle_files: bool
+    slurm_account: Optional[str]
 
     def __init__(
         self,
@@ -189,6 +190,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         common_script_lines: Optional[list[str]] = None,
         slurm_poll_interval: Optional[int] = None,
         keep_pickle_files: bool = False,
+        slurm_account: Optional[str] = None,
         *args,
         **kwargs,
     ):
@@ -205,8 +207,26 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         self.keep_pickle_files = keep_pickle_files
         self.slurm_user = slurm_user
+        self.slurm_account = slurm_account
 
         self.common_script_lines = common_script_lines or []
+
+        # Check that SLURM account is not set here
+        try:
+            invalid_line = next(
+                line
+                for line in self.common_script_lines
+                if line.startswith("#SBATCH --account=")
+            )
+            raise RuntimeError(
+                "Invalid line in `FractalSlurmExecutor.common_script_lines`: "
+                f"'{invalid_line}'.\n"
+                "SLURM account must be set via the query parameter of the "
+                "apply-workflow endpoint, or by modifying the user properties."
+            )
+        except StopIteration:
+            pass
+
         self.working_dir = working_dir
         if not _path_exists_as_user(
             path=str(working_dir_user), user=self.slurm_user
@@ -519,6 +539,10 @@ class FractalSlurmExecutor(SlurmExecutor):
             Future representing the execution of the current SLURM job.
         """
         fut: Future = Future()
+
+        # Inject SLURM account (if set) into slurm_config
+        if self.slurm_account:
+            slurm_config.account = self.slurm_account
 
         # Define slurm-job-related files
         if single_task_submission:
