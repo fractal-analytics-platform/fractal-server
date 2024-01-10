@@ -217,7 +217,8 @@ class FractalSlurmExecutor(SlurmExecutor):
                 if line.startswith("#SBATCH --account=")
             )
             raise RuntimeError(
-                f"Invalid line in `worker_init` variable: '{invalid_line}'.\n"
+                "Invalid line in `FractalSlurmExecutor.common_script_lines`: "
+                f"'{invalid_line}'.\n"
                 "SLURM account must be set via the query parameter of the "
                 "apply-workflow endpoint, or by modifying the user properties."
             )
