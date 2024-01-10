@@ -178,6 +178,7 @@ class FractalSlurmExecutor(SlurmExecutor):
     working_dir_user: Path
     map_jobid_to_slurm_files: dict[str, tuple[str, str, str]]
     keep_pickle_files: bool
+    slurm_account: Optional[str]
 
     def __init__(
         self,
@@ -206,6 +207,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         self.keep_pickle_files = keep_pickle_files
         self.slurm_user = slurm_user
+        self.slurm_account = slurm_account
 
         self.common_script_lines = common_script_lines or []
 
@@ -224,12 +226,6 @@ class FractalSlurmExecutor(SlurmExecutor):
             )
         except StopIteration:
             pass
-
-        # Set SLURM account (if provided) as part of `common_script_lines`
-        if slurm_account is not None:
-            self.common_script_lines.append(
-                f"#SBATCH --account={slurm_account}"
-            )
 
         self.working_dir = working_dir
         if not _path_exists_as_user(
@@ -543,6 +539,10 @@ class FractalSlurmExecutor(SlurmExecutor):
             Future representing the execution of the current SLURM job.
         """
         fut: Future = Future()
+
+        # Inject SLURM account (if set) into slurm_config
+        if self.slurm_account:
+            slurm_config.account = self.slurm_account
 
         # Define slurm-job-related files
         if single_task_submission:
