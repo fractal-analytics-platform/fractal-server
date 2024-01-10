@@ -972,7 +972,9 @@ class FractalSlurmExecutor(SlurmExecutor):
         except subprocess.CalledProcessError as e:
             error_msg = (
                 f"Submit command `{full_command}` failed. "
-                f"Original error:\n{str(e)}"
+                f"Original error:\n{str(e)}\n"
+                f"Original stdout:\n{e.stdout}\n"
+                f"Original stderr:\n{e.stderr}\n"
             )
             logger.error(error_msg)
             raise JobExecutionError(info=error_msg)
