@@ -61,9 +61,9 @@ from ..models.security import OAuthAccount
 from ..models.security import UserOAuth as User
 from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.schemas.user import UserCreate
-from fractal_server.logger import set_logger
+from fractal_server.logger import get_logger
 
-logger = set_logger(__name__)
+logger = get_logger(__name__)
 
 
 class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
