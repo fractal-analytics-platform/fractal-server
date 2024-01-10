@@ -9,6 +9,7 @@ from fractal_server.app.runner._slurm._slurm_config import (
 )
 from fractal_server.app.runner._slurm._slurm_config import get_slurm_config
 from fractal_server.app.runner._slurm._slurm_config import SlurmConfigError
+from fractal_server.app.runner._slurm._submit_setup import _slurm_submit_setup
 from tests.fixtures_tasks import MockTask
 from tests.fixtures_tasks import MockWorkflowTask
 
@@ -326,3 +327,38 @@ def test_get_slurm_config_wftask_meta_none(tmp_path):
     assert len(slurm_config.extra_lines) == len(set(slurm_config.extra_lines))
     # Check value of user_local_exports
     assert slurm_config.user_local_exports == USER_LOCAL_EXPORTS
+
+
+def test_slurm_submit_setup(
+    tmp_path, testdata_path, override_settings_factory
+):
+    override_settings_factory(
+        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
+    )
+
+    # No account in `wftask.meta` --> OK
+    wftask = MockWorkflowTask(
+        meta=dict(key="value"),
+        task=MockTask(name="name", source="source", command="command"),
+    )
+    slurm_config = _slurm_submit_setup(
+        wftask=wftask,
+        workflow_dir=tmp_path,
+        workflow_dir_user=tmp_path,
+    )
+    debug(slurm_config)
+    assert slurm_config["slurm_config"].account is None
+
+    # Account in `wftask.meta` --> fail
+    wftask = MockWorkflowTask(
+        meta=dict(key="value", account="MyFakeAccount"),
+        task=MockTask(name="name", source="source", command="command"),
+    )
+    with pytest.raises(SlurmConfigError) as e:
+        _slurm_submit_setup(
+            wftask=wftask,
+            workflow_dir=tmp_path,
+            workflow_dir_user=tmp_path,
+        )
+    debug(e.value)
+    assert "SLURM account" in str(e.value)
