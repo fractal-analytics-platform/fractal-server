@@ -287,3 +287,54 @@ def test_submit_pre_command(fake_process, tmp_path, cfut_jobs_finished):
     target = f"sudo --non-interactive -u {slurm_user} ls"
     debug([target in call for call in call_strings])
     assert any([target in call for call in call_strings])
+
+
+def test_slurm_account_in_submit_script(tmp_path, cfut_jobs_finished):
+    """
+    Check that submission script contains the right SLURM account.
+    """
+    slurm_user = "some-fake-user"
+    SLURM_ACCOUNT = "FakeAccountForThisTest"
+
+    # Without slurm_account argument
+    tmp_path1 = tmp_path / "1"
+    tmp_path1.mkdir()
+    with FractalSlurmExecutor(
+        slurm_user=slurm_user,
+        working_dir=tmp_path1,
+        working_dir_user=tmp_path1,
+    ) as executor:
+        submit_and_ignore_exceptions(executor, lambda: None)
+
+    submission_script_files = list(tmp_path1.glob("*.sbatch"))
+    assert len(submission_script_files) == 1
+    submission_script_file = submission_script_files[0]
+    with submission_script_file.open("r") as f:
+        lines = f.read().splitlines()
+    debug(lines)
+    try:
+        invalid_line = next(
+            line for line in lines if line.startswith("#SBATCH --account=")
+        )
+        raise RuntimeError(f"Line '{invalid_line}' cannot be there.")
+    except StopIteration:
+        pass
+
+    # With slurm_account argument
+    tmp_path2 = tmp_path / "2"
+    tmp_path2.mkdir()
+    with FractalSlurmExecutor(
+        slurm_user=slurm_user,
+        working_dir=tmp_path2,
+        working_dir_user=tmp_path2,
+        slurm_account=SLURM_ACCOUNT,
+    ) as executor:
+        submit_and_ignore_exceptions(executor, lambda: None)
+
+    submission_script_files = list(tmp_path2.glob("*.sbatch"))
+    assert len(submission_script_files) == 1
+    submission_script_file = submission_script_files[0]
+    with submission_script_file.open("r") as f:
+        lines = f.read().splitlines()
+    debug(lines)
+    assert f"#SBATCH --account={SLURM_ACCOUNT}" in lines
