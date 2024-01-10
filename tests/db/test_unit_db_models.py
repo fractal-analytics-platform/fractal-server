@@ -574,11 +574,19 @@ async def test_task_workflow_association(
 
         wf = Workflow(name="my wfl", project_id=project.id)
 
+        args = dict(arg="test arg")
+
+        # insert_task fail if Workflow has not an id yet
+        with pytest.raises(ValueError):
+            await wf.insert_task(t0.id, db=db, args=args)
+        # insert_task fail if Task with task_id is not found
+        with pytest.raises(ValueError):
+            await wf.insert_task(12345, db=db, args=args)
+
         db.add(wf)
         await db.commit()
         await db.refresh(wf)
 
-        args = dict(arg="test arg")
         await wf.insert_task(t0.id, db=db, args=args)
 
         debug(wf)

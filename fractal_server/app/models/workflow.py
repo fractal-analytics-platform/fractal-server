@@ -141,12 +141,19 @@ class Workflow(_WorkflowBase, SQLModel, table=True):
             db: TBD
             commit: TBD
         """
+        if self.id is None:
+            raise ValueError(
+                "Cannot use `insert_task` for a non-committed Workflow"
+            )
+
         if order is None:
             order = len(self.task_list)
 
         # Get task from db, and extract default arguments via a Task property
         # method
         db_task = await db.get(Task, task_id)
+        if db_task is None:
+            raise ValueError(f"Task with id {task_id} not found")
         default_args = db_task.default_args_from_args_schema
         # Override default_args with args
         actual_args = default_args.copy()
@@ -163,7 +170,12 @@ class Workflow(_WorkflowBase, SQLModel, table=True):
             wt_meta = None
 
         # Create DB entry
-        wf_task = WorkflowTask(task_id=task_id, args=actual_args, meta=wt_meta)
+        wf_task = WorkflowTask(
+            workflow_id=self.id,
+            task_id=task_id,
+            args=actual_args,
+            meta=wt_meta,
+        )
         db.add(wf_task)
         self.task_list.insert(order, wf_task)
         self.task_list.reorder()  # type: ignore
