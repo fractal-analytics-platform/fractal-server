@@ -25,19 +25,28 @@ with next(get_sync_db()) as db:
     stm = select(Project)
     projects = db.execute(stm).scalars().all()
     for project in projects:
-        if project.timestamp_created == REFERENCE_TIMESTAMP_STRING:
+        timestamp_created = project.timestamp_created
+        if timestamp_created != REFERENCE_TIMESTAMP_STRING:
             logging.warning(
-                f"[Project {project.id:4d}] "
-                f"timestamp_created={project.timestamp_created}, "
-                "use dummy data"
+                f"[Project {project.id:4d}] {timestamp_created=} -> skip."
+            )
+        else:
+            logging.warning(
+                f"[Project {project.id:4d}] {timestamp_created=} -> "
+                "replace with job timestamps."
             )
             stm = select(ApplyWorkflow).where(
                 ApplyWorkflow.project_id == project.id
             )
             jobs = db.execute(stm).scalars().all()
+            if len(jobs) == 0:
+                logging.warning(
+                    f"[Project {project.id:4d}] No jobs found, skip."
+                )
+                continue
             timestamp_created = min([job.start_timestamp for job in jobs])
             logging.warning(
-                f"[Project {project.id:4d}] setting {timestamp_created=}"
+                f"[Project {project.id:4d}] New value: {timestamp_created=}"
             )
             project.timestamp_created = timestamp_created
             db.add(project)
@@ -45,13 +54,8 @@ with next(get_sync_db()) as db:
             db.refresh(project)
             db.expunge(project)
             ProjectRead(**project.dict())
-        else:
-            logging.warning(
-                f"[Project {project.id:4d}] timestamp_created attribute valid,"
-                " skip"
-            )
 
-    # Get list of jobs
+    # Get list of all jobs
     stm = select(ApplyWorkflow)
     res = db.execute(stm)
     jobs = res.scalars().all()
