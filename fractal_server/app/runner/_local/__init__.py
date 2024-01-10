@@ -87,6 +87,7 @@ async def process_workflow(
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
     slurm_user: Optional[str] = None,
+    slurm_account: Optional[str] = None,
     user_cache_dir: Optional[str] = None,
     worker_init: Optional[str] = None,
     first_task_index: Optional[int] = None,
@@ -121,6 +122,10 @@ async def process_workflow(
             for the `local` backend it cannot be different from `workflow_dir`.
         slurm_user:
             Username to impersonate to run the workflow. This argument is
+            present for compatibility with the standard backend interface, but
+            is ignored in the `local` backend.
+        slurm_account:
+            SLURM account to use when running the workflow. This argument is
             present for compatibility with the standard backend interface, but
             is ignored in the `local` backend.
         user_cache_dir:
