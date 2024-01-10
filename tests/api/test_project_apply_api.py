@@ -3,7 +3,7 @@ import time
 
 from devtools import debug
 
-from fractal_server.app.schemas.applyworkflow import WorkflowDump
+from fractal_server.app.schemas.dumps import WorkflowDump
 
 PREFIX = "/api/v1"
 

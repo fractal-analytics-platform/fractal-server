@@ -12,13 +12,14 @@ WARNINGS:
     * Make first-admin-user verified (\#1110).
     * Add the automatic setting of `ApplyWorkflow.end_timestamp` when patching `ApplyWorkflow.status` via `PATCH /admin/job/{job_id}` (\#1121).
     * Change `ProjectDump.timestamp_created` type from `datetime` to `str` (\#1120).
+    * Change `_DatasetHistoryItem.workflowtask` type into `WorkflowTaskDump` (\#1139).
 * API (internal):
     * Implement cascade operations explicitly, in `DELETE` endpoints for datasets, workflows and projects (\#1130).
     * Update `GET /project/{project_id}/workflow/{workflow_id}/job/` to avoid using `Workflow.job_list` (\#1130).
 * Database:
     * Add `ApplyWorkflow.project_dump` column (\#1070).
     * Provide more meaningful names to fix-db scripts (\#1107).
-    * Add `Project.timestamp_created` column (\#1102).
+    * Add `Project.timestamp_created` column, with timezone-aware default (\#1102, \#1131).
     * Remove `Dataset.list_jobs_input` and `Dataset.list_jobs_output` relationships (\#1130).
     * Remove `Workflow.job_list` (\#1130).
 * Testing:
