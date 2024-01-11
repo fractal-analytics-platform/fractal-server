@@ -59,15 +59,15 @@
 | fractal\_server/app/schemas/task\_collection.py                   |       44 |        0 |       12 |        2 |     96% |67->66, 81->80 |
 | fractal\_server/app/schemas/user.py                               |       44 |        0 |        4 |        1 |     98% |    76->68 |
 | fractal\_server/app/schemas/workflow.py                           |       63 |        0 |       11 |        2 |     97% |100->99, 161->160 |
-| fractal\_server/app/security/\_\_init\_\_.py                      |      113 |       27 |       18 |        2 |     70% |106-119, 138-139, 144-153, 158-166, 180, 184 |
+| fractal\_server/app/security/\_\_init\_\_.py                      |      144 |       28 |       32 |        3 |     77% |114-127, 146-147, 152-161, 166-174, 188, 192, 316 |
 | fractal\_server/config.py                                         |      163 |        4 |       67 |       11 |     93% |76->75, 126->125, 204->203, 207, 216->exit, 228->227, 231, 235->exit, 276->275, 398-399, 404->exit |
 | fractal\_server/logger.py                                         |       50 |       11 |       14 |        0 |     80% |   138-153 |
-| fractal\_server/main.py                                           |       66 |       13 |       14 |        3 |     78% |72-73, 83, 126-130, 141, 145-152, 192->191, 198-206 |
+| fractal\_server/main.py                                           |       32 |        6 |        2 |        1 |     79% |55-56, 66, 106->105, 112-120 |
 | fractal\_server/syringe.py                                        |       29 |        2 |        8 |        3 |     86% |66->65, 83->82, 93-94, 97->96 |
 | fractal\_server/tasks/\_\_init\_\_.py                             |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/tasks/collection.py                               |      205 |        6 |       76 |       14 |     93% |63, 85-86, 132->131, 136->135, 147, 160->159, 239->exit, 293, 311->exit, 316->exit, 321->exit, 513->exit, 544->exit, 553 |
 | fractal\_server/utils.py                                          |       22 |        0 |        2 |        0 |    100% |           |
-|                                                         **TOTAL** | **4112** |  **165** | **1166** |  **160** | **93%** |           |
+|                                                         **TOTAL** | **4109** |  **159** | **1168** |  **159** | **94%** |           |
 
 
 ## Setup coverage badge
