@@ -15,9 +15,7 @@ from .....logger import close_logger
 from .....logger import set_logger
 from .....syringe import Inject
 from ....db import AsyncSession
-from ....db import DBSyncSession
 from ....db import get_db
-from ....db import get_sync_db
 from ....models import ApplyWorkflow
 from ....models import Dataset
 from ....models import LinkUserProject
@@ -249,9 +247,6 @@ async def apply_workflow(
     output_dataset_id: int,
     user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_db),
-    db_sync: DBSyncSession = Depends(
-        get_sync_db
-    ),  # FIXME: why both sync and async?  # noqa
 ) -> Optional[ApplyWorkflowRead]:
 
     output = await _get_dataset_check_owner(
@@ -438,6 +433,5 @@ async def apply_workflow(
     )
 
     await db.close()
-    db_sync.close()
 
     return job
