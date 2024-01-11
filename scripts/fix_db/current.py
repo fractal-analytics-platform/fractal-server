@@ -11,11 +11,15 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models.dataset import Dataset
 from fractal_server.app.models.job import ApplyWorkflow
 from fractal_server.app.models.project import Project
+from fractal_server.app.models.workflow import Workflow
 from fractal_server.app.schemas.applyworkflow import ApplyWorkflowRead
+from fractal_server.app.schemas.dataset import DatasetRead
 from fractal_server.app.schemas.dumps import ProjectDump
 from fractal_server.app.schemas.project import ProjectRead
+from fractal_server.app.schemas.workflow import WorkflowRead
 
 
 REFERENCE_TIMESTAMP = datetime(2000, 1, 1, tzinfo=timezone.utc)
@@ -100,3 +104,57 @@ with next(get_sync_db()) as db:
             db.refresh(job)
             db.expunge(job)
             ApplyWorkflowRead(**job.dict())
+
+    # Workflow.timestamp_created
+    stm = select(Workflow)
+    workflows = db.execute(stm).scalars().all()
+    for workflow in workflows:
+        timestamp_created = workflow.timestamp_created
+        if timestamp_created != REFERENCE_TIMESTAMP:
+            logging.warning(
+                f"[Workflow {workflow.id:4d}] {timestamp_created=} -> skip."
+            )
+        else:
+            logging.warning(
+                f"[Workflow {workflow.id:4d}] {timestamp_created=} -> "
+                "replace with project timestamp."
+            )
+            stm = select(Project).where(Project.id == workflow.project_id)
+            project = db.execute(stm).scalars().one()
+            timestamp_created = project.timestamp_created
+            logging.warning(
+                f"[Workflow {workflow.id:4d}] New value: {timestamp_created=}"
+            )
+            workflow.timestamp_created = timestamp_created
+            db.add(workflow)
+            db.commit()
+            db.refresh(workflow)
+            db.expunge(workflow)
+            WorkflowRead(**workflow.model_dump())
+
+    # Dataset.timestamp_created
+    stm = select(Dataset)
+    datasets = db.execute(stm).scalars().all()
+    for dataset in datasets:
+        timestamp_created = dataset.timestamp_created
+        if timestamp_created != REFERENCE_TIMESTAMP:
+            logging.warning(
+                f"[Dataset {dataset.id:4d}] {timestamp_created=} -> skip."
+            )
+        else:
+            logging.warning(
+                f"[Dataset {dataset.id:4d}] {timestamp_created=} -> "
+                "replace with project timestamp."
+            )
+            stm = select(Project).where(Project.id == dataset.project_id)
+            project = db.execute(stm).scalars().one()
+            timestamp_created = project.timestamp_created
+            logging.warning(
+                f"[Dataset {dataset.id:4d}] New value: {timestamp_created=}"
+            )
+            dataset.timestamp_created = timestamp_created
+            db.add(dataset)
+            db.commit()
+            db.refresh(dataset)
+            db.expunge(dataset)
+            DatasetRead(**dataset.model_dump())
