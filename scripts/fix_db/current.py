@@ -78,9 +78,7 @@ with next(get_sync_db()) as db:
                 f"[Workflow {workflow.id:4d}] {timestamp_created=} -> "
                 "replace with project timestamp."
             )
-            stm = select(Project).where(Project.id == workflow.project_id)
-            project = db.execute(stm).scalars().one()
-            timestamp_created = project.timestamp_created
+            timestamp_created = workflow.project.timestamp_created
             logging.warning(
                 f"[Workflow {workflow.id:4d}] New value: {timestamp_created=}"
             )
@@ -88,8 +86,8 @@ with next(get_sync_db()) as db:
             db.add(workflow)
             db.commit()
             db.refresh(workflow)
-            WorkflowRead(**workflow.model_dump())
             db.expunge(workflow)
+            WorkflowRead(**workflow.model_dump())
         # add timestamp_created to Jobs.workflow_dump
         stm = select(ApplyWorkflow).where(
             ApplyWorkflow.workflow_dump["id"] == workflow.id
@@ -100,8 +98,8 @@ with next(get_sync_db()) as db:
             db.add(job)
             db.commit()
             db.refresh(job)
-            WorkflowDump(**job.workflow_dump)
             db.expunge(job)
+            WorkflowDump(**job.workflow_dump)
 
     # Dataset.timestamp_created
     stm = select(Dataset)
@@ -118,9 +116,7 @@ with next(get_sync_db()) as db:
                 f"[Dataset {dataset.id:4d}] {timestamp_created=} -> "
                 "replace with project timestamp."
             )
-            stm = select(Project).where(Project.id == dataset.project_id)
-            project = db.execute(stm).scalars().one()
-            timestamp_created = project.timestamp_created
+            timestamp_created = dataset.project.timestamp_created
             logging.warning(
                 f"[Dataset {dataset.id:4d}] New value: {timestamp_created=}"
             )
@@ -128,8 +124,8 @@ with next(get_sync_db()) as db:
             db.add(dataset)
             db.commit()
             db.refresh(dataset)
-            DatasetRead(**dataset.model_dump())
             db.expunge(dataset)
+            DatasetRead(**dataset.model_dump())
 
         # add timestamp_created to Jobs.input_dataset_dump
         stm = select(ApplyWorkflow).where(
@@ -143,8 +139,8 @@ with next(get_sync_db()) as db:
             db.add(job)
             db.commit()
             db.refresh(job)
-            DatasetDump(**job.input_dataset_dump)
             db.expunge(job)
+            DatasetDump(**job.input_dataset_dump)
         # add timestamp_created to Jobs.output_dataset_dump
         stm = select(ApplyWorkflow).where(
             ApplyWorkflow.output_dataset_dump["id"] == dataset.id
@@ -157,8 +153,8 @@ with next(get_sync_db()) as db:
             db.add(job)
             db.commit()
             db.refresh(job)
-            DatasetDump(**job.output_dataset_dump)
             db.expunge(job)
+            DatasetDump(**job.output_dataset_dump)
 
     # Get list of all jobs
     stm = select(ApplyWorkflow)
