@@ -1,5 +1,6 @@
 import pathlib
 
+import pytest
 from devtools import debug
 
 from fractal_server.app.runner._slurm.executor import _subprocess_run_or_raise
@@ -16,16 +17,18 @@ def test_subprocess_run_or_raise(tmp_path: pathlib.Path):
 
     cmd_ok = f"ls {str(tmp_path)}"
     debug(cmd_ok)
-    cmd_fail = "ls --invalid-option"
     output = _subprocess_run_or_raise(cmd_ok)
     debug(output)
     assert output.stderr == ""
     assert output.stdout.strip("\n").split("\n") == ["1.txt", "2.txt"]
 
     # Failed call
-    try:
+    cmd_fail = "ls --invalid-option"
+    debug(cmd_fail)
+
+    with pytest.raises(JobExecutionError) as e:
         _subprocess_run_or_raise(cmd_fail)
-        raise RuntimeError("This branch should have never been reached.")
-    except JobExecutionError as e:
-        debug(e.info)
-        assert "ls: unrecognized option '--invalid-option'" in e.info
+    debug(e)
+    debug(e.value)
+    debug(e.value.info)
+    assert "ls: unrecognized option '--invalid-option'" in e.value.info
