@@ -495,7 +495,7 @@ async def test_stop_job(
         )
 
         if backend == "slurm":
-            assert res.status_code == 204
+            assert res.status_code == 202
             shutdown_file = tmp_path / SHUTDOWN_FILENAME
             debug(shutdown_file)
             assert shutdown_file.exists()
