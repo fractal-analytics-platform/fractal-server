@@ -18,6 +18,9 @@ class MockTask(BaseModel):
     parallelization_level: Optional[str] = None
     meta: Optional[dict] = {}
 
+    def model_dump(self, *args, **kwargs):
+        return self.dict(*args, **kwargs)
+
 
 class MockWorkflowTask(BaseModel):
     order: int = 0
@@ -25,6 +28,9 @@ class MockWorkflowTask(BaseModel):
     args: dict = {}
     meta: dict = {}
     executor: Optional[str] = "default"
+
+    def model_dump(self, *args, **kwargs):
+        return self.dict(*args, **kwargs)
 
     @validator("meta", pre=True)
     def merge_meta(cls, meta, values):

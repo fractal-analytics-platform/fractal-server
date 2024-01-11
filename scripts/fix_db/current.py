@@ -59,51 +59,7 @@ with next(get_sync_db()) as db:
             db.commit()
             db.refresh(project)
             db.expunge(project)
-            ProjectRead(**project.dict())
-
-    # Get list of all jobs
-    stm = select(ApplyWorkflow)
-    res = db.execute(stm)
-    jobs = res.scalars().all()
-
-    # Loop over jobs
-    for job in sorted(jobs, key=lambda x: x.id):
-        if job.project_dump != {}:
-            # Do not overwrite existing data
-            logging.warning(
-                f"[Job {job.id:4d}] project_dump attribute non-empty, skip"
-            )
-        else:
-            if job.project_id is None:
-                logging.warning(
-                    f"[Job {job.id:4d}] project_id=None, use dummy data"
-                )
-                project_dump = dict(
-                    id=-1,
-                    name="__UNDEFINED__",
-                    read_only=True,
-                    timestamp_created=REFERENCE_TIMESTAMP_STRING,
-                )
-            else:
-                project = db.get(Project, job.project_id)
-                if project is None:
-                    raise IntegrityError(
-                        f"[Job {job.id:4d}] "
-                        f"project_id={job.project_id}, "
-                        f"but Project {job.project_id} does not exist"
-                    )
-                project_dump = json.loads(project.json(exclude={"user_list"}))
-
-            logging.warning(f"[Job {job.id:4d}] setting {project_dump=}")
-            ProjectDump(**project_dump)
-            job.project_dump = project_dump
-            db.add(job)
-            db.commit()
-
-            # Also validate that the row can be cast into ApplyWorkflowRead
-            db.refresh(job)
-            db.expunge(job)
-            ApplyWorkflowRead(**job.dict())
+            ProjectRead(**project.model_dump())
 
     # Workflow.timestamp_created
     stm = select(Workflow)
@@ -158,3 +114,48 @@ with next(get_sync_db()) as db:
             db.refresh(dataset)
             db.expunge(dataset)
             DatasetRead(**dataset.model_dump())
+
+    # Get list of all jobs
+    stm = select(ApplyWorkflow)
+    res = db.execute(stm)
+    jobs = res.scalars().all()
+
+    # Loop over jobs
+    for job in sorted(jobs, key=lambda x: x.id):
+        if job.project_dump != {}:
+            # Do not overwrite existing data
+            logging.warning(
+                f"[Job {job.id:4d}] project_dump attribute non-empty, skip"
+            )
+        else:
+            if job.project_id is None:
+                logging.warning(
+                    f"[Job {job.id:4d}] project_id=None, use dummy data"
+                )
+                project_dump = dict(
+                    id=-1,
+                    name="__UNDEFINED__",
+                    read_only=True,
+                    timestamp_created=REFERENCE_TIMESTAMP_STRING,
+                )
+            else:
+                project = db.get(Project, job.project_id)
+                if project is None:
+                    raise IntegrityError(
+                        f"[Job {job.id:4d}] "
+                        f"project_id={job.project_id}, "
+                        f"but Project {job.project_id} does not exist"
+                    )
+                project_dump = json.loads(project.json(exclude={"user_list"}))
+
+            logging.warning(f"[Job {job.id:4d}] setting {project_dump=}")
+            ProjectDump(**project_dump)
+            job.project_dump = project_dump
+            db.add(job)
+            db.commit()
+
+            # Also validate that the row can be cast into ApplyWorkflowRead
+            db.refresh(job)
+            db.expunge(job)
+
+            ApplyWorkflowRead(**job.model_dump())
