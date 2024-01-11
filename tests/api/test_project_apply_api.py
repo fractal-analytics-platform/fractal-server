@@ -481,7 +481,10 @@ async def test_project_apply_workflow_subset(
         )
         expected_workflow_dump = WorkflowDump(
             **dict(
-                workflow.model_dump(exclude={"task_list"}),
+                workflow.model_dump(
+                    exclude={"task_list", "timestamp_created"}
+                ),
+                timestamp_created=str(workflow.timestamp_created),
                 task_list=[
                     dict(
                         wf_task.model_dump(exclude={"task"}),
