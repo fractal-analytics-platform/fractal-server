@@ -17,6 +17,7 @@ WARNINGS:
 * API (internal):
     * Implement cascade operations explicitly, in `DELETE` endpoints for datasets, workflows and projects (\#1130).
     * Update `GET /project/{project_id}/workflow/{workflow_id}/job/` to avoid using `Workflow.job_list` (\#1130).
+    * Remove obsolete sync-database dependency from apply-workflow endpoint (\#1144).
 * Database:
     * Add `ApplyWorkflow.project_dump` column (\#1070).
     * Provide more meaningful names to fix-db scripts (\#1107).
@@ -26,17 +27,22 @@ WARNINGS:
 * Runner:
     * In SLURM backend, use `slurm_account` (as received from apply-workflow endpoint) with top priority (\#1145).
     * Forbid setting of SLURM account from `WorkflowTask.meta` or as part of `worker_init` variable (\#1145).
+    * Include more info in error message upon `sbatch` failure (\#1142).
 * Testing:
     * Extended systematic testing of database models (\#1078).
     * Review `MockCurrentUser` fixture, to handle different kinds of users (\#1099).
     * Remove `persist` from `MockCurrentUser` (\#1098).
     * Update `migrations.yml` GitHub Action to use up-to-date database and also test fix-db script (\#1101).
     * Add more schema-based validation to fix-db current script (\#1107).
+    * Update `.dict()` to `.model_dump()` for `SQLModel` objects, to fix some `DeprecationWarnings`(\##1133).
     * Small improvement in schema coverage (\#1125).
+    * Add unit test for `security` module (\#1036).
 * Dependencies:
     * Update `sqlmodel` to version 0.0.14 (\#1124).
 * Benchmarks:
     * Add automatic benchmark system for API's performances (\#1123)
+* App (internal):
+    * Move `_create_first_user` from `main` to `security` module, and allow it to create multiple regular users (\#1036).
 
 # 1.4.1
 
@@ -53,7 +59,6 @@ WARNINGS:
     * Add `Dataset.project` and `Workflow.project` relationships (\#1082).
     * Avoid using `Project` relationships `dataset_list` or `workflow_list` within some `GET` endpoints (\#1082).
     * Fully remove `Project` relationships `dataset_list`, `workflow_list` and `job_list` (\#1091).
-
 * Testing:
     * Only use ubuntu-22.04 in GitHub actions (\#1061).
     * Improve unit testing of database models (\#1082).
