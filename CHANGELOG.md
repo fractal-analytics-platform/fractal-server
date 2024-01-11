@@ -2,9 +2,10 @@
 
 # 1.4.2
 
-WARNINGS:
-1. This update requires running some fix-db scripts (more details TBD - see issue #1094).
-2. Starting from this versions, non-verified users have limited access to `/api/v1/` endpoints.
+> **WARNINGs**:
+>
+> 1. This update requires running a fix-db script, available at [this link](https://github.com/fractal-analytics-platform/fractal-server/blob/1.4.2/scripts/fix_db/current.py).
+> 2. Starting from this versions, non-verified users have limited access to `/api/v1/` endpoints. Before the upgrade, all existing users must be manually set to verified.
 
 * API:
     * Prevent access to `GET/PATCH` task endpoints for non-verified users (\#1114).
