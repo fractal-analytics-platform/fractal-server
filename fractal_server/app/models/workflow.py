@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any
 from typing import Optional
 from typing import Union
@@ -5,11 +6,13 @@ from typing import Union
 from pydantic import validator
 from sqlalchemy import Column
 from sqlalchemy.ext.orderinglist import ordering_list
+from sqlalchemy.types import DateTime
 from sqlalchemy.types import JSON
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
+from ...utils import get_timestamp
 from ..db import AsyncSession
 from ..schemas.workflow import _WorkflowBase
 from ..schemas.workflow import _WorkflowTaskBase
@@ -116,6 +119,11 @@ class Workflow(_WorkflowBase, SQLModel, table=True):
             collection_class=ordering_list("order"),
             cascade="all, delete-orphan",
         ),
+    )
+
+    timestamp_created: datetime = Field(
+        default_factory=get_timestamp,
+        sa_column=Column(DateTime(timezone=True), nullable=False),
     )
 
     async def insert_task(
