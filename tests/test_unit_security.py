@@ -15,6 +15,8 @@ async def test_unit_create_first_user(db, caplog):
 
     assert await count_users(db) == 0
 
+    # Calls that do create a new user
+
     await _create_first_user(email="test1@fractal.com", password="xxxx")
     assert await count_users(db) == 1
 
@@ -23,29 +25,30 @@ async def test_unit_create_first_user(db, caplog):
     )
     assert await count_users(db) == 2
 
-    # UserAlreadyExists
-    with caplog.at_level(logging.WARNING):
-        await _create_first_user(email="test2@fractal.com", password="xxxx")
-    assert "User test2@fractal.com already exists" in caplog.text
-    assert await count_users(db) == 2
-    caplog.clear()
-
     await _create_first_user(
         email="test3@fractal.com", password="xxxx", is_superuser=True
     )
     assert await count_users(db) == 3
-    # can't create more than one superuser
-    with caplog.at_level(logging.INFO):
-        await _create_first_user(
-            email="test4@fractal.com", password="xxxx", is_superuser=True
-        )
-    assert "superuser already exists, skip creation" in caplog.text
-    assert await count_users(db) == 3
+
+    await _create_first_user(
+        email="test4@fractal.com", password="xxxx", is_verified=True
+    )
+    assert await count_users(db) == 4
+
+    # Calls that do not create new users
+
+    # Cannot create two users with the same email
+    with caplog.at_level(logging.WARNING):
+        await _create_first_user(email="test2@fractal.com", password="xxxx")
+    assert "User test2@fractal.com already exists" in caplog.text
+    assert await count_users(db) == 4
     caplog.clear()
 
-    # Missing test for:
-    #   except IntegrityError:
-    #         logger.warning(
-    #             f"Creation of user {email} failed with IntegrityError "
-    #             "(likely due to concurrent attempts from different workers)."
-    #         )
+    # Cannot create more than one superuser
+    with caplog.at_level(logging.INFO):
+        await _create_first_user(
+            email="test5@fractal.com", password="xxxx", is_superuser=True
+        )
+    assert "superuser already exists, skip creation" in caplog.text
+    assert await count_users(db) == 4
+    caplog.clear()
