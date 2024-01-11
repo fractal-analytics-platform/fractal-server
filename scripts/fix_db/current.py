@@ -88,8 +88,8 @@ with next(get_sync_db()) as db:
             db.add(workflow)
             db.commit()
             db.refresh(workflow)
-            db.expunge(workflow)
             WorkflowRead(**workflow.model_dump())
+            db.expunge(workflow)
         # add timestamp_created to Jobs.workflow_dump
         stm = select(ApplyWorkflow).where(
             ApplyWorkflow.workflow_dump["id"] == workflow.id
@@ -100,8 +100,8 @@ with next(get_sync_db()) as db:
             db.add(job)
             db.commit()
             db.refresh(job)
-            db.expunge(job)
             WorkflowDump(**job.workflow_dump)
+            db.expunge(job)
 
     # Dataset.timestamp_created
     stm = select(Dataset)
@@ -128,8 +128,8 @@ with next(get_sync_db()) as db:
             db.add(dataset)
             db.commit()
             db.refresh(dataset)
-            db.expunge(dataset)
             DatasetRead(**dataset.model_dump())
+            db.expunge(dataset)
 
         # add timestamp_created to Jobs.input_dataset_dump
         stm = select(ApplyWorkflow).where(
@@ -143,8 +143,8 @@ with next(get_sync_db()) as db:
             db.add(job)
             db.commit()
             db.refresh(job)
-            db.expunge(job)
             DatasetDump(**job.input_dataset_dump)
+            db.expunge(job)
         # add timestamp_created to Jobs.output_dataset_dump
         stm = select(ApplyWorkflow).where(
             ApplyWorkflow.output_dataset_dump["id"] == dataset.id
@@ -157,8 +157,8 @@ with next(get_sync_db()) as db:
             db.add(job)
             db.commit()
             db.refresh(job)
-            db.expunge(job)
             DatasetDump(**job.output_dataset_dump)
+            db.expunge(job)
 
     # Get list of all jobs
     stm = select(ApplyWorkflow)
