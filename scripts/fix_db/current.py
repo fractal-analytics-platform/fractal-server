@@ -92,7 +92,7 @@ with next(get_sync_db()) as db:
 
         # add timestamp_created to Jobs.workflow_dump
         stm = select(ApplyWorkflow).where(
-            ApplyWorkflow.workflow_dump["id"] == workflow.id
+            ApplyWorkflow.workflow_dump["id"].astext == workflow.id
         )
         jobs = db.execute(stm).scalars().all()
         for job in jobs:
