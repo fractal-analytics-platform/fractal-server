@@ -27,6 +27,7 @@ WARNINGS:
 * Runner:
     * In SLURM backend, use `slurm_account` (as received from apply-workflow endpoint) with top priority (\#1145).
     * Forbid setting of SLURM account from `WorkflowTask.meta` or as part of `worker_init` variable (\#1145).
+    * Include more info in error message upon `sbatch` failure (\#1142).
 * Testing:
     * Extended systematic testing of database models (\#1078).
     * Review `MockCurrentUser` fixture, to handle different kinds of users (\#1099).
@@ -58,7 +59,6 @@ WARNINGS:
     * Add `Dataset.project` and `Workflow.project` relationships (\#1082).
     * Avoid using `Project` relationships `dataset_list` or `workflow_list` within some `GET` endpoints (\#1082).
     * Fully remove `Project` relationships `dataset_list`, `workflow_list` and `job_list` (\#1091).
-
 * Testing:
     * Only use ubuntu-22.04 in GitHub actions (\#1061).
     * Improve unit testing of database models (\#1082).

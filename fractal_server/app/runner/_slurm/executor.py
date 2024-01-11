@@ -19,6 +19,7 @@ from concurrent.futures import Future
 from concurrent.futures import InvalidStateError
 from copy import copy
 from pathlib import Path
+from subprocess import CompletedProcess  # nosec
 from typing import Any
 from typing import Callable
 from typing import Optional
@@ -47,6 +48,38 @@ from fractal_server import __VERSION__
 
 
 logger = set_logger(__name__)
+
+
+def _subprocess_run_or_raise(full_command: str) -> Optional[CompletedProcess]:
+    """
+    Wrap `subprocess.run` and raise  appropriate `JobExecutionError` if needed.
+
+    Args:
+        full_command: Full string of the command to execute.
+
+    Raises:
+        JobExecutionError: If `subprocess.run` raises a `CalledProcessError`.
+
+    Returns:
+        The actual `CompletedProcess` output of `subprocess.run`.
+    """
+    try:
+        output = subprocess.run(  # nosec
+            shlex.split(full_command),
+            capture_output=True,
+            check=True,
+            encoding="utf-8",
+        )
+        return output
+    except subprocess.CalledProcessError as e:
+        error_msg = (
+            f"Submit command `{full_command}` failed. "
+            f"Original error:\n{str(e)}\n"
+            f"Original stdout:\n{e.stdout}\n"
+            f"Original stderr:\n{e.stderr}\n"
+        )
+        logger.error(error_msg)
+        raise JobExecutionError(info=error_msg)
 
 
 class SlurmJob:
@@ -986,20 +1019,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         full_command = f"{pre_command} {submit_command}"
 
         # Submit SLURM job and retrieve job ID
-        try:
-            output = subprocess.run(  # nosec
-                shlex.split(full_command),
-                capture_output=True,
-                check=True,
-                encoding="utf-8",
-            )
-        except subprocess.CalledProcessError as e:
-            error_msg = (
-                f"Submit command `{full_command}` failed. "
-                f"Original error:\n{str(e)}"
-            )
-            logger.error(error_msg)
-            raise JobExecutionError(info=error_msg)
+        output = _subprocess_run_or_raise(full_command)
         try:
             jobid = int(output.stdout)
         except ValueError as e:
