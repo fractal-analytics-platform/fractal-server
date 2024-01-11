@@ -96,6 +96,7 @@ def test_apply_workflow_read():
         type="zarr",
         read_only=False,
         resource_list=[dict(id=1, dataset_id=1, path="/tmp")],
+        timestamp_created=str(get_timestamp()),
     )
     job1 = ApplyWorkflowRead(
         id=1,
@@ -161,6 +162,7 @@ def test_dataset_read():
         resource_list=[],
         name="n",
         read_only=True,
+        timestamp_created=datetime.now(),
     )
     debug(d)
     # Successful creation - non-trivial resource_list
@@ -170,7 +172,12 @@ def test_dataset_read():
     with pytest.raises(ValidationError):
         # missing "project"
         DatasetRead(
-            id=1, project_id=1, resource_list=rlist, name="n", read_only=False
+            id=1,
+            project_id=1,
+            resource_list=rlist,
+            name="n",
+            read_only=False,
+            timestamp_created=datetime.now(),
         )
 
 
