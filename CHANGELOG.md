@@ -17,6 +17,7 @@ WARNINGS:
 * API (internal):
     * Implement cascade operations explicitly, in `DELETE` endpoints for datasets, workflows and projects (\#1130).
     * Update `GET /project/{project_id}/workflow/{workflow_id}/job/` to avoid using `Workflow.job_list` (\#1130).
+    * Remove obsolete sync-database dependency from apply-workflow endpoint (\#1144).
 * Database:
     * Add `ApplyWorkflow.project_dump` column (\#1070).
     * Provide more meaningful names to fix-db scripts (\#1107).
@@ -34,10 +35,13 @@ WARNINGS:
     * Add more schema-based validation to fix-db current script (\#1107).
     * Update `.dict()` to `.model_dump()` for `SQLModel` objects, to fix some `DeprecationWarnings`(\##1133).
     * Small improvement in schema coverage (\#1125).
+    * Add unit test for `security` module (\#1036).
 * Dependencies:
     * Update `sqlmodel` to version 0.0.14 (\#1124).
 * Benchmarks:
     * Add automatic benchmark system for API's performances (\#1123)
+* App (internal):
+    * Move `_create_first_user` from `main` to `security` module, and allow it to create multiple regular users (\#1036).
 
 # 1.4.1
 
