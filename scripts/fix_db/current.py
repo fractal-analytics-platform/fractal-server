@@ -16,11 +16,12 @@ from fractal_server.app.models.job import ApplyWorkflow
 from fractal_server.app.models.project import Project
 from fractal_server.app.models.workflow import Workflow
 from fractal_server.app.schemas.applyworkflow import ApplyWorkflowRead
-from fractal_server.app.schemas.dataset import DatasetRead
 from fractal_server.app.schemas.dumps import DatasetDump
 from fractal_server.app.schemas.dumps import ProjectDump
 from fractal_server.app.schemas.dumps import WorkflowDump
 from fractal_server.app.schemas.project import ProjectRead
+
+# from fractal_server.app.schemas.dataset import DatasetRead
 
 # from fractal_server.app.schemas.workflow import WorkflowRead
 
@@ -88,25 +89,27 @@ with next(get_sync_db()) as db:
             db.commit()
             db.refresh(workflow)
             db.expunge(workflow)
-        # Missing `task_list` and `project``
-        # WorkflowRead(**workflow.model_dump())
+            # Missing `task_list` and `project``
+            # WorkflowRead(**workflow.model_dump())
 
-        # add timestamp_created to Jobs.workflow_dump
-        stm = select(ApplyWorkflow)
-        jobs = [
-            job
-            for job in db.execute(stm).scalars().all()
-            if job.workflow_dump["id"] == workflow.id
-        ]
-        for job in jobs:
-            new_dict = job.workflow_dump.copy()
-            new_dict.update({"timestamp_created": str(timestamp_created)})
-            job.workflow_dump = new_dict
-            db.add(job)
-            db.commit()
-            db.refresh(job)
-            db.expunge(job)
-            WorkflowDump(**job.workflow_dump)
+            # add timestamp_created to Jobs.workflow_dump
+            stm = select(ApplyWorkflow)
+            jobs = [
+                job
+                for job in db.execute(stm).scalars().all()
+                if job.workflow_dump["id"] == workflow.id
+            ]
+            for job in jobs:
+                new_workflow_dump = job.workflow_dump.copy()
+                new_workflow_dump.update(
+                    {"timestamp_created": str(timestamp_created)}
+                )
+                job.workflow_dump = new_workflow_dump
+                db.add(job)
+                db.commit()
+                db.refresh(job)
+                db.expunge(job)
+                WorkflowDump(**job.workflow_dump)
 
     # Dataset.timestamp_created
     stm = select(Dataset)
@@ -132,40 +135,47 @@ with next(get_sync_db()) as db:
             db.commit()
             db.refresh(dataset)
             db.expunge(dataset)
-            DatasetRead(**dataset.model_dump())
+            # DatasetRead(**dataset.model_dump())
 
-        # add timestamp_created to Jobs.input_dataset_dump
-        stm = select(ApplyWorkflow)
-        jobs = [
-            job
-            for job in db.execute(stm).scalars().all()
-            if job.input_dataset_dump["id"] == dataset.id
-        ]
-        for job in jobs:
-            job.input_dataset_dump["timestamp_created"] = str(
-                timestamp_created
-            )
-            db.add(job)
-            db.commit()
-            db.refresh(job)
-            db.expunge(job)
-            DatasetDump(**job.input_dataset_dump)
-        # add timestamp_created to Jobs.output_dataset_dump
-        stm = select(ApplyWorkflow)
-        jobs = [
-            job
-            for job in db.execute(stm).scalars().all()
-            if job.output_dataset_dump["id"] == dataset.id
-        ]
-        for job in jobs:
-            job.output_dataset_dump["timestamp_created"] = str(
-                timestamp_created
-            )
-            db.add(job)
-            db.commit()
-            db.refresh(job)
-            db.expunge(job)
-            DatasetDump(**job.output_dataset_dump)
+            # add timestamp_created to Jobs.input_dataset_dump
+            stm = select(ApplyWorkflow)
+            input_jobs = [
+                job
+                for job in db.execute(stm).scalars().all()
+                if job.input_dataset_dump["id"] == dataset.id
+            ]
+            for job in input_jobs:
+                new_input_dataset_dump = job.input_dataset_dump.copy()
+                new_input_dataset_dump.update(
+                    {"timestamp_created": str(timestamp_created)}
+                )
+                job.input_dataset_dump = new_input_dataset_dump
+                db.add(job)
+                db.commit()
+                db.refresh(job)
+                db.expunge(job)
+                DatasetDump(**job.input_dataset_dump)
+            # add timestamp_created to Jobs.output_dataset_dump
+            stm = select(ApplyWorkflow)
+            output_jobs = [
+                job
+                for job in db.execute(stm).scalars().all()
+                if job.output_dataset_dump["id"] == dataset.id
+            ]
+            for job in output_jobs:
+                new_output_dataset_dump = job.output_dataset_dump.copy()
+                new_output_dataset_dump.update(
+                    {"timestamp_created": str(timestamp_created)}
+                )
+                job.output_dataset_dump = new_input_dataset_dump
+                job.output_dataset_dump["timestamp_created"] = str(
+                    timestamp_created
+                )
+                db.add(job)
+                db.commit()
+                db.refresh(job)
+                db.expunge(job)
+                DatasetDump(**job.output_dataset_dump)
 
     # Get list of all jobs
     stm = select(ApplyWorkflow)
