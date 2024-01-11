@@ -217,6 +217,7 @@ async def submit_workflow(
         logger.debug(f"fractal_server.__VERSION__: {__VERSION__}")
         logger.debug(f"FRACTAL_RUNNER_BACKEND: {FRACTAL_RUNNER_BACKEND}")
         logger.debug(f"slurm_user: {slurm_user}")
+        logger.debug(f"slurm_account: {job.slurm_account}")
         logger.debug(f"worker_init: {worker_init}")
         logger.debug(f"input metadata: {input_dataset.meta}")
         logger.debug(f"input_paths: {input_paths}")
@@ -249,6 +250,7 @@ async def submit_workflow(
             input_metadata=input_dataset.meta,
             input_history=input_dataset.history,
             slurm_user=slurm_user,
+            slurm_account=job.slurm_account,
             user_cache_dir=user_cache_dir,
             workflow_dir=WORKFLOW_DIR,
             workflow_dir_user=WORKFLOW_DIR_USER,
