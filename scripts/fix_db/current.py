@@ -87,9 +87,9 @@ with next(get_sync_db()) as db:
             db.commit()
             db.refresh(workflow)
             db.expunge(workflow)
-            print(workflow.project)
+            workflow.project
             for task in workflow.task_list:
-                print(task)
+                task
             WorkflowRead(**workflow.model_dump())
         # add timestamp_created to Jobs.workflow_dump
         stm = select(ApplyWorkflow).where(
