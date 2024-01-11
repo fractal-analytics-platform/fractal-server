@@ -30,9 +30,9 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from fractal_server.app.db import get_db
+from fractal_server.app.security import _create_first_user
 from fractal_server.config import get_settings
 from fractal_server.config import Settings
-from fractal_server.main import _create_first_user
 from fractal_server.syringe import Inject
 
 try:
