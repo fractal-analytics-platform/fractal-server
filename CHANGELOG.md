@@ -29,6 +29,7 @@
     * In SLURM backend, use `slurm_account` (as received from apply-workflow endpoint) with top priority (\#1145).
     * Forbid setting of SLURM account from `WorkflowTask.meta` or as part of `worker_init` variable (\#1145).
     * Include more info in error message upon `sbatch` failure (\#1142).
+    * Replace `sbatch` `--chdir` option with `-D`, to support also slurm versions before 17.11 (\#1159).
 * Testing:
     * Extended systematic testing of database models (\#1078).
     * Review `MockCurrentUser` fixture, to handle different kinds of users (\#1099).

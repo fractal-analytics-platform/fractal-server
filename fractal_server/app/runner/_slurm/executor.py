@@ -1075,7 +1075,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             [
                 f"#SBATCH --err={slurm_err_path}",
                 f"#SBATCH --out={slurm_out_path}",
-                f"#SBATCH --chdir={self.working_dir_user}",
+                f"#SBATCH -D {self.working_dir_user}",
             ]
         )
         script_lines = slurm_config.sort_script_lines(script_lines)
