@@ -99,9 +99,9 @@ with next(get_sync_db()) as db:
             if job.workflow_dump["id"] == workflow.id
         ]
         for job in jobs:
-            job.workflow_dump.update(
-                {"timestamp_created": str(timestamp_created)}
-            )
+            new_dict = job.workflow_dump.copy()
+            new_dict.update({"timestamp_created": str(timestamp_created)})
+            job.workflow_dump = new_dict
             db.add(job)
             db.commit()
             db.refresh(job)
