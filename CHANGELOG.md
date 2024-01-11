@@ -13,6 +13,7 @@ WARNINGS:
     * Add the automatic setting of `ApplyWorkflow.end_timestamp` when patching `ApplyWorkflow.status` via `PATCH /admin/job/{job_id}` (\#1121).
     * Change `ProjectDump.timestamp_created` type from `datetime` to `str` (\#1120).
     * Change `_DatasetHistoryItem.workflowtask` type into `WorkflowTaskDump` (\#1139).
+    * Change status code of stop-job endpoints to 202 (\#1151).
 * API (internal):
     * Implement cascade operations explicitly, in `DELETE` endpoints for datasets, workflows and projects (\#1130).
     * Update `GET /project/{project_id}/workflow/{workflow_id}/job/` to avoid using `Workflow.job_list` (\#1130).

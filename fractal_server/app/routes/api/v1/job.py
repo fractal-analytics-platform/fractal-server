@@ -150,7 +150,7 @@ async def get_job_list(
 
 @router.get(
     "/project/{project_id}/job/{job_id}/stop/",
-    status_code=204,
+    status_code=202,
 )
 async def stop_job(
     project_id: int,
@@ -176,4 +176,4 @@ async def stop_job(
 
     _write_shutdown_file(job=job)
 
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return Response(status_code=status.HTTP_202_ACCEPTED)
