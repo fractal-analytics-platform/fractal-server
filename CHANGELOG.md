@@ -33,6 +33,7 @@ WARNINGS:
     * Remove `persist` from `MockCurrentUser` (\#1098).
     * Update `migrations.yml` GitHub Action to use up-to-date database and also test fix-db script (\#1101).
     * Add more schema-based validation to fix-db current script (\#1107).
+    * Update `.dict()` to `.model_dump()` for `SQLModel` objects, to fix some `DeprecationWarnings`(\##1133).
     * Small improvement in schema coverage (\#1125).
     * Add unit test for `security` module (\#1036).
 * Dependencies:

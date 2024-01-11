@@ -94,8 +94,8 @@ def assemble_history_failed_job(
 
     # Part 3/B: Append failed task to history
     if failed_wftask is not None:
-        failed_wftask_dump = failed_wftask.dict(exclude={"task"})
-        failed_wftask_dump["task"] = failed_wftask.task.dict()
+        failed_wftask_dump = failed_wftask.model_dump(exclude={"task"})
+        failed_wftask_dump["task"] = failed_wftask.task.model_dump()
         new_history_item = dict(
             workflowtask=failed_wftask_dump,
             status=WorkflowTaskStatusType.FAILED,
