@@ -4,7 +4,7 @@
 
 > **WARNINGs**:
 >
-> 1. This update requires running a fix-db script, available at [this link](https://github.com/fractal-analytics-platform/fractal-server/blob/1.4.2/scripts/fix_db/current.py).
+> 1. This update requires running a fix-db script, available at https://raw.githubusercontent.com/fractal-analytics-platform/fractal-server/1.4.2a5/scripts/fix_db/current.py (note: replace `1.4.2a5` with `1.4.2` upon release).
 > 2. Starting from this versions, non-verified users have limited access to `/api/v1/` endpoints. Before the upgrade, all existing users must be manually set to verified.
 
 * API:
