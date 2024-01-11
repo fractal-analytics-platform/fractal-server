@@ -91,10 +91,12 @@ with next(get_sync_db()) as db:
             # WorkflowRead(**workflow.model_dump())
 
         # add timestamp_created to Jobs.workflow_dump
-        stm = select(ApplyWorkflow).where(
-            ApplyWorkflow.workflow_dump["id"].astext == workflow.id
-        )
-        jobs = db.execute(stm).scalars().all()
+        stm = select(ApplyWorkflow)
+        jobs = [
+            job
+            for job in db.execute(stm).scalars().all()
+            if job.workflow_dump["id"] == workflow.id
+        ]
         for job in jobs:
             job.workflow_dump["timestamp_created"] = str(timestamp_created)
             db.add(job)
@@ -130,10 +132,12 @@ with next(get_sync_db()) as db:
             DatasetRead(**dataset.model_dump())
 
         # add timestamp_created to Jobs.input_dataset_dump
-        stm = select(ApplyWorkflow).where(
-            ApplyWorkflow.input_dataset_dump["id"] == dataset.id
-        )
-        jobs = db.execute(stm).scalars().all()
+        stm = select(ApplyWorkflow)
+        jobs = [
+            job
+            for job in db.execute(stm).scalars().all()
+            if job.input_dataset_dump["id"] == dataset.id
+        ]
         for job in jobs:
             job.input_dataset_dump["timestamp_created"] = str(
                 timestamp_created
@@ -144,10 +148,12 @@ with next(get_sync_db()) as db:
             db.expunge(job)
             DatasetDump(**job.input_dataset_dump)
         # add timestamp_created to Jobs.output_dataset_dump
-        stm = select(ApplyWorkflow).where(
-            ApplyWorkflow.output_dataset_dump["id"] == dataset.id
-        )
-        jobs = db.execute(stm).scalars().all()
+        stm = select(ApplyWorkflow)
+        jobs = [
+            job
+            for job in db.execute(stm).scalars().all()
+            if job.output_dataset_dump["id"] == dataset.id
+        ]
         for job in jobs:
             job.output_dataset_dump["timestamp_created"] = str(
                 timestamp_created
