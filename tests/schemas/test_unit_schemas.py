@@ -36,6 +36,7 @@ from fractal_server.app.schemas import WorkflowTaskUpdate
 from fractal_server.app.schemas import WorkflowUpdate
 from fractal_server.app.schemas.applyworkflow import DatasetDump
 from fractal_server.app.schemas.applyworkflow import WorkflowDump
+from fractal_server.utils import get_timestamp
 
 
 def test_apply_workflow_create():
@@ -81,7 +82,13 @@ def test_apply_workflow_update():
 
 
 def test_apply_workflow_read():
-    WORKFLOW_DUMP = dict(id=1, project_id=1, name="wf", task_list=[])
+    WORKFLOW_DUMP = dict(
+        id=1,
+        project_id=1,
+        name="wf",
+        task_list=[],
+        timestamp_created=str(get_timestamp()),
+    )
     DATASET_DUMP = dict(
         id=1,
         project_id=1,
@@ -535,6 +542,7 @@ def test_workflow_read_empty_task_list():
             read_only=False,
             timestamp_created=datetime.now(),
         ),
+        timestamp_created=str(get_timestamp()),
     )
     debug(w)
 
@@ -565,6 +573,7 @@ def test_workflow_read_non_empty_task_list():
             read_only=False,
             timestamp_created=datetime.now(),
         ),
+        timestamp_created=str(get_timestamp()),
     )
     debug(w)
 
