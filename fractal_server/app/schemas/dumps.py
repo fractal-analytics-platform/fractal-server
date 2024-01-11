@@ -62,3 +62,4 @@ class DatasetDump(BaseModel):
     read_only: bool
     resource_list: list[ResourceDump]
     project_id: int
+    timestamp_created: str
