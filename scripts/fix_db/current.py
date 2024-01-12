@@ -9,8 +9,9 @@ from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import ApplyWorkflow
 from fractal_server.app.models import Project
 from fractal_server.app.models import Workflow
-from fractal_server.app.schemas import WorkflowRead
 from fractal_server.app.schemas.dumps import WorkflowDump
+
+# from fractal_server.app.schemas import WorkflowRead
 
 REFERENCE_TIMESTAMP = datetime(2000, 1, 1, tzinfo=timezone.utc)
 
@@ -47,7 +48,8 @@ with next(get_sync_db()) as db:
             db.commit()
             db.refresh(workflow)
             db.expunge(workflow)
-            WorkflowRead(**workflow.model_dump())
+            # Missing `task_list` and `project``
+            # WorkflowRead(**workflow.model_dump())
 
         # add timestamp_created to Job.workflow_dump
         stm = select(ApplyWorkflow)
