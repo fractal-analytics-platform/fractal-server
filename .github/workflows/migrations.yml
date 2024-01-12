@@ -15,7 +15,7 @@ on:
 
 
 env:
-  TARGET_VERSION: 1.4.1
+  TARGET_VERSION: 1.4.2
   ROOTDIR: tests/data/testing_databases
 
 jobs:
