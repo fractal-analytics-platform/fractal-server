@@ -412,6 +412,13 @@ def test_user_create():
             password="asd",
             slurm_accounts=["foo", "bar", "foo", "rab"],
         )
+    with pytest.raises(ValidationError):
+        # empty string
+        UserCreate(
+            email="a@b.c",
+            password="asd",
+            slurm_accounts=["foo", "     ", "bar"],
+        )
 
     # With valid cache_dir
     CACHE_DIR = "/xxx"
