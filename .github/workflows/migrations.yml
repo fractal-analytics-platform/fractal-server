@@ -64,14 +64,14 @@ jobs:
         run: |
           poetry install --without dev --without docs --no-interaction -E postgres
 
+      - name: Convert postgres database into sqlite
+        run: pipx run db-to-sqlite[postgresql]==1.5 "postgresql://postgres:postgres@localhost/fractal_test" $ROOTDIR/clean_db_fractal_${TARGET_VERSION}.sql.sqlite3 --all
+
       - name: Apply migration and fix-db script (postgres)
         run: |
           cp $ROOTDIR/.fractal_server_postgres.env .fractal_server.env
           poetry run fractalctl set-db
           poetry run python scripts/fix_db/current.py  # FIXME: see issue 1094
-
-      - name: Convert postgres database into sqlite
-        run: pipx run db-to-sqlite[postgresql]==1.5 "postgresql://postgres:postgres@localhost/fractal_test" $ROOTDIR/clean_db_fractal_${TARGET_VERSION}.sql.sqlite3 --all
 
       - name: Apply migration and fix-db script (sqlite)
         run: |
