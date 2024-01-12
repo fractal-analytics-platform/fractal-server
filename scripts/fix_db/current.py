@@ -51,48 +51,46 @@ with next(get_sync_db()) as db:
             # Missing `task_list` and `project``
             # WorkflowRead(**workflow.model_dump())
 
-        # add timestamp_created to Job.workflow_dump
-        stm = select(ApplyWorkflow)
-        jobs = db.execute(stm).scalars().all()
-        for job in jobs:
-            workflow_dump_timestamp = job.workflow_dump.get(
-                "timestamp_created"
-            )
-            logging.warning(f"[Job {job.id:4d}] -> {workflow_dump_timestamp=}")
-            if job.workflow_dump.get("timestamp_created") is None:
-                # if Job.workflow_dump has no timestamp_created
-                if job.project_id is not None:
-                    # if Job.Project exists
-                    project = db.get(Project, job.project_id)
-                    if project is None:
-                        raise IntegrityError(
-                            f"[Job {job.id:4d}] "
-                            f"project_id={job.project_id}, "
-                            f"but Project {job.project_id} does not exist"
-                        )
-                    logging.warning(
+    # add timestamp_created to Job.workflow_dump
+    stm = select(ApplyWorkflow)
+    jobs = db.execute(stm).scalars().all()
+    for job in jobs:
+        workflow_dump_timestamp = job.workflow_dump.get("timestamp_created")
+        logging.warning(f"[Job {job.id:4d}] -> {workflow_dump_timestamp=}")
+        if job.workflow_dump.get("timestamp_created") is None:
+            # if Job.workflow_dump has no timestamp_created
+            if job.project_id is not None:
+                # if Job.Project exists
+                project = db.get(Project, job.project_id)
+                if project is None:
+                    raise IntegrityError(
                         f"[Job {job.id:4d}] "
-                        f"{job.workflow_dump.get('timestamp_created')=} -> "
-                        "replace with project timestamp."
+                        f"project_id={job.project_id}, "
+                        f"but Project {job.project_id} does not exist"
                     )
-                    new_timestamp = project.timestamp_created
-                else:
-                    # if Job.Project doesn't exist
-                    logging.warning(
-                        f"[Job {job.id:4d}] "
-                        f"{job.workflow_dump.get('timestamp_created')=} "
-                        f" and {job.project_id=} -> "
-                        f"replace with {REFERENCE_TIMESTAMP=}."
-                    )
-                    new_timestamp = REFERENCE_TIMESTAMP
-                # add Job.workflow_dump.timestamp_created
-                new_workflow_dump = job.workflow_dump.copy()
-                new_workflow_dump.update(
-                    {"timestamp_created": str(timestamp_created)}
+                logging.warning(
+                    f"[Job {job.id:4d}] "
+                    f"{job.workflow_dump.get('timestamp_created')=} -> "
+                    "replace with project timestamp."
                 )
-                job.workflow_dump = new_workflow_dump
-                db.add(job)
-                db.commit()
-                db.refresh(job)
-                db.expunge(job)
-                WorkflowDump(**job.workflow_dump)
+                new_timestamp = project.timestamp_created
+            else:
+                # if Job.Project doesn't exist
+                logging.warning(
+                    f"[Job {job.id:4d}] "
+                    f"{job.workflow_dump.get('timestamp_created')=} "
+                    f" and {job.project_id=} -> "
+                    f"replace with {REFERENCE_TIMESTAMP=}."
+                )
+                new_timestamp = REFERENCE_TIMESTAMP
+            # add Job.workflow_dump.timestamp_created
+            new_workflow_dump = job.workflow_dump.copy()
+            new_workflow_dump.update(
+                {"timestamp_created": str(timestamp_created)}
+            )
+            job.workflow_dump = new_workflow_dump
+            db.add(job)
+            db.commit()
+            db.refresh(job)
+            db.expunge(job)
+            WorkflowDump(**job.workflow_dump)
