@@ -11,13 +11,12 @@ from fractal_server.app.models import Project
 from fractal_server.app.models import Workflow
 from fractal_server.app.schemas.dumps import WorkflowDump
 
-# from fractal_server.app.schemas import WorkflowRead
 
 REFERENCE_TIMESTAMP = datetime(2000, 1, 1, tzinfo=timezone.utc)
 
 with next(get_sync_db()) as db:
 
-    # add timestamp_created to Workflow
+    # add timestamp_created to Workflows
     stm = select(Workflow)
     workflows = db.execute(stm).scalars().all()
     for workflow in workflows:
@@ -55,10 +54,13 @@ with next(get_sync_db()) as db:
     stm = select(ApplyWorkflow)
     jobs = db.execute(stm).scalars().all()
     for job in jobs:
-        workflow_dump_timestamp = job.workflow_dump.get("timestamp_created")
-        logging.warning(f"[Job {job.id:4d}] -> {workflow_dump_timestamp=}")
-        if job.workflow_dump.get("timestamp_created") is None:
-            # if Job.workflow_dump has no timestamp_created
+        dump_timestamp = job.workflow_dump.get("timestamp_created")
+        if dump_timestamp is not None:
+            logging.warning(
+                f"[Job {job.id:4d}] -> Job.workflow_dump['timestamp_created'] "
+                f" = {dump_timestamp} -> SKIP"
+            )
+        else:  # dump_timestamp is None
             if job.project_id is not None:
                 # if Job.Project exists
                 project = db.get(Project, job.project_id)
@@ -68,19 +70,20 @@ with next(get_sync_db()) as db:
                         f"project_id={job.project_id}, "
                         f"but Project {job.project_id} does not exist"
                     )
+                new_timestamp = project.timestamp_created
                 logging.warning(
                     f"[Job {job.id:4d}] "
-                    f"{job.workflow_dump.get('timestamp_created')=} -> "
-                    "replace with project timestamp."
+                    f"Job.workflow_dump['timestamp_created']={dump_timestamp} "
+                    f"-> replace it with Project {job.project_id} timestamp "
+                    f"-> {new_timestamp}"
                 )
-                new_timestamp = project.timestamp_created
             else:
                 # if Job.Project doesn't exist
                 logging.warning(
                     f"[Job {job.id:4d}] "
-                    f"{job.workflow_dump.get('timestamp_created')=} "
-                    f" and {job.project_id=} -> "
-                    f"replace with {REFERENCE_TIMESTAMP=}."
+                    f"Job.workflow_dump['timestamp_created']={dump_timestamp} "
+                    f"AND Job.project_id is None -> replace it with reference"
+                    f"timestamp {REFERENCE_TIMESTAMP}"
                 )
                 new_timestamp = REFERENCE_TIMESTAMP
             # add Job.workflow_dump.timestamp_created
@@ -92,5 +95,5 @@ with next(get_sync_db()) as db:
             db.add(job)
             db.commit()
             db.refresh(job)
-            db.expunge(job)
-            WorkflowDump(**job.workflow_dump)
+        db.expunge(job)
+        WorkflowDump(**job.workflow_dump)
