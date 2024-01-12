@@ -55,8 +55,12 @@ with next(get_sync_db()) as db:
         stm = select(ApplyWorkflow)
         jobs = db.execute(stm).scalars().all()
         for job in jobs:
+            workflow_dump_timestamp = job.workflow_dump.get(
+                "timestamp_created"
+            )
+            logging.warning(f"[Job {job.id:4d}] -> {workflow_dump_timestamp=}")
             if job.workflow_dump.get("timestamp_created") is None:
-                # if Job.workflow_dump has not timestamp_created
+                # if Job.workflow_dump has no timestamp_created
                 if job.project_id is not None:
                     # if Job.Project exists
                     project = db.get(Project, job.project_id)
