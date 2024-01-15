@@ -360,6 +360,18 @@ class Settings(BaseSettings):
                 raise FractalConfigurationError(
                     "POSTGRES_DB cannot be None when DB_ENGINE=postgres."
                 )
+            try:
+                import psycopg2  # noqa: F401
+            except ModuleNotFoundError:
+                raise FractalConfigurationError(
+                    "DB engine is `postgres` but `psycopg2` is not available"
+                )
+            try:
+                import asyncpg  # noqa: F401
+            except ModuleNotFoundError:
+                raise FractalConfigurationError(
+                    "DB engine is `postgres` but `asyncpg` is not available"
+                )
         else:
             if not self.SQLITE_PATH:
                 raise FractalConfigurationError(
