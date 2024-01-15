@@ -117,7 +117,7 @@ async def test_project_and_workflows(db):
 
     # test relationships
     assert db_workflow1.project_id == db_project.id
-    assert db_workflow1.project == db_project
+    assert db_workflow1.project.model_dump() == db_project.model_dump()
     # test defaults
     assert db_workflow1.task_list == []
 
@@ -137,7 +137,7 @@ async def test_project_and_workflows(db):
     assert db_workflow1.name == workflow1.name
     assert db_workflow2.name == workflow2.name
     assert db_workflow2.project_id == db_project.id
-    assert db_workflow2.project == db_project
+    assert db_workflow2.project.model_dump() == db_project.model_dump()
 
     # delete just one workflow
     await db.delete(db_workflow2)
@@ -278,7 +278,7 @@ async def test_project_and_datasets(db):
 
     # test relationships
     assert db_dataset1.project_id == db_project.id
-    assert db_dataset1.project == db_project
+    assert db_dataset1.project.model_dump() == db_project.model_dump()
     # test defaults
     assert db_dataset1.type is None
     assert db_dataset1.read_only is False
@@ -302,7 +302,7 @@ async def test_project_and_datasets(db):
     assert db_dataset1.name == dataset1.name
     assert db_dataset2.name == dataset2.name
     assert db_dataset2.project_id == db_project.id
-    assert db_dataset2.project == db_project
+    assert db_dataset2.project.model_dump() == db_project.model_dump()
 
     # delete just one dataset
     await db.delete(db_dataset2)
@@ -577,8 +577,8 @@ async def test_project_name_not_unique(MockCurrentUser, db, project_factory):
     res = await db.execute(stm)
     project_list = res.scalars().all()
     assert len(project_list) == 2
-    assert p0 in project_list
-    assert p1 in project_list
+    assert p0.model_dump() in [p.model_dump() for p in project_list]
+    assert p1.model_dump() in [p.model_dump() for p in project_list]
 
 
 async def test_task_workflow_association(

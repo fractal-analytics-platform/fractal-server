@@ -15,9 +15,7 @@ from .....logger import close_logger
 from .....logger import set_logger
 from .....syringe import Inject
 from ....db import AsyncSession
-from ....db import DBSyncSession
 from ....db import get_db
-from ....db import get_sync_db
 from ....models import ApplyWorkflow
 from ....models import Dataset
 from ....models import LinkUserProject
@@ -79,7 +77,7 @@ async def create_project(
         project_name=project.name, user_id=user.id, db=db
     )
 
-    db_project = Project.from_orm(project)
+    db_project = Project(**project.dict())
     db_project.user_list.append(user)
     try:
         db.add(db_project)
@@ -249,9 +247,6 @@ async def apply_workflow(
     output_dataset_id: int,
     user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_db),
-    db_sync: DBSyncSession = Depends(
-        get_sync_db
-    ),  # FIXME: why both sync and async?  # noqa
 ) -> Optional[ApplyWorkflowRead]:
 
     output = await _get_dataset_check_owner(
@@ -400,21 +395,26 @@ async def apply_workflow(
         workflow_id=workflow_id,
         user_email=user.email,
         input_dataset_dump=dict(
-            input_dataset.dict(exclude={"resource_list"}),
+            input_dataset.model_dump(exclude={"resource_list"}),
             resource_list=[
-                resource.dict() for resource in input_dataset.resource_list
+                resource.model_dump()
+                for resource in input_dataset.resource_list
             ],
         ),
         output_dataset_dump=dict(
-            output_dataset.dict(exclude={"resource_list"}),
+            output_dataset.model_dump(exclude={"resource_list"}),
             resource_list=[
-                resource.dict() for resource in output_dataset.resource_list
+                resource.model_dump()
+                for resource in output_dataset.resource_list
             ],
         ),
         workflow_dump=dict(
-            workflow.dict(exclude={"task_list"}),
+            workflow.model_dump(exclude={"task_list"}),
             task_list=[
-                dict(wf_task.dict(exclude={"task"}), task=wf_task.task.dict())
+                dict(
+                    wf_task.model_dump(exclude={"task"}),
+                    task=wf_task.task.model_dump(),
+                )
                 for wf_task in workflow.task_list
             ],
         ),
@@ -438,6 +438,5 @@ async def apply_workflow(
     )
 
     await db.close()
-    db_sync.close()
 
     return job

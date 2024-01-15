@@ -565,7 +565,7 @@ def get_slurm_config(
             error_msg = (
                 f"Invalid {account=} property in WorkflowTask `meta` "
                 "attribute.\n"
-                "SLURM account must be set via the query parameter of the "
+                "SLURM account must be set in the request body of the "
                 "apply-workflow endpoint, or by modifying the user properties."
             )
             logger.error(error_msg)

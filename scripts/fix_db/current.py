@@ -55,7 +55,7 @@ with next(get_sync_db()) as db:
             db.commit()
             db.refresh(project)
             db.expunge(project)
-            ProjectRead(**project.dict())
+            ProjectRead(**project.model_dump())
 
     # Get list of all jobs
     stm = select(ApplyWorkflow)
@@ -99,4 +99,4 @@ with next(get_sync_db()) as db:
             # Also validate that the row can be cast into ApplyWorkflowRead
             db.refresh(job)
             db.expunge(job)
-            ApplyWorkflowRead(**job.dict())
+            ApplyWorkflowRead(**job.model_dump())

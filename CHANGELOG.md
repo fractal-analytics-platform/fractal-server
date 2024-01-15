@@ -2,9 +2,10 @@
 
 # 1.4.2
 
-WARNINGS:
-1. This update requires running some fix-db scripts (more details TBD - see issue #1094).
-2. Starting from this versions, non-verified users have limited access to `/api/v1/` endpoints.
+> **WARNINGs**:
+>
+> 1. This update requires running a fix-db script, available at https://raw.githubusercontent.com/fractal-analytics-platform/fractal-server/1.4.2a5/scripts/fix_db/current.py (note: replace `1.4.2a5` with `1.4.2` upon release).
+> 2. Starting from this version, non-verified users have limited access to `/api/v1/` endpoints. Before the upgrade, all existing users must be manually set to verified.
 
 * API:
     * Prevent access to `GET/PATCH` task endpoints for non-verified users (\#1114).
@@ -13,9 +14,11 @@ WARNINGS:
     * Add the automatic setting of `ApplyWorkflow.end_timestamp` when patching `ApplyWorkflow.status` via `PATCH /admin/job/{job_id}` (\#1121).
     * Change `ProjectDump.timestamp_created` type from `datetime` to `str` (\#1120).
     * Change `_DatasetHistoryItem.workflowtask` type into `WorkflowTaskDump` (\#1139).
+    * Change status code of stop-job endpoints to 202 (\#1151).
 * API (internal):
     * Implement cascade operations explicitly, in `DELETE` endpoints for datasets, workflows and projects (\#1130).
     * Update `GET /project/{project_id}/workflow/{workflow_id}/job/` to avoid using `Workflow.job_list` (\#1130).
+    * Remove obsolete sync-database dependency from apply-workflow endpoint (\#1144).
 * Database:
     * Add `ApplyWorkflow.project_dump` column (\#1070).
     * Provide more meaningful names to fix-db scripts (\#1107).
@@ -25,17 +28,23 @@ WARNINGS:
 * Runner:
     * In SLURM backend, use `slurm_account` (as received from apply-workflow endpoint) with top priority (\#1145).
     * Forbid setting of SLURM account from `WorkflowTask.meta` or as part of `worker_init` variable (\#1145).
+    * Include more info in error message upon `sbatch` failure (\#1142).
+    * Replace `sbatch` `--chdir` option with `-D`, to support also slurm versions before 17.11 (\#1159).
 * Testing:
     * Extended systematic testing of database models (\#1078).
     * Review `MockCurrentUser` fixture, to handle different kinds of users (\#1099).
     * Remove `persist` from `MockCurrentUser` (\#1098).
     * Update `migrations.yml` GitHub Action to use up-to-date database and also test fix-db script (\#1101).
     * Add more schema-based validation to fix-db current script (\#1107).
+    * Update `.dict()` to `.model_dump()` for `SQLModel` objects, to fix some `DeprecationWarnings`(\##1133).
     * Small improvement in schema coverage (\#1125).
+    * Add unit test for `security` module (\#1036).
 * Dependencies:
     * Update `sqlmodel` to version 0.0.14 (\#1124).
 * Benchmarks:
     * Add automatic benchmark system for API's performances (\#1123)
+* App (internal):
+    * Move `_create_first_user` from `main` to `security` module, and allow it to create multiple regular users (\#1036).
 
 # 1.4.1
 
@@ -52,7 +61,6 @@ WARNINGS:
     * Add `Dataset.project` and `Workflow.project` relationships (\#1082).
     * Avoid using `Project` relationships `dataset_list` or `workflow_list` within some `GET` endpoints (\#1082).
     * Fully remove `Project` relationships `dataset_list`, `workflow_list` and `job_list` (\#1091).
-
 * Testing:
     * Only use ubuntu-22.04 in GitHub actions (\#1061).
     * Improve unit testing of database models (\#1082).
