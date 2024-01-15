@@ -1,5 +1,11 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# 1.4.3
+
+* Database:
+    * Make `WorkflowTask.workflow_id` and `WorfklowTask.task_id` not nullable (\#1137).
+
+
 # 1.4.2
 
 > **WARNINGs**:
@@ -25,7 +31,6 @@
     * Add `Project.timestamp_created` column, with timezone-aware default (\#1102, \#1131).
     * Remove `Dataset.list_jobs_input` and `Dataset.list_jobs_output` relationships (\#1130).
     * Remove `Workflow.job_list` (\#1130).
-    * Make `WorkflowTask.workflow_id` and `WorfklowTask.task_id` not nullable (\#1137).
 * Runner:
     * In SLURM backend, use `slurm_account` (as received from apply-workflow endpoint) with top priority (\#1145).
     * Forbid setting of SLURM account from `WorkflowTask.meta` or as part of `worker_init` variable (\#1145).
