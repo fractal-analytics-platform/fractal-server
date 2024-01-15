@@ -62,17 +62,17 @@ class DB:
                 "pool_pre_ping": True,
             }
 
-        cls._async_session_maker = sessionmaker(
-            cls._engine_async,
-            class_=AsyncSession,
-            expire_on_commit=False,
-            future=True,
-        )
         cls._engine_async = create_async_engine(
             settings.DATABASE_URL,
             echo=settings.DB_ECHO,
             future=True,
             **engine_kwargs_async,
+        )
+        cls._async_session_maker = sessionmaker(
+            cls._engine_async,
+            class_=AsyncSession,
+            expire_on_commit=False,
+            future=True,
         )
 
     @classmethod
@@ -95,17 +95,18 @@ class DB:
         else:
             engine_kwargs_sync = {}
 
-        cls._sync_session_maker = sessionmaker(
-            bind=cls._engine_sync,
-            autocommit=False,
-            autoflush=False,
-            future=True,
-        )
         cls._engine_sync = create_engine(
             settings.DATABASE_SYNC_URL,
             echo=settings.DB_ECHO,
             future=True,
             **engine_kwargs_sync,
+        )
+
+        cls._sync_session_maker = sessionmaker(
+            bind=cls._engine_sync,
+            autocommit=False,
+            autoflush=False,
+            future=True,
         )
 
         @event.listens_for(cls._engine_sync, "connect")
