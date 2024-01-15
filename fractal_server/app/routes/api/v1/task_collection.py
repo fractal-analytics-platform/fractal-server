@@ -37,6 +37,7 @@ from ....schemas import StateRead
 from ....schemas import TaskCollectPip
 from ....schemas import TaskCollectStatus
 from ....schemas import TaskCreate
+from ....schemas import TaskRead
 from ....security import current_active_user
 from ....security import current_active_verified_user
 from ....security import User
@@ -99,7 +100,7 @@ async def _background_collect_pip(
             # finalise
             logger.debug("Task-collection status: finalising")
             collection_path = get_collection_path(venv_path)
-            data.task_list = tasks
+            data.task_list = [TaskRead(**task.model_dump()) for task in tasks]
             with collection_path.open("w") as f:
                 json.dump(data.sanitised_dict(), f)
 
@@ -143,7 +144,7 @@ async def _insert_tasks(
     """
     Insert tasks into database
     """
-    task_db_list = [Task.from_orm(t) for t in task_list]
+    task_db_list = [Task(**t.dict()) for t in task_list]
     db.add_all(task_db_list)
     db.commit()
     for t in task_db_list:

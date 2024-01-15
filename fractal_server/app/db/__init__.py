@@ -55,8 +55,7 @@ class DB:
                 "constraints, database consistency cannot be guaranteed."
             )
 
-        # Set some sqlite-specific options
-        if settings.DB_ENGINE == "sqlite":
+            # Set some sqlite-specific options
             engine_kwargs_async = dict(poolclass=StaticPool)
             engine_kwargs_sync = dict(
                 poolclass=StaticPool,
