@@ -75,6 +75,7 @@ class DB:
             **engine_kwargs_async,
         )
 
+    @classmethod
     def set_sync_db(cls):
         settings = Inject(get_settings)
         settings.check_db()
@@ -115,7 +116,7 @@ class DB:
                 cursor.close()
 
     @classmethod
-    async def get_db(cls) -> AsyncGenerator[AsyncSession, None]:
+    async def get_async_db(cls) -> AsyncGenerator[AsyncSession, None]:
         """
         Get async database session
         """
@@ -141,5 +142,5 @@ class DB:
             yield sync_session
 
 
-get_db = DB.get_db
+get_db = DB.get_async_db
 get_sync_db = DB.get_sync_db
