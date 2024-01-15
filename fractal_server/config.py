@@ -362,15 +362,11 @@ class Settings(BaseSettings):
                 )
             try:
                 import psycopg2  # noqa: F401
-            except ModuleNotFoundError:
-                raise FractalConfigurationError(
-                    "DB engine is `postgres` but `psycopg2` is not available"
-                )
-            try:
                 import asyncpg  # noqa: F401
             except ModuleNotFoundError:
                 raise FractalConfigurationError(
-                    "DB engine is `postgres` but `asyncpg` is not available"
+                    "DB engine is `postgres` but `psycopg2` or `asyncpg` "
+                    "are not available"
                 )
         else:
             if not self.SQLITE_PATH:
@@ -388,7 +384,7 @@ class Settings(BaseSettings):
         info = f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
         if self.FRACTAL_RUNNER_BACKEND == "slurm":
             try:
-                import clusterfutures  # noqa: F401
+                import cfut  # noqa: F401
             except ModuleNotFoundError:
                 raise FractalConfigurationError(
                     f"{info} but `clusterfutures` is not available"

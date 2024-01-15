@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 from devtools import debug
 
+from .fixtures_server import DB_ENGINE
 from fractal_server.config import FractalConfigurationError
 from fractal_server.config import OAuthClientConfig
 from fractal_server.config import Settings
@@ -192,6 +193,12 @@ def test_settings_check(
 
     # Create a Settings instance
     settings = Settings(**settings_dict)
+
+    # raises when `settings` point to postgres but actual DB_ENGINE is sqlite
+    # (psycopg2 and asyncpg are not installed)
+    if DB_ENGINE == "sqlite":
+        if settings.DB_ENGINE == "postgres":
+            raises = True
 
     # Run Settings.check method
     if raises:
