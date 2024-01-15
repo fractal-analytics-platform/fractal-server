@@ -32,7 +32,7 @@ class DB:
         try:
             return cls._engine_async
         except AttributeError:
-            cls.set_db()
+            cls.set_async_db()
             return cls._engine_async
 
     @classmethod
@@ -40,11 +40,11 @@ class DB:
         try:
             return cls._engine_sync
         except AttributeError:
-            cls.set_db()
+            cls.set_sync_db()
             return cls._engine_sync
 
     @classmethod
-    def set_db(cls):
+    def set_async_db(cls):
         settings = Inject(get_settings)
         settings.check_db()
 
@@ -57,28 +57,10 @@ class DB:
 
             # Set some sqlite-specific options
             engine_kwargs_async = dict(poolclass=StaticPool)
-            engine_kwargs_sync = dict(
-                poolclass=StaticPool,
-                connect_args={"check_same_thread": False},
-            )
         else:
             engine_kwargs_async = {
                 "pool_pre_ping": True,
             }
-            engine_kwargs_sync = {}
-
-        cls._engine_async = create_async_engine(
-            settings.DATABASE_URL,
-            echo=settings.DB_ECHO,
-            future=True,
-            **engine_kwargs_async,
-        )
-        cls._engine_sync = create_engine(
-            settings.DATABASE_SYNC_URL,
-            echo=settings.DB_ECHO,
-            future=True,
-            **engine_kwargs_sync,
-        )
 
         cls._async_session_maker = sessionmaker(
             cls._engine_async,
@@ -86,12 +68,43 @@ class DB:
             expire_on_commit=False,
             future=True,
         )
+        cls._engine_async = create_async_engine(
+            settings.DATABASE_URL,
+            echo=settings.DB_ECHO,
+            future=True,
+            **engine_kwargs_async,
+        )
+
+    def set_sync_db(cls):
+        settings = Inject(get_settings)
+        settings.check_db()
+
+        if settings.DB_ENGINE == "sqlite":
+            logger.warning(
+                "SQLite is supported (for version >=3.37) but discouraged "
+                "in production. Given its partial support for ForeignKey "
+                "constraints, database consistency cannot be guaranteed."
+            )
+
+            # Set some sqlite-specific options
+            engine_kwargs_sync = dict(
+                poolclass=StaticPool,
+                connect_args={"check_same_thread": False},
+            )
+        else:
+            engine_kwargs_sync = {}
 
         cls._sync_session_maker = sessionmaker(
             bind=cls._engine_sync,
             autocommit=False,
             autoflush=False,
             future=True,
+        )
+        cls._engine_sync = create_engine(
+            settings.DATABASE_SYNC_URL,
+            echo=settings.DB_ECHO,
+            future=True,
+            **engine_kwargs_sync,
         )
 
         @event.listens_for(cls._engine_sync, "connect")
@@ -109,7 +122,7 @@ class DB:
         try:
             session_maker = cls._async_session_maker()
         except AttributeError:
-            cls.set_db()
+            cls.set_async_db()
             session_maker = cls._async_session_maker()
         async with session_maker as async_session:
             yield async_session
@@ -122,7 +135,7 @@ class DB:
         try:
             session_maker = cls._sync_session_maker()
         except AttributeError:
-            cls.set_db()
+            cls.set_sync_db()
             session_maker = cls._sync_session_maker()
         with session_maker as sync_session:
             yield sync_session
