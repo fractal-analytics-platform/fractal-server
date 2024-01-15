@@ -254,7 +254,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             raise RuntimeError(
                 "Invalid line in `FractalSlurmExecutor.common_script_lines`: "
                 f"'{invalid_line}'.\n"
-                "SLURM account must be set via the query parameter of the "
+                "SLURM account must be set via the request body of the "
                 "apply-workflow endpoint, or by modifying the user properties."
             )
         except StopIteration:
@@ -1075,7 +1075,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             [
                 f"#SBATCH --err={slurm_err_path}",
                 f"#SBATCH --out={slurm_out_path}",
-                f"#SBATCH --chdir={self.working_dir_user}",
+                f"#SBATCH -D {self.working_dir_user}",
             ]
         )
         script_lines = slurm_config.sort_script_lines(script_lines)

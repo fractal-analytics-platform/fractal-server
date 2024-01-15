@@ -2,9 +2,10 @@
 
 # 1.4.2
 
-WARNINGS:
-1. This update requires running some fix-db scripts (more details TBD - see issue #1094).
-2. Starting from this versions, non-verified users have limited access to `/api/v1/` endpoints.
+> **WARNINGs**:
+>
+> 1. This update requires running a fix-db script, available at https://raw.githubusercontent.com/fractal-analytics-platform/fractal-server/1.4.2a5/scripts/fix_db/current.py (note: replace `1.4.2a5` with `1.4.2` upon release).
+> 2. Starting from this version, non-verified users have limited access to `/api/v1/` endpoints. Before the upgrade, all existing users must be manually set to verified.
 
 * API:
     * Prevent access to `GET/PATCH` task endpoints for non-verified users (\#1114).
@@ -28,6 +29,7 @@ WARNINGS:
     * In SLURM backend, use `slurm_account` (as received from apply-workflow endpoint) with top priority (\#1145).
     * Forbid setting of SLURM account from `WorkflowTask.meta` or as part of `worker_init` variable (\#1145).
     * Include more info in error message upon `sbatch` failure (\#1142).
+    * Replace `sbatch` `--chdir` option with `-D`, to support also slurm versions before 17.11 (\#1159).
 * Testing:
     * Extended systematic testing of database models (\#1078).
     * Review `MockCurrentUser` fixture, to handle different kinds of users (\#1099).
