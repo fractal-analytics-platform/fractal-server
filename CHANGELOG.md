@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# 1.4.3
+
+* API (internal):
+    * Improve validation of `UserCreate.slurm_accounts` (\#1162).
+
 # 1.4.2
 
 > **WARNINGs**:
@@ -19,7 +24,6 @@
     * Implement cascade operations explicitly, in `DELETE` endpoints for datasets, workflows and projects (\#1130).
     * Update `GET /project/{project_id}/workflow/{workflow_id}/job/` to avoid using `Workflow.job_list` (\#1130).
     * Remove obsolete sync-database dependency from apply-workflow endpoint (\#1144).
-    * Improve validation of `UserCreate.slurm_accounts` (\#1162).
 * Database:
     * Add `ApplyWorkflow.project_dump` column (\#1070).
     * Provide more meaningful names to fix-db scripts (\#1107).
