@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# 1.4.3
+
+* API (internal):
+    * Change the class attribute `Workflow.insert_task` into the auxiliary function `_workflow_insert_task` (\#1149).
+
 # 1.4.2
 
 > **WARNINGs**:
