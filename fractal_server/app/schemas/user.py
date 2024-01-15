@@ -121,7 +121,7 @@ class UserCreate(schemas.BaseUserCreate):
     @validator("slurm_accounts")
     def slurm_accounts_validator(cls, value):
         for i, element in enumerate(value):
-            valstr(attribute=f"slurm_accounts[{i}]")(element)
+            value[i] = valstr(attribute=f"slurm_accounts[{i}]")(element)
         val_unique_list("slurm_accounts")(value)
         return value
 
