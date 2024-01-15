@@ -3,7 +3,7 @@ import pytest
 from fractal_server.app.db import DB
 
 
-async def test_attribute_errore():
+async def test_attribute_error():
 
     with pytest.raises(AttributeError):
         DB._engine_async
