@@ -1,10 +1,21 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# 1.4.3
+
+* API:
+    * Add `timestamp_created` to `WorkflowRead`, `WorkflowDump`, `DatasetRead` and `DatasetDump` (\#1152).
+* Database:
+    * Add `Workflow.timestamp_created` and `Dataset.timestamp_created` columns (\#1152).
+* Testing:
+    * Update `clean_db_fractal_1.4.1.sql` to `clean_db_fractal_1.4.2.sql`, and change `migrations.yml` target version (\#1152).
+    * Start a new `current.py` fix-db script (\#1152).
+
+
 # 1.4.2
 
 > **WARNINGs**:
 >
-> 1. This update requires running a fix-db script, available at https://raw.githubusercontent.com/fractal-analytics-platform/fractal-server/1.4.2a5/scripts/fix_db/current.py (note: replace `1.4.2a5` with `1.4.2` upon release).
+> 1. This update requires running a fix-db script, available at https://raw.githubusercontent.com/fractal-analytics-platform/fractal-server/1.4.2/scripts/fix_db/current.py.
 > 2. Starting from this version, non-verified users have limited access to `/api/v1/` endpoints. Before the upgrade, all existing users must be manually set to verified.
 
 * API:
