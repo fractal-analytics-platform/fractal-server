@@ -1,4 +1,4 @@
-"""add Workflow.timestamp_created
+"""add Workflow.timestamp_created and Dataset.timestamp_created
 
 Revision ID: 9fd26a2b0de4
 Revises: efa89c30e0a4
@@ -14,7 +14,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "9fd26a2b0de4"
-down_revision = "efa89c30e0a4"
+down_revision = "4cedeb448a53"
 branch_labels = None
 depends_on = None
 
