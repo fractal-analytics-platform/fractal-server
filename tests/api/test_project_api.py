@@ -6,10 +6,12 @@ from fractal_server.app.models import ApplyWorkflow
 from fractal_server.app.models import Dataset
 from fractal_server.app.models import Project
 from fractal_server.app.models import Workflow
+from fractal_server.app.routes.api.v1._aux_functions import (
+    _workflow_insert_task,
+)
 from fractal_server.app.schemas import JobStatusType
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
-
 
 PREFIX = "/api/v1"
 
@@ -201,7 +203,7 @@ async def test_delete_project(
         # Add a workflow to the project
         wf = await workflow_factory(project_id=p["id"])
         t = await task_factory()
-        await wf.insert_task(task_id=t.id, db=db)
+        await _workflow_insert_task(workflow_id=wf.id, task_id=t.id, db=db)
 
         # Add a job to the project
         await job_factory(
@@ -273,7 +275,7 @@ async def test_delete_project_ongoing_jobs(
             t = await task_factory(
                 name=f"task_{status}", source=f"source_{status}"
             )
-            await w.insert_task(task_id=t.id, db=db)
+            await _workflow_insert_task(workflow_id=w.id, task_id=t.id, db=db)
             await job_factory(
                 project_id=p.id,
                 workflow_id=w.id,

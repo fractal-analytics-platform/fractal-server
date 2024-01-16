@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Any
 from typing import Optional
 from typing import Union
@@ -6,14 +5,11 @@ from typing import Union
 from pydantic import validator
 from sqlalchemy import Column
 from sqlalchemy.ext.orderinglist import ordering_list
-from sqlalchemy.types import DateTime
 from sqlalchemy.types import JSON
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
-from ...utils import get_timestamp
-from ..db import AsyncSession
 from ..schemas.workflow import _WorkflowBase
 from ..schemas.workflow import _WorkflowTaskBase
 from .task import Task
@@ -52,8 +48,8 @@ class WorkflowTask(_WorkflowTaskBase, SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    workflow_id: Optional[int] = Field(foreign_key="workflow.id")
-    task_id: Optional[int] = Field(foreign_key="task.id")
+    workflow_id: int = Field(foreign_key="workflow.id")
+    task_id: int = Field(foreign_key="task.id")
     order: Optional[int]
     meta: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
     args: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
@@ -120,63 +116,6 @@ class Workflow(_WorkflowBase, SQLModel, table=True):
             cascade="all, delete-orphan",
         ),
     )
-
-    timestamp_created: datetime = Field(
-        default_factory=get_timestamp,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
-    )
-
-    async def insert_task(
-        self,
-        task_id: int,
-        *,
-        args: Optional[dict[str, Any]] = None,
-        meta: Optional[dict[str, Any]] = None,
-        order: Optional[int] = None,
-        db: AsyncSession,
-        commit: bool = True,
-    ) -> WorkflowTask:
-        """
-        Insert a new WorkflowTask into Workflow.task_list
-
-        Args:
-            task_id: TBD
-            args: TBD
-            meta: TBD
-            order: TBD
-            db: TBD
-            commit: TBD
-        """
-        if order is None:
-            order = len(self.task_list)
-
-        # Get task from db, and extract default arguments via a Task property
-        # method
-        db_task = await db.get(Task, task_id)
-        default_args = db_task.default_args_from_args_schema
-        # Override default_args with args
-        actual_args = default_args.copy()
-        if args is not None:
-            for k, v in args.items():
-                actual_args[k] = v
-        if not actual_args:
-            actual_args = None
-
-        # Combine meta (higher priority) and db_task.meta (lower priority)
-        wt_meta = (db_task.meta or {}).copy()
-        wt_meta.update(meta or {})
-        if not wt_meta:
-            wt_meta = None
-
-        # Create DB entry
-        wf_task = WorkflowTask(task_id=task_id, args=actual_args, meta=wt_meta)
-        db.add(wf_task)
-        self.task_list.insert(order, wf_task)
-        self.task_list.reorder()  # type: ignore
-        if commit:
-            await db.commit()
-            await db.refresh(wf_task)
-        return wf_task
 
     @property
     def input_type(self):
