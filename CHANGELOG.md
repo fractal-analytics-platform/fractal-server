@@ -1,11 +1,14 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+
 # 1.4.3 (unreleased)
 
 * API:
     * Improve validation of `UserCreate.slurm_accounts` (\#1162).
 * API (internal):
     * Change the class method `Workflow.insert_task` into the auxiliary function `_workflow_insert_task` (\#1149).
+* Database:
+    * Make `WorkflowTask.workflow_id` and `WorfklowTask.task_id` not nullable (\#1137).
 
 # 1.4.2
 
