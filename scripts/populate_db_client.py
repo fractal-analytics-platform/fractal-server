@@ -1,14 +1,18 @@
 import argparse
 
 import requests
+from devtools import debug
 
 
 class SimpleHttpClient:
+    base_url: str
+
     def __init__(self, base_url):
         self.base_url = base_url
 
     def make_request(self, endpoint, method="GET", data=None, headers=None):
         url = f"{self.base_url}/{endpoint}"
+        debug(url)
 
         try:
             if method == "GET":
@@ -29,6 +33,22 @@ class SimpleHttpClient:
             return None
 
 
+class BearerHttpClient(SimpleHttpClient):
+    bearer_token: str
+
+    def __init__(self, base_url: str, bearer_token: str):
+        self.super(base_url=base_url)
+        self.bearer_token = bearer_token
+        self.headers = dict(
+            Authorization=f"Authorization: Bearer {bearer_token}"
+        )
+
+    def make_request(self, endpoint: str, method: str = "GET", data=None):
+        self.super().make_request(
+            endpoint=endpoint, method=method, data=data, headers=self.headers
+        )
+
+
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Simple HTTP Client")
     parser.add_argument("base_url", help="Base URL for the API")
@@ -44,6 +64,7 @@ def parse_arguments():
 
 
 if __name__ == "__main__":
+    """
     args = parse_arguments()
 
     http_client = SimpleHttpClient(args.base_url)
@@ -64,5 +85,14 @@ if __name__ == "__main__":
 
     if response_content is not None:
         print(f"Response Content:\n{response_content}")
+    """
+
+    base_url = "http://localhost:8000"
+    credentials = dict(username="admin@fractal.xy", password="1234")  # nosec
+    anon_client = SimpleHttpClient(base_url)
+    debug(anon_client)
+    res = anon_client.make_request(
+        endpoint="auth/token/login/", data=credentials, method="POST"
+    )
 
 # poetry run python populate_db_client.py http://localhost:8000 api/alive/
