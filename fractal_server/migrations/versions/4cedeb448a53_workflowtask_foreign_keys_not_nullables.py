@@ -1,8 +1,8 @@
 """WorkflowTask foreign keys not nullables
 
-Revision ID: b36532679e67
+Revision ID: 4cedeb448a53
 Revises: efa89c30e0a4
-Create Date: 2024-01-09 16:37:04.798092
+Create Date: 2024-01-16 13:57:47.891931
 
 """
 import sqlalchemy as sa
@@ -10,7 +10,7 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = "b36532679e67"
+revision = "4cedeb448a53"
 down_revision = "efa89c30e0a4"
 branch_labels = None
 depends_on = None
