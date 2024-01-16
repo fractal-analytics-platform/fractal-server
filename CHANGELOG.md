@@ -1,16 +1,20 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
-# 1.4.3
 
+# 1.4.3 (unreleased)
+
+* API:
+    * Improve validation of `UserCreate.slurm_accounts` (\#1162).
+* API (internal):
+    * Change the class method `Workflow.insert_task` into the auxiliary function `_workflow_insert_task` (\#1149).
 * Database:
     * Make `WorkflowTask.workflow_id` and `WorfklowTask.task_id` not nullable (\#1137).
-
 
 # 1.4.2
 
 > **WARNINGs**:
 >
-> 1. This update requires running a fix-db script, available at https://raw.githubusercontent.com/fractal-analytics-platform/fractal-server/1.4.2a5/scripts/fix_db/current.py (note: replace `1.4.2a5` with `1.4.2` upon release).
+> 1. This update requires running a fix-db script, available at https://raw.githubusercontent.com/fractal-analytics-platform/fractal-server/1.4.2/scripts/fix_db/current.py.
 > 2. Starting from this version, non-verified users have limited access to `/api/v1/` endpoints. Before the upgrade, all existing users must be manually set to verified.
 
 * API:
