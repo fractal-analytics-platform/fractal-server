@@ -3,6 +3,9 @@ import time
 
 from devtools import debug
 
+from fractal_server.app.routes.api.v1._aux_functions import (
+    _workflow_insert_task,
+)
 from fractal_server.app.schemas.dumps import WorkflowDump
 
 PREFIX = "/api/v1"
@@ -67,7 +70,9 @@ async def test_project_apply_failures(
         workflow3 = await workflow_factory(project_id=project2.id)
 
         task = await task_factory()
-        await workflow1.insert_task(task.id, db=db)
+        await _workflow_insert_task(
+            workflow_id=workflow1.id, task_id=task.id, db=db
+        )
 
         # (A) Not existing workflow
         res = await client.post(
@@ -189,7 +194,9 @@ async def test_project_apply_existing_job(
             output_type="Any",
         )
         workflow = await workflow_factory(project_id=project.id)
-        await workflow.insert_task(new_task.id, db=db)
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=new_task.id, db=db
+        )
 
         # Existing jobs with done/running status
         existing_job_A_done = await job_factory(
@@ -279,7 +286,9 @@ async def test_project_apply_missing_user_attributes(
             assert res.status_code == 201
         workflow = await workflow_factory(project_id=project.id)
         task = await task_factory(input_type="zarr")
-        await workflow.insert_task(task.id, db=db)
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
 
         # Call apply endpoint
         res = await client.post(
@@ -327,7 +336,9 @@ async def test_project_apply_missing_resources(
         )
         workflow = await workflow_factory(project_id=project.id)
         task = await task_factory()
-        await workflow.insert_task(task.id, db=db)
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
 
         debug(input_dataset)
         debug(output_dataset)
@@ -378,8 +389,12 @@ async def test_project_apply_workflow_subset(
         task23 = await task_factory(
             input_type="type2", output_type="type3", source="admin:2to3"
         )
-        await workflow.insert_task(task12.id, db=db)
-        await workflow.insert_task(task23.id, db=db)
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task12.id, db=db
+        )
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task23.id, db=db
+        )
 
         debug(workflow)
 
@@ -525,7 +540,9 @@ async def test_project_apply_slurm_account(
             source="source",
             command="ls",
         )
-        await workflow.insert_task(task.id, db=db)
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
 
         # User has an empty SLURM accounts list
         assert user.slurm_accounts == []
@@ -563,7 +580,9 @@ async def test_project_apply_slurm_account(
             source="source2",
             command="ls",
         )
-        await workflow.insert_task(task.id, db=db)
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
 
         # User has a non empty SLURM accounts list
         assert user2.slurm_accounts == SLURM_LIST

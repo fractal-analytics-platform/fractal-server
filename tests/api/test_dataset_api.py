@@ -3,6 +3,9 @@ from sqlmodel import select
 
 from fractal_server.app.models import Dataset
 from fractal_server.app.models import Resource
+from fractal_server.app.routes.api.v1._aux_functions import (
+    _workflow_insert_task,
+)
 from fractal_server.app.schemas import JobStatusType
 
 PREFIX = "api/v1"
@@ -192,7 +195,9 @@ async def test_delete_dataset_cascade_jobs(
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id)
         task = await task_factory(name="task", source="source")
-        await workflow.insert_task(task_id=task.id, db=db)
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
         input_ds = await dataset_factory(project_id=project.id)
         output_ds = await dataset_factory(project_id=project.id)
 
