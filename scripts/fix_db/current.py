@@ -52,7 +52,8 @@ with next(get_sync_db()) as db:
             db.commit()
             db.refresh(workflow)
             db.expunge(workflow)
-            WorkflowRead(**workflow.model_dump())
+            _workflow = db.get(Workflow, workflow.id)
+            WorkflowRead(**_workflow.model_dump())
 
     # add timestamp_created to Dataset
     stm = select(Dataset)
@@ -85,7 +86,8 @@ with next(get_sync_db()) as db:
             db.commit()
             db.refresh(dataset)
             db.expunge(dataset)
-            DatasetRead(**dataset.model_dump())
+            _dataset = db.get(Dataset, dataset.id)
+            DatasetRead(**_dataset.model_dump())
 
     # add timestamp_created to Job.workflow_dump and Job.in/output_dataset_dump
     stm = select(ApplyWorkflow)
