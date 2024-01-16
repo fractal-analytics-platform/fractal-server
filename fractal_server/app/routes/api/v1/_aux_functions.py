@@ -403,12 +403,18 @@ async def _workflow_insert_task(
         commit: TBD
     """
     db_workflow = await db.get(Workflow, workflow_id)
+    if db_workflow is None:
+        raise ValueError(f"Workflow {workflow_id} does not exist")
+
     if order is None:
         order = len(db_workflow.task_list)
 
     # Get task from db, and extract default arguments via a Task property
     # method
     db_task = await db.get(Task, task_id)
+    if db_task is None:
+        raise ValueError(f"Task {task_id} does not exist")
+
     default_args = db_task.default_args_from_args_schema
     # Override default_args with args
     actual_args = default_args.copy()

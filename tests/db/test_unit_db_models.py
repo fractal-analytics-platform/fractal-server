@@ -572,7 +572,7 @@ async def test_project_name_not_unique(MockCurrentUser, db, project_factory):
 
 
 async def test_task_workflow_association(
-    db, project_factory, MockCurrentUser, task_factory
+    project_factory, MockCurrentUser, task_factory, db
 ):
     async with MockCurrentUser() as user:
         project = await project_factory(user)
@@ -580,19 +580,17 @@ async def test_task_workflow_association(
         t1 = await task_factory(source="source1")
 
         wf = Workflow(name="my wfl", project_id=project.id)
-
         args = dict(arg="test arg")
-
-        # insert_task fail if Workflow has not an id yet
-        with pytest.raises(ValueError):
-            await _workflow_insert_task(
-                workflow_id=wf.id, task_id=t0.id, db=db, args=args
-            )
 
         db.add(wf)
         await db.commit()
         await db.refresh(wf)
 
+        # insert_task fail if Workflow with workflow_id is not found
+        with pytest.raises(ValueError):
+            await _workflow_insert_task(
+                workflow_id=12345, task_id=t0.id, db=db, args=args
+            )
         # insert_task fail if Task with task_id is not found
         with pytest.raises(ValueError):
             await _workflow_insert_task(
@@ -604,10 +602,6 @@ async def test_task_workflow_association(
         )
 
         debug(wf)
-
-        await _workflow_insert_task(
-            workflow_id=wf.id, task_id=t0.id, db=db, args=args
-        )
 
         assert wf.task_list[0].args == args
         # check workflow
