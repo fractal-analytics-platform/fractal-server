@@ -560,7 +560,17 @@ def get_slurm_config(
 
     # Optional SLURM arguments and extra lines
     if wftask.meta is not None:
-        for key in ["time", "account", "gres", "constraint"]:
+        account = wftask.meta.get("account", None)
+        if account is not None:
+            error_msg = (
+                f"Invalid {account=} property in WorkflowTask `meta` "
+                "attribute.\n"
+                "SLURM account must be set in the request body of the "
+                "apply-workflow endpoint, or by modifying the user properties."
+            )
+            logger.error(error_msg)
+            raise SlurmConfigError(error_msg)
+        for key in ["time", "gres", "constraint"]:
             value = wftask.meta.get(key, None)
             if value:
                 slurm_dict[key] = value

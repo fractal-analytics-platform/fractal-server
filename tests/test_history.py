@@ -3,6 +3,9 @@ import logging
 
 from devtools import debug
 
+from fractal_server.app.routes.api.v1._aux_functions import (
+    _workflow_insert_task,
+)
 from fractal_server.app.runner._common import HISTORY_FILENAME
 from fractal_server.app.runner.handle_failed_job import (
     assemble_history_failed_job,
@@ -60,7 +63,9 @@ async def test_get_workflowtask_status(
         # because they match with the task_list of the workflow associated to a
         # job associated to output_dataset
         for dummy_status in ["done", "failed", "submitted"]:
-            await workflow.insert_task(task_id=task.id, db=db)
+            await _workflow_insert_task(
+                workflow_id=workflow.id, task_id=task.id, db=db
+            )
             ID = workflow.task_list[-1].id
             history.append(dict(workflowtask=dict(id=ID), status=dummy_status))
             RESULTS["submitted"].add(ID)
@@ -130,7 +135,9 @@ async def test_get_workflowtask_status_simple(
         # job associated to output_dataset
         history = []
         for dummy_status in ["done", "failed", "submitted"]:
-            await workflow.insert_task(task_id=task.id, db=db)
+            await _workflow_insert_task(
+                workflow_id=workflow.id, task_id=task.id, db=db
+            )
             ID = workflow.task_list[-1].id
             history.append(dict(workflowtask=dict(id=ID), status=dummy_status))
             RESULTS["submitted"].add(ID)
@@ -190,7 +197,9 @@ async def test_get_workflowtask_status_fail(
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id, name="WF")
         task = await task_factory()
-        await workflow.insert_task(task_id=task.id, db=db)
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
         dataset = await dataset_factory(project_id=project.id)
 
         # Create *two* jobs in relation with dataset
@@ -229,7 +238,9 @@ async def test_export_history_as_workflow_fail(
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id, name="WF")
         task = await task_factory()
-        await workflow.insert_task(task_id=task.id, db=db)
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
         dataset = await dataset_factory(project_id=project.id)
 
         # Create job in relation with dataset
@@ -288,7 +299,9 @@ async def test_assemble_history_failed_job_fail(
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id, name="WF")
         task = await task_factory()
-        wftask = await workflow.insert_task(task_id=task.id, db=db)
+        wftask = await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
         dataset = await dataset_factory(project_id=project.id)
         job = await job_factory(
             project_id=project.id,

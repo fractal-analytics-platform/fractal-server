@@ -260,7 +260,7 @@ async def update_job(
     return job
 
 
-@router_admin.get("/job/{job_id}/stop/", status_code=204)
+@router_admin.get("/job/{job_id}/stop/", status_code=202)
 async def stop_job(
     job_id: int,
     user: User = Depends(current_active_superuser),
@@ -283,7 +283,7 @@ async def stop_job(
 
     _write_shutdown_file(job=job)
 
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return Response(status_code=status.HTTP_202_ACCEPTED)
 
 
 @router_admin.get(

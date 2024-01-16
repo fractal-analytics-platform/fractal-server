@@ -26,6 +26,7 @@ registers the client and the relative routes.
 
 All routes are registerd under the `auth/` prefix.
 """
+import contextlib
 from typing import Any
 from typing import AsyncGenerator
 from typing import Dict
@@ -43,9 +44,11 @@ from fastapi_users.authentication import CookieTransport
 from fastapi_users.authentication import JWTStrategy
 from fastapi_users.db.base import BaseUserDatabase
 from fastapi_users.exceptions import InvalidPasswordException
+from fastapi_users.exceptions import UserAlreadyExists
 from fastapi_users.models import ID
 from fastapi_users.models import OAP
 from fastapi_users.models import UP
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlmodel import func
@@ -56,6 +59,11 @@ from ...syringe import Inject
 from ..db import get_db
 from ..models.security import OAuthAccount
 from ..models.security import UserOAuth as User
+from fractal_server.app.models.security import UserOAuth
+from fractal_server.app.schemas.user import UserCreate
+from fractal_server.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
@@ -238,3 +246,77 @@ current_active_verified_user = fastapi_users.current_user(
 current_active_superuser = fastapi_users.current_user(
     active=True, superuser=True
 )
+
+get_async_session_context = contextlib.asynccontextmanager(get_db)
+get_user_db_context = contextlib.asynccontextmanager(get_user_db)
+get_user_manager_context = contextlib.asynccontextmanager(get_user_manager)
+
+
+async def _create_first_user(
+    email: str,
+    password: str,
+    is_superuser: bool = False,
+    is_verified: bool = False,
+    username: Optional[str] = None,
+) -> None:
+    """
+    Private method to create the first fractal-server user
+
+    Create a user with the given default arguments and return a message with
+    the relevant informations. If the user alredy exists, for example after a
+    restart, it returns a message to inform that user already exists.
+
+    **WARNING**: This function is only meant to create the first user, and then
+    it catches and ignores `IntegrityError`s (when multiple workers may be
+    trying to concurrently create the first user). This is not the expected
+    behavior for regular user creation, which must rather happen via the
+    /auth/register endpoint.
+
+    See [fastapi_users docs](https://fastapi-users.github.io/fastapi-users/
+    12.1/cookbook/create-user-programmatically)
+
+    Arguments:
+        email: New user's email
+        password: New user's password
+        is_superuser: `True` if the new user is a superuser
+        is_verified: `True` if the new user is verifie
+        username:
+    """
+    try:
+        async with get_async_session_context() as session:
+
+            if is_superuser is True:
+                # If a superuser already exists, exit
+                stm = select(UserOAuth).where(
+                    UserOAuth.is_superuser == True  # noqa: E712
+                )
+                res = await session.execute(stm)
+                existing_superuser = res.scalars().first()
+                if existing_superuser is not None:
+                    logger.info(
+                        f"{existing_superuser.email} superuser already exists,"
+                        f" skip creation of {email}"
+                    )
+                    return None
+
+            async with get_user_db_context(session) as user_db:
+                async with get_user_manager_context(user_db) as user_manager:
+                    kwargs = dict(
+                        email=email,
+                        password=password,
+                        is_superuser=is_superuser,
+                        is_verified=is_verified,
+                    )
+                    if username is not None:
+                        kwargs["username"] = username
+                    user = await user_manager.create(UserCreate(**kwargs))
+                    logger.info(f"User {user.email} created")
+
+    except IntegrityError:
+        logger.warning(
+            f"Creation of user {email} failed with IntegrityError "
+            "(likely due to concurrent attempts from different workers)."
+        )
+
+    except UserAlreadyExists:
+        logger.warning(f"User {email} already exists")

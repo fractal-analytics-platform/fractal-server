@@ -11,6 +11,9 @@ from fractal_server.app.models import State
 from fractal_server.app.models import Task
 from fractal_server.app.models import Workflow
 from fractal_server.app.models import WorkflowTask
+from fractal_server.app.routes.api.v1._aux_functions import (
+    _workflow_insert_task,
+)
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 
@@ -114,7 +117,7 @@ async def test_project_and_workflows(db):
 
     # test relationships
     assert db_workflow1.project_id == db_project.id
-    assert db_workflow1.project == db_project
+    assert db_workflow1.project.model_dump() == db_project.model_dump()
     # test defaults
     assert db_workflow1.task_list == []
 
@@ -134,7 +137,7 @@ async def test_project_and_workflows(db):
     assert db_workflow1.name == workflow1.name
     assert db_workflow2.name == workflow2.name
     assert db_workflow2.project_id == db_project.id
-    assert db_workflow2.project == db_project
+    assert db_workflow2.project.model_dump() == db_project.model_dump()
 
     # delete just one workflow
     await db.delete(db_workflow2)
@@ -170,23 +173,13 @@ async def test_project_and_workflows(db):
 
 
 async def test_workflows_tasks_and_workflowtasks(db):
-    # DB accepts totally empty WorkflowTasks
-    db.add(WorkflowTask())
-    await db.commit()
-    db.expunge_all()
-    wftask_query = await db.execute(select(WorkflowTask))
-    db_wftask = wftask_query.scalars().one()
-    # test defaults
-    assert db_wftask.task_id is None
-    assert db_wftask.meta is None
-    assert db_wftask.args is None
-    assert db_wftask.workflow_id is None
-    assert db_wftask.order is None
-    assert db_wftask.task is None
-    # delete
-    await db.delete(db_wftask)
-    wftask_query = await db.execute(select(WorkflowTask))
-    assert wftask_query.scalars().one_or_none() is None
+
+    # DB does not accept totally empty WorkflowTasks
+    with pytest.raises(IntegrityError):
+        empty_workflow = WorkflowTask()
+        db.add(empty_workflow)
+        await db.commit()
+    await db.rollback()
 
     project = Project(name="project")
     workflow = Workflow(name="workflow", project=project)
@@ -231,8 +224,12 @@ async def test_workflows_tasks_and_workflowtasks(db):
     task4 = Task(**tasks_common_args, source="source4")
     db.add(task4)
     await db.commit()
-    await db_workflow.insert_task(
-        db=db, task_id=task4.id, order=1, meta={"meta": "test"}
+    await _workflow_insert_task(
+        workflow_id=db_workflow.id,
+        task_id=task4.id,
+        db=db,
+        order=1,
+        meta={"meta": "test"},
     )
     db.expunge_all()
 
@@ -271,7 +268,7 @@ async def test_project_and_datasets(db):
 
     # test relationships
     assert db_dataset1.project_id == db_project.id
-    assert db_dataset1.project == db_project
+    assert db_dataset1.project.model_dump() == db_project.model_dump()
     # test defaults
     assert db_dataset1.type is None
     assert db_dataset1.read_only is False
@@ -295,7 +292,7 @@ async def test_project_and_datasets(db):
     assert db_dataset1.name == dataset1.name
     assert db_dataset2.name == dataset2.name
     assert db_dataset2.project_id == db_project.id
-    assert db_dataset2.project == db_project
+    assert db_dataset2.project.model_dump() == db_project.model_dump()
 
     # delete just one dataset
     await db.delete(db_dataset2)
@@ -570,12 +567,12 @@ async def test_project_name_not_unique(MockCurrentUser, db, project_factory):
     res = await db.execute(stm)
     project_list = res.scalars().all()
     assert len(project_list) == 2
-    assert p0 in project_list
-    assert p1 in project_list
+    assert p0.model_dump() in [p.model_dump() for p in project_list]
+    assert p1.model_dump() in [p.model_dump() for p in project_list]
 
 
 async def test_task_workflow_association(
-    db, project_factory, MockCurrentUser, task_factory
+    project_factory, MockCurrentUser, task_factory, db
 ):
     async with MockCurrentUser() as user:
         project = await project_factory(user)
@@ -584,13 +581,28 @@ async def test_task_workflow_association(
 
         wf = Workflow(name="my wfl", project_id=project.id)
         args = dict(arg="test arg")
-        await wf.insert_task(t0.id, db=db, args=args)
 
         db.add(wf)
         await db.commit()
         await db.refresh(wf)
 
+        # insert_task fail if Workflow with workflow_id is not found
+        with pytest.raises(ValueError):
+            await _workflow_insert_task(
+                workflow_id=12345, task_id=t0.id, db=db, args=args
+            )
+        # insert_task fail if Task with task_id is not found
+        with pytest.raises(ValueError):
+            await _workflow_insert_task(
+                workflow_id=wf.id, task_id=12345, db=db, args=args
+            )
+
+        await _workflow_insert_task(
+            workflow_id=wf.id, task_id=t0.id, db=db, args=args
+        )
+
         debug(wf)
+
         assert wf.task_list[0].args == args
         # check workflow
         assert len(wf.task_list) == 1
@@ -607,7 +619,9 @@ async def test_task_workflow_association(
         assert link.task_id == t0.id
 
         # Insert at position 0
-        await wf.insert_task(t1.id, order=0, db=db)
+        await _workflow_insert_task(
+            workflow_id=wf.id, task_id=t1.id, db=db, order=0
+        )
         db.add(wf)
         await db.commit()
         await db.refresh(wf)
@@ -676,14 +690,27 @@ async def test_workflow_insert_task_with_args_schema(
         # Create project and workflow
         project = await project_factory(user)
         wf = Workflow(name="my wfl", project_id=project.id)
-
-        # Insert task into workflow, without/with additional args
-        await wf.insert_task(t0.id, db=db)
-        await wf.insert_task(t0.id, db=db, args=dict(arg_default_one="two"))
-        await wf.insert_task(t0.id, db=db, args=dict(arg_default_none="three"))
         db.add(wf)
         await db.commit()
         await db.refresh(wf)
+
+        # Insert task into workflow, without/with additional args
+        db.add(wf)
+        await db.commit()
+        await db.refresh(wf)
+        await _workflow_insert_task(workflow_id=wf.id, task_id=t0.id, db=db)
+        await _workflow_insert_task(
+            workflow_id=wf.id,
+            task_id=t0.id,
+            db=db,
+            args=dict(arg_default_one="two"),
+        )
+        await _workflow_insert_task(
+            workflow_id=wf.id,
+            task_id=t0.id,
+            db=db,
+            args=dict(arg_default_none="three"),
+        )
 
         # Verify taht args were set correctly
         wftask1, wftask2, wftask3 = wf.task_list[:]
@@ -711,11 +738,11 @@ async def test_workflow_insert_task_with_args_schema(
             source="source1", args_schema=invalid_args_schema
         )
 
-        # Insert task with invalid args_schema into workflow
-        await wf.insert_task(t1.id, db=db)
         db.add(wf)
         await db.commit()
         await db.refresh(wf)
+        # Insert task with invalid args_schema into workflow
+        await _workflow_insert_task(workflow_id=wf.id, task_id=t1.id, db=db)
         wftask4 = wf.task_list[-1]
         debug(wftask4)
         assert wftask4.args is None
@@ -745,11 +772,10 @@ async def test_cascade_delete_workflow(
         t0 = await task_factory(source="source0")
         t1 = await task_factory(source="source1")
 
-        await workflow.insert_task(t0.id, db=db)
-        await workflow.insert_task(t1.id, db=db)
+        await _workflow_insert_task(workflow_id=wf_id, task_id=t0.id, db=db)
+        await _workflow_insert_task(workflow_id=wf_id, task_id=t1.id, db=db)
 
         await db.refresh(workflow)
-
         before_delete_wft_ids = [_wft.id for _wft in workflow.task_list]
 
         await db.delete(workflow)
@@ -861,8 +887,16 @@ async def test_insert_task_with_meta_none(
         project = await project_factory(user)
         t0 = await task_factory(source="source0", meta=None)
         wf = Workflow(name="my wfl", project_id=project.id)
+        db.add(wf)
+        await db.commit()
+        await db.refresh(wf)
         args = dict(arg="test arg")
-        await wf.insert_task(t0.id, db=db, args=args)
+        db.add(wf)
+        await db.commit()
+        await db.refresh(wf)
+        await _workflow_insert_task(
+            workflow_id=wf.id, task_id=t0.id, db=db, args=args
+        )
 
 
 async def test_project_relationships(db):

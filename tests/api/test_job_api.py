@@ -4,11 +4,13 @@ from zipfile import ZipFile
 import pytest
 from devtools import debug
 
+from fractal_server.app.routes.api.v1._aux_functions import (
+    _workflow_insert_task,
+)
 from fractal_server.app.runner import _backends
 from fractal_server.app.runner._common import SHUTDOWN_FILENAME
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
-
 
 PREFIX = "/api/v1"
 
@@ -36,7 +38,7 @@ async def test_stop_job(
         wf = await workflow_factory(project_id=project.id)
         t = await task_factory(name="task", source="source")
         ds = await dataset_factory(project_id=project.id)
-        await wf.insert_task(task_id=t.id, db=db)
+        await _workflow_insert_task(workflow_id=wf.id, task_id=t.id, db=db)
         job = await job_factory(
             working_dir=tmp_path.as_posix(),
             project_id=project.id,
@@ -51,7 +53,7 @@ async def test_stop_job(
             f"api/v1/project/{project.id}/job/{job.id}/stop/"
         )
         if backend == "slurm":
-            assert res.status_code == 204
+            assert res.status_code == 202
 
             shutdown_file = tmp_path / SHUTDOWN_FILENAME
             debug(shutdown_file)
@@ -87,7 +89,9 @@ async def test_job_list(
         )
         workflow = await workflow_factory(project_id=prj.id)
         t = await task_factory()
-        await workflow.insert_task(task_id=t.id, db=db)
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=t.id, db=db
+        )
         job = await job_factory(
             project_id=prj.id,
             workflow_id=workflow.id,
@@ -126,7 +130,9 @@ async def test_job_download_logs(
         )
         workflow = await workflow_factory(project_id=prj.id)
         t = await task_factory()
-        await workflow.insert_task(task_id=t.id, db=db)
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=t.id, db=db
+        )
         working_dir = (tmp_path / "workflow_dir_for_zipping").as_posix()
         job = await job_factory(
             project_id=prj.id,
@@ -193,7 +199,9 @@ async def test_get_job_list(
         workflow2 = await workflow_factory(project_id=project.id)
 
         t = await task_factory()
-        await workflow.insert_task(task_id=t.id, db=db)
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=t.id, db=db
+        )
         dataset = await dataset_factory(project_id=project.id)
 
         N = 5
@@ -247,7 +255,9 @@ async def test_get_user_jobs(
 
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id)
-        await workflow.insert_task(task_id=task.id, db=db)
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
         dataset = await dataset_factory(project_id=project.id)
 
         for _ in range(3):
@@ -261,7 +271,9 @@ async def test_get_user_jobs(
 
         project2 = await project_factory(user)
         workflow2 = await workflow_factory(project_id=project.id)
-        await workflow2.insert_task(task_id=task.id, db=db)
+        await _workflow_insert_task(
+            workflow_id=workflow2.id, task_id=task.id, db=db
+        )
         dataset2 = await dataset_factory(project_id=project.id)
 
         for _ in range(2):
