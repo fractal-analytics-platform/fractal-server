@@ -173,23 +173,13 @@ async def test_project_and_workflows(db):
 
 
 async def test_workflows_tasks_and_workflowtasks(db):
-    # DB accepts totally empty WorkflowTasks
-    db.add(WorkflowTask())
-    await db.commit()
-    db.expunge_all()
-    wftask_query = await db.execute(select(WorkflowTask))
-    db_wftask = wftask_query.scalars().one()
-    # test defaults
-    assert db_wftask.task_id is None
-    assert db_wftask.meta is None
-    assert db_wftask.args is None
-    assert db_wftask.workflow_id is None
-    assert db_wftask.order is None
-    assert db_wftask.task is None
-    # delete
-    await db.delete(db_wftask)
-    wftask_query = await db.execute(select(WorkflowTask))
-    assert wftask_query.scalars().one_or_none() is None
+
+    # DB does not accept totally empty WorkflowTasks
+    with pytest.raises(IntegrityError):
+        empty_workflow = WorkflowTask()
+        db.add(empty_workflow)
+        await db.commit()
+    await db.rollback()
 
     project = Project(name="project")
     workflow = Workflow(name="workflow", project=project)
@@ -582,7 +572,7 @@ async def test_project_name_not_unique(MockCurrentUser, db, project_factory):
 
 
 async def test_task_workflow_association(
-    db, project_factory, MockCurrentUser, task_factory
+    project_factory, MockCurrentUser, task_factory, db
 ):
     async with MockCurrentUser() as user:
         project = await project_factory(user)
@@ -595,11 +585,23 @@ async def test_task_workflow_association(
         db.add(wf)
         await db.commit()
         await db.refresh(wf)
-        debug(wf)
+
+        # insert_task fail if Workflow with workflow_id is not found
+        with pytest.raises(ValueError):
+            await _workflow_insert_task(
+                workflow_id=12345, task_id=t0.id, db=db, args=args
+            )
+        # insert_task fail if Task with task_id is not found
+        with pytest.raises(ValueError):
+            await _workflow_insert_task(
+                workflow_id=wf.id, task_id=12345, db=db, args=args
+            )
 
         await _workflow_insert_task(
             workflow_id=wf.id, task_id=t0.id, db=db, args=args
         )
+
+        debug(wf)
 
         assert wf.task_list[0].args == args
         # check workflow
@@ -688,6 +690,9 @@ async def test_workflow_insert_task_with_args_schema(
         # Create project and workflow
         project = await project_factory(user)
         wf = Workflow(name="my wfl", project_id=project.id)
+        db.add(wf)
+        await db.commit()
+        await db.refresh(wf)
 
         # Insert task into workflow, without/with additional args
         db.add(wf)
@@ -882,6 +887,9 @@ async def test_insert_task_with_meta_none(
         project = await project_factory(user)
         t0 = await task_factory(source="source0", meta=None)
         wf = Workflow(name="my wfl", project_id=project.id)
+        db.add(wf)
+        await db.commit()
+        await db.refresh(wf)
         args = dict(arg="test arg")
         db.add(wf)
         await db.commit()
