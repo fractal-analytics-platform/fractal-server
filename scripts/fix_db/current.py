@@ -5,6 +5,7 @@ If the corresponding project still exists, set the project_dump.
 import json
 import logging
 from datetime import datetime
+from datetime import timezone
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -13,41 +14,50 @@ from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.job import ApplyWorkflow
 from fractal_server.app.models.project import Project
 from fractal_server.app.schemas.applyworkflow import ApplyWorkflowRead
-from fractal_server.app.schemas.applyworkflow import ProjectDump
+from fractal_server.app.schemas.dumps import ProjectDump
 from fractal_server.app.schemas.project import ProjectRead
+
+
+REFERENCE_TIMESTAMP = datetime(2000, 1, 1, tzinfo=timezone.utc)
+REFERENCE_TIMESTAMP_STRING = str(REFERENCE_TIMESTAMP)
+
 
 with next(get_sync_db()) as db:
     # Get list of all projects with their related job
     stm = select(Project)
     projects = db.execute(stm).scalars().all()
     for project in projects:
-        if project.timestamp_created == str(datetime(1, 1, 1, 0, 0, 0, 0)):
+        timestamp_created = project.timestamp_created
+        if timestamp_created != REFERENCE_TIMESTAMP:
             logging.warning(
-                f"[Project {project.id:4d}] "
-                f"timestamp_created={project.timestamp_created}, "
-                "use dummy data"
+                f"[Project {project.id:4d}] {timestamp_created=} -> skip."
+            )
+        else:
+            logging.warning(
+                f"[Project {project.id:4d}] {timestamp_created=} -> "
+                "replace with job timestamps."
             )
             stm = select(ApplyWorkflow).where(
                 ApplyWorkflow.project_id == project.id
             )
             jobs = db.execute(stm).scalars().all()
+            if len(jobs) == 0:
+                logging.warning(
+                    f"[Project {project.id:4d}] No jobs found, skip."
+                )
+                continue
             timestamp_created = min([job.start_timestamp for job in jobs])
             logging.warning(
-                f"[Project {project.id:4d}] setting {timestamp_created=}"
+                f"[Project {project.id:4d}] New value: {timestamp_created=}"
             )
             project.timestamp_created = timestamp_created
             db.add(project)
             db.commit()
             db.refresh(project)
             db.expunge(project)
-            ProjectRead(**project.dict())
-        else:
-            logging.warning(
-                f"[Project {project.id:4d}] timestamp_created attribute valid,"
-                " skip"
-            )
+            ProjectRead(**project.model_dump())
 
-    # Get list of jobs
+    # Get list of all jobs
     stm = select(ApplyWorkflow)
     res = db.execute(stm)
     jobs = res.scalars().all()
@@ -68,7 +78,7 @@ with next(get_sync_db()) as db:
                     id=-1,
                     name="__UNDEFINED__",
                     read_only=True,
-                    timestamp_created=str(datetime(1, 1, 1, 0, 0, 0)),
+                    timestamp_created=REFERENCE_TIMESTAMP_STRING,
                 )
             else:
                 project = db.get(Project, job.project_id)
@@ -89,4 +99,4 @@ with next(get_sync_db()) as db:
             # Also validate that the row can be cast into ApplyWorkflowRead
             db.refresh(job)
             db.expunge(job)
-            ApplyWorkflowRead(**job.dict())
+            ApplyWorkflowRead(**job.model_dump())

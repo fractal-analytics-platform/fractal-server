@@ -43,6 +43,7 @@ def _process_workflow(
     first_task_index: int,
     last_task_index: int,
     slurm_user: Optional[str] = None,
+    slurm_account: Optional[str] = None,
     user_cache_dir: str,
     worker_init: Optional[Union[str, list[str]]] = None,
 ) -> dict[str, Any]:
@@ -75,6 +76,7 @@ def _process_workflow(
         working_dir=workflow_dir,
         working_dir_user=workflow_dir_user,
         common_script_lines=worker_init,
+        slurm_account=slurm_account,
     ) as executor:
         output_task_pars = execute_tasks(
             executor=executor,
@@ -110,6 +112,7 @@ async def process_workflow(
     workflow_dir_user: Optional[Path] = None,
     user_cache_dir: Optional[str] = None,
     slurm_user: Optional[str] = None,
+    slurm_account: Optional[str] = None,
     worker_init: Optional[str] = None,
     first_task_index: Optional[int] = None,
     last_task_index: Optional[int] = None,
@@ -138,6 +141,7 @@ async def process_workflow(
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
         slurm_user=slurm_user,
+        slurm_account=slurm_account,
         user_cache_dir=user_cache_dir,
         worker_init=worker_init,
         first_task_index=first_task_index,
