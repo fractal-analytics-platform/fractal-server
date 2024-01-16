@@ -15,6 +15,9 @@ on:
 
 
 env:
+  # The DB `${ROOTDIR}/clean_db_fractal_${TARGET_VERSION}.sql` is compatible
+  # with the TARGET_VERSION of fractal-server.
+  # Here we test the script that upgrades the DB to the current version.
   TARGET_VERSION: 1.4.2
   ROOTDIR: tests/data/testing_databases
 
@@ -49,7 +52,7 @@ jobs:
       - name: Load database dump into postgres database
         env:
           PGPASSWORD: postgres
-        run: psql -U postgres -h localhost -d fractal_test -f $ROOTDIR/clean_db_fractal_${TARGET_VERSION}.sql
+        run: psql -U postgres -h localhost -d fractal_test -f ${ROOTDIR}/clean_db_fractal_${TARGET_VERSION}.sql
 
       - name: Install poetry
         run: pipx install poetry==1.7.1
