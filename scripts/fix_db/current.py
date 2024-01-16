@@ -11,11 +11,10 @@ from fractal_server.app.models import Dataset
 from fractal_server.app.models import Project
 from fractal_server.app.models import Workflow
 from fractal_server.app.schemas import ApplyWorkflowRead
+from fractal_server.app.schemas import WorkflowRead
+from fractal_server.app.schemas.dataset import DatasetRead
 from fractal_server.app.schemas.dumps import DatasetDump
 from fractal_server.app.schemas.dumps import WorkflowDump
-
-# from fractal_server.app.schemas.dataset import DatasetRead
-# from fractal_server.app.schemas import WorkflowRead
 
 
 REFERENCE_TIMESTAMP = datetime(2000, 1, 1, tzinfo=timezone.utc)
@@ -53,8 +52,7 @@ with next(get_sync_db()) as db:
             db.commit()
             db.refresh(workflow)
             db.expunge(workflow)
-            # Missing `task_list` and `project``
-            # WorkflowRead(**workflow.model_dump())
+            WorkflowRead(**workflow.model_dump())
 
     # add timestamp_created to Dataset
     stm = select(Dataset)
@@ -87,8 +85,7 @@ with next(get_sync_db()) as db:
             db.commit()
             db.refresh(dataset)
             db.expunge(dataset)
-            # missing relationships
-            # DatasetRead(**workflow.model_dump())
+            DatasetRead(**dataset.model_dump())
 
     # add timestamp_created to Job.workflow_dump and Job.in/output_dataset_dump
     stm = select(ApplyWorkflow)
