@@ -2,6 +2,10 @@
 
 # 1.4.3
 
+> **WARNINGs**:
+>
+> 1. This update requires running a fix-db script, available at https://raw.githubusercontent.com/fractal-analytics-platform/fractal-server/main/scripts/fix_db/current.py.
+
 * API:
     * Add `timestamp_created` to `WorkflowRead`, `WorkflowDump`, `DatasetRead` and `DatasetDump` (\#1152).
 * Database:
