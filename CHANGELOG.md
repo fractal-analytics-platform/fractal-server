@@ -10,9 +10,9 @@
     * Add `timestamp_created` to `WorkflowRead`, `WorkflowDump`, `DatasetRead` and `DatasetDump` (\#1152).
 * Database:
     * Add `Workflow.timestamp_created` and `Dataset.timestamp_created` columns (\#1152).
+    * Start a new `current.py` fix-db script (\#1152).
 * Testing:
     * Update `clean_db_fractal_1.4.1.sql` to `clean_db_fractal_1.4.2.sql`, and change `migrations.yml` target version (\#1152).
-    * Start a new `current.py` fix-db script (\#1152).
 
 
 # 1.4.2
