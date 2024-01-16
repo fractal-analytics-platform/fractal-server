@@ -4,6 +4,8 @@
 
 * API:
     * Improve validation of `UserCreate.slurm_accounts` (\#1162).
+* API (internal):
+    * Change the class method `Workflow.insert_task` into the auxiliary function `_workflow_insert_task` (\#1149).
 
 # 1.4.2
 

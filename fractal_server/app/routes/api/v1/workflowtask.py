@@ -30,6 +30,7 @@ from ....security import current_active_user
 from ....security import User
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import _get_workflow_task_check_owner
+from ._aux_functions import _workflow_insert_task
 
 router = APIRouter()
 
@@ -64,8 +65,9 @@ async def create_workflowtask(
         )
 
     async with db:
-        workflow_task = await workflow.insert_task(
+        workflow_task = await _workflow_insert_task(
             **new_task.dict(),
+            workflow_id=workflow.id,
             task_id=task_id,
             db=db,
         )
