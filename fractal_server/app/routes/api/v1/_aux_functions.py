@@ -383,9 +383,9 @@ def _get_active_jobs_statement() -> SelectOfScalar:
 
 
 async def _workflow_insert_task(
+    *,
     workflow_id: int,
     task_id: int,
-    *,
     args: Optional[dict[str, Any]] = None,
     meta: Optional[dict[str, Any]] = None,
     order: Optional[int] = None,
