@@ -39,6 +39,7 @@ from ._aux_functions import _check_workflow_exists
 from ._aux_functions import _get_active_jobs_statement
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_workflow_check_owner
+from ._aux_functions import _workflow_insert_task
 
 
 router = APIRouter()
@@ -323,8 +324,9 @@ async def import_workflow(
                 **wf_task.dict(exclude_none=True),
             )
             # Insert task
-            await db_workflow.insert_task(
+            await _workflow_insert_task(
                 **new_wf_task.dict(),
+                workflow_id=db_workflow.id,
                 task_id=task_id,
                 db=db,
             )

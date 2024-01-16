@@ -7,6 +7,9 @@ from devtools import debug
 
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import ApplyWorkflow
+from fractal_server.app.routes.api.v1._aux_functions import (
+    _workflow_insert_task,
+)
 from fractal_server.app.runner import submit_workflow
 from fractal_server.app.schemas import JobStatusType
 
@@ -30,7 +33,9 @@ async def test_success_submit_workflows(
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id)
         task = await task_factory(name="task", source="task_source")
-        await workflow.insert_task(task_id=task.id, db=db)
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
         dataset = await dataset_factory(project_id=project.id)
         job0 = await job_factory(
             working_dir=tmp_path.as_posix(),
@@ -90,7 +95,9 @@ async def test_fail_submit_workflows_at_same_time(
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id)
         task = await task_factory(name="task", source="task_source")
-        await workflow.insert_task(task_id=task.id, db=db)
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
         dataset = await dataset_factory(project_id=project.id)
         job = await job_factory(
             working_dir=tmp_path.as_posix(),
@@ -142,7 +149,9 @@ async def test_fail_submit_workflows_wrong_IDs(
         project = await project_factory(user)
         workflow = await workflow_factory(project_id=project.id)
         task = await task_factory(name="task", source="task_source")
-        await workflow.insert_task(task_id=task.id, db=db)
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
         dataset = await dataset_factory(project_id=project.id)
         job = await job_factory(
             working_dir=tmp_path.as_posix(),

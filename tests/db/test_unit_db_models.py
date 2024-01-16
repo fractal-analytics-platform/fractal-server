@@ -11,6 +11,9 @@ from fractal_server.app.models import State
 from fractal_server.app.models import Task
 from fractal_server.app.models import Workflow
 from fractal_server.app.models import WorkflowTask
+from fractal_server.app.routes.api.v1._aux_functions import (
+    _workflow_insert_task,
+)
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 
@@ -221,8 +224,12 @@ async def test_workflows_tasks_and_workflowtasks(db):
     task4 = Task(**tasks_common_args, source="source4")
     db.add(task4)
     await db.commit()
-    await db_workflow.insert_task(
-        db=db, task_id=task4.id, order=1, meta={"meta": "test"}
+    await _workflow_insert_task(
+        workflow_id=db_workflow.id,
+        task_id=task4.id,
+        db=db,
+        order=1,
+        meta={"meta": "test"},
     )
     db.expunge_all()
 
@@ -578,7 +585,9 @@ async def test_task_workflow_association(
 
         # insert_task fail if Workflow has not an id yet
         with pytest.raises(ValueError):
-            await wf.insert_task(t0.id, db=db, args=args)
+            await _workflow_insert_task(
+                workflow_id=wf.id, task_id=t0.id, db=db, args=args
+            )
 
         db.add(wf)
         await db.commit()
@@ -586,11 +595,20 @@ async def test_task_workflow_association(
 
         # insert_task fail if Task with task_id is not found
         with pytest.raises(ValueError):
-            await wf.insert_task(12345, db=db, args=args)
+            await _workflow_insert_task(
+                workflow_id=wf.id, task_id=12345, db=db, args=args
+            )
 
-        await wf.insert_task(t0.id, db=db, args=args)
+        await _workflow_insert_task(
+            workflow_id=wf.id, task_id=t0.id, db=db, args=args
+        )
 
         debug(wf)
+
+        await _workflow_insert_task(
+            workflow_id=wf.id, task_id=t0.id, db=db, args=args
+        )
+
         assert wf.task_list[0].args == args
         # check workflow
         assert len(wf.task_list) == 1
@@ -607,7 +625,9 @@ async def test_task_workflow_association(
         assert link.task_id == t0.id
 
         # Insert at position 0
-        await wf.insert_task(t1.id, order=0, db=db)
+        await _workflow_insert_task(
+            workflow_id=wf.id, task_id=t1.id, db=db, order=0
+        )
         db.add(wf)
         await db.commit()
         await db.refresh(wf)
@@ -681,9 +701,22 @@ async def test_workflow_insert_task_with_args_schema(
         await db.refresh(wf)
 
         # Insert task into workflow, without/with additional args
-        await wf.insert_task(t0.id, db=db)
-        await wf.insert_task(t0.id, db=db, args=dict(arg_default_one="two"))
-        await wf.insert_task(t0.id, db=db, args=dict(arg_default_none="three"))
+        db.add(wf)
+        await db.commit()
+        await db.refresh(wf)
+        await _workflow_insert_task(workflow_id=wf.id, task_id=t0.id, db=db)
+        await _workflow_insert_task(
+            workflow_id=wf.id,
+            task_id=t0.id,
+            db=db,
+            args=dict(arg_default_one="two"),
+        )
+        await _workflow_insert_task(
+            workflow_id=wf.id,
+            task_id=t0.id,
+            db=db,
+            args=dict(arg_default_none="three"),
+        )
 
         # Verify taht args were set correctly
         wftask1, wftask2, wftask3 = wf.task_list[:]
@@ -711,11 +744,11 @@ async def test_workflow_insert_task_with_args_schema(
             source="source1", args_schema=invalid_args_schema
         )
 
-        # Insert task with invalid args_schema into workflow
-        await wf.insert_task(t1.id, db=db)
         db.add(wf)
         await db.commit()
         await db.refresh(wf)
+        # Insert task with invalid args_schema into workflow
+        await _workflow_insert_task(workflow_id=wf.id, task_id=t1.id, db=db)
         wftask4 = wf.task_list[-1]
         debug(wftask4)
         assert wftask4.args is None
@@ -745,11 +778,10 @@ async def test_cascade_delete_workflow(
         t0 = await task_factory(source="source0")
         t1 = await task_factory(source="source1")
 
-        await workflow.insert_task(t0.id, db=db)
-        await workflow.insert_task(t1.id, db=db)
+        await _workflow_insert_task(workflow_id=wf_id, task_id=t0.id, db=db)
+        await _workflow_insert_task(workflow_id=wf_id, task_id=t1.id, db=db)
 
         await db.refresh(workflow)
-
         before_delete_wft_ids = [_wft.id for _wft in workflow.task_list]
 
         await db.delete(workflow)
@@ -865,7 +897,12 @@ async def test_insert_task_with_meta_none(
         await db.commit()
         await db.refresh(wf)
         args = dict(arg="test arg")
-        await wf.insert_task(t0.id, db=db, args=args)
+        db.add(wf)
+        await db.commit()
+        await db.refresh(wf)
+        await _workflow_insert_task(
+            workflow_id=wf.id, task_id=t0.id, db=db, args=args
+        )
 
 
 async def test_project_relationships(db):

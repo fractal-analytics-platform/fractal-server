@@ -10,6 +10,9 @@ from fractal_server.app.models import WorkflowExport
 from fractal_server.app.models import WorkflowImport
 from fractal_server.app.models import WorkflowRead
 from fractal_server.app.models import WorkflowTask
+from fractal_server.app.routes.api.v1._aux_functions import (
+    _workflow_insert_task,
+)
 from fractal_server.app.schemas import JobStatusType
 
 
@@ -156,10 +159,18 @@ async def test_delete_workflow(
         wf_not_deletable_1 = await workflow_factory(project_id=project.id)
         wf_not_deletable_2 = await workflow_factory(project_id=project.id)
         task = await task_factory(name="task", source="source")
-        await wf_deletable_1.insert_task(task_id=task.id, db=db)
-        await wf_deletable_2.insert_task(task_id=task.id, db=db)
-        await wf_not_deletable_1.insert_task(task_id=task.id, db=db)
-        await wf_not_deletable_2.insert_task(task_id=task.id, db=db)
+        await _workflow_insert_task(
+            workflow_id=wf_deletable_1.id, task_id=task.id, db=db
+        )
+        await _workflow_insert_task(
+            workflow_id=wf_deletable_2.id, task_id=task.id, db=db
+        )
+        await _workflow_insert_task(
+            workflow_id=wf_not_deletable_1.id, task_id=task.id, db=db
+        )
+        await _workflow_insert_task(
+            workflow_id=wf_not_deletable_2.id, task_id=task.id, db=db
+        )
         dataset = await dataset_factory(project_id=project.id)
         common_args = {
             "project_id": project.id,
@@ -1083,7 +1094,11 @@ async def test_delete_workflow_with_job(
         # Create a workflow and a job in relationship with it
         workflow = await workflow_factory(project_id=project.id)
         task = await task_factory(name="1", source="1")
-        await workflow.insert_task(task.id, db=db)
+
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
+
         input_ds = await dataset_factory(project_id=project.id)
         output_ds = await dataset_factory(project_id=project.id)
 
