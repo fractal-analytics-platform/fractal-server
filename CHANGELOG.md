@@ -1,8 +1,8 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
-# 1.4.3
+# 1.4.3 (unreleased)
 
-* API (internal):
+* API:
     * Improve validation of `UserCreate.slurm_accounts` (\#1162).
 
 # 1.4.2
