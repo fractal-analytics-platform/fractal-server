@@ -156,7 +156,7 @@ async def test_full_workflow(
             f"&output_dataset_id={output_dataset_id}"
         )
         debug(url)
-        res = await client.post(url, json={})
+        res = await client.post(url, json=dict(working_dir="/tmp/test"))
         job_data = res.json()
         debug(job_data)
         assert res.status_code == 202

@@ -43,6 +43,7 @@ def test_apply_workflow_create():
     # ApplyWorkflowCreate
     valid_args = dict(
         worker_init="worker init",
+        working_dir="/tmp/user",
         first_task_index=1,
         last_task_index=10,
         slurm_account="slurm account",
@@ -53,6 +54,12 @@ def test_apply_workflow_create():
         ApplyWorkflowCreate(**invalid_args)
     with pytest.raises(ValueError):
         invalid_args = {**valid_args, "worker_init": None}
+        ApplyWorkflowCreate(**invalid_args)
+    with pytest.raises(ValueError):
+        invalid_args = {**valid_args, "working_dir": "  "}
+        ApplyWorkflowCreate(**invalid_args)
+    with pytest.raises(ValueError):
+        invalid_args = {**valid_args, "working_dir": None}
         ApplyWorkflowCreate(**invalid_args)
     with pytest.raises(ValueError):
         invalid_args = {**valid_args, "first_task_index": -1}
@@ -102,6 +109,7 @@ def test_apply_workflow_read():
         input_dataset_dump=DATASET_DUMP,
         output_dataset_dump=DATASET_DUMP,
         user_email="test@fractal.com",
+        working_dir="/tmp/test",
     )
     assert isinstance(job1.workflow_dump, WorkflowDump)
     assert isinstance(job1.input_dataset_dump, DatasetDump)
@@ -117,6 +125,7 @@ def test_apply_workflow_read():
         input_dataset_dump=DATASET_DUMP,
         output_dataset_dump=DATASET_DUMP,
         user_email="test@fractal.com",
+        working_dir="/tmp/test",
     )
     assert job2.project_id is None
     assert job2.input_dataset_id is None

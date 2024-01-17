@@ -22,9 +22,9 @@ async def test_project_apply_failures_non_verified_user(
     async with MockCurrentUser(user_kwargs=dict(is_verified=False)):
         res = await client.post(
             f"{PREFIX}/project/123/workflow/123/apply/"
-            f"?input_dataset_id=123"
-            f"&output_dataset_id=123",
-            json={},
+            "?input_dataset_id=123"
+            "&output_dataset_id=123",
+            json=dict(working_dir="/tmp/test"),
         )
         assert res.status_code == 401
 
@@ -79,7 +79,7 @@ async def test_project_apply_failures(
             f"{PREFIX}/project/{project1.id}/workflow/123/apply/"
             f"?input_dataset_id={input_dataset.id}"
             f"&output_dataset_id={output_dataset.id}",
-            json={},
+            json=dict(working_dir="/tmp/test"),
         )
         debug(res.json())
         assert res.status_code == 404
@@ -89,7 +89,7 @@ async def test_project_apply_failures(
             f"{PREFIX}/project/{project1.id}/workflow/{workflow3.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
             f"&output_dataset_id={output_dataset.id}",
-            json={},
+            json=dict(working_dir="/tmp/test"),
         )
         debug(res.json())
         assert res.status_code == 422
@@ -98,7 +98,7 @@ async def test_project_apply_failures(
         res = await client.post(
             f"{PREFIX}/project/{project1.id}/workflow/{workflow1.id}/apply/"
             f"?input_dataset_id={input_dataset.id}&output_dataset_id=123",
-            json={},
+            json=dict(working_dir="/tmp/test"),
         )
         debug(res.json())
         assert res.status_code == 404
@@ -107,7 +107,7 @@ async def test_project_apply_failures(
         res = await client.post(
             f"{PREFIX}/project/{project1.id}/workflow/{workflow1.id}/apply/"
             f"?input_dataset_id={input_dataset.id}",
-            json={},
+            json=dict(working_dir="/tmp/test"),
         )
         debug(res.json())
         assert res.status_code == 422
@@ -117,7 +117,7 @@ async def test_project_apply_failures(
             f"{PREFIX}/project/{project1.id}/workflow/{workflow1.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
             f"&output_dataset_id={output_dataset_read_only.id}",
-            json={},
+            json=dict(working_dir="/tmp/test"),
         )
         debug(res.json())
         assert res.status_code == 422
@@ -128,7 +128,7 @@ async def test_project_apply_failures(
             f"{PREFIX}/project/{project1.id}/workflow/{workflow1.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
             f"&output_dataset_id={output_dataset_wrong_type.id}",
-            json={},
+            json=dict(working_dir="/tmp/test"),
         )
         debug(res.json())
         assert res.status_code == 422
@@ -139,7 +139,7 @@ async def test_project_apply_failures(
             f"{PREFIX}/project/{project1.id}/workflow/{workflow1.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
             f"&output_dataset_id={output_dataset_two_resources.id}",
-            json={},
+            json=dict(working_dir="/tmp/test"),
         )
         debug(res.json())
         assert res.status_code == 422
@@ -150,7 +150,7 @@ async def test_project_apply_failures(
             f"{PREFIX}/project/{project1.id}/workflow/{workflow2.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
             f"&output_dataset_id={output_dataset.id}",
-            json={},
+            json=dict(working_dir="/tmp/test"),
         )
         debug(res.json())
         assert res.status_code == 422
@@ -224,7 +224,7 @@ async def test_project_apply_existing_job(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
             f"&output_dataset_id={output_dataset_A.id}",
-            json={},
+            json=dict(working_dir="/tmp/test"),
         )
         debug(res.json())
         assert res.status_code == 202
@@ -235,7 +235,7 @@ async def test_project_apply_existing_job(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
             f"&output_dataset_id={output_dataset_B.id}",
-            json={},
+            json=dict(working_dir="/tmp/test"),
         )
         debug(res.json())
         assert res.status_code == 422
@@ -295,7 +295,7 @@ async def test_project_apply_missing_user_attributes(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
             f"&output_dataset_id={output_dataset.id}",
-            json={},
+            json=dict(working_dir="/tmp/test"),
         )
         debug(res.json())
         assert res.status_code == 422
@@ -310,7 +310,7 @@ async def test_project_apply_missing_user_attributes(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
             f"&output_dataset_id={output_dataset.id}",
-            json={},
+            json=dict(working_dir="/tmp/test"),
         )
         debug(res.json())
         assert res.status_code == 422
@@ -347,7 +347,7 @@ async def test_project_apply_missing_resources(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
             f"&output_dataset_id={output_dataset.id}",
-            json={},
+            json=dict(working_dir="/tmp/test"),
         )
 
         debug(res.json())
@@ -405,7 +405,7 @@ async def test_project_apply_workflow_subset(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={dataset1.id}"
             f"&output_dataset_id={dataset3.id}",
-            json={},
+            json=dict(working_dir="/tmp/test"),
         )
         debug(res.json())
         job_id = res.json()["id"]
@@ -420,7 +420,9 @@ async def test_project_apply_workflow_subset(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={dataset1.id}"
             f"&output_dataset_id={dataset2.id}",
-            json=dict(first_task_index=0, last_task_index=0),
+            json=dict(
+                first_task_index=0, last_task_index=0, working_dir="/tmp/test"
+            ),
         )
         debug(res.json())
         job_id = res.json()["id"]
@@ -436,7 +438,9 @@ async def test_project_apply_workflow_subset(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={dataset2.id}"
             f"&output_dataset_id={dataset3.id}",
-            json=dict(first_task_index=1, last_task_index=1),
+            json=dict(
+                first_task_index=1, last_task_index=1, working_dir="/tmp/test"
+            ),
         )
         debug(res.json())
         job_id = res.json()["id"]
@@ -452,7 +456,9 @@ async def test_project_apply_workflow_subset(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={dataset1.id}"
             f"&output_dataset_id={dataset3.id}",
-            json=dict(first_task_index=0, last_task_index=0),
+            json=dict(
+                first_task_index=0, last_task_index=0, working_dir="/tmp/test"
+            ),
         )
         debug(res.json())
         assert res.status_code == 422
@@ -462,7 +468,9 @@ async def test_project_apply_workflow_subset(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={dataset1.id}"
             f"&output_dataset_id={dataset3.id}",
-            json=dict(first_task_index=-2, last_task_index=1),
+            json=dict(
+                first_task_index=-2, last_task_index=1, working_dir="/tmp/test"
+            ),
         )
         debug(res.json())
         assert res.status_code == 422
@@ -472,7 +480,9 @@ async def test_project_apply_workflow_subset(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={dataset1.id}"
             f"&output_dataset_id={dataset3.id}",
-            json=dict(first_task_index=0, last_task_index=99),
+            json=dict(
+                first_task_index=0, last_task_index=99, working_dir="/tmp/test"
+            ),
         )
         debug(res.json())
         assert res.status_code == 422
@@ -482,7 +492,9 @@ async def test_project_apply_workflow_subset(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={dataset1.id}"
             f"&output_dataset_id={dataset3.id}",
-            json=dict(first_task_index=1, last_task_index=0),
+            json=dict(
+                first_task_index=1, last_task_index=0, working_dir="/tmp/test"
+            ),
         )
         debug(res.json())
         assert res.status_code == 422
@@ -492,7 +504,9 @@ async def test_project_apply_workflow_subset(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={dataset1.id}"
             f"&output_dataset_id={dataset3.id}",
-            json=dict(first_task_index=0, last_task_index=1),
+            json=dict(
+                first_task_index=0, last_task_index=1, working_dir="/tmp/test"
+            ),
         )
         expected_workflow_dump = WorkflowDump(
             **dict(
@@ -548,7 +562,7 @@ async def test_project_apply_slurm_account(
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={dataset.id}&output_dataset_id={dataset.id}",
-            json={},
+            json=dict(working_dir="/tmp/test"),
         )
         assert res.status_code == 202
         assert res.json()["slurm_account"] is None
@@ -557,7 +571,9 @@ async def test_project_apply_slurm_account(
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={dataset.id}&output_dataset_id={dataset.id}",
-            json=dict(slurm_account="NOT IN THE LIST"),
+            json=dict(
+                slurm_account="NOT IN THE LIST", working_dir="/tmp/test"
+            ),
         )
         assert res.status_code == 422
 
@@ -588,7 +604,7 @@ async def test_project_apply_slurm_account(
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={dataset.id}&output_dataset_id={dataset.id}",
-            json={},
+            json=dict(working_dir="/tmp/test"),
         )
         assert res.status_code == 202
         assert res.json()["slurm_account"] == SLURM_LIST[0]
@@ -599,7 +615,7 @@ async def test_project_apply_slurm_account(
                 f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
                 f"?input_dataset_id={dataset.id}"
                 f"&output_dataset_id={dataset.id}",
-                json=dict(slurm_account=account),
+                json=dict(slurm_account=account, working_dir="/tmp/test"),
             )
             assert res.status_code == 202
             assert res.json()["slurm_account"] == account
@@ -608,6 +624,8 @@ async def test_project_apply_slurm_account(
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={dataset.id}&output_dataset_id={dataset.id}",
-            json=dict(slurm_account="NOT IN THE LIST"),
+            json=dict(
+                slurm_account="NOT IN THE LIST", working_dir="/tmp/test"
+            ),
         )
         assert res.status_code == 422

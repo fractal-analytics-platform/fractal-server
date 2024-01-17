@@ -160,7 +160,7 @@ async def test_full_workflow(
             f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/apply/"
             f"?input_dataset_id={input_dataset_id}"
             f"&output_dataset_id={output_dataset_id}",
-            json={},
+            json=dict(working_dir="/tmp/test"),
         )
         job_data = res.json()
         debug(job_data)
@@ -311,7 +311,7 @@ async def test_failing_workflow_UnknownError(
             f"{PREFIX}/project/{project_id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
             f"&output_dataset_id={output_dataset.id}",
-            json={},
+            json=dict(working_dir="/tmp/test"),
         )
         job_data = res.json()
         assert res.status_code == 202
@@ -430,7 +430,7 @@ async def test_failing_workflow_TaskExecutionError(
             f"{PREFIX}/project/{project_id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
             f"&output_dataset_id={output_dataset.id}",
-            json={},
+            json=dict(working_dir="/tmp/test"),
         )
         job_data = res.json()
         assert res.status_code == 202
@@ -606,7 +606,7 @@ async def test_failing_workflow_JobExecutionError(
             f"{PREFIX}/project/{project_id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
             f"&output_dataset_id={output_dataset.id}",
-            json={},
+            json=dict(working_dir="/tmp/test"),
         )
         job_data = res_second_apply.json()
         debug(job_data)
@@ -697,7 +697,7 @@ async def test_non_python_task(
             f"{PREFIX}/project/{project_id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={dataset.id}"
             f"&output_dataset_id={dataset.id}",
-            json={},
+            json=dict(working_dir="/tmp/test"),
         )
         job_data = res.json()
         debug(job_data)
@@ -814,7 +814,7 @@ async def test_metadiff(
             f"{PREFIX}/project/{project_id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={dataset.id}"
             f"&output_dataset_id={dataset.id}",
-            json={},
+            json=dict(working_dir="/tmp/test"),
         )
         job_data = res.json()
         debug(job_data)
@@ -949,7 +949,7 @@ async def test_non_executable_task_command(
             f"{PREFIX}/project/{project_id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={dataset.id}"
             f"&output_dataset_id={dataset.id}",
-            json={},
+            json=dict(working_dir="/tmp/test"),
         )
         job_data = res.json()
         debug(job_data)
