@@ -77,7 +77,7 @@ jobs:
             poetry run coverage combine && \
             poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -k "tests/schema" && \
             poetry run coverage combine && \
-            poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -k "tests/unit" && \
+            poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -k "tests/unit"
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
