@@ -397,6 +397,7 @@ async def test_jobs(db):
         input_dataset_dump={},
         output_dataset_dump={},
         workflow_dump={},
+        working_dir="/tmp/user",
         first_task_index=0,
         last_task_index=0,
     )
