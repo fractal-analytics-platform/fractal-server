@@ -9,6 +9,8 @@
     * Change the class method `Workflow.insert_task` into the auxiliary function `_workflow_insert_task` (\#1149).
 * Database:
     * Make `WorkflowTask.workflow_id` and `WorfklowTask.task_id` not nullable (\#1137).
+* Dependencies:
+    * Update `python-dotenv` to version 0.21.0 (\#1172).
 
 # 1.4.2
 
