@@ -538,7 +538,7 @@ async def job_factory(db: AsyncSession):
             project_dump=json.loads(project.json(exclude={"user_list"})),
             last_task_index=last_task_index,
             first_task_index=first_task_index,
-            working_dir=working_dir,
+            working_dir=str(working_dir),
             worker_init="WORKER_INIT string",
             user_email="user@example.org",
         )
