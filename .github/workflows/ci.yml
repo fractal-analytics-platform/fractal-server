@@ -67,12 +67,12 @@ jobs:
 
       - name: Test with pytest
         run: |
-          poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest -k "tests/api" && \
-            poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest -k "tests/backend" && \
-            poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest -k "tests/db" && \
-            poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest -k "tests/others" && \
-            poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest -k "tests/schema" && \
-            poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest -k "tests/unit"
+          poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest -k tests/unit/*.py && \
+            poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest -k tests/schema/*.py && \
+            poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest -k tests/db/*.py && \
+            poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest -k tests/api/*.py && \
+            poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest -k tests/backend/*.py && \
+            poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest -k tests/*.py
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
