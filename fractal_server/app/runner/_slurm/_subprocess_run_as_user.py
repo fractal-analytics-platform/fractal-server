@@ -60,8 +60,8 @@ def _run_command_as_user(
     stdout = res.stdout.decode("utf-8")
     stderr = res.stderr.decode("utf-8")
     logger.debug(f"[_run_command_as_user] {res.returncode=}")
-    logger.debug(f"[_run_command_as_user] {res.stdout=}")
-    logger.debug(f"[_run_command_as_user] {res.stderr=}")
+    logger.debug(f"[_run_command_as_user] {stdout=}")
+    logger.debug(f"[_run_command_as_user] {stderr=}")
 
     if check and not res.returncode == 0:
         raise RuntimeError(
