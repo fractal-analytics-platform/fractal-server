@@ -53,6 +53,7 @@ class _ApplyWorkflowBase(BaseModel):
     """
 
     worker_init: Optional[str]
+    working_dir: str
 
 
 class ApplyWorkflowCreate(_ApplyWorkflowBase):
@@ -72,6 +73,10 @@ class ApplyWorkflowCreate(_ApplyWorkflowBase):
     # Validators
     _worker_init = validator("worker_init", allow_reuse=True)(
         valstr("worker_init")
+    )
+
+    _working_dir = validator("working_dir", allow_reuse=True)(
+        valstr("working_dir")
     )
 
     @validator("first_task_index", always=True)
@@ -148,7 +153,6 @@ class ApplyWorkflowRead(_ApplyWorkflowBase):
     end_timestamp: Optional[datetime]
     status: str
     log: Optional[str]
-    working_dir: str
     working_dir_user: Optional[str]
     first_task_index: Optional[int]
     last_task_index: Optional[int]
