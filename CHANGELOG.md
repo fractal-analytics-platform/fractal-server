@@ -10,7 +10,7 @@
 * Database:
     * Make `WorkflowTask.workflow_id` and `WorfklowTask.task_id` not nullable (\#1137).
 * Testing:
-    * Define the execution order of test modules inside `ci.yml` (\#1166).
+    * Reorganise the test directory into subdirectories, named according to the order in which we want the CI to execute them (\#1166).
 
 # 1.4.2
 
