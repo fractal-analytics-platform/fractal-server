@@ -53,7 +53,7 @@ with next(get_sync_db()) as db:
             db.refresh(workflow)
             db.expunge(workflow)
             WorkflowRead(
-                **workflow.model_dump(),
+                **workflow.model_dump(exclude={"task_list", "project"}),
                 task_list=workflow.task_list,
                 project=workflow.project,
             )
@@ -90,7 +90,7 @@ with next(get_sync_db()) as db:
             db.refresh(dataset)
             db.expunge(dataset)
             DatasetRead(
-                **dataset.model_dump(),
+                **dataset.model_dump(exclude={"resource_list", "project"}),
                 resource_list=dataset.resource_list,
                 project=dataset.project,
             )
