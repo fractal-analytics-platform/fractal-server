@@ -4,11 +4,11 @@ from pathlib import Path
 
 from devtools import debug
 
+from .data import tasks_dummy as tasks_package
+from .data.tasks_dummy import dummy as dummy_module
+from .data.tasks_dummy.dummy import dummy
+from .data.tasks_dummy.dummy_parallel import dummy_parallel
 from fractal_server.app.schemas.manifest import ManifestV1
-from tests.data import tasks_dummy as tasks_package
-from tests.data.tasks_dummy import dummy as dummy_module
-from tests.data.tasks_dummy.dummy import dummy
-from tests.data.tasks_dummy.dummy_parallel import dummy_parallel
 
 
 FIRST_TEST_MESSAGE = "first call"
