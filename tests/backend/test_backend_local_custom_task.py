@@ -181,3 +181,8 @@ async def test_full_workflow(
         assert (
             history[1]["workflowtask"]["task"]["name"] == PARALLEL_TASK_NAME
         )  # noqa
+
+
+def test_fake():
+    # This test is intended to test the functioning of pr #1166.
+    assert False
