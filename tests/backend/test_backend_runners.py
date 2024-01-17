@@ -18,6 +18,9 @@ import pytest
 from devtools import debug
 
 from fractal_server.app.models import Workflow
+from fractal_server.app.routes.api.v1._aux_functions import (
+    _workflow_insert_task,
+)
 from fractal_server.app.runner import _backends
 from fractal_server.app.runner.common import close_job_logger
 from fractal_server.logger import set_logger
@@ -88,11 +91,25 @@ async def test_runner(
     await db.commit()
     await db.refresh(wf)
 
-    await wf.insert_task(tk_dummy.id, db=db, args=dict(message="task 0"))
-    await wf.insert_task(tk_dummy.id, db=db, args=dict(message="task 1"))
-    await wf.insert_task(
-        tk_dummy_parallel.id, db=db, args=dict(message="task 2")
+    await _workflow_insert_task(
+        workflow_id=wf.id,
+        task_id=tk_dummy.id,
+        db=db,
+        args=dict(message="task 0"),
     )
+    await _workflow_insert_task(
+        workflow_id=wf.id,
+        task_id=tk_dummy.id,
+        db=db,
+        args=dict(message="task 1"),
+    )
+    await _workflow_insert_task(
+        workflow_id=wf.id,
+        task_id=tk_dummy_parallel.id,
+        db=db,
+        args=dict(message="task 2"),
+    )
+
     await db.refresh(wf)
     debug(wf)
 
