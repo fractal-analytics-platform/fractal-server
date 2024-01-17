@@ -85,7 +85,7 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
         sa_column=Column(JSON, nullable=False)
     )
 
-    working_dir: Optional[str]
+    working_dir: str
     working_dir_user: Optional[str]
     first_task_index: int
     last_task_index: int

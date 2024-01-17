@@ -148,7 +148,7 @@ class ApplyWorkflowRead(_ApplyWorkflowBase):
     end_timestamp: Optional[datetime]
     status: str
     log: Optional[str]
-    working_dir: Optional[str]
+    working_dir: str
     working_dir_user: Optional[str]
     first_task_index: Optional[int]
     last_task_index: Optional[int]
