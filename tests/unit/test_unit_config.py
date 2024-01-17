@@ -3,11 +3,11 @@ from pathlib import Path
 import pytest
 from devtools import debug
 
-from .fixtures_server import DB_ENGINE
 from fractal_server.config import FractalConfigurationError
 from fractal_server.config import OAuthClientConfig
 from fractal_server.config import Settings
 from fractal_server.syringe import Inject
+from tests.fixtures_server import DB_ENGINE
 
 
 def test_settings_injection(override_settings):
