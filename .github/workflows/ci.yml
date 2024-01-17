@@ -66,13 +66,7 @@ jobs:
           poetry install --with dev --without docs --no-interaction -E slurm -E gunicorn $DB
 
       - name: Test with pytest
-        run: |
-          poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest tests/unit/*.py
-          poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest tests/schemas/*.py
-          poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest tests/db/*.py
-          poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest tests/api/*.py
-          poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest tests/backend/*.py
-          poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest tests/*.py
+        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
