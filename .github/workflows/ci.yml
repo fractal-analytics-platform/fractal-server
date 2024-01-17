@@ -67,17 +67,15 @@ jobs:
 
       - name: Test with pytest
         run: |
-          poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -k "tests/api" && \
-            poetry run coverage combine && \
-            poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -k "tests/backend" && \
-            poetry run coverage combine && \
-            poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -k "tests/db" && \
-            poetry run coverage combine && \
-            poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -k "tests/others" && \
-            poetry run coverage combine && \
-            poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -k "tests/schema" && \
-            poetry run coverage combine && \
-            poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest -k "tests/unit"
+          poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest -k "tests/api" && \
+            poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest -k "tests/backend" && \
+            poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest -k "tests/db" && \
+            poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest -k "tests/others" && \
+            poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest -k "tests/schema" && \
+            poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest -k "tests/unit" && \
+
+      - name: Combine coverage files
+        run: poetry run coverage combine
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
