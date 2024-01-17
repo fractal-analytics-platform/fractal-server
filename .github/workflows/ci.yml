@@ -72,7 +72,7 @@ jobs:
             poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest -k "tests/db" && \
             poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest -k "tests/others" && \
             poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest -k "tests/schema" && \
-            poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest -k "tests/unit" && \
+            poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest -k "tests/unit"
 
       - name: Combine coverage files
         run: poetry run coverage combine
