@@ -57,6 +57,8 @@ def _run_command_as_user(
         capture_output=True,
         encoding=encoding,
     )
+    stdout = res.stdout.decode("utf-8")
+    stderr = res.stderr.decode("utf-8")
     logger.debug(f"[_run_command_as_user] {res.returncode=}")
     logger.debug(f"[_run_command_as_user] {res.stdout=}")
     logger.debug(f"[_run_command_as_user] {res.stderr=}")
@@ -65,8 +67,8 @@ def _run_command_as_user(
         raise RuntimeError(
             f"{cmd=}\n\n"
             f"{res.returncode=}\n\n"
-            f"{res.stdout=}\n\n"
-            f"{res.stderr=}\n"
+            f"{stdout=}\n\n"
+            f"{stderr=}\n"
         )
 
     return res
