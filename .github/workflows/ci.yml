@@ -68,7 +68,7 @@ jobs:
       - name: Test with pytest
         run: |
           poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest tests/unit/*.py
-          poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest tests/schema/*.py
+          poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest tests/schemas/*.py
           poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest tests/db/*.py
           poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest tests/api/*.py
           poetry run coverage run -p --concurrency=thread,greenlet,multiprocessing -m pytest tests/backend/*.py
