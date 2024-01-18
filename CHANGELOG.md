@@ -1,19 +1,26 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
-
 # 1.4.3 (unreleased)
+
+> **WARNINGs**:
+>
+> 1. This update requires running a fix-db script, available at https://raw.githubusercontent.com/fractal-analytics-platform/fractal-server/main/scripts/fix_db/current.py.
 
 * API:
     * Improve validation of `UserCreate.slurm_accounts` (\#1162).
+    * Add `timestamp_created` to `WorkflowRead`, `WorkflowDump`, `DatasetRead` and `DatasetDump` (\#1152).
     * Make all dumps in `ApplyWorkflowRead` non optional (\#1175).
 * API (internal):
     * Change the class method `Workflow.insert_task` into the auxiliary function `_workflow_insert_task` (\#1149).
 * Database:
     * Make `WorkflowTask.workflow_id` and `WorfklowTask.task_id` not nullable (\#1137).
+    * Add `Workflow.timestamp_created` and `Dataset.timestamp_created` columns (\#1152).
+    * Start a new `current.py` fix-db script (\#1152).
+* Testing:
+    * Update `clean_db_fractal_1.4.1.sql` to `clean_db_fractal_1.4.2.sql`, and change `migrations.yml` target version (\#1152).
+    * Reorganise the test directory into subdirectories, named according to the order in which we want the CI to execute them (\#1166).
 * Dependencies:
     * Update `python-dotenv` to version 0.21.0 (\#1172).
-* Testing:
-    * Reorganise the test directory into subdirectories, named according to the order in which we want the CI to execute them (\#1166).
 
 # 1.4.2
 

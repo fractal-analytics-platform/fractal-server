@@ -83,7 +83,13 @@ def test_apply_workflow_update():
 
 
 def test_apply_workflow_read():
-    WORKFLOW_DUMP = dict(id=1, project_id=1, name="wf", task_list=[])
+    WORKFLOW_DUMP = dict(
+        id=1,
+        project_id=1,
+        name="wf",
+        task_list=[],
+        timestamp_created=str(get_timestamp()),
+    )
     DATASET_DUMP = dict(
         id=1,
         project_id=1,
@@ -91,6 +97,7 @@ def test_apply_workflow_read():
         type="zarr",
         read_only=False,
         resource_list=[dict(id=1, dataset_id=1, path="/tmp")],
+        timestamp_created=str(get_timestamp()),
     )
     PROJECT_DUMP = dict(
         id=1,
@@ -160,11 +167,12 @@ def test_dataset_read():
             id=1,
             name="project",
             read_only=False,
-            timestamp_created=datetime.now(),
+            timestamp_created=get_timestamp(),
         ),
         resource_list=[],
         name="n",
         read_only=True,
+        timestamp_created=get_timestamp(),
     )
     debug(d)
     # Successful creation - non-trivial resource_list
@@ -174,7 +182,12 @@ def test_dataset_read():
     with pytest.raises(ValidationError):
         # missing "project"
         DatasetRead(
-            id=1, project_id=1, resource_list=rlist, name="n", read_only=False
+            id=1,
+            project_id=1,
+            resource_list=rlist,
+            name="n",
+            read_only=False,
+            timestamp_created=get_timestamp(),
         )
 
 
@@ -292,15 +305,15 @@ def test_project_create():
 
 
 def test_state():
-    _StateBase(data={"some": "thing"}, timestamp=datetime.now())
+    _StateBase(data={"some": "thing"}, timestamp=get_timestamp())
 
 
 def test_state_read():
-    s = StateRead(data={"some": "thing"}, timestamp=datetime.now())
+    s = StateRead(data={"some": "thing"}, timestamp=get_timestamp())
     debug(s)
     assert s.id is None
 
-    s = StateRead(data={"some": "thing"}, timestamp=datetime.now(), id=1)
+    s = StateRead(data={"some": "thing"}, timestamp=get_timestamp(), id=1)
     debug(s)
     assert s.id == 1
 
@@ -564,8 +577,9 @@ def test_workflow_read_empty_task_list():
             id=1,
             name="project",
             read_only=False,
-            timestamp_created=datetime.now(),
+            timestamp_created=get_timestamp(),
         ),
+        timestamp_created=str(get_timestamp()),
     )
     debug(w)
 
@@ -594,8 +608,9 @@ def test_workflow_read_non_empty_task_list():
             id=1,
             name="project",
             read_only=False,
-            timestamp_created=datetime.now(),
+            timestamp_created=get_timestamp(),
         ),
+        timestamp_created=str(get_timestamp()),
     )
     debug(w)
 
