@@ -11,6 +11,8 @@
     * Make `WorkflowTask.workflow_id` and `WorfklowTask.task_id` not nullable (\#1137).
 * Dependencies:
     * Update `python-dotenv` to version 0.21.0 (\#1172).
+* Testing:
+    * Reorganise the test directory into subdirectories, named according to the order in which we want the CI to execute them (\#1166).
 
 # 1.4.2
 
