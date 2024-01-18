@@ -1,4 +1,3 @@
-import json
 from typing import Optional
 
 from fastapi import APIRouter
@@ -395,31 +394,40 @@ async def apply_workflow(
         workflow_id=workflow_id,
         user_email=user.email,
         input_dataset_dump=dict(
-            input_dataset.model_dump(exclude={"resource_list"}),
+            **input_dataset.model_dump(
+                exclude={"resource_list", "timestamp_created"}
+            ),
+            timestamp_created=str(input_dataset.timestamp_created),
             resource_list=[
                 resource.model_dump()
                 for resource in input_dataset.resource_list
             ],
         ),
         output_dataset_dump=dict(
-            output_dataset.model_dump(exclude={"resource_list"}),
+            **output_dataset.model_dump(
+                exclude={"resource_list", "timestamp_created"}
+            ),
+            timestamp_created=str(output_dataset.timestamp_created),
             resource_list=[
                 resource.model_dump()
                 for resource in output_dataset.resource_list
             ],
         ),
         workflow_dump=dict(
-            workflow.model_dump(exclude={"task_list"}),
+            **workflow.model_dump(exclude={"task_list", "timestamp_created"}),
+            timestamp_created=str(workflow.timestamp_created),
             task_list=[
                 dict(
-                    wf_task.model_dump(exclude={"task"}),
+                    **wf_task.model_dump(exclude={"task"}),
                     task=wf_task.task.model_dump(),
                 )
                 for wf_task in workflow.task_list
             ],
         ),
-        # we use (project.json + json.loads) to serialize datetime
-        project_dump=json.loads(project.json(exclude={"user_list"})),
+        project_dump=dict(
+            **project.model_dump(exclude={"user_list", "timestamp_created"}),
+            timestamp_created=str(project.timestamp_created),
+        ),
         **apply_workflow.dict(),
     )
     db.add(job)

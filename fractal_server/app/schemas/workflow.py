@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 from typing import Any
 from typing import Optional
@@ -131,6 +132,7 @@ class WorkflowRead(_WorkflowBase):
     project_id: int
     task_list: list[WorkflowTaskRead]
     project: ProjectRead
+    timestamp_created: datetime
 
 
 class WorkflowCreate(_WorkflowBase):
