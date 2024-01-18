@@ -18,13 +18,12 @@ import json
 import logging
 import os
 import time
-from datetime import datetime
-from datetime import timezone
 from pathlib import Path
 from sys import stdout
 from typing import Any
 from typing import Optional
 
+from fractal_server.utils import get_timestamp
 
 logging.basicConfig(
     level=logging.DEBUG, format="%(asctime)s; %(levelname)s; %(message)s"
@@ -84,7 +83,7 @@ def dummy_parallel(
 
     payload = dict(
         task="DUMMY TASK",
-        timestamp=datetime.now(timezone.utc).isoformat(),
+        timestamp=get_timestamp().isoformat(),
         input_paths=input_paths,
         output_path=output_path,
         metadata=metadata,
