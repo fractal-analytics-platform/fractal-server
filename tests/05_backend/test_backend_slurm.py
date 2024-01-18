@@ -184,13 +184,13 @@ def test_slurm_executor_submit_and_scancel(
             fut = executor.submit(wait_and_return)
             debug(fut)
 
-            # Wait until the SLURM job goes from PENDING to RUNNING
+            # Wait until the SLURM job goes from PENDING to SUBMITTED
             while True:
                 squeue_output = run_squeue(
                     squeue_format="%i %u %T", header=False
                 )
                 debug(squeue_output)
-                if "RUNNING" in squeue_output:
+                if "SUBMITTED" in squeue_output:
                     break
                 time.sleep(1)
 
@@ -210,7 +210,7 @@ def test_slurm_executor_submit_and_scancel(
     debug(e.value.assemble_error())
 
     assert "CANCELLED" in e.value.assemble_error()
-    # Since we waited for the job to be RUNNING, both the SLURM stdout and
+    # Since we waited for the job to be SUBMITTED, both the SLURM stdout and
     # stderr files should exist
     assert "missing" not in e.value.assemble_error()
 

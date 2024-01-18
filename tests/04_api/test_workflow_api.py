@@ -193,11 +193,6 @@ async def test_delete_workflow(
             status=JobStatusType.SUBMITTED,
             **common_args,
         )
-        await job_factory(
-            workflow_id=wf_not_deletable_2.id,
-            status=JobStatusType.RUNNING,
-            **common_args,
-        )
         res = await client.delete(
             f"api/v1/project/{project.id}/workflow/{wf_deletable_1.id}/"
         )
