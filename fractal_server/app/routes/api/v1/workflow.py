@@ -36,8 +36,8 @@ from ....schemas import WorkflowUpdate
 from ....security import current_active_user
 from ....security import User
 from ._aux_functions import _check_workflow_exists
-from ._aux_functions import _get_active_jobs_statement
 from ._aux_functions import _get_project_check_owner
+from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
 from ._aux_functions import _workflow_insert_task
 
@@ -194,7 +194,7 @@ async def delete_workflow(
 
     # Fail if there exist jobs that are active (that is, pending or running)
     # and in relation with the current workflow.
-    stm = _get_active_jobs_statement().where(
+    stm = _get_submitted_jobs_statement().where(
         ApplyWorkflow.workflow_id == workflow.id
     )
     res = await db.execute(stm)
