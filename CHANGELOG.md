@@ -9,6 +9,8 @@
     * Change the class method `Workflow.insert_task` into the auxiliary function `_workflow_insert_task` (\#1149).
 * Database:
     * Make `WorkflowTask.workflow_id` and `WorfklowTask.task_id` not nullable (\#1137).
+* Testing:
+    * Reorganise the test directory into subdirectories, named according to the order in which we want the CI to execute them (\#1166).
 
 # 1.4.2
 
