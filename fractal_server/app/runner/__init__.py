@@ -184,7 +184,6 @@ async def submit_workflow(
         # Update db
         job.working_dir = WORKFLOW_DIR.as_posix()
         job.working_dir_user = WORKFLOW_DIR_USER.as_posix()
-        job.status = JobStatusType.RUNNING
         db_sync.merge(job)
         db_sync.commit()
 
