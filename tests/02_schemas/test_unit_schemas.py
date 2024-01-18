@@ -34,8 +34,10 @@ from fractal_server.app.schemas import WorkflowTaskImport
 from fractal_server.app.schemas import WorkflowTaskRead
 from fractal_server.app.schemas import WorkflowTaskUpdate
 from fractal_server.app.schemas import WorkflowUpdate
-from fractal_server.app.schemas.applyworkflow import DatasetDump
-from fractal_server.app.schemas.applyworkflow import WorkflowDump
+from fractal_server.app.schemas.dumps import DatasetDump
+from fractal_server.app.schemas.dumps import ProjectDump
+from fractal_server.app.schemas.dumps import WorkflowDump
+from fractal_server.utils import get_timestamp
 
 
 def test_apply_workflow_create():
@@ -90,6 +92,12 @@ def test_apply_workflow_read():
         read_only=False,
         resource_list=[dict(id=1, dataset_id=1, path="/tmp")],
     )
+    PROJECT_DUMP = dict(
+        id=1,
+        name="project",
+        read_only=False,
+        timestamp_created=str(get_timestamp()),
+    )
     job1 = ApplyWorkflowRead(
         id=1,
         project_id=1,
@@ -98,11 +106,13 @@ def test_apply_workflow_read():
         output_dataset_id=1,
         start_timestamp="2019-12-23T23:10:11.115310Z",
         status="good",
+        project_dump=PROJECT_DUMP,
         workflow_dump=WORKFLOW_DUMP,
         input_dataset_dump=DATASET_DUMP,
         output_dataset_dump=DATASET_DUMP,
         user_email="test@fractal.com",
     )
+    assert isinstance(job1.project_dump, ProjectDump)
     assert isinstance(job1.workflow_dump, WorkflowDump)
     assert isinstance(job1.input_dataset_dump, DatasetDump)
     assert isinstance(job1.output_dataset_dump, DatasetDump)
@@ -113,6 +123,7 @@ def test_apply_workflow_read():
         id=1,
         start_timestamp="2019-12-23T23:10:11.115310Z",
         status="good",
+        project_dump=PROJECT_DUMP,
         workflow_dump=WORKFLOW_DUMP,
         input_dataset_dump=DATASET_DUMP,
         output_dataset_dump=DATASET_DUMP,
