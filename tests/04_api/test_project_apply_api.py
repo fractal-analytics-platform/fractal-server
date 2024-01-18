@@ -1,4 +1,3 @@
-import json
 import time
 
 from devtools import debug
@@ -6,6 +5,8 @@ from devtools import debug
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
+from fractal_server.app.schemas.dumps import DatasetDump
+from fractal_server.app.schemas.dumps import ProjectDump
 from fractal_server.app.schemas.dumps import WorkflowDump
 
 PREFIX = "/api/v1"
@@ -487,29 +488,47 @@ async def test_project_apply_workflow_subset(
         debug(res.json())
         assert res.status_code == 422
 
-        # Check workflow_dump field
+        # Check dumps field
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={dataset1.id}"
             f"&output_dataset_id={dataset3.id}",
             json=dict(first_task_index=0, last_task_index=1),
         )
-        expected_workflow_dump = WorkflowDump(
-            **dict(
-                workflow.model_dump(exclude={"task_list"}),
-                task_list=[
-                    dict(
-                        wf_task.model_dump(exclude={"task"}),
-                        task=wf_task.task.model_dump(),
-                    )
-                    for wf_task in workflow.task_list
-                ],
-            )
+        expected_project_dump = ProjectDump(
+            **project.model_dump(exclude={"user_list", "timestamp_created"}),
+            timestamp_created=str(project.timestamp_created),
         ).dict()
-        debug(expected_workflow_dump)
+        expected_workflow_dump = WorkflowDump(
+            **workflow.model_dump(exclude={"task_list", "timestamp_created"}),
+            timestamp_created=str(workflow.timestamp_created),
+            task_list=[
+                dict(
+                    wf_task.model_dump(exclude={"task"}),
+                    task=wf_task.task.model_dump(),
+                )
+                for wf_task in workflow.task_list
+            ],
+        ).dict()
+        expected_input_dataset_dump = DatasetDump(
+            **dataset1.model_dump(exclude={"task_list", "timestamp_created"}),
+            timestamp_created=str(dataset1.timestamp_created),
+            resource_list=[
+                resource.model_dump() for resource in dataset1.resource_list
+            ],
+        ).dict()
+        expected_output_dataset_dump = DatasetDump(
+            **dataset3.model_dump(exclude={"task_list", "timestamp_created"}),
+            timestamp_created=str(dataset3.timestamp_created),
+            resource_list=[
+                resource.model_dump() for resource in dataset3.resource_list
+            ],
+        ).dict()
+        assert res.json()["project_dump"] == expected_project_dump
         assert res.json()["workflow_dump"] == expected_workflow_dump
-        assert res.json()["project_dump"] == json.loads(
-            project.json(exclude={"user_list"})
+        assert res.json()["input_dataset_dump"] == expected_input_dataset_dump
+        assert (
+            res.json()["output_dataset_dump"] == expected_output_dataset_dump
         )
 
 

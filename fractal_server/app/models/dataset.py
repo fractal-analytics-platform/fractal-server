@@ -1,13 +1,16 @@
+from datetime import datetime
 from typing import Any
 from typing import Optional
 
 from sqlalchemy import Column
 from sqlalchemy.ext.orderinglist import ordering_list
+from sqlalchemy.types import DateTime
 from sqlalchemy.types import JSON
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
+from ...utils import get_timestamp
 from ..schemas.dataset import _DatasetBase
 from ..schemas.dataset import _ResourceBase
 
@@ -53,6 +56,11 @@ class Dataset(_DatasetBase, SQLModel, table=True):
     meta: dict[str, Any] = Field(sa_column=Column(JSON), default={})
     history: list[dict[str, Any]] = Field(
         sa_column=Column(JSON, server_default="[]", nullable=False)
+    )
+
+    timestamp_created: datetime = Field(
+        default_factory=get_timestamp,
+        sa_column=Column(DateTime(timezone=True), nullable=False),
     )
 
     class Config:
