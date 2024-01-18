@@ -28,9 +28,9 @@ from ....schemas import WorkflowExport
 from ....schemas import WorkflowTaskExport
 from ....security import current_active_user
 from ....security import User
-from ._aux_functions import _get_active_jobs_statement
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_project_check_owner
+from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
 
 
@@ -173,7 +173,7 @@ async def delete_dataset(
 
     # Fail if there exist jobs that are active (that is, pending or running)
     # and in relation with the current dataset.
-    stm = _get_active_jobs_statement().where(
+    stm = _get_submitted_jobs_statement().where(
         or_(
             ApplyWorkflow.input_dataset_id == dataset_id,
             ApplyWorkflow.output_dataset_id == dataset_id,
@@ -378,7 +378,7 @@ async def export_history_as_workflow(
     # == dataset_id`. If at least one such job exists, then this endpoint will
     # fail. We do not support the use case of exporting a reproducible workflow
     # when job execution is in progress; this may change in the future.
-    stm = _get_active_jobs_statement().where(
+    stm = _get_submitted_jobs_statement().where(
         ApplyWorkflow.output_dataset_id == dataset_id
     )
     res = await db.execute(stm)
@@ -449,7 +449,7 @@ async def get_workflowtask_status(
     # Note: see
     # https://sqlmodel.tiangolo.com/tutorial/where/#type-annotations-and-errors
     # regarding the type-ignore in this code block
-    stm = _get_active_jobs_statement().where(
+    stm = _get_submitted_jobs_statement().where(
         ApplyWorkflow.output_dataset_id == dataset_id
     )
     res = await db.execute(stm)

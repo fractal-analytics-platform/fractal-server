@@ -33,9 +33,9 @@ from ....security import current_active_user
 from ....security import current_active_verified_user
 from ....security import User
 from ._aux_functions import _check_project_exists
-from ._aux_functions import _get_active_jobs_statement
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_project_check_owner
+from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
 
 
@@ -153,7 +153,7 @@ async def delete_project(
 
     # Fail if there exist jobs that are submitted and in relation with the
     # current project.
-    stm = _get_active_jobs_statement().where(
+    stm = _get_submitted_jobs_statement().where(
         ApplyWorkflow.project_id == project_id
     )
     res = await db.execute(stm)
