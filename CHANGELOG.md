@@ -5,10 +5,15 @@
 
 * API:
     * Improve validation of `UserCreate.slurm_accounts` (\#1162).
+    * Make all dumps in `ApplyWorkflowRead` non optional (\#1175).
 * API (internal):
     * Change the class method `Workflow.insert_task` into the auxiliary function `_workflow_insert_task` (\#1149).
 * Database:
     * Make `WorkflowTask.workflow_id` and `WorfklowTask.task_id` not nullable (\#1137).
+* Dependencies:
+    * Update `python-dotenv` to version 0.21.0 (\#1172).
+* Testing:
+    * Reorganise the test directory into subdirectories, named according to the order in which we want the CI to execute them (\#1166).
 
 # 1.4.2
 
