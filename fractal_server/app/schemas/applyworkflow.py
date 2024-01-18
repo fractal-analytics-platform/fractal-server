@@ -135,15 +135,15 @@ class ApplyWorkflowRead(_ApplyWorkflowBase):
 
     id: int
     project_id: Optional[int]
-    project_dump: Optional[ProjectDump]
+    project_dump: ProjectDump
     user_email: str
     slurm_account: Optional[str]
     workflow_id: Optional[int]
-    workflow_dump: Optional[WorkflowDump]
+    workflow_dump: WorkflowDump
     input_dataset_id: Optional[int]
-    input_dataset_dump: Optional[DatasetDump]
+    input_dataset_dump: DatasetDump
     output_dataset_id: Optional[int]
-    output_dataset_dump: Optional[DatasetDump]
+    output_dataset_dump: DatasetDump
     start_timestamp: datetime
     end_timestamp: Optional[datetime]
     status: str
