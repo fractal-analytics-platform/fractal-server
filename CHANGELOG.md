@@ -4,7 +4,7 @@
 
 > **WARNINGs**:
 >
-> 1. This update requires running a fix-db script, available at https://raw.githubusercontent.com/fractal-analytics-platform/fractal-server/main/scripts/fix_db/current.py.
+> 1. This update requires running a fix-db script, available at https://raw.githubusercontent.com/fractal-analytics-platform/fractal-server/1.4.3a0/scripts/fix_db/current.py.
 
 * API:
     * Improve validation of `UserCreate.slurm_accounts` (\#1162).
