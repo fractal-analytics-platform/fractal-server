@@ -9,6 +9,7 @@
 * API:
     * Improve validation of `UserCreate.slurm_accounts` (\#1162).
     * Add `timestamp_created` to `WorkflowRead`, `WorkflowDump`, `DatasetRead` and `DatasetDump` (\#1152).
+    * Make all dumps in `ApplyWorkflowRead` non optional (\#1175).
 * API (internal):
     * Change the class method `Workflow.insert_task` into the auxiliary function `_workflow_insert_task` (\#1149).
 * Database:
