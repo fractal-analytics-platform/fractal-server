@@ -424,7 +424,6 @@ async def apply_workflow(
                 for wf_task in workflow.task_list
             ],
         ),
-        # we use (project.json + json.loads) to serialize datetime
         project_dump=dict(
             **project.model_dump(exclude={"user_list", "timestamp_created"}),
             timestamp_created=str(project.timestamp_created),
