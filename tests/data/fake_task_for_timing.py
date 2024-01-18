@@ -4,8 +4,6 @@ import sys
 import time
 from datetime import datetime
 
-from fractal_server.utils import get_timestamp
-
 
 logging.basicConfig(format="%(message)s")
 
@@ -14,10 +12,10 @@ sleep_time = float(sys.argv[2])  # How long to sleep
 outdir = sys.argv[3]  # Where to store results
 
 ref_time = datetime(2023, 3, 1, 1, 1, 1)
-start_time = get_timestamp()
+start_time = datetime.now()
 logging.warning(f"{start_time}, START for {component=} and {sleep_time=}")
 time.sleep(sleep_time)
-end_time = get_timestamp()
+end_time = datetime.now()
 logging.warning(f"{end_time}, END   for {component=} and {sleep_time=}")
 
 start_time_sec = (start_time - ref_time).total_seconds()
