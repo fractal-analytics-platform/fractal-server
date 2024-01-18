@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any
 from typing import Optional
 
@@ -147,6 +148,7 @@ class DatasetRead(_DatasetBase):
     project_id: int
     read_only: bool
     project: ProjectRead
+    timestamp_created: datetime
 
 
 class DatasetStatusRead(BaseModel):

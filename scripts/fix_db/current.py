@@ -1,8 +1,3 @@
-"""
-Loop over jobs.
-If the corresponding project still exists, set the project_dump.
-"""
-import json
 import logging
 from datetime import datetime
 from datetime import timezone
@@ -11,92 +6,217 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.models.job import ApplyWorkflow
-from fractal_server.app.models.project import Project
-from fractal_server.app.schemas.applyworkflow import ApplyWorkflowRead
-from fractal_server.app.schemas.dumps import ProjectDump
-from fractal_server.app.schemas.project import ProjectRead
+from fractal_server.app.models import ApplyWorkflow
+from fractal_server.app.models import Dataset
+from fractal_server.app.models import Project
+from fractal_server.app.models import Workflow
+from fractal_server.app.schemas import ApplyWorkflowRead
+from fractal_server.app.schemas import WorkflowRead
+from fractal_server.app.schemas.dataset import DatasetRead
+from fractal_server.app.schemas.dumps import DatasetDump
+from fractal_server.app.schemas.dumps import WorkflowDump
 
 
 REFERENCE_TIMESTAMP = datetime(2000, 1, 1, tzinfo=timezone.utc)
-REFERENCE_TIMESTAMP_STRING = str(REFERENCE_TIMESTAMP)
-
 
 with next(get_sync_db()) as db:
-    # Get list of all projects with their related job
-    stm = select(Project)
-    projects = db.execute(stm).scalars().all()
-    for project in projects:
-        timestamp_created = project.timestamp_created
+
+    # add timestamp_created to Workflows
+    stm = select(Workflow)
+    workflows = db.execute(stm).scalars().all()
+    for workflow in workflows:
+        # add timestamp_created to Workflows
+        timestamp_created = workflow.timestamp_created
         if timestamp_created != REFERENCE_TIMESTAMP:
             logging.warning(
-                f"[Project {project.id:4d}] {timestamp_created=} -> skip."
+                f"[Workflow {workflow.id:4d}] {timestamp_created=} -> skip."
             )
         else:
             logging.warning(
-                f"[Project {project.id:4d}] {timestamp_created=} -> "
-                "replace with job timestamps."
+                f"[Workflow {workflow.id:4d}] {timestamp_created=} -> "
+                "replace with project timestamp."
             )
-            stm = select(ApplyWorkflow).where(
-                ApplyWorkflow.project_id == project.id
-            )
-            jobs = db.execute(stm).scalars().all()
-            if len(jobs) == 0:
-                logging.warning(
-                    f"[Project {project.id:4d}] No jobs found, skip."
+            project = db.get(Project, workflow.project_id)
+            if project is None:
+                raise IntegrityError(
+                    f"[Workflow {workflow.id:4d}] "
+                    f"project_id={workflow.project_id}, "
+                    f"but Project {workflow.project_id} does not exist"
                 )
-                continue
-            timestamp_created = min([job.start_timestamp for job in jobs])
+            new_timestamp = project.timestamp_created
             logging.warning(
-                f"[Project {project.id:4d}] New value: {timestamp_created=}"
+                f"[Workflow {workflow.id:4d}] New value: {new_timestamp=}"
             )
-            project.timestamp_created = timestamp_created
-            db.add(project)
+            workflow.timestamp_created = new_timestamp
+            db.add(workflow)
             db.commit()
-            db.refresh(project)
-            db.expunge(project)
-            ProjectRead(**project.model_dump())
+            db.refresh(workflow)
+            db.expunge(workflow)
+            WorkflowRead(
+                **workflow.model_dump(exclude={"task_list", "project"}),
+                task_list=workflow.task_list,
+                project=workflow.project,
+            )
 
-    # Get list of all jobs
-    stm = select(ApplyWorkflow)
-    res = db.execute(stm)
-    jobs = res.scalars().all()
-
-    # Loop over jobs
-    for job in sorted(jobs, key=lambda x: x.id):
-        if job.project_dump != {}:
-            # Do not overwrite existing data
+    # add timestamp_created to Dataset
+    stm = select(Dataset)
+    datasets = db.execute(stm).scalars().all()
+    for dataset in datasets:
+        # add timestamp_created to Datasets
+        timestamp_created = dataset.timestamp_created
+        if timestamp_created != REFERENCE_TIMESTAMP:
             logging.warning(
-                f"[Job {job.id:4d}] project_dump attribute non-empty, skip"
+                f"[Dataset {dataset.id:4d}] {timestamp_created=} -> skip."
             )
         else:
-            if job.project_id is None:
-                logging.warning(
-                    f"[Job {job.id:4d}] project_id=None, use dummy data"
+            logging.warning(
+                f"[Dataset {dataset.id:4d}] {timestamp_created=} -> "
+                "replace with project timestamp."
+            )
+            project = db.get(Project, dataset.project_id)
+            if project is None:
+                raise IntegrityError(
+                    f"[Dataset {dataset.id:4d}] "
+                    f"project_id={dataset.project_id}, "
+                    f"but Project {dataset.project_id} does not exist"
                 )
-                project_dump = dict(
-                    id=-1,
-                    name="__UNDEFINED__",
-                    read_only=True,
-                    timestamp_created=REFERENCE_TIMESTAMP_STRING,
+            new_timestamp = project.timestamp_created
+            logging.warning(
+                f"[Dataset {dataset.id:4d}] New value: {new_timestamp=}"
+            )
+            dataset.timestamp_created = new_timestamp
+            db.add(dataset)
+            db.commit()
+            db.refresh(dataset)
+            db.expunge(dataset)
+            DatasetRead(
+                **dataset.model_dump(exclude={"resource_list", "project"}),
+                resource_list=dataset.resource_list,
+                project=dataset.project,
+            )
+
+    # add timestamp_created to Job.workflow_dump and Job.in/output_dataset_dump
+    stm = select(ApplyWorkflow)
+    jobs = db.execute(stm).scalars().all()
+    for job in jobs:
+
+        project_timestamp = None
+        if job.project_id is not None:
+            project = db.get(Project, job.project_id)
+            if project is None:
+                raise IntegrityError(
+                    f"[Job {job.id:4d}] "
+                    f"project_id={job.project_id}, "
+                    f"but Project {job.project_id} does not exist"
+                )
+            project_timestamp = project.timestamp_created
+
+        # WORKFLOW DUMP
+        workflow_dump_timestamp = job.workflow_dump.get("timestamp_created")
+        if workflow_dump_timestamp is not None:
+            logging.warning(
+                f"[Job {job.id:4d}] -> Job.workflow_dump['timestamp_created'] "
+                f" = {workflow_dump_timestamp} -> SKIP"
+            )
+        else:  # workflow_dump_timestamp is None
+            if project_timestamp is not None:
+                # if Job.Project exists
+                new_timestamp = project_timestamp
+                logging.warning(
+                    f"[Job {job.id:4d}] Job.workflow_dump['timestamp_created']"
+                    f"={workflow_dump_timestamp} -> replace it with Project "
+                    f"{job.project_id} timestamp -> {new_timestamp}"
                 )
             else:
-                project = db.get(Project, job.project_id)
-                if project is None:
-                    raise IntegrityError(
-                        f"[Job {job.id:4d}] "
-                        f"project_id={job.project_id}, "
-                        f"but Project {job.project_id} does not exist"
-                    )
-                project_dump = json.loads(project.json(exclude={"user_list"}))
-
-            logging.warning(f"[Job {job.id:4d}] setting {project_dump=}")
-            ProjectDump(**project_dump)
-            job.project_dump = project_dump
+                # if Job.Project doesn't exist
+                logging.warning(
+                    f"[Job {job.id:4d}] Job.workflow_dump['timestamp_created']"
+                    f"={workflow_dump_timestamp} AND Job.project_id is None "
+                    "-> replace it with reference timestamp "
+                    f"{REFERENCE_TIMESTAMP}"
+                )
+                new_timestamp = REFERENCE_TIMESTAMP
+            # add Job.workflow_dump.timestamp_created
+            new_workflow_dump = job.workflow_dump.copy()
+            new_workflow_dump.update({"timestamp_created": str(new_timestamp)})
+            job.workflow_dump = new_workflow_dump
             db.add(job)
             db.commit()
-
-            # Also validate that the row can be cast into ApplyWorkflowRead
             db.refresh(job)
-            db.expunge(job)
-            ApplyWorkflowRead(**job.model_dump())
+
+        # INPUT DATASET DUMP
+        ids_dump_timestamp = job.input_dataset_dump.get("timestamp_created")
+        if ids_dump_timestamp is not None:
+            logging.warning(
+                f"[Job {job.id:4d}] -> "
+                "Job.input_dataset_dump['timestamp_created'] "
+                f" = {ids_dump_timestamp} -> SKIP"
+            )
+        else:  # ids_dump_timestamp is None
+            if project_timestamp is not None:
+                # if Job.Project exists
+                new_timestamp = project_timestamp
+                logging.warning(
+                    f"[Job {job.id:4d}] "
+                    "Job.input_dataset_dump['timestamp_created']="
+                    f"{ids_dump_timestamp} -> replace it with "
+                    f"Project {job.project_id} timestamp -> {new_timestamp}"
+                )
+            else:
+                # if Job.Project doesn't exist
+                logging.warning(
+                    f"[Job {job.id:4d}] "
+                    f"Job.input_dataset_dump['timestamp_created']="
+                    f"{ids_dump_timestamp} AND Job.project_id is None -> "
+                    "replace it with reference timestamp "
+                    f"{REFERENCE_TIMESTAMP}"
+                )
+                new_timestamp = REFERENCE_TIMESTAMP
+            # add Job.input_dataset_dump.timestamp_created
+            new_ids_dump = job.input_dataset_dump.copy()
+            new_ids_dump.update({"timestamp_created": str(new_timestamp)})
+            job.input_dataset_dump = new_ids_dump
+            db.add(job)
+            db.commit()
+            db.refresh(job)
+
+        # OUTPUT DATASET DUMP
+        ods_dump_timestamp = job.output_dataset_dump.get("timestamp_created")
+        if ods_dump_timestamp is not None:
+            logging.warning(
+                f"[Job {job.id:4d}] -> "
+                "Job.output_dataset_dump['timestamp_created'] "
+                f" = {ods_dump_timestamp} -> SKIP"
+            )
+        else:  # ods_dump_timestamp is None
+            if project_timestamp is not None:
+                # if Job.Project exists
+                new_timestamp = project_timestamp
+                logging.warning(
+                    f"[Job {job.id:4d}] "
+                    "Job.output_dataset_dump['timestamp_created']="
+                    f"{ods_dump_timestamp} -> replace it with "
+                    f"Project {job.project_id} timestamp -> {new_timestamp}"
+                )
+            else:
+                # if Job.Project doesn't exist
+                logging.warning(
+                    f"[Job {job.id:4d}] "
+                    f"Job.output_dataset_dump['timestamp_created']="
+                    f"{ods_dump_timestamp} AND Job.project_id is None -> "
+                    "replace it with reference timestamp "
+                    f"{REFERENCE_TIMESTAMP}"
+                )
+                new_timestamp = REFERENCE_TIMESTAMP
+            # add Job.output_dataset_dump.timestamp_created
+            new_ods_dump = job.output_dataset_dump.copy()
+            new_ods_dump.update({"timestamp_created": str(new_timestamp)})
+            job.output_dataset_dump = new_ods_dump
+            db.add(job)
+            db.commit()
+            db.refresh(job)
+        db.expunge(job)
+        WorkflowDump(**job.workflow_dump)
+        DatasetDump(**job.input_dataset_dump)
+        DatasetDump(**job.output_dataset_dump)
+        ApplyWorkflowRead(**job.model_dump())
