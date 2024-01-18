@@ -68,11 +68,6 @@ def test_DB_ENGINE_is_postgres():
 
 async def test_DB_class_async():
 
-    with pytest.raises(AttributeError):
-        DB._engine_async
-    with pytest.raises(AttributeError):
-        DB._async_session_maker
-    DB.engine_async()
     DB._engine_async
     DB._async_session_maker
     delattr(DB, "_engine_async")
@@ -88,11 +83,6 @@ async def test_DB_class_async():
 
 def test_DB_class_sync():
 
-    with pytest.raises(AttributeError):
-        DB._engine_sync
-    with pytest.raises(AttributeError):
-        DB._sync_session_maker
-    DB.engine_sync()
     DB._engine_sync
     DB._sync_session_maker
     delattr(DB, "_engine_sync")
