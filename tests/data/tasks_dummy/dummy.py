@@ -17,6 +17,8 @@ import json
 import logging
 import os
 import time
+from datetime import datetime
+from datetime import timezone
 from json.decoder import JSONDecodeError
 from pathlib import Path
 from sys import stdout
@@ -25,8 +27,6 @@ from typing import Dict
 from typing import Optional
 
 from pydantic.decorator import validate_arguments
-
-from fractal_server.utils import get_timestamp
 
 
 logging.basicConfig(
@@ -90,7 +90,7 @@ def dummy(
 
     payload = dict(
         task="DUMMY TASK",
-        timestamp=get_timestamp().isoformat(),
+        timestamp=datetime.now(timezone.utc).isoformat(),
         input_paths=input_paths,
         output_path=output_path,
         metadata=metadata,
