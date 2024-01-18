@@ -34,8 +34,10 @@ from fractal_server.app.schemas import WorkflowTaskImport
 from fractal_server.app.schemas import WorkflowTaskRead
 from fractal_server.app.schemas import WorkflowTaskUpdate
 from fractal_server.app.schemas import WorkflowUpdate
-from fractal_server.app.schemas.applyworkflow import DatasetDump
-from fractal_server.app.schemas.applyworkflow import WorkflowDump
+from fractal_server.app.schemas.dumps import DatasetDump
+from fractal_server.app.schemas.dumps import ProjectDump
+from fractal_server.app.schemas.dumps import WorkflowDump
+from fractal_server.utils import get_timestamp
 
 
 def test_apply_workflow_create():
@@ -88,7 +90,13 @@ def test_apply_workflow_update():
 
 
 def test_apply_workflow_read():
-    WORKFLOW_DUMP = dict(id=1, project_id=1, name="wf", task_list=[])
+    WORKFLOW_DUMP = dict(
+        id=1,
+        project_id=1,
+        name="wf",
+        task_list=[],
+        timestamp_created=str(get_timestamp()),
+    )
     DATASET_DUMP = dict(
         id=1,
         project_id=1,
@@ -96,6 +104,13 @@ def test_apply_workflow_read():
         type="zarr",
         read_only=False,
         resource_list=[dict(id=1, dataset_id=1, path="/tmp")],
+        timestamp_created=str(get_timestamp()),
+    )
+    PROJECT_DUMP = dict(
+        id=1,
+        name="project",
+        read_only=False,
+        timestamp_created=str(get_timestamp()),
     )
     job1 = ApplyWorkflowRead(
         id=1,
@@ -105,12 +120,14 @@ def test_apply_workflow_read():
         output_dataset_id=1,
         start_timestamp="2019-12-23T23:10:11.115310Z",
         status="good",
+        project_dump=PROJECT_DUMP,
         workflow_dump=WORKFLOW_DUMP,
         input_dataset_dump=DATASET_DUMP,
         output_dataset_dump=DATASET_DUMP,
         user_email="test@fractal.com",
         working_dir="/tmp/test",
     )
+    assert isinstance(job1.project_dump, ProjectDump)
     assert isinstance(job1.workflow_dump, WorkflowDump)
     assert isinstance(job1.input_dataset_dump, DatasetDump)
     assert isinstance(job1.output_dataset_dump, DatasetDump)
@@ -121,6 +138,7 @@ def test_apply_workflow_read():
         id=1,
         start_timestamp="2019-12-23T23:10:11.115310Z",
         status="good",
+        project_dump=PROJECT_DUMP,
         workflow_dump=WORKFLOW_DUMP,
         input_dataset_dump=DATASET_DUMP,
         output_dataset_dump=DATASET_DUMP,
@@ -158,11 +176,12 @@ def test_dataset_read():
             id=1,
             name="project",
             read_only=False,
-            timestamp_created=datetime.now(),
+            timestamp_created=get_timestamp(),
         ),
         resource_list=[],
         name="n",
         read_only=True,
+        timestamp_created=get_timestamp(),
     )
     debug(d)
     # Successful creation - non-trivial resource_list
@@ -172,7 +191,12 @@ def test_dataset_read():
     with pytest.raises(ValidationError):
         # missing "project"
         DatasetRead(
-            id=1, project_id=1, resource_list=rlist, name="n", read_only=False
+            id=1,
+            project_id=1,
+            resource_list=rlist,
+            name="n",
+            read_only=False,
+            timestamp_created=get_timestamp(),
         )
 
 
@@ -290,15 +314,15 @@ def test_project_create():
 
 
 def test_state():
-    _StateBase(data={"some": "thing"}, timestamp=datetime.now())
+    _StateBase(data={"some": "thing"}, timestamp=get_timestamp())
 
 
 def test_state_read():
-    s = StateRead(data={"some": "thing"}, timestamp=datetime.now())
+    s = StateRead(data={"some": "thing"}, timestamp=get_timestamp())
     debug(s)
     assert s.id is None
 
-    s = StateRead(data={"some": "thing"}, timestamp=datetime.now(), id=1)
+    s = StateRead(data={"some": "thing"}, timestamp=get_timestamp(), id=1)
     debug(s)
     assert s.id == 1
 
@@ -562,8 +586,9 @@ def test_workflow_read_empty_task_list():
             id=1,
             name="project",
             read_only=False,
-            timestamp_created=datetime.now(),
+            timestamp_created=get_timestamp(),
         ),
+        timestamp_created=str(get_timestamp()),
     )
     debug(w)
 
@@ -592,8 +617,9 @@ def test_workflow_read_non_empty_task_list():
             id=1,
             name="project",
             read_only=False,
-            timestamp_created=datetime.now(),
+            timestamp_created=get_timestamp(),
         ),
+        timestamp_created=str(get_timestamp()),
     )
     debug(w)
 

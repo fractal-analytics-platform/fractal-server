@@ -512,21 +512,30 @@ async def job_factory(db: AsyncSession):
             output_dataset_id=output_dataset_id,
             workflow_id=workflow_id,
             input_dataset_dump=dict(
-                input_dataset.model_dump(exclude={"resource_list"}),
+                input_dataset.model_dump(
+                    exclude={"resource_list", "timestamp_created"}
+                ),
+                timestamp_created=str(input_dataset.timestamp_created),
                 resource_list=[
                     resource.model_dump()
                     for resource in input_dataset.resource_list
                 ],
             ),
             output_dataset_dump=dict(
-                output_dataset.model_dump(exclude={"resource_list"}),
+                output_dataset.model_dump(
+                    exclude={"resource_list", "timestamp_created"}
+                ),
+                timestamp_created=str(output_dataset.timestamp_created),
                 resource_list=[
                     resource.model_dump()
                     for resource in output_dataset.resource_list
                 ],
             ),
             workflow_dump=dict(
-                workflow.model_dump(exclude={"task_list"}),
+                workflow.model_dump(
+                    exclude={"task_list", "timestamp_created"}
+                ),
+                timestamp_created=str(workflow.timestamp_created),
                 task_list=[
                     dict(
                         wf_task.model_dump(exclude={"task"}),
