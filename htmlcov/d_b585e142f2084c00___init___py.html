@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="d_a3e5354dc8db4bd4_config_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.0">coverage.py v7.4.0</a>,
-            created at 2024-01-19 14:28 +0000
+            created at 2024-01-19 16:04 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -140,7 +140,7 @@
     <p class="pln"><span class="n"><a id="t56" href="#t56">56</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t57" href="#t57">57</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="nam">config</span> <span class="key">import</span> <span class="nam">get_settings</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t58" href="#t58">58</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="nam">syringe</span> <span class="key">import</span> <span class="nam">Inject</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t59" href="#t59">59</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="op">.</span><span class="nam">db</span> <span class="key">import</span> <span class="nam">get_db</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t59" href="#t59">59</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="op">.</span><span class="nam">db</span> <span class="key">import</span> <span class="nam">get_async_db</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t60" href="#t60">60</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="op">.</span><span class="nam">models</span><span class="op">.</span><span class="nam">security</span> <span class="key">import</span> <span class="nam">OAuthAccount</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t61" href="#t61">61</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="op">.</span><span class="nam">models</span><span class="op">.</span><span class="nam">security</span> <span class="key">import</span> <span class="nam">UserOAuth</span> <span class="key">as</span> <span class="nam">User</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t62" href="#t62">62</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">app</span><span class="op">.</span><span class="nam">models</span><span class="op">.</span><span class="nam">security</span> <span class="key">import</span> <span class="nam">UserOAuth</span>&nbsp;</span><span class="r"></span></p>
@@ -259,7 +259,7 @@
     <p class="pln"><span class="n"><a id="t175" href="#t175">175</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t176" href="#t176">176</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t177" href="#t177">177</a></span><span class="t"><span class="key">async</span> <span class="key">def</span> <span class="nam">get_user_db</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t178" href="#t178">178</a></span><span class="t">    <span class="nam">session</span><span class="op">:</span> <span class="nam">AsyncSession</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">get_db</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t178" href="#t178">178</a></span><span class="t">    <span class="nam">session</span><span class="op">:</span> <span class="nam">AsyncSession</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">get_async_db</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t179" href="#t179">179</a></span><span class="t"><span class="op">)</span> <span class="op">-></span> <span class="nam">AsyncGenerator</span><span class="op">[</span><span class="nam">SQLModelUserDatabaseAsync</span><span class="op">,</span> <span class="key">None</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t180" href="#t180">180</a></span><span class="t">    <span class="key">yield</span> <span class="nam">SQLModelUserDatabaseAsync</span><span class="op">(</span><span class="nam">session</span><span class="op">,</span> <span class="nam">User</span><span class="op">,</span> <span class="nam">OAuthAccount</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t181" href="#t181">181</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -331,7 +331,7 @@
     <p class="pln"><span class="n"><a id="t247" href="#t247">247</a></span><span class="t">    <span class="nam">active</span><span class="op">=</span><span class="key">True</span><span class="op">,</span> <span class="nam">superuser</span><span class="op">=</span><span class="key">True</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t248" href="#t248">248</a></span><span class="t"><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t249" href="#t249">249</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t250" href="#t250">250</a></span><span class="t"><span class="nam">get_async_session_context</span> <span class="op">=</span> <span class="nam">contextlib</span><span class="op">.</span><span class="nam">asynccontextmanager</span><span class="op">(</span><span class="nam">get_db</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t250" href="#t250">250</a></span><span class="t"><span class="nam">get_async_session_context</span> <span class="op">=</span> <span class="nam">contextlib</span><span class="op">.</span><span class="nam">asynccontextmanager</span><span class="op">(</span><span class="nam">get_async_db</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t251" href="#t251">251</a></span><span class="t"><span class="nam">get_user_db_context</span> <span class="op">=</span> <span class="nam">contextlib</span><span class="op">.</span><span class="nam">asynccontextmanager</span><span class="op">(</span><span class="nam">get_user_db</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t252" href="#t252">252</a></span><span class="t"><span class="nam">get_user_manager_context</span> <span class="op">=</span> <span class="nam">contextlib</span><span class="op">.</span><span class="nam">asynccontextmanager</span><span class="op">(</span><span class="nam">get_user_manager</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t253" href="#t253">253</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -413,7 +413,7 @@
             <a id="nextFileLink" class="nav" href="d_a3e5354dc8db4bd4_config_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.0">coverage.py v7.4.0</a>,
-            created at 2024-01-19 14:28 +0000
+            created at 2024-01-19 16:04 +0000
         </p>
     </div>
 </footer>
