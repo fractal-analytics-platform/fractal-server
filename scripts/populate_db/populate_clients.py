@@ -1,6 +1,7 @@
 import time
 
 import requests
+from devtools import debug
 
 from fractal_server.app.schemas import ApplyWorkflowCreate
 from fractal_server.app.schemas import ApplyWorkflowRead
@@ -48,6 +49,7 @@ class SimpleHttpClient:
         url = f"{self.base_url}/{endpoint}"
 
         try:
+            time_start = time.perf_counter()
             if method == "GET":
                 response = requests.get(url, headers=headers)
             elif method == "POST":
@@ -58,6 +60,10 @@ class SimpleHttpClient:
                 response = requests.delete(url, headers=headers)
             else:
                 raise ValueError(f"Unsupported HTTP method: {method}")
+            time_end = time.perf_counter()
+            elapsed = time_end - time_start
+            if elapsed > 1:
+                debug(url, method, elapsed)
 
             return response
 
@@ -254,7 +260,9 @@ class FractalClient:
                 raise
             job_statuses = [job["status"] for job in res.json()]
             print(job_statuses)
-            if "submitted" not in job_statuses:
+            if ("submitted" not in job_statuses) and (
+                "running" not in job_statuses
+            ):
                 return None
             time.sleep(waiting_interval)
         raise RuntimeError(f"Reached {max_calls=} but {job_statuses=}.")
