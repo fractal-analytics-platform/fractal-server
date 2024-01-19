@@ -1,6 +1,7 @@
 import pytest
 from devtools import debug
 
+from fractal_server.app.db import DB
 from tests.fixtures_server import DB_ENGINE
 
 
@@ -63,3 +64,59 @@ async def test_sync_db(db_sync, db):
 )
 def test_DB_ENGINE_is_postgres():
     pass
+
+
+async def test_DB_class_async():
+
+    try:
+        assert DB._engine_async
+        delattr(DB, "_engine_async")
+    except AttributeError:
+        pass
+    with pytest.raises(AttributeError):
+        assert DB._engine_async
+
+    DB.engine_async()
+    assert DB._engine_async
+    delattr(DB, "_engine_async")
+
+    try:
+        assert DB._async_session_maker
+        delattr(DB, "_async_session_maker")
+    except AttributeError:
+        pass
+    with pytest.raises(AttributeError):
+        assert DB._async_session_maker
+
+    async for _ in DB.get_async_db():
+        pass
+
+    assert DB._engine_async
+    assert DB._async_session_maker
+
+
+def test_DB_class_sync():
+    try:
+        assert DB._engine_sync
+        delattr(DB, "_engine_sync")
+    except AttributeError:
+        pass
+    with pytest.raises(AttributeError):
+        assert DB._engine_sync
+
+    DB.engine_sync()
+    assert DB._engine_sync
+    delattr(DB, "_engine_sync")
+
+    try:
+        assert DB._sync_session_maker
+        delattr(DB, "_sync_session_maker")
+    except AttributeError:
+        pass
+    with pytest.raises(AttributeError):
+        assert DB._sync_session_maker
+
+    next(DB.get_sync_db())
+
+    assert DB._engine_sync
+    assert DB._sync_session_maker

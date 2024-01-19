@@ -16,6 +16,9 @@
     * Make `WorkflowTask.workflow_id` and `WorfklowTask.task_id` not nullable (\#1137).
     * Add `Workflow.timestamp_created` and `Dataset.timestamp_created` columns (\#1152).
     * Start a new `current.py` fix-db script (\#1152).
+* App (internal):
+    * Check in `Settings` that `psycopg2`, `asyngpg` and `cfut`, if required, are installed (\#1167).
+    * Split `DB.set_db` into sync/async methods (\#1165).
 * Testing:
     * Update `clean_db_fractal_1.4.1.sql` to `clean_db_fractal_1.4.2.sql`, and change `migrations.yml` target version (\#1152).
     * Reorganise the test directory into subdirectories, named according to the order in which we want the CI to execute them (\#1166).
