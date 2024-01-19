@@ -157,7 +157,6 @@ async def test_delete_workflow(
         wf_deletable_1 = await workflow_factory(project_id=project.id)
         wf_deletable_2 = await workflow_factory(project_id=project.id)
         wf_not_deletable_1 = await workflow_factory(project_id=project.id)
-        wf_not_deletable_2 = await workflow_factory(project_id=project.id)
         task = await task_factory(name="task", source="source")
         await _workflow_insert_task(
             workflow_id=wf_deletable_1.id, task_id=task.id, db=db
@@ -167,9 +166,6 @@ async def test_delete_workflow(
         )
         await _workflow_insert_task(
             workflow_id=wf_not_deletable_1.id, task_id=task.id, db=db
-        )
-        await _workflow_insert_task(
-            workflow_id=wf_not_deletable_2.id, task_id=task.id, db=db
         )
         dataset = await dataset_factory(project_id=project.id)
         common_args = {
@@ -203,10 +199,6 @@ async def test_delete_workflow(
         assert res.status_code == 204
         res = await client.delete(
             f"api/v1/project/{project.id}/workflow/{wf_not_deletable_1.id}/"
-        )
-        assert res.status_code == 422
-        res = await client.delete(
-            f"api/v1/project/{project.id}/workflow/{wf_not_deletable_2.id}/"
         )
         assert res.status_code == 422
 

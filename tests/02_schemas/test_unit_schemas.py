@@ -72,7 +72,7 @@ def test_apply_workflow_create():
 
 
 def test_apply_workflow_update():
-    for status in ["submitted", "running", "done", "failed"]:
+    for status in ["submitted", "done", "failed"]:
         ApplyWorkflowUpdate(status=status)
     with pytest.raises(ValueError):
         ApplyWorkflowUpdate(status=" ")
