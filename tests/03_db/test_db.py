@@ -69,54 +69,54 @@ def test_DB_ENGINE_is_postgres():
 async def test_DB_class_async():
 
     try:
-        DB._engine_async
+        assert DB._engine_async
         delattr(DB, "_engine_async")
     except AttributeError:
         pass
     with pytest.raises(AttributeError):
-        DB._engine_async
+        assert DB._engine_async
 
     DB.engine_async()
-    DB._engine_async
+    assert DB._engine_async
     delattr(DB, "_engine_async")
 
     try:
-        DB._async_session_maker
+        assert DB._async_session_maker
         delattr(DB, "_async_session_maker")
     except AttributeError:
         pass
     with pytest.raises(AttributeError):
-        DB._async_session_maker
+        assert DB._async_session_maker
 
     async for _ in DB.get_async_db():
         pass
 
-    DB._engine_async
-    DB._async_session_maker
+    assert DB._engine_async
+    assert DB._async_session_maker
 
 
 def test_DB_class_sync():
     try:
-        DB._engine_sync
+        assert DB._engine_sync
         delattr(DB, "_engine_sync")
     except AttributeError:
         pass
     with pytest.raises(AttributeError):
-        DB._engine_sync
+        assert DB._engine_sync
 
     DB.engine_sync()
-    DB._engine_sync
+    assert DB._engine_sync
     delattr(DB, "_engine_sync")
 
     try:
-        DB._sync_session_maker
+        assert DB._sync_session_maker
         delattr(DB, "_sync_session_maker")
     except AttributeError:
         pass
     with pytest.raises(AttributeError):
-        DB._sync_session_maker
+        assert DB._sync_session_maker
 
     next(DB.get_sync_db())
 
-    DB._engine_sync
-    DB._sync_session_maker
+    assert DB._engine_sync
+    assert DB._sync_session_maker
