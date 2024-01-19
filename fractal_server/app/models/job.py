@@ -3,12 +3,12 @@ from typing import Any
 from typing import Optional
 
 from sqlalchemy import Column
+from sqlalchemy.sql import func
 from sqlalchemy.types import DateTime
 from sqlalchemy.types import JSON
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
-from ...utils import get_timestamp
 from ..schemas import JobStatusType
 from ..schemas.applyworkflow import _ApplyWorkflowBase
 
@@ -91,8 +91,9 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
     last_task_index: int
 
     start_timestamp: datetime = Field(
-        default_factory=get_timestamp,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+        sa_column=Column(
+            DateTime(timezone=True), nullable=False, server_default=func.now()
+        ),
     )
     end_timestamp: Optional[datetime] = Field(
         default=None, sa_column=Column(DateTime(timezone=True))

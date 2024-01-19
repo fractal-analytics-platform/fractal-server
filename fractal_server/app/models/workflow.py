@@ -6,13 +6,13 @@ from typing import Union
 from pydantic import validator
 from sqlalchemy import Column
 from sqlalchemy.ext.orderinglist import ordering_list
+from sqlalchemy.sql import func
 from sqlalchemy.types import DateTime
 from sqlalchemy.types import JSON
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
-from ...utils import get_timestamp
 from ..schemas.workflow import _WorkflowBase
 from ..schemas.workflow import _WorkflowTaskBase
 from .task import Task
@@ -119,9 +119,10 @@ class Workflow(_WorkflowBase, SQLModel, table=True):
             cascade="all, delete-orphan",
         ),
     )
-    timestamp_created: datetime = Field(
-        default_factory=get_timestamp,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+    timestamp_created: Optional[datetime] = Field(
+        sa_column=Column(
+            DateTime(timezone=True), nullable=False, server_default=func.now()
+        ),
     )
 
     @property
