@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="d_e101bdf799b2c8b0_workflowtask_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.0">coverage.py v7.4.0</a>,
-            created at 2024-01-19 08:56 +0000
+            created at 2024-01-19 14:28 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -120,8 +120,8 @@
     <p class="run"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="op">.</span><span class="nam">security</span> <span class="key">import</span> <span class="nam">current_active_user</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="op">.</span><span class="nam">security</span> <span class="key">import</span> <span class="nam">User</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">_aux_functions</span> <span class="key">import</span> <span class="nam">_check_workflow_exists</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">_aux_functions</span> <span class="key">import</span> <span class="nam">_get_active_jobs_statement</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t40" href="#t40">40</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">_aux_functions</span> <span class="key">import</span> <span class="nam">_get_project_check_owner</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">_aux_functions</span> <span class="key">import</span> <span class="nam">_get_project_check_owner</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t40" href="#t40">40</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">_aux_functions</span> <span class="key">import</span> <span class="nam">_get_submitted_jobs_statement</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t41" href="#t41">41</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">_aux_functions</span> <span class="key">import</span> <span class="nam">_get_workflow_check_owner</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t42" href="#t42">42</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">_aux_functions</span> <span class="key">import</span> <span class="nam">_workflow_insert_task</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t43" href="#t43">43</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -276,9 +276,9 @@
     <p class="pln"><span class="n"><a id="t192" href="#t192">192</a></span><span class="t">        <span class="nam">project_id</span><span class="op">=</span><span class="nam">project_id</span><span class="op">,</span> <span class="nam">workflow_id</span><span class="op">=</span><span class="nam">workflow_id</span><span class="op">,</span> <span class="nam">user_id</span><span class="op">=</span><span class="nam">user</span><span class="op">.</span><span class="nam">id</span><span class="op">,</span> <span class="nam">db</span><span class="op">=</span><span class="nam">db</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t193" href="#t193">193</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t194" href="#t194">194</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t195" href="#t195">195</a></span><span class="t">    <span class="com"># Fail if there exist jobs that are active (that is, pending or running)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t196" href="#t196">196</a></span><span class="t">    <span class="com"># and in relation with the current workflow.</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t197" href="#t197">197</a></span><span class="t">    <span class="nam">stm</span> <span class="op">=</span> <span class="nam">_get_active_jobs_statement</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">where</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t195" href="#t195">195</a></span><span class="t">    <span class="com"># Fail if there exist jobs that are submitted and in relation with the</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t196" href="#t196">196</a></span><span class="t">    <span class="com"># current workflow.</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t197" href="#t197">197</a></span><span class="t">    <span class="nam">stm</span> <span class="op">=</span> <span class="nam">_get_submitted_jobs_statement</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">where</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t198" href="#t198">198</a></span><span class="t">        <span class="nam">ApplyWorkflow</span><span class="op">.</span><span class="nam">workflow_id</span> <span class="op">==</span> <span class="nam">workflow</span><span class="op">.</span><span class="nam">id</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t199" href="#t199">199</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t200" href="#t200">200</a></span><span class="t">    <span class="nam">res</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">db</span><span class="op">.</span><span class="nam">execute</span><span class="op">(</span><span class="nam">stm</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -441,7 +441,7 @@
             <a id="nextFileLink" class="nav" href="d_e101bdf799b2c8b0_workflowtask_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.0">coverage.py v7.4.0</a>,
-            created at 2024-01-19 08:56 +0000
+            created at 2024-01-19 14:28 +0000
         </p>
     </div>
 </footer>
