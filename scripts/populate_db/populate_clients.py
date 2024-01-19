@@ -167,7 +167,7 @@ class FractalClient:
 
         return TaskRead(**res.json())
 
-    def add_job(
+    def apply_workflow(
         self,
         project_id: int,
         workflow_id: int,

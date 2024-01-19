@@ -30,7 +30,9 @@ if __name__ == "__main__":
     debug(t)
     wt = x.add_workflowtask(p.id, w.id, t.id, WorkflowTaskCreate(order=0))
     debug(wt)
-    a = x.add_job(p.id, w.id, d.id, d.id, applyworkflow=ApplyWorkflowCreate())
+    a = x.apply_workflow(
+        p.id, w.id, d.id, d.id, applyworkflow=ApplyWorkflowCreate()
+    )
     debug(a)
 
     x.wait_for_all_jobs()
