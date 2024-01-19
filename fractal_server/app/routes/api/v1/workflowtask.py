@@ -21,7 +21,7 @@ from fastapi import Response
 from fastapi import status
 
 from ....db import AsyncSession
-from ....db import get_db
+from ....db import get_async_db
 from ....models import Task
 from ....schemas import WorkflowTaskCreate
 from ....schemas import WorkflowTaskRead
@@ -46,7 +46,7 @@ async def create_workflowtask(
     task_id: int,
     new_task: WorkflowTaskCreate,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Optional[WorkflowTaskRead]:
     """
     Add a WorkflowTask to a Workflow
@@ -85,7 +85,7 @@ async def read_workflowtask(
     workflow_id: int,
     workflow_task_id: int,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ):
     workflow_task, _ = await _get_workflow_task_check_owner(
         project_id=project_id,
@@ -107,7 +107,7 @@ async def update_workflowtask(
     workflow_task_id: int,
     workflow_task_update: WorkflowTaskUpdate,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Optional[WorkflowTaskRead]:
     """
     Edit a WorkflowTask of a Workflow
@@ -162,7 +162,7 @@ async def delete_workflowtask(
     workflow_id: int,
     workflow_task_id: int,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """
     Delete a WorkflowTask of a Workflow

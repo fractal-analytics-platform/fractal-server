@@ -3,7 +3,7 @@ import contextlib
 
 from sqlmodel import select
 
-from fractal_server.app.db import get_db
+from fractal_server.app.db import get_async_db
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.dataset import Dataset
 from fractal_server.app.models.dataset import Resource
@@ -22,7 +22,7 @@ from fractal_server.app.security import User
 # from fractal_server.app.schemas.workflow import WorkflowCreate
 
 
-get_async_session_context = contextlib.asynccontextmanager(get_db)
+get_async_session_context = contextlib.asynccontextmanager(get_async_db)
 get_user_db_context = contextlib.asynccontextmanager(get_user_db)
 get_user_manager_context = contextlib.asynccontextmanager(get_user_manager)
 
