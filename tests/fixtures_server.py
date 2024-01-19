@@ -170,8 +170,9 @@ async def db_create_tables(override_settings):
     from fractal_server.app.db import DB
     from fractal_server.app.models import SQLModel
 
-    # Calling both set_sync_db and set_async_db every time is needed for our
-    # Postgresql-based CI, due to the presence of Enums.
+    # Calling both set_sync_db and set_async_db guarantees that a new pair of
+    # sync/async engines is created every time.
+    # This is needed for our Postgresql-based CI, due to the presence of Enums.
     # See
     # https://github.com/fractal-analytics-platform/fractal-server/pull/934#issuecomment-1782842865
     # and
