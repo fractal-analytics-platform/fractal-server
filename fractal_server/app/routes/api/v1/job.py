@@ -9,7 +9,7 @@ from fastapi.responses import StreamingResponse
 from sqlmodel import select
 
 from ....db import AsyncSession
-from ....db import get_db
+from ....db import get_async_db
 from ....models import ApplyWorkflow
 from ....models import Project
 from ....schemas import ApplyWorkflowRead
@@ -29,7 +29,7 @@ router = APIRouter()
 @router.get("/job/", response_model=list[ApplyWorkflowRead])
 async def get_user_jobs(
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> list[ApplyWorkflowRead]:
     """
     Returns all the jobs of the current user
@@ -51,7 +51,7 @@ async def get_workflow_jobs(
     project_id: int,
     workflow_id: int,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Optional[list[ApplyWorkflowRead]]:
     """
     Returns all the jobs related to a specific workflow
@@ -73,7 +73,7 @@ async def read_job(
     project_id: int,
     job_id: int,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Optional[ApplyWorkflowRead]:
     """
     Return info on an existing job
@@ -99,7 +99,7 @@ async def download_job_logs(
     project_id: int,
     job_id: int,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> StreamingResponse:
     """
     Download job folder
@@ -132,7 +132,7 @@ async def download_job_logs(
 async def get_job_list(
     project_id: int,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Optional[list[ApplyWorkflowRead]]:
     """
     Get job list for given project
@@ -156,7 +156,7 @@ async def stop_job(
     project_id: int,
     job_id: int,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """
     Stop execution of a workflow job (only available for slurm backend)

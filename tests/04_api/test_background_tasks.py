@@ -14,7 +14,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from fractal_server.app.db import DBSyncSession
-from fractal_server.app.db import get_db
+from fractal_server.app.db import get_async_db
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import State
 from fractal_server.app.routes.api import router_api
@@ -45,7 +45,7 @@ async def bgtask_async_db(state_id: int):
     async db session.
     """
     logger.critical("bgtask_async_db START")
-    async for new_db in get_db():
+    async for new_db in get_async_db():
         state = await new_db.get(State, state_id)
         state.data = {"a": "b"}
         await new_db.merge(state)
@@ -60,7 +60,7 @@ async def bgtask_async_db(state_id: int):
 @router_api.get("/test_async/")
 async def run_background_task_async(
     background_tasks: BackgroundTasks,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ):
     """Endpoint that calls bgtask_async_db in background."""
     logger.critical("START run_background_task_async")
@@ -78,7 +78,7 @@ async def run_background_task_async(
 @router_api.get("/test_sync/")
 async def run_background_task_sync(
     background_tasks: BackgroundTasks,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ):
     """Endpoint that calls bgtask_sync_db in background."""
 

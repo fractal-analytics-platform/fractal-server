@@ -13,7 +13,7 @@ from sqlmodel import select
 
 from ...config import get_settings
 from ...syringe import Inject
-from ..db import get_db
+from ..db import get_async_db
 from ..models.security import UserOAuth as User
 from ..schemas.user import UserCreate
 from ..schemas.user import UserRead
@@ -97,7 +97,7 @@ async def get_current_user(user: User = Depends(current_active_user)):
 @router_auth.get("/users/", response_model=list[UserRead])
 async def list_users(
     user: User = Depends(current_active_superuser),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ):
     """
     Return list of all users
