@@ -171,7 +171,7 @@ async def delete_dataset(
     )
     dataset = output["dataset"]
 
-    # Fail if there exist jobs that are active (that is, pending or running)
+    # Fail if there exist jobs that are active (that is, pending or submitted)
     # and in relation with the current dataset.
     stm = _get_submitted_jobs_statement().where(
         or_(
