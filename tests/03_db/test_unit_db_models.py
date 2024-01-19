@@ -102,9 +102,12 @@ async def test_project_and_workflows(db):
     project = Project(name="project")
     # using `.project` relationship
     workflow1 = Workflow(name="workflow1", project=project)
+    assert workflow1.timestamp_created is None
     db.add(project)
     db.add(workflow1)
     await db.commit()
+    await db.refresh(workflow1)
+    assert workflow1.timestamp_created is not None
     db.expunge_all()
 
     with pytest.raises(IntegrityError):
@@ -253,9 +256,12 @@ async def test_project_and_datasets(db):
     project = Project(name="project")
     # using `.project` relationship
     dataset1 = Dataset(name="dataset1", project=project)
+    assert dataset1.timestamp_created is None
     db.add(project)
     db.add(dataset1)
     await db.commit()
+    await db.refresh(dataset1)
+    assert dataset1.timestamp_created is not None
     db.expunge_all()
 
     with pytest.raises(IntegrityError):
@@ -415,8 +421,11 @@ async def test_jobs(db):
             await db.commit()
         await db.rollback()
     job = ApplyWorkflow(**required_args)
+    assert job.start_timestamp is None
     db.add(job)
     await db.commit()
+    await db.refresh(job)
+    assert job.start_timestamp is not None
     db.expunge_all()
     job_query = await db.execute(select(ApplyWorkflow))
     db_job = job_query.scalars().one()
