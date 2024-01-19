@@ -76,6 +76,10 @@ async def test_DB_class_async():
     with pytest.raises(AttributeError):
         DB._engine_async
 
+    DB.engine_async()
+    DB._engine_async
+    delattr(DB, "_engine_async")
+
     try:
         DB._async_session_maker
         delattr(DB, "_async_session_maker")
@@ -99,6 +103,10 @@ def test_DB_class_sync():
         pass
     with pytest.raises(AttributeError):
         DB._engine_sync
+
+    DB.engine_sync()
+    DB._engine_sync
+    delattr(DB, "_engine_sync")
 
     try:
         DB._sync_session_maker
