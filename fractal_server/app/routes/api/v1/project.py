@@ -33,9 +33,9 @@ from ....security import current_active_user
 from ....security import current_active_verified_user
 from ....security import User
 from ._aux_functions import _check_project_exists
-from ._aux_functions import _get_active_jobs_statement
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_project_check_owner
+from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
 
 
@@ -151,9 +151,9 @@ async def delete_project(
         project_id=project_id, user_id=user.id, db=db
     )
 
-    # Fail if there exist jobs that are active (that is, pending or running)
-    # and in relation with the current project.
-    stm = _get_active_jobs_statement().where(
+    # Fail if there exist jobs that are submitted and in relation with the
+    # current project.
+    stm = _get_submitted_jobs_statement().where(
         ApplyWorkflow.project_id == project_id
     )
     res = await db.execute(stm)
@@ -352,16 +352,11 @@ async def apply_workflow(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)
         )
 
-    # Check that no other job with the same output_dataset_id is either
-    # SUBMITTED or RUNNING
+    # Check that no other job with the same output_dataset_id is SUBMITTED
     stm = (
         select(ApplyWorkflow)
         .where(ApplyWorkflow.output_dataset_id == output_dataset_id)
-        .where(
-            ApplyWorkflow.status.in_(
-                [JobStatusType.SUBMITTED, JobStatusType.RUNNING]
-            )
-        )
+        .where(ApplyWorkflow.status == JobStatusType.SUBMITTED)
     )
     res = await db.execute(stm)
     if res.scalars().all():
@@ -369,7 +364,7 @@ async def apply_workflow(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
                 f"Output dataset {output_dataset_id} is already in use "
-                "in pending/running job(s)."
+                "in submitted job(s)."
             ),
         )
 

@@ -25,21 +25,17 @@ class JobStatusType(str, Enum):
 
     Attributes:
         SUBMITTED:
-            The workflow has been applied but not yet scheduled with an
-            executor. In this phase, due diligence takes place, such as
-            creating working directory, assemblying arguments, etc.
-        RUNNING:
-            The workflow was scheduled with an executor. Note that it might not
-            yet be running within the executor, e.g., jobs could still be
-            pending within a SLURM executor.
+            The job was created. This does not guarantee that it was also
+            submitted to an executor (e.g. other errors could have prevented
+            this), nor that it is actually running (e.g. SLURM jobs could be
+            still in the queue).
         DONE:
-            The workflow was applied successfully
+            The job successfully reached its end.
         FAILED:
             The workflow terminated with an error.
     """
 
     SUBMITTED = "submitted"
-    RUNNING = "running"
     DONE = "done"
     FAILED = "failed"
 

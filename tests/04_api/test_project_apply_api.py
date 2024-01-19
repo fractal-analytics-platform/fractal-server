@@ -215,7 +215,7 @@ async def test_project_apply_existing_job(
             output_dataset_id=output_dataset_B.id,
             workflow_id=workflow.id,
             working_dir=tmp_path.as_posix(),
-            status="running",
+            status="submitted",
         )
         debug(existing_job_B_done)
 
