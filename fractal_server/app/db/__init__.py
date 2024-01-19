@@ -27,6 +27,16 @@ class DB:
     DB class
     """
 
+    def __init__(self):
+        settings = Inject(get_settings)
+        settings.check_db()
+        if settings.DB_ENGINE == "sqlite":
+            logger.warning(
+                "SQLite is supported (for version >=3.37) but discouraged "
+                "in production. Given its partial support for ForeignKey "
+                "constraints, database consistency cannot be guaranteed."
+            )
+
     @classmethod
     def engine_async(cls):
         try:
@@ -49,12 +59,6 @@ class DB:
         settings.check_db()
 
         if settings.DB_ENGINE == "sqlite":
-            logger.warning(
-                "SQLite is supported (for version >=3.37) but discouraged "
-                "in production. Given its partial support for ForeignKey "
-                "constraints, database consistency cannot be guaranteed."
-            )
-
             # Set some sqlite-specific options
             engine_kwargs_async = dict(poolclass=StaticPool)
         else:
@@ -81,12 +85,6 @@ class DB:
         settings.check_db()
 
         if settings.DB_ENGINE == "sqlite":
-            logger.warning(
-                "SQLite is supported (for version >=3.37) but discouraged "
-                "in production. Given its partial support for ForeignKey "
-                "constraints, database consistency cannot be guaranteed."
-            )
-
             # Set some sqlite-specific options
             engine_kwargs_sync = dict(
                 poolclass=StaticPool,
