@@ -21,11 +21,15 @@ from fractal_server.syringe import Inject
 async def test_projects(db):
     p1 = Project(name="project", read_only=True)
     p2 = Project(name="project")
-    assert p1.timestamp_created is not None
-    assert p2.timestamp_created is not None
+    assert p1.timestamp_created is None
+    assert p2.timestamp_created is None
     db.add(p1)
     db.add(p2)
     await db.commit()
+    await db.refresh(p1)
+    await db.refresh(p2)
+    assert p1.timestamp_created is not None
+    assert p2.timestamp_created is not None
     db.expunge_all()
 
     project_query = await db.execute(select(Project))

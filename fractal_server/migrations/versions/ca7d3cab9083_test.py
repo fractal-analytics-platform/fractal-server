@@ -23,8 +23,6 @@ def upgrade() -> None:
         batch_op.alter_column(
             "timestamp_created", server_default=sa.func.now()  # .utcnow() ???
         )
-    with op.batch_alter_table("state", schema=None) as batch_op:
-        batch_op.alter_column("timestamp", server_default=sa.func.now())
     with op.batch_alter_table("workflow", schema=None) as batch_op:
         batch_op.alter_column(
             "timestamp_created", server_default=sa.func.now()
@@ -40,8 +38,6 @@ def upgrade() -> None:
 def downgrade() -> None:
     with op.batch_alter_table("project", schema=None) as batch_op:
         batch_op.alter_column("timestamp_created", None)
-    with op.batch_alter_table("state", schema=None) as batch_op:
-        batch_op.alter_column("timestamp", server_default=None)
     with op.batch_alter_table("workflow", schema=None) as batch_op:
         batch_op.alter_column("timestamp_created", server_default=None)
     with op.batch_alter_table("dataset", schema=None) as batch_op:
