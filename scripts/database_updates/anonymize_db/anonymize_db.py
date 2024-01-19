@@ -23,7 +23,7 @@ context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 hashed_password = context.hash("1234")
 
 
-DB.set_db()
+DB.set_sync_db()
 
 with next(get_sync_db()) as db:
     stm = select(Project)
