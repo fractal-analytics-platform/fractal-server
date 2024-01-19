@@ -3,7 +3,7 @@ from typing import Any
 from typing import Optional
 
 from sqlalchemy import Column
-from sqlalchemy.sql import func
+from sqlalchemy import func
 from sqlalchemy.types import DateTime
 from sqlalchemy.types import JSON
 from sqlmodel import Field
