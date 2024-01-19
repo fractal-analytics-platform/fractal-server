@@ -192,8 +192,8 @@ async def delete_workflow(
         project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
 
-    # Fail if there exist jobs that are active (that is, pending or running)
-    # and in relation with the current workflow.
+    # Fail if there exist jobs that are submitted and in relation with the
+    # current workflow.
     stm = _get_submitted_jobs_statement().where(
         ApplyWorkflow.workflow_id == workflow.id
     )
