@@ -56,7 +56,7 @@ from sqlmodel import select
 
 from ...config import get_settings
 from ...syringe import Inject
-from ..db import get_db
+from ..db import get_async_db
 from ..models.security import OAuthAccount
 from ..models.security import UserOAuth as User
 from fractal_server.app.models.security import UserOAuth
@@ -175,7 +175,7 @@ class SQLModelUserDatabaseAsync(Generic[UP, ID], BaseUserDatabase[UP, ID]):
 
 
 async def get_user_db(
-    session: AsyncSession = Depends(get_db),
+    session: AsyncSession = Depends(get_async_db),
 ) -> AsyncGenerator[SQLModelUserDatabaseAsync, None]:
     yield SQLModelUserDatabaseAsync(session, User, OAuthAccount)
 
@@ -247,7 +247,7 @@ current_active_superuser = fastapi_users.current_user(
     active=True, superuser=True
 )
 
-get_async_session_context = contextlib.asynccontextmanager(get_db)
+get_async_session_context = contextlib.asynccontextmanager(get_async_db)
 get_user_db_context = contextlib.asynccontextmanager(get_user_db)
 get_user_manager_context = contextlib.asynccontextmanager(get_user_manager)
 

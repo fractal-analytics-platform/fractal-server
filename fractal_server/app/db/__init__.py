@@ -139,5 +139,5 @@ class DB:
             yield sync_session
 
 
-get_db = DB.get_async_db
+get_async_db = DB.get_async_db
 get_sync_db = DB.get_sync_db
