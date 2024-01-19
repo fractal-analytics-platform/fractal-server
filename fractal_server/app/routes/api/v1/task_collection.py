@@ -29,7 +29,7 @@ from .....tasks.collection import inspect_package
 from .....tasks.collection import slugify_task_name
 from ....db import AsyncSession
 from ....db import DBSyncSession
-from ....db import get_db
+from ....db import get_async_db
 from ....db import get_sync_db
 from ....models import State
 from ....models import Task
@@ -175,7 +175,7 @@ async def collect_tasks_pip(
     background_tasks: BackgroundTasks,
     response: Response,
     user: User = Depends(current_active_verified_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> StateRead:  # State[TaskCollectStatus]
     """
     Task collection endpoint
@@ -314,7 +314,7 @@ async def check_collection_status(
     state_id: int,
     user: User = Depends(current_active_user),
     verbose: bool = False,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> StateRead:  # State[TaskCollectStatus]
     """
     Check status of background task collection

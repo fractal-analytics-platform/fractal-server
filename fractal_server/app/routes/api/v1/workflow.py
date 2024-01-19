@@ -22,7 +22,7 @@ from sqlmodel import select
 from .....logger import close_logger
 from .....logger import set_logger
 from ....db import AsyncSession
-from ....db import get_db
+from ....db import get_async_db
 from ....models import ApplyWorkflow
 from ....models import Project
 from ....models import Task
@@ -52,7 +52,7 @@ router = APIRouter()
 async def get_workflow_list(
     project_id: int,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Optional[list[WorkflowRead]]:
     """
     Get workflow list for given project
@@ -79,7 +79,7 @@ async def create_workflow(
     project_id: int,
     workflow: WorkflowCreate,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Optional[WorkflowRead]:
     """
     Create a workflow, associate to a project
@@ -109,7 +109,7 @@ async def read_workflow(
     project_id: int,
     workflow_id: int,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Optional[WorkflowRead]:
     """
     Get info on an existing workflow
@@ -131,7 +131,7 @@ async def update_workflow(
     workflow_id: int,
     patch: WorkflowUpdate,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Optional[WorkflowRead]:
     """
     Edit a workflow
@@ -182,7 +182,7 @@ async def delete_workflow(
     project_id: int,
     workflow_id: int,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """
     Delete a workflow
@@ -234,7 +234,7 @@ async def export_worfklow(
     project_id: int,
     workflow_id: int,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Optional[WorkflowExport]:
     """
     Export an existing workflow, after stripping all IDs
@@ -267,7 +267,7 @@ async def import_workflow(
     project_id: int,
     workflow: WorkflowImport,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Optional[WorkflowRead]:
     """
     Import an existing workflow into a project
@@ -338,7 +338,7 @@ async def import_workflow(
 @router.get("/workflow/", response_model=list[WorkflowRead])
 async def get_user_workflows(
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> list[WorkflowRead]:
     """
     Returns all the workflows of the current user
