@@ -1,3 +1,5 @@
+import time
+
 from populate_clients import FractalClient
 from populate_clients import SimpleHttpClient
 
@@ -62,5 +64,6 @@ if __name__ == "__main__":
                 a = user.apply_workflow(
                     p.id, w.id, d.id, d.id, applyworkflow=ApplyWorkflowCreate()
                 )
+                time.sleep(0.1)
 
     admin.wait_for_all_jobs()
