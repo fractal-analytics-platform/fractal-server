@@ -12,27 +12,35 @@ from fractal_server.app.schemas import ResourceCreate
 from fractal_server.app.schemas import ResourceRead
 from fractal_server.app.schemas import TaskCreate
 from fractal_server.app.schemas import TaskRead
+from fractal_server.app.schemas import UserCreate
+from fractal_server.app.schemas import UserRead
+from fractal_server.app.schemas import UserUpdate
 from fractal_server.app.schemas import WorkflowCreate
 from fractal_server.app.schemas import WorkflowRead
 from fractal_server.app.schemas import WorkflowTaskCreate
 from fractal_server.app.schemas import WorkflowTaskRead
 
 
-BASE_URL = "http://localhost:8000"
-CREDENTIALS = dict(username="admin@fractal.xy", password="1234")  # nosec
+DEFAULT_BASE_URL = "http://localhost:8000"
+DEFAULT_CREDENTIALS = dict(
+    username="admin@fractal.xy",
+    password="1234",  # nosec
+)
 
 
 class SimpleHttpClient:
     base_url: str
 
-    def __init__(self, base_url, credentials):
+    def __init__(
+        self,
+        base_url: str = DEFAULT_BASE_URL,
+        credentials: dict[str, str] = DEFAULT_CREDENTIALS,
+    ):
         self.base_url = base_url
-
         response = requests.post(
             f"{self.base_url}/auth/token/login/",
             data=credentials,
         )
-
         self.bearer_token = response.json().get("access_token")
 
     def make_request(self, endpoint, method="GET", data=None):
@@ -65,6 +73,26 @@ class FractalClient:
     def detail(self, res):
         if res.get("detail"):
             raise ValueError(f"Attention: {res.get('detail')}")
+
+    def add_user(self, user: UserCreate):
+        # Register new user
+        res = self.client.make_request(
+            endpoint="auth/register/",
+            method="POST",
+            data=user.dict(exclude_none=True),
+        )
+        self.detail(res.json())
+        new_user_id = res.json()["id"]
+        # Make new user verified
+        patch_user = UserUpdate(is_verified=True)
+        res = self.client.make_request(
+            endpoint=f"auth/users/{new_user_id}/",
+            method="PATCH",
+            data=patch_user.dict(exclude_none=True),
+        )
+        self.detail(res.json())
+
+        return UserRead(**res.json())
 
     def add_project(self, project: ProjectCreate):
         res = self.client.make_request(
@@ -118,7 +146,7 @@ class FractalClient:
             endpoint=f"api/v1/project/{project_id}/workflow/"
             f"{workflow_id}/wftask/?{task_id=}",
             method="POST",
-            data=wftask.dict(),
+            data=wftask.dict(exclude_none=True),
         )
         self.detail(res.json())
 
@@ -157,15 +185,31 @@ class FractalClient:
         return TaskRead(**res.json())
 
     def add_task(self, task: TaskCreate):
-
         res = self.client.make_request(
             endpoint="api/v1/task/",
             method="POST",
             data=task.dict(exclude_none=True),
         )
         self.detail(res.json())
-
         return TaskRead(**res.json())
+
+    def whoami(self):
+        res = self.client.make_request(
+            endpoint="auth/current-user/",
+            method="GET",
+        )
+        self.detail(res.json())
+        return UserRead(**res.json())
+
+    def patch_current_superuser(self, user: UserUpdate):
+        me = self.whoami()
+        res = self.client.make_request(
+            endpoint=f"auth/users/{me.id}/",
+            method="PATCH",
+            data=user.dict(exclude_none=True),
+        )
+        self.detail(res.json())
+        return UserRead(**res.json())
 
     def apply_workflow(
         self,
@@ -193,12 +237,8 @@ class FractalClient:
         waiting_interval: float = 1.0,
     ):
         # Check if user is superuser or not, to set appropriate endpoint
-        res = self.client.make_request(
-            endpoint="auth/current-user/",
-            method="GET",
-        )
-        self.detail(res.json())
-        is_superuser = res.json()["is_superuser"]
+        me = self.whoami()
+        is_superuser = me.is_superuser
         if is_superuser:
             endpoint = "admin/job/"
         else:
