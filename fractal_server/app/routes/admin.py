@@ -16,7 +16,7 @@ from sqlmodel import select
 
 from ...utils import get_timestamp
 from ..db import AsyncSession
-from ..db import get_db
+from ..db import get_async_db
 from ..models import ApplyWorkflow
 from ..models import Dataset
 from ..models import JobStatusType
@@ -41,7 +41,7 @@ async def view_project(
     id: Optional[int] = None,
     user_id: Optional[int] = None,
     user: User = Depends(current_active_superuser),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> list[ProjectRead]:
     """
     Query `project` table.
@@ -73,7 +73,7 @@ async def view_workflow(
     project_id: Optional[int] = None,
     name_contains: Optional[str] = None,
     user: User = Depends(current_active_superuser),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> list[WorkflowRead]:
     """
     Query `workflow` table.
@@ -115,7 +115,7 @@ async def view_dataset(
     name_contains: Optional[str] = None,
     type: Optional[str] = None,
     user: User = Depends(current_active_superuser),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> list[DatasetRead]:
     """
     Query `dataset` table.
@@ -166,7 +166,7 @@ async def view_job(
     end_timestamp_min: Optional[datetime] = None,
     end_timestamp_max: Optional[datetime] = None,
     user: User = Depends(current_active_superuser),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> list[ApplyWorkflowRead]:
     """
     Query `ApplyWorkflow` table.
@@ -231,7 +231,7 @@ async def update_job(
     job_update: ApplyWorkflowUpdate,
     job_id: int,
     user: User = Depends(current_active_superuser),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Optional[ApplyWorkflowRead]:
     """
     Change the status of an existing job.
@@ -264,7 +264,7 @@ async def update_job(
 async def stop_job(
     job_id: int,
     user: User = Depends(current_active_superuser),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """
     Stop execution of a workflow job.
@@ -293,7 +293,7 @@ async def stop_job(
 async def download_job_logs(
     job_id: int,
     user: User = Depends(current_active_superuser),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> StreamingResponse:
     """
     Download job folder

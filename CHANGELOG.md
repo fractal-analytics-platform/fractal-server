@@ -2,9 +2,9 @@
 
 # 1.4.3 (unreleased)
 
-> **WARNINGs**:
+> **WARNING**:
 >
-> 1. This update requires running a fix-db script, available at https://raw.githubusercontent.com/fractal-analytics-platform/fractal-server/1.4.3a0/scripts/fix_db/current.py.
+> This update requires running a fix-db script, available at https://raw.githubusercontent.com/fractal-analytics-platform/fractal-server/1.4.3a0/scripts/fix_db/current.py.
 
 * API:
     * Improve validation of `UserCreate.slurm_accounts` (\#1162).
@@ -19,6 +19,7 @@
 * App (internal):
     * Check in `Settings` that `psycopg2`, `asyngpg` and `cfut`, if required, are installed (\#1167).
     * Split `DB.set_db` into sync/async methods (\#1165).
+    * Rename `DB.get_db` into `DB_get_async_db` (\#1183).
 * Testing:
     * Update `clean_db_fractal_1.4.1.sql` to `clean_db_fractal_1.4.2.sql`, and change `migrations.yml` target version (\#1152).
     * Reorganise the test directory into subdirectories, named according to the order in which we want the CI to execute them (\#1166).
