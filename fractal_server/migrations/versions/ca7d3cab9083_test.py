@@ -21,7 +21,7 @@ depends_on = None
 def upgrade() -> None:
     with op.batch_alter_table("project", schema=None) as batch_op:
         batch_op.alter_column(
-            "timestamp_created", server_default=sa.func.now()  # .utcnow() ???
+            "timestamp_created", server_default=sa.func.now()
         )
     with op.batch_alter_table("workflow", schema=None) as batch_op:
         batch_op.alter_column(
