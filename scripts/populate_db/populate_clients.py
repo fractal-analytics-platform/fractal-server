@@ -1,3 +1,5 @@
+import time
+
 import requests
 
 from fractal_server.app.schemas import ApplyWorkflowCreate
@@ -56,7 +58,7 @@ class SimpleHttpClient:
             return None
 
 
-class New:
+class FractalClient:
     def __init__(self, client: SimpleHttpClient):
         self.client = client
 
@@ -122,6 +124,38 @@ class New:
 
         return WorkflowTaskRead(**res.json())
 
+    def add_working_task(self):
+        task = TaskCreate(
+            source="echo-task",
+            name="Echo Task",
+            command="echo",
+            input_type="Any",
+            output_type="Any",
+        )
+        res = self.client.make_request(
+            endpoint="api/v1/task/",
+            method="POST",
+            data=task.dict(exclude_none=True),
+        )
+        self.detail(res.json())
+        return TaskRead(**res.json())
+
+    def add_failing_task(self):
+        task = TaskCreate(
+            source="ls-task",
+            name="Ls Task",
+            command="ls",
+            input_type="Any",
+            output_type="Any",
+        )
+        res = self.client.make_request(
+            endpoint="api/v1/task/",
+            method="POST",
+            data=task.dict(exclude_none=True),
+        )
+        self.detail(res.json())
+        return TaskRead(**res.json())
+
     def add_task(self, task: TaskCreate):
 
         res = self.client.make_request(
@@ -152,3 +186,35 @@ class New:
         self.detail(res.json())
 
         return ApplyWorkflowRead(**res.json())
+
+    def wait_for_all_jobs(
+        self,
+        max_calls: int = 20,
+        waiting_interval: float = 1.0,
+    ):
+        # Check if user is superuser or not, to set appropriate endpoint
+        res = self.client.make_request(
+            endpoint="auth/current-user/",
+            method="GET",
+        )
+        self.detail(res.json())
+        is_superuser = res.json()["is_superuser"]
+        if is_superuser:
+            endpoint = "admin/job/"
+        else:
+            endpoint = "api/v1/job/"
+
+        # Make repeated calls
+        for ind_call in range(max_calls):
+            res = self.client.make_request(
+                endpoint=endpoint,
+                method="GET",
+            )
+            if res.status_code != 200:
+                raise
+            job_statuses = [job["status"] for job in res.json()]
+            print(job_statuses)
+            if "submitted" not in job_statuses:
+                return None
+            time.sleep(waiting_interval)
+        raise RuntimeError(f"Reached {max_calls=} but {job_statuses=}.")
