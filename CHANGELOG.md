@@ -24,6 +24,8 @@
     * Reorganise the test directory into subdirectories, named according to the order in which we want the CI to execute them (\#1166).
 * Dependencies:
     * Update `python-dotenv` to version 0.21.0 (\#1172).
+* Runner:
+    * Remove `JobStatusType.RUNNING`, incorporating it into `JobStatusType.SUBMITTED` (\#1179).
 
 # 1.4.2
 
