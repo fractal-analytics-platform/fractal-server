@@ -496,7 +496,7 @@ async def test_stop_job(
             input_dataset_id=dataset.id,
             output_dataset_id=dataset.id,
             workflow_id=workflow.id,
-            status=JobStatusType.RUNNING,
+            status=JobStatusType.SUBMITTED,
         )
 
     async with MockCurrentUser(user_kwargs={"id": 2222, "is_superuser": True}):

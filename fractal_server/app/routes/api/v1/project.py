@@ -14,7 +14,7 @@ from .....logger import close_logger
 from .....logger import set_logger
 from .....syringe import Inject
 from ....db import AsyncSession
-from ....db import get_db
+from ....db import get_async_db
 from ....models import ApplyWorkflow
 from ....models import Dataset
 from ....models import LinkUserProject
@@ -33,9 +33,9 @@ from ....security import current_active_user
 from ....security import current_active_verified_user
 from ....security import User
 from ._aux_functions import _check_project_exists
-from ._aux_functions import _get_active_jobs_statement
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_project_check_owner
+from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
 
 
@@ -45,7 +45,7 @@ router = APIRouter()
 @router.get("/", response_model=list[ProjectRead])
 async def get_list_project(
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> list[Project]:
     """
     Return list of projects user is member of
@@ -65,7 +65,7 @@ async def get_list_project(
 async def create_project(
     project: ProjectCreate,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Optional[ProjectRead]:
     """
     Create new poject
@@ -100,7 +100,7 @@ async def create_project(
 async def read_project(
     project_id: int,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Optional[ProjectRead]:
     """
     Return info on an existing project
@@ -117,7 +117,7 @@ async def update_project(
     project_id: int,
     project_update: ProjectUpdate,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ):
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
@@ -142,7 +142,7 @@ async def update_project(
 async def delete_project(
     project_id: int,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """
     Delete project
@@ -151,9 +151,9 @@ async def delete_project(
         project_id=project_id, user_id=user.id, db=db
     )
 
-    # Fail if there exist jobs that are active (that is, pending or running)
-    # and in relation with the current project.
-    stm = _get_active_jobs_statement().where(
+    # Fail if there exist jobs that are submitted and in relation with the
+    # current project.
+    stm = _get_submitted_jobs_statement().where(
         ApplyWorkflow.project_id == project_id
     )
     res = await db.execute(stm)
@@ -245,7 +245,7 @@ async def apply_workflow(
     input_dataset_id: int,
     output_dataset_id: int,
     user: User = Depends(current_active_verified_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Optional[ApplyWorkflowRead]:
 
     output = await _get_dataset_check_owner(
@@ -352,16 +352,11 @@ async def apply_workflow(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)
         )
 
-    # Check that no other job with the same output_dataset_id is either
-    # SUBMITTED or RUNNING
+    # Check that no other job with the same output_dataset_id is SUBMITTED
     stm = (
         select(ApplyWorkflow)
         .where(ApplyWorkflow.output_dataset_id == output_dataset_id)
-        .where(
-            ApplyWorkflow.status.in_(
-                [JobStatusType.SUBMITTED, JobStatusType.RUNNING]
-            )
-        )
+        .where(ApplyWorkflow.status == JobStatusType.SUBMITTED)
     )
     res = await db.execute(stm)
     if res.scalars().all():
@@ -369,7 +364,7 @@ async def apply_workflow(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
                 f"Output dataset {output_dataset_id} is already in use "
-                "in pending/running job(s)."
+                "in submitted job(s)."
             ),
         )
 

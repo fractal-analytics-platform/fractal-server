@@ -11,7 +11,7 @@ from sqlmodel import or_
 from sqlmodel import select
 
 from ....db import AsyncSession
-from ....db import get_db
+from ....db import get_async_db
 from ....models import ApplyWorkflow
 from ....models import Dataset
 from ....models import Project
@@ -28,9 +28,9 @@ from ....schemas import WorkflowExport
 from ....schemas import WorkflowTaskExport
 from ....security import current_active_user
 from ....security import User
-from ._aux_functions import _get_active_jobs_statement
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_project_check_owner
+from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
 
 
@@ -46,7 +46,7 @@ async def create_dataset(
     project_id: int,
     dataset: DatasetCreate,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Optional[DatasetRead]:
     """
     Add new dataset to current project
@@ -70,7 +70,7 @@ async def create_dataset(
 async def read_dataset_list(
     project_id: int,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Optional[list[DatasetRead]]:
     """
     Get dataset list for given project
@@ -96,7 +96,7 @@ async def read_dataset(
     project_id: int,
     dataset_id: int,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Optional[DatasetRead]:
     """
     Get info on a dataset associated to the current project
@@ -121,7 +121,7 @@ async def update_dataset(
     dataset_id: int,
     dataset_update: DatasetUpdate,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Optional[DatasetRead]:
     """
     Edit a dataset associated to the current project
@@ -158,7 +158,7 @@ async def delete_dataset(
     project_id: int,
     dataset_id: int,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """
     Delete a dataset associated to the current project
@@ -171,9 +171,9 @@ async def delete_dataset(
     )
     dataset = output["dataset"]
 
-    # Fail if there exist jobs that are active (that is, pending or running)
-    # and in relation with the current dataset.
-    stm = _get_active_jobs_statement().where(
+    # Fail if there exist jobs that are submitted and in relation with the
+    # current dataset.
+    stm = _get_submitted_jobs_statement().where(
         or_(
             ApplyWorkflow.input_dataset_id == dataset_id,
             ApplyWorkflow.output_dataset_id == dataset_id,
@@ -231,7 +231,7 @@ async def create_resource(
     dataset_id: int,
     resource: ResourceCreate,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Optional[ResourceRead]:
     """
     Add resource to an existing dataset
@@ -259,7 +259,7 @@ async def get_resource_list(
     project_id: int,
     dataset_id: int,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Optional[list[ResourceRead]]:
     """
     Get resources from a dataset
@@ -287,7 +287,7 @@ async def update_resource(
     resource_id: int,
     resource_update: ResourceUpdate,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Optional[ResourceRead]:
     """
     Edit a resource of a dataset
@@ -327,7 +327,7 @@ async def delete_resource(
     dataset_id: int,
     resource_id: int,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """
     Delete a resource of a dataset
@@ -360,7 +360,7 @@ async def export_history_as_workflow(
     project_id: int,
     dataset_id: int,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Optional[WorkflowExport]:
     """
     Extract a reproducible workflow from the dataset history.
@@ -374,11 +374,12 @@ async def export_history_as_workflow(
     )
     dataset = output["dataset"]
 
-    # Check whether there exists an active job such that `job.output_dataset_id
-    # == dataset_id`. If at least one such job exists, then this endpoint will
-    # fail. We do not support the use case of exporting a reproducible workflow
-    # when job execution is in progress; this may change in the future.
-    stm = _get_active_jobs_statement().where(
+    # Check whether there exists a submitted job such that
+    # `job.output_dataset_id==dataset_id`.
+    # If at least one such job exists, then this endpoint will fail.
+    # We do not support the use case of exporting a reproducible workflow when
+    # job execution is in progress; this may change in the future.
+    stm = _get_submitted_jobs_statement().where(
         ApplyWorkflow.output_dataset_id == dataset_id
     )
     res = await db.execute(stm)
@@ -427,7 +428,7 @@ async def get_workflowtask_status(
     project_id: int,
     dataset_id: int,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Optional[DatasetStatusRead]:
     """
     Extract the status of all `WorkflowTask`s that ran on a given `Dataset`.
@@ -449,7 +450,7 @@ async def get_workflowtask_status(
     # Note: see
     # https://sqlmodel.tiangolo.com/tutorial/where/#type-annotations-and-errors
     # regarding the type-ignore in this code block
-    stm = _get_active_jobs_statement().where(
+    stm = _get_submitted_jobs_statement().where(
         ApplyWorkflow.output_dataset_id == dataset_id
     )
     res = await db.execute(stm)
@@ -516,7 +517,7 @@ async def get_workflowtask_status(
 @router.get("/dataset/", response_model=list[DatasetRead])
 async def get_user_datasets(
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> list[DatasetRead]:
     """
     Returns all the datasets of the current user
