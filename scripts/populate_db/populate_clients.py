@@ -23,10 +23,9 @@ from fractal_server.app.schemas import WorkflowTaskRead
 
 
 DEFAULT_BASE_URL = "http://localhost:8000"
-DEFAULT_CREDENTIALS = dict(
-    username="admin@fractal.xy",
-    password="1234",  # nosec
-)
+DEFAULT_CREDENTIALS = {}
+DEFAULT_CREDENTIALS["username"] = "admin@fractal.xy"
+DEFAULT_CREDENTIALS["password"] = "1234"  # nosec
 
 
 class SimpleHttpClient:
