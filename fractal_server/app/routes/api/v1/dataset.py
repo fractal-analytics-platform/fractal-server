@@ -375,8 +375,8 @@ async def export_history_as_workflow(
     dataset = output["dataset"]
 
     # Check whether there exists a submitted job such that
-    # `job.output_dataset_id==dataset_id`. If at least one such job exists,
-    # then this endpoint will fail.
+    # `job.output_dataset_id==dataset_id`.
+    # If at least one such job exists, then this endpoint will fail.
     # We do not support the use case of exporting a reproducible workflow when
     # job execution is in progress; this may change in the future.
     stm = _get_submitted_jobs_statement().where(
