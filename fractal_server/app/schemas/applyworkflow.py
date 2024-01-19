@@ -25,12 +25,12 @@ class JobStatusType(str, Enum):
 
     Attributes:
         SUBMITTED:
-            The job was created.
-            This does not guarantee that it was also submitted to an executor
-            (e.g. other errors could have prevented this), nor that it is
-            actually running (e.g. SLURM jobs could be still in the queue).
+            The job was created. This does not guarantee that it was also
+            submitted to an executor (e.g. other errors could have prevented
+            this), nor that it is actually running (e.g. SLURM jobs could be
+            still in the queue).
         DONE:
-            The workflow was applied successfully
+            The job successfully reached its end.
         FAILED:
             The workflow terminated with an error.
     """
