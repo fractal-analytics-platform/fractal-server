@@ -260,12 +260,6 @@ async def test_delete_dataset_cascade_jobs(
             status=JobStatusType.SUBMITTED,  # this is why ds are not deletable
             **common_args,
         )
-        await job_factory(
-            input_dataset_id=ds_not_deletable_2.id,
-            output_dataset_id=ds_not_deletable_1.id,
-            status=JobStatusType.RUNNING,  # this is why ds are not deletable
-            **common_args,
-        )
         res = await client.delete(
             f"api/v1/project/{project.id}/dataset/{ds_deletable_1.id}/"
         )
@@ -279,7 +273,7 @@ async def test_delete_dataset_cascade_jobs(
         )
         assert res.status_code == 422
         res = await client.delete(
-            f"api/v1/project/{project.id}/dataset/{ds_not_deletable_1.id}/"
+            f"api/v1/project/{project.id}/dataset/{ds_not_deletable_2.id}/"
         )
         assert res.status_code == 422
 

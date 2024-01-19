@@ -288,7 +288,6 @@ async def test_delete_project_ongoing_jobs(
 
         prj_done = await get_project_id_linked_to_job(JobStatusType.DONE)
         prj_failed = await get_project_id_linked_to_job(JobStatusType.FAILED)
-        prj_running = await get_project_id_linked_to_job(JobStatusType.RUNNING)
         prj_submitted = await get_project_id_linked_to_job(
             JobStatusType.SUBMITTED
         )
@@ -297,7 +296,5 @@ async def test_delete_project_ongoing_jobs(
         assert res.status_code == 204
         res = await client.delete(f"api/v1/project/{prj_failed}/")
         assert res.status_code == 204
-        res = await client.delete(f"api/v1/project/{prj_running}/")
-        assert res.status_code == 422
         res = await client.delete(f"api/v1/project/{prj_submitted}/")
         assert res.status_code == 422

@@ -368,16 +368,14 @@ async def _get_task_check_owner(
     return task
 
 
-def _get_active_jobs_statement() -> SelectOfScalar:
+def _get_submitted_jobs_statement() -> SelectOfScalar:
     """
     Returns:
         A sqlmodel statement that selects all `ApplyWorkflow`s with
-        `ApplyWorkflow.status` equal to `submitted` or `running`.
+        `ApplyWorkflow.status` equal to `submitted`.
     """
     stm = select(ApplyWorkflow).where(
-        ApplyWorkflow.status.in_(
-            [JobStatusType.SUBMITTED, JobStatusType.RUNNING]
-        )
+        ApplyWorkflow.status == JobStatusType.SUBMITTED
     )
     return stm
 

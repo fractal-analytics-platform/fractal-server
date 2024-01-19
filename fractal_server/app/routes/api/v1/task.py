@@ -10,7 +10,7 @@ from sqlmodel import select
 
 from .....logger import set_logger
 from ....db import AsyncSession
-from ....db import get_db
+from ....db import get_async_db
 from ....models import Task
 from ....models import WorkflowTask
 from ....schemas import TaskCreate
@@ -29,7 +29,7 @@ logger = set_logger(__name__)
 @router.get("/", response_model=list[TaskRead])
 async def get_list_task(
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskRead]:
     """
     Get list of available tasks
@@ -45,7 +45,7 @@ async def get_list_task(
 async def get_task(
     task_id: int,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> TaskRead:
     """
     Get info on a specific task
@@ -64,7 +64,7 @@ async def patch_task(
     task_id: int,
     task_update: TaskUpdate,
     user: User = Depends(current_active_verified_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Optional[TaskRead]:
     """
     Edit a specific task (restricted to superusers and task owner)
@@ -108,7 +108,7 @@ async def patch_task(
 async def create_task(
     task: TaskCreate,
     user: User = Depends(current_active_verified_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Optional[TaskRead]:
     """
     Create a new task
@@ -154,7 +154,7 @@ async def create_task(
 async def delete_task(
     task_id: int,
     user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """
     Delete a task
