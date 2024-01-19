@@ -273,7 +273,7 @@ async def test_delete_dataset_cascade_jobs(
         )
         assert res.status_code == 422
         res = await client.delete(
-            f"api/v1/project/{project.id}/dataset/{ds_not_deletable_1.id}/"
+            f"api/v1/project/{project.id}/dataset/{ds_not_deletable_2.id}/"
         )
         assert res.status_code == 422
 
