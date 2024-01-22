@@ -1,7 +1,7 @@
+import logging
 import time
 
 import requests
-from devtools import debug
 
 from fractal_server.app.schemas import ApplyWorkflowCreate
 from fractal_server.app.schemas import ApplyWorkflowRead
@@ -28,7 +28,7 @@ DEFAULT_CREDENTIALS["username"] = "admin@fractal.xy"
 DEFAULT_CREDENTIALS["password"] = "1234"  # nosec
 
 
-class SimpleHttpClient:
+class FractalClient:
     base_url: str
 
     def __init__(
@@ -59,10 +59,14 @@ class SimpleHttpClient:
                 response = requests.delete(url, headers=headers)
             else:
                 raise ValueError(f"Unsupported HTTP method: {method}")
+
+            # Log calls that take more than one second
             time_end = time.perf_counter()
             elapsed = time_end - time_start
             if elapsed > 1:
-                debug(url, method, elapsed)
+                logging.warning(
+                    f"SLOW API CALL: {method} {url}, {elapsed} seconds"
+                )
 
             return response
 
@@ -70,18 +74,13 @@ class SimpleHttpClient:
             print(f"Request failed: {e}")
             return None
 
-
-class FractalClient:
-    def __init__(self, client: SimpleHttpClient):
-        self.client = client
-
     def detail(self, res):
         if res.get("detail"):
             raise ValueError(f"Attention: {res.get('detail')}")
 
     def add_user(self, user: UserCreate):
         # Register new user
-        res = self.client.make_request(
+        res = self.make_request(
             endpoint="auth/register/",
             method="POST",
             data=user.dict(exclude_none=True),
@@ -90,7 +89,7 @@ class FractalClient:
         new_user_id = res.json()["id"]
         # Make new user verified
         patch_user = UserUpdate(is_verified=True)
-        res = self.client.make_request(
+        res = self.make_request(
             endpoint=f"auth/users/{new_user_id}/",
             method="PATCH",
             data=patch_user.dict(exclude_none=True),
@@ -100,7 +99,7 @@ class FractalClient:
         return UserRead(**res.json())
 
     def add_project(self, project: ProjectCreate):
-        res = self.client.make_request(
+        res = self.make_request(
             endpoint="api/v1/project/",
             method="POST",
             data=project.dict(),
@@ -109,7 +108,7 @@ class FractalClient:
         return ProjectRead(**res.json())
 
     def add_dataset(self, project_id, dataset: DatasetCreate):
-        res = self.client.make_request(
+        res = self.make_request(
             endpoint=f"api/v1/project/{project_id}/dataset/",
             method="POST",
             data=dataset.dict(),
@@ -120,7 +119,7 @@ class FractalClient:
     def add_resource(
         self, project_id: int, dataset_id: int, resource: ResourceCreate
     ):
-        res = self.client.make_request(
+        res = self.make_request(
             endpoint=f"api/v1/project/{project_id}/dataset/"
             f"{dataset_id}/resource/",
             method="POST",
@@ -131,7 +130,7 @@ class FractalClient:
         return ResourceRead(**res.json())
 
     def add_workflow(self, project_id, workflow: WorkflowCreate):
-        res = self.client.make_request(
+        res = self.make_request(
             endpoint=f"api/v1/project/{project_id}/workflow/",
             method="POST",
             data=workflow.dict(),
@@ -147,7 +146,7 @@ class FractalClient:
         task_id: int,
         wftask: WorkflowTaskCreate,
     ):
-        res = self.client.make_request(
+        res = self.make_request(
             endpoint=f"api/v1/project/{project_id}/workflow/"
             f"{workflow_id}/wftask/?{task_id=}",
             method="POST",
@@ -165,7 +164,7 @@ class FractalClient:
             input_type="Any",
             output_type="Any",
         )
-        res = self.client.make_request(
+        res = self.make_request(
             endpoint="api/v1/task/",
             method="POST",
             data=task.dict(exclude_none=True),
@@ -181,7 +180,7 @@ class FractalClient:
             input_type="Any",
             output_type="Any",
         )
-        res = self.client.make_request(
+        res = self.make_request(
             endpoint="api/v1/task/",
             method="POST",
             data=task.dict(exclude_none=True),
@@ -190,7 +189,7 @@ class FractalClient:
         return TaskRead(**res.json())
 
     def add_task(self, task: TaskCreate):
-        res = self.client.make_request(
+        res = self.make_request(
             endpoint="api/v1/task/",
             method="POST",
             data=task.dict(exclude_none=True),
@@ -199,7 +198,7 @@ class FractalClient:
         return TaskRead(**res.json())
 
     def whoami(self):
-        res = self.client.make_request(
+        res = self.make_request(
             endpoint="auth/current-user/",
             method="GET",
         )
@@ -208,7 +207,7 @@ class FractalClient:
 
     def patch_current_superuser(self, user: UserUpdate):
         me = self.whoami()
-        res = self.client.make_request(
+        res = self.make_request(
             endpoint=f"auth/users/{me.id}/",
             method="PATCH",
             data=user.dict(exclude_none=True),
@@ -224,7 +223,7 @@ class FractalClient:
         out_dataset_id: int,
         applyworkflow: ApplyWorkflowCreate,
     ):
-        res = self.client.make_request(
+        res = self.make_request(
             endpoint=f"api/v1/project/{project_id}/"
             f"workflow/{workflow_id}/apply/"
             f"?input_dataset_id={in_dataset_id}"
@@ -250,7 +249,7 @@ class FractalClient:
             endpoint = "api/v1/job/"
         # Make repeated calls
         for ind_call in range(max_calls):
-            res = self.client.make_request(
+            res = self.make_request(
                 endpoint=endpoint,
                 method="GET",
             )
