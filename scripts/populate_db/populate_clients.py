@@ -248,7 +248,6 @@ class FractalClient:
             endpoint = "admin/job/"
         else:
             endpoint = "api/v1/job/"
-
         # Make repeated calls
         for ind_call in range(max_calls):
             res = self.client.make_request(
@@ -258,10 +257,10 @@ class FractalClient:
             if res.status_code != 200:
                 raise
             job_statuses = [job["status"] for job in res.json()]
-            print(job_statuses)
             if ("submitted" not in job_statuses) and (
                 "running" not in job_statuses
             ):
+                print("No submitted/running job left.")
                 return None
             time.sleep(waiting_interval)
         raise RuntimeError(f"Reached {max_calls=} but {job_statuses=}.")
