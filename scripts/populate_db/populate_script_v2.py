@@ -1,5 +1,4 @@
-from populate_clients import FractalClient
-from populate_clients import SimpleHttpClient
+from fractal_client import FractalClient
 
 from fractal_server.app.schemas import ApplyWorkflowCreate
 from fractal_server.app.schemas import DatasetCreate
@@ -23,10 +22,7 @@ def _create_user_client(
             slurm_user=slurm_user,
         )
     )
-    user_client = SimpleHttpClient(
-        credentials=dict(username=email, password=password)
-    )
-    _user = FractalClient(client=user_client)
+    _user = FractalClient(credentials=dict(username=email, password=password))
     print(_user.whoami())
     return _user
 
@@ -95,8 +91,7 @@ def _user_flow_power(
 
 
 if __name__ == "__main__":
-    base_client = SimpleHttpClient()
-    admin = FractalClient(client=base_client)
+    admin = FractalClient()
 
     working_task = admin.add_working_task()
     failing_task = admin.add_failing_task()
