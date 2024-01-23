@@ -27,7 +27,8 @@
     * Update `python-dotenv` to version 0.21.0 (\#1172).
 * Runner:
     * Remove `JobStatusType.RUNNING`, incorporating it into `JobStatusType.SUBMITTED` (\#1179).
-
+* Benchmarks:
+    * Add `fractal_client.py` and `populate_script_v2.py` for creating different database status scenarios.
 # 1.4.2
 
 > **WARNINGs**:
