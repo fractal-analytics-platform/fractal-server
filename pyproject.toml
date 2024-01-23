@@ -60,6 +60,7 @@ pytest-docker = {version = "^2.0"}
 pytest-pretty = "^1.0.1"
 pyyaml="^6.0.1"
 locust = "^2.20.0"
+a2wsgi = "^1.10.0"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs = "1.5.2"
