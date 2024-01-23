@@ -1,7 +1,9 @@
 import logging
 import time
 
+import httpx
 import requests
+from a2wsgi import ASGIMiddleware
 
 from fractal_server.app.schemas import ApplyWorkflowCreate
 from fractal_server.app.schemas import ApplyWorkflowRead
@@ -20,6 +22,7 @@ from fractal_server.app.schemas import WorkflowCreate
 from fractal_server.app.schemas import WorkflowRead
 from fractal_server.app.schemas import WorkflowTaskCreate
 from fractal_server.app.schemas import WorkflowTaskRead
+from fractal_server.main import app
 
 
 DEFAULT_BASE_URL = "http://localhost:8000"
@@ -28,37 +31,48 @@ DEFAULT_CREDENTIALS["username"] = "admin@fractal.xy"
 DEFAULT_CREDENTIALS["password"] = "1234"  # nosec
 
 
+wsgi_app = ASGIMiddleware(app)
+
+
 class FractalClient:
-    base_url: str
+    # base_url: str
 
     def __init__(
         self,
-        base_url: str = DEFAULT_BASE_URL,
+        # base_url: str = DEFAULT_BASE_URL,
         credentials: dict[str, str] = DEFAULT_CREDENTIALS,
     ):
-        self.base_url = base_url
-        response = requests.post(
-            f"{self.base_url}/auth/token/login/",
-            data=credentials,
-        )
-        self.bearer_token = response.json().get("access_token")
+
+        # self.base_url = base_url
+        with httpx.Client(
+            app=wsgi_app, base_url="http://testserver"
+        ) as client:
+            response = client.post(
+                "/auth/token/login/",
+                data=credentials,
+            )
+            print(response.json())
+            self.bearer_token = response.json().get("access_token")
 
     def make_request(self, endpoint, method="GET", data=None):
         headers = {"Authorization": f"Bearer {self.bearer_token}"}
-        url = f"{self.base_url}/{endpoint}"
+        url = f"/{endpoint}"
 
         try:
-            time_start = time.perf_counter()
-            if method == "GET":
-                response = requests.get(url, headers=headers)
-            elif method == "POST":
-                response = requests.post(url, json=data, headers=headers)
-            elif method == "PATCH":
-                response = requests.patch(url, json=data, headers=headers)
-            elif method == "DELETE":
-                response = requests.delete(url, headers=headers)
-            else:
-                raise ValueError(f"Unsupported HTTP method: {method}")
+            with httpx.Client(
+                app=wsgi_app, base_url="http://testserver"
+            ) as client:
+                time_start = time.perf_counter()
+                if method == "GET":
+                    response = client.get(url, headers=headers)
+                elif method == "POST":
+                    response = client.post(url, json=data, headers=headers)
+                elif method == "PATCH":
+                    response = client.patch(url, json=data, headers=headers)
+                elif method == "DELETE":
+                    response = client.delete(url, headers=headers)
+                else:
+                    raise ValueError(f"Unsupported HTTP method: {method}")
 
             # Log calls that take more than one second
             time_end = time.perf_counter()

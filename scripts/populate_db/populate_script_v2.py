@@ -1,5 +1,10 @@
+from fractal_client import DEFAULT_CREDENTIALS
 from fractal_client import FractalClient
+from passlib.context import CryptContext
+from sqlalchemy import insert
+from sqlalchemy import select
 
+from fractal_server.app.db import get_sync_db
 from fractal_server.app.schemas import ApplyWorkflowCreate
 from fractal_server.app.schemas import DatasetCreate
 from fractal_server.app.schemas import ProjectCreate
@@ -7,6 +12,32 @@ from fractal_server.app.schemas import ResourceCreate
 from fractal_server.app.schemas import UserCreate
 from fractal_server.app.schemas import WorkflowCreate
 from fractal_server.app.schemas import WorkflowTaskCreate
+from fractal_server.app.security import UserOAuth
+
+
+context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+hashed_password = context.hash(DEFAULT_CREDENTIALS["password"])
+
+stm_insert = insert(UserOAuth).values(
+    email=DEFAULT_CREDENTIALS["username"],
+    hashed_password=hashed_password,
+    username="admin",
+    slurm_user="slurm",
+    is_superuser=True,
+    is_verified=True,
+)
+
+stm_get = select(UserOAuth).where(UserOAuth.is_superuser == True)  # noqa: E712
+with next(get_sync_db()) as session:
+
+    res = session.execute(stm_get)
+    existing_superuser = res.scalars().first()
+    if existing_superuser is not None:
+        print(f"{existing_superuser.email} superuser already exists,")
+    else:
+        user = session.execute(stm_insert)
+        session.commit()
+        print(f"{user.inserted_primary_key}")
 
 
 def _create_user_client(
