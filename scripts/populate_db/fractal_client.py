@@ -24,8 +24,6 @@ from fractal_server.app.schemas import WorkflowTaskCreate
 from fractal_server.app.schemas import WorkflowTaskRead
 from fractal_server.main import app
 
-
-DEFAULT_BASE_URL = "http://localhost:8000"
 DEFAULT_CREDENTIALS = {}
 DEFAULT_CREDENTIALS["username"] = "admin@fractal.xy"
 DEFAULT_CREDENTIALS["password"] = "1234"  # nosec
@@ -35,18 +33,13 @@ wsgi_app = ASGIMiddleware(app)
 
 
 class FractalClient:
-    # base_url: str
-
     def __init__(
         self,
-        # base_url: str = DEFAULT_BASE_URL,
         credentials: dict[str, str] = DEFAULT_CREDENTIALS,
     ):
-
-        # self.base_url = base_url
-        with httpx.Client(
-            app=wsgi_app, base_url="http://testserver"
-        ) as client:
+        # base_url is needed to determine the communication protocol
+        # for requests, otherwise a KeyError is raised.
+        with httpx.Client(app=wsgi_app, base_url="http://") as client:
             response = client.post(
                 "/auth/token/login/",
                 data=credentials,
@@ -59,9 +52,7 @@ class FractalClient:
         url = f"/{endpoint}"
 
         try:
-            with httpx.Client(
-                app=wsgi_app, base_url="http://testserver"
-            ) as client:
+            with httpx.Client(app=wsgi_app, base_url="http://") as client:
                 time_start = time.perf_counter()
                 if method == "GET":
                     response = client.get(url, headers=headers)
