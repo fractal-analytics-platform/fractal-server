@@ -54,8 +54,8 @@ async def test_view_project(client, MockCurrentUser, project_factory):
         await project_factory(superuser)
 
     async with MockCurrentUser(user_kwargs={"is_superuser": False}) as user:
-        project1 = await project_factory(user)
-        prj1_id = project1.id
+        project = await project_factory(user)
+        prj_id = project.id
         await project_factory(user)
         user_id = user.id
 
@@ -63,22 +63,45 @@ async def test_view_project(client, MockCurrentUser, project_factory):
         res = await client.get(f"{PREFIX}/project/")
         assert res.status_code == 200
         assert len(res.json()) == 3
-        res = await client.get(f"{PREFIX}/project/?id={prj1_id}")
+        res = await client.get(f"{PREFIX}/project/?id={prj_id}")
         assert res.status_code == 200
         assert len(res.json()) == 1
         res = await client.get(f"{PREFIX}/project/?user_id={user_id}")
         assert res.status_code == 200
         assert len(res.json()) == 2
         res = await client.get(
-            f"{PREFIX}/project/?user_id={user_id}&id={prj1_id}"
+            f"{PREFIX}/project/?user_id={user_id}&id={prj_id}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 1
         res = await client.get(
-            f"{PREFIX}/project/?user_id={user_id}&id={prj1_id}"
+            f"{PREFIX}/project/?user_id={user_id}&id={prj_id}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 1
+
+        res = await client.get(
+            f"{PREFIX}/project/?timestamp_created_min="
+            f"{quote(str(datetime(2000, 1, 1, 1, 1, 1)))}"
+        )
+        assert res.status_code == 422
+        res = await client.get(
+            f"{PREFIX}/project/?timestamp_created_min="
+            f"{quote(str(project.timestamp_created))}"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 2
+        res = await client.get(
+            f"{PREFIX}/project/?timestamp_created_max="
+            f"{quote(str(datetime(2000, 1, 1, 1, 1, 1)))}"
+        )
+        assert res.status_code == 422
+        res = await client.get(
+            f"{PREFIX}/project/?timestamp_created_max="
+            f"{quote(str(project.timestamp_created))}"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 2
 
 
 async def test_view_workflow(
