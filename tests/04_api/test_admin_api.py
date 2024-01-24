@@ -180,6 +180,29 @@ async def test_view_workflow(
         assert res.status_code == 200
         assert len(res.json()) == 3
 
+        res = await client.get(
+            f"{PREFIX}/workflow/?timestamp_created_min="
+            f"{quote(str(datetime(2000, 1, 1, 1, 1, 1)))}"
+        )
+        assert res.status_code == 422
+        res = await client.get(
+            f"{PREFIX}/workflow/?timestamp_created_min="
+            f"{quote(str(workflow1b.timestamp_created))}"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 3
+        res = await client.get(
+            f"{PREFIX}/workflow/?timestamp_created_max="
+            f"{quote(str(datetime(2000, 1, 1, 1, 1, 1)))}"
+        )
+        assert res.status_code == 422
+        res = await client.get(
+            f"{PREFIX}/workflow/?timestamp_created_max="
+            f"{quote(str(workflow1b.timestamp_created))}"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 2
+
 
 async def test_view_dataset(
     client, MockCurrentUser, project_factory, dataset_factory
@@ -194,7 +217,7 @@ async def test_view_dataset(
             name="ds1a",
             type="zarr",
         )
-        await dataset_factory(
+        ds1b = await dataset_factory(
             project_id=project1.id,
             name="ds1b",
             type="image",
@@ -267,6 +290,29 @@ async def test_view_dataset(
         res = await client.get(f"{PREFIX}/dataset/?type=image")
         assert res.status_code == 200
         assert len(res.json()) == 1
+
+        res = await client.get(
+            f"{PREFIX}/dataset/?timestamp_created_min="
+            f"{quote(str(datetime(2000, 1, 1, 1, 1, 1)))}"
+        )
+        assert res.status_code == 422
+        res = await client.get(
+            f"{PREFIX}/dataset/?timestamp_created_min="
+            f"{quote(str(ds1b.timestamp_created))}"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 3
+        res = await client.get(
+            f"{PREFIX}/dataset/?timestamp_created_max="
+            f"{quote(str(datetime(2000, 1, 1, 1, 1, 1)))}"
+        )
+        assert res.status_code == 422
+        res = await client.get(
+            f"{PREFIX}/dataset/?timestamp_created_max="
+            f"{quote(str(ds1b.timestamp_created))}"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 2
 
 
 async def test_view_job(
