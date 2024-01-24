@@ -3,7 +3,6 @@ from typing import Any
 from typing import Optional
 
 from sqlalchemy import Column
-from sqlalchemy import func
 from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.types import DateTime
 from sqlalchemy.types import JSON
@@ -11,6 +10,7 @@ from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
+from ...utils import utcnow
 from ..schemas.dataset import _DatasetBase
 from ..schemas.dataset import _ResourceBase
 
@@ -60,7 +60,7 @@ class Dataset(_DatasetBase, SQLModel, table=True):
 
     timestamp_created: datetime = Field(
         sa_column=Column(
-            DateTime(timezone=True), nullable=False, server_default=func.now()
+            DateTime(timezone=True), nullable=False, server_default=utcnow()
         ),
     )
 

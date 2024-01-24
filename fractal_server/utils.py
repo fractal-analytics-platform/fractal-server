@@ -20,6 +20,10 @@ from pathlib import Path
 from shlex import split as shlex_split
 from typing import Optional
 
+from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.sql import expression
+from sqlalchemy.types import DateTime
+
 from .logger import get_logger
 
 
@@ -28,6 +32,21 @@ def get_timestamp() -> datetime:
     Get timezone aware timestamp.
     """
     return datetime.now(tz=timezone.utc)
+
+
+class utcnow(expression.FunctionElement):
+    type = DateTime()
+    inherit_cache = True
+
+
+@compiles(utcnow, "postgresql")
+def pg_utcnow(element, compiler, **kw):
+    return "TIMEZONE('utc', CURRENT_TIMESTAMP)"
+
+
+@compiles(utcnow, "sqlite")
+def sqlite_utcnow(element, compiler, **kw):
+    return r"(STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW'))"
 
 
 async def execute_command(
