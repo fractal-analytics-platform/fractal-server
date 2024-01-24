@@ -1,5 +1,7 @@
 from datetime import datetime
+from datetime import timezone
 from pathlib import Path
+from urllib.parse import quote
 from zipfile import ZipFile
 
 import pytest
@@ -280,7 +282,7 @@ async def test_view_job(
             input_dataset_id=dataset1.id,
             output_dataset_id=dataset2.id,
             workflow_id=workflow1.id,
-            start_timestamp=datetime(2000, 1, 1),
+            start_timestamp=datetime(2000, 1, 1, tzinfo=timezone.utc),
         )
 
         job2 = await job_factory(
@@ -290,8 +292,8 @@ async def test_view_job(
             input_dataset_id=dataset2.id,
             output_dataset_id=dataset1.id,
             workflow_id=workflow2.id,
-            start_timestamp=datetime(2023, 1, 1),
-            end_timestamp=datetime(2023, 11, 9),
+            start_timestamp=datetime(2023, 1, 1, tzinfo=timezone.utc),
+            end_timestamp=datetime(2023, 11, 9, tzinfo=timezone.utc),
         )
 
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
@@ -356,22 +358,26 @@ async def test_view_job(
         # get jobs by [start/end]_timestamp_[min/max]
 
         res = await client.get(
-            f"{PREFIX}/job/?start_timestamp_min=1999-01-01T00:00:01"
+            f"{PREFIX}/job/?start_timestamp_min="
+            f"{quote(str(datetime(1999, 1, 1, 0, 0, 1, tzinfo=timezone.utc)))}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 2
         res = await client.get(
-            f"{PREFIX}/job/?start_timestamp_max=1999-01-01T00:00:01"
+            f"{PREFIX}/job/?start_timestamp_max="
+            f"{quote(str(datetime(1999, 1, 1, 0, 0, 1, tzinfo=timezone.utc)))}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 0
         res = await client.get(
-            f"{PREFIX}/job/?end_timestamp_min=3000-01-01T00:00:01"
+            f"{PREFIX}/job/?end_timestamp_min="
+            f"{quote(str(datetime(3000, 1, 1, 0, 0, 1, tzinfo=timezone.utc)))}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 0
         res = await client.get(
-            f"{PREFIX}/job/?end_timestamp_max=3000-01-01T00:00:01"
+            f"{PREFIX}/job/?end_timestamp_max="
+            f"{quote(str(datetime(3000, 1, 1, 0, 0, 1, tzinfo=timezone.utc)))}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 1
