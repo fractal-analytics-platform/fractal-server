@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import Column
-from sqlalchemy.types import DateTime
+from sqlalchemy_utc import UtcDateTime
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
@@ -18,7 +18,7 @@ class Project(_ProjectBase, SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     timestamp_created: datetime = Field(
         default_factory=get_timestamp,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+        sa_column=Column(UtcDateTime(), nullable=False),
     )
 
     user_list: list[UserOAuth] = Relationship(
