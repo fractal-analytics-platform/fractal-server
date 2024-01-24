@@ -220,7 +220,7 @@ async def test_get_job_list(
         assert len(res.json()) == N
         for job in res.json():
             settings = Inject(get_settings)
-            if settings.DB_ENGINE == "postgres":
+            if True:
                 assert job["start_timestamp"].endswith("+00:00")
                 project_dump = job["project_dump"]
                 assert project_dump["timestamp_created"].endswith("+00:00")
