@@ -359,10 +359,21 @@ async def test_view_job(
 
         res = await client.get(
             f"{PREFIX}/job/?start_timestamp_min="
+            f"{quote(str(datetime(1999, 1, 1, 0, 0, 1)))}"
+        )
+        assert res.status_code == 422
+        res = await client.get(
+            f"{PREFIX}/job/?start_timestamp_min="
             f"{quote(str(datetime(1999, 1, 1, 0, 0, 1, tzinfo=timezone.utc)))}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 2
+
+        res = await client.get(
+            f"{PREFIX}/job/?start_timestamp_max="
+            f"{quote(str(datetime(1999, 1, 1, 0, 0, 1)))}"
+        )
+        assert res.status_code == 422
         res = await client.get(
             f"{PREFIX}/job/?start_timestamp_max="
             f"{quote(str(datetime(1999, 1, 1, 0, 0, 1, tzinfo=timezone.utc)))}"
