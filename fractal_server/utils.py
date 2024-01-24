@@ -35,6 +35,9 @@ def get_timestamp() -> datetime:
 
 
 class utcnow(expression.FunctionElement):
+    # See:
+    # https://docs.sqlalchemy.org/en/20/core/compiler.html#utc-timestamp-function
+    # https://github.com/spoqa/sqlalchemy-utc/blob/master/sqlalchemy_utc/now.py
     type = DateTime()
     inherit_cache = True
 
