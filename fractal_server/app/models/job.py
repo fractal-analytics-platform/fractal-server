@@ -3,8 +3,8 @@ from typing import Any
 from typing import Optional
 
 from sqlalchemy import Column
-from sqlalchemy.types import DateTime
 from sqlalchemy.types import JSON
+from sqlalchemy_utc import UtcDateTime
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
@@ -92,10 +92,10 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
 
     start_timestamp: datetime = Field(
         default_factory=get_timestamp,
-        sa_column=Column(DateTime(timezone=True), nullable=False),
+        sa_column=Column(UtcDateTime(), nullable=False),
     )
     end_timestamp: Optional[datetime] = Field(
-        default=None, sa_column=Column(DateTime(timezone=True))
+        default=None, sa_column=Column(UtcDateTime())
     )
     status: str = JobStatusType.SUBMITTED
     log: Optional[str] = None
