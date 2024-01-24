@@ -9,6 +9,7 @@ from typing import Optional
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Query
 from fastapi import Response
 from fastapi import status
 from fastapi.responses import StreamingResponse
@@ -37,7 +38,7 @@ from .aux._runner import _check_backend_is_slurm
 router_admin = APIRouter()
 
 
-def CHECK_UTC(param_name: str, dt: datetime):
+def CHECK_UTC(param_name: str, dt: datetime) -> None:
     if dt.tzinfo != timezone.utc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -45,12 +46,17 @@ def CHECK_UTC(param_name: str, dt: datetime):
         )
 
 
+timestamp_args = dict(
+    default=None, example="yyyy-MM-dd%20HH%3Amm%3Ass.SSSSSS%2B00%3A00"
+)
+
+
 @router_admin.get("/project/", response_model=list[ProjectRead])
 async def view_project(
     id: Optional[int] = None,
     user_id: Optional[int] = None,
-    timestamp_created_min: Optional[datetime] = None,
-    timestamp_created_max: Optional[datetime] = None,
+    timestamp_created_min: Optional[datetime] = Query(**timestamp_args),
+    timestamp_created_max: Optional[datetime] = Query(**timestamp_args),
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[ProjectRead]:
@@ -89,8 +95,8 @@ async def view_workflow(
     user_id: Optional[int] = None,
     project_id: Optional[int] = None,
     name_contains: Optional[str] = None,
-    timestamp_created_min: Optional[datetime] = None,
-    timestamp_created_max: Optional[datetime] = None,
+    timestamp_created_min: Optional[datetime] = Query(**timestamp_args),
+    timestamp_created_max: Optional[datetime] = Query(**timestamp_args),
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[WorkflowRead]:
@@ -139,8 +145,8 @@ async def view_dataset(
     project_id: Optional[int] = None,
     name_contains: Optional[str] = None,
     type: Optional[str] = None,
-    timestamp_created_min: Optional[datetime] = None,
-    timestamp_created_max: Optional[datetime] = None,
+    timestamp_created_min: Optional[datetime] = Query(**timestamp_args),
+    timestamp_created_max: Optional[datetime] = Query(**timestamp_args),
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[DatasetRead]:
@@ -194,10 +200,10 @@ async def view_job(
     output_dataset_id: Optional[int] = None,
     workflow_id: Optional[int] = None,
     status: Optional[JobStatusType] = None,
-    start_timestamp_min: Optional[datetime] = None,
-    start_timestamp_max: Optional[datetime] = None,
-    end_timestamp_min: Optional[datetime] = None,
-    end_timestamp_max: Optional[datetime] = None,
+    start_timestamp_min: Optional[datetime] = Query(**timestamp_args),
+    start_timestamp_max: Optional[datetime] = Query(**timestamp_args),
+    end_timestamp_min: Optional[datetime] = Query(**timestamp_args),
+    end_timestamp_max: Optional[datetime] = Query(**timestamp_args),
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[ApplyWorkflowRead]:
