@@ -125,7 +125,7 @@ async def test_collection(
         state_id = state["id"]
         data = state["data"]
         venv_path = Path(data["venv_path"])
-        assert "fractal_tasks_dummy" in data["venv_path"]
+        assert "fractal-tasks-dummy" in data["venv_path"]
 
         # Get/check collection info
         res = await client.get(f"{PREFIX}/collect/{state_id}/")
@@ -393,7 +393,7 @@ async def test_failed_collection_missing_task_file(
         assert res.json()["data"]["status"] == "pending"
         state = res.json()
         data = state["data"]
-        assert "my_tasks_fail" in data["venv_path"]
+        assert "my-tasks-fail" in data["venv_path"]
 
         res = await client.get(f"{PREFIX}/collect/{state['id']}/?verbose=True")
         debug(res.json())
