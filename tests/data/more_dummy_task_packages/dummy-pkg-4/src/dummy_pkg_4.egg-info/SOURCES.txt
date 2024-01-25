@@ -1,0 +1,7 @@
+pyproject.toml
+src/dummy_pkg_4/__FRACTAL_MANIFEST__.json
+src/dummy_pkg_4/__init__.py
+src/dummy_pkg_4.egg-info/PKG-INFO
+src/dummy_pkg_4.egg-info/SOURCES.txt
+src/dummy_pkg_4.egg-info/dependency_links.txt
+src/dummy_pkg_4.egg-info/top_level.txt

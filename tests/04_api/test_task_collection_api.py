@@ -578,6 +578,7 @@ async def test_logs_failed_collection(
         "dummy_pkg_1/dist/dummy_pkg_1-0.0.1-py3-none-any.whl",
         "dummy_pkg_2/dist/dummy_pkg_2-0.0.1-py3-none-any.whl",
         "dummy-pkg-3/dist/dummy_pkg_3-0.0.1-py3-none-any.whl",
+        "dummy-pkg-4/dist/dummy_pkg_4-0.0.1-py3-none-any.whl",
     ),
 )
 async def test_unit_create_venv_install_package(
