@@ -119,7 +119,6 @@ class Workflow(_WorkflowBase, SQLModel, table=True):
             cascade="all, delete-orphan",
         ),
     )
-
     timestamp_created: datetime = Field(
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),

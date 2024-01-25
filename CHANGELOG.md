@@ -10,14 +10,12 @@
     * Improve validation of `UserCreate.slurm_accounts` (\#1162).
     * Add `timestamp_created` to `WorkflowRead`, `WorkflowDump`, `DatasetRead` and `DatasetDump` (\#1152).
     * Make all dumps in `ApplyWorkflowRead` non optional (\#1175).
-    * Add utc-timestamp query parameters to admin endpoints (\#1186).
 * API (internal):
     * Change the class method `Workflow.insert_task` into the auxiliary function `_workflow_insert_task` (\#1149).
 * Database:
     * Make `WorkflowTask.workflow_id` and `WorfklowTask.task_id` not nullable (\#1137).
     * Add `Workflow.timestamp_created` and `Dataset.timestamp_created` columns (\#1152).
     * Start a new `current.py` fix-db script (\#1152).
-    * Add utc timezone to timestamps in sqlite, changing column types from `DateTime` to `UtcDateTime` (\#1186).
 * App (internal):
     * Check in `Settings` that `psycopg2`, `asyngpg` and `cfut`, if required, are installed (\#1167).
     * Split `DB.set_db` into sync/async methods (\#1165).
@@ -27,7 +25,6 @@
     * Reorganise the test directory into subdirectories, named according to the order in which we want the CI to execute them (\#1166).
 * Dependencies:
     * Update `python-dotenv` to version 0.21.0 (\#1172).
-    * Add `sqlalchemy-utc` (\#1186).
 * Runner:
     * Remove `JobStatusType.RUNNING`, incorporating it into `JobStatusType.SUBMITTED` (\#1179).
 * Benchmarks:
