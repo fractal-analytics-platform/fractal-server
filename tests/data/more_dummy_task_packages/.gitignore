@@ -1,1 +1,2 @@
-dist
+*.tar.gz
+*.egg-info
