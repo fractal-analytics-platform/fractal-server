@@ -13,9 +13,12 @@ from fractal_server.app.routes.api.v1._aux_functions import (
 )
 from fractal_server.app.runner import _backends
 from fractal_server.app.runner._common import SHUTDOWN_FILENAME
+from fractal_server.config import get_settings
+from fractal_server.syringe import Inject
 
 backends_available = list(_backends.keys())
 
+DB_ENGINE = Inject(get_settings).DB_ENGINE
 
 PREFIX = "/admin"
 
@@ -82,23 +85,23 @@ async def test_view_project(client, MockCurrentUser, project_factory):
 
         res = await client.get(
             f"{PREFIX}/project/?timestamp_created_min="
-            f"{quote(str(datetime(2000, 1, 1, 1, 1, 1)))}"
+            f"{quote(str(project.timestamp_created.replace(tzinfo=None)))}"
         )
         assert res.status_code == 422
+        ts = str(project.timestamp_created.replace(tzinfo=timezone.utc))
         res = await client.get(
-            f"{PREFIX}/project/?timestamp_created_min="
-            f"{quote(str(project.timestamp_created))}"
+            f"{PREFIX}/project/?timestamp_created_min={quote(ts)}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 2
         res = await client.get(
             f"{PREFIX}/project/?timestamp_created_max="
-            f"{quote(str(datetime(2000, 1, 1, 1, 1, 1)))}"
+            f"{quote(str(project.timestamp_created.replace(tzinfo=None)))}"
         )
         assert res.status_code == 422
+        ts = str(project.timestamp_created.replace(tzinfo=timezone.utc))
         res = await client.get(
-            f"{PREFIX}/project/?timestamp_created_max="
-            f"{quote(str(project.timestamp_created))}"
+            f"{PREFIX}/project/?timestamp_created_max={quote(ts)}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 2
@@ -185,9 +188,9 @@ async def test_view_workflow(
             f"{quote(str(datetime(2000, 1, 1, 1, 1, 1)))}"
         )
         assert res.status_code == 422
+        ts = str(workflow1b.timestamp_created.replace(tzinfo=timezone.utc))
         res = await client.get(
-            f"{PREFIX}/workflow/?timestamp_created_min="
-            f"{quote(str(workflow1b.timestamp_created))}"
+            f"{PREFIX}/workflow/?timestamp_created_min={quote(ts)}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 3
@@ -196,9 +199,9 @@ async def test_view_workflow(
             f"{quote(str(datetime(2000, 1, 1, 1, 1, 1)))}"
         )
         assert res.status_code == 422
+        ts = str(workflow1b.timestamp_created.replace(tzinfo=timezone.utc))
         res = await client.get(
-            f"{PREFIX}/workflow/?timestamp_created_max="
-            f"{quote(str(workflow1b.timestamp_created))}"
+            f"{PREFIX}/workflow/?timestamp_created_max={quote(ts)}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 2
@@ -296,9 +299,9 @@ async def test_view_dataset(
             f"{quote(str(datetime(2000, 1, 1, 1, 1, 1)))}"
         )
         assert res.status_code == 422
+        ts = str(ds1b.timestamp_created.replace(tzinfo=timezone.utc))
         res = await client.get(
-            f"{PREFIX}/dataset/?timestamp_created_min="
-            f"{quote(str(ds1b.timestamp_created))}"
+            f"{PREFIX}/dataset/?timestamp_created_min={quote(ts)}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 3
@@ -308,8 +311,7 @@ async def test_view_dataset(
         )
         assert res.status_code == 422
         res = await client.get(
-            f"{PREFIX}/dataset/?timestamp_created_max="
-            f"{quote(str(ds1b.timestamp_created))}"
+            f"{PREFIX}/dataset/?timestamp_created_max={quote(ts)}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 2
