@@ -947,5 +947,11 @@ async def test_timestamp(db):
     query = await db.execute(select(Project))
     project = query.scalars().one()
 
-    assert project.timestamp_created.tzinfo == datetime.timezone.utc
-    assert project.timestamp_created.tzname() == "UTC"
+    DB_ENGINE = Inject(get_settings).DB_ENGINE
+
+    if DB_ENGINE == "sqlite":
+        assert project.timestamp_created.tzinfo is None
+        assert project.timestamp_created.tzname() is None
+    else:  # postgres
+        assert project.timestamp_created.tzinfo == datetime.timezone.utc
+        assert project.timestamp_created.tzname() == "UTC"

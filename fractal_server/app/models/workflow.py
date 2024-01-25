@@ -6,8 +6,8 @@ from typing import Union
 from pydantic import validator
 from sqlalchemy import Column
 from sqlalchemy.ext.orderinglist import ordering_list
+from sqlalchemy.types import DateTime
 from sqlalchemy.types import JSON
-from sqlalchemy_utc import UtcDateTime
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
@@ -122,7 +122,7 @@ class Workflow(_WorkflowBase, SQLModel, table=True):
 
     timestamp_created: datetime = Field(
         default_factory=get_timestamp,
-        sa_column=Column(UtcDateTime(), nullable=False),
+        sa_column=Column(DateTime(timezone=True), nullable=False),
     )
 
     @property
