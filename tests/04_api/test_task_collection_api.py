@@ -570,3 +570,37 @@ async def test_logs_failed_collection(
     assert state.data["status"] == "fail"
     assert state.data["info"].startswith("Original error")
     assert not venv_path.exists()
+
+
+@pytest.mark.parametrize(
+    "relative_path",
+    (
+        "dummy_pkg_1/dist/dummy_pkg_1-0.0.1-py3-none-any.whl",
+        "dummy_pkg_2/dist/dummy_pkg_2-0.0.1-py3-none-any.whl",
+        "dummy-pkg-3/dist/dummy_pkg_3-0.0.1-py3-none-any.whl",
+    ),
+)
+async def test_unit_create_venv_install_package(
+    testdata_path: Path,
+    tmp_path: Path,
+    override_settings_factory: callable,
+    relative_path: str,
+):
+    from fractal_server.tasks.collection import _create_venv_install_package
+    from fractal_server.logger import set_logger
+
+    LOGGER_NAME = "TMP"
+    set_logger(LOGGER_NAME, log_file_path=(tmp_path / "logs"))
+
+    task_package = testdata_path / "more_dummy_task_packages" / relative_path
+    task_pkg = _TaskCollectPip(package=task_package.as_posix())
+
+    # Extract info form the wheel package (this would be part of the endpoint)
+    _inspect_package_and_set_attributes(task_pkg)
+    debug(task_pkg)
+
+    python_bin, package_root = await _create_venv_install_package(
+        task_pkg=task_pkg, path=tmp_path, logger_name=LOGGER_NAME
+    )
+    debug(python_bin)
+    debug(package_root)

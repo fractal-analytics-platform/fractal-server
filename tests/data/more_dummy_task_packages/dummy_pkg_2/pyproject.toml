@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "dummy-pkg-2"
+version = "0.0.1"
+description = ""
+authors = ["X Y <x@y.z>"]
+packages = [{include = "dummy_pkg_2"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+devtools = "*"
+docstring_parser = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
