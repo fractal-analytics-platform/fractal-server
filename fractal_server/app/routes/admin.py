@@ -47,7 +47,17 @@ def CHECK_UTC(param_name: str, dt: datetime) -> None:
 
 
 timestamp_args = dict(
-    default=None, example="yyyy-MM-dd%20HH%3Amm%3Ass.SSSSSS%2B00%3A00"
+    default=None,
+    openapi_examples={
+        "example1": {
+            "summary": "Most complete format",
+            "value": "yyyy-MM-dd%20HH%3Amm%3Ass.SSSSSS%2B00%3A00",
+        },
+        "example2": {
+            "summary": "First January 2000, at 3:14 PM",
+            "value": "2000-01-01%2015%3A14%3A00%2B00%3A00",
+        },
+    },
 )
 
 
