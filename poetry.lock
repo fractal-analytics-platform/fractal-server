@@ -2776,21 +2776,6 @@ pymysql = ["pymysql"]
 sqlcipher = ["sqlcipher3_binary"]
 
 [[package]]
-name = "sqlalchemy-utc"
-version = "0.14.0"
-description = "SQLAlchemy type to store aware datetime values"
-optional = false
-python-versions = "*"
-files = [
-    {file = "SQLAlchemy-Utc-0.14.0.tar.gz", hash = "sha256:8e041624595b66d7b1d5ea8b6de486df5c1b9352697f3b24f862f0ded56cd7aa"},
-    {file = "SQLAlchemy_Utc-0.14.0-py2.py3-none-any.whl", hash = "sha256:d2379eed5cce372128b5e744ce382decd262b2c742ab31f7f22ca11c6647f60b"},
-]
-
-[package.dependencies]
-setuptools = "*"
-SQLAlchemy = ">=0.9.0"
-
-[[package]]
 name = "sqlmodel"
 version = "0.0.14"
 description = "SQLModel, SQL databases in Python, designed for simplicity, compatibility, and robustness."
@@ -3060,4 +3045,4 @@ slurm = ["cloudpickle", "clusterfutures"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "2dbc2402b624765feddfe79152deb5e2af025b7a2c923471afbfc22d29fc4a56"
+content-hash = "5774a153f4373304a911e042493f96ac03f7d10c965c5e4fca0a7f54b8309383"
