@@ -34,6 +34,7 @@ from ..config import get_settings
 from ..logger import get_logger
 from ..syringe import Inject
 from ..utils import execute_command
+from .naming import _normalize_package_name
 
 
 FRACTAL_PUBLIC_TASK_SUBDIR = ".fractal"
@@ -192,6 +193,8 @@ class _TaskCollectPip(TaskCollectPip):
         """
         if not self.package_name:
             raise ValueError("`package_name` attribute is not set")
+        if self.package_name != _normalize_package_name(self.package_name):
+            raise ValueError(f"{self.package_name=} is not normalized")
         if not self.package_version:
             raise ValueError("`package_version` attribute is not set")
         if not self.package_manifest:
@@ -275,7 +278,7 @@ def inspect_package(path: Path, logger_name: Optional[str] = None) -> dict:
     dist-info section. If we need to generalize to to tar.gz archives, we would
     need to go and look for `PKG-INFO`.
 
-    Note: package name is normalized by replacing `{-,.}` with `_`.
+    Note: package name is normalized via `_normalize_package_name`.
 
     Args:
         path: Path
@@ -326,7 +329,7 @@ def inspect_package(path: Path, logger_name: Optional[str] = None) -> dict:
         logger.debug("Package name and version read correctly.")
 
     # Normalize package name:
-    pkg_name = pkg_name.replace("-", "_").replace(".", "_")
+    pkg_name = _normalize_package_name(pkg_name)
 
     info = dict(
         pkg_name=pkg_name,
@@ -347,6 +350,10 @@ async def create_package_environment_pip(
     """
 
     logger = get_logger(logger_name)
+
+    # Normalize package name
+    task_pkg.package_name = _normalize_package_name(task_pkg.package_name)
+    task_pkg.package = _normalize_package_name(task_pkg.package)
 
     # Only proceed if package, version and manifest attributes are set
     task_pkg.check()
@@ -414,6 +421,11 @@ async def _create_venv_install_package(
         python_bin: path to venv's python interpreter
         package_root: the location of the package manifest
     """
+
+    # Normalize package name
+    task_pkg.package_name = _normalize_package_name(task_pkg.package_name)
+    task_pkg.package = _normalize_package_name(task_pkg.package)
+
     python_bin = await _init_venv(
         path=path,
         python_version=task_pkg.python_version,
@@ -444,13 +456,18 @@ async def _init_venv(
         python_bin : Path
             path to python interpreter
     """
+    logger = get_logger(logger_name)
+    logger.debug(f"[_init_venv] {path=}")
     interpreter = get_python_interpreter(version=python_version)
+    logger.debug(f"[_init_venv] {interpreter=}")
     await execute_command(
         cwd=path,
         command=f"{interpreter} -m venv venv",
         logger_name=logger_name,
     )
-    return path / "venv/bin/python"
+    python_bin = path / "venv/bin/python"
+    logger.debug(f"[_init_venv] {python_bin=}")
+    return python_bin
 
 
 async def _pip_install(
@@ -461,9 +478,13 @@ async def _pip_install(
     """
     Install package in venv
 
+    Args:
+        venv_path:
+        task_pkg:
+        logger_name:
+
     Returns:
-        package_root : Path
-            the location of the package manifest
+        The location of the package.
     """
 
     logger = get_logger(logger_name)
@@ -548,7 +569,21 @@ async def _pip_install(
             if line.startswith("Location:")
         )
     )
-    package_root = location / task_pkg.package.replace("-", "_")
+
+    # NOTE
+    # https://packaging.python.org/en/latest/specifications/recording-installed-packages/
+    # This directory is named as {name}-{version}.dist-info, with name and
+    # version fields corresponding to Core metadata specifications. Both
+    # fields must be normalized (see the name normalization specification and
+    # the version normalization specification), and replace dash (-)
+    # characters with underscore (_) characters, so the .dist-info directory
+    # always has exactly one dash (-) character in its stem, separating the
+    # name and version fields.
+    package_root = location / (task_pkg.package_name.replace("-", "_"))
+    logger.debug(f"[_pip install] {location=}")
+    logger.debug(f"[_pip install] {task_pkg.package_name=}")
+    logger.debug(f"[_pip install] {task_pkg.package=}")
+    logger.debug(f"[_pip install] {package_root=}")
     if not package_root.exists():
         raise RuntimeError(
             "Could not determine package installation location."
