@@ -158,7 +158,15 @@ class _TaskCollectPip(TaskCollectPip):
         return values
 
     @property
-    def package_source(self):
+    def package_source(self) -> str:
+        """
+        NOTE: As of PR #1188 in `fractal-server`, the attribute
+        `self.package_name` is normalized; this means e.g. that `_` is
+        replaced by `-`. To guarantee backwards compatibility with
+        `Task.source` attributes created before this change, we still replace
+        `-` with `_` upon generation of the `source` attribute, in this
+        method.
+        """
         if not self.package_name or not self.package_version:
             raise ValueError(
                 "Cannot construct `package_source` property with "
@@ -178,7 +186,7 @@ class _TaskCollectPip(TaskCollectPip):
         source = ":".join(
             (
                 collection_type,
-                self.package_name,
+                self.package_name.replace("-", "_"),  # see method docstring
                 self.package_version,
                 package_extras,
                 python_version,
