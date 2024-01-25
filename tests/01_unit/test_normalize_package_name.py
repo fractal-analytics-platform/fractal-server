@@ -2,6 +2,10 @@ from fractal_server.tasks.naming import _normalize_package_name
 
 
 def test_normalize_package_name():
+    """
+    Test based on the example in
+    https://packaging.python.org/en/latest/specifications/name-normalization.
+    """
     inputs = (
         "friendly-bard",
         "Friendly-Bard",

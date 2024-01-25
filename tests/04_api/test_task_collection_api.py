@@ -573,7 +573,7 @@ async def test_logs_failed_collection(
 
 
 @pytest.mark.parametrize(
-    "relative_path",
+    "relative_wheel_path",
     (
         "dummy_pkg_1/dist/dummy_pkg_1-0.0.1-py3-none-any.whl",
         "dummy_pkg_2/dist/dummy_PKG_2-0.0.1-py3-none-any.whl",
@@ -583,21 +583,28 @@ async def test_unit_create_venv_install_package(
     testdata_path: Path,
     tmp_path: Path,
     override_settings_factory: callable,
-    relative_path: str,
+    relative_wheel_path: str,
 ):
+    """
+    This unit test for `_create_venv_install_package` collects tasks from two
+    local wheel files, where the second one has a non-normalized package name.
+    """
     from fractal_server.tasks.collection import _create_venv_install_package
     from fractal_server.logger import set_logger
 
-    LOGGER_NAME = "TMP"
+    LOGGER_NAME = "LOGGER"
     set_logger(LOGGER_NAME, log_file_path=(tmp_path / "logs"))
 
-    task_package = testdata_path / "more_dummy_task_packages" / relative_path
+    task_package = (
+        testdata_path / "more_dummy_task_packages" / relative_wheel_path
+    )
     task_pkg = _TaskCollectPip(package=task_package.as_posix())
 
     # Extract info form the wheel package (this would be part of the endpoint)
     _inspect_package_and_set_attributes(task_pkg)
     debug(task_pkg)
 
+    # Collect task package
     python_bin, package_root = await _create_venv_install_package(
         task_pkg=task_pkg, path=tmp_path, logger_name=LOGGER_NAME
     )
