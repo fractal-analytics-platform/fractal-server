@@ -18,6 +18,6 @@ with next(get_sync_db()) as db:
     stm = select(Workflow).options(
         joinedload(Workflow.project), joinedload(Workflow.task_list)
     )
-    workflows = db.execute(stm).scalars().all()
+    workflows = db.execute(stm).scalars().unique().all()
     for workflow in workflows:
         WorkflowRead(**workflow.model_dump())
