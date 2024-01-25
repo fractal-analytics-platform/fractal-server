@@ -1,15 +1,17 @@
-[tool.poetry]
+[project]
 name = "dummy-pkg-1"
 version = "0.0.1"
 description = ""
-authors = ["X Y <x@y.z>"]
-packages = [{include = "dummy_pkg_1"}]
-
-[tool.poetry.dependencies]
-python = "^3.9"
-devtools = "*"
-docstring_parser = "*"
+authors = [{ name = "X Y", email = "x@y.z" }]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["dummy_pkg_1"]
+
+# Always include the __FRACTAL_MANIFEST__.json file in the package
+[tool.setuptools.package-data]
+"*" = ["__FRACTAL_MANIFEST__.json"]
