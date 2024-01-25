@@ -585,9 +585,8 @@ async def _pip_install(
     # characters with underscore (_) characters, so the .dist-info directory
     # always has exactly one dash (-) character in its stem, separating the
     # name and version fields.
-    package_root = location / (task_pkg.package_name.replace("-", "_"))
+    package_root = location / (task_pkg.package.replace("-", "_"))
     logger.debug(f"[_pip install] {location=}")
-    logger.debug(f"[_pip install] {task_pkg.package_name=}")
     logger.debug(f"[_pip install] {task_pkg.package=}")
     logger.debug(f"[_pip install] {package_root=}")
     if not package_root.exists():
