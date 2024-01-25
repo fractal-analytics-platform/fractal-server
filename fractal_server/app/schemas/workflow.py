@@ -8,6 +8,7 @@ from pydantic import validator
 
 from ._validators import valint
 from ._validators import valstr
+from ._validators import valutc
 from .project import ProjectRead
 from .task import TaskExport
 from .task import TaskImport
@@ -133,6 +134,10 @@ class WorkflowRead(_WorkflowBase):
     task_list: list[WorkflowTaskRead]
     project: ProjectRead
     timestamp_created: datetime
+
+    _timestamp_created = validator("timestamp_created", allow_reuse=True)(
+        valutc("timestamp_created")
+    )
 
 
 class WorkflowCreate(_WorkflowBase):
