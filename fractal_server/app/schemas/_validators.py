@@ -1,4 +1,6 @@
 import os
+from datetime import datetime
+from datetime import timezone
 
 
 def valstr(attribute: str, accept_none: bool = False):
@@ -71,5 +73,13 @@ def val_unique_list(attribute: str):
             if len(set(must_be_unique)) != len(must_be_unique):
                 raise ValueError(f"`{attribute}` list has repetitions")
         return must_be_unique
+
+    return val
+
+
+def valutc(attribute: str):
+    def val(timestamp: datetime) -> datetime:
+        if timestamp is not None:
+            return timestamp.astimezone(timezone.utc)
 
     return val
