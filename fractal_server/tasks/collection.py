@@ -201,8 +201,6 @@ class _TaskCollectPip(TaskCollectPip):
         """
         if not self.package_name:
             raise ValueError("`package_name` attribute is not set")
-        if self.package_name != _normalize_package_name(self.package_name):
-            raise ValueError(f"{self.package_name=} is not normalized")
         if not self.package_version:
             raise ValueError("`package_version` attribute is not set")
         if not self.package_manifest:
