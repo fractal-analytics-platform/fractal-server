@@ -80,6 +80,6 @@ def val_unique_list(attribute: str):
 def valutc(attribute: str):
     def val(timestamp: datetime) -> datetime:
         if timestamp is not None:
-            return timestamp.astimezone(timezone.utc)
+            return timestamp.replace(tzinfo=timezone.utc)
 
     return val

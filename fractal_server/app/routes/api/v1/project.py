@@ -394,7 +394,7 @@ async def apply_workflow(
                 exclude={"resource_list", "timestamp_created"}
             ),
             timestamp_created=str(
-                input_dataset.timestamp_created.astimezone(timezone.utc)
+                input_dataset.timestamp_created.replace(tzinfo=timezone.utc)
             ),
             resource_list=[
                 resource.model_dump()
@@ -406,7 +406,7 @@ async def apply_workflow(
                 exclude={"resource_list", "timestamp_created"}
             ),
             timestamp_created=str(
-                output_dataset.timestamp_created.astimezone(timezone.utc)
+                output_dataset.timestamp_created.replace(tzinfo=timezone.utc)
             ),
             resource_list=[
                 resource.model_dump()
@@ -416,7 +416,7 @@ async def apply_workflow(
         workflow_dump=dict(
             **workflow.model_dump(exclude={"task_list", "timestamp_created"}),
             timestamp_created=str(
-                workflow.timestamp_created.astimezone(timezone.utc)
+                workflow.timestamp_created.replace(tzinfo=timezone.utc)
             ),
             task_list=[
                 dict(
@@ -429,7 +429,7 @@ async def apply_workflow(
         project_dump=dict(
             **project.model_dump(exclude={"user_list", "timestamp_created"}),
             timestamp_created=str(
-                project.timestamp_created.astimezone(timezone.utc)
+                project.timestamp_created.replace(tzinfo=timezone.utc)
             ),
         ),
         **apply_workflow.dict(),

@@ -16,6 +16,8 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import func
 from sqlmodel import select
 
+from ...config import get_settings
+from ...syringe import Inject
 from ...utils import get_timestamp
 from ..db import AsyncSession
 from ..db import get_async_db
@@ -38,12 +40,17 @@ from .aux._runner import _check_backend_is_slurm
 router_admin = APIRouter()
 
 
-def CHECK_UTC(param_name: str, dt: datetime) -> None:
-    if dt.tzinfo != timezone.utc:
+def CONVERT_UTC(dt: datetime) -> None:
+    if dt.tzinfo is None:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Timestamp without UTC timezone: {param_name} -> {dt}",
+            detail=f"The timestamp provided has no timezone information: {dt}",
         )
+    DB_ENGINE = Inject(get_settings).DB_ENGINE
+    if DB_ENGINE == "postgres":
+        return dt.astimezone(timezone.utc)
+    else:
+        return dt.astimezone(timezone.utc).replace(tzinfo=None)
 
 
 timestamp_args = dict(
@@ -86,10 +93,10 @@ async def view_project(
     if user_id is not None:
         stm = stm.where(Project.user_list.any(User.id == user_id))
     if timestamp_created_min is not None:
-        CHECK_UTC("timestamp_created_min", timestamp_created_min)
+        timestamp_created_min = CONVERT_UTC(timestamp_created_min)
         stm = stm.where(Project.timestamp_created >= timestamp_created_min)
     if timestamp_created_max is not None:
-        CHECK_UTC("timestamp_created_max", timestamp_created_max)
+        timestamp_created_max = CONVERT_UTC(timestamp_created_max)
         stm = stm.where(Project.timestamp_created <= timestamp_created_max)
 
     res = await db.execute(stm)
@@ -135,10 +142,10 @@ async def view_workflow(
             func.lower(Workflow.name).contains(name_contains.lower())
         )
     if timestamp_created_min is not None:
-        CHECK_UTC("timestamp_created_min", timestamp_created_min)
+        timestamp_created_min = CONVERT_UTC(timestamp_created_min)
         stm = stm.where(Workflow.timestamp_created >= timestamp_created_min)
     if timestamp_created_max is not None:
-        CHECK_UTC("timestamp_created_max", timestamp_created_max)
+        timestamp_created_max = CONVERT_UTC(timestamp_created_max)
         stm = stm.where(Workflow.timestamp_created <= timestamp_created_max)
 
     res = await db.execute(stm)
@@ -188,10 +195,10 @@ async def view_dataset(
     if type is not None:
         stm = stm.where(Dataset.type == type)
     if timestamp_created_min is not None:
-        CHECK_UTC("timestamp_created_min", timestamp_created_min)
+        timestamp_created_min = CONVERT_UTC(timestamp_created_min)
         stm = stm.where(Dataset.timestamp_created >= timestamp_created_min)
     if timestamp_created_max is not None:
-        CHECK_UTC("timestamp_created_max", timestamp_created_max)
+        timestamp_created_max = CONVERT_UTC(timestamp_created_max)
         stm = stm.where(Dataset.timestamp_created <= timestamp_created_max)
 
     res = await db.execute(stm)
@@ -257,16 +264,16 @@ async def view_job(
     if status is not None:
         stm = stm.where(ApplyWorkflow.status == status)
     if start_timestamp_min is not None:
-        CHECK_UTC("start_timestamp_min", start_timestamp_min)
+        start_timestamp_min = CONVERT_UTC(start_timestamp_min)
         stm = stm.where(ApplyWorkflow.start_timestamp >= start_timestamp_min)
     if start_timestamp_max is not None:
-        CHECK_UTC("start_timestamp_max", start_timestamp_max)
+        start_timestamp_max = CONVERT_UTC(start_timestamp_max)
         stm = stm.where(ApplyWorkflow.start_timestamp <= start_timestamp_max)
     if end_timestamp_min is not None:
-        CHECK_UTC("end_timestamp_min", end_timestamp_min)
+        end_timestamp_min = CONVERT_UTC(end_timestamp_min)
         stm = stm.where(ApplyWorkflow.end_timestamp >= end_timestamp_min)
     if end_timestamp_max is not None:
-        CHECK_UTC("end_timestamp_max", end_timestamp_max)
+        end_timestamp_max = CONVERT_UTC(end_timestamp_max)
         stm = stm.where(ApplyWorkflow.end_timestamp <= end_timestamp_max)
 
     res = await db.execute(stm)
