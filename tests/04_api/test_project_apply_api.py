@@ -1,4 +1,5 @@
 import time
+from datetime import timezone
 
 from devtools import debug
 
@@ -497,11 +498,15 @@ async def test_project_apply_workflow_subset(
         )
         expected_project_dump = ProjectDump(
             **project.model_dump(exclude={"user_list", "timestamp_created"}),
-            timestamp_created=str(project.timestamp_created),
+            timestamp_created=str(
+                project.timestamp_created.astimezone(timezone.utc)
+            ),
         ).dict()
         expected_workflow_dump = WorkflowDump(
             **workflow.model_dump(exclude={"task_list", "timestamp_created"}),
-            timestamp_created=str(workflow.timestamp_created),
+            timestamp_created=str(
+                workflow.timestamp_created.astimezone(timezone.utc)
+            ),
             task_list=[
                 dict(
                     wf_task.model_dump(exclude={"task"}),
@@ -512,14 +517,18 @@ async def test_project_apply_workflow_subset(
         ).dict()
         expected_input_dataset_dump = DatasetDump(
             **dataset1.model_dump(exclude={"task_list", "timestamp_created"}),
-            timestamp_created=str(dataset1.timestamp_created),
+            timestamp_created=str(
+                dataset1.timestamp_created.astimezone(timezone.utc)
+            ),
             resource_list=[
                 resource.model_dump() for resource in dataset1.resource_list
             ],
         ).dict()
         expected_output_dataset_dump = DatasetDump(
             **dataset3.model_dump(exclude={"task_list", "timestamp_created"}),
-            timestamp_created=str(dataset3.timestamp_created),
+            timestamp_created=str(
+                dataset3.timestamp_created.astimezone(timezone.utc)
+            ),
             resource_list=[
                 resource.model_dump() for resource in dataset3.resource_list
             ],
