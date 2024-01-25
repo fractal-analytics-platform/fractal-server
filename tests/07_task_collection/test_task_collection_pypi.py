@@ -264,7 +264,7 @@ async def test_inspect_package(tmp_path):
     debug(pkg_wheel)
     info = inspect_package(pkg_wheel)
     debug(info)
-    assert info["pkg_name"] == "fractal_tasks_core"
+    assert info["pkg_name"] == "fractal-tasks-core"
     assert info["pkg_version"] == "0.9.4"
     assert isinstance(info["pkg_manifest"], ManifestV1)
 
