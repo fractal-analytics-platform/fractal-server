@@ -32,7 +32,6 @@ alembic = "^1.9.1"
 uvicorn = "^0.20.0"
 pydantic = ">=1.10.8,<2"
 bcrypt = "4.0.1"
-sqlalchemy-utc = "^0.14.0"
 
 clusterfutures = { version = "^0.5", optional = true}
 cloudpickle = {version = ">=2.2.1,<2.3.0", optional = true}
