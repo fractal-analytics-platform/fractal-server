@@ -22,14 +22,14 @@ with next(get_sync_db()) as db:
     # PROJECTS
     stm = select(Project)
     projects = db.execute(stm).scalars().all()
-    for project in projects:
+    for project in sorted(projects, key=lambda x: x.id):
         ProjectRead(**project.model_dump())
         print(f"Project {project.id} validated")
 
     # WORKFLOWS
     stm = select(Workflow)
     workflows = db.execute(stm).scalars().all()
-    for workflow in workflows:
+    for workflow in sorted(workflows, key=lambda x: x.id):
         WorkflowRead(
             **workflow.model_dump(),
             project=ProjectRead(**workflow.project.model_dump()),
@@ -46,7 +46,7 @@ with next(get_sync_db()) as db:
     # DATASETS
     stm = select(Dataset)
     datasets = db.execute(stm).scalars().all()
-    for dataset in datasets:
+    for dataset in sorted(datasets, key=lambda x: x.id):
         DatasetRead(
             **dataset.model_dump(),
             project=ProjectRead(**dataset.project.model_dump()),
@@ -60,20 +60,20 @@ with next(get_sync_db()) as db:
     # JOBS
     stm = select(ApplyWorkflow)
     jobs = db.execute(stm).scalars().all()
-    for job in jobs:
+    for job in sorted(jobs, key=lambda x: x.id):
         ApplyWorkflowRead(**job.model_dump())
         print(f"ApplyWorkflow {job.id} validated")
 
     # STATES
     stm = select(State)
     states = db.execute(stm).scalars().all()
-    for state in states:
+    for state in sorted(states, key=lambda x: x.id):
         StateRead(**state.model_dump())
         print(f"State {state.id} validated")
 
     # USERS
     stm = select(UserOAuth)
     users = db.execute(stm).scalars().unique().all()
-    for user in users:
+    for user in sorted(users, key=lambda x: x.id):
         UserRead(**user.model_dump())
         print(f"User {user.id} validated")
