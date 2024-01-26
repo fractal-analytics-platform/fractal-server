@@ -5,11 +5,11 @@ from typing import Optional
 import pytest
 from devtools import debug
 
+from fractal_server.app.schemas import ManifestV1
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 from fractal_server.tasks.background_operations import _init_venv
 from fractal_server.tasks.background_operations import _pip_install
-from fractal_server.tasks.collection import ManifestV1
 from fractal_server.tasks.endpoint_operations import create_package_dir_pip
 from fractal_server.tasks.endpoint_operations import download_package
 from fractal_server.tasks.endpoint_operations import inspect_package
