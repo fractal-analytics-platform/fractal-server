@@ -14,7 +14,6 @@ from fractal_server.app.models import Task
 from fractal_server.app.routes.api.v1.task_collection import (
     _background_collect_pip,
 )
-from fractal_server.app.routes.api.v1.task_collection import _TaskCollectPip
 from fractal_server.app.routes.api.v1.task_collection import (
     create_package_dir_pip,
 )
@@ -24,6 +23,7 @@ from fractal_server.syringe import Inject
 from fractal_server.tasks.collection import get_collection_path
 from fractal_server.tasks.collection import get_log_path
 from fractal_server.tasks.collection import inspect_package
+from fractal_server.tasks.utils import _TaskCollectPip
 from tests.fixtures_tasks import execute_command
 
 PREFIX = "/api/v1/task"
@@ -589,7 +589,9 @@ async def test_unit_create_venv_install_package(
     This unit test for `_create_venv_install_package` collects tasks from two
     local wheel files, where the second one has a non-normalized package name.
     """
-    from fractal_server.tasks.collection import _create_venv_install_package
+    from fractal_server.tasks.background_operations import (
+        _create_venv_install_package,
+    )
     from fractal_server.logger import set_logger
 
     LOGGER_NAME = "LOGGER"

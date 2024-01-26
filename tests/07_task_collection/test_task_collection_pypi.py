@@ -7,13 +7,13 @@ from devtools import debug
 
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
-from fractal_server.tasks.collection import _init_venv
-from fractal_server.tasks.collection import _pip_install
-from fractal_server.tasks.collection import _TaskCollectPip
+from fractal_server.tasks.background_operations import _init_venv
+from fractal_server.tasks.background_operations import _pip_install
 from fractal_server.tasks.collection import create_package_dir_pip
 from fractal_server.tasks.collection import download_package
 from fractal_server.tasks.collection import inspect_package
 from fractal_server.tasks.collection import ManifestV1
+from fractal_server.tasks.utils import _TaskCollectPip
 from tests.fixtures_tasks import execute_command
 
 
