@@ -16,7 +16,7 @@ from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 from fractal_server.tasks._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.background_operations import (
-    _background_collect_pip,
+    background_collect_pip,
 )
 from fractal_server.tasks.endpoint_operations import (
     create_package_dir_pip,
@@ -268,7 +268,7 @@ async def test_collection_with_json_schemas(
     await db.commit()
     await db.refresh(state)
     debug(state)
-    await _background_collect_pip(
+    await background_collect_pip(
         state_id=state.id,
         venv_path=venv_path,
         task_pkg=task_pkg,
@@ -507,7 +507,7 @@ async def test_logs(
     await db.commit()
     await db.refresh(state)
     debug(state)
-    await _background_collect_pip(
+    await background_collect_pip(
         state_id=state.id,
         venv_path=venv_path,
         task_pkg=task_pkg,
@@ -558,7 +558,7 @@ async def test_logs_failed_collection(
     task_pkg.package = "__NO_PACKAGE"
     task_pkg.package_path = None
 
-    await _background_collect_pip(
+    await background_collect_pip(
         state_id=state.id,
         venv_path=venv_path,
         task_pkg=task_pkg,
