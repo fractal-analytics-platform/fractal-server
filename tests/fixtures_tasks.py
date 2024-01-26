@@ -10,6 +10,8 @@ from pydantic import BaseModel
 from pydantic import validator
 
 from .fixtures_server import HAS_LOCAL_SBATCH
+from fractal_server.tasks.endpoint_operations import create_package_dir_pip
+from fractal_server.tasks.endpoint_operations import inspect_package
 
 
 class MockTask(BaseModel):
@@ -164,8 +166,6 @@ async def install_dummy_packages(tmp777_session_path, dummy_task_package):
     """
 
     from fractal_server.tasks.collection import (
-        inspect_package,
-        create_package_dir_pip,
         create_package_environment_pip,
     )
     from fractal_server.tasks.utils import _TaskCollectPip
