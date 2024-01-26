@@ -25,7 +25,7 @@
 | fractal\_server/app/routes/api/v1/job.py                          |       64 |        0 |       12 |        6 |     92% |30->29, 50->46, 72->68, 98->94, 132->128, 155->151 |
 | fractal\_server/app/routes/api/v1/project.py                      |      178 |        6 |       56 |        6 |     95% |46->45, 65->64, 86-91, 100->99, 116->115, 142->141, 240->235 |
 | fractal\_server/app/routes/api/v1/task.py                         |       85 |        1 |       32 |        6 |     94% |30->29, 45->44, 63->62, 96, 108->107, 154->153 |
-| fractal\_server/app/routes/api/v1/task\_collection.py             |      179 |        5 |       32 |        4 |     96% |173->156, 206, 246-247, 313->312, 336-337 |
+| fractal\_server/app/routes/api/v1/task\_collection.py             |      113 |        5 |       20 |        4 |     93% |59->42, 92, 132-133, 199->198, 222-223 |
 | fractal\_server/app/routes/api/v1/workflow.py                     |      130 |        0 |       50 |        9 |     95% |52->48, 78->73, 108->104, 129->125, 181->177, 233->229, 266->261, 295->293, 339->338 |
 | fractal\_server/app/routes/api/v1/workflowtask.py                 |       64 |        1 |       24 |        6 |     92% |43->38, 83->79, 104->100, 133->136, 144, 160->156 |
 | fractal\_server/app/routes/auth.py                                |       64 |       12 |       18 |        4 |     76% |68->67, 78-79, 90->89, 98->97, 126-149 |
@@ -56,7 +56,7 @@
 | fractal\_server/app/schemas/project.py                            |       18 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/state.py                              |       10 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/task.py                               |       62 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/schemas/task\_collection.py                   |       44 |        0 |       12 |        2 |     96% |67->66, 81->80 |
+| fractal\_server/app/schemas/task\_collection.py                   |       42 |        0 |       12 |        2 |     96% |59->58, 73->72 |
 | fractal\_server/app/schemas/user.py                               |       49 |        0 |        8 |        2 |     96% |76->68, 122->121 |
 | fractal\_server/app/schemas/workflow.py                           |       65 |        0 |       11 |        2 |     97% |101->100, 163->162 |
 | fractal\_server/app/security/\_\_init\_\_.py                      |      144 |       28 |       32 |        3 |     77% |114-127, 146-147, 152-161, 166-174, 188, 192, 316 |
@@ -64,10 +64,13 @@
 | fractal\_server/logger.py                                         |       50 |       11 |       14 |        0 |     80% |   138-153 |
 | fractal\_server/main.py                                           |       32 |        6 |        2 |        1 |     79% |55-56, 66, 106->105, 112-120 |
 | fractal\_server/syringe.py                                        |       29 |        2 |        8 |        3 |     86% |66->65, 83->82, 93-94, 97->96 |
+| fractal\_server/tasks/\_TaskCollectPip.py                         |       43 |        0 |       24 |        3 |     96% |29->28, 33->32, 57->56 |
 | fractal\_server/tasks/\_\_init\_\_.py                             |        0 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/tasks/collection.py                               |      205 |        6 |       76 |       14 |     93% |63, 85-86, 132->131, 136->135, 147, 160->159, 239->exit, 293, 311->exit, 316->exit, 321->exit, 513->exit, 544->exit, 553 |
+| fractal\_server/tasks/background\_operations.py                   |      155 |        1 |       32 |        3 |     98% |124->exit, 155->exit, 177 |
+| fractal\_server/tasks/endpoint\_operations.py                     |       80 |        0 |       26 |        4 |     96% |47->exit, 119->exit, 124->exit, 129->exit |
+| fractal\_server/tasks/utils.py                                    |       35 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/utils.py                                          |       22 |        0 |        2 |        0 |    100% |           |
-|                                                         **TOTAL** | **4151** |  **149** | **1180** |  **160** | **94%** |           |
+|                                                         **TOTAL** | **4191** |  **144** | **1180** |  **156** | **94%** |           |
 
 
 ## Setup coverage badge
