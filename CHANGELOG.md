@@ -15,11 +15,13 @@
 * Database:
     * Make `WorkflowTask.workflow_id` and `WorfklowTask.task_id` not nullable (\#1137).
     * Add `Workflow.timestamp_created` and `Dataset.timestamp_created` columns (\#1152).
-    * Start a new `current.py` fix-db script (\#1152).
+    * Start a new `current.py` fix-db script (\#1152, \#1195).
+    * Add to `migrations.yml` a new script (`validate_db_data_with_read_schemas.py`) that validates test-DB data with Read schemas (\#1187).
 * App (internal):
     * Check in `Settings` that `psycopg2`, `asyngpg` and `cfut`, if required, are installed (\#1167).
     * Split `DB.set_db` into sync/async methods (\#1165).
     * Rename `DB.get_db` into `DB.get_async_db` (\#1183).
+    * Normalize names of task packages (\#1188).
 * Testing:
     * Update `clean_db_fractal_1.4.1.sql` to `clean_db_fractal_1.4.2.sql`, and change `migrations.yml` target version (\#1152).
     * Reorganise the test directory into subdirectories, named according to the order in which we want the CI to execute them (\#1166).
@@ -29,6 +31,8 @@
     * Remove `JobStatusType.RUNNING`, incorporating it into `JobStatusType.SUBMITTED` (\#1179).
 * Benchmarks:
     * Add `fractal_client.py` and `populate_script_v2.py` for creating different database status scenarios (\#1178).
+
+
 # 1.4.2
 
 > **WARNINGs**:

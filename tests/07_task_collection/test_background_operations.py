@@ -5,105 +5,20 @@ from typing import Optional
 import pytest
 from devtools import debug
 
-from fractal_server.config import get_settings
-from fractal_server.syringe import Inject
-from fractal_server.tasks.collection import _init_venv
-from fractal_server.tasks.collection import _pip_install
-from fractal_server.tasks.collection import _TaskCollectPip
-from fractal_server.tasks.collection import create_package_dir_pip
-from fractal_server.tasks.collection import download_package
-from fractal_server.tasks.collection import inspect_package
-from fractal_server.tasks.collection import ManifestV1
-from tests.fixtures_tasks import execute_command
-
-
-@pytest.mark.parametrize(
-    (
-        "package",
-        "package_version",
-        "package_extras",
-        "python_version",
-        "expected_source",
-    ),
-    [
-        (
-            "my-package",
-            "1.2.3",
-            None,
-            None,
-            "pip_remote:my-package:1.2.3::",
-        ),
-        (
-            "my-package",
-            "1.2.3",
-            "extra1,extra2",
-            None,
-            "pip_remote:my-package:1.2.3:extra1,extra2:",
-        ),
-        (
-            "my-package",
-            "1.2.3",
-            "extra1,extra2",
-            "3.9",
-            "pip_remote:my-package:1.2.3:extra1,extra2:py3.9",
-        ),
-    ],
+from fractal_server.app.models import State
+from fractal_server.app.routes.api.v1.task_collection import TaskCollectStatus
+from fractal_server.tasks._TaskCollectPip import _TaskCollectPip
+from fractal_server.tasks.background_operations import _init_venv
+from fractal_server.tasks.background_operations import _pip_install
+from fractal_server.tasks.background_operations import (
+    background_collect_pip,
 )
-def test_unit_source_resolution(
-    package,
-    package_version,
-    package_extras,
-    python_version,
-    expected_source,
-):
-    """
-    GIVEN a task package
-    WHEN the source is resolved
-    THEN it matches expectations
-    """
-    args = dict(
-        package=package,
-        package_name=package,
-        package_version=package_version,
-    )
-    if package_extras:
-        args["package_extras"] = package_extras
-    if python_version:
-        args["python_version"] = python_version
-    tc = _TaskCollectPip(**args)
-    assert tc.package_source == expected_source
-
-
-def test_TaskCollectPip_model(dummy_task_package):
-    """
-    GIVEN a path to a local wheel package
-    WHEN it is passed to the `_TaskCollectPip` constructor
-    THEN the package name is correctly extracted and the package path
-         correctly set
-    """
-    debug(dummy_task_package)
-    tc = _TaskCollectPip(package=dummy_task_package.as_posix())
-    debug(tc)
-
-    assert tc.package == "fractal_tasks_dummy"
-    assert tc.package_path == dummy_task_package
-
-    # Test multiple cases for the check() method and package_source() property
-    with pytest.raises(ValueError):
-        tc.check()
-    with pytest.raises(ValueError):
-        tc.package_source
-    tc.package_name = tc.package
-    with pytest.raises(ValueError):
-        tc.check()
-    with pytest.raises(ValueError):
-        tc.package_source
-    tc.package_version = "1.2.3"
-    with pytest.raises(ValueError):
-        tc.check()
-    debug(tc.package_source)
-    tc.package_manifest = ManifestV1(manifest_version="1", task_list=[])
-    tc.check()
+from fractal_server.tasks.endpoint_operations import (
+    create_package_dir_pip,
+)
+from fractal_server.tasks.endpoint_operations import download_package
+from fractal_server.tasks.endpoint_operations import inspect_package
+from tests.fixtures_tasks import execute_command
 
 
 @pytest.mark.parametrize("python_version", [None, "3.10"])
@@ -252,50 +167,108 @@ async def test_download(tmp_path):
     assert "whl" in pkg.as_posix()
 
 
-async def test_inspect_package(tmp_path):
-    """
-    GIVEN the path to a wheel package
-    WHEN the inspect package is called on the path of the wheel
-    THEN the name, version and manifest of the package are loaded
-    """
-    PACKAGE = "fractal-tasks-core==0.9.4"
-    task_pkg = _TaskCollectPip(package=PACKAGE)
-    pkg_wheel = await download_package(task_pkg=task_pkg, dest=tmp_path)
-    debug(pkg_wheel)
-    info = inspect_package(pkg_wheel)
-    debug(info)
-    assert info["pkg_name"] == "fractal_tasks_core"
-    assert info["pkg_version"] == "0.9.4"
-    assert isinstance(info["pkg_manifest"], ManifestV1)
-
-
 @pytest.mark.parametrize(
-    ("task_pkg", "expected_path"),
-    [
-        (
-            _TaskCollectPip(package="my-package"),
-            Path(".fractal/my-package"),
-        ),
-        (
-            _TaskCollectPip(package="my-package", package_version="1.2.3"),
-            Path(".fractal/my-package1.2.3"),
-        ),
-    ],
+    "relative_wheel_path",
+    (
+        "dummy_pkg_1/dist/dummy_pkg_1-0.0.1-py3-none-any.whl",
+        "dummy_pkg_2/dist/dummy_PKG_2-0.0.1-py3-none-any.whl",
+    ),
 )
-def test_create_pkg_dir(task_pkg, expected_path):
+async def test_unit_create_venv_install_package(
+    testdata_path: Path,
+    tmp_path: Path,
+    override_settings_factory: callable,
+    relative_wheel_path: str,
+):
     """
-    GIVEN a taks package
-    WHEN the directory for installation is created
-    THEN the path is the one expected, or we obtain the expected error
+    This unit test for `_create_venv_install_package` collects tasks from two
+    local wheel files.
 
-    NOTE:
-        expected_path relative to FRACTAL_TASKS_DIR
+    ``console
+    $ pwd
+    /.../fractal-server/tests/data/more_dummy_task_packages
+    $ grep name dummy_pkg_*/pyproject.toml | grep -v email
+    dummy_pkg_1/pyproject.toml:name = "dummy_pkg_1"
+    dummy_pkg_2/pyproject.toml:name = "dummy-PKG-2"
+    ```
     """
-    settings = Inject(get_settings)
-    check = settings.FRACTAL_TASKS_DIR / expected_path
-    if task_pkg.package_version is None:
-        with pytest.raises(ValueError):
-            venv_path = create_package_dir_pip(task_pkg=task_pkg)
-    else:
-        venv_path = create_package_dir_pip(task_pkg=task_pkg)
-        assert venv_path == check
+    from fractal_server.tasks.background_operations import (
+        _create_venv_install_package,
+    )
+    from fractal_server.logger import set_logger
+
+    LOGGER_NAME = "LOGGER"
+    set_logger(LOGGER_NAME, log_file_path=(tmp_path / "logs"))
+
+    task_package = (
+        testdata_path / "more_dummy_task_packages" / relative_wheel_path
+    )
+    task_pkg = _TaskCollectPip(package=task_package.as_posix())
+
+    # Extract info form the wheel package (this is part of the endpoint)
+    pkg_info = inspect_package(task_pkg.package_path)
+    task_pkg.package_name = pkg_info["pkg_name"]
+    task_pkg.package_version = pkg_info["pkg_version"]
+    task_pkg.package_manifest = pkg_info["pkg_manifest"]
+    task_pkg.check()
+    debug(task_pkg)
+
+    # Collect task package
+    python_bin, package_root = await _create_venv_install_package(
+        task_pkg=task_pkg, path=tmp_path, logger_name=LOGGER_NAME
+    )
+    debug(python_bin)
+    debug(package_root)
+
+
+async def test_logs_failed_collection(
+    db, dummy_task_package, override_settings_factory, tmp_path: Path
+):
+    """
+    GIVEN a package and its installation environment
+    WHEN the background collection is called on it and it fails
+    THEN
+        * the log of the collection is saved to the state
+        * the installation directory is removed
+    """
+
+    override_settings_factory(
+        FRACTAL_TASKS_DIR=(tmp_path / "test_logs_failed_collection")
+    )
+
+    task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())
+
+    # Extract info form the wheel package (this is part of the endpoint)
+    pkg_info = inspect_package(task_pkg.package_path)
+    task_pkg.package_name = pkg_info["pkg_name"]
+    task_pkg.package_version = pkg_info["pkg_version"]
+    task_pkg.package_manifest = pkg_info["pkg_manifest"]
+    task_pkg.check()
+    debug(task_pkg)
+
+    venv_path = create_package_dir_pip(task_pkg=task_pkg)
+    collection_status = TaskCollectStatus(
+        status="pending", venv_path=venv_path, package=task_pkg.package
+    )
+    # replacing with path because of non-serializable Path
+    collection_status_dict = collection_status.sanitised_dict()
+    state = State(data=collection_status_dict)
+    db.add(state)
+    await db.commit()
+    await db.refresh(state)
+
+    task_pkg.package = "__NO_PACKAGE"
+    task_pkg.package_path = None
+
+    await background_collect_pip(
+        state_id=state.id,
+        venv_path=venv_path,
+        task_pkg=task_pkg,
+    )
+
+    await db.refresh(state)
+    debug(state)
+    assert state.data["log"]
+    assert state.data["status"] == "fail"
+    assert state.data["info"].startswith("Original error")
+    assert not venv_path.exists()
