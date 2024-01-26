@@ -1,7 +1,5 @@
-import json
 from pathlib import Path
 from shutil import copy as shell_copy
-from shutil import rmtree as shell_rmtree
 from tempfile import TemporaryDirectory
 
 from fastapi import APIRouter
@@ -17,27 +15,21 @@ from .....config import get_settings
 from .....logger import close_logger
 from .....logger import set_logger
 from .....syringe import Inject
-from .....tasks.background_operations import create_package_environment_pip
-from .....tasks.background_operations import get_collection_log
-from .....tasks.background_operations import get_log_path
+from .....tasks.background_operations import _background_collect_pip
 from .....tasks.endpoint_operations import create_package_dir_pip
 from .....tasks.endpoint_operations import download_package
 from .....tasks.endpoint_operations import get_collection_data
 from .....tasks.endpoint_operations import inspect_package
 from .....tasks.utils import _TaskCollectPip
-from .....tasks.utils import get_collection_path
+from .....tasks.utils import get_collection_log
 from .....tasks.utils import slugify_task_name
 from ....db import AsyncSession
-from ....db import DBSyncSession
 from ....db import get_async_db
-from ....db import get_sync_db
 from ....models import State
 from ....models import Task
 from ....schemas import StateRead
 from ....schemas import TaskCollectPip
 from ....schemas import TaskCollectStatus
-from ....schemas import TaskCreate
-from ....schemas import TaskRead
 from ....security import current_active_user
 from ....security import current_active_verified_user
 from ....security import User
@@ -45,112 +37,6 @@ from ....security import User
 router = APIRouter()
 
 logger = set_logger(__name__)
-
-
-async def _background_collect_pip(
-    state_id: int,
-    venv_path: Path,
-    task_pkg: _TaskCollectPip,
-) -> None:
-    """
-    Install package and collect tasks
-
-    Install a python package and collect the tasks it provides according to
-    the manifest.
-
-    In case of error, copy the log into the state and delete the package
-    directory.
-    """
-    logger_name = task_pkg.package.replace("/", "_")
-    logger = set_logger(
-        logger_name=logger_name,
-        log_file_path=get_log_path(venv_path),
-    )
-    logger.debug("Start background task collection")
-    for key, value in task_pkg.dict(exclude={"package_manifest"}).items():
-        logger.debug(f"{key}: {value}")
-
-    with next(get_sync_db()) as db:
-        state: State = db.get(State, state_id)
-        data = TaskCollectStatus(**state.data)
-        data.info = None
-
-        try:
-            # install
-            logger.debug("Task-collection status: installing")
-            data.status = "installing"
-
-            state.data = data.sanitised_dict()
-            db.merge(state)
-            db.commit()
-            task_list = await create_package_environment_pip(
-                venv_path=venv_path,
-                task_pkg=task_pkg,
-                logger_name=logger_name,
-            )
-
-            # collect
-            logger.debug("Task-collection status: collecting")
-            data.status = "collecting"
-            state.data = data.sanitised_dict()
-            db.merge(state)
-            db.commit()
-            tasks = await _insert_tasks(task_list=task_list, db=db)
-
-            # finalise
-            logger.debug("Task-collection status: finalising")
-            collection_path = get_collection_path(venv_path)
-            data.task_list = [TaskRead(**task.model_dump()) for task in tasks]
-            with collection_path.open("w") as f:
-                json.dump(data.sanitised_dict(), f)
-
-            # Update DB
-            data.status = "OK"
-            data.log = get_collection_log(venv_path)
-            state.data = data.sanitised_dict()
-            db.add(state)
-            db.merge(state)
-            db.commit()
-
-            # Write last logs to file
-            logger.debug("Task-collection status: OK")
-            logger.info("Background task collection completed successfully")
-            close_logger(logger)
-            db.close()
-
-        except Exception as e:
-            # Write last logs to file
-            logger.debug("Task-collection status: fail")
-            logger.info(f"Background collection failed. Original error: {e}")
-            close_logger(logger)
-
-            # Update db
-            data.status = "fail"
-            data.info = f"Original error: {e}"
-            data.log = get_collection_log(venv_path)
-            state.data = data.sanitised_dict()
-            db.merge(state)
-            db.commit()
-            db.close()
-
-            # Delete corrupted package dir
-            shell_rmtree(venv_path)
-
-
-async def _insert_tasks(
-    task_list: list[TaskCreate],
-    db: DBSyncSession,
-) -> list[Task]:
-    """
-    Insert tasks into database
-    """
-    task_db_list = [Task(**t.dict()) for t in task_list]
-    db.add_all(task_db_list)
-    db.commit()
-    for t in task_db_list:
-        db.refresh(t)
-    db.close()
-    return task_db_list
 
 
 @router.post(

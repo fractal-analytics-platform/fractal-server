@@ -176,3 +176,14 @@ def _normalize_package_name(name: str) -> str:
         The normalized package name.
     """
     return re.sub(r"[-_.]+", "-", name).lower()
+
+
+def get_log_path(base: Path) -> Path:
+    return base / "collection.log"
+
+
+def get_collection_log(venv_path: Path) -> str:
+    package_path = get_absolute_venv_path(venv_path)
+    log_path = get_log_path(package_path)
+    log = log_path.open().read()
+    return log
