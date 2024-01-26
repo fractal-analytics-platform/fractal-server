@@ -9,8 +9,8 @@ from fractal_server.app.schemas import TaskCollectStatus
 from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
 from fractal_server.syringe import Inject
+from fractal_server.tasks._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.utils import _normalize_package_name
-from fractal_server.tasks.utils import _TaskCollectPip
 from fractal_server.tasks.utils import get_absolute_venv_path
 from fractal_server.tasks.utils import get_collection_path
 from fractal_server.tasks.utils import get_python_interpreter

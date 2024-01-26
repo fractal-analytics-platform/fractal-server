@@ -13,8 +13,8 @@ from fractal_server.app.schemas import TaskRead
 from fractal_server.logger import close_logger
 from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
+from fractal_server.tasks._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.utils import _normalize_package_name
-from fractal_server.tasks.utils import _TaskCollectPip
 from fractal_server.tasks.utils import get_collection_log
 from fractal_server.tasks.utils import get_collection_path
 from fractal_server.tasks.utils import get_log_path
