@@ -2,11 +2,22 @@ from pathlib import Path
 
 import pytest
 from devtools import debug
+from pydantic.error_wrappers import ValidationError
 
 from fractal_server.app.schemas import ManifestV1
 from fractal_server.tasks._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.utils import _normalize_package_name
 from fractal_server.tasks.utils import get_absolute_venv_path
+from fractal_server.tasks.utils import get_python_interpreter
+
+
+def test_unit_TaskCollectPip(tmp_path):
+    _TaskCollectPip(package="my-package")
+    package = tmp_path / "dummy_pkg_1-0.0.1-py3-none-any.whl"
+    package.mkdir()
+    _TaskCollectPip(package=package.as_posix())
+    with pytest.raises(ValidationError):
+        _TaskCollectPip(package="somedirectory/my-package")
 
 
 def test_get_absolute_venv_path(tmp_path, override_settings_factory):
@@ -18,6 +29,11 @@ def test_get_absolute_venv_path(tmp_path, override_settings_factory):
     assert get_absolute_venv_path(relative_path) == (
         FRACTAL_TASKS_DIR / relative_path
     )
+
+
+def test_get_python_interpreter():
+    with pytest.raises(ValueError):
+        get_python_interpreter(version="1.1")
 
 
 def test_normalize_package_name():
