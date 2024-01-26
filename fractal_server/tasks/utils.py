@@ -1,3 +1,4 @@
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -7,6 +8,8 @@ from pydantic import root_validator
 
 from fractal_server.app.schemas import ManifestV1
 from fractal_server.app.schemas import TaskCollectPip
+from fractal_server.config import get_settings
+from fractal_server.syringe import Inject
 
 
 class _TaskCollectPip(TaskCollectPip):
@@ -129,3 +132,47 @@ def get_python_interpreter(version: Optional[str] = None) -> str:
         interpreter = sys.executable
 
     return interpreter
+
+
+def slugify_task_name(task_name: str) -> str:
+    return task_name.replace(" ", "_").lower()
+
+
+def get_absolute_venv_path(venv_path: Path) -> Path:
+    """
+    Note:
+    In Python 3.9 it would be safer to do:
+
+        if venv_path.is_relative_to(settings.FRACTAL_TASKS_DIR):
+            package_path = venv_path
+        else:
+            package_path = settings.FRACTAL_TASKS_DIR / venv_path
+    """
+    if venv_path.is_absolute():
+        package_path = venv_path
+    else:
+        settings = Inject(get_settings)
+        package_path = settings.FRACTAL_TASKS_DIR / venv_path
+    return package_path
+
+
+def get_collection_path(base: Path) -> Path:
+    return base / "collection.json"
+
+
+def _normalize_package_name(name: str) -> str:
+    """
+    Implement PyPa specifications for package-name normalization
+
+    The name should be lowercased with all runs of the characters `.`, `-`,
+    or `_` replaced with a single `-` character. This can be implemented in
+    Python with the re module.
+    (https://packaging.python.org/en/latest/specifications/name-normalization)
+
+    Args:
+        name: The non-normalized package name.
+
+    Returns:
+        The normalized package name.
+    """
+    return re.sub(r"[-_.]+", "-", name).lower()
