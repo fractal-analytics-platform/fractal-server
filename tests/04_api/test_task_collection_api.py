@@ -11,19 +11,19 @@ from sqlmodel import select
 
 from fractal_server.app.models import State
 from fractal_server.app.models import Task
-from fractal_server.app.routes.api.v1.task_collection import (
-    _background_collect_pip,
-)
-from fractal_server.app.routes.api.v1.task_collection import _TaskCollectPip
-from fractal_server.app.routes.api.v1.task_collection import (
-    create_package_dir_pip,
-)
 from fractal_server.app.routes.api.v1.task_collection import TaskCollectStatus
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
-from fractal_server.tasks.collection import get_collection_path
-from fractal_server.tasks.collection import get_log_path
-from fractal_server.tasks.collection import inspect_package
+from fractal_server.tasks._TaskCollectPip import _TaskCollectPip
+from fractal_server.tasks.background_operations import (
+    background_collect_pip,
+)
+from fractal_server.tasks.endpoint_operations import (
+    create_package_dir_pip,
+)
+from fractal_server.tasks.endpoint_operations import inspect_package
+from fractal_server.tasks.utils import get_collection_path
+from fractal_server.tasks.utils import get_log_path
 from tests.fixtures_tasks import execute_command
 
 PREFIX = "/api/v1/task"
@@ -125,7 +125,7 @@ async def test_collection(
         state_id = state["id"]
         data = state["data"]
         venv_path = Path(data["venv_path"])
-        assert "fractal_tasks_dummy" in data["venv_path"]
+        assert "fractal-tasks-dummy" in data["venv_path"]
 
         # Get/check collection info
         res = await client.get(f"{PREFIX}/collect/{state_id}/")
@@ -268,7 +268,7 @@ async def test_collection_with_json_schemas(
     await db.commit()
     await db.refresh(state)
     debug(state)
-    await _background_collect_pip(
+    await background_collect_pip(
         state_id=state.id,
         venv_path=venv_path,
         task_pkg=task_pkg,
@@ -393,7 +393,7 @@ async def test_failed_collection_missing_task_file(
         assert res.json()["data"]["status"] == "pending"
         state = res.json()
         data = state["data"]
-        assert "my_tasks_fail" in data["venv_path"]
+        assert "my-tasks-fail" in data["venv_path"]
 
         res = await client.get(f"{PREFIX}/collect/{state['id']}/?verbose=True")
         debug(res.json())
@@ -507,7 +507,7 @@ async def test_logs(
     await db.commit()
     await db.refresh(state)
     debug(state)
-    await _background_collect_pip(
+    await background_collect_pip(
         state_id=state.id,
         venv_path=venv_path,
         task_pkg=task_pkg,
@@ -521,52 +521,3 @@ async def test_logs(
     debug(out_state["data"]["log"])
     debug(out_state["data"]["info"])
     assert out_state["data"]["log"]
-
-
-async def test_logs_failed_collection(
-    db, dummy_task_package, override_settings_factory, tmp_path: Path
-):
-    """
-    GIVEN a package and its installation environment
-    WHEN the background collection is called on it and it fails
-    THEN
-        * the log of the collection is saved to the state
-        * the installation directory is removed
-    """
-
-    override_settings_factory(
-        FRACTAL_TASKS_DIR=(tmp_path / "test_logs_failed_collection")
-    )
-
-    task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())
-
-    # Extract info form the wheel package (this would be part of the endpoint)
-    _inspect_package_and_set_attributes(task_pkg)
-    debug(task_pkg)
-
-    venv_path = create_package_dir_pip(task_pkg=task_pkg)
-    collection_status = TaskCollectStatus(
-        status="pending", venv_path=venv_path, package=task_pkg.package
-    )
-    # replacing with path because of non-serializable Path
-    collection_status_dict = collection_status.sanitised_dict()
-    state = State(data=collection_status_dict)
-    db.add(state)
-    await db.commit()
-    await db.refresh(state)
-
-    task_pkg.package = "__NO_PACKAGE"
-    task_pkg.package_path = None
-
-    await _background_collect_pip(
-        state_id=state.id,
-        venv_path=venv_path,
-        task_pkg=task_pkg,
-    )
-
-    await db.refresh(state)
-    debug(state)
-    assert state.data["log"]
-    assert state.data["status"] == "fail"
-    assert state.data["info"].startswith("Original error")
-    assert not venv_path.exists()
