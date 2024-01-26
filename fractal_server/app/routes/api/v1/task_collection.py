@@ -16,7 +16,7 @@ from .....logger import close_logger
 from .....logger import set_logger
 from .....syringe import Inject
 from .....tasks._TaskCollectPip import _TaskCollectPip
-from .....tasks.background_operations import _background_collect_pip
+from .....tasks.background_operations import background_collect_pip
 from .....tasks.endpoint_operations import create_package_dir_pip
 from .....tasks.endpoint_operations import download_package
 from .....tasks.endpoint_operations import get_collection_data
@@ -175,7 +175,7 @@ async def collect_tasks_pip(
     await db.refresh(state)
 
     background_tasks.add_task(
-        _background_collect_pip,
+        background_collect_pip,
         state_id=state.id,
         venv_path=venv_path,
         task_pkg=task_pkg,
