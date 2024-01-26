@@ -168,7 +168,7 @@ async def install_dummy_packages(tmp777_session_path, dummy_task_package):
     from fractal_server.tasks.background_operations import (
         create_package_environment_pip,
     )
-    from fractal_server.tasks.utils import _TaskCollectPip
+    from fractal_server.tasks._TaskCollectPip import _TaskCollectPip
 
     task_pkg = _TaskCollectPip(
         package=dummy_task_package.as_posix(),
