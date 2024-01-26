@@ -1,10 +1,13 @@
 from pathlib import Path
 from typing import Optional
 
+from fractal_server.app.schemas import TaskCreate
 from fractal_server.logger import get_logger
-from fractal_server.tasks.naming import _normalize_package_name
+from fractal_server.tasks.utils import _normalize_package_name
 from fractal_server.tasks.utils import _TaskCollectPip
+from fractal_server.tasks.utils import get_absolute_venv_path
 from fractal_server.tasks.utils import get_python_interpreter
+from fractal_server.tasks.utils import slugify_task_name
 from fractal_server.utils import execute_command
 
 
@@ -192,3 +195,79 @@ async def _create_venv_install_package(
         venv_path=path, task_pkg=task_pkg, logger_name=logger_name
     )
     return python_bin, package_root
+
+
+async def create_package_environment_pip(
+    *,
+    task_pkg: _TaskCollectPip,
+    venv_path: Path,
+    logger_name: str,
+) -> list[TaskCreate]:
+    """
+    Create environment, install package, and prepare task list
+    """
+
+    logger = get_logger(logger_name)
+
+    # Normalize package name
+    task_pkg.package_name = _normalize_package_name(task_pkg.package_name)
+    task_pkg.package = _normalize_package_name(task_pkg.package)
+
+    # Only proceed if package, version and manifest attributes are set
+    task_pkg.check()
+
+    try:
+
+        logger.debug("Creating venv and installing package")
+        python_bin, package_root = await _create_venv_install_package(
+            path=venv_path,
+            task_pkg=task_pkg,
+            logger_name=logger_name,
+        )
+        logger.debug("Venv creation and package installation ended correctly.")
+
+        # Prepare task_list with appropriate metadata
+        logger.debug("Creating task list from manifest")
+        task_list = []
+        for t in task_pkg.package_manifest.task_list:
+            # Fill in attributes for TaskCreate
+            task_executable = package_root / t.executable
+            cmd = f"{python_bin.as_posix()} {task_executable.as_posix()}"
+            task_name_slug = slugify_task_name(t.name)
+            task_source = f"{task_pkg.package_source}:{task_name_slug}"
+            if not task_executable.exists():
+                raise FileNotFoundError(
+                    f"Cannot find executable `{task_executable}` "
+                    f"for task `{t.name}`"
+                )
+            manifest = task_pkg.package_manifest
+            if manifest.has_args_schemas:
+                additional_attrs = dict(
+                    args_schema_version=manifest.args_schema_version
+                )
+            else:
+                additional_attrs = {}
+            this_task = TaskCreate(
+                **t.dict(),
+                command=cmd,
+                version=task_pkg.package_version,
+                **additional_attrs,
+                source=task_source,
+            )
+            task_list.append(this_task)
+        logger.debug("Task list created correctly")
+    except Exception as e:
+        logger.error("Task manifest loading failed")
+        raise e
+    return task_list
+
+
+def get_log_path(base: Path) -> Path:
+    return base / "collection.log"
+
+
+def get_collection_log(venv_path: Path) -> str:
+    package_path = get_absolute_venv_path(venv_path)
+    log_path = get_log_path(package_path)
+    log = log_path.open().read()
+    return log

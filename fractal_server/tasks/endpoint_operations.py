@@ -4,16 +4,15 @@ from typing import Optional
 from typing import Union
 from zipfile import ZipFile
 
+from fractal_server.app.schemas import ManifestV1
 from fractal_server.app.schemas import TaskCollectStatus
 from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
 from fractal_server.syringe import Inject
-from fractal_server.tasks.collection import _load_manifest_from_wheel
-from fractal_server.tasks.collection import FRACTAL_PUBLIC_TASK_SUBDIR
-from fractal_server.tasks.collection import get_absolute_venv_path
-from fractal_server.tasks.collection import get_collection_path
-from fractal_server.tasks.naming import _normalize_package_name
+from fractal_server.tasks.utils import _normalize_package_name
 from fractal_server.tasks.utils import _TaskCollectPip
+from fractal_server.tasks.utils import get_absolute_venv_path
+from fractal_server.tasks.utils import get_collection_path
 from fractal_server.tasks.utils import get_python_interpreter
 from fractal_server.utils import execute_command
 
@@ -46,6 +45,31 @@ async def download_package(
         line.split()[-1] for line in stdout.split("\n") if "Saved" in line
     )
     return Path(pkg_file)
+
+
+def _load_manifest_from_wheel(
+    path: Path, wheel: ZipFile, logger_name: Optional[str] = None
+) -> ManifestV1:
+    logger = get_logger(logger_name)
+    namelist = wheel.namelist()
+    try:
+        manifest = next(
+            name for name in namelist if "__FRACTAL_MANIFEST__.json" in name
+        )
+    except StopIteration:
+        msg = f"{path.as_posix()} does not include __FRACTAL_MANIFEST__.json"
+        logger.error(msg)
+        raise ValueError(msg)
+    with wheel.open(manifest) as manifest_fd:
+        manifest_dict = json.load(manifest_fd)
+    manifest_version = str(manifest_dict["manifest_version"])
+    if manifest_version == "1":
+        pkg_manifest = ManifestV1(**manifest_dict)
+        return pkg_manifest
+    else:
+        msg = f"Manifest version {manifest_version=} not supported"
+        logger.error(msg)
+        raise ValueError(msg)
 
 
 def inspect_package(path: Path, logger_name: Optional[str] = None) -> dict:
@@ -115,6 +139,9 @@ def inspect_package(path: Path, logger_name: Optional[str] = None) -> dict:
         pkg_manifest=pkg_manifest,
     )
     return info
+
+
+FRACTAL_PUBLIC_TASK_SUBDIR = ".fractal"
 
 
 def create_package_dir_pip(
