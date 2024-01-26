@@ -9,7 +9,6 @@ from typing import Optional
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Query
 from fastapi import Response
 from fastapi import status
 from fastapi.responses import StreamingResponse
@@ -40,40 +39,29 @@ from .aux._runner import _check_backend_is_slurm
 router_admin = APIRouter()
 
 
-def CONVERT_UTC(dt: datetime) -> None:
+def _convert_to_db_timestamp(dt: datetime) -> datetime:
+    """
+    This function takes a timezone-aware datetime and converts it to UTC.
+    If using SQLite, it also removes the timezone information in order to make
+    the datetime comparable with datetimes in the database.
+    """
     if dt.tzinfo is None:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"The timestamp provided has no timezone information: {dt}",
         )
-    DB_ENGINE = Inject(get_settings).DB_ENGINE
-    if DB_ENGINE == "postgres":
-        return dt.astimezone(timezone.utc)
-    else:
-        return dt.astimezone(timezone.utc).replace(tzinfo=None)
-
-
-timestamp_args = dict(
-    default=None,
-    openapi_examples={
-        "example1": {
-            "summary": "Most complete format",
-            "value": "yyyy-MM-dd%20HH%3Amm%3Ass.SSSSSS%2B00%3A00",
-        },
-        "example2": {
-            "summary": "First January 2000, at 3:14 PM",
-            "value": "2000-01-01%2015%3A14%3A00%2B00%3A00",
-        },
-    },
-)
+    dt = dt.astimezone(timezone.utc)
+    if Inject(get_settings).DB_ENGINE == "sqlite":
+        return dt.replace(tzinfo=None)
+    return dt
 
 
 @router_admin.get("/project/", response_model=list[ProjectRead])
 async def view_project(
     id: Optional[int] = None,
     user_id: Optional[int] = None,
-    timestamp_created_min: Optional[datetime] = Query(**timestamp_args),
-    timestamp_created_max: Optional[datetime] = Query(**timestamp_args),
+    timestamp_created_min: Optional[datetime] = None,
+    timestamp_created_max: Optional[datetime] = None,
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[ProjectRead]:
@@ -93,10 +81,10 @@ async def view_project(
     if user_id is not None:
         stm = stm.where(Project.user_list.any(User.id == user_id))
     if timestamp_created_min is not None:
-        timestamp_created_min = CONVERT_UTC(timestamp_created_min)
+        timestamp_created_min = _convert_to_db_timestamp(timestamp_created_min)
         stm = stm.where(Project.timestamp_created >= timestamp_created_min)
     if timestamp_created_max is not None:
-        timestamp_created_max = CONVERT_UTC(timestamp_created_max)
+        timestamp_created_max = _convert_to_db_timestamp(timestamp_created_max)
         stm = stm.where(Project.timestamp_created <= timestamp_created_max)
 
     res = await db.execute(stm)
@@ -112,8 +100,8 @@ async def view_workflow(
     user_id: Optional[int] = None,
     project_id: Optional[int] = None,
     name_contains: Optional[str] = None,
-    timestamp_created_min: Optional[datetime] = Query(**timestamp_args),
-    timestamp_created_max: Optional[datetime] = Query(**timestamp_args),
+    timestamp_created_min: Optional[datetime] = None,
+    timestamp_created_max: Optional[datetime] = None,
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[WorkflowRead]:
@@ -142,10 +130,10 @@ async def view_workflow(
             func.lower(Workflow.name).contains(name_contains.lower())
         )
     if timestamp_created_min is not None:
-        timestamp_created_min = CONVERT_UTC(timestamp_created_min)
+        timestamp_created_min = _convert_to_db_timestamp(timestamp_created_min)
         stm = stm.where(Workflow.timestamp_created >= timestamp_created_min)
     if timestamp_created_max is not None:
-        timestamp_created_max = CONVERT_UTC(timestamp_created_max)
+        timestamp_created_max = _convert_to_db_timestamp(timestamp_created_max)
         stm = stm.where(Workflow.timestamp_created <= timestamp_created_max)
 
     res = await db.execute(stm)
@@ -162,8 +150,8 @@ async def view_dataset(
     project_id: Optional[int] = None,
     name_contains: Optional[str] = None,
     type: Optional[str] = None,
-    timestamp_created_min: Optional[datetime] = Query(**timestamp_args),
-    timestamp_created_max: Optional[datetime] = Query(**timestamp_args),
+    timestamp_created_min: Optional[datetime] = None,
+    timestamp_created_max: Optional[datetime] = None,
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[DatasetRead]:
@@ -195,10 +183,10 @@ async def view_dataset(
     if type is not None:
         stm = stm.where(Dataset.type == type)
     if timestamp_created_min is not None:
-        timestamp_created_min = CONVERT_UTC(timestamp_created_min)
+        timestamp_created_min = _convert_to_db_timestamp(timestamp_created_min)
         stm = stm.where(Dataset.timestamp_created >= timestamp_created_min)
     if timestamp_created_max is not None:
-        timestamp_created_max = CONVERT_UTC(timestamp_created_max)
+        timestamp_created_max = _convert_to_db_timestamp(timestamp_created_max)
         stm = stm.where(Dataset.timestamp_created <= timestamp_created_max)
 
     res = await db.execute(stm)
@@ -217,10 +205,10 @@ async def view_job(
     output_dataset_id: Optional[int] = None,
     workflow_id: Optional[int] = None,
     status: Optional[JobStatusType] = None,
-    start_timestamp_min: Optional[datetime] = Query(**timestamp_args),
-    start_timestamp_max: Optional[datetime] = Query(**timestamp_args),
-    end_timestamp_min: Optional[datetime] = Query(**timestamp_args),
-    end_timestamp_max: Optional[datetime] = Query(**timestamp_args),
+    start_timestamp_min: Optional[datetime] = None,
+    start_timestamp_max: Optional[datetime] = None,
+    end_timestamp_min: Optional[datetime] = None,
+    end_timestamp_max: Optional[datetime] = None,
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[ApplyWorkflowRead]:
@@ -264,16 +252,16 @@ async def view_job(
     if status is not None:
         stm = stm.where(ApplyWorkflow.status == status)
     if start_timestamp_min is not None:
-        start_timestamp_min = CONVERT_UTC(start_timestamp_min)
+        start_timestamp_min = _convert_to_db_timestamp(start_timestamp_min)
         stm = stm.where(ApplyWorkflow.start_timestamp >= start_timestamp_min)
     if start_timestamp_max is not None:
-        start_timestamp_max = CONVERT_UTC(start_timestamp_max)
+        start_timestamp_max = _convert_to_db_timestamp(start_timestamp_max)
         stm = stm.where(ApplyWorkflow.start_timestamp <= start_timestamp_max)
     if end_timestamp_min is not None:
-        end_timestamp_min = CONVERT_UTC(end_timestamp_min)
+        end_timestamp_min = _convert_to_db_timestamp(end_timestamp_min)
         stm = stm.where(ApplyWorkflow.end_timestamp >= end_timestamp_min)
     if end_timestamp_max is not None:
-        end_timestamp_max = CONVERT_UTC(end_timestamp_max)
+        end_timestamp_max = _convert_to_db_timestamp(end_timestamp_max)
         stm = stm.where(ApplyWorkflow.end_timestamp <= end_timestamp_max)
 
     res = await db.execute(stm)

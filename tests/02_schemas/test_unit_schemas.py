@@ -119,6 +119,9 @@ def test_apply_workflow_read():
         output_dataset_dump=DATASET_DUMP,
         user_email="test@fractal.com",
     )
+    debug(job1)
+    debug(job1.start_timestamp)
+
     assert isinstance(job1.project_dump, ProjectDump)
     assert isinstance(job1.workflow_dump, WorkflowDump)
     assert isinstance(job1.input_dataset_dump, DatasetDump)
