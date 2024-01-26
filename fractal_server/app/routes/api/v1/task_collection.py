@@ -17,7 +17,6 @@ from .....config import get_settings
 from .....logger import close_logger
 from .....logger import set_logger
 from .....syringe import Inject
-from .....tasks.collection import _TaskCollectPip
 from .....tasks.collection import create_package_dir_pip
 from .....tasks.collection import create_package_environment_pip
 from .....tasks.collection import download_package
@@ -27,6 +26,7 @@ from .....tasks.collection import get_collection_path
 from .....tasks.collection import get_log_path
 from .....tasks.collection import inspect_package
 from .....tasks.collection import slugify_task_name
+from .....tasks.utils import _TaskCollectPip
 from ....db import AsyncSession
 from ....db import DBSyncSession
 from ....db import get_async_db
