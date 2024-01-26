@@ -17,13 +17,13 @@ from fractal_server.app.routes.api.v1.task_collection import (
 from fractal_server.app.routes.api.v1.task_collection import TaskCollectStatus
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
-from fractal_server.tasks.collection import get_collection_path
-from fractal_server.tasks.collection import get_log_path
+from fractal_server.tasks.background_operations import get_log_path
 from fractal_server.tasks.endpoint_operations import (
     create_package_dir_pip,
 )
 from fractal_server.tasks.endpoint_operations import inspect_package
 from fractal_server.tasks.utils import _TaskCollectPip
+from fractal_server.tasks.utils import get_collection_path
 from tests.fixtures_tasks import execute_command
 
 PREFIX = "/api/v1/task"

@@ -1,4 +1,4 @@
-from fractal_server.tasks.naming import _normalize_package_name
+from fractal_server.tasks.utils import _normalize_package_name
 
 
 def test_normalize_package_name():

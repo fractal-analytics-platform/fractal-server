@@ -165,7 +165,7 @@ async def install_dummy_packages(tmp777_session_path, dummy_task_package):
     https://github.com/fractal-analytics-platform/fractal-server/issues/498
     """
 
-    from fractal_server.tasks.collection import (
+    from fractal_server.tasks.background_operations import (
         create_package_environment_pip,
     )
     from fractal_server.tasks.utils import _TaskCollectPip
