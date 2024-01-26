@@ -41,15 +41,6 @@ def slugify_task_name(task_name: str) -> str:
 
 
 def get_absolute_venv_path(venv_path: Path) -> Path:
-    """
-    Note:
-    In Python 3.9 it would be safer to do:
-
-        if venv_path.is_relative_to(settings.FRACTAL_TASKS_DIR):
-            package_path = venv_path
-        else:
-            package_path = settings.FRACTAL_TASKS_DIR / venv_path
-    """
     if venv_path.is_absolute():
         package_path = venv_path
     else:
