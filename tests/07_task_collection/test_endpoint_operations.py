@@ -29,6 +29,12 @@ async def test_inspect_package(tmp_path):
     assert isinstance(info["pkg_manifest"], ManifestV1)
 
 
+async def test_inspect_package_fail(tmp_path):
+    wheel_path = tmp_path
+    with pytest.raises(ValueError):
+        inspect_package(wheel_path)
+
+
 @pytest.mark.parametrize(
     ("task_pkg", "expected_path"),
     [
