@@ -73,7 +73,7 @@ jobs:
       - name: Apply migration and fix-db script (postgres)
         run: |
           cp $ROOTDIR/.fractal_server_postgres.env .fractal_server.env
-          poetry run fractalctl set-dd
+          poetry run fractalctl set-db
           poetry run python scripts/fix_db/current.py  # FIXME: see issue 1094
 
       - name: Apply migration and fix-db script (sqlite)
