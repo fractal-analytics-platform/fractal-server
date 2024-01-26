@@ -1,5 +1,5 @@
 import argparse as ap
-from sys import argv
+import sys
 
 import uvicorn
 
@@ -43,6 +43,9 @@ openapi_parser.add_argument(
 # fractalctl set-db
 subparsers.add_parser("set-db", description="Initialise the database")
 
+# fractalctl update-db-data
+subparsers.add_parser("update-db-data", description="FIXME")
+
 
 def save_openapi(dest="openapi.json"):
     from fractal_server.main import start_application
@@ -74,20 +77,76 @@ def set_db():
     alembic.config.main(argv=alembic_args)
 
 
+def update_db_data():
+    import fractal_server
+    from importlib import import_module
+    from packaging.version import parse
+    import os
+
+    def _slugify_version(raw_version: str) -> str:
+        v = parse(raw_version)
+        return f"{v.major}_{v.minor}_{v.micro}"
+
+    current_version = fractal_server.__VERSION__
+    current_version_slug = _slugify_version(current_version)
+
+    print(
+        "WARNING: This command acts directly on database data. "
+        "If in doubt, do not run it!\n"
+    )
+
+    print(
+        "You have updated fractal-server from some old version to a "
+        "target version, and now need to fix some database data.\n"
+        f"The target version is '{current_version}' (which maps to "
+        f"the update-db-data module '{current_version_slug}.py').\n"
+        "Note that the old and target versions MUST be consecutive, "
+        "that is, you cannot skip an intermediate version."
+    )
+    print()
+
+    if not os.path.isfile(".fractal_server.env"):
+        sys.exit(
+            "This command will look for a '.fractal_server.env' file, but "
+            "there isn't one in the current directory."
+        )
+
+    yes_no_questions = (
+        "Do you confirm that the old and target versions are consecutive?",
+        f"Do you confirm that the target version is {current_version}?",
+        "Have you run 'fractalctl set-db' with the target version?",
+        "Have you made a backup of your database (e.g. via `pg_dump`)?",
+        "Are you sure you want to proceed?",
+    )
+    for question in yes_no_questions:
+        user_input = input(f"{question} (yes/no) ")
+        if user_input != "yes":
+            sys.exit(f"Answer was '{user_input}'; exit.")
+
+    current_update_db_data_module = import_module(
+        f"fractal_server.data_migrations.{current_version_slug}"
+    )
+    current_update_db_data_module.fix_db()
+
+
 def run():
-    args = parser.parse_args(argv[1:])
+    args = parser.parse_args(sys.argv[1:])
 
     if args.cmd == "openapi":
         save_openapi(dest=args.openapi_file)
     elif args.cmd == "set-db":
         set_db()
-    else:
+    elif args.cmd == "update-db-data":
+        update_db_data()
+    elif args.cmd == "start":
         uvicorn.run(
             "fractal_server.main:app",
             host=args.host,
             port=args.port,
             reload=args.reload,
         )
+    else:
+        sys.exit(f"Error: invalid command '{args.cmd}'.")
 
 
 if __name__ == "__main__":
