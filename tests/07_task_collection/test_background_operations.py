@@ -182,7 +182,15 @@ async def test_unit_create_venv_install_package(
 ):
     """
     This unit test for `_create_venv_install_package` collects tasks from two
-    local wheel files, where the second one has a non-normalized package name.
+    local wheel files.
+
+    ``console
+    $ pwd
+    /.../fractal-server/tests/data/more_dummy_task_packages
+    $ grep name dummy_pkg_*/pyproject.toml | grep -v email
+    dummy_pkg_1/pyproject.toml:name = "dummy_pkg_1"
+    dummy_pkg_2/pyproject.toml:name = "dummy-PKG-2"
+    ```
     """
     from fractal_server.tasks.background_operations import (
         _create_venv_install_package,

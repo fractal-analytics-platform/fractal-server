@@ -1,5 +1,5 @@
 [project]
-name = "dummy-pkg-1"
+name = "dummy_pkg_1"
 version = "0.0.1"
 description = ""
 authors = [{ name = "X Y", email = "x@y.z" }]
