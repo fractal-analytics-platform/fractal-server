@@ -58,7 +58,7 @@ jobs:
         run: pipx install poetry==1.7.1
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           cache: "poetry"
@@ -73,7 +73,7 @@ jobs:
       - name: Apply migration and fix-db script (postgres)
         run: |
           cp $ROOTDIR/.fractal_server_postgres.env .fractal_server.env
-          poetry run fractalctl set-db
+          poetry run fractalctl set-dd
           poetry run python scripts/fix_db/current.py  # FIXME: see issue 1094
 
       - name: Apply migration and fix-db script (sqlite)
