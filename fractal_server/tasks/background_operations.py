@@ -1,3 +1,7 @@
+"""
+The main function exported from this module is `background_collect_pip`, which
+is used as a background task for the task-collection endpoint.
+"""
 import json
 from pathlib import Path
 from shutil import rmtree as shell_rmtree
@@ -290,7 +294,7 @@ async def _insert_tasks(
     return task_db_list
 
 
-async def _background_collect_pip(
+async def background_collect_pip(
     state_id: int,
     venv_path: Path,
     task_pkg: _TaskCollectPip,
