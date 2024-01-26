@@ -4,7 +4,9 @@ from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import ApplyWorkflow
 from fractal_server.app.models import Dataset
 from fractal_server.app.models import Project
+from fractal_server.app.models import Resource
 from fractal_server.app.models import State
+from fractal_server.app.models import Task
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models import Workflow
 from fractal_server.app.schemas import ApplyWorkflowRead
@@ -26,6 +28,13 @@ with next(get_sync_db()) as db:
         ProjectRead(**project.model_dump())
         print(f"Project {project.id} validated")
 
+    # TASKS
+    stm = select(Task)
+    tasks = db.execute(stm).scalars().all()
+    for task in sorted(tasks, key=lambda x: x.id):
+        TaskRead(**task.model_dump())
+        print(f"Task {task.id} validated")
+
     # WORKFLOWS
     stm = select(Workflow)
     workflows = db.execute(stm).scalars().all()
@@ -42,6 +51,13 @@ with next(get_sync_db()) as db:
             ],
         )
         print(f"Workflow {workflow.id} validated")
+
+    # TASKS
+    stm = select(Resource)
+    resources = db.execute(stm).scalars().all()
+    for resource in sorted(resources, key=lambda x: x.id):
+        ResourceRead(**resource.model_dump())
+        print(f"Resource {resource.id} validated")
 
     # DATASETS
     stm = select(Dataset)
