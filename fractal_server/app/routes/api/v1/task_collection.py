@@ -15,12 +15,12 @@ from .....config import get_settings
 from .....logger import close_logger
 from .....logger import set_logger
 from .....syringe import Inject
+from .....tasks._TaskCollectPip import _TaskCollectPip
 from .....tasks.background_operations import _background_collect_pip
 from .....tasks.endpoint_operations import create_package_dir_pip
 from .....tasks.endpoint_operations import download_package
 from .....tasks.endpoint_operations import get_collection_data
 from .....tasks.endpoint_operations import inspect_package
-from .....tasks.utils import _TaskCollectPip
 from .....tasks.utils import get_collection_log
 from .....tasks.utils import slugify_task_name
 from ....db import AsyncSession
