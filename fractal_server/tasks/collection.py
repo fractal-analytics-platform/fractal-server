@@ -17,17 +17,12 @@ Tasks are installed under `Settings.FRACTAL_TASKS_DIR/{username}`, with
 `username = ".fractal"`.
 """
 import json
-import shutil
-import sys
 from pathlib import Path
 from typing import Optional
 from typing import Union
 from zipfile import ZipFile
 
-from pydantic import root_validator
-
 from ..app.schemas import ManifestV1
-from ..app.schemas import TaskCollectPip
 from ..app.schemas import TaskCollectStatus
 from ..app.schemas import TaskCreate
 from ..config import get_settings
@@ -35,6 +30,11 @@ from ..logger import get_logger
 from ..syringe import Inject
 from ..utils import execute_command
 from .naming import _normalize_package_name
+from fractal_server.tasks.background_operations import (
+    _create_venv_install_package,
+)
+from fractal_server.tasks.utils import _TaskCollectPip
+from fractal_server.tasks.utils import get_python_interpreter
 
 
 FRACTAL_PUBLIC_TASK_SUBDIR = ".fractal"
@@ -42,32 +42,6 @@ FRACTAL_PUBLIC_TASK_SUBDIR = ".fractal"
 
 def slugify_task_name(task_name: str) -> str:
     return task_name.replace(" ", "_").lower()
-
-
-def get_python_interpreter(version: Optional[str] = None) -> str:
-    """
-    Return the path to the python interpreter
-
-    Args:
-        version: Python version
-
-    Raises:
-        ValueError: If the python version requested is not available on the
-                    host.
-
-    Returns:
-        interpreter: string representing the python executable or its path
-    """
-    if version:
-        interpreter = shutil.which(f"python{version}")
-        if not interpreter:
-            raise ValueError(
-                f"Python version {version} not available on host."
-            )
-    else:
-        interpreter = sys.executable
-
-    return interpreter
 
 
 def get_absolute_venv_path(venv_path: Path) -> Path:
@@ -109,102 +83,6 @@ def get_collection_data(venv_path: Path) -> TaskCollectStatus:
     with collection_path.open() as f:
         data = json.load(f)
     return TaskCollectStatus(**data)
-
-
-class _TaskCollectPip(TaskCollectPip):
-    """
-    Internal TaskCollectPip schema
-
-    Differences with its parent class (`TaskCollectPip`):
-
-        1. We check if the package corresponds to a path in the filesystem, and
-           whether it exists (via new validator `check_local_package`, new
-           method `is_local_package` and new attribute `package_path`).
-        2. We include an additional `package_manifest` attribute.
-        3. We expose an additional attribute `package_name`, which is filled
-           during task collection.
-    """
-
-    package_name: Optional[str] = None
-    package_path: Optional[Path] = None
-    package_manifest: Optional[ManifestV1] = None
-
-    @property
-    def is_local_package(self) -> bool:
-        return bool(self.package_path)
-
-    @root_validator(pre=True)
-    def check_local_package(cls, values):
-        """
-        Checks if package corresponds to an existing path on the filesystem
-
-        In this case, the user is providing directly a package file, rather
-        than a remote one from PyPI. We set the `package_path` attribute and
-        get the actual package name and version from the package file name.
-        """
-        if "/" in values["package"]:
-            package_path = Path(values["package"])
-            if not package_path.is_absolute():
-                raise ValueError("Package path must be absolute")
-            if package_path.exists():
-                values["package_path"] = package_path
-                (
-                    values["package"],
-                    values["version"],
-                    *_,
-                ) = package_path.name.split("-")
-            else:
-                raise ValueError(f"Package {package_path} does not exist.")
-        return values
-
-    @property
-    def package_source(self) -> str:
-        """
-        NOTE: As of PR #1188 in `fractal-server`, the attribute
-        `self.package_name` is normalized; this means e.g. that `_` is
-        replaced by `-`. To guarantee backwards compatibility with
-        `Task.source` attributes created before this change, we still replace
-        `-` with `_` upon generation of the `source` attribute, in this
-        method.
-        """
-        if not self.package_name or not self.package_version:
-            raise ValueError(
-                "Cannot construct `package_source` property with "
-                f"{self.package_name=} and {self.package_version=}."
-            )
-        if self.is_local_package:
-            collection_type = "pip_local"
-        else:
-            collection_type = "pip_remote"
-
-        package_extras = self.package_extras or ""
-        if self.python_version:
-            python_version = f"py{self.python_version}"
-        else:
-            python_version = ""  # FIXME: can we allow this?
-
-        source = ":".join(
-            (
-                collection_type,
-                self.package_name.replace("-", "_"),  # see method docstring
-                self.package_version,
-                package_extras,
-                python_version,
-            )
-        )
-        return source
-
-    def check(self):
-        """
-        Verify that the package has all attributes that are needed to continue
-        with task collection
-        """
-        if not self.package_name:
-            raise ValueError("`package_name` attribute is not set")
-        if not self.package_version:
-            raise ValueError("`package_version` attribute is not set")
-        if not self.package_manifest:
-            raise ValueError("`package_manifest` attribute is not set")
 
 
 def create_package_dir_pip(
@@ -409,189 +287,3 @@ async def create_package_environment_pip(
         logger.error("Task manifest loading failed")
         raise e
     return task_list
-
-
-async def _create_venv_install_package(
-    *,
-    task_pkg: _TaskCollectPip,
-    path: Path,
-    logger_name: str,
-) -> tuple[Path, Path]:
-    """Create venv and install package
-
-    Args:
-        path: the directory in which to create the environment
-        task_pkg: object containing the different metadata required to install
-            the package
-
-    Returns:
-        python_bin: path to venv's python interpreter
-        package_root: the location of the package manifest
-    """
-
-    # Normalize package name
-    task_pkg.package_name = _normalize_package_name(task_pkg.package_name)
-    task_pkg.package = _normalize_package_name(task_pkg.package)
-
-    python_bin = await _init_venv(
-        path=path,
-        python_version=task_pkg.python_version,
-        logger_name=logger_name,
-    )
-    package_root = await _pip_install(
-        venv_path=path, task_pkg=task_pkg, logger_name=logger_name
-    )
-    return python_bin, package_root
-
-
-async def _init_venv(
-    *,
-    path: Path,
-    python_version: Optional[str] = None,
-    logger_name: str,
-) -> Path:
-    """
-    Set a virtual environment at `path/venv`
-
-    Args:
-        path : Path
-            path to directory in which to set up the virtual environment
-        python_version : default=None
-            Python version the virtual environment will be based upon
-
-    Returns:
-        python_bin : Path
-            path to python interpreter
-    """
-    logger = get_logger(logger_name)
-    logger.debug(f"[_init_venv] {path=}")
-    interpreter = get_python_interpreter(version=python_version)
-    logger.debug(f"[_init_venv] {interpreter=}")
-    await execute_command(
-        cwd=path,
-        command=f"{interpreter} -m venv venv",
-        logger_name=logger_name,
-    )
-    python_bin = path / "venv/bin/python"
-    logger.debug(f"[_init_venv] {python_bin=}")
-    return python_bin
-
-
-async def _pip_install(
-    venv_path: Path,
-    task_pkg: _TaskCollectPip,
-    logger_name: str,
-) -> Path:
-    """
-    Install package in venv
-
-    Args:
-        venv_path:
-        task_pkg:
-        logger_name:
-
-    Returns:
-        The location of the package.
-    """
-
-    logger = get_logger(logger_name)
-
-    pip = venv_path / "venv/bin/pip"
-
-    extras = f"[{task_pkg.package_extras}]" if task_pkg.package_extras else ""
-
-    if task_pkg.is_local_package:
-        pip_install_str = f"{task_pkg.package_path.as_posix()}{extras}"
-    else:
-        version_string = (
-            f"=={task_pkg.package_version}" if task_pkg.package_version else ""
-        )
-        pip_install_str = f"{task_pkg.package}{extras}{version_string}"
-
-    cmd_install = f"{pip} install {pip_install_str}"
-    cmd_inspect = f"{pip} show {task_pkg.package}"
-
-    await execute_command(
-        cwd=venv_path,
-        command=f"{pip} install --upgrade pip",
-        logger_name=logger_name,
-    )
-    await execute_command(
-        cwd=venv_path, command=cmd_install, logger_name=logger_name
-    )
-    if task_pkg.pinned_package_versions:
-        for (
-            pinned_pkg_name,
-            pinned_pkg_version,
-        ) in task_pkg.pinned_package_versions.items():
-
-            logger.debug(
-                "Specific version required: "
-                f"{pinned_pkg_name}=={pinned_pkg_version}"
-            )
-            logger.debug(
-                "Preliminary check: verify that "
-                f"{pinned_pkg_version} is already installed"
-            )
-            stdout_inspect = await execute_command(
-                cwd=venv_path,
-                command=f"{pip} show {pinned_pkg_name}",
-                logger_name=logger_name,
-            )
-            current_version = next(
-                line.split()[-1]
-                for line in stdout_inspect.split("\n")
-                if line.startswith("Version:")
-            )
-            if current_version != pinned_pkg_version:
-                logger.debug(
-                    f"Currently installed version of {pinned_pkg_name} "
-                    f"({current_version}) differs from pinned version "
-                    f"({pinned_pkg_version}); "
-                    f"install version {pinned_pkg_version}."
-                )
-                await execute_command(
-                    cwd=venv_path,
-                    command=(
-                        f"{pip} install "
-                        f"{pinned_pkg_name}=={pinned_pkg_version}"
-                    ),
-                    logger_name=logger_name,
-                )
-            else:
-                logger.debug(
-                    f"Currently installed version of {pinned_pkg_name} "
-                    f"({current_version}) already matches the pinned version."
-                )
-
-    # Extract package installation path from `pip show`
-    stdout_inspect = await execute_command(
-        cwd=venv_path, command=cmd_inspect, logger_name=logger_name
-    )
-
-    location = Path(
-        next(
-            line.split()[-1]
-            for line in stdout_inspect.split("\n")
-            if line.startswith("Location:")
-        )
-    )
-
-    # NOTE
-    # https://packaging.python.org/en/latest/specifications/recording-installed-packages/
-    # This directory is named as {name}-{version}.dist-info, with name and
-    # version fields corresponding to Core metadata specifications. Both
-    # fields must be normalized (see the name normalization specification and
-    # the version normalization specification), and replace dash (-)
-    # characters with underscore (_) characters, so the .dist-info directory
-    # always has exactly one dash (-) character in its stem, separating the
-    # name and version fields.
-    package_root = location / (task_pkg.package.replace("-", "_"))
-    logger.debug(f"[_pip install] {location=}")
-    logger.debug(f"[_pip install] {task_pkg.package=}")
-    logger.debug(f"[_pip install] {package_root=}")
-    if not package_root.exists():
-        raise RuntimeError(
-            "Could not determine package installation location."
-        )
-    return package_root
