@@ -936,7 +936,7 @@ async def test_project_relationships(db):
 
 async def test_timestamp(db):
     p = Project(name="project")
-    assert p.timestamp_created is not None
+    assert isinstance(p.timestamp_created, datetime.datetime)
     assert p.timestamp_created.tzinfo == datetime.timezone.utc
     assert p.timestamp_created.tzname() == "UTC"
 
@@ -947,9 +947,13 @@ async def test_timestamp(db):
     query = await db.execute(select(Project))
     project = query.scalars().one()
 
-    DB_ENGINE = Inject(get_settings).DB_ENGINE
+    assert isinstance(project.timestamp_created, datetime.datetime)
 
+    DB_ENGINE = Inject(get_settings).DB_ENGINE
     if DB_ENGINE == "sqlite":
+        # SQLite encodes datetime objects as strings;
+        # therefore when extracting a timestamp from the db,
+        # it is not timezone-aware by default.
         assert project.timestamp_created.tzinfo is None
         assert project.timestamp_created.tzname() is None
     else:  # postgres

@@ -15,7 +15,6 @@ import random
 import shutil
 from dataclasses import dataclass
 from dataclasses import field
-from datetime import timezone
 from pathlib import Path
 from typing import Any
 from typing import AsyncGenerator
@@ -34,6 +33,7 @@ from fractal_server.app.security import _create_first_user
 from fractal_server.config import get_settings
 from fractal_server.config import Settings
 from fractal_server.syringe import Inject
+from fractal_server.utils import _encode_as_utc
 
 try:
     import asyncpg  # noqa: F401
@@ -517,10 +517,8 @@ async def job_factory(db: AsyncSession):
                 input_dataset.model_dump(
                     exclude={"resource_list", "timestamp_created"}
                 ),
-                timestamp_created=str(
-                    input_dataset.timestamp_created.replace(
-                        tzinfo=timezone.utc
-                    )
+                timestamp_created=_encode_as_utc(
+                    input_dataset.timestamp_created
                 ),
                 resource_list=[
                     resource.model_dump()
@@ -531,10 +529,8 @@ async def job_factory(db: AsyncSession):
                 output_dataset.model_dump(
                     exclude={"resource_list", "timestamp_created"}
                 ),
-                timestamp_created=str(
-                    output_dataset.timestamp_created.replace(
-                        tzinfo=timezone.utc
-                    )
+                timestamp_created=_encode_as_utc(
+                    output_dataset.timestamp_created
                 ),
                 resource_list=[
                     resource.model_dump()
@@ -545,9 +541,7 @@ async def job_factory(db: AsyncSession):
                 workflow.model_dump(
                     exclude={"task_list", "timestamp_created"}
                 ),
-                timestamp_created=str(
-                    workflow.timestamp_created.replace(tzinfo=timezone.utc)
-                ),
+                timestamp_created=_encode_as_utc(workflow.timestamp_created),
                 task_list=[
                     dict(
                         wf_task.model_dump(exclude={"task"}),
@@ -558,9 +552,7 @@ async def job_factory(db: AsyncSession):
             ),
             project_dump=dict(
                 project.model_dump(exclude={"user_list", "timestamp_created"}),
-                timestamp_created=str(
-                    project.timestamp_created.replace(tzinfo=timezone.utc)
-                ),
+                timestamp_created=_encode_as_utc(project.timestamp_created),
             ),
             last_task_index=last_task_index,
             first_task_index=first_task_index,

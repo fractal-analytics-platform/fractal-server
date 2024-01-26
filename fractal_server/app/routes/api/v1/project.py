@@ -1,4 +1,3 @@
-from datetime import timezone
 from typing import Optional
 
 from fastapi import APIRouter
@@ -14,6 +13,7 @@ from .....config import get_settings
 from .....logger import close_logger
 from .....logger import set_logger
 from .....syringe import Inject
+from .....utils import _encode_as_utc
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models import ApplyWorkflow
@@ -38,7 +38,6 @@ from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
-
 
 router = APIRouter()
 
@@ -393,9 +392,7 @@ async def apply_workflow(
             **input_dataset.model_dump(
                 exclude={"resource_list", "timestamp_created"}
             ),
-            timestamp_created=str(
-                input_dataset.timestamp_created.replace(tzinfo=timezone.utc)
-            ),
+            timestamp_created=_encode_as_utc(input_dataset.timestamp_created),
             resource_list=[
                 resource.model_dump()
                 for resource in input_dataset.resource_list
@@ -405,9 +402,7 @@ async def apply_workflow(
             **output_dataset.model_dump(
                 exclude={"resource_list", "timestamp_created"}
             ),
-            timestamp_created=str(
-                output_dataset.timestamp_created.replace(tzinfo=timezone.utc)
-            ),
+            timestamp_created=_encode_as_utc(output_dataset.timestamp_created),
             resource_list=[
                 resource.model_dump()
                 for resource in output_dataset.resource_list
@@ -415,9 +410,7 @@ async def apply_workflow(
         ),
         workflow_dump=dict(
             **workflow.model_dump(exclude={"task_list", "timestamp_created"}),
-            timestamp_created=str(
-                workflow.timestamp_created.replace(tzinfo=timezone.utc)
-            ),
+            timestamp_created=_encode_as_utc(workflow.timestamp_created),
             task_list=[
                 dict(
                     **wf_task.model_dump(exclude={"task"}),
@@ -428,9 +421,7 @@ async def apply_workflow(
         ),
         project_dump=dict(
             **project.model_dump(exclude={"user_list", "timestamp_created"}),
-            timestamp_created=str(
-                project.timestamp_created.replace(tzinfo=timezone.utc)
-            ),
+            timestamp_created=_encode_as_utc(project.timestamp_created),
         ),
         **apply_workflow.dict(),
     )
