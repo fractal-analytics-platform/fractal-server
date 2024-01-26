@@ -17,6 +17,9 @@ from fractal_server.tasks.utils import get_python_interpreter
 from fractal_server.utils import execute_command
 
 
+FRACTAL_PUBLIC_TASK_SUBDIR = ".fractal"
+
+
 def get_collection_data(venv_path: Path) -> TaskCollectStatus:
     package_path = get_absolute_venv_path(venv_path)
     collection_path = get_collection_path(package_path)
@@ -139,9 +142,6 @@ def inspect_package(path: Path, logger_name: Optional[str] = None) -> dict:
         pkg_manifest=pkg_manifest,
     )
     return info
-
-
-FRACTAL_PUBLIC_TASK_SUBDIR = ".fractal"
 
 
 def create_package_dir_pip(
