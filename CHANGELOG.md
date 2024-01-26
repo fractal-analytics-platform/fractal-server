@@ -15,7 +15,7 @@
 * Database:
     * Make `WorkflowTask.workflow_id` and `WorfklowTask.task_id` not nullable (\#1137).
     * Add `Workflow.timestamp_created` and `Dataset.timestamp_created` columns (\#1152).
-    * Start a new `current.py` fix-db script (\#1152).
+    * Start a new `current.py` fix-db script (\#1152, \#1195).
     * Add to `migrations.yml` a new script (`validate_db_data_with_read_schemas.py`) that validates test-DB data with Read schemas (\#1187).
 * App (internal):
     * Check in `Settings` that `psycopg2`, `asyngpg` and `cfut`, if required, are installed (\#1167).
