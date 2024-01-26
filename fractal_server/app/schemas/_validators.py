@@ -79,6 +79,10 @@ def val_unique_list(attribute: str):
 
 def valutc(attribute: str):
     def val(timestamp: datetime):
+        """
+        Replacing `tzinfo` with `timezone.utc` is just required by SQLite data.
+        If using Postgres, this function leaves the datetime exactly as it is.
+        """
         if timestamp is not None:
             return timestamp.replace(tzinfo=timezone.utc)
         return None
