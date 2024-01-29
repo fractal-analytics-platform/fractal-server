@@ -41,7 +41,7 @@ jobs:
      - name: Benchmark
        run: |
         cd benchmarks/
-        poetry run api_bench.py
+        poetry run python api_bench.py
 
      - name: HTML Preview
        uses: pavi2410/html-preview-action@v2

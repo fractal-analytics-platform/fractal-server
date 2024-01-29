@@ -29,7 +29,7 @@ USERS = [
 N_REQUESTS = 10
 
 
-def get_cleaned_paths():
+def get_cleaned_paths() -> list:
     swagger_url = "http://127.0.0.1:8000/openapi.json"
 
     response = httpx.get(swagger_url)
@@ -65,7 +65,7 @@ def get_cleaned_paths():
 
 
 class Benchmark:
-    def __init__(self, method, cleaned_paths, users):
+    def __init__(self, method: str, cleaned_paths: list, users: list):
 
         self.method = method
         self.cleaned_paths = cleaned_paths
@@ -82,7 +82,7 @@ class Benchmark:
                 .get("access_token")
             )
 
-    def to_html(self, json_path: str):
+    def to_html(self, json_path: str) -> None:
 
         with open(json_path, "r") as f:
             benchmarks = json.load(f)
@@ -114,14 +114,14 @@ class Benchmark:
         with open("bench.html", "w") as output_file:
             output_file.write(rendered_html)
 
-    def get_metrics(self, res: Response):
+    def get_metrics(self, res: Response) -> dict:
 
         time_response = res.elapsed.total_seconds()
         byte_size = len(res.content)
 
         return dict(time=time_response, size=byte_size)
 
-    def run_benchmark(self):
+    def run_benchmark(self) -> None:
 
         # time and size are the two keys to extract and make the average
         keys_to_sum = ["time", "size"]
