@@ -451,7 +451,7 @@ async def apply_workflow(
             for db_job in db_jobs
         ):
             raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 detail=(
                     f"The endpoint 'POST /{project_id}/workflow/{workflow_id}/"
                     "apply/' was called several times with an interval of less"
