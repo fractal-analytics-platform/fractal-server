@@ -631,3 +631,65 @@ async def test_project_apply_slurm_account(
             json=dict(slurm_account="NOT IN THE LIST"),
         )
         assert res.status_code == 422
+
+
+async def test_rate_limit(
+    MockCurrentUser,
+    project_factory,
+    dataset_factory,
+    resource_factory,
+    workflow_factory,
+    task_factory,
+    client,
+    db,
+):
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+
+        # Preliminaries
+        project = await project_factory(user)
+        dataset = await dataset_factory(
+            project_id=project.id, name="ds1", type="type1"
+        )
+        await resource_factory(dataset)
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(
+            input_type="type1",
+            output_type="type1",
+            source="source",
+            command="ls",
+        )
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
+
+        # Call 1: OK
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
+            f"?input_dataset_id={dataset.id}&output_dataset_id={dataset.id}",
+            json={},
+        )
+        assert res.status_code == 202
+        time.sleep(1)
+        # Call 2: OK
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
+            f"?input_dataset_id={dataset.id}&output_dataset_id={dataset.id}",
+            json={},
+        )
+        assert res.status_code == 202
+        # Call 2: too early!
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
+            f"?input_dataset_id={dataset.id}&output_dataset_id={dataset.id}",
+            json={},
+        )
+        assert res.status_code == 409
+        assert "less than one second" in res.json()["detail"]
+        time.sleep(1)
+        # Call 3: OK
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
+            f"?input_dataset_id={dataset.id}&output_dataset_id={dataset.id}",
+            json={},
+        )
+        assert res.status_code == 202

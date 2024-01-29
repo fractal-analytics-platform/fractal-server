@@ -1,4 +1,5 @@
 from datetime import datetime
+from datetime import timedelta
 from datetime import timezone
 from typing import Optional
 
@@ -430,6 +431,32 @@ async def apply_workflow(
         ),
         **apply_workflow.dict(),
     )
+
+    stm = (
+        select(ApplyWorkflow)
+        .where(ApplyWorkflow.project_id == project_id)
+        .where(ApplyWorkflow.workflow_id == workflow_id)
+        .where(ApplyWorkflow.input_dataset_id == input_dataset_id)
+        .where(ApplyWorkflow.output_dataset_id == output_dataset_id)
+    )
+    res = await db.execute(stm)
+    db_jobs = res.scalars().all()
+    if db_jobs:
+        if any(
+            abs(db_job.start_timestamp - job.start_timestamp)
+            < timedelta(seconds=1)
+            for db_job in db_jobs
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    f"The endpoint 'POST /{project_id}/workflow/{workflow_id}/"
+                    "apply/' was called several times with an interval of less"
+                    " than one second, using the same foreign key. If it was "
+                    "intentional, please wait and try again."
+                ),
+            )
+
     db.add(job)
     await db.commit()
     await db.refresh(job)
