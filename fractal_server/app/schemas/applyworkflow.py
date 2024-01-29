@@ -7,6 +7,7 @@ from pydantic import validator
 from pydantic.types import StrictStr
 
 from ._validators import valstr
+from ._validators import valutc
 from .dumps import DatasetDump
 from .dumps import ProjectDump
 from .dumps import WorkflowDump
@@ -148,6 +149,13 @@ class ApplyWorkflowRead(_ApplyWorkflowBase):
     working_dir_user: Optional[str]
     first_task_index: Optional[int]
     last_task_index: Optional[int]
+
+    _start_timestamp = validator("start_timestamp", allow_reuse=True)(
+        valutc("start_timestamp")
+    )
+    _end_timestamp = validator("end_timestamp", allow_reuse=True)(
+        valutc("end_timestamp")
+    )
 
 
 class ApplyWorkflowUpdate(BaseModel):

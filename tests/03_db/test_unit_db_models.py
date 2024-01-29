@@ -1,3 +1,5 @@
+import datetime
+
 import pytest
 from devtools import debug
 from sqlalchemy.exc import IntegrityError
@@ -930,3 +932,33 @@ async def test_project_relationships(db):
     await db.refresh(ds3)
     assert wf3.project.name == proj.name
     assert ds3.project.name == proj.name
+
+
+async def test_timestamp(db):
+    """
+    SQLite encodes datetime objects as strings; therefore when extracting a
+    timestamp from the db, it is not timezone-aware by default.
+    Postgres, on the other hand, saves timestamps together with their timezone.
+    This test asserts this behaviour.
+    """
+    p = Project(name="project")
+    assert isinstance(p.timestamp_created, datetime.datetime)
+    assert p.timestamp_created.tzinfo == datetime.timezone.utc
+    assert p.timestamp_created.tzname() == "UTC"
+
+    db.add(p)
+    await db.commit()
+    db.expunge_all()
+
+    query = await db.execute(select(Project))
+    project = query.scalars().one()
+
+    assert isinstance(project.timestamp_created, datetime.datetime)
+
+    DB_ENGINE = Inject(get_settings).DB_ENGINE
+    if DB_ENGINE == "sqlite":
+        assert project.timestamp_created.tzinfo is None
+        assert project.timestamp_created.tzname() is None
+    else:  # postgres
+        assert project.timestamp_created.tzinfo == datetime.timezone.utc
+        assert project.timestamp_created.tzname() == "UTC"
