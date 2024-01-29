@@ -103,7 +103,7 @@ def get_patched_settings(temp_path: Path):
     settings.FRACTAL_RUNNER_WORKING_BASE_DIR = temp_path / "artifacts"
     settings.FRACTAL_RUNNER_WORKING_BASE_DIR.mkdir(parents=True, exist_ok=True)
     settings.FRACTAL_RUNNER_WORKING_BASE_DIR.chmod(0o755)
-    settings.FRACTAL_API_SUBMIT_MIN_WAIT = 0
+    settings.FRACTAL_API_SUBMIT_RATE_LIMIT = 0
 
     # NOTE:
     # This variable is set to work with the system interpreter within a docker

@@ -644,7 +644,7 @@ async def test_rate_limit(
     db,
     override_settings_factory,
 ):
-    override_settings_factory(FRACTAL_API_SUBMIT_MIN_WAIT=1)
+    override_settings_factory(FRACTAL_API_SUBMIT_RATE_LIMIT=1)
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
 
         # Preliminaries

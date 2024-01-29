@@ -446,14 +446,14 @@ async def apply_workflow(
     if db_job and abs(
         db_job.start_timestamp.replace(tzinfo=timezone.utc)
         - job.start_timestamp
-    ) < timedelta(seconds=settings.FRACTAL_API_SUBMIT_MIN_WAIT):
+    ) < timedelta(seconds=settings.FRACTAL_API_SUBMIT_RATE_LIMIT):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail=(
                 f"The endpoint 'POST /{project_id}/workflow/{workflow_id}/"
                 "apply/' was called several times with an interval of less "
-                f"than {settings.FRACTAL_API_SUBMIT_MIN_WAIT} seconds, using "
-                "the same foreign keys. If it was intentional, please wait "
+                f"than {settings.FRACTAL_API_SUBMIT_RATE_LIMIT} seconds, using"
+                " the same foreign keys. If it was intentional, please wait "
                 "and try again."
             ),
         )
