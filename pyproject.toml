@@ -14,6 +14,7 @@ documentation = "https://fractal-analytics-platform.github.io/fractal-server"
 license = "BSD-3-Clause"
 exclude = [
 "fractal_server/.gitignore",
+"fractal_server/data_migrations/old",
 ]
 
 [tool.poetry.urls]
