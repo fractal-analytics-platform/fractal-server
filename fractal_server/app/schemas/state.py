@@ -3,7 +3,9 @@ from typing import Any
 from typing import Optional
 
 from pydantic import BaseModel
+from pydantic import validator
 
+from ._validators import valutc
 
 __all__ = (
     "_StateBase",
@@ -34,3 +36,5 @@ class StateRead(_StateBase):
     """
 
     id: Optional[int]
+
+    _timestamp = validator("timestamp", allow_reuse=True)(valutc("timestamp"))

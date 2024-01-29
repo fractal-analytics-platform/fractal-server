@@ -4,12 +4,14 @@
 
 > **WARNING**:
 >
-> This update requires running a fix-db script, available at https://raw.githubusercontent.com/fractal-analytics-platform/fractal-server/1.4.3a0/scripts/fix_db/current.py.
+> This update requires running a fix-db script, via `fractalctl update-db-data`.
 
 * API:
     * Improve validation of `UserCreate.slurm_accounts` (\#1162).
     * Add `timestamp_created` to `WorkflowRead`, `WorkflowDump`, `DatasetRead` and `DatasetDump` (\#1152).
     * Make all dumps in `ApplyWorkflowRead` non optional (\#1175).
+    * Ensure that timestamps in `Read` schemas are timezone-aware, regardless of `DB_ENGINE` (\#1186).
+    * Add timezone-aware timestamp query parameters to all `/admin` endpoints (\#1186).
 * API (internal):
     * Change the class method `Workflow.insert_task` into the auxiliary function `_workflow_insert_task` (\#1149).
 * Database:
@@ -17,6 +19,7 @@
     * Add `Workflow.timestamp_created` and `Dataset.timestamp_created` columns (\#1152).
     * Start a new `current.py` fix-db script (\#1152, \#1195).
     * Add to `migrations.yml` a new script (`validate_db_data_with_read_schemas.py`) that validates test-DB data with Read schemas (\#1187).
+    * Expose `fix-db` scripts via command-line option `fractalctl update-db-data` (\#1197).
 * App (internal):
     * Check in `Settings` that `psycopg2`, `asyngpg` and `cfut`, if required, are installed (\#1167).
     * Split `DB.set_db` into sync/async methods (\#1165).
@@ -30,7 +33,9 @@
 * Runner:
     * Remove `JobStatusType.RUNNING`, incorporating it into `JobStatusType.SUBMITTED` (\#1179).
 * Benchmarks:
-    * Add `fractal_client.py` and `populate_script_v2.py` for creating different database status scenarios.
+    * Add `fractal_client.py` and `populate_script_v2.py` for creating different database status scenarios (\#1178).
+* Documentation:
+    * Add the minimum set of environment variables required to set the database and start the server (\#1198).
 
 # 1.4.2
 

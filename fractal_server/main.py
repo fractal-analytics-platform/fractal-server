@@ -46,7 +46,7 @@ def check_settings() -> None:
     """
     Check and register the settings
 
-    Verify the consistency of the settings, in particular that mandatory
+    Verify the consistency of the settings, in particular that required
     variables are set.
 
     Raises:
