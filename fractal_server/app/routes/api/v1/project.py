@@ -443,9 +443,9 @@ async def apply_workflow(
     )
     res = await db.execute(stm)
     db_job = res.scalar_one_or_none()
-    if db_job and abs(
-        db_job.start_timestamp.replace(tzinfo=timezone.utc)
-        - job.start_timestamp
+    if (db_job is not None) and (
+        job.start_timestamp
+        - db_job.start_timestamp.replace(tzinfo=timezone.utc)
     ) < timedelta(seconds=settings.FRACTAL_API_SUBMIT_RATE_LIMIT):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
