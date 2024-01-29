@@ -10,6 +10,8 @@
     * Improve validation of `UserCreate.slurm_accounts` (\#1162).
     * Add `timestamp_created` to `WorkflowRead`, `WorkflowDump`, `DatasetRead` and `DatasetDump` (\#1152).
     * Make all dumps in `ApplyWorkflowRead` non optional (\#1175).
+    * Ensure that timestamps in `Read` schemas are timezone-aware, regardless of `DB_ENGINE` (\#1186).
+    * Add timezone-aware timestamp query parameters to all `/admin` endpoints (\#1186).
 * API (internal):
     * Change the class method `Workflow.insert_task` into the auxiliary function `_workflow_insert_task` (\#1149).
 * Database:
@@ -30,7 +32,8 @@
 * Runner:
     * Remove `JobStatusType.RUNNING`, incorporating it into `JobStatusType.SUBMITTED` (\#1179).
 * Benchmarks:
-    * Add `fractal_client.py` and `populate_script_v2.py` for creating different database status scenarios.
+    * Add `fractal_client.py` and `populate_script_v2.py` for creating different database status scenarios (\#1178).
+
 
 # 1.4.2
 
