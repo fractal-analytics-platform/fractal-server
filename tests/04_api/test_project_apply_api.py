@@ -222,7 +222,6 @@ async def test_project_apply_existing_job(
 
         # API call succeeds when the other job with the same output_dataset has
         # status="done"
-        time.sleep(1)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
@@ -616,7 +615,6 @@ async def test_project_apply_slurm_account(
 
         # If a slurm_account from the list is provided, we use it
         for account in SLURM_LIST:
-            time.sleep(1)
             res = await client.post(
                 f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
                 f"?input_dataset_id={dataset.id}"
@@ -644,30 +642,36 @@ async def test_rate_limit(
     task_factory,
     client,
     db,
+    override_settings_factory,
 ):
+    override_settings_factory(FRACTAL_API_SUBMIT_MIN_WAIT=1)
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
 
         # Preliminaries
         project = await project_factory(user)
-        dataset = await dataset_factory(
-            project_id=project.id, name="ds1", type="type1"
+        dataset_i = await dataset_factory(
+            project_id=project.id, name="ds1", type="type"
         )
-        await resource_factory(dataset)
+        dataset_o = await dataset_factory(
+            project_id=project.id, name="ds2", type="type"
+        )
+        await resource_factory(dataset_i)
+        await resource_factory(dataset_o)
         workflow = await workflow_factory(project_id=project.id)
         task = await task_factory(
-            input_type="type1",
-            output_type="type1",
+            input_type="type",
+            output_type="type",
             source="source",
             command="ls",
         )
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
-
         # Call 1: OK
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
-            f"?input_dataset_id={dataset.id}&output_dataset_id={dataset.id}",
+            f"?input_dataset_id={dataset_i.id}"
+            f"&output_dataset_id={dataset_o.id}",
             json={},
         )
         assert res.status_code == 202
@@ -675,23 +679,26 @@ async def test_rate_limit(
         # Call 2: OK
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
-            f"?input_dataset_id={dataset.id}&output_dataset_id={dataset.id}",
+            f"?input_dataset_id={dataset_i.id}"
+            f"&output_dataset_id={dataset_o.id}",
             json={},
         )
         assert res.status_code == 202
         # Call 2: too early!
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
-            f"?input_dataset_id={dataset.id}&output_dataset_id={dataset.id}",
+            f"?input_dataset_id={dataset_i.id}"
+            f"&output_dataset_id={dataset_o.id}",
             json={},
         )
         assert res.status_code == 429
-        assert "less than one second" in res.json()["detail"]
+        assert "less than 1 second" in res.json()["detail"]
         time.sleep(1)
         # Call 3: OK
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
-            f"?input_dataset_id={dataset.id}&output_dataset_id={dataset.id}",
+            f"?input_dataset_id={dataset_i.id}"
+            f"&output_dataset_id={dataset_o.id}",
             json={},
         )
         assert res.status_code == 202
