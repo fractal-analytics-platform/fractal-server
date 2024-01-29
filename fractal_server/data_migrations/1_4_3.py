@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 from datetime import timezone
 
-from packaging import parse
+from packaging.version import parse
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
