@@ -647,7 +647,6 @@ async def test_rate_limit(
     override_settings_factory(FRACTAL_API_SUBMIT_RATE_LIMIT=1)
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
 
-        # Preliminaries
         project = await project_factory(user)
         dataset_i = await dataset_factory(
             project_id=project.id, name="ds1", type="type"
