@@ -685,7 +685,7 @@ async def test_rate_limit(
             f"?input_dataset_id={dataset.id}&output_dataset_id={dataset.id}",
             json={},
         )
-        assert res.status_code == 409
+        assert res.status_code == 429
         assert "less than one second" in res.json()["detail"]
         time.sleep(1)
         # Call 3: OK
