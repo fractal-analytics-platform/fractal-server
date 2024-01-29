@@ -18,8 +18,6 @@ from fractal_server.syringe import Inject
 
 backends_available = list(_backends.keys())
 
-DB_ENGINE = Inject(get_settings).DB_ENGINE
-
 PREFIX = "/admin"
 
 
@@ -344,6 +342,16 @@ async def test_view_dataset(
         assert "timezone" in res.json()["detail"]
 
         ts = ds1b.timestamp_created.isoformat()
+        res = await client.get(
+            f"{PREFIX}/dataset/?timestamp_created_max={quote(ts)}"
+        )
+        if Inject(get_settings).DB_ENGINE == "sqlite":
+            assert res.status_code == 422
+        else:
+            assert res.status_code == 200
+            assert len(res.json()) == 2
+
+        ts = ds1b.timestamp_created.replace(tzinfo=timezone.utc).isoformat()
         res = await client.get(
             f"{PREFIX}/dataset/?timestamp_created_max={quote(ts)}"
         )
