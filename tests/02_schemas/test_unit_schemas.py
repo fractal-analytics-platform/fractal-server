@@ -1,4 +1,5 @@
 from datetime import datetime
+from datetime import timezone
 
 import pytest
 from devtools import debug
@@ -144,6 +145,20 @@ def test_apply_workflow_read():
     assert job2.output_dataset_id is None
     assert job2.workflow_id is None
 
+    job3 = ApplyWorkflowRead(
+        id=1,
+        start_timestamp=datetime(2000, 1, 1, tzinfo=None),
+        end_timestamp=datetime(2000, 1, 2, tzinfo=None),
+        status="good",
+        project_dump=PROJECT_DUMP,
+        workflow_dump=WORKFLOW_DUMP,
+        input_dataset_dump=DATASET_DUMP,
+        output_dataset_dump=DATASET_DUMP,
+        user_email="test@fractal.com",
+    )
+    assert job3.start_timestamp.tzinfo == timezone.utc
+    assert job3.end_timestamp.tzinfo == timezone.utc
+
 
 def test_dataset_create():
     # Successful creation
@@ -170,14 +185,16 @@ def test_dataset_read():
             id=1,
             name="project",
             read_only=False,
-            timestamp_created=get_timestamp(),
+            timestamp_created=datetime(1999, 1, 1, tzinfo=None),
         ),
         resource_list=[],
         name="n",
         read_only=True,
-        timestamp_created=get_timestamp(),
+        timestamp_created=datetime(2000, 1, 1, tzinfo=None),
     )
     debug(d)
+    assert d.timestamp_created.tzinfo == timezone.utc
+    assert d.project.timestamp_created.tzinfo == timezone.utc
     # Successful creation - non-trivial resource_list
     r1 = ResourceRead(id=1, dataset_id=1, path="/something")
     r2 = ResourceRead(id=1, dataset_id=1, path="/something")
@@ -312,9 +329,12 @@ def test_state():
 
 
 def test_state_read():
-    s = StateRead(data={"some": "thing"}, timestamp=get_timestamp())
+    s = StateRead(
+        data={"some": "thing"}, timestamp=datetime(2000, 1, 1, tzinfo=None)
+    )
     debug(s)
     assert s.id is None
+    assert s.timestamp.tzinfo == timezone.utc
 
     s = StateRead(data={"some": "thing"}, timestamp=get_timestamp(), id=1)
     debug(s)
@@ -582,9 +602,10 @@ def test_workflow_read_empty_task_list():
             read_only=False,
             timestamp_created=get_timestamp(),
         ),
-        timestamp_created=str(get_timestamp()),
+        timestamp_created=datetime(2000, 1, 1, tzinfo=None),
     )
     debug(w)
+    assert w.timestamp_created.tzinfo == timezone.utc
 
 
 def test_workflow_read_non_empty_task_list():
