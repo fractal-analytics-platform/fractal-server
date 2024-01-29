@@ -935,6 +935,12 @@ async def test_project_relationships(db):
 
 
 async def test_timestamp(db):
+    """
+    SQLite encodes datetime objects as strings; therefore when extracting a
+    timestamp from the db, it is not timezone-aware by default.
+    Postgres, on the other hand, saves timestamps together with their timezone.
+    This test asserts this behaviour.
+    """
     p = Project(name="project")
     assert isinstance(p.timestamp_created, datetime.datetime)
     assert p.timestamp_created.tzinfo == datetime.timezone.utc
@@ -951,9 +957,6 @@ async def test_timestamp(db):
 
     DB_ENGINE = Inject(get_settings).DB_ENGINE
     if DB_ENGINE == "sqlite":
-        # SQLite encodes datetime objects as strings;
-        # therefore when extracting a timestamp from the db,
-        # it is not timezone-aware by default.
         assert project.timestamp_created.tzinfo is None
         assert project.timestamp_created.tzname() is None
     else:  # postgres
