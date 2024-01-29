@@ -50,10 +50,10 @@ def _convert_to_db_timestamp(dt: datetime) -> datetime:
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"The timestamp provided has no timezone information: {dt}",
         )
-    dt = dt.astimezone(timezone.utc)
+    _dt = dt.astimezone(timezone.utc)
     if Inject(get_settings).DB_ENGINE == "sqlite":
-        return dt.replace(tzinfo=None)
-    return dt
+        return _dt.replace(tzinfo=None)
+    return _dt
 
 
 @router_admin.get("/project/", response_model=list[ProjectRead])
