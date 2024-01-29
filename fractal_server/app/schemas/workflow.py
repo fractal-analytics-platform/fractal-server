@@ -86,7 +86,7 @@ class WorkflowTaskExport(_WorkflowTaskBase):
     Class for `WorkflowTask` export.
 
     Attributes:
-        task
+        task:
     """
 
     task: TaskExport
