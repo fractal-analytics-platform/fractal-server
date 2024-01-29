@@ -24,7 +24,7 @@ with next(get_sync_db()) as db:
     # add timestamp_created to Workflows
     stm = select(Workflow)
     workflows = db.execute(stm).scalars().all()
-    for workflow in workflows:
+    for workflow in sorted(workflows, key=lambda x: x.id):
         # add timestamp_created to Workflows
         timestamp_created = workflow.timestamp_created
         if timestamp_created != REFERENCE_TIMESTAMP:
@@ -61,7 +61,7 @@ with next(get_sync_db()) as db:
     # add timestamp_created to Dataset
     stm = select(Dataset)
     datasets = db.execute(stm).scalars().all()
-    for dataset in datasets:
+    for dataset in sorted(datasets, key=lambda x: x.id):
         # add timestamp_created to Datasets
         timestamp_created = dataset.timestamp_created
         if timestamp_created != REFERENCE_TIMESTAMP:
@@ -98,8 +98,7 @@ with next(get_sync_db()) as db:
     # add timestamp_created to Job.workflow_dump and Job.in/output_dataset_dump
     stm = select(ApplyWorkflow)
     jobs = db.execute(stm).scalars().all()
-    for job in jobs:
-
+    for job in sorted(jobs, key=lambda x: x.id):
         project_timestamp = None
         if job.project_id is not None:
             project = db.get(Project, job.project_id)
