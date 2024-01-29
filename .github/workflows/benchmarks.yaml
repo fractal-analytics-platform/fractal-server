@@ -43,6 +43,11 @@ jobs:
         cd benchmarks/
         poetry run api_bench.py
 
+     - name: HTML Preview
+       uses: pavi2410/html-preview-action@v2
+       with:
+         html_file: 'benchmarks/bench.html'
+
 
      - uses: stefanzweifel/git-auto-commit-action@v5
        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
