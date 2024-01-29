@@ -443,7 +443,10 @@ async def apply_workflow(
     db_jobs = res.scalars().all()
     if db_jobs:
         if any(
-            abs(db_job.start_timestamp - job.start_timestamp)
+            abs(
+                db_job.start_timestamp.replace(tzinfo=timezone.utc)
+                - job.start_timestamp
+            )
             < timedelta(seconds=1)
             for db_job in db_jobs
         ):
