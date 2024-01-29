@@ -30,9 +30,10 @@ def fix_db():
     module_version = parse("1.4.3")
     current_version = parse(fractal_server.__VERSION__)
     if (
-            current_version.major != module_version.major or
-            current_version.minor != module_version.minor or
-            current_version.micro != module_version.micro):
+        current_version.major != module_version.major
+        or current_version.minor != module_version.minor
+        or current_version.micro != module_version.micro
+    ):
         raise RuntimeError(
             f"{fractal_server.__VERSION__=} not matching with {__file__=}"
         )
@@ -47,7 +48,7 @@ def fix_db():
             timestamp_created = workflow.timestamp_created
             if timestamp_created != REFERENCE_TIMESTAMP:
                 logger.warning(
-                    f"[Workflow {workflow.id:4d}] {timestamp_created=} -> skip."
+                    f"[Workflow {workflow.id:4d}] {timestamp_created=} -> skip"
                 )
             else:
                 logger.warning(
@@ -113,7 +114,8 @@ def fix_db():
                     project=dataset.project,
                 )
 
-        # add timestamp_created to Job.workflow_dump and Job.in/output_dataset_dump
+        # Add timestamp_created to job attributes workflow_dump,
+        # input_dataset_dump, output_dataset_dump
         stm = select(ApplyWorkflow)
         jobs = db.execute(stm).scalars().all()
         for job in sorted(jobs, key=lambda x: x.id):
@@ -134,7 +136,7 @@ def fix_db():
             )
             if workflow_dump_timestamp is not None:
                 logger.warning(
-                    f"[Job {job.id:4d}] -> Job.workflow_dump['timestamp_created'] "
+                    f"[Job {job.id:4d}] -> workflow_dump['timestamp_created'] "
                     f" = {workflow_dump_timestamp} -> SKIP"
                 )
             else:  # workflow_dump_timestamp is None
@@ -142,15 +144,16 @@ def fix_db():
                     # if Job.Project exists
                     new_timestamp = project_timestamp
                     logger.warning(
-                        f"[Job {job.id:4d}] Job.workflow_dump['timestamp_created']"
-                        f"={workflow_dump_timestamp} -> replace it with Project "
+                        f"[Job {job.id:4d}] workflow_dump['timestamp_created']"
+                        f"={workflow_dump_timestamp} -> replace it with "
+                        "Project "
                         f"{job.project_id} timestamp -> {new_timestamp}"
                     )
                 else:
                     # if Job.Project doesn't exist
                     logger.warning(
-                        f"[Job {job.id:4d}] Job.workflow_dump['timestamp_created']"
-                        f"={workflow_dump_timestamp} AND Job.project_id is None "
+                        f"[Job {job.id:4d}] workflow_dump['timestamp_created']"
+                        f"={workflow_dump_timestamp} AND project_id is None "
                         "-> replace it with reference timestamp "
                         f"{REFERENCE_TIMESTAMP}"
                     )
@@ -172,7 +175,7 @@ def fix_db():
             if ids_dump_timestamp is not None:
                 logger.warning(
                     f"[Job {job.id:4d}] -> "
-                    "Job.input_dataset_dump['timestamp_created'] "
+                    "input_dataset_dump['timestamp_created'] "
                     f" = {ids_dump_timestamp} -> SKIP"
                 )
             else:  # ids_dump_timestamp is None
@@ -181,16 +184,17 @@ def fix_db():
                     new_timestamp = project_timestamp
                     logger.warning(
                         f"[Job {job.id:4d}] "
-                        "Job.input_dataset_dump['timestamp_created']="
+                        "input_dataset_dump['timestamp_created']="
                         f"{ids_dump_timestamp} -> replace it with "
-                        f"Project {job.project_id} timestamp -> {new_timestamp}"
+                        f"Project {job.project_id} timestamp -> "
+                        f"{new_timestamp}"
                     )
                 else:
                     # if Job.Project doesn't exist
                     logger.warning(
                         f"[Job {job.id:4d}] "
-                        f"Job.input_dataset_dump['timestamp_created']="
-                        f"{ids_dump_timestamp} AND Job.project_id is None -> "
+                        f"input_dataset_dump['timestamp_created']="
+                        f"{ids_dump_timestamp} AND project_id is None -> "
                         "replace it with reference timestamp "
                         f"{REFERENCE_TIMESTAMP}"
                     )
@@ -210,7 +214,7 @@ def fix_db():
             if ods_dump_timestamp is not None:
                 logger.warning(
                     f"[Job {job.id:4d}] -> "
-                    "Job.output_dataset_dump['timestamp_created'] "
+                    "output_dataset_dump['timestamp_created'] "
                     f" = {ods_dump_timestamp} -> SKIP"
                 )
             else:  # ods_dump_timestamp is None
@@ -219,16 +223,17 @@ def fix_db():
                     new_timestamp = project_timestamp
                     logger.warning(
                         f"[Job {job.id:4d}] "
-                        "Job.output_dataset_dump['timestamp_created']="
+                        "output_dataset_dump['timestamp_created']="
                         f"{ods_dump_timestamp} -> replace it with "
-                        f"Project {job.project_id} timestamp -> {new_timestamp}"
+                        f"Project {job.project_id} timestamp -> "
+                        f"{new_timestamp}"
                     )
                 else:
                     # if Job.Project doesn't exist
                     logger.warning(
                         f"[Job {job.id:4d}] "
-                        f"Job.output_dataset_dump['timestamp_created']="
-                        f"{ods_dump_timestamp} AND Job.project_id is None -> "
+                        f"output_dataset_dump['timestamp_created']="
+                        f"{ods_dump_timestamp} AND project_id is None -> "
                         "replace it with reference timestamp "
                         f"{REFERENCE_TIMESTAMP}"
                     )
