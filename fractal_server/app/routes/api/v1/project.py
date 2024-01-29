@@ -432,6 +432,10 @@ async def apply_workflow(
         **apply_workflow.dict(),
     )
 
+    # Rate Limiting:
+    # raise `429 TOO MANY REQUESTS` if this endpoint has been called with the
+    # same database keys (Project, Workflow and Datasets) in the last
+    # `settings.FRACTAL_API_SUBMIT_RATE_LIMIT` seconds.
     stm = (
         select(ApplyWorkflow)
         .where(ApplyWorkflow.project_id == project_id)
