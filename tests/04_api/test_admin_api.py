@@ -83,7 +83,7 @@ async def test_view_project(client, MockCurrentUser, project_factory):
         res = await client.get(
             f"{PREFIX}/project/?timestamp_created_min={quote(ts)}"
         )
-        assert res.status_code == 422  # because timzone is None
+        assert res.status_code == 422  # because timezonee is None
         assert "timezone" in res.json()["detail"]
 
         ts = project.timestamp_created.replace(tzinfo=timezone.utc).isoformat()
@@ -97,7 +97,7 @@ async def test_view_project(client, MockCurrentUser, project_factory):
         res = await client.get(
             f"{PREFIX}/project/?timestamp_created_max={quote(ts)}"
         )
-        assert res.status_code == 422  # because timzone is None
+        assert res.status_code == 422  # because timezonee is None
         assert "timezone" in res.json()["detail"]
 
         ts = project.timestamp_created.replace(tzinfo=timezone.utc).isoformat()
@@ -188,7 +188,7 @@ async def test_view_workflow(
             f"{PREFIX}/workflow/?timestamp_created_min="
             f"{quote('2000-01-01T01:01:01')}"
         )
-        assert res.status_code == 422  # because timzone is None
+        assert res.status_code == 422  # because timezonee is None
         assert "timezone" in res.json()["detail"]
 
         res = await client.get(
@@ -225,7 +225,7 @@ async def test_view_workflow(
             f"{PREFIX}/workflow/?timestamp_created_max="
             f"{quote('2000-01-01T01:01:01')}"
         )
-        assert res.status_code == 422  # because timzone is None
+        assert res.status_code == 422  # because timezonee is None
         assert "timezone" in res.json()["detail"]
 
         ts = workflow1b.timestamp_created.replace(
@@ -329,7 +329,7 @@ async def test_view_dataset(
             f"{PREFIX}/dataset/?timestamp_created_min="
             f"{quote('2000-01-01T01:01:01')}"
         )
-        assert res.status_code == 422  # because timzone is None
+        assert res.status_code == 422  # because timezonee is None
         assert "timezone" in res.json()["detail"]
 
         ts = ds1b.timestamp_created.replace(tzinfo=timezone.utc).isoformat()
@@ -343,7 +343,7 @@ async def test_view_dataset(
             f"{PREFIX}/dataset/?timestamp_created_max="
             f"{quote('2000-01-01T01:01:01')}"
         )
-        assert res.status_code == 422  # because timzone is None
+        assert res.status_code == 422  # because timezonee is None
         assert "timezone" in res.json()["detail"]
 
         ts = ds1b.timestamp_created.replace(tzinfo=timezone.utc).isoformat()
@@ -468,7 +468,7 @@ async def test_view_job(
         res = await client.get(
             f"{PREFIX}/job/?start_timestamp_min={quote('1999-01-01T00:00:01')}"
         )
-        assert res.status_code == 422  # because timzone is None
+        assert res.status_code == 422  # because timezonee is None
         assert "timezone" in res.json()["detail"]
 
         res = await client.get(
@@ -487,7 +487,7 @@ async def test_view_job(
         res = await client.get(
             f"{PREFIX}/job/?start_timestamp_max={quote('1999-01-01T00:00:01')}"
         )
-        assert res.status_code == 422  # because timzone is None
+        assert res.status_code == 422  # because timezonee is None
         assert "timezone" in res.json()["detail"]
 
         res = await client.get(
