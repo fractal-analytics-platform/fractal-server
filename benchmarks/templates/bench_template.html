@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <title>User Metrics</title>
+</head>
+<body>
+    <h1>Benchmarks</h1>
+
+    {% for key, values in user_metrics.items()%}
+    GET {{ key }}
+    <table class="table">
+        <tr>
+            <th scope="col">
+                User
+            </th>
+            <th scope="col">
+                Time(seconds)
+            </th>
+            <th scope="col">
+                Size(byte)
+            </th>
+        </tr>
+        {%for user in values%}
+        <tr>
+            <th>{{user.get("username")}}</th>
+            <td>
+                {{user.get("time")}}
+            </td>
+            <td>
+                {{user.get("size")}}
+            </td>
+        </tr>
+        {%endfor%}
+
+    </table>
+    {% endfor %}
+    </ul>
+</body>
+</html>
