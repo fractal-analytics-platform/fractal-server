@@ -15,15 +15,7 @@ __all__ = (
 )
 
 
-class _TaskCollectBase(BaseModel):
-    """
-    Base class for `TaskCollectPip`.
-    """
-
-    pass
-
-
-class TaskCollectPip(_TaskCollectBase):
+class TaskCollectPip(BaseModel):
     """
     TaskCollectPip class
 
@@ -89,7 +81,7 @@ class TaskCollectPip(_TaskCollectBase):
         return v
 
 
-class TaskCollectStatus(_TaskCollectBase):
+class TaskCollectStatus(BaseModel):
     """
     TaskCollectStatus class
 
