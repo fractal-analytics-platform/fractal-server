@@ -452,7 +452,7 @@ async def apply_workflow(
                 detail=(
                     f"The endpoint 'POST /{project_id}/workflow/{workflow_id}/"
                     "apply/' was called several times with an interval of less"
-                    " than one second, using the same foreign key. If it was "
+                    " than one second, using the same foreign keys. If it was "
                     "intentional, please wait and try again."
                 ),
             )
