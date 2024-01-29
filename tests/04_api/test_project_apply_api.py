@@ -5,10 +5,10 @@ from devtools import debug
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
+from fractal_server.app.routes.api.v1.project import _encode_as_utc
 from fractal_server.app.schemas.dumps import DatasetDump
 from fractal_server.app.schemas.dumps import ProjectDump
 from fractal_server.app.schemas.dumps import WorkflowDump
-from fractal_server.utils import _encode_as_utc
 
 PREFIX = "/api/v1"
 

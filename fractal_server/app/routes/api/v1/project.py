@@ -1,3 +1,5 @@
+from datetime import datetime
+from datetime import timezone
 from typing import Optional
 
 from fastapi import APIRouter
@@ -13,7 +15,6 @@ from .....config import get_settings
 from .....logger import close_logger
 from .....logger import set_logger
 from .....syringe import Inject
-from .....utils import _encode_as_utc
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models import ApplyWorkflow
@@ -40,6 +41,10 @@ from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
 
 router = APIRouter()
+
+
+def _encode_as_utc(dt: datetime):
+    return dt.replace(tzinfo=timezone.utc).isoformat()
 
 
 @router.get("/", response_model=list[ProjectRead])
