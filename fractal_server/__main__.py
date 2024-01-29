@@ -41,10 +41,16 @@ openapi_parser.add_argument(
 )
 
 # fractalctl set-db
-subparsers.add_parser("set-db", description="Initialise the database")
+subparsers.add_parser(
+    "set-db",
+    description="Initialise the database and apply schema migrations",
+)
 
 # fractalctl update-db-data
-subparsers.add_parser("update-db-data", description="FIXME")
+subparsers.add_parser(
+    "update-db-data",
+    description="Apply data-migration script to an existing database.",
+)
 
 
 def save_openapi(dest="openapi.json"):
@@ -78,6 +84,10 @@ def set_db():
 
 
 def update_db_data():
+    """
+    Apply data migrations.
+    """
+
     import fractal_server
     from importlib import import_module
     from packaging.version import parse
@@ -91,15 +101,16 @@ def update_db_data():
     current_version_slug = _slugify_version(current_version)
 
     print(
-        "WARNING: This command acts directly on database data. "
-        "If in doubt, do not run it!\n"
+        "**WARNING**\nThis command acts directly on database data. "
+        "If you have any doubt about this, do not run it!\n"
     )
 
     print(
+        "Expected use case:\n"
         "You have updated fractal-server from some old version to a "
         "target version, and now need to fix some database data.\n"
-        f"The target version is '{current_version}' (which maps to "
-        f"the update-db-data module '{current_version_slug}.py').\n"
+        f"The detected target version is '{current_version}' (corresponding "
+        f"to the update-db-data module '{current_version_slug}.py').\n"
         "Note that the old and target versions MUST be consecutive, "
         "that is, you cannot skip an intermediate version."
     )
@@ -119,9 +130,11 @@ def update_db_data():
         "Are you sure you want to proceed?",
     )
     for question in yes_no_questions:
-        user_input = input(f"{question} (yes/no) ")
+        user_input = input(f"{question} (yes/no)\n")
         if user_input != "yes":
             sys.exit(f"Answer was '{user_input}'; exit.")
+
+    print("OK, now starting data-migration script\n")
 
     current_update_db_data_module = import_module(
         f"fractal_server.data_migrations.{current_version_slug}"
