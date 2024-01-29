@@ -30,10 +30,6 @@ def get_timestamp() -> datetime:
     return datetime.now(tz=timezone.utc)
 
 
-def _encode_as_utc(dt: datetime):
-    return dt.replace(tzinfo=timezone.utc).isoformat()
-
-
 async def execute_command(
     *,
     cwd: Path,
