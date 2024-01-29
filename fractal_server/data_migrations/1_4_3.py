@@ -2,9 +2,11 @@ import logging
 from datetime import datetime
 from datetime import timezone
 
+from packaging import parse
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
+import fractal_server
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import ApplyWorkflow
 from fractal_server.app.models import Dataset
@@ -23,6 +25,12 @@ REFERENCE_TIMESTAMP = datetime(2000, 1, 1, tzinfo=timezone.utc)
 def fix_db():
     logger = logging.getLogger("fix_db")
     logger.warning("START execution of fix_db function")
+
+    # Check that this module matches with the current version
+    if parse(fractal_server.__VERSION__) != parse("1.4.3"):
+        raise RuntimeError(
+            f"{fractal_server.__VERSION__=} not matching with {__file__=}"
+        )
 
     with next(get_sync_db()) as db:
 
