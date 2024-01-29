@@ -11,7 +11,7 @@
     * Add `timestamp_created` to `WorkflowRead`, `WorkflowDump`, `DatasetRead` and `DatasetDump` (\#1152).
     * Make all dumps in `ApplyWorkflowRead` non optional (\#1175).
     * Ensure that timestamps in `Read` schemas are timezone-aware, regardless of `DB_ENGINE` (\#1186).
-    * Add and standardise datetime query parameters for admin api, so that they only accept timezone aware datetime (\#1186).
+    * Add timezone-aware timestamp query parameters to all `/admin` endpoints (\#1186).
 * API (internal):
     * Change the class method `Workflow.insert_task` into the auxiliary function `_workflow_insert_task` (\#1149).
 * Database:
