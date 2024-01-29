@@ -6,12 +6,15 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <title>User Metrics</title>
 </head>
+
 <body>
     <h1>Benchmarks</h1>
+    <p class="h6">Date: {{date}}</p>
+    <br>
 
     {% for key, values in user_metrics.items()%}
-    GET {{ key }}
-    <table class="table">
+    <p  class="text-success"><strong>{{method}} {{ key }}</strong></p>
+    <table class="table table-secondary">
         <tr>
             <th scope="col">
                 User

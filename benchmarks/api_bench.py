@@ -1,5 +1,6 @@
 import json
 import re
+from datetime import datetime
 from typing import Optional
 
 import httpx
@@ -64,8 +65,9 @@ def get_cleaned_paths():
 
 
 class Benchmark:
-    def __init__(self, cleaned_paths, users):
+    def __init__(self, method, cleaned_paths, users):
 
+        self.method = method
         self.cleaned_paths = cleaned_paths
         self.users = users
         self.client = Client(base_url="http://localhost:8000")
@@ -87,22 +89,27 @@ class Benchmark:
 
         aggregated_values = {}
 
+        # for each dict in the list we aggregate on "path" key
         for bench in benchmarks:
             key_to_aggregate = bench["path"]
             if key_to_aggregate not in aggregated_values:
                 aggregated_values[key_to_aggregate] = []
-            # drop a dict element
+            # remove path key from dict because
+            # it is the key now
             del bench["path"]
 
             aggregated_values[key_to_aggregate].append(bench)
-        print(aggregated_values)
 
         env = Environment(
             loader=FileSystemLoader(searchpath="./templates"), autoescape=True
         )
         template = env.get_template("bench_template.html")
 
-        rendered_html = template.render(user_metrics=aggregated_values)
+        rendered_html = template.render(
+            user_metrics=aggregated_values,
+            method=self.method,
+            date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        )
 
         with open("bench.html", "w") as output_file:
             output_file.write(rendered_html)
@@ -116,23 +123,30 @@ class Benchmark:
 
     def run_benchmark(self):
 
+        # time and size are the two keys to extract and make the average
         keys_to_sum = ["time", "size"]
-        user_metrics: list = []  # dict[str, dict] = dict()
+        user_metrics: list[dict] = []
 
         for path in self.cleaned_paths:
             for user in self.users:
                 headers = {"Authorization": f"Bearer {user.token}"}
 
+                # list of dicts made by get_metrics()
                 metrics_list = [
                     self.get_metrics(self.client.get(path, headers=headers))
                     for n in range(N_REQUESTS)
                 ]
+                # dicts with two keys -> key to sum (time, size)
                 avg_metrics_user = {
-                    key: sum(metric[key] for metric in metrics_list)
-                    / N_REQUESTS
+                    key: round(
+                        sum(metric[key] for metric in metrics_list)
+                        / N_REQUESTS,
+                        6,
+                    )
                     for key in keys_to_sum
                 }
 
+                # final list of flatten dicts
                 user_metrics.append(
                     dict(
                         path=path,
@@ -141,12 +155,15 @@ class Benchmark:
                         size=avg_metrics_user.get("size"),
                     )
                 )
-                # print(user_metrics)
 
         with open("bench.json", "w") as f:
             json.dump(user_metrics, f)
 
 
-x = Benchmark(get_cleaned_paths(), USERS)
-x.run_benchmark()
-x.to_html("bench.json")
+if __name__ == "__main__":
+
+    benchmark = Benchmark(
+        method="GET", cleaned_paths=get_cleaned_paths(), users=USERS
+    )
+    benchmark.run_benchmark()
+    benchmark.to_html("bench.json")
