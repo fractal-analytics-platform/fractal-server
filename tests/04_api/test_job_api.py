@@ -1,3 +1,5 @@
+from datetime import datetime
+from datetime import timezone
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -9,8 +11,6 @@ from fractal_server.app.routes.api.v1._aux_functions import (
 )
 from fractal_server.app.runner import _backends
 from fractal_server.app.runner._common import SHUTDOWN_FILENAME
-from fractal_server.config import get_settings
-from fractal_server.syringe import Inject
 
 PREFIX = "/api/v1"
 
@@ -219,11 +219,19 @@ async def test_get_job_list(
         assert res.status_code == 200
         assert len(res.json()) == N
         for job in res.json():
-            settings = Inject(get_settings)
-            if settings.DB_ENGINE == "postgres":
-                assert job["start_timestamp"].endswith("+00:00")
-                project_dump = job["project_dump"]
-                assert project_dump["timestamp_created"].endswith("+00:00")
+            assert job["start_timestamp"].endswith("+00:00")
+            assert (
+                datetime.fromisoformat(job["start_timestamp"]).tzinfo
+                == timezone.utc
+            )
+            assert job["project_dump"]["timestamp_created"].endswith("+00:00")
+            assert job["workflow_dump"]["timestamp_created"].endswith("+00:00")
+            assert job["input_dataset_dump"]["timestamp_created"].endswith(
+                "+00:00"
+            )
+            assert job["output_dataset_dump"]["timestamp_created"].endswith(
+                "+00:00"
+            )
 
         res = await client.get(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/job/"

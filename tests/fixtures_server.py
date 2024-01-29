@@ -10,7 +10,6 @@ This file is part of Fractal and was originally developed by eXact lab S.r.l.
 Institute for Biomedical Research and Pelkmans Lab from the University of
 Zurich.
 """
-import json
 import logging
 import random
 import shutil
@@ -30,6 +29,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from fractal_server.app.db import get_async_db
+from fractal_server.app.routes.api.v1.project import _encode_as_utc
 from fractal_server.app.security import _create_first_user
 from fractal_server.config import get_settings
 from fractal_server.config import Settings
@@ -517,7 +517,9 @@ async def job_factory(db: AsyncSession):
                 input_dataset.model_dump(
                     exclude={"resource_list", "timestamp_created"}
                 ),
-                timestamp_created=str(input_dataset.timestamp_created),
+                timestamp_created=_encode_as_utc(
+                    input_dataset.timestamp_created
+                ),
                 resource_list=[
                     resource.model_dump()
                     for resource in input_dataset.resource_list
@@ -527,7 +529,9 @@ async def job_factory(db: AsyncSession):
                 output_dataset.model_dump(
                     exclude={"resource_list", "timestamp_created"}
                 ),
-                timestamp_created=str(output_dataset.timestamp_created),
+                timestamp_created=_encode_as_utc(
+                    output_dataset.timestamp_created
+                ),
                 resource_list=[
                     resource.model_dump()
                     for resource in output_dataset.resource_list
@@ -537,7 +541,7 @@ async def job_factory(db: AsyncSession):
                 workflow.model_dump(
                     exclude={"task_list", "timestamp_created"}
                 ),
-                timestamp_created=str(workflow.timestamp_created),
+                timestamp_created=_encode_as_utc(workflow.timestamp_created),
                 task_list=[
                     dict(
                         wf_task.model_dump(exclude={"task"}),
@@ -546,7 +550,10 @@ async def job_factory(db: AsyncSession):
                     for wf_task in workflow.task_list
                 ],
             ),
-            project_dump=json.loads(project.json(exclude={"user_list"})),
+            project_dump=dict(
+                project.model_dump(exclude={"user_list", "timestamp_created"}),
+                timestamp_created=_encode_as_utc(project.timestamp_created),
+            ),
             last_task_index=last_task_index,
             first_task_index=first_task_index,
             working_dir=working_dir,

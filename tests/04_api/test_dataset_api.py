@@ -1,3 +1,6 @@
+from datetime import datetime
+from datetime import timezone
+
 from devtools import debug
 from sqlmodel import select
 
@@ -30,8 +33,12 @@ async def test_get_dataset(app, client, MockCurrentUser, db, project_factory):
         EXPECTED_PROJECT = res.json()
         # Get dataset, and check relationship
         res = await client.get(f"/api/v1/project/{p_id}/dataset/{ds_id}/")
-        assert res.status_code == 200
         debug(res.json())
+        assert res.status_code == 200
+        assert (
+            datetime.fromisoformat(res.json()["timestamp_created"]).tzinfo
+            == timezone.utc
+        )
         assert res.json()["name"] == DATASET_NAME
         assert res.json()["project"] == EXPECTED_PROJECT
         # Get missing dataset
@@ -47,6 +54,7 @@ async def test_get_dataset(app, client, MockCurrentUser, db, project_factory):
         datasets = res.json()
         assert len(datasets) == 1
         assert datasets[0]["project"] == EXPECTED_PROJECT
+        debug(datasets[0]["timestamp_created"])
 
 
 async def test_get_user_datasets(

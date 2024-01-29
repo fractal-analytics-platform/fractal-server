@@ -1,5 +1,7 @@
 from datetime import datetime
+from datetime import timezone
 from pathlib import Path
+from urllib.parse import quote
 from zipfile import ZipFile
 
 import pytest
@@ -13,7 +15,6 @@ from fractal_server.app.runner import _backends
 from fractal_server.app.runner._common import SHUTDOWN_FILENAME
 
 backends_available = list(_backends.keys())
-
 
 PREFIX = "/admin"
 
@@ -52,8 +53,8 @@ async def test_view_project(client, MockCurrentUser, project_factory):
         await project_factory(superuser)
 
     async with MockCurrentUser(user_kwargs={"is_superuser": False}) as user:
-        project1 = await project_factory(user)
-        prj1_id = project1.id
+        project = await project_factory(user)
+        prj_id = project.id
         await project_factory(user)
         user_id = user.id
 
@@ -61,22 +62,50 @@ async def test_view_project(client, MockCurrentUser, project_factory):
         res = await client.get(f"{PREFIX}/project/")
         assert res.status_code == 200
         assert len(res.json()) == 3
-        res = await client.get(f"{PREFIX}/project/?id={prj1_id}")
+        res = await client.get(f"{PREFIX}/project/?id={prj_id}")
         assert res.status_code == 200
         assert len(res.json()) == 1
         res = await client.get(f"{PREFIX}/project/?user_id={user_id}")
         assert res.status_code == 200
         assert len(res.json()) == 2
         res = await client.get(
-            f"{PREFIX}/project/?user_id={user_id}&id={prj1_id}"
+            f"{PREFIX}/project/?user_id={user_id}&id={prj_id}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 1
         res = await client.get(
-            f"{PREFIX}/project/?user_id={user_id}&id={prj1_id}"
+            f"{PREFIX}/project/?user_id={user_id}&id={prj_id}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 1
+
+        ts = project.timestamp_created.replace(tzinfo=None).isoformat()
+        res = await client.get(
+            f"{PREFIX}/project/?timestamp_created_min={quote(ts)}"
+        )
+        assert res.status_code == 422  # because timezonee is None
+        assert "timezone" in res.json()["detail"]
+
+        ts = project.timestamp_created.replace(tzinfo=timezone.utc).isoformat()
+        res = await client.get(
+            f"{PREFIX}/project/?timestamp_created_min={quote(ts)}"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 2
+
+        ts = project.timestamp_created.replace(tzinfo=None).isoformat()
+        res = await client.get(
+            f"{PREFIX}/project/?timestamp_created_max={quote(ts)}"
+        )
+        assert res.status_code == 422  # because timezonee is None
+        assert "timezone" in res.json()["detail"]
+
+        ts = project.timestamp_created.replace(tzinfo=timezone.utc).isoformat()
+        res = await client.get(
+            f"{PREFIX}/project/?timestamp_created_max={quote(ts)}"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 2
 
 
 async def test_view_workflow(
@@ -155,6 +184,59 @@ async def test_view_workflow(
         assert res.status_code == 200
         assert len(res.json()) == 3
 
+        res = await client.get(
+            f"{PREFIX}/workflow/?timestamp_created_min="
+            f"{quote('2000-01-01T01:01:01')}"
+        )
+        assert res.status_code == 422  # because timezonee is None
+        assert "timezone" in res.json()["detail"]
+
+        res = await client.get(
+            f"{PREFIX}/workflow/?timestamp_created_min=2000-01-01T01:01:01Z"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 4
+
+        res = await client.get(
+            f"{PREFIX}/workflow/?timestamp_created_min="
+            f"{quote('2000-01-01T01:01:01+00:00')}"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 4
+
+        # same as "quote('2000-01-01T01:01:01+00:00')"
+        res = await client.get(
+            f"{PREFIX}/workflow/?timestamp_created_min="
+            "2000-01-01T01%3A01%3A01%2B00%3A00"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 4
+
+        ts = workflow1b.timestamp_created.replace(
+            tzinfo=timezone.utc
+        ).isoformat()
+        res = await client.get(
+            f"{PREFIX}/workflow/?timestamp_created_min={quote(ts)}"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 3
+
+        res = await client.get(
+            f"{PREFIX}/workflow/?timestamp_created_max="
+            f"{quote('2000-01-01T01:01:01')}"
+        )
+        assert res.status_code == 422  # because timezonee is None
+        assert "timezone" in res.json()["detail"]
+
+        ts = workflow1b.timestamp_created.replace(
+            tzinfo=timezone.utc
+        ).isoformat()
+        res = await client.get(
+            f"{PREFIX}/workflow/?timestamp_created_max={quote(ts)}"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 2
+
 
 async def test_view_dataset(
     client, MockCurrentUser, project_factory, dataset_factory
@@ -169,7 +251,7 @@ async def test_view_dataset(
             name="ds1a",
             type="zarr",
         )
-        await dataset_factory(
+        ds1b = await dataset_factory(
             project_id=project1.id,
             name="ds1b",
             type="image",
@@ -222,13 +304,13 @@ async def test_view_dataset(
 
         # get datasets by name
         res = await client.get(
-            f"{PREFIX}/dataset/" f"?project_id={project1.id}&name_contains=a"
+            f"{PREFIX}/dataset/?project_id={project1.id}&name_contains=a"
         )
         assert res.status_code == 200
         assert len(res.json()) == 1
         assert res.json()[0]["name"] == ds1a.name
         res = await client.get(
-            f"{PREFIX}/dataset/" f"?project_id={project1.id}&name_contains=c"
+            f"{PREFIX}/dataset/?project_id={project1.id}&name_contains=c"
         )
         assert res.status_code == 200
         assert len(res.json()) == 0
@@ -242,6 +324,34 @@ async def test_view_dataset(
         res = await client.get(f"{PREFIX}/dataset/?type=image")
         assert res.status_code == 200
         assert len(res.json()) == 1
+
+        res = await client.get(
+            f"{PREFIX}/dataset/?timestamp_created_min="
+            f"{quote('2000-01-01T01:01:01')}"
+        )
+        assert res.status_code == 422  # because timezonee is None
+        assert "timezone" in res.json()["detail"]
+
+        ts = ds1b.timestamp_created.replace(tzinfo=timezone.utc).isoformat()
+        res = await client.get(
+            f"{PREFIX}/dataset/?timestamp_created_min={quote(ts)}"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 3
+
+        res = await client.get(
+            f"{PREFIX}/dataset/?timestamp_created_max="
+            f"{quote('2000-01-01T01:01:01')}"
+        )
+        assert res.status_code == 422  # because timezonee is None
+        assert "timezone" in res.json()["detail"]
+
+        ts = ds1b.timestamp_created.replace(tzinfo=timezone.utc).isoformat()
+        res = await client.get(
+            f"{PREFIX}/dataset/?timestamp_created_max={quote(ts)}"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 2
 
 
 async def test_view_job(
@@ -280,7 +390,7 @@ async def test_view_job(
             input_dataset_id=dataset1.id,
             output_dataset_id=dataset2.id,
             workflow_id=workflow1.id,
-            start_timestamp=datetime(2000, 1, 1),
+            start_timestamp=datetime(2000, 1, 1, tzinfo=timezone.utc),
         )
 
         job2 = await job_factory(
@@ -290,8 +400,8 @@ async def test_view_job(
             input_dataset_id=dataset2.id,
             output_dataset_id=dataset1.id,
             workflow_id=workflow2.id,
-            start_timestamp=datetime(2023, 1, 1),
-            end_timestamp=datetime(2023, 11, 9),
+            start_timestamp=datetime(2023, 1, 1, tzinfo=timezone.utc),
+            end_timestamp=datetime(2023, 11, 9, tzinfo=timezone.utc),
         )
 
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
@@ -356,22 +466,46 @@ async def test_view_job(
         # get jobs by [start/end]_timestamp_[min/max]
 
         res = await client.get(
-            f"{PREFIX}/job/?start_timestamp_min=1999-01-01T00:00:01"
+            f"{PREFIX}/job/?start_timestamp_min={quote('1999-01-01T00:00:01')}"
+        )
+        assert res.status_code == 422  # because timezonee is None
+        assert "timezone" in res.json()["detail"]
+
+        res = await client.get(
+            f"{PREFIX}/job/?start_timestamp_min="
+            f"{quote('1999-01-01T00:00:01+00:00')}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 2
+
         res = await client.get(
-            f"{PREFIX}/job/?start_timestamp_max=1999-01-01T00:00:01"
+            f"{PREFIX}/job/?start_timestamp_min=1999-01-01T00:00:01Z"
+        )
+        assert res.status_code == 200
+        assert len(res.json()) == 2
+
+        res = await client.get(
+            f"{PREFIX}/job/?start_timestamp_max={quote('1999-01-01T00:00:01')}"
+        )
+        assert res.status_code == 422  # because timezonee is None
+        assert "timezone" in res.json()["detail"]
+
+        res = await client.get(
+            f"{PREFIX}/job/?start_timestamp_max="
+            f"{quote('1999-01-01T00:00:01+00:00')}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 0
+
         res = await client.get(
-            f"{PREFIX}/job/?end_timestamp_min=3000-01-01T00:00:01"
+            f"{PREFIX}/job/?end_timestamp_min="
+            f"{quote('3000-01-01T00:00:01+00:00')}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 0
+
         res = await client.get(
-            f"{PREFIX}/job/?end_timestamp_max=3000-01-01T00:00:01"
+            f"{PREFIX}/job/?end_timestamp_max=3000-01-01T00:00:01Z"
         )
         assert res.status_code == 200
         assert len(res.json()) == 1

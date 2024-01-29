@@ -110,7 +110,7 @@ options:
 ```
 
 Now the server is up, and depending on the intended use case you may have to
-create/edit some users - see [the Users page](./users.md).
+create/edit some users - see [the Users page](../internals/users/).
 
 
 Notice that you could also use more explicit startup commands, see

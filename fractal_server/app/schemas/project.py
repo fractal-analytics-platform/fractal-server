@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from pydantic import validator
 
 from ._validators import valstr
+from ._validators import valutc
 
 
 __all__ = (
@@ -48,6 +49,10 @@ class ProjectRead(_ProjectBase):
 
     id: int
     timestamp_created: datetime
+
+    _timestamp_created = validator("timestamp_created", allow_reuse=True)(
+        valutc("timestamp_created")
+    )
 
 
 class ProjectUpdate(_ProjectBase):

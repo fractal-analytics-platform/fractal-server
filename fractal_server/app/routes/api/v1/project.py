@@ -1,3 +1,5 @@
+from datetime import datetime
+from datetime import timezone
 from typing import Optional
 
 from fastapi import APIRouter
@@ -38,8 +40,11 @@ from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
 
-
 router = APIRouter()
+
+
+def _encode_as_utc(dt: datetime):
+    return dt.replace(tzinfo=timezone.utc).isoformat()
 
 
 @router.get("/", response_model=list[ProjectRead])
@@ -392,7 +397,7 @@ async def apply_workflow(
             **input_dataset.model_dump(
                 exclude={"resource_list", "timestamp_created"}
             ),
-            timestamp_created=str(input_dataset.timestamp_created),
+            timestamp_created=_encode_as_utc(input_dataset.timestamp_created),
             resource_list=[
                 resource.model_dump()
                 for resource in input_dataset.resource_list
@@ -402,7 +407,7 @@ async def apply_workflow(
             **output_dataset.model_dump(
                 exclude={"resource_list", "timestamp_created"}
             ),
-            timestamp_created=str(output_dataset.timestamp_created),
+            timestamp_created=_encode_as_utc(output_dataset.timestamp_created),
             resource_list=[
                 resource.model_dump()
                 for resource in output_dataset.resource_list
@@ -410,7 +415,7 @@ async def apply_workflow(
         ),
         workflow_dump=dict(
             **workflow.model_dump(exclude={"task_list", "timestamp_created"}),
-            timestamp_created=str(workflow.timestamp_created),
+            timestamp_created=_encode_as_utc(workflow.timestamp_created),
             task_list=[
                 dict(
                     **wf_task.model_dump(exclude={"task"}),
@@ -421,7 +426,7 @@ async def apply_workflow(
         ),
         project_dump=dict(
             **project.model_dump(exclude={"user_list", "timestamp_created"}),
-            timestamp_created=str(project.timestamp_created),
+            timestamp_created=_encode_as_utc(project.timestamp_created),
         ),
         **apply_workflow.dict(),
     )
