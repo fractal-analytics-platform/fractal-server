@@ -398,7 +398,6 @@ async def _workflow_insert_task(
         meta: TBD
         order: TBD
         db: TBD
-        commit: TBD
     """
     db_workflow = await db.get(Workflow, workflow_id)
     if db_workflow is None:
