@@ -34,7 +34,8 @@
     * Remove `JobStatusType.RUNNING`, incorporating it into `JobStatusType.SUBMITTED` (\#1179).
 * Benchmarks:
     * Add `fractal_client.py` and `populate_script_v2.py` for creating different database status scenarios (\#1178).
-
+* Documentation:
+    * Add the minimum set of environment variables required to set the database and start the server (\#1198).
 
 # 1.4.2
 
