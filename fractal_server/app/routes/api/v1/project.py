@@ -447,7 +447,7 @@ async def apply_workflow(
                 db_job.start_timestamp.replace(tzinfo=timezone.utc)
                 - job.start_timestamp
             )
-            < timedelta(seconds=1)
+            < timedelta(seconds=settings.FRACTAL_API_SUBMIT_MIN_WAIT)
             for db_job in db_jobs
         ):
             raise HTTPException(
@@ -455,8 +455,9 @@ async def apply_workflow(
                 detail=(
                     f"The endpoint 'POST /{project_id}/workflow/{workflow_id}/"
                     "apply/' was called several times with an interval of less"
-                    " than one second, using the same foreign keys. If it was "
-                    "intentional, please wait and try again."
+                    f" than {settings.FRACTAL_API_SUBMIT_MIN_WAIT} seconds, "
+                    "using the same foreign keys. If it was intentional, "
+                    "please wait and try again."
                 ),
             )
 
