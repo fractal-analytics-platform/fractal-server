@@ -4,7 +4,7 @@
 
 > **WARNING**:
 >
-> This update requires running a fix-db script, available at https://raw.githubusercontent.com/fractal-analytics-platform/fractal-server/1.4.3a0/scripts/fix_db/current.py.
+> This update requires running a fix-db script, via `fractalctl update-db-data`.
 
 * API:
     * Improve validation of `UserCreate.slurm_accounts` (\#1162).
@@ -17,6 +17,7 @@
     * Add `Workflow.timestamp_created` and `Dataset.timestamp_created` columns (\#1152).
     * Start a new `current.py` fix-db script (\#1152, \#1195).
     * Add to `migrations.yml` a new script (`validate_db_data_with_read_schemas.py`) that validates test-DB data with Read schemas (\#1187).
+    * Expose `fix-db` scripts via command-line option `fractalctl update-db-data` (\#1197).
 * App (internal):
     * Check in `Settings` that `psycopg2`, `asyngpg` and `cfut`, if required, are installed (\#1167).
     * Split `DB.set_db` into sync/async methods (\#1165).
