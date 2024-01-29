@@ -441,25 +441,24 @@ async def apply_workflow(
     )
     res = await db.execute(stm)
     db_jobs = res.scalars().all()
-    if db_jobs:
-        if any(
-            abs(
-                db_job.start_timestamp.replace(tzinfo=timezone.utc)
-                - job.start_timestamp
-            )
-            < timedelta(seconds=settings.FRACTAL_API_SUBMIT_MIN_WAIT)
-            for db_job in db_jobs
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail=(
-                    f"The endpoint 'POST /{project_id}/workflow/{workflow_id}/"
-                    "apply/' was called several times with an interval of less"
-                    f" than {settings.FRACTAL_API_SUBMIT_MIN_WAIT} seconds, "
-                    "using the same foreign keys. If it was intentional, "
-                    "please wait and try again."
-                ),
-            )
+    if db_jobs and any(
+        abs(
+            db_job.start_timestamp.replace(tzinfo=timezone.utc)
+            - job.start_timestamp
+        )
+        < timedelta(seconds=settings.FRACTAL_API_SUBMIT_MIN_WAIT)
+        for db_job in db_jobs
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=(
+                f"The endpoint 'POST /{project_id}/workflow/{workflow_id}/"
+                "apply/' was called several times with an interval of less "
+                f"than {settings.FRACTAL_API_SUBMIT_MIN_WAIT} seconds, using "
+                "the same foreign keys. If it was intentional, please wait "
+                "and try again."
+            ),
+        )
 
     db.add(job)
     await db.commit()
