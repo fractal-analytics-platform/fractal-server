@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <title>User Metrics</title>
+</head>
+<body>
+    <h1>Benchmarks</h1>
+
+
+    GET /api/alive/
+    <table class="table">
+        <tr>
+            <th scope="col">
+                User
+            </th>
+            <th scope="col">
+                Time
+            </th>
+            <th scope="col">
+                Size
+            </th>
+        </tr>
+
+        <tr>
+            <th>user-vanilla@example.org</th>
+            <td>
+                0.0008738999999999998
+            </td>
+            <td>
+                34.0
+            </td>
+        </tr>
+
+        <tr>
+            <th>user-power@example.org</th>
+            <td>
+                0.0008205
+            </td>
+            <td>
+                34.0
+            </td>
+        </tr>
+
+
+    </table>
+
+    GET /api/v1/project/
+    <table class="table">
+        <tr>
+            <th scope="col">
+                User
+            </th>
+            <th scope="col">
+                Time
+            </th>
+            <th scope="col">
+                Size
+            </th>
+        </tr>
+
+        <tr>
+            <th>user-vanilla@example.org</th>
+            <td>
+                0.0046037000000000005
+            </td>
+            <td>
+                96.0
+            </td>
+        </tr>
+
+        <tr>
+            <th>user-power@example.org</th>
+            <td>
+                0.004495600000000001
+            </td>
+            <td>
+                96.0
+            </td>
+        </tr>
+
+
+    </table>
+
+    GET /api/v1/dataset/
+    <table class="table">
+        <tr>
+            <th scope="col">
+                User
+            </th>
+            <th scope="col">
+                Time
+            </th>
+            <th scope="col">
+                Size
+            </th>
+        </tr>
+
+        <tr>
+            <th>user-vanilla@example.org</th>
+            <td>
+                0.006133100000000001
+            </td>
+            <td>
+                568.0
+            </td>
+        </tr>
+
+        <tr>
+            <th>user-power@example.org</th>
+            <td>
+                0.0791337
+            </td>
+            <td>
+                141883.0
+            </td>
+        </tr>
+
+
+    </table>
+
+    </ul>
+</body>
+</html>
