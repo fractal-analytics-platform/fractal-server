@@ -222,6 +222,7 @@ async def test_project_apply_existing_job(
 
         # API call succeeds when the other job with the same output_dataset has
         # status="done"
+        time.sleep(1)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
             f"?input_dataset_id={input_dataset.id}"
@@ -615,6 +616,7 @@ async def test_project_apply_slurm_account(
 
         # If a slurm_account from the list is provided, we use it
         for account in SLURM_LIST:
+            time.sleep(1)
             res = await client.post(
                 f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
                 f"?input_dataset_id={dataset.id}"
