@@ -112,7 +112,9 @@ def update_db_data():
         f"The detected target version is '{current_version}' (corresponding "
         f"to the update-db-data module '{current_version_slug}.py').\n"
         "Note that the old and target versions MUST be consecutive, "
-        "that is, you cannot skip an intermediate version."
+        "that is, you cannot skip an intermediate version.\nThe list of "
+        "released versions is available at https://github.com/"
+        "fractal-analytics-platform/fractal-server/blob/main/CHANGELOG.md."
     )
     print()
 
@@ -134,11 +136,17 @@ def update_db_data():
         if user_input != "yes":
             sys.exit(f"Answer was '{user_input}'; exit.")
 
-    print("OK, now starting data-migration script\n")
+    try:
+        current_update_db_data_module = import_module(
+            f"fractal_server.data_migrations.{current_version_slug}"
+        )
+    except ModuleNotFoundError as e:
+        sys.exit(
+            f"Update-db module for version {current_version} not found; "
+            f"exit.\nOriginal error message: {str(e)}"
+        )
 
-    current_update_db_data_module = import_module(
-        f"fractal_server.data_migrations.{current_version_slug}"
-    )
+    print("OK, now starting data-migration script\n")
     current_update_db_data_module.fix_db()
 
 
