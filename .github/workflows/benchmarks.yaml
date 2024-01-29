@@ -38,16 +38,10 @@ jobs:
         cd benchmarks/
         poetry run sh serve.sh
 
-     - name: Benchmark with locust
+     - name: Benchmark
        run: |
         cd benchmarks/
-        poetry run locust -f api_bench.py \
-        --host http://0.0.0.0:8000 \
-        --users 1 \
-        --spawn-rate 10 \
-        --run-time 10s \
-        --headless \
-        --html bench.html
+        poetry run api_bench.py
 
 
      - uses: stefanzweifel/git-auto-commit-action@v5
