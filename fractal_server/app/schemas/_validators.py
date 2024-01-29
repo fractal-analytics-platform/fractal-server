@@ -1,4 +1,6 @@
 import os
+from datetime import datetime
+from datetime import timezone
 
 
 def valstr(attribute: str, accept_none: bool = False):
@@ -71,5 +73,18 @@ def val_unique_list(attribute: str):
             if len(set(must_be_unique)) != len(must_be_unique):
                 raise ValueError(f"`{attribute}` list has repetitions")
         return must_be_unique
+
+    return val
+
+
+def valutc(attribute: str):
+    def val(timestamp: datetime):
+        """
+        Replacing `tzinfo` with `timezone.utc` is just required by SQLite data.
+        If using Postgres, this function leaves the datetime exactly as it is.
+        """
+        if timestamp is not None:
+            return timestamp.replace(tzinfo=timezone.utc)
+        return None
 
     return val
