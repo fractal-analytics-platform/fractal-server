@@ -192,8 +192,7 @@ async def test_view_workflow(
         assert "timezone" in res.json()["detail"]
 
         res = await client.get(
-            f"{PREFIX}/workflow/?timestamp_created_min="
-            f"{quote('2000-01-01T01:01:01Z')}"
+            f"{PREFIX}/workflow/?timestamp_created_min=2000-01-01T01:01:01Z"
         )
         assert res.status_code == 200
         assert len(res.json()) == 4
@@ -472,8 +471,7 @@ async def test_view_job(
         assert len(res.json()) == 2
 
         res = await client.get(
-            f"{PREFIX}/job/?start_timestamp_min="
-            f"{quote('1999-01-01T00:00:01Z')}"
+            f"{PREFIX}/job/?start_timestamp_min=1999-01-01T00:00:01Z"
         )
         assert res.status_code == 200
         assert len(res.json()) == 2
@@ -499,7 +497,7 @@ async def test_view_job(
         assert len(res.json()) == 0
 
         res = await client.get(
-            f"{PREFIX}/job/?end_timestamp_max={quote('3000-01-01T00:00:01Z')}"
+            f"{PREFIX}/job/?end_timestamp_max=3000-01-01T00:00:01Z"
         )
         assert res.status_code == 200
         assert len(res.json()) == 1
