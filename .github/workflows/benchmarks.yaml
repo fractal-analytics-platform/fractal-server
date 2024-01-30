@@ -14,8 +14,6 @@ jobs:
 
     services:
       postgres:
-        # Disable postgres service when using sqlite, through the workaround
-        # described in https://github.com/actions/runner/issues/822
         image: postgres
         env:
           POSTGRES_PASSWORD: postgres
@@ -51,10 +49,12 @@ jobs:
         export POSTGRES_USER=postgres
         export POSTGRES_HOST=localhost
         export FRACTAL_RUNNER_WORKING_BASE_DIR=/tmp/artifacts
+        export FRACTAL_TASKS_DIR=/tmp/FRACTAL_TASKS_DIR
         export JWT_SECRET_KEY=secret
         export FRACTAL_LOGGING_LEVEL=10
         cd benchmarks/
         poetry run sh serve.sh
+
 
      - name: Benchmark
        run: |
