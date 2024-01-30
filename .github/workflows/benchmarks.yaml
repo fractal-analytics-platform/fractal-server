@@ -74,16 +74,10 @@ jobs:
     #      push_options: '--force'
     #      file_pattern: 'benchmarks/bench_diff.html'
 
-    #  - name: HTML Preview
-    #    id: html_preview
-    #    uses: pavi2410/html-preview-action@v2
-    #    with:
-    #      html_file: 'benchmarks/bench_diff.html'
-
-    #  - name: Add comment with preview
-    #    uses: mshick/add-pr-comment@v2
-    #    with:
-    #      message: ${{ format('[Click here to preview Benchmark Diff page in browser]({0})', steps.html_preview.outputs.url) }}
+     - name: Add comment with preview
+       uses: mshick/add-pr-comment@v2
+       with:
+         message: ${{ format('[Click here to preview Benchmark Diff page in browser]({0})',https://htmlpreview.github.io/?https://github.com/fractal-analytics-platform/fractal-server/blob/${{ steps.vars.outputs.branch }}/benchmarks/bench_diff.html) }}
 
 
     #  - uses: stefanzweifel/git-auto-commit-action@v5
