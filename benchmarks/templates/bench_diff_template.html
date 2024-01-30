@@ -15,24 +15,31 @@
         <p  class="text-success"><strong>{{method}} {{ path_main }}</strong></p>
         <table class="table table-secondary">
             <tr>
-                <th>
-                    Origin
-                </th>
                 <th scope="col">
                     User
                 </th>
                 <th scope="col">
-                    Time(millisec)
+                    Time(ms)
+                    Main
                 </th>
                 <th scope="col">
-                    Size(Kbyte)
+                    Time(ms)
+                    Current
+                </th>
+                <th scope="col">
+                    Diff. Main/Current
+                </th>
+                <th scope="col">
+                    Size(Kb)
+                    Main
+                </th>
+                <th scope="col">
+                    Size(Kb)
+                    Current
                 </th>
             </tr>
             {% for i in range(users_main|length) %}
             <tr>
-                <th>
-                    Main
-                </th>
                 <td>
                     {{users_main[i].get("username")}}
                 </td>
@@ -40,25 +47,18 @@
                 <td>
                     {{users_main[i].get('time')}}
                 </td>
-
+                <td>
+                    {{users_curr[i].get('time')}}
+                </td>
+                <td style="{% if ((users_curr[i].get('time') / users_main[i].get('time')) / 100) > 1.1 %}background-color: red;{% else %}background-color: green;{% endif %}">
+                    {{ "%.2f"|format(users_main[i].get('time') - users_curr[i].get('time'))}}
+                </td>
                 <td>
                     {{users_main[i].get('size')}}
                 </td>
-            </tr>
-            <tr>
-                <th>
-                    Current
-                </th>
                 <td>
-                    {{users_curr[i].get("username")}}
-                </td>
-                <td style="{% if users_curr[i].get('time') > users_main[i].get('time') %}background-color: red;{% else %}background-color: green;{% endif %}">
-                    {{users_curr[i].get('time')}}
-                </td>
-                <td style="{% if users_curr[i].get('size') > users_main[i].get('size') %}background-color: red;{% else %}background-color: green;{% endif %}">
                     {{users_curr[i].get('size')}}
                 </td>
-
             </tr>
             {%endfor%}
 
