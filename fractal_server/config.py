@@ -428,7 +428,7 @@ class Settings(BaseSettings):
 
     def check(self):
         """
-        Make sure that mandatory variables are set
+        Make sure that required variables are set
 
         This method must be called before the server starts
         """
