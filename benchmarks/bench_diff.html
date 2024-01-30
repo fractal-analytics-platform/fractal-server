@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <title>Fractal-server API benchmark Diff</title>
+</head>
+
+<body>
+    <h1>Diff Main vs. Current</h1>
+    <br>
+
+
+        <p  class="text-success"><strong>GET /api/alive/</strong></p>
+        <table class="table table-secondary">
+            <tr>
+                <th>
+                    Origin
+                </th>
+                <th scope="col">
+                    User
+                </th>
+                <th scope="col">
+                    Time(millisec)
+                </th>
+                <th scope="col">
+                    Size(Kbyte)
+                </th>
+            </tr>
+
+            <tr>
+                <th>
+                    Main
+                </th>
+                <td>
+                    user-vanilla
+                </td>
+
+                <td>
+                    0.8
+                </td>
+
+                <td>
+                    0.0
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    Current
+                </th>
+                <td>
+                    user-vanilla
+                </td>
+                <td style="background-color: green;">
+                    0.8
+                </td>
+                <td style="background-color: green;">
+                    0.0
+                </td>
+
+            </tr>
+
+            <tr>
+                <th>
+                    Main
+                </th>
+                <td>
+                    user-power
+                </td>
+
+                <td>
+                    0.8
+                </td>
+
+                <td>
+                    0.0
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    Current
+                </th>
+                <td>
+                    user-power
+                </td>
+                <td style="background-color: green;">
+                    0.8
+                </td>
+                <td style="background-color: green;">
+                    0.0
+                </td>
+
+            </tr>
+
+
+        </table>
+
+        <p  class="text-success"><strong>GET /api/v1/project/</strong></p>
+        <table class="table table-secondary">
+            <tr>
+                <th>
+                    Origin
+                </th>
+                <th scope="col">
+                    User
+                </th>
+                <th scope="col">
+                    Time(millisec)
+                </th>
+                <th scope="col">
+                    Size(Kbyte)
+                </th>
+            </tr>
+
+            <tr>
+                <th>
+                    Main
+                </th>
+                <td>
+                    user-vanilla
+                </td>
+
+                <td>
+                    4.8
+                </td>
+
+                <td>
+                    0.1
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    Current
+                </th>
+                <td>
+                    user-vanilla
+                </td>
+                <td style="background-color: green;">
+                    4.7
+                </td>
+                <td style="background-color: green;">
+                    0.1
+                </td>
+
+            </tr>
+
+            <tr>
+                <th>
+                    Main
+                </th>
+                <td>
+                    user-power
+                </td>
+
+                <td>
+                    4.7
+                </td>
+
+                <td>
+                    0.1
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    Current
+                </th>
+                <td>
+                    user-power
+                </td>
+                <td style="background-color: green;">
+                    4.6
+                </td>
+                <td style="background-color: green;">
+                    0.1
+                </td>
+
+            </tr>
+
+
+        </table>
+
+        <p  class="text-success"><strong>GET /api/v1/dataset/</strong></p>
+        <table class="table table-secondary">
+            <tr>
+                <th>
+                    Origin
+                </th>
+                <th scope="col">
+                    User
+                </th>
+                <th scope="col">
+                    Time(millisec)
+                </th>
+                <th scope="col">
+                    Size(Kbyte)
+                </th>
+            </tr>
+
+            <tr>
+                <th>
+                    Main
+                </th>
+                <td>
+                    user-vanilla
+                </td>
+
+                <td>
+                    7.0
+                </td>
+
+                <td>
+                    0.6
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    Current
+                </th>
+                <td>
+                    user-vanilla
+                </td>
+                <td style="background-color: green;">
+                    6.7
+                </td>
+                <td style="background-color: green;">
+                    0.6
+                </td>
+
+            </tr>
+
+            <tr>
+                <th>
+                    Main
+                </th>
+                <td>
+                    user-power
+                </td>
+
+                <td>
+                    90.6
+                </td>
+
+                <td>
+                    144.3
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    Current
+                </th>
+                <td>
+                    user-power
+                </td>
+                <td style="background-color: green;">
+                    84.6
+                </td>
+                <td style="background-color: green;">
+                    144.3
+                </td>
+
+            </tr>
+
+
+        </table>
+
+        <p  class="text-success"><strong>GET /api/v1/job/</strong></p>
+        <table class="table table-secondary">
+            <tr>
+                <th>
+                    Origin
+                </th>
+                <th scope="col">
+                    User
+                </th>
+                <th scope="col">
+                    Time(millisec)
+                </th>
+                <th scope="col">
+                    Size(Kbyte)
+                </th>
+            </tr>
+
+            <tr>
+                <th>
+                    Main
+                </th>
+                <td>
+                    user-vanilla
+                </td>
+
+                <td>
+                    5.9
+                </td>
+
+                <td>
+                    3.3
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    Current
+                </th>
+                <td>
+                    user-vanilla
+                </td>
+                <td style="background-color: green;">
+                    4.6
+                </td>
+                <td style="background-color: green;">
+                    3.3
+                </td>
+
+            </tr>
+
+            <tr>
+                <th>
+                    Main
+                </th>
+                <td>
+                    user-power
+                </td>
+
+                <td>
+                    119.4
+                </td>
+
+                <td>
+                    504.4
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    Current
+                </th>
+                <td>
+                    user-power
+                </td>
+                <td style="background-color: green;">
+                    111.6
+                </td>
+                <td style="background-color: green;">
+                    504.4
+                </td>
+
+            </tr>
+
+
+        </table>
+
+</body>
+</html>

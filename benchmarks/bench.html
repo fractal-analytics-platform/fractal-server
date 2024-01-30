@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-    <title>User Metrics</title>
+    <title>Fractal-server API benchmark</title>
 </head>
 
 <body>
     <h1>Benchmarks</h1>
-    <p class="h6">Date: 2024-01-29 22:51:31</p>
+    <p class="h6">Date: 2024-01-30 11:04:03</p>
+    <p class="h6"># Requests: 25</p>
     <br>
 
 
@@ -28,22 +29,22 @@
         </tr>
 
         <tr>
-            <th>user-vanilla@example.org</th>
+            <th>user-vanilla</th>
             <td>
-                0.000781
+                0.8
             </td>
             <td>
-                34.0
+                0.0
             </td>
         </tr>
 
         <tr>
-            <th>user-power@example.org</th>
+            <th>user-power</th>
             <td>
-                0.000755
+                0.8
             </td>
             <td>
-                34.0
+                0.0
             </td>
         </tr>
 
@@ -65,22 +66,22 @@
         </tr>
 
         <tr>
-            <th>user-vanilla@example.org</th>
+            <th>user-vanilla</th>
             <td>
-                0.004588
+                4.8
             </td>
             <td>
-                96.0
+                0.1
             </td>
         </tr>
 
         <tr>
-            <th>user-power@example.org</th>
+            <th>user-power</th>
             <td>
-                0.004412
+                4.7
             </td>
             <td>
-                96.0
+                0.1
             </td>
         </tr>
 
@@ -102,28 +103,64 @@
         </tr>
 
         <tr>
-            <th>user-vanilla@example.org</th>
+            <th>user-vanilla</th>
             <td>
-                0.006217
+                7.0
             </td>
             <td>
-                568.0
+                0.6
             </td>
         </tr>
 
         <tr>
-            <th>user-power@example.org</th>
+            <th>user-power</th>
             <td>
-                0.080017
+                90.6
             </td>
             <td>
-                141883.0
+                144.3
             </td>
         </tr>
 
 
     </table>
 
-    </ul>
+    <p  class="text-success"><strong>GET /api/v1/job/</strong></p>
+    <table class="table table-secondary">
+        <tr>
+            <th scope="col">
+                User
+            </th>
+            <th scope="col">
+                Time(seconds)
+            </th>
+            <th scope="col">
+                Size(byte)
+            </th>
+        </tr>
+
+        <tr>
+            <th>user-vanilla</th>
+            <td>
+                5.9
+            </td>
+            <td>
+                3.3
+            </td>
+        </tr>
+
+        <tr>
+            <th>user-power</th>
+            <td>
+                119.4
+            </td>
+            <td>
+                504.4
+            </td>
+        </tr>
+
+
+    </table>
+
 </body>
 </html>
