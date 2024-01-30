@@ -51,7 +51,6 @@ jobs:
         export FRACTAL_RUNNER_WORKING_BASE_DIR=/tmp/artifacts
         export FRACTAL_TASKS_DIR=/tmp/FRACTAL_TASKS_DIR
         export JWT_SECRET_KEY=secret
-        export FRACTAL_LOGGING_LEVEL=10
         cd benchmarks/
         poetry run sh serve.sh
 
@@ -64,7 +63,8 @@ jobs:
      - uses: stefanzweifel/git-auto-commit-action@v5
        with:
          commit_message: Add bench_diff.html
-         file_pattern: benchmarks/bench_diff.html
+         push_options: '--force'
+         file_pattern: 'benchmarks/bench_diff.html'
 
      - name: HTML Preview
        id: html_preview
