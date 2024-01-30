@@ -17,7 +17,6 @@
     <div class="row">
     <hr>
         <p  class="text-success"><strong>GET /api/alive/</strong></p>
-        <div class="col-sm">
         <table class="table table-secondary table-bordered">
             <thead>
             <tr>
@@ -33,7 +32,7 @@
                     Current
                 </th>
                 <th scope="col">
-                    Diff. Main/Current
+                    Ratio Main/Current
                 </th>
                 <th scope="col">
                     Size(Kb)
@@ -48,9 +47,9 @@
         <tbody>
 
             <tr>
-                <td>
+                <th>
                     <strong>user-vanilla</strong>
-                </td>
+                </th>
 
                 <td>
                     0.8
@@ -70,9 +69,9 @@
             </tr>
 
             <tr>
-                <td>
+                <th>
                     <strong>user-power</strong>
-                </td>
+                </th>
 
                 <td>
                     0.8
@@ -93,13 +92,11 @@
 
         </tbody>
         </table>
-        </div>
         </div>
 
     <div class="row">
     <hr>
         <p  class="text-success"><strong>GET /api/v1/project/</strong></p>
-        <div class="col-sm">
         <table class="table table-secondary table-bordered">
             <thead>
             <tr>
@@ -115,7 +112,7 @@
                     Current
                 </th>
                 <th scope="col">
-                    Diff. Main/Current
+                    Ratio Main/Current
                 </th>
                 <th scope="col">
                     Size(Kb)
@@ -130,15 +127,37 @@
         <tbody>
 
             <tr>
-                <td>
+                <th>
                     <strong>user-vanilla</strong>
-                </td>
+                </th>
 
                 <td>
                     4.8
                 </td>
                 <td>
-                    4.8
+                    4.7
+                </td>
+                <td style="background-color: rgb(36, 182, 36);">
+                    1.02
+                </td>
+                <td>
+                    0.1
+                </td>
+                <td>
+                    0.1
+                </td>
+            </tr>
+
+            <tr>
+                <th>
+                    <strong>user-power</strong>
+                </th>
+
+                <td>
+                    4.7
+                </td>
+                <td>
+                    4.7
                 </td>
                 <td style="background-color: rgb(36, 182, 36);">
                     1.00
@@ -151,37 +170,13 @@
                 </td>
             </tr>
 
-            <tr>
-                <td>
-                    <strong>user-power</strong>
-                </td>
-
-                <td>
-                    4.7
-                </td>
-                <td>
-                    4.5
-                </td>
-                <td style="background-color: rgb(36, 182, 36);">
-                    1.04
-                </td>
-                <td>
-                    0.1
-                </td>
-                <td>
-                    0.1
-                </td>
-            </tr>
-
         </tbody>
         </table>
-        </div>
         </div>
 
     <div class="row">
     <hr>
         <p  class="text-success"><strong>GET /api/v1/dataset/</strong></p>
-        <div class="col-sm">
         <table class="table table-secondary table-bordered">
             <thead>
             <tr>
@@ -197,7 +192,7 @@
                     Current
                 </th>
                 <th scope="col">
-                    Diff. Main/Current
+                    Ratio Main/Current
                 </th>
                 <th scope="col">
                     Size(Kb)
@@ -212,18 +207,18 @@
         <tbody>
 
             <tr>
-                <td>
+                <th>
                     <strong>user-vanilla</strong>
-                </td>
+                </th>
 
                 <td>
                     7.0
                 </td>
                 <td>
-                    6.5
+                    6.6
                 </td>
                 <td style="background-color: rgb(36, 182, 36);">
-                    1.08
+                    1.06
                 </td>
                 <td>
                     0.6
@@ -234,18 +229,18 @@
             </tr>
 
             <tr>
-                <td>
+                <th>
                     <strong>user-power</strong>
-                </td>
+                </th>
 
                 <td>
                     90.6
                 </td>
                 <td>
-                    82.9
+                    82.3
                 </td>
                 <td style="background-color: rgb(36, 182, 36);">
-                    1.09
+                    1.10
                 </td>
                 <td>
                     144.3
@@ -258,12 +253,10 @@
         </tbody>
         </table>
         </div>
-        </div>
 
     <div class="row">
     <hr>
         <p  class="text-success"><strong>GET /api/v1/job/</strong></p>
-        <div class="col-sm">
         <table class="table table-secondary table-bordered">
             <thead>
             <tr>
@@ -279,7 +272,7 @@
                     Current
                 </th>
                 <th scope="col">
-                    Diff. Main/Current
+                    Ratio Main/Current
                 </th>
                 <th scope="col">
                     Size(Kb)
@@ -294,18 +287,18 @@
         <tbody>
 
             <tr>
-                <td>
+                <th>
                     <strong>user-vanilla</strong>
-                </td>
+                </th>
 
                 <td>
                     5.9
                 </td>
                 <td>
-                    4.5
+                    4.7
                 </td>
                 <td style="background-color: rgb(36, 182, 36);">
-                    1.31
+                    1.26
                 </td>
                 <td>
                     3.3
@@ -316,30 +309,29 @@
             </tr>
 
             <tr>
-                <td>
+                <th>
                     <strong>user-power</strong>
-                </td>
+                </th>
 
                 <td>
                     119.4
                 </td>
                 <td>
-                    108.6
+                    111.7
                 </td>
                 <td style="background-color: rgb(36, 182, 36);">
-                    1.10
+                    1.07
                 </td>
                 <td>
                     504.4
                 </td>
                 <td>
-                    504.4
+                    509.2
                 </td>
             </tr>
 
         </tbody>
         </table>
-        </div>
         </div>
 
     </div>
