@@ -61,6 +61,12 @@ jobs:
         cd benchmarks/
         poetry run python api_bench.py
 
+     - uses: stefanzweifel/git-auto-commit-action@v5
+       with:
+         commit_message: Add bench_diff.html
+         skip_checkout: true
+         file_pattern: benchmarks/bench_diff.html
+
      - name: HTML Preview
        id: html_preview
        uses: pavi2410/html-preview-action@v2
