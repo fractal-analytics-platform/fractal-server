@@ -60,6 +60,13 @@ jobs:
         cd benchmarks/
         poetry run python api_bench.py
 
+     - name: Set output
+       id: vars
+       run: echo ::set-output name=short_ref::${GITHUB_REF#refs/*/}
+
+     - name: Check output
+       run: echo ${{ steps.vars.outputs.short_ref }}
+
      - uses: stefanzweifel/git-auto-commit-action@v5
        with:
          commit_message: Add bench_diff.html
