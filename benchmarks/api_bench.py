@@ -52,7 +52,6 @@ def get_cleaned_paths() -> list:
             re.compile(r"/import/"),
             re.compile(r"/export_history/"),
             re.compile(r"/workflow/"),
-            # re.compile(r"/job/"),
             re.compile(r"\{.*?\}"),
         ]
 
@@ -82,15 +81,12 @@ class Benchmark:
                 .get("access_token")
             )
 
-    def aggregate_on_path(self, json_path: str) -> None:
-
-        with open(json_path, "r") as f:
-            benchmarks = json.load(f)
+    def aggregate_on_path(self, user_metrics: list) -> None:
 
         aggregated_values = {}
 
         # for each dict in the list we aggregate on "path" key
-        for bench in benchmarks:
+        for bench in user_metrics:
             key_to_aggregate = bench["path"]
             if key_to_aggregate not in aggregated_values:
                 aggregated_values[key_to_aggregate] = []
@@ -140,7 +136,7 @@ class Benchmark:
 
         return dict(time=time_response, size=byte_size)
 
-    def run_benchmark(self, n_requests: int) -> None:
+    def run_benchmark(self, n_requests: int) -> list:
 
         # time and size are the two keys to extract and make the average
         keys_to_sum = ["time", "size"]
@@ -182,15 +178,26 @@ class Benchmark:
         with open("bench.json", "w") as f:
             json.dump(user_metrics, f)
 
+        return user_metrics
+
 
 if __name__ == "__main__":
 
     benchmark = Benchmark(
         method="GET", cleaned_paths=get_cleaned_paths(), users=USERS
     )
-    benchmark.run_benchmark(N_REQUESTS)
-    agg_values_main = benchmark.aggregate_on_path("bench.json")
-    agg_values_curr = benchmark.aggregate_on_path("bench_diff.json")
+    user_metrics = benchmark.run_benchmark(N_REQUESTS)
 
-    benchmark.to_html(agg_values_main, N_REQUESTS)
+    agg_values_curr = benchmark.aggregate_on_path(user_metrics)
+
+    benchmark.to_html(agg_values_curr, N_REQUESTS)
+
+    # get the bench_diff.json from the bechmark-api branch
+    json_diff = httpx.get(
+        "https://raw.githubusercontent.com/fractal-analytics-platform/"
+        "fractal-server/benchmark-api/benchmarks/bench.json"
+    )
+    print(json_diff.status_code)
+    agg_values_main = benchmark.aggregate_on_path(json_diff.json())
+
     benchmark.make_html_diff(agg_values_main, agg_values_curr)
