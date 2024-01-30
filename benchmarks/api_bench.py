@@ -26,7 +26,7 @@ USERS = [
     ),
 ]
 
-N_REQUESTS = 10
+N_REQUESTS = 25
 
 
 def get_cleaned_paths() -> list:
@@ -52,7 +52,7 @@ def get_cleaned_paths() -> list:
             re.compile(r"/import/"),
             re.compile(r"/export_history/"),
             re.compile(r"/workflow/"),
-            re.compile(r"/job/"),
+            # re.compile(r"/job/"),
             re.compile(r"\{.*?\}"),
         ]
 
@@ -82,7 +82,7 @@ class Benchmark:
                 .get("access_token")
             )
 
-    def to_html(self, json_path: str) -> None:
+    def aggregate_on_path(self, json_path: str) -> None:
 
         with open(json_path, "r") as f:
             benchmarks = json.load(f)
@@ -99,6 +99,9 @@ class Benchmark:
             del bench["path"]
 
             aggregated_values[key_to_aggregate].append(bench)
+        return aggregated_values
+
+    def to_html(self, aggregated_values: dict, n_requests: int):
 
         env = Environment(
             loader=FileSystemLoader(searchpath="./templates"), autoescape=True
@@ -109,9 +112,25 @@ class Benchmark:
             user_metrics=aggregated_values,
             method=self.method,
             date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            requests=n_requests,
         )
 
         with open("bench.html", "w") as output_file:
+            output_file.write(rendered_html)
+
+    def make_html_diff(self, agg_values_main: dict, agg_values_curr: dict):
+
+        env = Environment(
+            loader=FileSystemLoader(searchpath="./templates"), autoescape=True
+        )
+        template = env.get_template("bench_diff_template.html")
+
+        rendered_html = template.render(
+            zip=zip(agg_values_main.items(), agg_values_curr.items()),
+            method=self.method,
+        )
+
+        with open("bench_diff.html", "w") as output_file:
             output_file.write(rendered_html)
 
     def get_metrics(self, res: Response) -> dict:
@@ -121,7 +140,7 @@ class Benchmark:
 
         return dict(time=time_response, size=byte_size)
 
-    def run_benchmark(self) -> None:
+    def run_benchmark(self, n_requests: int) -> None:
 
         # time and size are the two keys to extract and make the average
         keys_to_sum = ["time", "size"]
@@ -134,13 +153,13 @@ class Benchmark:
                 # list of dicts made by get_metrics()
                 metrics_list = [
                     self.get_metrics(self.client.get(path, headers=headers))
-                    for n in range(N_REQUESTS)
+                    for n in range(n_requests)
                 ]
                 # dicts with two keys -> key to sum (time, size)
                 avg_metrics_user = {
                     key: round(
                         sum(metric[key] for metric in metrics_list)
-                        / N_REQUESTS,
+                        / n_requests,
                         6,
                     )
                     for key in keys_to_sum
@@ -150,9 +169,13 @@ class Benchmark:
                 user_metrics.append(
                     dict(
                         path=path,
-                        username=user.name,
-                        time=avg_metrics_user.get("time"),
-                        size=avg_metrics_user.get("size"),
+                        username=user.name.split("@")[0],  # remove domain
+                        time=round(
+                            avg_metrics_user.get("time") * 1000, 1
+                        ),  # millisecond
+                        size=round(
+                            avg_metrics_user.get("size") / 1000, 1
+                        ),  # kbyte
                     )
                 )
 
@@ -165,5 +188,9 @@ if __name__ == "__main__":
     benchmark = Benchmark(
         method="GET", cleaned_paths=get_cleaned_paths(), users=USERS
     )
-    benchmark.run_benchmark()
-    benchmark.to_html("bench.json")
+    benchmark.run_benchmark(N_REQUESTS)
+    agg_values_main = benchmark.aggregate_on_path("bench.json")
+    agg_values_curr = benchmark.aggregate_on_path("bench_diff.json")
+
+    benchmark.to_html(agg_values_main, N_REQUESTS)
+    benchmark.make_html_diff(agg_values_main, agg_values_curr)

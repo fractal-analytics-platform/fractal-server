@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-    <title>User Metrics</title>
+    <title>Fractal-server API benchmark</title>
 </head>
 
 <body>
     <h1>Benchmarks</h1>
     <p class="h6">Date: {{date}}</p>
+    <p class="h6"># Requests: {{requests}}</p>
     <br>
 
     {% for key, values in user_metrics.items()%}
@@ -40,6 +41,5 @@
 
     </table>
     {% endfor %}
-    </ul>
 </body>
 </html>
