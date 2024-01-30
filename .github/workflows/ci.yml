@@ -71,7 +71,7 @@ jobs:
 
   tests_runner:
 
-    name: "Job - Python ${{ matrix.python-version }} - ${{ matrix.db }}"
+    name: "Runner - Python ${{ matrix.python-version }} - ${{ matrix.db }}"
     runs-on: ubuntu-22.04
     timeout-minutes: 30
 
