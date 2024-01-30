@@ -134,7 +134,7 @@ jobs:
   coverage:
     name: Coverage
     runs-on: ubuntu-22.04
-    needs: [tests_core, tests_job]
+    needs: [tests_core, tests_runner]
 
     permissions:
       pull-requests: write
