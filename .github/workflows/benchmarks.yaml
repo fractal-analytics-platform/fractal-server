@@ -77,8 +77,7 @@ jobs:
      - name: Add comment with preview
        uses: mshick/add-pr-comment@v2
        with:
-         message: ${{ format('[Click here to preview Benchmark Diff page in browser]({0})','https://htmlpreview.github.io/?https://github.com/fractal-analytics-platform/fractal-server/blob/${{ steps.vars.outputs.branch }}/benchmarks/bench_diff.html') }}
-
+        message: "[Click here to preview Benchmark Diff page in browser](https://htmlpreview.github.io/?https://github.com/fractal-analytics-platform/fractal-server/blob/${{ steps.vars.outputs.branch }}/benchmarks/bench_diff.html)"
 
     #  - uses: stefanzweifel/git-auto-commit-action@v5
     #    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
