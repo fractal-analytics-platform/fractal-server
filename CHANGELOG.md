@@ -28,6 +28,7 @@
 * Testing:
     * Update `clean_db_fractal_1.4.1.sql` to `clean_db_fractal_1.4.2.sql`, and change `migrations.yml` target version (\#1152).
     * Reorganise the test directory into subdirectories, named according to the order in which we want the CI to execute them (\#1166).
+    * Split the CI into two independent jobs, `Core` and `Runner`, to save time through parallelisation (\#1204).
 * Dependencies:
     * Update `python-dotenv` to version 0.21.0 (\#1172).
 * Runner:
