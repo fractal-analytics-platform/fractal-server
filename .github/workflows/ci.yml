@@ -61,7 +61,7 @@ jobs:
           poetry install --with dev --without docs --no-interaction -E slurm -E gunicorn $DB
 
       - name: Test with pytest
-        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest tests/0[123467]*
+        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest --ignore tests/05_backend --ignore tests/08_full_workflow
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
@@ -69,7 +69,7 @@ jobs:
           name: coverage-data
           path: ".coverage*"
 
-  tests_job:
+  tests_runner:
 
     name: "Job - Python ${{ matrix.python-version }} - ${{ matrix.db }}"
     runs-on: ubuntu-22.04
@@ -123,7 +123,7 @@ jobs:
           poetry install --with dev --without docs --no-interaction -E slurm -E gunicorn $DB
 
       - name: Test with pytest
-        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest tests/0[58]*
+        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest tests/05_backend tests/08_full_workflow
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
