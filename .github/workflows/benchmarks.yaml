@@ -60,7 +60,10 @@ jobs:
      - name: Benchmark
        run: |
         cd benchmarks/
-        poetry run python api_bench.py ${GITHUB_REF##*/}
+        github branch --show-current
+        CURRENT_BRANCH=`github branch --show-current`
+        echo $CURRENT_BRANCH
+        poetry run python api_bench.py $CURRENT_BRANCH
 
      - name: Add comment with preview
        uses: mshick/add-pr-comment@v2
