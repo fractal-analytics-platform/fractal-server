@@ -1,6 +1,6 @@
 import json
-import os
 import re
+import sys
 from datetime import datetime
 from typing import Any
 from typing import Optional
@@ -67,12 +67,19 @@ def get_clean_API_paths() -> list[str]:
 
 
 class Benchmark:
-    def __init__(self, method: str, cleaned_paths: list, users: list):
+    def __init__(
+        self,
+        method: str,
+        cleaned_paths: list,
+        users: list,
+        current_branch: str,
+    ):
 
         self.method = method
         self.cleaned_paths = cleaned_paths
         self.users = users
         self.client = Client(base_url=FRACTAL_SERVER_URL)
+        self.current_branch = current_branch
 
         for user in self.users:
             user.token = (
@@ -125,7 +132,7 @@ class Benchmark:
         rendered_html = template.render(
             zip=zip(agg_values_main.items(), agg_values_curr.items()),
             method=self.method,
-            currentbranch=os.environ.get("CURRENT_BRANCH", "current-branch"),
+            currentbranch=self.current_branch,
         )
 
         with open("bench_diff.md", "w") as output_file:
@@ -185,8 +192,16 @@ class Benchmark:
 
 if __name__ == "__main__":
 
+    if len(sys.argv[1:]) == 1:
+        current_branch = sys.argv[1]
+    else:
+        current_branch = "current-branch"
+
     benchmark = Benchmark(
-        method="GET", cleaned_paths=get_clean_API_paths(), users=USERS
+        method="GET",
+        cleaned_paths=get_clean_API_paths(),
+        users=USERS,
+        current_branch=current_branch,
     )
     user_metrics = benchmark.run_benchmark(N_REQUESTS)
 
