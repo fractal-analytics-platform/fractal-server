@@ -59,30 +59,11 @@ jobs:
         cd benchmarks/
         poetry run python api_bench.py
 
-     - name: Set output
-       id: vars
-       shell: bash
-       run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
-
-     - uses: stefanzweifel/git-auto-commit-action@v5
-       with:
-         commit_message: Add bench_diff.html, bench.html, bench.json
-         commit_options: '--no-verify' # to avoit pre-commit
-         push_options: '--force' # to force always the latest version of files
-         file_pattern: 'benchmarks/bench_diff.html benchmarks/bench.html benchmarks/bench.json'
-
      - name: Add comment with preview
        uses: mshick/add-pr-comment@v2
        with:
-        message: "[Click here to preview Benchmark Diff page in browser](https://htmlpreview.github.io/?https://github.com/fractal-analytics-platform/fractal-server/blob/${{ steps.vars.outputs.branch }}/benchmarks/bench_diff.html)"
-
-
-     # remove bench_diff.html than commit on benchmark-api
-     - name: Remove File
-       uses: JesseTG/rm@v1.0.3
-       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-       with:
-         path: benchmarks/bench_diff.html
+         message-path: |
+            benchmarks/bench_diff.md
 
      # commit on benchmark-api removing bench_diff.html
      - uses: stefanzweifel/git-auto-commit-action@v5
@@ -93,21 +74,4 @@ jobs:
          commit_options: '--no-verify'
          push_options: '--force'
          skip_checkout: true
-         file_pattern: 'benchmarks/bench_diff.html benchmarks/bench.html benchmarks/bench.json'
-
-     # remove bench.html and bench.json than commit on main
-     - name: Remove File
-       uses: JesseTG/rm@v1.0.3
-       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-       with:
-         path: benchmarks/bench.html benchmarks/bench.json
-
-     # commit to remove bench* files on main
-     - uses: stefanzweifel/git-auto-commit-action@v5
-       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-       with:
-         commit_message: Update bench.html & bench.json
-         commit_options: '--no-verify'
-         push_options: '--force'
-         skip_checkout: true
-         file_pattern: 'benchmarks/bench_diff.html benchmarks/bench.html benchmarks/bench.json'
+         file_pattern: 'benchmarks/bench.html benchmarks/bench.json'
