@@ -125,7 +125,7 @@ class Benchmark:
         rendered_html = template.render(
             zip=zip(agg_values_main.items(), agg_values_curr.items()),
             method=self.method,
-            current_branch=os.environ.get("CURRENT_BRANCH", "current-branch"),
+            currentbranch=os.environ.get("CURRENT_BRANCH", "current-branch"),
         )
 
         with open("bench_diff.md", "w") as output_file:
