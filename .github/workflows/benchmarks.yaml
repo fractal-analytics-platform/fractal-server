@@ -61,7 +61,7 @@ jobs:
        run: |
         cd benchmarks/
         CURRENT_BRANCH=$(git branch --show-current)
-        poetry run python api_bench.py ${env.CURRENT_BRANCH}
+        poetry run python api_bench.py ${CURRENT_BRANCH}
 
      - name: Add comment with preview
        uses: mshick/add-pr-comment@v2
