@@ -55,7 +55,6 @@ def get_clean_API_paths() -> list[str]:
             re.compile(r"/export/"),
             re.compile(r"/import/"),
             re.compile(r"/export_history/"),
-            re.compile(r"/workflow/"),
             re.compile(r"\{.*?\}"),
         ]
         API_paths = [
