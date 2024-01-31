@@ -114,19 +114,19 @@ class Benchmark:
         with open("bench.html", "w") as output_file:
             output_file.write(rendered_html)
 
-    def make_html_diff(self, agg_values_main: dict, agg_values_curr: dict):
+    def make_md_diff(self, agg_values_main: dict, agg_values_curr: dict):
 
         env = Environment(
             loader=FileSystemLoader(searchpath="./templates"), autoescape=True
         )
-        template = env.get_template("bench_diff_template.html")
+        template = env.get_template("bench_diff_template.md")
 
         rendered_html = template.render(
             zip=zip(agg_values_main.items(), agg_values_curr.items()),
             method=self.method,
         )
 
-        with open("bench_diff.html", "w") as output_file:
+        with open("bench_diff.md", "w") as output_file:
             output_file.write(rendered_html)
 
     def get_metrics(self, res: Response) -> dict:
@@ -200,4 +200,4 @@ if __name__ == "__main__":
     print(json_diff.status_code)
     agg_values_main = benchmark.aggregate_on_path(json_diff.json())
 
-    benchmark.make_html_diff(agg_values_main, agg_values_curr)
+    benchmark.make_md_diff(agg_values_main, agg_values_curr)
