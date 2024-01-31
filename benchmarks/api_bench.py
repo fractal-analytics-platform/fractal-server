@@ -1,6 +1,7 @@
 import json
 import re
 from datetime import datetime
+from typing import Any
 from typing import Optional
 
 import httpx
@@ -9,6 +10,9 @@ from httpx import Response
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
 from pydantic import BaseModel
+
+
+FRACTAL_SERVER_URL = "http://localhost:8000"
 
 
 class UserBench(BaseModel):
@@ -29,20 +33,20 @@ USERS = [
 N_REQUESTS = 25
 
 
-def get_cleaned_paths() -> list:
-    swagger_url = "http://127.0.0.1:8000/openapi.json"
-
+def get_clean_API_paths() -> list[str]:
+    """
+    Extract endpoint paths by filtering the OpenAPI ones.
+    """
+    swagger_url = f"{FRACTAL_SERVER_URL}/openapi.json"
     response = httpx.get(swagger_url)
-
     if response.status_code == 200:
         swagger_data = response.json()
-
         paths = [
             path
             for path, path_data in swagger_data.get("paths", {}).items()
             if "get" in path_data
         ]
-        patterns = [
+        excluded_patterns = [
             re.compile(r"/api/v1/task/"),
             re.compile(r"/auth/"),
             re.compile(r"/admin/"),
@@ -54,13 +58,12 @@ def get_cleaned_paths() -> list:
             re.compile(r"/workflow/"),
             re.compile(r"\{.*?\}"),
         ]
-
-        cleaned_paths = [
+        API_paths = [
             path
             for path in paths
-            if not any(pattern.search(path) for pattern in patterns)
+            if not any(pattern.search(path) for pattern in excluded_patterns)
         ]
-    return cleaned_paths
+    return API_paths
 
 
 class Benchmark:
@@ -69,7 +72,7 @@ class Benchmark:
         self.method = method
         self.cleaned_paths = cleaned_paths
         self.users = users
-        self.client = Client(base_url="http://localhost:8000")
+        self.client = Client(base_url=FRACTAL_SERVER_URL)
 
         for user in self.users:
             user.token = (
@@ -81,20 +84,18 @@ class Benchmark:
                 .get("access_token")
             )
 
-    def aggregate_on_path(self, user_metrics: list) -> None:
-
+    def aggregate_on_path(
+        self, user_metrics: list[dict[str, Any]]
+    ) -> dict[str, list]:
+        """
+        Given a list of benchmarks, aggregate them on their "path" keys.
+        """
         aggregated_values = {}
-
-        # for each dict in the list we aggregate on "path" key
         for bench in user_metrics:
-            key_to_aggregate = bench["path"]
-            if key_to_aggregate not in aggregated_values:
-                aggregated_values[key_to_aggregate] = []
-            # remove path key from dict because
-            # it is the key now
-            del bench["path"]
-
-            aggregated_values[key_to_aggregate].append(bench)
+            current_path = bench.pop("path")
+            if current_path not in aggregated_values.keys():
+                aggregated_values[current_path] = []
+            aggregated_values[current_path].append(bench)
         return aggregated_values
 
     def to_html(self, aggregated_values: dict, n_requests: int):
@@ -184,7 +185,7 @@ class Benchmark:
 if __name__ == "__main__":
 
     benchmark = Benchmark(
-        method="GET", cleaned_paths=get_cleaned_paths(), users=USERS
+        method="GET", cleaned_paths=get_clean_API_paths(), users=USERS
     )
     user_metrics = benchmark.run_benchmark(N_REQUESTS)
 
@@ -193,11 +194,23 @@ if __name__ == "__main__":
     benchmark.to_html(agg_values_curr, N_REQUESTS)
 
     # get the bench_diff.json from the bechmark-api branch
-    json_diff = httpx.get(
+    url = (
         "https://raw.githubusercontent.com/fractal-analytics-platform/"
         "fractal-server/benchmark-api/benchmarks/bench.json"
     )
-    print(json_diff.status_code)
-    agg_values_main = benchmark.aggregate_on_path(json_diff.json())
+    response = httpx.get(url)
+    if response.status_code != 200:
+        raise ValueError(
+            f"GET {url} returned status code {response.status_code}.\n"
+            "Does bench.json exist in the benchmark-api branch?"
+        )
+    try:
+        agg_values_main = benchmark.aggregate_on_path(response.json())
+    except BaseException:
+        raise ValueError(
+            f"Cannot decode response-body JSON for GET call to {url}"
+            f"(which returned status code {response.status_code}).\n"
+            "Does bench.json exist in the benchmark-api branch?"
+        )
 
     benchmark.make_md_diff(agg_values_main, agg_values_curr)
