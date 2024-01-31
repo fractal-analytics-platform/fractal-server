@@ -57,6 +57,7 @@ jobs:
      - name: Benchmark
        run: |
         cd benchmarks/
+        export CURRENT_BRANCH=$(git branch --show-current)
         poetry run python api_bench.py
 
      - name: Add comment with preview
