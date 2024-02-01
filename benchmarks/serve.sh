@@ -12,4 +12,6 @@ gunicorn "fractal_server.main:app" \
     --bind=$BIND \
     --workers=$N_WORKERS \
     --worker-class=$WORKER_CLASS \
-    --daemon
+    --daemon \
+    --access-logfile fractal-server.out \
+    --error-logfile fractal-server.err
