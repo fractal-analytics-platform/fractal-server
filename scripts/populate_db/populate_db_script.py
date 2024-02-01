@@ -35,9 +35,9 @@ def create_first_user() -> None:
 def _create_user_client(
     _admin: FractalClient, user_identifier: str
 ) -> FractalClient:
-    email = f"user-{user_identifier}@example.org"
-    password = f"user-{user_identifier}-pwd"
-    slurm_user = f"user-{user_identifier}-slurm"
+    email = f"{user_identifier}@example.org"
+    password = f"{user_identifier}-pwd"
+    slurm_user = f"{user_identifier}-slurm"
     _admin.add_user(
         UserCreate(
             email=email,
