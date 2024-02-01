@@ -17,6 +17,7 @@ poetry run locust -f api_bench.py \
         --spawn-rate 10 \
         --run-time 10s \
         --headless \
+        --csv test.csv \
         --html bench.html
 ```
 
@@ -24,6 +25,5 @@ It does some actions:
 
 1. Retrieve all the endpoints from the swagger
 2. Filter the endpoints, based on their action (we keep just the GET endpoints)
-3. Subtitute the right number where an url is in the format like `.../{id}/`
 
-Then a `bench.html` file will be generated with a summary about response time and number of failures.
+Then the `bench.html` file will be generated with a summary about response time and number of failures.
