@@ -23,12 +23,8 @@ class UserBench(BaseModel):
 
 
 USERS = [
-    UserBench(  # nosec
-        name="user-vanilla@example.org", password="user-vanilla-pwd"
-    ),
-    UserBench(  # nosec
-        name="user-power@example.org", password="user-power-pwd"
-    ),
+    UserBench(name="vanilla@example.org", password="vanilla-pwd"),  # nosec
+    UserBench(name="power@example.org", password="power-pwd"),  # nosec
 ]
 
 N_REQUESTS = 25
