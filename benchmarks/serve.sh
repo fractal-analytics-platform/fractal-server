@@ -6,10 +6,12 @@ WORKER_CLASS=uvicorn.workers.UvicornWorker
 
 fractalctl set-db
 
-python ../scripts/populate_db/populate_script_v2.py
+python ../scripts/populate_db/populate_db_script.py
 
 gunicorn "fractal_server.main:app" \
     --bind=$BIND \
     --workers=$N_WORKERS \
     --worker-class=$WORKER_CLASS \
-    --daemon
+    --daemon \
+    --access-logfile fractal-server.out \
+    --error-logfile fractal-server.err
