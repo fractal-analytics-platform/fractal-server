@@ -9,4 +9,4 @@ createdb fractal_test
 # docker exec -it postgres-main createdb -Upostgres fractal_test
 
 poetry run fractalctl set-db
-poetry run python populate_script_v2.py
+poetry run python populate_db_script.py

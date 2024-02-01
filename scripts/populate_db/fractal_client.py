@@ -2,7 +2,6 @@ import logging
 import time
 
 import httpx
-import requests
 from a2wsgi import ASGIMiddleware
 
 from fractal_server.app.schemas import ApplyWorkflowCreate
@@ -38,7 +37,7 @@ class FractalClient:
         credentials: dict[str, str] = DEFAULT_CREDENTIALS,
     ):
         # base_url is needed to determine the communication protocol
-        # for requests, otherwise a KeyError is raised.
+        # for httpx, that uses requests, otherwise a KeyError is raised.
         with httpx.Client(app=wsgi_app, base_url="http://") as client:
             response = client.post(
                 "/auth/token/login/",
@@ -75,7 +74,7 @@ class FractalClient:
 
             return response
 
-        except requests.RequestException as e:
+        except httpx.ReadError as e:
             print(f"Request failed: {e}")
             return None
 
