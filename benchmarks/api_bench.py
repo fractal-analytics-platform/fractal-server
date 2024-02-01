@@ -80,6 +80,7 @@ class Benchmark:
         self.users = users
         self.client = Client(base_url=FRACTAL_SERVER_URL)
         self.current_branch = current_branch
+        self.exceptions: list = []
 
         for user in self.users:
             user.token = (
@@ -133,15 +134,27 @@ class Benchmark:
             zip=zip(agg_values_main.items(), agg_values_curr.items()),
             method=self.method,
             currentbranch=self.current_branch,
+            exceptions=self.exceptions,
         )
 
         with open("bench_diff.md", "w") as output_file:
             output_file.write(rendered_html)
 
-    def get_metrics(self, res: Response) -> dict:
-
-        time_response = res.elapsed.total_seconds()
-        byte_size = len(res.content)
+    def get_metrics(self, path: str, res: Response) -> dict:
+        time_response: float = 0
+        byte_size: float = 0
+        if res.is_success:
+            time_response = res.elapsed.total_seconds()
+            byte_size = len(res.content)
+        else:
+            self.exceptions.append(
+                dict(
+                    path=path,
+                    status=res.status_code,
+                    detail=res.json().get("detail"),
+                    exception=res.reason_phrase,
+                )
+            )
 
         return dict(time=time_response, size=byte_size)
 
@@ -157,7 +170,9 @@ class Benchmark:
 
                 # list of dicts made by get_metrics()
                 metrics_list = [
-                    self.get_metrics(self.client.get(path, headers=headers))
+                    self.get_metrics(
+                        path, self.client.get(path, headers=headers)
+                    )
                     for n in range(n_requests)
                 ]
                 # dicts with two keys -> key to sum (time, size)
@@ -215,7 +230,7 @@ if __name__ == "__main__":
         "fractal-server/benchmark-api/benchmarks/bench.json"
     )
     response = httpx.get(url)
-    if response.status_code != 200:
+    if response.is_error:
         raise ValueError(
             f"GET {url} returned status code {response.status_code}.\n"
             "Does bench.json exist in the benchmark-api branch?"
