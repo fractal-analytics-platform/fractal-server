@@ -94,6 +94,7 @@ Preliminary check-list
 * You updated the `CHANGELOG.md` file.
 * You [updated the schema
   version](./#update-database-schema) (if needed).
+* If the release is a stable one (e.g. `X.Y.Z`, not `X.Y.Za1` or `X.Y.Zrc2`), you moved `fractal_server/data_migrations/X_Y_Z.py` to `fractal_server/data_migrations/old`.
 
 Actual **release instructions**:
 
