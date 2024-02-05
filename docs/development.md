@@ -93,7 +93,7 @@ Preliminary check-list
   that you are using the poetry-installed local package).
 * You updated the `CHANGELOG.md` file.
 * You [updated the schema
-  version](./#generate-database-migration-script) (if needed).
+  version](./#update-database-schema) (if needed).
 
 Actual **release instructions**:
 
