@@ -93,7 +93,7 @@ Preliminary check-list
   that you are using the poetry-installed local package).
 * You updated the `CHANGELOG.md` file.
 * You [updated the schema
-  version](./#generate-database-migration-script) (if needed).
+  version](./#update-database-schema) (if needed).
 
 Actual **release instructions**:
 
@@ -109,6 +109,9 @@ version and commit the changes locally.
 This is it. Upon pushing a tag which matches some filters, a dedicated GitHub
 action will build the new package and publish to PyPI.
 
+3. **After the release**: If the release was a stable one (e.g. `X.Y.Z`, not
+   `X.Y.Za1` or `X.Y.Zrc2`), move `fractal_server/data_migrations/X_Y_Z.py` to
+   `fractal_server/data_migrations/old`.
 
 
 ## Run tests
