@@ -309,8 +309,8 @@ async def submit_workflow(
         exception_args_string = "\n".join(e.args)
         job.log = (
             f"TASK ERROR:"
-            f"Task id: {e.workflow_task_id} ({e.task_name}), "
-            f"{e.workflow_task_order=}\n"
+            f"Task name: {e.task_name}, "
+            f"position in Workflow: {e.workflow_task_order=}\n"
             f"TRACEBACK:\n{exception_args_string}"
         )
         db_sync.merge(job)
@@ -339,7 +339,7 @@ async def submit_workflow(
         job.status = JobStatusType.FAILED
         job.end_timestamp = get_timestamp()
         error = e.assemble_error()
-        job.log = f"JOB ERROR:\nTRACEBACK:\n{error}"
+        job.log = f"JOB ERROR in Fractal job {job.id}:\n TRACEBACK:\n{error}"
         db_sync.merge(job)
         close_job_logger(logger)
         db_sync.commit()
@@ -367,7 +367,10 @@ async def submit_workflow(
 
         job.status = JobStatusType.FAILED
         job.end_timestamp = get_timestamp()
-        job.log = f"UNKNOWN ERROR\nOriginal error: {current_traceback}"
+        job.log = (
+            f"UNKNOWN ERROR in Fractal job {job.id}\n"
+            f"Original error: {current_traceback}"
+        )
         db_sync.merge(job)
         close_job_logger(logger)
         db_sync.commit()
