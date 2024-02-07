@@ -339,7 +339,7 @@ async def submit_workflow(
         job.status = JobStatusType.FAILED
         job.end_timestamp = get_timestamp()
         error = e.assemble_error()
-        job.log = f"JOB ERROR in Fractal job {job.id}:\n TRACEBACK:\n{error}"
+        job.log = f"JOB ERROR in Fractal job {job.id}:\nTRACEBACK:\n{error}"
         db_sync.merge(job)
         close_job_logger(logger)
         db_sync.commit()
@@ -369,7 +369,7 @@ async def submit_workflow(
         job.end_timestamp = get_timestamp()
         job.log = (
             f"UNKNOWN ERROR in Fractal job {job.id}\n"
-            f"Original error: {current_traceback}"
+            f"TRACEBACK: {current_traceback}"
         )
         db_sync.merge(job)
         close_job_logger(logger)
