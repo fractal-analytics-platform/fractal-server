@@ -72,6 +72,7 @@ async def get_workflow_jobs(
 async def read_job(
     project_id: int,
     job_id: int,
+    show_tmp_logs: bool = False,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[ApplyWorkflowRead]:
@@ -86,8 +87,12 @@ async def read_job(
         db=db,
     )
     job = output["job"]
-
     await db.close()
+
+    if (show_tmp_logs is True) and (job.status == "submitted"):
+        with open(f"{job.working_dir}/workflow.log", "r") as f:
+            job.log = f.read()
+
     return job
 
 
