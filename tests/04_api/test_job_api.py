@@ -9,6 +9,7 @@ from devtools import debug
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
+from fractal_server.app.routes.api.v1.project import _encode_as_utc as _utc
 from fractal_server.app.runner import _backends
 from fractal_server.app.runner._common import SHUTDOWN_FILENAME
 
@@ -175,6 +176,61 @@ async def test_job_download_logs(
         with (unzipped_archived_path / LOG_FILE).open("r") as f:
             actual_logs = f.read()
         assert LOG_CONTENT in actual_logs
+
+
+async def test_get_job(
+    MockCurrentUser,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    job_factory,
+    db,
+    task_factory,
+    client,
+    tmp_path,
+):
+    async with MockCurrentUser(user_kwargs={"id": 1}) as user:
+        x_project = await project_factory(user)
+        x_workflow = await workflow_factory(project_id=x_project.id)
+        x_task = await task_factory(source="x")
+        await _workflow_insert_task(
+            workflow_id=x_workflow.id, task_id=x_task.id, db=db
+        )
+        x_dataset = await dataset_factory(project_id=x_project.id)
+        x_job = await job_factory(
+            project_id=x_project.id,
+            input_dataset_id=x_dataset.id,
+            output_dataset_id=x_dataset.id,
+            workflow_id=x_workflow.id,
+            working_dir=tmp_path,
+        )
+
+    async with MockCurrentUser(user_kwargs={"id": 2}) as user:
+        y_project = await project_factory(user)
+        y_workflow = await workflow_factory(project_id=y_project.id)
+        y_task = await task_factory(source="y")
+        await _workflow_insert_task(
+            workflow_id=y_workflow.id, task_id=y_task.id, db=db
+        )
+        y_dataset = await dataset_factory(project_id=y_project.id)
+        y_job = await job_factory(
+            project_id=y_project.id,
+            input_dataset_id=y_dataset.id,
+            output_dataset_id=y_dataset.id,
+            workflow_id=y_workflow.id,
+            working_dir=tmp_path,
+        )
+
+        res = await client.get(
+            f"{PREFIX}/project/{x_project.id}/job/{x_job.id}/"
+        )
+        assert res.status_code == 403
+
+        res = await client.get(
+            f"{PREFIX}/project/{y_project.id}/job/{y_job.id}/"
+        )
+        assert res.status_code == 200
+        assert res.json()["start_timestamp"] == _utc(y_job.start_timestamp)
 
 
 async def test_get_job_list(
