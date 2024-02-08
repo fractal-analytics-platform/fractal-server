@@ -83,35 +83,18 @@ $ poetry run alembic revision --autogenerate -m "Some migration message"
 #   Generating /some/path/fractal_server/migrations/versions/155de544c342_.py ...  done
 ```
 
-## Build and release
+## Release
 
-Preliminary check-list
-
-* The `main` branch is checked out.
-* You reviewed dependencies, and the lock file is up to date with ``pyproject.toml``.
-* The current HEAD of the `main` branch passes all the tests (note: make sure
-  that you are using the poetry-installed local package).
-* You updated the `CHANGELOG.md` file.
-* You [updated the schema
-  version](./#update-database-schema) (if needed).
-
-Actual **release instructions**:
-
-1. Use:
-```
-poetry run bumpver update --[tag-num|patch|minor] --tag-commit --commit --dry
-```
-to test updating the version bump.
-
-2. If the previous step looks good, remove `--dry` and re-run to actually bump the
-version and commit the changes locally.
-
-This is it. Upon pushing a tag which matches some filters, a dedicated GitHub
-action will build the new package and publish to PyPI.
-
-3. **After the release**: If the release was a stable one (e.g. `X.Y.Z`, not
-   `X.Y.Za1` or `X.Y.Zrc2`), move `fractal_server/data_migrations/X_Y_Z.py` to
-   `fractal_server/data_migrations/old`.
+1. Checkout to branch `main`.
+2. Check that the current HEAD of the `main` branch passes all the tests (note: make sure that you are using the poetry-installed local package).
+3. Update the `CHANGELOG.md` file (e.g. remove `(unreleased)` from the upcoming version).
+4. If you have modified the models, then you must also [create](./#update-database-schema) a new migration script (note: in principle the CI will fail if you forget this step).
+5. Use:<br>
+  ```poetry run bumpver update --[tag-num|minor|patch|set-version] --tag-commit --commit --dry```<br>
+  to test updating the version bump.
+6. If the previous step looks good, remove `--dry` and re-run to actually bump the version, commit and push the changes.
+7. Approve (or have approved) the new version at [Publish package to PyPI](https://github.com/fractal-analytics-platform/fractal-server/actions/workflows/publish_pypi.yml).
+8. **After the release**: If the release was a stable one (e.g. `X.Y.Z`, not `X.Y.Za1` or `X.Y.Zrc2`), move `fractal_server/data_migrations/X_Y_Z.py` to `fractal_server/data_migrations/old`.
 
 
 ## Run tests
