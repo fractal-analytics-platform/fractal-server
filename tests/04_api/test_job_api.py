@@ -12,6 +12,7 @@ from fractal_server.app.routes.api.v1._aux_functions import (
 from fractal_server.app.routes.api.v1.project import _encode_as_utc as _utc
 from fractal_server.app.runner import _backends
 from fractal_server.app.runner._common import SHUTDOWN_FILENAME
+from fractal_server.app.runner._common import WORKFLOW_LOG_FILENAME
 
 PREFIX = "/api/v1"
 
@@ -357,3 +358,51 @@ async def test_get_user_jobs(
         res = await client.get(f"{PREFIX}/job/")
         assert res.status_code == 200
         assert len(res.json()) == 0
+
+
+async def test_view_log_submitted_jobs(
+    MockCurrentUser,
+    project_factory,
+    dataset_factory,
+    resource_factory,
+    task_factory,
+    workflow_factory,
+    job_factory,
+    tmp_path,
+    db,
+    client,
+):
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+        project = await project_factory(user)
+        dataset = await dataset_factory(project_id=project.id)
+        await resource_factory(dataset)
+        task = await task_factory(
+            input_type="Any",
+            output_type="Any",
+        )
+        workflow = await workflow_factory(project_id=project.id)
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
+
+        job = await job_factory(
+            project_id=project.id,
+            input_dataset_id=dataset.id,
+            output_dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir=tmp_path.as_posix(),
+            status="submitted",
+        )
+        logfile = Path(job.working_dir) / WORKFLOW_LOG_FILENAME
+        assert not logfile.exists()
+        LOG = "LOG"
+        with logfile.open("w") as f:
+            f.write(LOG)
+
+        res = await client.get(f"{PREFIX}/project/{project.id}/job/{job.id}/")
+        assert res.json()["log"] is None
+
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/job/{job.id}/?show_tmp_logs=true"
+        )
+        assert res.json()["log"] == LOG
