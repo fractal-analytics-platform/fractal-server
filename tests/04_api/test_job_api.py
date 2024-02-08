@@ -423,7 +423,8 @@ async def test_view_log_submitted_jobs(
         )
         assert res.json()["log"] is None
         res = await client.get(
-            f"{PREFIX}/project/{project.id}/job/{job_submitted.id}/?show_tmp_logs=true"
+            f"{PREFIX}/project/{project.id}/job/{job_submitted.id}/"
+            "?show_tmp_logs=true"
         )
         assert res.json()["log"] == LOG
 
@@ -432,7 +433,8 @@ async def test_view_log_submitted_jobs(
         )
         assert res.json()["log"] is None
         res = await client.get(
-            f"{PREFIX}/project/{project.id}/job/{job_done.id}/?show_tmp_logs=true"
+            f"{PREFIX}/project/{project.id}/job/{job_done.id}/"
+            "?show_tmp_logs=true"
         )
         assert res.json()["log"] is None
 
@@ -441,6 +443,7 @@ async def test_view_log_submitted_jobs(
         )
         assert res.json()["log"] is None
         res = await client.get(
-            f"{PREFIX}/project/{project.id}/job/{job_failed.id}/?show_tmp_logs=true"
+            f"{PREFIX}/project/{project.id}/job/{job_failed.id}/"
+            "?show_tmp_logs=true"
         )
         assert res.json()["log"] is None
