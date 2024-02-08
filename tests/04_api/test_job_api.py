@@ -6,6 +6,7 @@ from zipfile import ZipFile
 import pytest
 from devtools import debug
 
+from fractal_server.app.models import JobStatusType
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
@@ -385,24 +386,61 @@ async def test_view_log_submitted_jobs(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
 
-        job = await job_factory(
+        working_dir = tmp_path.as_posix()
+        job_submitted = await job_factory(
             project_id=project.id,
             input_dataset_id=dataset.id,
             output_dataset_id=dataset.id,
             workflow_id=workflow.id,
-            working_dir=tmp_path.as_posix(),
-            status="submitted",
+            working_dir=working_dir,
+            status=JobStatusType.SUBMITTED,
         )
-        logfile = Path(job.working_dir) / WORKFLOW_LOG_FILENAME
+        job_done = await job_factory(
+            project_id=project.id,
+            input_dataset_id=dataset.id,
+            output_dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir=working_dir,
+            status=JobStatusType.DONE,
+        )
+        job_failed = await job_factory(
+            project_id=project.id,
+            input_dataset_id=dataset.id,
+            output_dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir=working_dir,
+            status=JobStatusType.FAILED,
+        )
+
+        logfile = Path(working_dir) / WORKFLOW_LOG_FILENAME
         assert not logfile.exists()
         LOG = "LOG"
         with logfile.open("w") as f:
             f.write(LOG)
 
-        res = await client.get(f"{PREFIX}/project/{project.id}/job/{job.id}/")
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/job/{job_submitted.id}/"
+        )
+        assert res.json()["log"] is None
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/job/{job_submitted.id}/?show_tmp_logs=true"
+        )
+        assert res.json()["log"] == LOG
+
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/job/{job_done.id}/"
+        )
+        assert res.json()["log"] is None
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/job/{job_done.id}/?show_tmp_logs=true"
+        )
         assert res.json()["log"] is None
 
         res = await client.get(
-            f"{PREFIX}/project/{project.id}/job/{job.id}/?show_tmp_logs=true"
+            f"{PREFIX}/project/{project.id}/job/{job_failed.id}/"
         )
-        assert res.json()["log"] == LOG
+        assert res.json()["log"] is None
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/job/{job_failed.id}/?show_tmp_logs=true"
+        )
+        assert res.json()["log"] is None
