@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="d_58bd1dbe3caee099__common_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.1">coverage.py v7.4.1</a>,
-            created at 2024-02-07 14:43 +0000
+            created at 2024-02-08 13:54 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -392,9 +392,9 @@
     <p class="pln"><span class="n"><a id="t308" href="#t308">308</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t309" href="#t309">309</a></span><span class="t">        <span class="nam">exception_args_string</span> <span class="op">=</span> <span class="str">"\n"</span><span class="op">.</span><span class="nam">join</span><span class="op">(</span><span class="nam">e</span><span class="op">.</span><span class="nam">args</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t310" href="#t310">310</a></span><span class="t">        <span class="nam">job</span><span class="op">.</span><span class="nam">log</span> <span class="op">=</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t311" href="#t311">311</a></span><span class="t">            <span class="str">f"TASK ERROR:"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t312" href="#t312">312</a></span><span class="t">            <span class="str">f"Task id: {e.workflow_task_id} ({e.task_name}), "</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t313" href="#t313">313</a></span><span class="t">            <span class="str">f"{e.workflow_task_order=}\n"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t311" href="#t311">311</a></span><span class="t">            <span class="str">f"TASK ERROR: "</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t312" href="#t312">312</a></span><span class="t">            <span class="str">f"Task name: {e.task_name}, "</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t313" href="#t313">313</a></span><span class="t">            <span class="str">f"position in Workflow: {e.workflow_task_order=}\n"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t314" href="#t314">314</a></span><span class="t">            <span class="str">f"TRACEBACK:\n{exception_args_string}"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t315" href="#t315">315</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t316" href="#t316">316</a></span><span class="t">        <span class="nam">db_sync</span><span class="op">.</span><span class="nam">merge</span><span class="op">(</span><span class="nam">job</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -423,7 +423,7 @@
     <p class="run"><span class="n"><a id="t339" href="#t339">339</a></span><span class="t">        <span class="nam">job</span><span class="op">.</span><span class="nam">status</span> <span class="op">=</span> <span class="nam">JobStatusType</span><span class="op">.</span><span class="nam">FAILED</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t340" href="#t340">340</a></span><span class="t">        <span class="nam">job</span><span class="op">.</span><span class="nam">end_timestamp</span> <span class="op">=</span> <span class="nam">get_timestamp</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t341" href="#t341">341</a></span><span class="t">        <span class="nam">error</span> <span class="op">=</span> <span class="nam">e</span><span class="op">.</span><span class="nam">assemble_error</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t342" href="#t342">342</a></span><span class="t">        <span class="nam">job</span><span class="op">.</span><span class="nam">log</span> <span class="op">=</span> <span class="str">f"JOB ERROR:\nTRACEBACK:\n{error}"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t342" href="#t342">342</a></span><span class="t">        <span class="nam">job</span><span class="op">.</span><span class="nam">log</span> <span class="op">=</span> <span class="str">f"JOB ERROR in Fractal job {job.id}:\nTRACEBACK:\n{error}"</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t343" href="#t343">343</a></span><span class="t">        <span class="nam">db_sync</span><span class="op">.</span><span class="nam">merge</span><span class="op">(</span><span class="nam">job</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t344" href="#t344">344</a></span><span class="t">        <span class="nam">close_job_logger</span><span class="op">(</span><span class="nam">logger</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t345" href="#t345">345</a></span><span class="t">        <span class="nam">db_sync</span><span class="op">.</span><span class="nam">commit</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -451,12 +451,15 @@
     <p class="pln"><span class="n"><a id="t367" href="#t367">367</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t368" href="#t368">368</a></span><span class="t">        <span class="nam">job</span><span class="op">.</span><span class="nam">status</span> <span class="op">=</span> <span class="nam">JobStatusType</span><span class="op">.</span><span class="nam">FAILED</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t369" href="#t369">369</a></span><span class="t">        <span class="nam">job</span><span class="op">.</span><span class="nam">end_timestamp</span> <span class="op">=</span> <span class="nam">get_timestamp</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t370" href="#t370">370</a></span><span class="t">        <span class="nam">job</span><span class="op">.</span><span class="nam">log</span> <span class="op">=</span> <span class="str">f"UNKNOWN ERROR\nOriginal error: {current_traceback}"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t371" href="#t371">371</a></span><span class="t">        <span class="nam">db_sync</span><span class="op">.</span><span class="nam">merge</span><span class="op">(</span><span class="nam">job</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t372" href="#t372">372</a></span><span class="t">        <span class="nam">close_job_logger</span><span class="op">(</span><span class="nam">logger</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t373" href="#t373">373</a></span><span class="t">        <span class="nam">db_sync</span><span class="op">.</span><span class="nam">commit</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t374" href="#t374">374</a></span><span class="t">    <span class="key">finally</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t375" href="#t375">375</a></span><span class="t">        <span class="nam">db_sync</span><span class="op">.</span><span class="nam">close</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t370" href="#t370">370</a></span><span class="t">        <span class="nam">job</span><span class="op">.</span><span class="nam">log</span> <span class="op">=</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t371" href="#t371">371</a></span><span class="t">            <span class="str">f"UNKNOWN ERROR in Fractal job {job.id}\n"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t372" href="#t372">372</a></span><span class="t">            <span class="str">f"TRACEBACK:\n{current_traceback}"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t373" href="#t373">373</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t374" href="#t374">374</a></span><span class="t">        <span class="nam">db_sync</span><span class="op">.</span><span class="nam">merge</span><span class="op">(</span><span class="nam">job</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t375" href="#t375">375</a></span><span class="t">        <span class="nam">close_job_logger</span><span class="op">(</span><span class="nam">logger</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t376" href="#t376">376</a></span><span class="t">        <span class="nam">db_sync</span><span class="op">.</span><span class="nam">commit</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t377" href="#t377">377</a></span><span class="t">    <span class="key">finally</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t378" href="#t378">378</a></span><span class="t">        <span class="nam">db_sync</span><span class="op">.</span><span class="nam">close</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -466,7 +469,7 @@
             <a id="nextFileLink" class="nav" href="d_58bd1dbe3caee099__common_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.1">coverage.py v7.4.1</a>,
-            created at 2024-02-07 14:43 +0000
+            created at 2024-02-08 13:54 +0000
         </p>
     </div>
 </footer>
