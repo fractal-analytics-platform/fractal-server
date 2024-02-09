@@ -40,10 +40,10 @@ async def get_user_jobs(
     res = await db.execute(stm)
     job_list = res.scalars().all()
     await db.close()
-    filtered_job_list = []
     if log:
         filtered_job_list = job_list
     else:
+        filtered_job_list = []
         for job in job_list:
             setattr(job, "log", None)
             filtered_job_list.append(job)
@@ -154,10 +154,10 @@ async def get_job_list(
     res = await db.execute(stm)
     job_list = res.scalars().all()
     await db.close()
-    filtered_job_list = []
     if log:
         filtered_job_list = job_list
     else:
+        filtered_job_list = []
         for job in job_list:
             setattr(job, "log", None)
             filtered_job_list.append(job)

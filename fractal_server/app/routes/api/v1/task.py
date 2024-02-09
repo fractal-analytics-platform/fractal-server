@@ -26,15 +26,6 @@ router = APIRouter()
 logger = set_logger(__name__)
 
 
-def exclude_params(query_params: list, obj_list) -> list:
-    filtered_list = []
-    for attribute in query_params:
-        for obj in obj_list:
-            if hasattr(obj, attribute):
-                setattr(obj, attribute, None)
-                filtered_list.append(obj)
-
-
 @router.get("/", response_model=list[TaskRead])
 async def get_list_task(
     user: User = Depends(current_active_user),
@@ -47,12 +38,12 @@ async def get_list_task(
     stm = select(Task)
     res = await db.execute(stm)
     task_list = res.scalars().all()
-    filtered_task_list = []
     await db.close()
     if args_schema:
         filtered_task_list = task_list
 
     else:
+        filtered_task_list = []
         for task in task_list:
             setattr(task, "args_schema", None)
             filtered_task_list.append(task)

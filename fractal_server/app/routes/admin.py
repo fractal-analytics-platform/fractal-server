@@ -233,6 +233,7 @@ async def view_job(
             after `end_timestamp_min`.
         end_timestamp_max: If not `None`, select a rows with `end_timestamp`
             before `end_timestamp_min`.
+        log: If `True` return `job.log`, if `False` `job.log` is set to `None`.
     """
     stm = select(ApplyWorkflow)
 
@@ -268,11 +269,11 @@ async def view_job(
     res = await db.execute(stm)
     job_list = res.scalars().all()
     await db.close()
-    filtered_job_list = []
     if log:
         filtered_job_list = job_list
 
     else:
+        filtered_job_list = []
         for job in job_list:
             setattr(job, "log", None)
             filtered_job_list.append(job)
