@@ -26,9 +26,19 @@ router = APIRouter()
 logger = set_logger(__name__)
 
 
+def exclude_params(query_params: list, obj_list) -> list:
+    filtered_list = []
+    for attribute in query_params:
+        for obj in obj_list:
+            if hasattr(obj, attribute):
+                setattr(obj, attribute, None)
+                filtered_list.append(obj)
+
+
 @router.get("/", response_model=list[TaskRead])
 async def get_list_task(
     user: User = Depends(current_active_user),
+    args_schema: bool = False,
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskRead]:
     """
@@ -37,8 +47,16 @@ async def get_list_task(
     stm = select(Task)
     res = await db.execute(stm)
     task_list = res.scalars().all()
+    filtered_task_list = []
     await db.close()
-    return task_list
+    if not args_schema:
+        for task in task_list:
+            setattr(task, "args_schema", {})
+            filtered_task_list.append(task)
+    else:
+        filtered_task_list = task_list
+
+    return filtered_task_list
 
 
 @router.get("/{task_id}/", response_model=TaskRead)

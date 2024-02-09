@@ -34,6 +34,16 @@ async def test_task_get_list(db, client, task_factory, MockCurrentUser):
         debug(data)
         assert len(data) == 3
         assert data[2]["id"] == t2.id
+        assert data[0]["args_schema"] == {}
+
+        res = await client.get(f"{PREFIX}/?args_schema=true")
+        data = res.json()
+        debug(data)
+        # res = await client.get(f"{PREFIX}/?q=meta&q=command")
+        # data = res.json()
+        # assert data[0]["meta"] is None
+        # assert data[0]["command"] is None
+        # debug(data)
 
 
 async def test_post_task(client, MockCurrentUser):

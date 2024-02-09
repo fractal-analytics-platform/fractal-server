@@ -29,18 +29,26 @@ router = APIRouter()
 @router.get("/job/", response_model=list[ApplyWorkflowRead])
 async def get_user_jobs(
     user: User = Depends(current_active_user),
+    log: bool = False,
     db: AsyncSession = Depends(get_async_db),
 ) -> list[ApplyWorkflowRead]:
     """
     Returns all the jobs of the current user
     """
-
     stm = select(ApplyWorkflow)
     stm = stm.join(Project).where(Project.user_list.any(User.id == user.id))
     res = await db.execute(stm)
     job_list = res.scalars().all()
+    await db.close()
+    filtered_job_list = []
+    if not log:
+        for job in job_list:
+            setattr(job, "log", "")
+            filtered_job_list.append(job)
+    else:
+        filtered_job_list = job_list
 
-    return job_list
+    return filtered_job_list
 
 
 @router.get(
@@ -132,6 +140,7 @@ async def download_job_logs(
 async def get_job_list(
     project_id: int,
     user: User = Depends(current_active_user),
+    log: bool = False,
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[list[ApplyWorkflowRead]]:
     """
@@ -144,8 +153,16 @@ async def get_job_list(
     stm = select(ApplyWorkflow).where(ApplyWorkflow.project_id == project.id)
     res = await db.execute(stm)
     job_list = res.scalars().all()
+    await db.close()
+    filtered_job_list = []
+    if not log:
+        for job in job_list:
+            setattr(job, "log", "")
+            filtered_job_list.append(job)
+    else:
+        filtered_job_list = job_list
 
-    return job_list
+    return filtered_job_list
 
 
 @router.get(

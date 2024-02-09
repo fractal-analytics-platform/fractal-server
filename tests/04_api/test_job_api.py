@@ -94,6 +94,7 @@ async def test_job_list(
         )
         job = await job_factory(
             project_id=prj.id,
+            log="log",
             workflow_id=workflow.id,
             working_dir=(tmp_path / "some_working_dir").as_posix(),
             input_dataset_id=input_dataset.id,
@@ -102,11 +103,20 @@ async def test_job_list(
         debug(job)
 
         # Test that the endpoint returns a list with the new job
-        res = await client.get(f"{PREFIX}/project/{prj.id}/job/")
+        res = await client.get(f"{PREFIX}/job/")
         assert res.status_code == 200
         debug(res.json())
         assert len(res.json()) == 1
         assert res.json()[0]["id"] == job.id
+        assert res.json()[0]["log"] == ""
+        res = await client.get(f"{PREFIX}/project/{prj.id}/job/?log=true")
+        assert len(res.json()) == 1
+        assert res.json()[0]["id"] == job.id
+        assert res.json()[0]["log"] == "log"
+        res = await client.get(f"{PREFIX}/project/{prj.id}/job/")
+        assert len(res.json()) == 1
+        assert res.json()[0]["id"] == job.id
+        assert res.json()[0]["log"] == ""
 
 
 async def test_job_download_logs(
