@@ -103,20 +103,15 @@ async def test_job_list(
         debug(job)
 
         # Test that the endpoint returns a list with the new job
-        res = await client.get(f"{PREFIX}/job/")
+        res = await client.get(f"{PREFIX}/project/{prj.id}/job/")
         assert res.status_code == 200
         debug(res.json())
-        assert len(res.json()) == 1
         assert res.json()[0]["id"] == job.id
         assert res.json()[0]["log"] == "asdasd"
         res = await client.get(f"{PREFIX}/project/{prj.id}/job/?log=false")
         assert len(res.json()) == 1
         assert res.json()[0]["id"] == job.id
         assert res.json()[0]["log"] is None
-        res = await client.get(f"{PREFIX}/project/{prj.id}/job/")
-        assert len(res.json()) == 1
-        assert res.json()[0]["id"] == job.id
-        assert res.json()[0]["log"] == "asdasd"
 
 
 async def test_job_download_logs(
@@ -282,6 +277,7 @@ async def test_get_user_jobs(
             await job_factory(
                 working_dir=tmp_path.as_posix(),
                 project_id=project.id,
+                log="asdasd",
                 input_dataset_id=dataset.id,
                 output_dataset_id=dataset.id,
                 workflow_id=workflow.id,
@@ -298,6 +294,7 @@ async def test_get_user_jobs(
             await job_factory(
                 working_dir=tmp_path.as_posix(),
                 project_id=project2.id,
+                log="asdasd",
                 input_dataset_id=dataset2.id,
                 output_dataset_id=dataset2.id,
                 workflow_id=workflow2.id,
@@ -306,6 +303,12 @@ async def test_get_user_jobs(
         res = await client.get(f"{PREFIX}/job/")
         assert res.status_code == 200
         assert len(res.json()) == 5
+        assert res.json()[0]["log"] == "asdasd"
+
+        res = await client.get(f"{PREFIX}/job/?log=false")
+        assert res.status_code == 200
+        assert len(res.json()) == 5
+        assert res.json()[0]["log"] is None
 
     async with MockCurrentUser(user_kwargs={"id": 321}):
         res = await client.get(f"{PREFIX}/job/")
