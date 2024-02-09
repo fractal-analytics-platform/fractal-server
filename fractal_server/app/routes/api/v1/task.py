@@ -39,16 +39,11 @@ async def get_list_task(
     res = await db.execute(stm)
     task_list = res.scalars().all()
     await db.close()
-    if args_schema:
-        filtered_task_list = task_list
-
-    else:
-        filtered_task_list = []
+    if not args_schema:
         for task in task_list:
             setattr(task, "args_schema", None)
-            filtered_task_list.append(task)
 
-    return filtered_task_list
+    return task_list
 
 
 @router.get("/{task_id}/", response_model=TaskRead)
