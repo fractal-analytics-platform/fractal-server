@@ -38,7 +38,7 @@ def exclude_params(query_params: list, obj_list) -> list:
 @router.get("/", response_model=list[TaskRead])
 async def get_list_task(
     user: User = Depends(current_active_user),
-    args_schema: bool = False,
+    args_schema: bool = True,
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskRead]:
     """
@@ -49,12 +49,13 @@ async def get_list_task(
     task_list = res.scalars().all()
     filtered_task_list = []
     await db.close()
-    if not args_schema:
-        for task in task_list:
-            setattr(task, "args_schema", {})
-            filtered_task_list.append(task)
-    else:
+    if args_schema:
         filtered_task_list = task_list
+
+    else:
+        for task in task_list:
+            setattr(task, "args_schema", None)
+            filtered_task_list.append(task)
 
     return filtered_task_list
 
