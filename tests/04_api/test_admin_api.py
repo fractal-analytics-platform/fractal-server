@@ -387,7 +387,7 @@ async def test_view_job(
             working_dir=f"{tmp_path.as_posix()}/aaaa1111",
             working_dir_user=f"{tmp_path.as_posix()}/aaaa2222",
             project_id=project.id,
-            log="log",
+            log="asdasd",
             input_dataset_id=dataset1.id,
             output_dataset_id=dataset2.id,
             workflow_id=workflow1.id,
@@ -398,7 +398,7 @@ async def test_view_job(
             working_dir=f"{tmp_path.as_posix()}/bbbb1111",
             working_dir_user=f"{tmp_path.as_posix()}/bbbb2222",
             project_id=project.id,
-            log="log",
+            log="asdasd",
             input_dataset_id=dataset2.id,
             output_dataset_id=dataset1.id,
             workflow_id=workflow2.id,
@@ -411,11 +411,11 @@ async def test_view_job(
         res = await client.get(f"{PREFIX}/job/")
         assert res.status_code == 200
         assert len(res.json()) == 2
-        assert res.json()[0]["log"] == ""
-        res = await client.get(f"{PREFIX}/job/?log=true")
+        assert res.json()[0]["log"] == "asdasd"
+        res = await client.get(f"{PREFIX}/job/?log=false")
         assert res.status_code == 200
         assert len(res.json()) == 2
-        assert res.json()[0]["log"] == "log"
+        assert res.json()[0]["log"] is None
 
         # get jobs by user_id
         res = await client.get(f"{PREFIX}/job/?user_id={user.id}")

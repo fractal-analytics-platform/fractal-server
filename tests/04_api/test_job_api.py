@@ -94,7 +94,7 @@ async def test_job_list(
         )
         job = await job_factory(
             project_id=prj.id,
-            log="log",
+            log="asdasd",
             workflow_id=workflow.id,
             working_dir=(tmp_path / "some_working_dir").as_posix(),
             input_dataset_id=input_dataset.id,
@@ -108,15 +108,15 @@ async def test_job_list(
         debug(res.json())
         assert len(res.json()) == 1
         assert res.json()[0]["id"] == job.id
-        assert res.json()[0]["log"] == ""
-        res = await client.get(f"{PREFIX}/project/{prj.id}/job/?log=true")
+        assert res.json()[0]["log"] == "asdasd"
+        res = await client.get(f"{PREFIX}/project/{prj.id}/job/?log=false")
         assert len(res.json()) == 1
         assert res.json()[0]["id"] == job.id
-        assert res.json()[0]["log"] == "log"
+        assert res.json()[0]["log"] is None
         res = await client.get(f"{PREFIX}/project/{prj.id}/job/")
         assert len(res.json()) == 1
         assert res.json()[0]["id"] == job.id
-        assert res.json()[0]["log"] == ""
+        assert res.json()[0]["log"] == "asdasd"
 
 
 async def test_job_download_logs(

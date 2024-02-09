@@ -209,7 +209,7 @@ async def view_job(
     start_timestamp_max: Optional[datetime] = None,
     end_timestamp_min: Optional[datetime] = None,
     end_timestamp_max: Optional[datetime] = None,
-    log: bool = False,
+    log: bool = True,
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[ApplyWorkflowRead]:
@@ -269,12 +269,13 @@ async def view_job(
     job_list = res.scalars().all()
     await db.close()
     filtered_job_list = []
-    if not log:
-        for job in job_list:
-            setattr(job, "log", "")
-            filtered_job_list.append(job)
-    else:
+    if log:
         filtered_job_list = job_list
+
+    else:
+        for job in job_list:
+            setattr(job, "log", None)
+            filtered_job_list.append(job)
 
     return filtered_job_list
 
