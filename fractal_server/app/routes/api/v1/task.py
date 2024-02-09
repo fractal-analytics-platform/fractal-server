@@ -29,6 +29,7 @@ logger = set_logger(__name__)
 @router.get("/", response_model=list[TaskRead])
 async def get_list_task(
     user: User = Depends(current_active_user),
+    args_schema: bool = True,
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskRead]:
     """
@@ -38,6 +39,10 @@ async def get_list_task(
     res = await db.execute(stm)
     task_list = res.scalars().all()
     await db.close()
+    if not args_schema:
+        for task in task_list:
+            setattr(task, "args_schema", None)
+
     return task_list
 
 

@@ -14,6 +14,7 @@
     * Add timezone-aware timestamp query parameters to all `/admin` endpoints (\#1186).
 * API (internal):
     * Change the class method `Workflow.insert_task` into the auxiliary function `_workflow_insert_task` (\#1149).
+    * Add boolean query params in GET[`/api/v1/task/`, `/api/v1/job/`,`/api/v1/{project.id}/job/`, `/admin/job/`] to reduce selectively the body response size. (\#1218)
 * Database:
     * Make `WorkflowTask.workflow_id` and `WorfklowTask.task_id` not nullable (\#1137).
     * Add `Workflow.timestamp_created` and `Dataset.timestamp_created` columns (\#1152).
