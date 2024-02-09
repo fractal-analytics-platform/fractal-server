@@ -233,7 +233,8 @@ async def view_job(
             after `end_timestamp_min`.
         end_timestamp_max: If not `None`, select a rows with `end_timestamp`
             before `end_timestamp_min`.
-        log: If `True` return `job.log`, if `False` `job.log` is set to `None`.
+        log: If `True`, include `job.log`, if `False`
+            `job.log` is set to `None`.
     """
     stm = select(ApplyWorkflow)
 
