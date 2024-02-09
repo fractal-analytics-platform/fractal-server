@@ -270,16 +270,11 @@ async def view_job(
     res = await db.execute(stm)
     job_list = res.scalars().all()
     await db.close()
-    if log:
-        filtered_job_list = job_list
-
-    else:
-        filtered_job_list = []
+    if not log:
         for job in job_list:
             setattr(job, "log", None)
-            filtered_job_list.append(job)
 
-    return filtered_job_list
+    return job_list
 
 
 @router_admin.patch(
