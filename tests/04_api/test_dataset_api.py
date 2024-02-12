@@ -10,8 +10,31 @@ from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.schemas import JobStatusType
+from fractal_server.app.schemas import WorkflowTaskStatusType
+from fractal_server.app.schemas.dataset import _DatasetHistoryItem
+from fractal_server.app.schemas.dumps import TaskDump
+from fractal_server.app.schemas.dumps import WorkflowTaskDump
 
 PREFIX = "api/v1"
+
+HISTORY = [
+    _DatasetHistoryItem(
+        workflowtask=WorkflowTaskDump(
+            id=1,
+            workflow_id=1,
+            task_id=1,
+            task=TaskDump(
+                id=1,
+                source="...",
+                name="test",
+                command="echo",
+                input_type="zarr",
+                output_type="zarr",
+            ).dict(),
+        ).dict(),
+        status=WorkflowTaskStatusType.DONE,
+    ).dict()
+]
 
 
 async def test_get_dataset(app, client, MockCurrentUser, db, project_factory):
@@ -20,7 +43,7 @@ async def test_get_dataset(app, client, MockCurrentUser, db, project_factory):
         p_id = project.id
         # Create dataset
         DATASET_NAME = "My Dataset"
-        payload = dict(name=DATASET_NAME, task_list=[])
+        payload = dict(name=DATASET_NAME, history=HISTORY, task_list=[])
         res = await client.post(
             f"api/v1/project/{p_id}/dataset/",
             json=payload,
@@ -54,6 +77,17 @@ async def test_get_dataset(app, client, MockCurrentUser, db, project_factory):
         datasets = res.json()
         assert len(datasets) == 1
         assert datasets[0]["project"] == EXPECTED_PROJECT
+        assert datasets[0]["history"] == HISTORY
+        debug(datasets[0]["timestamp_created"])
+
+        res = await client.get(
+            f"/api/v1/project/{p_id}/dataset/?history=false"
+        )
+        assert res.status_code == 200
+        datasets = res.json()
+        assert len(datasets) == 1
+        assert datasets[0]["project"] == EXPECTED_PROJECT
+        assert datasets[0]["history"] == []
         debug(datasets[0]["timestamp_created"])
 
 
@@ -69,15 +103,31 @@ async def test_get_user_datasets(
 
         project1 = await project_factory(user, name="p1")
         project2 = await project_factory(user, name="p2")
-        await dataset_factory(project_id=project1.id, name="ds1a")
-        await dataset_factory(project_id=project1.id, name="ds1b")
-        await dataset_factory(project_id=project2.id, name="ds2a")
+        await dataset_factory(
+            project_id=project1.id, name="ds1a", history=HISTORY
+        )
+        await dataset_factory(
+            project_id=project1.id, name="ds1b", history=HISTORY
+        )
+        await dataset_factory(
+            project_id=project2.id, name="ds2a", history=HISTORY
+        )
 
         res = await client.get("/api/v1/dataset/")
         assert res.status_code == 200
-        debug(res.json())
+        datasets = res.json()
         assert len(res.json()) == 3
-        assert set(ds["name"] for ds in res.json()) == {"ds1a", "ds1b", "ds2a"}
+        assert set(ds["name"] for ds in datasets) == {"ds1a", "ds1b", "ds2a"}
+        for ds in datasets:
+            assert len(ds["history"]) == 1
+
+        res = await client.get("/api/v1/dataset/?history=false")
+        assert res.status_code == 200
+        datasets = res.json()
+        assert len(res.json()) == 3
+        assert set(ds["name"] for ds in datasets) == {"ds1a", "ds1b", "ds2a"}
+        for ds in datasets:
+            assert len(ds["history"]) == 0
 
 
 async def test_post_dataset(app, client, MockCurrentUser, db):
