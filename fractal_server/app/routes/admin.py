@@ -209,6 +209,7 @@ async def view_job(
     start_timestamp_max: Optional[datetime] = None,
     end_timestamp_min: Optional[datetime] = None,
     end_timestamp_max: Optional[datetime] = None,
+    log: bool = True,
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[ApplyWorkflowRead]:
@@ -232,6 +233,8 @@ async def view_job(
             after `end_timestamp_min`.
         end_timestamp_max: If not `None`, select a rows with `end_timestamp`
             before `end_timestamp_min`.
+        log: If `True`, include `job.log`, if `False`
+            `job.log` is set to `None`.
     """
     stm = select(ApplyWorkflow)
 
@@ -267,6 +270,9 @@ async def view_job(
     res = await db.execute(stm)
     job_list = res.scalars().all()
     await db.close()
+    if not log:
+        for job in job_list:
+            setattr(job, "log", None)
 
     return job_list
 
