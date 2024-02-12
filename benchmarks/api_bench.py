@@ -55,7 +55,7 @@ def get_clean_API_paths() -> list[str]:
             re.compile(r"\{.*?\}"),
         ]
         API_paths = [
-            path
+            f"{path}?history=false"
             for path in paths
             if not any(pattern.search(path) for pattern in excluded_patterns)
         ]
