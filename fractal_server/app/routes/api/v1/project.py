@@ -442,15 +442,17 @@ async def apply_workflow(
         .where(ApplyWorkflow.workflow_id == workflow_id)
         .where(ApplyWorkflow.input_dataset_id == input_dataset_id)
         .where(ApplyWorkflow.output_dataset_id == output_dataset_id)
-        .order_by(ApplyWorkflow.start_timestamp.desc())
-        .limit(1)
     )
     res = await db.execute(stm)
-    db_job = res.scalar_one_or_none()
-    if (db_job is not None) and (
-        job.start_timestamp
-        - db_job.start_timestamp.replace(tzinfo=timezone.utc)
-    ) < timedelta(seconds=settings.FRACTAL_API_SUBMIT_RATE_LIMIT):
+    db_jobs = res.scalars().all()
+    if (db_jobs is not None) and any(
+        abs(
+            job.start_timestamp
+            - db_job.start_timestamp.replace(tzinfo=timezone.utc)
+        )
+        < timedelta(seconds=settings.FRACTAL_API_SUBMIT_RATE_LIMIT)
+        for db_job in db_jobs
+    ):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail=(
