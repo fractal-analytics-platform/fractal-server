@@ -69,6 +69,7 @@ async def create_dataset(
 )
 async def read_dataset_list(
     project_id: int,
+    history: bool = True,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[list[DatasetRead]]:
@@ -84,7 +85,12 @@ async def read_dataset_list(
     # `project.dataset_list` - ref
     # https://github.com/fractal-analytics-platform/fractal-server/pull/1082#issuecomment-1856676097.
     stm = select(Dataset).where(Dataset.project_id == project.id)
-    dataset_list = (await db.execute(stm)).scalars().all()
+    res = await db.execute(stm)
+    dataset_list = res.scalars().all()
+    await db.close()
+    if not history:
+        for ds in dataset_list:
+            setattr(ds, "history", [])
     return dataset_list
 
 
