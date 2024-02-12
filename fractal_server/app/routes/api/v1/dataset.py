@@ -69,7 +69,7 @@ async def create_dataset(
 )
 async def read_dataset_list(
     project_id: int,
-    history: bool = True,
+    history: bool = False,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[list[DatasetRead]]:
