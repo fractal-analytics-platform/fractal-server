@@ -3,7 +3,9 @@
 # 1.4.4 (unreleased)
 
 * API:
+    * Add rate limiting to `POST /{project_id}/workflow/{workflow_id}/apply/` (\#1199).
     * Allow users to read the logs of ongoing jobs with `GET /project/{project_id}/job/{job_id}/`, using `show_tmp_logs` query parameter (\#1216).
+
 
 # 1.4.3
 
