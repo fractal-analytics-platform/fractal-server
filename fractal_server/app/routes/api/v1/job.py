@@ -30,16 +30,20 @@ router = APIRouter()
 @router.get("/job/", response_model=list[ApplyWorkflowRead])
 async def get_user_jobs(
     user: User = Depends(current_active_user),
+    log: bool = True,
     db: AsyncSession = Depends(get_async_db),
 ) -> list[ApplyWorkflowRead]:
     """
     Returns all the jobs of the current user
     """
-
     stm = select(ApplyWorkflow)
     stm = stm.join(Project).where(Project.user_list.any(User.id == user.id))
     res = await db.execute(stm)
     job_list = res.scalars().all()
+    await db.close()
+    if not log:
+        for job in job_list:
+            setattr(job, "log", None)
 
     return job_list
 
@@ -138,6 +142,7 @@ async def download_job_logs(
 async def get_job_list(
     project_id: int,
     user: User = Depends(current_active_user),
+    log: bool = True,
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[list[ApplyWorkflowRead]]:
     """
@@ -150,6 +155,10 @@ async def get_job_list(
     stm = select(ApplyWorkflow).where(ApplyWorkflow.project_id == project.id)
     res = await db.execute(stm)
     job_list = res.scalars().all()
+    await db.close()
+    if not log:
+        for job in job_list:
+            setattr(job, "log", None)
 
     return job_list
 
