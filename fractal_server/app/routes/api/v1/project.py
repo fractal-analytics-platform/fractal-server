@@ -415,7 +415,7 @@ async def apply_workflow(
             ],
         ),
         workflow_dump=dict(
-            **workflow.model_dump(exclude={"timestamp_created"}),
+            **workflow.model_dump(exclude={"task_list", "timestamp_created"}),
             timestamp_created=_encode_as_utc(workflow.timestamp_created),
         ),
         project_dump=dict(
