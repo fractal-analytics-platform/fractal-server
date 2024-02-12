@@ -6,11 +6,14 @@ from zipfile import ZipFile
 import pytest
 from devtools import debug
 
+from fractal_server.app.models import JobStatusType
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
+from fractal_server.app.routes.api.v1.project import _encode_as_utc as _utc
 from fractal_server.app.runner import _backends
 from fractal_server.app.runner._common import SHUTDOWN_FILENAME
+from fractal_server.app.runner._common import WORKFLOW_LOG_FILENAME
 
 PREFIX = "/api/v1"
 
@@ -182,6 +185,61 @@ async def test_job_download_logs(
         assert LOG_CONTENT in actual_logs
 
 
+async def test_get_job(
+    MockCurrentUser,
+    project_factory,
+    dataset_factory,
+    workflow_factory,
+    job_factory,
+    db,
+    task_factory,
+    client,
+    tmp_path,
+):
+    async with MockCurrentUser(user_kwargs={"id": 1}) as user:
+        x_project = await project_factory(user)
+        x_workflow = await workflow_factory(project_id=x_project.id)
+        x_task = await task_factory(source="x")
+        await _workflow_insert_task(
+            workflow_id=x_workflow.id, task_id=x_task.id, db=db
+        )
+        x_dataset = await dataset_factory(project_id=x_project.id)
+        x_job = await job_factory(
+            project_id=x_project.id,
+            input_dataset_id=x_dataset.id,
+            output_dataset_id=x_dataset.id,
+            workflow_id=x_workflow.id,
+            working_dir=tmp_path,
+        )
+
+    async with MockCurrentUser(user_kwargs={"id": 2}) as user:
+        y_project = await project_factory(user)
+        y_workflow = await workflow_factory(project_id=y_project.id)
+        y_task = await task_factory(source="y")
+        await _workflow_insert_task(
+            workflow_id=y_workflow.id, task_id=y_task.id, db=db
+        )
+        y_dataset = await dataset_factory(project_id=y_project.id)
+        y_job = await job_factory(
+            project_id=y_project.id,
+            input_dataset_id=y_dataset.id,
+            output_dataset_id=y_dataset.id,
+            workflow_id=y_workflow.id,
+            working_dir=tmp_path,
+        )
+
+        res = await client.get(
+            f"{PREFIX}/project/{x_project.id}/job/{x_job.id}/"
+        )
+        assert res.status_code == 403
+
+        res = await client.get(
+            f"{PREFIX}/project/{y_project.id}/job/{y_job.id}/"
+        )
+        assert res.status_code == 200
+        assert res.json()["start_timestamp"] == _utc(y_job.start_timestamp)
+
+
 async def test_get_job_list(
     MockCurrentUser,
     project_factory,
@@ -314,3 +372,91 @@ async def test_get_user_jobs(
         res = await client.get(f"{PREFIX}/job/")
         assert res.status_code == 200
         assert len(res.json()) == 0
+
+
+async def test_view_log_submitted_jobs(
+    MockCurrentUser,
+    project_factory,
+    dataset_factory,
+    resource_factory,
+    task_factory,
+    workflow_factory,
+    job_factory,
+    tmp_path,
+    db,
+    client,
+):
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+        project = await project_factory(user)
+        dataset = await dataset_factory(project_id=project.id)
+        await resource_factory(dataset)
+        task = await task_factory(
+            input_type="Any",
+            output_type="Any",
+        )
+        workflow = await workflow_factory(project_id=project.id)
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
+
+        working_dir = tmp_path.as_posix()
+        job_submitted = await job_factory(
+            project_id=project.id,
+            input_dataset_id=dataset.id,
+            output_dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir=working_dir,
+            status=JobStatusType.SUBMITTED,
+        )
+        job_done = await job_factory(
+            project_id=project.id,
+            input_dataset_id=dataset.id,
+            output_dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir=working_dir,
+            status=JobStatusType.DONE,
+        )
+        job_failed = await job_factory(
+            project_id=project.id,
+            input_dataset_id=dataset.id,
+            output_dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir=working_dir,
+            status=JobStatusType.FAILED,
+        )
+
+        logfile = Path(working_dir) / WORKFLOW_LOG_FILENAME
+        assert not logfile.exists()
+        LOG = "LOG"
+        with logfile.open("w") as f:
+            f.write(LOG)
+
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/job/{job_submitted.id}/"
+        )
+        assert res.json()["log"] is None
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/job/{job_submitted.id}/"
+            "?show_tmp_logs=true"
+        )
+        assert res.json()["log"] == LOG
+
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/job/{job_done.id}/"
+        )
+        assert res.json()["log"] is None
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/job/{job_done.id}/"
+            "?show_tmp_logs=true"
+        )
+        assert res.json()["log"] is None
+
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/job/{job_failed.id}/"
+        )
+        assert res.json()["log"] is None
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/job/{job_failed.id}/"
+            "?show_tmp_logs=true"
+        )
+        assert res.json()["log"] is None
