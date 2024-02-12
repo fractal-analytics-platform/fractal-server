@@ -69,7 +69,7 @@ async def create_dataset(
 )
 async def read_dataset_list(
     project_id: int,
-    history: bool = False,
+    history: bool = True,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[list[DatasetRead]]:
@@ -522,6 +522,7 @@ async def get_workflowtask_status(
 
 @router.get("/dataset/", response_model=list[DatasetRead])
 async def get_user_datasets(
+    history: bool = True,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[DatasetRead]:
@@ -532,4 +533,8 @@ async def get_user_datasets(
     stm = stm.join(Project).where(Project.user_list.any(User.id == user.id))
     res = await db.execute(stm)
     dataset_list = res.scalars().all()
+    await db.close()
+    if not history:
+        for ds in dataset_list:
+            setattr(ds, "history", [])
     return dataset_list
