@@ -82,7 +82,7 @@ def _user_flow_power(
     user = _create_user_client(admin, user_identifier="power")
     proj = user.add_project(ProjectCreate(name="MyProject"))
 
-    num_workflows = 10
+    num_workflows = 20
     num_jobs_per_workflow = 20
     for ind_wf in range(num_workflows):
         wf = user.add_workflow(
@@ -92,6 +92,9 @@ def _user_flow_power(
             proj.id, wf.id, working_task_id, WorkflowTaskCreate()
         )
         if ind_wf % 2 == 0:
+            user.add_workflowtask(
+                proj.id, wf.id, working_task_id, WorkflowTaskCreate()
+            )
             user.add_workflowtask(
                 proj.id, wf.id, failing_task_id, WorkflowTaskCreate()
             )
