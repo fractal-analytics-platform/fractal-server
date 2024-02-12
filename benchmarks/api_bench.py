@@ -55,7 +55,7 @@ def get_clean_API_paths() -> list[str]:
             re.compile(r"\{.*?\}"),
         ]
         API_paths = [
-            f"{path}?history=false"
+            path
             for path in paths
             if not any(pattern.search(path) for pattern in excluded_patterns)
         ]
@@ -167,7 +167,10 @@ class Benchmark:
                 # list of dicts made by get_metrics()
                 metrics_list = [
                     self.get_metrics(
-                        path, self.client.get(path, headers=headers)
+                        path,
+                        self.client.get(
+                            f"{path}?history=false", headers=headers
+                        ),
                     )
                     for n in range(n_requests)
                 ]
