@@ -501,15 +501,8 @@ async def test_project_apply_workflow_subset(
             timestamp_created=_encode_as_utc(project.timestamp_created),
         ).dict()
         expected_workflow_dump = WorkflowDump(
-            **workflow.model_dump(exclude={"task_list", "timestamp_created"}),
+            **workflow.model_dump(exclude={"timestamp_created"}),
             timestamp_created=_encode_as_utc(workflow.timestamp_created),
-            task_list=[
-                dict(
-                    wf_task.model_dump(exclude={"task"}),
-                    task=wf_task.task.model_dump(),
-                )
-                for wf_task in workflow.task_list
-            ],
         ).dict()
         expected_input_dataset_dump = DatasetDump(
             **dataset1.model_dump(exclude={"task_list", "timestamp_created"}),
