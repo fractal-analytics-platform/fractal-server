@@ -168,9 +168,7 @@ class Benchmark:
                 metrics_list = [
                     self.get_metrics(
                         path,
-                        self.client.get(
-                            f"{path}?history=false", headers=headers
-                        ),
+                        self.client.get(path, headers=headers),
                     )
                     for n in range(n_requests)
                 ]
