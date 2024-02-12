@@ -10,6 +10,10 @@ from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.schemas import JobStatusType
+from fractal_server.app.schemas import WorkflowTaskStatusType
+from fractal_server.app.schemas.dataset import _DatasetHistoryItem
+from fractal_server.app.schemas.dumps import TaskDump
+from fractal_server.app.schemas.dumps import WorkflowTaskDump
 
 PREFIX = "api/v1"
 
@@ -20,7 +24,25 @@ async def test_get_dataset(app, client, MockCurrentUser, db, project_factory):
         p_id = project.id
         # Create dataset
         DATASET_NAME = "My Dataset"
-        payload = dict(name=DATASET_NAME, task_list=[])
+        history = [
+            _DatasetHistoryItem(
+                workflowtask=WorkflowTaskDump(
+                    id=1,
+                    workflow_id=1,
+                    task_id=1,
+                    task=TaskDump(
+                        id=1,
+                        source="...",
+                        name="test",
+                        command="echo",
+                        input_type="zarr",
+                        output_type="zarr",
+                    ).dict(),
+                ).dict(),
+                status=WorkflowTaskStatusType.DONE,
+            ).dict()
+        ]
+        payload = dict(name=DATASET_NAME, history=history, task_list=[])
         res = await client.post(
             f"api/v1/project/{p_id}/dataset/",
             json=payload,
@@ -54,6 +76,17 @@ async def test_get_dataset(app, client, MockCurrentUser, db, project_factory):
         datasets = res.json()
         assert len(datasets) == 1
         assert datasets[0]["project"] == EXPECTED_PROJECT
+        assert datasets[0]["history"] == history
+        debug(datasets[0]["timestamp_created"])
+
+        res = await client.get(
+            f"/api/v1/project/{p_id}/dataset/?history=false"
+        )
+        assert res.status_code == 200
+        datasets = res.json()
+        assert len(datasets) == 1
+        assert datasets[0]["project"] == EXPECTED_PROJECT
+        assert datasets[0]["history"] == []
         debug(datasets[0]["timestamp_created"])
 
 
