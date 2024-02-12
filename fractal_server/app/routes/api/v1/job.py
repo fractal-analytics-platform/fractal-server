@@ -11,7 +11,9 @@ from sqlmodel import select
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models import ApplyWorkflow
+from ....models import JobStatusType
 from ....models import Project
+from ....runner._common import WORKFLOW_LOG_FILENAME
 from ....schemas import ApplyWorkflowRead
 from ....security import current_active_user
 from ....security import User
@@ -21,7 +23,6 @@ from ...aux._runner import _check_backend_is_slurm
 from ._aux_functions import _get_job_check_owner
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_workflow_check_owner
-
 
 router = APIRouter()
 
@@ -76,6 +77,7 @@ async def get_workflow_jobs(
 async def read_job(
     project_id: int,
     job_id: int,
+    show_tmp_logs: bool = False,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[ApplyWorkflowRead]:
@@ -90,8 +92,12 @@ async def read_job(
         db=db,
     )
     job = output["job"]
-
     await db.close()
+
+    if show_tmp_logs and (job.status == JobStatusType.SUBMITTED):
+        with open(f"{job.working_dir}/{WORKFLOW_LOG_FILENAME}", "r") as f:
+            job.log = f.read()
+
     return job
 
 
