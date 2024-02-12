@@ -348,6 +348,11 @@ class Settings(BaseSettings):
     Default values correspond to `vite` defaults.
     """
 
+    FRACTAL_API_SUBMIT_RATE_LIMIT: int = 2
+    """
+    TBD
+    """
+
     ###########################################################################
     # BUSINESS LOGIC
     ###########################################################################
