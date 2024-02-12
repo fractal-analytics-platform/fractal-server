@@ -45,7 +45,6 @@ class WorkflowDump(BaseModel):
     id: int
     name: str
     project_id: int
-    task_list: list[WorkflowTaskDump]
     timestamp_created: str
 
 

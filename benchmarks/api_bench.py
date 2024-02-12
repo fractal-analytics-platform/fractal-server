@@ -167,7 +167,8 @@ class Benchmark:
                 # list of dicts made by get_metrics()
                 metrics_list = [
                     self.get_metrics(
-                        path, self.client.get(path, headers=headers)
+                        path,
+                        self.client.get(path, headers=headers),
                     )
                     for n in range(n_requests)
                 ]
