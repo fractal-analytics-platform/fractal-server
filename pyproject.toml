@@ -24,7 +24,7 @@ exclude = [
 [tool.poetry.dependencies]
 python = "^3.9"
 python-dotenv = "^0.21.0"
-fastapi = "^0.103.0"
+fastapi = "^0.109.0"
 sqlmodel = "^0.0.14"
 sqlalchemy = {extras = ["asyncio"], version = ">=2.0.23,<2.1"}
 aiosqlite = "^0.17.0"
