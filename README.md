@@ -21,7 +21,7 @@
 | fractal\_server/app/routes/api/\_\_init\_\_.py                    |        8 |        0 |        2 |        1 |     90% |    14->13 |
 | fractal\_server/app/routes/api/v1/\_\_init\_\_.py                 |       16 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v1/\_aux\_functions.py             |      111 |        0 |       46 |        0 |    100% |           |
-| fractal\_server/app/routes/api/v1/dataset.py                      |      204 |        0 |       68 |       12 |     96% |45->40, 70->66, 95->91, 119->115, 157->153, 229->224, 258->254, 284->280, 325->321, 359->355, 427->423, 518->517 |
+| fractal\_server/app/routes/api/v1/dataset.py                      |      213 |        0 |       76 |       12 |     96% |45->40, 70->66, 101->97, 125->121, 163->159, 235->230, 264->260, 290->286, 331->327, 365->361, 433->429, 524->523 |
 | fractal\_server/app/routes/api/v1/job.py                          |       77 |        0 |       24 |        6 |     94% |31->30, 55->51, 77->73, 108->104, 142->138, 170->166 |
 | fractal\_server/app/routes/api/v1/project.py                      |      188 |        6 |       59 |        6 |     95% |52->51, 71->70, 92-97, 106->105, 122->121, 148->147, 246->241 |
 | fractal\_server/app/routes/api/v1/task.py                         |       88 |        1 |       36 |        6 |     94% |30->29, 50->49, 68->67, 101, 113->112, 159->158 |
@@ -51,7 +51,7 @@
 | fractal\_server/app/schemas/\_validators.py                       |       46 |        0 |       22 |        0 |    100% |           |
 | fractal\_server/app/schemas/applyworkflow.py                      |       62 |        0 |       12 |        2 |     97% |75->74, 86->85 |
 | fractal\_server/app/schemas/dataset.py                            |       52 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/schemas/dumps.py                              |       41 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/app/schemas/dumps.py                              |       40 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/manifest.py                           |       41 |        0 |       12 |        2 |     96% |92->91, 124->123 |
 | fractal\_server/app/schemas/project.py                            |       20 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/state.py                              |       13 |        0 |        0 |        0 |    100% |           |
@@ -70,7 +70,7 @@
 | fractal\_server/tasks/endpoint\_operations.py                     |       80 |        0 |       26 |        4 |     96% |47->exit, 119->exit, 124->exit, 129->exit |
 | fractal\_server/tasks/utils.py                                    |       35 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/utils.py                                          |       22 |        0 |        2 |        0 |    100% |           |
-|                                                         **TOTAL** | **4261** |  **133** | **1219** |  **156** | **94%** |           |
+|                                                         **TOTAL** | **4269** |  **133** | **1227** |  **156** | **94%** |           |
 
 
 ## Setup coverage badge
