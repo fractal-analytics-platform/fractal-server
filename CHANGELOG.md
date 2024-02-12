@@ -7,10 +7,6 @@
     * Allow users to read the logs of ongoing jobs with `GET /project/{project_id}/job/{job_id}/`, using `show_tmp_logs` query parameter (\#1216).
     * Add `log` query parameter in `GET {/api/v1/job/,/api/v1/{project.id}/job/,/admin/job/}`, to trim response body (\#1218).
     * Add `args_schema` query parameter in `GET /api/v1/task/` to trim response body (\#1218).
-    * Add `history` query parameter in `GET /api/v1/project/{project.id}/dataset/` to trim response body (\#1219).
-    * Remove `task_list` from `job.workflow_dump` creation in `/api/v1/{project_id}/workflow/{workflow_id}/apply/`(\#1219)
-* Database:
-    * Remove `task_list` from `WorkflowDump`(\#1219)
 
 # 1.4.3
 
