@@ -33,6 +33,7 @@ from ..models import Dataset
 from ..models import Workflow
 from ..models import WorkflowTask
 from ..schemas import JobStatusType
+from ._common import WORKFLOW_LOG_FILENAME
 from ._local import process_workflow as local_process_workflow
 from .common import close_job_logger
 from .common import JobExecutionError
@@ -204,7 +205,7 @@ async def submit_workflow(
 
         # Write logs
         logger_name = f"WF{workflow_id}_job{job_id}"
-        log_file_path = WORKFLOW_DIR / "workflow.log"
+        log_file_path = WORKFLOW_DIR / WORKFLOW_LOG_FILENAME
         logger = set_logger(
             logger_name=logger_name,
             log_file_path=log_file_path,

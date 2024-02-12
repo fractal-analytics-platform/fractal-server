@@ -23,6 +23,7 @@ import pytest
 from devtools import debug
 
 from fractal_server.app.runner import _backends
+from fractal_server.app.runner._common import WORKFLOW_LOG_FILENAME
 
 PREFIX = "/api/v1"
 
@@ -722,7 +723,7 @@ async def test_non_python_task(
             "0.err",
             "0.metadiff.json",
             "0.out",
-            "workflow.log",
+            WORKFLOW_LOG_FILENAME,
         ]
         for f in must_exist:
             assert f in glob_list
@@ -857,13 +858,13 @@ async def test_metadiff(
             "3_par_B.out",
             "3_par_A.metadiff.json",
             "3_par_B.metadiff.json",
-            "workflow.log",
+            WORKFLOW_LOG_FILENAME,
         ]
         for f in must_exist:
             assert f in glob_list
 
         # Check that workflow.log includes expected warnings
-        with open(f"{working_dir}/workflow.log", "r") as f:
+        with open(f"{working_dir}/{WORKFLOW_LOG_FILENAME}", "r") as f:
             logs = f.read()
         print(logs)
         assert "Skip collection of updated metadata" in logs

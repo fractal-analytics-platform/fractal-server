@@ -624,3 +624,73 @@ async def test_project_apply_slurm_account(
             json=dict(slurm_account="NOT IN THE LIST"),
         )
         assert res.status_code == 422
+
+
+async def test_rate_limit(
+    MockCurrentUser,
+    project_factory,
+    dataset_factory,
+    resource_factory,
+    workflow_factory,
+    task_factory,
+    client,
+    db,
+    override_settings_factory,
+):
+    override_settings_factory(FRACTAL_API_SUBMIT_RATE_LIMIT=1)
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+
+        project = await project_factory(user)
+        dataset_i = await dataset_factory(
+            project_id=project.id, name="ds1", type="type"
+        )
+        dataset_o = await dataset_factory(
+            project_id=project.id, name="ds2", type="type"
+        )
+        await resource_factory(dataset_i)
+        await resource_factory(dataset_o)
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(
+            input_type="type",
+            output_type="type",
+            source="source",
+            command="ls",
+        )
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
+        # Call 1: OK
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
+            f"?input_dataset_id={dataset_i.id}"
+            f"&output_dataset_id={dataset_o.id}",
+            json={},
+        )
+        assert res.status_code == 202
+        time.sleep(1)
+        # Call 2: OK
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
+            f"?input_dataset_id={dataset_i.id}"
+            f"&output_dataset_id={dataset_o.id}",
+            json={},
+        )
+        assert res.status_code == 202
+        # Call 2: too early!
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
+            f"?input_dataset_id={dataset_i.id}"
+            f"&output_dataset_id={dataset_o.id}",
+            json={},
+        )
+        assert res.status_code == 429
+        assert "less than 1 second" in res.json()["detail"]
+        time.sleep(1)
+        # Call 3: OK
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/apply/"
+            f"?input_dataset_id={dataset_i.id}"
+            f"&output_dataset_id={dataset_o.id}",
+            json={},
+        )
+        assert res.status_code == 202

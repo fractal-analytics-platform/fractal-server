@@ -1,5 +1,13 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# 1.4.4 (unreleased)
+
+* API:
+    * Add rate limiting to `POST /{project_id}/workflow/{workflow_id}/apply/` (\#1199).
+    * Allow users to read the logs of ongoing jobs with `GET /project/{project_id}/job/{job_id}/`, using `show_tmp_logs` query parameter (\#1216).
+    * Add `log` query parameter in `GET {/api/v1/job/,/api/v1/{project.id}/job/,/admin/job/}`, to trim response body (\#1218).
+    * Add `args_schema` query parameter in `GET /api/v1/task/` to trim response body (\#1218).
+
 # 1.4.3
 
 > **WARNING**:
@@ -14,7 +22,6 @@
     * Add timezone-aware timestamp query parameters to all `/admin` endpoints (\#1186).
 * API (internal):
     * Change the class method `Workflow.insert_task` into the auxiliary function `_workflow_insert_task` (\#1149).
-    * Add boolean query params in GET[`/api/v1/task/`, `/api/v1/job/`,`/api/v1/{project.id}/job/`, `/admin/job/`] to reduce selectively the body response size. (\#1218)
 * Database:
     * Make `WorkflowTask.workflow_id` and `WorfklowTask.task_id` not nullable (\#1137).
     * Add `Workflow.timestamp_created` and `Dataset.timestamp_created` columns (\#1152).
