@@ -501,7 +501,7 @@ async def test_project_apply_workflow_subset(
             timestamp_created=_encode_as_utc(project.timestamp_created),
         ).dict()
         expected_workflow_dump = WorkflowDump(
-            **workflow.model_dump(exclude={"timestamp_created"}),
+            **workflow.model_dump(exclude={"task_list", "timestamp_created"}),
             timestamp_created=_encode_as_utc(workflow.timestamp_created),
         ).dict()
         expected_input_dataset_dump = DatasetDump(
