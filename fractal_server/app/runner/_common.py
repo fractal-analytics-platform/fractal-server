@@ -29,6 +29,7 @@ from .common import write_args_file
 HISTORY_FILENAME = "history.json"
 METADATA_FILENAME = "metadata.json"
 SHUTDOWN_FILENAME = "shutdown"
+WORKFLOW_LOG_FILENAME = "workflow.log"
 
 
 def no_op_submit_setup_call(
