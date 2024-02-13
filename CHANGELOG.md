@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
-# 1.4.4 (unreleased)
+# 1.4.4
 
 * API:
     * Add rate limiting to `POST /{project_id}/workflow/{workflow_id}/apply/` (\#1199).
