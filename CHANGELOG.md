@@ -10,7 +10,7 @@
     * Add `history` query parameter in `GET {/api/v1/dataset/,/api/v1/project/{project.id}/dataset/}` to trim response body (\#1219).
     * Remove `task_list` from `job.workflow_dump` creation in `/api/v1/{project_id}/workflow/{workflow_id}/apply/`(\#1219)
 * Database:
-    * Remove `task_list` from `WorkflowDump`(\#1219)
+    * Remove `task_list` from `ApplyWorkflowRead.workflow_dump`(\#1219)
 
 # 1.4.3
 
