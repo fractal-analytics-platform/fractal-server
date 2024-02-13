@@ -141,11 +141,10 @@ def update_db_data():
             f"fractal_server.data_migrations.{current_version_slug}"
         )
     except ModuleNotFoundError as e:
-        print(
+        sys.exit(
             f"Update-db module for version {current_version} not found; "
             f"exit.\nOriginal error message: {str(e)}"
         )
-        return
 
     print("OK, now starting data-migration script\n")
     current_update_db_data_module.fix_db()
