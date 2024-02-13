@@ -10,7 +10,12 @@
     * Add `history` query parameter in `GET {/api/v1/dataset/,/api/v1/project/{project.id}/dataset/}` to trim response body (\#1219).
     * Remove `task_list` from `job.workflow_dump` creation in `/api/v1/{project_id}/workflow/{workflow_id}/apply/`(\#1219)
 * Database:
-    * Remove `task_list` from `WorkflowDump`(\#1219)
+    * Remove `task_list` from `ApplyWorkflowRead.workflow_dump`(\#1219)
+* Dependencies:
+    * Update fastapi to `^0.109.0` (\#1222).
+    * Update gunicorn to `^21.2.0` (\#1222).
+    * Update aiosqlite to `^0.19.0` (\#1222).
+    * Update uvicorn to `^0.27.0` (\#1222).
 
 # 1.4.3
 
