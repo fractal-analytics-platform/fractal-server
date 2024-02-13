@@ -74,12 +74,12 @@ jobs:
         run: |
           cp $ROOTDIR/.fractal_server_postgres.env .fractal_server.env
           poetry run fractalctl set-db
-          yes yes | poetry run fractalctl update-db-data
+          echo -e "yes\nyes\nyes\nyes\nyes"| poetry run fractalctl update-db-data
           poetry run python scripts/validate_db_data_with_read_schemas.py
 
       - name: Apply migration and fix-db script (sqlite)
         run: |
           echo -e "DB_ENGINE=sqlite\nSQLITE_PATH=${ROOTDIR}/clean_db_fractal_${TARGET_VERSION}.sql.sqlite3" > .fractal_server.env
           poetry run fractalctl set-db
-          yes yes | poetry run fractalctl update-db-data
+          echo -e "yes\nyes\nyes\nyes\nyes" | poetry run fractalctl update-db-data
           poetry run python scripts/validate_db_data_with_read_schemas.py
