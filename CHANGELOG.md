@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# 1.4.5 (unreleased)
+
+* Testing:
+    *  Fix `migrations.yml` GitHub action (\#1225).
+
 # 1.4.4
 
 * API:
