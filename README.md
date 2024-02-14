@@ -60,9 +60,9 @@
 | fractal\_server/app/schemas/user.py                               |       49 |        0 |        8 |        2 |     96% |76->68, 122->121 |
 | fractal\_server/app/schemas/workflow.py                           |       67 |        0 |       11 |        2 |     97% |102->101, 168->167 |
 | fractal\_server/app/security/\_\_init\_\_.py                      |      144 |       28 |       32 |        3 |     77% |114-127, 146-147, 152-161, 166-174, 188, 192, 316 |
-| fractal\_server/config.py                                         |      174 |        6 |       67 |       11 |     92% |76->75, 126->125, 204->203, 207, 216->exit, 228->227, 231, 235->exit, 276->275, 393-394, 417-418, 423->exit |
+| fractal\_server/config.py                                         |      172 |        6 |       67 |       11 |     92% |76->75, 126->125, 204->203, 207, 216->exit, 228->227, 231, 235->exit, 276->275, 387-388, 411-412, 417->exit |
 | fractal\_server/logger.py                                         |       35 |        0 |       12 |        0 |    100% |           |
-| fractal\_server/main.py                                           |       32 |        6 |        2 |        1 |     79% |55-56, 66, 106->105, 112-120 |
+| fractal\_server/main.py                                           |       29 |        6 |        2 |        1 |     77% |54-55, 65, 85->84, 91-99 |
 | fractal\_server/syringe.py                                        |       29 |        2 |        8 |        3 |     86% |66->65, 83->82, 93-94, 97->96 |
 | fractal\_server/tasks/\_TaskCollectPip.py                         |       43 |        0 |       24 |        3 |     96% |29->28, 33->32, 57->56 |
 | fractal\_server/tasks/\_\_init\_\_.py                             |        0 |        0 |        0 |        0 |    100% |           |
@@ -70,7 +70,7 @@
 | fractal\_server/tasks/endpoint\_operations.py                     |       80 |        0 |       26 |        4 |     96% |47->exit, 119->exit, 124->exit, 129->exit |
 | fractal\_server/tasks/utils.py                                    |       35 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/utils.py                                          |       22 |        0 |        2 |        0 |    100% |           |
-|                                                         **TOTAL** | **4269** |  **133** | **1227** |  **156** | **94%** |           |
+|                                                         **TOTAL** | **4264** |  **133** | **1227** |  **156** | **94%** |           |
 
 
 ## Setup coverage badge
