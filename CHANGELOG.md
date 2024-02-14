@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
-# 1.4.5 (unreleased)
+# 1.4.5
 
 * Remove CORS middleware (\#1228).
 * Testing:
