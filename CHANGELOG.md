@@ -2,6 +2,7 @@
 
 # 1.4.5 (unreleased)
 
+* Remove CORS middleware (\#1228).
 * Testing:
     *  Fix `migrations.yml` GitHub action (\#1225).
 
