@@ -16,7 +16,6 @@
 This module sets up the FastAPI application that serves the Fractal Server.
 """
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
 from .app.security import _create_first_user
 from .config import get_settings
@@ -68,12 +67,7 @@ async def __on_startup() -> None:
 
 def start_application() -> FastAPI:
     """
-    Create and initialise the application
-
-    It performs the following initialisation steps:
-
-    1. Collect all available routers
-    2. Set-up CORS middleware
+    Create the application, initialise it and collect all available routers.
 
     Returns:
         app:
@@ -81,21 +75,6 @@ def start_application() -> FastAPI:
     """
     app = FastAPI()
     collect_routers(app)
-    settings = Inject(get_settings)
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.FRACTAL_CORS_ALLOW_ORIGIN.split(";"),
-        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        allow_headers=[
-            "set-cookie",
-            "Set-Cookie",
-            "Content-Type",
-            "Access-Control-Allow-Headers",
-            "X-Requested-With",
-        ],
-        allow_credentials=True,
-    )
-
     return app
 
 
