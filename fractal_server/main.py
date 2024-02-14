@@ -67,12 +67,7 @@ async def __on_startup() -> None:
 
 def start_application() -> FastAPI:
     """
-    Create and initialise the application
-
-    It performs the following initialisation steps:
-
-    1. Collect all available routers
-    2. Set-up CORS middleware
+    Create the application, initialise it and collect all available routers.
 
     Returns:
         app:
