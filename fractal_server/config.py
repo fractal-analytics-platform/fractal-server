@@ -342,7 +342,9 @@ class Settings(BaseSettings):
 
     FRACTAL_API_SUBMIT_RATE_LIMIT: int = 2
     """
-    TBD
+    Interval to wait (in seconds) to be allowed to call again
+    `POST api/v1/{project_id}/workflow/{workflow_id}/apply/`
+    with the same path and query parameters.
     """
 
     ###########################################################################
