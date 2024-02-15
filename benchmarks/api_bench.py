@@ -1,6 +1,7 @@
 import json
 import re
 import sys
+import time
 from datetime import datetime
 from typing import Any
 from typing import Optional
@@ -82,16 +83,26 @@ class Benchmark:
         self.current_branch = current_branch
         self.exceptions: list = []
 
+        max_steps = 4
         for user in self.users:
-            user.token = (
-                self.client.post(
-                    "/auth/token/login/",
-                    data=dict(username=user.name, password=user.password),
+            for step in range(max_steps):
+                user.token = (
+                    self.client.post(
+                        "/auth/token/login/",
+                        data=dict(username=user.name, password=user.password),
+                    )
+                    .json()
+                    .get("access_token")
                 )
-                .json()
-                .get("access_token")
-            )
-        print(f"{self.users=}")
+                if user.token is not None:
+                    break
+                time.sleep(0.5)
+            if user.token is None:
+                sys.exit(f"Error while logging-in as user {user.name}")
+
+        print("Users:")
+        for _user in self.users:
+            print(_user)
 
     def aggregate_on_path(
         self, user_metrics: list[dict[str, Any]]
