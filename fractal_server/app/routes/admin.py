@@ -278,7 +278,7 @@ async def view_job(
     return job_list
 
 
-@router_admin.get("/job/{job_id}/", response_model=list[ApplyWorkflowRead])
+@router_admin.get("/job/{job_id}/", response_model=ApplyWorkflowRead)
 async def view_single_job(
     job_id: int = None,
     show_tmp_logs: bool = False,
