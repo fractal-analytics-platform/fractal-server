@@ -95,8 +95,11 @@ async def read_job(
     await db.close()
 
     if show_tmp_logs and (job.status == JobStatusType.SUBMITTED):
-        with open(f"{job.working_dir}/{WORKFLOW_LOG_FILENAME}", "r") as f:
-            job.log = f.read()
+        try:
+            with open(f"{job.working_dir}/{WORKFLOW_LOG_FILENAME}", "r") as f:
+                job.log = f.read()
+        except FileNotFoundError:
+            pass
 
     return job
 
