@@ -566,8 +566,9 @@ async def test_view_single_job(
         assert res.status_code == 200
         assert res.json()["log"] is None
 
-        with pytest.raises(FileNotFoundError):
-            await client.get(f"{PREFIX}/job/{job.id}/?show_tmp_logs=true")
+        res = await client.get(f"{PREFIX}/job/{job.id}/?show_tmp_logs=true")
+        assert res.status_code == 200
+        assert res.json()["log"] is None
 
         logfile = Path(job.working_dir) / WORKFLOW_LOG_FILENAME
         assert not logfile.exists()
