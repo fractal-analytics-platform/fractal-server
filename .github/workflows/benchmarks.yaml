@@ -56,6 +56,7 @@ jobs:
         export JWT_SECRET_KEY=secret
         export FRACTAL_API_SUBMIT_RATE_LIMIT=0
         cd benchmarks/
+        poetry run sh setup_db.sh
         poetry run sh serve.sh
 
      - name: Benchmark
