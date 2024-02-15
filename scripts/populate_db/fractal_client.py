@@ -260,10 +260,8 @@ class FractalClient:
             if res.status_code != 200:
                 raise
             job_statuses = [job["status"] for job in res.json()]
-            if ("submitted" not in job_statuses) and (
-                "running" not in job_statuses
-            ):
-                print("No submitted/running job left.")
+            if "submitted" not in job_statuses:
+                print("No submitted job left.")
                 return None
             time.sleep(waiting_interval)
         raise RuntimeError(f"Reached {max_calls=} but {job_statuses=}.")
