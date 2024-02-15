@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* API:
+    * Fix error message for rate limits in apply-workflow endpoint (\#1231).
+
 # 1.4.6
 
 * API:
