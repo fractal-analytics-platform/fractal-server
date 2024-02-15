@@ -278,7 +278,7 @@ async def view_job(
     return job_list
 
 
-@router_admin.get("/job/{job_id}", response_model=list[ApplyWorkflowRead])
+@router_admin.get("/job/{job_id}/", response_model=list[ApplyWorkflowRead])
 async def view_single_job(
     job_id: int = None,
     show_tmp_logs: bool = False,
@@ -296,7 +296,7 @@ async def view_single_job(
 
     if show_tmp_logs and (job.status == JobStatusType.SUBMITTED):
         with open(f"{job.working_dir}/{WORKFLOW_LOG_FILENAME}", "r") as f:
-            job.log = f.read()    
+            job.log = f.read()
 
     return job
 
