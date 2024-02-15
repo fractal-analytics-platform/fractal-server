@@ -449,8 +449,9 @@ async def apply_workflow(
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail=(
-                f"The endpoint 'POST /{project_id}/workflow/{workflow_id}/"
-                "apply/' was called several times with an interval of less "
+                f"The endpoint 'POST /api/v1/project/{project_id}/workflow/"
+                f"{workflow_id}/apply/' "
+                "was called several times within an interval of less "
                 f"than {settings.FRACTAL_API_SUBMIT_RATE_LIMIT} seconds, using"
                 " the same foreign keys. If it was intentional, please wait "
                 "and try again."
