@@ -26,6 +26,7 @@ from ..models import JobStatusType
 from ..models import Project
 from ..models import Workflow
 from ..models.security import UserOAuth as User
+from ..runner._common import WORKFLOW_LOG_FILENAME
 from ..schemas import ApplyWorkflowRead
 from ..schemas import ApplyWorkflowUpdate
 from ..schemas import DatasetRead
@@ -275,6 +276,32 @@ async def view_job(
             setattr(job, "log", None)
 
     return job_list
+
+
+@router_admin.get("/job/{job_id}/", response_model=ApplyWorkflowRead)
+async def view_single_job(
+    job_id: int = None,
+    show_tmp_logs: bool = False,
+    user: User = Depends(current_active_superuser),
+    db: AsyncSession = Depends(get_async_db),
+) -> ApplyWorkflowRead:
+
+    job = await db.get(ApplyWorkflow, job_id)
+    if not job:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Job {job_id} not found",
+        )
+    await db.close()
+
+    if show_tmp_logs and (job.status == JobStatusType.SUBMITTED):
+        try:
+            with open(f"{job.working_dir}/{WORKFLOW_LOG_FILENAME}", "r") as f:
+                job.log = f.read()
+        except FileNotFoundError:
+            pass
+
+    return job
 
 
 @router_admin.patch(

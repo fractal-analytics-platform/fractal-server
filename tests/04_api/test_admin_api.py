@@ -13,6 +13,7 @@ from fractal_server.app.routes.api.v1._aux_functions import (
 )
 from fractal_server.app.runner import _backends
 from fractal_server.app.runner._common import SHUTDOWN_FILENAME
+from fractal_server.app.runner._common import WORKFLOW_LOG_FILENAME
 
 backends_available = list(_backends.keys())
 
@@ -516,6 +517,67 @@ async def test_view_job(
         )
         assert res.status_code == 200
         assert len(res.json()) == 1
+
+
+async def test_view_single_job(
+    db,
+    client,
+    MockCurrentUser,
+    tmp_path,
+    project_factory,
+    workflow_factory,
+    dataset_factory,
+    task_factory,
+    job_factory,
+):
+    async with MockCurrentUser(user_kwargs={"is_superuser": False}) as user:
+
+        project = await project_factory(user)
+
+        workflow1 = await workflow_factory(project_id=project.id)
+        workflow2 = await workflow_factory(project_id=project.id)
+
+        task = await task_factory(name="task", source="source")
+        dataset1 = await dataset_factory(project_id=project.id)
+        dataset2 = await dataset_factory(project_id=project.id)
+
+        await _workflow_insert_task(
+            workflow_id=workflow1.id, task_id=task.id, db=db
+        )
+        await _workflow_insert_task(
+            workflow_id=workflow2.id, task_id=task.id, db=db
+        )
+
+        job = await job_factory(
+            working_dir=tmp_path.as_posix(),
+            project_id=project.id,
+            input_dataset_id=dataset1.id,
+            output_dataset_id=dataset2.id,
+            workflow_id=workflow1.id,
+            status="submitted",
+        )
+
+    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+
+        res = await client.get(f"{PREFIX}/job/{job.id + 1}/")
+        assert res.status_code == 404
+
+        res = await client.get(f"{PREFIX}/job/{job.id}/")
+        assert res.status_code == 200
+        assert res.json()["log"] is None
+
+        res = await client.get(f"{PREFIX}/job/{job.id}/?show_tmp_logs=true")
+        assert res.status_code == 200
+        assert res.json()["log"] is None
+
+        logfile = Path(job.working_dir) / WORKFLOW_LOG_FILENAME
+        assert not logfile.exists()
+        with logfile.open("w") as f:
+            f.write("LOG")
+
+        res = await client.get(f"{PREFIX}/job/{job.id}/?show_tmp_logs=true")
+        assert res.status_code == 200
+        assert res.json()["log"] == "LOG"
 
 
 async def test_patch_job(

@@ -425,6 +425,11 @@ async def test_view_log_submitted_jobs(
             status=JobStatusType.FAILED,
         )
 
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/job/{job_submitted.id}/"
+            "?show_tmp_logs=true"
+        )
+        assert res.json()["log"] is None
         logfile = Path(working_dir) / WORKFLOW_LOG_FILENAME
         assert not logfile.exists()
         LOG = "LOG"
