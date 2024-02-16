@@ -4,6 +4,8 @@
 
 * API:
     * Fix error message for rate limits in apply-workflow endpoint (\#1231).
+* Benchmarks:
+    * Add more scenarios, issue \#1184 (\#1232).
 
 # 1.4.6
 
