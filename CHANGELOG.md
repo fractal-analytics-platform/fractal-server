@@ -1,5 +1,16 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* API:
+    * Fix error message for rate limits in apply-workflow endpoint (\#1231).
+
+# 1.4.6
+
+* API:
+    * Add `GET /admin/job/{job_id}` (\#1230).
+    * Handle `FileNotFound` in `GET /project/{project_id}/job/{job_id}/` (\#1230).
+
 # 1.4.5
 
 * Remove CORS middleware (\#1228).
