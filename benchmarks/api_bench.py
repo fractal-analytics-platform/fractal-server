@@ -71,8 +71,8 @@ class Benchmark:
     def __init__(
         self,
         method: str,
-        cleaned_paths: list,
-        users: list,
+        cleaned_paths: list[str],
+        users: list[UserBench],
         current_branch: str,
     ):
 
