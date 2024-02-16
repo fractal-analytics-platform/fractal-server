@@ -1,6 +1,7 @@
 import json
 import re
 import sys
+import time
 from datetime import datetime
 from typing import Any
 from typing import Optional
@@ -25,7 +26,11 @@ class UserBench(BaseModel):
 USERS = [
     UserBench(name="vanilla@example.org", password="vanilla-pwd"),  # nosec
     UserBench(name="power@example.org", password="power-pwd"),  # nosec
+    UserBench(name="dataset@example.org", password="dataset-pwd"),  # nosec
+    UserBench(name="project@example.org", password="project-pwd"),  # nosec
+    UserBench(name="job@example.org", password="job-pwd"),  # nosec
 ]
+
 
 N_REQUESTS = 25
 
@@ -66,8 +71,8 @@ class Benchmark:
     def __init__(
         self,
         method: str,
-        cleaned_paths: list,
-        users: list,
+        cleaned_paths: list[str],
+        users: list[UserBench],
         current_branch: str,
     ):
 
@@ -78,15 +83,26 @@ class Benchmark:
         self.current_branch = current_branch
         self.exceptions: list = []
 
+        max_steps = 4
         for user in self.users:
-            user.token = (
-                self.client.post(
-                    "/auth/token/login/",
-                    data=dict(username=user.name, password=user.password),
+            for step in range(max_steps):
+                user.token = (
+                    self.client.post(
+                        "/auth/token/login/",
+                        data=dict(username=user.name, password=user.password),
+                    )
+                    .json()
+                    .get("access_token")
                 )
-                .json()
-                .get("access_token")
-            )
+                if user.token is not None:
+                    break
+                time.sleep(0.5)
+            if user.token is None:
+                sys.exit(f"Error while logging-in as user {user.name}")
+
+        print("Users:")
+        for _user in self.users:
+            print(_user)
 
     def aggregate_on_path(
         self, user_metrics: list[dict[str, Any]]
@@ -125,6 +141,9 @@ class Benchmark:
             loader=FileSystemLoader(searchpath="./templates"), autoescape=True
         )
         template = env.get_template("bench_diff_template.md")
+
+        print(f"{agg_values_curr=}")
+        print(f"{agg_values_main=}")
 
         rendered_html = template.render(
             zip=zip(agg_values_main.items(), agg_values_curr.items()),

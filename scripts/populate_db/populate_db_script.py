@@ -50,12 +50,17 @@ def _create_user_client(
     return _user
 
 
+# vanilla user:
+# 1 project
+# 1 dataset with a single resource
+# 1 workflow with a single task
+# 1 job
 def _user_flow_vanilla(
     admin: FractalClient,
     working_task_id: int,
 ):
     user = _create_user_client(admin, user_identifier="vanilla")
-    proj = user.add_project(ProjectCreate(name="MyProject"))
+    proj = user.add_project(ProjectCreate(name="MyProject_uv"))
     ds = user.add_dataset(
         proj.id, DatasetCreate(name="MyDataset", type="type")
     )
@@ -73,6 +78,11 @@ def _user_flow_vanilla(
     )
 
 
+# power user:
+# 1 project
+# `num_jobs_per_workflow` datasets with a single resource
+# `num_workflows` workflows, half with 1, half with 3 tasks
+# `num_jobs_per_workflow` jobs
 def _user_flow_power(
     admin: FractalClient,
     *,
@@ -80,7 +90,7 @@ def _user_flow_power(
     failing_task_id: int,
 ):
     user = _create_user_client(admin, user_identifier="power")
-    proj = user.add_project(ProjectCreate(name="MyProject"))
+    proj = user.add_project(ProjectCreate(name="MyProject_upw"))
 
     num_workflows = 20
     num_jobs_per_workflow = 20
@@ -116,6 +126,124 @@ def _user_flow_power(
             )
 
 
+# dataset user:
+# 1 project
+# `n_datasets` datasets with a single resource
+# `num_workflows` workflows, with a single task
+# `n_datasets` jobs
+def _user_flow_dataset(
+    admin: FractalClient,
+    working_task_id: int,
+):
+    user = _create_user_client(admin, user_identifier="dataset")
+    proj = user.add_project(ProjectCreate(name="MyProject_us"))
+    n_datasets = 20
+    ds_list = []
+    for i in range(n_datasets):
+        ds = user.add_dataset(
+            proj.id, DatasetCreate(name=f"MyDataset_us-{i}", type="type")
+        )
+        user.add_resource(
+            proj.id,
+            ds.id,
+            resource=ResourceCreate(path="/invalidpath"),
+        )
+        ds_list.append(ds)
+
+    num_workflows = 20
+    for i in range(num_workflows):
+        wf = user.add_workflow(
+            proj.id, WorkflowCreate(name=f"MyWorkflow_us-{i}")
+        )
+        user.add_workflowtask(
+            proj.id, wf.id, working_task_id, WorkflowTaskCreate()
+        )
+        for ds in ds_list:
+            user.apply_workflow(
+                proj.id,
+                wf.id,
+                ds.id,
+                ds.id,
+                applyworkflow=ApplyWorkflowCreate(),
+            )
+
+
+# project user:
+# `n_projects` project
+# 2 datasets with a single resource per project
+# 1 workflow, with a single task
+# `num_jobs_per_workflow` jobs
+def _user_flow_project(
+    admin: FractalClient,
+    working_task_id: int,
+):
+    user = _create_user_client(admin, user_identifier="project")
+    n_projects = 25
+    num_jobs_per_workflow = 5
+    for i in range(n_projects):
+        proj = user.add_project(ProjectCreate(name=f"MyProject_upj-{i}"))
+        ds1 = user.add_dataset(
+            proj.id, DatasetCreate(name=f"MyDataset_up1-{i}", type="type")
+        )
+        ds2 = user.add_dataset(
+            proj.id, DatasetCreate(name=f"MyDataset_up2-{i}", type="type")
+        )
+        user.add_resource(
+            proj.id,
+            ds1.id,
+            resource=ResourceCreate(path="/invalidpath"),
+        )
+        user.add_resource(
+            proj.id,
+            ds2.id,
+            resource=ResourceCreate(path="/invalidpath"),
+        )
+        wf = user.add_workflow(
+            proj.id, WorkflowCreate(name=f"MyWorkflow_up-{i}")
+        )
+        user.add_workflowtask(
+            proj.id, wf.id, working_task_id, WorkflowTaskCreate()
+        )
+        for i in range(num_jobs_per_workflow):
+            user.apply_workflow(
+                proj.id,
+                wf.id,
+                ds1.id,
+                ds2.id,
+                applyworkflow=ApplyWorkflowCreate(),
+            )
+
+
+# job user:
+# 1 project
+# 1 dataset with a single resource
+# 1 workflow with a single task
+# `num_jobs_per_workflow` job
+def _user_flow_job(
+    admin: FractalClient,
+    working_task_id: int,
+):
+    user = _create_user_client(admin, user_identifier="job")
+    proj = user.add_project(ProjectCreate(name="MyProject_uj"))
+    ds = user.add_dataset(
+        proj.id, DatasetCreate(name="MyDataset_uj", type="type")
+    )
+    user.add_resource(
+        proj.id,
+        ds.id,
+        resource=ResourceCreate(path="/invalidpath"),
+    )
+    wf = user.add_workflow(proj.id, WorkflowCreate(name="MyWorkflow_uj"))
+    user.add_workflowtask(
+        proj.id, wf.id, working_task_id, WorkflowTaskCreate()
+    )
+    num_jobs_per_workflow = 100
+    for i in range(num_jobs_per_workflow):
+        user.apply_workflow(
+            proj.id, wf.id, ds.id, ds.id, applyworkflow=ApplyWorkflowCreate()
+        )
+
+
 if __name__ == "__main__":
     create_first_user()
     admin = FractalClient()
@@ -127,5 +255,8 @@ if __name__ == "__main__":
     _user_flow_power(
         admin, working_task_id=working_task.id, failing_task_id=failing_task.id
     )
+    _user_flow_dataset(admin, working_task_id=working_task.id)
+    _user_flow_project(admin, working_task_id=working_task.id)
+    _user_flow_job(admin, working_task_id=working_task.id)
 
     admin.wait_for_all_jobs()
