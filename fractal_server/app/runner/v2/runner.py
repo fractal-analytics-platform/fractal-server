@@ -45,7 +45,7 @@ def _validate_parallelization_list_valid(
                 "An element in parallelization list does not match "
                 f"with any image:\n{kwargs=}"
             )
-        if "buffer" in kwargs.keys() or "root_dir" in kwargs.keys():
+        if "buffer" in kwargs.keys():
             raise ValueError(
                 f"An element in parallelization list is not valid:\n{kwargs=}"
             )
@@ -99,7 +99,7 @@ def execute_tasks_v2(
                 paths = [image["path"] for image in filtered_images]
                 function_kwargs = dict(
                     paths=paths,
-                    root_dir=tmp_dataset.root_dir,
+                    # root_dir=tmp_dataset.root_dir,
                     buffer=tmp_buffer,
                     **wftask.args,
                 )
@@ -123,7 +123,7 @@ def execute_tasks_v2(
                     list_function_kwargs.append(
                         dict(
                             path=image["path"],
-                            root_dir=tmp_dataset.root_dir,
+                            # root_dir=tmp_dataset.root_dir,
                             buffer=tmp_buffer,
                             **wftask.args,
                         )
@@ -132,11 +132,11 @@ def execute_tasks_v2(
                 # Use pre-made parallelization_list
                 list_function_kwargs = deepcopy(parallelization_list)
                 for ind, kwargs in enumerate(list_function_kwargs):
-                    if "root_dir" in kwargs or "buffer" in kwargs:
+                    if "buffer" in kwargs:
                         raise ValueError(f"Invalid {kwargs=}")
                     list_function_kwargs[ind].update(
                         dict(
-                            root_dir=tmp_dataset.root_dir,
+                            # root_dir=tmp_dataset.root_dir,
                             buffer=tmp_buffer,
                             **wftask.args,
                         )

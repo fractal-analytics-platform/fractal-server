@@ -18,7 +18,7 @@ class Dataset(BaseModel):
     id: Optional[int] = None
     history: list[dict[str, Any]] = []
     # New in v2
-    root_dir: str
+    # root_dir: str
     images: list[SingleImage] = Field(default_factory=list)
     filters: FilterSet = Field(default_factory=dict)
     # Temporary state
