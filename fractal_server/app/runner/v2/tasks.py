@@ -37,8 +37,8 @@ def create_ome_zarr(
     TBD
 
     Args:
-        root_dir: Absolute path to parent folder for plate-level Zarr.
         image_dir: Absolute path to images folder.
+        zarr_dir: Absolute path to parent folder for plate-level Zarr.
     """
     zarr_dir = zarr_dir.rstrip("/")
 
@@ -103,9 +103,8 @@ def yokogawa_to_zarr(
     TBD
 
     Args:
-        root_dir: Absolute path to parent folder for plate-level Zarr.
         path:
-            Relative image path within `root_dir`, e.g.`"plate.zarr/A/01/0"".
+            Absolute NGFF-image path, e.g.`"/tmp/plate.zarr/A/01/0"".
     """
 
     print("[yokogawa_to_zarr] START")
@@ -236,7 +235,7 @@ def copy_data(
     *,
     # Standard arguments
     # Zarr group (typically the plate one)
-    path: str,  # Relative path to NGFF image within root_dir
+    path: str,
     buffer: dict[str, Any],  # Used to receive information from an "init" task
 ) -> dict[str, Any]:
 
