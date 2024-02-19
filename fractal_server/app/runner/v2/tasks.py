@@ -319,6 +319,7 @@ def create_ome_zarr_multiplex(
             f"Something wrong in create_ome_zarr_multiplex. {paths=}"
         )
 
+    zarr_dir = zarr_dir.rstrip("/")
     # Based on images in image_folder, create plate OME-Zarr
     # Path(root_dir).mkdir(parents=True)
     plate_zarr_name = "my_plate.zarr"
@@ -350,7 +351,7 @@ def create_ome_zarr_multiplex(
     for ind, image_relative_path in enumerate(image_relative_paths):
         new_images.append(
             dict(
-                path=f"{plate_zarr_name}/{image_relative_path}",
+                path=f"{zarr_dir}/{plate_zarr_name}/{image_relative_path}",
                 well="_".join(image_relative_path.split("/")[:2]),
                 acquisition=acquisitions[ind],
             )
@@ -359,12 +360,24 @@ def create_ome_zarr_multiplex(
         new_images=new_images,
         buffer=dict(
             image_raw_paths={
-                f"{plate_zarr_name}/A/01/0": f"{image_dir}/figure_A01_0.tif",
-                f"{plate_zarr_name}/A/01/1": f"{image_dir}/figure_A01_1.tif",
-                f"{plate_zarr_name}/A/01/2": f"{image_dir}/figure_A01_2.tif",
-                f"{plate_zarr_name}/A/02/0": f"{image_dir}/figure_A02_0.tif",
-                f"{plate_zarr_name}/A/02/1": f"{image_dir}/figure_A02_1.tif",
-                f"{plate_zarr_name}/A/02/2": f"{image_dir}/figure_A02_2.tif",
+                (
+                    f"{zarr_dir}/{plate_zarr_name}/A/01/0"
+                ): f"{image_dir}/figure_A01_0.tif",
+                (
+                    f"{zarr_dir}/{plate_zarr_name}/A/01/1"
+                ): f"{image_dir}/figure_A01_1.tif",
+                (
+                    f"{zarr_dir}/{plate_zarr_name}/A/01/2"
+                ): f"{image_dir}/figure_A01_2.tif",
+                (
+                    f"{zarr_dir}/{plate_zarr_name}/A/02/0"
+                ): f"{image_dir}/figure_A02_0.tif",
+                (
+                    f"{zarr_dir}/{plate_zarr_name}/A/02/1"
+                ): f"{image_dir}/figure_A02_1.tif",
+                (
+                    f"{zarr_dir}/{plate_zarr_name}/A/02/2"
+                ): f"{image_dir}/figure_A02_2.tif",
             },
         ),
         new_filters=dict(
