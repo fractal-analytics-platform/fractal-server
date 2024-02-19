@@ -2,12 +2,13 @@ from pathlib import Path
 
 import pytest
 from devtools import debug
-from images import find_image_by_path
-from models import Dataset
-from models import Workflow
-from models import WorkflowTask
-from runner import execute_tasks_v2
-from tasks import TASK_LIST
+
+from fractal_server.v2 import Dataset
+from fractal_server.v2 import execute_tasks_v2
+from fractal_server.v2 import find_image_by_path
+from fractal_server.v2 import TASK_LIST
+from fractal_server.v2 import Workflow
+from fractal_server.v2 import WorkflowTask
 
 
 def test_workflow_1(tmp_path: Path):
@@ -16,13 +17,13 @@ def test_workflow_1(tmp_path: Path):
     2. illumination correction (new images)
     3. new_ome_zarr + MIP
     """
-    root_dir = (tmp_path / "root_dir").as_posix()
-    dataset_in = Dataset(id=1, root_dir=root_dir)
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+    dataset_in = Dataset(id=1)
     dataset_out = execute_tasks_v2(
         wf_task_list=[
             WorkflowTask(
                 task=TASK_LIST["create_ome_zarr"],
-                args=dict(image_dir="/tmp/input_images"),
+                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
             ),
             WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
             WorkflowTask(
@@ -55,18 +56,18 @@ def test_workflow_1(tmp_path: Path):
 
     debug(dataset_out.images)
     assert set(dataset_out.image_paths) == {
-        "my_plate.zarr/A/01/0",
-        "my_plate.zarr/A/02/0",
-        "my_plate.zarr/A/02/0_corr",
-        "my_plate.zarr/A/01/0_corr",
-        "my_plate_mip.zarr/A/01/0_corr",
-        "my_plate_mip.zarr/A/02/0_corr",
+        f"{zarr_dir}/my_plate.zarr/A/01/0",
+        f"{zarr_dir}/my_plate.zarr/A/02/0",
+        f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
+        f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
+        f"{zarr_dir}/my_plate_mip.zarr/A/01/0_corr",
+        f"{zarr_dir}/my_plate_mip.zarr/A/02/0_corr",
     }
     img = find_image_by_path(
-        path="my_plate.zarr/A/01/0_corr", images=dataset_out.images
+        path=f"{zarr_dir}/my_plate.zarr/A/01/0_corr", images=dataset_out.images
     )
     assert img == {
-        "path": "my_plate.zarr/A/01/0_corr",
+        "path": f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
         "well": "A_01",
         "plate": "my_plate.zarr",
         "data_dimensionality": "3",
@@ -74,10 +75,11 @@ def test_workflow_1(tmp_path: Path):
     }
 
     img = find_image_by_path(
-        path="my_plate_mip.zarr/A/01/0_corr", images=dataset_out.images
+        path=f"{zarr_dir}/my_plate_mip.zarr/A/01/0_corr",
+        images=dataset_out.images,
     )
     assert img == {
-        "path": "my_plate_mip.zarr/A/01/0_corr",
+        "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0_corr",
         "well": "A_01",
         "plate": "my_plate_mip.zarr",
         "data_dimensionality": "2",
@@ -90,13 +92,13 @@ def test_workflow_2(tmp_path: Path):
     1. create-ome-zarr + yokogawa-to-zarr
     2. illumination correction (overwrite_input=True)
     """
-    root_dir = (tmp_path / "root_dir").as_posix()
-    dataset_in = Dataset(id=1, root_dir=root_dir)
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+    dataset_in = Dataset(id=1)
     dataset_out = execute_tasks_v2(
         wf_task_list=[
             WorkflowTask(
                 task=TASK_LIST["create_ome_zarr"],
-                args=dict(image_dir="/tmp/input_images"),
+                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
             ),
             WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
             WorkflowTask(
@@ -122,14 +124,14 @@ def test_workflow_2(tmp_path: Path):
     debug(dataset_out.images)
     assert dataset_out.images == [
         {
-            "path": "my_plate.zarr/A/01/0",
+            "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
             "well": "A_01",
             "plate": "my_plate.zarr",
             "data_dimensionality": "3",
             "illumination_correction": True,
         },
         {
-            "path": "my_plate.zarr/A/02/0",
+            "path": f"{zarr_dir}/my_plate.zarr/A/02/0",
             "well": "A_02",
             "plate": "my_plate.zarr",
             "data_dimensionality": "3",
@@ -143,13 +145,13 @@ def test_workflow_3(tmp_path: Path):
     1. create-ome-zarr + yokogawa-to-zarr
     2. illumination correction (overwrite_input=True) on a single well
     """
-    root_dir = (tmp_path / "root_dir").as_posix()
-    dataset_in = Dataset(id=1, root_dir=root_dir)
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+    dataset_in = Dataset(id=1, zarr_dir=zarr_dir)
     dataset_out = execute_tasks_v2(
         wf_task_list=[
             WorkflowTask(
                 task=TASK_LIST["create_ome_zarr"],
-                args=dict(image_dir="/tmp/input_images"),
+                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
             ),
             WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
             WorkflowTask(
@@ -177,14 +179,14 @@ def test_workflow_3(tmp_path: Path):
     debug(dataset_out.images)
     assert dataset_out.images == [
         {
-            "path": "my_plate.zarr/A/01/0",
+            "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
             "well": "A_01",
             "plate": "my_plate.zarr",
             "data_dimensionality": "3",
             "illumination_correction": True,
         },
         {
-            "path": "my_plate.zarr/A/02/0",
+            "path": f"{zarr_dir}/my_plate.zarr/A/02/0",
             "well": "A_02",
             "plate": "my_plate.zarr",
             "data_dimensionality": "3",
@@ -280,6 +282,7 @@ WORKFLOWS = [
 @pytest.mark.skip()
 @pytest.mark.parametrize("workflow", WORKFLOWS)
 def test_full_workflows(workflow: Workflow, tmp_path: Path):
-    root_dir = (tmp_path / "root_dir").as_posix()
-    dataset = Dataset(id=1, root_dir=root_dir)
+    zarr_dir = (tmp_path / "zarr_dir").as_posix()
+    print(zarr_dir)
+    dataset = Dataset(id=1)
     execute_tasks_v2(wf_task_list=workflow.task_list, dataset=dataset)
