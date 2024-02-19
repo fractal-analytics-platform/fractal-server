@@ -11,6 +11,11 @@ from fractal_server.v2 import Workflow
 from fractal_server.v2 import WorkflowTask
 
 
+def _assert_image_data_exist(image_list: list[dict]):
+    for image in image_list:
+        assert (Path(image["path"]) / "data").exists()
+
+
 def test_workflow_1(tmp_path: Path):
     """
     1. create-ome-zarr + yokogawa-to-zarr
@@ -86,6 +91,8 @@ def test_workflow_1(tmp_path: Path):
         "illumination_correction": True,
     }
 
+    _assert_image_data_exist(dataset_out.images)
+
 
 def test_workflow_2(tmp_path: Path):
     """
@@ -138,6 +145,8 @@ def test_workflow_2(tmp_path: Path):
             "illumination_correction": True,
         },
     ]
+
+    _assert_image_data_exist(dataset_out.images)
 
 
 def test_workflow_3(tmp_path: Path):
@@ -192,6 +201,8 @@ def test_workflow_3(tmp_path: Path):
             "data_dimensionality": "3",
         },
     ]
+
+    _assert_image_data_exist(dataset_out.images)
 
 
 def test_workflow_4(tmp_path: Path):
@@ -259,6 +270,8 @@ def test_workflow_4(tmp_path: Path):
             "data_dimensionality": "3",
         },
     ]
+
+    _assert_image_data_exist(dataset_out.images)
 
 
 WORKFLOWS = [
