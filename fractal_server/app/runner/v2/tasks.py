@@ -150,9 +150,9 @@ def illumination_correction(
     else:
         new_path = f"{path}_corr"
 
-        Path(new_path).mkdir()
-        with (Path(new_path) / "data").open("w") as f:
-            f.write("Illuination correction\n")
+        Path(new_path).mkdir(exist_ok=True)
+        with (Path(new_path) / "data").open("a") as f:
+            f.write(f"Illumination correction, {subsets=}\n")
 
         print(f"[illumination_correction] {new_path=}")
         out = dict(new_images=[dict(path=new_path)])
