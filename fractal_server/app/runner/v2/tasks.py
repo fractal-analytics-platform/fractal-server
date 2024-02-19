@@ -1,4 +1,5 @@
 import os
+import shutil
 from pathlib import Path
 from typing import Any
 from typing import Literal
@@ -240,9 +241,10 @@ def copy_data(
     old_plate = buffer["new_ome_zarr"]["old_plate"]
     new_plate = buffer["new_ome_zarr"]["new_plate"]
     old_path = path.replace(new_plate, old_plate)
-    root_dir = _extract_common_root(path).get("shared_root_dir")
-    old_zarr_path = Path(root_dir) / old_path
-    new_zarr_path = Path(root_dir) / path
+    old_zarr_path = old_path
+    new_zarr_path = path
+
+    shutil.copytree(old_zarr_path, new_zarr_path)
 
     print("[copy_data] START")
     print(f"[copy_data] {old_zarr_path=}")
@@ -263,9 +265,8 @@ def maximum_intensity_projection(
     old_plate = buffer["new_ome_zarr"]["old_plate"]
     new_plate = buffer["new_ome_zarr"]["new_plate"]
     old_path = path.replace(new_plate, old_plate)
-    root_dir = _extract_common_root(path)
-    old_zarr_path = Path(root_dir) / old_path
-    new_zarr_path = Path(root_dir) / path
+    old_zarr_path = old_path
+    new_zarr_path = path
 
     print("[maximum_intensity_projection] START")
     print(f"[maximum_intensity_projection] {old_zarr_path=}")
@@ -280,12 +281,12 @@ def maximum_intensity_projection(
 def init_channel_parallelization(
     *,
     # Standard arguments
-    root_dir: str,
+    # root_dir: str,
     paths: list[str],
     buffer: Optional[dict[str, Any]] = None,
 ) -> dict:
     print("[init_channel_parallelization] START")
-    print(f"[init_channel_parallelization] {root_dir=}")
+    # print(f"[init_channel_parallelization] {root_dir=}")
     print(f"[init_channel_parallelization] {paths=}")
     parallelization_list = []
     for path in paths:
@@ -315,7 +316,7 @@ def create_ome_zarr_multiplex(
         )
 
     # Based on images in image_folder, create plate OME-Zarr
-    Path(root_dir).mkdir(parents=True)
+    # Path(root_dir).mkdir(parents=True)
     plate_zarr_name = "my_plate.zarr"
     zarr_path = (Path(root_dir) / plate_zarr_name).as_posix()
 
