@@ -388,6 +388,9 @@ def test_workflow_7(tmp_path: Path):
                 task=TASK_LIST["init_registration"],
                 args={"ref_cycle_name": "0"},
             ),
+            WorkflowTask(
+                task=TASK_LIST["registration"],
+            ),
         ],
         dataset=dataset_in,
     )
@@ -397,6 +400,7 @@ def test_workflow_7(tmp_path: Path):
         "create_ome_zarr_multiplex",
         "yokogawa_to_zarr",
         "init_registration",
+        "registration",
     ]
 
     _assert_image_data_exist(dataset_out.images)

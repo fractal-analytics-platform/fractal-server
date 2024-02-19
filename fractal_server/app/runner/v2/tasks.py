@@ -444,6 +444,30 @@ def init_registration(
     return dict(parallelization_list=parallelization_list)
 
 
+def registration(
+    *,
+    # Standard arguments
+    path: str,
+    buffer: Optional[dict[str, Any]] = None,
+    # Non-standard arguments
+    ref_path: str,
+    overwrite_input: bool = True,
+) -> dict:
+    print("[registration] START")
+    print(f"[registration] {path=}")
+
+    if overwrite_input:
+        out = dict(edited_images=[dict(path=path)])
+
+        with (Path(path) / "data").open("a") as f:
+            f.write(f"registration against {ref_path=}\n")
+    else:
+        raise NotImplementedError
+    print(f"[registration] {out=}")
+    print("[registration] END")
+    return out
+
+
 TASK_LIST = {
     "create_ome_zarr": Task(
         function=create_ome_zarr, task_type="non_parallel"
@@ -472,5 +496,10 @@ TASK_LIST = {
     ),
     "init_registration": Task(
         function=init_registration, task_type="non_parallel"
+    ),
+    "registration": Task(
+        function=registration,
+        task_type="parallel",
+        new_filters=dict(registration=True),
     ),
 }
