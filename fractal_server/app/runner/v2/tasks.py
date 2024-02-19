@@ -308,11 +308,11 @@ def init_channel_parallelization(
 def create_ome_zarr_multiplex(
     *,
     # Standard arguments
-    root_dir: str,
     paths: list[str],
     buffer: Optional[dict[str, Any]] = None,
     # Task-specific arguments
     image_dir: str,
+    zarr_dir: str,
 ) -> dict:
     if len(paths) > 0:
         raise RuntimeError(
@@ -322,15 +322,15 @@ def create_ome_zarr_multiplex(
     # Based on images in image_folder, create plate OME-Zarr
     # Path(root_dir).mkdir(parents=True)
     plate_zarr_name = "my_plate.zarr"
-    zarr_path = (Path(root_dir) / plate_zarr_name).as_posix()
+    zarr_path = (Path(zarr_dir) / plate_zarr_name).as_posix()
 
     print("[create_ome_zarr_multiplex] START")
     print(f"[create_ome_zarr_multiplex] {image_dir=}")
-    print(f"[create_ome_zarr_multiplex] {root_dir=}")
+    print(f"[create_ome_zarr_multiplex] {zarr_dir=}")
     print(f"[create_ome_zarr_multiplex] {zarr_path=}")
 
     # Create (fake) OME-Zarr folder on disk
-    Path(zarr_path).mkdir()
+    Path(zarr_path).mkdir(parents=True)
 
     # Create well/image OME-Zarr folders on disk
     image_relative_paths = [
