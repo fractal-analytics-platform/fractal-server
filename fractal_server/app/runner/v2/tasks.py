@@ -270,6 +270,8 @@ def maximum_intensity_projection(
     old_zarr_path = old_path
     new_zarr_path = path
 
+    shutil.copytree(old_zarr_path, new_zarr_path)
+
     print("[maximum_intensity_projection] START")
     print(f"[maximum_intensity_projection] {old_zarr_path=}")
     print(f"[maximum_intensity_projection] {new_zarr_path=}")
