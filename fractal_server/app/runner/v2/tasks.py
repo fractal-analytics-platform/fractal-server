@@ -148,6 +148,8 @@ def illumination_correction(
 
     else:
         new_path = f"{path}_corr"
+
+        Path(new_path).mkdir()
         with (Path(new_path) / "data").open("w") as f:
             f.write("Illuination correction\n")
 
