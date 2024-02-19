@@ -403,7 +403,7 @@ def init_registration(
 
     # Detect plate prefix
     shared_plate = _extract_common_root(paths).get("shared_plate")
-
+    shared_root_dir = _extract_common_root(paths).get("shared_root_dir")
     #    shared_plate = set(path.split("/")[0] for path in paths)
     # if len(shared_plate) > 1:
     #     raise ValueError
@@ -414,7 +414,9 @@ def init_registration(
     x_cycles_per_well = {}
     wells = []
     for path in paths:
-        path_splits = path.lstrip(shared_plate).strip("/").split("/")
+        path_splits = (
+            path.lstrip(shared_root_dir + shared_plate).strip("/").split("/")
+        )
         well = "/".join(path_splits[0:2])
         wells.append(well)
         image = path_splits[2]
