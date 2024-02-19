@@ -393,7 +393,6 @@ def create_ome_zarr_multiplex(
 def init_registration(
     *,
     # Standard arguments
-    root_dir: str,
     paths: list[str],
     buffer: Optional[dict[str, Any]] = None,
     # Non-standard arguments
@@ -401,14 +400,15 @@ def init_registration(
 ) -> dict:
 
     print("[init_registration] START")
-    print(f"[init_registration] {root_dir=}")
     print(f"[init_registration] {paths=}")
 
     # Detect plate prefix
-    shared_plate = set(path.split("/")[0] for path in paths)
-    if len(shared_plate) > 1:
-        raise ValueError
-    shared_plate = list(shared_plate)[0]
+    shared_plate = _extract_common_root(paths).get("shared_plate")
+
+    #    shared_plate = set(path.split("/")[0] for path in paths)
+    # if len(shared_plate) > 1:
+    #     raise ValueError
+    # shared_plate = list(shared_plate)[0]
     print(f"[init_registration] Identified {shared_plate=}")
 
     ref_cycles_per_well = {}
