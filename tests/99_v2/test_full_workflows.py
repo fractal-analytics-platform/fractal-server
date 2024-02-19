@@ -2,12 +2,13 @@ from pathlib import Path
 
 import pytest
 from devtools import debug
-from images import find_image_by_path
-from models import Dataset
-from models import Workflow
-from models import WorkflowTask
-from runner import execute_tasks_v2
-from tasks import TASK_LIST
+
+from fractal_server.v2 import Dataset
+from fractal_server.v2 import execute_tasks_v2
+from fractal_server.v2 import find_image_by_path
+from fractal_server.v2 import TASK_LIST
+from fractal_server.v2 import Workflow
+from fractal_server.v2 import WorkflowTask
 
 
 def test_workflow_1(tmp_path: Path):
