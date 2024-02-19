@@ -65,7 +65,10 @@ def create_ome_zarr(
     out = dict(
         new_images=[
             dict(
-                path=f"{plate_zarr_name}/{image_relative_path}",
+                path=(
+                    f"{zarr_dir.rstrip('/')}/{plate_zarr_name}/"
+                    f"{image_relative_path}"
+                ),
                 well="_".join(image_relative_path.split("/")[:2]),
             )
             for image_relative_path in image_relative_paths
@@ -88,7 +91,6 @@ def create_ome_zarr(
 def yokogawa_to_zarr(
     *,
     # Standard arguments
-    # root_dir: str,
     path: str,
     buffer: dict[str, Any],
 ) -> dict:
@@ -102,7 +104,6 @@ def yokogawa_to_zarr(
     """
 
     print("[yokogawa_to_zarr] START")
-    # print(f"[yokogawa_to_zarr] {root_dir=}")
     print(f"[yokogawa_to_zarr] {path=}")
 
     source_data = buffer["image_raw_paths"][path]
@@ -122,7 +123,6 @@ def yokogawa_to_zarr(
 def illumination_correction(
     *,
     # Standard arguments
-    # root_dir: str,
     path: str,
     buffer: Optional[dict[str, Any]] = None,
     # Non-standard arguments
@@ -132,7 +132,6 @@ def illumination_correction(
     overwrite_input: bool = False,
 ) -> dict:
     print("[illumination_correction] START")
-    # print(f"[illumination_correction] {root_dir=}")
     print(f"[illumination_correction] {path=}")
     print(f"[illumination_correction] {overwrite_input=}")
     print(f"[illumination_correction] {subsets=}")
@@ -158,14 +157,12 @@ def illumination_correction(
 def cellpose_segmentation(
     *,
     # Standard arguments
-    # root_dir: str,
     path: str,
     buffer: Optional[dict[str, Any]] = None,
     # Non-standard arguments
     default_diameter: int = 100,
 ) -> dict:
     print("[cellpose_segmentation] START")
-    # print(f"[cellpose_segmentation] {root_dir=}")
     print(f"[cellpose_segmentation] {path=}")
 
     with (Path(path) / "data").open("a") as f:
@@ -180,7 +177,6 @@ def cellpose_segmentation(
 def new_ome_zarr(
     *,
     # Standard arguments
-    # root_dir: str,
     paths: list[str],
     buffer: Optional[dict[str, Any]] = None,
     # Non-standard arguments
@@ -193,7 +189,6 @@ def new_ome_zarr(
     old_plate = dict_shared.get("shared_plate")
 
     print("[new_ome_zarr] START")
-    # print(f"[new_ome_zarr] {root_dir=}")
     print(f"[new_ome_zarr] {paths=}")
     print(f"[new_ome_zarr] Identified {old_plate=}")
 
@@ -233,7 +228,6 @@ def new_ome_zarr(
 def copy_data(
     *,
     # Standard arguments
-    root_dir: str,  # Parent folder of the main
     # Zarr group (typically the plate one)
     path: str,  # Relative path to NGFF image within root_dir
     buffer: dict[str, Any],  # Used to receive information from an "init" task
@@ -242,6 +236,7 @@ def copy_data(
     old_plate = buffer["new_ome_zarr"]["old_plate"]
     new_plate = buffer["new_ome_zarr"]["new_plate"]
     old_path = path.replace(new_plate, old_plate)
+    root_dir = _extract_common_root(path).get()
     old_zarr_path = Path(root_dir) / old_path
     new_zarr_path = Path(root_dir) / path
 
@@ -257,7 +252,6 @@ def copy_data(
 def maximum_intensity_projection(
     *,
     # Standard arguments
-    root_dir: str,  # Parent folder of the main Zarr
     # group (typically the plate one)
     path: str,  # Relative path to NGFF image within root_dir
     buffer: dict[str, Any],  # Used to receive information from an "init" task
@@ -265,6 +259,7 @@ def maximum_intensity_projection(
     old_plate = buffer["new_ome_zarr"]["old_plate"]
     new_plate = buffer["new_ome_zarr"]["new_plate"]
     old_path = path.replace(new_plate, old_plate)
+    root_dir = _extract_common_root(path)
     old_zarr_path = Path(root_dir) / old_path
     new_zarr_path = Path(root_dir) / path
 
