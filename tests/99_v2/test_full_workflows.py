@@ -1,13 +1,11 @@
 from pathlib import Path
 
-import pytest
 from devtools import debug
 
 from fractal_server.v2 import Dataset
 from fractal_server.v2 import execute_tasks_v2
 from fractal_server.v2 import find_image_by_path
 from fractal_server.v2 import TASK_LIST
-from fractal_server.v2 import Workflow
 from fractal_server.v2 import WorkflowTask
 
 
@@ -372,12 +370,18 @@ def test_workflow_6(tmp_path: Path):
     _assert_image_data_exist(dataset_out.images)
 
 
-WORKFLOWS = [
-    Workflow(
-        task_list=[
+def test_workflow_7(tmp_path: Path):
+    """
+    1. create ome zarr multiplex + yokogawa-to-zarr
+    2. init_registration
+    """
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+    dataset_in = Dataset(id=1, zarr_dir=zarr_dir)
+    dataset_out = execute_tasks_v2(
+        wf_task_list=[
             WorkflowTask(
                 task=TASK_LIST["create_ome_zarr_multiplex"],
-                args=dict(image_dir="/tmp/input_images"),
+                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
             ),
             WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
             WorkflowTask(
@@ -385,12 +389,33 @@ WORKFLOWS = [
                 args={"ref_cycle_name": "0"},
             ),
         ],
-    ),
-    Workflow(
-        task_list=[
+        dataset=dataset_in,
+    )
+
+    debug(dataset_out)
+    assert dataset_out.history == [
+        "create_ome_zarr_multiplex",
+        "yokogawa_to_zarr",
+        "init_registration",
+    ]
+
+    _assert_image_data_exist(dataset_out.images)
+
+
+def test_workflow_8(tmp_path: Path):
+    """
+    1. create ome zarr + yokogawa-to-zarr
+    2. new_ome_zarr + MIP
+    3. cellpose segmentation for 3D data
+    4. cellpose segmentation for 2D data
+    """
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+    dataset_in = Dataset(id=1, zarr_dir=zarr_dir)
+    dataset_out = execute_tasks_v2(
+        wf_task_list=[
             WorkflowTask(
                 task=TASK_LIST["create_ome_zarr"],
-                args=dict(image_dir="/tmp/input_images"),
+                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
             ),
             WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
             WorkflowTask(
@@ -408,14 +433,48 @@ WORKFLOWS = [
                 filters=dict(data_dimensionality="3", plate=None),
             ),
         ],
-    ),
-]
+        dataset=dataset_in,
+    )
 
+    debug(dataset_out)
+    assert dataset_out.history == [
+        "create_ome_zarr",
+        "yokogawa_to_zarr",
+        "new_ome_zarr",
+        "maximum_intensity_projection",
+        "cellpose_segmentation",
+        "cellpose_segmentation",
+    ]
+    assert dataset_out.images == [
+        {
+            "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
+            "well": "A_01",
+            "plate": "my_plate.zarr",
+            "data_dimensionality": "3",
+        },
+        {
+            "path": f"{zarr_dir}/my_plate.zarr/A/02/0",
+            "well": "A_02",
+            "plate": "my_plate.zarr",
+            "data_dimensionality": "3",
+        },
+        {
+            "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
+            "well": "A_01",
+            "plate": "my_plate_mip.zarr",
+            "data_dimensionality": "2",
+        },
+        {
+            "path": f"{zarr_dir}/my_plate_mip.zarr/A/02/0",
+            "well": "A_02",
+            "plate": "my_plate_mip.zarr",
+            "data_dimensionality": "2",
+        },
+    ]
+    _assert_image_data_exist(dataset_out.images)
 
-@pytest.mark.skip()
-@pytest.mark.parametrize("workflow", WORKFLOWS)
-def test_full_workflows(workflow: Workflow, tmp_path: Path):
-    zarr_dir = (tmp_path / "zarr_dir").as_posix()
-    print(zarr_dir)
-    dataset = Dataset(id=1)
-    execute_tasks_v2(wf_task_list=workflow.task_list, dataset=dataset)
+    # In this workflow, cellpose should have run on both 3D and 2D data
+    for image_path in dataset_out.image_paths:
+        with (Path(image_path) / "data").open("r") as f:
+            log = f.read()
+        assert "Cellpose" in log
