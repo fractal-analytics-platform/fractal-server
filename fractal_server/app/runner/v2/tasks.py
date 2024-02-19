@@ -39,6 +39,7 @@ def create_ome_zarr(
         root_dir: Absolute path to parent folder for plate-level Zarr.
         image_dir: Absolute path to images folder.
     """
+    zarr_dir = zarr_dir.rstrip("/")
 
     if len(paths) > 0:
         raise RuntimeError(f"Something wrong in create_ome_zarr. {paths=}")
@@ -66,8 +67,7 @@ def create_ome_zarr(
         new_images=[
             dict(
                 path=(
-                    f"{zarr_dir.rstrip('/')}/{plate_zarr_name}/"
-                    f"{image_relative_path}"
+                    f"{zarr_dir}/{plate_zarr_name}/" f"{image_relative_path}"
                 ),
                 well="_".join(image_relative_path.split("/")[:2]),
             )
@@ -75,8 +75,12 @@ def create_ome_zarr(
         ],
         buffer=dict(
             image_raw_paths={
-                f"{plate_zarr_name}/A/01/0": f"{image_dir}/figure_A01.tif",
-                f"{plate_zarr_name}/A/02/0": f"{image_dir}/figure_A02.tif",
+                (
+                    f"{zarr_dir}/{plate_zarr_name}" "/A/01/0"
+                ): f"{image_dir}/figure_A01.tif",
+                (
+                    f"{zarr_dir}/{plate_zarr_name}" "/A/02/0"
+                ): f"{image_dir}/figure_A02.tif",
             },
         ),
         new_filters=dict(
@@ -236,7 +240,7 @@ def copy_data(
     old_plate = buffer["new_ome_zarr"]["old_plate"]
     new_plate = buffer["new_ome_zarr"]["new_plate"]
     old_path = path.replace(new_plate, old_plate)
-    root_dir = _extract_common_root(path).get()
+    root_dir = _extract_common_root(path).get("shared_root_dir")
     old_zarr_path = Path(root_dir) / old_path
     new_zarr_path = Path(root_dir) / path
 
