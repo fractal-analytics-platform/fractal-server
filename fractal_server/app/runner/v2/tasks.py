@@ -76,10 +76,10 @@ def create_ome_zarr(
         buffer=dict(
             image_raw_paths={
                 (
-                    f"{zarr_dir}/{plate_zarr_name}" "/A/01/0"
+                    f"{zarr_dir}/{plate_zarr_name}/A/01/0"
                 ): f"{image_dir}/figure_A01.tif",
                 (
-                    f"{zarr_dir}/{plate_zarr_name}" "/A/02/0"
+                    f"{zarr_dir}/{plate_zarr_name}/A/02/0"
                 ): f"{image_dir}/figure_A02.tif",
             },
         ),
