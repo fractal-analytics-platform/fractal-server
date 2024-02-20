@@ -4,15 +4,13 @@ from copy import deepcopy
 from .images import _deduplicate_list_of_dicts
 from .images import filter_images
 from .images import find_image_by_path
-from .images import ImageAttributesType
 from .images import SingleImage
 from .models import Dataset
-from .models import KwargsType
+from .models import DictStrAny
 from .models import WorkflowTask
 from .runner_functions import _run_non_parallel_task
 from .runner_functions import _run_parallel_task
 from .task_output import TaskOutput
-from .utils import ipjson
 
 
 # FIXME: define RESERVED_ARGUMENTS = ["buffer", ...]
@@ -21,7 +19,7 @@ from .utils import ipjson
 def _apply_attributes_to_image(
     *,
     image: SingleImage,
-    filters: ImageAttributesType,
+    filters: DictStrAny,
 ) -> SingleImage:
     updated_image = copy(image)
     for key, value in filters.items():
@@ -30,7 +28,7 @@ def _apply_attributes_to_image(
 
 
 def _validate_parallelization_list_valid(
-    parallelization_list: list[KwargsType],
+    parallelization_list: list[DictStrAny],
     current_image_paths: list[SingleImage],
 ) -> None:
     for kwargs in parallelization_list:
@@ -61,8 +59,6 @@ def execute_tasks_v2(
 
     for wftask in wf_task_list:
         task = wftask.task
-
-        print(f"NOW RUN {task.name} (task type: {task.task_type})")
 
         # Extract tmp_buffer
         if tmp_dataset.buffer is not None:
@@ -96,7 +92,7 @@ def execute_tasks_v2(
                     dataset_filters=tmp_dataset.filters,
                     wftask_filters=wftask.filters,
                 )
-                paths = [image["path"] for image in filtered_images]
+                paths = [image.path for image in filtered_images]
                 function_kwargs = dict(
                     paths=paths,
                     buffer=tmp_buffer,
@@ -150,6 +146,7 @@ def execute_tasks_v2(
                     )
                     for kwargs in list_function_kwargs
                 ]  # FIXME change name `filtered_images`
+
             task_output = _run_parallel_task(
                 task=task,
                 list_function_kwargs=list_function_kwargs,
@@ -160,25 +157,19 @@ def execute_tasks_v2(
 
         # Redundant validation step (useful especially to check the merged
         # output of a parallel task)
-        TaskOutput(**task_output)
+        TaskOutput(**task_output.dict())
 
         # Decorate new images with source-image attributes
-        new_images = task_output.get("new_images", [])
+        new_images = task_output.new_images or []
 
         # Construct up-to-date filters
         new_filters = copy(tmp_dataset.filters)
         new_filters.update(task.new_filters)
-        actual_task_new_filters = task_output.get("new_filters", {})
+        actual_task_new_filters = task_output.new_filters or {}
         new_filters.update(actual_task_new_filters)
-        print(f"Dataset old filters:\n{ipjson(tmp_dataset.filters)}")
-        print(f"Task.new_filters:\n{ipjson(task.new_filters)}")
-        print(
-            f"Actual new filters from task:\n{ipjson(actual_task_new_filters)}"
-        )
-        print(f"Combined new filters:\n{ipjson(new_filters)}")
 
         # Add filters to edited images, and update Dataset.images
-        edited_images = task_output.get("edited_images", [])
+        edited_images = task_output.edited_images or []
         edited_paths = [image.path for image in edited_images]
         for ind, image in enumerate(tmp_dataset.images):
             if image.path in edited_paths:
@@ -187,7 +178,7 @@ def execute_tasks_v2(
                 )
                 tmp_dataset.images[ind] = updated_image
         # Add filters to new images
-        new_images = task_output.get("new_images", [])
+        new_images = task_output.new_images or []
         for ind, image in enumerate(new_images):
             updated_image = _apply_attributes_to_image(
                 image=image, filters=new_filters
@@ -206,18 +197,17 @@ def execute_tasks_v2(
                 raise ValueError(f"Found {overlap=}")
             except StopIteration:
                 pass
-            print(f"Add {image} to list")
             tmp_dataset.images.append(image)
 
         # Update Dataset.filters
         tmp_dataset.filters = new_filters
 
         # Update Dataset.buffer
-        tmp_dataset.buffer = task_output.get("buffer")
+        tmp_dataset.buffer = task_output.buffer
 
         # Update Dataset.parallelization_list
         # NOTE: this mut be done *after* Dataset.images was updated
-        new_parallelization_list = task_output.get("parallelization_list")
+        new_parallelization_list = task_output.parallelization_list
         if new_parallelization_list is not None:
             _validate_parallelization_list_valid(
                 parallelization_list=new_parallelization_list,
@@ -227,10 +217,5 @@ def execute_tasks_v2(
 
         # Update Dataset.history
         tmp_dataset.history.append(task.name)
-
-        # End-of-task logs
-        print(f"AFTER RUNNING {task.name}, we have this dataset:")
-        print(ipjson(tmp_dataset.dict()))
-        print("\n" + "-" * 88 + "\n")
 
     return tmp_dataset
