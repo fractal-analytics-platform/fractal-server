@@ -53,6 +53,7 @@ class ParallelTaskOutput(BaseModel):
     new_images: Optional[list[SingleImage]] = None
     edited_images: Optional[list[SingleImage]] = None
     new_filters: Optional[FilterSet] = None  # FIXME
+    removed_images: Optional[list[SingleImage]] = None
 
 
 def merge_outputs(
