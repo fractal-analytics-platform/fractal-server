@@ -62,9 +62,7 @@ class Dataset(BaseModel):
 class Task(BaseModel):
     function: Callable  # mock of task.command
     meta: DictStrAny = Field(default_factory=dict)
-    new_filters: DictStrAny = Field(
-        default_factory=dict
-    )  # FIXME: this is not using ImageAttributesType any more!
+    new_filters: DictStrAny = Field(default_factory=dict)
     task_type: Literal["non_parallel", "parallel"] = "non_parallel"
 
     @validator("new_filters")
