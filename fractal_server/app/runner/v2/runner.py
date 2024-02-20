@@ -186,6 +186,9 @@ def execute_tasks_v2(
             new_images[ind] = updated_image
         new_images = _deduplicate_list_of_dicts(new_images)
 
+        # Get removed images
+        removed_images = task_output.removed_images or []
+
         # Add new images to Dataset.images
         for image in new_images:
             try:
@@ -199,6 +202,16 @@ def execute_tasks_v2(
                 pass
             tmp_dataset.images.append(image)
 
+        # Remove images from Dataset.images
+        removed_images_paths = [
+            removed_image.path for removed_image in removed_images
+        ]
+
+        tmp_dataset.images = [
+            image
+            for image in tmp_dataset.images
+            if image.path not in removed_images_paths
+        ]
         # Update Dataset.filters
         tmp_dataset.filters = new_filters
 

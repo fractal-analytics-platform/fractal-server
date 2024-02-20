@@ -37,6 +37,8 @@ class TaskOutput(BaseModel):
     of the companion task.
     """
 
+    removed_images: Optional[list[SingleImage]] = None
+
     class Config:
         extra = "forbid"
 
@@ -58,6 +60,7 @@ def merge_outputs(
 
     final_new_images = []
     final_edited_images = []
+    final_removed_images = []
     final_new_filters = None
 
     for task_output in task_outputs:
@@ -73,9 +76,14 @@ def merge_outputs(
                     old_image.attributes | new_image.attributes
                 )
                 final_new_images.append(new_image)
+
         if task_output.edited_images:
             for edited_image in task_output.edited_images:
                 final_edited_images.append(edited_image)
+
+        if task_output.removed_images:
+            for removed_image in task_output.removed_images:
+                final_removed_images.append(removed_image)
 
         new_filters = task_output.new_filters
         if new_filters:
@@ -94,5 +102,7 @@ def merge_outputs(
         final_output.edited_images = final_edited_images
     if final_new_filters:
         final_output.new_filters = final_new_filters
+    if final_edited_images:
+        final_output.removed_images = final_removed_images
 
     return final_output
