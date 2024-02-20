@@ -1,10 +1,10 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Any
 from typing import Literal
 from typing import Optional
 
+from .models import KwargsType
 from .models import Task
 
 
@@ -28,7 +28,7 @@ def create_ome_zarr(
     *,
     # Standard arguments
     paths: list[str],
-    buffer: Optional[dict[str, Any]] = None,
+    buffer: Optional[KwargsType] = None,
     # Task-specific arguments
     image_dir: str,
     zarr_dir: str,
@@ -97,7 +97,7 @@ def yokogawa_to_zarr(
     *,
     # Standard arguments
     path: str,
-    buffer: dict[str, Any],
+    buffer: KwargsType,
 ) -> dict:
     """
     TBD
@@ -128,7 +128,7 @@ def illumination_correction(
     *,
     # Standard arguments
     path: str,
-    buffer: Optional[dict[str, Any]] = None,
+    buffer: Optional[KwargsType] = None,
     # Non-standard arguments
     subsets: Optional[
         dict[Literal["T_index", "C_index", "Z_index"], int]
@@ -164,7 +164,7 @@ def cellpose_segmentation(
     *,
     # Standard arguments
     path: str,
-    buffer: Optional[dict[str, Any]] = None,
+    buffer: Optional[KwargsType] = None,
     # Non-standard arguments
     default_diameter: int = 100,
 ) -> dict:
@@ -184,7 +184,7 @@ def new_ome_zarr(
     *,
     # Standard arguments
     paths: list[str],
-    buffer: Optional[dict[str, Any]] = None,
+    buffer: Optional[KwargsType] = None,
     # Non-standard arguments
     suffix: str = "new",
     project_to_2D: bool = True,
@@ -236,8 +236,8 @@ def copy_data(
     # Standard arguments
     # Zarr group (typically the plate one)
     path: str,
-    buffer: dict[str, Any],  # Used to receive information from an "init" task
-) -> dict[str, Any]:
+    buffer: KwargsType,  # Used to receive information from an "init" task
+) -> KwargsType:
 
     old_plate = buffer["new_ome_zarr"]["old_plate"]
     new_plate = buffer["new_ome_zarr"]["new_plate"]
@@ -261,8 +261,8 @@ def maximum_intensity_projection(
     # Standard arguments
     # group (typically the plate one)
     path: str,  # Relative path to NGFF image within root_dir
-    buffer: dict[str, Any],  # Used to receive information from an "init" task
-) -> dict[str, Any]:
+    buffer: KwargsType,  # Used to receive information from an "init" task
+) -> KwargsType:
     old_plate = buffer["new_ome_zarr"]["old_plate"]
     new_plate = buffer["new_ome_zarr"]["new_plate"]
     old_path = path.replace(new_plate, old_plate)
@@ -286,7 +286,7 @@ def init_channel_parallelization(
     # Standard arguments
     # root_dir: str,
     paths: list[str],
-    buffer: Optional[dict[str, Any]] = None,
+    buffer: Optional[KwargsType] = None,
 ) -> dict:
     print("[init_channel_parallelization] START")
     # print(f"[init_channel_parallelization] {root_dir=}")
@@ -308,7 +308,7 @@ def create_ome_zarr_multiplex(
     *,
     # Standard arguments
     paths: list[str],
-    buffer: Optional[dict[str, Any]] = None,
+    buffer: Optional[KwargsType] = None,
     # Task-specific arguments
     image_dir: str,
     zarr_dir: str,
@@ -393,7 +393,7 @@ def init_registration(
     *,
     # Standard arguments
     paths: list[str],
-    buffer: Optional[dict[str, Any]] = None,
+    buffer: Optional[KwargsType] = None,
     # Non-standard arguments
     ref_cycle_name: str,
 ) -> dict:
@@ -448,7 +448,7 @@ def registration(
     *,
     # Standard arguments
     path: str,
-    buffer: Optional[dict[str, Any]] = None,
+    buffer: Optional[KwargsType] = None,
     # Non-standard arguments
     ref_path: str,
     overwrite_input: bool = True,

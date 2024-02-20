@@ -1,8 +1,8 @@
 from copy import copy
-from typing import Any
 
 from .env import MAX_PARALLELIZATION_LIST_SIZE
 from .images import find_image_by_path
+from .models import KwargsType
 from .models import SingleImage
 from .models import Task
 from .task_output import merge_outputs
@@ -13,9 +13,9 @@ from .utils import pjson
 
 def _run_non_parallel_task(
     task: Task,
-    function_kwargs: dict[str, Any],
+    function_kwargs: KwargsType,
     old_dataset_images: list[SingleImage],
-) -> dict[str, Any]:
+) -> KwargsType:
 
     task_output = task.function(**function_kwargs)
     if task_output is None:
@@ -50,9 +50,9 @@ def _run_non_parallel_task(
 
 def _run_parallel_task(
     task: Task,
-    list_function_kwargs: list[dict[str, Any]],
+    list_function_kwargs: list[KwargsType],
     old_dataset_images: list[SingleImage],
-) -> dict[str, Any]:
+) -> KwargsType:
 
     if len(list_function_kwargs) > MAX_PARALLELIZATION_LIST_SIZE:
         raise ValueError(

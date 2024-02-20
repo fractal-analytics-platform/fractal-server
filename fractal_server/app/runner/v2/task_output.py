@@ -1,4 +1,3 @@
-from typing import Any
 from typing import Optional
 
 from pydantic import BaseModel
@@ -28,7 +27,7 @@ class TaskOutput(BaseModel):
     (e.g. the plate name).
     """
 
-    buffer: Optional[dict[str, Any]] = None
+    buffer: Optional[KwargsType] = None
     """
     Metadata used for communication between an init task and its (parallel)
     companion task.
