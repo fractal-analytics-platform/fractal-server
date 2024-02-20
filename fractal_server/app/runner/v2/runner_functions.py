@@ -22,10 +22,22 @@ def _run_non_parallel_task(
 
     task_output = TaskOutput(**task_output)
 
-    # Process the output, to propagate some image attributes - if possible
-    # FIXME: refactor this into a "process_task_output" function?
+    task_output = process_task_output(
+        task_output=task_output,
+        old_dataset_images=old_dataset_images,
+        old_image_paths=function_kwargs["paths"],
+    )
+
+    return TaskOutput(**task_output.dict())
+
+
+def process_task_output(
+    task_output: TaskOutput,
+    old_image_paths: list[str],
+    old_dataset_images: list[SingleImage],
+):
     if task_output.new_images is not None:
-        old_image_paths = function_kwargs["paths"]
+
         new_image_paths = [
             new_image.path for new_image in task_output.new_images
         ]
@@ -44,8 +56,7 @@ def _run_non_parallel_task(
                 )
                 final_new_images.append(new_image)
             task_output.new_images = final_new_images
-
-    return TaskOutput(**task_output.dict())
+    return task_output
 
 
 def merge_outputs(
