@@ -250,7 +250,9 @@ def async_wrap(func: Callable) -> Callable:
     return async_wrapper
 
 
-def write_args_file(*args: dict[str, Any], path: Path):
+def write_args_file(
+    *args: dict[str, Any], path: Path, include_image_list: bool = False
+):
     """
     Merge arbitrary dictionaries and write to file
 
@@ -261,10 +263,20 @@ def write_args_file(*args: dict[str, Any], path: Path):
             previous ones.
         path:
             Destination for serialised file.
+        include_image_list:
+            If `False`, remove `out["metadata"]["image"]
     """
     out = {}
     for d in args:
         out.update(d)
+
+    # Remove args["metadata"]["image"] key - see issue 1237
+    # (https://github.com/fractal-analytics-platform/fractal-server/issues/1237)
+    try:
+        out["metadata"]["image"] = []
+    except KeyError:
+        pass
+
     with open(path, "w") as f:
         json.dump(out, f, cls=TaskParameterEncoder, indent=4)
 
