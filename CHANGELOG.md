@@ -2,6 +2,8 @@
 
 # Unreleased
 
+* Runner:
+    * Do not include `metadata["image"]` in JSON file with task arguments (\#1238).
 * API:
     * Fix error message for rate limits in apply-workflow endpoint (\#1231).
 * Benchmarks:
