@@ -18,9 +18,9 @@ def _run_non_parallel_task(
     task_output = task.function(**function_kwargs)
 
     if task_output is None:
-        task_output = TaskOutput()
-    else:
-        task_output = TaskOutput(**task_output)
+        return TaskOutput()
+
+    task_output = TaskOutput(**task_output)
 
     # Process the output, to propagate some image attributes - if possible
     # FIXME: refactor this into a "process_task_output" function?
