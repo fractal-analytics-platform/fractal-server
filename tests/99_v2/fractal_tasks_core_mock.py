@@ -4,8 +4,8 @@ from pathlib import Path
 from typing import Literal
 from typing import Optional
 
-from .models import DictStrAny
-from .models import Task
+from fractal_server.app.runner.v2.models import DictStrAny
+from fractal_server.app.runner.v2.models import Task
 
 
 def _extract_common_root(paths: list[str]) -> dict[str, str]:

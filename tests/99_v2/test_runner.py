@@ -5,12 +5,14 @@ import pytest
 from devtools import debug
 from tasks_for_tests import dummy_task
 
-from fractal_server.app.runner.v2.env import MAX_PARALLELIZATION_LIST_SIZE
 from fractal_server.app.runner.v2.models import Dataset
 from fractal_server.app.runner.v2.models import SingleImage
 from fractal_server.app.runner.v2.models import Task
 from fractal_server.app.runner.v2.models import WorkflowTask
 from fractal_server.app.runner.v2.runner import execute_tasks_v2
+from fractal_server.app.runner.v2.runner_functions import (
+    MAX_PARALLELIZATION_LIST_SIZE,
+)
 
 
 @pytest.mark.parametrize("N", [100, 1000])
