@@ -34,7 +34,9 @@ class SingleImage(BaseModel):
         val_scalar_dict("attributes")
     )
 
-    def match_filter(self, filters: DictStrAny):
+    def match_filter(self, filters: Optional[DictStrAny] = None):
+        if filters is None:
+            return True
         for key, value in filters.items():
             if value is None:
                 continue
