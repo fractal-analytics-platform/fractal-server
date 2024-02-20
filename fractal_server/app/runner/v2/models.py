@@ -13,15 +13,15 @@ DictStrAny = dict[str, Any]
 
 def val_scalar_dict(attribute: str):
     def val(
-        kwargs: DictStrAny,
+        dict_str_any: DictStrAny,
     ) -> dict[str, Union[int, float, str, bool, None]]:
-        for key, value in kwargs.items():
+        for key, value in dict_str_any.items():
             if not isinstance(value, (int, float, str, bool, type(None))):
                 raise ValueError(
                     f"{attribute}[{key}] must be a scalar (int, float, str, "
                     f"bool, or None). Given {value} ({type(value)})"
                 )
-        return kwargs
+        return dict_str_any
 
     return val
 
