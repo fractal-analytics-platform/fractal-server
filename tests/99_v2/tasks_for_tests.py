@@ -32,16 +32,15 @@ def print_path(path: str, buffer: dict[str, Any]) -> dict[str, Any]:
 
 
 def edit_image(
-    root_dir: str, path: str, buffer: dict[str, Any], custom_parameter: int = 1
+    path: str, buffer: dict[str, Any], custom_parameter: int = 1
 ) -> dict[str, Any]:
     edited_images = [dict(path=path)]
     return dict(edited_images=edited_images)
 
 
 def copy_and_edit_image(
-    root_dir: str,
     path: str,
     buffer: dict[str, Any],
 ) -> dict[str, Any]:
-    new_images = [dict(path=f"{path}_new", processed=True)]
+    new_images = [dict(path=f"{path}_new", attributes=dict(processed=True))]
     return dict(new_images=new_images)
