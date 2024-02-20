@@ -19,6 +19,7 @@ from typing import Callable
 from typing import Optional
 
 from ...logger import get_logger
+from ..models import Task
 from ..models import WorkflowTask
 from ..schemas import WorkflowTaskStatusType
 from .common import JobExecutionError
@@ -51,6 +52,25 @@ def sanitize_component(value: str) -> str:
     'plate.zarr/B/03/0' to 'plate_zarr_B_03_0'.
     """
     return value.replace(" ", "_").replace("/", "_").replace(".", "_")
+
+
+def _task_needs_image_list(_task: Task) -> bool:
+    """
+    Whether a task requires `metadata["image"]` in its `args.json` file.
+
+    For details see
+    https://github.com/fractal-analytics-platform/fractal-server/issues/1237
+
+    Args:
+        _task: The task to be checked.
+    """
+    if (
+        _task.name == "Copy OME-Zarr structure"
+        and "fractal_tasks_core" in _task.source
+    ):
+        return True
+    else:
+        return False
 
 
 class TaskFiles:
@@ -263,6 +283,7 @@ def call_single_task(
         task_pars.dict(exclude={"history"}),
         wftask.args or {},
         path=task_files.args,
+        include_image_list=_task_needs_image_list(wftask.task),
     )
 
     # assemble full command
@@ -390,6 +411,7 @@ def call_single_parallel_task(
         wftask.args or {},
         dict(component=component),
         path=task_files.args,
+        include_image_list=_task_needs_image_list(wftask.task),
     )
 
     # assemble full command
