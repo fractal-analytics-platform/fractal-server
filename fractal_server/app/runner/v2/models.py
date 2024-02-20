@@ -65,7 +65,7 @@ class Task(BaseModel):
     new_filters: DictStrAny = Field(default_factory=dict)
     task_type: Literal["non_parallel", "parallel"] = "non_parallel"
 
-    _attributes = validator("new_filters", allow_reuse=True)(
+    _new_filters = validator("new_filters", allow_reuse=True)(
         val_scalars_dict("new_filters")
     )
 
