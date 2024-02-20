@@ -278,7 +278,7 @@ def write_args_file(
     if not include_image_list:
         try:
             if "metadata" in out.keys() and "image" in out["metadata"].keys():
-                out["metadata"]["image"] = None
+                out["metadata"].pop("image")
         except AttributeError:
             pass
 
