@@ -2,8 +2,8 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from .filters import FilterSet
 from .images import find_image_by_path
+from .images import ImageAttributesType
 from .images import SingleImage
 from .models import KwargsType
 from .utils import pjson
@@ -17,7 +17,7 @@ class TaskOutput(BaseModel):
     """List of images edited by a given task instance."""
 
     new_filters: Optional[
-        FilterSet
+        ImageAttributesType
     ] = None  # FIXME: this does not actually work in Pydantic
     """
     *Global* filters (common to all images) added by this task.
@@ -49,7 +49,7 @@ class ParallelTaskOutput(BaseModel):
 
     new_images: Optional[list[SingleImage]] = None
     edited_images: Optional[list[SingleImage]] = None
-    new_filters: Optional[FilterSet] = None  # FIXME
+    new_filters: Optional[ImageAttributesType] = None  # FIXME
 
 
 def merge_outputs(

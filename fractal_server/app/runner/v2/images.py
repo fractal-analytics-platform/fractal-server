@@ -1,7 +1,7 @@
 from copy import copy
 from typing import Optional
 
-from .models import ImageAttributeType
+from .models import ImageAttributesType
 from .models import SingleImage
 from .utils import ipjson
 from .utils import pjson
@@ -42,7 +42,7 @@ def _deduplicate_list_of_dicts(list_of_dicts: list[dict]) -> list[dict]:
 
 def _filter_image_list(
     images: list[SingleImage],
-    filters: Optional[ImageAttributeType] = None,
+    filters: Optional[ImageAttributesType] = None,
 ) -> list[SingleImage]:
 
     if filters is None:
@@ -59,8 +59,8 @@ def _filter_image_list(
 def filter_images(
     *,
     dataset_images: list[SingleImage],
-    dataset_filters: Optional[ImageAttributeType] = None,
-    wftask_filters: Optional[ImageAttributeType] = None,
+    dataset_filters: Optional[ImageAttributesType] = None,
+    wftask_filters: Optional[ImageAttributesType] = None,
 ) -> list[SingleImage]:
 
     current_filters = copy(dataset_filters)
