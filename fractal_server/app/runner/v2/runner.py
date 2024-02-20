@@ -25,7 +25,7 @@ def _apply_attributes_to_image(
 ) -> SingleImage:
     updated_image = copy(image)
     for key, value in filters.items():
-        updated_image[key] = value
+        updated_image.attributes[key] = value
     return updated_image
 
 
@@ -99,7 +99,6 @@ def execute_tasks_v2(
                 paths = [image["path"] for image in filtered_images]
                 function_kwargs = dict(
                     paths=paths,
-                    # root_dir=tmp_dataset.root_dir,
                     buffer=tmp_buffer,
                     **wftask.args,
                 )
@@ -122,8 +121,7 @@ def execute_tasks_v2(
                 for image in filtered_images:
                     list_function_kwargs.append(
                         dict(
-                            path=image["path"],
-                            # root_dir=tmp_dataset.root_dir,
+                            path=image.path,
                             buffer=tmp_buffer,
                             **wftask.args,
                         )
@@ -181,9 +179,9 @@ def execute_tasks_v2(
 
         # Add filters to edited images, and update Dataset.images
         edited_images = task_output.get("edited_images", [])
-        edited_paths = [image["path"] for image in edited_images]
+        edited_paths = [image.path for image in edited_images]
         for ind, image in enumerate(tmp_dataset.images):
-            if image["path"] in edited_paths:
+            if image.path in edited_paths:
                 updated_image = _apply_attributes_to_image(
                     image=image, filters=new_filters
                 )
@@ -203,7 +201,7 @@ def execute_tasks_v2(
                 overlap = next(
                     _image
                     for _image in tmp_dataset.images
-                    if _image["path"] == image["path"]
+                    if _image.path == image.path
                 )
                 raise ValueError(f"Found {overlap=}")
             except StopIteration:
