@@ -1,12 +1,13 @@
 from copy import copy
 
-from .env import MAX_PARALLELIZATION_LIST_SIZE
 from .images import find_image_by_path
 from .models import DictStrAny
 from .models import SingleImage
 from .models import Task
 from .task_output import ParallelTaskOutput
 from .task_output import TaskOutput
+
+MAX_PARALLELIZATION_LIST_SIZE = 200
 
 
 def _run_non_parallel_task(
