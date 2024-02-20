@@ -2,59 +2,76 @@ from typing import Any
 from typing import Callable
 from typing import Literal
 from typing import Optional
+from typing import Union
 
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import validator
 
-from .filters import FilterSet
-from .images import SingleImage
+DictStrAny = dict[str, Any]
 
 
-KwargsType = dict[str, Any]
+def val_scalar_dict(attribute: str):
+    def val(
+        dict_str_any: DictStrAny,
+    ) -> dict[str, Union[int, float, str, bool, None]]:
+        for key, value in dict_str_any.items():
+            if not isinstance(value, (int, float, str, bool, type(None))):
+                raise ValueError(
+                    f"{attribute}[{key}] must be a scalar (int, float, str, "
+                    f"bool, or None). Given {value} ({type(value)})"
+                )
+        return dict_str_any
+
+    return val
+
+
+class SingleImage(BaseModel):
+    path: str
+    attributes: DictStrAny = Field(default_factory=dict)
+
+    _attributes = validator("attributes", allow_reuse=True)(
+        val_scalar_dict("attributes")
+    )
+
+    def match_filter(self, filters: Optional[DictStrAny] = None):
+        if filters is None:
+            return True
+        for key, value in filters.items():
+            if value is None:
+                continue
+            if self.attributes.get(key) != value:
+                return False
+        return True
 
 
 class Dataset(BaseModel):
     id: Optional[int] = None
-    history: list[dict[str, Any]] = []
+    history: list[DictStrAny] = []
     # New in v2
     # root_dir: str
     images: list[SingleImage] = Field(default_factory=list)
-    filters: FilterSet = Field(default_factory=dict)
+    filters: DictStrAny = Field(default_factory=dict)
     # Temporary state
-    buffer: Optional[dict[str, Any]] = None
-    parallelization_list: Optional[list[dict[str, Any]]] = None
+    buffer: Optional[DictStrAny] = None
+    parallelization_list: Optional[list[DictStrAny]] = None
     # Removed from V1
     # resource_list (relationship)
 
     @property
     def image_paths(self) -> list[str]:
-        return [image["path"] for image in self.images]
+        return [image.path for image in self.images]
 
 
 class Task(BaseModel):
     function: Callable  # mock of task.command
-    meta: dict[str, Any] = Field(default_factory=dict)
-    new_filters: dict[str, Any] = Field(
-        default_factory=dict
-    )  # FIXME: this is not using FilterSet any more!
+    meta: DictStrAny = Field(default_factory=dict)
+    new_filters: DictStrAny = Field(default_factory=dict)
     task_type: Literal["non_parallel", "parallel"] = "non_parallel"
 
-    @validator("new_filters")
-    def scalar_filters(cls, v):
-        """
-        Check that values of new_filters are all JSON-scalar.
-
-        Replacement for `new_filters: FilterSet` attribute type, which
-        does not work in Pydantic.
-        """
-        for value in v.values():
-            if type(value) not in [int, str, bool] and value is not None:
-                raise ValueError(
-                    f"{value=} in new_filters has invalid type {type(value)}"
-                )
-
-        return v
+    _new_filters = validator("new_filters", allow_reuse=True)(
+        val_scalar_dict("new_filters")
+    )
 
     @property
     def name(self) -> str:
@@ -62,10 +79,10 @@ class Task(BaseModel):
 
 
 class WorkflowTask(BaseModel):
-    args: dict[str, Any] = Field(default_factory=dict)
-    meta: dict[str, Any] = Field(default_factory=dict)
+    args: DictStrAny = Field(default_factory=dict)
+    meta: DictStrAny = Field(default_factory=dict)
     task: Optional[Task] = None
-    filters: FilterSet = Field(default_factory=dict)
+    filters: DictStrAny = Field(default_factory=dict)
 
 
 class Workflow(BaseModel):
