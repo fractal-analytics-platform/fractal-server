@@ -2,17 +2,19 @@ from typing import Any
 from typing import Callable
 from typing import Literal
 from typing import Optional
+from typing import Union
 
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import validator
 
-
 DictStrAny = dict[str, Any]
 
 
-def val_scalars_dict(attribute: str):
-    def val(kwargs: dict):
+def val_scalar_dict(attribute: str):
+    def val(
+        kwargs: DictStrAny,
+    ) -> dict[str, Union[int, float, str, bool, None]]:
         for key, value in kwargs.items():
             if not isinstance(value, (int, float, str, bool, type(None))):
                 raise ValueError(
@@ -29,7 +31,7 @@ class SingleImage(BaseModel):
     attributes: DictStrAny = Field(default_factory=dict)
 
     _attributes = validator("attributes", allow_reuse=True)(
-        val_scalars_dict("attributes")
+        val_scalar_dict("attributes")
     )
 
     def match_filter(self, filters: DictStrAny):
@@ -66,7 +68,7 @@ class Task(BaseModel):
     task_type: Literal["non_parallel", "parallel"] = "non_parallel"
 
     _new_filters = validator("new_filters", allow_reuse=True)(
-        val_scalars_dict("new_filters")
+        val_scalar_dict("new_filters")
     )
 
     @property
