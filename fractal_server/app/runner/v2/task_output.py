@@ -99,7 +99,7 @@ def merge_outputs(
         final_output["edited_images"] = final_edited_images
     if final_new_filters:
         final_output["new_filters"] = final_new_filters
-    if final_edited_images:
+    if final_removed_images:
         final_output["removed_images"] = final_removed_images
 
     # Validate output:
