@@ -26,7 +26,7 @@ def _run_non_parallel_task(
     if task_output.get("new_images") is not None:
         old_image_paths = function_kwargs["paths"]
         new_image_paths = [
-            new_image["path"] for new_image in task_output.get("new_images")
+            new_image.path for new_image in task_output.get("new_images")
         ]
         if len(old_image_paths) == len(new_image_paths):
             new_old_image_mapping = {}
@@ -36,16 +36,17 @@ def _run_non_parallel_task(
             for new_image in task_output.get("new_images"):
                 old_image = find_image_by_path(
                     images=old_dataset_images,
-                    path=new_old_image_mapping[new_image["path"]],
+                    path=new_old_image_mapping[new_image.path],
                 )
-                final_new_images.append(old_image | new_image)
+                new_image.attributes = (
+                    old_image.attributes | new_image.attributes
+                )
+                final_new_images.append(new_image)
             task_output["new_images"] = final_new_images
 
     print(f"Task output:\n{pjson(task_output)}")
-    # Validate task output:
-    TaskOutput(**task_output)
 
-    return task_output
+    return TaskOutput(**task_output)
 
 
 def _run_parallel_task(
@@ -70,7 +71,7 @@ def _run_parallel_task(
         if task_output.get("new_images") is not None:
             new_old_image_mapping.update(
                 {
-                    new_image["path"]: function_kwargs["path"]
+                    new_image.path: function_kwargs["path"]
                     for new_image in task_output["new_images"]
                 }
             )
@@ -78,10 +79,10 @@ def _run_parallel_task(
         ParallelTaskOutput(**task_output)
         task_outputs.append(copy(task_output))
 
-    task_output = merge_outputs(
+    merged_output = merge_outputs(
         task_outputs,
         new_old_image_mapping,
         old_dataset_images,
     )
 
-    return task_output
+    return TaskOutput(**merged_output)

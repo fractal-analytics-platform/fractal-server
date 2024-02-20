@@ -67,10 +67,11 @@ def merge_outputs(
         for new_image in task_output.get("new_images", []):
             old_image = find_image_by_path(
                 images=old_dataset_images,
-                path=new_old_image_mapping[new_image["path"]],
+                path=new_old_image_mapping[new_image.path],
             )
             # Propagate old-image attributes to new-image
-            final_new_images.append(old_image | new_image)
+            new_image.attributes = old_image.attributes | new_image.attributes
+            final_new_images.append(new_image)
 
         for edited_image in task_output.get("edited_images", []):
             final_edited_images.append(edited_image)
