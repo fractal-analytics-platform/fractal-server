@@ -40,6 +40,8 @@ class TaskOutput(BaseModel):
     of the companion task.
     """
 
+    removed_images: Optional[list[SingleImage]] = None
+
     class Config:
         extra = "forbid"
 
@@ -57,10 +59,11 @@ def merge_outputs(
     task_outputs: list[dict],  # Actually list[ParallelTaskOutput]
     new_old_image_mapping: dict[str, str],
     old_dataset_images: list[SingleImage],
-) -> dict:  # Actually TaskOutput
+) -> dict[str, Any]:  # Actually TaskOutput
 
     final_new_images = []
     final_edited_images = []
+    final_removed_images = []
     final_new_filters = None
 
     for task_output in task_outputs:
@@ -75,6 +78,9 @@ def merge_outputs(
 
         for edited_image in task_output.get("edited_images", []):
             final_edited_images.append(edited_image)
+
+        for removed_image in task_output.get("removed_images", []):
+            final_removed_images.append(removed_image)
 
         new_filters = task_output.get("new_filters")
         if new_filters:
@@ -93,6 +99,8 @@ def merge_outputs(
         final_output["edited_images"] = final_edited_images
     if final_new_filters:
         final_output["new_filters"] = final_new_filters
+    if final_edited_images:
+        final_output["removed_images"] = final_removed_images
 
     # Validate output:
     TaskOutput(**final_output)
