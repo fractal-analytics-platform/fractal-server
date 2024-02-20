@@ -1,6 +1,9 @@
 import pytest
-from images import _deduplicate_list_of_dicts
-from runner import _validate_parallelization_list_valid
+
+from fractal_server.app.runner.v2.images import _deduplicate_list_of_dicts
+from fractal_server.app.runner.v2.runner import (
+    _validate_parallelization_list_valid,
+)
 
 
 def test_validate_parallelization_list():
@@ -41,8 +44,8 @@ def test_validate_parallelization_list():
             current_image_paths=CURRENT_IMAGE_PATHS,
         )
 
-    # Invalid `root_dir` attribute
-    PARALLELIZATION_LIST = [dict(path="asd", root_dir="/something")]
+    # Invalid `buffer` attribute
+    PARALLELIZATION_LIST = [dict(path="asd", buffer="")]
     CURRENT_IMAGE_PATHS = ["asd"]
     with pytest.raises(ValueError):
         _validate_parallelization_list_valid(

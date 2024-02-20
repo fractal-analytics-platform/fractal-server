@@ -14,7 +14,6 @@ def dummy_task(*args, **kwargs):
 
 
 def create_images_from_scratch(
-    root_dir: str,
     paths: list[str],
     buffer: dict[str, Any],
     new_paths: Optional[list[str]] = None,
@@ -39,9 +38,7 @@ def remove_images(
 # Parallel tasks
 
 
-def print_path(
-    root_dir: str, path: str, buffer: dict[str, Any]
-) -> dict[str, Any]:
+def print_path(path: str, buffer: dict[str, Any]) -> dict[str, Any]:
     print(f"Running `print_path` task, with {path=}")
     return {}
 
