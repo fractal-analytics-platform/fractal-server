@@ -1,4 +1,4 @@
-from filters import _filter_image_list
+from fractal_server.app.runner.v2.filters import _filter_image_list
 
 images = [
     dict(

@@ -3,13 +3,13 @@ from typing import Optional
 
 import pytest
 from devtools import debug
-from env import MAX_PARALLELIZATION_LIST_SIZE
-from models import Dataset
-from models import Task
-from models import WorkflowTask
-from runner import execute_tasks_v2
+from tasks_for_tests import dummy_task
 
-from tests.tasks_for_tests import dummy_task
+from fractal_server.app.runner.v2.env import MAX_PARALLELIZATION_LIST_SIZE
+from fractal_server.app.runner.v2.models import Dataset
+from fractal_server.app.runner.v2.models import Task
+from fractal_server.app.runner.v2.models import WorkflowTask
+from fractal_server.app.runner.v2.runner import execute_tasks_v2
 
 
 @pytest.mark.parametrize("N", [100, 1000])
@@ -45,7 +45,6 @@ def test_max_parallelization_list_size(N: int):
 
 
 def _copy_and_edit_image(
-    root_dir: str,
     path: str,
     buffer: dict[str, Any],
 ) -> dict[str, Any]:

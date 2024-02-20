@@ -1,6 +1,7 @@
 import pytest
 from devtools import debug
-from models import Task
+
+from fractal_server.app.runner.v2.models import Task
 
 
 def _dummy_function():
