@@ -11,7 +11,7 @@ from pydantic import validator
 DictStrAny = dict[str, Any]
 
 
-def val_filters(attribute: str):
+def val_scalars_dict(attribute: str):
     def val(kwargs: dict):
         for key, value in kwargs.items():
             if not isinstance(value, (int, float, str, bool, type(None))):
@@ -29,7 +29,7 @@ class SingleImage(BaseModel):
     attributes: DictStrAny = Field(default_factory=dict)
 
     _attributes = validator("attributes", allow_reuse=True)(
-        val_filters("attributes")
+        val_scalars_dict("attributes")
     )
 
     def match_filter(self, filters: DictStrAny):
@@ -65,21 +65,9 @@ class Task(BaseModel):
     new_filters: DictStrAny = Field(default_factory=dict)
     task_type: Literal["non_parallel", "parallel"] = "non_parallel"
 
-    @validator("new_filters")
-    def scalar_filters(cls, v):
-        """
-        Check that values of new_filters are all JSON-scalar.
-
-        Replacement for `new_filters: ImageAttributesType` attribute type,
-        which does not work in Pydantic.
-        """
-        for value in v.values():
-            if type(value) not in [int, str, bool] and value is not None:
-                raise ValueError(
-                    f"{value=} in new_filters has invalid type {type(value)}"
-                )
-
-        return v
+    _attributes = validator("new_filters", allow_reuse=True)(
+        val_scalars_dict("new_filters")
+    )
 
     @property
     def name(self) -> str:
