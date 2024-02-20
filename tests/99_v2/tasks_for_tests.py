@@ -4,7 +4,7 @@ from typing import Optional
 
 def dummy_task(*args, **kwargs):
     """
-    This task does nothing, and it is both valid as a parallel or non_parallel task.
+    This task does nothing, and it's both valid as parallel/non_parallel task.
     """
     return {}
 
@@ -13,7 +13,6 @@ def dummy_task(*args, **kwargs):
 
 
 def create_images_from_scratch(
-    root_dir: str,
     paths: list[str],
     buffer: dict[str, Any],
     new_paths: Optional[list[str]] = None,
@@ -27,9 +26,7 @@ def create_images_from_scratch(
 # Parallel tasks
 
 
-def print_path(
-    root_dir: str, path: str, buffer: dict[str, Any]
-) -> dict[str, Any]:
+def print_path(path: str, buffer: dict[str, Any]) -> dict[str, Any]:
     print(f"Running `print_path` task, with {path=}")
     return {}
 
