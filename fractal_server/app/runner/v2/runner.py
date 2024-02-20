@@ -1,10 +1,10 @@
 from copy import copy
 from copy import deepcopy
 
-from .filters import filter_images
-from .filters import FilterSet
 from .images import _deduplicate_list_of_dicts
+from .images import filter_images
 from .images import find_image_by_path
+from .images import ImageAttributesType
 from .images import SingleImage
 from .models import Dataset
 from .models import KwargsType
@@ -21,7 +21,7 @@ from .utils import ipjson
 def _apply_attributes_to_image(
     *,
     image: SingleImage,
-    filters: FilterSet,
+    filters: ImageAttributesType,
 ) -> SingleImage:
     updated_image = copy(image)
     for key, value in filters.items():
