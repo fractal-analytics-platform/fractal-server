@@ -11,7 +11,7 @@ from fractal_server.v2 import WorkflowTask
 
 def _assert_image_data_exist(image_list: list[dict]):
     for image in image_list:
-        assert (Path(image["path"]) / "data").exists()
+        assert (Path(image.path) / "data").exists()
 
 
 def test_workflow_1(tmp_path: Path):
@@ -69,12 +69,16 @@ def test_workflow_1(tmp_path: Path):
     img = find_image_by_path(
         path=f"{zarr_dir}/my_plate.zarr/A/01/0_corr", images=dataset_out.images
     )
-    assert img == {
+    debug(img)
+    debug(img.dict())
+    assert img.dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
-        "well": "A_01",
-        "plate": "my_plate.zarr",
-        "data_dimensionality": "3",
-        "illumination_correction": True,
+        "attributes": {
+            "well": "A_01",
+            "plate": "my_plate.zarr",
+            "data_dimensionality": "3",
+            "illumination_correction": True,
+        },
     }
 
     img = find_image_by_path(
@@ -83,10 +87,12 @@ def test_workflow_1(tmp_path: Path):
     )
     assert img == {
         "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0_corr",
-        "well": "A_01",
-        "plate": "my_plate_mip.zarr",
-        "data_dimensionality": "2",
-        "illumination_correction": True,
+        "attributes": {
+            "well": "A_01",
+            "plate": "my_plate_mip.zarr",
+            "data_dimensionality": "2",
+            "illumination_correction": True,
+        },
     }
 
     _assert_image_data_exist(dataset_out.images)
@@ -130,17 +136,21 @@ def test_workflow_2(tmp_path: Path):
     assert dataset_out.images == [
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
-            "well": "A_01",
-            "plate": "my_plate.zarr",
-            "data_dimensionality": "3",
-            "illumination_correction": True,
+            "attributes": {
+                "well": "A_01",
+                "plate": "my_plate.zarr",
+                "data_dimensionality": "3",
+                "illumination_correction": True,
+            },
         },
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/02/0",
-            "well": "A_02",
-            "plate": "my_plate.zarr",
-            "data_dimensionality": "3",
-            "illumination_correction": True,
+            "attributes": {
+                "well": "A_02",
+                "plate": "my_plate.zarr",
+                "data_dimensionality": "3",
+                "illumination_correction": True,
+            },
         },
     ]
 
@@ -187,16 +197,20 @@ def test_workflow_3(tmp_path: Path):
     assert dataset_out.images == [
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
-            "well": "A_01",
-            "plate": "my_plate.zarr",
-            "data_dimensionality": "3",
-            "illumination_correction": True,
+            "attributes": {
+                "well": "A_01",
+                "plate": "my_plate.zarr",
+                "data_dimensionality": "3",
+                "illumination_correction": True,
+            },
         },
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/02/0",
-            "well": "A_02",
-            "plate": "my_plate.zarr",
-            "data_dimensionality": "3",
+            "attributes": {
+                "well": "A_02",
+                "plate": "my_plate.zarr",
+                "data_dimensionality": "3",
+            },
         },
     ]
 
@@ -245,27 +259,35 @@ def test_workflow_4(tmp_path: Path):
     assert dataset_out.images == [
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
-            "well": "A_01",
-            "plate": "my_plate.zarr",
-            "data_dimensionality": "3",
+            "attributes": {
+                "well": "A_01",
+                "plate": "my_plate.zarr",
+                "data_dimensionality": "3",
+            },
         },
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/02/0",
-            "well": "A_02",
-            "plate": "my_plate.zarr",
-            "data_dimensionality": "3",
+            "attributes": {
+                "well": "A_02",
+                "plate": "my_plate.zarr",
+                "data_dimensionality": "3",
+            },
         },
         {
             "path": f"{zarr_dir}/my_plate_new.zarr/A/01/0",
-            "well": "A_01",
-            "plate": "my_plate_new.zarr",
-            "data_dimensionality": "3",
+            "attributes": {
+                "well": "A_01",
+                "plate": "my_plate_new.zarr",
+                "data_dimensionality": "3",
+            },
         },
         {
             "path": f"{zarr_dir}/my_plate_new.zarr/A/02/0",
-            "well": "A_02",
-            "plate": "my_plate_new.zarr",
-            "data_dimensionality": "3",
+            "attributes": {
+                "well": "A_02",
+                "plate": "my_plate_new.zarr",
+                "data_dimensionality": "3",
+            },
         },
     ]
 
@@ -311,27 +333,35 @@ def test_workflow_5(tmp_path: Path):
     assert dataset_out.images == [
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
-            "well": "A_01",
-            "plate": "my_plate.zarr",
-            "data_dimensionality": "3",
+            "attributes": {
+                "well": "A_01",
+                "plate": "my_plate.zarr",
+                "data_dimensionality": "3",
+            },
         },
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/02/0",
-            "well": "A_02",
-            "plate": "my_plate.zarr",
-            "data_dimensionality": "3",
+            "attributes": {
+                "well": "A_02",
+                "plate": "my_plate.zarr",
+                "data_dimensionality": "3",
+            },
         },
         {
             "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
-            "well": "A_01",
-            "plate": "my_plate_mip.zarr",
-            "data_dimensionality": "2",
+            "attributes": {
+                "well": "A_01",
+                "plate": "my_plate_mip.zarr",
+                "data_dimensionality": "2",
+            },
         },
         {
             "path": f"{zarr_dir}/my_plate_mip.zarr/A/02/0",
-            "well": "A_02",
-            "plate": "my_plate_mip.zarr",
-            "data_dimensionality": "2",
+            "attributes": {
+                "well": "A_02",
+                "plate": "my_plate_mip.zarr",
+                "data_dimensionality": "2",
+            },
         },
     ]
     _assert_image_data_exist(dataset_out.images)
@@ -452,27 +482,35 @@ def test_workflow_8(tmp_path: Path):
     assert dataset_out.images == [
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
-            "well": "A_01",
-            "plate": "my_plate.zarr",
-            "data_dimensionality": "3",
+            "attributes": {
+                "well": "A_01",
+                "plate": "my_plate.zarr",
+                "data_dimensionality": "3",
+            },
         },
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/02/0",
-            "well": "A_02",
-            "plate": "my_plate.zarr",
-            "data_dimensionality": "3",
+            "attributes": {
+                "well": "A_02",
+                "plate": "my_plate.zarr",
+                "data_dimensionality": "3",
+            },
         },
         {
             "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
-            "well": "A_01",
-            "plate": "my_plate_mip.zarr",
-            "data_dimensionality": "2",
+            "attributes": {
+                "well": "A_01",
+                "plate": "my_plate_mip.zarr",
+                "data_dimensionality": "2",
+            },
         },
         {
             "path": f"{zarr_dir}/my_plate_mip.zarr/A/02/0",
-            "well": "A_02",
-            "plate": "my_plate_mip.zarr",
-            "data_dimensionality": "2",
+            "attributes": {
+                "well": "A_02",
+                "plate": "my_plate_mip.zarr",
+                "data_dimensionality": "2",
+            },
         },
     ]
     _assert_image_data_exist(dataset_out.images)

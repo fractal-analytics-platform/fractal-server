@@ -2,23 +2,18 @@ from typing import Any
 from typing import Callable
 from typing import Literal
 from typing import Optional
-from typing import Union
 
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import validator
 
 
-KwargsType = dict[str, Any]
-Scalar = Union[int, float, str, bool, None]
-ImageAttributesType = dict[str, Scalar]
+DictStrAny = dict[str, Any]
 
 
 def val_filters(attribute: str):
     def val(kwargs: dict):
         for key, value in kwargs.items():
-            if not isinstance(key, str):
-                raise ValueError("Key must be a string")
             if not isinstance(value, (int, float, str, bool, type(None))):
                 raise ValueError(
                     f"{attribute}[{key}] must be a scalar (int, float, str, "
@@ -31,13 +26,13 @@ def val_filters(attribute: str):
 
 class SingleImage(BaseModel):
     path: str
-    attributes: ImageAttributesType = Field(default_factory=dict)
+    attributes: DictStrAny = Field(default_factory=dict)
 
     _attributes = validator("attributes", allow_reuse=True)(
         val_filters("attributes")
     )
 
-    def match_filter(self, filters: ImageAttributesType):
+    def match_filter(self, filters: DictStrAny):
         for key, value in filters.items():
             if value is None:
                 continue
@@ -48,26 +43,26 @@ class SingleImage(BaseModel):
 
 class Dataset(BaseModel):
     id: Optional[int] = None
-    history: list[KwargsType] = []
+    history: list[DictStrAny] = []
     # New in v2
     # root_dir: str
     images: list[SingleImage] = Field(default_factory=list)
-    filters: ImageAttributesType = Field(default_factory=dict)
+    filters: DictStrAny = Field(default_factory=dict)
     # Temporary state
-    buffer: Optional[KwargsType] = None
-    parallelization_list: Optional[list[KwargsType]] = None
+    buffer: Optional[DictStrAny] = None
+    parallelization_list: Optional[list[DictStrAny]] = None
     # Removed from V1
     # resource_list (relationship)
 
     @property
     def image_paths(self) -> list[str]:
-        return [image["path"] for image in self.images]
+        return [image.path for image in self.images]
 
 
 class Task(BaseModel):
     function: Callable  # mock of task.command
-    meta: KwargsType = Field(default_factory=dict)
-    new_filters: KwargsType = Field(
+    meta: DictStrAny = Field(default_factory=dict)
+    new_filters: DictStrAny = Field(
         default_factory=dict
     )  # FIXME: this is not using ImageAttributesType any more!
     task_type: Literal["non_parallel", "parallel"] = "non_parallel"
@@ -94,10 +89,10 @@ class Task(BaseModel):
 
 
 class WorkflowTask(BaseModel):
-    args: KwargsType = Field(default_factory=dict)
-    meta: KwargsType = Field(default_factory=dict)
+    args: DictStrAny = Field(default_factory=dict)
+    meta: DictStrAny = Field(default_factory=dict)
     task: Optional[Task] = None
-    filters: ImageAttributesType = Field(default_factory=dict)
+    filters: DictStrAny = Field(default_factory=dict)
 
 
 class Workflow(BaseModel):

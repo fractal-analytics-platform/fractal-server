@@ -1,10 +1,8 @@
 from copy import copy
 from typing import Optional
 
-from .models import ImageAttributesType
+from .models import DictStrAny
 from .models import SingleImage
-from .utils import ipjson
-from .utils import pjson
 
 
 def find_image_by_path(
@@ -42,7 +40,7 @@ def _deduplicate_list_of_dicts(list_of_dicts: list[dict]) -> list[dict]:
 
 def _filter_image_list(
     images: list[SingleImage],
-    filters: Optional[ImageAttributesType] = None,
+    filters: Optional[DictStrAny] = None,
 ) -> list[SingleImage]:
 
     if filters is None:
@@ -59,22 +57,15 @@ def _filter_image_list(
 def filter_images(
     *,
     dataset_images: list[SingleImage],
-    dataset_filters: Optional[ImageAttributesType] = None,
-    wftask_filters: Optional[ImageAttributesType] = None,
+    dataset_filters: Optional[DictStrAny] = None,
+    wftask_filters: Optional[DictStrAny] = None,
 ) -> list[SingleImage]:
 
     current_filters = copy(dataset_filters)
     current_filters.update(wftask_filters)
-    print(f"[filter_images] Dataset filters:\n{ipjson(dataset_filters)}")
-    print(f"[filter_images] WorkflowTask filters:\n{ipjson(wftask_filters)}")
-    print(f"[filter_images] Dataset images:\n{ipjson(dataset_images)}")
-    print(
-        "[filter_images] Current selection filters:\n"
-        f"{ipjson(current_filters)}"
-    )
+
     filtered_images = _filter_image_list(
         dataset_images,
         filters=current_filters,
     )
-    print(f"[filter_images] Filtered image list:  {pjson(filtered_images)}")
     return filtered_images
