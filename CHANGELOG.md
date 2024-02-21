@@ -1,6 +1,6 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
-# 1.4.7 (unreleased)
+# 1.4.7
 
 * Runner:
     * Do not include `metadata["image"]` in JSON file with task arguments (\#1238).
