@@ -18,7 +18,9 @@ from typing import Any
 from typing import Callable
 from typing import Optional
 
+from ...config import get_settings
 from ...logger import get_logger
+from ...syringe import Inject
 from ..models import Task
 from ..models import WorkflowTask
 from ..schemas import WorkflowTaskStatusType
@@ -26,6 +28,7 @@ from .common import JobExecutionError
 from .common import TaskExecutionError
 from .common import TaskParameters
 from .common import write_args_file
+
 
 HISTORY_FILENAME = "history.json"
 METADATA_FILENAME = "metadata.json"
@@ -64,10 +67,11 @@ def _task_needs_image_list(_task: Task) -> bool:
     Args:
         _task: The task to be checked.
     """
-    if (
-        _task.name == "Copy OME-Zarr structure"
-        and "fractal_tasks_core" in _task.source
-    ):
+    settings = Inject(get_settings)
+    exception_task_names = settings.FRACTAL_RUNNER_TASKS_INCLUDE_IMAGE.split(
+        ";"
+    )
+    if _task.name in exception_task_names:
         return True
     else:
         return False
