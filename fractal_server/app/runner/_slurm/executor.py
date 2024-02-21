@@ -42,6 +42,7 @@ from ._executor_wait_thread import FractalSlurmWaitThread
 from ._slurm_config import get_default_slurm_config
 from ._slurm_config import SlurmConfig
 from ._subprocess_run_as_user import _glob_as_user
+from ._subprocess_run_as_user import _glob_as_user_strict
 from ._subprocess_run_as_user import _path_exists_as_user
 from ._subprocess_run_as_user import _run_command_as_user
 from fractal_server import __VERSION__
@@ -930,15 +931,26 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         for prefix in prefixes:
 
-            files_to_copy = _glob_as_user(
-                folder=str(self.working_dir_user),
-                user=self.slurm_user,
-                startswith=prefix,
-            )
+            logger.critical(f"PREFIX {prefix=}")
+
+            if prefix == job.slurm_file_prefix:
+                files_to_copy = _glob_as_user(
+                    folder=str(self.working_dir_user),
+                    user=self.slurm_user,
+                    startswith=prefix,
+                )
+            else:
+                files_to_copy = _glob_as_user_strict(
+                    folder=str(self.working_dir_user),
+                    user=self.slurm_user,
+                    startswith=prefix,
+                )
+
             logger.debug(
                 "[_copy_files_from_user_to_server] "
                 f"{prefix=}, {len(files_to_copy)=}"
             )
+            logger.critical(f"{prefix=}, {files_to_copy=}")
 
             for source_file_name in files_to_copy:
                 if " " in source_file_name:
@@ -949,7 +961,6 @@ class FractalSlurmExecutor(SlurmExecutor):
                 source_file_path = str(
                     self.working_dir_user / source_file_name
                 )
-                dest_file_path = str(self.working_dir / source_file_name)
 
                 # Read source_file_path (requires sudo)
                 # NOTE: By setting encoding=None, we read/write bytes instead
