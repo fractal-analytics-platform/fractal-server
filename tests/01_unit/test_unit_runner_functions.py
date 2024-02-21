@@ -46,22 +46,8 @@ def test_write_args_file(tmp_path):
 
 
 def test_task_needs_image_list():
-    assert not _task_needs_image_list(Task(name="name", source="source"))
-    assert not _task_needs_image_list(
-        Task(
-            name="name",
-            source="pip_remote:fractal_tasks_core:...",
-        )
-    )
-    assert not _task_needs_image_list(
-        Task(
-            name="Copy OME-Zarr structure",
-            source="source",
-        )
-    )
+    assert not _task_needs_image_list(Task(name="name"))
+    assert _task_needs_image_list(Task(name="Copy OME-Zarr structure"))
     assert _task_needs_image_list(
-        Task(
-            name="Copy OME-Zarr structure",
-            source="pip_remote:fractal_tasks_core:...",
-        )
+        Task(name="Convert Metadata Components from 2D to 3D")
     )
