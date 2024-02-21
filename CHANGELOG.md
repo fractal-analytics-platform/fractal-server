@@ -1,13 +1,14 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 1.4.7 (unreleased)
 
 * Runner:
     * Do not include `metadata["image"]` in JSON file with task arguments (\#1238).
+    * Add `FRACTAL_RUNNER_TASKS_INCLUDE_IMAGE` configuration variable, to define exceptions where tasks still require `metadata["image"]` (\#1238).
 * API:
     * Fix error message for rate limits in apply-workflow endpoint (\#1231).
 * Benchmarks:
-    * Add more scenarios, issue \#1184 (\#1232).
+    * Add more scenarios, as per issue \#1184 (\#1232).
 
 # 1.4.6
 
