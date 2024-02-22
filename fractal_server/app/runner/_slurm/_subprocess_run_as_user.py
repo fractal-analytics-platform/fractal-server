@@ -125,7 +125,9 @@ def _glob_as_user_strict(
     Execute `ls` on a folder (impersonating a user, if `user` is not `None`)
     and select results that comply with a set of rules. They all start with
     `startswith` (if not `None`), and they match one of the known filename
-    patterns.
+    patterns. See details in
+    https://github.com/fractal-analytics-platform/fractal-server/issues/1240
+
 
     Arguments:
         folder: Absolute path to the folder
