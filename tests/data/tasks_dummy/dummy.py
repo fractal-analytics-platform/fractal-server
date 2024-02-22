@@ -48,6 +48,7 @@ def dummy(
     index: int = 0,
     raise_error: bool = False,
     sleep_time: int = 0,
+    number_components: int = 3,
 ) -> Dict[str, Any]:
     """
     Dummy task
@@ -117,7 +118,8 @@ def dummy(
     time.sleep(sleep_time)
 
     # Update metadata
-    metadata_update = dict(dummy=f"dummy {index}", index=["0", "1", "2"])
+    new_index_components = [str(ind) for ind in range(number_components)]
+    metadata_update = dict(dummy=f"dummy {index}", index=new_index_components)
 
     logger.info("[dummy] EXITING")
 
