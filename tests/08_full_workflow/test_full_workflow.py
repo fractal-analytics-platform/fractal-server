@@ -133,7 +133,7 @@ async def test_full_workflow(
         res = await client.post(
             f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
             f"?task_id={collect_packages[0].id}",
-            json=dict(),
+            json=dict(args=dict(number_components=11)),
         )
         debug(res.json())
         assert res.status_code == 201
@@ -142,7 +142,7 @@ async def test_full_workflow(
         res = await client.post(
             f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
             f"?task_id={collect_packages[0].id}",
-            json=dict(),
+            json=dict(args=dict(number_components=11)),
         )
         debug(res.json())
         assert res.status_code == 201
