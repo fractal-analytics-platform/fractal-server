@@ -931,8 +931,6 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         for prefix in prefixes:
 
-            logger.critical(f"PREFIX {prefix=}")
-
             if prefix == job.slurm_file_prefix:
                 files_to_copy = _glob_as_user(
                     folder=str(self.working_dir_user),
@@ -950,7 +948,6 @@ class FractalSlurmExecutor(SlurmExecutor):
                 "[_copy_files_from_user_to_server] "
                 f"{prefix=}, {len(files_to_copy)=}"
             )
-            logger.critical(f"{prefix=}, {files_to_copy=}")
 
             for source_file_name in files_to_copy:
                 if " " in source_file_name:
