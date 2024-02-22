@@ -68,10 +68,13 @@ def test_glob_as_user_strict(tmp_path):
         "1.out",
         "1.metadiff.json",
         "1.args.json",
+        "1_out_AAAAA.pickle",
         "11.err",
         "11.out",
         "11.metadiff.json",
         "11.args.json",
+        "11_out_BBBBB.pickle",
+        "11_out_BBBBB.pickle.tmp",
     ]
     for fname in file_list:
         with (tmp_path / fname).open("w") as f:
@@ -82,7 +85,7 @@ def test_glob_as_user_strict(tmp_path):
         folder=str(tmp_path), user=None, startswith="1"
     )
     debug(files)
-    assert len(files) == 4
+    assert len(files) == 5
 
 
 def test_path_exists_as_user(tmp_path):
