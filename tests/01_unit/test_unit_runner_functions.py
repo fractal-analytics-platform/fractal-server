@@ -20,25 +20,44 @@ def test_trim_TaskParameters():
         metadata=dict(well=["a"], image=["a1", "a2"]),
     )
 
-    # For two specific tasks (see test_task_needs_image_list), metadata
-    # are preserved
+    # For two specific tasks (see test_task_needs_image_list) and for
+    # non-parallel tasks, metadata are preserved
 
     # Case 1
     new_taskpar = trim_TaskParameters(
-        old_taskpar, Task(name="Copy OME-Zarr structure")
+        old_taskpar,
+        Task(
+            name="Copy OME-Zarr structure",
+            meta=dict(parallelization_level="image"),
+        ),
     )
     for key in ["input_paths", "output_path", "history", "metadata"]:
         assert getattr(old_taskpar, key) == getattr(new_taskpar, key)
 
     # Case 2
     new_taskpar = trim_TaskParameters(
-        old_taskpar, Task(name="Convert Metadata Components from 2D to 3D")
+        old_taskpar,
+        Task(
+            name="Convert Metadata Components from 2D to 3D",
+            meta=dict(parallelization_level="image"),
+        ),
     )
     for key in ["input_paths", "output_path", "history", "metadata"]:
         assert getattr(old_taskpar, key) == getattr(new_taskpar, key)
 
-    # For generic tasks, both history and metadata["image"] are removed
-    new_taskpar = trim_TaskParameters(old_taskpar, Task(name="task name"))
+    # Case 3
+    new_taskpar = trim_TaskParameters(
+        old_taskpar, Task(name="name", meta=dict(key="value"))
+    )
+    for key in ["input_paths", "output_path", "history", "metadata"]:
+        assert getattr(old_taskpar, key) == getattr(new_taskpar, key)
+
+    # For generic *parallel* tasks, both history and metadata["image"] are
+    # removed
+    new_taskpar = trim_TaskParameters(
+        old_taskpar,
+        Task(name="task name", meta=dict(parallelization_level="image")),
+    )
     for key in ["input_paths", "output_path", "history"]:
         assert getattr(old_taskpar, key) == getattr(new_taskpar, key)
     assert new_taskpar.metadata == dict(well=["a"])
