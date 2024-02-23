@@ -687,14 +687,12 @@ def execute_tasks(
                     f"Original traceback:\n{tb}"
                 )
 
-            # Preliminary steps
-            actual_current_task_pars = trim_TaskParameters(
-                current_task_pars, this_wftask.task
-            )
-
             # NOTE: executor.submit(call_single_task, ...) is non-blocking,
             # i.e. the returned future may have `this_wftask_future.done() =
             # False`. We make it blocking right away, by calling `.result()`
+            actual_current_task_pars = trim_TaskParameters(
+                current_task_pars, this_wftask.task
+            )
             this_wftask_future = executor.submit(
                 call_single_task,
                 wftask=this_wftask,
