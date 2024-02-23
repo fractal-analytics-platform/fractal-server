@@ -1,48 +1,7 @@
-import json
-
 from fractal_server.app.models import Task
 from fractal_server.app.runner._common import _task_needs_image_list
-from fractal_server.app.runner.common import write_args_file
-
-
-def test_write_args_file(tmp_path):
-
-    ARGS = dict(metadata=dict(image=[1, 2, 3], well=[1]))
-    STRIPPED_ARGS = dict(metadata=dict(well=[1]))
-    args_path = tmp_path / "0.json"
-    write_args_file(ARGS, path=args_path, include_image_list=True)
-    with args_path.open("r") as f:
-        args = json.load(f)
-        assert args == ARGS
-    args_path = tmp_path / "1.json"
-    write_args_file(ARGS, path=args_path, include_image_list=False)
-    with args_path.open("r") as f:
-        args = json.load(f)
-        assert args == STRIPPED_ARGS
-
-    ARGS = dict(metadata=dict(well=[1]))
-    args_path = tmp_path / "3.json"
-    write_args_file(ARGS, path=args_path, include_image_list=True)
-    with args_path.open("r") as f:
-        args = json.load(f)
-        assert args == ARGS
-    args_path = tmp_path / "4.json"
-    write_args_file(ARGS, path=args_path, include_image_list=False)
-    with args_path.open("r") as f:
-        args = json.load(f)
-        assert args == ARGS
-
-    ARGS = dict(something="else", metadata=[])
-    args_path = tmp_path / "5.json"
-    write_args_file(ARGS, path=args_path, include_image_list=True)
-    with args_path.open("r") as f:
-        args = json.load(f)
-        assert args == ARGS
-    args_path = tmp_path / "6.json"
-    write_args_file(ARGS, path=args_path, include_image_list=False)
-    with args_path.open("r") as f:
-        args = json.load(f)
-        assert args == ARGS
+from fractal_server.app.runner._common import TaskParameters
+from fractal_server.app.runner._common import trim_TaskParameters
 
 
 def test_task_needs_image_list():
@@ -51,3 +10,39 @@ def test_task_needs_image_list():
     assert _task_needs_image_list(
         Task(name="Convert Metadata Components from 2D to 3D")
     )
+
+
+def test_trim_TaskParameters():
+    old_taskpar = TaskParameters(
+        input_paths=["a", "b"],
+        output_path="c",
+        history=[dict(key="value")],
+        metadata=dict(well=["a"], image=["a1", "a2"]),
+    )
+
+    # For two specific tasks (see test_task_needs_image_list), history is
+    # removed but metadata are preserved
+
+    # Case 1
+    new_taskpar = trim_TaskParameters(
+        old_taskpar, Task(name="Copy OME-Zarr structure")
+    )
+    for key in ["input_paths", "output_path", "metadata"]:
+        assert getattr(old_taskpar, key) == getattr(new_taskpar, key)
+    assert new_taskpar.history == []
+
+    # Case 2
+    new_taskpar = trim_TaskParameters(
+        old_taskpar, Task(name="Convert Metadata Components from 2D to 3D")
+    )
+    for key in ["input_paths", "output_path", "metadata"]:
+        assert getattr(old_taskpar, key) == getattr(new_taskpar, key)
+    assert new_taskpar.history == []
+
+    # For generic tasks, both history and metadata["image"] are removed
+    new_taskpar = trim_TaskParameters(old_taskpar, Task(name="task name"))
+    for key in ["input_paths", "output_path"]:
+        assert getattr(old_taskpar, key) == getattr(new_taskpar, key)
+    assert new_taskpar.history == []
+    assert new_taskpar.metadata == dict(well=["a"])
+    assert "image" not in new_taskpar.metadata.keys()
