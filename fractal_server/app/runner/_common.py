@@ -453,7 +453,11 @@ def trim_TaskParameters(
     (https://github.com/fractal-analytics-platform/fractal-server/issues/1237)
     """
     task_params_slim = task_params.copy()
+    import logging
+
+    logging.critical(f"trim_TaskParameters, {_task=}")
     if not _task_needs_image_list(_task):
+        logging.critical("Do remove metadata/images")
         if "image" in task_params_slim.metadata.keys():
             task_params_slim.metadata.pop("image")
     return task_params_slim
