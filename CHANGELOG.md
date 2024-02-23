@@ -1,5 +1,14 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+
+# 1.4.9
+
+This release is a follow-up of 1.4.7 and 1.4.8, to mitigate the risk of
+job folders becoming very large.
+
+* Runner:
+    * Exclude `history` from `TaskParameters` object for parallel tasks, so that it does not end up in input pickle files (\#1247).
+
 # 1.4.8
 
 This release is a follow-up of 1.4.7, to mitigate the risk of job folders
