@@ -10,6 +10,7 @@ import shutil
 import subprocess  # nosec
 import traceback
 from concurrent.futures import Executor
+from copy import deepcopy
 from functools import lru_cache
 from functools import partial
 from pathlib import Path
@@ -454,7 +455,7 @@ def trim_TaskParameters(
     This applies only to parallel tasks with names different from the ones
     defined in `_task_needs_image_list`.
     """
-    task_params_slim = task_params.copy()
+    task_params_slim = deepcopy(task_params)
     if not _task_needs_image_list(_task) and _task.is_parallel:
         if "image" in task_params_slim.metadata.keys():
             task_params_slim.metadata.pop("image")
@@ -542,6 +543,7 @@ def call_parallel_task(
     actual_task_pars_depend = trim_TaskParameters(
         task_pars_depend, wftask.task
     )
+
     partial_call_task = partial(
         call_single_parallel_task,
         wftask=wftask,
@@ -579,13 +581,8 @@ def call_parallel_task(
             "future releases."
         )
 
-    # Prepare updated_metadata
-    import logging
-
     updated_metadata = task_pars_depend.metadata.copy()
-    logging.critical(f"[call_parallel_task] A: {updated_metadata=}")
     updated_metadata.update(aggregated_metadata_update)
-    logging.critical(f"[call_parallel_task] B: {updated_metadata=}")
 
     # Prepare updated_history (note: the expected type for history items is
     # defined in `_DatasetHistoryItem`)
