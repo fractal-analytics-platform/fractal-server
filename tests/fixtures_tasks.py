@@ -23,6 +23,17 @@ class MockTask(BaseModel):
     def model_dump(self, *args, **kwargs):
         return self.dict(*args, **kwargs)
 
+    @property
+    def parallelization_level(self) -> Optional[str]:
+        try:
+            return self.meta["parallelization_level"]
+        except KeyError:
+            return None
+
+    @property
+    def is_parallel(self) -> bool:
+        return bool(self.parallelization_level)
+
 
 class MockWorkflowTask(BaseModel):
     order: int = 0
