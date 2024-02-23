@@ -101,8 +101,9 @@ def dummy(
     # Create output folder and set output file path
     if not os.path.isdir(output_path):
         os.makedirs(output_path, exist_ok=True)
-    filename_out = f"{index}.result.json"
+    filename_out = f"{index}.dummy.result.json"
     out_fullpath = Path(output_path) / filename_out
+    logger.info(f"[dummy] now looking into {out_fullpath=}")
 
     try:
         with out_fullpath.open("r") as fin:

@@ -199,7 +199,7 @@ def monkey_slurm(monkeypatch, docker_compose_project_name, docker_services):
                 "-c",
             ] + container_cmd
             super().__init__(cmd, *args[1:], **kwargs)
-            logging.critical(shlex.join(self.args))
+            logging.warning(shlex.join(self.args))
             PopenLog.add_call(self)
 
     monkeypatch.setattr(subprocess, "Popen", _MockPopen)
