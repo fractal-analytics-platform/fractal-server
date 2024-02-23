@@ -311,7 +311,7 @@ async def submit_workflow(
         job.log = (
             f"TASK ERROR: "
             f"Task name: {e.task_name}, "
-            f"position in Workflow: {e.workflow_task_order=}\n"
+            f"position in Workflow: {e.workflow_task_order}\n"
             f"TRACEBACK:\n{exception_args_string}"
         )
         db_sync.merge(job)
