@@ -283,9 +283,6 @@ def call_single_task(
     )
 
     # write args file (by assembling task_pars and wftask.args)
-    # Note: trim_TaskParameters already emptied the history key-value pair, but
-    # we should still remove it from the JSON file to avoid a validation error
-    # for the task arguments.
     write_args_file(
         task_pars.dict(exclude={"history"}),
         wftask.args or {},
@@ -412,9 +409,6 @@ def call_single_parallel_task(
     )
 
     # write args file (by assembling task_pars, wftask.args and component)
-    # Note: trim_TaskParameters already emptied the history key-value pair, but
-    # we should still remove it from the JSON file to avoid a validation error
-    # for the task arguments.
     write_args_file(
         task_pars.dict(exclude={"history"}),
         wftask.args or {},
