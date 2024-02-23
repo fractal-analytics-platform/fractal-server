@@ -183,7 +183,9 @@ def test_execute_single_parallel_task(tmp_path):
             data = json.load(fin)
         safe_component = data["component"].replace(" ", "_")
         safe_component = safe_component.replace(".", "_").replace("/", "_")
-        assert output_file.name == f"{safe_component}.result.json"
+        assert (
+            output_file.name == f"{safe_component}.dummy_parallel.result.json"
+        )
         assert data["message"] == MESSAGE
 
 
@@ -266,11 +268,11 @@ def test_execute_multiple_tasks(tmp_path):
     assert len(history) == 3
     assert history[:-2] == existing_history
 
-    with (tmp_path / "0.result.json").open("r") as f:
+    with (tmp_path / "0.dummy.result.json").open("r") as f:
         data = json.load(f)
         debug(data[0]["metadata"])
         assert data[0]["metadata"] == METADATA_0
-    with (tmp_path / "1.result.json").open("r") as f:
+    with (tmp_path / "1.dummy.result.json").open("r") as f:
         data = json.load(f)
         debug(data[0]["metadata"])
         assert data[0]["metadata"] == METADATA_1
