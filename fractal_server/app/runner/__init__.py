@@ -219,7 +219,7 @@ async def submit_workflow(
         logger.debug(f"slurm_user: {slurm_user}")
         logger.debug(f"slurm_account: {job.slurm_account}")
         logger.debug(f"worker_init: {worker_init}")
-        logger.debug(f"input metadata: {input_dataset.meta}")
+        logger.debug(f"input metadata keys: {list(input_dataset.meta.keys())}")
         logger.debug(f"input_paths: {input_paths}")
         logger.debug(f"output_path: {output_path}")
         logger.debug(f"job.id: {job.id}")
@@ -311,7 +311,7 @@ async def submit_workflow(
         job.log = (
             f"TASK ERROR: "
             f"Task name: {e.task_name}, "
-            f"position in Workflow: {e.workflow_task_order=}\n"
+            f"position in Workflow: {e.workflow_task_order}\n"
             f"TRACEBACK:\n{exception_args_string}"
         )
         db_sync.merge(job)
