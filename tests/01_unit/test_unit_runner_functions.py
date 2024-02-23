@@ -37,6 +37,9 @@ def test_trim_TaskParameters():
     for key in ["input_paths", "output_path", "history", "metadata"]:
         assert getattr(old_taskpar, key) == getattr(new_taskpar, key)
 
+    # Verify that input was not modified
+    assert old_taskpar == old_taskpar_deepcopy
+
     # Case 2
     new_taskpar = trim_TaskParameters(
         old_taskpar,
@@ -48,12 +51,18 @@ def test_trim_TaskParameters():
     for key in ["input_paths", "output_path", "history", "metadata"]:
         assert getattr(old_taskpar, key) == getattr(new_taskpar, key)
 
+    # Verify that input was not modified
+    assert old_taskpar == old_taskpar_deepcopy
+
     # Case 3
     new_taskpar = trim_TaskParameters(
         old_taskpar, Task(name="name", meta=dict(key="value"))
     )
     for key in ["input_paths", "output_path", "history", "metadata"]:
         assert getattr(old_taskpar, key) == getattr(new_taskpar, key)
+
+    # Verify that input was not modified
+    assert old_taskpar == old_taskpar_deepcopy
 
     # For generic *parallel* tasks, both history and metadata["image"] are
     # removed
@@ -66,4 +75,5 @@ def test_trim_TaskParameters():
     assert new_taskpar.metadata == dict(well=["a"])
     assert "image" not in new_taskpar.metadata.keys()
 
+    # Verify that input was not modified
     assert old_taskpar == old_taskpar_deepcopy
