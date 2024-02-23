@@ -459,6 +459,7 @@ def trim_TaskParameters(
     if not _task_needs_image_list(_task) and _task.is_parallel:
         if "image" in task_params_slim.metadata.keys():
             task_params_slim.metadata.pop("image")
+        task_params_slim.history = []
     return task_params_slim
 
 
