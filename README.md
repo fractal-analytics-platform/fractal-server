@@ -33,7 +33,7 @@
 | fractal\_server/app/routes/aux/\_job.py                           |       17 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/app/routes/aux/\_runner.py                        |        9 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/app/runner/\_\_init\_\_.py                        |      165 |        5 |       25 |        1 |     97% |54-55, 62-63, 183 |
-| fractal\_server/app/runner/\_common.py                            |      199 |        9 |       54 |        6 |     94% |142, 153->152, 201-202, 205->exit, 212, 401, 403, 535-537 |
+| fractal\_server/app/runner/\_common.py                            |      200 |        9 |       54 |        6 |     94% |142, 153->152, 201-202, 205->exit, 212, 401, 403, 536-538 |
 | fractal\_server/app/runner/\_local/\_\_init\_\_.py                |       23 |        1 |        4 |        1 |     93% |       160 |
 | fractal\_server/app/runner/\_local/\_local\_config.py             |       34 |        0 |        8 |        0 |    100% |           |
 | fractal\_server/app/runner/\_local/\_submit\_setup.py             |        9 |        0 |        0 |        0 |    100% |           |
@@ -70,7 +70,7 @@
 | fractal\_server/tasks/endpoint\_operations.py                     |       80 |        0 |       26 |        4 |     96% |47->exit, 119->exit, 124->exit, 129->exit |
 | fractal\_server/tasks/utils.py                                    |       35 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/utils.py                                          |       22 |        0 |        2 |        0 |    100% |           |
-|                                                         **TOTAL** | **4312** |  **136** | **1251** |  **157** | **94%** |           |
+|                                                         **TOTAL** | **4313** |  **136** | **1251** |  **157** | **94%** |           |
 
 
 ## Setup coverage badge
