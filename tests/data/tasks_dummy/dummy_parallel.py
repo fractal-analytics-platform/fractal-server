@@ -105,7 +105,9 @@ def dummy_parallel(
         os.makedirs(output_path, exist_ok=True)
     safe_component = component.replace(" ", "_").replace("/", "_")
     safe_component = safe_component.replace(".", "_")
-    out_fullpath = str(Path(output_path) / f"{safe_component}.result.json")
+    out_fullpath = str(
+        Path(output_path) / f"{safe_component}.dummy_parallel.result.json"
+    )
 
     # Write output
     with open(out_fullpath, "w") as fout:
