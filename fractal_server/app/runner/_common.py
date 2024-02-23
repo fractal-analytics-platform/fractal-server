@@ -581,6 +581,7 @@ def call_parallel_task(
             "future releases."
         )
 
+    # Prepare updated_metadata
     updated_metadata = task_pars_depend.metadata.copy()
     updated_metadata.update(aggregated_metadata_update)
 
@@ -689,7 +690,6 @@ def execute_tasks(
                     f"{type(e)} error in {submit_setup_call=}\n"
                     f"Original traceback:\n{tb}"
                 )
-
             # NOTE: executor.submit(call_single_task, ...) is non-blocking,
             # i.e. the returned future may have `this_wftask_future.done() =
             # False`. We make it blocking right away, by calling `.result()`
