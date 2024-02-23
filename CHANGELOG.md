@@ -8,6 +8,8 @@ becoming very large.
 * Runner:
     * Exclude `metadata["image"]` from `TaskParameters` object for parallel tasks, so that it does not end up in input pickle files (\#1245).
     * Exclude components list from `workflow.log` logs (\#1245).
+* Database:
+    * Remove spurious logging of `fractal_server.app.db` string (\#1245).
 
 # 1.4.7
 
