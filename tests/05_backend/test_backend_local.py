@@ -135,7 +135,7 @@ def test_execute_single_parallel_task(tmp_path):
             task=MockTask(
                 name=MOCKPARALLELTASK_NAME,
                 command=f"python {dummy_parallel_module.__file__}",
-                parallelization_level="index",
+                meta=dict(parallelization_level="index"),
             ),
             args=dict(message=MESSAGE),
             order=0,
@@ -183,7 +183,9 @@ def test_execute_single_parallel_task(tmp_path):
             data = json.load(fin)
         safe_component = data["component"].replace(" ", "_")
         safe_component = safe_component.replace(".", "_").replace("/", "_")
-        assert output_file.name == f"{safe_component}.result.json"
+        assert (
+            output_file.name == f"{safe_component}.dummy_parallel.result.json"
+        )
         assert data["message"] == MESSAGE
 
 
@@ -231,14 +233,14 @@ def test_execute_multiple_tasks(tmp_path):
                 task=MockTask(
                     name="old-task",
                     command="old-command",
-                    parallelization_level="component",
+                    meta=dict(parallelization_level="component"),
                 ).model_dump(),
                 args=dict(some_key="some_value"),
             ).model_dump(),
             status=WorkflowTaskStatusType.FAILED,
             parallelization=dict(
                 component_list=["A", "B"],
-                parallelization_level="component",
+                meta=dict(parallelization_level="component"),
             ),
         )
     ]
@@ -266,11 +268,11 @@ def test_execute_multiple_tasks(tmp_path):
     assert len(history) == 3
     assert history[:-2] == existing_history
 
-    with (tmp_path / "0.result.json").open("r") as f:
+    with (tmp_path / "0.dummy.result.json").open("r") as f:
         data = json.load(f)
         debug(data[0]["metadata"])
         assert data[0]["metadata"] == METADATA_0
-    with (tmp_path / "1.result.json").open("r") as f:
+    with (tmp_path / "1.dummy.result.json").open("r") as f:
         data = json.load(f)
         debug(data[0]["metadata"])
         assert data[0]["metadata"] == METADATA_1
@@ -303,7 +305,7 @@ def test_call_parallel_task_max_tasks(
         task=MockTask(
             name="task0",
             command=f"python {dummy_parallel_module.__file__}",
-            parallelization_level="index",
+            meta=dict(parallelization_level="index"),
         ),
         args=dict(message="message", sleep_time=SLEEP_TIME),
         order=0,

@@ -253,7 +253,6 @@ def async_wrap(func: Callable) -> Callable:
 def write_args_file(
     *args: dict[str, Any],
     path: Path,
-    include_image_list: bool,
 ):
     """
     Merge arbitrary dictionaries and write to file
@@ -265,22 +264,10 @@ def write_args_file(
             previous ones.
         path:
             Destination for serialised file.
-        include_image_list:
-            If `False`, remove `out["metadata"]["image"]` before writing to
-            disk; if `True`, use `out` as is.
     """
     out = {}
     for d in args:
         out.update(d)
-
-    # Remove args["metadata"]["image"] key - see issue 1237
-    # (https://github.com/fractal-analytics-platform/fractal-server/issues/1237)
-    if not include_image_list:
-        try:
-            if "metadata" in out.keys() and "image" in out["metadata"].keys():
-                out["metadata"].pop("image")
-        except AttributeError:
-            pass
 
     with open(path, "w") as f:
         json.dump(out, f, cls=TaskParameterEncoder, indent=4)

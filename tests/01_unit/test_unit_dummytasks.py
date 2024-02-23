@@ -28,7 +28,7 @@ def test_dummy_direct_call(tmp_path):
     assert out_path.exists()
     assert metadata_update == {"dummy": "dummy 0", "index": ["0", "1", "2"]}
     debug(out_path)
-    with (out_path / "0.result.json").open("r") as f:
+    with (out_path / "0.dummy.result.json").open("r") as f:
         data = json.load(f)
     debug(data)
 
@@ -44,7 +44,7 @@ def test_dummy_direct_call(tmp_path):
         index=1,
     )
     assert metadata_update == {"dummy": "dummy 1", "index": ["0", "1", "2"]}
-    with (out_path / "1.result.json").open("r") as f:
+    with (out_path / "1.dummy.result.json").open("r") as f:
         data = json.load(f)
     debug(data)
 
@@ -80,7 +80,7 @@ async def test_dummy_process_call(tmp_path):
 
     assert out_path.exists()
     assert metadata_update == {"dummy": "dummy 0", "index": ["0", "1", "2"]}
-    with (out_path / "0.result.json").open("r") as f:
+    with (out_path / "0.dummy.result.json").open("r") as f:
         data = json.load(f)
     debug(data)
 
@@ -134,7 +134,9 @@ def test_dummy_parallel_direct_call(tmp_path):
     for out_file in out_files:
         with out_file.open("r") as fin:
             data = json.load(fin)
-        assert out_file.name == f'{data["component"]}.result.json'
+        assert (
+            out_file.name == f'{data["component"]}.dummy_parallel.result.json'
+        )
         assert data["message"] == FIRST_TEST_MESSAGE
 
 
