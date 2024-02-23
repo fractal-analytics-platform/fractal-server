@@ -455,11 +455,20 @@ def trim_TaskParameters(
     task_params_slim = task_params.copy()
     import logging
 
-    logging.critical(f"trim_TaskParameters, {_task=}")
+    logging.critical(f"trim_TaskParameters, {_task.name=}")
+    logging.critical(
+        f"trim_TaskParameters, {list(task_params.metadata.keys())=}"
+    )
     if not _task_needs_image_list(_task):
         logging.critical("Do remove metadata/images")
         if "image" in task_params_slim.metadata.keys():
             task_params_slim.metadata.pop("image")
+    logging.critical(
+        f"trim_TaskParameters, {list(task_params.metadata.keys())=}"
+    )
+    logging.critical(
+        f"trim_TaskParameters, {list(task_params_slim.metadata.keys())=}"
+    )
     return task_params_slim
 
 

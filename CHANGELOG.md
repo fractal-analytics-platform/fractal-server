@@ -2,8 +2,8 @@
 
 # 1.4.8
 
-This release is a follow-up of 1.4.7, to avoid the risk of job folders becoming
-very large.
+This release is a follow-up of 1.4.7, to mitigate the risk of job folders
+becoming very large.
 
 * Runner:
     * Exclude `metadata["image"]` from `TaskParameters` object, so that it does not end up in input pickle files (\#1245).
