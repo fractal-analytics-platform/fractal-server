@@ -580,8 +580,12 @@ def call_parallel_task(
         )
 
     # Prepare updated_metadata
+    import logging
+
     updated_metadata = task_pars_depend.metadata.copy()
+    logging.critical(f"[call_parallel_task] A: {updated_metadata=}")
     updated_metadata.update(aggregated_metadata_update)
+    logging.critical(f"[call_parallel_task] B: {updated_metadata=}")
 
     # Prepare updated_history (note: the expected type for history items is
     # defined in `_DatasetHistoryItem`)
