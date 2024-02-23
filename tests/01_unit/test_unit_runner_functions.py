@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from fractal_server.app.models import Task
 from fractal_server.app.runner._common import _task_needs_image_list
 from fractal_server.app.runner._common import TaskParameters
@@ -19,6 +21,7 @@ def test_trim_TaskParameters():
         history=[dict(key="value")],
         metadata=dict(well=["a"], image=["a1", "a2"]),
     )
+    old_taskpar_deepcopy = deepcopy(old_taskpar)
 
     # For two specific tasks (see test_task_needs_image_list) and for
     # non-parallel tasks, metadata are preserved
@@ -62,3 +65,5 @@ def test_trim_TaskParameters():
         assert getattr(old_taskpar, key) == getattr(new_taskpar, key)
     assert new_taskpar.metadata == dict(well=["a"])
     assert "image" not in new_taskpar.metadata.keys()
+
+    assert old_taskpar == old_taskpar_deepcopy
