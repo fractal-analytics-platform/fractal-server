@@ -17,7 +17,6 @@ from fractal_server.tasks.endpoint_operations import inspect_package
 class MockTask(BaseModel):
     name: str
     command: str
-    parallelization_level: Optional[str] = None
     meta: Optional[dict] = {}
 
     def model_dump(self, *args, **kwargs):
@@ -36,6 +35,7 @@ class MockTask(BaseModel):
 
 
 class MockWorkflowTask(BaseModel):
+    id: int = 99
     order: int = 0
     task: MockTask
     args: dict = {}
@@ -58,7 +58,7 @@ class MockWorkflowTask(BaseModel):
 
     @property
     def is_parallel(self) -> bool:
-        return bool(self.task.parallelization_level)
+        return self.task.is_parallel
 
     @property
     def parallelization_level(self) -> Optional[str]:
