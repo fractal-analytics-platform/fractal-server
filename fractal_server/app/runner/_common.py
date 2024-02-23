@@ -455,13 +455,10 @@ def trim_TaskParameters(
     """
     Return a smaller copy of a TaskParameter object.
 
-    1. Remove metadata["image"] key/value pair - see issues 1237 and 1242.
+    Remove metadata["image"] key/value pair - see issues 1237 and 1242.
     (https://github.com/fractal-analytics-platform/fractal-server/issues/1237)
-
-    2. Remove history, always.
     """
     task_params_slim = task_params.copy()
-    task_params_slim.history = []
     if not _task_needs_image_list(_task):
         if "image" in task_params_slim.metadata.keys():
             task_params_slim.metadata.pop("image")
