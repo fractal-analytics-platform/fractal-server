@@ -70,10 +70,11 @@ def test_trim_TaskParameters():
         old_taskpar,
         Task(name="task name", meta=dict(parallelization_level="image")),
     )
-    for key in ["input_paths", "output_path", "history"]:
+    for key in ["input_paths", "output_path"]:
         assert getattr(old_taskpar, key) == getattr(new_taskpar, key)
     assert new_taskpar.metadata == dict(well=["a"])
     assert "image" not in new_taskpar.metadata.keys()
+    assert new_taskpar.history == []
 
     # Verify that input was not modified
     assert old_taskpar == old_taskpar_deepcopy
