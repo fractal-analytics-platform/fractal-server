@@ -6,7 +6,7 @@ This release is a follow-up of 1.4.7, to mitigate the risk of job folders
 becoming very large.
 
 * Runner:
-    * Exclude `metadata["image"]` from `TaskParameters` object, so that it does not end up in input pickle files (\#1245).
+    * Exclude `metadata["image"]` from `TaskParameters` object for parallel tasks, so that it does not end up in input pickle files (\#1245).
     * Exclude components list from `workflow.log` logs (\#1245).
 
 # 1.4.7

@@ -451,24 +451,13 @@ def trim_TaskParameters(
 
     Remove metadata["image"] key/value pair - see issues 1237 and 1242.
     (https://github.com/fractal-analytics-platform/fractal-server/issues/1237)
+    This applies only to parallel tasks with names different from the ones
+    defined in `_task_needs_image_list`.
     """
     task_params_slim = task_params.copy()
-    import logging
-
-    logging.critical(f"trim_TaskParameters, {_task.name=}")
-    logging.critical(
-        f"trim_TaskParameters, {list(task_params.metadata.keys())=}"
-    )
-    if not _task_needs_image_list(_task):
-        logging.critical("Do remove metadata/images")
+    if not _task_needs_image_list(_task) and _task.is_parallel:
         if "image" in task_params_slim.metadata.keys():
             task_params_slim.metadata.pop("image")
-    logging.critical(
-        f"trim_TaskParameters, {list(task_params.metadata.keys())=}"
-    )
-    logging.critical(
-        f"trim_TaskParameters, {list(task_params_slim.metadata.keys())=}"
-    )
     return task_params_slim
 
 
@@ -703,13 +692,13 @@ def execute_tasks(
             # NOTE: executor.submit(call_single_task, ...) is non-blocking,
             # i.e. the returned future may have `this_wftask_future.done() =
             # False`. We make it blocking right away, by calling `.result()`
-            actual_current_task_pars = trim_TaskParameters(
-                current_task_pars, this_wftask.task
-            )
+            # NOTE: do not use trim_TaskParameters for non-parallel tasks,
+            # since the `task_pars` argument in `call_single_task` is also used
+            # as a basis for new `metadata`.
             this_wftask_future = executor.submit(
                 call_single_task,
                 wftask=this_wftask,
-                task_pars=actual_current_task_pars,
+                task_pars=current_task_pars,
                 workflow_dir=workflow_dir,
                 workflow_dir_user=workflow_dir_user,
                 logger_name=logger_name,
