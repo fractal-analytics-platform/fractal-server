@@ -1,5 +1,14 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# 1.4.8
+
+This release is a follow-up of 1.4.7, to avoid the risk of job folders becoming
+very large.
+
+* Runner:
+    * Exclude `metadata["image"]` from `TaskParameters` object, so that it does not end up in input pickle files (\#1245).
+    * Exclude components list from `workflow.log` logs (\#1245).
+
 # 1.4.7
 
 This release provides a bugfix (PR 1239) and a workaround (PR 1238) for the
