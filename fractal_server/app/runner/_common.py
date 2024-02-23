@@ -284,10 +284,9 @@ def call_single_task(
 
     # write args file (by assembling task_pars and wftask.args)
     write_args_file(
-        task_pars.dict(exclude={"history"}),
+        task_pars.dict(),
         wftask.args or {},
         path=task_files.args,
-        include_image_list=_task_needs_image_list(wftask.task),
     )
 
     # assemble full command
@@ -411,11 +410,10 @@ def call_single_parallel_task(
 
     # write args file (by assembling task_pars, wftask.args and component)
     write_args_file(
-        task_pars.dict(exclude={"history"}),
+        task_pars.dict(),
         wftask.args or {},
         dict(component=component),
         path=task_files.args,
-        include_image_list=_task_needs_image_list(wftask.task),
     )
 
     # assemble full command
@@ -442,6 +440,29 @@ def call_single_parallel_task(
         this_meta_update = None
 
     return this_meta_update
+
+
+def trim_TaskParameters(
+    task_params: TaskParameters,
+    _task: Task,
+) -> TaskParameters:
+    """
+    Return a smaller copy of a TaskParameter object.
+
+    1. Remove metadata["image"] key/value pair - see issues 1237 and 1242.
+    (https://github.com/fractal-analytics-platform/fractal-server/issues/1237)
+
+    2. Remove history, always.
+    """
+    task_params_slim = task_params.copy()
+    task_params_slim.history = []
+    if not _task_needs_image_list(_task):
+        try:
+            if "image" in task_params_slim.metadata.keys():
+                task_params_slim.metadata.pop("image")
+        except AttributeError:
+            pass
+    return task_params_slim
 
 
 def call_parallel_task(
@@ -522,10 +543,13 @@ def call_parallel_task(
         )
 
     # Preliminary steps
+    actual_task_pars_depend = trim_TaskParameters(
+        task_pars_depend, wftask.task
+    )
     partial_call_task = partial(
         call_single_parallel_task,
         wftask=wftask,
-        task_pars=task_pars_depend,
+        task_pars=actual_task_pars_depend,
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
     )
@@ -668,13 +692,19 @@ def execute_tasks(
                     f"{type(e)} error in {submit_setup_call=}\n"
                     f"Original traceback:\n{tb}"
                 )
+
+            # Preliminary steps
+            actual_current_task_pars = trim_TaskParameters(
+                current_task_pars, this_wftask.task
+            )
+
             # NOTE: executor.submit(call_single_task, ...) is non-blocking,
             # i.e. the returned future may have `this_wftask_future.done() =
             # False`. We make it blocking right away, by calling `.result()`
             this_wftask_future = executor.submit(
                 call_single_task,
                 wftask=this_wftask,
-                task_pars=current_task_pars,
+                task_pars=actual_current_task_pars,
                 workflow_dir=workflow_dir,
                 workflow_dir_user=workflow_dir_user,
                 logger_name=logger_name,
