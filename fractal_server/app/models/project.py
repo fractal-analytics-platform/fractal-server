@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
+from pydantic import validator
 from sqlalchemy import Column
 from sqlalchemy.types import DateTime
 from sqlmodel import Field
@@ -16,6 +17,7 @@ from .security import UserOAuth
 class Project(_ProjectBase, SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
+    version: str = Field(nullable=False)
     timestamp_created: datetime = Field(
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),
@@ -28,3 +30,9 @@ class Project(_ProjectBase, SQLModel, table=True):
             "lazy": "selectin",
         },
     )
+
+    @validator("version")
+    def validation_version(cls, value):
+        if value not in ["v1", "v2"]:
+            raise ValueError(f"Allowed versions: 'v1', 'v2'. Given {value}")
+        return value
