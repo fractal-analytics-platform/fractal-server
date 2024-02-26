@@ -17,6 +17,8 @@ class DatasetV2(SQLModel, table=True):
         arbitrary_types_allowed = True
 
     id: Optional[int] = Field(default=None, primary_key=True)
+    name: str
+
     project_id: int = Field(foreign_key="project.id")
     project: "Project" = Relationship(  # noqa: F821
         sa_relationship_kwargs=dict(lazy="selectin"),
