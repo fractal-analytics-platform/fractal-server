@@ -95,3 +95,7 @@ class WorkflowV2(SQLModel, table=True):
     @property
     def output_type(self):
         return self.task_list[-1].task.output_type
+
+
+class WorkflowTaskV2Legacy(SQLModel, table=False):
+    pass
