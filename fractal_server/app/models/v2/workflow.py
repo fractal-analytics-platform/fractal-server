@@ -23,8 +23,8 @@ class WorkflowTaskV2(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    workflow_id: int = Field(foreign_key="workflow.id")
-    task_id: int = Field(foreign_key="task.id")
+    workflow_id: int = Field(foreign_key="workflowv2.id")
+    task_id: int = Field(foreign_key="taskv2.id")
     order: Optional[int]
     meta: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
     args: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
@@ -78,7 +78,7 @@ class WorkflowV2(SQLModel, table=True):
     task_list: list[WorkflowTaskV2] = Relationship(
         sa_relationship_kwargs=dict(
             lazy="selectin",
-            order_by="WorkflowTask.order",
+            order_by="WorkflowTaskV2.order",
             collection_class=ordering_list("order"),
             cascade="all, delete-orphan",
         ),

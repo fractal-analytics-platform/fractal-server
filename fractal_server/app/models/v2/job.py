@@ -18,8 +18,8 @@ class JobV2(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     project_id: Optional[int] = Field(foreign_key="project.id")
-    workflow_id: Optional[int] = Field(foreign_key="workflow.id")
-    dataset_id: Optional[int] = Field(foreign_key="dataset.id")
+    workflow_id: Optional[int] = Field(foreign_key="workflowv2.id")
+    dataset_id: Optional[int] = Field(foreign_key="datasetv2.id")
 
     user_email: str = Field(nullable=False)
     slurm_account: Optional[str]
