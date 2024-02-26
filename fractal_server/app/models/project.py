@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import validator
 from sqlalchemy import Column
 from sqlalchemy.types import DateTime
 from sqlmodel import Field
@@ -30,9 +29,3 @@ class Project(_ProjectBase, SQLModel, table=True):
             "lazy": "selectin",
         },
     )
-
-    @validator("version", always=True, pre=True)
-    def validation_version(cls, value):
-        if value not in ["v1", "v2"]:
-            raise RuntimeError(f"Allowed versions: 'v1', 'v2'. Given {value}")
-        return value
