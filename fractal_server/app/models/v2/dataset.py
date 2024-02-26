@@ -41,6 +41,12 @@ class DatasetV2(SQLModel, table=True):
     filters: dict[str, Any] = Field(
         sa_column=Column(JSON, server_default="{}", nullable=False)
     )
+    buffer: Optional[dict[str, Any]] = Field(
+        sa_column=Column(JSON, nullable=True)
+    )
+    parallelization_list: Optional[list[dict[str, Any]]] = Field(
+        sa_column=Column(JSON, nullable=True)
+    )
 
     @property
     def image_paths(self) -> list[str]:

@@ -12,39 +12,11 @@ from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
-from ...utils import get_timestamp
-from ..schemas.workflow import _WorkflowBase
-from ..schemas.workflow import _WorkflowTaskBase
-from .task import Task
+from ....utils import get_timestamp
+from .task import TaskV2
 
 
-class WorkflowTask(_WorkflowTaskBase, SQLModel, table=True):
-    """
-    A Task as part of a Workflow
-
-    This is a crossing table between Task and Workflow. In addition to the
-    foreign keys, it allows for parameter overriding and keeps the order
-    within the list of tasks of the workflow.
-
-
-    Attributes:
-        id:
-            Primary key
-        workflow_id:
-            ID of the `Workflow` the `WorkflowTask` belongs to
-        task_id:
-            ID of the task corresponding to the `WorkflowTask`
-        order:
-            Positional order of the `WorkflowTask` in `Workflow.task_list`
-        meta:
-            Additional parameters useful for execution
-        args:
-            Task arguments
-        task:
-            `Task` object associated with the current `WorkflowTask`
-
-    """
-
+class WorkflowTaskV2(SQLModel, table=True):
     class Config:
         arbitrary_types_allowed = True
         fields = {"parent": {"exclude": True}}
@@ -56,7 +28,9 @@ class WorkflowTask(_WorkflowTaskBase, SQLModel, table=True):
     order: Optional[int]
     meta: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
     args: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
-    task: Task = Relationship(sa_relationship_kwargs=dict(lazy="selectin"))
+    task: TaskV2 = Relationship(sa_relationship_kwargs=dict(lazy="selectin"))
+
+    filters: dict[str, Any] = Field(sa_column=Column(JSON))
 
     @validator("args")
     def validate_args(cls, value: dict = None):
@@ -92,26 +66,16 @@ class WorkflowTask(_WorkflowTaskBase, SQLModel, table=True):
         return self.task.parallelization_level
 
 
-class Workflow(_WorkflowBase, SQLModel, table=True):
-    """
-    Workflow
-
-    Attributes:
-        id:
-            Primary key
-        project_id:
-            ID of the project the workflow belongs to.
-        task_list:
-            List of associations to tasks.
-    """
+class WorkflowV2(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
+    name: str
     project_id: int = Field(foreign_key="project.id")
     project: "Project" = Relationship(  # noqa: F821
         sa_relationship_kwargs=dict(lazy="selectin"),
     )
 
-    task_list: list[WorkflowTask] = Relationship(
+    task_list: list[WorkflowTaskV2] = Relationship(
         sa_relationship_kwargs=dict(
             lazy="selectin",
             order_by="WorkflowTask.order",
