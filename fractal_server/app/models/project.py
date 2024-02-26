@@ -17,7 +17,7 @@ from .security import UserOAuth
 class Project(_ProjectBase, SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    version: str = Field(nullable=False)
+    version: str = Field(nullable=False, default="v1")
     timestamp_created: datetime = Field(
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),
