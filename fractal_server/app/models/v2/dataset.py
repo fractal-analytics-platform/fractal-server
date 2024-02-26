@@ -13,6 +13,8 @@ from ....utils import get_timestamp
 
 
 class DatasetV2(SQLModel, table=True):
+    class Config:
+        arbitrary_types_allowed = True
 
     id: Optional[int] = Field(default=None, primary_key=True)
     project_id: int = Field(foreign_key="project.id")
@@ -31,5 +33,15 @@ class DatasetV2(SQLModel, table=True):
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
 
-    class Config:
-        arbitrary_types_allowed = True
+    # New in V2
+
+    images: list[dict[str, Any]] = Field(
+        sa_column=Column(JSON, server_default="[]", nullable=False)
+    )
+    filters: dict[str, Any] = Field(
+        sa_column=Column(JSON, server_default="{}", nullable=False)
+    )
+
+    @property
+    def image_paths(self) -> list[str]:
+        return [image["path"] for image in self.images]
