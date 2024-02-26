@@ -31,8 +31,8 @@ class Project(_ProjectBase, SQLModel, table=True):
         },
     )
 
-    @validator("version")
+    @validator("version", always=True, pre=True)
     def validation_version(cls, value):
         if value not in ["v1", "v2"]:
-            raise ValueError(f"Allowed versions: 'v1', 'v2'. Given {value}")
+            raise RuntimeError(f"Allowed versions: 'v1', 'v2'. Given {value}")
         return value
