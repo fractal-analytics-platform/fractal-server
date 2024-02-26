@@ -9,36 +9,19 @@ from sqlalchemy.types import JSON
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
-from ..schemas.task import _TaskBase
 
-
-class Task(_TaskBase, SQLModel, table=True):
-    """
-    Task model
-
-    Attributes:
-        id: Primary key
-        command: Executable command
-        input_type: Expected type of input `Dataset`
-        output_type: Expected type of output `Dataset`
-        meta:
-            Additional metadata related to execution (e.g. computational
-            resources)
-        source: inherited from `_TaskBase`
-        name: inherited from `_TaskBase`
-        args_schema: JSON schema of task arguments
-        args_schema_version:
-            label pointing at how the JSON schema of task arguments was
-            generated
-    """
+class TaskV2(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
+
+    is_parallel: bool
+
     command: str
     source: str = Field(unique=True)
-    input_type: str
-    output_type: str
+
     meta: Optional[dict[str, Any]] = Field(sa_column=Column(JSON), default={})
+
     owner: Optional[str] = None
     version: Optional[str] = None
     args_schema: Optional[dict[str, Any]] = Field(
@@ -54,10 +37,6 @@ class Task(_TaskBase, SQLModel, table=True):
             return self.meta["parallelization_level"]
         except KeyError:
             return None
-
-    @property
-    def is_parallel(self) -> bool:
-        return bool(self.parallelization_level)
 
     @property
     def default_args_from_args_schema(self) -> dict[str, Any]:
