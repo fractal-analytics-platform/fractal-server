@@ -1,0 +1,170 @@
+from pathlib import Path
+
+from devtools import debug
+from fractal_tasks_core_mock import TASK_LIST
+
+from fractal_server.v2 import Dataset
+from fractal_server.v2 import execute_tasks_v2
+from fractal_server.v2 import find_image_by_path
+from fractal_server.v2 import WorkflowTask
+
+
+def _assert_image_data_exist(image_list: list[dict]):
+    for image in image_list:
+        assert (Path(image.path) / "data").exists()
+
+
+def test_fractal_demos_01(tmp_path: Path):
+    """ """
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+    dataset = Dataset(id=1)
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=TASK_LIST["create_ome_zarr"],
+                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
+            )
+        ],
+        dataset=dataset,
+    )
+
+    assert dataset.history == [
+        "create_ome_zarr",
+    ]
+    assert dataset.filters == {
+        "plate": "my_plate.zarr",
+        "data_dimensionality": "3",
+    }
+    assert dataset.image_paths == [
+        f"{zarr_dir}/my_plate.zarr/A/01/0",
+        f"{zarr_dir}/my_plate.zarr/A/02/0",
+    ]
+
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=TASK_LIST["yokogawa_to_zarr"],
+                args=dict(),
+            )
+        ],
+        dataset=dataset,
+    )
+
+    debug(dataset)
+
+    assert dataset.history == [
+        "create_ome_zarr",
+        "yokogawa_to_zarr",
+    ]
+    assert dataset.filters == {
+        "plate": "my_plate.zarr",
+        "data_dimensionality": "3",
+    }
+    _assert_image_data_exist(dataset.images)
+
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=TASK_LIST["illumination_correction"],
+                args=dict(),
+            )
+        ],
+        dataset=dataset,
+    )
+
+    assert dataset.history == [
+        "create_ome_zarr",
+        "yokogawa_to_zarr",
+        "illumination_correction",
+    ]
+    assert dataset.filters == {
+        "plate": "my_plate.zarr",
+        "data_dimensionality": "3",
+        "illumination_correction": True,
+    }
+    assert set(dataset.image_paths) == {
+        f"{zarr_dir}/my_plate.zarr/A/01/0",
+        f"{zarr_dir}/my_plate.zarr/A/02/0",
+        f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
+        f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
+    }
+
+    img = find_image_by_path(
+        path=f"{zarr_dir}/my_plate.zarr/A/01/0_corr", images=dataset.images
+    )
+    assert img.dict() == {
+        "path": f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
+        "attributes": {
+            "well": "A_01",
+            "plate": "my_plate.zarr",
+            "data_dimensionality": "3",
+            "illumination_correction": True,
+        },
+    }
+    _assert_image_data_exist(dataset.images)
+
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=TASK_LIST["new_ome_zarr"],
+                args=dict(suffix="mip"),
+            )
+        ],
+        dataset=dataset,
+    )
+
+    assert dataset.history == [
+        "create_ome_zarr",
+        "yokogawa_to_zarr",
+        "illumination_correction",
+        "new_ome_zarr",
+    ]
+    assert dataset.filters == {
+        "plate": "my_plate_mip.zarr",
+        "data_dimensionality": "2",
+        "illumination_correction": True,
+    }
+    assert set(dataset.image_paths) == {
+        f"{zarr_dir}/my_plate.zarr/A/01/0",
+        f"{zarr_dir}/my_plate.zarr/A/02/0",
+        f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
+        f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
+        f"{zarr_dir}/my_plate_mip.zarr/A/01/0_corr",
+        f"{zarr_dir}/my_plate_mip.zarr/A/02/0_corr",
+    }
+
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=TASK_LIST["maximum_intensity_projection"],
+                args=dict(),
+            )
+        ],
+        dataset=dataset,
+    )
+
+    assert dataset.history == [
+        "create_ome_zarr",
+        "yokogawa_to_zarr",
+        "illumination_correction",
+        "new_ome_zarr",
+        "maximum_intensity_projection",
+    ]
+    assert dataset.filters == {
+        "plate": "my_plate_mip.zarr",
+        "data_dimensionality": "2",
+        "illumination_correction": True,
+    }
+    img = find_image_by_path(
+        path=f"{zarr_dir}/my_plate_mip.zarr/A/01/0_corr", images=dataset.images
+    )
+    assert img.dict() == {
+        "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0_corr",
+        "attributes": {
+            "well": "A_01",
+            "plate": "my_plate_mip.zarr",
+            "data_dimensionality": "2",
+            "illumination_correction": True,
+        },
+    }
+    _assert_image_data_exist(dataset.images)
