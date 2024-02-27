@@ -8,9 +8,9 @@ from pydantic.types import StrictStr
 
 from .._validators import valstr
 from .._validators import valutc
-from ..dumps import DatasetDump  # FIXME V2
-from ..dumps import ProjectDump  # FIXME V2
-from ..dumps import WorkflowDump  # FIXME V2
+from .dumps import DatasetDumpV2
+from .dumps import ProjectDumpV2
+from .dumps import WorkflowDumpV2
 
 
 class JobStatusTypeV2(str, Enum):
@@ -83,15 +83,13 @@ class JobReadV2(BaseModel):
 
     id: int
     project_id: Optional[int]
-    project_dump: ProjectDump
+    project_dump: ProjectDumpV2
     user_email: str
     slurm_account: Optional[str]
     workflow_id: Optional[int]
-    workflow_dump: WorkflowDump
-    input_dataset_id: Optional[int]
-    input_dataset_dump: DatasetDump
-    output_dataset_id: Optional[int]
-    output_dataset_dump: DatasetDump
+    workflow_dump: WorkflowDumpV2
+    dataset_id: Optional[int]
+    dataset_dump: DatasetDumpV2
     start_timestamp: datetime
     end_timestamp: Optional[datetime]
     status: str

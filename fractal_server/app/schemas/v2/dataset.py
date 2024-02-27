@@ -8,8 +8,8 @@ from pydantic import validator
 
 from .._validators import valstr
 from .._validators import valutc
-from ..dumps import WorkflowTaskDump  # FIXME V2
 from ..project import ProjectRead
+from .dumps import WorkflowTaskDumpV2
 from .workflowtask import WorkflowTaskStatusTypeV2
 from fractal_server.app.schemas.v2._validators_v2 import val_scalar_dict
 
@@ -38,7 +38,7 @@ class _DatasetHistoryItemV2(BaseModel):
     Class for an item of `Dataset.history`.
     """
 
-    workflowtask: WorkflowTaskDump  # FIXME V2
+    workflowtask: WorkflowTaskDumpV2
     status: WorkflowTaskStatusTypeV2
     parallelization: Optional[dict]
 
