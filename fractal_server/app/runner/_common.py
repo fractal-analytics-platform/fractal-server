@@ -10,6 +10,7 @@ import shutil
 import subprocess  # nosec
 import traceback
 from concurrent.futures import Executor
+from copy import deepcopy
 from functools import lru_cache
 from functools import partial
 from pathlib import Path
@@ -18,13 +19,17 @@ from typing import Any
 from typing import Callable
 from typing import Optional
 
+from ...config import get_settings
 from ...logger import get_logger
+from ...syringe import Inject
+from ..models import Task
 from ..models import WorkflowTask
 from ..schemas import WorkflowTaskStatusType
 from .common import JobExecutionError
 from .common import TaskExecutionError
 from .common import TaskParameters
 from .common import write_args_file
+
 
 HISTORY_FILENAME = "history.json"
 METADATA_FILENAME = "metadata.json"
@@ -51,6 +56,26 @@ def sanitize_component(value: str) -> str:
     'plate.zarr/B/03/0' to 'plate_zarr_B_03_0'.
     """
     return value.replace(" ", "_").replace("/", "_").replace(".", "_")
+
+
+def _task_needs_image_list(_task: Task) -> bool:
+    """
+    Whether a task requires `metadata["image"]` in its `args.json` file.
+
+    For details see
+    https://github.com/fractal-analytics-platform/fractal-server/issues/1237
+
+    Args:
+        _task: The task to be checked.
+    """
+    settings = Inject(get_settings)
+    exception_task_names = settings.FRACTAL_RUNNER_TASKS_INCLUDE_IMAGE.split(
+        ";"
+    )
+    if _task.name in exception_task_names:
+        return True
+    else:
+        return False
 
 
 class TaskFiles:
@@ -418,6 +443,26 @@ def call_single_parallel_task(
     return this_meta_update
 
 
+def trim_TaskParameters(
+    task_params: TaskParameters,
+    _task: Task,
+) -> TaskParameters:
+    """
+    Return a smaller copy of a TaskParameter object.
+
+    Remove metadata["image"] key/value pair - see issues 1237 and 1242.
+    (https://github.com/fractal-analytics-platform/fractal-server/issues/1237)
+    This applies only to parallel tasks with names different from the ones
+    defined in `_task_needs_image_list`.
+    """
+    task_params_slim = deepcopy(task_params)
+    if not _task_needs_image_list(_task) and _task.is_parallel:
+        if "image" in task_params_slim.metadata.keys():
+            task_params_slim.metadata.pop("image")
+        task_params_slim.history = []
+    return task_params_slim
+
+
 def call_parallel_task(
     *,
     executor: Executor,
@@ -496,10 +541,14 @@ def call_parallel_task(
         )
 
     # Preliminary steps
+    actual_task_pars_depend = trim_TaskParameters(
+        task_pars_depend, wftask.task
+    )
+
     partial_call_task = partial(
         call_single_parallel_task,
         wftask=wftask,
-        task_pars=task_pars_depend,
+        task_pars=actual_task_pars_depend,
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
     )
@@ -645,6 +694,9 @@ def execute_tasks(
             # NOTE: executor.submit(call_single_task, ...) is non-blocking,
             # i.e. the returned future may have `this_wftask_future.done() =
             # False`. We make it blocking right away, by calling `.result()`
+            # NOTE: do not use trim_TaskParameters for non-parallel tasks,
+            # since the `task_pars` argument in `call_single_task` is also used
+            # as a basis for new `metadata`.
             this_wftask_future = executor.submit(
                 call_single_task,
                 wftask=this_wftask,

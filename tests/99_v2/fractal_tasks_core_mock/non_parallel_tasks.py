@@ -1,37 +1,20 @@
-import os
-import shutil
 from pathlib import Path
-from typing import Any
-from typing import Literal
 from typing import Optional
 
-from .models import Task
-
-
-def _extract_common_root(paths: list[str]) -> dict[str, str]:
-    shared_plates = []
-    shared_root_dirs = []
-    for path in paths:
-        tmp = path.split(".zarr/")[0]
-        shared_root_dirs.append("/".join(tmp.split("/")[:-1]))
-        shared_plates.append(tmp.split("/")[-1] + ".zarr")
-
-    if len(set(shared_plates)) > 1 or len(set(shared_root_dirs)) > 1:
-        raise ValueError
-    shared_plate = list(shared_plates)[0]
-    shared_root_dir = list(shared_root_dirs)[0]
-
-    return dict(shared_root_dir=shared_root_dir, shared_plate=shared_plate)
+from .utils import _check_buffer_is_empty
+from .utils import _extract_common_root
+from fractal_server.app.runner.v2.models import DictStrAny
 
 
 def create_ome_zarr(
     *,
     # Standard arguments
     paths: list[str],
-    buffer: Optional[dict[str, Any]] = None,
+    buffer: Optional[DictStrAny] = None,
     # Task-specific arguments
     image_dir: str,
     zarr_dir: str,
+    fake_list_relative_paths: Optional[list[str]] = None,
 ) -> dict:
     """
     TBD
@@ -43,7 +26,11 @@ def create_ome_zarr(
     zarr_dir = zarr_dir.rstrip("/")
 
     if len(paths) > 0:
-        raise RuntimeError(f"Something wrong in create_ome_zarr. {paths=}")
+        raise ValueError(
+            "Error in create_ome_zarr, `paths` argument must be empty, but "
+            f"{paths=}."
+        )
+    _check_buffer_is_empty(buffer)
 
     # Based on images in image_folder, create plate OME-Zarr
     Path(zarr_dir).mkdir(parents=True)
@@ -58,32 +45,35 @@ def create_ome_zarr(
     # Create (fake) OME-Zarr folder on disk
     Path(zarr_path).mkdir()
 
-    # Create well/image OME-Zarr folders on disk
-    image_relative_paths = ["A/01/0", "A/02/0"]
+    # Prepare fake list of OME-Zarr images
+    if fake_list_relative_paths is None:
+        image_relative_paths = ["A/01/0", "A/02/0"]
+    else:
+        image_relative_paths = fake_list_relative_paths
+
+    # Create well/image OME-Zarr folders on disk, and prepare output
+    # metadata
+    image_raw_paths = {}
+    new_images = []
     for image_relative_path in image_relative_paths:
         (Path(zarr_path) / image_relative_path).mkdir(parents=True)
-
-    # Prepare output metadata
-    out = dict(
-        new_images=[
+        path = f"{zarr_dir}/{plate_zarr_name}/{image_relative_path}"
+        image_raw_paths[path] = (
+            Path(image_dir) / image_relative_path.replace("/", "_")
+        ).as_posix()
+        new_images.append(
             dict(
-                path=(
-                    f"{zarr_dir}/{plate_zarr_name}/" f"{image_relative_path}"
+                path=path,
+                attributes=dict(
+                    well="_".join(image_relative_path.split("/")[:2])
                 ),
-                well="_".join(image_relative_path.split("/")[:2]),
             )
-            for image_relative_path in image_relative_paths
-        ],
-        buffer=dict(
-            image_raw_paths={
-                (
-                    f"{zarr_dir}/{plate_zarr_name}/A/01/0"
-                ): f"{image_dir}/figure_A01.tif",
-                (
-                    f"{zarr_dir}/{plate_zarr_name}/A/02/0"
-                ): f"{image_dir}/figure_A02.tif",
-            },
-        ),
+        )
+
+    # Combine output metadata
+    out = dict(
+        new_images=new_images,
+        buffer=dict(image_raw_paths=image_raw_paths),
         new_filters=dict(
             plate=plate_zarr_name,
             data_dimensionality="3",
@@ -93,98 +83,11 @@ def create_ome_zarr(
     return out
 
 
-def yokogawa_to_zarr(
-    *,
-    # Standard arguments
-    path: str,
-    buffer: dict[str, Any],
-) -> dict:
-    """
-    TBD
-
-    Args:
-        path:
-            Absolute NGFF-image path, e.g.`"/tmp/plate.zarr/A/01/0"".
-    """
-
-    print("[yokogawa_to_zarr] START")
-    print(f"[yokogawa_to_zarr] {path=}")
-
-    source_data = buffer["image_raw_paths"][path]
-    print(f"[yokogawa_to_zarr] {source_data=}")
-
-    # Write fake image data into image Zarr group
-    if not os.path.isabs(path):
-        raise ValueError(f"Path is not absolute {path=}")
-
-    with (Path(path) / "data").open("w") as f:
-        f.write(f"Source data: {source_data}\n")
-
-    print("[yokogawa_to_zarr] END")
-    return {}
-
-
-def illumination_correction(
-    *,
-    # Standard arguments
-    path: str,
-    buffer: Optional[dict[str, Any]] = None,
-    # Non-standard arguments
-    subsets: Optional[
-        dict[Literal["T_index", "C_index", "Z_index"], int]
-    ] = None,
-    overwrite_input: bool = False,
-) -> dict:
-    print("[illumination_correction] START")
-    print(f"[illumination_correction] {path=}")
-    print(f"[illumination_correction] {overwrite_input=}")
-    print(f"[illumination_correction] {subsets=}")
-
-    if overwrite_input:
-        out = dict(edited_images=[dict(path=path)])
-
-        with (Path(path) / "data").open("a") as f:
-            f.write("Illumination correction\n")
-
-    else:
-        new_path = f"{path}_corr"
-
-        Path(new_path).mkdir(exist_ok=True)
-        with (Path(new_path) / "data").open("a") as f:
-            f.write(f"Illumination correction, {subsets=}\n")
-
-        print(f"[illumination_correction] {new_path=}")
-        out = dict(new_images=[dict(path=new_path)])
-    print(f"[illumination_correction] {out=}")
-    print("[illumination_correction] END")
-    return out
-
-
-def cellpose_segmentation(
-    *,
-    # Standard arguments
-    path: str,
-    buffer: Optional[dict[str, Any]] = None,
-    # Non-standard arguments
-    default_diameter: int = 100,
-) -> dict:
-    print("[cellpose_segmentation] START")
-    print(f"[cellpose_segmentation] {path=}")
-
-    with (Path(path) / "data").open("a") as f:
-        f.write("Cellpose segmentation\n")
-
-    out = dict()
-    print(f"[cellpose_segmentation] {out=}")
-    print("[cellpose_segmentation] END")
-    return out
-
-
 def new_ome_zarr(
     *,
     # Standard arguments
     paths: list[str],
-    buffer: Optional[dict[str, Any]] = None,
+    buffer: Optional[DictStrAny] = None,
     # Non-standard arguments
     suffix: str = "new",
     project_to_2D: bool = True,
@@ -231,62 +134,13 @@ def new_ome_zarr(
     return out
 
 
-def copy_data(
-    *,
-    # Standard arguments
-    # Zarr group (typically the plate one)
-    path: str,
-    buffer: dict[str, Any],  # Used to receive information from an "init" task
-) -> dict[str, Any]:
-
-    old_plate = buffer["new_ome_zarr"]["old_plate"]
-    new_plate = buffer["new_ome_zarr"]["new_plate"]
-    old_path = path.replace(new_plate, old_plate)
-    old_zarr_path = old_path
-    new_zarr_path = path
-
-    shutil.copytree(old_zarr_path, new_zarr_path)
-
-    print("[copy_data] START")
-    print(f"[copy_data] {old_zarr_path=}")
-    print(f"[copy_data] {new_zarr_path=}")
-    print("[copy_data] END")
-
-    out = {}
-    return out
-
-
-def maximum_intensity_projection(
-    *,
-    # Standard arguments
-    # group (typically the plate one)
-    path: str,  # Relative path to NGFF image within root_dir
-    buffer: dict[str, Any],  # Used to receive information from an "init" task
-) -> dict[str, Any]:
-    old_plate = buffer["new_ome_zarr"]["old_plate"]
-    new_plate = buffer["new_ome_zarr"]["new_plate"]
-    old_path = path.replace(new_plate, old_plate)
-    old_zarr_path = old_path
-    new_zarr_path = path
-
-    shutil.copytree(old_zarr_path, new_zarr_path)
-
-    print("[maximum_intensity_projection] START")
-    print(f"[maximum_intensity_projection] {old_zarr_path=}")
-    print(f"[maximum_intensity_projection] {new_zarr_path=}")
-    print("[maximum_intensity_projection] END")
-
-    out = dict(edited_images=[dict(path=path)])
-    return out
-
-
 # This is a task that only serves as an init task
 def init_channel_parallelization(
     *,
     # Standard arguments
     # root_dir: str,
     paths: list[str],
-    buffer: Optional[dict[str, Any]] = None,
+    buffer: Optional[DictStrAny] = None,
 ) -> dict:
     print("[init_channel_parallelization] START")
     # print(f"[init_channel_parallelization] {root_dir=}")
@@ -308,7 +162,7 @@ def create_ome_zarr_multiplex(
     *,
     # Standard arguments
     paths: list[str],
-    buffer: Optional[dict[str, Any]] = None,
+    buffer: Optional[DictStrAny] = None,
     # Task-specific arguments
     image_dir: str,
     zarr_dir: str,
@@ -393,7 +247,7 @@ def init_registration(
     *,
     # Standard arguments
     paths: list[str],
-    buffer: Optional[dict[str, Any]] = None,
+    buffer: Optional[DictStrAny] = None,
     # Non-standard arguments
     ref_cycle_name: str,
 ) -> dict:
@@ -442,64 +296,3 @@ def init_registration(
 
     print("[init_registration] END")
     return dict(parallelization_list=parallelization_list)
-
-
-def registration(
-    *,
-    # Standard arguments
-    path: str,
-    buffer: Optional[dict[str, Any]] = None,
-    # Non-standard arguments
-    ref_path: str,
-    overwrite_input: bool = True,
-) -> dict:
-    print("[registration] START")
-    print(f"[registration] {path=}")
-
-    if overwrite_input:
-        out = dict(edited_images=[dict(path=path)])
-
-        with (Path(path) / "data").open("a") as f:
-            f.write(f"registration against {ref_path=}\n")
-    else:
-        raise NotImplementedError
-    print(f"[registration] {out=}")
-    print("[registration] END")
-    return out
-
-
-TASK_LIST = {
-    "create_ome_zarr": Task(
-        function=create_ome_zarr, task_type="non_parallel"
-    ),
-    "yokogawa_to_zarr": Task(function=yokogawa_to_zarr, task_type="parallel"),
-    "create_ome_zarr_multiplex": Task(
-        function=create_ome_zarr_multiplex, task_type="non_parallel"
-    ),
-    "cellpose_segmentation": Task(
-        function=cellpose_segmentation, task_type="parallel"
-    ),
-    "new_ome_zarr": Task(function=new_ome_zarr, task_type="non_parallel"),
-    "copy_data": Task(function=copy_data, task_type="parallel"),
-    "illumination_correction": Task(
-        function=illumination_correction,
-        task_type="parallel",
-        new_filters=dict(illumination_correction=True),
-    ),
-    "maximum_intensity_projection": Task(
-        function=maximum_intensity_projection,
-        task_type="parallel",
-        new_filters=dict(data_dimensionality="2"),
-    ),
-    "init_channel_parallelization": Task(
-        function=init_channel_parallelization, task_type="non_parallel"
-    ),
-    "init_registration": Task(
-        function=init_registration, task_type="non_parallel"
-    ),
-    "registration": Task(
-        function=registration,
-        task_type="parallel",
-        new_filters=dict(registration=True),
-    ),
-}

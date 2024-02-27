@@ -250,7 +250,10 @@ def async_wrap(func: Callable) -> Callable:
     return async_wrapper
 
 
-def write_args_file(*args: dict[str, Any], path: Path):
+def write_args_file(
+    *args: dict[str, Any],
+    path: Path,
+):
     """
     Merge arbitrary dictionaries and write to file
 
@@ -265,6 +268,7 @@ def write_args_file(*args: dict[str, Any], path: Path):
     out = {}
     for d in args:
         out.update(d)
+
     with open(path, "w") as f:
         json.dump(out, f, cls=TaskParameterEncoder, indent=4)
 

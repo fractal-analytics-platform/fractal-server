@@ -18,7 +18,6 @@ from ...logger import set_logger
 from ...syringe import Inject
 
 
-print(__name__)
 logger = set_logger(__name__)
 
 SQLITE_WARNING_MESSAGE = (

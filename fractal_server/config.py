@@ -347,6 +347,14 @@ class Settings(BaseSettings):
     with the same path and query parameters.
     """
 
+    FRACTAL_RUNNER_TASKS_INCLUDE_IMAGE: str = (
+        "Copy OME-Zarr structure;Convert Metadata Components from 2D to 3D"
+    )
+    """
+    `;`-separated list of names for task that require the `metadata["image"]`
+    attribute in their input-arguments JSON file.
+    """
+
     ###########################################################################
     # BUSINESS LOGIC
     ###########################################################################
