@@ -23,40 +23,40 @@ def _run_non_parallel_task(
 
     task_output = TaskOutput(**task_output)
 
-    task_output = process_task_output(
+    task_output = update_task_output_new_images(
         task_output=task_output,
         old_dataset_images=old_dataset_images,
-        old_image_paths=function_kwargs["paths"],
+        task_input_paths=function_kwargs["paths"],
     )
 
     return TaskOutput(**task_output.dict())
 
 
-def process_task_output(
+def update_task_output_new_images(
     task_output: TaskOutput,
-    old_image_paths: list[str],
+    task_input_paths: list[str],
     old_dataset_images: list[SingleImage],
 ):
-    if task_output.new_images is not None:
+    """
+    Update task_output.new_images (if set)
+    by propagating old images attributes
+    """
+    if task_output.new_images is None:
+        return task_output
 
-        new_image_paths = [
-            new_image.path for new_image in task_output.new_images
-        ]
-        if len(old_image_paths) == len(new_image_paths):
-            new_old_image_mapping = {}
-            for ind, new_image_path in enumerate(new_image_paths):
-                new_old_image_mapping[new_image_path] = old_image_paths[ind]
-            final_new_images = []
-            for new_image in task_output.new_images:
-                old_image = find_image_by_path(
-                    images=old_dataset_images,
-                    path=new_old_image_mapping[new_image.path],
-                )
-                new_image.attributes = (
-                    old_image.attributes | new_image.attributes
-                )
-                final_new_images.append(new_image)
-            task_output.new_images = final_new_images
+    new_image_paths = [new_image.path for new_image in task_output.new_images]
+    if len(task_input_paths) == len(new_image_paths):
+        final_new_images = []
+        for ind, new_image in enumerate(task_output.new_images):
+            old_image = find_image_by_path(
+                images=old_dataset_images,
+                path=task_input_paths[ind],
+            )
+            new_image.attributes = old_image.attributes | new_image.attributes
+            final_new_images.append(new_image)
+        task_output.new_images = final_new_images
+    else:
+        print("WARNING: If lenghts are different we don't know how to proceed")
     return task_output
 
 
