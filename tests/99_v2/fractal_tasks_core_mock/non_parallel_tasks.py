@@ -63,7 +63,7 @@ def create_ome_zarr(
         path = f"{zarr_dir}/{plate_zarr_name}/{image_relative_path}"
         image_raw_paths[path] = (
             Path(image_dir) / image_relative_path.replace("/", "_")
-        ).as_posix()
+        ).as_posix() + ".tif"
         new_images.append(
             dict(
                 path=path,
@@ -132,7 +132,7 @@ def create_ome_zarr_multiplex(
         path = f"{zarr_dir}/{plate_zarr_name}/{image_relative_path}"
         image_raw_paths[path] = (
             Path(image_dir) / image_relative_path.replace("/", "_")
-        ).as_posix()
+        ).as_posix() + ".tif"
         new_images.append(
             dict(
                 path=path,
