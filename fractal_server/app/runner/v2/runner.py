@@ -1,7 +1,7 @@
 from copy import copy
 from copy import deepcopy
 
-from .images import _deduplicate_list_of_dicts
+from .images import _deduplicate_list
 from .images import filter_images
 from .images import find_image_by_path
 from .images import SingleImage
@@ -119,9 +119,7 @@ def execute_tasks_v2(
                             **wftask.args,
                         )
                     )
-                list_function_kwargs = _deduplicate_list_of_dicts(
-                    list_function_kwargs
-                )
+                list_function_kwargs = _deduplicate_list(list_function_kwargs)
 
                 current_task_images = [
                     find_image_by_path(
@@ -130,9 +128,7 @@ def execute_tasks_v2(
                     for kwargs in list_function_kwargs
                 ]
 
-                current_task_images = _deduplicate_list_of_dicts(
-                    current_task_images
-                )
+                current_task_images = _deduplicate_list(current_task_images)
 
             task_output = _run_parallel_task(
                 task=task,
@@ -164,7 +160,7 @@ def execute_tasks_v2(
                 image=image, new_attributes=new_filters
             )
             added_images[ind] = updated_image
-        added_images = _deduplicate_list_of_dicts(added_images)
+        added_images = _deduplicate_list(added_images)
 
         # Get removed images
         removed_images = task_output.removed_images or []

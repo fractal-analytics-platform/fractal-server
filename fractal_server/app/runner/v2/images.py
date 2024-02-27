@@ -31,15 +31,16 @@ def find_image_by_path(
 T = TypeVar("T")
 
 
-def _deduplicate_list_of_dicts(list_of_dicts: list[T]) -> list[T]:
+def _deduplicate_list(this_list: list[T]) -> list[T]:
     """
-    Custom replacement for `set(list_of_dict)`, since `dict` is not hashable.
+    Custom replacement for `set(this_list)`, when items are of a non-hashable
+    type T (e.g. dict or SingleImage).
     """
-    new_list_of_dicts = []
-    for my_dict in list_of_dicts:
-        if my_dict not in new_list_of_dicts:
-            new_list_of_dicts.append(my_dict)
-    return new_list_of_dicts
+    new_list = []
+    for this_item in this_list:
+        if this_item not in new_list:
+            new_list.append(this_item)
+    return new_list
 
 
 def _filter_image_list(
