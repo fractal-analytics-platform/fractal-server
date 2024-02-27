@@ -3,11 +3,14 @@ from pathlib import Path
 from typing import Literal
 from typing import Optional
 
+from pydantic.decorator import validate_arguments
+
 from .utils import _check_buffer_is_empty
 from .utils import _check_path_is_absolute
 from fractal_server.app.runner.v2.models import DictStrAny
 
 
+@validate_arguments
 def yokogawa_to_zarr(
     *,
     path: str,
@@ -42,6 +45,7 @@ def yokogawa_to_zarr(
     return {}
 
 
+@validate_arguments
 def illumination_correction(
     *,
     # Standard arguments
@@ -80,6 +84,7 @@ def illumination_correction(
     return out
 
 
+@validate_arguments
 def cellpose_segmentation(
     *,
     # Standard arguments
@@ -102,6 +107,7 @@ def cellpose_segmentation(
     return out
 
 
+@validate_arguments
 def copy_data(
     *,
     # Standard arguments
@@ -127,6 +133,7 @@ def copy_data(
     return out
 
 
+@validate_arguments
 def maximum_intensity_projection(
     *,
     # Standard arguments
@@ -151,6 +158,7 @@ def maximum_intensity_projection(
     return out
 
 
+@validate_arguments
 def registration(
     *,
     # Standard arguments
