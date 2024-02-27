@@ -28,6 +28,5 @@ def _check_path_is_absolute(_path: str) -> None:
 def _check_buffer_is_empty(_buffer: Optional[DictStrAny] = None) -> None:
     if _buffer not in [None, {}]:
         raise ValueError(
-            "Error in create_ome_zarr: `buffer` must be None or empty, but "
-            f"buffer={_buffer}."
+            "Error: `buffer` must be None or empty, but " f"buffer={_buffer}."
         )
