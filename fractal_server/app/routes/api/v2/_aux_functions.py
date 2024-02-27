@@ -79,6 +79,7 @@ async def _get_workflow_check_owner(
     project_id: int,
     user_id: int,
     db: AsyncSession,
+    version: Optional[str] = None,
 ) -> WorkflowV2:
     """
     Get a workflow and a project, after access control on the project.
@@ -101,7 +102,7 @@ async def _get_workflow_check_owner(
 
     # Access control for project
     project = await _get_project_check_owner(
-        project_id=project_id, user_id=user_id, db=db
+        project_id=project_id, user_id=user_id, db=db, version=version
     )
     # Get workflow
     workflow = await db.get(WorkflowV2, workflow_id)
@@ -129,6 +130,7 @@ async def _get_workflow_task_check_owner(
     workflow_task_id: int,
     user_id: int,
     db: AsyncSession,
+    version: Optional[str] = None,
 ) -> tuple[WorkflowTaskV2, WorkflowV2]:
     """
     Check that user has access to Workflow and WorkflowTask.
@@ -152,7 +154,11 @@ async def _get_workflow_task_check_owner(
 
     # Access control for workflow
     workflow = await _get_workflow_check_owner(
-        workflow_id=workflow_id, project_id=project_id, user_id=user_id, db=db
+        workflow_id=workflow_id,
+        project_id=project_id,
+        user_id=user_id,
+        db=db,
+        version=version,
     )
 
     # If WorkflowTask is not in the db, exit
@@ -242,6 +248,7 @@ async def _get_dataset_check_owner(
     dataset_id: int,
     user_id: int,
     db: AsyncSession,
+    version: Optional[str] = None,
 ) -> dict[Literal["dataset", "project"], Union[DatasetV2, Project]]:
     """
     Get a dataset and a project, after access control on the project
@@ -263,7 +270,7 @@ async def _get_dataset_check_owner(
 
     # Access control for project
     project = await _get_project_check_owner(
-        project_id=project_id, user_id=user_id, db=db
+        project_id=project_id, user_id=user_id, db=db, version=version
     )
     # Get dataset
     dataset = await db.get(DatasetV2, dataset_id)
@@ -290,6 +297,7 @@ async def _get_job_check_owner(
     job_id: int,
     user_id: int,
     db: AsyncSession,
+    version: Optional[str] = None,
 ) -> dict[Literal["job", "project"], Union[JobV2, Project]]:
     """
     Get a job and a project, after access control on the project
@@ -310,7 +318,7 @@ async def _get_job_check_owner(
     """
     # Access control for project
     project = await _get_project_check_owner(
-        project_id=project_id, user_id=user_id, db=db
+        project_id=project_id, user_id=user_id, db=db, version=version
     )
     # Get dataset
     job = await db.get(JobV2, job_id)

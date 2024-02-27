@@ -10,9 +10,9 @@ from sqlmodel import select
 
 from ....db import AsyncSession
 from ....db import get_async_db
-from ....models import Project
 from ....models.v2 import DatasetV2
 from ....models.v2 import JobV2
+from ....models.v2 import Project
 from ....schemas.v2 import DatasetCreateV2
 from ....schemas.v2 import DatasetReadV2
 from ....schemas.v2 import DatasetUpdateV2
