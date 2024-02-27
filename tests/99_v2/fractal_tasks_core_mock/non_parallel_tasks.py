@@ -1,11 +1,14 @@
 from pathlib import Path
 from typing import Optional
 
+from pydantic.decorator import validate_arguments
+
 from .utils import _check_buffer_is_empty
 from .utils import _extract_common_root
 from fractal_server.app.runner.v2.models import DictStrAny
 
 
+@validate_arguments
 def create_ome_zarr(
     *,
     # Standard arguments
@@ -83,6 +86,7 @@ def create_ome_zarr(
     return out
 
 
+@validate_arguments
 def create_ome_zarr_multiplex(
     *,
     # Standard arguments
@@ -100,7 +104,6 @@ def create_ome_zarr_multiplex(
 
     zarr_dir = zarr_dir.rstrip("/")
     # Based on images in image_folder, create plate OME-Zarr
-    # Path(root_dir).mkdir(parents=True)
     plate_zarr_name = "my_plate.zarr"
     zarr_path = (Path(zarr_dir) / plate_zarr_name).as_posix()
 
@@ -153,6 +156,7 @@ def create_ome_zarr_multiplex(
     return out
 
 
+@validate_arguments
 def new_ome_zarr(
     *,
     # Standard arguments
@@ -204,16 +208,14 @@ def new_ome_zarr(
     return out
 
 
-# This is a task that only serves as an init task
+@validate_arguments
 def init_channel_parallelization(
     *,
     # Standard arguments
-    # root_dir: str,
     paths: list[str],
     buffer: Optional[DictStrAny] = None,
 ) -> dict:
     print("[init_channel_parallelization] START")
-    # print(f"[init_channel_parallelization] {root_dir=}")
     print(f"[init_channel_parallelization] {paths=}")
     parallelization_list = []
     for path in paths:
@@ -228,7 +230,7 @@ def init_channel_parallelization(
     return dict(parallelization_list=parallelization_list)
 
 
-# This is a task that only serves as an init task
+@validate_arguments
 def init_registration(
     *,
     # Standard arguments
@@ -244,10 +246,6 @@ def init_registration(
     # Detect plate prefix
     shared_plate = _extract_common_root(paths).get("shared_plate")
     shared_root_dir = _extract_common_root(paths).get("shared_root_dir")
-    #    shared_plate = set(path.split("/")[0] for path in paths)
-    # if len(shared_plate) > 1:
-    #     raise ValueError
-    # shared_plate = list(shared_plate)[0]
     print(f"[init_registration] Identified {shared_plate=}")
 
     ref_cycles_per_well = {}
