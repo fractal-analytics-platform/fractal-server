@@ -66,33 +66,20 @@ def execute_tasks_v2(
         else:
             tmp_buffer = {}
 
-        # Extract parallelization_list
-        if tmp_dataset.parallelization_list is not None:
-            parallelization_list = tmp_dataset.parallelization_list
-            parallelization_list = _deduplicate_list_of_dicts(
-                parallelization_list
-            )
-            _validate_parallelization_list_valid(
-                parallelization_list=parallelization_list,
-                current_image_paths=tmp_dataset.image_paths,
-            )
-        else:
-            parallelization_list = None
-
         # (1/2) Non-parallel task
         if task.task_type == "non_parallel":
-            if parallelization_list is not None:
+            if tmp_dataset.parallelization_list is not None:
                 raise ValueError(
                     "Found parallelization_list for non-parallel task"
                 )
             else:
                 # Get filtered images
-                filtered_images = filter_images(
+                current_task_images = filter_images(
                     dataset_images=tmp_dataset.images,
                     dataset_filters=tmp_dataset.filters,
                     wftask_filters=wftask.filters,
                 )
-                paths = [image.path for image in filtered_images]
+                paths = [image.path for image in current_task_images]
                 function_kwargs = dict(
                     paths=paths,
                     buffer=tmp_buffer,
@@ -101,56 +88,58 @@ def execute_tasks_v2(
                 task_output = _run_non_parallel_task(
                     task=task,
                     function_kwargs=function_kwargs,
-                    old_dataset_images=filtered_images,
+                    old_dataset_images=current_task_images,
                 )
         # (2/2) Parallel task
         elif task.task_type == "parallel":
             # Prepare list_function_kwargs
-            if parallelization_list is None:
+            if tmp_dataset.parallelization_list is None:
                 # Get filtered images
-                filtered_images = filter_images(
+                current_task_images = filter_images(
                     dataset_images=tmp_dataset.images,
                     dataset_filters=tmp_dataset.filters,
                     wftask_filters=wftask.filters,
                 )
-                list_function_kwargs = []
-                for image in filtered_images:
-                    list_function_kwargs.append(
-                        dict(
-                            path=image.path,
-                            buffer=tmp_buffer,
-                            **wftask.args,
-                        )
-                    )
+                list_function_kwargs = [
+                    dict(path=image.path, buffer=tmp_buffer, **wftask.args)
+                    for image in current_task_images
+                ]
+
             else:
                 # Use pre-made parallelization_list
+                parallelization_list = tmp_dataset.parallelization_list
+
+                _validate_parallelization_list_valid(
+                    parallelization_list=parallelization_list,
+                    current_image_paths=tmp_dataset.image_paths,
+                )
                 list_function_kwargs = deepcopy(parallelization_list)
                 for ind, kwargs in enumerate(list_function_kwargs):
-                    if "buffer" in kwargs:
-                        raise ValueError(f"Invalid {kwargs=}")
                     list_function_kwargs[ind].update(
                         dict(
-                            # root_dir=tmp_dataset.root_dir,
                             buffer=tmp_buffer,
                             **wftask.args,
                         )
                     )
-                # TODO: can we avoid this deduplicate operation?
                 list_function_kwargs = _deduplicate_list_of_dicts(
                     list_function_kwargs
                 )
 
-                filtered_images = [
+                current_task_images = [
                     find_image_by_path(
                         images=tmp_dataset.images, path=kwargs["path"]
                     )
                     for kwargs in list_function_kwargs
-                ]  # FIXME change name `filtered_images`
+                ]
+
+                current_task_images = _deduplicate_list_of_dicts(
+                    current_task_images
+                )
 
             task_output = _run_parallel_task(
                 task=task,
                 list_function_kwargs=list_function_kwargs,
-                old_dataset_images=filtered_images,
+                old_dataset_images=current_task_images,
             )
         else:
             raise ValueError(f"Invalid {task.task_type=}.")

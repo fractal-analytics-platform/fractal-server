@@ -13,9 +13,7 @@ class TaskOutput(BaseModel):
     edited_images: Optional[list[SingleImage]] = None
     """List of images edited by a given task instance."""
 
-    new_filters: Optional[
-        DictStrAny
-    ] = None  # FIXME: this does not actually work in Pydantic
+    new_filters: Optional[DictStrAny] = None
     """
     *Global* filters (common to all images) added by this task.
 
@@ -35,7 +33,7 @@ class TaskOutput(BaseModel):
     Used in the output of an init task, to expose customizable parallelization
     of the companion task.
     """
-
+    # FIXME if parallelization_list is set maybe other attributes cannot be set
     removed_images: Optional[list[SingleImage]] = None
 
     class Config:
