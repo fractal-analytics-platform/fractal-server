@@ -1,33 +1,17 @@
 from datetime import datetime
 from typing import Any
 from typing import Optional
-from typing import Union
 
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import validator
 
-from .._validators import val_absolute_path  # noqa F401
 from .._validators import valstr
 from .._validators import valutc
 from ..dumps import WorkflowTaskDump  # FIXME V2
 from ..project import ProjectRead
-from ..workflow import WorkflowTaskStatusType  # FIXME V2
-
-
-def val_scalar_dict(attribute: str):
-    def val(
-        dict_str_any: dict[str, Any],
-    ) -> dict[str, Union[int, float, str, bool, None]]:
-        for key, value in dict_str_any.items():
-            if not isinstance(value, (int, float, str, bool, type(None))):
-                raise ValueError(
-                    f"{attribute}[{key}] must be a scalar (int, float, str, "
-                    f"bool, or None). Given {value} ({type(value)})"
-                )
-        return dict_str_any
-
-    return val
+from .workflowtask import WorkflowTaskStatusTypeV2
+from fractal_server.app.schemas.v2._validators_v2 import val_scalar_dict
 
 
 class SingleImage(BaseModel):
@@ -55,7 +39,7 @@ class _DatasetHistoryItemV2(BaseModel):
     """
 
     workflowtask: WorkflowTaskDump  # FIXME V2
-    status: WorkflowTaskStatusType
+    status: WorkflowTaskStatusTypeV2
     parallelization: Optional[dict]
 
 
@@ -68,7 +52,7 @@ class DatasetStatusReadV2(BaseModel):
     status: Optional[
         dict[
             int,
-            WorkflowTaskStatusType,
+            WorkflowTaskStatusTypeV2,
         ]
     ] = None
 
