@@ -6,9 +6,9 @@ from pydantic import BaseModel
 from pydantic import validator
 
 from .._validators import valint
-from ..task import TaskExport  # FIXME V2
-from ..task import TaskImport  # FIXME V2
-from ..task import TaskRead  # FIXME V2
+from .task import TaskExportV2
+from .task import TaskImportV2
+from .task import TaskReadV2
 from fractal_server.app.schemas.v2._validators_v2 import val_scalar_dict
 
 
@@ -50,7 +50,7 @@ class WorkflowTaskReadV2(BaseModel):
     order: Optional[int]
     workflow_id: int
     task_id: int
-    task: TaskRead
+    task: TaskReadV2
     meta: Optional[dict[str, Any]]
     args: Optional[dict[str, Any]]
     filters: dict[str, Any]
@@ -81,7 +81,7 @@ class WorkflowTaskUpdateV2(BaseModel):
 
 class WorkflowTaskImportV2(BaseModel):
 
-    task: TaskImport
+    task: TaskImportV2
     meta: Optional[dict[str, Any]] = None
     args: Optional[dict[str, Any]] = None
     filters: dict[str, Any]
@@ -93,7 +93,7 @@ class WorkflowTaskImportV2(BaseModel):
 
 class WorkflowTaskExportV2(BaseModel):
 
-    task: TaskExport
+    task: TaskExportV2
     meta: Optional[dict[str, Any]] = None
     args: Optional[dict[str, Any]] = None
     filters: dict[str, Any]
