@@ -83,6 +83,76 @@ def create_ome_zarr(
     return out
 
 
+def create_ome_zarr_multiplex(
+    *,
+    # Standard arguments
+    paths: list[str],
+    buffer: Optional[DictStrAny] = None,
+    # Task-specific arguments
+    image_dir: str,
+    zarr_dir: str,
+) -> dict:
+    if len(paths) > 0:
+        raise ValueError(
+            "Error in create_ome_zarr_multiplex, "
+            f"`paths` argument must be empty, but {paths=}."
+        )
+
+    zarr_dir = zarr_dir.rstrip("/")
+    # Based on images in image_folder, create plate OME-Zarr
+    # Path(root_dir).mkdir(parents=True)
+    plate_zarr_name = "my_plate.zarr"
+    zarr_path = (Path(zarr_dir) / plate_zarr_name).as_posix()
+
+    print("[create_ome_zarr_multiplex] START")
+    print(f"[create_ome_zarr_multiplex] {image_dir=}")
+    print(f"[create_ome_zarr_multiplex] {zarr_dir=}")
+    print(f"[create_ome_zarr_multiplex] {zarr_path=}")
+
+    # Create (fake) OME-Zarr folder on disk
+    Path(zarr_path).mkdir(parents=True)
+
+    # Create well/image OME-Zarr folders on disk, and prepare output
+    # metadata
+    image_relative_paths = [
+        f"{well}/{cycle}"
+        for well in ["A/01", "A/02"]
+        for cycle in ["0", "1", "2"]
+    ]
+    acquisitions = [
+        str(cycle) for well in ["A/01", "A/02"] for cycle in ["0", "1", "2"]
+    ]
+    image_raw_paths = {}
+    new_images = []
+    for ind, image_relative_path in enumerate(image_relative_paths):
+        (Path(zarr_path) / image_relative_path).mkdir(parents=True)
+        path = f"{zarr_dir}/{plate_zarr_name}/{image_relative_path}"
+        image_raw_paths[path] = (
+            Path(image_dir) / image_relative_path.replace("/", "_")
+        ).as_posix()
+        new_images.append(
+            dict(
+                path=path,
+                attributes=dict(
+                    well="_".join(image_relative_path.split("/")[:2]),
+                    acquisition=acquisitions[ind],
+                ),
+            )
+        )
+
+    # Compose output metadata
+    out = dict(
+        new_images=new_images,
+        buffer=dict(image_raw_paths=image_raw_paths),
+        new_filters=dict(
+            plate=plate_zarr_name,
+            data_dimensionality="3",
+        ),
+    )
+    print("[create_ome_zarr_multiplex] END")
+    return out
+
+
 def new_ome_zarr(
     *,
     # Standard arguments
@@ -156,90 +226,6 @@ def init_channel_parallelization(
             )
     print("[init_channel_parallelization] END")
     return dict(parallelization_list=parallelization_list)
-
-
-def create_ome_zarr_multiplex(
-    *,
-    # Standard arguments
-    paths: list[str],
-    buffer: Optional[DictStrAny] = None,
-    # Task-specific arguments
-    image_dir: str,
-    zarr_dir: str,
-) -> dict:
-    if len(paths) > 0:
-        raise RuntimeError(
-            f"Something wrong in create_ome_zarr_multiplex. {paths=}"
-        )
-
-    zarr_dir = zarr_dir.rstrip("/")
-    # Based on images in image_folder, create plate OME-Zarr
-    # Path(root_dir).mkdir(parents=True)
-    plate_zarr_name = "my_plate.zarr"
-    zarr_path = (Path(zarr_dir) / plate_zarr_name).as_posix()
-
-    print("[create_ome_zarr_multiplex] START")
-    print(f"[create_ome_zarr_multiplex] {image_dir=}")
-    print(f"[create_ome_zarr_multiplex] {zarr_dir=}")
-    print(f"[create_ome_zarr_multiplex] {zarr_path=}")
-
-    # Create (fake) OME-Zarr folder on disk
-    Path(zarr_path).mkdir(parents=True)
-
-    # Create well/image OME-Zarr folders on disk
-    image_relative_paths = [
-        f"{well}/{cycle}"
-        for well in ["A/01", "A/02"]
-        for cycle in ["0", "1", "2"]
-    ]
-    acquisitions = [
-        str(cycle) for well in ["A/01", "A/02"] for cycle in ["0", "1", "2"]
-    ]
-
-    for image_relative_path in image_relative_paths:
-        (Path(zarr_path) / image_relative_path).mkdir(parents=True)
-
-    # Prepare output metadata
-    new_images = []
-    for ind, image_relative_path in enumerate(image_relative_paths):
-        new_images.append(
-            dict(
-                path=f"{zarr_dir}/{plate_zarr_name}/{image_relative_path}",
-                well="_".join(image_relative_path.split("/")[:2]),
-                acquisition=acquisitions[ind],
-            )
-        )
-    out = dict(
-        new_images=new_images,
-        buffer=dict(
-            image_raw_paths={
-                (
-                    f"{zarr_dir}/{plate_zarr_name}/A/01/0"
-                ): f"{image_dir}/figure_A01_0.tif",
-                (
-                    f"{zarr_dir}/{plate_zarr_name}/A/01/1"
-                ): f"{image_dir}/figure_A01_1.tif",
-                (
-                    f"{zarr_dir}/{plate_zarr_name}/A/01/2"
-                ): f"{image_dir}/figure_A01_2.tif",
-                (
-                    f"{zarr_dir}/{plate_zarr_name}/A/02/0"
-                ): f"{image_dir}/figure_A02_0.tif",
-                (
-                    f"{zarr_dir}/{plate_zarr_name}/A/02/1"
-                ): f"{image_dir}/figure_A02_1.tif",
-                (
-                    f"{zarr_dir}/{plate_zarr_name}/A/02/2"
-                ): f"{image_dir}/figure_A02_2.tif",
-            },
-        ),
-        new_filters=dict(
-            plate=plate_zarr_name,
-            data_dimensionality="3",
-        ),
-    )
-    print("[create_ome_zarr] END")
-    return out
 
 
 # This is a task that only serves as an init task
