@@ -12,8 +12,6 @@ from .parallel_tasks import yokogawa_to_zarr
 from fractal_server.app.runner.v2.models import Task
 
 
-print(yokogawa_to_zarr)
-
 TASK_LIST = {
     "create_ome_zarr": Task(
         function=create_ome_zarr, task_type="non_parallel"
