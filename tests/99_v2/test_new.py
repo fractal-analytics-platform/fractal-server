@@ -8,11 +8,11 @@ from fractal_server.app.schemas.v2 import DatasetUpdateV2  # noqa F401
 
 
 async def test_project_version_attribute(db):
-    project1 = Project(name="project")  # model default is "v1"
-    assert project1.version == "v1"
+    project1 = Project(name="project")  # model default is "v2"
+    assert project1.version == "v2"
 
-    project2 = Project(name="project", version="v2")
-    assert project2.version == "v2"
+    project2 = Project(name="project", version="v1")
+    assert project2.version == "v1"
 
     project3 = Project(name="project", version="anystring")
     assert project3.version == "anystring"
@@ -26,7 +26,7 @@ async def test_project_version_attribute(db):
     db.add(project_none)
     await db.commit()
 
-    assert project_none.version == "v1"  # DB default is "v1"
+    assert project_none.version == "v2"  # DB default is "v2"
 
 
 async def test_unit_dataset_v2(db):
@@ -36,16 +36,32 @@ async def test_unit_dataset_v2(db):
     db.add(project)
     await db.commit()
 
-    dataset = DatasetCreateV2(
-        project_id=project.id,
-        name="ds",
-        history=[],
-        images=[],
-        filters=[],
-    )
+    # Create
+    dataset_create = DatasetCreateV2(name="name")
+    debug(dataset_create)
+
+    dataset = DatasetV2(**dataset_create.dict(), project_id=project.id)
     debug(dataset)
 
-    db_dataset = DatasetV2(**dataset.dict(), project_id=project.id)
-    debug(db_dataset)
-    db.add(db_dataset)
+    db.add(dataset)
     await db.commit()
+
+    # Read
+    debug(dataset)
+    debug(dataset.project)
+
+    dataset_read = DatasetReadV2(
+        **dataset.model_dump(), project=dataset.project
+    )
+    debug(dataset_read)
+
+    # Update
+    dataset_update = DatasetUpdateV2(name="new name")
+    debug(dataset_update)
+
+    for key, value in dataset_update.dict(exclude_unset=True).items():
+        setattr(dataset, key, value)
+
+    db.add(dataset)
+    await db.commit()
+    debug(dataset)

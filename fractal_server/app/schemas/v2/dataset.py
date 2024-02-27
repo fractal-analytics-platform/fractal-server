@@ -54,58 +54,9 @@ class _DatasetHistoryItemV2(BaseModel):
     Class for an item of `Dataset.history`.
     """
 
-    workflowtask: WorkflowTaskDump
+    workflowtask: WorkflowTaskDump  # FIXME V2
     status: WorkflowTaskStatusType
     parallelization: Optional[dict]
-
-
-class _DatasetBaseV2(BaseModel):
-
-    name: str
-    type: Optional[str]
-    meta: dict[str, Any] = Field(default={})
-    history: list[_DatasetHistoryItemV2] = Field(default=[])
-    read_only: bool
-
-    images: list[SingleImage]
-    filters: dict[str, Any]
-
-    _filters = validator("filters", allow_reuse=True)(
-        val_scalar_dict("filters")
-    )
-
-
-class DatasetUpdateV2(_DatasetBaseV2):
-
-    name: Optional[str]
-    meta: Optional[dict[str, Any]] = None
-    history: Optional[list[_DatasetHistoryItemV2]] = None
-    read_only: Optional[bool]
-
-    # Validators
-    _name = validator("name", allow_reuse=True)(valstr("name"))
-    _type = validator("type", allow_reuse=True)(valstr("type"))
-
-
-class DatasetCreateV2(_DatasetBaseV2):
-
-    read_only: bool = False
-
-    # Validators
-    _name = validator("name", allow_reuse=True)(valstr("name"))
-    _type = validator("type", allow_reuse=True)(valstr("type"))
-
-
-class DatasetReadV2(_DatasetBaseV2):
-
-    id: int
-    project_id: int
-    project: ProjectRead
-    timestamp_created: datetime
-
-    _timestamp_created = validator("timestamp_created", allow_reuse=True)(
-        valutc("timestamp_created")
-    )
 
 
 class DatasetStatusReadV2(BaseModel):
@@ -120,3 +71,75 @@ class DatasetStatusReadV2(BaseModel):
             WorkflowTaskStatusType,
         ]
     ] = None
+
+
+# CRUD
+
+
+class DatasetCreateV2(BaseModel):
+
+    name: str
+
+    meta: dict[str, Any] = {}
+    history: list[_DatasetHistoryItemV2] = []
+    read_only: bool = False
+
+    images: list[SingleImage] = []
+    filters: dict[str, Any] = {}
+
+    buffer: Optional[dict[str, Any]]
+    parallelization_list: Optional[list[dict[str, Any]]]
+
+    # Validators
+    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _filters = validator("filters", allow_reuse=True)(
+        val_scalar_dict("filters")
+    )
+
+
+class DatasetReadV2(BaseModel):
+
+    id: int
+    name: str
+
+    project_id: int
+    project: ProjectRead
+
+    meta: dict[str, Any]
+    history: list[_DatasetHistoryItemV2]
+    read_only: bool
+
+    timestamp_created: datetime
+
+    images: list[SingleImage]
+    filters: dict[str, Any]
+    buffer: Optional[dict[str, Any]]
+    parallelization_list: Optional[list[dict[str, Any]]]
+
+    # Validators
+    _timestamp_created = validator("timestamp_created", allow_reuse=True)(
+        valutc("timestamp_created")
+    )
+    _filters = validator("filters", allow_reuse=True)(
+        val_scalar_dict("filters")
+    )
+
+
+class DatasetUpdateV2(BaseModel):
+
+    name: Optional[str]
+
+    meta: Optional[dict[str, Any]]
+    history: Optional[list[_DatasetHistoryItemV2]]
+    read_only: Optional[bool]
+
+    images: Optional[list[SingleImage]]
+    filters: Optional[dict[str, Any]]
+    buffer: Optional[dict[str, Any]]
+    parallelization_list: Optional[list[dict[str, Any]]]
+
+    # Validators
+    _name = validator("name", allow_reuse=True)(valstr("name"))
+    _filters = validator("filters", allow_reuse=True)(
+        val_scalar_dict("filters")
+    )
