@@ -69,9 +69,8 @@ def merge_outputs(
     final_new_images = []
     final_edited_images = []
     final_removed_images = []
-    final_new_filters = None
 
-    for task_output in task_outputs:
+    for ind, task_output in enumerate(task_outputs):
 
         if task_output.new_images:
             for new_image in task_output.new_images:
@@ -93,23 +92,22 @@ def merge_outputs(
             for removed_image in task_output.removed_images:
                 final_removed_images.append(removed_image)
 
-        new_filters = task_output.new_filters
-        if new_filters:
-            if final_new_filters is None:
-                final_new_filters = new_filters
-            else:
-                if final_new_filters != new_filters:
-                    raise ValueError(
-                        f"{new_filters=} but {final_new_filters=}"
-                    )
+        current_new_filters = task_output.new_filters
+
+        if ind == 0:
+            last_new_filters = current_new_filters
+        if current_new_filters != last_new_filters:
+            raise ValueError(f"{current_new_filters=} but {last_new_filters=}")
+
+        last_new_filters = current_new_filters.copy()
 
     final_output = TaskOutput()
     if final_new_images:
         final_output.new_images = final_new_images
     if final_edited_images:
         final_output.edited_images = final_edited_images
-    if final_new_filters:
-        final_output.new_filters = final_new_filters
+    if last_new_filters:
+        final_output.new_filters = last_new_filters
     if final_edited_images:
         final_output.removed_images = final_removed_images
 
@@ -133,21 +131,23 @@ def _run_parallel_task(
     new_old_image_mapping = {}
     for function_kwargs in list_function_kwargs:
 
+        # FIXME functools.partial
         task_output = task.function(**function_kwargs)
         if task_output is None:
             task_output = ParallelTaskOutput()
         else:
             task_output = ParallelTaskOutput(**task_output)
 
+        task_outputs.append(copy(task_output))
+
         if task_output.new_images is not None:
+            # FIXME check keys are not repeated
             new_old_image_mapping.update(
                 {
                     new_image.path: function_kwargs["path"]
                     for new_image in task_output.new_images
                 }
             )
-
-        task_outputs.append(copy(task_output))
 
     merged_output = merge_outputs(
         task_outputs,
