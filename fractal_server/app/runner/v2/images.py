@@ -1,5 +1,6 @@
 from copy import copy
 from typing import Optional
+from typing import TypeVar
 
 from .models import DictStrAny
 from .models import SingleImage
@@ -27,7 +28,10 @@ def find_image_by_path(
         raise ValueError(f"No image with {path=} found in image list.")
 
 
-def _deduplicate_list_of_dicts(list_of_dicts: list[dict]) -> list[dict]:
+T = TypeVar("T")
+
+
+def _deduplicate_list_of_dicts(list_of_dicts: list[T]) -> list[T]:
     """
     Custom replacement for `set(list_of_dict)`, since `dict` is not hashable.
     """
