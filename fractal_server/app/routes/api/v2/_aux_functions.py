@@ -28,6 +28,7 @@ async def _get_project_check_owner(
     project_id: int,
     user_id: int,
     db: AsyncSession,
+    version: Optional[str] = None,
 ) -> Project:
     """
     Check that user is a member of project and return the project.
@@ -36,6 +37,7 @@ async def _get_project_check_owner(
         project_id:
         user_id:
         db:
+        version:
 
     Returns:
         The project object
@@ -47,6 +49,7 @@ async def _get_project_check_owner(
             If the project does not exist
     """
     project = await db.get(Project, project_id)
+
     link_user_project = await db.get(LinkUserProject, (project_id, user_id))
     if not project:
         raise HTTPException(
@@ -57,6 +60,16 @@ async def _get_project_check_owner(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Not allowed on project {project_id}",
         )
+
+    if (version is not None) and (project.version != version):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                f"Conflict between Project[{project_id}]'s version "
+                f"('{project.version}') and the API version ('{version}')."
+            ),
+        )
+
     return project
 
 

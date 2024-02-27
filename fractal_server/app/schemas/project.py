@@ -33,7 +33,7 @@ class ProjectCreate(_ProjectBase):
     Class for `Project` creation.
     """
 
-    version: str
+    version: str = "v2"
 
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))
