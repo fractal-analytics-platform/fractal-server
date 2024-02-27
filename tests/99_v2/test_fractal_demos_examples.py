@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pytest
 from devtools import debug
 from fractal_tasks_core_mock import TASK_LIST
 
@@ -41,6 +42,22 @@ def test_fractal_demos_01(tmp_path: Path):
         f"{zarr_dir}/my_plate.zarr/A/01/0",
         f"{zarr_dir}/my_plate.zarr/A/02/0",
     ]
+    assert dataset.images[0].dict() == {
+        "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
+        "attributes": {
+            "well": "A_01",
+            "plate": "my_plate.zarr",
+            "data_dimensionality": "3",
+        },
+    }
+    assert dataset.images[1].dict() == {
+        "path": f"{zarr_dir}/my_plate.zarr/A/02/0",
+        "attributes": {
+            "well": "A_02",
+            "plate": "my_plate.zarr",
+            "data_dimensionality": "3",
+        },
+    }
 
     dataset = execute_tasks_v2(
         wf_task_list=[
@@ -51,8 +68,6 @@ def test_fractal_demos_01(tmp_path: Path):
         ],
         dataset=dataset,
     )
-
-    debug(dataset)
 
     assert dataset.history == [
         "create_ome_zarr",
@@ -101,13 +116,14 @@ def test_fractal_demos_01(tmp_path: Path):
             "illumination_correction": True,
         },
     }
+
     _assert_image_data_exist(dataset.images)
 
     dataset = execute_tasks_v2(
         wf_task_list=[
             WorkflowTask(
                 task=TASK_LIST["new_ome_zarr"],
-                args=dict(suffix="mip"),
+                args=dict(suffix="mip", project_to_2D=True),
             )
         ],
         dataset=dataset,
@@ -129,6 +145,59 @@ def test_fractal_demos_01(tmp_path: Path):
         f"{zarr_dir}/my_plate.zarr/A/02/0",
         f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
         f"{zarr_dir}/my_plate_mip.zarr/A/02/0",
+    }
+    _assert_image_data_exist(
+        [
+            image
+            for image in dataset.images
+            if image.attributes.get("data_dimensionality") == "3"
+        ]
+    )
+
+    with pytest.raises(AssertionError):
+        _assert_image_data_exist(
+            [
+                image
+                for image in dataset.images
+                if image.attributes.get("data_dimensionality") == "2"
+            ]
+        )
+
+    assert dataset.images[0].dict() == {
+        "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
+        "attributes": {
+            "well": "A_01",
+            "plate": "my_plate.zarr",
+            "data_dimensionality": "3",
+            "illumination_correction": True,
+        },
+    }
+    assert dataset.images[1].dict() == {
+        "path": f"{zarr_dir}/my_plate.zarr/A/02/0",
+        "attributes": {
+            "well": "A_02",
+            "plate": "my_plate.zarr",
+            "data_dimensionality": "3",
+            "illumination_correction": True,
+        },
+    }
+    assert dataset.images[2].dict() == {
+        "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
+        "attributes": {
+            "well": "A_01",
+            "plate": "my_plate_mip.zarr",
+            "data_dimensionality": "2",
+            "illumination_correction": True,
+        },
+    }
+    assert dataset.images[3].dict() == {
+        "path": f"{zarr_dir}/my_plate_mip.zarr/A/02/0",
+        "attributes": {
+            "well": "A_02",
+            "plate": "my_plate_mip.zarr",
+            "data_dimensionality": "2",
+            "illumination_correction": True,
+        },
     }
 
     dataset = execute_tasks_v2(
@@ -166,6 +235,27 @@ def test_fractal_demos_01(tmp_path: Path):
         },
     }
     _assert_image_data_exist(dataset.images)
+
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=TASK_LIST["cellpose_segmentation"],
+                args=dict(),
+            )
+        ],
+        dataset=dataset,
+    )
+
+    debug(dataset)
+
+    assert dataset.history == [
+        "create_ome_zarr",
+        "yokogawa_to_zarr",
+        "illumination_correction",
+        "new_ome_zarr",
+        "maximum_intensity_projection",
+        "cellpose_segmentation",
+    ]
 
 
 def test_fractal_demos_01_no_overwrite(tmp_path: Path):
@@ -223,7 +313,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path):
         wf_task_list=[
             WorkflowTask(
                 task=TASK_LIST["illumination_correction"],
-                args=dict(),
+                args=dict(overwrite_input=False),
             )
         ],
         dataset=dataset,
@@ -325,3 +415,24 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path):
         },
     }
     _assert_image_data_exist(dataset.images)
+
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=TASK_LIST["cellpose_segmentation"],
+                args=dict(),
+            )
+        ],
+        dataset=dataset,
+    )
+
+    debug(dataset)
+
+    assert dataset.history == [
+        "create_ome_zarr",
+        "yokogawa_to_zarr",
+        "illumination_correction",
+        "new_ome_zarr",
+        "maximum_intensity_projection",
+        "cellpose_segmentation",
+    ]
