@@ -1,13 +1,17 @@
 import pytest
 
 from fractal_server.app.runner.v2.images import find_image_by_path
+from fractal_server.app.runner.v2.images import SingleImage
 
 
 def test_find_image_by_path():
-    images = [dict(path="a", name="a"), dict(path="b")]
+    images = [
+        SingleImage(path="a", attributes=dict(name="a")),
+        SingleImage(path="b"),
+    ]
 
     image = find_image_by_path(path="a", images=images)
-    assert image["name"] == "a"
+    assert image.attributes["name"] == "a"
 
     with pytest.raises(ValueError):
         find_image_by_path(path="invalid", images=images)

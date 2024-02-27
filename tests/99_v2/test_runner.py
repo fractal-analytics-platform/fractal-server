@@ -5,11 +5,14 @@ import pytest
 from devtools import debug
 from tasks_for_tests import dummy_task
 
-from fractal_server.app.runner.v2.env import MAX_PARALLELIZATION_LIST_SIZE
 from fractal_server.app.runner.v2.models import Dataset
+from fractal_server.app.runner.v2.models import SingleImage
 from fractal_server.app.runner.v2.models import Task
 from fractal_server.app.runner.v2.models import WorkflowTask
 from fractal_server.app.runner.v2.runner import execute_tasks_v2
+from fractal_server.app.runner.v2.runner_functions import (
+    MAX_PARALLELIZATION_LIST_SIZE,
+)
 
 
 @pytest.mark.parametrize("N", [100, 1000])
@@ -51,7 +54,7 @@ def _copy_and_edit_image(
     new_images = [
         dict(
             path=f"{path}_new",
-            processed=True,
+            attributes=dict(processed=True),
         )
     ]
     return dict(new_images=new_images)
@@ -71,8 +74,14 @@ def test_image_attribute_propagation(
     parallelization_list: Optional[list[dict]],
 ):
     images_pre = [
-        dict(path="plate.zarr/A/01/0", plate="plate.zarr", well="A/01"),
-        dict(path="plate.zarr/A/02/0", plate="plate.zarr", well="A/02"),
+        SingleImage(
+            path="plate.zarr/A/01/0",
+            attributes=dict(plate="plate.zarr", well="A/01"),
+        ),
+        SingleImage(
+            path="plate.zarr/A/02/0",
+            attributes=dict(plate="plate.zarr", well="A/02"),
+        ),
     ]
     dataset_pre = Dataset(
         id=1,
@@ -98,14 +107,14 @@ def test_image_attribute_propagation(
 
     for image in images_post:
         print(f"Now validate {image}")
-        if image["path"] == "plate.zarr/A/01/0_new":
-            assert image["processed"] is True
-            assert image["plate"] == "plate.zarr"
-            assert image["well"] == "A/01"
-        elif image["path"] == "plate.zarr/A/02/0_new":
-            assert image["processed"] is True
-            assert image["plate"] == "plate.zarr"
-            assert image["well"] == "A/02"
+        if image.path == "plate.zarr/A/01/0_new":
+            assert image.attributes["processed"] is True
+            assert image.attributes["plate"] == "plate.zarr"
+            assert image.attributes["well"] == "A/01"
+        elif image.path == "plate.zarr/A/02/0_new":
+            assert image.attributes["processed"] is True
+            assert image.attributes["plate"] == "plate.zarr"
+            assert image.attributes["well"] == "A/02"
         else:
-            assert image["plate"] == "plate.zarr"
-            assert "processed" not in image.keys()
+            assert image.attributes["plate"] == "plate.zarr"
+            assert "processed" not in image.attributes.keys()

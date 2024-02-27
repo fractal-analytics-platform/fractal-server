@@ -1,11 +1,39 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
 
+# 1.4.9
+
+This release is a follow-up of 1.4.7 and 1.4.8, to mitigate the risk of
+job folders becoming very large.
+
+* Runner:
+    * Exclude `history` from `TaskParameters` object for parallel tasks, so that it does not end up in input pickle files (\#1247).
+
+# 1.4.8
+
+This release is a follow-up of 1.4.7, to mitigate the risk of job folders
+becoming very large.
+
+* Runner:
+    * Exclude `metadata["image"]` from `TaskParameters` object for parallel tasks, so that it does not end up in input pickle files (\#1245).
+    * Exclude components list from `workflow.log` logs (\#1245).
+* Database:
+    * Remove spurious logging of `fractal_server.app.db` string (\#1245).
+
+# 1.4.7
+
+This release provides a bugfix (PR 1239) and a workaround (PR 1238) for the
+SLURM runner, which became relevant for the use case of processing a large
+dataset (300 wells with 25 cycles each).
+
+* Runner:
+    * Do not include `metadata["image"]` in JSON file with task arguments (\#1238).
+    * Add `FRACTAL_RUNNER_TASKS_INCLUDE_IMAGE` configuration variable, to define exceptions where tasks still require `metadata["image"]` (\#1238).
+    * Fix bug in globbing patterns, when copying files from user-side to server-side job folder in SLURM executor (\#1239).
 * API:
     * Fix error message for rate limits in apply-workflow endpoint (\#1231).
 * Benchmarks:
-    * Add more scenarios, issue \#1184 (\#1232).
+    * Add more scenarios, as per issue \#1184 (\#1232).
 
 # 1.4.6
 
