@@ -57,14 +57,14 @@ def create_ome_zarr(
     # Create well/image OME-Zarr folders on disk, and prepare output
     # metadata
     image_raw_paths = {}
-    new_images = []
+    added_images = []
     for image_relative_path in image_relative_paths:
         (Path(zarr_path) / image_relative_path).mkdir(parents=True)
         path = f"{zarr_dir}/{plate_zarr_name}/{image_relative_path}"
         image_raw_paths[path] = (
             Path(image_dir) / image_relative_path.replace("/", "_")
         ).as_posix() + ".tif"
-        new_images.append(
+        added_images.append(
             dict(
                 path=path,
                 attributes=dict(
@@ -75,7 +75,7 @@ def create_ome_zarr(
 
     # Combine output metadata
     out = dict(
-        new_images=new_images,
+        added_images=added_images,
         buffer=dict(image_raw_paths=image_raw_paths),
         new_filters=dict(
             plate=plate_zarr_name,
@@ -126,14 +126,14 @@ def create_ome_zarr_multiplex(
         str(cycle) for well in ["A/01", "A/02"] for cycle in ["0", "1", "2"]
     ]
     image_raw_paths = {}
-    new_images = []
+    added_images = []
     for ind, image_relative_path in enumerate(image_relative_paths):
         (Path(zarr_path) / image_relative_path).mkdir(parents=True)
         path = f"{zarr_dir}/{plate_zarr_name}/{image_relative_path}"
         image_raw_paths[path] = (
             Path(image_dir) / image_relative_path.replace("/", "_")
         ).as_posix() + ".tif"
-        new_images.append(
+        added_images.append(
             dict(
                 path=path,
                 attributes=dict(
@@ -145,7 +145,7 @@ def create_ome_zarr_multiplex(
 
     # Compose output metadata
     out = dict(
-        new_images=new_images,
+        added_images=added_images,
         buffer=dict(image_raw_paths=image_raw_paths),
         new_filters=dict(
             plate=plate_zarr_name,
@@ -187,7 +187,7 @@ def new_ome_zarr(
     # Create (fake) OME-Zarr folder on disk
     Path(new_zarr_path).mkdir()
 
-    new_image_paths = [path.replace(old_plate, new_plate) for path in paths]
+    added_image_paths = [path.replace(old_plate, new_plate) for path in paths]
 
     new_filters = dict(plate=new_plate)
     if project_to_2D:
@@ -195,7 +195,7 @@ def new_ome_zarr(
 
     # Prepare output metadata
     out = dict(
-        new_images=[dict(path=path) for path in new_image_paths],
+        added_images=[dict(path=path) for path in added_image_paths],
         new_filters=new_filters,
         buffer=dict(
             new_ome_zarr=dict(

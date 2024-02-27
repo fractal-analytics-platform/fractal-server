@@ -149,7 +149,7 @@ def execute_tasks_v2(
         TaskOutput(**task_output.dict())
 
         # Decorate new images with source-image attributes
-        new_images = task_output.new_images or []
+        added_images = task_output.added_images or []
 
         # Construct up-to-date filters
         new_filters = copy(tmp_dataset.filters)
@@ -167,19 +167,19 @@ def execute_tasks_v2(
                 )
                 tmp_dataset.images[ind] = updated_image
         # Add filters to new images
-        new_images = task_output.new_images or []
-        for ind, image in enumerate(new_images):
+        added_images = task_output.added_images or []
+        for ind, image in enumerate(added_images):
             updated_image = _apply_attributes_to_image(
                 image=image, filters=new_filters
             )
-            new_images[ind] = updated_image
-        new_images = _deduplicate_list_of_dicts(new_images)
+            added_images[ind] = updated_image
+        added_images = _deduplicate_list_of_dicts(added_images)
 
         # Get removed images
         removed_images = task_output.removed_images or []
 
         # Add new images to Dataset.images
-        for image in new_images:
+        for image in added_images:
             try:
                 overlap = next(
                     _image
