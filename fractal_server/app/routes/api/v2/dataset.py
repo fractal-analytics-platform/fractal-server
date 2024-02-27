@@ -41,7 +41,7 @@ async def create_dataset(
     Add new dataset to current project
     """
     await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+        project_id=project_id, user_id=user.id, db=db, version="v2"
     )
     db_dataset = DatasetV2(project_id=project_id, **dataset.dict())
     db.add(db_dataset)
@@ -67,7 +67,7 @@ async def read_dataset_list(
     """
     # Access control
     project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db
+        project_id=project_id, user_id=user.id, db=db, version="v2"
     )
     # Find datasets of the current project. Note: this select/where approach
     # has much better scaling than refreshing all elements of
