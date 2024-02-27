@@ -525,7 +525,7 @@ def test_workflow_8(tmp_path: Path):
 # step by step
 
 
-def test_workflow_step_by_step(tmp_path: Path):
+def test_fractal_demos_01(tmp_path: Path):
     """
     1. create-ome-zarr + yokogawa-to-zarr
     2. illumination correction (new images)
@@ -607,12 +607,14 @@ def test_workflow_step_by_step(tmp_path: Path):
     img = find_image_by_path(
         path=f"{zarr_dir}/my_plate.zarr/A/01/0_corr", images=dataset.images
     )
-    assert img == {
+    assert img.dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
-        "well": "A_01",
-        "plate": "my_plate.zarr",
-        "data_dimensionality": "3",
-        "illumination_correction": True,
+        "attributes": {
+            "well": "A_01",
+            "plate": "my_plate.zarr",
+            "data_dimensionality": "3",
+            "illumination_correction": True,
+        },
     }
     _assert_image_data_exist(dataset.images)
 
@@ -671,12 +673,13 @@ def test_workflow_step_by_step(tmp_path: Path):
     img = find_image_by_path(
         path=f"{zarr_dir}/my_plate_mip.zarr/A/01/0_corr", images=dataset.images
     )
-    assert img == {
+    assert img.dict() == {
         "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0_corr",
-        "well": "A_01",
-        "plate": "my_plate_mip.zarr",
-        "data_dimensionality": "2",
-        "illumination_correction": True,
+        "attributes": {
+            "well": "A_01",
+            "plate": "my_plate_mip.zarr",
+            "data_dimensionality": "2",
+            "illumination_correction": True,
+        },
     }
-
     _assert_image_data_exist(dataset.images)
