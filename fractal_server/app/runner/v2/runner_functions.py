@@ -92,24 +92,21 @@ def merge_outputs(
             for removed_image in task_output.removed_images:
                 final_removed_images.append(removed_image)
 
+        # check that all filters are the same
         current_new_filters = task_output.new_filters
-
         if ind == 0:
-            last_new_filters = current_new_filters
+            last_new_filters = copy(current_new_filters)
         if current_new_filters != last_new_filters:
             raise ValueError(f"{current_new_filters=} but {last_new_filters=}")
 
-        last_new_filters = current_new_filters.copy()
+        last_new_filters = copy(current_new_filters)
 
-    final_output = TaskOutput()
-    if final_new_images:
-        final_output.new_images = final_new_images
-    if final_edited_images:
-        final_output.edited_images = final_edited_images
-    if last_new_filters:
-        final_output.new_filters = last_new_filters
-    if final_edited_images:
-        final_output.removed_images = final_removed_images
+    final_output = TaskOutput(
+        new_images=final_new_images,
+        edited_images=final_edited_images,
+        new_filters=last_new_filters,
+        removed_images=final_removed_images,
+    )
 
     return final_output
 
