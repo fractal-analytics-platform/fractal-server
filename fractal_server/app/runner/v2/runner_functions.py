@@ -23,7 +23,7 @@ def _run_non_parallel_task(
 
     task_output = TaskOutput(**task_output)
 
-    task_output = update_task_output_new_images(
+    task_output = update_task_output_added_images(
         task_output=task_output,
         old_dataset_images=old_dataset_images,
         task_input_paths=function_kwargs["paths"],
@@ -32,29 +32,33 @@ def _run_non_parallel_task(
     return TaskOutput(**task_output.dict())
 
 
-def update_task_output_new_images(
+def update_task_output_added_images(
     task_output: TaskOutput,
     task_input_paths: list[str],
     old_dataset_images: list[SingleImage],
 ):
     """
-    Update task_output.new_images (if set)
+    Update task_output.added_images (if set)
     by propagating old images attributes
     """
-    if task_output.new_images is None:
+    if task_output.added_images is None:
         return task_output
 
-    new_image_paths = [new_image.path for new_image in task_output.new_images]
-    if len(task_input_paths) == len(new_image_paths):
-        final_new_images = []
-        for ind, new_image in enumerate(task_output.new_images):
+    added_image_paths = [
+        added_image.path for added_image in task_output.added_images
+    ]
+    if len(task_input_paths) == len(added_image_paths):
+        final_added_images = []
+        for ind, added_image in enumerate(task_output.added_images):
             old_image = find_image_by_path(
                 images=old_dataset_images,
                 path=task_input_paths[ind],
             )
-            new_image.attributes = old_image.attributes | new_image.attributes
-            final_new_images.append(new_image)
-        task_output.new_images = final_new_images
+            added_image.attributes = (
+                old_image.attributes | added_image.attributes
+            )
+            final_added_images.append(added_image)
+        task_output.added_images = final_added_images
     else:
         print("WARNING: If lenghts are different we don't know how to proceed")
     return task_output
@@ -66,23 +70,23 @@ def merge_outputs(
     old_dataset_images: list[SingleImage],
 ) -> TaskOutput:
 
-    final_new_images = []
+    final_added_images = []
     final_edited_images = []
     final_removed_images = []
 
     for ind, task_output in enumerate(task_outputs):
 
-        if task_output.new_images:
-            for new_image in task_output.new_images:
+        if task_output.added_images:
+            for added_image in task_output.added_images:
                 old_image = find_image_by_path(
                     images=old_dataset_images,
-                    path=new_old_image_mapping[new_image.path],
+                    path=new_old_image_mapping[added_image.path],
                 )
                 # Propagate old-image attributes to new-image
-                new_image.attributes = (
-                    old_image.attributes | new_image.attributes
+                added_image.attributes = (
+                    old_image.attributes | added_image.attributes
                 )
-                final_new_images.append(new_image)
+                final_added_images.append(added_image)
 
         if task_output.edited_images:
             for edited_image in task_output.edited_images:
@@ -102,7 +106,7 @@ def merge_outputs(
         last_new_filters = copy(current_new_filters)
 
     final_output = TaskOutput(
-        new_images=final_new_images,
+        added_images=final_added_images,
         edited_images=final_edited_images,
         new_filters=last_new_filters,
         removed_images=final_removed_images,
@@ -137,12 +141,12 @@ def _run_parallel_task(
 
         task_outputs.append(copy(task_output))
 
-        if task_output.new_images is not None:
+        if task_output.added_images is not None:
             # FIXME check keys are not repeated
             new_old_image_mapping.update(
                 {
-                    new_image.path: function_kwargs["path"]
-                    for new_image in task_output.new_images
+                    added_image.path: function_kwargs["path"]
+                    for added_image in task_output.added_images
                 }
             )
 

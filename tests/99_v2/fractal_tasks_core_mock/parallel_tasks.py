@@ -71,7 +71,7 @@ def illumination_correction(
     else:
         new_path = f"{path}_corr"
         Path(new_path).mkdir(exist_ok=True)
-        out = dict(new_images=[dict(path=new_path)])
+        out = dict(added_images=[dict(path=new_path)])
         actual_path = new_path
         print(f"[illumination_correction] {new_path=}")
 

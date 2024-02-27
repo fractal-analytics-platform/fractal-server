@@ -7,7 +7,7 @@ from .models import DictStrAny
 
 
 class TaskOutput(BaseModel):
-    new_images: Optional[list[SingleImage]] = None
+    added_images: Optional[list[SingleImage]] = None
     """List of new images added by a given task instance."""
 
     edited_images: Optional[list[SingleImage]] = None
@@ -44,7 +44,7 @@ class ParallelTaskOutput(BaseModel):
     class Config:
         extra = "forbid"
 
-    new_images: Optional[list[SingleImage]] = None
+    added_images: Optional[list[SingleImage]] = None
     edited_images: Optional[list[SingleImage]] = None
     removed_images: Optional[list[SingleImage]] = None
     new_filters: Optional[DictStrAny] = None  # FIXME
