@@ -177,7 +177,7 @@ async def delete_dataset(
 
     # Cascade operations: set foreign-keys to null for jobs which are in
     # relationship with the current dataset
-    stm = select(JobV2).where(JobV2.input_dataset_id == dataset_id)
+    stm = select(JobV2).where(JobV2.dataset_id == dataset_id)
     res = await db.execute(stm)
     jobs = res.scalars().all()
     for job in jobs:
