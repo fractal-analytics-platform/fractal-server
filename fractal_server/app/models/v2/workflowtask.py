@@ -27,7 +27,7 @@ class WorkflowTaskV2(SQLModel, table=True):
     task: TaskV2 = Relationship(sa_relationship_kwargs=dict(lazy="selectin"))
 
     filters: dict[str, Any] = Field(
-        sa_column=Column(JSON), nullable=False, default_factory=dict
+        sa_column=Column(JSON, nullable=False, server_default="{}")
     )
 
     @validator("args")
