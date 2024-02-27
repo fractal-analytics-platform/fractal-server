@@ -10,7 +10,6 @@ from .models import DictStrAny
 from .models import WorkflowTask
 from .runner_functions import _run_non_parallel_task
 from .runner_functions import _run_parallel_task
-from .task_output import TaskOutput
 
 
 # FIXME: define RESERVED_ARGUMENTS = ["buffer", ...]
@@ -19,11 +18,10 @@ from .task_output import TaskOutput
 def _apply_attributes_to_image(
     *,
     image: SingleImage,
-    filters: DictStrAny,
+    new_attributes: DictStrAny,
 ) -> SingleImage:
     updated_image = copy(image)
-    for key, value in filters.items():
-        updated_image.attributes[key] = value
+    updated_image.attributes.update(new_attributes)
     return updated_image
 
 
@@ -144,18 +142,11 @@ def execute_tasks_v2(
         else:
             raise ValueError(f"Invalid {task.task_type=}.")
 
-        # Redundant validation step (useful especially to check the merged
-        # output of a parallel task)
-        TaskOutput(**task_output.dict())
-
-        # Decorate new images with source-image attributes
-        new_images = task_output.new_images or []
-
         # Construct up-to-date filters
         new_filters = copy(tmp_dataset.filters)
         new_filters.update(task.new_filters)
-        actual_task_new_filters = task_output.new_filters or {}
-        new_filters.update(actual_task_new_filters)
+        if task_output.new_filters is not None:
+            new_filters.update(task_output.new_filters)
 
         # Add filters to edited images, and update Dataset.images
         edited_images = task_output.edited_images or []
@@ -163,14 +154,14 @@ def execute_tasks_v2(
         for ind, image in enumerate(tmp_dataset.images):
             if image.path in edited_paths:
                 updated_image = _apply_attributes_to_image(
-                    image=image, filters=new_filters
+                    image=image, new_attributes=new_filters
                 )
                 tmp_dataset.images[ind] = updated_image
         # Add filters to new images
         new_images = task_output.new_images or []
         for ind, image in enumerate(new_images):
             updated_image = _apply_attributes_to_image(
-                image=image, filters=new_filters
+                image=image, new_attributes=new_filters
             )
             new_images[ind] = updated_image
         new_images = _deduplicate_list_of_dicts(new_images)
@@ -180,15 +171,9 @@ def execute_tasks_v2(
 
         # Add new images to Dataset.images
         for image in new_images:
-            try:
-                overlap = next(
-                    _image
-                    for _image in tmp_dataset.images
-                    if _image.path == image.path
-                )
-                raise ValueError(f"Found {overlap=}")
-            except StopIteration:
-                pass
+            if image.path in tmp_dataset.image_paths:
+                raise ValueError("Found an overlap")
+
             tmp_dataset.images.append(image)
 
         # Remove images from Dataset.images
