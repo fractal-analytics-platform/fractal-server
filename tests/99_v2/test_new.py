@@ -1,4 +1,6 @@
+import pytest
 from devtools import debug
+from pydantic import ValidationError
 
 from fractal_server.app.models import Project
 from fractal_server.app.models.v2 import DatasetV2
@@ -37,7 +39,31 @@ async def test_unit_dataset_v2(db):
     await db.commit()
 
     # Create
-    dataset_create = DatasetCreateV2(name="name")
+
+    with pytest.raises(ValidationError):
+        # Non-scalar attribute
+        DatasetCreateV2(
+            name="name",
+            images=[{"path": "/tmp/xxx.yz", "attributes": {"x": [1, 0]}}],
+        )
+    with pytest.raises(ValidationError):
+        # Non-scalar filter
+        DatasetCreateV2(name="name", filters={"x": [1, 0]})
+
+    dataset_create = DatasetCreateV2(
+        name="name",
+        images=[
+            {
+                "path": "/tmp/xxx.yz",
+                "attributes": {"x": 10},
+            },
+            {
+                "path": "/tmp/xxx_corr.yz",
+                "attributes": {"x": 10, "y": True, "z": 3.14},
+            },
+        ],
+        filters={"x": 10},
+    )
     debug(dataset_create)
 
     dataset = DatasetV2(**dataset_create.dict(), project_id=project.id)

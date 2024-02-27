@@ -129,17 +129,5 @@ class DatasetUpdateV2(BaseModel):
 
     name: Optional[str]
 
-    meta: Optional[dict[str, Any]]
-    history: Optional[list[_DatasetHistoryItemV2]]
-    read_only: Optional[bool]
-
-    images: Optional[list[SingleImage]]
-    filters: Optional[dict[str, Any]]
-    buffer: Optional[dict[str, Any]]
-    parallelization_list: Optional[list[dict[str, Any]]]
-
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))
-    _filters = validator("filters", allow_reuse=True)(
-        val_scalar_dict("filters")
-    )
