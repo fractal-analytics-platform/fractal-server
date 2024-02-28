@@ -68,4 +68,5 @@ async def test_schemas_dataset_v2(db):
 
     db.add(dataset)
     await db.commit()
+    assert dataset.name == "new name"
     debug(dataset)
