@@ -35,14 +35,12 @@ class WorkflowTaskV2(SQLModel, table=True):
         """
         Prevent fractal task reserved parameter names from entering args
 
-        Forbidden argument names are `input_paths`, `output_path`, `metadata`,
+        Forbidden argument names are `metadata`,
         `component`.
         """
         if value is None:
             return
         forbidden_args_keys = {
-            "input_paths",
-            "output_path",
             "metadata",
             "component",
         }
