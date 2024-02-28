@@ -2,47 +2,15 @@ from typing import Any
 from typing import Callable
 from typing import Literal
 from typing import Optional
-from typing import Union
 
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import validator
 
+from ....images import SingleImage
+from ....images import val_scalar_dict
+
 DictStrAny = dict[str, Any]
-
-
-def val_scalar_dict(attribute: str):
-    def val(
-        dict_str_any: DictStrAny,
-    ) -> dict[str, Union[int, float, str, bool, None]]:
-        for key, value in dict_str_any.items():
-            if not isinstance(value, (int, float, str, bool, type(None))):
-                raise ValueError(
-                    f"{attribute}[{key}] must be a scalar (int, float, str, "
-                    f"bool, or None). Given {value} ({type(value)})"
-                )
-        return dict_str_any
-
-    return val
-
-
-class SingleImage(BaseModel):
-    path: str
-    attributes: DictStrAny = Field(default_factory=dict)
-
-    _attributes = validator("attributes", allow_reuse=True)(
-        val_scalar_dict("attributes")
-    )
-
-    def match_filter(self, filters: Optional[DictStrAny] = None):
-        if filters is None:
-            return True
-        for key, value in filters.items():
-            if value is None:
-                continue
-            if self.attributes.get(key) != value:
-                return False
-        return True
 
 
 class Dataset(BaseModel):

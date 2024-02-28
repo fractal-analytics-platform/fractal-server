@@ -1,8 +1,8 @@
 from copy import copy
 
-from .images import find_image_by_path
+from ....images import find_image_by_path
+from ....images import SingleImage
 from .models import DictStrAny
-from .models import SingleImage
 from .models import Task
 from .task_output import ParallelTaskOutput
 from .task_output import TaskOutput

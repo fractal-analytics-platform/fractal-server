@@ -1,5 +1,5 @@
-from fractal_server.app.runner.v2.images import _filter_image_list
-from fractal_server.app.runner.v2.images import SingleImage
+from fractal_server.images import SingleImage
+from fractal_server.images.single_image import _filter_image_list
 
 images = [
     SingleImage(
