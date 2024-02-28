@@ -15,8 +15,8 @@ from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import validator
 
-from .dataset import SingleImage
-from fractal_server.app.schemas.v2._validators_v2 import val_scalar_dict
+from ._validators_v2 import val_scalar_dict
+from .image import SingleImage
 
 
 class ProjectDumpV2(BaseModel, extra=Extra.forbid):
