@@ -254,7 +254,7 @@ def init_registration(
     for path in paths:
         path_splits = (
             path.lstrip(shared_root_dir + shared_plate).strip("/").split("/")
-        )
+        )  # FIXME check lstrip behavior
         well = "/".join(path_splits[0:2])
         wells.append(well)
         image = path_splits[2]
