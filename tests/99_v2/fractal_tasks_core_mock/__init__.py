@@ -33,7 +33,7 @@ TASK_LIST = {
     "maximum_intensity_projection": Task(
         function=maximum_intensity_projection,
         task_type="parallel",
-        new_filters=dict(data_dimensionality="2"),
+        new_filters=dict(data_dimensionality=2),
     ),
     "init_channel_parallelization": Task(
         function=init_channel_parallelization, task_type="non_parallel"
