@@ -5,8 +5,8 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import validator
 
-from ....images.single_image import SingleImage
-from ....images.single_image import val_scalar_dict
+from ....images import SingleImage
+from ....images import val_scalar_dict
 from .._validators import valstr
 from .._validators import valutc
 from ..project import ProjectRead
