@@ -1,7 +1,7 @@
 import pytest
 
-from fractal_server.app.runner.v2.images import find_image_by_path
-from fractal_server.app.runner.v2.images import SingleImage
+from fractal_server.images import find_image_by_path
+from fractal_server.images import SingleImage
 
 
 def test_find_image_by_path():
