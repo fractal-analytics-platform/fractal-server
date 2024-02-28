@@ -1,9 +1,49 @@
 from copy import copy
+from typing import Any
 from typing import Optional
 from typing import TypeVar
+from typing import Union
 
-from .models import DictStrAny
-from .models import SingleImage
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic import validator
+
+
+T = TypeVar("T")
+
+
+def val_scalar_dict(attribute: str):
+    def val(
+        dict_str_any: dict[str, Any],
+    ) -> dict[str, Union[int, float, str, bool, None]]:
+        for key, value in dict_str_any.items():
+            if not isinstance(value, (int, float, str, bool, type(None))):
+                raise ValueError(
+                    f"{attribute}[{key}] must be a scalar (int, float, str, "
+                    f"bool, or None). Given {value} ({type(value)})"
+                )
+        return dict_str_any
+
+    return val
+
+
+class SingleImage(BaseModel):
+    path: str
+    attributes: dict[str, Any] = Field(default_factory=dict)
+
+    _attributes = validator("attributes", allow_reuse=True)(
+        val_scalar_dict("attributes")
+    )
+
+    def match_filter(self, filters: Optional[dict[str, Any]] = None):
+        if filters is None:
+            return True
+        for key, value in filters.items():
+            if value is None:
+                continue
+            if self.attributes.get(key) != value:
+                return False
+        return True
 
 
 def find_image_by_path(
@@ -28,10 +68,7 @@ def find_image_by_path(
         raise ValueError(f"No image with {path=} found in image list.")
 
 
-T = TypeVar("T")
-
-
-def _deduplicate_list(this_list: list[T]) -> list[T]:
+def deduplicate_list(this_list: list[T]) -> list[T]:
     """
     Custom replacement for `set(this_list)`, when items are of a non-hashable
     type T (e.g. dict or SingleImage).
@@ -45,7 +82,7 @@ def _deduplicate_list(this_list: list[T]) -> list[T]:
 
 def _filter_image_list(
     images: list[SingleImage],
-    filters: Optional[DictStrAny] = None,
+    filters: Optional[dict[str, Any]] = None,
 ) -> list[SingleImage]:
 
     if filters is None:
@@ -62,8 +99,8 @@ def _filter_image_list(
 def filter_images(
     *,
     dataset_images: list[SingleImage],
-    dataset_filters: Optional[DictStrAny] = None,
-    wftask_filters: Optional[DictStrAny] = None,
+    dataset_filters: Optional[dict[str, Any]] = None,
+    wftask_filters: Optional[dict[str, Any]] = None,
 ) -> list[SingleImage]:
 
     current_filters = copy(dataset_filters)

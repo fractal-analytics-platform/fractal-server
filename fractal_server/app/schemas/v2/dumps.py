@@ -15,8 +15,8 @@ from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import validator
 
-from ._validators_v2 import val_scalar_dict
-from .image import SingleImage
+from ....images.single_image import SingleImage
+from ....images.single_image import val_scalar_dict
 
 
 class ProjectDumpV2(BaseModel, extra=Extra.forbid):

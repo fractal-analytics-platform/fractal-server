@@ -3,9 +3,9 @@ from pathlib import Path
 from devtools import debug
 from fractal_tasks_core_mock import TASK_LIST
 
+from fractal_server.images.single_image import find_image_by_path
 from fractal_server.v2 import Dataset
 from fractal_server.v2 import execute_tasks_v2
-from fractal_server.v2 import find_image_by_path
 from fractal_server.v2 import WorkflowTask
 
 
