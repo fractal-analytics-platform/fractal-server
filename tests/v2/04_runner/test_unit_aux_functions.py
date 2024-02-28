@@ -3,7 +3,7 @@ import pytest
 from fractal_server.app.runner.v2.runner import (
     _validate_parallelization_list_valid,
 )
-from fractal_server.images.single_image import deduplicate_list
+from fractal_server.images import deduplicate_list
 
 
 def test_validate_parallelization_list():

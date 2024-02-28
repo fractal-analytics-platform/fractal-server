@@ -9,7 +9,7 @@ from .._validators import valint
 from .task import TaskExportV2
 from .task import TaskImportV2
 from .task import TaskReadV2
-from fractal_server.images.single_image import val_scalar_dict
+from fractal_server.images import val_scalar_dict
 
 
 class WorkflowTaskStatusTypeV2(str, Enum):
