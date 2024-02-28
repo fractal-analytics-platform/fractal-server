@@ -1,6 +1,6 @@
 import pytest
 
-from fractal_server.app.runner.v2.images import _deduplicate_list_of_dicts
+from fractal_server.app.runner.v2.images import _deduplicate_list
 from fractal_server.app.runner.v2.runner import (
     _validate_parallelization_list_valid,
 )
@@ -68,8 +68,8 @@ def test_validate_parallelization_list():
 
 def test_deduplicate_list_of_dicts():
     old = [dict(a=1), dict(b=2)]
-    new = _deduplicate_list_of_dicts(old)
+    new = _deduplicate_list(old)
     assert len(new) == 2
     old = [dict(a=1), dict(a=1), dict(b=2), dict(a=1)]
-    new = _deduplicate_list_of_dicts(old)
+    new = _deduplicate_list(old)
     assert len(new) == 2

@@ -51,13 +51,13 @@ def _copy_and_edit_image(
     path: str,
     buffer: dict[str, Any],
 ) -> dict[str, Any]:
-    new_images = [
+    added_images = [
         dict(
             path=f"{path}_new",
             attributes=dict(processed=True),
         )
     ]
-    return dict(new_images=new_images)
+    return dict(added_images=added_images)
 
 
 @pytest.mark.parametrize(
