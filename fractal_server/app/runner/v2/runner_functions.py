@@ -23,40 +23,44 @@ def _run_non_parallel_task(
 
     task_output = TaskOutput(**task_output)
 
-    task_output = process_task_output(
+    task_output = update_task_output_added_images(
         task_output=task_output,
         old_dataset_images=old_dataset_images,
-        old_image_paths=function_kwargs["paths"],
+        task_input_paths=function_kwargs["paths"],
     )
 
     return TaskOutput(**task_output.dict())
 
 
-def process_task_output(
+def update_task_output_added_images(
     task_output: TaskOutput,
-    old_image_paths: list[str],
+    task_input_paths: list[str],
     old_dataset_images: list[SingleImage],
 ):
-    if task_output.new_images is not None:
+    """
+    Update task_output.added_images (if set)
+    by propagating old images attributes
+    """
+    if task_output.added_images is None:
+        return task_output
 
-        new_image_paths = [
-            new_image.path for new_image in task_output.new_images
-        ]
-        if len(old_image_paths) == len(new_image_paths):
-            new_old_image_mapping = {}
-            for ind, new_image_path in enumerate(new_image_paths):
-                new_old_image_mapping[new_image_path] = old_image_paths[ind]
-            final_new_images = []
-            for new_image in task_output.new_images:
-                old_image = find_image_by_path(
-                    images=old_dataset_images,
-                    path=new_old_image_mapping[new_image.path],
-                )
-                new_image.attributes = (
-                    old_image.attributes | new_image.attributes
-                )
-                final_new_images.append(new_image)
-            task_output.new_images = final_new_images
+    added_image_paths = [
+        added_image.path for added_image in task_output.added_images
+    ]
+    if len(task_input_paths) == len(added_image_paths):
+        final_added_images = []
+        for ind, added_image in enumerate(task_output.added_images):
+            old_image = find_image_by_path(
+                images=old_dataset_images,
+                path=task_input_paths[ind],
+            )
+            added_image.attributes = (
+                old_image.attributes | added_image.attributes
+            )
+            final_added_images.append(added_image)
+        task_output.added_images = final_added_images
+    else:
+        print("WARNING: If lenghts are different we don't know how to proceed")
     return task_output
 
 
@@ -66,24 +70,23 @@ def merge_outputs(
     old_dataset_images: list[SingleImage],
 ) -> TaskOutput:
 
-    final_new_images = []
+    final_added_images = []
     final_edited_images = []
     final_removed_images = []
-    final_new_filters = None
 
-    for task_output in task_outputs:
+    for ind, task_output in enumerate(task_outputs):
 
-        if task_output.new_images:
-            for new_image in task_output.new_images:
+        if task_output.added_images:
+            for added_image in task_output.added_images:
                 old_image = find_image_by_path(
                     images=old_dataset_images,
-                    path=new_old_image_mapping[new_image.path],
+                    path=new_old_image_mapping[added_image.path],
                 )
                 # Propagate old-image attributes to new-image
-                new_image.attributes = (
-                    old_image.attributes | new_image.attributes
+                added_image.attributes = (
+                    old_image.attributes | added_image.attributes
                 )
-                final_new_images.append(new_image)
+                final_added_images.append(added_image)
 
         if task_output.edited_images:
             for edited_image in task_output.edited_images:
@@ -93,25 +96,21 @@ def merge_outputs(
             for removed_image in task_output.removed_images:
                 final_removed_images.append(removed_image)
 
-        new_filters = task_output.new_filters
-        if new_filters:
-            if final_new_filters is None:
-                final_new_filters = new_filters
-            else:
-                if final_new_filters != new_filters:
-                    raise ValueError(
-                        f"{new_filters=} but {final_new_filters=}"
-                    )
+        # check that all filters are the same
+        current_new_filters = task_output.new_filters
+        if ind == 0:
+            last_new_filters = copy(current_new_filters)
+        if current_new_filters != last_new_filters:
+            raise ValueError(f"{current_new_filters=} but {last_new_filters=}")
 
-    final_output = TaskOutput()
-    if final_new_images:
-        final_output.new_images = final_new_images
-    if final_edited_images:
-        final_output.edited_images = final_edited_images
-    if final_new_filters:
-        final_output.new_filters = final_new_filters
-    if final_edited_images:
-        final_output.removed_images = final_removed_images
+        last_new_filters = copy(current_new_filters)
+
+    final_output = TaskOutput(
+        added_images=final_added_images,
+        edited_images=final_edited_images,
+        new_filters=last_new_filters,
+        removed_images=final_removed_images,
+    )
 
     return final_output
 
@@ -133,21 +132,23 @@ def _run_parallel_task(
     new_old_image_mapping = {}
     for function_kwargs in list_function_kwargs:
 
+        # FIXME functools.partial
         task_output = task.function(**function_kwargs)
         if task_output is None:
             task_output = ParallelTaskOutput()
         else:
             task_output = ParallelTaskOutput(**task_output)
 
-        if task_output.new_images is not None:
+        task_outputs.append(copy(task_output))
+
+        if task_output.added_images is not None:
+            # FIXME check keys are not repeated
             new_old_image_mapping.update(
                 {
-                    new_image.path: function_kwargs["path"]
-                    for new_image in task_output.new_images
+                    added_image.path: function_kwargs["path"]
+                    for added_image in task_output.added_images
                 }
             )
-
-        task_outputs.append(copy(task_output))
 
     merged_output = merge_outputs(
         task_outputs,

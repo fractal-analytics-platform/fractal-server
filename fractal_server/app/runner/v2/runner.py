@@ -1,7 +1,7 @@
 from copy import copy
 from copy import deepcopy
 
-from .images import _deduplicate_list_of_dicts
+from .images import _deduplicate_list
 from .images import filter_images
 from .images import find_image_by_path
 from .images import SingleImage
@@ -10,7 +10,6 @@ from .models import DictStrAny
 from .models import WorkflowTask
 from .runner_functions import _run_non_parallel_task
 from .runner_functions import _run_parallel_task
-from .task_output import TaskOutput
 
 
 # FIXME: define RESERVED_ARGUMENTS = ["buffer", ...]
@@ -19,11 +18,10 @@ from .task_output import TaskOutput
 def _apply_attributes_to_image(
     *,
     image: SingleImage,
-    filters: DictStrAny,
+    new_attributes: DictStrAny,
 ) -> SingleImage:
     updated_image = copy(image)
-    for key, value in filters.items():
-        updated_image.attributes[key] = value
+    updated_image.attributes.update(new_attributes)
     return updated_image
 
 
@@ -66,33 +64,20 @@ def execute_tasks_v2(
         else:
             tmp_buffer = {}
 
-        # Extract parallelization_list
-        if tmp_dataset.parallelization_list is not None:
-            parallelization_list = tmp_dataset.parallelization_list
-            parallelization_list = _deduplicate_list_of_dicts(
-                parallelization_list
-            )
-            _validate_parallelization_list_valid(
-                parallelization_list=parallelization_list,
-                current_image_paths=tmp_dataset.image_paths,
-            )
-        else:
-            parallelization_list = None
-
         # (1/2) Non-parallel task
         if task.task_type == "non_parallel":
-            if parallelization_list is not None:
+            if tmp_dataset.parallelization_list is not None:
                 raise ValueError(
                     "Found parallelization_list for non-parallel task"
                 )
             else:
                 # Get filtered images
-                filtered_images = filter_images(
+                current_task_images = filter_images(
                     dataset_images=tmp_dataset.images,
                     dataset_filters=tmp_dataset.filters,
                     wftask_filters=wftask.filters,
                 )
-                paths = [image.path for image in filtered_images]
+                paths = [image.path for image in current_task_images]
                 function_kwargs = dict(
                     paths=paths,
                     buffer=tmp_buffer,
@@ -101,72 +86,63 @@ def execute_tasks_v2(
                 task_output = _run_non_parallel_task(
                     task=task,
                     function_kwargs=function_kwargs,
-                    old_dataset_images=filtered_images,
+                    old_dataset_images=current_task_images,
                 )
         # (2/2) Parallel task
         elif task.task_type == "parallel":
             # Prepare list_function_kwargs
-            if parallelization_list is None:
+            if tmp_dataset.parallelization_list is None:
                 # Get filtered images
-                filtered_images = filter_images(
+                current_task_images = filter_images(
                     dataset_images=tmp_dataset.images,
                     dataset_filters=tmp_dataset.filters,
                     wftask_filters=wftask.filters,
                 )
-                list_function_kwargs = []
-                for image in filtered_images:
-                    list_function_kwargs.append(
-                        dict(
-                            path=image.path,
-                            buffer=tmp_buffer,
-                            **wftask.args,
-                        )
-                    )
+                list_function_kwargs = [
+                    dict(path=image.path, buffer=tmp_buffer, **wftask.args)
+                    for image in current_task_images
+                ]
+
             else:
                 # Use pre-made parallelization_list
+                parallelization_list = tmp_dataset.parallelization_list
+
+                _validate_parallelization_list_valid(
+                    parallelization_list=parallelization_list,
+                    current_image_paths=tmp_dataset.image_paths,
+                )
                 list_function_kwargs = deepcopy(parallelization_list)
                 for ind, kwargs in enumerate(list_function_kwargs):
-                    if "buffer" in kwargs:
-                        raise ValueError(f"Invalid {kwargs=}")
                     list_function_kwargs[ind].update(
                         dict(
-                            # root_dir=tmp_dataset.root_dir,
                             buffer=tmp_buffer,
                             **wftask.args,
                         )
                     )
-                # TODO: can we avoid this deduplicate operation?
-                list_function_kwargs = _deduplicate_list_of_dicts(
-                    list_function_kwargs
-                )
+                list_function_kwargs = _deduplicate_list(list_function_kwargs)
 
-                filtered_images = [
+                current_task_images = [
                     find_image_by_path(
                         images=tmp_dataset.images, path=kwargs["path"]
                     )
                     for kwargs in list_function_kwargs
-                ]  # FIXME change name `filtered_images`
+                ]
+
+                current_task_images = _deduplicate_list(current_task_images)
 
             task_output = _run_parallel_task(
                 task=task,
                 list_function_kwargs=list_function_kwargs,
-                old_dataset_images=filtered_images,
+                old_dataset_images=current_task_images,
             )
         else:
             raise ValueError(f"Invalid {task.task_type=}.")
 
-        # Redundant validation step (useful especially to check the merged
-        # output of a parallel task)
-        TaskOutput(**task_output.dict())
-
-        # Decorate new images with source-image attributes
-        new_images = task_output.new_images or []
-
         # Construct up-to-date filters
         new_filters = copy(tmp_dataset.filters)
         new_filters.update(task.new_filters)
-        actual_task_new_filters = task_output.new_filters or {}
-        new_filters.update(actual_task_new_filters)
+        if task_output.new_filters is not None:
+            new_filters.update(task_output.new_filters)
 
         # Add filters to edited images, and update Dataset.images
         edited_images = task_output.edited_images or []
@@ -174,32 +150,26 @@ def execute_tasks_v2(
         for ind, image in enumerate(tmp_dataset.images):
             if image.path in edited_paths:
                 updated_image = _apply_attributes_to_image(
-                    image=image, filters=new_filters
+                    image=image, new_attributes=new_filters
                 )
                 tmp_dataset.images[ind] = updated_image
         # Add filters to new images
-        new_images = task_output.new_images or []
-        for ind, image in enumerate(new_images):
+        added_images = task_output.added_images or []
+        for ind, image in enumerate(added_images):
             updated_image = _apply_attributes_to_image(
-                image=image, filters=new_filters
+                image=image, new_attributes=new_filters
             )
-            new_images[ind] = updated_image
-        new_images = _deduplicate_list_of_dicts(new_images)
+            added_images[ind] = updated_image
+        added_images = _deduplicate_list(added_images)
 
         # Get removed images
         removed_images = task_output.removed_images or []
 
         # Add new images to Dataset.images
-        for image in new_images:
-            try:
-                overlap = next(
-                    _image
-                    for _image in tmp_dataset.images
-                    if _image.path == image.path
-                )
-                raise ValueError(f"Found {overlap=}")
-            except StopIteration:
-                pass
+        for image in added_images:
+            if image.path in tmp_dataset.image_paths:
+                raise ValueError("Found an overlap")
+
             tmp_dataset.images.append(image)
 
         # Remove images from Dataset.images
