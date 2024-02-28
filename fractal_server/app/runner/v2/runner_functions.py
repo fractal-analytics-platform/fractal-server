@@ -59,6 +59,8 @@ def update_task_output_added_images(
             )
             final_added_images.append(added_image)
         task_output.added_images = final_added_images
+    elif len(task_input_paths) == 0 or len(added_image_paths) == 0:
+        pass
     else:
         print("WARNING: If lenghts are different we don't know how to proceed")
     return task_output
