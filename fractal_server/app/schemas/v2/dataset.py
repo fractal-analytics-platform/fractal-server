@@ -5,12 +5,12 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import validator
 
+from ....images.single_image import SingleImage
+from ....images.single_image import val_scalar_dict
 from .._validators import valstr
 from .._validators import valutc
 from ..project import ProjectRead
-from ._validators_v2 import val_scalar_dict
 from .dumps import WorkflowTaskDumpV2
-from .image import SingleImage
 from .workflowtask import WorkflowTaskStatusTypeV2
 
 
