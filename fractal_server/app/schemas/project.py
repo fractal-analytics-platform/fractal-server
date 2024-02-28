@@ -33,16 +33,8 @@ class ProjectCreate(_ProjectBase):
     Class for `Project` creation.
     """
 
-    version: str = "v2"
-
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))
-
-    @validator("version", always=True, pre=True)
-    def validation_version(cls, value):
-        if value not in ["v1", "v2"]:
-            raise ValueError(f"Allowed versions: 'v1', 'v2'. Given {value}")
-        return value
 
 
 class ProjectRead(_ProjectBase):
@@ -56,7 +48,6 @@ class ProjectRead(_ProjectBase):
     """
 
     id: int
-    version: str
     timestamp_created: datetime
 
     _timestamp_created = validator("timestamp_created", allow_reuse=True)(

@@ -14,8 +14,8 @@ from sqlmodel.sql.expression import SelectOfScalar
 from ....db import AsyncSession
 from ....models.v2 import DatasetV2
 from ....models.v2 import JobV2
-from ....models.v2 import LinkUserProject
-from ....models.v2 import Project
+from ....models.v2 import LinkUserProjectV2
+from ....models.v2 import ProjectV2
 from ....models.v2 import TaskV2
 from ....models.v2 import WorkflowTaskV2
 from ....models.v2 import WorkflowV2
@@ -28,8 +28,7 @@ async def _get_project_check_owner(
     project_id: int,
     user_id: int,
     db: AsyncSession,
-    version: Optional[str] = None,
-) -> Project:
+) -> ProjectV2:
     """
     Check that user is a member of project and return the project.
 
@@ -48,9 +47,9 @@ async def _get_project_check_owner(
         HTTPException(status_code=404_NOT_FOUND):
             If the project does not exist
     """
-    project = await db.get(Project, project_id)
+    project = await db.get(ProjectV2, project_id)
 
-    link_user_project = await db.get(LinkUserProject, (project_id, user_id))
+    link_user_project = await db.get(LinkUserProjectV2, (project_id, user_id))
     if not project:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
@@ -59,15 +58,6 @@ async def _get_project_check_owner(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Not allowed on project {project_id}",
-        )
-
-    if (version is not None) and (project.version != version):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=(
-                f"Conflict between Project[{project_id}]'s version "
-                f"('{project.version}') and the API version ('{version}')."
-            ),
         )
 
     return project
@@ -79,7 +69,6 @@ async def _get_workflow_check_owner(
     project_id: int,
     user_id: int,
     db: AsyncSession,
-    version: Optional[str] = None,
 ) -> WorkflowV2:
     """
     Get a workflow and a project, after access control on the project.
@@ -102,7 +91,7 @@ async def _get_workflow_check_owner(
 
     # Access control for project
     project = await _get_project_check_owner(
-        project_id=project_id, user_id=user_id, db=db, version=version
+        project_id=project_id, user_id=user_id, db=db
     )
     # Get workflow
     workflow = await db.get(WorkflowV2, workflow_id)
@@ -130,7 +119,6 @@ async def _get_workflow_task_check_owner(
     workflow_task_id: int,
     user_id: int,
     db: AsyncSession,
-    version: Optional[str] = None,
 ) -> tuple[WorkflowTaskV2, WorkflowV2]:
     """
     Check that user has access to Workflow and WorkflowTask.
@@ -158,7 +146,6 @@ async def _get_workflow_task_check_owner(
         project_id=project_id,
         user_id=user_id,
         db=db,
-        version=version,
     )
 
     # If WorkflowTask is not in the db, exit
@@ -229,10 +216,10 @@ async def _check_project_exists(
             If such a project already exists
     """
     stm = (
-        select(Project)
-        .join(LinkUserProject)
-        .where(Project.name == project_name)
-        .where(LinkUserProject.user_id == user_id)
+        select(ProjectV2)
+        .join(LinkUserProjectV2)
+        .where(ProjectV2.name == project_name)
+        .where(LinkUserProjectV2.user_id == user_id)
     )
     res = await db.execute(stm)
     if res.scalars().all():
@@ -248,8 +235,7 @@ async def _get_dataset_check_owner(
     dataset_id: int,
     user_id: int,
     db: AsyncSession,
-    version: Optional[str] = None,
-) -> dict[Literal["dataset", "project"], Union[DatasetV2, Project]]:
+) -> dict[Literal["dataset", "project"], Union[DatasetV2, ProjectV2]]:
     """
     Get a dataset and a project, after access control on the project
 
@@ -270,7 +256,7 @@ async def _get_dataset_check_owner(
 
     # Access control for project
     project = await _get_project_check_owner(
-        project_id=project_id, user_id=user_id, db=db, version=version
+        project_id=project_id, user_id=user_id, db=db
     )
     # Get dataset
     dataset = await db.get(DatasetV2, dataset_id)
@@ -297,8 +283,7 @@ async def _get_job_check_owner(
     job_id: int,
     user_id: int,
     db: AsyncSession,
-    version: Optional[str] = None,
-) -> dict[Literal["job", "project"], Union[JobV2, Project]]:
+) -> dict[Literal["job", "project"], Union[JobV2, ProjectV2]]:
     """
     Get a job and a project, after access control on the project
 
@@ -318,7 +303,9 @@ async def _get_job_check_owner(
     """
     # Access control for project
     project = await _get_project_check_owner(
-        project_id=project_id, user_id=user_id, db=db, version=version
+        project_id=project_id,
+        user_id=user_id,
+        db=db,
     )
     # Get dataset
     job = await db.get(JobV2, job_id)

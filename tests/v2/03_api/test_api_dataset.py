@@ -1,26 +1,17 @@
+from devtools import debug
+
+
 async def test_api_dataset_v2(client, MockCurrentUser):
 
     async with MockCurrentUser():
 
-        res = await client.post(
-            "api/v1/project/", json=dict(name="projectV1", version="v1")
-        )
+        res = await client.post("api/v2/project/", json=dict(name="projectV2"))
+        debug(res.json())
         assert res.status_code == 201
-        projectV1 = res.json()
-        p1_id = projectV1["id"]
-
-        res = await client.post("api/v1/project/", json=dict(name="projectV2"))
-        assert res.status_code == 201
-        assert res.json()["version"] == "v2"
         projectV2 = res.json()
         p2_id = projectV2["id"]
 
         # POST
-
-        res = await client.post(
-            f"api/v2/project/{p1_id}/dataset/", json=dict(name="dataset")
-        )
-        assert res.status_code == 400
 
         res = await client.post(
             f"api/v2/project/{p2_id}/dataset/", json=dict(name="dataset")
@@ -56,8 +47,6 @@ async def test_api_dataset_v2(client, MockCurrentUser):
         user_dataset_list = res.json()
 
         # 2
-        res = await client.get(f"api/v2/project/{p1_id}/dataset/")
-        assert res.status_code == 400
         res = await client.get(f"api/v2/project/{p2_id}/dataset/")
         assert res.status_code == 200
         project_dataset_list = res.json()

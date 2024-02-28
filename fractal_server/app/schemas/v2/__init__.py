@@ -10,6 +10,9 @@ from .job import JobCreateV2  # noqa F401
 from .job import JobReadV2  # noqa F401
 from .job import JobStatusTypeV2  # noqa F401
 from .job import JobUpdateV2  # noqa F401
+from .project import ProjectCreateV2  # noqa F401
+from .project import ProjectReadV2  # noqa F401
+from .project import ProjectUpdateV2  # noqa F401
 from .task import TaskCreateV2  # noqa F401
 from .task import TaskExportV2  # noqa F401
 from .task import TaskImportV2  # noqa F401
