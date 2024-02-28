@@ -24,7 +24,8 @@ pip install jupyter devtools
 pip instal -e ..
 ```
 
-6. Run jupyter and select one of the notebooks
+6. Run jupyter
 ```
 jupyter notebook
 ```
+and select one of the notebooks.
