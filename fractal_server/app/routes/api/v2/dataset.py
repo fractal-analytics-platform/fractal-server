@@ -5,14 +5,13 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
-from sqlmodel import and_
 from sqlmodel import select
 
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import DatasetV2
 from ....models.v2 import JobV2
-from ....models.v2 import Project
+from ....models.v2 import ProjectV2
 from ....schemas.v2 import DatasetCreateV2
 from ....schemas.v2 import DatasetReadV2
 from ....schemas.v2 import DatasetUpdateV2
@@ -41,7 +40,7 @@ async def create_dataset(
     Add new dataset to current project
     """
     await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db, version="v2"
+        project_id=project_id, user_id=user.id, db=db
     )
     db_dataset = DatasetV2(project_id=project_id, **dataset.dict())
     db.add(db_dataset)
@@ -67,7 +66,7 @@ async def read_dataset_list(
     """
     # Access control
     project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db, version="v2"
+        project_id=project_id, user_id=user.id, db=db
     )
     # Find datasets of the current project. Note: this select/where approach
     # has much better scaling than refreshing all elements of
@@ -202,11 +201,10 @@ async def get_user_datasets(
     Returns all the datasets of the current user
     """
     stm = select(DatasetV2)
-    stm = stm.join(Project).where(
-        and_(
-            Project.user_list.any(User.id == user.id), Project.version == "v2"
-        )
+    stm = stm.join(ProjectV2).where(
+        ProjectV2.user_list.any(User.id == user.id)
     )
+
     res = await db.execute(stm)
     dataset_list = res.scalars().all()
     await db.close()
@@ -216,7 +214,7 @@ async def get_user_datasets(
     return dataset_list
 
 
-# ADVANCED ENDPOINTS
+# OTHER ENDPOINTS
 
 # @router.get(
 #     "/project/{project_id}/dataset/{dataset_id}/status/",
