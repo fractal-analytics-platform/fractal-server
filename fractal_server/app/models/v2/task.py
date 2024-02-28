@@ -32,13 +32,6 @@ class TaskV2(SQLModel, table=True):
     docs_link: Optional[HttpUrl] = None
 
     @property
-    def parallelization_level(self) -> Optional[str]:
-        try:
-            return self.meta["parallelization_level"]
-        except KeyError:
-            return None
-
-    @property
     def default_args_from_args_schema(self) -> dict[str, Any]:
         """
         Extract default arguments from args_schema
