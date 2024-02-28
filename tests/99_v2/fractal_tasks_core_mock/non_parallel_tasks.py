@@ -79,7 +79,7 @@ def create_ome_zarr(
         buffer=dict(image_raw_paths=image_raw_paths),
         new_filters=dict(
             plate=plate_zarr_name,
-            data_dimensionality="3",
+            data_dimensionality=3,
         ),
     )
     print("[create_ome_zarr] END")
@@ -149,7 +149,7 @@ def create_ome_zarr_multiplex(
         buffer=dict(image_raw_paths=image_raw_paths),
         new_filters=dict(
             plate=plate_zarr_name,
-            data_dimensionality="3",
+            data_dimensionality=3,
         ),
     )
     print("[create_ome_zarr_multiplex] END")
@@ -191,7 +191,7 @@ def new_ome_zarr(
 
     new_filters = dict(plate=new_plate)
     if project_to_2D:
-        new_filters["data_dimensionality"] = "2"
+        new_filters["data_dimensionality"] = 2
 
     # Prepare output metadata
     out = dict(

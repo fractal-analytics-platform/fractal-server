@@ -45,7 +45,7 @@ def test_workflow_1(tmp_path: Path):
 
     assert dataset_out.filters == {
         "plate": "my_plate_mip.zarr",
-        "data_dimensionality": "2",
+        "data_dimensionality": 2,
         "illumination_correction": True,
     }
 
@@ -76,7 +76,7 @@ def test_workflow_1(tmp_path: Path):
         "attributes": {
             "well": "A_01",
             "plate": "my_plate.zarr",
-            "data_dimensionality": "3",
+            "data_dimensionality": 3,
             "illumination_correction": True,
         },
     }
@@ -90,7 +90,7 @@ def test_workflow_1(tmp_path: Path):
         "attributes": {
             "well": "A_01",
             "plate": "my_plate_mip.zarr",
-            "data_dimensionality": "2",
+            "data_dimensionality": 2,
             "illumination_correction": True,
         },
     }
@@ -129,7 +129,7 @@ def test_workflow_2(tmp_path: Path):
     debug(dataset_out.filters)
     assert dataset_out.filters == {
         "plate": "my_plate.zarr",
-        "data_dimensionality": "3",
+        "data_dimensionality": 3,
         "illumination_correction": True,
     }
     debug(dataset_out.images)
@@ -139,7 +139,7 @@ def test_workflow_2(tmp_path: Path):
             "attributes": {
                 "well": "A_01",
                 "plate": "my_plate.zarr",
-                "data_dimensionality": "3",
+                "data_dimensionality": 3,
                 "illumination_correction": True,
             },
         },
@@ -148,7 +148,7 @@ def test_workflow_2(tmp_path: Path):
             "attributes": {
                 "well": "A_02",
                 "plate": "my_plate.zarr",
-                "data_dimensionality": "3",
+                "data_dimensionality": 3,
                 "illumination_correction": True,
             },
         },
@@ -190,7 +190,7 @@ def test_workflow_3(tmp_path: Path):
     debug(dataset_out.filters)
     assert dataset_out.filters == {
         "plate": "my_plate.zarr",
-        "data_dimensionality": "3",
+        "data_dimensionality": 3,
         "illumination_correction": True,
     }
     debug(dataset_out.images)
@@ -200,7 +200,7 @@ def test_workflow_3(tmp_path: Path):
             "attributes": {
                 "well": "A_01",
                 "plate": "my_plate.zarr",
-                "data_dimensionality": "3",
+                "data_dimensionality": 3,
                 "illumination_correction": True,
             },
         },
@@ -209,7 +209,7 @@ def test_workflow_3(tmp_path: Path):
             "attributes": {
                 "well": "A_02",
                 "plate": "my_plate.zarr",
-                "data_dimensionality": "3",
+                "data_dimensionality": 3,
             },
         },
     ]
@@ -253,7 +253,7 @@ def test_workflow_4(tmp_path: Path):
     debug(dataset_out.filters)
     assert dataset_out.filters == {
         "plate": "my_plate_new.zarr",
-        "data_dimensionality": "3",
+        "data_dimensionality": 3,
     }
     debug(dataset_out.images)
     assert dataset_out.images == [
@@ -262,7 +262,7 @@ def test_workflow_4(tmp_path: Path):
             "attributes": {
                 "well": "A_01",
                 "plate": "my_plate.zarr",
-                "data_dimensionality": "3",
+                "data_dimensionality": 3,
             },
         },
         {
@@ -270,7 +270,7 @@ def test_workflow_4(tmp_path: Path):
             "attributes": {
                 "well": "A_02",
                 "plate": "my_plate.zarr",
-                "data_dimensionality": "3",
+                "data_dimensionality": 3,
             },
         },
         {
@@ -278,7 +278,7 @@ def test_workflow_4(tmp_path: Path):
             "attributes": {
                 "well": "A_01",
                 "plate": "my_plate_new.zarr",
-                "data_dimensionality": "3",
+                "data_dimensionality": 3,
             },
         },
         {
@@ -286,7 +286,7 @@ def test_workflow_4(tmp_path: Path):
             "attributes": {
                 "well": "A_02",
                 "plate": "my_plate_new.zarr",
-                "data_dimensionality": "3",
+                "data_dimensionality": 3,
             },
         },
     ]
@@ -328,7 +328,7 @@ def test_workflow_5(tmp_path: Path):
     ]
     assert dataset_out.filters == {
         "plate": "my_plate_mip.zarr",
-        "data_dimensionality": "2",
+        "data_dimensionality": 2,
     }
     assert dataset_out.images == [
         {
@@ -336,7 +336,7 @@ def test_workflow_5(tmp_path: Path):
             "attributes": {
                 "well": "A_01",
                 "plate": "my_plate.zarr",
-                "data_dimensionality": "3",
+                "data_dimensionality": 3,
             },
         },
         {
@@ -344,7 +344,7 @@ def test_workflow_5(tmp_path: Path):
             "attributes": {
                 "well": "A_02",
                 "plate": "my_plate.zarr",
-                "data_dimensionality": "3",
+                "data_dimensionality": 3,
             },
         },
         {
@@ -352,7 +352,7 @@ def test_workflow_5(tmp_path: Path):
             "attributes": {
                 "well": "A_01",
                 "plate": "my_plate_mip.zarr",
-                "data_dimensionality": "2",
+                "data_dimensionality": 2,
             },
         },
         {
@@ -360,7 +360,7 @@ def test_workflow_5(tmp_path: Path):
             "attributes": {
                 "well": "A_02",
                 "plate": "my_plate_mip.zarr",
-                "data_dimensionality": "2",
+                "data_dimensionality": 2,
             },
         },
     ]
@@ -464,7 +464,7 @@ def test_workflow_8(tmp_path: Path):
             ),
             WorkflowTask(
                 task=TASK_LIST["cellpose_segmentation"],
-                filters=dict(data_dimensionality="3", plate=None),
+                filters=dict(data_dimensionality=3, plate=None),
             ),
         ],
         dataset=dataset_in,
@@ -485,7 +485,7 @@ def test_workflow_8(tmp_path: Path):
             "attributes": {
                 "well": "A_01",
                 "plate": "my_plate.zarr",
-                "data_dimensionality": "3",
+                "data_dimensionality": 3,
             },
         },
         {
@@ -493,7 +493,7 @@ def test_workflow_8(tmp_path: Path):
             "attributes": {
                 "well": "A_02",
                 "plate": "my_plate.zarr",
-                "data_dimensionality": "3",
+                "data_dimensionality": 3,
             },
         },
         {
@@ -501,7 +501,7 @@ def test_workflow_8(tmp_path: Path):
             "attributes": {
                 "well": "A_01",
                 "plate": "my_plate_mip.zarr",
-                "data_dimensionality": "2",
+                "data_dimensionality": 2,
             },
         },
         {
@@ -509,7 +509,7 @@ def test_workflow_8(tmp_path: Path):
             "attributes": {
                 "well": "A_02",
                 "plate": "my_plate_mip.zarr",
-                "data_dimensionality": "2",
+                "data_dimensionality": 2,
             },
         },
     ]
