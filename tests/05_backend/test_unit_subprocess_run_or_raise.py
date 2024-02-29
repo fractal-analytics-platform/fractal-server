@@ -3,8 +3,10 @@ import pathlib
 import pytest
 from devtools import debug
 
-from fractal_server.app.runner._slurm.executor import _subprocess_run_or_raise
 from fractal_server.app.runner.common import JobExecutionError
+from fractal_server.app.runner.executors.slurm.executor import (
+    _subprocess_run_or_raise,
+)
 
 
 def test_subprocess_run_or_raise(tmp_path: pathlib.Path):

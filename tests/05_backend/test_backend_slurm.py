@@ -6,11 +6,11 @@ from typing import Callable
 import pytest
 from devtools import debug
 
-from fractal_server.app.runner._slurm.executor import (
-    FractalSlurmExecutor,
-)  # noqa
 from fractal_server.app.runner.common import JobExecutionError
 from fractal_server.app.runner.common import TaskExecutionError
+from fractal_server.app.runner.executors.slurm.executor import (
+    FractalSlurmExecutor,
+)  # noqa
 from tests.fixtures_slurm import run_squeue
 from tests.fixtures_slurm import scancel_all_jobs_of_a_slurm_user
 

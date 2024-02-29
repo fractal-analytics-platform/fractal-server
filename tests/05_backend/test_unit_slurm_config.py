@@ -3,13 +3,21 @@ import json
 import pytest
 from devtools import debug
 
-from fractal_server.app.runner._slurm._slurm_config import _parse_mem_value
-from fractal_server.app.runner._slurm._slurm_config import (
+from fractal_server.app.runner.executors.slurm._slurm_config import (
+    _parse_mem_value,
+)
+from fractal_server.app.runner.executors.slurm._slurm_config import (
     get_default_slurm_config,
 )
-from fractal_server.app.runner._slurm._slurm_config import get_slurm_config
-from fractal_server.app.runner._slurm._slurm_config import SlurmConfigError
-from fractal_server.app.runner._slurm._submit_setup import _slurm_submit_setup
+from fractal_server.app.runner.executors.slurm._slurm_config import (
+    get_slurm_config,
+)
+from fractal_server.app.runner.executors.slurm._slurm_config import (
+    SlurmConfigError,
+)
+from fractal_server.app.runner.executors.slurm._submit_setup import (
+    _slurm_submit_setup,
+)
 from tests.fixtures_tasks import MockTask
 from tests.fixtures_tasks import MockWorkflowTask
 

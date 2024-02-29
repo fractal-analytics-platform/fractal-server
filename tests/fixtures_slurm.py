@@ -7,10 +7,10 @@ from pathlib import Path
 import pytest
 from devtools import debug
 
-from fractal_server.app.runner._slurm._subprocess_run_as_user import (
+from fractal_server.app.runner.executors.slurm._subprocess_run_as_user import (
     _mkdir_as_user,
 )
-from fractal_server.app.runner._slurm._subprocess_run_as_user import (
+from fractal_server.app.runner.executors.slurm._subprocess_run_as_user import (
     _run_command_as_user,
 )
 
