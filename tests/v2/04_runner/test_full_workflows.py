@@ -74,7 +74,7 @@ def test_workflow_1(tmp_path: Path):
     assert img.dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
         "attributes": {
-            "well": "A_01",
+            "well": "A01",
             "plate": "my_plate.zarr",
             "data_dimensionality": 3,
             "illumination_correction": True,
@@ -88,7 +88,7 @@ def test_workflow_1(tmp_path: Path):
     assert img == {
         "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0_corr",
         "attributes": {
-            "well": "A_01",
+            "well": "A01",
             "plate": "my_plate_mip.zarr",
             "data_dimensionality": 2,
             "illumination_correction": True,
@@ -137,7 +137,7 @@ def test_workflow_2(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
             "attributes": {
-                "well": "A_01",
+                "well": "A01",
                 "plate": "my_plate.zarr",
                 "data_dimensionality": 3,
                 "illumination_correction": True,
@@ -146,7 +146,7 @@ def test_workflow_2(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/02/0",
             "attributes": {
-                "well": "A_02",
+                "well": "A02",
                 "plate": "my_plate.zarr",
                 "data_dimensionality": 3,
                 "illumination_correction": True,
@@ -174,7 +174,7 @@ def test_workflow_3(tmp_path: Path):
             WorkflowTask(
                 task=TASK_LIST["illumination_correction"],
                 args=dict(overwrite_input=True),
-                filters=dict(well="A_01"),
+                filters=dict(well="A01"),
             ),
         ],
         dataset=dataset_in,
@@ -198,7 +198,7 @@ def test_workflow_3(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
             "attributes": {
-                "well": "A_01",
+                "well": "A01",
                 "plate": "my_plate.zarr",
                 "data_dimensionality": 3,
                 "illumination_correction": True,
@@ -207,7 +207,7 @@ def test_workflow_3(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/02/0",
             "attributes": {
-                "well": "A_02",
+                "well": "A02",
                 "plate": "my_plate.zarr",
                 "data_dimensionality": 3,
             },
@@ -260,7 +260,7 @@ def test_workflow_4(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
             "attributes": {
-                "well": "A_01",
+                "well": "A01",
                 "plate": "my_plate.zarr",
                 "data_dimensionality": 3,
             },
@@ -268,7 +268,7 @@ def test_workflow_4(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/02/0",
             "attributes": {
-                "well": "A_02",
+                "well": "A02",
                 "plate": "my_plate.zarr",
                 "data_dimensionality": 3,
             },
@@ -276,7 +276,7 @@ def test_workflow_4(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate_new.zarr/A/01/0",
             "attributes": {
-                "well": "A_01",
+                "well": "A01",
                 "plate": "my_plate_new.zarr",
                 "data_dimensionality": 3,
             },
@@ -284,7 +284,7 @@ def test_workflow_4(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate_new.zarr/A/02/0",
             "attributes": {
-                "well": "A_02",
+                "well": "A02",
                 "plate": "my_plate_new.zarr",
                 "data_dimensionality": 3,
             },
@@ -334,7 +334,7 @@ def test_workflow_5(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
             "attributes": {
-                "well": "A_01",
+                "well": "A01",
                 "plate": "my_plate.zarr",
                 "data_dimensionality": 3,
             },
@@ -342,7 +342,7 @@ def test_workflow_5(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/02/0",
             "attributes": {
-                "well": "A_02",
+                "well": "A02",
                 "plate": "my_plate.zarr",
                 "data_dimensionality": 3,
             },
@@ -350,7 +350,7 @@ def test_workflow_5(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
             "attributes": {
-                "well": "A_01",
+                "well": "A01",
                 "plate": "my_plate_mip.zarr",
                 "data_dimensionality": 2,
             },
@@ -358,7 +358,7 @@ def test_workflow_5(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate_mip.zarr/A/02/0",
             "attributes": {
-                "well": "A_02",
+                "well": "A02",
                 "plate": "my_plate_mip.zarr",
                 "data_dimensionality": 2,
             },
@@ -483,7 +483,7 @@ def test_workflow_8(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
             "attributes": {
-                "well": "A_01",
+                "well": "A01",
                 "plate": "my_plate.zarr",
                 "data_dimensionality": 3,
             },
@@ -491,7 +491,7 @@ def test_workflow_8(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/02/0",
             "attributes": {
-                "well": "A_02",
+                "well": "A02",
                 "plate": "my_plate.zarr",
                 "data_dimensionality": 3,
             },
@@ -499,7 +499,7 @@ def test_workflow_8(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
             "attributes": {
-                "well": "A_01",
+                "well": "A01",
                 "plate": "my_plate_mip.zarr",
                 "data_dimensionality": 2,
             },
@@ -507,7 +507,7 @@ def test_workflow_8(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate_mip.zarr/A/02/0",
             "attributes": {
-                "well": "A_02",
+                "well": "A02",
                 "plate": "my_plate_mip.zarr",
                 "data_dimensionality": 2,
             },
