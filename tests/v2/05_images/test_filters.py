@@ -1,5 +1,8 @@
+import pytest
+
 from fractal_server.images import _filter_image_list
 from fractal_server.images import SingleImage
+from fractal_server.images import val_scalar_dict
 
 images = [
     SingleImage(
@@ -55,6 +58,26 @@ images = [
         ),
     ),
 ]
+
+
+def test_filter_validation():
+    invalid = [
+        ["l", "i", "s", "t"],
+        {"d": "i", "c": "t"},
+        {"s", "e", "t"},
+        ("t", "u", "p", "l", "e"),
+        bool,  # type
+        lambda x: x,  # function
+    ]
+    for item in invalid:
+        filters = dict(key=item)
+        with pytest.raises(ValueError):
+            val_scalar_dict("")(filters)
+
+    valid = ["string", -7, 3.14, True, None]
+    for item in valid:
+        filters = dict(key=item)
+        assert val_scalar_dict("")(filters) == filters
 
 
 def test_filter_image_list():
