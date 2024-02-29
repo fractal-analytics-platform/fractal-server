@@ -4,10 +4,11 @@ import pytest
 from devtools import debug
 from fractal_tasks_core_mock import TASK_LIST
 
+from fractal_server.app.runner.v2 import execute_tasks_v2
+from fractal_server.app.runner.v2.models import Dataset
+from fractal_server.app.runner.v2.models import WorkflowTask
 from fractal_server.images import find_image_by_path
-from fractal_server.v2 import Dataset
-from fractal_server.v2 import execute_tasks_v2
-from fractal_server.v2 import WorkflowTask
+from fractal_server.images import SingleImage
 
 
 def _assert_image_data_exist(image_list: list[dict]):
@@ -15,12 +16,26 @@ def _assert_image_data_exist(image_list: list[dict]):
         assert (Path(image.path) / "data").exists()
 
 
+def image_data_exist_on_disk(image_list: list[SingleImage]):
+    """
+    Given an image list, check whether mock data were written to disk.
+    """
+    prefix = "[image_data_exist_on_disk]"
+    all_images_have_data = True
+    for image in image_list:
+        if (Path(image.path) / "data").exists():
+            print(f"{prefix} {image.path} contains data")
+        else:
+            print(f"{prefix} {image.path} does *not* contain data")
+            all_images_have_data = False
+    return all_images_have_data
+
+
 def test_fractal_demos_01(tmp_path: Path):
     """
     Mock of fractal-demos/examples/01.
     """
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
-    dataset = Dataset(id=1)
     dataset = execute_tasks_v2(
         wf_task_list=[
             WorkflowTask(
@@ -28,7 +43,7 @@ def test_fractal_demos_01(tmp_path: Path):
                 args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
             )
         ],
-        dataset=dataset,
+        dataset=Dataset(),
     )
 
     assert dataset.history == [
@@ -266,7 +281,6 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path):
     # The first block (up to yokogawa-to-zarr included) is identical to
     # the previous test
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
-    dataset = Dataset(id=1)
     dataset = execute_tasks_v2(
         wf_task_list=[
             WorkflowTask(
@@ -274,7 +288,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path):
                 args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
             )
         ],
-        dataset=dataset,
+        dataset=Dataset(),
     )
     assert dataset.image_paths == [
         f"{zarr_dir}/my_plate.zarr/A/01/0",
@@ -453,3 +467,164 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path):
         "maximum_intensity_projection",
         "cellpose_segmentation",
     ]
+
+
+def test_example_registration(tmp_path: Path):
+    """
+    TBD
+    """
+    # Run create-ome-zarr-multiplex
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=TASK_LIST["create_ome_zarr_multiplex"],
+                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
+            )
+        ],
+        dataset=Dataset(),
+    )
+
+    # Print current dataset information
+    debug(dataset)
+
+    # We have 6 images (two wells, three cycles)
+    assert len(dataset.images) == 6
+    assert dataset.image_paths == [
+        f"{zarr_dir}/my_plate.zarr/A/01/0",
+        f"{zarr_dir}/my_plate.zarr/A/01/1",
+        f"{zarr_dir}/my_plate.zarr/A/01/2",
+        f"{zarr_dir}/my_plate.zarr/A/02/0",
+        f"{zarr_dir}/my_plate.zarr/A/02/1",
+        f"{zarr_dir}/my_plate.zarr/A/02/2",
+    ]
+
+    # Image data do not exit on disk yet
+    assert not image_data_exist_on_disk(dataset.images)
+
+    # The first image looks like this
+    assert dataset.images[0].dict() == {
+        "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
+        "attributes": {
+            "well": "A_01",
+            "acquisition": 0,
+            "plate": "my_plate.zarr",
+            "data_dimensionality": 3,
+        },
+    }
+
+    # Run yokogawa-to-zarr
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"]),
+        ],
+        dataset=dataset,
+    )
+
+    # Print current dataset information
+    debug(dataset)
+
+    # We still have 6 images (two wells, three cycles)
+    assert len(dataset.images) == 6
+    assert dataset.image_paths == [
+        f"{zarr_dir}/my_plate.zarr/A/01/0",
+        f"{zarr_dir}/my_plate.zarr/A/01/1",
+        f"{zarr_dir}/my_plate.zarr/A/01/2",
+        f"{zarr_dir}/my_plate.zarr/A/02/0",
+        f"{zarr_dir}/my_plate.zarr/A/02/1",
+        f"{zarr_dir}/my_plate.zarr/A/02/2",
+    ]
+
+    # The first-image metadata has not changed
+    assert dataset.images[0].dict() == {
+        "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
+        "attributes": {
+            "well": "A_01",
+            "acquisition": 0,
+            "plate": "my_plate.zarr",
+            "data_dimensionality": 3,
+        },
+    }
+
+    # Image data now exist on disk yet
+    assert image_data_exist_on_disk(dataset.images)
+
+    # Run init-registration
+    # NOTE: the reference cycle is currently identified by its name
+    # (the last part of the OME-Zarr image path). We can then change
+    # this into using some zarr metadata
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=TASK_LIST["init_registration"],
+                args={"ref_cycle_name": "0"},
+            )
+        ],
+        dataset=dataset,
+    )
+
+    # Print current dataset information
+    debug(dataset)
+
+    # The dataset now includes a custom parallelization list
+    assert dataset.parallelization_list is not None
+
+    # We still have the same 6 images (two wells, three cycles)
+    assert len(dataset.images) == 6
+    assert dataset.image_paths == [
+        f"{zarr_dir}/my_plate.zarr/A/01/0",
+        f"{zarr_dir}/my_plate.zarr/A/01/1",
+        f"{zarr_dir}/my_plate.zarr/A/01/2",
+        f"{zarr_dir}/my_plate.zarr/A/02/0",
+        f"{zarr_dir}/my_plate.zarr/A/02/1",
+        f"{zarr_dir}/my_plate.zarr/A/02/2",
+    ]
+
+    # The first-image metadata has not changed
+    assert dataset.images[0].dict() == {
+        "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
+        "attributes": {
+            "well": "A_01",
+            "acquisition": 0,
+            "plate": "my_plate.zarr",
+            "data_dimensionality": 3,
+        },
+    }
+
+    # Run registration
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=TASK_LIST["registration"],
+            ),
+        ],
+        dataset=dataset,
+    )
+
+    # Print current dataset information
+    debug(dataset)
+
+    # We still have the same 6 images (two wells, three cycles)
+    assert len(dataset.images) == 6
+    assert dataset.image_paths == [
+        f"{zarr_dir}/my_plate.zarr/A/01/0",
+        f"{zarr_dir}/my_plate.zarr/A/01/1",
+        f"{zarr_dir}/my_plate.zarr/A/01/2",
+        f"{zarr_dir}/my_plate.zarr/A/02/0",
+        f"{zarr_dir}/my_plate.zarr/A/02/1",
+        f"{zarr_dir}/my_plate.zarr/A/02/2",
+    ]
+
+    # The first-image metadata has not changed
+    assert dataset.images[0].dict() == {
+        "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
+        "attributes": {
+            "well": "A_01",
+            "acquisition": 0,
+            "plate": "my_plate.zarr",
+            "data_dimensionality": 3,
+        },
+    }
+
+    # The custom parallelization list is not present any more
+    assert dataset.parallelization_list is None
