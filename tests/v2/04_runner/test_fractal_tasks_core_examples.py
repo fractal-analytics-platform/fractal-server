@@ -60,7 +60,7 @@ def test_fractal_demos_01(tmp_path: Path):
     assert dataset.images[0].dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
         "attributes": {
-            "well": "A_01",
+            "well": "A01",
             "plate": "my_plate.zarr",
             "data_dimensionality": 3,
         },
@@ -68,7 +68,7 @@ def test_fractal_demos_01(tmp_path: Path):
     assert dataset.images[1].dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/02/0",
         "attributes": {
-            "well": "A_02",
+            "well": "A02",
             "plate": "my_plate.zarr",
             "data_dimensionality": 3,
         },
@@ -125,7 +125,7 @@ def test_fractal_demos_01(tmp_path: Path):
     assert img.dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
         "attributes": {
-            "well": "A_01",
+            "well": "A01",
             "plate": "my_plate.zarr",
             "data_dimensionality": 3,
             "illumination_correction": True,
@@ -181,7 +181,7 @@ def test_fractal_demos_01(tmp_path: Path):
     assert dataset.images[0].dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
         "attributes": {
-            "well": "A_01",
+            "well": "A01",
             "plate": "my_plate.zarr",
             "data_dimensionality": 3,
             "illumination_correction": True,
@@ -190,7 +190,7 @@ def test_fractal_demos_01(tmp_path: Path):
     assert dataset.images[1].dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/02/0",
         "attributes": {
-            "well": "A_02",
+            "well": "A02",
             "plate": "my_plate.zarr",
             "data_dimensionality": 3,
             "illumination_correction": True,
@@ -199,7 +199,7 @@ def test_fractal_demos_01(tmp_path: Path):
     assert dataset.images[2].dict() == {
         "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
         "attributes": {
-            "well": "A_01",
+            "well": "A01",
             "plate": "my_plate_mip.zarr",
             "data_dimensionality": 2,
             "illumination_correction": True,
@@ -208,7 +208,7 @@ def test_fractal_demos_01(tmp_path: Path):
     assert dataset.images[3].dict() == {
         "path": f"{zarr_dir}/my_plate_mip.zarr/A/02/0",
         "attributes": {
-            "well": "A_02",
+            "well": "A02",
             "plate": "my_plate_mip.zarr",
             "data_dimensionality": 2,
             "illumination_correction": True,
@@ -243,7 +243,7 @@ def test_fractal_demos_01(tmp_path: Path):
     assert img.dict() == {
         "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
         "attributes": {
-            "well": "A_01",
+            "well": "A01",
             "plate": "my_plate_mip.zarr",
             "data_dimensionality": 2,
             "illumination_correction": True,
@@ -338,7 +338,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path):
     assert dataset.images[0].dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
         "attributes": {
-            "well": "A_01",
+            "well": "A01",
             "plate": "my_plate.zarr",
             "data_dimensionality": 3,
         },
@@ -346,7 +346,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path):
     assert dataset.images[1].dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/02/0",
         "attributes": {
-            "well": "A_02",
+            "well": "A02",
             "plate": "my_plate.zarr",
             "data_dimensionality": 3,
         },
@@ -354,7 +354,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path):
     assert dataset.images[2].dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
         "attributes": {
-            "well": "A_01",
+            "well": "A01",
             "plate": "my_plate.zarr",
             "data_dimensionality": 3,
             "illumination_correction": True,
@@ -363,7 +363,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path):
     assert dataset.images[3].dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
         "attributes": {
-            "well": "A_02",
+            "well": "A02",
             "plate": "my_plate.zarr",
             "data_dimensionality": 3,
             "illumination_correction": True,
@@ -404,7 +404,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path):
     assert dataset.images[4].dict() == {
         "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0_corr",
         "attributes": {
-            "well": "A_01",
+            "well": "A01",
             "plate": "my_plate_mip.zarr",
             "data_dimensionality": 2,
             "illumination_correction": True,
@@ -413,7 +413,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path):
     assert dataset.images[5].dict() == {
         "path": f"{zarr_dir}/my_plate_mip.zarr/A/02/0_corr",
         "attributes": {
-            "well": "A_02",
+            "well": "A02",
             "plate": "my_plate_mip.zarr",
             "data_dimensionality": 2,
             "illumination_correction": True,
@@ -508,7 +508,7 @@ def test_example_registration(tmp_path: Path):
     assert dataset.images[0].dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
         "attributes": {
-            "well": "A_01",
+            "well": "A01",
             "acquisition": 0,
             "plate": "my_plate.zarr",
             "data_dimensionality": 3,
@@ -541,7 +541,7 @@ def test_example_registration(tmp_path: Path):
     assert dataset.images[0].dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
         "attributes": {
-            "well": "A_01",
+            "well": "A01",
             "acquisition": 0,
             "plate": "my_plate.zarr",
             "data_dimensionality": 3,
@@ -586,7 +586,7 @@ def test_example_registration(tmp_path: Path):
     assert dataset.images[0].dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
         "attributes": {
-            "well": "A_01",
+            "well": "A01",
             "acquisition": 0,
             "plate": "my_plate.zarr",
             "data_dimensionality": 3,
@@ -621,7 +621,7 @@ def test_example_registration(tmp_path: Path):
     assert dataset.images[0].dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
         "attributes": {
-            "well": "A_01",
+            "well": "A01",
             "acquisition": 0,
             "plate": "my_plate.zarr",
             "data_dimensionality": 3,
@@ -631,7 +631,7 @@ def test_example_registration(tmp_path: Path):
     assert dataset.images[1].dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/1",
         "attributes": {
-            "well": "A_01",
+            "well": "A01",
             "acquisition": 1,
             "plate": "my_plate.zarr",
             "data_dimensionality": 3,
