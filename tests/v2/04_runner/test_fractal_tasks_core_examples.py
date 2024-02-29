@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
@@ -9,6 +10,12 @@ from fractal_server.app.runner.v2.models import Dataset
 from fractal_server.app.runner.v2.models import WorkflowTask
 from fractal_server.images import find_image_by_path
 from fractal_server.images import SingleImage
+
+
+@pytest.fixture()
+def executor():
+    with ThreadPoolExecutor() as e:
+        yield e
 
 
 def _assert_image_data_exist(image_list: list[dict]):
@@ -31,7 +38,7 @@ def image_data_exist_on_disk(image_list: list[SingleImage]):
     return all_images_have_data
 
 
-def test_fractal_demos_01(tmp_path: Path):
+def test_fractal_demos_01(tmp_path: Path, executor):
     """
     Mock of fractal-demos/examples/01.
     """
@@ -44,6 +51,7 @@ def test_fractal_demos_01(tmp_path: Path):
             )
         ],
         dataset=Dataset(),
+        executor=executor,
     )
 
     assert dataset.history == [
@@ -82,6 +90,7 @@ def test_fractal_demos_01(tmp_path: Path):
             )
         ],
         dataset=dataset,
+        executor=executor,
     )
 
     assert dataset.history == [
@@ -102,6 +111,7 @@ def test_fractal_demos_01(tmp_path: Path):
             )
         ],
         dataset=dataset,
+        executor=executor,
     )
 
     assert dataset.history == [
@@ -142,6 +152,7 @@ def test_fractal_demos_01(tmp_path: Path):
             )
         ],
         dataset=dataset,
+        executor=executor,
     )
 
     assert dataset.history == [
@@ -223,6 +234,7 @@ def test_fractal_demos_01(tmp_path: Path):
             )
         ],
         dataset=dataset,
+        executor=executor,
     )
 
     assert dataset.history == [
@@ -259,6 +271,7 @@ def test_fractal_demos_01(tmp_path: Path):
             )
         ],
         dataset=dataset,
+        executor=executor,
     )
 
     debug(dataset)
@@ -273,7 +286,7 @@ def test_fractal_demos_01(tmp_path: Path):
     ]
 
 
-def test_fractal_demos_01_no_overwrite(tmp_path: Path):
+def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
     """
     Similar to fractal-demos/examples/01, but illumination
     correction task does not override its input images.
@@ -289,6 +302,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path):
             )
         ],
         dataset=Dataset(),
+        executor=executor,
     )
     assert dataset.image_paths == [
         f"{zarr_dir}/my_plate.zarr/A/01/0",
@@ -302,6 +316,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path):
             )
         ],
         dataset=dataset,
+        executor=executor,
     )
     debug(dataset)
     _assert_image_data_exist(dataset.images)
@@ -315,6 +330,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path):
             )
         ],
         dataset=dataset,
+        executor=executor,
     )
 
     assert dataset.history == [
@@ -379,6 +395,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path):
             )
         ],
         dataset=dataset,
+        executor=executor,
     )
 
     assert dataset.history == [
@@ -431,6 +448,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path):
             )
         ],
         dataset=dataset,
+        executor=executor,
     )
 
     assert dataset.history == [
@@ -456,6 +474,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path):
             )
         ],
         dataset=dataset,
+        executor=executor,
     )
     debug(dataset)
 
@@ -469,7 +488,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path):
     ]
 
 
-def test_registration_overwrite(tmp_path: Path):
+def test_registration_overwrite(tmp_path: Path, executor):
     """
     TBD
     """
@@ -485,6 +504,7 @@ def test_registration_overwrite(tmp_path: Path):
             )
         ],
         dataset=Dataset(),
+        executor=executor,
     )
 
     # Print current dataset information
@@ -521,6 +541,7 @@ def test_registration_overwrite(tmp_path: Path):
             WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"]),
         ],
         dataset=dataset,
+        executor=executor,
     )
 
     # Print current dataset information
@@ -563,6 +584,7 @@ def test_registration_overwrite(tmp_path: Path):
             )
         ],
         dataset=dataset,
+        executor=executor,
     )
 
     # Print current dataset information
@@ -602,6 +624,7 @@ def test_registration_overwrite(tmp_path: Path):
             ),
         ],
         dataset=dataset,
+        executor=executor,
     )
 
     # Print current dataset information
@@ -618,7 +641,7 @@ def test_registration_overwrite(tmp_path: Path):
         f"{zarr_dir}/my_plate.zarr/A/02/2",
     ]
 
-    # The first-image metadata (reference cycle) has not changed
+    # The first-image metadata (reference cycle) now has registration=True
     assert dataset.images[0].dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
         "attributes": {
@@ -626,6 +649,7 @@ def test_registration_overwrite(tmp_path: Path):
             "acquisition": 0,
             "plate": "my_plate.zarr",
             "data_dimensionality": 3,
+            "registration": True,
         },
     }
     # The second-image metadata also have registration=True
@@ -644,7 +668,7 @@ def test_registration_overwrite(tmp_path: Path):
     assert dataset.parallelization_list is None
 
 
-def test_registration_no_overwrite(tmp_path: Path):
+def test_registration_no_overwrite(tmp_path: Path, executor):
     """
     TBD
     """
@@ -660,6 +684,7 @@ def test_registration_no_overwrite(tmp_path: Path):
             )
         ],
         dataset=Dataset(),
+        executor=executor,
     )
 
     # Print current dataset information
@@ -696,6 +721,7 @@ def test_registration_no_overwrite(tmp_path: Path):
             WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"]),
         ],
         dataset=dataset,
+        executor=executor,
     )
 
     # Print current dataset information
@@ -738,6 +764,7 @@ def test_registration_no_overwrite(tmp_path: Path):
             )
         ],
         dataset=dataset,
+        executor=executor,
     )
 
     # Print current dataset information
@@ -777,13 +804,14 @@ def test_registration_no_overwrite(tmp_path: Path):
             ),
         ],
         dataset=dataset,
+        executor=executor,
     )
 
     # Print current dataset information
     debug(dataset)
 
-    # We now have 11 images (6 raw and 4 registered)
-    assert len(dataset.images) == 10
+    # We now have 12 images (6 raw and 6 registered)
+    assert len(dataset.images) == 12
     assert dataset.image_paths == [
         f"{zarr_dir}/my_plate.zarr/A/01/0",
         f"{zarr_dir}/my_plate.zarr/A/01/1",
@@ -791,8 +819,10 @@ def test_registration_no_overwrite(tmp_path: Path):
         f"{zarr_dir}/my_plate.zarr/A/02/0",
         f"{zarr_dir}/my_plate.zarr/A/02/1",
         f"{zarr_dir}/my_plate.zarr/A/02/2",
+        f"{zarr_dir}/my_plate.zarr/A/01/0_r",
         f"{zarr_dir}/my_plate.zarr/A/01/1_r",
         f"{zarr_dir}/my_plate.zarr/A/01/2_r",
+        f"{zarr_dir}/my_plate.zarr/A/02/0_r",
         f"{zarr_dir}/my_plate.zarr/A/02/1_r",
         f"{zarr_dir}/my_plate.zarr/A/02/2_r",
     ]
@@ -808,7 +838,7 @@ def test_registration_no_overwrite(tmp_path: Path):
         },
     }
     # A registered image has the correct path and registration=True
-    assert dataset.images[6].dict() == {
+    assert dataset.images[7].dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/1_r",
         "attributes": {
             "well": "A01",
