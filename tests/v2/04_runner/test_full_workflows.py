@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from devtools import debug
@@ -22,26 +23,30 @@ def test_workflow_1(tmp_path: Path):
     """
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     dataset_in = Dataset(id=1)
-    dataset_out = execute_tasks_v2(
-        wf_task_list=[
-            WorkflowTask(
-                task=TASK_LIST["create_ome_zarr"],
-                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
-            ),
-            WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
-            WorkflowTask(
-                task=TASK_LIST["illumination_correction"],
-            ),
-            WorkflowTask(
-                task=TASK_LIST["new_ome_zarr"],
-                args={"suffix": "mip"},
-            ),
-            WorkflowTask(
-                task=TASK_LIST["maximum_intensity_projection"],
-            ),
-        ],
-        dataset=dataset_in,
-    )
+    with ThreadPoolExecutor() as executor:
+        dataset_out = execute_tasks_v2(
+            wf_task_list=[
+                WorkflowTask(
+                    task=TASK_LIST["create_ome_zarr"],
+                    args=dict(
+                        image_dir="/tmp/input_images", zarr_dir=zarr_dir
+                    ),
+                ),
+                WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
+                WorkflowTask(
+                    task=TASK_LIST["illumination_correction"],
+                ),
+                WorkflowTask(
+                    task=TASK_LIST["new_ome_zarr"],
+                    args={"suffix": "mip"},
+                ),
+                WorkflowTask(
+                    task=TASK_LIST["maximum_intensity_projection"],
+                ),
+            ],
+            dataset=dataset_in,
+            executor=executor,
+        )
 
     assert dataset_out.filters == {
         "plate": "my_plate_mip.zarr",
@@ -105,20 +110,24 @@ def test_workflow_2(tmp_path: Path):
     """
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     dataset_in = Dataset(id=1)
-    dataset_out = execute_tasks_v2(
-        wf_task_list=[
-            WorkflowTask(
-                task=TASK_LIST["create_ome_zarr"],
-                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
-            ),
-            WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
-            WorkflowTask(
-                task=TASK_LIST["illumination_correction"],
-                args=dict(overwrite_input=True),
-            ),
-        ],
-        dataset=dataset_in,
-    )
+    with ThreadPoolExecutor() as executor:
+        dataset_out = execute_tasks_v2(
+            wf_task_list=[
+                WorkflowTask(
+                    task=TASK_LIST["create_ome_zarr"],
+                    args=dict(
+                        image_dir="/tmp/input_images", zarr_dir=zarr_dir
+                    ),
+                ),
+                WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
+                WorkflowTask(
+                    task=TASK_LIST["illumination_correction"],
+                    args=dict(overwrite_input=True),
+                ),
+            ],
+            dataset=dataset_in,
+            executor=executor,
+        )
 
     assert dataset_out.history == [
         "create_ome_zarr",
@@ -164,21 +173,25 @@ def test_workflow_3(tmp_path: Path):
     """
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     dataset_in = Dataset(id=1, zarr_dir=zarr_dir)
-    dataset_out = execute_tasks_v2(
-        wf_task_list=[
-            WorkflowTask(
-                task=TASK_LIST["create_ome_zarr"],
-                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
-            ),
-            WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
-            WorkflowTask(
-                task=TASK_LIST["illumination_correction"],
-                args=dict(overwrite_input=True),
-                filters=dict(well="A01"),
-            ),
-        ],
-        dataset=dataset_in,
-    )
+    with ThreadPoolExecutor() as executor:
+        dataset_out = execute_tasks_v2(
+            wf_task_list=[
+                WorkflowTask(
+                    task=TASK_LIST["create_ome_zarr"],
+                    args=dict(
+                        image_dir="/tmp/input_images", zarr_dir=zarr_dir
+                    ),
+                ),
+                WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
+                WorkflowTask(
+                    task=TASK_LIST["illumination_correction"],
+                    args=dict(overwrite_input=True),
+                    filters=dict(well="A01"),
+                ),
+            ],
+            dataset=dataset_in,
+            executor=executor,
+        )
 
     debug(dataset_out)
     assert dataset_out.history == [
@@ -224,23 +237,27 @@ def test_workflow_4(tmp_path: Path):
     """
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     dataset_in = Dataset(id=1, zarr_dir=zarr_dir)
-    dataset_out = execute_tasks_v2(
-        wf_task_list=[
-            WorkflowTask(
-                task=TASK_LIST["create_ome_zarr"],
-                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
-            ),
-            WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
-            WorkflowTask(
-                task=TASK_LIST["new_ome_zarr"],
-                args={"suffix": "new", "project_to_2D": False},
-            ),
-            WorkflowTask(
-                task=TASK_LIST["copy_data"],
-            ),
-        ],
-        dataset=dataset_in,
-    )
+    with ThreadPoolExecutor() as executor:
+        dataset_out = execute_tasks_v2(
+            wf_task_list=[
+                WorkflowTask(
+                    task=TASK_LIST["create_ome_zarr"],
+                    args=dict(
+                        image_dir="/tmp/input_images", zarr_dir=zarr_dir
+                    ),
+                ),
+                WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
+                WorkflowTask(
+                    task=TASK_LIST["new_ome_zarr"],
+                    args={"suffix": "new", "project_to_2D": False},
+                ),
+                WorkflowTask(
+                    task=TASK_LIST["copy_data"],
+                ),
+            ],
+            dataset=dataset_in,
+            executor=executor,
+        )
 
     debug(dataset_out)
     assert dataset_out.history == [
@@ -301,23 +318,27 @@ def test_workflow_5(tmp_path: Path):
     """
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     dataset_in = Dataset(id=1, zarr_dir=zarr_dir)
-    dataset_out = execute_tasks_v2(
-        wf_task_list=[
-            WorkflowTask(
-                task=TASK_LIST["create_ome_zarr"],
-                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
-            ),
-            WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
-            WorkflowTask(
-                task=TASK_LIST["new_ome_zarr"],
-                args={"suffix": "mip"},
-            ),
-            WorkflowTask(
-                task=TASK_LIST["maximum_intensity_projection"],
-            ),
-        ],
-        dataset=dataset_in,
-    )
+    with ThreadPoolExecutor() as executor:
+        dataset_out = execute_tasks_v2(
+            wf_task_list=[
+                WorkflowTask(
+                    task=TASK_LIST["create_ome_zarr"],
+                    args=dict(
+                        image_dir="/tmp/input_images", zarr_dir=zarr_dir
+                    ),
+                ),
+                WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
+                WorkflowTask(
+                    task=TASK_LIST["new_ome_zarr"],
+                    args={"suffix": "mip"},
+                ),
+                WorkflowTask(
+                    task=TASK_LIST["maximum_intensity_projection"],
+                ),
+            ],
+            dataset=dataset_in,
+            executor=executor,
+        )
 
     debug(dataset_out)
     assert dataset_out.history == [
@@ -374,20 +395,24 @@ def test_workflow_6(tmp_path: Path):
     """
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     dataset_in = Dataset(id=1, zarr_dir=zarr_dir)
-    dataset_out = execute_tasks_v2(
-        wf_task_list=[
-            WorkflowTask(
-                task=TASK_LIST["create_ome_zarr"],
-                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
-            ),
-            WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"]),
-            WorkflowTask(task=TASK_LIST["init_channel_parallelization"]),
-            WorkflowTask(
-                task=TASK_LIST["illumination_correction"],
-            ),
-        ],
-        dataset=dataset_in,
-    )
+    with ThreadPoolExecutor() as executor:
+        dataset_out = execute_tasks_v2(
+            wf_task_list=[
+                WorkflowTask(
+                    task=TASK_LIST["create_ome_zarr"],
+                    args=dict(
+                        image_dir="/tmp/input_images", zarr_dir=zarr_dir
+                    ),
+                ),
+                WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"]),
+                WorkflowTask(task=TASK_LIST["init_channel_parallelization"]),
+                WorkflowTask(
+                    task=TASK_LIST["illumination_correction"],
+                ),
+            ],
+            dataset=dataset_in,
+            executor=executor,
+        )
 
     debug(dataset_out)
     assert dataset_out.history == [
@@ -407,23 +432,27 @@ def test_workflow_7(tmp_path: Path):
     """
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     dataset_in = Dataset(id=1, zarr_dir=zarr_dir)
-    dataset_out = execute_tasks_v2(
-        wf_task_list=[
-            WorkflowTask(
-                task=TASK_LIST["create_ome_zarr_multiplex"],
-                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
-            ),
-            WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
-            WorkflowTask(
-                task=TASK_LIST["init_registration"],
-                args={"ref_cycle_name": "0"},
-            ),
-            WorkflowTask(
-                task=TASK_LIST["registration"],
-            ),
-        ],
-        dataset=dataset_in,
-    )
+    with ThreadPoolExecutor() as executor:
+        dataset_out = execute_tasks_v2(
+            wf_task_list=[
+                WorkflowTask(
+                    task=TASK_LIST["create_ome_zarr_multiplex"],
+                    args=dict(
+                        image_dir="/tmp/input_images", zarr_dir=zarr_dir
+                    ),
+                ),
+                WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
+                WorkflowTask(
+                    task=TASK_LIST["init_registration"],
+                    args={"ref_cycle_name": "0"},
+                ),
+                WorkflowTask(
+                    task=TASK_LIST["registration"],
+                ),
+            ],
+            dataset=dataset_in,
+            executor=executor,
+        )
 
     debug(dataset_out)
     assert dataset_out.history == [
@@ -445,30 +474,34 @@ def test_workflow_8(tmp_path: Path):
     """
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     dataset_in = Dataset(id=1, zarr_dir=zarr_dir)
-    dataset_out = execute_tasks_v2(
-        wf_task_list=[
-            WorkflowTask(
-                task=TASK_LIST["create_ome_zarr"],
-                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
-            ),
-            WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
-            WorkflowTask(
-                task=TASK_LIST["new_ome_zarr"],
-                args={"suffix": "mip"},
-            ),
-            WorkflowTask(
-                task=TASK_LIST["maximum_intensity_projection"],
-            ),
-            WorkflowTask(
-                task=TASK_LIST["cellpose_segmentation"],
-            ),
-            WorkflowTask(
-                task=TASK_LIST["cellpose_segmentation"],
-                filters=dict(data_dimensionality=3, plate=None),
-            ),
-        ],
-        dataset=dataset_in,
-    )
+    with ThreadPoolExecutor() as executor:
+        dataset_out = execute_tasks_v2(
+            wf_task_list=[
+                WorkflowTask(
+                    task=TASK_LIST["create_ome_zarr"],
+                    args=dict(
+                        image_dir="/tmp/input_images", zarr_dir=zarr_dir
+                    ),
+                ),
+                WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
+                WorkflowTask(
+                    task=TASK_LIST["new_ome_zarr"],
+                    args={"suffix": "mip"},
+                ),
+                WorkflowTask(
+                    task=TASK_LIST["maximum_intensity_projection"],
+                ),
+                WorkflowTask(
+                    task=TASK_LIST["cellpose_segmentation"],
+                ),
+                WorkflowTask(
+                    task=TASK_LIST["cellpose_segmentation"],
+                    filters=dict(data_dimensionality=3, plate=None),
+                ),
+            ],
+            dataset=dataset_in,
+            executor=executor,
+        )
 
     debug(dataset_out)
     assert dataset_out.history == [
