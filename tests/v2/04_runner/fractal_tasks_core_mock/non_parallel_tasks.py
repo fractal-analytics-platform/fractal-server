@@ -276,6 +276,11 @@ def init_registration(
     for well in sorted(set(wells)):
         print(f"[init_registration] {well=}")
         ref_path = ref_cycles_per_well[well]
+
+        # First, include a dummy pair of paths (ref_path, ref_path)
+        parallelization_list.append(dict(path=ref_path, ref_path=ref_path))
+
+        # Then, include all actually-relevant (path, ref_path) pairs
         for path in x_cycles_per_well[well]:
             parallelization_list.append(
                 dict(
