@@ -154,14 +154,17 @@ def _run_parallel_task(
     for ind, task_output in enumerate(task_outputs):
         if task_output.added_images is not None:
             for added_image in task_output.added_images:
-                if added_image.path in new_old_image_mapping.keys():
-                    from devtools import debug
-
-                    debug(added_image.path)
-                    raise ValueError
-                new_old_image_mapping[added_image.path] = list_function_kwargs[
-                    ind
-                ]["path"]
+                new_key = added_image.path
+                new_value = list_function_kwargs[ind]["path"]
+                old_value = new_old_image_mapping.get(new_key)
+                if old_value is not None and old_value != new_value:
+                    raise ValueError(
+                        "The same `added_image.path` corresponds to "
+                        "multiple `path` function arguments. This means "
+                        "that two tasks with different `path` input created "
+                        "the same `added_image` entry."
+                    )
+                new_old_image_mapping[new_key] = new_value
 
     merged_output = merge_outputs(
         task_outputs,
