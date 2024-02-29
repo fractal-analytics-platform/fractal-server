@@ -1,8 +1,8 @@
 from copy import copy
 
-from .images import find_image_by_path
+from ....images import find_image_by_path
+from ....images import SingleImage
 from .models import DictStrAny
-from .models import SingleImage
 from .models import Task
 from .task_output import ParallelTaskOutput
 from .task_output import TaskOutput
@@ -59,6 +59,8 @@ def update_task_output_added_images(
             )
             final_added_images.append(added_image)
         task_output.added_images = final_added_images
+    elif len(task_input_paths) == 0 or len(added_image_paths) == 0:
+        pass
     else:
         print("WARNING: If lenghts are different we don't know how to proceed")
     return task_output

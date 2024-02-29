@@ -2,7 +2,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from .images import SingleImage
+from ....images import SingleImage
 from .models import DictStrAny
 
 

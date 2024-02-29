@@ -4,9 +4,9 @@ import pytest
 from devtools import debug
 from fractal_tasks_core_mock import TASK_LIST
 
+from fractal_server.images import find_image_by_path
 from fractal_server.v2 import Dataset
 from fractal_server.v2 import execute_tasks_v2
-from fractal_server.v2 import find_image_by_path
 from fractal_server.v2 import WorkflowTask
 
 
@@ -36,7 +36,7 @@ def test_fractal_demos_01(tmp_path: Path):
     ]
     assert dataset.filters == {
         "plate": "my_plate.zarr",
-        "data_dimensionality": "3",
+        "data_dimensionality": 3,
     }
     assert dataset.image_paths == [
         f"{zarr_dir}/my_plate.zarr/A/01/0",
@@ -47,7 +47,7 @@ def test_fractal_demos_01(tmp_path: Path):
         "attributes": {
             "well": "A_01",
             "plate": "my_plate.zarr",
-            "data_dimensionality": "3",
+            "data_dimensionality": 3,
         },
     }
     assert dataset.images[1].dict() == {
@@ -55,7 +55,7 @@ def test_fractal_demos_01(tmp_path: Path):
         "attributes": {
             "well": "A_02",
             "plate": "my_plate.zarr",
-            "data_dimensionality": "3",
+            "data_dimensionality": 3,
         },
     }
 
@@ -75,7 +75,7 @@ def test_fractal_demos_01(tmp_path: Path):
     ]
     assert dataset.filters == {
         "plate": "my_plate.zarr",
-        "data_dimensionality": "3",
+        "data_dimensionality": 3,
     }
     _assert_image_data_exist(dataset.images)
 
@@ -96,7 +96,7 @@ def test_fractal_demos_01(tmp_path: Path):
     ]
     assert dataset.filters == {
         "plate": "my_plate.zarr",
-        "data_dimensionality": "3",
+        "data_dimensionality": 3,
         "illumination_correction": True,
     }
     assert set(dataset.image_paths) == {
@@ -112,7 +112,7 @@ def test_fractal_demos_01(tmp_path: Path):
         "attributes": {
             "well": "A_01",
             "plate": "my_plate.zarr",
-            "data_dimensionality": "3",
+            "data_dimensionality": 3,
             "illumination_correction": True,
         },
     }
@@ -137,7 +137,7 @@ def test_fractal_demos_01(tmp_path: Path):
     ]
     assert dataset.filters == {
         "plate": "my_plate_mip.zarr",
-        "data_dimensionality": "2",
+        "data_dimensionality": 2,
         "illumination_correction": True,
     }
     assert set(dataset.image_paths) == {
@@ -150,7 +150,7 @@ def test_fractal_demos_01(tmp_path: Path):
         [
             image
             for image in dataset.images
-            if image.attributes.get("data_dimensionality") == "3"
+            if image.attributes.get("data_dimensionality") == 3
         ]
     )
 
@@ -159,7 +159,7 @@ def test_fractal_demos_01(tmp_path: Path):
             [
                 image
                 for image in dataset.images
-                if image.attributes.get("data_dimensionality") == "2"
+                if image.attributes.get("data_dimensionality") == 2
             ]
         )
 
@@ -168,7 +168,7 @@ def test_fractal_demos_01(tmp_path: Path):
         "attributes": {
             "well": "A_01",
             "plate": "my_plate.zarr",
-            "data_dimensionality": "3",
+            "data_dimensionality": 3,
             "illumination_correction": True,
         },
     }
@@ -177,7 +177,7 @@ def test_fractal_demos_01(tmp_path: Path):
         "attributes": {
             "well": "A_02",
             "plate": "my_plate.zarr",
-            "data_dimensionality": "3",
+            "data_dimensionality": 3,
             "illumination_correction": True,
         },
     }
@@ -186,7 +186,7 @@ def test_fractal_demos_01(tmp_path: Path):
         "attributes": {
             "well": "A_01",
             "plate": "my_plate_mip.zarr",
-            "data_dimensionality": "2",
+            "data_dimensionality": 2,
             "illumination_correction": True,
         },
     }
@@ -195,7 +195,7 @@ def test_fractal_demos_01(tmp_path: Path):
         "attributes": {
             "well": "A_02",
             "plate": "my_plate_mip.zarr",
-            "data_dimensionality": "2",
+            "data_dimensionality": 2,
             "illumination_correction": True,
         },
     }
@@ -219,7 +219,7 @@ def test_fractal_demos_01(tmp_path: Path):
     ]
     assert dataset.filters == {
         "plate": "my_plate_mip.zarr",
-        "data_dimensionality": "2",
+        "data_dimensionality": 2,
         "illumination_correction": True,
     }
     img = find_image_by_path(
@@ -230,7 +230,7 @@ def test_fractal_demos_01(tmp_path: Path):
         "attributes": {
             "well": "A_01",
             "plate": "my_plate_mip.zarr",
-            "data_dimensionality": "2",
+            "data_dimensionality": 2,
             "illumination_correction": True,
         },
     }
@@ -263,6 +263,8 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path):
     Similar to fractal-demos/examples/01, but illumination
     correction task does not override its input images.
     """
+    # The first block (up to yokogawa-to-zarr included) is identical to
+    # the previous test
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     dataset = Dataset(id=1)
     dataset = execute_tasks_v2(
@@ -274,19 +276,10 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path):
         ],
         dataset=dataset,
     )
-
-    assert dataset.history == [
-        "create_ome_zarr",
-    ]
-    assert dataset.filters == {
-        "plate": "my_plate.zarr",
-        "data_dimensionality": "3",
-    }
     assert dataset.image_paths == [
         f"{zarr_dir}/my_plate.zarr/A/01/0",
         f"{zarr_dir}/my_plate.zarr/A/02/0",
     ]
-
     dataset = execute_tasks_v2(
         wf_task_list=[
             WorkflowTask(
@@ -296,19 +289,10 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path):
         ],
         dataset=dataset,
     )
-
     debug(dataset)
-
-    assert dataset.history == [
-        "create_ome_zarr",
-        "yokogawa_to_zarr",
-    ]
-    assert dataset.filters == {
-        "plate": "my_plate.zarr",
-        "data_dimensionality": "3",
-    }
     _assert_image_data_exist(dataset.images)
 
+    # Run illumination correction with overwrite_input=False
     dataset = execute_tasks_v2(
         wf_task_list=[
             WorkflowTask(
@@ -326,25 +310,48 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path):
     ]
     assert dataset.filters == {
         "plate": "my_plate.zarr",
-        "data_dimensionality": "3",
+        "data_dimensionality": 3,
         "illumination_correction": True,
     }
-    assert set(dataset.image_paths) == {
+    assert dataset.image_paths == [
         f"{zarr_dir}/my_plate.zarr/A/01/0",
         f"{zarr_dir}/my_plate.zarr/A/02/0",
-        f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
         f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
-    }
+        f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
+    ]
+    debug(dataset)
 
-    img = find_image_by_path(
-        path=f"{zarr_dir}/my_plate.zarr/A/01/0_corr", images=dataset.images
-    )
-    assert img.dict() == {
+    assert dataset.images[0].dict() == {
+        "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
+        "attributes": {
+            "well": "A_01",
+            "plate": "my_plate.zarr",
+            "data_dimensionality": 3,
+        },
+    }
+    assert dataset.images[1].dict() == {
+        "path": f"{zarr_dir}/my_plate.zarr/A/02/0",
+        "attributes": {
+            "well": "A_02",
+            "plate": "my_plate.zarr",
+            "data_dimensionality": 3,
+        },
+    }
+    assert dataset.images[2].dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
         "attributes": {
             "well": "A_01",
             "plate": "my_plate.zarr",
-            "data_dimensionality": "3",
+            "data_dimensionality": 3,
+            "illumination_correction": True,
+        },
+    }
+    assert dataset.images[3].dict() == {
+        "path": f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
+        "attributes": {
+            "well": "A_02",
+            "plate": "my_plate.zarr",
+            "data_dimensionality": 3,
             "illumination_correction": True,
         },
     }
@@ -368,17 +375,39 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path):
     ]
     assert dataset.filters == {
         "plate": "my_plate_mip.zarr",
-        "data_dimensionality": "2",
+        "data_dimensionality": 2,
         "illumination_correction": True,
     }
-    assert set(dataset.image_paths) == {
+    assert dataset.image_paths == [
         f"{zarr_dir}/my_plate.zarr/A/01/0",
         f"{zarr_dir}/my_plate.zarr/A/02/0",
-        f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
         f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
+        f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
         f"{zarr_dir}/my_plate_mip.zarr/A/01/0_corr",
         f"{zarr_dir}/my_plate_mip.zarr/A/02/0_corr",
+    ]
+
+    assert dataset.images[4].dict() == {
+        "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0_corr",
+        "attributes": {
+            "well": "A_01",
+            "plate": "my_plate_mip.zarr",
+            "data_dimensionality": 2,
+            "illumination_correction": True,
+        },
     }
+    assert dataset.images[5].dict() == {
+        "path": f"{zarr_dir}/my_plate_mip.zarr/A/02/0_corr",
+        "attributes": {
+            "well": "A_02",
+            "plate": "my_plate_mip.zarr",
+            "data_dimensionality": 2,
+            "illumination_correction": True,
+        },
+    }
+    # NOTE: new images do not exist yet on disk
+    with pytest.raises(AssertionError):
+        _assert_image_data_exist(dataset.images)
 
     dataset = execute_tasks_v2(
         wf_task_list=[
@@ -399,21 +428,10 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path):
     ]
     assert dataset.filters == {
         "plate": "my_plate_mip.zarr",
-        "data_dimensionality": "2",
+        "data_dimensionality": 2,
         "illumination_correction": True,
     }
-    img = find_image_by_path(
-        path=f"{zarr_dir}/my_plate_mip.zarr/A/01/0_corr", images=dataset.images
-    )
-    assert img.dict() == {
-        "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0_corr",
-        "attributes": {
-            "well": "A_01",
-            "plate": "my_plate_mip.zarr",
-            "data_dimensionality": "2",
-            "illumination_correction": True,
-        },
-    }
+    # Note: images now exist
     _assert_image_data_exist(dataset.images)
 
     dataset = execute_tasks_v2(
@@ -425,7 +443,6 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path):
         ],
         dataset=dataset,
     )
-
     debug(dataset)
 
     assert dataset.history == [
