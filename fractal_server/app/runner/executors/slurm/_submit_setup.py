@@ -17,9 +17,9 @@ implementation of `submit_setup_call` in
 from pathlib import Path
 from typing import Optional
 
-from ...models import WorkflowTask
-from .._common import get_task_file_paths
-from ..common import TaskParameters
+from ....models import WorkflowTask
+from ..._common import get_task_file_paths
+from ...common import TaskParameters
 from ._slurm_config import get_slurm_config
 
 

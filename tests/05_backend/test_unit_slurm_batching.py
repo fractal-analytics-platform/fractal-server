@@ -5,8 +5,10 @@ from pathlib import Path
 import pytest
 from devtools import debug
 
-from fractal_server.app.runner._slurm._batching import heuristics
-from fractal_server.app.runner._slurm._batching import SlurmHeuristicsError
+from fractal_server.app.runner.executors.slurm._batching import heuristics
+from fractal_server.app.runner.executors.slurm._batching import (
+    SlurmHeuristicsError,
+)
 
 
 clusters = [
