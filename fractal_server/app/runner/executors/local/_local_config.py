@@ -19,9 +19,9 @@ from pydantic import BaseModel
 from pydantic import Extra
 from pydantic.error_wrappers import ValidationError
 
-from ....config import get_settings
-from ....syringe import Inject
-from ...models import WorkflowTask
+from .....config import get_settings
+from .....syringe import Inject
+from ....models import WorkflowTask
 
 
 class LocalBackendConfigError(ValueError):

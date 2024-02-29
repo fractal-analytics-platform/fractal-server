@@ -13,8 +13,12 @@ Zurich.
 import pytest
 from devtools import debug
 
-from fractal_server.app.runner._local._local_config import LocalBackendConfig
-from fractal_server.app.runner._local.executor import FractalThreadPoolExecutor
+from fractal_server.app.runner.executors.local._local_config import (
+    LocalBackendConfig,
+)
+from fractal_server.app.runner.executors.local.executor import (
+    FractalThreadPoolExecutor,
+)
 
 
 def test_executor_submit():
