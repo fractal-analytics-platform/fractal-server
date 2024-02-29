@@ -1,5 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 from copy import copy
+from typing import Any
 
 from ....images import find_image_by_path
 from ....images import SingleImage
@@ -15,14 +16,19 @@ def _run_non_parallel_task(
     task: Task,
     function_kwargs: DictStrAny,
     old_dataset_images: list[SingleImage],
+    executor: ThreadPoolExecutor,
 ) -> TaskOutput:
+    def _wrapper_expand_kwargs(input_kwargs: dict[str, Any]):
+        task_output = task.function(**input_kwargs)
+        if task_output is None:
+            task_output = TaskOutput()
+        else:
+            task_output = TaskOutput(**task_output)
+        return task_output
 
-    task_output = task.function(**function_kwargs)
-
-    if task_output is None:
-        return TaskOutput()
-
-    task_output = TaskOutput(**task_output)
+    task_output = executor.submit(
+        _wrapper_expand_kwargs, function_kwargs
+    ).result()
 
     task_output = update_task_output_added_images(
         task_output=task_output,
@@ -122,6 +128,7 @@ def _run_parallel_task(
     task: Task,
     list_function_kwargs: list[DictStrAny],
     old_dataset_images: list[SingleImage],
+    executor: ThreadPoolExecutor,
 ) -> DictStrAny:
 
     if len(list_function_kwargs) > MAX_PARALLELIZATION_LIST_SIZE:
@@ -131,7 +138,7 @@ def _run_parallel_task(
             f"   {MAX_PARALLELIZATION_LIST_SIZE=}\n"
         )
 
-    def _wrapper_expand_kwargs(input_kwargs: dict):
+    def _wrapper_expand_kwargs(input_kwargs: dict[str, Any]):
         task_output = task.function(**input_kwargs)
         if task_output is None:
             task_output = ParallelTaskOutput()
@@ -139,9 +146,8 @@ def _run_parallel_task(
             task_output = ParallelTaskOutput(**task_output)
         return task_output
 
-    with ThreadPoolExecutor() as executor:
-        results = executor.map(_wrapper_expand_kwargs, list_function_kwargs)
-        task_outputs = list(results)
+    results = executor.map(_wrapper_expand_kwargs, list_function_kwargs)
+    task_outputs = list(results)
 
     new_old_image_mapping = {}
 
@@ -149,6 +155,9 @@ def _run_parallel_task(
         if task_output.added_images is not None:
             for added_image in task_output.added_images:
                 if added_image.path in new_old_image_mapping.keys():
+                    from devtools import debug
+
+                    debug(added_image.path)
                     raise ValueError
                 new_old_image_mapping[added_image.path] = list_function_kwargs[
                     ind
