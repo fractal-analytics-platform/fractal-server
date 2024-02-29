@@ -96,14 +96,17 @@ def create_ome_zarr_multiplex(
     image_dir: str,
     zarr_dir: str,
 ) -> dict:
+
     if len(paths) > 0:
         raise ValueError(
             "Error in create_ome_zarr_multiplex, "
             f"`paths` argument must be empty, but {paths=}."
         )
 
-    zarr_dir = zarr_dir.rstrip("/")
+    _check_buffer_is_empty(buffer)
+
     # Based on images in image_folder, create plate OME-Zarr
+    zarr_dir = zarr_dir.rstrip("/")
     plate_zarr_name = "my_plate.zarr"
     zarr_path = (Path(zarr_dir) / plate_zarr_name).as_posix()
 
@@ -123,7 +126,7 @@ def create_ome_zarr_multiplex(
         for cycle in ["0", "1", "2"]
     ]
     acquisitions = [
-        str(cycle) for well in ["A/01", "A/02"] for cycle in ["0", "1", "2"]
+        int(cycle) for well in ["A/01", "A/02"] for cycle in ["0", "1", "2"]
     ]
     image_raw_paths = {}
     added_images = []
@@ -247,19 +250,22 @@ def init_registration(
     shared_plate = _extract_common_root(paths).get("shared_plate")
     shared_root_dir = _extract_common_root(paths).get("shared_root_dir")
     print(f"[init_registration] Identified {shared_plate=}")
+    print(f"[init_registration] Identified {shared_root_dir=}")
 
     ref_cycles_per_well = {}
     x_cycles_per_well = {}
     wells = []
     for path in paths:
-        path_splits = (
-            path.lstrip(shared_root_dir + shared_plate).strip("/").split("/")
-        )  # FIXME check lstrip behavior
-        well = "/".join(path_splits[0:2])
+        relative_path = path.replace(
+            f"{shared_root_dir}/{shared_plate}", ""
+        ).lstrip("/")
+        path_parts = relative_path.split("/")
+        well = "/".join(path_parts[0:2])
+        image = path_parts[2]
         wells.append(well)
-        image = path_splits[2]
         if image == ref_cycle_name:
-            assert well not in ref_cycles_per_well.keys()  # nosec
+            if well in ref_cycles_per_well.keys():
+                raise ValueError("We should have not reached this branch.")
             ref_cycles_per_well[well] = path
         else:
             cycles = x_cycles_per_well.get(well, [])
