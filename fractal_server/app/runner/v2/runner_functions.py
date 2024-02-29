@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 from copy import copy
 
 from ....images import find_image_by_path
@@ -130,27 +131,28 @@ def _run_parallel_task(
             f"   {MAX_PARALLELIZATION_LIST_SIZE=}\n"
         )
 
-    task_outputs = []
-    new_old_image_mapping = {}
-    for function_kwargs in list_function_kwargs:
-
-        # FIXME functools.partial
-        task_output = task.function(**function_kwargs)
+    def _wrapper_expand_kwargs(input_kwargs: dict):
+        task_output = task.function(**input_kwargs)
         if task_output is None:
             task_output = ParallelTaskOutput()
         else:
             task_output = ParallelTaskOutput(**task_output)
+        return task_output
 
-        task_outputs.append(copy(task_output))
+    with ThreadPoolExecutor() as executor:
+        results = executor.map(_wrapper_expand_kwargs, list_function_kwargs)
+        task_outputs = list(results)
 
+    new_old_image_mapping = {}
+
+    for ind, task_output in enumerate(task_outputs):
         if task_output.added_images is not None:
-            # FIXME check keys are not repeated
-            new_old_image_mapping.update(
-                {
-                    added_image.path: function_kwargs["path"]
-                    for added_image in task_output.added_images
-                }
-            )
+            for added_image in task_output.added_images:
+                if added_image.path in new_old_image_mapping.keys():
+                    raise ValueError
+                new_old_image_mapping[added_image.path] = list_function_kwargs[
+                    ind
+                ]["path"]
 
     merged_output = merge_outputs(
         task_outputs,
