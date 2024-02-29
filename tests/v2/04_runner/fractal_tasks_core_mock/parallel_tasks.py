@@ -170,14 +170,19 @@ def registration(
 ) -> dict:
     print("[registration] START")
     print(f"[registration] {path=}")
+    print(f"[registration] {overwrite_input=}")
 
     if overwrite_input:
         out = dict(edited_images=[dict(path=path)])
-
         with (Path(path) / "data").open("a") as f:
             f.write(f"registration against {ref_path=}\n")
     else:
-        raise NotImplementedError
+        new_path = f"{path}_r"
+        print(f"[registration] {new_path=}")
+        out = dict(added_images=[dict(path=new_path)])
+        Path(new_path).mkdir()
+        with (Path(new_path) / "data").open("a") as f:
+            f.write(f"registration against {ref_path=}\n")
     print(f"[registration] {out=}")
     print("[registration] END")
     return out
