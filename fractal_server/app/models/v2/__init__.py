@@ -9,4 +9,3 @@ from .project import ProjectV2  # noqa F401
 from .task import TaskV2  # noqa F401
 from .workflow import WorkflowV2  # noqa F401
 from .workflowtask import WorkflowTaskV2  # noqa F401
-from .workflowtask import WorkflowTaskV2Legacy  # noqa F401
