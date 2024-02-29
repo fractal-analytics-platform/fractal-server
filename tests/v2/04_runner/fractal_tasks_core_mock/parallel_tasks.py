@@ -172,6 +172,7 @@ def registration(
     print(f"[registration] {path=}")
     print(f"[registration] {overwrite_input=}")
 
+    # Handle the case of path=ref_path
     if overwrite_input:
         out = dict(edited_images=[dict(path=path)])
         with (Path(path) / "data").open("a") as f:
