@@ -473,8 +473,10 @@ def test_example_registration(tmp_path: Path):
     """
     TBD
     """
-    # Run create-ome-zarr-multiplex
+    # Setup
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+
+    # Run create-ome-zarr-multiplex
     dataset = execute_tasks_v2(
         wf_task_list=[
             WorkflowTask(
@@ -615,7 +617,7 @@ def test_example_registration(tmp_path: Path):
         f"{zarr_dir}/my_plate.zarr/A/02/2",
     ]
 
-    # The first-image metadata has not changed
+    # The first-image metadata (reference cycle) has not changed
     assert dataset.images[0].dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
         "attributes": {
@@ -623,6 +625,17 @@ def test_example_registration(tmp_path: Path):
             "acquisition": 0,
             "plate": "my_plate.zarr",
             "data_dimensionality": 3,
+        },
+    }
+    # The second-image metadata also have registration=True
+    assert dataset.images[1].dict() == {
+        "path": f"{zarr_dir}/my_plate.zarr/A/01/1",
+        "attributes": {
+            "well": "A_01",
+            "acquisition": 1,
+            "plate": "my_plate.zarr",
+            "data_dimensionality": 3,
+            "registration": True,
         },
     }
 
