@@ -1,8 +1,8 @@
 """v2
 
-Revision ID: 55ba62b82c0e
+Revision ID: 1b564b4a412d
 Revises: 9fd26a2b0de4
-Create Date: 2024-02-28 16:36:48.644610
+Create Date: 2024-02-29 10:46:35.059144
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = "55ba62b82c0e"
+revision = "1b564b4a412d"
 down_revision = "9fd26a2b0de4"
 branch_labels = None
 depends_on = None
@@ -57,6 +57,7 @@ def upgrade() -> None:
         sa.Column(
             "docs_link", sqlmodel.sql.sqltypes.AutoString(), nullable=True
         ),
+        sa.Column("new_filters", sa.JSON(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("source"),
     )
@@ -163,13 +164,19 @@ def upgrade() -> None:
         "workflowtaskv2",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("workflow_id", sa.Integer(), nullable=False),
-        sa.Column("task_id", sa.Integer(), nullable=False),
         sa.Column("order", sa.Integer(), nullable=True),
         sa.Column("meta", sa.JSON(), nullable=True),
         sa.Column("args", sa.JSON(), nullable=True),
         sa.Column("filters", sa.JSON(), server_default="{}", nullable=False),
+        sa.Column("is_v2", sa.Boolean(), nullable=False),
+        sa.Column("task_v2_id", sa.Integer(), nullable=True),
+        sa.Column("task_v1_id", sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(
-            ["task_id"],
+            ["task_v1_id"],
+            ["task.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["task_v2_id"],
             ["taskv2.id"],
         ),
         sa.ForeignKeyConstraint(
