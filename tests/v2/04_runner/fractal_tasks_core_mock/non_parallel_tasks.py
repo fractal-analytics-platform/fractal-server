@@ -68,7 +68,7 @@ def create_ome_zarr(
             dict(
                 path=path,
                 attributes=dict(
-                    well="_".join(image_relative_path.split("/")[:2])
+                    well="".join(image_relative_path.split("/")[:2])
                 ),
             )
         )
@@ -140,7 +140,7 @@ def create_ome_zarr_multiplex(
             dict(
                 path=path,
                 attributes=dict(
-                    well="_".join(image_relative_path.split("/")[:2]),
+                    well="".join(image_relative_path.split("/")[:2]),
                     acquisition=acquisitions[ind],
                 ),
             )
