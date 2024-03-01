@@ -32,7 +32,7 @@ async def test_sync_db(db_sync, db):
     assert db_sync.get_bind()
 
     from sqlmodel import select
-    from fractal_server.app.models.task import Task
+    from fractal_server.app.models.v1.task import Task
 
     db.add(
         Task(
