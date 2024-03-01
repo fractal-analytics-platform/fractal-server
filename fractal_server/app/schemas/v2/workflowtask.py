@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from pydantic import validator
 
 from .._validators import valint
-from ..task import TaskRead
+from ..v1.task import TaskRead
 from .task import TaskExportV2
 from .task import TaskImportV2
 from .task import TaskReadV2

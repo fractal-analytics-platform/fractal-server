@@ -9,7 +9,7 @@ from ....images import SingleImage
 from ....images import val_scalar_dict
 from .._validators import valstr
 from .._validators import valutc
-from ..project import ProjectRead
+from ..v1.project import ProjectRead
 from .dumps import WorkflowTaskDumpV2
 from .workflowtask import WorkflowTaskStatusTypeV2
 

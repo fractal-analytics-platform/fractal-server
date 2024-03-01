@@ -27,9 +27,9 @@ from ....db import AsyncSession
 from ....db import get_async_db
 from ....models import State
 from ....models import Task
-from ....schemas import StateRead
-from ....schemas import TaskCollectPip
-from ....schemas import TaskCollectStatus
+from ....schemas.v1 import StateRead
+from ....schemas.v1 import TaskCollectPip
+from ....schemas.v1 import TaskCollectStatus
 from ....security import current_active_user
 from ....security import current_active_verified_user
 from ....security import User

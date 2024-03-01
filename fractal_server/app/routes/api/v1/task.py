@@ -13,9 +13,9 @@ from ....db import AsyncSession
 from ....db import get_async_db
 from ....models import Task
 from ....models import WorkflowTask
-from ....schemas import TaskCreate
-from ....schemas import TaskRead
-from ....schemas import TaskUpdate
+from ....schemas.v1 import TaskCreate
+from ....schemas.v1 import TaskRead
+from ....schemas.v1 import TaskUpdate
 from ....security import current_active_user
 from ....security import current_active_verified_user
 from ....security import User

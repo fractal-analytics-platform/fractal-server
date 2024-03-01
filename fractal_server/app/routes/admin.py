@@ -27,11 +27,11 @@ from ..models import Project
 from ..models import Workflow
 from ..models.security import UserOAuth as User
 from ..runner.v1._common import WORKFLOW_LOG_FILENAME
-from ..schemas import ApplyWorkflowRead
-from ..schemas import ApplyWorkflowUpdate
-from ..schemas import DatasetRead
-from ..schemas import ProjectRead
-from ..schemas import WorkflowRead
+from ..schemas.v1 import ApplyWorkflowRead
+from ..schemas.v1 import ApplyWorkflowUpdate
+from ..schemas.v1 import DatasetRead
+from ..schemas.v1 import ProjectRead
+from ..schemas.v1 import WorkflowRead
 from ..security import current_active_superuser
 from .aux._job import _write_shutdown_file
 from .aux._job import _zip_folder_to_byte_stream

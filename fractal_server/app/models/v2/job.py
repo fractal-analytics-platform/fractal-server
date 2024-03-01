@@ -9,7 +9,7 @@ from sqlmodel import Field
 from sqlmodel import SQLModel
 
 from ....utils import get_timestamp
-from ...schemas import JobStatusType
+from ...schemas.v1 import JobStatusType
 
 
 class JobV2(SQLModel, table=True):

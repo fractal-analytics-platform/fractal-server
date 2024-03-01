@@ -32,7 +32,7 @@ from ...models import ApplyWorkflow
 from ...models import Dataset
 from ...models import Workflow
 from ...models import WorkflowTask
-from ...schemas import JobStatusType
+from ...schemas.v1 import JobStatusType
 from ..executors.local import process_workflow as local_process_workflow
 from ._common import WORKFLOW_LOG_FILENAME
 from .common import close_job_logger

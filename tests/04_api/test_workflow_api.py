@@ -15,7 +15,7 @@ from fractal_server.app.models import WorkflowTask
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
-from fractal_server.app.schemas import JobStatusType
+from fractal_server.app.schemas.v1 import JobStatusType
 
 
 async def get_workflow(client, p_id, wf_id):

@@ -4,8 +4,8 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import validator
 
-from ._validators import valstr
-from ._validators import valutc
+from .._validators import valstr
+from .._validators import valutc
 
 
 __all__ = (

@@ -6,7 +6,7 @@ from pydantic import validator
 
 from .._validators import valstr
 from .._validators import valutc
-from ..project import ProjectRead
+from ..v1.project import ProjectRead
 from .workflowtask import WorkflowTaskExportV2
 from .workflowtask import WorkflowTaskImportV2
 from .workflowtask import WorkflowTaskReadV2
