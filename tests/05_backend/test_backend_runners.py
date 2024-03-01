@@ -17,7 +17,7 @@ import os
 import pytest
 from devtools import debug
 
-from fractal_server.app.models import Workflow
+from fractal_server.app.models.v1 import Workflow
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
