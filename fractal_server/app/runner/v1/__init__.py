@@ -33,8 +33,8 @@ from ...models import Dataset
 from ...models import Workflow
 from ...models import WorkflowTask
 from ...schemas import JobStatusType
-from ..executors.local import process_workflow as local_process_workflow
 from ._common import WORKFLOW_LOG_FILENAME
+from ._local import process_workflow as local_process_workflow
 from .common import close_job_logger
 from .common import JobExecutionError
 from .common import TaskExecutionError
@@ -48,7 +48,7 @@ _backend_errors: dict[str, Exception] = {}
 _backends["local"] = local_process_workflow
 
 try:
-    from ..executors.slurm import process_workflow as slurm_process_workflow
+    from .slurm import process_workflow as slurm_process_workflow
 
     _backends["slurm"] = slurm_process_workflow
 except ModuleNotFoundError as e:
