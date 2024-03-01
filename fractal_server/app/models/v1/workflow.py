@@ -12,9 +12,9 @@ from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
-from ...utils import get_timestamp
-from ..schemas.workflow import _WorkflowBase
-from ..schemas.workflow import _WorkflowTaskBase
+from ....utils import get_timestamp
+from ...schemas.workflow import _WorkflowBase
+from ...schemas.workflow import _WorkflowTaskBase
 from .task import Task
 
 

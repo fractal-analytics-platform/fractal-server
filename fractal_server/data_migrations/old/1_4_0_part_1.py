@@ -1,9 +1,9 @@
 from sqlalchemy import select
 
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.models.dataset import Dataset
-from fractal_server.app.models.job import ApplyWorkflow
-from fractal_server.app.models.workflow import Workflow
+from fractal_server.app.models.v1.dataset import Dataset
+from fractal_server.app.models.v1.job import ApplyWorkflow
+from fractal_server.app.models.v1.workflow import Workflow
 from fractal_server.app.schemas.workflow import WorkflowRead
 
 

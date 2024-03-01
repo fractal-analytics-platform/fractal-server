@@ -7,10 +7,10 @@ from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
-from ...utils import get_timestamp
-from ..schemas.project import _ProjectBase
-from .linkuserproject import LinkUserProject
-from .security import UserOAuth
+from ....utils import get_timestamp
+from ...schemas.project import _ProjectBase
+from ..linkuserproject import LinkUserProject
+from ..security import UserOAuth
 
 
 class Project(_ProjectBase, SQLModel, table=True):

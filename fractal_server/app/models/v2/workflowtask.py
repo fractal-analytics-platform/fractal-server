@@ -9,7 +9,7 @@ from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
-from ..task import Task
+from ..v1.task import Task
 from .task import TaskV2
 
 

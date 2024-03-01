@@ -10,9 +10,9 @@ from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
-from ...utils import get_timestamp
-from ..schemas.dataset import _DatasetBase
-from ..schemas.dataset import _ResourceBase
+from ....utils import get_timestamp
+from ...schemas.dataset import _DatasetBase
+from ...schemas.dataset import _ResourceBase
 
 
 class Resource(_ResourceBase, SQLModel, table=True):

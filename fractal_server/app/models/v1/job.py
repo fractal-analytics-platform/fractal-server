@@ -8,9 +8,9 @@ from sqlalchemy.types import JSON
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
-from ...utils import get_timestamp
-from ..schemas import JobStatusType
-from ..schemas.applyworkflow import _ApplyWorkflowBase
+from ....utils import get_timestamp
+from ...schemas import JobStatusType
+from ...schemas.applyworkflow import _ApplyWorkflowBase
 
 
 class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
