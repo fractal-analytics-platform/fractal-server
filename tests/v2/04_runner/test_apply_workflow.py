@@ -6,10 +6,10 @@ from tasks_for_tests import create_images_from_scratch
 from tasks_for_tests import print_path
 from tasks_for_tests import remove_images
 
-from fractal_server.v2 import Dataset
-from fractal_server.v2 import execute_tasks_v2
-from fractal_server.v2 import Task
-from fractal_server.v2 import WorkflowTask
+from fractal_server.app.runner.v2.models import Dataset
+from fractal_server.app.runner.v2.models import Task
+from fractal_server.app.runner.v2.models import WorkflowTask
+from fractal_server.app.runner.v2.runner import execute_tasks_v2
 
 
 @pytest.fixture()
