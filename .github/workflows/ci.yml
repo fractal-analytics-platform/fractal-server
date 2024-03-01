@@ -58,7 +58,7 @@ jobs:
           if [[ ${{ matrix.db }} == "postgres" ]]; then
             DB="-E postgres"
           fi
-          poetry install --with dev --without docs --no-interaction -E slurm -E gunicorn $DB
+          poetry install --with dev --without docs --no-interaction -E gunicorn $DB
 
       - name: Test with pytest
         run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest --ignore tests/05_backend --ignore tests/08_full_workflow
@@ -120,7 +120,7 @@ jobs:
           if [[ ${{ matrix.db }} == "postgres" ]]; then
             DB="-E postgres"
           fi
-          poetry install --with dev --without docs --no-interaction -E slurm -E gunicorn $DB
+          poetry install --with dev --without docs --no-interaction -E gunicorn $DB
 
       - name: Test with pytest
         run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest tests/05_backend tests/08_full_workflow
