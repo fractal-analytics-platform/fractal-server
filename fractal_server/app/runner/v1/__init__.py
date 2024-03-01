@@ -22,25 +22,25 @@ import traceback
 from pathlib import Path
 from typing import Optional
 
-from ... import __VERSION__
-from ...config import get_settings
-from ...logger import set_logger
-from ...syringe import Inject
-from ...utils import get_timestamp
-from ..db import DB
-from ..models import ApplyWorkflow
-from ..models import Dataset
-from ..models import Workflow
-from ..models import WorkflowTask
-from ..schemas import JobStatusType
+from .... import __VERSION__
+from ....config import get_settings
+from ....logger import set_logger
+from ....syringe import Inject
+from ....utils import get_timestamp
+from ...db import DB
+from ...models import ApplyWorkflow
+from ...models import Dataset
+from ...models import Workflow
+from ...models import WorkflowTask
+from ...schemas import JobStatusType
+from ..common import close_job_logger
+from ..common import JobExecutionError
+from ..common import TaskExecutionError
+from ..common import validate_workflow_compatibility  # noqa: F401
+from ..executors.local import process_workflow as local_process_workflow
+from ..handle_failed_job import assemble_history_failed_job
+from ..handle_failed_job import assemble_meta_failed_job
 from ._common import WORKFLOW_LOG_FILENAME
-from .common import close_job_logger
-from .common import JobExecutionError
-from .common import TaskExecutionError
-from .common import validate_workflow_compatibility  # noqa: F401
-from .executors.local import process_workflow as local_process_workflow
-from .handle_failed_job import assemble_history_failed_job
-from .handle_failed_job import assemble_meta_failed_job
 
 
 _backends = {}
@@ -48,7 +48,7 @@ _backend_errors: dict[str, Exception] = {}
 _backends["local"] = local_process_workflow
 
 try:
-    from .executors.slurm import process_workflow as slurm_process_workflow
+    from ..executors.slurm import process_workflow as slurm_process_workflow
 
     _backends["slurm"] = slurm_process_workflow
 except ModuleNotFoundError as e:
@@ -173,7 +173,9 @@ async def submit_workflow(
             WORKFLOW_DIR_USER = WORKFLOW_DIR
         elif FRACTAL_RUNNER_BACKEND == "slurm":
 
-            from .executors.slurm._subprocess_run_as_user import _mkdir_as_user
+            from ..executors.slurm._subprocess_run_as_user import (
+                _mkdir_as_user,
+            )
 
             WORKFLOW_DIR_USER = (
                 Path(user_cache_dir) / f"{WORKFLOW_DIR.name}"

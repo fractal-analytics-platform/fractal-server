@@ -4,7 +4,7 @@ from zipfile import ZIP_DEFLATED
 from zipfile import ZipFile
 
 from ...models import ApplyWorkflow
-from ...runner._common import SHUTDOWN_FILENAME
+from ...runner.v1._common import SHUTDOWN_FILENAME
 
 
 def _write_shutdown_file(*, job: ApplyWorkflow):

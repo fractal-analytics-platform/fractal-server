@@ -23,9 +23,9 @@ from ....models import Dataset
 from ....models import LinkUserProject
 from ....models import Project
 from ....models import Workflow
-from ....runner import submit_workflow
-from ....runner import validate_workflow_compatibility
 from ....runner.common import set_start_and_last_task_index
+from ....runner.v1 import submit_workflow
+from ....runner.v1 import validate_workflow_compatibility
 from ....schemas import ApplyWorkflowCreate
 from ....schemas import ApplyWorkflowRead
 from ....schemas import JobStatusType
