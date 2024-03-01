@@ -18,8 +18,8 @@ from pathlib import Path
 from typing import Optional
 
 from ....models import WorkflowTask
-from ...common import TaskParameters
 from ...v1._common import get_task_file_paths
+from ...v1.common import TaskParameters
 from ._slurm_config import get_slurm_config
 
 

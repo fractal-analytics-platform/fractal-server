@@ -6,10 +6,10 @@ from devtools import debug
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
-from fractal_server.app.runner.handle_failed_job import (
+from fractal_server.app.runner.v1._common import HISTORY_FILENAME
+from fractal_server.app.runner.v1.handle_failed_job import (
     assemble_history_failed_job,
 )  # noqa
-from fractal_server.app.runner.v1._common import HISTORY_FILENAME
 
 
 async def test_get_workflowtask_status(

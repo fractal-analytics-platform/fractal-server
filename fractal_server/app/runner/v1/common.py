@@ -18,9 +18,9 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from ...logger import close_logger as close_job_logger  # noqa F401
-from ..models import Dataset
-from ..models.workflow import Workflow
+from ....logger import close_logger as close_job_logger  # noqa F401
+from ...models.v1 import Dataset
+from ...models.v1 import Workflow
 
 
 class TaskExecutionError(RuntimeError):

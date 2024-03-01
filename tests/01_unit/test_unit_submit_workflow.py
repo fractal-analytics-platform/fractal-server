@@ -114,7 +114,7 @@ async def test_fail_submit_workflows_at_same_time(
             )
 
         monkeypatch.setattr(
-            "fractal_server.app.runner.get_timestamp", patched_get_timestamp
+            "fractal_server.app.runner.v1.get_timestamp", patched_get_timestamp
         )
 
         await submit_workflow(

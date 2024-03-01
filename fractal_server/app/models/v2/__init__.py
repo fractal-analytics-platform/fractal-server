@@ -2,7 +2,6 @@
 v2 `models` module
 """
 from ..linkuserproject import LinkUserProjectV2  # noqa F401
-from ..state import State  # noqa F401
 from .dataset import DatasetV2  # noqa F401
 from .job import JobV2  # noqa F401
 from .project import ProjectV2  # noqa F401

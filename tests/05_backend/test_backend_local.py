@@ -18,8 +18,6 @@ from concurrent.futures import ThreadPoolExecutor
 import pytest
 from devtools import debug
 
-from fractal_server.app.runner.common import close_job_logger
-from fractal_server.app.runner.common import TaskParameters
 from fractal_server.app.runner.executors.local._local_config import (
     LocalBackendConfig,
 )
@@ -30,6 +28,8 @@ from fractal_server.app.runner.v1._common import _call_command_wrapper
 from fractal_server.app.runner.v1._common import call_parallel_task
 from fractal_server.app.runner.v1._common import call_single_task
 from fractal_server.app.runner.v1._common import execute_tasks
+from fractal_server.app.runner.v1.common import close_job_logger
+from fractal_server.app.runner.v1.common import TaskParameters
 from fractal_server.app.schemas import WorkflowTaskStatusType
 from fractal_server.logger import set_logger
 from tests.data.tasks_dummy import dummy as dummy_module

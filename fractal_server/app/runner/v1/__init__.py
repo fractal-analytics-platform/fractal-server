@@ -33,14 +33,14 @@ from ...models import Dataset
 from ...models import Workflow
 from ...models import WorkflowTask
 from ...schemas import JobStatusType
-from ..common import close_job_logger
-from ..common import JobExecutionError
-from ..common import TaskExecutionError
-from ..common import validate_workflow_compatibility  # noqa: F401
 from ..executors.local import process_workflow as local_process_workflow
-from ..handle_failed_job import assemble_history_failed_job
-from ..handle_failed_job import assemble_meta_failed_job
 from ._common import WORKFLOW_LOG_FILENAME
+from .common import close_job_logger
+from .common import JobExecutionError
+from .common import TaskExecutionError
+from .common import validate_workflow_compatibility  # noqa: F401
+from .handle_failed_job import assemble_history_failed_job
+from .handle_failed_job import assemble_meta_failed_job
 
 
 _backends = {}
