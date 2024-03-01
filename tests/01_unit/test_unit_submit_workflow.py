@@ -10,7 +10,7 @@ from fractal_server.app.models import ApplyWorkflow
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
-from fractal_server.app.runner import submit_workflow
+from fractal_server.app.runner.v1 import submit_workflow
 from fractal_server.app.schemas import JobStatusType
 
 

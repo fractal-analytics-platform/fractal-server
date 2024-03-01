@@ -24,8 +24,8 @@ from ..models import Dataset
 from ..models import Workflow
 from ..models import WorkflowTask
 from ..models import WorkflowTaskStatusType
-from ._common import HISTORY_FILENAME
-from ._common import METADATA_FILENAME
+from .v1._common import HISTORY_FILENAME
+from .v1._common import METADATA_FILENAME
 
 
 def assemble_history_failed_job(

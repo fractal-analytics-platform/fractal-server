@@ -21,8 +21,8 @@ from fractal_server.app.models import Workflow
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
-from fractal_server.app.runner import _backends
 from fractal_server.app.runner.common import close_job_logger
+from fractal_server.app.runner.v1 import _backends
 from fractal_server.logger import set_logger
 
 

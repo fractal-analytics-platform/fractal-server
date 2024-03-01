@@ -22,8 +22,8 @@ from pathlib import Path
 import pytest
 from devtools import debug
 
-from fractal_server.app.runner import _backends
-from fractal_server.app.runner._common import WORKFLOW_LOG_FILENAME
+from fractal_server.app.runner.v1 import _backends
+from fractal_server.app.runner.v1._common import WORKFLOW_LOG_FILENAME
 
 PREFIX = "/api/v1"
 

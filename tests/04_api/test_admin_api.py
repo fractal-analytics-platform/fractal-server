@@ -11,9 +11,9 @@ from fractal_server.app.models import JobStatusType
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
-from fractal_server.app.runner import _backends
-from fractal_server.app.runner._common import SHUTDOWN_FILENAME
-from fractal_server.app.runner._common import WORKFLOW_LOG_FILENAME
+from fractal_server.app.runner.v1 import _backends
+from fractal_server.app.runner.v1._common import SHUTDOWN_FILENAME
+from fractal_server.app.runner.v1._common import WORKFLOW_LOG_FILENAME
 
 backends_available = list(_backends.keys())
 
