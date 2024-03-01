@@ -12,7 +12,7 @@ from .....logger import set_logger
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import JobV2
-from ....models.v2 import Project
+from ....models.v2 import ProjectV2
 from ....models.v2 import TaskV2
 from ....models.v2 import WorkflowV2
 from ....schemas.v2 import WorkflowCreateV2
@@ -47,7 +47,7 @@ async def get_workflow_list(
     """
     # Access control
     project = await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db, version="v2"
+        project_id=project_id, user_id=user.id, db=db
     )
     # Find workflows of the current project. Note: this select/where approach
     # has much better scaling than refreshing all elements of
@@ -73,7 +73,7 @@ async def create_workflow(
     Create a workflow, associate to a project
     """
     await _get_project_check_owner(
-        project_id=project_id, user_id=user.id, db=db, version="v2"
+        project_id=project_id, user_id=user.id, db=db
     )
     await _check_workflow_exists(
         name=workflow.name, project_id=project_id, db=db
@@ -106,7 +106,6 @@ async def read_workflow(
         workflow_id=workflow_id,
         user_id=user.id,
         db=db,
-        version="v2",
     )
 
     return workflow
@@ -131,7 +130,6 @@ async def update_workflow(
         workflow_id=workflow_id,
         user_id=user.id,
         db=db,
-        version="v2",
     )
 
     if patch.name:
@@ -187,7 +185,6 @@ async def delete_workflow(
         workflow_id=workflow_id,
         user_id=user.id,
         db=db,
-        version="v2",
     )
 
     # Fail if there exist jobs that are submitted and in relation with the
@@ -242,7 +239,6 @@ async def export_worfklow(
         workflow_id=workflow_id,
         user_id=user.id,
         db=db,
-        version="v2",
     )
     # Emit a warning when exporting a workflow with custom tasks
     logger = set_logger(None)
@@ -283,7 +279,6 @@ async def import_workflow(
         project_id=project_id,
         user_id=user.id,
         db=db,
-        version="v2",
     )
 
     await _check_workflow_exists(
@@ -347,7 +342,9 @@ async def get_user_workflows(
     Returns all the workflows of the current user
     """
     stm = select(WorkflowV2)
-    stm = stm.join(Project).where(Project.user_list.any(User.id == user.id))
+    stm = stm.join(ProjectV2).where(
+        ProjectV2.user_list.any(User.id == user.id)
+    )
     res = await db.execute(stm)
     workflow_list = res.scalars().all()
     return workflow_list

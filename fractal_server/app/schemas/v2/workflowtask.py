@@ -1,11 +1,13 @@
 from enum import Enum
 from typing import Any
 from typing import Optional
+from typing import Union
 
 from pydantic import BaseModel
 from pydantic import validator
 
 from .._validators import valint
+from ..task import TaskRead
 from .task import TaskExportV2
 from .task import TaskImportV2
 from .task import TaskReadV2
@@ -37,6 +39,7 @@ class WorkflowTaskCreateV2(BaseModel):
     args: Optional[dict[str, Any]]
     order: Optional[int]
     filters: Optional[dict[str, Any]]
+    is_v2: Optional[bool]
     # Validators
     _order = validator("order", allow_reuse=True)(valint("order", min_val=0))
     _filters = validator("filters", allow_reuse=True)(
@@ -50,7 +53,8 @@ class WorkflowTaskReadV2(BaseModel):
     order: Optional[int]
     workflow_id: int
     task_id: int
-    task: TaskReadV2
+    is_v2: bool
+    task: Union[TaskRead, TaskReadV2]
     meta: Optional[dict[str, Any]]
     args: Optional[dict[str, Any]]
     filters: dict[str, Any]

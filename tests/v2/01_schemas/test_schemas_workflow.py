@@ -1,6 +1,6 @@
 from devtools import debug
 
-from fractal_server.app.models.v2 import Project
+from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.schemas.v2 import WorkflowCreateV2
 from fractal_server.app.schemas.v2 import WorkflowReadV2
@@ -9,7 +9,7 @@ from fractal_server.app.schemas.v2 import WorkflowUpdateV2
 
 async def test_schemas_workflow_v2(db):
 
-    project = Project(name="project")
+    project = ProjectV2(name="project")
     debug(project)
     db.add(project)
     await db.commit()

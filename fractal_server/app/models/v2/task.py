@@ -31,12 +31,7 @@ class TaskV2(SQLModel, table=True):
     docs_info: Optional[str] = None
     docs_link: Optional[HttpUrl] = None
 
-    @property
-    def parallelization_level(self) -> Optional[str]:
-        try:
-            return self.meta["parallelization_level"]
-        except KeyError:
-            return None
+    new_filters: dict[str, Any] = Field(sa_column=Column(JSON), default={})
 
     @property
     def default_args_from_args_schema(self) -> dict[str, Any]:
