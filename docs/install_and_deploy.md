@@ -36,10 +36,9 @@ pip install fractal-server
 
 Some additional features must be installed as *extras*, e.g. via one of the following
 ```
-pip install fractal-server[slurm]
 pip install fractal-server[postgres]
 pip install fractal-server[gunicorn]
-pip install fractal-server[slurm,postgres]
+pip install fractal-server[gunicorn,postgres]
 ```
 
 When including the `postgres` extra, the following additional packages should
