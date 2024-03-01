@@ -3,7 +3,7 @@ from devtools import debug
 from pydantic import ValidationError
 
 from fractal_server.app.models.v2 import DatasetV2
-from fractal_server.app.models.v2 import Project
+from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.schemas.v2 import DatasetCreateV2
 from fractal_server.app.schemas.v2 import DatasetReadV2
 from fractal_server.app.schemas.v2 import DatasetUpdateV2
@@ -11,7 +11,7 @@ from fractal_server.app.schemas.v2 import DatasetUpdateV2
 
 async def test_schemas_dataset_v2(db):
 
-    project = Project(name="project")
+    project = ProjectV2(name="project")
     debug(project)
     db.add(project)
     await db.commit()

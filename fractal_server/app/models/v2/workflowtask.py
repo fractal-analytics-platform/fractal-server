@@ -9,6 +9,7 @@ from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
+from ..task import Task
 from .task import TaskV2
 
 
@@ -20,29 +21,55 @@ class WorkflowTaskV2(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     workflow_id: int = Field(foreign_key="workflowv2.id")
-    task_id: int = Field(foreign_key="taskv2.id")
     order: Optional[int]
     meta: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
     args: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
-    task: TaskV2 = Relationship(sa_relationship_kwargs=dict(lazy="selectin"))
 
     filters: dict[str, Any] = Field(
         sa_column=Column(JSON, nullable=False, server_default="{}")
     )
 
+    is_v2: bool = True
+
+    task_v2: Optional[TaskV2] = Relationship(
+        sa_relationship_kwargs=dict(lazy="selectin")
+    )
+    task_v2_id: Optional[int] = Field(foreign_key="taskv2.id")
+
+    task_v1: Optional[Task] = Relationship(
+        sa_relationship_kwargs=dict(lazy="selectin")
+    )
+    task_v1_id: Optional[int] = Field(foreign_key="task.id")
+
+    @property
+    def task(self) -> Union[Task, TaskV2]:
+        if self.is_v2:
+            return self.task_v2
+        else:
+            return self.task_v1
+
+    @property
+    def task_id(self) -> int:
+        if self.is_v2:
+            return self.task_v2_id
+        else:
+            return self.task_v1_id
+
+    @property
+    def is_parallel(self) -> bool:
+        return self.task.is_parallel
+
     @validator("args")
-    def validate_args(cls, value: dict = None):
+    def validate_args(cls, value):
         """
         Prevent fractal task reserved parameter names from entering args
 
-        Forbidden argument names are `input_paths`, `output_path`, `metadata`,
+        Forbidden argument names are `metadata`,
         `component`.
         """
         if value is None:
             return
         forbidden_args_keys = {
-            "input_paths",
-            "output_path",
             "metadata",
             "component",
         }
@@ -54,15 +81,3 @@ class WorkflowTaskV2(SQLModel, table=True):
                 f"{intersect_keys}"
             )
         return value
-
-    @property
-    def is_parallel(self) -> bool:
-        return self.task.is_parallel
-
-    @property
-    def parallelization_level(self) -> Union[str, None]:
-        return self.task.parallelization_level
-
-
-class WorkflowTaskV2Legacy(SQLModel, table=False):
-    pass

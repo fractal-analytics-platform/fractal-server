@@ -17,7 +17,7 @@ class JobV2(SQLModel, table=True):
         arbitrary_types_allowed = True
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    project_id: Optional[int] = Field(foreign_key="project.id")
+    project_id: Optional[int] = Field(foreign_key="projectv2.id")
     workflow_id: Optional[int] = Field(foreign_key="workflowv2.id")
     dataset_id: Optional[int] = Field(foreign_key="datasetv2.id")
 

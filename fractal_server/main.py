@@ -37,8 +37,8 @@ def collect_routers(app: FastAPI) -> None:
     from .app.routes.auth import router_auth
 
     app.include_router(router_api, prefix="/api")
-    app.include_router(router_api_v1, prefix="/api/v1")
-    app.include_router(router_api_v2, prefix="/api/v2")
+    app.include_router(router_api_v1, prefix="/api/v1", tags=["V1"])
+    app.include_router(router_api_v2, prefix="/api/v2", tags=["V2"])
     app.include_router(router_admin, prefix="/admin", tags=["Admin area"])
     app.include_router(router_auth, prefix="/auth", tags=["auth"])
 

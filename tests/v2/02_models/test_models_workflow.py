@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
-from fractal_server.app.models.v2 import Project
+from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
@@ -17,7 +17,7 @@ async def test_project_and_workflows(db):
         await db.commit()
     await db.rollback()
 
-    project = Project(name="project")
+    project = ProjectV2(name="project")
 
     # using `.project` relationship
     workflow1 = WorkflowV2(name="workflow1", project=project)
@@ -26,7 +26,7 @@ async def test_project_and_workflows(db):
     await db.commit()
     db.expunge_all()
 
-    project_query = await db.execute(select(Project))
+    project_query = await db.execute(select(ProjectV2))
     db_project = project_query.scalars().one()
     workflow_query = await db.execute(select(WorkflowV2))
     db_workflow1 = workflow_query.scalars().one()
@@ -43,7 +43,7 @@ async def test_project_and_workflows(db):
     await db.commit()
     db.expunge_all()
 
-    project_query = await db.execute(select(Project))
+    project_query = await db.execute(select(ProjectV2))
     db_project = project_query.scalars().one()
 
     workflow_query = await db.execute(select(WorkflowV2))
@@ -63,7 +63,7 @@ async def test_project_and_workflows(db):
     assert db_workflow.name == workflow1.name
 
     # delete the project
-    project_query = await db.execute(select(Project))
+    project_query = await db.execute(select(ProjectV2))
     db_project = project_query.scalars().one()
     await db.delete(db_project)
 
@@ -77,7 +77,7 @@ async def test_project_and_workflows(db):
         await db.commit()
         db.expunge_all()
 
-        project_query = await db.execute(select(Project))
+        project_query = await db.execute(select(ProjectV2))
         db_project = project_query.scalars().one_or_none()
         assert db_project is None
 
