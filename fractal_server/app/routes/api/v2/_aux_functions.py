@@ -19,7 +19,7 @@ from ....models.v2 import ProjectV2
 from ....models.v2 import TaskV2
 from ....models.v2 import WorkflowTaskV2
 from ....models.v2 import WorkflowV2
-from ....schemas import JobStatusType
+from ....schemas.v1 import JobStatusType
 from ....security import User
 
 

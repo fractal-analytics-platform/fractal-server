@@ -4,23 +4,23 @@ import time
 import httpx
 from a2wsgi import ASGIMiddleware
 
-from fractal_server.app.schemas import ApplyWorkflowCreate
-from fractal_server.app.schemas import ApplyWorkflowRead
-from fractal_server.app.schemas import DatasetCreate
-from fractal_server.app.schemas import DatasetRead
-from fractal_server.app.schemas import ProjectCreate
-from fractal_server.app.schemas import ProjectRead
-from fractal_server.app.schemas import ResourceCreate
-from fractal_server.app.schemas import ResourceRead
-from fractal_server.app.schemas import TaskCreate
-from fractal_server.app.schemas import TaskRead
-from fractal_server.app.schemas import UserCreate
-from fractal_server.app.schemas import UserRead
-from fractal_server.app.schemas import UserUpdate
-from fractal_server.app.schemas import WorkflowCreate
-from fractal_server.app.schemas import WorkflowRead
-from fractal_server.app.schemas import WorkflowTaskCreate
-from fractal_server.app.schemas import WorkflowTaskRead
+from fractal_server.app.schemas.v1 import ApplyWorkflowCreate
+from fractal_server.app.schemas.v1 import ApplyWorkflowRead
+from fractal_server.app.schemas.v1 import DatasetCreate
+from fractal_server.app.schemas.v1 import DatasetRead
+from fractal_server.app.schemas.v1 import ProjectCreate
+from fractal_server.app.schemas.v1 import ProjectRead
+from fractal_server.app.schemas.v1 import ResourceCreate
+from fractal_server.app.schemas.v1 import ResourceRead
+from fractal_server.app.schemas.v1 import TaskCreate
+from fractal_server.app.schemas.v1 import TaskRead
+from fractal_server.app.schemas.v1 import UserCreate
+from fractal_server.app.schemas.v1 import UserRead
+from fractal_server.app.schemas.v1 import UserUpdate
+from fractal_server.app.schemas.v1 import WorkflowCreate
+from fractal_server.app.schemas.v1 import WorkflowRead
+from fractal_server.app.schemas.v1 import WorkflowTaskCreate
+from fractal_server.app.schemas.v1 import WorkflowTaskRead
 from fractal_server.main import app
 
 DEFAULT_CREDENTIALS = {}

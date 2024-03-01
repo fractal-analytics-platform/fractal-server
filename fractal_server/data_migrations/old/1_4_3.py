@@ -12,11 +12,11 @@ from fractal_server.app.models import ApplyWorkflow
 from fractal_server.app.models import Dataset
 from fractal_server.app.models import Project
 from fractal_server.app.models import Workflow
-from fractal_server.app.schemas import ApplyWorkflowRead
-from fractal_server.app.schemas import WorkflowRead
-from fractal_server.app.schemas.dataset import DatasetRead
-from fractal_server.app.schemas.dumps import DatasetDump
-from fractal_server.app.schemas.dumps import WorkflowDump
+from fractal_server.app.schemas.v1 import ApplyWorkflowRead
+from fractal_server.app.schemas.v1 import WorkflowRead
+from fractal_server.app.schemas.v1.dataset import DatasetRead
+from fractal_server.app.schemas.v1.dumps import DatasetDump
+from fractal_server.app.schemas.v1.dumps import WorkflowDump
 
 
 REFERENCE_TIMESTAMP = datetime(2000, 1, 1, tzinfo=timezone.utc)

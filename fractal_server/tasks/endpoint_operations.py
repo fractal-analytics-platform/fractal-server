@@ -4,8 +4,8 @@ from typing import Optional
 from typing import Union
 from zipfile import ZipFile
 
-from fractal_server.app.schemas import ManifestV1
-from fractal_server.app.schemas import TaskCollectStatus
+from fractal_server.app.schemas.v1 import ManifestV1
+from fractal_server.app.schemas.v1 import TaskCollectStatus
 from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
 from fractal_server.syringe import Inject
