@@ -19,13 +19,13 @@ from pathlib import Path
 from typing import Any
 from typing import Optional
 
-from ..models import ApplyWorkflow
-from ..models import Dataset
-from ..models import Workflow
-from ..models import WorkflowTask
-from ..models import WorkflowTaskStatusType
-from .v1._common import HISTORY_FILENAME
-from .v1._common import METADATA_FILENAME
+from ...models.v1 import ApplyWorkflow
+from ...models.v1 import Dataset
+from ...models.v1 import Workflow
+from ...models.v1 import WorkflowTask
+from ...schemas import WorkflowTaskStatusType
+from ._common import HISTORY_FILENAME
+from ._common import METADATA_FILENAME
 
 
 def assemble_history_failed_job(

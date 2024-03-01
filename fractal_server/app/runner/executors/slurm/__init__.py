@@ -22,10 +22,10 @@ from typing import Optional
 from typing import Union
 
 from ....models import Workflow
-from ...common import async_wrap
-from ...common import set_start_and_last_task_index
-from ...common import TaskParameters
 from ...v1._common import execute_tasks
+from ...v1.common import async_wrap
+from ...v1.common import set_start_and_last_task_index
+from ...v1.common import TaskParameters
 from ._submit_setup import _slurm_submit_setup
 from .executor import FractalSlurmExecutor
 

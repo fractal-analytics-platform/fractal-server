@@ -14,8 +14,8 @@ Submodule to define _local_submit_setup
 from pathlib import Path
 from typing import Optional
 
-from ....models import WorkflowTask
-from ...common import TaskParameters
+from ....models.v1 import WorkflowTask
+from ...v1.common import TaskParameters
 from ._local_config import get_local_backend_config
 
 
