@@ -23,13 +23,13 @@ from pathlib import Path
 from typing import Any
 from typing import Optional
 
-from ...models import Workflow
-from .._common import execute_tasks
-from ..common import async_wrap
-from ..common import set_start_and_last_task_index
-from ..common import TaskParameters
-from .local._submit_setup import _local_submit_setup
-from .local.executor import FractalThreadPoolExecutor
+from ....models import Workflow
+from ..._common import execute_tasks
+from ...common import async_wrap
+from ...common import set_start_and_last_task_index
+from ...common import TaskParameters
+from ._submit_setup import _local_submit_setup
+from .executor import FractalThreadPoolExecutor
 
 
 def _process_workflow(
