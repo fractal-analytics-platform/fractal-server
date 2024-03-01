@@ -15,7 +15,7 @@ from .....syringe import Inject
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import JobV2
-from ....runner.v2 import execute_tasks_v2  # noqa: F401
+from ....runner.v2 import submit_workflow
 from ....schemas.v2 import JobCreateV2
 from ....schemas.v2 import JobReadV2
 from ....schemas.v2 import JobStatusTypeV2
@@ -221,7 +221,6 @@ async def apply_workflow(
     await db.commit()
     await db.refresh(job)
 
-    submit_workflow = None  # ! FIXME REMOVE
     background_tasks.add_task(
         submit_workflow,
         workflow_id=workflow.id,
