@@ -15,8 +15,8 @@ from pathlib import Path
 from typing import Optional
 
 from ....models.v1 import WorkflowTask
-from ...v1.common import TaskParameters
-from ._local_config import get_local_backend_config
+from ...executors.local._local_config import get_local_backend_config
+from ..common import TaskParameters
 
 
 def _local_submit_setup(

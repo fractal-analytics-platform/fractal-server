@@ -1001,7 +1001,7 @@ class FractalSlurmExecutor(SlurmExecutor):
             cmdlines.append(
                 (
                     f"{python_worker_interpreter}"
-                    " -m fractal_server.app.runner._slurm.remote "
+                    " -m fractal_server.app.runner.executors.slurm.remote "
                     f"--input-file {input_pickle_file} "
                     f"--output-file {output_pickle_file}"
                 )

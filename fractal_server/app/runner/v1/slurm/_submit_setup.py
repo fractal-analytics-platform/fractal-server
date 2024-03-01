@@ -18,9 +18,9 @@ from pathlib import Path
 from typing import Optional
 
 from ....models import WorkflowTask
-from ...v1._common import get_task_file_paths
-from ...v1.common import TaskParameters
-from ._slurm_config import get_slurm_config
+from ...executors.slurm._slurm_config import get_slurm_config
+from .._common import get_task_file_paths
+from ..common import TaskParameters
 
 
 def _slurm_submit_setup(
