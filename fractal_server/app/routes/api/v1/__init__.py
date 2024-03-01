@@ -14,13 +14,13 @@ from .workflowtask import router as workflowtask_router
 router_api_v1 = APIRouter()
 
 router_api_v1.include_router(
-    project_router, prefix="/project", tags=["Projects"]
+    project_router, prefix="/project", tags=["V1 Project"]
 )
-router_api_v1.include_router(task_router, prefix="/task", tags=["Tasks"])
+router_api_v1.include_router(task_router, prefix="/task", tags=["V1 Task"])
 router_api_v1.include_router(
-    taskcollection_router, prefix="/task", tags=["Task Collection"]
+    taskcollection_router, prefix="/task", tags=["V1 Task Collection"]
 )
-router_api_v1.include_router(dataset_router, tags=["Datasets"])
-router_api_v1.include_router(workflow_router, tags=["Workflows"])
-router_api_v1.include_router(workflowtask_router, tags=["Workflow Tasks"])
-router_api_v1.include_router(job_router, tags=["Jobs"])
+router_api_v1.include_router(dataset_router, tags=["V1 Dataset"])
+router_api_v1.include_router(workflow_router, tags=["V1 Workflow"])
+router_api_v1.include_router(workflowtask_router, tags=["V1 WorkflowTask"])
+router_api_v1.include_router(job_router, tags=["V1 Job"])
