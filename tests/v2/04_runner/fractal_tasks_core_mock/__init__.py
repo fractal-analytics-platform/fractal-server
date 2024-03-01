@@ -1,14 +1,18 @@
 from .non_parallel_tasks import create_ome_zarr
 from .non_parallel_tasks import create_ome_zarr_multiplex
 from .non_parallel_tasks import init_channel_parallelization
-from .non_parallel_tasks import init_registration
 from .non_parallel_tasks import new_ome_zarr
 from .parallel_tasks import cellpose_segmentation
 from .parallel_tasks import copy_data
 from .parallel_tasks import illumination_correction
 from .parallel_tasks import maximum_intensity_projection
-from .parallel_tasks import registration
 from .parallel_tasks import yokogawa_to_zarr
+from .registration_tasks import apply_registration_to_image
+from .registration_tasks import calculate_registration
+from .registration_tasks import find_registration_consensus
+from .registration_tasks import init_registration
+from .registration_tasks_old import init_registration_old
+from .registration_tasks_old import registration_old
 from fractal_server.app.runner.v2.models import Task
 
 
@@ -38,11 +42,27 @@ TASK_LIST = {
     "init_channel_parallelization": Task(
         function=init_channel_parallelization, task_type="non_parallel"
     ),
+    "init_registration_old": Task(
+        function=init_registration_old, task_type="non_parallel"
+    ),
+    "registration_old": Task(
+        function=registration_old,
+        task_type="parallel",
+        new_filters=dict(registration=True),
+    ),
+    # Block of new mocks for registration tasks
     "init_registration": Task(
         function=init_registration, task_type="non_parallel"
     ),
-    "registration": Task(
-        function=registration,
+    "calculate_registration": Task(
+        function=calculate_registration,
+        task_type="parallel",
+    ),
+    "find_registration_consensus": Task(
+        function=find_registration_consensus, task_type="non_parallel"
+    ),
+    "apply_registration_to_image": Task(
+        function=apply_registration_to_image,
         task_type="parallel",
         new_filters=dict(registration=True),
     ),
