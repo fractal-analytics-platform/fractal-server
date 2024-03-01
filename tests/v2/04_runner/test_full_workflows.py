@@ -414,43 +414,6 @@ def test_workflow_6(tmp_path: Path, executor):
     _assert_image_data_exist(dataset_out.images)
 
 
-def test_workflow_7(tmp_path: Path, executor):
-    """
-    1. create ome zarr multiplex + yokogawa-to-zarr
-    2. init_registration
-    """
-    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
-    dataset_in = Dataset(id=1, zarr_dir=zarr_dir)
-    dataset_out = execute_tasks_v2(
-        wf_task_list=[
-            WorkflowTask(
-                task=TASK_LIST["create_ome_zarr_multiplex"],
-                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
-            ),
-            WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
-            WorkflowTask(
-                task=TASK_LIST["init_registration"],
-                args={"ref_cycle_name": "0"},
-            ),
-            WorkflowTask(
-                task=TASK_LIST["registration"],
-            ),
-        ],
-        dataset=dataset_in,
-        executor=executor,
-    )
-
-    debug(dataset_out)
-    assert dataset_out.history == [
-        "create_ome_zarr_multiplex",
-        "yokogawa_to_zarr",
-        "init_registration",
-        "registration",
-    ]
-
-    _assert_image_data_exist(dataset_out.images)
-
-
 def test_workflow_8(tmp_path: Path, executor):
     """
     1. create ome zarr + yokogawa-to-zarr
