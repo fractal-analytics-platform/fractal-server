@@ -34,11 +34,11 @@ from ..models import Workflow
 from ..models import WorkflowTask
 from ..schemas import JobStatusType
 from ._common import WORKFLOW_LOG_FILENAME
-from ._local import process_workflow as local_process_workflow
 from .common import close_job_logger
 from .common import JobExecutionError
 from .common import TaskExecutionError
 from .common import validate_workflow_compatibility  # noqa: F401
+from .executors import process_workflow as local_process_workflow
 from .handle_failed_job import assemble_history_failed_job
 from .handle_failed_job import assemble_meta_failed_job
 
@@ -48,7 +48,7 @@ _backend_errors: dict[str, Exception] = {}
 _backends["local"] = local_process_workflow
 
 try:
-    from ._slurm import process_workflow as slurm_process_workflow
+    from .executors.slurm import process_workflow as slurm_process_workflow
 
     _backends["slurm"] = slurm_process_workflow
 except ModuleNotFoundError as e:
@@ -173,7 +173,7 @@ async def submit_workflow(
             WORKFLOW_DIR_USER = WORKFLOW_DIR
         elif FRACTAL_RUNNER_BACKEND == "slurm":
 
-            from ._slurm._subprocess_run_as_user import _mkdir_as_user
+            from .executors.slurm._subprocess_run_as_user import _mkdir_as_user
 
             WORKFLOW_DIR_USER = (
                 Path(user_cache_dir) / f"{WORKFLOW_DIR.name}"

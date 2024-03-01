@@ -1,3 +1,6 @@
+from concurrent.futures import ThreadPoolExecutor
+
+import pytest
 from devtools import debug
 from tasks_for_tests import create_images_from_scratch
 from tasks_for_tests import print_path
@@ -9,7 +12,13 @@ from fractal_server.v2 import Task
 from fractal_server.v2 import WorkflowTask
 
 
-def test_single_non_parallel_task():
+@pytest.fixture()
+def executor():
+    with ThreadPoolExecutor() as e:
+        yield e
+
+
+def test_single_non_parallel_task(executor):
     NEW_PATHS = ["/tmp/A/01/0", "/tmp/A/02/0", "/tmp/A/03/0"]
     dataset_in = Dataset(id=1)
     task_list = [
@@ -21,12 +30,14 @@ def test_single_non_parallel_task():
             args=dict(new_paths=NEW_PATHS),
         )
     ]
-    dataset_out = execute_tasks_v2(wf_task_list=task_list, dataset=dataset_in)
+    dataset_out = execute_tasks_v2(
+        wf_task_list=task_list, dataset=dataset_in, executor=executor
+    )
     debug(dataset_out.image_paths)
     assert set(dataset_out.image_paths) == set(NEW_PATHS)
 
 
-def test_single_non_parallel_task_removed():
+def test_single_non_parallel_task_removed(executor):
     IMAGES = [dict(path="/tmp/A/01/0"), dict(path="/tmp/A/02/0")]
     dataset_in = Dataset(id=1, images=IMAGES)
     task_list = [
@@ -38,12 +49,14 @@ def test_single_non_parallel_task_removed():
             args=dict(removed_images_paths=["/tmp/A/01/0"]),
         )
     ]
-    dataset_out = execute_tasks_v2(wf_task_list=task_list, dataset=dataset_in)
+    dataset_out = execute_tasks_v2(
+        wf_task_list=task_list, dataset=dataset_in, executor=executor
+    )
     debug(dataset_out.image_paths)
     assert dataset_out.image_paths == ["/tmp/A/02/0"]
 
 
-def test_single_parallel_task_no_parallization_list():
+def test_single_parallel_task_no_parallization_list(executor):
     """This is currently not very useful"""
     IMAGES = [dict(path="/tmp/A/01/0"), dict(path="/tmp/A/02/0")]
     dataset_in = Dataset(id=1, images=IMAGES)
@@ -55,5 +68,7 @@ def test_single_parallel_task_no_parallization_list():
             )
         )
     ]
-    dataset_out = execute_tasks_v2(wf_task_list=task_list, dataset=dataset_in)
+    dataset_out = execute_tasks_v2(
+        wf_task_list=task_list, dataset=dataset_in, executor=executor
+    )
     debug(dataset_out.image_paths)

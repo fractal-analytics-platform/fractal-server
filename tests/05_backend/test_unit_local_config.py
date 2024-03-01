@@ -3,10 +3,10 @@ import json
 import pytest
 from devtools import debug
 
-from fractal_server.app.runner._local._local_config import (
+from fractal_server.app.runner.executors.local._local_config import (
     get_local_backend_config,
 )
-from fractal_server.app.runner._local._local_config import (
+from fractal_server.app.runner.executors.local._local_config import (
     LocalBackendConfigError,
 )
 from tests.fixtures_tasks import MockTask

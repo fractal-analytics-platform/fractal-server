@@ -1,5 +1,7 @@
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+import pytest
 from devtools import debug
 from fractal_tasks_core_mock import TASK_LIST
 
@@ -14,7 +16,13 @@ def _assert_image_data_exist(image_list: list[dict]):
         assert (Path(image.path) / "data").exists()
 
 
-def test_workflow_1(tmp_path: Path):
+@pytest.fixture()
+def executor():
+    with ThreadPoolExecutor() as e:
+        yield e
+
+
+def test_workflow_1(tmp_path: Path, executor):
     """
     1. create-ome-zarr + yokogawa-to-zarr
     2. illumination correction (new images)
@@ -41,6 +49,7 @@ def test_workflow_1(tmp_path: Path):
             ),
         ],
         dataset=dataset_in,
+        executor=executor,
     )
 
     assert dataset_out.filters == {
@@ -74,7 +83,7 @@ def test_workflow_1(tmp_path: Path):
     assert img.dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
         "attributes": {
-            "well": "A_01",
+            "well": "A01",
             "plate": "my_plate.zarr",
             "data_dimensionality": 3,
             "illumination_correction": True,
@@ -88,7 +97,7 @@ def test_workflow_1(tmp_path: Path):
     assert img == {
         "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0_corr",
         "attributes": {
-            "well": "A_01",
+            "well": "A01",
             "plate": "my_plate_mip.zarr",
             "data_dimensionality": 2,
             "illumination_correction": True,
@@ -98,7 +107,7 @@ def test_workflow_1(tmp_path: Path):
     _assert_image_data_exist(dataset_out.images)
 
 
-def test_workflow_2(tmp_path: Path):
+def test_workflow_2(tmp_path: Path, executor):
     """
     1. create-ome-zarr + yokogawa-to-zarr
     2. illumination correction (overwrite_input=True)
@@ -118,6 +127,7 @@ def test_workflow_2(tmp_path: Path):
             ),
         ],
         dataset=dataset_in,
+        executor=executor,
     )
 
     assert dataset_out.history == [
@@ -137,7 +147,7 @@ def test_workflow_2(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
             "attributes": {
-                "well": "A_01",
+                "well": "A01",
                 "plate": "my_plate.zarr",
                 "data_dimensionality": 3,
                 "illumination_correction": True,
@@ -146,7 +156,7 @@ def test_workflow_2(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/02/0",
             "attributes": {
-                "well": "A_02",
+                "well": "A02",
                 "plate": "my_plate.zarr",
                 "data_dimensionality": 3,
                 "illumination_correction": True,
@@ -157,7 +167,7 @@ def test_workflow_2(tmp_path: Path):
     _assert_image_data_exist(dataset_out.images)
 
 
-def test_workflow_3(tmp_path: Path):
+def test_workflow_3(tmp_path: Path, executor):
     """
     1. create-ome-zarr + yokogawa-to-zarr
     2. illumination correction (overwrite_input=True) on a single well
@@ -174,10 +184,11 @@ def test_workflow_3(tmp_path: Path):
             WorkflowTask(
                 task=TASK_LIST["illumination_correction"],
                 args=dict(overwrite_input=True),
-                filters=dict(well="A_01"),
+                filters=dict(well="A01"),
             ),
         ],
         dataset=dataset_in,
+        executor=executor,
     )
 
     debug(dataset_out)
@@ -198,7 +209,7 @@ def test_workflow_3(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
             "attributes": {
-                "well": "A_01",
+                "well": "A01",
                 "plate": "my_plate.zarr",
                 "data_dimensionality": 3,
                 "illumination_correction": True,
@@ -207,7 +218,7 @@ def test_workflow_3(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/02/0",
             "attributes": {
-                "well": "A_02",
+                "well": "A02",
                 "plate": "my_plate.zarr",
                 "data_dimensionality": 3,
             },
@@ -217,7 +228,7 @@ def test_workflow_3(tmp_path: Path):
     _assert_image_data_exist(dataset_out.images)
 
 
-def test_workflow_4(tmp_path: Path):
+def test_workflow_4(tmp_path: Path, executor):
     """
     1. create ome zarr + yokogawa-to-zarr
     2. new-ome-zarr + copy-data
@@ -240,6 +251,7 @@ def test_workflow_4(tmp_path: Path):
             ),
         ],
         dataset=dataset_in,
+        executor=executor,
     )
 
     debug(dataset_out)
@@ -260,7 +272,7 @@ def test_workflow_4(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
             "attributes": {
-                "well": "A_01",
+                "well": "A01",
                 "plate": "my_plate.zarr",
                 "data_dimensionality": 3,
             },
@@ -268,7 +280,7 @@ def test_workflow_4(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/02/0",
             "attributes": {
-                "well": "A_02",
+                "well": "A02",
                 "plate": "my_plate.zarr",
                 "data_dimensionality": 3,
             },
@@ -276,7 +288,7 @@ def test_workflow_4(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate_new.zarr/A/01/0",
             "attributes": {
-                "well": "A_01",
+                "well": "A01",
                 "plate": "my_plate_new.zarr",
                 "data_dimensionality": 3,
             },
@@ -284,7 +296,7 @@ def test_workflow_4(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate_new.zarr/A/02/0",
             "attributes": {
-                "well": "A_02",
+                "well": "A02",
                 "plate": "my_plate_new.zarr",
                 "data_dimensionality": 3,
             },
@@ -294,7 +306,7 @@ def test_workflow_4(tmp_path: Path):
     _assert_image_data_exist(dataset_out.images)
 
 
-def test_workflow_5(tmp_path: Path):
+def test_workflow_5(tmp_path: Path, executor):
     """
     1. create ome zarr + yokogawa-to-zarr
     2. new-ome-zarr + MIP
@@ -317,6 +329,7 @@ def test_workflow_5(tmp_path: Path):
             ),
         ],
         dataset=dataset_in,
+        executor=executor,
     )
 
     debug(dataset_out)
@@ -334,7 +347,7 @@ def test_workflow_5(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
             "attributes": {
-                "well": "A_01",
+                "well": "A01",
                 "plate": "my_plate.zarr",
                 "data_dimensionality": 3,
             },
@@ -342,7 +355,7 @@ def test_workflow_5(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/02/0",
             "attributes": {
-                "well": "A_02",
+                "well": "A02",
                 "plate": "my_plate.zarr",
                 "data_dimensionality": 3,
             },
@@ -350,7 +363,7 @@ def test_workflow_5(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
             "attributes": {
-                "well": "A_01",
+                "well": "A01",
                 "plate": "my_plate_mip.zarr",
                 "data_dimensionality": 2,
             },
@@ -358,7 +371,7 @@ def test_workflow_5(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate_mip.zarr/A/02/0",
             "attributes": {
-                "well": "A_02",
+                "well": "A02",
                 "plate": "my_plate_mip.zarr",
                 "data_dimensionality": 2,
             },
@@ -367,7 +380,7 @@ def test_workflow_5(tmp_path: Path):
     _assert_image_data_exist(dataset_out.images)
 
 
-def test_workflow_6(tmp_path: Path):
+def test_workflow_6(tmp_path: Path, executor):
     """
     1. create ome zarr + yokogawa-to-zarr
     2. new-ome-zarr + MIP
@@ -387,6 +400,7 @@ def test_workflow_6(tmp_path: Path):
             ),
         ],
         dataset=dataset_in,
+        executor=executor,
     )
 
     debug(dataset_out)
@@ -400,7 +414,7 @@ def test_workflow_6(tmp_path: Path):
     _assert_image_data_exist(dataset_out.images)
 
 
-def test_workflow_7(tmp_path: Path):
+def test_workflow_7(tmp_path: Path, executor):
     """
     1. create ome zarr multiplex + yokogawa-to-zarr
     2. init_registration
@@ -423,6 +437,7 @@ def test_workflow_7(tmp_path: Path):
             ),
         ],
         dataset=dataset_in,
+        executor=executor,
     )
 
     debug(dataset_out)
@@ -436,7 +451,7 @@ def test_workflow_7(tmp_path: Path):
     _assert_image_data_exist(dataset_out.images)
 
 
-def test_workflow_8(tmp_path: Path):
+def test_workflow_8(tmp_path: Path, executor):
     """
     1. create ome zarr + yokogawa-to-zarr
     2. new_ome_zarr + MIP
@@ -468,6 +483,7 @@ def test_workflow_8(tmp_path: Path):
             ),
         ],
         dataset=dataset_in,
+        executor=executor,
     )
 
     debug(dataset_out)
@@ -483,7 +499,7 @@ def test_workflow_8(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
             "attributes": {
-                "well": "A_01",
+                "well": "A01",
                 "plate": "my_plate.zarr",
                 "data_dimensionality": 3,
             },
@@ -491,7 +507,7 @@ def test_workflow_8(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate.zarr/A/02/0",
             "attributes": {
-                "well": "A_02",
+                "well": "A02",
                 "plate": "my_plate.zarr",
                 "data_dimensionality": 3,
             },
@@ -499,7 +515,7 @@ def test_workflow_8(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
             "attributes": {
-                "well": "A_01",
+                "well": "A01",
                 "plate": "my_plate_mip.zarr",
                 "data_dimensionality": 2,
             },
@@ -507,7 +523,7 @@ def test_workflow_8(tmp_path: Path):
         {
             "path": f"{zarr_dir}/my_plate_mip.zarr/A/02/0",
             "attributes": {
-                "well": "A_02",
+                "well": "A02",
                 "plate": "my_plate_mip.zarr",
                 "data_dimensionality": 2,
             },
