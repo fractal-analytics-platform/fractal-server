@@ -13,7 +13,7 @@ from ....db import get_async_db
 from ....models import ApplyWorkflow
 from ....models import JobStatusType
 from ....models import Project
-from ....runner.v1._common import WORKFLOW_LOG_FILENAME
+from ....runner.filenames import WORKFLOW_LOG_FILENAME
 from ....schemas import ApplyWorkflowRead
 from ....security import current_active_user
 from ....security import User
