@@ -11,12 +11,12 @@ jobs:
   tests_v2:
     name: "Core - Python ${{ matrix.python-version }} - ${{ matrix.db }}"
     runs-on: ubuntu-22.04
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     strategy:
       matrix:
         python-version: ["3.9", "3.10"]
-        db: ["sqlite"]  #, "postgres"]
+        db: ["sqlite", "postgres"]
 
     services:
       postgres:
