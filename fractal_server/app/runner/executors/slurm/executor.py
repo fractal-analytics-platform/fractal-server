@@ -32,11 +32,11 @@ from cfut.util import random_string
 from .....config import get_settings
 from .....logger import set_logger
 from .....syringe import Inject
-from ...v1._common import get_task_file_paths
-from ...v1._common import SHUTDOWN_FILENAME
-from ...v1._common import TaskFiles
-from ...v1.common import JobExecutionError
-from ...v1.common import TaskExecutionError
+from ...exceptions import JobExecutionError
+from ...exceptions import TaskExecutionError
+from ...filenames import SHUTDOWN_FILENAME
+from ...task_files import get_task_file_paths
+from ...task_files import TaskFiles
 from ._batching import heuristics
 from ._executor_wait_thread import FractalSlurmWaitThread
 from ._slurm_config import get_default_slurm_config

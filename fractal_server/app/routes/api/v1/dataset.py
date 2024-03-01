@@ -16,7 +16,7 @@ from ....models import ApplyWorkflow
 from ....models import Dataset
 from ....models import Project
 from ....models import Resource
-from ....runner.v1._common import HISTORY_FILENAME
+from ....runner.filenames import HISTORY_FILENAME
 from ....schemas import DatasetCreate
 from ....schemas import DatasetRead
 from ....schemas import DatasetStatusRead
