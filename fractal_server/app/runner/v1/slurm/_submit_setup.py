@@ -19,7 +19,7 @@ from typing import Optional
 
 from ....models import WorkflowTask
 from ...executors.slurm._slurm_config import get_slurm_config
-from .._common import get_task_file_paths
+from ...task_files import get_task_file_paths
 from ..common import TaskParameters
 
 

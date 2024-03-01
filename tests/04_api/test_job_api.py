@@ -11,9 +11,9 @@ from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.routes.api.v1.project import _encode_as_utc as _utc
+from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
+from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
 from fractal_server.app.runner.v1 import _backends
-from fractal_server.app.runner.v1._common import SHUTDOWN_FILENAME
-from fractal_server.app.runner.v1._common import WORKFLOW_LOG_FILENAME
 
 PREFIX = "/api/v1"
 

@@ -26,7 +26,7 @@ from ..models import JobStatusType
 from ..models import Project
 from ..models import Workflow
 from ..models.security import UserOAuth as User
-from ..runner.v1._common import WORKFLOW_LOG_FILENAME
+from ..runner.filenames import WORKFLOW_LOG_FILENAME
 from ..schemas.v1 import ApplyWorkflowRead
 from ..schemas.v1 import ApplyWorkflowUpdate
 from ..schemas.v1 import DatasetRead

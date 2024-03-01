@@ -32,12 +32,12 @@ from ...models import ApplyWorkflow
 from ...models import Dataset
 from ...models import Workflow
 from ...models import WorkflowTask
-from ...schemas.v1 import JobStatusType
+from ...schemas import JobStatusType
+from ..exceptions import JobExecutionError
+from ..exceptions import TaskExecutionError
+from ..filenames import WORKFLOW_LOG_FILENAME
 from ..v1._local import process_workflow as local_process_workflow
-from ._common import WORKFLOW_LOG_FILENAME
 from .common import close_job_logger
-from .common import JobExecutionError
-from .common import TaskExecutionError
 from .common import validate_workflow_compatibility  # noqa: F401
 from .handle_failed_job import assemble_history_failed_job
 from .handle_failed_job import assemble_meta_failed_job
