@@ -390,6 +390,11 @@ class Settings(BaseSettings):
 
         info = f"FRACTAL_RUNNER_BACKEND={self.FRACTAL_RUNNER_BACKEND}"
         if self.FRACTAL_RUNNER_BACKEND == "slurm":
+
+            from fractal_server.app.runner.executors.slurm._slurm_config import (  # noqa: E501
+                load_slurm_config_file,
+            )
+
             try:
                 import cfut  # noqa: F401
             except ModuleNotFoundError:
@@ -406,10 +411,6 @@ class Settings(BaseSettings):
                         f"{info} but FRACTAL_SLURM_CONFIG_FILE="
                         f"{self.FRACTAL_SLURM_CONFIG_FILE} not found."
                     )
-
-                from fractal_server.app.runner._slurm._slurm_config import (
-                    load_slurm_config_file,
-                )
 
                 load_slurm_config_file(self.FRACTAL_SLURM_CONFIG_FILE)
                 if not shutil.which("sbatch"):

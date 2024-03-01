@@ -8,7 +8,7 @@ from typing import Optional
 from cfut import FileWaitThread
 from cfut import slurm
 
-from ....logger import set_logger
+from .....logger import set_logger
 
 
 logger = set_logger(__name__)

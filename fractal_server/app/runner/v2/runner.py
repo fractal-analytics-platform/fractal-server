@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 from copy import copy
 from copy import deepcopy
 
@@ -50,6 +51,7 @@ def _validate_parallelization_list_valid(
 def execute_tasks_v2(
     wf_task_list: list[WorkflowTask],
     dataset: Dataset,
+    executor: ThreadPoolExecutor,
 ) -> Dataset:
 
     # Run task 0
@@ -87,6 +89,7 @@ def execute_tasks_v2(
                     task=task,
                     function_kwargs=function_kwargs,
                     old_dataset_images=current_task_images,
+                    executor=executor,
                 )
         # (2/2) Parallel task
         elif task.task_type == "parallel":
@@ -134,6 +137,7 @@ def execute_tasks_v2(
                 task=task,
                 list_function_kwargs=list_function_kwargs,
                 old_dataset_images=current_task_images,
+                executor=executor,
             )
         else:
             raise ValueError(f"Invalid {task.task_type=}.")

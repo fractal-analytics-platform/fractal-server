@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 from typing import Optional
 
@@ -15,8 +16,14 @@ from fractal_server.app.runner.v2.runner_functions import (
 )
 
 
+@pytest.fixture()
+def executor():
+    with ThreadPoolExecutor() as e:
+        yield e
+
+
 @pytest.mark.parametrize("N", [100, 1000])
-def test_max_parallelization_list_size(N: int):
+def test_max_parallelization_list_size(N: int, executor):
     parallelization_list = [
         dict(
             path=f"image-{i}",
@@ -40,10 +47,14 @@ def test_max_parallelization_list_size(N: int):
     ]
     if N < MAX_PARALLELIZATION_LIST_SIZE:
         debug(N, "OK")
-        execute_tasks_v2(wf_task_list=wf_task_list, dataset=dataset)
+        execute_tasks_v2(
+            wf_task_list=wf_task_list, dataset=dataset, executor=executor
+        )
     else:
         with pytest.raises(ValueError) as e:
-            execute_tasks_v2(wf_task_list=wf_task_list, dataset=dataset)
+            execute_tasks_v2(
+                wf_task_list=wf_task_list, dataset=dataset, executor=executor
+            )
         debug(N, str(e.value))
 
 
@@ -72,6 +83,7 @@ def _copy_and_edit_image(
 )
 def test_image_attribute_propagation(
     parallelization_list: Optional[list[dict]],
+    executor,
 ):
     images_pre = [
         SingleImage(
@@ -98,7 +110,7 @@ def test_image_attribute_propagation(
         )
     ]
     dataset_post = execute_tasks_v2(
-        wf_task_list=wf_task_list, dataset=dataset_pre
+        wf_task_list=wf_task_list, dataset=dataset_pre, executor=executor
     )
     images_post = dataset_post.images
 

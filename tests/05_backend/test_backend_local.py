@@ -22,10 +22,14 @@ from fractal_server.app.runner._common import _call_command_wrapper
 from fractal_server.app.runner._common import call_parallel_task
 from fractal_server.app.runner._common import call_single_task
 from fractal_server.app.runner._common import execute_tasks
-from fractal_server.app.runner._local._local_config import LocalBackendConfig
-from fractal_server.app.runner._local.executor import FractalThreadPoolExecutor
 from fractal_server.app.runner.common import close_job_logger
 from fractal_server.app.runner.common import TaskParameters
+from fractal_server.app.runner.executors.local._local_config import (
+    LocalBackendConfig,
+)
+from fractal_server.app.runner.executors.local.executor import (
+    FractalThreadPoolExecutor,
+)
 from fractal_server.app.schemas import WorkflowTaskStatusType
 from fractal_server.logger import set_logger
 from tests.data.tasks_dummy import dummy as dummy_module

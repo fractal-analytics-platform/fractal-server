@@ -1,4 +1,6 @@
+from concurrent.futures import ThreadPoolExecutor
 from copy import copy
+from typing import Any
 
 from ....images import find_image_by_path
 from ....images import SingleImage
@@ -14,14 +16,19 @@ def _run_non_parallel_task(
     task: Task,
     function_kwargs: DictStrAny,
     old_dataset_images: list[SingleImage],
+    executor: ThreadPoolExecutor,
 ) -> TaskOutput:
+    def _wrapper_expand_kwargs(input_kwargs: dict[str, Any]):
+        task_output = task.function(**input_kwargs)
+        if task_output is None:
+            task_output = TaskOutput()
+        else:
+            task_output = TaskOutput(**task_output)
+        return task_output
 
-    task_output = task.function(**function_kwargs)
-
-    if task_output is None:
-        return TaskOutput()
-
-    task_output = TaskOutput(**task_output)
+    task_output = executor.submit(
+        _wrapper_expand_kwargs, function_kwargs
+    ).result()
 
     task_output = update_task_output_added_images(
         task_output=task_output,
@@ -121,6 +128,7 @@ def _run_parallel_task(
     task: Task,
     list_function_kwargs: list[DictStrAny],
     old_dataset_images: list[SingleImage],
+    executor: ThreadPoolExecutor,
 ) -> DictStrAny:
 
     if len(list_function_kwargs) > MAX_PARALLELIZATION_LIST_SIZE:
@@ -130,27 +138,33 @@ def _run_parallel_task(
             f"   {MAX_PARALLELIZATION_LIST_SIZE=}\n"
         )
 
-    task_outputs = []
-    new_old_image_mapping = {}
-    for function_kwargs in list_function_kwargs:
-
-        # FIXME functools.partial
-        task_output = task.function(**function_kwargs)
+    def _wrapper_expand_kwargs(input_kwargs: dict[str, Any]):
+        task_output = task.function(**input_kwargs)
         if task_output is None:
             task_output = ParallelTaskOutput()
         else:
             task_output = ParallelTaskOutput(**task_output)
+        return task_output
 
-        task_outputs.append(copy(task_output))
+    results = executor.map(_wrapper_expand_kwargs, list_function_kwargs)
+    task_outputs = list(results)
 
+    new_old_image_mapping = {}
+
+    for ind, task_output in enumerate(task_outputs):
         if task_output.added_images is not None:
-            # FIXME check keys are not repeated
-            new_old_image_mapping.update(
-                {
-                    added_image.path: function_kwargs["path"]
-                    for added_image in task_output.added_images
-                }
-            )
+            for added_image in task_output.added_images:
+                new_key = added_image.path
+                new_value = list_function_kwargs[ind]["path"]
+                old_value = new_old_image_mapping.get(new_key)
+                if old_value is not None and old_value != new_value:
+                    raise ValueError(
+                        "The same `added_image.path` corresponds to "
+                        "multiple `path` function arguments. This means "
+                        "that two tasks with different `path` input created "
+                        "the same `added_image` entry."
+                    )
+                new_old_image_mapping[new_key] = new_value
 
     merged_output = merge_outputs(
         task_outputs,
