@@ -338,7 +338,7 @@ async def test_json_decode_error(
     client,
 ):
 
-    history = "not a json"
+    history = "NOT A VALID JSON"
     working_dir = tmp_path / "working_dir"
     working_dir.mkdir()
     with (working_dir / HISTORY_FILENAME).open("w") as f:
@@ -346,7 +346,7 @@ async def test_json_decode_error(
 
     async with MockCurrentUser() as user:
         project = await project_factory(user)
-        task = await task_factory(name="task1", source="task1")
+        task = await task_factory(name="task", source="task")
         workflow = await workflow_factory(project_id=project.id, name="WF")
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
@@ -363,7 +363,6 @@ async def test_json_decode_error(
             working_dir=str(working_dir),
         )
 
-        # Test get_workflowtask_status endpoint
         res = await client.get(
             f"api/v1/project/{project.id}/dataset/{output_dataset.id}/status/"
         )
