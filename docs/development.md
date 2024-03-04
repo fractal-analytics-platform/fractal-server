@@ -43,8 +43,7 @@ with `poetry run`, as in `poetry run fractalctl start`.
 To install Fractal Server with some additional extras, use the [`-E`
 option](https://python-poetry.org/docs/pyproject/#extras), as in
 ```console
-poetry install -E slurm
-poetry install -E slurm -E postgres
+poetry install -E postgres
 poetry install --all-extras
 ```
 
