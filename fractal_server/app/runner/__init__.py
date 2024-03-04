@@ -86,9 +86,10 @@ async def submit_workflow(
             The username to impersonate for the workflow execution, for the
             slurm backend.
     """
+
+    # Declare runner backend and set `process_workflow` function
     settings = Inject(get_settings)
     FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
-
     if FRACTAL_RUNNER_BACKEND == "local":
         process_workflow = local_process_workflow
     elif FRACTAL_RUNNER_BACKEND == "slurm":
