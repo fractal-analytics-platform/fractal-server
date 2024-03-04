@@ -22,8 +22,6 @@ import traceback
 from pathlib import Path
 from typing import Optional
 
-from .... import __VERSION__
-from ....config import get_settings
 from ....logger import set_logger
 from ....syringe import Inject
 from ....utils import get_timestamp
@@ -37,37 +35,18 @@ from ..exceptions import JobExecutionError
 from ..exceptions import TaskExecutionError
 from ..filenames import WORKFLOW_LOG_FILENAME
 from ..v1._local import process_workflow as local_process_workflow
+from ..v1.slurm import process_workflow as slurm_process_workflow
 from .common import close_job_logger
 from .common import validate_workflow_compatibility  # noqa: F401
 from .handle_failed_job import assemble_history_failed_job
 from .handle_failed_job import assemble_meta_failed_job
+from fractal_server import __VERSION__
+from fractal_server.config import get_settings
 
 
 _backends = {}
-_backend_errors: dict[str, Exception] = {}
 _backends["local"] = local_process_workflow
-
-try:
-    from .slurm import process_workflow as slurm_process_workflow
-
-    _backends["slurm"] = slurm_process_workflow
-except ModuleNotFoundError as e:
-    _backend_errors["slurm"] = e
-
-
-def get_process_workflow():
-    settings = Inject(get_settings)
-    try:
-        process_workflow = _backends[settings.FRACTAL_RUNNER_BACKEND]
-    except KeyError:
-        raise _backend_errors.get(
-            settings.FRACTAL_RUNNER_BACKEND,
-            RuntimeError(
-                "Unknown error during collection of backend "
-                f"`{settings.FRACTAL_RUNNER_BACKEND}`"
-            ),
-        )
-    return process_workflow
+_backends["slurm"] = slurm_process_workflow
 
 
 async def submit_workflow(
@@ -107,6 +86,17 @@ async def submit_workflow(
             The username to impersonate for the workflow execution, for the
             slurm backend.
     """
+
+    # Declare runner backend and set `process_workflow` function
+    settings = Inject(get_settings)
+    FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
+    if FRACTAL_RUNNER_BACKEND == "local":
+        process_workflow = local_process_workflow
+    elif FRACTAL_RUNNER_BACKEND == "slurm":
+        process_workflow = slurm_process_workflow
+    else:
+        raise RuntimeError(f"Invalid runner backend {FRACTAL_RUNNER_BACKEND=}")
+
     with next(DB.get_sync_db()) as db_sync:
 
         job: ApplyWorkflow = db_sync.get(ApplyWorkflow, job_id)
@@ -139,11 +129,6 @@ async def submit_workflow(
             db_sync.commit()
             db_sync.close()
             return
-
-        # Select backend
-        settings = Inject(get_settings)
-        FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
-        process_workflow = get_process_workflow()
 
         # Prepare some of process_workflow arguments
         input_paths = input_dataset.paths

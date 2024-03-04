@@ -395,12 +395,6 @@ class Settings(BaseSettings):
                 load_slurm_config_file,
             )
 
-            try:
-                import cfut  # noqa: F401
-            except ModuleNotFoundError:
-                raise FractalConfigurationError(
-                    f"{info} but `clusterfutures` is not available"
-                )
             if not self.FRACTAL_SLURM_CONFIG_FILE:
                 raise FractalConfigurationError(
                     f"Must set FRACTAL_SLURM_CONFIG_FILE when {info}"
