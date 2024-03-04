@@ -324,3 +324,50 @@ async def test_assemble_history_failed_job_fail(
     assert "Cannot identify the failed task" in caplog.text
     debug(history)
     assert history == tmp_history
+
+
+async def test_json_decode_error(
+    db,
+    MockCurrentUser,
+    tmp_path,
+    project_factory,
+    task_factory,
+    dataset_factory,
+    workflow_factory,
+    job_factory,
+    client,
+):
+
+    history = "not a json"
+    working_dir = tmp_path / "working_dir"
+    working_dir.mkdir()
+    with (working_dir / HISTORY_FILENAME).open("w") as f:
+        f.write(history)
+
+    async with MockCurrentUser() as user:
+        project = await project_factory(user)
+        task = await task_factory(name="task1", source="task1")
+        workflow = await workflow_factory(project_id=project.id, name="WF")
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
+        input_dataset = await dataset_factory(project_id=project.id)
+        output_dataset = await dataset_factory(
+            project_id=project.id, history=history
+        )
+        await job_factory(
+            project_id=project.id,
+            workflow_id=workflow.id,
+            input_dataset_id=input_dataset.id,
+            output_dataset_id=output_dataset.id,
+            working_dir=str(working_dir),
+        )
+
+        # Test get_workflowtask_status endpoint
+        res = await client.get(
+            f"api/v1/project/{project.id}/dataset/{output_dataset.id}/status/"
+        )
+        assert res.status_code == 422
+        assert res.json()["detail"] == (
+            "History file does not include a valid JSON."
+        )
