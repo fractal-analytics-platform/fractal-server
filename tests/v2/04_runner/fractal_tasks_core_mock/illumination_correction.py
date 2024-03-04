@@ -49,6 +49,9 @@ def init_channel_parallelization(
     buffer: Optional[DictStrAny] = None,
     overwrite_input: bool = False,
 ) -> dict:
+
+    _check_buffer_is_empty(buffer)
+
     print("[init_channel_parallelization] START")
     print(f"[init_channel_parallelization] {paths=}")
     print(f"[init_channel_parallelization] {overwrite_input=}")
@@ -88,9 +91,9 @@ def illumination_correction_B(
     *,
     # Standard arguments
     path: str,
-    raw_path: str,
     buffer: Optional[DictStrAny] = None,
     # Non-standard arguments
+    raw_path: str,
     subsets: Optional[
         dict[Literal["T_index", "C_index", "Z_index"], int]
     ] = None,
