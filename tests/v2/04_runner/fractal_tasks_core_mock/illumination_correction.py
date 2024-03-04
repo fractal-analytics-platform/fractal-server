@@ -15,14 +15,11 @@ def illumination_correction(
     path: str,
     buffer: Optional[DictStrAny] = None,
     # Non-standard arguments
-    subsets: Optional[
-        dict[Literal["T_index", "C_index", "Z_index"], int]
-    ] = None,
     overwrite_input: bool = False,
 ) -> dict:
     print("[illumination_correction] START")
     print(f"[illumination_correction] {path=}")
-    print(f"[illumination_correction] {overwrite_input=}, {subsets=}")
+    print(f"[illumination_correction] {overwrite_input=}")
 
     _check_buffer_is_empty(buffer)
 
@@ -38,9 +35,7 @@ def illumination_correction(
         print(f"[illumination_correction] {new_path=}")
 
     with (Path(actual_path) / "data").open("a") as f:
-        f.write(
-            f"[illumination_correction] ({overwrite_input=}, {subsets=})\n"
-        )
+        f.write(f"[illumination_correction] ({overwrite_input=})\n")
 
     print("[illumination_correction] END")
     return out
