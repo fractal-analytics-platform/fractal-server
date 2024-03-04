@@ -1,6 +1,16 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
 
+# 1.4.10
+
+> WARNING: Starting from this version, the dependencies for the `slurm` extra
+> are required; commands like `pip install fractal-server[slurm,postgres]` must
+> be replaced by `pip install fractal-server[postgres]`.
+
+* Dependencies:
+    * Make `clusterfutures` and `cloudpickle` required dependencies (\#1255).
+    * Remove `slurm` extra from package (\#1255).
+
 # 1.4.9
 
 This release is a follow-up of 1.4.7 and 1.4.8, to mitigate the risk of
