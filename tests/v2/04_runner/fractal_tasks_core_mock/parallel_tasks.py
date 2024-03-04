@@ -1,6 +1,5 @@
 import shutil
 from pathlib import Path
-from typing import Literal
 from typing import Optional
 
 from pydantic.decorator import validate_arguments
@@ -43,44 +42,6 @@ def yokogawa_to_zarr(
         f.write(f"Source data: {source_data}\n")
     print("[yokogawa_to_zarr] END")
     return {}
-
-
-@validate_arguments
-def illumination_correction(
-    *,
-    # Standard arguments
-    path: str,
-    buffer: Optional[DictStrAny] = None,
-    # Non-standard arguments
-    subsets: Optional[
-        dict[Literal["T_index", "C_index", "Z_index"], int]
-    ] = None,
-    overwrite_input: bool = False,
-) -> dict:
-    print("[illumination_correction] START")
-    print(f"[illumination_correction] {path=}")
-    print(f"[illumination_correction] {overwrite_input=}, {subsets=}")
-
-    _check_buffer_is_empty(buffer)
-
-    # Prepare output metadata and set actual_path
-    if overwrite_input:
-        out = dict(edited_images=[dict(path=path)])
-        actual_path = path
-    else:
-        new_path = f"{path}_corr"
-        Path(new_path).mkdir(exist_ok=True)
-        out = dict(added_images=[dict(path=new_path)])
-        actual_path = new_path
-        print(f"[illumination_correction] {new_path=}")
-
-    with (Path(actual_path) / "data").open("a") as f:
-        f.write(
-            "Illumination correction " f"({overwrite_input=}, {subsets=})\n"
-        )
-
-    print("[illumination_correction] END")
-    return out
 
 
 @validate_arguments

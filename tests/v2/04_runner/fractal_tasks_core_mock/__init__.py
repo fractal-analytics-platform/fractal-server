@@ -1,10 +1,11 @@
+from .illumination_correction import illumination_correction
+from .illumination_correction import illumination_correction_B
+from .illumination_correction import init_channel_parallelization
 from .non_parallel_tasks import create_ome_zarr
 from .non_parallel_tasks import create_ome_zarr_multiplex
-from .non_parallel_tasks import init_channel_parallelization
 from .non_parallel_tasks import new_ome_zarr
 from .parallel_tasks import cellpose_segmentation
 from .parallel_tasks import copy_data
-from .parallel_tasks import illumination_correction
 from .parallel_tasks import maximum_intensity_projection
 from .parallel_tasks import yokogawa_to_zarr
 from .registration_tasks import apply_registration_to_image
@@ -31,6 +32,11 @@ TASK_LIST = {
     "copy_data": Task(function=copy_data, task_type="parallel"),
     "illumination_correction": Task(
         function=illumination_correction,
+        task_type="parallel",
+        new_filters=dict(illumination_correction=True),
+    ),
+    "illumination_correction_B": Task(
+        function=illumination_correction_B,
         task_type="parallel",
         new_filters=dict(illumination_correction=True),
     ),
