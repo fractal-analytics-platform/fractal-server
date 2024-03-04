@@ -92,9 +92,10 @@ def merge_outputs(
                     path=new_old_image_mapping[added_image.path],
                 )
                 # Propagate old-image attributes to new-image
-                added_image.attributes = (
-                    old_image.attributes | added_image.attributes
-                )
+                if old_image is not None:
+                    added_image.attributes = (
+                        old_image.attributes | added_image.attributes
+                    )
                 final_added_images.append(added_image)
 
         if task_output.edited_images:
