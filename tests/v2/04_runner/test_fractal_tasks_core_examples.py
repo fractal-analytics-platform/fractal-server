@@ -1035,7 +1035,6 @@ def test_registration_overwrite(tmp_path: Path, executor):
 
 
 def test_channel_parallelization_with_overwrite(tmp_path: Path, executor):
-
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
 
     # Run create_ome_zarr+yokogawa_to_zarr
@@ -1057,7 +1056,10 @@ def test_channel_parallelization_with_overwrite(tmp_path: Path, executor):
     # Run init_channel_parallelization
     dataset = execute_tasks_v2(
         wf_task_list=[
-            WorkflowTask(task=TASK_LIST["init_channel_parallelization"]),
+            WorkflowTask(
+                task=TASK_LIST["init_channel_parallelization"],
+                args=dict(overwrite_input=True),
+            ),
         ],
         dataset=dataset,
         executor=executor,
@@ -1074,8 +1076,7 @@ def test_channel_parallelization_with_overwrite(tmp_path: Path, executor):
     dataset = execute_tasks_v2(
         wf_task_list=[
             WorkflowTask(
-                task=TASK_LIST["illumination_correction"],
-                args=dict(overwrite_input=True),
+                task=TASK_LIST["illumination_correction_B"],
             ),
         ],
         dataset=dataset,
@@ -1090,7 +1091,6 @@ def test_channel_parallelization_with_overwrite(tmp_path: Path, executor):
 
 
 def test_channel_parallelization_no_overwrite(tmp_path: Path, executor):
-
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
 
     # Run create_ome_zarr+yokogawa_to_zarr
@@ -1112,7 +1112,10 @@ def test_channel_parallelization_no_overwrite(tmp_path: Path, executor):
     # Run init_channel_parallelization
     dataset = execute_tasks_v2(
         wf_task_list=[
-            WorkflowTask(task=TASK_LIST["init_channel_parallelization"]),
+            WorkflowTask(
+                task=TASK_LIST["init_channel_parallelization"],
+                args=dict(overwrite_input=False),
+            ),
         ],
         dataset=dataset,
         executor=executor,
@@ -1128,10 +1131,7 @@ def test_channel_parallelization_no_overwrite(tmp_path: Path, executor):
     # Run init_channel_parallelization
     dataset = execute_tasks_v2(
         wf_task_list=[
-            WorkflowTask(
-                task=TASK_LIST["illumination_correction"],
-                args=dict(overwrite_input=False),
-            ),
+            WorkflowTask(task=TASK_LIST["illumination_correction_B"]),
         ],
         dataset=dataset,
         executor=executor,

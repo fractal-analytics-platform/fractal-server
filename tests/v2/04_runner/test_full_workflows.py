@@ -396,7 +396,7 @@ def test_workflow_6(tmp_path: Path, executor):
             WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"]),
             WorkflowTask(task=TASK_LIST["init_channel_parallelization"]),
             WorkflowTask(
-                task=TASK_LIST["illumination_correction"],
+                task=TASK_LIST["illumination_correction_B"],
             ),
         ],
         dataset=dataset_in,
@@ -408,7 +408,7 @@ def test_workflow_6(tmp_path: Path, executor):
         "create_ome_zarr",
         "yokogawa_to_zarr",
         "init_channel_parallelization",
-        "illumination_correction",
+        "illumination_correction_B",
     ]
 
     _assert_image_data_exist(dataset_out.images)
