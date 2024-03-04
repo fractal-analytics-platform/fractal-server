@@ -1032,3 +1032,116 @@ def test_registration_overwrite(tmp_path: Path, executor):
 
     # Print current dataset information
     debug(dataset)
+
+
+def test_channel_parallelization_with_overwrite(tmp_path: Path, executor):
+
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+
+    # Run create_ome_zarr+yokogawa_to_zarr
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=TASK_LIST["create_ome_zarr"],
+                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
+            ),
+            WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"]),
+        ],
+        dataset=Dataset(),
+        executor=executor,
+    )
+
+    # Print current dataset information
+    debug(dataset)
+
+    # Run init_channel_parallelization
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(task=TASK_LIST["init_channel_parallelization"]),
+        ],
+        dataset=dataset,
+        executor=executor,
+    )
+
+    # Print current dataset information
+    debug(dataset)
+
+    # Look at custom parallelization_list
+    debug(dataset.parallelization_list)
+    assert dataset.parallelization_list is not None
+
+    # Run init_channel_parallelization
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=TASK_LIST["illumination_correction"],
+                args=dict(overwrite_input=True),
+            ),
+        ],
+        dataset=dataset,
+        executor=executor,
+    )
+
+    # Parallelization list is not there any more
+    assert dataset.parallelization_list is None
+
+    # Print current dataset information
+    debug(dataset)
+
+
+def test_channel_parallelization_no_overwrite(tmp_path: Path, executor):
+
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+
+    # Run create_ome_zarr+yokogawa_to_zarr
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=TASK_LIST["create_ome_zarr"],
+                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
+            ),
+            WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"]),
+        ],
+        dataset=Dataset(),
+        executor=executor,
+    )
+
+    # Print current dataset information
+    debug(dataset)
+
+    # Run init_channel_parallelization
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(task=TASK_LIST["init_channel_parallelization"]),
+        ],
+        dataset=dataset,
+        executor=executor,
+    )
+
+    # Print current dataset information
+    debug(dataset)
+
+    # Look at custom parallelization_list
+    debug(dataset.parallelization_list)
+    assert dataset.parallelization_list is not None
+
+    # Run init_channel_parallelization
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=TASK_LIST["illumination_correction"],
+                args=dict(overwrite_input=False),
+            ),
+        ],
+        dataset=dataset,
+        executor=executor,
+    )
+
+    # Print current dataset information
+    debug(dataset)
+
+    # Parallelization list is not there any more
+    assert dataset.parallelization_list is None
+
+    # Check that there are now 4 images
+    assert len(dataset.images) == 4
