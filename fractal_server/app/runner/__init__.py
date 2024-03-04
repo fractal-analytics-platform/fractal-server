@@ -47,27 +47,6 @@ from .handle_failed_job import assemble_meta_failed_job
 _backends = {}
 _backends["local"] = local_process_workflow
 _backends["slurm"] = slurm_process_workflow
-# try:
-#     from ._slurm import process_workflow as slurm_process_workflow
-
-#     _backends["slurm"] = slurm_process_workflow
-# except ModuleNotFoundError as e:
-#     _backend_errors["slurm"] = e
-
-
-# def get_process_workflow():
-#     settings = Inject(get_settings)
-#     try:
-#         process_workflow = _backends[settings.FRACTAL_RUNNER_BACKEND]
-#     except KeyError:
-#         raise _backend_errors.get(
-#             settings.FRACTAL_RUNNER_BACKEND,
-#             RuntimeError(
-#                 "Unknown error during collection of backend "
-#                 f"`{settings.FRACTAL_RUNNER_BACKEND}`"
-#             ),
-#         )
-#     return process_workflow
 
 
 async def submit_workflow(
