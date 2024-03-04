@@ -43,7 +43,7 @@ class TaskFiles:
     workflow_dir: Path
     workflow_dir_user: Path
     task_order: Optional[int] = None
-    component: Optional[str] = None
+    component: Optional[str] = None  # FIXME: this is actually for V1 only
 
     file_prefix: str
     args: Path
