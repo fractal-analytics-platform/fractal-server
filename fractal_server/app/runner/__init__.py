@@ -87,16 +87,14 @@ async def submit_workflow(
             slurm backend.
     """
     settings = Inject(get_settings)
+    FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
 
-    if settings.FRACTAL_RUNNER_BACKEND == "local":
+    if FRACTAL_RUNNER_BACKEND == "local":
         process_workflow = local_process_workflow
-    elif settings.FRACTAL_RUNNER_BACKEND == "slurm":
+    elif FRACTAL_RUNNER_BACKEND == "slurm":
         process_workflow = slurm_process_workflow
     else:
-        raise RuntimeError(
-            "Unknown error during collection of backend "
-            f"`{settings.FRACTAL_RUNNER_BACKEND}`"
-        )
+        raise RuntimeError(f"Invalid runner backend {FRACTAL_RUNNER_BACKEND=}")
 
     with next(DB.get_sync_db()) as db_sync:
 
@@ -130,10 +128,6 @@ async def submit_workflow(
             db_sync.commit()
             db_sync.close()
             return
-
-        # Select backend
-        settings = Inject(get_settings)
-        FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
 
         # Prepare some of process_workflow arguments
         input_paths = input_dataset.paths
