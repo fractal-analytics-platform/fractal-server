@@ -130,7 +130,7 @@ def _run_parallel_task(
     list_function_kwargs: list[DictStrAny],
     old_dataset_images: list[SingleImage],
     executor: ThreadPoolExecutor,
-) -> DictStrAny:
+) -> TaskOutput:
 
     if len(list_function_kwargs) > MAX_PARALLELIZATION_LIST_SIZE:
         raise ValueError(
