@@ -59,8 +59,7 @@ def illumination_correction(
 ) -> dict:
     print("[illumination_correction] START")
     print(f"[illumination_correction] {path=}")
-    print(f"[illumination_correction] {overwrite_input=}")
-    print(f"[illumination_correction] {subsets=}")
+    print(f"[illumination_correction] {overwrite_input=}, {subsets=}")
 
     _check_buffer_is_empty(buffer)
 
