@@ -134,7 +134,6 @@ async def submit_workflow(
         # Select backend
         settings = Inject(get_settings)
         FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
-        # process_workflow = get_process_workflow()
 
         # Prepare some of process_workflow arguments
         input_paths = input_dataset.paths
