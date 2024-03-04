@@ -1,3 +1,3 @@
 from .executor import SlurmExecutor
 
-__all__ = [SlurmExecutor]
+__all__ = ["SlurmExecutor"]
