@@ -50,7 +50,7 @@ def find_image_by_path(
     *,
     images: list[SingleImage],
     path: str,
-) -> SingleImage:
+) -> Optional[SingleImage]:
     """
     Return a copy of the image with a given path, from a list.
 
@@ -65,10 +65,10 @@ def find_image_by_path(
         image = next(image for image in images if image.path == path)
         return copy(image)
     except StopIteration:
-        raise ValueError(f"No image with {path=} found in image list.")
+        return None
 
 
-def deduplicate_list(this_list: list[T]) -> list[T]:
+def deduplicate_list(this_list: list[T], remove_None: bool = False) -> list[T]:
     """
     Custom replacement for `set(this_list)`, when items are of a non-hashable
     type T (e.g. dict or SingleImage).
@@ -76,6 +76,8 @@ def deduplicate_list(this_list: list[T]) -> list[T]:
     new_list = []
     for this_item in this_list:
         if this_item not in new_list:
+            if remove_None and this_item is None:
+                continue
             new_list.append(this_item)
     return new_list
 

@@ -28,7 +28,7 @@ def _apply_attributes_to_image(
 
 def _validate_parallelization_list_valid(
     parallelization_list: list[DictStrAny],
-    current_image_paths: list[SingleImage],
+    current_image_paths: list[str],
 ) -> None:
     for kwargs in parallelization_list:
         path = kwargs.get("path")
@@ -37,11 +37,11 @@ def _validate_parallelization_list_valid(
                 "An element in parallelization list has no path:\n"
                 f"{kwargs=}"
             )
-        if path not in current_image_paths:
-            raise ValueError(
-                "An element in parallelization list does not match "
-                f"with any image:\n{kwargs=}"
-            )
+        # if path not in current_image_paths and False:
+        #     raise ValueError(
+        #         "An element in parallelization list does not match "
+        #         f"with any image:\n{kwargs=}"
+        #     )
         if "buffer" in kwargs.keys():
             raise ValueError(
                 f"An element in parallelization list is not valid:\n{kwargs=}"
@@ -131,7 +131,9 @@ def execute_tasks_v2(
                     for kwargs in list_function_kwargs
                 ]
 
-                current_task_images = deduplicate_list(current_task_images)
+                current_task_images = deduplicate_list(
+                    current_task_images, remove_None=True
+                )
 
             task_output = _run_parallel_task(
                 task=task,

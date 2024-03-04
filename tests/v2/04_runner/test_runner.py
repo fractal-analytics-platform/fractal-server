@@ -31,12 +31,7 @@ def test_max_parallelization_list_size(N: int, executor):
         )
         for i in range(N)
     ]
-    dataset = Dataset(
-        id=1,
-        root_dir="/tmp/invalid",
-        images=[dict(path=x["path"]) for x in parallelization_list],
-        parallelization_list=parallelization_list,
-    )
+    dataset = Dataset(parallelization_list=parallelization_list)
     wf_task_list = [
         WorkflowTask(
             task=Task(
