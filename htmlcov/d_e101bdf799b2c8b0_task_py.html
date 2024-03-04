@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="d_e101bdf799b2c8b0_task_collection_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.3">coverage.py v7.4.3</a>,
-            created at 2024-02-27 09:30 +0000
+            created at 2024-03-04 08:46 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -184,7 +184,7 @@
     <p class="pln"><span class="n"><a id="t100" href="#t100">100</a></span><span class="t">        <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t101" href="#t101">101</a></span><span class="t">            <span class="key">raise</span> <span class="nam">HTTPException</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t102" href="#t102">102</a></span><span class="t">                <span class="nam">status_code</span><span class="op">=</span><span class="nam">status</span><span class="op">.</span><span class="nam">HTTP_422_UNPROCESSABLE_ENTITY</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t103" href="#t103">103</a></span><span class="t">                <span class="nam">detail</span><span class="op">=</span><span class="str">f"Invalid {type(value)=} for {key=}"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t103" href="#t103">103</a></span><span class="t">                <span class="nam">detail</span><span class="op">=</span><span class="fst">f"</span><span class="fst">Invalid </span><span class="op">{</span><span class="nam">type</span><span class="op">(</span><span class="nam">value</span><span class="op">)</span><span class="op">=</span><span class="op">}</span><span class="fst"> for </span><span class="op">{</span><span class="nam">key</span><span class="op">=</span><span class="op">}</span><span class="fst">"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t104" href="#t104">104</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t105" href="#t105">105</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t106" href="#t106">106</a></span><span class="t">    <span class="key">await</span> <span class="nam">db</span><span class="op">.</span><span class="nam">commit</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -217,7 +217,7 @@
     <p class="pln"><span class="n"><a id="t133" href="#t133">133</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t134" href="#t134">134</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t135" href="#t135">135</a></span><span class="t">    <span class="com"># Prepend owner to task.source</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t136" href="#t136">136</a></span><span class="t">    <span class="nam">task</span><span class="op">.</span><span class="nam">source</span> <span class="op">=</span> <span class="str">f"{owner}:{task.source}"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t136" href="#t136">136</a></span><span class="t">    <span class="nam">task</span><span class="op">.</span><span class="nam">source</span> <span class="op">=</span> <span class="fst">f"</span><span class="op">{</span><span class="nam">owner</span><span class="op">}</span><span class="fst">:</span><span class="op">{</span><span class="nam">task</span><span class="op">.</span><span class="nam">source</span><span class="op">}</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t137" href="#t137">137</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t138" href="#t138">138</a></span><span class="t">    <span class="com"># Verify that source is not already in use (note: this check is only useful</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t139" href="#t139">139</a></span><span class="t">    <span class="com"># to provide a user-friendly error message, but `task.source` uniqueness is</span>&nbsp;</span><span class="r"></span></p>
@@ -227,7 +227,7 @@
     <p class="run"><span class="n"><a id="t143" href="#t143">143</a></span><span class="t">    <span class="key">if</span> <span class="nam">res</span><span class="op">.</span><span class="nam">scalars</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">all</span><span class="op">(</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t144" href="#t144">144</a></span><span class="t">        <span class="key">raise</span> <span class="nam">HTTPException</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t145" href="#t145">145</a></span><span class="t">            <span class="nam">status_code</span><span class="op">=</span><span class="nam">status</span><span class="op">.</span><span class="nam">HTTP_422_UNPROCESSABLE_ENTITY</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t146" href="#t146">146</a></span><span class="t">            <span class="nam">detail</span><span class="op">=</span><span class="str">f'Task source "{task.source}" already in use'</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t146" href="#t146">146</a></span><span class="t">            <span class="nam">detail</span><span class="op">=</span><span class="fst">f'</span><span class="fst">Task source "</span><span class="op">{</span><span class="nam">task</span><span class="op">.</span><span class="nam">source</span><span class="op">}</span><span class="fst">" already in use</span><span class="fst">'</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t147" href="#t147">147</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t148" href="#t148">148</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t149" href="#t149">149</a></span><span class="t">    <span class="com"># Add task</span>&nbsp;</span><span class="r"></span></p>
@@ -259,9 +259,9 @@
     <p class="run"><span class="n"><a id="t175" href="#t175">175</a></span><span class="t">        <span class="key">raise</span> <span class="nam">HTTPException</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t176" href="#t176">176</a></span><span class="t">            <span class="nam">status_code</span><span class="op">=</span><span class="nam">status</span><span class="op">.</span><span class="nam">HTTP_422_UNPROCESSABLE_ENTITY</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t177" href="#t177">177</a></span><span class="t">            <span class="nam">detail</span><span class="op">=</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t178" href="#t178">178</a></span><span class="t">                <span class="str">f"Cannot remove Task {task_id} because it is currently "</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t178" href="#t178">178</a></span><span class="t">                <span class="fst">f"</span><span class="fst">Cannot remove Task </span><span class="op">{</span><span class="nam">task_id</span><span class="op">}</span><span class="fst"> because it is currently </span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t179" href="#t179">179</a></span><span class="t">                <span class="str">"imported in Workflows "</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t180" href="#t180">180</a></span><span class="t">                <span class="str">f"{[x.workflow_id for x in workflowtask_list]}. "</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t180" href="#t180">180</a></span><span class="t">                <span class="fst">f"</span><span class="op">{</span><span class="op">[</span><span class="nam">x</span><span class="op">.</span><span class="nam">workflow_id</span> <span class="key">for</span> <span class="nam">x</span> <span class="key">in</span> <span class="nam">workflowtask_list</span><span class="op">]</span><span class="op">}</span><span class="fst">. </span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t181" href="#t181">181</a></span><span class="t">                <span class="str">"If you want to remove this task, then you should first remove"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t182" href="#t182">182</a></span><span class="t">                <span class="str">" the workflows."</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t183" href="#t183">183</a></span><span class="t">            <span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -279,7 +279,7 @@
             <a id="nextFileLink" class="nav" href="d_e101bdf799b2c8b0_task_collection_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.3">coverage.py v7.4.3</a>,
-            created at 2024-02-27 09:30 +0000
+            created at 2024-03-04 08:46 +0000
         </p>
     </div>
 </footer>

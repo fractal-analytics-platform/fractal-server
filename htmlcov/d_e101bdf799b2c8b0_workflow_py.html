@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="d_e101bdf799b2c8b0_workflowtask_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.3">coverage.py v7.4.3</a>,
-            created at 2024-02-27 09:30 +0000
+            created at 2024-03-04 08:46 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -242,7 +242,7 @@
     <p class="pln"><span class="n"><a id="t158" href="#t158">158</a></span><span class="t">                    <span class="nam">status_code</span><span class="op">=</span><span class="nam">status</span><span class="op">.</span><span class="nam">HTTP_422_UNPROCESSABLE_ENTITY</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t159" href="#t159">159</a></span><span class="t">                    <span class="nam">detail</span><span class="op">=</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t160" href="#t160">160</a></span><span class="t">                        <span class="str">"`reordered_workflowtask_ids` must be a permutation of"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t161" href="#t161">161</a></span><span class="t">                        <span class="str">f" {current_workflowtask_ids} (given {value})"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t161" href="#t161">161</a></span><span class="t">                        <span class="fst">f"</span><span class="fst"> </span><span class="op">{</span><span class="nam">current_workflowtask_ids</span><span class="op">}</span><span class="fst"> (given </span><span class="op">{</span><span class="nam">value</span><span class="op">}</span><span class="fst">)</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t162" href="#t162">162</a></span><span class="t">                    <span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t163" href="#t163">163</a></span><span class="t">                <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t164" href="#t164">164</a></span><span class="t">            <span class="key">for</span> <span class="nam">ind_wftask</span> <span class="key">in</span> <span class="nam">range</span><span class="op">(</span><span class="nam">num_tasks</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -288,8 +288,8 @@
     <p class="run"><span class="n"><a id="t204" href="#t204">204</a></span><span class="t">        <span class="key">raise</span> <span class="nam">HTTPException</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t205" href="#t205">205</a></span><span class="t">            <span class="nam">status_code</span><span class="op">=</span><span class="nam">status</span><span class="op">.</span><span class="nam">HTTP_422_UNPROCESSABLE_ENTITY</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t206" href="#t206">206</a></span><span class="t">            <span class="nam">detail</span><span class="op">=</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t207" href="#t207">207</a></span><span class="t">                <span class="str">f"Cannot delete workflow {workflow.id} because it "</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t208" href="#t208">208</a></span><span class="t">                <span class="str">f"is linked to active job(s) {string_ids}."</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t207" href="#t207">207</a></span><span class="t">                <span class="fst">f"</span><span class="fst">Cannot delete workflow </span><span class="op">{</span><span class="nam">workflow</span><span class="op">.</span><span class="nam">id</span><span class="op">}</span><span class="fst"> because it </span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t208" href="#t208">208</a></span><span class="t">                <span class="fst">f"</span><span class="fst">is linked to active job(s) </span><span class="op">{</span><span class="nam">string_ids</span><span class="op">}</span><span class="fst">.</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t209" href="#t209">209</a></span><span class="t">            <span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t210" href="#t210">210</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t211" href="#t211">211</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -331,8 +331,8 @@
     <p class="run"><span class="n"><a id="t247" href="#t247">247</a></span><span class="t">    <span class="key">for</span> <span class="nam">wftask</span> <span class="key">in</span> <span class="nam">workflow</span><span class="op">.</span><span class="nam">task_list</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t248" href="#t248">248</a></span><span class="t">        <span class="key">if</span> <span class="nam">wftask</span><span class="op">.</span><span class="nam">task</span><span class="op">.</span><span class="nam">owner</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t249" href="#t249">249</a></span><span class="t">            <span class="nam">logger</span><span class="op">.</span><span class="nam">warning</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t250" href="#t250">250</a></span><span class="t">                <span class="str">f"Custom tasks (like the one with id={wftask.task.id} and "</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t251" href="#t251">251</a></span><span class="t">                <span class="str">f'source="{wftask.task.source}") are not meant to be '</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t250" href="#t250">250</a></span><span class="t">                <span class="fst">f"</span><span class="fst">Custom tasks (like the one with id=</span><span class="op">{</span><span class="nam">wftask</span><span class="op">.</span><span class="nam">task</span><span class="op">.</span><span class="nam">id</span><span class="op">}</span><span class="fst"> and </span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t251" href="#t251">251</a></span><span class="t">                <span class="fst">f'</span><span class="fst">source="</span><span class="op">{</span><span class="nam">wftask</span><span class="op">.</span><span class="nam">task</span><span class="op">.</span><span class="nam">source</span><span class="op">}</span><span class="fst">") are not meant to be </span><span class="fst">'</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t252" href="#t252">252</a></span><span class="t">                <span class="str">"portable; re-importing this workflow may not work as "</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t253" href="#t253">253</a></span><span class="t">                <span class="str">"expected."</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t254" href="#t254">254</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -383,7 +383,7 @@
     <p class="run"><span class="n"><a id="t299" href="#t299">299</a></span><span class="t">                <span class="key">raise</span> <span class="nam">HTTPException</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t300" href="#t300">300</a></span><span class="t">                    <span class="nam">status_code</span><span class="op">=</span><span class="nam">status</span><span class="op">.</span><span class="nam">HTTP_422_UNPROCESSABLE_ENTITY</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t301" href="#t301">301</a></span><span class="t">                    <span class="nam">detail</span><span class="op">=</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t302" href="#t302">302</a></span><span class="t">                        <span class="str">f"Found {len(tasks_by_source)} tasks with {source=}."</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t302" href="#t302">302</a></span><span class="t">                        <span class="fst">f"</span><span class="fst">Found </span><span class="op">{</span><span class="nam">len</span><span class="op">(</span><span class="nam">tasks_by_source</span><span class="op">)</span><span class="op">}</span><span class="fst"> tasks with </span><span class="op">{</span><span class="nam">source</span><span class="op">=</span><span class="op">}</span><span class="fst">.</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t303" href="#t303">303</a></span><span class="t">                    <span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t304" href="#t304">304</a></span><span class="t">                <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t305" href="#t305">305</a></span><span class="t">            <span class="nam">source_to_id</span><span class="op">[</span><span class="nam">source</span><span class="op">]</span> <span class="op">=</span> <span class="nam">tasks_by_source</span><span class="op">[</span><span class="num">0</span><span class="op">]</span><span class="op">.</span><span class="nam">id</span>&nbsp;</span><span class="r"></span></p>
@@ -441,7 +441,7 @@
             <a id="nextFileLink" class="nav" href="d_e101bdf799b2c8b0_workflowtask_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.3">coverage.py v7.4.3</a>,
-            created at 2024-02-27 09:30 +0000
+            created at 2024-03-04 08:46 +0000
         </p>
     </div>
 </footer>

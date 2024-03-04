@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="d_e0542f3a62985dd8_background_operations_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.3">coverage.py v7.4.3</a>,
-            created at 2024-02-27 09:30 +0000
+            created at 2024-03-04 08:46 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -134,7 +134,7 @@
     <p class="pln"><span class="n"><a id="t50" href="#t50">50</a></span><span class="t">                    <span class="op">*</span><span class="nam">_</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t51" href="#t51">51</a></span><span class="t">                <span class="op">)</span> <span class="op">=</span> <span class="nam">package_path</span><span class="op">.</span><span class="nam">name</span><span class="op">.</span><span class="nam">split</span><span class="op">(</span><span class="str">"-"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t52" href="#t52">52</a></span><span class="t">            <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t53" href="#t53">53</a></span><span class="t">                <span class="key">raise</span> <span class="nam">ValueError</span><span class="op">(</span><span class="str">f"Package {package_path} does not exist."</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t53" href="#t53">53</a></span><span class="t">                <span class="key">raise</span> <span class="nam">ValueError</span><span class="op">(</span><span class="fst">f"</span><span class="fst">Package </span><span class="op">{</span><span class="nam">package_path</span><span class="op">}</span><span class="fst"> does not exist.</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t54" href="#t54">54</a></span><span class="t">        <span class="key">return</span> <span class="nam">values</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t55" href="#t55">55</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t56" href="#t56">56</a></span><span class="t">    <span class="op">@</span><span class="nam">property</span>&nbsp;</span><span class="r"></span></p>
@@ -150,7 +150,7 @@
     <p class="run"><span class="n"><a id="t66" href="#t66">66</a></span><span class="t">        <span class="key">if</span> <span class="key">not</span> <span class="nam">self</span><span class="op">.</span><span class="nam">package_name</span> <span class="key">or</span> <span class="key">not</span> <span class="nam">self</span><span class="op">.</span><span class="nam">package_version</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t67" href="#t67">67</a></span><span class="t">            <span class="key">raise</span> <span class="nam">ValueError</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t68" href="#t68">68</a></span><span class="t">                <span class="str">"Cannot construct `package_source` property with "</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t69" href="#t69">69</a></span><span class="t">                <span class="str">f"{self.package_name=} and {self.package_version=}."</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t69" href="#t69">69</a></span><span class="t">                <span class="fst">f"</span><span class="op">{</span><span class="nam">self</span><span class="op">.</span><span class="nam">package_name</span><span class="op">=</span><span class="op">}</span><span class="fst"> and </span><span class="op">{</span><span class="nam">self</span><span class="op">.</span><span class="nam">package_version</span><span class="op">=</span><span class="op">}</span><span class="fst">.</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t70" href="#t70">70</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t71" href="#t71">71</a></span><span class="t">        <span class="key">if</span> <span class="nam">self</span><span class="op">.</span><span class="nam">is_local_package</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t72" href="#t72">72</a></span><span class="t">            <span class="nam">collection_type</span> <span class="op">=</span> <span class="str">"pip_local"</span>&nbsp;</span><span class="r"></span></p>
@@ -159,7 +159,7 @@
     <p class="pln"><span class="n"><a id="t75" href="#t75">75</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t76" href="#t76">76</a></span><span class="t">        <span class="nam">package_extras</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">package_extras</span> <span class="key">or</span> <span class="str">""</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t77" href="#t77">77</a></span><span class="t">        <span class="key">if</span> <span class="nam">self</span><span class="op">.</span><span class="nam">python_version</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t78" href="#t78">78</a></span><span class="t">            <span class="nam">python_version</span> <span class="op">=</span> <span class="str">f"py{self.python_version}"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t78" href="#t78">78</a></span><span class="t">            <span class="nam">python_version</span> <span class="op">=</span> <span class="fst">f"</span><span class="fst">py</span><span class="op">{</span><span class="nam">self</span><span class="op">.</span><span class="nam">python_version</span><span class="op">}</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t79" href="#t79">79</a></span><span class="t">        <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t80" href="#t80">80</a></span><span class="t">            <span class="nam">python_version</span> <span class="op">=</span> <span class="str">""</span>  <span class="com"># FIXME: can we allow this?</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t81" href="#t81">81</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -194,7 +194,7 @@
             <a id="nextFileLink" class="nav" href="d_e0542f3a62985dd8_background_operations_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.3">coverage.py v7.4.3</a>,
-            created at 2024-02-27 09:30 +0000
+            created at 2024-03-04 08:46 +0000
         </p>
     </div>
 </footer>
