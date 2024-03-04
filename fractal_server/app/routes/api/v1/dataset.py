@@ -1,4 +1,5 @@
 import json
+from json.decoder import JSONDecodeError
 from pathlib import Path
 from typing import Optional
 
@@ -511,6 +512,12 @@ async def get_workflowtask_status(
                 history = json.load(f)
         except FileNotFoundError:
             history = []
+        except JSONDecodeError:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="History file does not include a valid JSON.",
+            )
+
         for history_item in history:
             wftask_id = history_item["workflowtask"]["id"]
             wftask_status = history_item["status"]
