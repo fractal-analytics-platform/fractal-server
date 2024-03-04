@@ -23,7 +23,7 @@ from ...models.v1 import ApplyWorkflow
 from ...models.v1 import Dataset
 from ...models.v1 import Workflow
 from ...models.v1 import WorkflowTask
-from ...schemas import WorkflowTaskStatusType
+from ...schemas.v1 import WorkflowTaskStatusType
 from ..filenames import HISTORY_FILENAME
 from ..filenames import METADATA_FILENAME
 

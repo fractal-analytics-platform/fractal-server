@@ -3,13 +3,13 @@ from fractal_client import FractalClient
 from passlib.context import CryptContext
 
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.schemas import ApplyWorkflowCreate
-from fractal_server.app.schemas import DatasetCreate
-from fractal_server.app.schemas import ProjectCreate
-from fractal_server.app.schemas import ResourceCreate
-from fractal_server.app.schemas import UserCreate
-from fractal_server.app.schemas import WorkflowCreate
-from fractal_server.app.schemas import WorkflowTaskCreate
+from fractal_server.app.schemas.v1 import ApplyWorkflowCreate
+from fractal_server.app.schemas.v1 import DatasetCreate
+from fractal_server.app.schemas.v1 import ProjectCreate
+from fractal_server.app.schemas.v1 import ResourceCreate
+from fractal_server.app.schemas.v1 import UserCreate
+from fractal_server.app.schemas.v1 import WorkflowCreate
+from fractal_server.app.schemas.v1 import WorkflowTaskCreate
 from fractal_server.app.security import UserOAuth
 
 

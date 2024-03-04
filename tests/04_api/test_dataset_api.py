@@ -9,11 +9,11 @@ from fractal_server.app.models import Resource
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
-from fractal_server.app.schemas import JobStatusType
-from fractal_server.app.schemas import WorkflowTaskStatusType
-from fractal_server.app.schemas.dataset import _DatasetHistoryItem
-from fractal_server.app.schemas.dumps import TaskDump
-from fractal_server.app.schemas.dumps import WorkflowTaskDump
+from fractal_server.app.schemas.v1 import JobStatusType
+from fractal_server.app.schemas.v1 import WorkflowTaskStatusType
+from fractal_server.app.schemas.v1.dataset import _DatasetHistoryItem
+from fractal_server.app.schemas.v1.dumps import TaskDump
+from fractal_server.app.schemas.v1.dumps import WorkflowTaskDump
 
 PREFIX = "api/v1"
 

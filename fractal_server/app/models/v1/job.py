@@ -9,8 +9,8 @@ from sqlmodel import Field
 from sqlmodel import SQLModel
 
 from ....utils import get_timestamp
-from ...schemas import JobStatusType
-from ...schemas.applyworkflow import _ApplyWorkflowBase
+from ...schemas.v1 import JobStatusType
+from ...schemas.v1.applyworkflow import _ApplyWorkflowBase
 
 
 class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):

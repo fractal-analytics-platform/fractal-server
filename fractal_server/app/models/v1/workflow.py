@@ -13,8 +13,8 @@ from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
 from ....utils import get_timestamp
-from ...schemas.workflow import _WorkflowBase
-from ...schemas.workflow import _WorkflowTaskBase
+from ...schemas.v1.workflow import _WorkflowBase
+from ...schemas.v1.workflow import _WorkflowTaskBase
 from .task import Task
 
 

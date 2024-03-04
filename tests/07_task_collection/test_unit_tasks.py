@@ -4,7 +4,7 @@ import pytest
 from devtools import debug
 from pydantic.error_wrappers import ValidationError
 
-from fractal_server.app.schemas import ManifestV1
+from fractal_server.app.schemas.v1 import ManifestV1
 from fractal_server.tasks._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.utils import _normalize_package_name
 from fractal_server.tasks.utils import get_absolute_venv_path

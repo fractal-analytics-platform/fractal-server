@@ -4,7 +4,7 @@ from pathlib import Path
 
 from devtools import debug
 
-from fractal_server.app.schemas.manifest import ManifestV1
+from fractal_server.app.schemas.v1.manifest import ManifestV1
 from tests.data import tasks_dummy as tasks_package
 from tests.data.tasks_dummy import dummy as dummy_module
 from tests.data.tasks_dummy.dummy import dummy

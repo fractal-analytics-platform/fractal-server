@@ -6,7 +6,7 @@ from pydantic import Field
 from pydantic import HttpUrl
 from pydantic import validator
 
-from ._validators import valstr
+from .._validators import valstr
 
 __all__ = (
     "TaskCreate",

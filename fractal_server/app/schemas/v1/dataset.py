@@ -6,9 +6,9 @@ from pydantic import BaseModel
 from pydantic import Field
 from pydantic import validator
 
-from ._validators import val_absolute_path
-from ._validators import valstr
-from ._validators import valutc
+from .._validators import val_absolute_path
+from .._validators import valstr
+from .._validators import valutc
 from .dumps import WorkflowTaskDump
 from .project import ProjectRead
 from .workflow import WorkflowTaskStatusType

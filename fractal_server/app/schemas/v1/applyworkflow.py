@@ -6,8 +6,8 @@ from pydantic import BaseModel
 from pydantic import validator
 from pydantic.types import StrictStr
 
-from ._validators import valstr
-from ._validators import valutc
+from .._validators import valstr
+from .._validators import valutc
 from .dumps import DatasetDump
 from .dumps import ProjectDump
 from .dumps import WorkflowDump

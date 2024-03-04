@@ -23,7 +23,7 @@ from ....logger import get_logger
 from ....syringe import Inject
 from ...models import Task
 from ...models import WorkflowTask
-from ...schemas import WorkflowTaskStatusType
+from ...schemas.v1 import WorkflowTaskStatusType
 from ..exceptions import JobExecutionError
 from ..exceptions import TaskExecutionError
 from .common import TaskParameters

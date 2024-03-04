@@ -26,10 +26,10 @@ from .....tasks.utils import slugify_task_name
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models import State
-from ....models import Task
-from ....schemas.v1 import StateRead
-from ....schemas.v1 import TaskCollectPip
-from ....schemas.v1 import TaskCollectStatus
+from ....models.v2 import TaskV2
+from ....schemas import StateRead
+from ....schemas.v2 import TaskCollectPipV2
+from ....schemas.v2 import TaskCollectStatusV2
 from ....security import current_active_user
 from ....security import current_active_verified_user
 from ....security import User
@@ -57,7 +57,7 @@ logger = set_logger(__name__)
     },
 )
 async def collect_tasks_pip(
-    task_collect: TaskCollectPip,
+    task_collect: TaskCollectPipV2,
     background_tasks: BackgroundTasks,
     response: Response,
     user: User = Depends(current_active_verified_user),
@@ -112,7 +112,7 @@ async def collect_tasks_pip(
         try:
             task_collect_status = get_collection_data(venv_path)
             for task in task_collect_status.task_list:
-                db_task = await db.get(Task, task.id)
+                db_task = await db.get(TaskV2, task.id)
                 if (
                     (not db_task)
                     or db_task.source != task.source
@@ -149,7 +149,7 @@ async def collect_tasks_pip(
     for new_task in task_pkg.package_manifest.task_list:
         new_task_name_slug = slugify_task_name(new_task.name)
         new_task_source = f"{task_pkg.package_source}:{new_task_name_slug}"
-        stm = select(Task).where(Task.source == new_task_source)
+        stm = select(TaskV2).where(TaskV2.source == new_task_source)
         res = await db.execute(stm)
         if res.scalars().all():
             raise HTTPException(
@@ -162,7 +162,7 @@ async def collect_tasks_pip(
 
     # All checks are OK, proceed with task collection
     full_venv_path = venv_path.relative_to(settings.FRACTAL_TASKS_DIR)
-    collection_status = TaskCollectStatus(
+    collection_status = TaskCollectStatusV2(
         status="pending", venv_path=full_venv_path, package=task_pkg.package
     )
 
@@ -214,7 +214,7 @@ async def check_collection_status(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No task collection info with id={state_id}",
         )
-    data = TaskCollectStatus(**state.data)
+    data = TaskCollectStatusV2(**state.data)
 
     # In some cases (i.e. a successful or ongoing task collection), data.log is
     # not set; if so, we collect the current logs
