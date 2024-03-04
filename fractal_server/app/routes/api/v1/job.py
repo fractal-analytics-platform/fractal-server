@@ -14,7 +14,7 @@ from ....models import ApplyWorkflow
 from ....models import JobStatusType
 from ....models import Project
 from ....runner.filenames import WORKFLOW_LOG_FILENAME
-from ....schemas import ApplyWorkflowRead
+from ....schemas.v1 import ApplyWorkflowRead
 from ....security import current_active_user
 from ....security import User
 from ...aux._job import _write_shutdown_file

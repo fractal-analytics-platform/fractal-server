@@ -9,15 +9,15 @@ from fractal_server.app.models import State
 from fractal_server.app.models import Task
 from fractal_server.app.models import UserOAuth
 from fractal_server.app.models import Workflow
-from fractal_server.app.schemas import ApplyWorkflowRead
-from fractal_server.app.schemas import DatasetRead
-from fractal_server.app.schemas import ProjectRead
-from fractal_server.app.schemas import ResourceRead
-from fractal_server.app.schemas import StateRead
-from fractal_server.app.schemas import TaskRead
-from fractal_server.app.schemas import UserRead
-from fractal_server.app.schemas import WorkflowRead
-from fractal_server.app.schemas import WorkflowTaskRead
+from fractal_server.app.schemas.v1 import ApplyWorkflowRead
+from fractal_server.app.schemas.v1 import DatasetRead
+from fractal_server.app.schemas.v1 import ProjectRead
+from fractal_server.app.schemas.v1 import ResourceRead
+from fractal_server.app.schemas.v1 import StateRead
+from fractal_server.app.schemas.v1 import TaskRead
+from fractal_server.app.schemas.v1 import UserRead
+from fractal_server.app.schemas.v1 import WorkflowRead
+from fractal_server.app.schemas.v1 import WorkflowTaskRead
 
 with next(get_sync_db()) as db:
 

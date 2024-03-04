@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 from devtools import debug
 
-from fractal_server.app.schemas import ManifestV1
+from fractal_server.app.schemas.v1 import ManifestV1
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 from fractal_server.tasks._TaskCollectPip import _TaskCollectPip

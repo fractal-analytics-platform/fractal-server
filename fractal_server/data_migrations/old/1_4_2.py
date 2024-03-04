@@ -13,9 +13,9 @@ from sqlalchemy.exc import IntegrityError
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v1.job import ApplyWorkflow
 from fractal_server.app.models.v1.project import Project
-from fractal_server.app.schemas.applyworkflow import ApplyWorkflowRead
-from fractal_server.app.schemas.dumps import ProjectDump
-from fractal_server.app.schemas.project import ProjectRead
+from fractal_server.app.schemas.v1.applyworkflow import ApplyWorkflowRead
+from fractal_server.app.schemas.v1.dumps import ProjectDump
+from fractal_server.app.schemas.v1.project import ProjectRead
 
 
 REFERENCE_TIMESTAMP = datetime(2000, 1, 1, tzinfo=timezone.utc)

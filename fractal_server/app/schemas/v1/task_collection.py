@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from pydantic import Field
 from pydantic import validator
 
-from ._validators import valstr
+from .._validators import valstr
 from .task import TaskRead
 
 __all__ = (

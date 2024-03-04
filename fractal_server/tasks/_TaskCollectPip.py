@@ -3,8 +3,8 @@ from typing import Optional
 
 from pydantic import root_validator
 
-from fractal_server.app.schemas import ManifestV1
-from fractal_server.app.schemas import TaskCollectPip
+from fractal_server.app.schemas.v1 import ManifestV1
+from fractal_server.app.schemas.v1 import TaskCollectPip
 
 
 class _TaskCollectPip(TaskCollectPip):

@@ -3,8 +3,8 @@ from devtools import debug
 from sqlmodel import select
 
 from fractal_server.app.models import Task
-from fractal_server.app.schemas.task import TaskCreate
-from fractal_server.app.schemas.task import TaskUpdate
+from fractal_server.app.schemas.v1.task import TaskCreate
+from fractal_server.app.schemas.v1.task import TaskUpdate
 
 PREFIX = "/api/v1/task"
 

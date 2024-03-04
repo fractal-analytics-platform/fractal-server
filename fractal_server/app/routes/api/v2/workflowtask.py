@@ -1,16 +1,3 @@
-# Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
-# University of Zurich
-#
-# Original author(s):
-# Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
-# Marco Franzon <marco.franzon@exact-lab.it>
-# Tommaso Comparin <tommaso.comparin@exact-lab.it>
-# Yuri Chiucconi <yuri.chiucconi@exact-lab.it>
-#
-# This file is part of Fractal and was originally developed by eXact lab S.r.l.
-# <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
-# Institute for Biomedical Research and Pelkmans Lab from the University of
-# Zurich.
 from copy import deepcopy
 from typing import Optional
 
@@ -22,10 +9,10 @@ from fastapi import status
 
 from ....db import AsyncSession
 from ....db import get_async_db
-from ....models import Task
-from ....schemas.v1 import WorkflowTaskCreate
-from ....schemas.v1 import WorkflowTaskRead
-from ....schemas.v1 import WorkflowTaskUpdate
+from ....models.v2 import TaskV2
+from ....schemas.v2 import WorkflowTaskCreateV2
+from ....schemas.v2 import WorkflowTaskReadV2
+from ....schemas.v2 import WorkflowTaskUpdateV2
 from ....security import current_active_user
 from ....security import User
 from ._aux_functions import _get_workflow_check_owner
@@ -37,17 +24,17 @@ router = APIRouter()
 
 @router.post(
     "/project/{project_id}/workflow/{workflow_id}/wftask/",
-    response_model=WorkflowTaskRead,
+    response_model=WorkflowTaskReadV2,
     status_code=status.HTTP_201_CREATED,
 )
 async def create_workflowtask(
     project_id: int,
     workflow_id: int,
     task_id: int,
-    new_task: WorkflowTaskCreate,
+    new_task: WorkflowTaskCreateV2,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[WorkflowTaskRead]:
+) -> Optional[WorkflowTaskReadV2]:
     """
     Add a WorkflowTask to a Workflow
     """
@@ -57,7 +44,7 @@ async def create_workflowtask(
     )
 
     # Check that task exists
-    task = await db.get(Task, task_id)
+    task = await db.get(TaskV2, task_id)
     if not task:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -78,7 +65,7 @@ async def create_workflowtask(
 
 @router.get(
     "/project/{project_id}/workflow/{workflow_id}/wftask/{workflow_task_id}/",
-    response_model=WorkflowTaskRead,
+    response_model=WorkflowTaskReadV2,
 )
 async def read_workflowtask(
     project_id: int,
@@ -99,16 +86,16 @@ async def read_workflowtask(
 
 @router.patch(
     "/project/{project_id}/workflow/{workflow_id}/wftask/{workflow_task_id}/",
-    response_model=WorkflowTaskRead,
+    response_model=WorkflowTaskReadV2,
 )
 async def update_workflowtask(
     project_id: int,
     workflow_id: int,
     workflow_task_id: int,
-    workflow_task_update: WorkflowTaskUpdate,
+    workflow_task_update: WorkflowTaskUpdateV2,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[WorkflowTaskRead]:
+) -> Optional[WorkflowTaskReadV2]:
     """
     Edit a WorkflowTask of a Workflow
     """

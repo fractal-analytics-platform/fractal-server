@@ -8,7 +8,7 @@ from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
 from ....utils import get_timestamp
-from ...schemas.project import _ProjectBase
+from ...schemas.v1.project import _ProjectBase
 from ..linkuserproject import LinkUserProject
 from ..security import UserOAuth
 

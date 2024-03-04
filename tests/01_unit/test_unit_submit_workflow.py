@@ -11,7 +11,7 @@ from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.runner.v1 import submit_workflow
-from fractal_server.app.schemas import JobStatusType
+from fractal_server.app.schemas.v1 import JobStatusType
 
 
 async def test_success_submit_workflows(

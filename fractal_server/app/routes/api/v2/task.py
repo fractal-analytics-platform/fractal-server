@@ -11,11 +11,11 @@ from sqlmodel import select
 from .....logger import set_logger
 from ....db import AsyncSession
 from ....db import get_async_db
-from ....models import Task
-from ....models import WorkflowTask
-from ....schemas.v1 import TaskCreate
-from ....schemas.v1 import TaskRead
-from ....schemas.v1 import TaskUpdate
+from ....models.v2 import TaskV2
+from ....models.v2 import WorkflowTaskV2
+from ....schemas.v2 import TaskCreateV2
+from ....schemas.v2 import TaskReadV2
+from ....schemas.v2 import TaskUpdateV2
 from ....security import current_active_user
 from ....security import current_active_verified_user
 from ....security import User
@@ -26,16 +26,16 @@ router = APIRouter()
 logger = set_logger(__name__)
 
 
-@router.get("/", response_model=list[TaskRead])
+@router.get("/", response_model=list[TaskReadV2])
 async def get_list_task(
     user: User = Depends(current_active_user),
     args_schema: bool = True,
     db: AsyncSession = Depends(get_async_db),
-) -> list[TaskRead]:
+) -> list[TaskReadV2]:
     """
     Get list of available tasks
     """
-    stm = select(Task)
+    stm = select(TaskV2)
     res = await db.execute(stm)
     task_list = res.scalars().all()
     await db.close()
@@ -46,31 +46,31 @@ async def get_list_task(
     return task_list
 
 
-@router.get("/{task_id}/", response_model=TaskRead)
+@router.get("/{task_id}/", response_model=TaskReadV2)
 async def get_task(
     task_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskRead:
+) -> TaskReadV2:
     """
     Get info on a specific task
     """
-    task = await db.get(Task, task_id)
+    task = await db.get(TaskV2, task_id)
     await db.close()
     if not task:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="TaskV2 not found"
         )
     return task
 
 
-@router.patch("/{task_id}/", response_model=TaskRead)
+@router.patch("/{task_id}/", response_model=TaskReadV2)
 async def patch_task(
     task_id: int,
-    task_update: TaskUpdate,
+    task_update: TaskUpdateV2,
     user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[TaskRead]:
+) -> Optional[TaskReadV2]:
     """
     Edit a specific task (restricted to superusers and task owner)
     """
@@ -109,12 +109,14 @@ async def patch_task(
     return db_task
 
 
-@router.post("/", response_model=TaskRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/", response_model=TaskReadV2, status_code=status.HTTP_201_CREATED
+)
 async def create_task(
-    task: TaskCreate,
+    task: TaskCreateV2,
     user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[TaskRead]:
+) -> Optional[TaskReadV2]:
     """
     Create a new task
     """
@@ -138,16 +140,16 @@ async def create_task(
     # Verify that source is not already in use (note: this check is only useful
     # to provide a user-friendly error message, but `task.source` uniqueness is
     # already guaranteed by a constraint in the table definition).
-    stm = select(Task).where(Task.source == task.source)
+    stm = select(TaskV2).where(TaskV2.source == task.source)
     res = await db.execute(stm)
     if res.scalars().all():
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f'Task source "{task.source}" already in use',
+            detail=f'TaskV2 source "{task.source}" already in use',
         )
 
     # Add task
-    db_task = Task(**task.dict(), owner=owner)
+    db_task = TaskV2(**task.dict(), owner=owner)
     db.add(db_task)
     await db.commit()
     await db.refresh(db_task)
@@ -167,16 +169,16 @@ async def delete_task(
 
     db_task = await _get_task_check_owner(task_id=task_id, user=user, db=db)
 
-    # Check that the Task is not in relationship with some WorkflowTask
-    stm = select(WorkflowTask).filter(WorkflowTask.task_id == task_id)
+    # Check that the TaskV2 is not in relationship with some WorkflowTaskV2
+    stm = select(WorkflowTaskV2).filter(WorkflowTaskV2.task_id == task_id)
     res = await db.execute(stm)
     workflowtask_list = res.scalars().all()
     if workflowtask_list:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
-                f"Cannot remove Task {task_id} because it is currently "
-                "imported in Workflows "
+                f"Cannot remove TaskV2 {task_id} because it is currently "
+                "imported in WorkflowsV2 "
                 f"{[x.workflow_id for x in workflowtask_list]}. "
                 "If you want to remove this task, then you should first remove"
                 " the workflows.",
