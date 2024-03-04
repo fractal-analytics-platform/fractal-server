@@ -1,3 +1,4 @@
+import os
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -488,7 +489,8 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
     ]
 
 
-def test_registration_overwrite(tmp_path: Path, executor):
+@pytest.mark.skip("FIXME: update this")
+def test_registration_old_overwrite(tmp_path: Path, executor):
     """
     TBD
     """
@@ -668,7 +670,8 @@ def test_registration_overwrite(tmp_path: Path, executor):
     assert dataset.parallelization_list is None
 
 
-def test_registration_no_overwrite(tmp_path: Path, executor):
+@pytest.mark.skip("FIXME: update this")
+def test_registration_old_no_overwrite(tmp_path: Path, executor):
     """
     TBD
     """
@@ -851,3 +854,181 @@ def test_registration_no_overwrite(tmp_path: Path, executor):
 
     # The custom parallelization list is not present any more
     assert dataset.parallelization_list is None
+
+
+def test_registration_no_overwrite(tmp_path: Path, executor):
+    """
+    Test registration workflow, based on four tasks.
+    """
+
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=TASK_LIST["create_ome_zarr_multiplex"],
+                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
+            ),
+            WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
+        ],
+        dataset=Dataset(),
+        executor=executor,
+    )
+
+    # Run init registration
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=TASK_LIST["init_registration"],
+                args={"ref_acquisition": 0},
+            )
+        ],
+        dataset=dataset,
+        executor=executor,
+    )
+
+    # Print current dataset information
+    debug(dataset)
+
+    # Run calculate registration
+    dataset = execute_tasks_v2(
+        wf_task_list=[WorkflowTask(task=TASK_LIST["calculate_registration"])],
+        dataset=dataset,
+        executor=executor,
+    )
+
+    # Print current dataset information
+    debug(dataset)
+
+    # In all non-reference-cycle images, a certain table was updated
+    for image in dataset.images:
+        if image.attributes["acquisition"] == 0:
+            assert not os.path.isfile(f"{image.path}/registration_table")
+        else:
+            assert os.path.isfile(f"{image.path}/registration_table")
+
+    # Run find_registration_consensus
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(task=TASK_LIST["find_registration_consensus"])
+        ],
+        dataset=dataset,
+        executor=executor,
+    )
+
+    # Print current dataset information
+    debug(dataset)
+
+    # In all images, a certain (post-consensus) table was updated
+    for image in dataset.images:
+        assert os.path.isfile(f"{image.path}/registration_table_final")
+
+    # The image list still has the original six images only
+    assert len(dataset.images) == 6
+
+    # Run apply_registration_to_image
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=TASK_LIST["apply_registration_to_image"],
+                args={"overwrite_input": False},
+            )
+        ],
+        dataset=dataset,
+        executor=executor,
+    )
+
+    # A new copy of each image was created
+    assert len(dataset.images) == 12
+
+    # Print current dataset information
+    debug(dataset)
+
+
+def test_registration_overwrite(tmp_path: Path, executor):
+    """
+    Test registration workflow, based on four tasks.
+    """
+
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=TASK_LIST["create_ome_zarr_multiplex"],
+                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
+            ),
+            WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
+        ],
+        dataset=Dataset(),
+        executor=executor,
+    )
+
+    # Run init registration
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=TASK_LIST["init_registration"],
+                args={"ref_acquisition": 0},
+            )
+        ],
+        dataset=dataset,
+        executor=executor,
+    )
+
+    # Print current dataset information
+    debug(dataset)
+
+    # Run calculate registration
+    dataset = execute_tasks_v2(
+        wf_task_list=[WorkflowTask(task=TASK_LIST["calculate_registration"])],
+        dataset=dataset,
+        executor=executor,
+    )
+
+    # Print current dataset information
+    debug(dataset)
+
+    # In all non-reference-cycle images, a certain table was updated
+    for image in dataset.images:
+        if image.attributes["acquisition"] == 0:
+            assert not os.path.isfile(f"{image.path}/registration_table")
+        else:
+            assert os.path.isfile(f"{image.path}/registration_table")
+
+    # Run find_registration_consensus
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(task=TASK_LIST["find_registration_consensus"])
+        ],
+        dataset=dataset,
+        executor=executor,
+    )
+
+    # Print current dataset information
+    debug(dataset)
+
+    # In all images, a certain (post-consensus) table was updated
+    for image in dataset.images:
+        assert os.path.isfile(f"{image.path}/registration_table_final")
+
+    # The image list still has the original six images only
+    assert len(dataset.images) == 6
+
+    # Run apply_registration_to_image
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=TASK_LIST["apply_registration_to_image"],
+                args={"overwrite_input": True},
+            )
+        ],
+        dataset=dataset,
+        executor=executor,
+    )
+
+    # Images are still the same number, but they are marked as registered
+    assert len(dataset.images) == 6
+    for image in dataset.images:
+        assert image.attributes["registration"] is True
+
+    # Print current dataset information
+    debug(dataset)
