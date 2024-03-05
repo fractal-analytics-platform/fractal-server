@@ -49,6 +49,8 @@ class DatasetCreateV2(BaseModel):
     history: list[_DatasetHistoryItemV2] = []
     read_only: bool = False
 
+    zarr_dir: str
+
     images: list[SingleImage] = []
     filters: dict[str, Any] = {}
 
@@ -75,6 +77,8 @@ class DatasetReadV2(BaseModel):
     read_only: bool
 
     timestamp_created: datetime
+
+    zarr_dir: str
 
     images: list[SingleImage]
     filters: dict[str, Any]
