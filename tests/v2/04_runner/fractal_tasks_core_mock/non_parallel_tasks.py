@@ -14,9 +14,9 @@ def create_ome_zarr(
     # Standard arguments
     paths: list[str],
     buffer: Optional[DictStrAny] = None,
+    zarr_dir: str,
     # Task-specific arguments
     image_dir: str,
-    zarr_dir: str,
     fake_list_relative_paths: Optional[list[str]] = None,
 ) -> dict:
     """
@@ -92,9 +92,9 @@ def create_ome_zarr_multiplex(
     # Standard arguments
     paths: list[str],
     buffer: Optional[DictStrAny] = None,
+    zarr_dir: str,
     # Task-specific arguments
     image_dir: str,
-    zarr_dir: str,
 ) -> dict:
 
     if len(paths) > 0:
@@ -165,6 +165,7 @@ def new_ome_zarr(
     # Standard arguments
     paths: list[str],
     buffer: Optional[DictStrAny] = None,
+    zarr_dir: str,
     # Non-standard arguments
     suffix: str = "new",
     project_to_2D: bool = True,
