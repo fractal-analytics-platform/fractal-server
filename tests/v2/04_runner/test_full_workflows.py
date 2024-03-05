@@ -29,12 +29,12 @@ def test_workflow_1(tmp_path: Path, executor):
     3. new_ome_zarr + MIP
     """
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
-    dataset_in = Dataset(id=1)
+    dataset_in = Dataset(id=1, zarr_dir=zarr_dir)
     dataset_out = execute_tasks_v2(
         wf_task_list=[
             WorkflowTask(
                 task=TASK_LIST["create_ome_zarr"],
-                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
+                args=dict(image_dir="/tmp/input_images"),
             ),
             WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
             WorkflowTask(
@@ -113,12 +113,12 @@ def test_workflow_2(tmp_path: Path, executor):
     2. illumination correction (overwrite_input=True)
     """
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
-    dataset_in = Dataset(id=1)
+    dataset_in = Dataset(id=1, zarr_dir=zarr_dir)
     dataset_out = execute_tasks_v2(
         wf_task_list=[
             WorkflowTask(
                 task=TASK_LIST["create_ome_zarr"],
-                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
+                args=dict(image_dir="/tmp/input_images"),
             ),
             WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
             WorkflowTask(
@@ -178,7 +178,7 @@ def test_workflow_3(tmp_path: Path, executor):
         wf_task_list=[
             WorkflowTask(
                 task=TASK_LIST["create_ome_zarr"],
-                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
+                args=dict(image_dir="/tmp/input_images"),
             ),
             WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
             WorkflowTask(
@@ -239,7 +239,7 @@ def test_workflow_4(tmp_path: Path, executor):
         wf_task_list=[
             WorkflowTask(
                 task=TASK_LIST["create_ome_zarr"],
-                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
+                args=dict(image_dir="/tmp/input_images"),
             ),
             WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
             WorkflowTask(
@@ -317,7 +317,7 @@ def test_workflow_5(tmp_path: Path, executor):
         wf_task_list=[
             WorkflowTask(
                 task=TASK_LIST["create_ome_zarr"],
-                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
+                args=dict(image_dir="/tmp/input_images"),
             ),
             WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
             WorkflowTask(
@@ -391,7 +391,7 @@ def test_workflow_6(tmp_path: Path, executor):
         wf_task_list=[
             WorkflowTask(
                 task=TASK_LIST["create_ome_zarr"],
-                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
+                args=dict(image_dir="/tmp/input_images"),
             ),
             WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"]),
             WorkflowTask(task=TASK_LIST["init_channel_parallelization"]),
@@ -427,7 +427,7 @@ def test_workflow_8(tmp_path: Path, executor):
         wf_task_list=[
             WorkflowTask(
                 task=TASK_LIST["create_ome_zarr"],
-                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
+                args=dict(image_dir="/tmp/input_images"),
             ),
             WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
             WorkflowTask(

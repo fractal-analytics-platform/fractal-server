@@ -210,3 +210,14 @@ def new_ome_zarr(
     )
     print("[new_ome_zarr] END")
     return out
+
+
+"""
+zarr_dirr = /tmp/my_folder
+image.path = /tmp/my_folder/plate.zarr/B/03/0
+
+
+image.path = /tmp/my_folder/0.zarr
+image.path = /tmp/my_folder/1.zarr
+image.path = /tmp/my_folder/2.zarr
+"""

@@ -16,6 +16,7 @@ def dummy_task(*args, **kwargs):
 def create_images_from_scratch(
     paths: list[str],
     buffer: dict[str, Any],
+    zarr_dir: str,
     new_paths: Optional[list[str]] = None,
 ) -> dict[str, Any]:
     if new_paths is None:
@@ -25,7 +26,10 @@ def create_images_from_scratch(
 
 
 def remove_images(
-    paths: list[str], buffer: dict[str, Any], removed_images_paths: list[str]
+    paths: list[str],
+    buffer: dict[str, Any],
+    zarr_dir: str,
+    removed_images_paths: list[str],
 ) -> dict[str, Any]:
 
     removed_images = [

@@ -43,6 +43,7 @@ def init_registration(
     # Standard arguments
     paths: list[str],
     buffer: Optional[DictStrAny] = None,
+    zarr_dir: str,
     # Non-standard arguments
     ref_acquisition: int,
 ) -> dict:
@@ -116,6 +117,7 @@ def find_registration_consensus(
     # Standard arguments
     paths: list[str],
     buffer: Optional[DictStrAny] = None,
+    zarr_dir: str,
 ) -> dict:
     print("[find_registration_consensus] START")
     well_to_paths = _group_paths_by_well(paths)

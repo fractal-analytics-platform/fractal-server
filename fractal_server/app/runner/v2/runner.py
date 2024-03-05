@@ -83,6 +83,7 @@ def execute_tasks_v2(
                 function_kwargs = dict(
                     paths=paths,
                     buffer=tmp_buffer,
+                    zarr_dir=tmp_dataset.zarr_dir,
                     **wftask.args,
                 )
                 task_output = _run_non_parallel_task(
@@ -105,7 +106,6 @@ def execute_tasks_v2(
                     dict(
                         path=image.path,
                         buffer=tmp_buffer,
-                        zarr_dir=tmp_dataset.zarr_dir,
                         **wftask.args,
                     )
                     for image in current_task_images
@@ -123,7 +123,6 @@ def execute_tasks_v2(
                 for ind, kwargs in enumerate(list_function_kwargs):
                     list_function_kwargs[ind].update(
                         dict(
-                            zarr_dir=tmp_dataset.zarr_dir,
                             buffer=tmp_buffer,
                             **wftask.args,
                         )
@@ -181,6 +180,11 @@ def execute_tasks_v2(
         for image in added_images:
             if image.path in tmp_dataset.image_paths:
                 raise ValueError("Found an overlap")
+            if not image.path.startswith(tmp_dataset.zarr_dir):
+                # !FIXME check image.path relative to zarr_dir
+                raise ValueError(
+                    f"{image.path} is not subclass of {tmp_dataset.zarr_dir}"
+                )
 
             tmp_dataset.images.append(image)
 
