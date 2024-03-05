@@ -102,7 +102,12 @@ def execute_tasks_v2(
                     wftask_filters=wftask.filters,
                 )
                 list_function_kwargs = [
-                    dict(path=image.path, buffer=tmp_buffer, **wftask.args)
+                    dict(
+                        path=image.path,
+                        buffer=tmp_buffer,
+                        zarr_dir=tmp_dataset.zarr_dir,
+                        **wftask.args,
+                    )
                     for image in current_task_images
                 ]
 
@@ -118,6 +123,7 @@ def execute_tasks_v2(
                 for ind, kwargs in enumerate(list_function_kwargs):
                     list_function_kwargs[ind].update(
                         dict(
+                            zarr_dir=tmp_dataset.zarr_dir,
                             buffer=tmp_buffer,
                             **wftask.args,
                         )
