@@ -181,9 +181,9 @@ def execute_tasks_v2(
             if image.path in tmp_dataset.image_paths:
                 raise ValueError("Found an overlap")
             if not image.path.startswith(tmp_dataset.zarr_dir):
-                # !FIXME check image.path relative to zarr_dir
                 raise ValueError(
-                    f"{image.path} is not subclass of {tmp_dataset.zarr_dir}"
+                    f"'{tmp_dataset.zarr_dir}' is not a parent directory of "
+                    f"'{image.path}'"
                 )
 
             tmp_dataset.images.append(image)
