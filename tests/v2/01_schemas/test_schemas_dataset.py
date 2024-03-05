@@ -41,6 +41,7 @@ async def test_schemas_dataset_v2(db):
             },
         ],
         filters={"x": 10},
+        zarr_dir="/tmp",
     )
     debug(dataset_create)
 
