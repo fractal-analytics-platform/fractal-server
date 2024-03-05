@@ -73,8 +73,8 @@ def _copy_and_edit_image(
     [
         None,
         [
-            dict(path="plate.zarr/A/01/0"),
-            dict(path="plate.zarr/A/02/0"),
+            dict(path="/tmp/mydir/plate.zarr/A/01/0"),
+            dict(path="/tmp/mydir/plate.zarr/A/02/0"),
         ],
     ],
 )
