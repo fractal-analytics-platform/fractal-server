@@ -48,10 +48,10 @@ def test_fractal_demos_01(tmp_path: Path, executor):
         wf_task_list=[
             WorkflowTask(
                 task=TASK_LIST["create_ome_zarr"],
-                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
+                args=dict(image_dir="/tmp/input_images"),
             )
         ],
-        dataset=Dataset(),
+        dataset=Dataset(zarr_dir=zarr_dir),
         executor=executor,
     )
 
@@ -299,10 +299,10 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
         wf_task_list=[
             WorkflowTask(
                 task=TASK_LIST["create_ome_zarr"],
-                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
+                args=dict(image_dir="/tmp/input_images"),
             )
         ],
-        dataset=Dataset(),
+        dataset=Dataset(zarr_dir=zarr_dir),
         executor=executor,
     )
     assert dataset.image_paths == [
@@ -866,11 +866,11 @@ def test_registration_no_overwrite(tmp_path: Path, executor):
         wf_task_list=[
             WorkflowTask(
                 task=TASK_LIST["create_ome_zarr_multiplex"],
-                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
+                args=dict(image_dir="/tmp/input_images"),
             ),
             WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
         ],
-        dataset=Dataset(),
+        dataset=Dataset(zarr_dir=zarr_dir),
         executor=executor,
     )
 
@@ -954,11 +954,11 @@ def test_registration_overwrite(tmp_path: Path, executor):
         wf_task_list=[
             WorkflowTask(
                 task=TASK_LIST["create_ome_zarr_multiplex"],
-                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
+                args=dict(image_dir="/tmp/input_images"),
             ),
             WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
         ],
-        dataset=Dataset(),
+        dataset=Dataset(zarr_dir=zarr_dir),
         executor=executor,
     )
 
@@ -1042,11 +1042,11 @@ def test_channel_parallelization_with_overwrite(tmp_path: Path, executor):
         wf_task_list=[
             WorkflowTask(
                 task=TASK_LIST["create_ome_zarr"],
-                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
+                args=dict(image_dir="/tmp/input_images"),
             ),
             WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"]),
         ],
-        dataset=Dataset(),
+        dataset=Dataset(zarr_dir=zarr_dir),
         executor=executor,
     )
 
@@ -1098,11 +1098,11 @@ def test_channel_parallelization_no_overwrite(tmp_path: Path, executor):
         wf_task_list=[
             WorkflowTask(
                 task=TASK_LIST["create_ome_zarr"],
-                args=dict(image_dir="/tmp/input_images", zarr_dir=zarr_dir),
+                args=dict(image_dir="/tmp/input_images"),
             ),
             WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"]),
         ],
-        dataset=Dataset(),
+        dataset=Dataset(zarr_dir=zarr_dir),
         executor=executor,
     )
 
