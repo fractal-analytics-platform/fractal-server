@@ -13,6 +13,7 @@ def init_registration_old(
     # Standard arguments
     paths: list[str],
     buffer: Optional[DictStrAny] = None,
+    zarr_dir: str,
     # Non-standard arguments
     ref_cycle_name: str,
 ) -> dict:

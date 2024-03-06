@@ -17,7 +17,7 @@ class Dataset(BaseModel):
     id: Optional[int] = None
     history: list[DictStrAny] = []
     # New in v2
-    # root_dir: str
+    zarr_dir: str
     images: list[SingleImage] = Field(default_factory=list)
     filters: DictStrAny = Field(default_factory=dict)
     # Temporary state

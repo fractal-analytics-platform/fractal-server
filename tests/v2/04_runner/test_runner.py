@@ -31,7 +31,9 @@ def test_max_parallelization_list_size(N: int, executor):
         )
         for i in range(N)
     ]
-    dataset = Dataset(parallelization_list=parallelization_list)
+    dataset = Dataset(
+        parallelization_list=parallelization_list, zarr_dir="/tmp"
+    )
     wf_task_list = [
         WorkflowTask(
             task=Task(
@@ -71,8 +73,8 @@ def _copy_and_edit_image(
     [
         None,
         [
-            dict(path="plate.zarr/A/01/0"),
-            dict(path="plate.zarr/A/02/0"),
+            dict(path="/tmp/mydir/plate.zarr/A/01/0"),
+            dict(path="/tmp/mydir/plate.zarr/A/02/0"),
         ],
     ],
 )
@@ -80,19 +82,20 @@ def test_image_attribute_propagation(
     parallelization_list: Optional[list[dict]],
     executor,
 ):
+    zarr_dir = "/tmp/mydir"
     images_pre = [
         SingleImage(
-            path="plate.zarr/A/01/0",
+            path=f"{zarr_dir}/plate.zarr/A/01/0",
             attributes=dict(plate="plate.zarr", well="A/01"),
         ),
         SingleImage(
-            path="plate.zarr/A/02/0",
+            path=f"{zarr_dir}/plate.zarr/A/02/0",
             attributes=dict(plate="plate.zarr", well="A/02"),
         ),
     ]
     dataset_pre = Dataset(
         id=1,
-        root_dir="/tmp/invalid",
+        zarr_dir=zarr_dir,
         images=images_pre,
         parallelization_list=parallelization_list,
     )
@@ -114,11 +117,11 @@ def test_image_attribute_propagation(
 
     for image in images_post:
         print(f"Now validate {image}")
-        if image.path == "plate.zarr/A/01/0_new":
+        if image.path == f"{zarr_dir}/plate.zarr/A/01/0_new":
             assert image.attributes["processed"] is True
             assert image.attributes["plate"] == "plate.zarr"
             assert image.attributes["well"] == "A/01"
-        elif image.path == "plate.zarr/A/02/0_new":
+        elif image.path == f"{zarr_dir}/plate.zarr/A/02/0_new":
             assert image.attributes["processed"] is True
             assert image.attributes["plate"] == "plate.zarr"
             assert image.attributes["well"] == "A/02"

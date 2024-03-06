@@ -83,6 +83,7 @@ def execute_tasks_v2(
                 function_kwargs = dict(
                     paths=paths,
                     buffer=tmp_buffer,
+                    zarr_dir=tmp_dataset.zarr_dir,
                     **wftask.args,
                 )
                 task_output = _run_non_parallel_task(
@@ -102,7 +103,11 @@ def execute_tasks_v2(
                     wftask_filters=wftask.filters,
                 )
                 list_function_kwargs = [
-                    dict(path=image.path, buffer=tmp_buffer, **wftask.args)
+                    dict(
+                        path=image.path,
+                        buffer=tmp_buffer,
+                        **wftask.args,
+                    )
                     for image in current_task_images
                 ]
 
@@ -175,6 +180,11 @@ def execute_tasks_v2(
         for image in added_images:
             if image.path in tmp_dataset.image_paths:
                 raise ValueError("Found an overlap")
+            if not image.path.startswith(tmp_dataset.zarr_dir):
+                raise ValueError(
+                    f"'{tmp_dataset.zarr_dir}' is not a parent directory of "
+                    f"'{image.path}'"
+                )
 
             tmp_dataset.images.append(image)
 
