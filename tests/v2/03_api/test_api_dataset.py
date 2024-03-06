@@ -14,7 +14,8 @@ async def test_api_dataset_v2(client, MockCurrentUser):
         # POST
 
         res = await client.post(
-            f"api/v2/project/{p2_id}/dataset/", json=dict(name="dataset")
+            f"api/v2/project/{p2_id}/dataset/",
+            json=dict(name="dataset", zarr_dir="/tmp"),
         )
         assert res.status_code == 201
         dataset1 = res.json()
@@ -34,6 +35,7 @@ async def test_api_dataset_v2(client, MockCurrentUser):
                     },
                 ],
                 filters={"x": 10},
+                zarr_dir="/tmp",
             ),
         )
         assert res.status_code == 201

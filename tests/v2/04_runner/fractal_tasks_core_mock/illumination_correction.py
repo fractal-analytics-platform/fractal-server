@@ -48,6 +48,7 @@ def init_channel_parallelization(
     paths: list[str],
     buffer: Optional[DictStrAny] = None,
     overwrite_input: bool = False,
+    zarr_dir: str,
 ) -> dict:
 
     _check_buffer_is_empty(buffer)
