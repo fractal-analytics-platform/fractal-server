@@ -7,6 +7,7 @@ from fastapi import Response
 from fastapi import status
 from sqlmodel import select
 
+from .....images import SingleImage
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import DatasetV2
@@ -20,7 +21,6 @@ from ....security import User
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
-
 
 router = APIRouter()
 
@@ -212,6 +212,28 @@ async def get_user_datasets(
         for ds in dataset_list:
             setattr(ds, "history", [])
     return dataset_list
+
+
+@router.get(
+    "/project/{project_id}/dataset/{dataset_id}/images/",
+    response_model=DatasetReadV2,
+)
+async def get_dataset_images(
+    project_id: int,
+    dataset_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> Optional[list[SingleImage]]:
+
+    output = await _get_dataset_check_owner(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        db=db,
+    )
+    dataset = output["dataset"]
+    await db.close()
+    return dataset.images
 
 
 # OTHER ENDPOINTS
