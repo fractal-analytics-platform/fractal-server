@@ -15,8 +15,9 @@ class TaskV2(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
 
-    is_parallel: bool
+    type: str  # Literal[“parallel”, “non_parallel”, “compound”]
 
+    command_pre: Optional[str] = None
     command: str
     source: str = Field(unique=True)
 
