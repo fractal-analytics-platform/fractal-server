@@ -1,8 +1,8 @@
 """v2
 
-Revision ID: 1b564b4a412d
+Revision ID: 7e4cd77c56fc
 Revises: 9fd26a2b0de4
-Create Date: 2024-02-29 10:46:35.059144
+Create Date: 2024-03-08 14:36:46.405183
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = "1b564b4a412d"
+revision = "7e4cd77c56fc"
 down_revision = "9fd26a2b0de4"
 branch_labels = None
 depends_on = None
@@ -76,6 +76,9 @@ def upgrade() -> None:
         sa.Column("filters", sa.JSON(), server_default="{}", nullable=False),
         sa.Column("buffer", sa.JSON(), nullable=True),
         sa.Column("parallelization_list", sa.JSON(), nullable=True),
+        sa.Column(
+            "zarr_dir", sqlmodel.sql.sqltypes.AutoString(), nullable=False
+        ),
         sa.ForeignKeyConstraint(
             ["project_id"],
             ["projectv2.id"],
