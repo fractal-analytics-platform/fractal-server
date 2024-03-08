@@ -9,6 +9,7 @@ from fastapi import status
 
 from ....db import AsyncSession
 from ....db import get_async_db
+from ....models.v1 import Task
 from ....models.v2 import TaskV2
 from ....schemas.v2 import WorkflowTaskCreateV2
 from ....schemas.v2 import WorkflowTaskReadV2
@@ -30,7 +31,6 @@ router = APIRouter()
 async def create_workflowtask(
     project_id: int,
     workflow_id: int,
-    task_id: int,
     new_task: WorkflowTaskCreateV2,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
@@ -44,16 +44,22 @@ async def create_workflowtask(
     )
 
     # Check that task exists
-    task = await db.get(TaskV2, task_id)
+    is_v2 = new_task.task_v2_id is not None
+    task_id = new_task.task_v2_id if is_v2 else new_task.task_v1_id
+    if is_v2:
+        task = await db.get(TaskV2, task_id)
+    else:
+        task = await db.get(Task, task_id)
     if not task:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Task {task_id} not found.",
+            detail=f"Task{'V2' if is_v2 else ''} {task_id} not found.",
         )
 
     async with db:
         workflow_task = await _workflow_insert_task(
             **new_task.dict(),
+            is_v2=is_v2,
             workflow_id=workflow.id,
             task_id=task_id,
             db=db,

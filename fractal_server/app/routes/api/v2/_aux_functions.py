@@ -12,6 +12,7 @@ from sqlmodel import select
 from sqlmodel.sql.expression import SelectOfScalar
 
 from ....db import AsyncSession
+from ....models.v1 import Task
 from ....models.v2 import DatasetV2
 from ....models.v2 import JobV2
 from ....models.v2 import LinkUserProjectV2
@@ -389,10 +390,12 @@ def _get_submitted_jobs_statement() -> SelectOfScalar:
 async def _workflow_insert_task(
     *,
     workflow_id: int,
+    is_v2: bool,
     task_id: int,
-    args: Optional[dict[str, Any]] = None,
-    meta: Optional[dict[str, Any]] = None,
     order: Optional[int] = None,
+    meta: Optional[dict[str, Any]] = None,
+    args: Optional[dict[str, Any]] = None,
+    filters: Optional[dict[str, Any]] = None,
     db: AsyncSession,
 ) -> WorkflowTaskV2:
     """
@@ -414,9 +417,14 @@ async def _workflow_insert_task(
 
     # Get task from db, and extract default arguments via a Task property
     # method
-    db_task = await db.get(TaskV2, task_id)
+    if is_v2:
+        db_task = await db.get(TaskV2, task_id)
+    else:
+        db_task = await db.get(Task, task_id)
     if db_task is None:
-        raise ValueError(f"Task {task_id} does not exist")
+        raise ValueError(
+            f"Task{'V2' if is_v2 else ''} {task_id} does not exist"
+        )
 
     default_args = db_task.default_args_from_args_schema
     # Override default_args with args
@@ -434,7 +442,14 @@ async def _workflow_insert_task(
         wt_meta = None
 
     # Create DB entry
-    wf_task = WorkflowTaskV2(task_id=task_id, args=actual_args, meta=wt_meta)
+    if is_v2:
+        wf_task = WorkflowTaskV2(
+            task_v2_id=task_id, args=actual_args, meta=wt_meta, filters=filters
+        )
+    else:
+        wf_task = WorkflowTaskV2(
+            task_v1_id=task_id, args=actual_args, meta=wt_meta, filters=filters
+        )
     db.add(wf_task)
     db_workflow.task_list.insert(order, wf_task)
     db_workflow.task_list.reorder()  # type: ignore

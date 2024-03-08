@@ -29,35 +29,32 @@ class WorkflowTaskV2(SQLModel, table=True):
         sa_column=Column(JSON, nullable=False, server_default="{}")
     )
 
-    is_v2: bool = True
+    task_v1: Optional[Task] = Relationship(
+        sa_relationship_kwargs=dict(lazy="selectin")
+    )
+    task_v1_id: Optional[int] = Field(foreign_key="task.id")
 
     task_v2: Optional[TaskV2] = Relationship(
         sa_relationship_kwargs=dict(lazy="selectin")
     )
     task_v2_id: Optional[int] = Field(foreign_key="taskv2.id")
 
-    task_v1: Optional[Task] = Relationship(
-        sa_relationship_kwargs=dict(lazy="selectin")
-    )
-    task_v1_id: Optional[int] = Field(foreign_key="task.id")
+    @property
+    def is_v2(self) -> bool:
+        if self.task_v2_id is not None:
+            return True
+        elif self.task_v1_id is not None:
+            return False
+        else:
+            raise ValueError("This WorkflowTaskV2 is not related to any Task")
 
     @property
     def task(self) -> Union[Task, TaskV2]:
-        if self.is_v2:
-            return self.task_v2
-        else:
-            return self.task_v1
+        return self.task_v2 or self.task_v1
 
     @property
     def task_id(self) -> int:
-        if self.is_v2:
-            return self.task_v2_id
-        else:
-            return self.task_v1_id
-
-    @property
-    def is_parallel(self) -> bool:
-        return self.task.is_parallel
+        return self.task_v2_id or self.task_v1_id
 
     @validator("args")
     def validate_args(cls, value):
