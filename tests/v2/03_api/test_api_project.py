@@ -287,3 +287,49 @@ async def test_delete_project(
         assert job.project_id is None
         assert job.dataset_id is None
         assert job.workflow_id is None
+
+
+async def test_delete_project_ongoing_jobs(
+    client,
+    MockCurrentUser,
+    db,
+    tmp_path,
+    project_factory_v2,
+    job_factory_v2,
+    dataset_factory_v2,
+    workflow_factory_v2,
+    task_factory_v2,
+):
+    async with MockCurrentUser() as user:
+
+        async def get_project_id_linked_to_job(status: JobStatusTypeV2) -> int:
+            p = await project_factory_v2(user)
+            d = await dataset_factory_v2(project_id=p.id)
+            w = await workflow_factory_v2(project_id=p.id)
+            t = await task_factory_v2(
+                name=f"task_{status}", source=f"source_{status}"
+            )
+            await _workflow_insert_task(
+                workflow_id=w.id, task_id=t.id, is_v2=True, db=db
+            )
+            await job_factory_v2(
+                project_id=p.id,
+                workflow_id=w.id,
+                dataset_id=d.id,
+                working_dir=(tmp_path / "some_working_dir").as_posix(),
+                status=status,
+            )
+            return p.id
+
+        prj_done = await get_project_id_linked_to_job(JobStatusTypeV2.DONE)
+        prj_failed = await get_project_id_linked_to_job(JobStatusTypeV2.FAILED)
+        prj_submitted = await get_project_id_linked_to_job(
+            JobStatusTypeV2.SUBMITTED
+        )
+
+        res = await client.delete(f"api/v2/project/{prj_done}/")
+        assert res.status_code == 204
+        res = await client.delete(f"api/v2/project/{prj_failed}/")
+        assert res.status_code == 204
+        res = await client.delete(f"api/v2/project/{prj_submitted}/")
+        assert res.status_code == 422

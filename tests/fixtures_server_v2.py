@@ -14,9 +14,28 @@ from fractal_server.app.runner.v1.common import (
 
 
 @pytest.fixture
+async def project_factory_v2(db):
+    """
+    Factory that adds a ProjectV2 to the database
+    """
+
+    async def __project_factory(user, **kwargs):
+        defaults = dict(name="project")
+        defaults.update(kwargs)
+        project = ProjectV2(**defaults)
+        project.user_list.append(user)
+        db.add(project)
+        await db.commit()
+        await db.refresh(project)
+        return project
+
+    return __project_factory
+
+
+@pytest.fixture
 async def dataset_factory_v2(db: AsyncSession, tmp_path):
     """
-    Insert datasetv2 in db
+    Insert DatasetV2 in db
     """
     from fractal_server.app.models.v2 import ProjectV2
     from fractal_server.app.models.v2 import DatasetV2
@@ -49,7 +68,7 @@ async def dataset_factory_v2(db: AsyncSession, tmp_path):
 @pytest.fixture
 async def workflow_factory_v2(db: AsyncSession):
     """
-    Insert workflow in db
+    Insert WorkflowV2 in db
     """
     from fractal_server.app.models.v2 import ProjectV2
     from fractal_server.app.models.v2 import WorkflowV2
@@ -83,7 +102,7 @@ async def workflow_factory_v2(db: AsyncSession):
 @pytest.fixture
 async def job_factory_v2(db: AsyncSession):
     """
-    Insert job in db
+    Insert JobV2 in db
     """
 
     async def __job_factory(
@@ -120,7 +139,6 @@ async def job_factory_v2(db: AsyncSession):
                 "Error from job_factory: "
                 f"ProjectV2 {project_id} does not exist."
             )
-        # ! STOP HERE, fix `apply` endpoint
         args = dict(
             project_id=project_id,
             dataset_id=dataset_id,
@@ -159,7 +177,7 @@ async def job_factory_v2(db: AsyncSession):
 @pytest.fixture
 async def task_factory_v2(db: AsyncSession):
     """
-    Insert task in db
+    Insert TaskV2 in db
     """
     from fractal_server.app.models.v2 import TaskV2
 
