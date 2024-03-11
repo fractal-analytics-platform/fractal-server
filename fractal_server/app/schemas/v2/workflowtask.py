@@ -45,7 +45,7 @@ class WorkflowTaskCreateV2(BaseModel):
     task_v2_id: Optional[int]
 
     # Validators
-    @root_validator()
+    @root_validator
     def task_v1_or_v2(cls, values):
         v1 = values.get("task_v1_id")
         v2 = values.get("task_v2_id")
