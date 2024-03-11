@@ -43,9 +43,10 @@ async def create_workflowtask(
         project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
 
-    # Check that task exists
     is_v2 = new_task.task_v2_id is not None
     task_id = new_task.task_v2_id if is_v2 else new_task.task_v1_id
+
+    # Check that task exists
     if is_v2:
         task = await db.get(TaskV2, task_id)
     else:
