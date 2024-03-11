@@ -168,7 +168,6 @@ async def delete_project(
         for job in jobs:
             job.workflow_id = None
             await db.merge(job)
-        # ! await db.commit()
         # Delete workflow
         await db.delete(wf)
     await db.commit()
@@ -186,7 +185,6 @@ async def delete_project(
         for job in jobs:
             job.dataset_id = None
             await db.merge(job)
-        # ! await db.commit()
         # Delete dataset
         await db.delete(ds)
     await db.commit()

@@ -9,7 +9,7 @@ from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.routes.api.v2.apply import _encode_as_utc
 from fractal_server.app.runner.v1.common import (
-    set_start_and_last_task_index,  # FIXME
+    set_start_and_last_task_index,  # FIXME v2
 )
 
 
