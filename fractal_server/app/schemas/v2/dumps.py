@@ -9,6 +9,7 @@ These models are used in at least two situations:
 2. In the `_DatasetHistoryItem.workflowtask` model, to trim its size.
 """
 from typing import Any
+from typing import Literal
 from typing import Optional
 
 from pydantic import BaseModel
@@ -31,9 +32,10 @@ class ProjectDumpV2(BaseModel, extra=Extra.forbid):
 class TaskDumpV2(BaseModel):
     id: int
     name: str
-    is_parallel: bool  # ! new
-    source: str
+    type: Literal["parallel", "non_parallel", "compound"]
+    command_pre: str
     command: str
+    source: str
     owner: Optional[str]
     version: Optional[str]
 
