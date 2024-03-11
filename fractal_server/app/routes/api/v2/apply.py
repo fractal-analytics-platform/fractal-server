@@ -168,7 +168,7 @@ async def apply_workflow(
         dataset_id=dataset_id,
         workflow_id=workflow_id,
         user_email=user.email,
-        input_dataset_dump=dict(
+        dataset_dump=dict(
             **dataset.model_dump(
                 exclude={"resource_list", "timestamp_created"}
             ),
