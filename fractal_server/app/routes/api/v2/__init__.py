@@ -18,9 +18,9 @@ router_api_v2.include_router(dataset_router_v2, tags=["V2 Dataset"])
 router_api_v2.include_router(job_router_v2, tags=["V2 Job"])
 router_api_v2.include_router(project_router_v2, tags=["V2 Project"])
 router_api_v2.include_router(runner_router_v2, tags=["V2 Apply-workflow"])
-router_api_v2.include_router(task_router_v2, tags=["V2 Task"])
+router_api_v2.include_router(task_router_v2, prefix="/task", tags=["V2 Task"])
 router_api_v2.include_router(
-    task_collection_router_v2, tags=["V2 Task Collection"]
+    task_collection_router_v2, prefix="/task", tags=["V2 Task Collection"]
 )
 router_api_v2.include_router(workflow_router_v2, tags=["V2 Workflow"])
 router_api_v2.include_router(workflowtask_router_v2, tags=["V2 WorkflowTask"])

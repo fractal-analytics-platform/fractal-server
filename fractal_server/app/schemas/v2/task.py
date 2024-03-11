@@ -1,4 +1,5 @@
 from typing import Any
+from typing import Literal
 from typing import Optional
 
 from pydantic import BaseModel
@@ -13,8 +14,9 @@ from .._validators import valstr
 class TaskCreateV2(BaseModel):
 
     name: str
-    is_parallel: bool
+    type: Literal["parallel", "non_parallel", "compound"]
 
+    command_pre: Optional[str]
     command: str
     source: str
 
@@ -43,7 +45,8 @@ class TaskReadV2(BaseModel):
 
     id: int
     name: str
-    is_parallel: bool
+    type: str
+    command_pre: Optional[str]
     command: str
     source: str
     meta: dict[str, Any]
@@ -59,7 +62,8 @@ class TaskReadV2(BaseModel):
 class TaskUpdateV2(BaseModel):
 
     name: Optional[str]
-    is_parallel: Optional[bool]
+    type: Optional[Literal["parallel", "non_parallel", "compound"]]
+    command_pre: Optional[str]
     command: Optional[str]
     source: Optional[str]
     meta: Optional[dict[str, Any]]

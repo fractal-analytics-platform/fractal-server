@@ -54,9 +54,6 @@ class DatasetCreateV2(BaseModel):
     images: list[SingleImage] = []
     filters: dict[str, Any] = {}
 
-    buffer: Optional[dict[str, Any]]
-    parallelization_list: Optional[list[dict[str, Any]]]
-
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))
     _filters = validator("filters", allow_reuse=True)(
@@ -82,8 +79,6 @@ class DatasetReadV2(BaseModel):
 
     images: list[SingleImage]
     filters: dict[str, Any]
-    buffer: Optional[dict[str, Any]]
-    parallelization_list: Optional[list[dict[str, Any]]]
 
     # Validators
     _timestamp_created = validator("timestamp_created", allow_reuse=True)(

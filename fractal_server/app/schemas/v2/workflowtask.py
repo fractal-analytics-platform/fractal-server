@@ -4,6 +4,7 @@ from typing import Optional
 from typing import Union
 
 from pydantic import BaseModel
+from pydantic import root_validator
 from pydantic import validator
 
 from .._validators import valint
@@ -39,8 +40,25 @@ class WorkflowTaskCreateV2(BaseModel):
     args: Optional[dict[str, Any]]
     order: Optional[int]
     filters: Optional[dict[str, Any]]
-    is_v2: Optional[bool]
+
+    task_v1_id: Optional[int]
+    task_v2_id: Optional[int]
+
     # Validators
+    @root_validator()
+    def task_v1_or_v2(cls, values):
+        v1 = values.get("task_v1_id")
+        v2 = values.get("task_v2_id")
+        if ((v1 is not None) and (v2 is not None)) or (
+            (v1 is None) and (v2 is None)
+        ):
+            message = "both" if (v1 and v2) else "none"
+            raise ValueError(
+                "One and only one must be provided between "
+                f"'task_v1_id' and 'task_v2_id' (you provided {message})"
+            )
+        return values
+
     _order = validator("order", allow_reuse=True)(valint("order", min_val=0))
     _filters = validator("filters", allow_reuse=True)(
         val_scalar_dict("filters")

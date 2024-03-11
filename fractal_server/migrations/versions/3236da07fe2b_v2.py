@@ -1,8 +1,8 @@
 """v2
 
-Revision ID: 7e4cd77c56fc
+Revision ID: 3236da07fe2b
 Revises: 9fd26a2b0de4
-Create Date: 2024-03-08 14:36:46.405183
+Create Date: 2024-03-08 17:40:47.460676
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = "7e4cd77c56fc"
+revision = "3236da07fe2b"
 down_revision = "9fd26a2b0de4"
 branch_labels = None
 depends_on = None
@@ -33,7 +33,10 @@ def upgrade() -> None:
         "taskv2",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("is_parallel", sa.Boolean(), nullable=False),
+        sa.Column("type", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column(
+            "command_pre", sqlmodel.sql.sqltypes.AutoString(), nullable=True
+        ),
         sa.Column(
             "command", sqlmodel.sql.sqltypes.AutoString(), nullable=False
         ),
@@ -74,8 +77,6 @@ def upgrade() -> None:
         ),
         sa.Column("images", sa.JSON(), server_default="[]", nullable=False),
         sa.Column("filters", sa.JSON(), server_default="{}", nullable=False),
-        sa.Column("buffer", sa.JSON(), nullable=True),
-        sa.Column("parallelization_list", sa.JSON(), nullable=True),
         sa.Column(
             "zarr_dir", sqlmodel.sql.sqltypes.AutoString(), nullable=False
         ),
@@ -171,9 +172,8 @@ def upgrade() -> None:
         sa.Column("meta", sa.JSON(), nullable=True),
         sa.Column("args", sa.JSON(), nullable=True),
         sa.Column("filters", sa.JSON(), server_default="{}", nullable=False),
-        sa.Column("is_v2", sa.Boolean(), nullable=False),
-        sa.Column("task_v2_id", sa.Integer(), nullable=True),
         sa.Column("task_v1_id", sa.Integer(), nullable=True),
+        sa.Column("task_v2_id", sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(
             ["task_v1_id"],
             ["task.id"],
