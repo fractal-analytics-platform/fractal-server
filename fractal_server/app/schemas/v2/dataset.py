@@ -90,6 +90,8 @@ class DatasetReadV2(BaseModel):
 
 
 class DatasetUpdateV2(BaseModel):
+    class Config:
+        extra = "forbid"
 
     name: Optional[str]
 
