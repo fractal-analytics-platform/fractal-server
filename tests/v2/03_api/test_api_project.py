@@ -3,6 +3,16 @@ from datetime import timezone
 
 import pytest
 from devtools import debug
+from sqlmodel import select
+
+from fractal_server.app.models.v2 import DatasetV2
+from fractal_server.app.models.v2 import JobV2
+from fractal_server.app.models.v2 import ProjectV2
+from fractal_server.app.models.v2 import WorkflowV2
+from fractal_server.app.routes.api.v2._aux_functions import (
+    _workflow_insert_task,
+)
+from fractal_server.app.schemas.v2 import JobStatusTypeV2
 
 PREFIX = "/api/v2"
 
@@ -190,3 +200,90 @@ async def test_patch_project(
                 assert value == payload[key]
             else:
                 assert value == old_project[key]
+
+
+async def test_delete_project(
+    client,
+    MockCurrentUser,
+    db,
+    tmp_path,
+    dataset_factory_v2,
+    workflow_factory_v2,
+    job_factory_v2,
+    task_factory_v2,
+):
+    async with MockCurrentUser():
+        res = await client.get(f"{PREFIX}/project/")
+        data = res.json()
+        assert len(data) == 0
+
+        # Create a project
+        res = await client.post(f"{PREFIX}/project/", json=dict(name="name"))
+        p = res.json()
+
+        # Verify that the project was created
+        res = await client.get(f"{PREFIX}/project/")
+        data = res.json()
+        debug(data)
+        assert res.status_code == 200
+        assert len(data) == 1
+        project_id = res.json()[0]["id"]
+
+        # Add a dataset to the project
+        dataset = await dataset_factory_v2(project_id=project_id)
+        dataset_id = dataset.id
+
+        # Add a workflow to the project
+        wf = await workflow_factory_v2(project_id=p["id"])
+        t = await task_factory_v2()
+        await _workflow_insert_task(
+            workflow_id=wf.id, task_id=t.id, is_v2=True, db=db
+        )
+
+        # Add a job to the project
+
+        await job_factory_v2(
+            project_id=p["id"],
+            workflow_id=wf.id,
+            working_dir=(tmp_path / "some_working_dir").as_posix(),
+            dataset_id=dataset_id,
+            status=JobStatusTypeV2.DONE,
+        )
+
+        # Check that a project-related job exists - via query
+        stm = select(JobV2).where(JobV2.project_id == p["id"])
+        res = (await db.execute(stm)).scalars().all()
+        assert len(res) == 1
+        job = res[0]
+        assert job.project_id == p["id"]
+        assert job.dataset_id == dataset_id
+        assert job.workflow_id == wf.id
+
+        # Delete the project
+        res = await client.delete(f"{PREFIX}/project/{p['id']}/")
+        assert res.status_code == 204
+
+        # Check that the project was deleted
+        res = await client.get(f"{PREFIX}/project/")
+        data = res.json()
+        assert len(data) == 0
+
+        # Check that project-related datasets were deleted
+        stm = select(DatasetV2).join(ProjectV2).where(ProjectV2.id == p["id"])
+        res = await db.execute(stm)
+        datasets = list(res)
+        debug(datasets)
+        assert len(datasets) == 0
+
+        # Check that project-related workflows were deleted
+        stm = select(WorkflowV2).join(ProjectV2).where(ProjectV2.id == p["id"])
+        res = await db.execute(stm)
+        workflows = list(res)
+        debug(workflows)
+        assert len(workflows) == 0
+
+        # Assert that total number of jobs is still 1, but without project_id
+        await db.refresh(job)
+        assert job.project_id is None
+        assert job.dataset_id is None
+        assert job.workflow_id is None
