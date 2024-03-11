@@ -15,6 +15,7 @@ from .....syringe import Inject
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import JobV2
+from ....runner.v1.common import set_start_and_last_task_index  # FIXME V2
 from ....runner.v2 import submit_workflow
 from ....schemas.v2 import JobCreateV2
 from ....schemas.v2 import JobReadV2
@@ -23,9 +24,6 @@ from ....security import current_active_verified_user
 from ....security import User
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_workflow_check_owner
-
-# from ....runner.v2 import validate_workflow_compatibility # FIXME V2
-# from ....runner.v2.common import set_start_and_last_task_index # FIXME V2
 
 
 def _encode_as_utc(dt: datetime):
@@ -43,9 +41,9 @@ router = APIRouter()
 async def apply_workflow(
     project_id: int,
     workflow_id: int,
-    apply_workflow: JobCreateV2,
-    background_tasks: BackgroundTasks,
     dataset_id: int,
+    job_create: JobCreateV2,
+    background_tasks: BackgroundTasks,
     user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[JobReadV2]:
@@ -81,14 +79,13 @@ async def apply_workflow(
     # Set values of first_task_index and last_task_index
     num_tasks = len(workflow.task_list)
     try:
-        set_start_and_last_task_index = None  # ! FIXME REMOVE
         first_task_index, last_task_index = set_start_and_last_task_index(
             num_tasks,
-            first_task_index=apply_workflow.first_task_index,
-            last_task_index=apply_workflow.last_task_index,
+            first_task_index=job_create.first_task_index,
+            last_task_index=job_create.last_task_index,
         )
-        apply_workflow.first_task_index = first_task_index
-        apply_workflow.last_task_index = last_task_index
+        job_create.first_task_index = first_task_index
+        job_create.last_task_index = last_task_index
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -120,19 +117,6 @@ async def apply_workflow(
                 ),
             )
 
-    try:
-        validate_workflow_compatibility = None  # ! FIXME REMOVE
-        validate_workflow_compatibility(
-            workflow=workflow,
-            dataset=dataset,
-            first_task_index=apply_workflow.first_task_index,
-            last_task_index=apply_workflow.last_task_index,
-        )
-    except TypeError as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)
-        )
-
     # Check that no other job with the same dataset_id is SUBMITTED
     stm = (
         select(JobV2)
@@ -149,18 +133,18 @@ async def apply_workflow(
             ),
         )
 
-    if apply_workflow.slurm_account is not None:
-        if apply_workflow.slurm_account not in user.slurm_accounts:
+    if job_create.slurm_account is not None:
+        if job_create.slurm_account not in user.slurm_accounts:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
-                    f"SLURM account '{apply_workflow.slurm_account}' is not "
+                    f"SLURM account '{job_create.slurm_account}' is not "
                     "among those available to the current user"
                 ),
             )
     else:
         if len(user.slurm_accounts) > 0:
-            apply_workflow.slurm_account = user.slurm_accounts[0]
+            job_create.slurm_account = user.slurm_accounts[0]
 
     # Add new ApplyWorkflow object to DB
     job = JobV2(
@@ -169,9 +153,7 @@ async def apply_workflow(
         workflow_id=workflow_id,
         user_email=user.email,
         dataset_dump=dict(
-            **dataset.model_dump(
-                exclude={"resource_list", "timestamp_created"}
-            ),
+            **dataset.model_dump(exclude={"timestamp_created"}),
             timestamp_created=_encode_as_utc(dataset.timestamp_created),
         ),
         workflow_dump=dict(
@@ -182,7 +164,7 @@ async def apply_workflow(
             **project.model_dump(exclude={"user_list", "timestamp_created"}),
             timestamp_created=_encode_as_utc(project.timestamp_created),
         ),
-        **apply_workflow.dict(),
+        **job_create.dict(),
     )
 
     # Rate Limiting:
@@ -208,7 +190,7 @@ async def apply_workflow(
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail=(
-                f"The endpoint 'POST /api/v1/project/{project_id}/workflow/"
+                f"The endpoint 'POST /api/v2/project/{project_id}/workflow/"
                 f"{workflow_id}/apply/' "
                 "was called several times within an interval of less "
                 f"than {settings.FRACTAL_API_SUBMIT_RATE_LIMIT} seconds, using"
@@ -226,7 +208,7 @@ async def apply_workflow(
         workflow_id=workflow.id,
         dataset_id=dataset.id,
         job_id=job.id,
-        worker_init=apply_workflow.worker_init,
+        worker_init=job.worker_init,
         slurm_user=user.slurm_user,
         user_cache_dir=user.cache_dir,
     )
