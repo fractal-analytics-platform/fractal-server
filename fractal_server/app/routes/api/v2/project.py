@@ -168,9 +168,10 @@ async def delete_project(
         for job in jobs:
             job.workflow_id = None
             await db.merge(job)
-        await db.commit()
+        # ! await db.commit()
         # Delete workflow
         await db.delete(wf)
+    await db.commit()
 
     # Dataset
     stm = select(DatasetV2).where(DatasetV2.project_id == project_id)
@@ -179,14 +180,16 @@ async def delete_project(
     for ds in datasets:
         # Cascade operations: set foreign-keys to null for jobs which are in
         # relationship with the current dataset
-        # input_dataset
         stm = select(JobV2).where(JobV2.dataset_id == ds.id)
         res = await db.execute(stm)
         jobs = res.scalars().all()
         for job in jobs:
             job.dataset_id = None
             await db.merge(job)
-        await db.commit()
+        # ! await db.commit()
+        # Delete dataset
+        await db.delete(ds)
+    await db.commit()
 
     # Job
     stm = select(JobV2).where(JobV2.project_id == project_id)
