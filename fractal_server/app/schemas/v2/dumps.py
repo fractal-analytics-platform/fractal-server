@@ -9,14 +9,17 @@ These models are used in at least two situations:
 2. In the `_DatasetHistoryItem.workflowtask` model, to trim its size.
 """
 from typing import Any
+from typing import Literal
 from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Extra
+from pydantic import root_validator
 from pydantic import validator
 
-from ....images import SingleImage
-from ....images import val_scalar_dict
+from fractal_server.app.schemas.v1.dumps import TaskDump as TaskDumpV1
+from fractal_server.images import SingleImage
+from fractal_server.images import val_scalar_dict
 
 
 class ProjectDumpV2(BaseModel, extra=Extra.forbid):
@@ -31,20 +34,39 @@ class ProjectDumpV2(BaseModel, extra=Extra.forbid):
 class TaskDumpV2(BaseModel):
     id: int
     name: str
-    is_parallel: bool  # ! new
-    source: str
+    type: Literal["parallel", "non_parallel", "compound"]
+    command_pre: str
     command: str
+    source: str
     owner: Optional[str]
     version: Optional[str]
 
 
 class WorkflowTaskDumpV2(BaseModel):
     id: int
-    order: Optional[int]
     workflow_id: int
-    task_id: int
-    task: TaskDumpV2
-    filters: dict[str, Any]  # ! new
+    order: Optional[int]
+    task_v1_id: Optional[int]
+    task_v1: Optional[TaskDumpV1]
+    task_v2_id: Optional[int]
+    task_v2: Optional[TaskDumpV2]
+    filters: dict[str, Any]
+
+    # Validators
+    @root_validator
+    def task_v1_or_v2(cls, values):
+        v1 = values.get("task_v1_id")
+        v2 = values.get("task_v2_id")
+        if ((v1 is not None) and (v2 is not None)) or (
+            (v1 is None) and (v2 is None)
+        ):
+            message = "both" if (v1 and v2) else "none"
+            raise ValueError(
+                "One and only one must be provided between "
+                f"'task_v1_id' and 'task_v2_id' (you provided {message})"
+            )
+        return values
+
     _filters = validator("filters", allow_reuse=True)(
         val_scalar_dict("filters")
     )
@@ -64,8 +86,9 @@ class DatasetDumpV2(BaseModel):
     read_only: bool
     timestamp_created: str
 
-    images: list[SingleImage]  # ! new
-    filters: dict[str, Any]  # ! new
+    images: list[SingleImage]
+    filters: dict[str, Any]
+    zarr_dir: str
     _filters = validator("filters", allow_reuse=True)(
         val_scalar_dict("filters")
     )
