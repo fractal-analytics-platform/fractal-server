@@ -1,7 +1,6 @@
 from enum import Enum
 from typing import Any
 from typing import Optional
-from typing import Union
 
 from pydantic import BaseModel
 from pydantic import root_validator
@@ -68,14 +67,20 @@ class WorkflowTaskCreateV2(BaseModel):
 class WorkflowTaskReadV2(BaseModel):
 
     id: int
-    order: Optional[int]
+
     workflow_id: int
-    task_id: int
-    is_v2: bool
-    task: Union[TaskRead, TaskReadV2]
+    order: Optional[int]
     meta: Optional[dict[str, Any]]
     args: Optional[dict[str, Any]]
+
     filters: dict[str, Any]
+
+    task_v1_id: Optional[int]
+    task_v2_id: Optional[int]
+
+    task_v1: Optional[TaskRead]
+    task_v2: Optional[TaskReadV2]
+
     # Validators
     _filters = validator("filters", allow_reuse=True)(
         val_scalar_dict("filters")
