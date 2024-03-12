@@ -26,7 +26,7 @@ class TaskCreateV2(BaseModel):
     args_schema_version: Optional[str]
     docs_info: Optional[str]
     docs_link: Optional[HttpUrl]
-    new_filters: Optional[dict[str, Any]]
+    new_filters: Optional[dict[str, Any]] = {}
 
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))
@@ -45,7 +45,7 @@ class TaskReadV2(BaseModel):
 
     id: int
     name: str
-    type: str
+    type: Literal["parallel", "non_parallel", "compound"]
     command_pre: Optional[str]
     command: str
     source: str

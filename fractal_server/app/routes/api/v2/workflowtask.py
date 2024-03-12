@@ -59,14 +59,18 @@ async def create_workflowtask(
 
     async with db:
         workflow_task = await _workflow_insert_task(
-            **new_task.dict(),
-            is_v2=is_v2,
             workflow_id=workflow.id,
+            is_v2=is_v2,
             task_id=task_id,
+            order=new_task.order,
+            meta=new_task.meta,
+            args=new_task.args,
+            filters=new_task.filters,
             db=db,
         )
 
     await db.close()
+
     return workflow_task
 
 
