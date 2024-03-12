@@ -56,34 +56,21 @@ def create_ome_zarr(
 
     # Create well/image OME-Zarr folders on disk, and prepare output
     # metadata
-    image_raw_paths = {}
-    added_images = []
+    parallelization_list = []
     for image_relative_path in image_relative_paths:
         (Path(zarr_path) / image_relative_path).mkdir(parents=True)
         path = f"{zarr_dir}/{plate_zarr_name}/{image_relative_path}"
-        image_raw_paths[path] = (
+        raw_path = (
             Path(image_dir) / image_relative_path.replace("/", "_")
         ).as_posix() + ".tif"
-        added_images.append(
+        parallelization_list.append(
             dict(
                 path=path,
-                attributes=dict(
-                    well="".join(image_relative_path.split("/")[:2])
-                ),
+                init_args=dict(raw_path=raw_path),
             )
         )
-
-    # Combine output metadata
-    out = dict(
-        added_images=added_images,
-        buffer=dict(image_raw_paths=image_raw_paths),
-        new_filters=dict(
-            plate=plate_zarr_name,
-            data_dimensionality=3,
-        ),
-    )
     print("[create_ome_zarr] END")
-    return out
+    return dict(parallelization_list=parallelization_list)
 
 
 @validate_arguments

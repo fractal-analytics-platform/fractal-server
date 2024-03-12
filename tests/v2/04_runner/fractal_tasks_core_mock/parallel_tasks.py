@@ -1,7 +1,9 @@
 import shutil
 from pathlib import Path
+from typing import Any
 from typing import Optional
 
+from pydantic import BaseModel
 from pydantic.decorator import validate_arguments
 
 from .utils import _check_buffer_is_empty
@@ -9,11 +11,15 @@ from .utils import _check_path_is_absolute
 from fractal_server.app.runner.v2.models import DictStrAny
 
 
+class InitArgs(BaseModel):
+    raw_path: str
+
+
 @validate_arguments
 def yokogawa_to_zarr(
     *,
     path: str,
-    buffer: DictStrAny,
+    init_args: InitArgs,
 ) -> dict:
     """
     TBD
@@ -24,9 +30,9 @@ def yokogawa_to_zarr(
     """
     print("[yokogawa_to_zarr] START")
     print(f"[yokogawa_to_zarr] {path=}")
-    # Read raw-image path from buffer
+
     try:
-        source_data = buffer["image_raw_paths"][path]
+        raw_path = init_args.raw_path
     except KeyError as e:
         raise ValueError(
             f"KeyError in yokogawa_to_zarr. Original error:\n{str(e)}"
@@ -35,13 +41,29 @@ def yokogawa_to_zarr(
         raise ValueError(
             f"IndexError in yokogawa_to_zarr. Original error:\n{str(e)}"
         )
-    print(f"[yokogawa_to_zarr] {source_data=}")
+
+    # Based on assumption on the path structure, find plate and well
+    plate = Path(path).parents[2].name
+    well = Path(path).parents[1].name + Path(path).parents[0].name
+
+    # Read data_dimensionality from data
+    data_dimensionality = 3  # Mock
+
+    print(f"[yokogawa_to_zarr] {raw_path=}")
     # Write fake image data into image Zarr group
     _check_path_is_absolute(path)
     with (Path(path) / "data").open("w") as f:
-        f.write(f"Source data: {source_data}\n")
+        f.write(f"Source data: {raw_path}\n")
     print("[yokogawa_to_zarr] END")
-    return {}
+    return dict(
+        added_images=[
+            dict(
+                path=path,
+                attributes=dict(well=well),
+            )
+        ],
+        new_filters=dict(plate=plate, data_dimensionality=data_dimensionality),
+    )
 
 
 @validate_arguments
