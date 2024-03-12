@@ -23,7 +23,7 @@ def run_squeue(job_ids):
         [
             "squeue",
             "--noheader",
-            "--format='%i %T'",
+            '--format="%i %T"',
             "--jobs",
             ",".join([str(j) for j in job_ids]),
             "--states=all",
@@ -65,6 +65,7 @@ def _custom_jobs_finished(job_ids) -> set[str]:
         for j in job_ids:
             res = run_squeue([j])
             if res.returncode != 0:
+                logger.info(f"Job {j} not found. Marked it as completed")
                 id_to_state.update({str(j): "COMPLETED"})
             else:
                 id_to_state.update(
