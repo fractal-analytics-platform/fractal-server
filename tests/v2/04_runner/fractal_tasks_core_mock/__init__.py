@@ -18,23 +18,28 @@ from fractal_server.app.runner.v2.models import Task
 
 
 TASK_LIST = {
-    "create_ome_zarr": Task(
-        function=create_ome_zarr, task_type="non_parallel"
+    "create_ome_zarr_compound": Task(
+        function_non_parallel=create_ome_zarr,
+        function_parallel=yokogawa_to_zarr,
     ),
-    "yokogawa_to_zarr": Task(function=yokogawa_to_zarr, task_type="parallel"),
+    "create_ome_zarr": Task(function_non_parallel=create_ome_zarr),
+    "yokogawa_to_zarr": Task(function_parallel=yokogawa_to_zarr),
+    "illumination_correction": Task(
+        function_parallel=illumination_correction,
+        new_filters=dict(illumination_correction=True),
+    ),
+}
+
+"""
+TASK_LIST_OLD = {
     "create_ome_zarr_multiplex": Task(
-        function=create_ome_zarr_multiplex, task_type="non_parallel"
     ),
     "cellpose_segmentation": Task(
         function=cellpose_segmentation, task_type="parallel"
     ),
     "new_ome_zarr": Task(function=new_ome_zarr, task_type="non_parallel"),
     "copy_data": Task(function=copy_data, task_type="parallel"),
-    "illumination_correction": Task(
-        function=illumination_correction,
-        task_type="parallel",
-        new_filters=dict(illumination_correction=True),
-    ),
+    ,
     "illumination_correction_B": Task(
         function=illumination_correction_B,
         task_type="parallel",
@@ -73,3 +78,4 @@ TASK_LIST = {
         new_filters=dict(registration=True),
     ),
 }
+"""
