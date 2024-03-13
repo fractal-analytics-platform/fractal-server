@@ -6,7 +6,7 @@ from ....images import find_image_by_path
 from ....images import SingleImage
 from .models import DictStrAny
 from .models import Task
-from .task_output import ParallelTaskOutput
+from .task_output import InitTaskOutput
 from .task_output import TaskOutput
 
 MAX_PARALLELIZATION_LIST_SIZE = 200
@@ -19,7 +19,7 @@ def _run_non_parallel_task(
     executor: ThreadPoolExecutor,
 ) -> TaskOutput:
     def _wrapper_expand_kwargs(input_kwargs: dict[str, Any]):
-        task_output = task.function(**input_kwargs)
+        task_output = task.function_non_parallel(**input_kwargs)
         if task_output is None:
             task_output = TaskOutput()
         else:
@@ -37,6 +37,27 @@ def _run_non_parallel_task(
     )
 
     return TaskOutput(**task_output.dict())
+
+
+def _run_non_parallel_task_init(
+    task: Task,
+    function_kwargs: DictStrAny,
+    old_dataset_images: list[SingleImage],
+    executor: ThreadPoolExecutor,
+) -> InitTaskOutput:
+    def _wrapper_expand_kwargs(input_kwargs: dict[str, Any]):
+        task_output = task.function_non_parallel(**input_kwargs)
+        if task_output is None:
+            task_output = InitTaskOutput()
+        else:
+            task_output = InitTaskOutput(**task_output)
+        return task_output
+
+    task_output = executor.submit(
+        _wrapper_expand_kwargs, function_kwargs
+    ).result()
+
+    return InitTaskOutput(**task_output.dict())
 
 
 def update_task_output_added_images(
@@ -74,7 +95,7 @@ def update_task_output_added_images(
 
 
 def merge_outputs(
-    task_outputs: list[ParallelTaskOutput],
+    task_outputs: list[TaskOutput],
     new_old_image_mapping: dict[str, str],
     old_dataset_images: list[SingleImage],
 ) -> TaskOutput:
@@ -87,11 +108,11 @@ def merge_outputs(
 
         if task_output.added_images:
             for added_image in task_output.added_images:
+                # Propagate old-image attributes to new-image, if old image exists
                 old_image = find_image_by_path(
                     images=old_dataset_images,
                     path=new_old_image_mapping[added_image.path],
                 )
-                # Propagate old-image attributes to new-image
                 if old_image is not None:
                     added_image.attributes = (
                         old_image.attributes | added_image.attributes
@@ -140,17 +161,23 @@ def _run_parallel_task(
         )
 
     def _wrapper_expand_kwargs(input_kwargs: dict[str, Any]):
-        task_output = task.function(**input_kwargs)
+        task_output = task.function_parallel(**input_kwargs)
         if task_output is None:
-            task_output = ParallelTaskOutput()
+            task_output = TaskOutput()
         else:
-            task_output = ParallelTaskOutput(**task_output)
+            task_output = TaskOutput(**task_output)
         return task_output
 
     results = executor.map(_wrapper_expand_kwargs, list_function_kwargs)
     task_outputs = list(results)
 
     new_old_image_mapping = {}
+
+    # for each new image, generated with a given input argument "path", add the key-value pair (new_image.path: path)
+    # illumination correction with no input overwrite
+    #   * illumination_correction(path="/tmp/plate.zarr/B/03/0")
+    #   * return dict(added_images=[dict(path="/tmp/plate.zarr/B/03/0_corr")])
+    #   * key-value pair is ("/tmp/plate.zarr/B/03/0_corr": "/tmp/plate.zarr/B/03/0")
 
     for ind, task_output in enumerate(task_outputs):
         if task_output.added_images is not None:
