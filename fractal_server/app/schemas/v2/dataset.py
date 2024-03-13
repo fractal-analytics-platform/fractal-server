@@ -77,7 +77,6 @@ class DatasetReadV2(BaseModel):
 
     zarr_dir: str
 
-    images: list[SingleImage]
     filters: dict[str, Any]
 
     # Validators
