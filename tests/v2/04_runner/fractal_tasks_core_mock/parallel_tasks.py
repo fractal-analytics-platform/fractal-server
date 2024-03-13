@@ -31,16 +31,7 @@ def yokogawa_to_zarr(
     print("[yokogawa_to_zarr] START")
     print(f"[yokogawa_to_zarr] {path=}")
 
-    try:
-        raw_path = init_args.raw_path
-    except KeyError as e:
-        raise ValueError(
-            f"KeyError in yokogawa_to_zarr. Original error:\n{str(e)}"
-        )
-    except IndexError as e:
-        raise ValueError(
-            f"IndexError in yokogawa_to_zarr. Original error:\n{str(e)}"
-        )
+    raw_path = init_args.raw_path
 
     # Based on assumption on the path structure, find plate and well
     plate = Path(path).parents[2].name
@@ -115,26 +106,35 @@ def copy_data(
     return out
 
 
+class InitArgsMIP(BaseModel):
+    new_path: str
+    new_plate: str  # FIXME: remove this
+
+
 @validate_arguments
 def maximum_intensity_projection(
     *,
-    # Standard arguments
-    # group (typically the plate one)
-    path: str,  # Relative path to NGFF image within root_dir
-    buffer: DictStrAny,  # Used to receive information from an "init" task
+    path: str,
+    init_args: InitArgsMIP,
 ) -> DictStrAny:
-    old_plate = buffer["new_ome_zarr"]["old_plate"]
-    new_plate = buffer["new_ome_zarr"]["new_plate"]
-    old_path = path.replace(new_plate, old_plate)
-    old_zarr_path = old_path
-    new_zarr_path = path
 
-    shutil.copytree(old_zarr_path, new_zarr_path)
+    new_path = init_args.new_path
+    new_plate = init_args.new_plate  # FIXME: re-compute it here
+
+    shutil.copytree(path, new_path)
 
     print("[maximum_intensity_projection] START")
-    print(f"[maximum_intensity_projection] {old_zarr_path=}")
-    print(f"[maximum_intensity_projection] {new_zarr_path=}")
+    print(f"[maximum_intensity_projection] {path=}")
+    print(f"[maximum_intensity_projection] {new_path=}")
     print("[maximum_intensity_projection] END")
 
-    out = dict(edited_images=[dict(path=path)])
+    new_filters = dict(
+        plate=new_plate,
+        data_dimensionality=2,
+    )
+
+    out = dict(
+        added_images=[dict(path=new_path)],
+        new_filters=new_filters,
+    )
     return out

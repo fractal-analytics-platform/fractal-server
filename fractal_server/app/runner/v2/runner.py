@@ -39,15 +39,16 @@ def execute_tasks_v2(
     for wftask in wf_task_list:
         task = wftask.task
 
+        # Get filtered images
+        filtered_images = filter_images(
+            dataset_images=tmp_dataset.images,
+            dataset_filters=tmp_dataset.filters,
+            wftask_filters=wftask.filters,
+        )
+
         # (1/3) Non-parallel task
         if task.task_type == "non_parallel_standalone":
-            # Get filtered images
-            current_task_images = filter_images(
-                dataset_images=tmp_dataset.images,
-                dataset_filters=tmp_dataset.filters,
-                wftask_filters=wftask.filters,
-            )
-            paths = [image.path for image in current_task_images]
+            paths = [image.path for image in filtered_images]
             function_kwargs = dict(
                 paths=paths,
                 zarr_dir=tmp_dataset.zarr_dir,
@@ -56,40 +57,28 @@ def execute_tasks_v2(
             task_output = _run_non_parallel_task(
                 task=task,
                 function_kwargs=function_kwargs,
-                old_dataset_images=current_task_images,
+                old_dataset_images=filtered_images,
                 executor=executor,
             )
         # (2/3) Parallel task
         elif task.task_type == "parallel_standalone":
-            # Get filtered images
-            current_task_images = filter_images(
-                dataset_images=tmp_dataset.images,
-                dataset_filters=tmp_dataset.filters,
-                wftask_filters=wftask.filters,
-            )
             list_function_kwargs = [
                 dict(
                     path=image.path,
                     **wftask.args_parallel,
                 )
-                for image in current_task_images
+                for image in filtered_images
             ]
             task_output = _run_parallel_task(
                 task=task,
                 list_function_kwargs=list_function_kwargs,
-                old_dataset_images=current_task_images,
+                old_dataset_images=filtered_images,
                 executor=executor,
             )
         # (3/3) Compound task
         elif task.task_type == "compound":
-
-            # RUN NON-PARALLEL PART
-            current_task_images = filter_images(
-                dataset_images=tmp_dataset.images,
-                dataset_filters=tmp_dataset.filters,
-                wftask_filters=wftask.filters,
-            )
-            paths = [image.path for image in current_task_images]
+            # 3/A: non-parallel init task
+            paths = [image.path for image in filtered_images]
             function_kwargs = dict(
                 paths=paths,
                 zarr_dir=tmp_dataset.zarr_dir,
@@ -98,40 +87,35 @@ def execute_tasks_v2(
             init_task_output = _run_non_parallel_task_init(
                 task=task,
                 function_kwargs=function_kwargs,
-                old_dataset_images=current_task_images,
+                old_dataset_images=filtered_images,
                 executor=executor,
             )
 
-            # RUN PARALLEL
+            # 3/B: parallel part of a compound task
             parallelization_list = init_task_output.parallelization_list
             list_function_kwargs = []
-            for ind, init_args in enumerate(
-                parallelization_list
-            ):  # FIXME: rename variable
+            for ind, parallelization_item in enumerate(parallelization_list):
                 list_function_kwargs.append(
                     dict(
-                        path=init_args.path,
-                        init_args=init_args.init_args,
+                        path=parallelization_item.path,
+                        init_args=parallelization_item.init_args,
                         **wftask.args_parallel,
                     )
                 )
             list_function_kwargs = deduplicate_list(list_function_kwargs)
-
-            current_task_images = [
+            these_filtered_images = [
                 find_image_by_path(
                     images=tmp_dataset.images, path=kwargs["path"]
                 )
                 for kwargs in list_function_kwargs
             ]
-
-            current_task_images = deduplicate_list(
-                current_task_images, remove_None=True
+            these_filtered_images = deduplicate_list(
+                these_filtered_images, remove_None=True
             )
-
             task_output = _run_parallel_task(
                 task=task,
                 list_function_kwargs=list_function_kwargs,
-                old_dataset_images=current_task_images,
+                old_dataset_images=these_filtered_images,
                 executor=executor,
             )
         else:

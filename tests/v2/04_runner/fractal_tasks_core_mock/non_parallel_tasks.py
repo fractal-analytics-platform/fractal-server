@@ -151,15 +151,12 @@ def new_ome_zarr(
     *,
     # Standard arguments
     paths: list[str],
-    buffer: Optional[DictStrAny] = None,
     zarr_dir: str,
     # Non-standard arguments
     suffix: str = "new",
-    project_to_2D: bool = True,
 ) -> dict:
 
     dict_shared = _extract_common_root(paths)
-    shared_root_dir = dict_shared.get("shared_root_dir")
     old_plate = dict_shared.get("shared_plate")
 
     print("[new_ome_zarr] START")
@@ -171,30 +168,27 @@ def new_ome_zarr(
     print(f"[new_ome_zarr] {new_plate=}")
 
     # Based on images in image_folder, create plate OME-Zarr
-    new_zarr_path = (Path(shared_root_dir) / new_plate).as_posix()
-
+    new_zarr_path = (Path(zarr_dir) / new_plate).as_posix()
     print(f"[new_ome_zarr] {new_zarr_path=}")
 
     # Create (fake) OME-Zarr folder on disk
     Path(new_zarr_path).mkdir()
 
-    added_image_paths = [path.replace(old_plate, new_plate) for path in paths]
-
-    new_filters = dict(plate=new_plate)
-    if project_to_2D:
-        new_filters["data_dimensionality"] = 2
+    parallelization_list = []
+    for old_path in paths:
+        new_path = old_path.replace(old_plate, new_plate)
+        parallelization_list.append(
+            dict(
+                path=old_path,
+                init_args=dict(
+                    new_path=new_path,
+                    new_plate=new_plate,
+                ),
+            )
+        )
 
     # Prepare output metadata
-    out = dict(
-        added_images=[dict(path=path) for path in added_image_paths],
-        new_filters=new_filters,
-        buffer=dict(
-            new_ome_zarr=dict(
-                old_plate=old_plate,
-                new_plate=new_plate,
-            )
-        ),
-    )
+    out = dict(parallelization_list=parallelization_list)
     print("[new_ome_zarr] END")
     return out
 
