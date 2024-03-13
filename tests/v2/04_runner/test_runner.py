@@ -57,7 +57,6 @@ def test_max_parallelization_list_size(N: int, executor):
 
 def _copy_and_edit_image(
     path: str,
-    buffer: dict[str, Any],
 ) -> dict[str, Any]:
     added_images = [
         dict(

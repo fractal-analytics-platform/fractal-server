@@ -411,10 +411,9 @@ def test_registration_overwrite(tmp_path: Path, executor):
     dataset = execute_tasks_v2(
         wf_task_list=[
             WorkflowTask(
-                task=TASK_LIST["create_ome_zarr_multiplex"],
-                args=dict(image_dir="/tmp/input_images"),
+                task=TASK_LIST["create_ome_zarr_multiplex_compound"],
+                args_non_parallel=dict(image_dir="/tmp/input_images"),
             ),
-            WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
         ],
         dataset=Dataset(zarr_dir=zarr_dir),
         executor=executor,
@@ -424,20 +423,10 @@ def test_registration_overwrite(tmp_path: Path, executor):
     dataset = execute_tasks_v2(
         wf_task_list=[
             WorkflowTask(
-                task=TASK_LIST["init_registration"],
-                args={"ref_acquisition": 0},
+                task=TASK_LIST["registration_part_1_compound"],
+                args_non_parallel={"ref_acquisition": 0},
             )
         ],
-        dataset=dataset,
-        executor=executor,
-    )
-
-    # Print current dataset information
-    debug(dataset)
-
-    # Run calculate registration
-    dataset = execute_tasks_v2(
-        wf_task_list=[WorkflowTask(task=TASK_LIST["calculate_registration"])],
         dataset=dataset,
         executor=executor,
     )

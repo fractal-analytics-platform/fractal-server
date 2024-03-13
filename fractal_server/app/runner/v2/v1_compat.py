@@ -6,10 +6,6 @@ def _convert_v2_args_into_v1(
     kwargs: dict[str, Any], parallelization_level: str
 ):
 
-    # Remove buffer
-    if "buffer" in kwargs.keys():
-        kwargs.pop("buffer")
-
     path = kwargs.pop("path")
     input_path = Path(path).parents[3].as_posix()
     image_component = path.replace(input_path, "").lstrip("/")

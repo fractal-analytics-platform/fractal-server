@@ -114,5 +114,5 @@ def illumination_correction_B(
             f"{subsets=}\n"
         )
 
-    print("[illumination_correction] END")
+    print("[illumination_correction_B] END")
     return out

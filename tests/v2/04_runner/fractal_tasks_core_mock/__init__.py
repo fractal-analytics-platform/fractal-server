@@ -19,27 +19,27 @@ TASK_LIST = {
         function_non_parallel=create_ome_zarr,
         function_parallel=yokogawa_to_zarr,
     ),
+    "create_ome_zarr_multiplex_compound": Task(
+        function_non_parallel=create_ome_zarr_multiplex,
+        function_parallel=yokogawa_to_zarr,
+    ),
     "MIP_compound": Task(
         function_non_parallel=new_ome_zarr,
         function_parallel=maximum_intensity_projection,
+        new_filters=dict(data_dimensionality=2),
     ),
     "illumination_correction": Task(
         function_parallel=illumination_correction,
         new_filters=dict(illumination_correction=True),
-    ),
-    "cellpose_segmentation": Task(
-        function_parallel=cellpose_segmentation,
-    ),
-    "create_ome_zarr_multiplex_compound": Task(
-        function_non_parallel=create_ome_zarr_multiplex,
-        function_parallel=yokogawa_to_zarr,
     ),
     "illumination_correction_compound": Task(
         function_non_parallel=init_channel_parallelization,
         function_parallel=illumination_correction_B,
         new_filters=dict(illumination_correction=True),
     ),
-    # Block of new mocks for registration tasks
+    "cellpose_segmentation": Task(
+        function_parallel=cellpose_segmentation,
+    ),
     "registration_part_1_compound": Task(
         function_non_parallel=init_registration,
         function_parallel=calculate_registration,

@@ -3,9 +3,7 @@ from typing import Optional
 
 from pydantic.decorator import validate_arguments
 
-from .utils import _check_buffer_is_empty
 from .utils import _extract_common_root
-from fractal_server.app.runner.v2.models import DictStrAny
 
 
 @validate_arguments
@@ -13,7 +11,6 @@ def create_ome_zarr(
     *,
     # Standard arguments
     paths: list[str],
-    buffer: Optional[DictStrAny] = None,
     zarr_dir: str,
     # Task-specific arguments
     image_dir: str,
@@ -33,7 +30,6 @@ def create_ome_zarr(
             "Error in create_ome_zarr, `paths` argument must be empty, but "
             f"{paths=}."
         )
-    _check_buffer_is_empty(buffer)
 
     # Based on images in image_folder, create plate OME-Zarr
     Path(zarr_dir).mkdir(parents=True)
