@@ -175,8 +175,8 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
     dataset = execute_tasks_v2(
         wf_task_list=[
             WorkflowTask(
-                task=TASK_LIST["create_ome_zarr"],
-                args=dict(image_dir="/tmp/input_images"),
+                task=TASK_LIST["create_ome_zarr_compound"],
+                args_non_parallel=dict(image_dir="/tmp/input_images"),
             )
         ],
         dataset=Dataset(zarr_dir=zarr_dir),
@@ -186,36 +186,22 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
         f"{zarr_dir}/my_plate.zarr/A/01/0",
         f"{zarr_dir}/my_plate.zarr/A/02/0",
     ]
-    dataset = execute_tasks_v2(
-        wf_task_list=[
-            WorkflowTask(
-                task=TASK_LIST["yokogawa_to_zarr"],
-                args=dict(),
-            )
-        ],
-        dataset=dataset,
-        executor=executor,
-    )
+
     debug(dataset)
     _assert_image_data_exist(dataset.images)
-
     # Run illumination correction with overwrite_input=False
     dataset = execute_tasks_v2(
         wf_task_list=[
             WorkflowTask(
                 task=TASK_LIST["illumination_correction"],
-                args=dict(overwrite_input=False),
+                args_parallel=dict(overwrite_input=False),
             )
         ],
         dataset=dataset,
         executor=executor,
     )
 
-    assert dataset.history == [
-        "create_ome_zarr",
-        "yokogawa_to_zarr",
-        "illumination_correction",
-    ]
+    assert dataset.history == [None, "illumination_correction"]
     assert dataset.filters == {
         "plate": "my_plate.zarr",
         "data_dimensionality": 3,
@@ -268,20 +254,15 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
     dataset = execute_tasks_v2(
         wf_task_list=[
             WorkflowTask(
-                task=TASK_LIST["new_ome_zarr"],
-                args=dict(suffix="mip"),
+                task=TASK_LIST["MIP_compound"],
+                args_non_parallel=dict(suffix="mip"),
             )
         ],
         dataset=dataset,
         executor=executor,
     )
 
-    assert dataset.history == [
-        "create_ome_zarr",
-        "yokogawa_to_zarr",
-        "illumination_correction",
-        "new_ome_zarr",
-    ]
+    assert dataset.history == [None, "illumination_correction", None]
     assert dataset.filters == {
         "plate": "my_plate_mip.zarr",
         "data_dimensionality": 2,
@@ -314,34 +295,14 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
             "illumination_correction": True,
         },
     }
-    # NOTE: new images do not exist yet on disk
-    with pytest.raises(AssertionError):
-        _assert_image_data_exist(dataset.images)
 
-    dataset = execute_tasks_v2(
-        wf_task_list=[
-            WorkflowTask(
-                task=TASK_LIST["maximum_intensity_projection"],
-                args=dict(),
-            )
-        ],
-        dataset=dataset,
-        executor=executor,
-    )
-
-    assert dataset.history == [
-        "create_ome_zarr",
-        "yokogawa_to_zarr",
-        "illumination_correction",
-        "new_ome_zarr",
-        "maximum_intensity_projection",
-    ]
     assert dataset.filters == {
         "plate": "my_plate_mip.zarr",
         "data_dimensionality": 2,
         "illumination_correction": True,
     }
-    # Note: images now exist
+
+    # NOTE: new images do not exist yet on disk
     _assert_image_data_exist(dataset.images)
 
     dataset = execute_tasks_v2(
@@ -357,11 +318,9 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
     debug(dataset)
 
     assert dataset.history == [
-        "create_ome_zarr",
-        "yokogawa_to_zarr",
+        None,
         "illumination_correction",
-        "new_ome_zarr",
-        "maximum_intensity_projection",
+        None,
         "cellpose_segmentation",
     ]
 
