@@ -10,10 +10,11 @@ from .models import Dataset
 from .models import DictStrAny
 from .models import WorkflowTask
 from .runner_functions import _run_non_parallel_task
+from .runner_functions import _run_non_parallel_task_init
 from .runner_functions import _run_parallel_task
 
 
-# FIXME: define RESERVED_ARGUMENTS = ["buffer", ...]
+# FIXME: define RESERVED_ARGUMENTS = [", ...]
 
 
 def _apply_attributes_to_image(
@@ -24,28 +25,6 @@ def _apply_attributes_to_image(
     updated_image = copy(image)
     updated_image.attributes.update(new_attributes)
     return updated_image
-
-
-def _validate_parallelization_list_valid(
-    parallelization_list: list[DictStrAny],
-    current_image_paths: list[str],
-) -> None:
-    for kwargs in parallelization_list:
-        path = kwargs.get("path")
-        if path is None:
-            raise ValueError(
-                "An element in parallelization list has no path:\n"
-                f"{kwargs=}"
-            )
-        # if path not in current_image_paths and False:
-        #     raise ValueError(
-        #         "An element in parallelization list does not match "
-        #         f"with any image:\n{kwargs=}"
-        #     )
-        if "buffer" in kwargs.keys():
-            raise ValueError(
-                f"An element in parallelization list is not valid:\n{kwargs=}"
-            )
 
 
 def execute_tasks_v2(
@@ -60,90 +39,83 @@ def execute_tasks_v2(
     for wftask in wf_task_list:
         task = wftask.task
 
-        # Extract tmp_buffer
-        if tmp_dataset.buffer is not None:
-            tmp_buffer = tmp_dataset.buffer
-        else:
-            tmp_buffer = {}
+        # Get filtered images
+        filtered_images = filter_images(
+            dataset_images=tmp_dataset.images,
+            dataset_filters=tmp_dataset.filters,
+            wftask_filters=wftask.filters,
+        )
 
-        # (1/2) Non-parallel task
-        if task.task_type == "non_parallel":
-            if tmp_dataset.parallelization_list is not None:
-                raise ValueError(
-                    "Found parallelization_list for non-parallel task"
+        # (1/3) Non-parallel task
+        if task.task_type == "non_parallel_standalone":
+            paths = [image.path for image in filtered_images]
+            function_kwargs = dict(
+                paths=paths,
+                zarr_dir=tmp_dataset.zarr_dir,
+                **wftask.args_non_parallel,
+            )
+            task_output = _run_non_parallel_task(
+                task=task,
+                function_kwargs=function_kwargs,
+                old_dataset_images=filtered_images,
+                executor=executor,
+            )
+        # (2/3) Parallel task
+        elif task.task_type == "parallel_standalone":
+            list_function_kwargs = [
+                dict(
+                    path=image.path,
+                    **wftask.args_parallel,
                 )
-            else:
-                # Get filtered images
-                current_task_images = filter_images(
-                    dataset_images=tmp_dataset.images,
-                    dataset_filters=tmp_dataset.filters,
-                    wftask_filters=wftask.filters,
-                )
-                paths = [image.path for image in current_task_images]
-                function_kwargs = dict(
-                    paths=paths,
-                    buffer=tmp_buffer,
-                    zarr_dir=tmp_dataset.zarr_dir,
-                    **wftask.args,
-                )
-                task_output = _run_non_parallel_task(
-                    task=task,
-                    function_kwargs=function_kwargs,
-                    old_dataset_images=current_task_images,
-                    executor=executor,
-                )
-        # (2/2) Parallel task
-        elif task.task_type == "parallel":
-            # Prepare list_function_kwargs
-            if tmp_dataset.parallelization_list is None:
-                # Get filtered images
-                current_task_images = filter_images(
-                    dataset_images=tmp_dataset.images,
-                    dataset_filters=tmp_dataset.filters,
-                    wftask_filters=wftask.filters,
-                )
-                list_function_kwargs = [
-                    dict(
-                        path=image.path,
-                        buffer=tmp_buffer,
-                        **wftask.args,
-                    )
-                    for image in current_task_images
-                ]
-
-            else:
-                # Use pre-made parallelization_list
-                parallelization_list = tmp_dataset.parallelization_list
-
-                _validate_parallelization_list_valid(
-                    parallelization_list=parallelization_list,
-                    current_image_paths=tmp_dataset.image_paths,
-                )
-                list_function_kwargs = deepcopy(parallelization_list)
-                for ind, kwargs in enumerate(list_function_kwargs):
-                    list_function_kwargs[ind].update(
-                        dict(
-                            buffer=tmp_buffer,
-                            **wftask.args,
-                        )
-                    )
-                list_function_kwargs = deduplicate_list(list_function_kwargs)
-
-                current_task_images = [
-                    find_image_by_path(
-                        images=tmp_dataset.images, path=kwargs["path"]
-                    )
-                    for kwargs in list_function_kwargs
-                ]
-
-                current_task_images = deduplicate_list(
-                    current_task_images, remove_None=True
-                )
-
+                for image in filtered_images
+            ]
             task_output = _run_parallel_task(
                 task=task,
                 list_function_kwargs=list_function_kwargs,
-                old_dataset_images=current_task_images,
+                old_dataset_images=filtered_images,
+                executor=executor,
+            )
+        # (3/3) Compound task
+        elif task.task_type == "compound":
+            # 3/A: non-parallel init task
+            paths = [image.path for image in filtered_images]
+            function_kwargs = dict(
+                paths=paths,
+                zarr_dir=tmp_dataset.zarr_dir,
+                **wftask.args_non_parallel,
+            )
+            init_task_output = _run_non_parallel_task_init(
+                task=task,
+                function_kwargs=function_kwargs,
+                old_dataset_images=filtered_images,
+                executor=executor,
+            )
+
+            # 3/B: parallel part of a compound task
+            parallelization_list = init_task_output.parallelization_list
+            list_function_kwargs = []
+            for ind, parallelization_item in enumerate(parallelization_list):
+                list_function_kwargs.append(
+                    dict(
+                        path=parallelization_item.path,
+                        init_args=parallelization_item.init_args,
+                        **wftask.args_parallel,
+                    )
+                )
+            list_function_kwargs = deduplicate_list(list_function_kwargs)
+            these_filtered_images = [
+                find_image_by_path(
+                    images=tmp_dataset.images, path=kwargs["path"]
+                )
+                for kwargs in list_function_kwargs
+            ]
+            these_filtered_images = deduplicate_list(
+                these_filtered_images, remove_None=True
+            )
+            task_output = _run_parallel_task(
+                task=task,
+                list_function_kwargs=list_function_kwargs,
+                old_dataset_images=these_filtered_images,
                 executor=executor,
             )
         else:
@@ -200,19 +172,6 @@ def execute_tasks_v2(
         ]
         # Update Dataset.filters
         tmp_dataset.filters = new_filters
-
-        # Update Dataset.buffer
-        tmp_dataset.buffer = task_output.buffer
-
-        # Update Dataset.parallelization_list
-        # NOTE: this mut be done *after* Dataset.images was updated
-        new_parallelization_list = task_output.parallelization_list
-        if new_parallelization_list is not None:
-            _validate_parallelization_list_valid(
-                parallelization_list=new_parallelization_list,
-                current_image_paths=tmp_dataset.image_paths,
-            )
-        tmp_dataset.parallelization_list = new_parallelization_list
 
         # Update Dataset.history
         tmp_dataset.history.append(task.name)
