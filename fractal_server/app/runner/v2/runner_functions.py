@@ -100,6 +100,13 @@ def merge_outputs(
     old_dataset_images: list[SingleImage],
 ) -> TaskOutput:
 
+    from devtools import debug
+
+    debug("MERGE OUTPUTS")
+    debug(task_outputs)
+    debug(new_old_image_mapping)
+    debug(old_dataset_images)
+
     final_added_images = []
     final_edited_images = []
     final_removed_images = []
@@ -108,11 +115,11 @@ def merge_outputs(
 
         if task_output.added_images:
             for added_image in task_output.added_images:
+                # Propagate old-image attributes to new-image, if old image exists
                 old_image = find_image_by_path(
                     images=old_dataset_images,
                     path=new_old_image_mapping[added_image.path],
                 )
-                # Propagate old-image attributes to new-image
                 if old_image is not None:
                     added_image.attributes = (
                         old_image.attributes | added_image.attributes
@@ -143,6 +150,8 @@ def merge_outputs(
         removed_images=final_removed_images,
     )
 
+    debug(final_output)
+
     return final_output
 
 
@@ -172,6 +181,12 @@ def _run_parallel_task(
     task_outputs = list(results)
 
     new_old_image_mapping = {}
+
+    # for each new image, generated with a given input argument "path", add the key-value pair (new_image.path: path)
+    # illumination correction with no input overwrite
+    #   * illumination_correction(path="/tmp/plate.zarr/B/03/0")
+    #   * return dict(added_images=[dict(path="/tmp/plate.zarr/B/03/0_corr")])
+    #   * key-value pair is ("/tmp/plate.zarr/B/03/0_corr": "/tmp/plate.zarr/B/03/0")
 
     for ind, task_output in enumerate(task_outputs):
         if task_output.added_images is not None:

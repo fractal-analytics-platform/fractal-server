@@ -22,21 +22,25 @@ TASK_LIST = {
         function_non_parallel=create_ome_zarr,
         function_parallel=yokogawa_to_zarr,
     ),
-    "create_ome_zarr": Task(function_non_parallel=create_ome_zarr),
-    "yokogawa_to_zarr": Task(function_parallel=yokogawa_to_zarr),
+    "MIP_compound": Task(
+        function_non_parallel=new_ome_zarr,
+        function_parallel=maximum_intensity_projection,
+    ),
     "illumination_correction": Task(
         function_parallel=illumination_correction,
         new_filters=dict(illumination_correction=True),
     ),
+    "cellpose_segmentation": Task(
+        function_parallel=cellpose_segmentation,
+    ),
 }
 
 """
+
 TASK_LIST_OLD = {
     "create_ome_zarr_multiplex": Task(
     ),
-    "cellpose_segmentation": Task(
-        function=cellpose_segmentation, task_type="parallel"
-    ),
+
     "new_ome_zarr": Task(function=new_ome_zarr, task_type="non_parallel"),
     "copy_data": Task(function=copy_data, task_type="parallel"),
     ,
