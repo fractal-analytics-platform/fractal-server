@@ -1,11 +1,9 @@
 from pathlib import Path
 from typing import Literal
-from typing import Optional
 
+from pydantic import BaseModel
+from pydantic import Field
 from pydantic.decorator import validate_arguments
-
-from .utils import _check_buffer_is_empty
-from fractal_server.app.runner.v2.models import DictStrAny
 
 
 @validate_arguments
@@ -13,15 +11,12 @@ def illumination_correction(
     *,
     # Standard arguments
     path: str,
-    buffer: Optional[DictStrAny] = None,
     # Non-standard arguments
     overwrite_input: bool = False,
 ) -> dict:
     print("[illumination_correction] START")
     print(f"[illumination_correction] {path=}")
     print(f"[illumination_correction] {overwrite_input=}")
-
-    _check_buffer_is_empty(buffer)
 
     # Prepare output metadata and set actual_path
     if overwrite_input:
@@ -46,13 +41,9 @@ def init_channel_parallelization(
     *,
     # Standard arguments
     paths: list[str],
-    buffer: Optional[DictStrAny] = None,
     overwrite_input: bool = False,
     zarr_dir: str,
 ) -> dict:
-
-    _check_buffer_is_empty(buffer)
-
     print("[init_channel_parallelization] START")
     print(f"[init_channel_parallelization] {paths=}")
     print(f"[init_channel_parallelization] {overwrite_input=}")
@@ -79,12 +70,21 @@ def init_channel_parallelization(
             parallelization_list.append(
                 dict(
                     path=new_path,
-                    raw_path=path,
-                    subsets=dict(C_index=ind_channel),
+                    init_args=dict(
+                        raw_path=path,
+                        subsets=dict(C_index=ind_channel),
+                    ),
                 )
             )
     print("[init_channel_parallelization] END")
     return dict(parallelization_list=parallelization_list)
+
+
+class InitArgsIllumination(BaseModel):
+    raw_path: str
+    subsets: dict[Literal["T_index", "C_index", "Z_index"], int] = Field(
+        default_factory=dict
+    )
 
 
 @validate_arguments
@@ -92,19 +92,14 @@ def illumination_correction_B(
     *,
     # Standard arguments
     path: str,
-    buffer: Optional[DictStrAny] = None,
-    # Non-standard arguments
-    raw_path: str,
-    subsets: Optional[
-        dict[Literal["T_index", "C_index", "Z_index"], int]
-    ] = None,
+    init_args: InitArgsIllumination,
 ) -> dict:
+    raw_path = init_args.raw_path
+    subsets = init_args.subsets
     print("[illumination_correction_B] START")
     print(f"[illumination_correction_B] {path=}")
     print(f"[illumination_correction_B] {raw_path=}")
     print(f"[illumination_correction_B] {subsets=}")
-
-    _check_buffer_is_empty(buffer)
 
     # Prepare output metadata and set actual_path
     if path == raw_path:
