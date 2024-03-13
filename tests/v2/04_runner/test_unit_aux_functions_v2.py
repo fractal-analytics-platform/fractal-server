@@ -17,42 +17,6 @@ def test_validate_parallelization_list():
             current_image_paths=CURRENT_IMAGE_PATHS,
         )
 
-    # # Path not in current image paths
-    # PARALLELIZATION_LIST = [dict(path="asd")]
-    # CURRENT_IMAGE_PATHS = []
-    # with pytest.raises(ValueError):
-    #     _validate_parallelization_list_valid(
-    #         parallelization_list=PARALLELIZATION_LIST,
-    #         current_image_paths=CURRENT_IMAGE_PATHS,
-    #     )
-
-    # Invalid buffer attributes
-    PARALLELIZATION_LIST = [dict(path="asd", buffer={})]
-    CURRENT_IMAGE_PATHS = ["asd"]
-    with pytest.raises(ValueError):
-        _validate_parallelization_list_valid(
-            parallelization_list=PARALLELIZATION_LIST,
-            current_image_paths=CURRENT_IMAGE_PATHS,
-        )
-
-    # Invalid `buffer`` attribute
-    PARALLELIZATION_LIST = [dict(path="asd", buffer={})]
-    CURRENT_IMAGE_PATHS = ["asd"]
-    with pytest.raises(ValueError):
-        _validate_parallelization_list_valid(
-            parallelization_list=PARALLELIZATION_LIST,
-            current_image_paths=CURRENT_IMAGE_PATHS,
-        )
-
-    # Invalid `buffer` attribute
-    PARALLELIZATION_LIST = [dict(path="asd", buffer="")]
-    CURRENT_IMAGE_PATHS = ["asd"]
-    with pytest.raises(ValueError):
-        _validate_parallelization_list_valid(
-            parallelization_list=PARALLELIZATION_LIST,
-            current_image_paths=CURRENT_IMAGE_PATHS,
-        )
-
     # Valid call
     PARALLELIZATION_LIST = [
         dict(path="asd", parameter=1),

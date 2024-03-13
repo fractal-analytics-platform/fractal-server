@@ -5,7 +5,6 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic.decorator import validate_arguments
 
-from .utils import _check_buffer_is_empty
 from .utils import _check_path_is_absolute
 from fractal_server.app.runner.v2.models import DictStrAny
 
@@ -65,12 +64,10 @@ def cellpose_segmentation(
     *,
     # Standard arguments
     path: str,
-    buffer: Optional[DictStrAny] = None,
     # Non-standard arguments
     default_diameter: int = 100,
 ) -> dict:
     _check_path_is_absolute(path)
-    _check_buffer_is_empty(buffer)
     print("[cellpose_segmentation] START")
     print(f"[cellpose_segmentation] {path=}")
 
@@ -89,11 +86,11 @@ def copy_data(
     # Standard arguments
     # Zarr group (typically the plate one)
     path: str,
-    buffer: DictStrAny,  # Used to receive information from an "init" task
 ) -> DictStrAny:
 
-    old_plate = buffer["new_ome_zarr"]["old_plate"]
-    new_plate = buffer["new_ome_zarr"]["new_plate"]
+    raise NotImplementedError
+
+    """
     old_path = path.replace(new_plate, old_plate)
     old_zarr_path = old_path
     new_zarr_path = path
@@ -107,6 +104,7 @@ def copy_data(
 
     out = {}
     return out
+    """
 
 
 class InitArgsMIP(BaseModel):
