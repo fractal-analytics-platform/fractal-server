@@ -5,7 +5,6 @@ from .non_parallel_tasks import create_ome_zarr
 from .non_parallel_tasks import create_ome_zarr_multiplex
 from .non_parallel_tasks import new_ome_zarr
 from .parallel_tasks import cellpose_segmentation
-from .parallel_tasks import copy_data
 from .parallel_tasks import maximum_intensity_projection
 from .parallel_tasks import yokogawa_to_zarr
 from .registration_tasks import apply_registration_to_image
@@ -31,53 +30,22 @@ TASK_LIST = {
     "cellpose_segmentation": Task(
         function_parallel=cellpose_segmentation,
     ),
-}
-
-"""
-
-TASK_LIST_OLD = {
     "create_ome_zarr_multiplex": Task(
+        function_non_parallel=create_ome_zarr_multiplex,
     ),
-
-    "new_ome_zarr": Task(function=new_ome_zarr, task_type="non_parallel"),
-    "copy_data": Task(function=copy_data, task_type="parallel"),
-    ,
-    "illumination_correction_B": Task(
-        function=illumination_correction_B,
-        task_type="parallel",
+    "illumination_correction_compound": Task(
+        function_non_parallel=init_channel_parallelization,
+        function_parallel=illumination_correction_B,
         new_filters=dict(illumination_correction=True),
     ),
-    "maximum_intensity_projection": Task(
-        function=maximum_intensity_projection,
-        task_type="parallel",
-        new_filters=dict(data_dimensionality=2),
-    ),
-    "init_channel_parallelization": Task(
-        function=init_channel_parallelization, task_type="non_parallel"
-    ),
-    "init_registration_old": Task(
-        function=init_registration_old, task_type="non_parallel"
-    ),
-    "registration_old": Task(
-        function=registration_old,
-        task_type="parallel",
-        new_filters=dict(registration=True),
-    ),
     # Block of new mocks for registration tasks
-    "init_registration": Task(
-        function=init_registration, task_type="non_parallel"
+    "registration_part_1_compound": Task(
+        function_non_parallel=init_registration,
+        function_parallel=calculate_registration,
     ),
-    "calculate_registration": Task(
-        function=calculate_registration,
-        task_type="parallel",
-    ),
-    "find_registration_consensus": Task(
-        function=find_registration_consensus, task_type="non_parallel"
-    ),
-    "apply_registration_to_image": Task(
-        function=apply_registration_to_image,
-        task_type="parallel",
+    "registration_part_2_compound": Task(
+        function_non_parallel=find_registration_consensus,
+        function_parallel=apply_registration_to_image,
         new_filters=dict(registration=True),
     ),
 }
-"""
