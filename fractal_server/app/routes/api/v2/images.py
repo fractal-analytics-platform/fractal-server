@@ -32,10 +32,8 @@ class ImageQuery(BaseModel):
     @validator("attributes")
     def cast_types(cls, value):
         for k, v in value.items():
-            if v.isdigit():
+            if v.isdigit() or (v.startswith(("+", "-")) and v[1:].isdigit()):
                 value[k] = int(v)
-            elif v.startswith(("+", "-")) and v[1:].isdigit():
-                value[k] = int(v[1:])
             elif v.replace(".", "", 1).isdigit():
                 value[k] = float(v)
             elif v in ["true", "True"]:
