@@ -100,13 +100,6 @@ def merge_outputs(
     old_dataset_images: list[SingleImage],
 ) -> TaskOutput:
 
-    from devtools import debug
-
-    debug("MERGE OUTPUTS")
-    debug(task_outputs)
-    debug(new_old_image_mapping)
-    debug(old_dataset_images)
-
     final_added_images = []
     final_edited_images = []
     final_removed_images = []
@@ -149,8 +142,6 @@ def merge_outputs(
         new_filters=last_new_filters,
         removed_images=final_removed_images,
     )
-
-    debug(final_output)
 
     return final_output
 
