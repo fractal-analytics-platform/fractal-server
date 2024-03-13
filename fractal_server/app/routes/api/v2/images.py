@@ -59,7 +59,7 @@ async def get_dataset_images(
     request: Request,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> list[SingleImage]:
+) -> ImageCollection:
 
     output = await _get_dataset_check_owner(
         project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
