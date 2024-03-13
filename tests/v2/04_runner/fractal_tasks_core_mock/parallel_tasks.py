@@ -1,6 +1,5 @@
 import shutil
 from pathlib import Path
-from typing import Any
 from typing import Optional
 
 from pydantic import BaseModel
@@ -13,6 +12,7 @@ from fractal_server.app.runner.v2.models import DictStrAny
 
 class InitArgs(BaseModel):
     raw_path: str
+    acquisition: Optional[int]
 
 
 @validate_arguments
@@ -46,11 +46,14 @@ def yokogawa_to_zarr(
     with (Path(path) / "data").open("w") as f:
         f.write(f"Source data: {raw_path}\n")
     print("[yokogawa_to_zarr] END")
+    attributes = dict(well=well)
+    if init_args.acquisition is not None:
+        attributes["acquisition"] = init_args.acquisition
     return dict(
         added_images=[
             dict(
                 path=path,
-                attributes=dict(well=well),
+                attributes=attributes,
             )
         ],
         new_filters=dict(plate=plate, data_dimensionality=data_dimensionality),
