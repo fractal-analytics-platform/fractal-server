@@ -138,3 +138,18 @@ async def delete_dataset_images(
     await db.merge(dataset)
     await db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.patch(
+    "/project/{project_id}/dataset/{dataset_id}/images/",
+    status_code=status.HTTP_501_NOT_IMPLEMENTED,
+)
+async def patch_dataset_images(
+    project_id: int,
+    dataset_id: int,
+    new_images: list[SingleImage],
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> list[SingleImage]:
+
+    return Response(status_code=status.HTTP_501_NOT_IMPLEMENTED)
