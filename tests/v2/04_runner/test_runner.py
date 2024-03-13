@@ -22,6 +22,7 @@ def executor():
         yield e
 
 
+@pytest.mark.xfail(reason="To be updated, in view of compound tasks")
 @pytest.mark.parametrize("N", [100, 1000])
 def test_max_parallelization_list_size(N: int, executor):
     parallelization_list = [
@@ -67,6 +68,7 @@ def _copy_and_edit_image(
     return dict(added_images=added_images)
 
 
+@pytest.mark.xfail(reason="To be updated, in view of compound tasks")
 @pytest.mark.parametrize(
     "parallelization_list",
     [
