@@ -12,8 +12,6 @@ from .registration_tasks import apply_registration_to_image
 from .registration_tasks import calculate_registration
 from .registration_tasks import find_registration_consensus
 from .registration_tasks import init_registration
-from .registration_tasks_old import init_registration_old
-from .registration_tasks_old import registration_old
 from fractal_server.app.runner.v2.models import Task
 
 
