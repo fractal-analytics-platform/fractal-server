@@ -78,7 +78,6 @@ def create_ome_zarr_multiplex(
     *,
     # Standard arguments
     paths: list[str],
-    buffer: Optional[DictStrAny] = None,
     zarr_dir: str,
     # Task-specific arguments
     image_dir: str,
@@ -89,8 +88,6 @@ def create_ome_zarr_multiplex(
             "Error in create_ome_zarr_multiplex, "
             f"`paths` argument must be empty, but {paths=}."
         )
-
-    _check_buffer_is_empty(buffer)
 
     # Based on images in image_folder, create plate OME-Zarr
     zarr_dir = zarr_dir.rstrip("/")
@@ -115,33 +112,24 @@ def create_ome_zarr_multiplex(
     acquisitions = [
         int(cycle) for well in ["A/01", "A/02"] for cycle in ["0", "1", "2"]
     ]
-    image_raw_paths = {}
-    added_images = []
+
+    parallelization_list = []
     for ind, image_relative_path in enumerate(image_relative_paths):
         (Path(zarr_path) / image_relative_path).mkdir(parents=True)
         path = f"{zarr_dir}/{plate_zarr_name}/{image_relative_path}"
-        image_raw_paths[path] = (
+        raw_path = (
             Path(image_dir) / image_relative_path.replace("/", "_")
         ).as_posix() + ".tif"
-        added_images.append(
+        parallelization_list.append(
             dict(
                 path=path,
-                attributes=dict(
-                    well="".join(image_relative_path.split("/")[:2]),
-                    acquisition=acquisitions[ind],
+                init_args=dict(
+                    raw_path=raw_path, acquisition=acquisitions[ind]
                 ),
             )
         )
-
     # Compose output metadata
-    out = dict(
-        added_images=added_images,
-        buffer=dict(image_raw_paths=image_raw_paths),
-        new_filters=dict(
-            plate=plate_zarr_name,
-            data_dimensionality=3,
-        ),
-    )
+    out = dict(parallelization_list=parallelization_list)
     print("[create_ome_zarr_multiplex] END")
     return out
 
