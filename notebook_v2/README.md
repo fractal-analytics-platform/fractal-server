@@ -21,7 +21,7 @@ pip install jupyter devtools
 
 5. Install current `fractal-server`:
 ```
-pip instal -e ..
+pip install -e ..
 ```
 
 6. Run jupyter
