@@ -375,10 +375,9 @@ def test_registration_no_overwrite(tmp_path: Path, executor):
     dataset = execute_tasks_v2(
         wf_task_list=[
             WorkflowTask(
-                task=TASK_LIST["create_ome_zarr_multiplex"],
-                args=dict(image_dir="/tmp/input_images"),
+                task=TASK_LIST["create_ome_zarr_multiplex_compound"],
+                args_non_parallel=dict(image_dir="/tmp/input_images"),
             ),
-            WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"], args={}),
         ],
         dataset=Dataset(zarr_dir=zarr_dir),
         executor=executor,
@@ -388,20 +387,10 @@ def test_registration_no_overwrite(tmp_path: Path, executor):
     dataset = execute_tasks_v2(
         wf_task_list=[
             WorkflowTask(
-                task=TASK_LIST["init_registration"],
-                args={"ref_acquisition": 0},
+                task=TASK_LIST["registration_part_1_compound"],
+                args_non_parallel={"ref_acquisition": 0},
             )
         ],
-        dataset=dataset,
-        executor=executor,
-    )
-
-    # Print current dataset information
-    debug(dataset)
-
-    # Run calculate registration
-    dataset = execute_tasks_v2(
-        wf_task_list=[WorkflowTask(task=TASK_LIST["calculate_registration"])],
         dataset=dataset,
         executor=executor,
     )
@@ -440,7 +429,7 @@ def test_registration_no_overwrite(tmp_path: Path, executor):
         wf_task_list=[
             WorkflowTask(
                 task=TASK_LIST["apply_registration_to_image"],
-                args={"overwrite_input": False},
+                args_parallel={"overwrite_input": False},
             )
         ],
         dataset=dataset,
@@ -551,10 +540,9 @@ def test_channel_parallelization_with_overwrite(tmp_path: Path, executor):
     dataset = execute_tasks_v2(
         wf_task_list=[
             WorkflowTask(
-                task=TASK_LIST["create_ome_zarr"],
-                args=dict(image_dir="/tmp/input_images"),
+                task=TASK_LIST["create_ome_zarr_compound"],
+                args_non_parallel=dict(image_dir="/tmp/input_images"),
             ),
-            WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"]),
         ],
         dataset=Dataset(zarr_dir=zarr_dir),
         executor=executor,
@@ -567,8 +555,8 @@ def test_channel_parallelization_with_overwrite(tmp_path: Path, executor):
     dataset = execute_tasks_v2(
         wf_task_list=[
             WorkflowTask(
-                task=TASK_LIST["init_channel_parallelization"],
-                args=dict(overwrite_input=True),
+                task=TASK_LIST["illumination_correction_compound"],
+                args_non_parallel=dict(overwrite_input=True),
             ),
         ],
         dataset=dataset,
@@ -578,26 +566,8 @@ def test_channel_parallelization_with_overwrite(tmp_path: Path, executor):
     # Print current dataset information
     debug(dataset)
 
-    # Look at custom parallelization_list
-    debug(dataset.parallelization_list)
-    assert dataset.parallelization_list is not None
-
-    # Run init_channel_parallelization
-    dataset = execute_tasks_v2(
-        wf_task_list=[
-            WorkflowTask(
-                task=TASK_LIST["illumination_correction_B"],
-            ),
-        ],
-        dataset=dataset,
-        executor=executor,
-    )
-
-    # Parallelization list is not there any more
-    assert dataset.parallelization_list is None
-
-    # Print current dataset information
-    debug(dataset)
+    # Check that there are now 2 images
+    assert len(dataset.images) == 2
 
 
 def test_channel_parallelization_no_overwrite(tmp_path: Path, executor):
@@ -607,10 +577,9 @@ def test_channel_parallelization_no_overwrite(tmp_path: Path, executor):
     dataset = execute_tasks_v2(
         wf_task_list=[
             WorkflowTask(
-                task=TASK_LIST["create_ome_zarr"],
-                args=dict(image_dir="/tmp/input_images"),
+                task=TASK_LIST["create_ome_zarr_compound"],
+                args_non_parallel=dict(image_dir="/tmp/input_images"),
             ),
-            WorkflowTask(task=TASK_LIST["yokogawa_to_zarr"]),
         ],
         dataset=Dataset(zarr_dir=zarr_dir),
         executor=executor,
@@ -623,8 +592,8 @@ def test_channel_parallelization_no_overwrite(tmp_path: Path, executor):
     dataset = execute_tasks_v2(
         wf_task_list=[
             WorkflowTask(
-                task=TASK_LIST["init_channel_parallelization"],
-                args=dict(overwrite_input=False),
+                task=TASK_LIST["illumination_correction_compound"],
+                args_non_parallel=dict(overwrite_input=False),
             ),
         ],
         dataset=dataset,
@@ -633,25 +602,6 @@ def test_channel_parallelization_no_overwrite(tmp_path: Path, executor):
 
     # Print current dataset information
     debug(dataset)
-
-    # Look at custom parallelization_list
-    debug(dataset.parallelization_list)
-    assert dataset.parallelization_list is not None
-
-    # Run init_channel_parallelization
-    dataset = execute_tasks_v2(
-        wf_task_list=[
-            WorkflowTask(task=TASK_LIST["illumination_correction_B"]),
-        ],
-        dataset=dataset,
-        executor=executor,
-    )
-
-    # Print current dataset information
-    debug(dataset)
-
-    # Parallelization list is not there any more
-    assert dataset.parallelization_list is None
 
     # Check that there are now 4 images
     assert len(dataset.images) == 4
