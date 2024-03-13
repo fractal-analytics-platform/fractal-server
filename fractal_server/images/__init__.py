@@ -101,8 +101,8 @@ def _filter_image_list(
 def filter_images(
     *,
     dataset_images: list[SingleImage],
-    dataset_filters: Optional[dict[str, Any]] = None,
-    wftask_filters: Optional[dict[str, Any]] = None,
+    dataset_filters: Optional[dict[str, Any]] = {},
+    wftask_filters: Optional[dict[str, Any]] = {},
 ) -> list[SingleImage]:
 
     current_filters = copy(dataset_filters)
