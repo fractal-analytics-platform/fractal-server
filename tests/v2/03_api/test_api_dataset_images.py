@@ -17,7 +17,7 @@ async def test_get_images(
         SingleImage(path="/abc", attributes={"x": 1, "y": 2, "z": 3}),
         SingleImage(path="/abc", attributes={"x": 1, "b": 2, "c": 3}),
         SingleImage(path="/abc", attributes={"a": 1, "y": 2, "c": 3}),
-        SingleImage(path="/abc", attributes={"a": 1, "b": 2, "z": 3}),
+        SingleImage(path="/abd", attributes={"a": 1, "b": 2, "z": 3}),
     ]
 
     async with MockCurrentUser() as user:
@@ -35,4 +35,26 @@ async def test_get_images(
     )
     debug(res.json())
     assert res.status_code == 200
+    assert len(res.json()["images"]) == len(images)
     assert sorted(res.json()["attributes"]) == ["a", "b", "c", "x", "y", "z"]
+
+    res = await client.get(
+        f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/",
+        params=dict(path="/abc"),
+    )
+    assert res.status_code == 200
+    assert len(res.json()["images"]) == 4
+
+    res = await client.get(
+        f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/",
+        params=dict(abc=123),
+    )
+    assert res.status_code == 200
+    assert len(res.json()["images"]) == 0
+
+    res = await client.get(
+        f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/",
+        params=dict(path="/abc", a=1),
+    )
+    assert res.status_code == 200
+    assert len(res.json()["images"]) == 2
