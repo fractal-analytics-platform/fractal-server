@@ -26,6 +26,7 @@ async def test_get_images(
 
     dataset = await dataset_factory_v2(project_id=project.id, images=IMAGES)
     debug(dataset)
+
     res = await client.get(
         f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/"
     )
@@ -33,7 +34,7 @@ async def test_get_images(
     res = await client.get(
         f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/"
     )
-    debug(res.json())
+
     assert res.status_code == 200
     assert len(res.json()["images"]) == len(IMAGES)
     assert sorted(res.json()["attributes"]) == ["a", "b", "c", "x", "y", "z"]

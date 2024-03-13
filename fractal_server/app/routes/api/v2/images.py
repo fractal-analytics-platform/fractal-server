@@ -56,6 +56,8 @@ class ImageQuery(BaseModel):
 async def get_dataset_images(
     project_id: int,
     dataset_id: int,
+    # path: Optional[str],
+    # attributes: Optional[dict[str, Any]],
     request: Request,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
@@ -65,6 +67,13 @@ async def get_dataset_images(
         project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
     )
     images: list[SingleImage] = output["dataset"].images
+
+    # !
+    from devtools import debug
+
+    for k, v in request.query_params.items():
+        debug(k, v)
+    # !
 
     # Query parameters casting
     query = ImageQuery(
