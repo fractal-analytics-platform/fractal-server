@@ -10,6 +10,8 @@
 * Dependencies:
     * Make `clusterfutures` and `cloudpickle` required dependencies (\#1255).
     * Remove `slurm` extra from package (\#1255).
+* API:
+    * Handle invalid history file in `GET /project/{project_id}/dataset/{dataset_id}/status/` (\#1259).
 
 # 1.4.9
 
