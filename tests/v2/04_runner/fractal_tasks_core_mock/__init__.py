@@ -7,10 +7,10 @@ from .illumination_correction import init_channel_parallelization
 from .mip import maximum_intensity_projection
 from .mip import new_ome_zarr
 from .parallel_tasks import cellpose_segmentation
-from .registration_tasks import apply_registration_to_image
-from .registration_tasks import calculate_registration
-from .registration_tasks import find_registration_consensus
-from .registration_tasks import init_registration
+from .registration import apply_registration_to_image
+from .registration import calculate_registration
+from .registration import find_registration_consensus
+from .registration import init_registration
 from fractal_server.app.runner.v2.models import Task
 
 
