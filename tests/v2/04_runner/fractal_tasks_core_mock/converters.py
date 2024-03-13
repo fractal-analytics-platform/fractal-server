@@ -1,9 +1,10 @@
 from pathlib import Path
 from typing import Optional
 
+from pydantic import BaseModel
 from pydantic.decorator import validate_arguments
 
-from .utils import _extract_common_root
+from .utils import _check_path_is_absolute
 
 
 @validate_arguments
@@ -130,59 +131,51 @@ def create_ome_zarr_multiplex(
     return out
 
 
+class InitArgs(BaseModel):
+    raw_path: str
+    acquisition: Optional[int]
+
+
 @validate_arguments
-def new_ome_zarr(
+def yokogawa_to_zarr(
     *,
-    # Standard arguments
-    paths: list[str],
-    zarr_dir: str,
-    # Non-standard arguments
-    suffix: str = "new",
+    path: str,
+    init_args: InitArgs,
 ) -> dict:
+    """
+    TBD
 
-    dict_shared = _extract_common_root(paths)
-    old_plate = dict_shared.get("shared_plate")
+    Args:
+        path:
+            Absolute NGFF-image path, e.g.`"/tmp/plate.zarr/A/01/0"".
+    """
+    print("[yokogawa_to_zarr] START")
+    print(f"[yokogawa_to_zarr] {path=}")
 
-    print("[new_ome_zarr] START")
-    print(f"[new_ome_zarr] {paths=}")
-    print(f"[new_ome_zarr] Identified {old_plate=}")
+    raw_path = init_args.raw_path
 
-    assert old_plate.endswith(".zarr")  # nosec
-    new_plate = old_plate.strip(".zarr") + f"_{suffix}.zarr"
-    print(f"[new_ome_zarr] {new_plate=}")
+    # Based on assumption on the path structure, find plate and well
+    plate = Path(path).parents[2].name
+    well = Path(path).parents[1].name + Path(path).parents[0].name
 
-    # Based on images in image_folder, create plate OME-Zarr
-    new_zarr_path = (Path(zarr_dir) / new_plate).as_posix()
-    print(f"[new_ome_zarr] {new_zarr_path=}")
+    # Read data_dimensionality from data
+    data_dimensionality = 3  # Mock
 
-    # Create (fake) OME-Zarr folder on disk
-    Path(new_zarr_path).mkdir()
-
-    parallelization_list = []
-    for old_path in paths:
-        new_path = old_path.replace(old_plate, new_plate)
-        parallelization_list.append(
+    print(f"[yokogawa_to_zarr] {raw_path=}")
+    # Write fake image data into image Zarr group
+    _check_path_is_absolute(path)
+    with (Path(path) / "data").open("w") as f:
+        f.write(f"Source data: {raw_path}\n")
+    print("[yokogawa_to_zarr] END")
+    attributes = dict(well=well)
+    if init_args.acquisition is not None:
+        attributes["acquisition"] = init_args.acquisition
+    return dict(
+        added_images=[
             dict(
-                path=old_path,
-                init_args=dict(
-                    new_path=new_path,
-                    new_plate=new_plate,
-                ),
+                path=path,
+                attributes=attributes,
             )
-        )
-
-    # Prepare output metadata
-    out = dict(parallelization_list=parallelization_list)
-    print("[new_ome_zarr] END")
-    return out
-
-
-"""
-zarr_dirr = /tmp/my_folder
-image.path = /tmp/my_folder/plate.zarr/B/03/0
-
-
-image.path = /tmp/my_folder/0.zarr
-image.path = /tmp/my_folder/1.zarr
-image.path = /tmp/my_folder/2.zarr
-"""
+        ],
+        new_filters=dict(plate=plate, data_dimensionality=data_dimensionality),
+    )
