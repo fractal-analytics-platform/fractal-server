@@ -30,8 +30,9 @@ TASK_LIST = {
     "cellpose_segmentation": Task(
         function_parallel=cellpose_segmentation,
     ),
-    "create_ome_zarr_multiplex": Task(
+    "create_ome_zarr_multiplex_compound": Task(
         function_non_parallel=create_ome_zarr_multiplex,
+        function_parallel=yokogawa_to_zarr,
     ),
     "illumination_correction_compound": Task(
         function_non_parallel=init_channel_parallelization,
@@ -43,8 +44,10 @@ TASK_LIST = {
         function_non_parallel=init_registration,
         function_parallel=calculate_registration,
     ),
-    "registration_part_2_compound": Task(
+    "find_registration_consensus": Task(
         function_non_parallel=find_registration_consensus,
+    ),
+    "apply_registration_to_image": Task(
         function_parallel=apply_registration_to_image,
         new_filters=dict(registration=True),
     ),
