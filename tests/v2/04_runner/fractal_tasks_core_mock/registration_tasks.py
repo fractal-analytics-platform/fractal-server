@@ -1,10 +1,8 @@
 from pathlib import Path
-from typing import Optional
 
 from pydantic.decorator import validate_arguments
 
 from .utils import _extract_common_root
-from fractal_server.app.runner.v2.models import DictStrAny
 
 
 def _read_acquisition_index_from_ngff_metadata(path: str) -> int:
@@ -42,7 +40,6 @@ def init_registration(
     *,
     # Standard arguments
     paths: list[str],
-    buffer: Optional[DictStrAny] = None,
     zarr_dir: str,
     # Non-standard arguments
     ref_acquisition: int,
@@ -53,9 +50,8 @@ def init_registration(
 
     # Detect plate prefix
     shared_plate = _extract_common_root(paths).get("shared_plate")
-    shared_root_dir = _extract_common_root(paths).get("shared_root_dir")
     print(f"[init_registration] Identified {shared_plate=}")
-    print(f"[init_registration] Identified {shared_root_dir=}")
+    print(f"[init_registration] Identified {zarr_dir=}")
 
     well_to_paths = _group_paths_by_well(paths)
 
@@ -82,7 +78,7 @@ def init_registration(
             parallelization_list.append(
                 dict(
                     path=path,
-                    ref_path=ref_path,
+                    init_args=dict(ref_path=ref_path),
                 )
             )
 
@@ -95,10 +91,11 @@ def calculate_registration(
     *,
     # Standard arguments
     path: str,
-    buffer: Optional[DictStrAny] = None,
+    init_args: dict[str, str],
     # Non-standard arguments
-    ref_path: str,
-) -> dict:
+) -> None:
+    # CRITICAL if this extraction fails, the task fails
+    ref_path = init_args["ref_path"]
     print("[calculate_registration] START")
     print(f"[calculate_registration] {path=}")
     print(f"[calculate_registration] {ref_path=}")
@@ -116,18 +113,28 @@ def find_registration_consensus(
     *,
     # Standard arguments
     paths: list[str],
-    buffer: Optional[DictStrAny] = None,
     zarr_dir: str,
-) -> dict:
+) -> None:
     print("[find_registration_consensus] START")
     well_to_paths = _group_paths_by_well(paths)
     for well, well_paths in well_to_paths.items():
         print(f"[find_registration_consensus] {well=}")
         for path in well_paths:
+
             table_path = Path(path) / "registration_table"
-            print(
-                f"[find_registration_consensus]   Read {table_path.as_posix()}"
-            )
+            try:
+                with table_path.open("r") as f:
+                    f.read()
+                print(
+                    f"[find_registration_consensus]  "
+                    f"Read {table_path.as_posix()}"
+                )
+            except FileNotFoundError:
+                print(
+                    f"[find_registration_consensus]  "
+                    f"FAIL Reading {table_path.as_posix()}"
+                )
+
         print(f"[find_registration_consensus] Find consensus for {well=}")
         for path in well_paths:
             table_path = Path(path) / "registration_table_final"
@@ -146,7 +153,6 @@ def apply_registration_to_image(
     *,
     # Standard arguments
     path: str,
-    buffer: Optional[DictStrAny] = None,
     # Non-standard arguments
     overwrite_input: bool = True,
 ) -> dict:
