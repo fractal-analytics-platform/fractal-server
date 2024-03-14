@@ -24,7 +24,6 @@ class DatasetV2(SQLModel, table=True):
         sa_relationship_kwargs=dict(lazy="selectin"),
     )
 
-    meta: dict[str, Any] = Field(sa_column=Column(JSON), default={})
     history: list[dict[str, Any]] = Field(
         sa_column=Column(JSON, server_default="[]", nullable=False)
     )
