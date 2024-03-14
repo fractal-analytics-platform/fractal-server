@@ -57,7 +57,6 @@ def execute_tasks_v2(
             task_output = _run_non_parallel_task(
                 task=task,
                 function_kwargs=function_kwargs,
-                old_dataset_images=filtered_images,
                 executor=executor,
             )
         # (2/3) Parallel task
@@ -86,7 +85,6 @@ def execute_tasks_v2(
             init_task_output = _run_non_parallel_task_init(
                 task=task,
                 function_kwargs=function_kwargs,
-                old_dataset_images=filtered_images,
                 executor=executor,
             )
 
