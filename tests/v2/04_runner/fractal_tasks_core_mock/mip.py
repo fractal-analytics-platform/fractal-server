@@ -79,7 +79,6 @@ def maximum_intensity_projection(
 
     new_filters = dict(
         plate=new_plate,
-        data_dimensionality=2,
     )
 
     out = dict(
