@@ -1,23 +1,22 @@
-from typing import Any
+import json
 from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Query
-from fastapi import Request
 from fastapi import Response
 from fastapi import status
 from pydantic import BaseModel
-from pydantic import validator
 
-from .....images import SingleImage
-from ....db import AsyncSession
-from ....db import get_async_db
-from ....models.v2 import DatasetV2
-from ....security import current_active_user
-from ....security import User
 from ._aux_functions import _get_dataset_check_owner
+from fractal_server.app.db import AsyncSession
+from fractal_server.app.db import get_async_db
+from fractal_server.app.models.v2 import DatasetV2
+from fractal_server.app.security import current_active_user
+from fractal_server.app.security import User
+from fractal_server.images import SingleImage
+from fractal_server.images import val_scalar_dict
 
 
 router = APIRouter()
@@ -28,26 +27,6 @@ class ImageCollection(BaseModel):
     attributes: list[str]
 
 
-class ImageQuery(BaseModel):
-    path: Optional[str]
-    attributes: Optional[dict[str, Any]]
-
-    @validator("attributes")
-    def cast_types(cls, value):
-        for k, v in value.items():
-            if v.isdigit() or (v.startswith(("+", "-")) and v[1:].isdigit()):
-                value[k] = int(v)
-            elif v.replace(".", "", 1).isdigit():
-                value[k] = float(v)
-            elif v in ["true", "True"]:
-                value[k] = True
-            elif v in ["false", "False"]:
-                value[k] = False
-            elif v in ["none", "None", "null"]:
-                value[k] = None
-        return value
-
-
 @router.get(
     "/project/{project_id}/dataset/{dataset_id}/images/",
     response_model=ImageCollection,
@@ -56,9 +35,22 @@ class ImageQuery(BaseModel):
 async def get_dataset_images(
     project_id: int,
     dataset_id: int,
-    # path: Optional[str],
-    # attributes: Optional[dict[str, Any]],
-    request: Request,
+    path: Optional[str] = None,
+    attributes: Optional[str] = Query(
+        None,
+        description=(
+            "String representation of a Python dictionary.<br><br>"
+            "Curly braces are encoded as `%7B` and `%7D`.<br>"
+            "Colomns become equal signs.<br>"
+            "Keys and string values must be enclosed in double quotes, "
+            "encoded as `%22`.<br>"
+            "`None` becomes `null`,"
+            "`True/False` becomes respectively `true/false`.<br>"
+            "E.g. `{'a': 3, 'b': None, 'c': 'hello'}` must be encoded as "
+            "`%7B%22a%22=3&%22b%22=null,%22c%22=%22hello%22%7D`.<br><br>"
+            "Values must be of type `str`, `int`, `float`, `bool` or `None`."
+        ),
+    ),
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> ImageCollection:
@@ -68,33 +60,33 @@ async def get_dataset_images(
     )
     images: list[SingleImage] = output["dataset"].images
 
-    # !
-    from devtools import debug
+    if path is not None:
+        images = [image for image in images if image["path"] == path]
 
-    for k, v in request.query_params.items():
-        debug(k, v)
-    # !
-
-    # Query parameters casting
-    query = ImageQuery(
-        path=request.query_params.get("path"),
-        attributes={
-            k: v for k, v in request.query_params.items() if k != "path"
-        },
-    )
-
-    if query.path is not None:
+    if attributes is not None:
+        try:
+            attributes = json.loads(attributes)
+            val_scalar_dict("")(attributes)
+        except json.JSONDecodeError:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "The 'attributes' query parameter must be a valid dict. "
+                    f"You provided: {attributes}"
+                ),
+            )
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "The 'attributes' query parameter must be a scalar dict. "
+                    f"You provided: {attributes}"
+                ),
+            )
         images = [
             image
             for image in images
-            if image["path"] == request.query_params["path"]
-        ]
-
-    if query.attributes is not None:
-        images = [
-            image
-            for image in images
-            if SingleImage(**image).match_filter(query.attributes)
+            if SingleImage(**image).match_filter(attributes)
         ]
 
     return ImageCollection(
