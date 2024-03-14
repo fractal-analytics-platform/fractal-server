@@ -72,7 +72,6 @@ def execute_tasks_v2(
             task_output = _run_parallel_task(
                 task=task,
                 list_function_kwargs=list_function_kwargs,
-                # old_dataset_images=filtered_images,
                 executor=executor,
             )
         # (3/3) Compound task
@@ -103,19 +102,9 @@ def execute_tasks_v2(
                     )
                 )
             list_function_kwargs = deduplicate_list(list_function_kwargs)
-            # these_filtered_images = [
-            #     find_image_by_path(
-            #         images=tmp_dataset.images, path=kwargs["path"]
-            #     )
-            #     for kwargs in list_function_kwargs
-            # ]
-            # # these_filtered_images = deduplicate_list(
-            #     these_filtered_images, remove_None=True
-            # )
             task_output = _run_parallel_task(
                 task=task,
                 list_function_kwargs=list_function_kwargs,
-                # old_dataset_images=these_filtered_images,
                 executor=executor,
             )
         else:
