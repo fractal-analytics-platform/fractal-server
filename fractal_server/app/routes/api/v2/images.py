@@ -35,9 +35,7 @@ class ImageQuery(BaseModel):
     path: Optional[str]
     filter: Optional[dict[str, Any]]
 
-    _filters = validator("filters", allow_reuse=True)(
-        val_scalar_dict("filters")
-    )
+    _filters = validator("filter", allow_reuse=True)(val_scalar_dict("filter"))
 
 
 @router.post(
@@ -49,7 +47,7 @@ async def query_dataset_images(
     project_id: int,
     dataset_id: int,
     page_size: Optional[int] = None,  # query param
-    page: Optional[int] = 0,  # query param
+    page: Optional[int] = 1,  # query param
     query: Optional[ImageQuery] = None,  # body
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
@@ -89,9 +87,10 @@ async def query_dataset_images(
 
     total_count = len(images)
     if page_size is not None:
-        images = images[
-            (page * page_size) : (page * page_size) + page_size  # noqa E203
-        ]
+        offset = (page - 1) * page_size
+        images = images[offset : offset + page_size]  # noqa E203
+    else:
+        page_size = total_count
 
     return ImagePage(
         total_count=total_count,
@@ -114,6 +113,10 @@ async def delete_dataset_images(
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
 
+    from devtools import debug
+
+    debug(path)
+
     output = await _get_dataset_check_owner(
         project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
     )
@@ -129,7 +132,9 @@ async def delete_dataset_images(
             detail=f"No image with path '{path}' in DatasetV2 {dataset_id}.",
         )
 
+    debug(len(dataset.images))
     dataset.images.remove(image_to_remove)
+    debug(len(dataset.images))
 
     await db.merge(dataset)
     await db.commit()
