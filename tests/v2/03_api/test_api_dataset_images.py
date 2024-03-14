@@ -1,5 +1,7 @@
+import time
 from typing import Any
 
+import pytest
 from devtools import debug
 
 from fractal_server.images import SingleImage
@@ -52,7 +54,7 @@ async def test_get_images(
     debug(dataset)
 
     res = await client.get(
-        f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/"
+        f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/",
     )
     assert "images" not in res.json()
     res = await client.get(
@@ -164,3 +166,31 @@ async def test_delete_images(
     )
     assert len(res.json()["images"]) == 1
     assert res.json()["images"][0]["path"] == "/C"
+
+
+@pytest.mark.parametrize("N", [100, 1_000, 10_000, 100_000])
+async def test_benchmark_get(
+    N: int,
+    MockCurrentUser,
+    client,
+    project_factory_v2,
+    dataset_factory_v2,
+):
+
+    async with MockCurrentUser() as user:
+        project = await project_factory_v2(user)
+    IMG = [
+        dict(path=f"/{i}", attributes={"a": 1, "b": i % 4, "c": i % 2})
+        for i in range(N)
+    ]
+    dataset = await dataset_factory_v2(project_id=project.id, images=IMG)
+
+    time_start = time.perf_counter()
+    res = await client.get(
+        f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/"
+        f"?match_filter={encode_dict(dict(b=0,c=0))}",
+    )
+    time_stop = time.perf_counter()
+    assert res.status_code == 200
+    assert res.json()["count"] == N // 4
+    debug(N, time_stop - time_start)
