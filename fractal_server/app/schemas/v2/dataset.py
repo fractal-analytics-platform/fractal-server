@@ -5,7 +5,6 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import validator
 
-from ....images import SingleImage
 from ....images import val_scalar_dict
 from .._validators import valstr
 from .._validators import valutc
@@ -45,13 +44,9 @@ class DatasetCreateV2(BaseModel):
 
     name: str
 
-    meta: dict[str, Any] = {}
-    history: list[_DatasetHistoryItemV2] = []
     read_only: bool = False
-
     zarr_dir: str
 
-    images: list[SingleImage] = []
     filters: dict[str, Any] = {}
 
     # Validators
@@ -69,14 +64,12 @@ class DatasetReadV2(BaseModel):
     project_id: int
     project: ProjectRead
 
-    meta: dict[str, Any]
     history: list[_DatasetHistoryItemV2]
     read_only: bool
 
     timestamp_created: datetime
 
     zarr_dir: str
-
     filters: dict[str, Any]
 
     # Validators
@@ -93,6 +86,12 @@ class DatasetUpdateV2(BaseModel):
         extra = "forbid"
 
     name: Optional[str]
+    read_only: Optional[bool]
+    zarr_dir: Optional[str]
+    filters: Optional[dict[str, Any]]
 
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))
+    _filters = validator("filters", allow_reuse=True)(
+        val_scalar_dict("filters")
+    )
