@@ -1,18 +1,17 @@
-import json
+from typing import Any
 from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Query
 from fastapi import Response
 from fastapi import status
 from pydantic import BaseModel
+from pydantic import validator
 
 from ._aux_functions import _get_dataset_check_owner
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
-from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.security import current_active_user
 from fractal_server.app.security import User
 from fractal_server.images import SingleImage
@@ -22,84 +21,84 @@ from fractal_server.images import val_scalar_dict
 router = APIRouter()
 
 
-class ImageCollection(BaseModel):
-    images: list[SingleImage]
+class ImagePage(BaseModel):
+
+    total_count: int
+    page_size: int
+    current_page: int
+
     attributes: list[str]
+    images: list[SingleImage]
 
 
-@router.get(
-    "/project/{project_id}/dataset/{dataset_id}/images/",
-    response_model=ImageCollection,
+class ImageQuery(BaseModel):
+    path: Optional[str]
+    filter: Optional[dict[str, Any]]
+
+    _filters = validator("filters", allow_reuse=True)(
+        val_scalar_dict("filters")
+    )
+
+
+@router.post(
+    "/project/{project_id}/dataset/{dataset_id}/images/query/",
+    response_model=ImagePage,
     status_code=status.HTTP_200_OK,
 )
-async def get_dataset_images(
+async def query_dataset_images(
     project_id: int,
     dataset_id: int,
-    path: Optional[str] = None,
-    attributes: Optional[str] = Query(
-        None,
-        description=(
-            "String representation of a Python dictionary.<br><br>"
-            "Curly braces are encoded as `%7B` and `%7D`.<br>"
-            "Colomns become equal signs.<br>"
-            "Keys and string values must be enclosed in double quotes, "
-            "encoded as `%22`.<br>"
-            "`None` becomes `null`,"
-            "`True/False` becomes respectively `true/false`.<br>"
-            "E.g. `{'a': 3, 'b': None, 'c': 'hello'}` must be encoded as "
-            "`%7B%22a%22=3&%22b%22=null,%22c%22=%22hello%22%7D`.<br><br>"
-            "Values must be of type `str`, `int`, `float`, `bool` or `None`."
-        ),
-    ),
+    page_size: Optional[int] = None,  # query param
+    page: Optional[int] = 0,  # query param
+    query: Optional[ImageQuery] = None,  # body
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> ImageCollection:
+) -> ImagePage:
 
     output = await _get_dataset_check_owner(
         project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
     )
-    images: list[SingleImage] = output["dataset"].images
+    images = output["dataset"].images
+    attributes = list(
+        set(
+            [
+                attribute
+                for image in images
+                for attribute in image["attributes"].keys()
+            ]
+        )
+    )
 
-    if path is not None:
-        images = [image for image in images if image["path"] == path]
+    if query is not None:
 
-    if attributes is not None:
-        try:
-            attributes = json.loads(attributes)
-            val_scalar_dict("")(attributes)
-        except json.JSONDecodeError:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    "The 'attributes' query parameter must be a valid dict. "
-                    f"You provided: {attributes}"
-                ),
+        if query.path is not None:
+            image = next(
+                image for image in images if image["path"] == query.path
             )
-        except ValueError:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    "The 'attributes' query parameter must be a scalar dict. "
-                    f"You provided: {attributes}"
-                ),
-            )
-        images = [
-            image
-            for image in images
-            if SingleImage(**image).match_filter(attributes)
+            if image is None:
+                images = []
+            else:
+                images = [image]
+
+        if query.filter is not None:
+            images = [
+                image
+                for image in images
+                if SingleImage(**image).match_filter(query.filter)
+            ]
+
+    total_count = len(images)
+    if page_size is not None:
+        images = images[
+            (page * page_size) : (page * page_size) + page_size  # noqa E203
         ]
 
-    return ImageCollection(
+    return ImagePage(
+        total_count=total_count,
+        current_page=page,
+        page_size=page_size,
+        attributes=attributes,
         images=images,
-        attributes=list(
-            set(
-                [
-                    attribute
-                    for image in images
-                    for attribute in image["attributes"].keys()
-                ]
-            )
-        ),
     )
 
 
@@ -110,7 +109,7 @@ async def get_dataset_images(
 async def delete_dataset_images(
     project_id: int,
     dataset_id: int,
-    path: list[str] = Query(...),
+    path: str,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
@@ -119,38 +118,19 @@ async def delete_dataset_images(
         project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
     )
 
-    dataset: DatasetV2 = output["dataset"]
+    dataset = output["dataset"]
 
-    if not all(p in dataset.image_paths for p in path):
+    image_to_remove = next(
+        image for image in dataset.images if image["path"] == path
+    )
+    if image_to_remove is None:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                f"The list of paths you provided ({path}) is not a sublist of "
-                f"{dataset.image_paths}."
-            ),
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No image with path '{path}' in DatasetV2 {dataset_id}.",
         )
 
-    new_images = [
-        image for image in dataset.images if not image["path"] in path
-    ]
-
-    dataset.images = new_images
+    dataset.images.remove(image_to_remove)
 
     await db.merge(dataset)
     await db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-@router.patch(
-    "/project/{project_id}/dataset/{dataset_id}/images/",
-    status_code=status.HTTP_501_NOT_IMPLEMENTED,
-)
-async def patch_dataset_images(
-    project_id: int,
-    dataset_id: int,
-    new_images: list[SingleImage],
-    user: User = Depends(current_active_user),
-    db: AsyncSession = Depends(get_async_db),
-) -> list[SingleImage]:
-
-    return Response(status_code=status.HTTP_501_NOT_IMPLEMENTED)
