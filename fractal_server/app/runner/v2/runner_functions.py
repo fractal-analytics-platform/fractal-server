@@ -2,7 +2,6 @@ from concurrent.futures import ThreadPoolExecutor
 from copy import copy
 from typing import Any
 
-from ....images import SingleImage
 from .models import DictStrAny
 from .models import Task
 from .task_output import InitTaskOutput
@@ -15,7 +14,6 @@ MAX_PARALLELIZATION_LIST_SIZE = 200
 def _run_non_parallel_task(
     task: Task,
     function_kwargs: DictStrAny,
-    old_dataset_images: list[SingleImage],
     executor: ThreadPoolExecutor,
 ) -> TaskOutput:
     def _wrapper_expand_kwargs(input_kwargs: dict[str, Any]):
@@ -36,7 +34,6 @@ def _run_non_parallel_task(
 def _run_non_parallel_task_init(
     task: Task,
     function_kwargs: DictStrAny,
-    old_dataset_images: list[SingleImage],
     executor: ThreadPoolExecutor,
 ) -> InitTaskOutput:
     def _wrapper_expand_kwargs(input_kwargs: dict[str, Any]):
