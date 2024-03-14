@@ -173,7 +173,9 @@ def apply_registration_to_image(
     else:
         new_path = f"{path}_r"
         print(f"[registration] {new_path=}")
-        out = dict(added_images=[dict(path=new_path)])
+        out = dict(
+            added_images=[dict(path=new_path, attributes=dict(origin=path))]
+        )
         Path(new_path).mkdir()
         with (Path(new_path) / "data").open("a") as f:
             f.write("Applying registration\n")
