@@ -45,15 +45,18 @@ class SingleImage(BaseModel):
         if attribute_filters is None and type_filters is None:
             return True
 
-        for key, value in (type_filters or {}).items():
-            if self.types.get(key) != value:
-                return False
+        if type_filters is not None:
+            for key, value in type_filters.items():
+                if self.types.get(key) != value:
+                    return False
 
-        for key, value in (attribute_filters or {}).items():
-            if value is None:
-                continue
-            if self.attributes.get(key) != value:
-                return False
+        if attribute_filters is not None:
+            for key, value in attribute_filters.items():
+                if value is None:
+                    continue
+                if self.attributes.get(key) != value:
+                    return False
+
         return True
 
 
