@@ -53,55 +53,22 @@ def docker_compose_file(pytestconfig, testdata_path: Path):
 
 
 @pytest.fixture
-def cfut_jobs_finished(monkeypatch):
+def patched_run_squeue(monkeypatch):
     """
     This fixture is a workaround to add quotes around the --format argument of
     squeue, see discussion in
     https://github.com/sampsyo/clusterfutures/pull/19.
 
-    The code of _jobs_finished, below, is a copy of the function from
-    https://github.com/sampsyo/clusterfutures/blob/09792479c2b5d3fb27d840cbd76138fae6d802a1/cfut/slurm.py#L37-L54,
-    with changes marked via # CHANGED comments.
+    The code of run_squeue, below, is a copy of the function in
+    fractal_server.app.runner._slurm._check_jobs_status, with changes
+    marked via # CHANGED comments.
     """
 
-    import cfut
-    from subprocess import run, PIPE
+    import fractal_server.app.runner._slurm._check_jobs_status
+    from subprocess import run
 
-    def _jobs_finished(job_ids):
-        """Check which ones of the given Slurm jobs already finished"""
-
-        # CHANGED -- start
-        import logging
-
-        logging.basicConfig(format="%(asctime)s; %(levelname)s; %(message)s")
-        logging.warning(f"[_jobs_finished] START {job_ids=}")
-        # CHANGED -- end
-
-        # CHANGED -- start
-        STATES_FINISHED = {  # https://slurm.schedmd.com/squeue.html#lbAG
-            "BOOT_FAIL",
-            "CANCELLED",
-            "COMPLETED",
-            "DEADLINE",
-            "FAILED",
-            "NODE_FAIL",
-            "OUT_OF_MEMORY",
-            "PREEMPTED",
-            "SPECIAL_EXIT",
-            "TIMEOUT",
-        }
-        # CHANGED -- end
-
-        # CHANGED -- start (only useful for debugging)
-        if job_ids:
-            assert type(list(job_ids)[0]) == str
-        # CHANGED -- end
-
-        # If there is no Slurm job to check, return right away
-        if not job_ids:
-            return set()
-
-        res = run(
+    def patched_run_squeue(job_ids):
+        res = run(  # nosec
             [
                 "squeue",
                 "--noheader",
@@ -110,38 +77,22 @@ def cfut_jobs_finished(monkeypatch):
                 ",".join([str(j) for j in job_ids]),
                 "--states=all",
             ],
-            stdout=PIPE,
-            stderr=PIPE,
+            capture_output=True,
             encoding="utf-8",
-            check=True,
+            check=False,
         )
-        id_to_state = dict(
-            [
-                line.strip().partition(" ")[::2]
-                for line in res.stdout.splitlines()
-            ]
-        )
+        if res.returncode != 0:
+            logging.warning(
+                f"squeue command with {job_ids}"
+                f" failed with:\n{res.stderr=}\n{res.stdout=}"
+            )
+        return res
 
-        # CHANGED -- start
-        logging.warning(f"[_jobs_finished] FROM SQUEUE: {id_to_state=}")
-        # CHANGED -- end
-
-        # Finished jobs only stay in squeue for a few mins (configurable). If
-        # a job ID isn't there, we'll assume it's finished.
-        # CHANGED -- start (print output before returning
-        finished_jobs = {
-            j
-            for j in job_ids
-            if id_to_state.get(j, "COMPLETED") in STATES_FINISHED
-        }
-        logging.warning(
-            f"[_jobs_finished] INCLUDING MISSING ONES {finished_jobs=}"
-        )
-        return finished_jobs
-        # CHANGED -- end
-
-    # Replace the jobs_finished function (from cfut.slurm) with our custom one
-    monkeypatch.setattr(cfut.slurm, "jobs_finished", _jobs_finished)
+    monkeypatch.setattr(
+        fractal_server.app.runner._slurm._check_jobs_status,
+        "run_squeue",
+        patched_run_squeue,
+    )
 
 
 @pytest.fixture
@@ -150,7 +101,12 @@ def monkey_slurm_user():
 
 
 @pytest.fixture
-def monkey_slurm(monkeypatch, docker_compose_project_name, docker_services):
+def monkey_slurm(
+    monkeypatch,
+    docker_compose_project_name,
+    docker_services,
+    patched_run_squeue,
+):
     """
     Monkeypatch Popen to execute overridden command in container
 
