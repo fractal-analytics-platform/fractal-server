@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Any
 from typing import Optional
 
@@ -113,14 +114,9 @@ async def delete_dataset_images(
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
 
-    from devtools import debug
-
-    debug(path)
-
     output = await _get_dataset_check_owner(
         project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
     )
-
     dataset = output["dataset"]
 
     image_to_remove = next(
@@ -132,10 +128,11 @@ async def delete_dataset_images(
             detail=f"No image with path '{path}' in DatasetV2 {dataset_id}.",
         )
 
-    debug(len(dataset.images))
-    dataset.images.remove(image_to_remove)
-    debug(len(dataset.images))
+    new_img = deepcopy(dataset.images)
+    new_img.remove(image_to_remove)
+    dataset.images = new_img
 
     await db.merge(dataset)
     await db.commit()
+
     return Response(status_code=status.HTTP_204_NO_CONTENT)
