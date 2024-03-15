@@ -13,7 +13,7 @@
 * API:
     * Handle invalid history file in `GET /project/{project_id}/dataset/{dataset_id}/status/` (\#1259).
 * Runner:
-    * Add custom `_custom_jobs_finished` to check the job status and to avoid squeue errors (\#1266)
+    * Add custom `_jobs_finished` to check the job status and to avoid squeue errors (\#1266)
 
 # 1.4.9
 
