@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Any
 from typing import Optional
 
@@ -127,10 +128,9 @@ async def delete_dataset_images(
             detail=f"No image with path '{path}' in DatasetV2 {dataset_id}.",
         )
 
-    # dataset.images.remove(image_to_remove)
-    dataset.images = [
-        image for image in dataset.images if image != image_to_remove
-    ]
+    new_image_list = deepcopy(dataset.images)
+    new_image_list.remove(image_to_remove)
+    dataset.images = new_image_list
 
     await db.merge(dataset)
     await db.commit()
