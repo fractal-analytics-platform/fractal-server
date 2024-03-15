@@ -21,9 +21,11 @@ def _apply_attributes_to_image(
     *,
     image: SingleImage,
     new_attributes: DictStrAny,
+    new_types: DictStrAny,
 ) -> SingleImage:
     updated_image = copy(image)
     updated_image.attributes.update(new_attributes)
+    updated_image.types.update(new_types)
     return updated_image
 
 
@@ -42,8 +44,10 @@ def execute_tasks_v2(
         # Get filtered images
         filtered_images = filter_images(
             dataset_images=tmp_dataset.images,
-            dataset_filters=tmp_dataset.filters,
-            wftask_filters=wftask.filters,
+            dataset_attribute_filters=tmp_dataset.attribute_filters,
+            dataset_type_filters=tmp_dataset.type_filters,
+            wftask_attribute_filters=wftask.attribute_filters,
+            wftask_type_filters=wftask.type_filters,
         )
 
         # (1/3) Non-parallel task
@@ -108,7 +112,7 @@ def execute_tasks_v2(
         else:
             raise ValueError(f"Invalid {task.task_type=}.")
 
-        # Propagate attributes from `origin` to added_images
+        # Propagate attributes and types from `origin` to added_images
         added_images = task_output.added_images or []
         for ind, img in enumerate(added_images):
             if "origin" not in img.attributes.keys():
@@ -120,16 +124,21 @@ def execute_tasks_v2(
             if original_img is not None:
                 updated_attributes = copy(original_img.attributes)
                 updated_attributes.update(img.attributes)
+                updated_types = copy(original_img.types)
+                updated_types.update(img.types)
                 added_images[ind] = SingleImage(
-                    path=img.path, attributes=updated_attributes
+                    path=img.path,
+                    attributes=updated_attributes,
+                    types=updated_types,
                 )
         task_output.added_images = added_images
 
         # Construct up-to-date filters
-        new_filters = copy(tmp_dataset.filters)
-        new_filters.update(task.new_filters)
-        if task_output.new_filters is not None:
-            new_filters.update(task_output.new_filters)
+        new_type_filters = copy(tmp_dataset.type_filters)
+        new_type_filters.update(task.new_type_filters)
+        new_attribute_filters = copy(tmp_dataset.attribute_filters) or {}
+        if task_output.new_attribute_filters is not None:
+            new_attribute_filters.update(task_output.new_attribute_filters)
 
         # Add filters to edited images, and update Dataset.images
         edited_images = task_output.edited_images or []
@@ -137,7 +146,9 @@ def execute_tasks_v2(
         for ind, image in enumerate(tmp_dataset.images):
             if image.path in edited_paths:
                 updated_image = _apply_attributes_to_image(
-                    image=image, new_attributes=new_filters
+                    image=image,
+                    new_attributes=new_attribute_filters,
+                    new_types=new_type_filters,
                 )
                 tmp_dataset.images[ind] = updated_image
 
@@ -145,7 +156,9 @@ def execute_tasks_v2(
         added_images = task_output.added_images or []
         for ind, image in enumerate(added_images):
             updated_image = _apply_attributes_to_image(
-                image=image, new_attributes=new_filters
+                image=image,
+                new_attributes=new_attribute_filters,
+                new_types=new_type_filters,
             )
             added_images[ind] = updated_image
         added_images = deduplicate_list(added_images)
@@ -175,8 +188,10 @@ def execute_tasks_v2(
             for image in tmp_dataset.images
             if image.path not in removed_images_paths
         ]
+
         # Update Dataset.filters
-        tmp_dataset.filters = new_filters
+        tmp_dataset.attribute_filters = new_attribute_filters
+        tmp_dataset.type_filters = new_type_filters
 
         # Update Dataset.history
         tmp_dataset.history.append(task.name)

@@ -26,16 +26,15 @@ TASK_LIST = {
     "MIP_compound": Task(
         function_non_parallel=new_ome_zarr,
         function_parallel=maximum_intensity_projection,
-        new_filters=dict(data_dimensionality=2),
     ),
     "illumination_correction": Task(
         function_parallel=illumination_correction,
-        new_filters=dict(illumination_correction=True),
+        new_type_filters=dict(illumination_correction=True),
     ),
     "illumination_correction_compound": Task(
         function_non_parallel=init_channel_parallelization,
         function_parallel=illumination_correction_B,
-        new_filters=dict(illumination_correction=True),
+        new_type_filters=dict(illumination_correction=True),
     ),
     "cellpose_segmentation": Task(
         function_parallel=cellpose_segmentation,
@@ -49,6 +48,6 @@ TASK_LIST = {
     ),
     "apply_registration_to_image": Task(
         function_parallel=apply_registration_to_image,
-        new_filters=dict(registration=True),
+        new_type_filters=dict(registration=True),
     ),
 }
