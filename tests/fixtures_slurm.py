@@ -68,6 +68,7 @@ def patched_run_squeue(monkeypatch):
     from subprocess import run
 
     def patched_run_squeue(job_ids):
+        logging.info(f"patched_run_squeue({job_ids})")
         res = run(  # nosec
             [
                 "squeue",
