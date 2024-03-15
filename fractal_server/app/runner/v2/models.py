@@ -20,7 +20,8 @@ class Dataset(BaseModel):
     # New in v2
     zarr_dir: str
     images: list[SingleImage] = Field(default_factory=list)
-    filters: DictStrAny = Field(default_factory=dict)
+    attribute_filters: DictStrAny = Field(default_factory=dict)
+    type_filters: DictStrAny = Field(default_factory=dict)
 
     @property
     def image_paths(self) -> list[str]:
@@ -29,10 +30,10 @@ class Dataset(BaseModel):
 
 class Task(BaseModel):
     meta: DictStrAny = Field(default_factory=dict)
-    new_filters: DictStrAny = Field(default_factory=dict)
+    new_type_filters: DictStrAny = Field(default_factory=dict)
 
-    _new_filters = validator("new_filters", allow_reuse=True)(
-        val_scalar_dict("new_filters")
+    _new_type_filters = validator("new_type_filters", allow_reuse=True)(
+        val_scalar_dict("new_type_filters")
     )
 
     function_non_parallel: Optional[Callable] = None
@@ -77,7 +78,8 @@ class WorkflowTask(BaseModel):
     args_parallel: DictStrAny = Field(default_factory=dict)
     meta: DictStrAny = Field(default_factory=dict)
     task: Optional[Task] = None
-    filters: DictStrAny = Field(default_factory=dict)
+    attribute_filters: DictStrAny = Field(default_factory=dict)
+    type_filters: DictStrAny = Field(default_factory=dict)
 
 
 class Workflow(BaseModel):

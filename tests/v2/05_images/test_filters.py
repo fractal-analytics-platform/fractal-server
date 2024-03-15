@@ -1,60 +1,69 @@
 import pytest
+from devtools import debug
 
 from fractal_server.images import _filter_image_list
 from fractal_server.images import SingleImage
 from fractal_server.images import val_scalar_dict
 
-images = [
+IMAGES = [
     SingleImage(
         path="plate.zarr/A/01/0",
+        types=dict(data_dimensionality=3),
         attributes=dict(
             plate="plate.zarr",
-            well="A/01",
-            data_dimensionality=3,
+            well="A01",
         ),
     ),
     SingleImage(
         path="plate.zarr/A/02/0",
+        types=dict(data_dimensionality=3),
         attributes=dict(
             plate="plate.zarr",
-            well="A/02",
-            data_dimensionality=3,
+            well="A02",
         ),
     ),
     SingleImage(
         path="plate.zarr/A/01/0_corr",
-        attributes=dict(
-            plate="plate.zarr",
-            well="A/01",
+        types=dict(
             data_dimensionality=3,
             illumination_correction=True,
+        ),
+        attributes=dict(
+            plate="plate.zarr",
+            well="A01",
         ),
     ),
     SingleImage(
         path="plate.zarr/A/02/0_corr",
-        attributes=dict(
-            plate="plate.zarr",
-            well="A/02",
+        types=dict(
             data_dimensionality=3,
             illumination_correction=True,
+        ),
+        attributes=dict(
+            plate="plate.zarr",
+            well="A02",
         ),
     ),
     SingleImage(
         path="plate_2d.zarr/A/01/0_corr",
-        attributes=dict(
-            plate="plate_2d.zarr",
-            well="A/01",
+        types=dict(
             data_dimensionality=2,
             illumination_correction=True,
+        ),
+        attributes=dict(
+            plate="plate_2d.zarr",
+            well="A01",
         ),
     ),
     SingleImage(
         path="plate_2d.zarr/A/02/0_corr",
-        attributes=dict(
-            plate="plate_2d.zarr",
-            well="A/02",
+        types=dict(
             data_dimensionality=2,
             illumination_correction=True,
+        ),
+        attributes=dict(
+            plate="plate_2d.zarr",
+            well="A02",
         ),
     ),
 ]
@@ -80,49 +89,63 @@ def test_filter_validation():
         assert val_scalar_dict("")(filters) == filters
 
 
-def test_filter_image_list():
-
-    filters = dict(invalid=True)
-    filtered_list = _filter_image_list(images=images, filters=filters)
-    assert len(filtered_list) == 0
-
-    filters = dict(invalid=False)
-    filtered_list = _filter_image_list(images=images, filters=filters)
-    assert len(filtered_list) == 0
-
-    filters = dict(data_dimensionality=3)
-    filtered_list = _filter_image_list(images=images, filters=filters)
-    assert len(filtered_list) == 4
-
-    filters = dict(data_dimensionality=2)
-    filtered_list = _filter_image_list(images=images, filters=filters)
-    assert len(filtered_list) == 2
-
-    filters = dict(data_dimensionality=3, illumination_correction=True)
-    filtered_list = _filter_image_list(images=images, filters=filters)
-    assert len(filtered_list) == 2
-
-    filters = dict(
-        data_dimensionality=3,
-        illumination_correction=True,
-        plate="plate_2d.zarr",
+@pytest.mark.parametrize(
+    "attribute_filters,type_filters,expected_number",
+    [
+        # No filter
+        (None, None, 6),
+        # Key is not part of attribute keys
+        ({"missing_key": "whatever"}, None, 0),
+        # Key is not part of type keys
+        (None, {"missing_key": "whatever"}, 0),
+        # Key is part of type keys, but value is missing
+        (None, {"data_dimensionality": 0}, 0),
+        # Key is part of attribute keys, but value is missing
+        ({"plate": "missing_plate.zarr"}, None, 0),
+        # Meaning of None for attributes: skip a given filter
+        ({"plate": None}, None, 6),
+        # Meaning of None for types: require that a value is actually None
+        (None, {"data_dimensionality": None}, 0),
+        # Single type filter
+        (None, {"data_dimensionality": 3}, 4),
+        # Single type filter
+        (None, {"data_dimensionality": 2}, 2),
+        # Two type filters
+        (None, {"data_dimensionality": 3, "illumination_correction": True}, 2),
+        # Both attribute and type filters
+        (
+            {"plate": "plate.zarr"},
+            {"data_dimensionality": 3, "illumination_correction": True},
+            2,
+        ),
+        # Both attribute and type filters
+        (
+            {"plate": "plate_2d.zarr"},
+            {"data_dimensionality": 3, "illumination_correction": True},
+            0,
+        ),
+        # Both attribute and type filters
+        (
+            {"plate": "plate.zarr", "well": "A01"},
+            {"data_dimensionality": 3, "illumination_correction": True},
+            1,
+        ),
+        # Single attribute filter
+        ({"well": "A01"}, None, 3),
+    ],
+)
+def test_filter_image_list(
+    attribute_filters,
+    type_filters,
+    expected_number,
+):
+    filtered_list = _filter_image_list(
+        images=IMAGES,
+        attribute_filters=attribute_filters,
+        type_filters=type_filters,
     )
-    filtered_list = _filter_image_list(images=images, filters=filters)
-    assert len(filtered_list) == 0
 
-    filters = dict(
-        data_dimensionality=3,
-        illumination_correction=True,
-        plate="plate.zarr",
-    )
-    filtered_list = _filter_image_list(images=images, filters=filters)
-    assert len(filtered_list) == 2
-
-    filters = dict(
-        data_dimensionality=3,
-        illumination_correction=True,
-        plate="plate.zarr",
-        well="A/01",
-    )
-    filtered_list = _filter_image_list(images=images, filters=filters)
-    assert len(filtered_list) == 1
+    debug(attribute_filters)
+    debug(type_filters)
+    debug(filtered_list)
+    assert len(filtered_list) == expected_number

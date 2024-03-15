@@ -177,5 +177,7 @@ def yokogawa_to_zarr(
                 attributes=attributes,
             )
         ],
-        new_filters=dict(plate=plate, data_dimensionality=data_dimensionality),
+        new_attribute_filters=dict(
+            plate=plate, data_dimensionality=data_dimensionality
+        ),
     )
