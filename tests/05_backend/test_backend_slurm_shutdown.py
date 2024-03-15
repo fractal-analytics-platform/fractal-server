@@ -14,7 +14,6 @@ def test_direct_shutdown_during_submit(
     monkey_slurm,
     monkey_slurm_user,
     tmp777_path,
-    cfut_jobs_finished,
 ):
     """
     Test the FractalSlurmExecutor.shutdown method directly
@@ -62,7 +61,6 @@ def test_indirect_shutdown_during_submit(
     monkey_slurm_user,
     tmp777_path,
     tmp_path,
-    cfut_jobs_finished,
 ):
     """
     Test the FractalSlurmExecutor.shutdown method indirectly, that is, when it
@@ -117,7 +115,6 @@ def test_indirect_shutdown_during_map(
     monkey_slurm_user,
     tmp777_path,
     tmp_path,
-    cfut_jobs_finished,
 ):
     def fun_sleep(dummy):
         time.sleep(100)
