@@ -4,9 +4,8 @@ from fractal_server.images import SingleImage
 
 PREFIX = "api/v2"
 
-IMAGES = [
-    SingleImage(path=f"/{i}", attributes={str(i): i}) for i in range(100)
-]
+N = 100
+IMAGES = [SingleImage(path=f"/{i}", attributes={str(i): i}) for i in range(N)]
 
 
 async def test_query_images(
@@ -24,6 +23,7 @@ async def test_query_images(
     res = await client.get(
         f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/",
     )
+    debug(res.json())
     assert "images" not in res.json()
 
     res = await client.post(
@@ -53,7 +53,6 @@ async def test_delete_images(
     assert res.json()["total_count"] == len(IMAGES)
 
     for i, image in enumerate(IMAGES):
-        debug(image)
         res = await client.delete(
             f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/"
             f"?path={image.path}",
