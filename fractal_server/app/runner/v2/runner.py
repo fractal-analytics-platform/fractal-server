@@ -57,7 +57,6 @@ def execute_tasks_v2(
             task_output = _run_non_parallel_task(
                 task=task,
                 function_kwargs=function_kwargs,
-                old_dataset_images=filtered_images,
                 executor=executor,
             )
         # (2/3) Parallel task
@@ -72,7 +71,6 @@ def execute_tasks_v2(
             task_output = _run_parallel_task(
                 task=task,
                 list_function_kwargs=list_function_kwargs,
-                old_dataset_images=filtered_images,
                 executor=executor,
             )
         # (3/3) Compound task
@@ -87,7 +85,6 @@ def execute_tasks_v2(
             init_task_output = _run_non_parallel_task_init(
                 task=task,
                 function_kwargs=function_kwargs,
-                old_dataset_images=filtered_images,
                 executor=executor,
             )
 
@@ -103,23 +100,30 @@ def execute_tasks_v2(
                     )
                 )
             list_function_kwargs = deduplicate_list(list_function_kwargs)
-            these_filtered_images = [
-                find_image_by_path(
-                    images=tmp_dataset.images, path=kwargs["path"]
-                )
-                for kwargs in list_function_kwargs
-            ]
-            these_filtered_images = deduplicate_list(
-                these_filtered_images, remove_None=True
-            )
             task_output = _run_parallel_task(
                 task=task,
                 list_function_kwargs=list_function_kwargs,
-                old_dataset_images=these_filtered_images,
                 executor=executor,
             )
         else:
             raise ValueError(f"Invalid {task.task_type=}.")
+
+        # Propagate attributes from `origin` to added_images
+        added_images = task_output.added_images or []
+        for ind, img in enumerate(added_images):
+            if "origin" not in img.attributes.keys():
+                continue
+            original_path = img.attributes["origin"]
+            original_img = find_image_by_path(
+                images=tmp_dataset.images, path=original_path
+            )
+            if original_img is not None:
+                updated_attributes = copy(original_img.attributes)
+                updated_attributes.update(img.attributes)
+                added_images[ind] = SingleImage(
+                    path=img.path, attributes=updated_attributes
+                )
+        task_output.added_images = added_images
 
         # Construct up-to-date filters
         new_filters = copy(tmp_dataset.filters)
@@ -136,6 +140,7 @@ def execute_tasks_v2(
                     image=image, new_attributes=new_filters
                 )
                 tmp_dataset.images[ind] = updated_image
+
         # Add filters to new images
         added_images = task_output.added_images or []
         for ind, image in enumerate(added_images):
