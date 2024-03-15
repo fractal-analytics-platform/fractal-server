@@ -19,7 +19,6 @@ def test_slurm_executor_submit(
     monkey_slurm,
     monkey_slurm_user,
     tmp777_path,
-    cfut_jobs_finished,
 ):
     with FractalSlurmExecutor(
         slurm_user=monkey_slurm_user,
@@ -36,7 +35,6 @@ def test_slurm_executor_submit_with_exception(
     monkey_slurm,
     monkey_slurm_user,
     tmp777_path,
-    cfut_jobs_finished,
 ):
     def raise_ValueError():
         raise ValueError
@@ -58,7 +56,6 @@ def test_slurm_executor_map(
     monkey_slurm,
     monkey_slurm_user,
     tmp777_path,
-    cfut_jobs_finished,
 ):
     with FractalSlurmExecutor(
         slurm_user=monkey_slurm_user,
@@ -80,7 +77,6 @@ def test_slurm_executor_map_with_exception(
     monkey_slurm,
     monkey_slurm_user,
     tmp777_path,
-    cfut_jobs_finished,
 ):
 
     """
@@ -128,7 +124,6 @@ def test_slurm_executor_submit_separate_folders(
     monkey_slurm,
     monkey_slurm_user,
     tmp777_path,
-    cfut_jobs_finished,
     slurm_working_folders,
 ):
     """
@@ -154,7 +149,6 @@ def test_slurm_executor_submit_and_scancel(
     monkey_slurm,
     monkey_slurm_user,
     tmp777_path,
-    cfut_jobs_finished,
     slurm_working_folders,
 ):
     """
@@ -256,7 +250,7 @@ def submit_and_ignore_exceptions(
         debug(f"Ignored exception: {str(e)}")
 
 
-def test_submit_pre_command(fake_process, tmp_path, cfut_jobs_finished):
+def test_submit_pre_command(fake_process, tmp_path):
     """
     GIVEN a FractalSlurmExecutor
     WHEN it is initialised with a slurm_user
@@ -289,7 +283,7 @@ def test_submit_pre_command(fake_process, tmp_path, cfut_jobs_finished):
     assert any([target in call for call in call_strings])
 
 
-def test_slurm_account_in_submit_script(tmp_path, cfut_jobs_finished):
+def test_slurm_account_in_submit_script(tmp_path):
     """
     Check that submission script contains the right SLURM account.
     """
