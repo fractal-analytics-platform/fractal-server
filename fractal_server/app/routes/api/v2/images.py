@@ -1,4 +1,3 @@
-from copy import deepcopy
 from typing import Any
 from typing import Optional
 
@@ -9,6 +8,7 @@ from fastapi import Response
 from fastapi import status
 from pydantic import BaseModel
 from pydantic import validator
+from sqlalchemy.orm.attributes import flag_modified
 
 from ._aux_functions import _get_dataset_check_owner
 from fractal_server.app.db import AsyncSession
@@ -17,7 +17,6 @@ from fractal_server.app.security import current_active_user
 from fractal_server.app.security import User
 from fractal_server.images import SingleImage
 from fractal_server.images import val_scalar_dict
-
 
 router = APIRouter()
 
@@ -128,9 +127,8 @@ async def delete_dataset_images(
             detail=f"No image with path '{path}' in DatasetV2 {dataset_id}.",
         )
 
-    new_image_list = deepcopy(dataset.images)
-    new_image_list.remove(image_to_remove)
-    dataset.images = new_image_list
+    dataset.images.remove(image_to_remove)
+    flag_modified(dataset, "images")
 
     await db.merge(dataset)
     await db.commit()
