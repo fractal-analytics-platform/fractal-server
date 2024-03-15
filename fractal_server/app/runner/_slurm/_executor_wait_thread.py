@@ -8,7 +8,7 @@ from typing import Optional
 from cfut import FileWaitThread
 
 from ....logger import set_logger
-from ._check_jobs_status import _custom_jobs_finished
+from ._check_jobs_status import _jobs_finished
 
 logger = set_logger(__name__)
 
@@ -120,7 +120,7 @@ class FractalSlurmWaitThread(FractalFileWaitThread):
         super().check(i)
         if i % (self.slurm_poll_interval // self.interval) == 0:
             try:
-                finished_jobs = _custom_jobs_finished(self.waiting.values())
+                finished_jobs = _jobs_finished(self.waiting.values())
             except Exception:
                 # Don't abandon completion checking if jobs_finished errors
                 traceback.print_exc()
