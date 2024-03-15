@@ -1,19 +1,9 @@
 from subprocess import run  # nosec
 
+from cfut.slurm import STATES_FINISHED
+
 from ....logger import set_logger
 
-STATES_FINISHED = {  # https://slurm.schedmd.com/squeue.html#lbAG
-    "BOOT_FAIL",
-    "CANCELLED",
-    "COMPLETED",
-    "DEADLINE",
-    "FAILED",
-    "NODE_FAIL",
-    "OUT_OF_MEMORY",
-    "PREEMPTED",
-    "SPECIAL_EXIT",
-    "TIMEOUT",
-}
 
 logger = set_logger(__name__)
 
@@ -23,7 +13,7 @@ def run_squeue(job_ids):
         [
             "squeue",
             "--noheader",
-            '--format="%i %T"',
+            "--format=%i %T",
             "--jobs",
             ",".join([str(j) for j in job_ids]),
             "--states=all",
@@ -41,13 +31,14 @@ def run_squeue(job_ids):
     return res
 
 
-def _custom_jobs_finished(job_ids) -> set[str]:
+def _jobs_finished(job_ids) -> set[str]:
     """
     Check which ones of the given Slurm jobs already finished
 
-    The function is copied from clusterfutures 0.5.
-    Original Copyright: 2022 Adrian Sampson,
-    released under the MIT licence
+    The function is based on the `_jobs_finished` function from
+    clusterfutures (version 0.5).
+    Original Copyright: 2022 Adrian Sampson
+    (released under the MIT licence)
     """
 
     # If there is no Slurm job to check, return right away
