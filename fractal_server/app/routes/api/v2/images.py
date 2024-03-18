@@ -55,6 +55,12 @@ async def query_dataset_images(
     db: AsyncSession = Depends(get_async_db),
 ) -> ImagePage:
 
+    if page < 1:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid pagination parameters: page={page} < 1",
+        )
+
     output = await _get_dataset_check_owner(
         project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
     )
@@ -73,7 +79,8 @@ async def query_dataset_images(
 
         if query.path is not None:
             image = next(
-                image for image in images if image["path"] == query.path
+                (image for image in images if image["path"] == query.path),
+                None,
             )
             if image is None:
                 images = []
@@ -89,13 +96,11 @@ async def query_dataset_images(
 
     total_count = len(images)
     if page_size is not None:
-        if page < 1 or page_size < 0:
-            # FIXME maybe use Query(gt=1) ?
+        if page_size < 0:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
-                    "Invalid pagination parameters: "
-                    f"page={page} < 1 and/or page_size={page_size} < 0"
+                    f"Invalid pagination parameters: page_size={page_size} < 0"
                 ),
             )
         offset = (page - 1) * page_size
@@ -130,7 +135,7 @@ async def delete_dataset_images(
     dataset = output["dataset"]
 
     image_to_remove = next(
-        image for image in dataset.images if image["path"] == path
+        (image for image in dataset.images if image["path"] == path), None
     )
     if image_to_remove is None:
         raise HTTPException(
