@@ -28,7 +28,10 @@ def val_scalar_dict(attribute: str):
 
 
 class SingleImage(BaseModel):
+
     path: str
+    origin: Optional[str] = None
+
     attributes: dict[str, Any] = Field(default_factory=dict)
     flags: dict[str, bool] = Field(default_factory=dict)
 

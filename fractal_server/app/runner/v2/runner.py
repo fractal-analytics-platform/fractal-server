@@ -115,22 +115,24 @@ def execute_tasks_v2(
         # Propagate attributes and flags from `origin` to added_images
         added_images = task_output.added_images or []
         for ind, img in enumerate(added_images):
-            if "origin" not in img.attributes.keys():
+            if img.origin is None:
                 continue
-            original_path = img.attributes["origin"]
             original_img = find_image_by_path(
-                images=tmp_dataset.images, path=original_path
+                images=tmp_dataset.images,
+                path=img.origin,
             )
-            if original_img is not None:
-                updated_attributes = copy(original_img.attributes)
-                updated_attributes.update(img.attributes)
-                updated_flags = copy(original_img.flags)
-                updated_flags.update(img.flags)
-                added_images[ind] = SingleImage(
-                    path=img.path,
-                    attributes=updated_attributes,
-                    flags=updated_flags,
-                )
+            if original_img is None:
+                continue
+            updated_attributes = copy(original_img.attributes)
+            updated_attributes.update(img.attributes)
+            updated_flags = copy(original_img.flags)
+            updated_flags.update(img.flags)
+            added_images[ind] = SingleImage(
+                path=img.path,
+                attributes=updated_attributes,
+                flags=updated_flags,
+                origin=img.origin,
+            )
         task_output.added_images = added_images
 
         # Construct up-to-date filters

@@ -78,7 +78,7 @@ def maximum_intensity_projection(
     print("[maximum_intensity_projection] END")
 
     out = dict(
-        added_images=[dict(path=new_path, attributes=dict(origin=path))],
+        added_images=[dict(path=new_path, origin=path)],
         new_attribute_filters=dict(plate=new_plate, data_dimensionality=2),
     )
     return out
