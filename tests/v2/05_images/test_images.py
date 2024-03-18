@@ -5,7 +5,7 @@ from fractal_server.images import SingleImage
 def test_find_image_by_path():
     images = [
         SingleImage(path="a", attributes=dict(name="a")),
-        SingleImage(path="b", types=dict(key="val")),
+        SingleImage(path="b", flags=dict(key="val")),
     ]
 
     image = find_image_by_path(path="a", images=images)

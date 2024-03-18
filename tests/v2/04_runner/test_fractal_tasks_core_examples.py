@@ -83,7 +83,7 @@ def test_fractal_demos_01(tmp_path: Path, executor):
         "plate": "my_plate.zarr",
         "data_dimensionality": 3,
     }
-    assert dataset.type_filters == {
+    assert dataset.flag_filters == {
         "illumination_correction": True,
     }
     assert set(dataset.image_paths) == {
@@ -101,7 +101,7 @@ def test_fractal_demos_01(tmp_path: Path, executor):
             "plate": "my_plate.zarr",
             "data_dimensionality": 3,
         },
-        "types": {
+        "flags": {
             "illumination_correction": True,
         },
     }
@@ -131,7 +131,7 @@ def test_fractal_demos_01(tmp_path: Path, executor):
         "plate": "my_plate_mip.zarr",
         "data_dimensionality": 2,
     }
-    assert dataset.type_filters == {
+    assert dataset.flag_filters == {
         "illumination_correction": True,
     }
     img = find_image_by_path(
@@ -145,7 +145,7 @@ def test_fractal_demos_01(tmp_path: Path, executor):
             "data_dimensionality": 2,
             "origin": f"{zarr_dir}/my_plate.zarr/A/01/0",
         },
-        "types": {
+        "flags": {
             "illumination_correction": True,
         },
     }
@@ -214,7 +214,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
         "plate": "my_plate.zarr",
         "data_dimensionality": 3,
     }
-    assert dataset.type_filters == {
+    assert dataset.flag_filters == {
         "illumination_correction": True,
     }
     assert dataset.image_paths == [
@@ -232,7 +232,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
             "plate": "my_plate.zarr",
             "data_dimensionality": 3,
         },
-        "types": {},
+        "flags": {},
     }
     assert dataset.images[1].dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/02/0",
@@ -241,7 +241,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
             "plate": "my_plate.zarr",
             "data_dimensionality": 3,
         },
-        "types": {},
+        "flags": {},
     }
     assert dataset.images[2].dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
@@ -251,7 +251,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
             "data_dimensionality": 3,
             "origin": f"{zarr_dir}/my_plate.zarr/A/01/0",
         },
-        "types": {"illumination_correction": True},
+        "flags": {"illumination_correction": True},
     }
     assert dataset.images[3].dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
@@ -261,7 +261,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
             "data_dimensionality": 3,
             "origin": f"{zarr_dir}/my_plate.zarr/A/02/0",
         },
-        "types": {
+        "flags": {
             "illumination_correction": True,
         },
     }
@@ -283,7 +283,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
         "plate": "my_plate_mip.zarr",
         "data_dimensionality": 2,
     }
-    assert dataset.type_filters == {
+    assert dataset.flag_filters == {
         "illumination_correction": True,
     }
     assert dataset.image_paths == [
@@ -303,7 +303,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
             "data_dimensionality": 2,
             "origin": f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
         },
-        "types": {
+        "flags": {
             "illumination_correction": True,
         },
     }
@@ -315,7 +315,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
             "data_dimensionality": 2,
             "origin": f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
         },
-        "types": {
+        "flags": {
             "illumination_correction": True,
         },
     }
@@ -324,7 +324,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
         "plate": "my_plate_mip.zarr",
         "data_dimensionality": 2,
     }
-    assert dataset.type_filters == {
+    assert dataset.flag_filters == {
         "illumination_correction": True,
     }
 
@@ -501,7 +501,7 @@ def test_registration_overwrite(tmp_path: Path, executor):
     # Images are still the same number, but they are marked as registered
     assert len(dataset.images) == 6
     for image in dataset.images:
-        assert image.types["registration"] is True
+        assert image.flags["registration"] is True
 
     # Print current dataset information
     debug(dataset)
