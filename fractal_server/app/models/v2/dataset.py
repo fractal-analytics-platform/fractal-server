@@ -43,7 +43,7 @@ class DatasetV2(SQLModel, table=True):
     attribute_filters: dict[str, Any] = Field(
         sa_column=Column(JSON, server_default="{}", nullable=False)
     )
-    flag_filters: dict[str, Any] = Field(
+    flag_filters: dict[str, bool] = Field(
         sa_column=Column(JSON, server_default="{}", nullable=False)
     )
 
