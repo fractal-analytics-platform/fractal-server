@@ -15,7 +15,6 @@ DictStrAny = dict[str, Any]
 class Dataset(BaseModel):
     id: Optional[int] = None
     history: list[DictStrAny] = []
-    # New in v2
     zarr_dir: str
     images: list[SingleImage] = Field(default_factory=list)
     attribute_filters: DictStrAny = Field(default_factory=dict)
@@ -74,7 +73,7 @@ class WorkflowTask(BaseModel):
     meta: DictStrAny = Field(default_factory=dict)
     task: Optional[Task] = None
     attribute_filters: DictStrAny = Field(default_factory=dict)
-    flag_filters: DictStrAny = Field(default_factory=dict)
+    flag_filters: dict[str, bool] = Field(default_factory=dict)
 
 
 class Workflow(BaseModel):
