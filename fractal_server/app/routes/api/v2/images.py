@@ -58,7 +58,7 @@ async def query_dataset_images(
     if page < 1:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Invalid pagination parameters: page={page} < 1",
+            detail=f"Invalid pagination parameter: page={page} < 1",
         )
 
     output = await _get_dataset_check_owner(
@@ -100,7 +100,7 @@ async def query_dataset_images(
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
-                    f"Invalid pagination parameters: page_size={page_size} < 0"
+                    f"Invalid pagination parameter: page_size={page_size} < 0"
                 ),
             )
         offset = (page - 1) * page_size
