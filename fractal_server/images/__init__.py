@@ -117,14 +117,14 @@ def filter_images(
     *,
     dataset_images: list[SingleImage],
     dataset_attribute_filters: Optional[dict[str, Any]] = None,
-    dataset_type_filters: Optional[dict[str, Any]] = None,
+    dataset_flag_filters: Optional[dict[str, Any]] = None,
     wftask_attribute_filters: Optional[dict[str, Any]] = None,
-    wftask_type_filters: Optional[dict[str, Any]] = None,
+    wftask_flag_filters: Optional[dict[str, Any]] = None,
 ) -> list[SingleImage]:
     current_attribute_filters = copy(dataset_attribute_filters)
     current_attribute_filters.update(wftask_attribute_filters)
-    current_type_filters = copy(dataset_type_filters)
-    current_type_filters.update(wftask_type_filters)
+    current_type_filters = copy(dataset_flag_filters)
+    current_type_filters.update(wftask_flag_filters)
 
     filtered_images = _filter_image_list(
         dataset_images,

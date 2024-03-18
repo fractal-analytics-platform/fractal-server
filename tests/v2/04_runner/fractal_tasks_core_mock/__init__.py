@@ -29,12 +29,12 @@ TASK_LIST = {
     ),
     "illumination_correction": Task(
         function_parallel=illumination_correction,
-        new_type_filters=dict(illumination_correction=True),
+        output_flags=dict(illumination_correction=True),
     ),
     "illumination_correction_compound": Task(
         function_non_parallel=init_channel_parallelization,
         function_parallel=illumination_correction_B,
-        new_type_filters=dict(illumination_correction=True),
+        output_flags=dict(illumination_correction=True),
     ),
     "cellpose_segmentation": Task(
         function_parallel=cellpose_segmentation,
@@ -48,6 +48,6 @@ TASK_LIST = {
     ),
     "apply_registration_to_image": Task(
         function_parallel=apply_registration_to_image,
-        new_type_filters=dict(registration=True),
+        output_flags=dict(registration=True),
     ),
 }

@@ -6,10 +6,8 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import root_validator
-from pydantic import validator
 
 from ....images import SingleImage
-from ....images import val_scalar_dict
 
 DictStrAny = dict[str, Any]
 
@@ -21,7 +19,7 @@ class Dataset(BaseModel):
     zarr_dir: str
     images: list[SingleImage] = Field(default_factory=list)
     attribute_filters: DictStrAny = Field(default_factory=dict)
-    type_filters: DictStrAny = Field(default_factory=dict)
+    flag_filters: DictStrAny = Field(default_factory=dict)
 
     @property
     def image_paths(self) -> list[str]:
@@ -30,11 +28,8 @@ class Dataset(BaseModel):
 
 class Task(BaseModel):
     meta: DictStrAny = Field(default_factory=dict)
-    new_type_filters: DictStrAny = Field(default_factory=dict)
-
-    _new_type_filters = validator("new_type_filters", allow_reuse=True)(
-        val_scalar_dict("new_type_filters")
-    )
+    input_flags: dict[str, bool] = Field(default_factory=dict)
+    output_flags: dict[str, bool] = Field(default_factory=dict)
 
     function_non_parallel: Optional[Callable] = None
     function_parallel: Optional[Callable] = None
@@ -79,7 +74,7 @@ class WorkflowTask(BaseModel):
     meta: DictStrAny = Field(default_factory=dict)
     task: Optional[Task] = None
     attribute_filters: DictStrAny = Field(default_factory=dict)
-    type_filters: DictStrAny = Field(default_factory=dict)
+    flag_filters: DictStrAny = Field(default_factory=dict)
 
 
 class Workflow(BaseModel):
