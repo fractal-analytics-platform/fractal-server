@@ -33,9 +33,11 @@ class ImagePage(BaseModel):
 
 class ImageQuery(BaseModel):
     path: Optional[str]
-    filter: Optional[dict[str, Any]]
+    attributes: Optional[dict[str, Any]]
 
-    _filters = validator("filter", allow_reuse=True)(val_scalar_dict("filter"))
+    _attributes = validator("attributes", allow_reuse=True)(
+        val_scalar_dict("attributes")
+    )
 
 
 @router.post(
@@ -46,8 +48,8 @@ class ImageQuery(BaseModel):
 async def query_dataset_images(
     project_id: int,
     dataset_id: int,
+    page: int = 1,  # query param
     page_size: Optional[int] = None,  # query param
-    page: Optional[int] = 1,  # query param
     query: Optional[ImageQuery] = None,  # body
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
@@ -78,15 +80,24 @@ async def query_dataset_images(
             else:
                 images = [image]
 
-        if query.filter is not None:
+        if query.attributes is not None:
             images = [
                 image
                 for image in images
-                if SingleImage(**image).match_filter(query.filter)
+                if SingleImage(**image).match_filter(query.attributes)
             ]
 
     total_count = len(images)
     if page_size is not None:
+        if page < 1 or page_size < 0:
+            # FIXME maybe use Query(gt=1) ?
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "Invalid pagination parameters: "
+                    f"page={page} < 1 and/or page_size={page_size} < 0"
+                ),
+            )
         offset = (page - 1) * page_size
         images = images[offset : offset + page_size]  # noqa E203
     else:
