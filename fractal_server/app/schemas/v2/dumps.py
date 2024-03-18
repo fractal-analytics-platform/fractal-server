@@ -25,7 +25,6 @@ from fractal_server.images import val_scalar_dict
 class ProjectDumpV2(BaseModel, extra=Extra.forbid):
 
     id: int
-    version: str  # ! new
     name: str
     read_only: bool
     timestamp_created: str
@@ -89,6 +88,8 @@ class DatasetDumpV2(BaseModel):
     images: list[SingleImage]
     filters: dict[str, Any]
     zarr_dir: str
+
+    # Validators
     _filters = validator("filters", allow_reuse=True)(
         val_scalar_dict("filters")
     )

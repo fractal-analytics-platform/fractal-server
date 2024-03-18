@@ -7,32 +7,8 @@ from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
-from fractal_server.app.schemas.v2 import WorkflowTaskStatusTypeV2
-from fractal_server.app.schemas.v2.dataset import _DatasetHistoryItemV2
-from fractal_server.app.schemas.v2.dumps import TaskDumpV2
-from fractal_server.app.schemas.v2.dumps import WorkflowTaskDumpV2
 
 PREFIX = "api/v2"
-
-HISTORY = [
-    _DatasetHistoryItemV2(
-        workflowtask=WorkflowTaskDumpV2(
-            id=1,
-            workflow_id=1,
-            task_v2_id=1,
-            task_v2=TaskDumpV2(
-                id=1,
-                name="test",
-                type="non_parallel",
-                command_pre="",
-                command="echo",
-                source="...",
-            ).dict(),
-            filters=dict(),
-        ).dict(),
-        status=WorkflowTaskStatusTypeV2.DONE,
-    ).dict()
-]
 
 
 async def test_new_dataset_v2(client, MockCurrentUser):
@@ -132,9 +108,7 @@ async def test_get_dataset(client, MockCurrentUser, project_factory_v2):
         DATASET_NAME = "My Dataset"
         res = await client.post(
             f"{PREFIX}/project/{p_id}/dataset/",
-            json=dict(
-                name=DATASET_NAME, history=HISTORY, zarr_dir="/tmp/zarr"
-            ),
+            json=dict(name=DATASET_NAME, zarr_dir="/tmp/zarr"),
         )
         assert res.status_code == 201
         ds_id = res.json()["id"]
@@ -165,7 +139,7 @@ async def test_get_dataset(client, MockCurrentUser, project_factory_v2):
         datasets = res.json()
         assert len(datasets) == 1
         assert datasets[0]["project"] == EXPECTED_PROJECT
-        assert datasets[0]["history"] == HISTORY
+        assert datasets[0]["history"] == []
         debug(datasets[0]["timestamp_created"])
 
         res = await client.get(
@@ -187,15 +161,9 @@ async def test_get_user_datasets(
 
         project1 = await project_factory_v2(user, name="p1")
         project2 = await project_factory_v2(user, name="p2")
-        await dataset_factory_v2(
-            project_id=project1.id, name="ds1a", history=HISTORY
-        )
-        await dataset_factory_v2(
-            project_id=project1.id, name="ds1b", history=HISTORY
-        )
-        await dataset_factory_v2(
-            project_id=project2.id, name="ds2a", history=HISTORY
-        )
+        await dataset_factory_v2(project_id=project1.id, name="ds1a")
+        await dataset_factory_v2(project_id=project1.id, name="ds1b")
+        await dataset_factory_v2(project_id=project2.id, name="ds2a")
 
         res = await client.get(f"{PREFIX}/dataset/")
         assert res.status_code == 200
@@ -203,7 +171,7 @@ async def test_get_user_datasets(
         assert len(res.json()) == 3
         assert set(ds["name"] for ds in datasets) == {"ds1a", "ds1b", "ds2a"}
         for ds in datasets:
-            assert len(ds["history"]) == 1
+            assert len(ds["history"]) == 0
 
         res = await client.get(f"{PREFIX}/dataset/?history=false")
         assert res.status_code == 200
@@ -226,11 +194,7 @@ async def test_post_dataset(client, MockCurrentUser):
         project_id = project["id"]
 
         # ADD DATASET
-        payload = dict(
-            name="new dataset",
-            meta={"xy": 2},
-            zarr_dir="/tmp/zarr",
-        )
+        payload = dict(name="new dataset", zarr_dir="/tmp/zarr")
         res = await client.post(
             f"{PREFIX}/project/{project_id}/dataset/",
             json=payload,
@@ -240,7 +204,6 @@ async def test_post_dataset(client, MockCurrentUser):
         dataset = res.json()
         assert dataset["name"] == payload["name"]
         assert dataset["project_id"] == project_id
-        assert dataset["meta"] == payload["meta"]
 
         # EDIT DATASET
         payload1 = dict(name="new dataset name")
