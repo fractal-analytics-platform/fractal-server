@@ -101,37 +101,16 @@ def deduplicate_list(this_list: list[T], remove_None: bool = False) -> list[T]:
 def _filter_image_list(
     images: list[SingleImage],
     attribute_filters: Optional[dict[str, Any]] = None,
-    type_filters: Optional[dict[str, Any]] = None,
+    flag_filters: Optional[dict[str, Any]] = None,
 ) -> list[SingleImage]:
-    if attribute_filters is None and type_filters is None:
+    if attribute_filters is None and flag_filters is None:
         # When no filter is provided, return all images
         return images
 
     filtered_images = []
     for this_image in images:
         if this_image.match_filter(
-            attribute_filters=attribute_filters, flag_filters=type_filters
+            attribute_filters=attribute_filters, flag_filters=flag_filters
         ):
             filtered_images.append(copy(this_image))
-    return filtered_images
-
-
-def filter_images(
-    *,
-    dataset_images: list[SingleImage],
-    dataset_attribute_filters: Optional[dict[str, Any]] = None,
-    dataset_flag_filters: Optional[dict[str, Any]] = None,
-    wftask_attribute_filters: Optional[dict[str, Any]] = None,
-    wftask_flag_filters: Optional[dict[str, Any]] = None,
-) -> list[SingleImage]:
-    current_attribute_filters = copy(dataset_attribute_filters)
-    current_attribute_filters.update(wftask_attribute_filters)
-    current_type_filters = copy(dataset_flag_filters)
-    current_type_filters.update(wftask_flag_filters)
-
-    filtered_images = _filter_image_list(
-        dataset_images,
-        attribute_filters=current_attribute_filters,
-        type_filters=current_type_filters,
-    )
     return filtered_images

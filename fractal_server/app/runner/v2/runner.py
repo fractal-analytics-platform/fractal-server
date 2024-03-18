@@ -2,8 +2,8 @@ from concurrent.futures import ThreadPoolExecutor
 from copy import copy
 from copy import deepcopy
 
+from ....images import _filter_image_list
 from ....images import deduplicate_list
-from ....images import filter_images
 from ....images import find_image_by_path
 from ....images import SingleImage
 from .models import Dataset
@@ -42,12 +42,15 @@ def execute_tasks_v2(
         task = wftask.task
 
         # Get filtered images
-        filtered_images = filter_images(
-            dataset_images=tmp_dataset.images,
-            dataset_attribute_filters=tmp_dataset.attribute_filters,
-            dataset_flag_filters=tmp_dataset.flag_filters,
-            wftask_attribute_filters=wftask.attribute_filters,
-            wftask_flag_filters=wftask.flag_filters,
+        flag_filters = copy(dataset.flag_filters)
+        flag_filters.update(task.input_flags)
+        flag_filters.update(wftask.flag_filters)
+        attribute_filters = copy(dataset.attribute_filters)
+        attribute_filters.update(wftask.attribute_filters)
+        filtered_images = _filter_image_list(
+            images=tmp_dataset.images,
+            flag_filters=flag_filters,
+            attribute_filters=attribute_filters,
         )
 
         # (1/3) Non-parallel task

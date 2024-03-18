@@ -142,7 +142,7 @@ def test_filter_image_list(
     filtered_list = _filter_image_list(
         images=IMAGES,
         attribute_filters=attribute_filters,
-        type_filters=type_filters,
+        flag_filters=type_filters,
     )
 
     debug(attribute_filters)
