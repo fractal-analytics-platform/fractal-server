@@ -25,7 +25,7 @@ def _apply_attributes_to_image(
 ) -> SingleImage:
     updated_image = copy(image)
     updated_image.attributes.update(new_attributes)
-    updated_image.types.update(new_types)
+    updated_image.flags.update(new_types)
     return updated_image
 
 
@@ -124,12 +124,12 @@ def execute_tasks_v2(
             if original_img is not None:
                 updated_attributes = copy(original_img.attributes)
                 updated_attributes.update(img.attributes)
-                updated_types = copy(original_img.types)
-                updated_types.update(img.types)
+                updated_types = copy(original_img.flags)
+                updated_types.update(img.flags)
                 added_images[ind] = SingleImage(
                     path=img.path,
                     attributes=updated_attributes,
-                    types=updated_types,
+                    flags=updated_types,
                 )
         task_output.added_images = added_images
 

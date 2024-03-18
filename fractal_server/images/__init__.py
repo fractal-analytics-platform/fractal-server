@@ -30,24 +30,23 @@ def val_scalar_dict(attribute: str):
 class SingleImage(BaseModel):
     path: str
     attributes: dict[str, Any] = Field(default_factory=dict)
-    types: dict[str, Any] = Field(default_factory=dict)
+    flags: dict[str, bool] = Field(default_factory=dict)
 
     _attributes = validator("attributes", allow_reuse=True)(
         val_scalar_dict("attributes")
     )
-    _types = validator("types", allow_reuse=True)(val_scalar_dict("types"))
 
     def match_filter(
         self,
         attribute_filters: Optional[dict[str, Any]] = None,
-        type_filters: Optional[dict[str, Any]] = None,
+        flag_filters: Optional[dict[str, bool]] = None,
     ):
-        if attribute_filters is None and type_filters is None:
+        if attribute_filters is None and flag_filters is None:
             return True
 
-        if type_filters is not None:
-            for key, value in type_filters.items():
-                if self.types.get(key) != value:
+        if flag_filters is not None:
+            for key, value in flag_filters.items():
+                if self.flags.get(key, False) != value:
                     return False
 
         if attribute_filters is not None:
@@ -108,7 +107,7 @@ def _filter_image_list(
     filtered_images = []
     for this_image in images:
         if this_image.match_filter(
-            attribute_filters=attribute_filters, type_filters=type_filters
+            attribute_filters=attribute_filters, flag_filters=type_filters
         ):
             filtered_images.append(copy(this_image))
     return filtered_images
