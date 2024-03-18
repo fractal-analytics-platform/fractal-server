@@ -36,13 +36,16 @@ class DatasetV2(SQLModel, table=True):
 
     # New in V2
 
+    zarr_dir: str
     images: list[dict[str, Any]] = Field(
         sa_column=Column(JSON, server_default="[]", nullable=False)
     )
-    filters: dict[str, Any] = Field(
+    attribute_filters: dict[str, Any] = Field(
         sa_column=Column(JSON, server_default="{}", nullable=False)
     )
-    zarr_dir: str
+    flag_filters: dict[str, Any] = Field(
+        sa_column=Column(JSON, server_default="{}", nullable=False)
+    )
 
     @property
     def image_paths(self) -> list[str]:
