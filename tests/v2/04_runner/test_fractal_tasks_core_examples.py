@@ -104,6 +104,7 @@ def test_fractal_demos_01(tmp_path: Path, executor):
         "flags": {
             "illumination_correction": True,
         },
+        "origin": None,
     }
 
     _assert_image_data_exist(dataset.images)
@@ -139,11 +140,11 @@ def test_fractal_demos_01(tmp_path: Path, executor):
     )
     assert img.dict() == {
         "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
+        "origin": f"{zarr_dir}/my_plate.zarr/A/01/0",
         "attributes": {
             "well": "A01",
             "plate": "my_plate_mip.zarr",
             "data_dimensionality": 2,
-            "origin": f"{zarr_dir}/my_plate.zarr/A/01/0",
         },
         "flags": {
             "illumination_correction": True,
@@ -227,6 +228,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
 
     assert dataset.images[0].dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
+        "origin": None,
         "attributes": {
             "well": "A01",
             "plate": "my_plate.zarr",
@@ -236,6 +238,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
     }
     assert dataset.images[1].dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/02/0",
+        "origin": None,
         "attributes": {
             "well": "A02",
             "plate": "my_plate.zarr",
@@ -245,21 +248,21 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
     }
     assert dataset.images[2].dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
+        "origin": f"{zarr_dir}/my_plate.zarr/A/01/0",
         "attributes": {
             "well": "A01",
             "plate": "my_plate.zarr",
             "data_dimensionality": 3,
-            "origin": f"{zarr_dir}/my_plate.zarr/A/01/0",
         },
         "flags": {"illumination_correction": True},
     }
     assert dataset.images[3].dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
+        "origin": f"{zarr_dir}/my_plate.zarr/A/02/0",
         "attributes": {
             "well": "A02",
             "plate": "my_plate.zarr",
             "data_dimensionality": 3,
-            "origin": f"{zarr_dir}/my_plate.zarr/A/02/0",
         },
         "flags": {
             "illumination_correction": True,
@@ -297,11 +300,11 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
 
     assert dataset.images[4].dict() == {
         "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0_corr",
+        "origin": f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
         "attributes": {
             "well": "A01",
             "plate": "my_plate_mip.zarr",
             "data_dimensionality": 2,
-            "origin": f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
         },
         "flags": {
             "illumination_correction": True,
@@ -309,11 +312,11 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
     }
     assert dataset.images[5].dict() == {
         "path": f"{zarr_dir}/my_plate_mip.zarr/A/02/0_corr",
+        "origin": f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
         "attributes": {
             "well": "A02",
             "plate": "my_plate_mip.zarr",
             "data_dimensionality": 2,
-            "origin": f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
         },
         "flags": {
             "illumination_correction": True,
