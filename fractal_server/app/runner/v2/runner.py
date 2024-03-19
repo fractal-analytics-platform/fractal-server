@@ -43,7 +43,6 @@ def execute_tasks_v2(
 
         # Get filtered images
         flag_filters = copy(dataset.flag_filters)
-        flag_filters.update(task.input_flags)
         flag_filters.update(wftask.flag_filters)
         attribute_filters = copy(dataset.attribute_filters)
         attribute_filters.update(wftask.attribute_filters)
@@ -52,6 +51,14 @@ def execute_tasks_v2(
             flag_filters=flag_filters,
             attribute_filters=attribute_filters,
         )
+        # Verify that filtered images comply with output flags
+        if not all(
+            img.match_filter(flag_filters=task.input_flags)
+            for img in filtered_images
+        ):
+            raise ValueError(
+                "Filtered images do not comply with task input_flags."
+            )
 
         # (1/3) Non-parallel task
         if task.task_type == "non_parallel_standalone":
@@ -138,9 +145,32 @@ def execute_tasks_v2(
             )
         task_output.added_images = added_images
 
-        # Construct up-to-date filters
+        # Construct up-to-date flag filters
+        if (
+            task_output.new_flag_filters is not None
+            and task.output_flags is not None
+        ):
+            flags_from_task_manifest = set(task.output_flags.keys())
+            flags_from_task_execution = set(
+                task_output.new_flag_filters.keys()
+            )
+            if not flags_from_task_manifest.isdisjoint(
+                flags_from_task_execution
+            ):
+                overlap = flags_from_task_manifest.intersection(
+                    flags_from_task_execution
+                )
+                raise ValueError(
+                    "Both task and task manifest did set the same"
+                    f"output flag. Overlapping keys: {overlap}."
+                )
         new_flag_filters = copy(tmp_dataset.flag_filters)
-        new_flag_filters.update(task.output_flags)
+        if task_output.new_flag_filters is not None:
+            new_flag_filters.update(task_output.new_flag_filters)
+        if task.output_flags is not None:
+            new_flag_filters.update(task.output_flags)
+
+        # Construct up-to-date attribute filters
         new_attribute_filters = copy(tmp_dataset.attribute_filters) or {}
         if task_output.new_attribute_filters is not None:
             new_attribute_filters.update(task_output.new_attribute_filters)
