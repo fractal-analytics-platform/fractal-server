@@ -1,17 +1,20 @@
-from typing import Optional
-
 from pydantic import BaseModel
+from pydantic import Field
 
 from ....images import SingleImage
 from .models import DictStrAny
 
 
 class TaskOutput(BaseModel):
-    added_images: Optional[list[SingleImage]] = None
-    edited_images: Optional[list[SingleImage]] = None
-    removed_images: Optional[list[SingleImage]] = None
-    new_attribute_filters: Optional[DictStrAny] = None
-    new_flag_filters: Optional[dict[str, bool]] = None
+
+    # CRUD images
+    added_images: list[SingleImage] = Field(default_factory=list)
+    edited_images: list[SingleImage] = Field(default_factory=list)
+    removed_images: list[SingleImage] = Field(default_factory=list)
+
+    # New filters
+    new_attribute_filters: DictStrAny = Field(default_factory=dict)
+    new_flag_filters: dict[str, bool] = Field(default_factory=dict)
 
     class Config:
         extra = "forbid"

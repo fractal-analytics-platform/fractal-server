@@ -93,17 +93,9 @@ def merge_outputs(
 
     for ind, task_output in enumerate(task_outputs):
 
-        if task_output.added_images:
-            for added_image in task_output.added_images:
-                final_added_images.append(added_image)
-
-        if task_output.edited_images:
-            for edited_image in task_output.edited_images:
-                final_edited_images.append(edited_image)
-
-        if task_output.removed_images:
-            for removed_image in task_output.removed_images:
-                final_removed_images.append(removed_image)
+        final_added_images.extend(task_output.added_images)
+        final_edited_images.extend(task_output.edited_images)
+        final_removed_images.extend(task_output.removed_images)
 
         # Check that all attribute_filters are the same
         current_new_attribute_filters = task_output.new_attribute_filters
@@ -122,7 +114,7 @@ def merge_outputs(
             last_new_flag_filters = copy(current_new_flag_filters)
         if current_new_flag_filters != last_new_flag_filters:
             raise ValueError(
-                f"{current_new_flag_filters=} but " f"{last_new_flag_filters=}"
+                f"{current_new_flag_filters=} but {last_new_flag_filters=}"
             )
         last_new_flag_filters = copy(current_new_flag_filters)
 
