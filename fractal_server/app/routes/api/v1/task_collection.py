@@ -25,6 +25,8 @@ from ....schemas.v1 import TaskCollectStatus
 from ....security import current_active_user
 from ....security import current_active_verified_user
 from ....security import User
+from fractal_server.tasks.utils import get_collection_log
+from fractal_server.tasks.utils import slugify_task_name
 from fractal_server.tasks.v1._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.v1.background_operations import (
     background_collect_pip,
@@ -33,8 +35,6 @@ from fractal_server.tasks.v1.endpoint_operations import create_package_dir_pip
 from fractal_server.tasks.v1.endpoint_operations import download_package
 from fractal_server.tasks.v1.endpoint_operations import get_collection_data
 from fractal_server.tasks.v1.endpoint_operations import inspect_package
-from fractal_server.tasks.v1.utils import get_collection_log
-from fractal_server.tasks.v1.utils import slugify_task_name
 
 router = APIRouter()
 
