@@ -7,6 +7,13 @@ from pathlib import Path
 from shutil import rmtree as shell_rmtree
 from typing import Optional
 
+from ..utils import _normalize_package_name
+from ..utils import get_collection_log
+from ..utils import get_collection_path
+from ..utils import get_log_path
+from ..utils import get_python_interpreter
+from ..utils import slugify_task_name
+from ._TaskCollectPip import _TaskCollectPip
 from fractal_server.app.db import DBSyncSession
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import State
@@ -17,13 +24,6 @@ from fractal_server.app.schemas.v1 import TaskRead
 from fractal_server.logger import close_logger
 from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
-from fractal_server.tasks.v1._TaskCollectPip import _TaskCollectPip
-from fractal_server.tasks.v1.utils import _normalize_package_name
-from fractal_server.tasks.v1.utils import get_collection_log
-from fractal_server.tasks.v1.utils import get_collection_path
-from fractal_server.tasks.v1.utils import get_log_path
-from fractal_server.tasks.v1.utils import get_python_interpreter
-from fractal_server.tasks.v1.utils import slugify_task_name
 from fractal_server.utils import execute_command
 
 
