@@ -10,8 +10,8 @@ from pydantic import BaseModel
 from pydantic import validator
 
 from .fixtures_server import HAS_LOCAL_SBATCH
-from fractal_server.tasks.endpoint_operations import create_package_dir_pip
-from fractal_server.tasks.endpoint_operations import inspect_package
+from fractal_server.tasks.v1.endpoint_operations import create_package_dir_pip
+from fractal_server.tasks.v1.endpoint_operations import inspect_package
 
 
 class MockTask(BaseModel):
@@ -176,10 +176,10 @@ async def install_dummy_packages(tmp777_session_path, dummy_task_package):
     https://github.com/fractal-analytics-platform/fractal-server/issues/498
     """
 
-    from fractal_server.tasks.background_operations import (
+    from fractal_server.tasks.v1.background_operations import (
         create_package_environment_pip,
     )
-    from fractal_server.tasks._TaskCollectPip import _TaskCollectPip
+    from fractal_server.tasks.v1._TaskCollectPip import _TaskCollectPip
 
     task_pkg = _TaskCollectPip(
         package=dummy_task_package.as_posix(),
@@ -204,7 +204,7 @@ async def install_dummy_packages(tmp777_session_path, dummy_task_package):
 
 @pytest.fixture(scope="function")
 async def collect_packages(db_sync, install_dummy_packages):
-    from fractal_server.tasks.background_operations import _insert_tasks
+    from fractal_server.tasks.v1.background_operations import _insert_tasks
 
     tasks = await _insert_tasks(task_list=install_dummy_packages, db=db_sync)
     return tasks
