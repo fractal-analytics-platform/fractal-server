@@ -41,6 +41,8 @@ def execute_tasks_v2(
     for wftask in wf_task_list:
         task = wftask.task
 
+        # PRE TASK EXECUTION
+
         # Get filtered images
         flag_filters = copy(dataset.flag_filters)
         flag_filters.update(wftask.input_flags)
@@ -59,6 +61,8 @@ def execute_tasks_v2(
             raise ValueError(
                 "Filtered images do not comply with task input_flags."
             )
+
+        # ACTUAL TASK EXECUTION
 
         # (1/3) Non-parallel task
         if task.task_type == "non_parallel_standalone":
@@ -121,6 +125,8 @@ def execute_tasks_v2(
             )
         else:
             raise ValueError(f"Invalid {task.task_type=}.")
+
+        # POST TASK EXECUTION
 
         # Propagate attributes and flags from `origin` to added_images
         added_images = task_output.added_images or []
