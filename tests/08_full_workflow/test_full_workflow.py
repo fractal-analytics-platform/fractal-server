@@ -59,7 +59,6 @@ async def test_full_workflow(
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
-        request.getfixturevalue("cfut_jobs_finished")
         user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
         user_kwargs["cache_dir"] = user_cache_dir
 
@@ -266,7 +265,6 @@ async def test_failing_workflow_UnknownError(
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
-        request.getfixturevalue("cfut_jobs_finished")
         user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
         user_kwargs["cache_dir"] = user_cache_dir
 
@@ -362,7 +360,6 @@ async def test_failing_workflow_TaskExecutionError(
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
-        request.getfixturevalue("cfut_jobs_finished")
         user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
         user_kwargs["cache_dir"] = user_cache_dir
 
@@ -512,7 +509,6 @@ async def test_failing_workflow_JobExecutionError(
     monkey_slurm,
     monkey_slurm_user,
     relink_python_interpreter,
-    cfut_jobs_finished,
     resource_factory,
     tmp_path,
 ):
@@ -906,7 +902,6 @@ async def test_non_executable_task_command(
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter")
-        request.getfixturevalue("cfut_jobs_finished")
         user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
         user_kwargs["cache_dir"] = user_cache_dir
 
