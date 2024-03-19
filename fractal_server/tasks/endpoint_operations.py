@@ -8,9 +8,11 @@ from .utils import _normalize_package_name
 from .utils import get_absolute_venv_path
 from .utils import get_collection_path
 from .utils import get_python_interpreter
-from .v1._TaskCollectPip import _TaskCollectPip
+from .v1._TaskCollectPip import _TaskCollectPip  # FIXME V2: this is V1 only
 from fractal_server.app.schemas.v1 import ManifestV1
-from fractal_server.app.schemas.v1 import TaskCollectStatus
+from fractal_server.app.schemas.v1 import (
+    TaskCollectStatus,
+)  # FIXME V2: this is V1 only
 from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
