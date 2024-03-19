@@ -26,7 +26,7 @@ class Dataset(BaseModel):
 
 
 class Task(BaseModel):
-    meta: DictStrAny = Field(default_factory=dict)
+    name: str
     input_flags: dict[str, bool] = Field(default_factory=dict)
     output_flags: dict[str, bool] = Field(default_factory=dict)
 
@@ -58,13 +58,6 @@ class Task(BaseModel):
                 return "non_parallel_standalone"
             else:
                 return "compound"
-
-    @property
-    def name(self) -> str:
-        if self.task_type == "parallel_standalone":
-            return self.function_parallel.__name__
-        elif self.task_type == "non_parallel_standalone":
-            return self.function_non_parallel.__name__
 
 
 class WorkflowTask(BaseModel):
