@@ -95,29 +95,6 @@ def execute_tasks_v2(
 
         # POST TASK EXECUTION
 
-        # Propagate attributes and flags from `origin` to added_images
-        added_images = current_task_output.added_images
-        for ind, img in enumerate(added_images):
-            if img.origin is None:
-                continue
-            original_img = find_image_by_path(
-                images=tmp_dataset.images,
-                path=img.origin,
-            )
-            if original_img is None:
-                continue
-            updated_attributes = copy(original_img.attributes)
-            updated_attributes.update(img.attributes)
-            updated_flags = copy(original_img.flags)
-            updated_flags.update(img.flags)
-            added_images[ind] = SingleImage(
-                path=img.path,
-                attributes=updated_attributes,
-                flags=updated_flags,
-                origin=img.origin,
-            )
-        current_task_output.added_images = added_images
-
         # Construct up-to-date flag filters
         # TODO extract as a helper function
         if task.output_flags is not None:
@@ -152,27 +129,51 @@ def execute_tasks_v2(
                 )
                 tmp_dataset.images[ind] = updated_image
 
-        # Add filters to new images
-        added_images = current_task_output.added_images
+        # Create clean added_images list
+        added_images = deepcopy(current_task_output.added_images)
         for ind, image in enumerate(added_images):
-            updated_image = _apply_attributes_to_image(
-                image=image,
-                new_attributes=new_attributes,
-                new_flags=new_flags,
-            )
-            added_images[ind] = updated_image
-        added_images = deduplicate_list(added_images)
-        # Add new images to Dataset.images
-        for image in added_images:
+            # Check that image was not already present
             if image.path in tmp_dataset.image_paths:
                 raise ValueError("Found an overlap")
+
+            # Check that image.path is relative to zarr_dir
             if not image.path.startswith(tmp_dataset.zarr_dir):
                 raise ValueError(
                     f"'{tmp_dataset.zarr_dir}' is not a parent directory of "
                     f"'{image.path}'"
                 )
 
-            tmp_dataset.images.append(image)
+            # Propagate attributes and flags from `origin` to added_images
+            if image.origin is not None:
+                original_img = find_image_by_path(
+                    images=tmp_dataset.images,
+                    path=image.origin,
+                )
+                if original_img is not None:
+                    updated_attributes = copy(original_img.attributes)
+                    updated_attributes.update(image.attributes)
+                    updated_flags = copy(original_img.flags)
+                    updated_flags.update(image.flags)
+                    added_images[ind] = SingleImage(
+                        path=image.path,
+                        origin=image.origin,
+                        attributes=updated_attributes,
+                        flags=updated_flags,
+                    )
+
+            # Apply new attributes/flags to image
+            updated_image = _apply_attributes_to_image(
+                image=added_images[ind],
+                new_attributes=new_attributes,
+                new_flags=new_flags,
+            )
+            added_images[ind] = updated_image
+
+        # Deduplicate new image list
+        added_images = deduplicate_list(added_images)
+
+        # Add new images to Dataset.images
+        tmp_dataset.images.extend(added_images)
 
         # Remove images from Dataset.images
         tmp_dataset.images = [
