@@ -64,7 +64,7 @@ def execute_tasks_v2(
 
         # ACTUAL TASK EXECUTION
 
-        # (1/3) Non-parallel task
+        # Non-parallel task
         if task.task_type == "non_parallel_standalone":
             task_output = _run_non_parallel_task(
                 filtered_images=filtered_images,
@@ -73,7 +73,7 @@ def execute_tasks_v2(
                 task=wftask.task,
                 executor=executor,
             )
-        # (2/3) Parallel task
+        # Parallel task
         elif task.task_type == "parallel_standalone":
             task_output = _run_parallel_task(
                 filtered_images=filtered_images,
@@ -81,7 +81,7 @@ def execute_tasks_v2(
                 task=wftask.task,
                 executor=executor,
             )
-        # (3/3) Compound task
+        # Compound task
         elif task.task_type == "compound":
             task_output = _run_compound_task(
                 filtered_images=filtered_images,
@@ -90,7 +90,6 @@ def execute_tasks_v2(
                 task=wftask.task,
                 executor=executor,
             )
-
         else:
             raise ValueError(f"Invalid {task.task_type=}.")
 
