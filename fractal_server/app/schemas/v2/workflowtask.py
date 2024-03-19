@@ -1,7 +1,6 @@
 from enum import Enum
 from typing import Any
 from typing import Optional
-from typing import Union
 
 from pydantic import BaseModel
 from pydantic import validator
@@ -65,8 +64,10 @@ class WorkflowTaskReadV2(BaseModel):
     input_flags: dict[str, bool]
 
     is_legacy_task: bool
-    task_id: int
-    task: Union[TaskReadV2, TaskRead]
+    task_id: Optional[int]
+    task: Optional[TaskReadV2]
+    task_legacy_id: Optional[int]
+    task_legacy: Optional[TaskRead]
 
     # Validators
     _input_attributes = validator("input_attributes", allow_reuse=True)(

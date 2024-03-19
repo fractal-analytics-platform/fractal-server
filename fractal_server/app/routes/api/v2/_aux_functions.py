@@ -418,12 +418,16 @@ async def _workflow_insert_task(
 
     # Get task from db, and extract default arguments via a Task property
     # method
-    db_task = await db.get(Task if is_legacy_task else TaskV2, task_id)
+    if is_legacy_task is True:
+        db_task = await db.get(Task, task_id)
+    else:
+        db_task = await db.get(TaskV2, task_id)
 
     if db_task is None:
-        raise ValueError(
-            f"Task{'' if is_legacy_task else 'V2'} {task_id} not found."
-        )
+        if is_legacy_task is True:
+            raise ValueError(f"Task {task_id} not found.")
+        else:
+            raise ValueError(f"TaskV2 {task_id} not found.")
 
     default_args = db_task.default_args_from_args_schema
     # Override default_args with args
