@@ -72,8 +72,8 @@ class WorkflowTask(BaseModel):
     args_parallel: DictStrAny = Field(default_factory=dict)
     meta: DictStrAny = Field(default_factory=dict)
     task: Optional[Task] = None
-    attribute_filters: DictStrAny = Field(default_factory=dict)
-    flag_filters: dict[str, bool] = Field(default_factory=dict)
+    input_attributes: DictStrAny = Field(default_factory=dict)
+    input_flags: dict[str, bool] = Field(default_factory=dict)
 
 
 class Workflow(BaseModel):
