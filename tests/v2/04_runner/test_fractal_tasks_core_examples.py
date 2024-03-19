@@ -379,7 +379,7 @@ def test_registration_no_overwrite(tmp_path: Path, executor):
     dataset = execute_tasks_v2(
         wf_task_list=[
             WorkflowTask(
-                task=TASK_LIST["registration_part_1_compound"],
+                task=TASK_LIST["calculate_registration_compound"],
                 args_non_parallel={"ref_acquisition": 0},
             )
         ],
@@ -456,7 +456,7 @@ def test_registration_overwrite(tmp_path: Path, executor):
     dataset = execute_tasks_v2(
         wf_task_list=[
             WorkflowTask(
-                task=TASK_LIST["registration_part_1_compound"],
+                task=TASK_LIST["calculate_registration_compound"],
                 args_non_parallel={"ref_acquisition": 0},
             )
         ],

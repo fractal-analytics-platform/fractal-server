@@ -49,8 +49,8 @@ TASK_LIST = {
         name="cellpose_segmentation",
         function_parallel=cellpose_segmentation,
     ),
-    "registration_part_1_compound": Task(
-        name="registration_part_1_compound",
+    "calculate_registration_compound": Task(
+        name="calculate_registration_compound",
         function_non_parallel=init_registration,
         function_parallel=calculate_registration,
     ),
