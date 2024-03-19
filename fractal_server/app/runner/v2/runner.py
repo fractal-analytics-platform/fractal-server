@@ -45,9 +45,9 @@ def execute_tasks_v2(
 
         # Get filtered images
         flag_filters = copy(dataset.flag_filters)
-        flag_filters.update(wftask.input_flags)
+        flag_filters.update(wftask.flag_filters)
         attribute_filters = copy(dataset.attribute_filters)
-        attribute_filters.update(wftask.input_attributes)
+        attribute_filters.update(wftask.attribute_filters)
         filtered_images = _filter_image_list(
             images=tmp_dataset.images,
             flag_filters=flag_filters,
@@ -66,7 +66,7 @@ def execute_tasks_v2(
 
         # Non-parallel task
         if task.task_type == "non_parallel_standalone":
-            task_output = _run_non_parallel_task(
+            current_task_output = _run_non_parallel_task(
                 filtered_images=filtered_images,
                 zarr_dir=tmp_dataset.zarr_dir,
                 wftask=wftask,
@@ -75,7 +75,7 @@ def execute_tasks_v2(
             )
         # Parallel task
         elif task.task_type == "parallel_standalone":
-            task_output = _run_parallel_task(
+            current_task_output = _run_parallel_task(
                 filtered_images=filtered_images,
                 wftask=wftask,
                 task=wftask.task,
@@ -83,7 +83,7 @@ def execute_tasks_v2(
             )
         # Compound task
         elif task.task_type == "compound":
-            task_output = _run_compound_task(
+            current_task_output = _run_compound_task(
                 filtered_images=filtered_images,
                 zarr_dir=tmp_dataset.zarr_dir,
                 wftask=wftask,
@@ -96,7 +96,7 @@ def execute_tasks_v2(
         # POST TASK EXECUTION
 
         # Propagate attributes and flags from `origin` to added_images
-        added_images = task_output.added_images
+        added_images = current_task_output.added_images
         for ind, img in enumerate(added_images):
             if img.origin is None:
                 continue
@@ -116,15 +116,13 @@ def execute_tasks_v2(
                 flags=updated_flags,
                 origin=img.origin,
             )
-        task_output.added_images = added_images
+        current_task_output.added_images = added_images
 
         # Construct up-to-date flag filters
         # TODO extract as a helper function
         if task.output_flags is not None:
             flags_from_task_manifest = set(task.output_flags.keys())
-            flags_from_task_execution = set(
-                task_output.new_flag_filters.keys()
-            )
+            flags_from_task_execution = set(current_task_output.flags.keys())
             if not flags_from_task_manifest.isdisjoint(
                 flags_from_task_execution
             ):
@@ -135,38 +133,35 @@ def execute_tasks_v2(
                     "Both task and task manifest did set the same"
                     f"output flag. Overlapping keys: {overlap}."
                 )
-        new_flag_filters = copy(tmp_dataset.flag_filters)
-        new_flag_filters.update(task_output.new_flag_filters)
+        new_flags = copy(tmp_dataset.flag_filters)
+        new_flags.update(current_task_output.flags)
         if task.output_flags is not None:
-            new_flag_filters.update(task.output_flags)
+            new_flags.update(task.output_flags)
 
         # Construct up-to-date attribute filters
-        new_attribute_filters = copy(tmp_dataset.attribute_filters) or {}
-        new_attribute_filters.update(task_output.new_attribute_filters)
+        new_attributes = copy(tmp_dataset.attribute_filters) or {}
+        new_attributes.update(current_task_output.attributes)
 
         # Add filters to edited images, and update Dataset.images
-        edited_images = task_output.edited_images
-        edited_paths = [image.path for image in edited_images]
         for ind, image in enumerate(tmp_dataset.images):
-            if image.path in edited_paths:
+            if image.path in current_task_output.edited_image_paths:
                 updated_image = _apply_attributes_to_image(
                     image=image,
-                    new_attributes=new_attribute_filters,
-                    new_flags=new_flag_filters,
+                    new_attributes=new_attributes,
+                    new_flags=new_flags,
                 )
                 tmp_dataset.images[ind] = updated_image
 
         # Add filters to new images
-        added_images = task_output.added_images
+        added_images = current_task_output.added_images
         for ind, image in enumerate(added_images):
             updated_image = _apply_attributes_to_image(
                 image=image,
-                new_attributes=new_attribute_filters,
-                new_flags=new_flag_filters,
+                new_attributes=new_attributes,
+                new_flags=new_flags,
             )
             added_images[ind] = updated_image
         added_images = deduplicate_list(added_images)
-
         # Add new images to Dataset.images
         for image in added_images:
             if image.path in tmp_dataset.image_paths:
@@ -180,19 +175,15 @@ def execute_tasks_v2(
             tmp_dataset.images.append(image)
 
         # Remove images from Dataset.images
-        removed_images_paths = [
-            removed_image.path for removed_image in task_output.removed_images
-        ]
-
         tmp_dataset.images = [
             image
             for image in tmp_dataset.images
-            if image.path not in removed_images_paths
+            if image.path not in current_task_output.removed_image_paths
         ]
 
         # Update Dataset.filters
-        tmp_dataset.attribute_filters = new_attribute_filters
-        tmp_dataset.flag_filters = new_flag_filters
+        tmp_dataset.attribute_filters = copy(new_attributes)
+        tmp_dataset.flag_filters = copy(new_flags)
 
         # Update Dataset.history
         tmp_dataset.history.append(task.name)

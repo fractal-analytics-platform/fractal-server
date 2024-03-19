@@ -7,14 +7,19 @@ from .models import DictStrAny
 
 class TaskOutput(BaseModel):
 
-    # CRUD images
+    # "CRUD" images
     added_images: list[SingleImage] = Field(default_factory=list)
-    edited_images: list[SingleImage] = Field(default_factory=list)
-    removed_images: list[SingleImage] = Field(default_factory=list)
+    edited_image_paths: list[str] = Field(
+        default_factory=list
+    )  # TODO rename??
+    removed_image_paths: list[str] = Field(default_factory=list)
 
-    # New filters
-    new_attribute_filters: DictStrAny = Field(default_factory=dict)
-    new_flag_filters: dict[str, bool] = Field(default_factory=dict)
+    # New flags/attributes
+    attributes: DictStrAny = Field(default_factory=dict)
+    flags: dict[str, bool] = Field(default_factory=dict)
 
     class Config:
         extra = "forbid"
+
+
+# TODO: validator that deduplicates lists of images? MAYBE

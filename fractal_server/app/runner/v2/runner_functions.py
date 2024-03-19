@@ -88,42 +88,39 @@ def merge_outputs(
 ) -> TaskOutput:
 
     final_added_images = []
-    final_edited_images = []
-    final_removed_images = []
+    final_edited_image_paths = []
+    final_removed_image_paths = []
 
     for ind, task_output in enumerate(task_outputs):
 
         final_added_images.extend(task_output.added_images)
-        final_edited_images.extend(task_output.edited_images)
-        final_removed_images.extend(task_output.removed_images)
+        final_edited_image_paths.extend(task_output.edited_image_paths)
+        final_removed_image_paths.extend(task_output.removed_image_paths)
 
         # Check that all attribute_filters are the same
-        current_new_attribute_filters = task_output.new_attribute_filters
+        current_new_attributes = task_output.attributes
         if ind == 0:
-            last_new_attribute_filters = copy(current_new_attribute_filters)
-        if current_new_attribute_filters != last_new_attribute_filters:
+            last_new_attributes = copy(current_new_attributes)
+        if current_new_attributes != last_new_attributes:
             raise ValueError(
-                f"{current_new_attribute_filters=} but "
-                f"{last_new_attribute_filters=}"
+                f"{current_new_attributes=} but " f"{last_new_attributes=}"
             )
-        last_new_attribute_filters = copy(current_new_attribute_filters)
+        last_new_attributes = copy(current_new_attributes)
 
         # Check that all flag_filters are the same
-        current_new_flag_filters = task_output.new_flag_filters
+        current_new_flags = task_output.flags
         if ind == 0:
-            last_new_flag_filters = copy(current_new_flag_filters)
-        if current_new_flag_filters != last_new_flag_filters:
-            raise ValueError(
-                f"{current_new_flag_filters=} but {last_new_flag_filters=}"
-            )
-        last_new_flag_filters = copy(current_new_flag_filters)
+            last_new_flags = copy(current_new_flags)
+        if current_new_flags != last_new_flags:
+            raise ValueError(f"{current_new_flags=} but {last_new_flags=}")
+        last_new_flags = copy(current_new_flags)
 
     final_output = TaskOutput(
         added_images=final_added_images,
-        edited_images=final_edited_images,
-        new_attribute_filters=last_new_attribute_filters,
-        new_flag_filters=last_new_flag_filters,
-        removed_images=final_removed_images,
+        edited_image_paths=final_edited_image_paths,
+        removed_image_paths=final_removed_image_paths,
+        attributes=last_new_attributes,
+        flags=last_new_flags,
     )
 
     return final_output
