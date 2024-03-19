@@ -65,8 +65,8 @@ async def create_workflowtask(
             order=new_task.order,
             meta=new_task.meta,
             args=new_task.args,
-            attribute_filters=new_task.input_attributes,
-            flag_filters=new_task.input_flags,
+            input_attributes=new_task.input_attributes,
+            input_flags=new_task.input_flags,
             db=db,
         )
 
