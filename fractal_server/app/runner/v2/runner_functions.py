@@ -2,12 +2,14 @@ from concurrent.futures import ThreadPoolExecutor
 from copy import copy
 from typing import Any
 
+from pydantic import BaseModel
+from pydantic import Field
+
 from ....images import deduplicate_list
 from ....images import SingleImage
 from .models import DictStrAny
 from .models import Task
 from .models import WorkflowTask
-from .task_output import InitTaskOutput
 from .task_output import TaskOutput
 
 
@@ -43,6 +45,21 @@ def _run_non_parallel_task(
     ).result()
 
     return TaskOutput(**task_output.dict())
+
+
+class InitArgsModel(BaseModel):
+    class Config:
+        extra = "forbid"
+
+    path: str
+    init_args: DictStrAny = Field(default_factory=dict)
+
+
+class InitTaskOutput(BaseModel):
+    parallelization_list: list[InitArgsModel] = Field(default_factory=list)
+
+    class Config:
+        extra = "forbid"
 
 
 def _run_non_parallel_task_init(
