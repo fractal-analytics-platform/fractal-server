@@ -56,7 +56,7 @@ def test_fractal_demos_01(tmp_path: Path, executor):
         executor=executor,
     )
 
-    assert dataset.history == [None]  # FIXME
+    assert dataset.history == ["create_ome_zarr_compound"]
     assert dataset.attribute_filters == {"plate": "my_plate.zarr"}
     assert dataset.flag_filters == {"has_z": True}
     _assert_image_data_exist(dataset.images)
@@ -74,7 +74,7 @@ def test_fractal_demos_01(tmp_path: Path, executor):
     )
 
     assert dataset.history == [
-        None,  # FIXME
+        "create_ome_zarr_compound",
         "illumination_correction",
     ]
     assert dataset.attribute_filters == {"plate": "my_plate.zarr"}
@@ -119,9 +119,9 @@ def test_fractal_demos_01(tmp_path: Path, executor):
     debug(dataset)
 
     assert dataset.history == [
-        None,
+        "create_ome_zarr_compound",
         "illumination_correction",
-        None,
+        "MIP_compound",
     ]
 
     assert dataset.attribute_filters == {"plate": "my_plate_mip.zarr"}
@@ -160,9 +160,9 @@ def test_fractal_demos_01(tmp_path: Path, executor):
     debug(dataset)
 
     assert dataset.history == [
-        None,
+        "create_ome_zarr_compound",
         "illumination_correction",
-        None,
+        "MIP_compound",
         "cellpose_segmentation",
     ]
 
@@ -204,7 +204,10 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
         executor=executor,
     )
 
-    assert dataset.history == [None, "illumination_correction"]
+    assert dataset.history == [
+        "create_ome_zarr_compound",
+        "illumination_correction",
+    ]
     assert dataset.attribute_filters == {
         "plate": "my_plate.zarr",
     }
@@ -279,7 +282,11 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
         executor=executor,
     )
 
-    assert dataset.history == [None, "illumination_correction", None]
+    assert dataset.history == [
+        "create_ome_zarr_compound",
+        "illumination_correction",
+        "MIP_compound",
+    ]
     assert dataset.attribute_filters == {
         "plate": "my_plate_mip.zarr",
     }
@@ -344,9 +351,9 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
     debug(dataset)
 
     assert dataset.history == [
-        None,
+        "create_ome_zarr_compound",
         "illumination_correction",
-        None,
+        "MIP_compound",
         "cellpose_segmentation",
     ]
 
