@@ -167,7 +167,7 @@ def apply_registration_to_image(
 
     # Handle the case of path=ref_path
     if overwrite_input:
-        out = dict(edited_images=[dict(path=path)])
+        out = dict(edited_image_paths=[path])
         with (Path(path) / "data").open("a") as f:
             f.write("Applying registration\n")
     else:

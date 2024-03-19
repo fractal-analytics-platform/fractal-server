@@ -176,7 +176,7 @@ def yokogawa_to_zarr(
                 attributes=attributes,
             )
         ],
-        new_attribute_filters=dict(plate=plate),
-        new_flag_filters=dict(has_z=has_z),
+        attributes=dict(plate=plate),
+        flags=dict(has_z=has_z),
     )
     return out
