@@ -54,13 +54,12 @@ def execute_tasks_v2(
             attribute_filters=attribute_filters,
         )
         # Verify that filtered images comply with output flags
-        if not all(
-            img.match_filter(flag_filters=task.input_flags)
-            for img in filtered_images
-        ):
-            raise ValueError(
-                "Filtered images do not comply with task input_flags."
-            )
+        for image in filtered_images:
+            if not image.match_filter(flag_filters=task.input_flags):
+                raise ValueError(
+                    f"Filtered images include {image.dict()}, which does "
+                    f"not comply with {task.input_flags=}."
+                )
 
         # ACTUAL TASK EXECUTION
 
