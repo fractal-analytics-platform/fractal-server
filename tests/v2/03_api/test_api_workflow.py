@@ -107,7 +107,7 @@ async def test_delete_workflow(
         # Add a dummy task to workflow
         res = await client.post(
             f"{PREFIX}/project/{p_id}/workflow/{wf_id}/wftask/",
-            json=dict(task_v1_id=collect_packages[0].id),
+            json=dict(task_id=collect_packages[0].id, is_legacy_task=True),
         )
         debug(res.json())
         assert res.status_code == 201
@@ -143,16 +143,15 @@ async def test_delete_workflow(
         wf_not_deletable_1 = await workflow_factory_v2(project_id=project.id)
         task = await task_factory_v2(name="task", source="source")
         await _workflow_insert_task(
-            workflow_id=wf_deletable_1.id, task_id=task.id, db=db, is_v2=True
+            workflow_id=wf_deletable_1.id, task_id=task.id, db=db
         )
         await _workflow_insert_task(
-            workflow_id=wf_deletable_2.id, task_id=task.id, db=db, is_v2=True
+            workflow_id=wf_deletable_2.id, task_id=task.id, db=db
         )
         await _workflow_insert_task(
             workflow_id=wf_not_deletable_1.id,
             task_id=task.id,
             db=db,
-            is_v2=True,
         )
         dataset = await dataset_factory_v2(project_id=project.id)
         payload = dict(
@@ -272,7 +271,7 @@ async def test_post_worfkflow_task(
         # Test that adding an invalid task fails with 404
         res = await client.post(
             (f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"),
-            json=dict(task_v2_id=99999),
+            json=dict(task_id=99999),
         )
         debug(res.json())
         assert res.status_code == 404
@@ -282,11 +281,11 @@ async def test_post_worfkflow_task(
             t = await add_task(client, index)
             res = await client.post(
                 f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/",
-                json=dict(task_v2_id=t["id"]),
+                json=dict(task_id=t["id"]),
             )
             workflow = await get_workflow(client, project.id, wf_id)
             assert len(workflow["task_list"]) == index + 1
-            assert workflow["task_list"][-1]["task_v2"] == t
+            assert workflow["task_list"][-1]["task"] == t
 
         workflow = await get_workflow(client, project.id, wf_id)
         assert len(workflow["task_list"]) == 2
@@ -295,12 +294,12 @@ async def test_post_worfkflow_task(
         args_payload = {"a": 0, "b": 1}
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/",
-            json=dict(task_v2_id=t2["id"], args=args_payload),
+            json=dict(task_id=t2["id"], args=args_payload),
         )
         assert res.status_code == 201
 
         t0b = await add_task(client, "0b")
-        payload = dict(task_v2_id=t0b["id"], order=1)
+        payload = dict(task_id=t0b["id"], order=1)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/",
             json=payload,
@@ -312,11 +311,11 @@ async def test_post_worfkflow_task(
         task_list = workflow["task_list"]
         assert len(task_list) == 4
         for wftask in task_list:
-            assert wftask["task_v1"] is None
-        assert task_list[0]["task_v2"]["name"] == "task0"
-        assert task_list[1]["task_v2"]["name"] == "task0b"
-        assert task_list[2]["task_v2"]["name"] == "task1"
-        assert task_list[3]["task_v2"]["name"] == "task2"
+            assert wftask["is_legacy_task"] is False
+        assert task_list[0]["task"]["name"] == "task0"
+        assert task_list[1]["task"]["name"] == "task0b"
+        assert task_list[2]["task"]["name"] == "task1"
+        assert task_list[3]["task"]["name"] == "task2"
         assert task_list[3]["args"] == args_payload
 
 
@@ -348,7 +347,7 @@ async def test_delete_workflow_task(
         for t in [t0, t1, t2]:
             res = await client.post(
                 f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/",
-                json=dict(task_v2_id=t["id"]),
+                json=dict(task_id=t["id"]),
             )
             assert res.status_code == 201
             wftasks.append(res.json())
@@ -489,7 +488,7 @@ async def test_patch_workflow_task(
         payload = {"task_id": t["id"]}
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/",
-            json=dict(task_v2_id=t["id"]),
+            json=dict(task_id=t["id"]),
         )
         assert res.status_code == 201
 
@@ -588,7 +587,7 @@ async def test_patch_workflow_task_with_args_schema(
         task_id = task.id
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/",
-            json=dict(task_v2_id=task_id),
+            json=dict(task_id=task_id),
         )
         wftask = res.json()
         wftask_id = wftask["id"]
@@ -649,14 +648,14 @@ async def test_patch_workflow_task_failures(
         t1 = await add_task(client, 1)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{wf1_id}/wftask/",
-            json=dict(task_v2_id=t1["id"]),
+            json=dict(task_id=t1["id"]),
         )
 
         t2 = await add_task(client, 2)
 
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{wf2_id}/wftask/",
-            json=dict(task_v2_id=t2["id"]),
+            json=dict(task_id=t2["id"]),
         )
 
         workflow1 = await get_workflow(client, project.id, wf1_id)
@@ -765,7 +764,7 @@ async def test_reorder_task_list(
             t = await add_task(client, i)
             res = await client.post(
                 f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/",
-                json=dict(task_v2_id=t["id"]),
+                json=dict(task_id=t["id"]),
             )
 
         # At this point, all WorkflowTask attributes have a predictable order
@@ -774,12 +773,7 @@ async def test_reorder_task_list(
             wft["order"] for wft in workflow["task_list"]
         ]
         old_worfklowtask_ids = [wft["id"] for wft in workflow["task_list"]]
-        old_task_ids = [
-            wft["task_v1"]["id"]
-            if (wft["task_v1"] is not None)
-            else wft["task_v2"]["id"]
-            for wft in workflow["task_list"]
-        ]
+        old_task_ids = [wft["task"]["id"] for wft in workflow["task_list"]]
         assert old_worfklowtask_orders == list(range(num_tasks))
         assert old_worfklowtask_ids == list(range(1, num_tasks + 1))
         assert old_task_ids == list(range(1, num_tasks + 1))
@@ -803,12 +797,7 @@ async def test_reorder_task_list(
         new_task_list = new_workflow["task_list"]
         new_workflowtask_orders = [wft["order"] for wft in new_task_list]
         new_workflowtask_ids = [wft["id"] for wft in new_task_list]
-        new_task_ids = [
-            wft["task_v1"]["id"]
-            if (wft["task_v1"] is not None)
-            else wft["task_v2"]["id"]
-            for wft in new_task_list
-        ]
+        new_task_ids = [wft["task"]["id"] for wft in new_task_list]
 
         # Assert that new attributes list corresponds to expectations
         assert new_workflowtask_orders == list(range(num_tasks))
@@ -898,7 +887,7 @@ async def test_delete_workflow_with_job(
         workflow = await workflow_factory_v2(project_id=project.id)
         task = await task_factory_v2(name="1", source="1")
         await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, is_v2=True, db=db
+            workflow_id=workflow.id, task_id=task.id, db=db
         )
         dataset = await dataset_factory_v2(project_id=project.id)
 
@@ -934,7 +923,7 @@ async def test_read_workflowtask(MockCurrentUser, project_factory_v2, client):
         t = await add_task(client, 99)
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/",
-            json=dict(task_v2_id=t["id"]),
+            json=dict(task_id=t["id"]),
         )
         assert res.status_code == 201
         wft_id = res.json()["id"]
@@ -942,7 +931,7 @@ async def test_read_workflowtask(MockCurrentUser, project_factory_v2, client):
             f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/{wft_id}/"
         )
         assert res.status_code == 200
-        assert res.json()["task_v2"] == t
+        assert res.json()["task"] == t
 
 
 # FIXME

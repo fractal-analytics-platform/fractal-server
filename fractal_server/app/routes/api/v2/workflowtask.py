@@ -38,30 +38,32 @@ async def create_workflowtask(
     """
     Add a WorkflowTask to a Workflow
     """
+    from devtools import debug
 
+    debug("DAGHE", new_task)
     workflow = await _get_workflow_check_owner(
         project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
 
-    is_v2 = new_task.task_v2_id is not None
-    task_id = new_task.task_v2_id if is_v2 else new_task.task_v1_id
-
     # Check that task exists
-    if is_v2:
-        task = await db.get(TaskV2, task_id)
-    else:
-        task = await db.get(Task, task_id)
+    task = await db.get(
+        Task if new_task.is_legacy_task else TaskV2, new_task.task_id
+    )
+
     if not task:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Task{'V2' if is_v2 else ''} {task_id} not found.",
+            detail=(
+                f"Task{'' if new_task.is_legacy_task else 'V2'} "
+                f"{new_task.task_id} not found."
+            ),
         )
 
     async with db:
         workflow_task = await _workflow_insert_task(
             workflow_id=workflow.id,
-            is_v2=is_v2,
-            task_id=task_id,
+            is_legacy_task=new_task.is_legacy_task,
+            task_id=new_task.task_id,
             order=new_task.order,
             meta=new_task.meta,
             args=new_task.args,
@@ -72,7 +74,21 @@ async def create_workflowtask(
 
     await db.close()
 
-    return workflow_task
+    return WorkflowTaskReadV2(
+        **workflow_task.model_dump(
+            exclude={"task_id", "task", "task_legacy_id", "task_legacy"}
+        ),
+        task_id=(
+            workflow_task.task_legacy_id
+            if workflow_task.is_legacy_task
+            else workflow_task.task_id
+        ),
+        task=(
+            workflow_task.task_legacy
+            if workflow_task.is_legacy_task
+            else workflow_task.task
+        ),
+    )
 
 
 @router.get(
