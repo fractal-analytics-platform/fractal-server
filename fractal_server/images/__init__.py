@@ -15,9 +15,9 @@ T = TypeVar("T")
 def val_scalar_dict(attribute: str):
     def val(
         dict_str_any: dict[str, Any],
-    ) -> dict[str, Union[int, float, str, bool, None]]:
+    ) -> dict[str, Union[int, float, str, bool]]:
         for key, value in dict_str_any.items():
-            if not isinstance(value, (int, float, str, bool, type(None))):
+            if not isinstance(value, (int, float, str, bool)):
                 raise ValueError(
                     f"{attribute}[{key}] must be a scalar (int, float, str, "
                     f"bool, or None). Given {value} ({type(value)})"
@@ -28,21 +28,37 @@ def val_scalar_dict(attribute: str):
 
 
 class SingleImage(BaseModel):
+
     path: str
+    origin: Optional[str] = None
+
     attributes: dict[str, Any] = Field(default_factory=dict)
+    flags: dict[str, bool] = Field(default_factory=dict)
 
     _attributes = validator("attributes", allow_reuse=True)(
         val_scalar_dict("attributes")
     )
 
-    def match_filter(self, filters: Optional[dict[str, Any]] = None):
-        if filters is None:
+    def match_filter(
+        self,
+        attribute_filters: Optional[dict[str, Any]] = None,
+        flag_filters: Optional[dict[str, bool]] = None,
+    ):
+        if attribute_filters is None and flag_filters is None:
             return True
-        for key, value in filters.items():
-            if value is None:
-                continue
-            if self.attributes.get(key) != value:
-                return False
+
+        if flag_filters is not None:
+            for key, value in flag_filters.items():
+                if self.flags.get(key, False) != value:
+                    return False
+
+        if attribute_filters is not None:
+            for key, value in attribute_filters.items():
+                if value is None:
+                    continue
+                if self.attributes.get(key) != value:
+                    return False
+
         return True
 
 
@@ -84,32 +100,17 @@ def deduplicate_list(this_list: list[T], remove_None: bool = False) -> list[T]:
 
 def _filter_image_list(
     images: list[SingleImage],
-    filters: Optional[dict[str, Any]] = None,
+    attribute_filters: Optional[dict[str, Any]] = None,
+    flag_filters: Optional[dict[str, Any]] = None,
 ) -> list[SingleImage]:
-
-    if filters is None:
+    if attribute_filters is None and flag_filters is None:
         # When no filter is provided, return all images
         return images
 
     filtered_images = []
     for this_image in images:
-        if this_image.match_filter(filters):
+        if this_image.match_filter(
+            attribute_filters=attribute_filters, flag_filters=flag_filters
+        ):
             filtered_images.append(copy(this_image))
-    return filtered_images
-
-
-def filter_images(
-    *,
-    dataset_images: list[SingleImage],
-    dataset_filters: Optional[dict[str, Any]] = {},
-    wftask_filters: Optional[dict[str, Any]] = {},
-) -> list[SingleImage]:
-
-    current_filters = copy(dataset_filters)
-    current_filters.update(wftask_filters)
-
-    filtered_images = _filter_image_list(
-        dataset_images,
-        filters=current_filters,
-    )
     return filtered_images

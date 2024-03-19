@@ -6,10 +6,8 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import root_validator
-from pydantic import validator
 
 from ....images import SingleImage
-from ....images import val_scalar_dict
 
 DictStrAny = dict[str, Any]
 
@@ -17,10 +15,10 @@ DictStrAny = dict[str, Any]
 class Dataset(BaseModel):
     id: Optional[int] = None
     history: list[DictStrAny] = []
-    # New in v2
     zarr_dir: str
     images: list[SingleImage] = Field(default_factory=list)
-    filters: DictStrAny = Field(default_factory=dict)
+    attribute_filters: DictStrAny = Field(default_factory=dict)
+    flag_filters: DictStrAny = Field(default_factory=dict)
 
     @property
     def image_paths(self) -> list[str]:
@@ -28,12 +26,9 @@ class Dataset(BaseModel):
 
 
 class Task(BaseModel):
-    meta: DictStrAny = Field(default_factory=dict)
-    new_filters: DictStrAny = Field(default_factory=dict)
-
-    _new_filters = validator("new_filters", allow_reuse=True)(
-        val_scalar_dict("new_filters")
-    )
+    name: str
+    input_flags: dict[str, bool] = Field(default_factory=dict)
+    output_flags: dict[str, bool] = Field(default_factory=dict)
 
     function_non_parallel: Optional[Callable] = None
     function_parallel: Optional[Callable] = None
@@ -64,20 +59,14 @@ class Task(BaseModel):
             else:
                 return "compound"
 
-    @property
-    def name(self) -> str:
-        if self.task_type == "parallel_standalone":
-            return self.function_parallel.__name__
-        elif self.task_type == "non_parallel_standalone":
-            return self.function_non_parallel.__name__
-
 
 class WorkflowTask(BaseModel):
     args_non_parallel: DictStrAny = Field(default_factory=dict)
     args_parallel: DictStrAny = Field(default_factory=dict)
     meta: DictStrAny = Field(default_factory=dict)
     task: Optional[Task] = None
-    filters: DictStrAny = Field(default_factory=dict)
+    attribute_filters: DictStrAny = Field(default_factory=dict)
+    flag_filters: dict[str, bool] = Field(default_factory=dict)
 
 
 class Workflow(BaseModel):

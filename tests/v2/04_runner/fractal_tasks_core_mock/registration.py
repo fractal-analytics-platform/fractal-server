@@ -167,15 +167,13 @@ def apply_registration_to_image(
 
     # Handle the case of path=ref_path
     if overwrite_input:
-        out = dict(edited_images=[dict(path=path)])
+        out = dict(edited_image_paths=[path])
         with (Path(path) / "data").open("a") as f:
             f.write("Applying registration\n")
     else:
         new_path = f"{path}_r"
         print(f"[registration] {new_path=}")
-        out = dict(
-            added_images=[dict(path=new_path, attributes=dict(origin=path))]
-        )
+        out = dict(added_images=[dict(path=new_path, origin=path)])
         Path(new_path).mkdir()
         with (Path(new_path) / "data").open("a") as f:
             f.write("Applying registration\n")
