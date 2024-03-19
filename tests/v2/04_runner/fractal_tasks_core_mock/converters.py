@@ -79,7 +79,6 @@ def create_ome_zarr_multiplex(
     # Task-specific arguments
     image_dir: str,
 ) -> dict:
-
     if len(paths) > 0:
         raise ValueError(
             "Error in create_ome_zarr_multiplex, "
@@ -158,8 +157,8 @@ def yokogawa_to_zarr(
     plate = Path(path).parents[2].name
     well = Path(path).parents[1].name + Path(path).parents[0].name
 
-    # Read data_dimensionality from data
-    data_dimensionality = 3  # Mock
+    # Read has_z from data
+    has_z = True  # Mock
 
     print(f"[yokogawa_to_zarr] {raw_path=}")
     # Write fake image data into image Zarr group
@@ -170,12 +169,14 @@ def yokogawa_to_zarr(
     attributes = dict(well=well)
     if init_args.acquisition is not None:
         attributes["acquisition"] = init_args.acquisition
-    return dict(
+    out = dict(
         added_images=[
             dict(
                 path=path,
                 attributes=attributes,
             )
         ],
-        new_filters=dict(plate=plate, data_dimensionality=data_dimensionality),
+        attributes=dict(plate=plate),
+        flags=dict(has_z=has_z),
     )
+    return out

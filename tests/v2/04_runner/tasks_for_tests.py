@@ -29,12 +29,7 @@ def remove_images(
     zarr_dir: str,
     removed_images_paths: list[str],
 ) -> dict[str, Any]:
-
-    removed_images = [
-        dict(path=image_path) for image_path in removed_images_paths
-    ]
-
-    return dict(removed_images=removed_images)
+    return dict(removed_image_paths=removed_images_paths)
 
 
 # Parallel tasks

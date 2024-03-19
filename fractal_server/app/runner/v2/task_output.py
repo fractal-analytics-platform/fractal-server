@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pydantic import BaseModel
 from pydantic import Field
 
@@ -8,25 +6,17 @@ from .models import DictStrAny
 
 
 class TaskOutput(BaseModel):
-    added_images: Optional[list[SingleImage]] = None
-    edited_images: Optional[list[SingleImage]] = None
-    removed_images: Optional[list[SingleImage]] = None
-    new_filters: Optional[DictStrAny] = None
+
+    added_images: list[SingleImage] = Field(default_factory=list)
+    edited_image_paths: list[str] = Field(default_factory=list)
+    removed_image_paths: list[str] = Field(default_factory=list)
+
+    # New flags/attributes
+    attributes: DictStrAny = Field(default_factory=dict)
+    flags: dict[str, bool] = Field(default_factory=dict)
 
     class Config:
         extra = "forbid"
 
 
-class InitArgsModel(BaseModel):
-    class Config:
-        extra = "forbid"
-
-    path: str
-    init_args: DictStrAny = Field(default_factory=dict)
-
-
-class InitTaskOutput(BaseModel):
-    parallelization_list: list[InitArgsModel] = Field(default_factory=list)
-
-    class Config:
-        extra = "forbid"
+# TODO: validator that deduplicates lists of images? MAYBE

@@ -24,6 +24,7 @@ def test_single_non_parallel_task(executor):
     task_list = [
         WorkflowTask(
             task=Task(
+                name="create_images_from_scratch",
                 function_non_parallel=create_images_from_scratch,
             ),
             args_non_parallel=dict(new_paths=NEW_PATHS),
@@ -49,6 +50,7 @@ def test_single_non_parallel_task_removed(executor):
     task_list = [
         WorkflowTask(
             task=Task(
+                name="remove_images",
                 function_non_parallel=remove_images,
             ),
             args_non_parallel=dict(removed_images_paths=["/tmp/A/01/0"]),
@@ -69,6 +71,7 @@ def test_single_parallel_task_no_parallization_list(executor):
     task_list = [
         WorkflowTask(
             task=Task(
+                name="print_path",
                 function_parallel=print_path,
             )
         )
