@@ -43,9 +43,9 @@ def execute_tasks_v2(
 
         # Get filtered images
         flag_filters = copy(dataset.flag_filters)
-        flag_filters.update(wftask.flag_filters)
+        flag_filters.update(wftask.input_flags)
         attribute_filters = copy(dataset.attribute_filters)
-        attribute_filters.update(wftask.attribute_filters)
+        attribute_filters.update(wftask.input_attributes)
         filtered_images = _filter_image_list(
             images=tmp_dataset.images,
             flag_filters=flag_filters,
