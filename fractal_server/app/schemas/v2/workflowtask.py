@@ -38,8 +38,8 @@ class WorkflowTaskCreateV2(BaseModel):
     meta: Optional[dict[str, Any]]
     args: Optional[dict[str, Any]]
     order: Optional[int]
-    attribute_filters: Optional[dict[str, Any]]
-    flag_filters: Optional[dict[str, bool]]
+    input_attributes: Optional[dict[str, Any]]
+    input_flags: Optional[dict[str, bool]]
 
     task_v1_id: Optional[int]
     task_v2_id: Optional[int]
@@ -60,8 +60,8 @@ class WorkflowTaskCreateV2(BaseModel):
         return values
 
     _order = validator("order", allow_reuse=True)(valint("order", min_val=0))
-    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
-        val_scalar_dict("attribute_filters")
+    _input_attributes = validator("input_attributes", allow_reuse=True)(
+        val_scalar_dict("input_attributes")
     )
 
 
@@ -74,8 +74,8 @@ class WorkflowTaskReadV2(BaseModel):
     meta: Optional[dict[str, Any]]
     args: Optional[dict[str, Any]]
 
-    attribute_filters: dict[str, Any]
-    flag_filters: dict[str, bool]
+    input_attributes: dict[str, Any]
+    input_flags: dict[str, bool]
 
     task_v1_id: Optional[int]
     task_v2_id: Optional[int]
@@ -84,8 +84,8 @@ class WorkflowTaskReadV2(BaseModel):
     task_v2: Optional[TaskReadV2]
 
     # Validators
-    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
-        val_scalar_dict("attribute_filters")
+    _input_attributes = validator("input_attributes", allow_reuse=True)(
+        val_scalar_dict("input_attributes")
     )
 
 
@@ -93,11 +93,11 @@ class WorkflowTaskUpdateV2(BaseModel):
 
     meta: Optional[dict[str, Any]]
     args: Optional[dict[str, Any]]
-    attribute_filters: Optional[dict[str, Any]]
-    flag_filters: Optional[dict[str, bool]]
+    input_attributes: Optional[dict[str, Any]]
+    input_flags: Optional[dict[str, bool]]
     # Validators
-    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
-        val_scalar_dict("attribute_filters")
+    _input_attributes = validator("input_attributes", allow_reuse=True)(
+        val_scalar_dict("input_attributes")
     )
 
     @validator("meta")
@@ -114,11 +114,11 @@ class WorkflowTaskImportV2(BaseModel):
     task: TaskImportV2
     meta: Optional[dict[str, Any]] = None
     args: Optional[dict[str, Any]] = None
-    attribute_filters: dict[str, Any]
-    flag_filters: dict[str, bool]
+    input_attributes: dict[str, Any]
+    input_flags: dict[str, bool]
     # Validators
-    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
-        val_scalar_dict("attribute_filters")
+    _input_attributes = validator("input_attributes", allow_reuse=True)(
+        val_scalar_dict("input_attributes")
     )
 
 
@@ -127,9 +127,9 @@ class WorkflowTaskExportV2(BaseModel):
     task: TaskExportV2
     meta: Optional[dict[str, Any]] = None
     args: Optional[dict[str, Any]] = None
-    attribute_filters: dict[str, Any]
-    flag_filters: dict[str, bool]
+    input_attributes: dict[str, Any]
+    input_flags: dict[str, bool]
     # Validators
-    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
-        val_scalar_dict("attribute_filters")
+    _input_attributes = validator("input_attributes", allow_reuse=True)(
+        val_scalar_dict("input_attributes")
     )

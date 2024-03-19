@@ -395,8 +395,8 @@ async def _workflow_insert_task(
     order: Optional[int] = None,
     meta: Optional[dict[str, Any]] = None,
     args: Optional[dict[str, Any]] = None,
-    attribute_filters: dict[str, Any] = {},
-    flag_filters: dict[str, bool] = {},
+    attribute_filters: dict[str, Any] = None,
+    flag_filters: dict[str, bool] = None,
     db: AsyncSession,
 ) -> WorkflowTaskV2:
     """
@@ -448,16 +448,16 @@ async def _workflow_insert_task(
             task_v2_id=task_id,
             args=actual_args,
             meta=wt_meta,
-            attribute_filters=attribute_filters,
-            flag_filters=flag_filters,
+            attribute_filters=attribute_filters or {},
+            flag_filters=flag_filters or {},
         )
     else:
         wf_task = WorkflowTaskV2(
             task_v1_id=task_id,
             args=actual_args,
             meta=wt_meta,
-            attribute_filters=attribute_filters,
-            flag_filters=flag_filters,
+            attribute_filters=attribute_filters or {},
+            flag_filters=flag_filters or {},
         )
     db.add(wf_task)
     db_workflow.task_list.insert(order, wf_task)
