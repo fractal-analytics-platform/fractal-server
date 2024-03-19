@@ -7,7 +7,6 @@ from pydantic import Field
 from pydantic import HttpUrl
 from pydantic import validator
 
-from ....images import val_scalar_dict
 from .._validators import valstr
 
 
@@ -26,7 +25,9 @@ class TaskCreateV2(BaseModel):
     args_schema_version: Optional[str]
     docs_info: Optional[str]
     docs_link: Optional[HttpUrl]
-    new_filters: Optional[dict[str, Any]] = {}
+
+    input_flags: dict[str, bool] = Field(default={})
+    output_flags: dict[str, bool] = Field(default={})
 
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))
@@ -35,9 +36,6 @@ class TaskCreateV2(BaseModel):
     _version = validator("version", allow_reuse=True)(valstr("version"))
     _args_schema_version = validator("args_schema_version", allow_reuse=True)(
         valstr("args_schema_version")
-    )
-    _new_filters = validator("new_filters", allow_reuse=True)(
-        val_scalar_dict("new_filters")
     )
 
 
@@ -56,7 +54,8 @@ class TaskReadV2(BaseModel):
     args_schema_version: Optional[str]
     docs_info: Optional[str]
     docs_link: Optional[HttpUrl]
-    new_filters: dict[str, Any]
+    input_flags: dict[str, bool]
+    output_flags: dict[str, bool]
 
 
 class TaskUpdateV2(BaseModel):
@@ -72,7 +71,8 @@ class TaskUpdateV2(BaseModel):
     args_schema_version: Optional[str]
     docs_info: Optional[str]
     docs_link: Optional[HttpUrl]
-    new_filters: Optional[dict[str, Any]]
+    input_flags: Optional[dict[str, bool]]
+    output_flags: Optional[dict[str, bool]]
 
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))
@@ -80,9 +80,6 @@ class TaskUpdateV2(BaseModel):
     _source = validator("source", allow_reuse=True)(valstr("source"))
     _version = validator("version", allow_reuse=True)(
         valstr("version", accept_none=True)
-    )
-    _new_filters = validator("new_filters", allow_reuse=True)(
-        val_scalar_dict("new_filters")
     )
 
 

@@ -1,8 +1,8 @@
 """v2
 
-Revision ID: c6882af4aa97
+Revision ID: d57414993e22
 Revises: 9fd26a2b0de4
-Create Date: 2024-03-14 15:54:07.081507
+Create Date: 2024-03-18 17:20:37.549899
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = "c6882af4aa97"
+revision = "d57414993e22"
 down_revision = "9fd26a2b0de4"
 branch_labels = None
 depends_on = None
@@ -60,7 +60,8 @@ def upgrade() -> None:
         sa.Column(
             "docs_link", sqlmodel.sql.sqltypes.AutoString(), nullable=True
         ),
-        sa.Column("new_filters", sa.JSON(), nullable=True),
+        sa.Column("input_flags", sa.JSON(), nullable=True),
+        sa.Column("output_flags", sa.JSON(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("source"),
     )
@@ -74,10 +75,15 @@ def upgrade() -> None:
         sa.Column(
             "timestamp_created", sa.DateTime(timezone=True), nullable=False
         ),
-        sa.Column("images", sa.JSON(), server_default="[]", nullable=False),
-        sa.Column("filters", sa.JSON(), server_default="{}", nullable=False),
         sa.Column(
             "zarr_dir", sqlmodel.sql.sqltypes.AutoString(), nullable=False
+        ),
+        sa.Column("images", sa.JSON(), server_default="[]", nullable=False),
+        sa.Column(
+            "attribute_filters", sa.JSON(), server_default="{}", nullable=False
+        ),
+        sa.Column(
+            "flag_filters", sa.JSON(), server_default="{}", nullable=False
         ),
         sa.ForeignKeyConstraint(
             ["project_id"],
@@ -170,7 +176,12 @@ def upgrade() -> None:
         sa.Column("order", sa.Integer(), nullable=True),
         sa.Column("meta", sa.JSON(), nullable=True),
         sa.Column("args", sa.JSON(), nullable=True),
-        sa.Column("filters", sa.JSON(), server_default="{}", nullable=False),
+        sa.Column(
+            "attribute_filters", sa.JSON(), server_default="{}", nullable=False
+        ),
+        sa.Column(
+            "flag_filters", sa.JSON(), server_default="{}", nullable=False
+        ),
         sa.Column("task_v1_id", sa.Integer(), nullable=True),
         sa.Column("task_v2_id", sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(

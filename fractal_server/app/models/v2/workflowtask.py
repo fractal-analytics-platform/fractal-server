@@ -25,7 +25,10 @@ class WorkflowTaskV2(SQLModel, table=True):
     meta: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
     args: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
 
-    filters: dict[str, Any] = Field(
+    input_attributes: dict[str, Any] = Field(
+        sa_column=Column(JSON, nullable=False, server_default="{}")
+    )
+    input_flags: dict[str, bool] = Field(
         sa_column=Column(JSON, nullable=False, server_default="{}")
     )
 

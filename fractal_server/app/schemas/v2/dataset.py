@@ -47,12 +47,13 @@ class DatasetCreateV2(BaseModel):
     read_only: bool = False
     zarr_dir: str
 
-    filters: dict[str, Any] = {}
+    attribute_filters: dict[str, Any] = {}
+    flag_filters: dict[str, bool] = {}
 
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))
-    _filters = validator("filters", allow_reuse=True)(
-        val_scalar_dict("filters")
+    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
+        val_scalar_dict("attribute_filters")
     )
 
 
@@ -70,14 +71,15 @@ class DatasetReadV2(BaseModel):
     timestamp_created: datetime
 
     zarr_dir: str
-    filters: dict[str, Any]
+    attribute_filters: dict[str, Any] = {}
+    flag_filters: dict[str, bool] = {}
 
     # Validators
     _timestamp_created = validator("timestamp_created", allow_reuse=True)(
         valutc("timestamp_created")
     )
-    _filters = validator("filters", allow_reuse=True)(
-        val_scalar_dict("filters")
+    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
+        val_scalar_dict("attribute_filters")
     )
 
 
@@ -88,10 +90,11 @@ class DatasetUpdateV2(BaseModel):
     name: Optional[str]
     read_only: Optional[bool]
     zarr_dir: Optional[str]
-    filters: Optional[dict[str, Any]]
+    attribute_filters: Optional[dict[str, Any]]
+    flag_filters: Optional[dict[str, bool]]
 
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))
-    _filters = validator("filters", allow_reuse=True)(
-        val_scalar_dict("filters")
+    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
+        val_scalar_dict("attribute_filters")
     )
