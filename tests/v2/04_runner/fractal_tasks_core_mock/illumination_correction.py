@@ -20,7 +20,7 @@ def illumination_correction(
 
     # Prepare output metadata and set actual_path
     if overwrite_input:
-        out = dict(edited_images=[dict(path=path)])
+        out = dict(edited_image_paths=[path])
         actual_path = path
     else:
         new_path = f"{path}_corr"
@@ -103,7 +103,7 @@ def illumination_correction_B(
 
     # Prepare output metadata and set actual_path
     if path == raw_path:
-        out = dict(edited_images=[dict(path=path)])
+        out = dict(edited_image_paths=[path])
     else:
         out = dict(
             added_images=[dict(path=path, attributes=dict(origin=raw_path))]
