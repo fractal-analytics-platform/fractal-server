@@ -4,11 +4,11 @@ from typing import Optional
 from typing import Union
 from zipfile import ZipFile
 
-from ..utils import _normalize_package_name
-from ..utils import get_absolute_venv_path
-from ..utils import get_collection_path
-from ..utils import get_python_interpreter
-from ._TaskCollectPip import _TaskCollectPip
+from .utils import _normalize_package_name
+from .utils import get_absolute_venv_path
+from .utils import get_collection_path
+from .utils import get_python_interpreter
+from .v1._TaskCollectPip import _TaskCollectPip
 from fractal_server.app.schemas.v1 import ManifestV1
 from fractal_server.app.schemas.v1 import TaskCollectStatus
 from fractal_server.config import get_settings

@@ -10,8 +10,8 @@ from pydantic import BaseModel
 from pydantic import validator
 
 from .fixtures_server import HAS_LOCAL_SBATCH
-from fractal_server.tasks.v1.endpoint_operations import create_package_dir_pip
-from fractal_server.tasks.v1.endpoint_operations import inspect_package
+from fractal_server.tasks.endpoint_operations import create_package_dir_pip
+from fractal_server.tasks.endpoint_operations import inspect_package
 
 
 class MockTask(BaseModel):

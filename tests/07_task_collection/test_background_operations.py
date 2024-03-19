@@ -7,17 +7,17 @@ from devtools import debug
 
 from fractal_server.app.models import State
 from fractal_server.app.routes.api.v1.task_collection import TaskCollectStatus
+from fractal_server.tasks.endpoint_operations import (
+    create_package_dir_pip,
+)
+from fractal_server.tasks.endpoint_operations import download_package
+from fractal_server.tasks.endpoint_operations import inspect_package
 from fractal_server.tasks.v1._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.v1.background_operations import _init_venv
 from fractal_server.tasks.v1.background_operations import _pip_install
 from fractal_server.tasks.v1.background_operations import (
     background_collect_pip,
 )
-from fractal_server.tasks.v1.endpoint_operations import (
-    create_package_dir_pip,
-)
-from fractal_server.tasks.v1.endpoint_operations import download_package
-from fractal_server.tasks.v1.endpoint_operations import inspect_package
 from tests.fixtures_tasks import execute_command
 
 
