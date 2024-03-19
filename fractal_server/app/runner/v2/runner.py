@@ -9,8 +9,8 @@ from ....images import SingleImage
 from .models import Dataset
 from .models import DictStrAny
 from .models import WorkflowTask
+from .runner_functions import _run_compound_task
 from .runner_functions import _run_non_parallel_task
-from .runner_functions import _run_non_parallel_task_init
 from .runner_functions import _run_parallel_task
 
 
@@ -35,10 +35,10 @@ def execute_tasks_v2(
     executor: ThreadPoolExecutor,
 ) -> Dataset:
 
-    # Run task 0
     tmp_dataset = deepcopy(dataset)
 
     for wftask in wf_task_list:
+
         task = wftask.task
 
         # PRE TASK EXECUTION
@@ -66,63 +66,31 @@ def execute_tasks_v2(
 
         # (1/3) Non-parallel task
         if task.task_type == "non_parallel_standalone":
-            paths = [image.path for image in filtered_images]
-            function_kwargs = dict(
-                paths=paths,
-                zarr_dir=tmp_dataset.zarr_dir,
-                **wftask.args_non_parallel,
-            )
             task_output = _run_non_parallel_task(
-                task=task,
-                function_kwargs=function_kwargs,
+                filtered_images=filtered_images,
+                zarr_dir=tmp_dataset.zarr_dir,
+                wftask=wftask,
+                task=wftask.task,
                 executor=executor,
             )
         # (2/3) Parallel task
         elif task.task_type == "parallel_standalone":
-            list_function_kwargs = [
-                dict(
-                    path=image.path,
-                    **wftask.args_parallel,
-                )
-                for image in filtered_images
-            ]
             task_output = _run_parallel_task(
-                task=task,
-                list_function_kwargs=list_function_kwargs,
+                filtered_images=filtered_images,
+                wftask=wftask,
+                task=wftask.task,
                 executor=executor,
             )
         # (3/3) Compound task
         elif task.task_type == "compound":
-            # 3/A: non-parallel init task
-            paths = [image.path for image in filtered_images]
-            function_kwargs = dict(
-                paths=paths,
+            task_output = _run_compound_task(
+                filtered_images=filtered_images,
                 zarr_dir=tmp_dataset.zarr_dir,
-                **wftask.args_non_parallel,
-            )
-            init_task_output = _run_non_parallel_task_init(
-                task=task,
-                function_kwargs=function_kwargs,
+                wftask=wftask,
+                task=wftask.task,
                 executor=executor,
             )
 
-            # 3/B: parallel part of a compound task
-            parallelization_list = init_task_output.parallelization_list
-            list_function_kwargs = []
-            for ind, parallelization_item in enumerate(parallelization_list):
-                list_function_kwargs.append(
-                    dict(
-                        path=parallelization_item.path,
-                        init_args=parallelization_item.init_args,
-                        **wftask.args_parallel,
-                    )
-                )
-            list_function_kwargs = deduplicate_list(list_function_kwargs)
-            task_output = _run_parallel_task(
-                task=task,
-                list_function_kwargs=list_function_kwargs,
-                executor=executor,
-            )
         else:
             raise ValueError(f"Invalid {task.task_type=}.")
 

@@ -2,8 +2,11 @@ from concurrent.futures import ThreadPoolExecutor
 from copy import copy
 from typing import Any
 
+from ....images import deduplicate_list
+from ....images import SingleImage
 from .models import DictStrAny
 from .models import Task
+from .models import WorkflowTask
 from .task_output import InitTaskOutput
 from .task_output import TaskOutput
 
@@ -12,10 +15,21 @@ MAX_PARALLELIZATION_LIST_SIZE = 200
 
 
 def _run_non_parallel_task(
+    *,
+    filtered_images: list[SingleImage],
+    zarr_dir: str,
     task: Task,
-    function_kwargs: DictStrAny,
-    executor: ThreadPoolExecutor,
+    wftask: WorkflowTask,
+    executor,
 ) -> TaskOutput:
+
+    paths = [image.path for image in filtered_images]
+    function_kwargs = dict(
+        paths=paths,
+        zarr_dir=zarr_dir,
+        **wftask.args_non_parallel,
+    )
+
     def _wrapper_expand_kwargs(input_kwargs: dict[str, Any]):
         task_output = task.function_non_parallel(**input_kwargs)
         if task_output is None:
@@ -32,6 +46,7 @@ def _run_non_parallel_task(
 
 
 def _run_non_parallel_task_init(
+    *,
     task: Task,
     function_kwargs: DictStrAny,
     executor: ThreadPoolExecutor,
@@ -106,10 +121,20 @@ def merge_outputs(
 
 
 def _run_parallel_task(
+    *,
+    filtered_images: list[SingleImage],
     task: Task,
-    list_function_kwargs: list[DictStrAny],
-    executor: ThreadPoolExecutor,
+    wftask: WorkflowTask,
+    executor,
 ) -> TaskOutput:
+
+    list_function_kwargs = [
+        dict(
+            path=image.path,
+            **wftask.args_parallel,
+        )
+        for image in filtered_images
+    ]
 
     if len(list_function_kwargs) > MAX_PARALLELIZATION_LIST_SIZE:
         raise ValueError(
@@ -132,4 +157,60 @@ def _run_parallel_task(
     merged_output = merge_outputs(
         task_outputs,
     )
+    return merged_output
+
+
+def _run_compound_task(
+    *,
+    filtered_images: list[SingleImage],
+    zarr_dir: str,
+    task: Task,
+    wftask: WorkflowTask,
+    executor,
+) -> TaskOutput:
+    # 3/A: non-parallel init task
+    paths = [image.path for image in filtered_images]
+    function_kwargs = dict(
+        paths=paths,
+        zarr_dir=zarr_dir,
+        **wftask.args_non_parallel,
+    )
+    init_task_output = _run_non_parallel_task_init(
+        task=task,
+        function_kwargs=function_kwargs,
+        executor=executor,
+    )
+
+    # 3/B: parallel part of a compound task
+    parallelization_list = init_task_output.parallelization_list
+    list_function_kwargs = []
+    for ind, parallelization_item in enumerate(parallelization_list):
+        list_function_kwargs.append(
+            dict(
+                path=parallelization_item.path,
+                init_args=parallelization_item.init_args,
+                **wftask.args_parallel,
+            )
+        )
+    list_function_kwargs = deduplicate_list(list_function_kwargs)
+
+    if len(list_function_kwargs) > MAX_PARALLELIZATION_LIST_SIZE:
+        raise ValueError(
+            "Too many parallelization items.\n"
+            f"   {len(list_function_kwargs)=}\n"
+            f"   {MAX_PARALLELIZATION_LIST_SIZE=}\n"
+        )
+
+    def _wrapper_expand_kwargs(input_kwargs: dict[str, Any]):
+        task_output = task.function_parallel(**input_kwargs)
+        if task_output is None:
+            task_output = TaskOutput()
+        else:
+            task_output = TaskOutput(**task_output)
+        return task_output
+
+    results = executor.map(_wrapper_expand_kwargs, list_function_kwargs)
+    task_outputs = list(results)
+
+    merged_output = merge_outputs(task_outputs)
     return merged_output
