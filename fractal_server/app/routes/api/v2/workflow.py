@@ -245,13 +245,23 @@ async def export_worfklow(
     # Emit a warning when exporting a workflow with custom tasks
     logger = set_logger(None)
     for wftask in workflow.task_list:
-        if wftask.task.owner is not None:
-            logger.warning(
-                f"Custom tasks (like the one with id={wftask.task.id} and "
-                f'source="{wftask.task.source}") are not meant to be '
-                "portable; re-importing this workflow may not work as "
-                "expected."
-            )
+        if wftask.is_legacy_task:
+            if wftask.task_legacy.owner is not None:
+                logger.warning(
+                    f"Custom tasks (like the one with "
+                    f"id={wftask.task_legacy_id} and "
+                    f"source='{wftask.task_legacy.source}') are not meant to "
+                    "be portable; re-importing this workflow may not work as "
+                    "expected."
+                )
+        else:
+            if wftask.task.owner is not None:
+                logger.warning(
+                    f"Custom tasks (like the one with id={wftask.task_id} and "
+                    f'source="{wftask.task.source}") are not meant to be '
+                    "portable; re-importing this workflow may not work as "
+                    "expected."
+                )
     close_logger(logger)
 
     await db.close()
@@ -332,7 +342,7 @@ async def import_workflow(
     await db.refresh(db_workflow)
 
     # Insert tasks
-    async with db:
+    async with db:  # FIXME why?
 
         for wf_task in workflow.task_list:
             if wf_task.is_legacy_task is True:
@@ -362,7 +372,6 @@ async def import_workflow(
                 # Insert task
                 await _workflow_insert_task(
                     **new_wf_task.dict(),
-                    is_legacy_task=False,
                     workflow_id=db_workflow.id,
                     task_id=task_id,
                     db=db,

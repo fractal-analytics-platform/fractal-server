@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from datetime import timezone
 
@@ -11,6 +12,9 @@ from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.app.schemas.v2 import WorkflowExportV2
+from fractal_server.app.schemas.v2 import WorkflowImportV2
+from fractal_server.app.schemas.v2 import WorkflowReadV2
 
 PREFIX = "api/v2"
 
@@ -106,8 +110,9 @@ async def test_delete_workflow(
 
         # Add a dummy task to workflow
         res = await client.post(
-            f"{PREFIX}/project/{p_id}/workflow/{wf_id}/wftask/",
-            json=dict(task_id=collect_packages[0].id, is_legacy_task=True),
+            f"{PREFIX}/project/{p_id}/workflow/{wf_id}/wftask/"
+            f"?task_id={collect_packages[0].id}",
+            json=dict(is_legacy_task=True),
         )
         debug(res.json())
         assert res.status_code == 201
@@ -270,8 +275,9 @@ async def test_post_worfkflow_task(
 
         # Test that adding an invalid task fails with 404
         res = await client.post(
-            (f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"),
-            json=dict(task_id=99999),
+            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
+            "?task_id=99999",
+            json=dict(),
         )
         debug(res.json())
         assert res.status_code == 404
@@ -280,8 +286,9 @@ async def test_post_worfkflow_task(
         for index in range(2):
             t = await add_task(client, index)
             res = await client.post(
-                f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/",
-                json=dict(task_id=t["id"]),
+                f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
+                f"?task_id={t['id']}",
+                json=dict(),
             )
             workflow = await get_workflow(client, project.id, wf_id)
             assert len(workflow["task_list"]) == index + 1
@@ -293,16 +300,17 @@ async def test_post_worfkflow_task(
         t2 = await add_task(client, 2)
         args_payload = {"a": 0, "b": 1}
         res = await client.post(
-            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/",
-            json=dict(task_id=t2["id"], args=args_payload),
+            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
+            f"?task_id={t2['id']}",
+            json=dict(args=args_payload),
         )
         assert res.status_code == 201
 
         t0b = await add_task(client, "0b")
-        payload = dict(task_id=t0b["id"], order=1)
         res = await client.post(
-            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/",
-            json=payload,
+            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
+            f"?task_id={t0b['id']}",
+            json=dict(order=1),
         )
         assert res.status_code == 201
 
@@ -346,9 +354,11 @@ async def test_delete_workflow_task(
         wftasks = []
         for t in [t0, t1, t2]:
             res = await client.post(
-                f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/",
-                json=dict(task_id=t["id"]),
+                f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
+                f"?task_id={t['id']}",
+                json=dict(),
             )
+            debug(res.json())
             assert res.status_code == 201
             wftasks.append(res.json())
 
@@ -487,8 +497,9 @@ async def test_patch_workflow_task(
         t = await add_task(client, 0)
         payload = {"task_id": t["id"]}
         res = await client.post(
-            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/",
-            json=dict(task_id=t["id"]),
+            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
+            f"?task_id={t['id']}",
+            json=dict(),
         )
         assert res.status_code == 201
 
@@ -586,8 +597,9 @@ async def test_patch_workflow_task_with_args_schema(
         debug(task)
         task_id = task.id
         res = await client.post(
-            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/",
-            json=dict(task_id=task_id),
+            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
+            f"?task_id={task_id}",
+            json=dict(),
         )
         wftask = res.json()
         wftask_id = wftask["id"]
@@ -647,15 +659,17 @@ async def test_patch_workflow_task_failures(
 
         t1 = await add_task(client, 1)
         res = await client.post(
-            f"{PREFIX}/project/{project.id}/workflow/{wf1_id}/wftask/",
-            json=dict(task_id=t1["id"]),
+            f"{PREFIX}/project/{project.id}/workflow/{wf1_id}/wftask/"
+            f"?task_id={t1['id']}",
+            json=dict(),
         )
 
         t2 = await add_task(client, 2)
 
         res = await client.post(
-            f"{PREFIX}/project/{project.id}/workflow/{wf2_id}/wftask/",
-            json=dict(task_id=t2["id"]),
+            f"{PREFIX}/project/{project.id}/workflow/{wf2_id}/wftask/"
+            f"?task_id={t2['id']}",
+            json=dict(),
         )
 
         workflow1 = await get_workflow(client, project.id, wf1_id)
@@ -763,8 +777,9 @@ async def test_reorder_task_list(
         for i in range(num_tasks):
             t = await add_task(client, i)
             res = await client.post(
-                f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/",
-                json=dict(task_id=t["id"]),
+                f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
+                f"?task_id={t['id']}",
+                json=dict(),
             )
 
         # At this point, all WorkflowTask attributes have a predictable order
@@ -922,8 +937,9 @@ async def test_read_workflowtask(MockCurrentUser, project_factory_v2, client):
 
         t = await add_task(client, 99)
         res = await client.post(
-            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/",
-            json=dict(task_id=t["id"]),
+            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
+            f"?task_id={t['id']}",
+            json=dict(),
         )
         assert res.status_code == 201
         wft_id = res.json()["id"]
@@ -934,8 +950,79 @@ async def test_read_workflowtask(MockCurrentUser, project_factory_v2, client):
         assert res.json()["task"] == t
 
 
+async def test_import_export_workflow(
+    client,
+    MockCurrentUser,
+    project_factory_v2,
+    task_factory,
+    task_factory_v2,
+    testdata_path,
+):
+
+    # Load workflow to be imported into DB
+    with (testdata_path / "import_export/workflow-v2.json").open("r") as f:
+        workflow_from_file = json.load(f)
+
+    await task_factory_v2(name="task", source="PKG_SOURCE:dummy")
+    await task_factory(name="task", source="PKG_SOURCE:dummy")
+
+    # Create project
+    async with MockCurrentUser() as user:
+        prj = await project_factory_v2(user)
+
+    # Import workflow into project
+    payload = WorkflowImportV2(**workflow_from_file).dict(exclude_none=True)
+
+    res = await client.post(
+        f"{PREFIX}/project/{prj.id}/workflow/import/", json=payload
+    )
+    assert res.status_code == 201
+    workflow_imported = res.json()
+
+    # Check that output can be cast to WorkflowRead
+    WorkflowReadV2(**workflow_imported)
+
+    # Export workflow
+    workflow_id = workflow_imported["id"]
+    res = await client.get(
+        f"{PREFIX}/project/{prj.id}/workflow/{workflow_id}/export/"
+    )
+    debug(res)
+    debug(res.status_code)
+    workflow_exported = res.json()
+    debug(workflow_exported)
+    assert "id" not in workflow_exported
+    assert "project_id" not in workflow_exported
+    for wftask in workflow_exported["task_list"]:
+        assert "id" not in wftask
+        assert "task_id" not in wftask
+        assert "task_legacy_id" not in wftask
+        assert "workflow_id" not in wftask
+        if wftask["is_legacy_task"]:
+            assert "id" not in wftask["task_legacy"]
+        else:
+            assert "id" not in wftask["task"]
+    assert res.status_code == 200
+
+    # Check that the exported workflow is an extension of the one in the
+    # original JSON file
+
+    wf_old = WorkflowExportV2(**workflow_from_file).dict()
+    wf_new = WorkflowExportV2(**workflow_exported).dict()
+    assert len(wf_old["task_list"]) == len(wf_new["task_list"])
+    for task_old, task_new in zip(wf_old["task_list"], wf_new["task_list"]):
+        assert task_old.keys() <= task_new.keys()
+        if "meta" in task_old:  # then "meta" is also in task_new
+            assert task_old["meta"].items() <= task_new["meta"].items()
+            task_old.pop("meta")
+            task_new.pop("meta")
+        elif "meta" in task_new:  # but not in task_old
+            task_new.pop("meta")
+        debug(task_old, task_new)
+        assert task_old == task_new
+
+
 # FIXME
 # Missing V2 for:
-# - test_import_export_workflow
 # - test_export_workflow_log
 # - test_import_export_workflow_fail

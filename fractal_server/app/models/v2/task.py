@@ -15,10 +15,8 @@ class TaskV2(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
 
-    type: str  # Literal[“parallel”, “non_parallel”, “compound”]
-
-    command_pre: Optional[str] = None
-    command: str
+    command_non_parallel: Optional[str] = None
+    command_parallel: Optional[str] = None
     source: str = Field(unique=True)
 
     meta: Optional[dict[str, Any]] = Field(sa_column=Column(JSON), default={})
