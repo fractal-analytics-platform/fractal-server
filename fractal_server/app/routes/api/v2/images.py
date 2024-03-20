@@ -45,7 +45,6 @@ class ImageQuery(BaseModel):
 
 @router.post(
     "/project/{project_id}/dataset/{dataset_id}/images/",
-    response_model=ImagePage,
     status_code=status.HTTP_201_CREATED,
 )
 async def post_new_image(
