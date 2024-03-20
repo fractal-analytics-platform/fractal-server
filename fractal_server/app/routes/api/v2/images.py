@@ -27,7 +27,7 @@ class ImagePage(BaseModel):
     page_size: int
     current_page: int
 
-    attributes: dict[str, Any]
+    attributes: dict[str, list[Any]]
     flags: list[str]
 
     images: list[SingleImage]
