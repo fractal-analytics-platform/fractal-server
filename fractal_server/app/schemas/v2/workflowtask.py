@@ -3,6 +3,7 @@ from typing import Any
 from typing import Optional
 
 from pydantic import BaseModel
+from pydantic import Field
 from pydantic import validator
 
 from .._validators import valint
@@ -43,7 +44,6 @@ class WorkflowTaskCreateV2(BaseModel):
     input_flags: Optional[dict[str, bool]]
 
     is_legacy_task: bool = False
-    task_id: int
 
     # Validators
 
@@ -102,8 +102,8 @@ class WorkflowTaskImportV2(BaseModel):
     meta: Optional[dict[str, Any]] = None
     args: Optional[dict[str, Any]] = None
 
-    input_attributes: dict[str, Any]
-    input_flags: dict[str, bool]
+    input_attributes: Optional[dict[str, Any]] = None
+    input_flags: Optional[dict[str, bool]] = None
 
     is_legacy_task: bool = False
     task: Optional[TaskImportV2] = None
@@ -119,8 +119,8 @@ class WorkflowTaskExportV2(BaseModel):
 
     meta: Optional[dict[str, Any]] = None
     args: Optional[dict[str, Any]] = None
-    input_attributes: dict[str, Any]
-    input_flags: dict[str, bool]
+    input_attributes: dict[str, Any] = Field(default_factory=dict)
+    input_flags: dict[str, bool] = Field(default_factory=dict)
 
     is_legacy_task: bool = False
     task: Optional[TaskExportV2]

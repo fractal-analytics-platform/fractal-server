@@ -31,6 +31,7 @@ router = APIRouter()
 async def create_workflowtask(
     project_id: int,
     workflow_id: int,
+    task_id: int,
     new_task: WorkflowTaskCreateV2,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
@@ -45,15 +46,15 @@ async def create_workflowtask(
 
     # Check that task exists
     if new_task.is_legacy_task is True:
-        task = await db.get(Task, new_task.task_id)
+        task = await db.get(Task, task_id)
     else:
-        task = await db.get(TaskV2, new_task.task_id)
+        task = await db.get(TaskV2, task_id)
 
     if not task:
         if new_task.is_legacy_task:
-            error = f"Task {new_task.task_id} not found."
+            error = f"Task {task_id} not found."
         else:
-            error = f"TaskV2 {new_task.task_id} not found."
+            error = f"TaskV2 {task_id} not found."
 
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=error
@@ -63,7 +64,7 @@ async def create_workflowtask(
         workflow_task = await _workflow_insert_task(
             workflow_id=workflow.id,
             is_legacy_task=new_task.is_legacy_task,
-            task_id=new_task.task_id,
+            task_id=task_id,
             order=new_task.order,
             meta=new_task.meta,
             args=new_task.args,
