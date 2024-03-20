@@ -27,13 +27,16 @@ class ImagePage(BaseModel):
     page_size: int
     current_page: int
 
-    attributes: list[str]
+    attributes: dict[str, Any]
+    flags: list[str]
+
     images: list[SingleImage]
 
 
 class ImageQuery(BaseModel):
     path: Optional[str]
     attributes: Optional[dict[str, Any]]
+    flags: Optional[dict[str, bool]]
 
     _attributes = validator("attributes", allow_reuse=True)(
         val_scalar_dict("attributes")
@@ -48,6 +51,7 @@ class ImageQuery(BaseModel):
 async def query_dataset_images(
     project_id: int,
     dataset_id: int,
+    use_dataset_filters: bool = False,  # query param
     page: int = 1,  # query param
     page_size: Optional[int] = None,  # query param
     query: Optional[ImageQuery] = None,  # body
@@ -64,15 +68,28 @@ async def query_dataset_images(
     output = await _get_dataset_check_owner(
         project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
     )
-    images = output["dataset"].images
-    attributes = list(
-        set(
-            [
-                attribute
-                for image in images
-                for attribute in image["attributes"].keys()
-            ]
-        )
+    dataset = output["dataset"]
+    images = dataset.images
+
+    if use_dataset_filters is True:
+        images = [
+            image
+            for image in images
+            if SingleImage(**image).match_filter(
+                attribute_filters=dataset.attribute_filters,
+                flag_filters=dataset.flag_filters,
+            )
+        ]
+
+    attributes = {}
+    for image in images:
+        for k, v in image["attributes"].items():
+            attributes.setdefault(k, []).append(v)
+        for k, v in attributes.items():
+            attributes[k] = list(set(v))
+
+    flags = list(
+        set(flag for image in images for flag in image["flags"].keys())
     )
 
     if query is not None:
@@ -87,11 +104,14 @@ async def query_dataset_images(
             else:
                 images = [image]
 
-        if query.attributes is not None:
+        if (query.attributes is not None) or (query.flags is not None):
             images = [
                 image
                 for image in images
-                if SingleImage(**image).match_filter(query.attributes)
+                if SingleImage(**image).match_filter(
+                    attribute_filters=query.attributes,
+                    flag_filters=query.flags,
+                )
             ]
 
     total_count = len(images)
@@ -113,6 +133,7 @@ async def query_dataset_images(
         current_page=page,
         page_size=page_size,
         attributes=attributes,
+        flags=flags,
         images=images,
     )
 

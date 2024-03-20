@@ -1,5 +1,3 @@
-from devtools import debug
-
 from fractal_server.images import SingleImage
 
 PREFIX = "api/v2"
@@ -11,11 +9,30 @@ def n_images(n: int) -> list[SingleImage]:
             path=f"/{i}",
             attributes={
                 str(i): i,
-                "flag": i % 2,
+                "string_attribute": str(i % 2),
+                "int_attribute": i % 2,
+            },
+            flags={
+                str(i): bool(i % 2),
+                "flag": bool(i % 2 + 1),
             },
         )
         for i in range(n)
     ]
+
+
+def assert_expected_attributes_and_flags(res, tot_images: int):
+    for attribute, values in res.json()["attributes"].items():
+        if attribute == "string_attribute":
+            assert set(values) == set(["0", "1"])
+        elif attribute == "int_attribute":
+            assert set(values) == set([0, 1])
+        else:
+            assert values == [int(values[0])]
+
+    assert set(res.json()["flags"]) == set(
+        [str(i) for i in range(tot_images)] + ["flag"]
+    )
 
 
 async def test_query_images(
@@ -34,7 +51,7 @@ async def test_query_images(
     res = await client.get(
         f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/",
     )
-    debug(res.json())
+
     assert "images" not in res.json()
 
     # query all images
@@ -45,9 +62,7 @@ async def test_query_images(
     assert res.json()["total_count"] == N
     assert res.json()["current_page"] == 1
     assert res.json()["page_size"] == N
-    assert set(res.json()["attributes"]) == set(
-        [str(i) for i in range(N)] + ["flag"]
-    )
+    assert_expected_attributes_and_flags(res, N)
 
     # use `page_size`
     page_size = 50
@@ -60,9 +75,7 @@ async def test_query_images(
     assert res.json()["current_page"] == 1
     assert res.json()["page_size"] == 50
     assert len(res.json()["images"]) == 50
-    assert set(res.json()["attributes"]) == set(
-        [str(i) for i in range(N)] + ["flag"]
-    )
+    assert_expected_attributes_and_flags(res, N)
 
     # use `page_size` too large
     res = await client.post(
@@ -74,9 +87,7 @@ async def test_query_images(
     assert res.json()["current_page"] == 1
     assert res.json()["page_size"] == N + 1
     assert len(res.json()["images"]) == N
-    assert set(res.json()["attributes"]) == set(
-        [str(i) for i in range(N)] + ["flag"]
-    )
+    assert_expected_attributes_and_flags(res, N)
 
     # use `page_size` and `page`
     last_page = (N // page_size) + 1
@@ -89,9 +100,7 @@ async def test_query_images(
     assert res.json()["current_page"] == last_page
     assert res.json()["page_size"] == page_size
     assert len(res.json()["images"]) == N % page_size
-    assert set(res.json()["attributes"]) == set(
-        [str(i) for i in range(N)] + ["flag"]
-    )
+    assert_expected_attributes_and_flags(res, N)
 
     # use `page` too large
     res = await client.post(
@@ -103,9 +112,7 @@ async def test_query_images(
     assert res.json()["current_page"] == last_page + 1
     assert res.json()["page_size"] == page_size
     assert len(res.json()["images"]) == 0
-    assert set(res.json()["attributes"]) == set(
-        [str(i) for i in range(N)] + ["flag"]
-    )
+    assert_expected_attributes_and_flags(res, N)
 
     # use `query.path`
     res = await client.post(
@@ -117,9 +124,7 @@ async def test_query_images(
     assert res.json()["current_page"] == 1
     assert res.json()["page_size"] == 1
     assert len(res.json()["images"]) == 1
-    assert set(res.json()["attributes"]) == set(
-        [str(i) for i in range(N)] + ["flag"]
-    )
+    assert_expected_attributes_and_flags(res, N)
 
     # use `query.attributes`
     res = await client.post(
@@ -133,9 +138,8 @@ async def test_query_images(
     assert res.json()["current_page"] == 1
     assert res.json()["page_size"] == res.json()["total_count"]
     assert len(res.json()["images"]) == res.json()["total_count"]
-    assert set(res.json()["attributes"]) == set(
-        [str(i) for i in range(N)] + ["flag"]
-    )
+    assert_expected_attributes_and_flags(res, N)
+
     res = await client.post(
         f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/query/"
         "?page_size=1000",
