@@ -86,10 +86,12 @@ class TaskUpdateV2(BaseModel):
 class TaskImportV2(BaseModel):
 
     source: str
+    # FIXME What goes here?
     _source = validator("source", allow_reuse=True)(valstr("source"))
 
 
 class TaskExportV2(BaseModel):
 
     source: str
+    # FIXME What goes here?
     _source = validator("source", allow_reuse=True)(valstr("source"))

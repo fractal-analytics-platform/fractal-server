@@ -6,6 +6,8 @@ from pydantic import BaseModel
 from pydantic import validator
 
 from .._validators import valint
+from ..v1.task import TaskExport
+from ..v1.task import TaskImport
 from ..v1.task import TaskRead
 from .task import TaskExportV2
 from .task import TaskImportV2
@@ -97,11 +99,16 @@ class WorkflowTaskUpdateV2(BaseModel):
 
 class WorkflowTaskImportV2(BaseModel):
 
-    task: TaskImportV2
     meta: Optional[dict[str, Any]] = None
     args: Optional[dict[str, Any]] = None
+
     input_attributes: dict[str, Any]
     input_flags: dict[str, bool]
+
+    is_legacy_task: bool = False
+    task: Optional[TaskImportV2] = None
+    task_legacy: Optional[TaskImport] = None
+
     # Validators
     _input_attributes = validator("input_attributes", allow_reuse=True)(
         val_scalar_dict("input_attributes")
@@ -110,11 +117,15 @@ class WorkflowTaskImportV2(BaseModel):
 
 class WorkflowTaskExportV2(BaseModel):
 
-    task: TaskExportV2
     meta: Optional[dict[str, Any]] = None
     args: Optional[dict[str, Any]] = None
     input_attributes: dict[str, Any]
     input_flags: dict[str, bool]
+
+    is_legacy_task: bool = False
+    task: Optional[TaskExportV2]
+    task_legacy: Optional[TaskExport]
+
     # Validators
     _input_attributes = validator("input_attributes", allow_reuse=True)(
         val_scalar_dict("input_attributes")
