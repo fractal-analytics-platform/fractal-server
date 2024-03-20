@@ -169,7 +169,9 @@ def execute_tasks_v2(
             added_images[ind] = updated_image
 
         # Deduplicate new image list
-        added_images = deduplicate_list(added_images)
+        added_images = deduplicate_list(
+            added_images, PydanticModel=SingleImage
+        )
 
         # Add new images to Dataset.images
         tmp_dataset.images.extend(added_images)
