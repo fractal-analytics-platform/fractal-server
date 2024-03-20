@@ -44,6 +44,46 @@ class ImageQuery(BaseModel):
 
 
 @router.post(
+    "/project/{project_id}/dataset/{dataset_id}/images/",
+    response_model=ImagePage,
+    status_code=status.HTTP_201_CREATED,
+)
+async def post_new_image(
+    project_id: int,
+    dataset_id: int,
+    new_image: SingleImage,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> Response:
+
+    output = await _get_dataset_check_owner(
+        project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
+    )
+    dataset = output["dataset"]
+
+    image_with_same_path = next(
+        (image for image in dataset.images if image["path"] == new_image.path),
+        None,
+    )
+    if image_with_same_path is not None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Image with path {new_image.path} is already in this "
+                f"Dataset: {image_with_same_path}",
+            ),
+        )
+
+    dataset.images.append(new_image.dict())
+    flag_modified(dataset, "images")
+
+    await db.merge(dataset)
+    await db.commit()
+
+    return Response(status_code=status.HTTP_201_CREATED)
+
+
+@router.post(
     "/project/{project_id}/dataset/{dataset_id}/images/query/",
     response_model=ImagePage,
     status_code=status.HTTP_200_OK,
