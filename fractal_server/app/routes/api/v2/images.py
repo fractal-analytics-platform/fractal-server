@@ -60,16 +60,12 @@ async def post_new_image(
     )
     dataset = output["dataset"]
 
-    image_with_same_path = next(
-        (image for image in dataset.images if image["path"] == new_image.path),
-        None,
-    )
-    if image_with_same_path is not None:
+    if new_image.path in dataset.image_paths:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
-                f"Image with path {new_image.path} is already in this "
-                f"Dataset: {image_with_same_path}",
+                f"Image with path '{new_image.path}' "
+                f"already in DatasetV2 {dataset_id}",
             ),
         )
 
