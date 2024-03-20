@@ -1,15 +1,11 @@
 from copy import copy
 from typing import Any
 from typing import Optional
-from typing import TypeVar
 from typing import Union
 
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import validator
-
-
-T = TypeVar("T")
 
 
 def val_scalar_dict(attribute: str):
@@ -82,18 +78,6 @@ def find_image_by_path(
         return copy(image)
     except StopIteration:
         return None
-
-
-def deduplicate_list(this_list: list[T]) -> list[T]:
-    """
-    Custom replacement for `set(this_list)`, when items are of a non-hashable
-    type T (e.g. dict or SingleImage).
-    """
-    new_list = []
-    for this_item in this_list:
-        if this_item not in new_list:
-            new_list.append(this_item)
-    return new_list
 
 
 def _filter_image_list(
