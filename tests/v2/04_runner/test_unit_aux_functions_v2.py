@@ -1,4 +1,4 @@
-from fractal_server.images import deduplicate_list
+from fractal_server.app.runner.v2.runner_functions import deduplicate_list
 
 
 def test_deduplicate_list_of_dicts():

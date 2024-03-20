@@ -1,11 +1,12 @@
 from concurrent.futures import ThreadPoolExecutor
 from copy import copy
 from typing import Any
+from typing import TypeVar
 
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic.main import ModelMetaclass
 
-from ....images import deduplicate_list
 from ....images import SingleImage
 from .models import DictStrAny
 from .models import Task
@@ -53,6 +54,9 @@ class InitArgsModel(BaseModel):
 
     path: str
     init_args: DictStrAny = Field(default_factory=dict)
+
+
+T = TypeVar("T", SingleImage, InitArgsModel)
 
 
 class InitTaskOutput(BaseModel):
@@ -166,6 +170,22 @@ def _run_parallel_task(
     return merged_output
 
 
+def deduplicate_list(
+    this_list: list[T], PydanticModel: ModelMetaclass
+) -> list[T]:
+    """
+    Custom replacement for `set(this_list)`, when items are Pydantic-model
+    instances and then non-hashable (e.g. SingleImage or InitArgsModel).
+    """
+    this_list_dict = [this_item.dict() for this_item in this_list]
+    new_list_dict = []
+    for this_dict in this_list_dict:
+        if this_dict not in new_list_dict:
+            new_list_dict.append(this_dict)
+    new_list = [PydanticModel(**this_dict) for this_dict in this_list_dict]
+    return new_list
+
+
 def _run_compound_task(
     *,
     filtered_images: list[SingleImage],
@@ -189,6 +209,7 @@ def _run_compound_task(
 
     # 3/B: parallel part of a compound task
     parallelization_list = init_task_output.parallelization_list
+    parallelization_list = deduplicate_list(parallelization_list)
     list_function_kwargs = []
     for ind, parallelization_item in enumerate(parallelization_list):
         list_function_kwargs.append(
@@ -198,7 +219,6 @@ def _run_compound_task(
                 **wftask.args_parallel,
             )
         )
-    list_function_kwargs = deduplicate_list(list_function_kwargs)
 
     if len(list_function_kwargs) > MAX_PARALLELIZATION_LIST_SIZE:
         raise ValueError(
