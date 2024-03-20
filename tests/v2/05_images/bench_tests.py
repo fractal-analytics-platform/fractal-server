@@ -1,5 +1,4 @@
 from functools import wraps
-from random import randrange
 from time import perf_counter
 
 import pytest
@@ -58,14 +57,22 @@ def test_filter_image_list(
 @pytest.mark.parametrize(
     "this_list",
     [
-        [SingleImage(path=f"/tmp_{randrange(1,3,1)}") for i in range(10)],
-        [SingleImage(path=f"/tmp_{randrange(1,10,1)}") for i in range(100)],
-        [SingleImage(path=f"/tmp_{randrange(1,20,1)}") for i in range(1000)],
-        [SingleImage(path=f"/tmp_{randrange(1,50,1)}") for i in range(10000)],
         [
-            SingleImage(path=f"/tmp_{randrange(1,100,1)}")
-            for i in range(100000)
+            SingleImage(path=f"/tmp_{ind_image}")
+            for ind_time in range(1)
+            for ind_image in range(20)
         ],
+        [
+            SingleImage(path=f"/tmp_{ind_image}")
+            for ind_time in range(1)
+            for ind_image in range(400)
+        ],
+        [SingleImage(path=f"/tmp_{ind_image}") for ind_image in range(1000)],
+        # [
+        #     SingleImage(path=f"/tmp_{ind_image}")
+        #     for ind_time in range(25)
+        #     for ind_image in range(400)
+        # ],
     ],
 )
 @benchmark
@@ -74,4 +81,4 @@ def test_deduplicate_list(
 ):
     new_list = deduplicate_list(this_list=this_list)
 
-    debug(new_list)
+    debug(len(this_list), len(new_list))
