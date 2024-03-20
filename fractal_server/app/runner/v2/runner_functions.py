@@ -182,7 +182,7 @@ def deduplicate_list(
     for this_dict in this_list_dict:
         if this_dict not in new_list_dict:
             new_list_dict.append(this_dict)
-    new_list = [PydanticModel(**this_dict) for this_dict in this_list_dict]
+    new_list = [PydanticModel(**this_dict) for this_dict in new_list_dict]
     return new_list
 
 
