@@ -71,6 +71,16 @@ async def query_dataset_images(
     dataset = output["dataset"]
     images = dataset.images
 
+    if use_dataset_filters is True:
+        images = [
+            image
+            for image in images
+            if SingleImage(**image).match_filter(
+                attribute_filters=dataset.attribute_filters,
+                flag_filters=dataset.flag_filters,
+            )
+        ]
+
     attributes = {}
     for image in images:
         for k, v in image["attributes"].items():
@@ -81,16 +91,6 @@ async def query_dataset_images(
     flags = list(
         set(flag for image in images for flag in image["flags"].keys())
     )
-
-    if use_dataset_filters is True:
-        images = [
-            image
-            for image in images
-            if SingleImage(**image).match_filter(
-                attribute_filters=dataset.attribute_filters,
-                flag_filters=dataset.flag_filters,
-            )
-        ]
 
     if query is not None:
 
