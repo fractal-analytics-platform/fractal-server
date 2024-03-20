@@ -1,3 +1,5 @@
+from devtools import debug
+
 from fractal_server.images import SingleImage
 
 PREFIX = "api/v2"
@@ -198,3 +200,53 @@ async def test_delete_images(
             f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/query/"
         )
         assert res.json()["total_count"] == len(IMAGES) - i - 1
+
+
+async def test_post_new_image(
+    MockCurrentUser,
+    client,
+    project_factory_v2,
+    dataset_factory_v2,
+):
+    N = 10
+    images = n_images(N)
+
+    new_image = SingleImage(
+        path="/new_path",
+        attributes={"new_attribute": "xyz"},
+        flags={"new_flag": True},
+    )
+    invalid_new_image = SingleImage(path=images[-1].path)
+    async with MockCurrentUser() as user:
+        project = await project_factory_v2(user)
+
+    dataset = await dataset_factory_v2(project_id=project.id, images=images)
+
+    res = await client.post(
+        f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/query/"
+    )
+    assert res.json()["total_count"] == N
+    assert "new_attribute" not in res.json()["attributes"].keys()
+    assert "new_flag" not in res.json()["flags"]
+
+    # add ivalid new image
+    res = await client.post(
+        f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/",
+        json=invalid_new_image.dict(),
+    )
+    assert res.status_code == 422
+    debug(res.json())
+    # add new image
+    res = await client.post(
+        f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/",
+        json=new_image.dict(),
+    )
+    assert res.status_code == 201
+
+    # assert changes
+    res = await client.post(
+        f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/query/"
+    )
+    assert res.json()["total_count"] == N + 1
+    assert "new_attribute" in res.json()["attributes"].keys()
+    assert "new_flag" in res.json()["flags"]
