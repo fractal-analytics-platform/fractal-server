@@ -209,7 +209,9 @@ def _run_compound_task(
 
     # 3/B: parallel part of a compound task
     parallelization_list = init_task_output.parallelization_list
-    parallelization_list = deduplicate_list(parallelization_list)
+    parallelization_list = deduplicate_list(
+        parallelization_list, PydanticModel=InitArgsModel
+    )
     list_function_kwargs = []
     for ind, parallelization_item in enumerate(parallelization_list):
         list_function_kwargs.append(
