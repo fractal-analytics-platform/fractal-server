@@ -44,8 +44,6 @@ class SingleImage(BaseModel):
         attribute_filters: Optional[dict[str, Any]] = None,
         flag_filters: Optional[dict[str, bool]] = None,
     ):
-        if attribute_filters is None and flag_filters is None:
-            return True
 
         if flag_filters is not None:
             for key, value in flag_filters.items():
