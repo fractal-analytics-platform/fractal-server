@@ -51,6 +51,7 @@ class ImageQuery(BaseModel):
 async def query_dataset_images(
     project_id: int,
     dataset_id: int,
+    use_dataset_filters: bool = False,  # query param
     page: int = 1,  # query param
     page_size: Optional[int] = None,  # query param
     query: Optional[ImageQuery] = None,  # body
@@ -67,7 +68,8 @@ async def query_dataset_images(
     output = await _get_dataset_check_owner(
         project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
     )
-    images = output["dataset"].images
+    dataset = output["dataset"]
+    images = dataset.images
 
     attributes = {}
     for image in images:
@@ -79,6 +81,16 @@ async def query_dataset_images(
     flags = list(
         set(flag for image in images for flag in image["flags"].keys())
     )
+
+    if use_dataset_filters is True:
+        images = [
+            image
+            for image in images
+            if SingleImage(**image).match_filter(
+                attribute_filters=dataset.attribute_filters,
+                flag_filters=dataset.flag_filters,
+            )
+        ]
 
     if query is not None:
 
