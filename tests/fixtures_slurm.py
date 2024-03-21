@@ -64,7 +64,7 @@ def patched_run_squeue(monkeypatch):
     marked via # CHANGED comments.
     """
 
-    import fractal_server.app.runner._slurm._check_jobs_status
+    import fractal_server.app.runner.executors.slurm._check_jobs_status
     from subprocess import run
 
     def patched_run_squeue(job_ids):
@@ -90,7 +90,7 @@ def patched_run_squeue(monkeypatch):
         return res
 
     monkeypatch.setattr(
-        fractal_server.app.runner._slurm._check_jobs_status,
+        fractal_server.app.runner.executors.slurm._check_jobs_status,
         "run_squeue",
         patched_run_squeue,
     )
