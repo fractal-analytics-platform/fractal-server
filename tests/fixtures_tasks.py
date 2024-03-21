@@ -126,7 +126,7 @@ async def dummy_task_package_invalid_manifest(
     MANIFEST_PATH = SOURCE_PATH / "__FRACTAL_MANIFEST__.json"
     with MANIFEST_PATH.open("r") as f:
         manifest = json.load(f)
-    manifest["manifest_version"] = 2
+    manifest["manifest_version"] = 99999
     with MANIFEST_PATH.open("w") as f:
         json.dump(manifest, f)
 
