@@ -60,9 +60,9 @@ def find_image_by_path(
     *,
     images: list[SingleImage],
     path: str,
-) -> Optional[SingleImage]:
+) -> Optional[dict[str, Union[int, SingleImage]]]:
     """
-    Return a copy of the image with a given path, from a list.
+    Return a copy of the image with a given path and its positional index.
 
     Args:
         images: List of images.
@@ -71,11 +71,12 @@ def find_image_by_path(
     Returns:
         The first image from `images` which has path equal to `path`.
     """
+    image_paths = [img.path for img in images]
     try:
-        image = next(image for image in images if image.path == path)
-        return copy(image)
-    except StopIteration:
+        ind = image_paths.index(path)
+    except ValueError:
         return None
+    return dict(image=copy(images[ind]), index=ind)
 
 
 def _filter_image_list(
