@@ -207,11 +207,8 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
         "create_ome_zarr_compound",
         "illumination_correction",
     ]
-    assert dataset.attribute_filters == {
-        "plate": "my_plate.zarr",
-    }
+    assert dataset.attribute_filters == {}
     assert dataset.flag_filters == {
-        "has_z": True,
         "illumination_correction": True,
     }
     assert dataset.image_paths == [
@@ -286,9 +283,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
         "illumination_correction",
         "MIP_compound",
     ]
-    assert dataset.attribute_filters == {
-        "plate": "my_plate_mip.zarr",
-    }
+    assert dataset.attribute_filters == {}
     assert dataset.flag_filters == {
         "has_z": False,
         "illumination_correction": True,
@@ -327,9 +322,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
         },
     }
 
-    assert dataset.attribute_filters == {
-        "plate": "my_plate_mip.zarr",
-    }
+    assert dataset.attribute_filters == {}
     assert dataset.flag_filters == {
         "has_z": False,
         "illumination_correction": True,
