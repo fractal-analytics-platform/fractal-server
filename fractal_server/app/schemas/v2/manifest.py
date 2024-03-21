@@ -92,6 +92,6 @@ class ManifestV2(BaseModel):
         return values
 
     @validator("manifest_version")
-    def manifest_version_1(cls, value):
+    def manifest_version_2(cls, value):
         if value != "2":
             raise ValueError(f"Wrong manifest version (given {value})")
