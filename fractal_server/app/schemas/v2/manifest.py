@@ -39,7 +39,8 @@ class TaskManifestV2(BaseModel):
     """
 
     name: str
-    executable: str
+    exectuable_non_parallel: Optional[str] = None
+    exectuable_parallel: Optional[str] = None
     input_flags: dict[str, bool] = Field(default_factory=dict)
     output_flags: dict[str, bool] = Field(default_factory=dict)
     meta: dict[str, Any] = Field(default_factory=dict)
@@ -92,5 +93,5 @@ class ManifestV2(BaseModel):
 
     @validator("manifest_version")
     def manifest_version_1(cls, value):
-        if value != "1":
+        if value != "2":
             raise ValueError(f"Wrong manifest version (given {value})")
