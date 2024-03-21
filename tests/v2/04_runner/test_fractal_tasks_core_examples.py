@@ -57,8 +57,8 @@ def test_fractal_demos_01(tmp_path: Path, executor):
     )
 
     assert dataset.history == ["create_ome_zarr_compound"]
-    assert dataset.attribute_filters == {"plate": "my_plate.zarr"}
-    assert dataset.flag_filters == {"has_z": True}
+    assert dataset.attribute_filters == {}
+    assert dataset.flag_filters == {}
     _assert_image_data_exist(dataset.images)
     debug(dataset)
 
@@ -77,9 +77,8 @@ def test_fractal_demos_01(tmp_path: Path, executor):
         "create_ome_zarr_compound",
         "illumination_correction",
     ]
-    assert dataset.attribute_filters == {"plate": "my_plate.zarr"}
+    assert dataset.attribute_filters == {}
     assert dataset.flag_filters == {
-        "has_z": True,
         "illumination_correction": True,
     }
     assert set(dataset.image_paths) == {
@@ -89,7 +88,7 @@ def test_fractal_demos_01(tmp_path: Path, executor):
 
     img = find_image_by_path(
         path=f"{zarr_dir}/my_plate.zarr/A/01/0", images=dataset.images
-    )
+    )["image"]
     assert img.dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
         "attributes": {
@@ -124,14 +123,14 @@ def test_fractal_demos_01(tmp_path: Path, executor):
         "MIP_compound",
     ]
 
-    assert dataset.attribute_filters == {"plate": "my_plate_mip.zarr"}
+    assert dataset.attribute_filters == {}
     assert dataset.flag_filters == {
-        "has_z": False,
         "illumination_correction": True,
+        "has_z": False,
     }
     img = find_image_by_path(
         path=f"{zarr_dir}/my_plate_mip.zarr/A/01/0", images=dataset.images
-    )
+    )["image"]
     assert img.dict() == {
         "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
         "origin": f"{zarr_dir}/my_plate.zarr/A/01/0",
