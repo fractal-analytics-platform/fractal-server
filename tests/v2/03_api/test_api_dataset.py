@@ -271,7 +271,7 @@ async def test_delete_dataset_cascade_jobs(
         workflow = await workflow_factory_v2(project_id=project.id)
         task = await task_factory_v2(name="task", source="source")
         await _workflow_insert_task(
-            workflow_id=workflow.id, task_id=task.id, is_v2=True, db=db
+            workflow_id=workflow.id, task_id=task.id, db=db
         )
         dataset = await dataset_factory_v2(project_id=project.id)
 
