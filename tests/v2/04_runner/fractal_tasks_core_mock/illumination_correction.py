@@ -105,9 +105,7 @@ def illumination_correction_B(
     if path == raw_path:
         out = dict(edited_image_paths=[path])
     else:
-        out = dict(
-            added_images=[dict(path=path, attributes=dict(origin=raw_path))]
-        )
+        out = dict(added_images=[dict(path=path, origin=raw_path)])
         print(f"[illumination_correction_B] {path=}")
 
     with (Path(path) / "data").open("a") as f:

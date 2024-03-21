@@ -3,7 +3,6 @@ from copy import copy
 from copy import deepcopy
 
 from ....images import _filter_image_list
-from ....images import deduplicate_list
 from ....images import find_image_by_path
 from ....images import SingleImage
 from .models import Dataset
@@ -12,6 +11,7 @@ from .models import WorkflowTask
 from .runner_functions import _run_compound_task
 from .runner_functions import _run_non_parallel_task
 from .runner_functions import _run_parallel_task
+from fractal_server.app.runner.v2.runner_functions import deduplicate_list
 
 
 # FIXME: define RESERVED_ARGUMENTS = [", ...]
@@ -169,7 +169,9 @@ def execute_tasks_v2(
             added_images[ind] = updated_image
 
         # Deduplicate new image list
-        added_images = deduplicate_list(added_images)
+        added_images = deduplicate_list(
+            added_images, PydanticModel=SingleImage
+        )
 
         # Add new images to Dataset.images
         tmp_dataset.images.extend(added_images)
