@@ -91,40 +91,30 @@ def merge_outputs(
     task_outputs: list[TaskOutput],
 ) -> TaskOutput:
 
-    final_added_images = []
-    final_edited_image_paths = []
-    final_removed_image_paths = []
+    final_image_list_updates = []
+    final_image_list_removals = []
 
     for ind, task_output in enumerate(task_outputs):
 
-        final_added_images.extend(task_output.added_images)
-        final_edited_image_paths.extend(task_output.edited_image_paths)
-        final_removed_image_paths.extend(task_output.removed_image_paths)
+        final_image_list_updates.extend(task_output.image_list_updates)
+        final_image_list_removals.extend(task_output.image_list_removals)
 
-        # Check that all attribute_filters are the same
-        current_new_attributes = task_output.attributes
+        # Check that all filters are the same
+        current_new_filters = task_output.filters
         if ind == 0:
-            last_new_attributes = copy(current_new_attributes)
-        if current_new_attributes != last_new_attributes:
-            raise ValueError(
-                f"{current_new_attributes=} but " f"{last_new_attributes=}"
-            )
-        last_new_attributes = copy(current_new_attributes)
+            last_new_filters = copy(current_new_filters)
+        if current_new_filters != last_new_filters:
+            raise ValueError(f"{current_new_filters=} but {last_new_filters=}")
+        last_new_filters = copy(current_new_filters)
 
-        # Check that all flag_filters are the same
-        current_new_flags = task_output.flags
-        if ind == 0:
-            last_new_flags = copy(current_new_flags)
-        if current_new_flags != last_new_flags:
-            raise ValueError(f"{current_new_flags=} but {last_new_flags=}")
-        last_new_flags = copy(current_new_flags)
+    final_image_list_updates = deduplicate_list(
+        final_image_list_updates, PydanticModel=SingleImage
+    )
 
     final_output = TaskOutput(
-        added_images=final_added_images,
-        edited_image_paths=final_edited_image_paths,
-        removed_image_paths=final_removed_image_paths,
-        attributes=last_new_attributes,
-        flags=last_new_flags,
+        image_list_updates=final_image_list_updates,
+        image_list_removals=final_image_list_removals,
+        filters=last_new_filters,
     )
 
     return final_output

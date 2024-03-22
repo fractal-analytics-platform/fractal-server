@@ -2,17 +2,17 @@ from concurrent.futures import ThreadPoolExecutor
 from copy import copy
 from copy import deepcopy
 
-from ....images import _filter_image_list
-from ....images import find_image_by_path
 from ....images import SingleImage
+from ....images.tools import _filter_image_list
+from ....images.tools import find_image_by_path
+from ....images.tools import match_filter
+from .filters import Filters
 from .models import Dataset
 from .models import DictStrAny
 from .models import WorkflowTask
 from .runner_functions import _run_compound_task
 from .runner_functions import _run_non_parallel_task
 from .runner_functions import _run_parallel_task
-from fractal_server.app.runner.v2.runner_functions import deduplicate_list
-
 
 # FIXME: define RESERVED_ARGUMENTS = [", ...]
 
@@ -21,11 +21,11 @@ def _apply_attributes_to_image(
     *,
     image: SingleImage,
     new_attributes: DictStrAny,
-    new_flags: DictStrAny,
+    new_types: DictStrAny,
 ) -> SingleImage:
     updated_image = copy(image)
     updated_image.attributes.update(new_attributes)
-    updated_image.flags.update(new_flags)
+    updated_image.types.update(new_types)
     return updated_image
 
 
@@ -34,31 +34,28 @@ def execute_tasks_v2(
     dataset: Dataset,
     executor: ThreadPoolExecutor,
 ) -> Dataset:
-
     tmp_dataset = deepcopy(dataset)
 
     for wftask in wf_task_list:
-
         task = wftask.task
 
         # PRE TASK EXECUTION
 
         # Get filtered images
-        flag_filters = copy(dataset.flag_filters)
-        flag_filters.update(wftask.flag_filters)
-        attribute_filters = copy(dataset.attribute_filters)
-        attribute_filters.update(wftask.attribute_filters)
+        type_filters = copy(dataset.filters.types)
+        type_filters.update(wftask.filters.types)
+        attribute_filters = copy(dataset.filters.attributes)
+        attribute_filters.update(wftask.filters.attributes)
         filtered_images = _filter_image_list(
             images=tmp_dataset.images,
-            flag_filters=flag_filters,
-            attribute_filters=attribute_filters,
+            filters=Filters(types=type_filters, attributes=attribute_filters),
         )
-        # Verify that filtered images comply with output flags
+        # Verify that filtered images comply with output types
         for image in filtered_images:
-            if not image.match_filter(flag_filters=task.input_flags):
+            if not match_filter(image, Filters(types=task.input_types)):
                 raise ValueError(
                     f"Filtered images include {image.dict()}, which does "
-                    f"not comply with {task.input_flags=}."
+                    f"not comply with {task.input_types=}."
                 )
 
         # ACTUAL TASK EXECUTION
@@ -94,98 +91,102 @@ def execute_tasks_v2(
 
         # POST TASK EXECUTION
 
-        # Construct up-to-date flag filters
-        # TODO extract as a helper function
-        if task.output_flags is not None:
-            flags_from_task_manifest = set(task.output_flags.keys())
-            flags_from_task_execution = set(current_task_output.flags.keys())
-            if not flags_from_task_manifest.isdisjoint(
-                flags_from_task_execution
-            ):
-                overlap = flags_from_task_manifest.intersection(
-                    flags_from_task_execution
-                )
-                raise ValueError(
-                    "Both task and task manifest did set the same"
-                    f"output flag. Overlapping keys: {overlap}."
-                )
-        new_flags = copy(tmp_dataset.flag_filters)
-        new_flags.update(current_task_output.flags)
-        if task.output_flags is not None:
-            new_flags.update(task.output_flags)
-
-        # Construct up-to-date attribute filters
-        new_attributes = copy(tmp_dataset.attribute_filters) or {}
-        new_attributes.update(current_task_output.attributes)
-
-        # Add filters to edited images, and update Dataset.images
-        for ind, image in enumerate(tmp_dataset.images):
-            if image.path in current_task_output.edited_image_paths:
-                updated_image = _apply_attributes_to_image(
-                    image=image,
-                    new_attributes=new_attributes,
-                    new_flags=new_flags,
-                )
-                tmp_dataset.images[ind] = updated_image
-
-        # Create clean added_images list
-        added_images = deepcopy(current_task_output.added_images)
-        for ind, image in enumerate(added_images):
-            # Check that image was not already present
+        # Update image list
+        current_task_output.check_paths_are_unique()
+        for image in current_task_output.image_list_updates:
+            # Edit existing image
             if image.path in tmp_dataset.image_paths:
-                raise ValueError("Found an overlap")
-
-            # Check that image.path is relative to zarr_dir
-            if not image.path.startswith(tmp_dataset.zarr_dir):
-                raise ValueError(
-                    f"'{tmp_dataset.zarr_dir}' is not a parent directory of "
-                    f"'{image.path}'"
-                )
-
-            # Propagate attributes and flags from `origin` to added_images
-            if image.origin is not None:
-                original_img = find_image_by_path(
-                    images=tmp_dataset.images,
-                    path=image.origin,
-                )
-                if original_img is not None:
-                    updated_attributes = copy(original_img.attributes)
-                    updated_attributes.update(image.attributes)
-                    updated_flags = copy(original_img.flags)
-                    updated_flags.update(image.flags)
-                    added_images[ind] = SingleImage(
-                        path=image.path,
-                        origin=image.origin,
-                        attributes=updated_attributes,
-                        flags=updated_flags,
+                if image.origin is not None and image.origin != image.path:
+                    raise ValueError(
+                        f"Trying to edit an image with {image.path=} "
+                        f"and {image.origin=}."
                     )
+                image_search = find_image_by_path(
+                    images=tmp_dataset.images,
+                    path=image.path,
+                )
+                if image_search is None:
+                    raise ValueError("This should have not happened")
+                original_img = image_search["image"]
+                original_index = image_search["index"]
+                updated_attributes = copy(original_img.attributes)
+                updated_types = copy(original_img.types)
 
-            # Apply new attributes/flags to image
-            updated_image = _apply_attributes_to_image(
-                image=added_images[ind],
-                new_attributes=new_attributes,
-                new_flags=new_flags,
-            )
-            added_images[ind] = updated_image
+                # Update image attributes/types with task output and manifest
+                updated_attributes.update(image.attributes)
+                updated_types.update(image.types)
+                updated_types.update(task.output_types)
 
-        # Deduplicate new image list
-        added_images = deduplicate_list(
-            added_images, PydanticModel=SingleImage
-        )
-
-        # Add new images to Dataset.images
-        tmp_dataset.images.extend(added_images)
+                # Update image in the dataset image list
+                tmp_dataset.images[
+                    original_index
+                ].attributes = updated_attributes
+                tmp_dataset.images[original_index].types = updated_types
+            # Add new image
+            else:
+                # Check that image.path is relative to zarr_dir
+                if not image.path.startswith(tmp_dataset.zarr_dir):
+                    raise ValueError(
+                        f"{tmp_dataset.zarr_dir} is not a parent directory of "
+                        f"{image.path}"
+                    )
+                # Propagate attributes and types from `origin` (if any)
+                updated_attributes = {}
+                updated_types = {}
+                if image.origin is not None:
+                    image_search = find_image_by_path(
+                        images=tmp_dataset.images,
+                        path=image.origin,
+                    )
+                    if image_search is not None:
+                        original_img = image_search["image"]
+                        updated_attributes = copy(original_img.attributes)
+                        updated_types = copy(original_img.types)
+                # Update image attributes/types with task output and manifest
+                updated_attributes.update(image.attributes)
+                updated_types.update(image.types)
+                updated_types.update(task.output_types)
+                new_image = SingleImage(
+                    path=image.path,
+                    origin=image.origin,
+                    attributes=updated_attributes,
+                    types=updated_types,
+                )
+                # Add image into the dataset image list
+                tmp_dataset.images.append(new_image)
 
         # Remove images from Dataset.images
         tmp_dataset.images = [
             image
             for image in tmp_dataset.images
-            if image.path not in current_task_output.removed_image_paths
+            if image.path not in current_task_output.image_list_removals
         ]
 
-        # Update Dataset.filters
-        tmp_dataset.attribute_filters = copy(new_attributes)
-        tmp_dataset.flag_filters = copy(new_flags)
+        # Update Dataset.filters.attributes:
+        # current + (task_output: not really, in current examples..)
+        if current_task_output.filters is not None:
+            tmp_dataset.filters.attributes.update(
+                current_task_output.filters.attributes
+            )
+
+        # Update Dataset.filters.types: current + (task_output + task_manifest)
+        types_from_manifest = task.output_types
+        if current_task_output.filters is not None:
+            types_from_task = current_task_output.filters.types
+        else:
+            types_from_task = {}
+        # Check that key sets are disjoint
+        set_types_from_manifest = set(types_from_manifest.keys())
+        set_types_from_task = set(types_from_task.keys())
+        if not set_types_from_manifest.isdisjoint(set_types_from_task):
+            overlap = set_types_from_manifest.intersection(set_types_from_task)
+            raise ValueError(
+                "Both task and task manifest did set the same"
+                f"output type. Overlapping keys: {overlap}."
+            )
+        # Update Dataset.filters.types
+        tmp_dataset.filters.types.update(types_from_manifest)
+        tmp_dataset.filters.types.update(types_from_task)
 
         # Update Dataset.history
         tmp_dataset.history.append(task.name)

@@ -8,6 +8,7 @@ from pydantic import Field
 from pydantic import root_validator
 
 from ....images import SingleImage
+from fractal_server.app.runner.v2.filters import Filters
 
 DictStrAny = dict[str, Any]
 
@@ -17,8 +18,7 @@ class Dataset(BaseModel):
     history: list[DictStrAny] = []
     zarr_dir: str
     images: list[SingleImage] = Field(default_factory=list)
-    attribute_filters: DictStrAny = Field(default_factory=dict)
-    flag_filters: DictStrAny = Field(default_factory=dict)
+    filters: Filters = Field(default_factory=Filters)
 
     @property
     def image_paths(self) -> list[str]:
@@ -27,8 +27,8 @@ class Dataset(BaseModel):
 
 class Task(BaseModel):
     name: str
-    input_flags: dict[str, bool] = Field(default_factory=dict)
-    output_flags: dict[str, bool] = Field(default_factory=dict)
+    input_types: dict[str, bool] = Field(default_factory=dict)
+    output_types: dict[str, bool] = Field(default_factory=dict)
 
     function_non_parallel: Optional[Callable] = None
     function_parallel: Optional[Callable] = None
@@ -65,8 +65,7 @@ class WorkflowTask(BaseModel):
     args_parallel: DictStrAny = Field(default_factory=dict)
     meta: DictStrAny = Field(default_factory=dict)
     task: Optional[Task] = None
-    attribute_filters: DictStrAny = Field(default_factory=dict)
-    flag_filters: dict[str, bool] = Field(default_factory=dict)
+    filters: Filters = Field(default_factory=Filters)
 
 
 class Workflow(BaseModel):

@@ -1,8 +1,8 @@
 """v2
 
-Revision ID: 6bb711137d01
+Revision ID: 56af171b0159
 Revises: 9fd26a2b0de4
-Create Date: 2024-03-19 15:42:33.030184
+Create Date: 2024-03-22 11:09:02.458011
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = "6bb711137d01"
+revision = "56af171b0159"
 down_revision = "9fd26a2b0de4"
 branch_labels = None
 depends_on = None
@@ -33,12 +33,15 @@ def upgrade() -> None:
         "taskv2",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("type", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column(
-            "command_pre", sqlmodel.sql.sqltypes.AutoString(), nullable=True
+            "command_non_parallel",
+            sqlmodel.sql.sqltypes.AutoString(),
+            nullable=True,
         ),
         sa.Column(
-            "command", sqlmodel.sql.sqltypes.AutoString(), nullable=False
+            "command_parallel",
+            sqlmodel.sql.sqltypes.AutoString(),
+            nullable=True,
         ),
         sa.Column(
             "source", sqlmodel.sql.sqltypes.AutoString(), nullable=False
@@ -60,8 +63,8 @@ def upgrade() -> None:
         sa.Column(
             "docs_link", sqlmodel.sql.sqltypes.AutoString(), nullable=True
         ),
-        sa.Column("input_flags", sa.JSON(), nullable=True),
-        sa.Column("output_flags", sa.JSON(), nullable=True),
+        sa.Column("input_types", sa.JSON(), nullable=True),
+        sa.Column("output_types", sa.JSON(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("source"),
     )
@@ -80,10 +83,10 @@ def upgrade() -> None:
         ),
         sa.Column("images", sa.JSON(), server_default="[]", nullable=False),
         sa.Column(
-            "attribute_filters", sa.JSON(), server_default="{}", nullable=False
-        ),
-        sa.Column(
-            "flag_filters", sa.JSON(), server_default="{}", nullable=False
+            "filters",
+            sa.JSON(),
+            server_default='{"attributes": {}, "types": {}}',
+            nullable=False,
         ),
         sa.ForeignKeyConstraint(
             ["project_id"],
@@ -177,13 +180,18 @@ def upgrade() -> None:
         sa.Column("meta", sa.JSON(), nullable=True),
         sa.Column("args", sa.JSON(), nullable=True),
         sa.Column(
-            "input_attributes", sa.JSON(), server_default="{}", nullable=False
-        ),
-        sa.Column(
-            "input_flags", sa.JSON(), server_default="{}", nullable=False
+            "input_filters",
+            sa.JSON(),
+            server_default='{"attributes": {}, "types": {}}',
+            nullable=False,
         ),
         sa.Column("is_legacy_task", sa.Boolean(), nullable=False),
+        sa.Column("task_id", sa.Integer(), nullable=True),
         sa.Column("task_legacy_id", sa.Integer(), nullable=True),
+        sa.ForeignKeyConstraint(
+            ["task_id"],
+            ["taskv2.id"],
+        ),
         sa.ForeignKeyConstraint(
             ["task_legacy_id"],
             ["task.id"],
