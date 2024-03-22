@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Any
+from typing import Literal
 from typing import Optional
 
 from sqlalchemy import Column
@@ -40,11 +41,13 @@ class DatasetV2(SQLModel, table=True):
     images: list[dict[str, Any]] = Field(
         sa_column=Column(JSON, server_default="[]", nullable=False)
     )
-    attribute_filters: dict[str, Any] = Field(
-        sa_column=Column(JSON, server_default="{}", nullable=False)
-    )
-    flag_filters: dict[str, bool] = Field(
-        sa_column=Column(JSON, server_default="{}", nullable=False)
+
+    filters: dict[Literal["attributes", "types"], dict[str, Any]] = Field(
+        sa_column=Column(
+            JSON,
+            nullable=False,
+            server_default=str(dict(attributes=dict(), types=dict())),
+        )
     )
 
     @property

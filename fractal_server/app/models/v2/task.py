@@ -30,8 +30,8 @@ class TaskV2(SQLModel, table=True):
     docs_info: Optional[str] = None
     docs_link: Optional[HttpUrl] = None
 
-    input_flags: dict[str, bool] = Field(sa_column=Column(JSON), default={})
-    output_flags: dict[str, bool] = Field(sa_column=Column(JSON), default={})
+    input_types: dict[str, bool] = Field(sa_column=Column(JSON), default={})
+    output_types: dict[str, bool] = Field(sa_column=Column(JSON), default={})
 
     @property
     def default_args_from_args_schema(self) -> dict[str, Any]:

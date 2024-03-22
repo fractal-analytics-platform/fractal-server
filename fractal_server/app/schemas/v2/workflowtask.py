@@ -13,7 +13,7 @@ from ..v1.task import TaskRead
 from .task import TaskExportV2
 from .task import TaskImportV2
 from .task import TaskReadV2
-from fractal_server.images import val_scalar_dict
+from fractal_server.app.runner.v2.filters import Filters
 
 
 class WorkflowTaskStatusTypeV2(str, Enum):
@@ -40,17 +40,13 @@ class WorkflowTaskCreateV2(BaseModel):
     meta: Optional[dict[str, Any]]
     args: Optional[dict[str, Any]]
     order: Optional[int]
-    input_attributes: Optional[dict[str, Any]]
-    input_flags: Optional[dict[str, bool]]
+    input_filters: Filters = Field(default_factory=Filters)
 
     is_legacy_task: bool = False
 
     # Validators
 
     _order = validator("order", allow_reuse=True)(valint("order", min_val=0))
-    _input_attributes = validator("input_attributes", allow_reuse=True)(
-        val_scalar_dict("input_attributes")
-    )
 
 
 class WorkflowTaskReadV2(BaseModel):
@@ -62,8 +58,7 @@ class WorkflowTaskReadV2(BaseModel):
     meta: Optional[dict[str, Any]]
     args: Optional[dict[str, Any]]
 
-    input_attributes: dict[str, Any]
-    input_flags: dict[str, bool]
+    input_filters: Filters
 
     is_legacy_task: bool
     task_id: Optional[int]
@@ -71,22 +66,14 @@ class WorkflowTaskReadV2(BaseModel):
     task_legacy_id: Optional[int]
     task_legacy: Optional[TaskRead]
 
-    # Validators
-    _input_attributes = validator("input_attributes", allow_reuse=True)(
-        val_scalar_dict("input_attributes")
-    )
-
 
 class WorkflowTaskUpdateV2(BaseModel):
 
     meta: Optional[dict[str, Any]]
     args: Optional[dict[str, Any]]
-    input_attributes: Optional[dict[str, Any]]
-    input_flags: Optional[dict[str, bool]]
+    input_filters: Optional[Filters]
+
     # Validators
-    _input_attributes = validator("input_attributes", allow_reuse=True)(
-        val_scalar_dict("input_attributes")
-    )
 
     @validator("meta")
     def check_no_parallelisation_level(cls, m):
@@ -102,31 +89,19 @@ class WorkflowTaskImportV2(BaseModel):
     meta: Optional[dict[str, Any]] = None
     args: Optional[dict[str, Any]] = None
 
-    input_attributes: Optional[dict[str, Any]] = None
-    input_flags: Optional[dict[str, bool]] = None
+    input_filters: Optional[Filters] = None
 
     is_legacy_task: bool = False
     task: Optional[TaskImportV2] = None
     task_legacy: Optional[TaskImport] = None
-
-    # Validators
-    _input_attributes = validator("input_attributes", allow_reuse=True)(
-        val_scalar_dict("input_attributes")
-    )
 
 
 class WorkflowTaskExportV2(BaseModel):
 
     meta: Optional[dict[str, Any]] = None
     args: Optional[dict[str, Any]] = None
-    input_attributes: dict[str, Any] = Field(default_factory=dict)
-    input_flags: dict[str, bool] = Field(default_factory=dict)
+    input_filters: Filters = Field(default_factory=Filters)
 
     is_legacy_task: bool = False
     task: Optional[TaskExportV2]
     task_legacy: Optional[TaskExport]
-
-    # Validators
-    _input_attributes = validator("input_attributes", allow_reuse=True)(
-        val_scalar_dict("input_attributes")
-    )
