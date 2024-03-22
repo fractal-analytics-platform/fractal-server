@@ -157,8 +157,8 @@ def yokogawa_to_zarr(
     plate = Path(path).parents[2].name
     well = Path(path).parents[1].name + Path(path).parents[0].name
 
-    # Read has_z from data
-    has_z = True  # Mock
+    # Read 3D from data
+    is_3D = True  # Mock
 
     print(f"[yokogawa_to_zarr] {raw_path=}")
     # Write fake image data into image Zarr group
@@ -174,7 +174,7 @@ def yokogawa_to_zarr(
             dict(
                 path=path,
                 attributes=attributes,
-                types=dict(has_z=has_z),
+                types={"3D": is_3D},
             )
         ],
     )

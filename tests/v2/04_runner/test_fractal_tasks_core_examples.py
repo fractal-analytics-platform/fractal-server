@@ -97,7 +97,7 @@ def test_fractal_demos_01(tmp_path: Path, executor):
         },
         "types": {
             "illumination_correction": True,
-            "has_z": True,
+            "3D": True,
         },
         "origin": None,
     }
@@ -126,7 +126,7 @@ def test_fractal_demos_01(tmp_path: Path, executor):
     assert dataset.filters.attributes == {}
     assert dataset.filters.types == {
         "illumination_correction": True,
-        "has_z": False,
+        "3D": False,
     }
     img = find_image_by_path(
         path=f"{zarr_dir}/my_plate_mip.zarr/A/01/0", images=dataset.images
@@ -139,7 +139,7 @@ def test_fractal_demos_01(tmp_path: Path, executor):
             "plate": "my_plate_mip.zarr",
         },
         "types": {
-            "has_z": False,
+            "3D": False,
             "illumination_correction": True,
         },
     }
@@ -227,7 +227,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
             "plate": "my_plate.zarr",
         },
         "types": {
-            "has_z": True,
+            "3D": True,
         },
     }
     assert dataset.images[1].dict() == {
@@ -238,7 +238,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
             "plate": "my_plate.zarr",
         },
         "types": {
-            "has_z": True,
+            "3D": True,
         },
     }
     assert dataset.images[2].dict() == {
@@ -250,7 +250,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
         },
         "types": {
             "illumination_correction": True,
-            "has_z": True,
+            "3D": True,
         },
     }
     assert dataset.images[3].dict() == {
@@ -261,7 +261,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
             "plate": "my_plate.zarr",
         },
         "types": {
-            "has_z": True,
+            "3D": True,
             "illumination_correction": True,
         },
     }
@@ -285,7 +285,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
     ]
     assert dataset.filters.attributes == {}
     assert dataset.filters.types == {
-        "has_z": False,
+        "3D": False,
         "illumination_correction": True,
     }
     assert dataset.image_paths == [
@@ -305,7 +305,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
             "plate": "my_plate_mip.zarr",
         },
         "types": {
-            "has_z": False,
+            "3D": False,
             "illumination_correction": True,
         },
     }
@@ -317,14 +317,14 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
             "plate": "my_plate_mip.zarr",
         },
         "types": {
-            "has_z": False,
+            "3D": False,
             "illumination_correction": True,
         },
     }
 
     assert dataset.filters.attributes == {}
     assert dataset.filters.types == {
-        "has_z": False,
+        "3D": False,
         "illumination_correction": True,
     }
 
