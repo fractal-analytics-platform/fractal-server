@@ -104,6 +104,8 @@ def execute_tasks_v2(
                     images=tmp_dataset.images,
                     path=image.path,
                 )
+                if image_search is None:
+                    raise ValueError("This should have not happened")
                 original_img = image_search["image"]
                 original_index = image_search["index"]
                 updated_attributes = copy(original_img.attributes)
@@ -135,8 +137,8 @@ def execute_tasks_v2(
                         images=tmp_dataset.images,
                         path=image.origin,
                     )
-                    original_img = image_search["image"]
-                    if original_img is not None:
+                    if image_search is not None:
+                        original_img = image_search["image"]
                         updated_attributes = copy(original_img.attributes)
                         updated_flags = copy(original_img.flags)
                 # Update image attributes/flags with task output and manifest
