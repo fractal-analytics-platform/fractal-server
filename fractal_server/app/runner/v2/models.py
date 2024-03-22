@@ -8,13 +8,9 @@ from pydantic import Field
 from pydantic import root_validator
 
 from ....images import SingleImage
+from fractal_server.app.runner.v2.filters import Filters
 
 DictStrAny = dict[str, Any]
-
-
-class Filters(BaseModel):
-    attributes: DictStrAny = Field(default_factory=dict)
-    types: dict[str, bool] = Field(default_factory=dict)
 
 
 class Dataset(BaseModel):
