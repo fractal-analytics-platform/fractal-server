@@ -1,5 +1,5 @@
-from fractal_server.images import find_image_by_path
 from fractal_server.images import SingleImage
+from fractal_server.images.tools import find_image_by_path
 
 
 def test_find_image_by_path():
