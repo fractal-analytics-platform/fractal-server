@@ -236,9 +236,7 @@ async def test_delete_project(
         # Add a workflow to the project
         wf = await workflow_factory_v2(project_id=p["id"])
         t = await task_factory_v2()
-        await _workflow_insert_task(
-            workflow_id=wf.id, task_id=t.id, is_v2=True, db=db
-        )
+        await _workflow_insert_task(workflow_id=wf.id, task_id=t.id, db=db)
 
         # Add a job to the project
 
@@ -309,9 +307,7 @@ async def test_delete_project_ongoing_jobs(
             t = await task_factory_v2(
                 name=f"task_{status}", source=f"source_{status}"
             )
-            await _workflow_insert_task(
-                workflow_id=w.id, task_id=t.id, is_v2=True, db=db
-            )
+            await _workflow_insert_task(workflow_id=w.id, task_id=t.id, db=db)
             await job_factory_v2(
                 project_id=p.id,
                 workflow_id=w.id,
