@@ -40,10 +40,10 @@ def execute_tasks_v2(
         # PRE TASK EXECUTION
 
         # Get filtered images
-        flag_filters = copy(dataset.flag_filters)
-        flag_filters.update(wftask.flag_filters)
-        attribute_filters = copy(dataset.attribute_filters)
-        attribute_filters.update(wftask.attribute_filters)
+        flag_filters = copy(dataset.filters.flags)
+        flag_filters.update(wftask.filters.flags)
+        attribute_filters = copy(dataset.filters.attributes)
+        attribute_filters.update(wftask.filters.attributes)
         filtered_images = _filter_image_list(
             images=tmp_dataset.images,
             flag_filters=flag_filters,
@@ -164,7 +164,7 @@ def execute_tasks_v2(
         # Update Dataset.attribute_filters:
         # current + (task_output: not really, in current examples..)
         if current_task_output.filters is not None:
-            tmp_dataset.attribute_filters.update(
+            tmp_dataset.filters.attributes.update(
                 current_task_output.filters.attributes
             )
 
@@ -184,8 +184,8 @@ def execute_tasks_v2(
                 f"output flag. Overlapping keys: {overlap}."
             )
         # Update Dataset.flag_filters
-        tmp_dataset.flag_filters.update(flags_from_manifest)
-        tmp_dataset.flag_filters.update(flags_from_task)
+        tmp_dataset.filters.flags.update(flags_from_manifest)
+        tmp_dataset.filters.flags.update(flags_from_task)
 
         # Update Dataset.history
         tmp_dataset.history.append(task.name)

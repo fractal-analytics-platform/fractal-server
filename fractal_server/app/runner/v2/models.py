@@ -12,13 +12,17 @@ from ....images import SingleImage
 DictStrAny = dict[str, Any]
 
 
+class Filters(BaseModel):
+    attributes: DictStrAny = Field(default_factory=dict)
+    flags: dict[str, bool] = Field(default_factory=dict)
+
+
 class Dataset(BaseModel):
     id: Optional[int] = None
     history: list[DictStrAny] = []
     zarr_dir: str
     images: list[SingleImage] = Field(default_factory=list)
-    attribute_filters: DictStrAny = Field(default_factory=dict)
-    flag_filters: dict[str, bool] = Field(default_factory=dict)
+    filters: Filters = Field(default_factory=Filters)
 
     @property
     def image_paths(self) -> list[str]:
@@ -65,8 +69,7 @@ class WorkflowTask(BaseModel):
     args_parallel: DictStrAny = Field(default_factory=dict)
     meta: DictStrAny = Field(default_factory=dict)
     task: Optional[Task] = None
-    attribute_filters: DictStrAny = Field(default_factory=dict)
-    flag_filters: dict[str, bool] = Field(default_factory=dict)
+    filters: Filters = Field(default_factory=Filters)
 
 
 class Workflow(BaseModel):
