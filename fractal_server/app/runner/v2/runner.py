@@ -5,6 +5,8 @@ from copy import deepcopy
 from ....images import SingleImage
 from ....images.tools import _filter_image_list
 from ....images.tools import find_image_by_path
+from ....images.tools import match_filter
+from .filters import Filters
 from .models import Dataset
 from .models import DictStrAny
 from .models import WorkflowTask
@@ -40,18 +42,17 @@ def execute_tasks_v2(
         # PRE TASK EXECUTION
 
         # Get filtered images
-        flag_filters = copy(dataset.filters.types)
-        flag_filters.update(wftask.filters.types)
+        type_filters = copy(dataset.filters.types)
+        type_filters.update(wftask.filters.types)
         attribute_filters = copy(dataset.filters.attributes)
         attribute_filters.update(wftask.filters.attributes)
         filtered_images = _filter_image_list(
             images=tmp_dataset.images,
-            type_filters=flag_filters,
-            attribute_filters=attribute_filters,
+            filters=Filters(types=type_filters, attributes=attribute_filters),
         )
         # Verify that filtered images comply with output types
         for image in filtered_images:
-            if not image.match_filter(type_filters=task.input_types):
+            if not match_filter(image, Filters(types=task.input_types)):
                 raise ValueError(
                     f"Filtered images include {image.dict()}, which does "
                     f"not comply with {task.input_types=}."
