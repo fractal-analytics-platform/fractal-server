@@ -8,8 +8,13 @@ def test_find_image_by_path():
         SingleImage(path="b", flags=dict(has_z=True)),
     ]
 
-    image = find_image_by_path(path="a", images=images)
-    assert image.attributes["name"] == "a"
+    image_search = find_image_by_path(path="a", images=images)
+    assert image_search["image"].attributes["name"] == "a"
+    assert image_search["index"] == 0
 
-    image = find_image_by_path(path="invalid", images=images)
-    assert image is None
+    image_search = find_image_by_path(path="b", images=images)
+    assert image_search["image"].flags["has_z"] is True
+    assert image_search["index"] == 1
+
+    image_search = find_image_by_path(path="invalid", images=images)
+    assert image_search is None
