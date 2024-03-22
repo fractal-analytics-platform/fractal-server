@@ -22,6 +22,7 @@ from ....models.v2 import WorkflowTaskV2
 from ....models.v2 import WorkflowV2
 from ....schemas.v1 import JobStatusType
 from ....security import User
+from fractal_server.app.runner.v2.filters import Filters
 
 
 async def _get_project_check_owner(
@@ -395,8 +396,7 @@ async def _workflow_insert_task(
     order: Optional[int] = None,
     meta: Optional[dict[str, Any]] = None,
     args: Optional[dict[str, Any]] = None,
-    input_attributes: dict[str, Any] = None,
-    input_flags: dict[str, bool] = None,
+    input_filters: Filters,
     db: AsyncSession,
 ) -> WorkflowTaskV2:
     """
@@ -451,8 +451,7 @@ async def _workflow_insert_task(
             task_legacy_id=task_id,
             args=actual_args,
             meta=wt_meta,
-            input_attributes=input_attributes or {},
-            input_flags=input_flags or {},
+            input_filters=input_filters,
         )
     else:
         wf_task = WorkflowTaskV2(
@@ -460,8 +459,7 @@ async def _workflow_insert_task(
             task_id=task_id,
             args=actual_args,
             meta=wt_meta,
-            input_attributes=input_attributes or {},
-            input_flags=input_flags or {},
+            input_filters=input_filters,
         )
     db.add(wf_task)
     db_workflow.task_list.insert(order, wf_task)
