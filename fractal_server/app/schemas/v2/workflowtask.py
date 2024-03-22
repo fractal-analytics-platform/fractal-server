@@ -3,10 +3,12 @@ from typing import Any
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import root_validator
+from pydantic import Field
 from pydantic import validator
 
 from .._validators import valint
+from ..v1.task import TaskExport
+from ..v1.task import TaskImport
 from ..v1.task import TaskRead
 from .task import TaskExportV2
 from .task import TaskImportV2
@@ -41,23 +43,9 @@ class WorkflowTaskCreateV2(BaseModel):
     input_attributes: Optional[dict[str, Any]]
     input_flags: Optional[dict[str, bool]]
 
-    task_v1_id: Optional[int]
-    task_v2_id: Optional[int]
+    is_legacy_task: bool = False
 
     # Validators
-    @root_validator
-    def task_v1_or_v2(cls, values):
-        v1 = values.get("task_v1_id")
-        v2 = values.get("task_v2_id")
-        if ((v1 is not None) and (v2 is not None)) or (
-            (v1 is None) and (v2 is None)
-        ):
-            message = "both" if (v1 and v2) else "none"
-            raise ValueError(
-                "One and only one must be provided between "
-                f"'task_v1_id' and 'task_v2_id' (you provided {message})"
-            )
-        return values
 
     _order = validator("order", allow_reuse=True)(valint("order", min_val=0))
     _input_attributes = validator("input_attributes", allow_reuse=True)(
@@ -77,11 +65,11 @@ class WorkflowTaskReadV2(BaseModel):
     input_attributes: dict[str, Any]
     input_flags: dict[str, bool]
 
-    task_v1_id: Optional[int]
-    task_v2_id: Optional[int]
-
-    task_v1: Optional[TaskRead]
-    task_v2: Optional[TaskReadV2]
+    is_legacy_task: bool
+    task_id: Optional[int]
+    task: Optional[TaskReadV2]
+    task_legacy_id: Optional[int]
+    task_legacy: Optional[TaskRead]
 
     # Validators
     _input_attributes = validator("input_attributes", allow_reuse=True)(
@@ -111,11 +99,16 @@ class WorkflowTaskUpdateV2(BaseModel):
 
 class WorkflowTaskImportV2(BaseModel):
 
-    task: TaskImportV2
     meta: Optional[dict[str, Any]] = None
     args: Optional[dict[str, Any]] = None
-    input_attributes: dict[str, Any]
-    input_flags: dict[str, bool]
+
+    input_attributes: Optional[dict[str, Any]] = None
+    input_flags: Optional[dict[str, bool]] = None
+
+    is_legacy_task: bool = False
+    task: Optional[TaskImportV2] = None
+    task_legacy: Optional[TaskImport] = None
+
     # Validators
     _input_attributes = validator("input_attributes", allow_reuse=True)(
         val_scalar_dict("input_attributes")
@@ -124,11 +117,15 @@ class WorkflowTaskImportV2(BaseModel):
 
 class WorkflowTaskExportV2(BaseModel):
 
-    task: TaskExportV2
     meta: Optional[dict[str, Any]] = None
     args: Optional[dict[str, Any]] = None
-    input_attributes: dict[str, Any]
-    input_flags: dict[str, bool]
+    input_attributes: dict[str, Any] = Field(default_factory=dict)
+    input_flags: dict[str, bool] = Field(default_factory=dict)
+
+    is_legacy_task: bool = False
+    task: Optional[TaskExportV2]
+    task_legacy: Optional[TaskExport]
+
     # Validators
     _input_attributes = validator("input_attributes", allow_reuse=True)(
         val_scalar_dict("input_attributes")
