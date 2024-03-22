@@ -9,7 +9,7 @@ from fractal_server.images.tools import _filter_image_list
 IMAGES = [
     SingleImage(
         path="plate.zarr/A/01/0",
-        types=dict(has_z=True),
+        types={"3D": True},
         attributes=dict(
             plate="plate.zarr",
             well="A01",
@@ -17,7 +17,7 @@ IMAGES = [
     ),
     SingleImage(
         path="plate.zarr/A/02/0",
-        types=dict(has_z=True),
+        types={"3D": True},
         attributes=dict(
             plate="plate.zarr",
             well="A02",
@@ -25,10 +25,10 @@ IMAGES = [
     ),
     SingleImage(
         path="plate.zarr/A/01/0_corr",
-        types=dict(
-            has_z=True,
-            illumination_correction=True,
-        ),
+        types={
+            "3D": True,
+            "illumination_correction": True,
+        },
         attributes=dict(
             plate="plate.zarr",
             well="A01",
@@ -36,10 +36,10 @@ IMAGES = [
     ),
     SingleImage(
         path="plate.zarr/A/02/0_corr",
-        types=dict(
-            has_z=True,
-            illumination_correction=True,
-        ),
+        types={
+            "3D": True,
+            "illumination_correction": True,
+        },
         attributes=dict(
             plate="plate.zarr",
             well="A02",
@@ -47,10 +47,10 @@ IMAGES = [
     ),
     SingleImage(
         path="plate_2d.zarr/A/01/0_corr",
-        types=dict(
-            has_z=False,
-            illumination_correction=True,
-        ),
+        types={
+            "3D": False,
+            "illumination_correction": True,
+        },
         attributes=dict(
             plate="plate_2d.zarr",
             well="A01",
@@ -58,10 +58,10 @@ IMAGES = [
     ),
     SingleImage(
         path="plate_2d.zarr/A/02/0_corr",
-        types=dict(
-            has_z=False,
-            illumination_correction=True,
-        ),
+        types={
+            "3D": False,
+            "illumination_correction": True,
+        },
         attributes=dict(
             plate="plate_2d.zarr",
             well="A02",
@@ -106,27 +106,27 @@ def test_filter_validation():
         # Meaning of None for attributes: skip a given filter
         ({"plate": None}, {}, 6),
         # Single type filter
-        ({}, {"has_z": True}, 4),
+        ({}, {"3D": True}, 4),
         # Single type filter
-        ({}, {"has_z": False}, 2),
+        ({}, {"3D": False}, 2),
         # Two type filters
-        ({}, {"has_z": True, "illumination_correction": True}, 2),
+        ({}, {"3D": True, "illumination_correction": True}, 2),
         # Both attribute and type filters
         (
             {"plate": "plate.zarr"},
-            {"has_z": True, "illumination_correction": True},
+            {"3D": True, "illumination_correction": True},
             2,
         ),
         # Both attribute and type filters
         (
             {"plate": "plate_2d.zarr"},
-            {"has_z": True, "illumination_correction": True},
+            {"3D": True, "illumination_correction": True},
             0,
         ),
         # Both attribute and type filters
         (
             {"plate": "plate.zarr", "well": "A01"},
-            {"has_z": True, "illumination_correction": True},
+            {"3D": True, "illumination_correction": True},
             1,
         ),
         # Single attribute filter

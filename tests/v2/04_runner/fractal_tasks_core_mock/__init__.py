@@ -27,10 +27,10 @@ TASK_LIST = {
     ),
     "MIP_compound": Task(
         name="MIP_compound",
-        input_types=dict(has_z=True),
+        input_types={"3D": True},
         function_non_parallel=new_ome_zarr,
         function_parallel=maximum_intensity_projection,
-        output_types=dict(has_z=False),
+        output_types={"3D": False},
     ),
     "illumination_correction": Task(
         name="illumination_correction",
