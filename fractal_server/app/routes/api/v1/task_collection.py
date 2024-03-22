@@ -27,7 +27,7 @@ from ....security import current_active_verified_user
 from ....security import User
 from fractal_server.tasks.endpoint_operations import create_package_dir_pip
 from fractal_server.tasks.endpoint_operations import download_package
-from fractal_server.tasks.endpoint_operations import get_collection_data
+from fractal_server.tasks.endpoint_operations import get_collection_data_v1
 from fractal_server.tasks.endpoint_operations import inspect_package
 from fractal_server.tasks.utils import get_collection_log
 from fractal_server.tasks.utils import slugify_task_name
@@ -112,7 +112,7 @@ async def collect_tasks_pip(
     except FileExistsError:
         venv_path = create_package_dir_pip(task_pkg=task_pkg, create=False)
         try:
-            task_collect_status = get_collection_data(venv_path)
+            task_collect_status = get_collection_data_v1(venv_path)
             for task in task_collect_status.task_list:
                 db_task = await db.get(Task, task.id)
                 if (
