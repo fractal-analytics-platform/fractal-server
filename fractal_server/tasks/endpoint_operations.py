@@ -4,35 +4,26 @@ from typing import Optional
 from typing import Union
 from zipfile import ZipFile
 
+from .utils import _normalize_package_name
+from .utils import get_python_interpreter
+from .v1._TaskCollectPip import _TaskCollectPip as _TaskCollectPipV1
+from .v2._TaskCollectPip import _TaskCollectPip as _TaskCollectPipV2
 from fractal_server.app.schemas.v1 import ManifestV1
-from fractal_server.app.schemas.v1 import TaskCollectStatus
+from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
 from fractal_server.syringe import Inject
-from fractal_server.tasks._TaskCollectPip import _TaskCollectPip
-from fractal_server.tasks.utils import _normalize_package_name
-from fractal_server.tasks.utils import get_absolute_venv_path
-from fractal_server.tasks.utils import get_collection_path
-from fractal_server.tasks.utils import get_python_interpreter
 from fractal_server.utils import execute_command
 
 
 FRACTAL_PUBLIC_TASK_SUBDIR = ".fractal"
 
 
-def get_collection_data(venv_path: Path) -> TaskCollectStatus:
-    package_path = get_absolute_venv_path(venv_path)
-    collection_path = get_collection_path(package_path)
-    with collection_path.open() as f:
-        data = json.load(f)
-    return TaskCollectStatus(**data)
-
-
 async def download_package(
     *,
-    task_pkg: _TaskCollectPip,
+    task_pkg: Union[_TaskCollectPipV1, _TaskCollectPipV2],
     dest: Union[str, Path],
-):
+) -> Path:
     """
     Download package to destination
     """
@@ -52,7 +43,7 @@ async def download_package(
 
 def _load_manifest_from_wheel(
     path: Path, wheel: ZipFile, logger_name: Optional[str] = None
-) -> ManifestV1:
+) -> Union[ManifestV1, ManifestV2]:
     logger = get_logger(logger_name)
     namelist = wheel.namelist()
     try:
@@ -68,6 +59,9 @@ def _load_manifest_from_wheel(
     manifest_version = str(manifest_dict["manifest_version"])
     if manifest_version == "1":
         pkg_manifest = ManifestV1(**manifest_dict)
+        return pkg_manifest
+    elif manifest_version == "2":
+        pkg_manifest = ManifestV2(**manifest_dict)
         return pkg_manifest
     else:
         msg = f"Manifest version {manifest_version=} not supported"
@@ -146,7 +140,7 @@ def inspect_package(path: Path, logger_name: Optional[str] = None) -> dict:
 
 def create_package_dir_pip(
     *,
-    task_pkg: _TaskCollectPip,
+    task_pkg: Union[_TaskCollectPipV1, _TaskCollectPipV2],
     create: bool = True,
 ) -> Path:
     """
