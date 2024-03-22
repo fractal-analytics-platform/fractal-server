@@ -8,7 +8,7 @@ from fractal_server.images import val_scalar_dict
 IMAGES = [
     SingleImage(
         path="plate.zarr/A/01/0",
-        flags=dict(has_z=True),
+        types=dict(has_z=True),
         attributes=dict(
             plate="plate.zarr",
             well="A01",
@@ -16,7 +16,7 @@ IMAGES = [
     ),
     SingleImage(
         path="plate.zarr/A/02/0",
-        flags=dict(has_z=True),
+        types=dict(has_z=True),
         attributes=dict(
             plate="plate.zarr",
             well="A02",
@@ -24,7 +24,7 @@ IMAGES = [
     ),
     SingleImage(
         path="plate.zarr/A/01/0_corr",
-        flags=dict(
+        types=dict(
             has_z=True,
             illumination_correction=True,
         ),
@@ -35,7 +35,7 @@ IMAGES = [
     ),
     SingleImage(
         path="plate.zarr/A/02/0_corr",
-        flags=dict(
+        types=dict(
             has_z=True,
             illumination_correction=True,
         ),
@@ -46,7 +46,7 @@ IMAGES = [
     ),
     SingleImage(
         path="plate_2d.zarr/A/01/0_corr",
-        flags=dict(
+        types=dict(
             has_z=False,
             illumination_correction=True,
         ),
@@ -57,7 +57,7 @@ IMAGES = [
     ),
     SingleImage(
         path="plate_2d.zarr/A/02/0_corr",
-        flags=dict(
+        types=dict(
             has_z=False,
             illumination_correction=True,
         ),

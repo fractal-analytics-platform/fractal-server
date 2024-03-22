@@ -19,11 +19,11 @@ def _apply_attributes_to_image(
     *,
     image: SingleImage,
     new_attributes: DictStrAny,
-    new_flags: DictStrAny,
+    new_types: DictStrAny,
 ) -> SingleImage:
     updated_image = copy(image)
     updated_image.attributes.update(new_attributes)
-    updated_image.flags.update(new_flags)
+    updated_image.types.update(new_types)
     return updated_image
 
 
@@ -40,8 +40,8 @@ def execute_tasks_v2(
         # PRE TASK EXECUTION
 
         # Get filtered images
-        flag_filters = copy(dataset.filters.flags)
-        flag_filters.update(wftask.filters.flags)
+        flag_filters = copy(dataset.filters.types)
+        flag_filters.update(wftask.filters.types)
         attribute_filters = copy(dataset.filters.attributes)
         attribute_filters.update(wftask.filters.attributes)
         filtered_images = _filter_image_list(
@@ -49,12 +49,12 @@ def execute_tasks_v2(
             flag_filters=flag_filters,
             attribute_filters=attribute_filters,
         )
-        # Verify that filtered images comply with output flags
+        # Verify that filtered images comply with output types
         for image in filtered_images:
-            if not image.match_filter(flag_filters=task.input_flags):
+            if not image.match_filter(type_filters=task.input_types):
                 raise ValueError(
                     f"Filtered images include {image.dict()}, which does "
-                    f"not comply with {task.input_flags=}."
+                    f"not comply with {task.input_types=}."
                 )
 
         # ACTUAL TASK EXECUTION
@@ -109,18 +109,18 @@ def execute_tasks_v2(
                 original_img = image_search["image"]
                 original_index = image_search["index"]
                 updated_attributes = copy(original_img.attributes)
-                updated_flags = copy(original_img.flags)
+                updated_types = copy(original_img.types)
 
-                # Update image attributes/flags with task output and manifest
+                # Update image attributes/types with task output and manifest
                 updated_attributes.update(image.attributes)
-                updated_flags.update(image.flags)
-                updated_flags.update(task.output_flags)
+                updated_types.update(image.types)
+                updated_types.update(task.output_types)
 
                 # Update image in the dataset image list
                 tmp_dataset.images[
                     original_index
                 ].attributes = updated_attributes
-                tmp_dataset.images[original_index].flags = updated_flags
+                tmp_dataset.images[original_index].types = updated_types
             # Add new image
             else:
                 # Check that image.path is relative to zarr_dir
@@ -129,9 +129,9 @@ def execute_tasks_v2(
                         f"{tmp_dataset.zarr_dir} is not a parent directory of "
                         f"{image.path}"
                     )
-                # Propagate attributes and flags from `origin` (if any)
+                # Propagate attributes and types from `origin` (if any)
                 updated_attributes = {}
-                updated_flags = {}
+                updated_types = {}
                 if image.origin is not None:
                     image_search = find_image_by_path(
                         images=tmp_dataset.images,
@@ -140,16 +140,16 @@ def execute_tasks_v2(
                     if image_search is not None:
                         original_img = image_search["image"]
                         updated_attributes = copy(original_img.attributes)
-                        updated_flags = copy(original_img.flags)
-                # Update image attributes/flags with task output and manifest
+                        updated_types = copy(original_img.types)
+                # Update image attributes/types with task output and manifest
                 updated_attributes.update(image.attributes)
-                updated_flags.update(image.flags)
-                updated_flags.update(task.output_flags)
+                updated_types.update(image.types)
+                updated_types.update(task.output_types)
                 new_image = SingleImage(
                     path=image.path,
                     origin=image.origin,
                     attributes=updated_attributes,
-                    flags=updated_flags,
+                    types=updated_types,
                 )
                 # Add image into the dataset image list
                 tmp_dataset.images.append(new_image)
@@ -169,23 +169,23 @@ def execute_tasks_v2(
             )
 
         # Update Dataset.flag_filters: current + (task_output + task_manifest)
-        flags_from_manifest = task.output_flags
+        types_from_manifest = task.output_types
         if current_task_output.filters is not None:
-            flags_from_task = current_task_output.filters.flags
+            types_from_task = current_task_output.filters.types
         else:
-            flags_from_task = {}
+            types_from_task = {}
         # Check that key sets are disjoint
-        set_flags_from_manifest = set(flags_from_manifest.keys())
-        set_flags_from_task = set(flags_from_task.keys())
-        if not set_flags_from_manifest.isdisjoint(set_flags_from_task):
-            overlap = set_flags_from_manifest.intersection(set_flags_from_task)
+        set_types_from_manifest = set(types_from_manifest.keys())
+        set_types_from_task = set(types_from_task.keys())
+        if not set_types_from_manifest.isdisjoint(set_types_from_task):
+            overlap = set_types_from_manifest.intersection(set_types_from_task)
             raise ValueError(
                 "Both task and task manifest did set the same"
                 f"output flag. Overlapping keys: {overlap}."
             )
         # Update Dataset.flag_filters
-        tmp_dataset.filters.flags.update(flags_from_manifest)
-        tmp_dataset.filters.flags.update(flags_from_task)
+        tmp_dataset.filters.types.update(types_from_manifest)
+        tmp_dataset.filters.types.update(types_from_task)
 
         # Update Dataset.history
         tmp_dataset.history.append(task.name)
