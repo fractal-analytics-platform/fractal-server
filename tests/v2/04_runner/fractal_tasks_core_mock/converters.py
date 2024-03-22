@@ -174,7 +174,7 @@ def yokogawa_to_zarr(
             dict(
                 path=path,
                 attributes=attributes,
-                flags=dict(has_z=has_z),
+                types=dict(has_z=has_z),
             )
         ],
     )

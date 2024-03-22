@@ -5,7 +5,7 @@ from fractal_server.images import SingleImage
 def test_find_image_by_path():
     images = [
         SingleImage(path="a", attributes=dict(name="a")),
-        SingleImage(path="b", flags=dict(has_z=True)),
+        SingleImage(path="b", types=dict(has_z=True)),
     ]
 
     image_search = find_image_by_path(path="a", images=images)
@@ -13,7 +13,7 @@ def test_find_image_by_path():
     assert image_search["index"] == 0
 
     image_search = find_image_by_path(path="b", images=images)
-    assert image_search["image"].flags["has_z"] is True
+    assert image_search["image"].types["has_z"] is True
     assert image_search["index"] == 1
 
     image_search = find_image_by_path(path="invalid", images=images)

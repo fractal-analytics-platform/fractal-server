@@ -29,7 +29,7 @@ class SingleImage(BaseModel):
     origin: Optional[str] = None
 
     attributes: dict[str, Any] = Field(default_factory=dict)
-    flags: dict[str, bool] = Field(default_factory=dict)
+    types: dict[str, bool] = Field(default_factory=dict)
 
     _attributes = validator("attributes", allow_reuse=True)(
         val_scalar_dict("attributes")
@@ -38,12 +38,12 @@ class SingleImage(BaseModel):
     def match_filter(
         self,
         attribute_filters: Optional[dict[str, Any]] = None,
-        flag_filters: Optional[dict[str, bool]] = None,
+        type_filters: Optional[dict[str, bool]] = None,
     ):
 
-        if flag_filters is not None:
-            for key, value in flag_filters.items():
-                if self.flags.get(key, False) != value:
+        if type_filters is not None:
+            for key, value in type_filters.items():
+                if self.types.get(key, False) != value:
                     return False
 
         if attribute_filters is not None:
@@ -91,7 +91,7 @@ def _filter_image_list(
     filtered_images = []
     for this_image in images:
         if this_image.match_filter(
-            attribute_filters=attribute_filters, flag_filters=flag_filters
+            attribute_filters=attribute_filters, type_filters=flag_filters
         ):
             filtered_images.append(copy(this_image))
     return filtered_images

@@ -62,7 +62,7 @@ def test_filter_image_list(
             [
                 SingleImage(
                     path=f"/tmp_{ind_image}",
-                    flags=dict(a=True),
+                    types=dict(a=True),
                     attributes=dict(b=1),
                 )
                 for ind_time_slice in range(25)
@@ -74,7 +74,7 @@ def test_filter_image_list(
             [
                 SingleImage(
                     path=f"/tmp_{ind_image}",
-                    flags=dict(a=True),
+                    types=dict(a=True),
                     attributes=dict(b=1),
                 )
                 for ind_image in range(10_000)

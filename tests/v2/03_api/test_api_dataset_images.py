@@ -14,7 +14,7 @@ def n_images(n: int) -> list[SingleImage]:
                 "string_attribute": str(i % 2),
                 "int_attribute": i % 2,
             },
-            flags={
+            types={
                 str(i): bool(i % 2),
                 "flag": bool(i % 2 + 1),
             },
@@ -214,7 +214,7 @@ async def test_post_new_image(
     new_image = SingleImage(
         path="/new_path",
         attributes={"new_attribute": "xyz"},
-        flags={"new_flag": True},
+        types={"new_flag": True},
     )
     invalid_new_image = SingleImage(path=images[-1].path)
     async with MockCurrentUser() as user:

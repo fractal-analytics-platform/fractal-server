@@ -14,7 +14,7 @@ DictStrAny = dict[str, Any]
 
 class Filters(BaseModel):
     attributes: DictStrAny = Field(default_factory=dict)
-    flags: dict[str, bool] = Field(default_factory=dict)
+    types: dict[str, bool] = Field(default_factory=dict)
 
 
 class Dataset(BaseModel):
@@ -31,8 +31,8 @@ class Dataset(BaseModel):
 
 class Task(BaseModel):
     name: str
-    input_flags: dict[str, bool] = Field(default_factory=dict)
-    output_flags: dict[str, bool] = Field(default_factory=dict)
+    input_types: dict[str, bool] = Field(default_factory=dict)
+    output_types: dict[str, bool] = Field(default_factory=dict)
 
     function_non_parallel: Optional[Callable] = None
     function_parallel: Optional[Callable] = None

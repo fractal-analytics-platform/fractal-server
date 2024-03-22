@@ -27,23 +27,23 @@ TASK_LIST = {
     ),
     "MIP_compound": Task(
         name="MIP_compound",
-        input_flags=dict(has_z=True),
+        input_types=dict(has_z=True),
         function_non_parallel=new_ome_zarr,
         function_parallel=maximum_intensity_projection,
-        output_flags=dict(has_z=False),
+        output_types=dict(has_z=False),
     ),
     "illumination_correction": Task(
         name="illumination_correction",
-        input_flags=dict(illumination_correction=False),
+        input_types=dict(illumination_correction=False),
         function_parallel=illumination_correction,
-        output_flags=dict(illumination_correction=True),
+        output_types=dict(illumination_correction=True),
     ),
     "illumination_correction_compound": Task(
         name="illumination_correction_compound",
-        input_flags=dict(illumination_correction=False),
+        input_types=dict(illumination_correction=False),
         function_non_parallel=init_channel_parallelization,
         function_parallel=illumination_correction_B,
-        output_flags=dict(illumination_correction=True),
+        output_types=dict(illumination_correction=True),
     ),
     "cellpose_segmentation": Task(
         name="cellpose_segmentation",
@@ -60,8 +60,8 @@ TASK_LIST = {
     ),
     "apply_registration_to_image": Task(
         name="apply_registration_to_image",
-        input_flags=dict(registration=False),
+        input_types=dict(registration=False),
         function_parallel=apply_registration_to_image,
-        output_flags=dict(registration=True),
+        output_types=dict(registration=True),
     ),
 }
