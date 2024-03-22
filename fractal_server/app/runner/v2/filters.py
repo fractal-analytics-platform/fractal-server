@@ -19,7 +19,7 @@ class Filters(BaseModel):
         cls, v: dict[str, Any]
     ) -> dict[str, Union[int, float, str, bool, None]]:
         for key, value in v.items():
-            if not isinstance(value, (int, float, str, bool, None)):
+            if not isinstance(value, (int, float, str, bool, type(None))):
                 raise ValueError(
                     f"Filters.attributes[{key}] must be a scalar "
                     "(int, float, str, bool, or None). "

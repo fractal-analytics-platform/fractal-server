@@ -1,9 +1,9 @@
 import pytest
 from devtools import debug
+from pydantic import ValidationError
 
 from fractal_server.app.runner.v2.filters import Filters
 from fractal_server.images import SingleImage
-from fractal_server.images import val_scalar_dict
 from fractal_server.images.tools import _filter_image_list
 
 IMAGES = [
@@ -70,7 +70,7 @@ IMAGES = [
 ]
 
 
-def test_filter_validation():
+def test_singleimage_attributes_validation():
     invalid = [
         ["l", "i", "s", "t"],
         {"d": "i", "c": "t"},
@@ -80,15 +80,39 @@ def test_filter_validation():
         bool,  # type
         lambda x: x,  # function
     ]
+
     for item in invalid:
-        filters = dict(key=item)
-        with pytest.raises(ValueError):
-            val_scalar_dict("")(filters)
+        with pytest.raises(ValidationError):
+            SingleImage(path="/xyz", attributes={"key": item})
 
     valid = ["string", -7, 3.14, True]
     for item in valid:
-        filters = dict(key=item)
-        assert val_scalar_dict("")(filters) == filters
+        assert (
+            SingleImage(path="/xyz", attributes={"key": item}).attributes[
+                "key"
+            ]
+            == item
+        )
+
+
+def test_filters_attributes_validation():
+    invalid = [
+        ["l", "i", "s", "t"],
+        {"d": "i", "c": "t"},
+        {"s", "e", "t"},
+        ("t", "u", "p", "l", "e"),
+        bool,  # type
+        lambda x: x,  # function
+    ]
+
+    for item in invalid:
+        with pytest.raises(ValidationError) as e:
+            Filters(attributes={"key": item})
+        debug(e)
+
+    valid = ["string", -7, 3.14, True, None]
+    for item in valid:
+        assert Filters(attributes={"key": item}).attributes["key"] == item
 
 
 @pytest.mark.parametrize(
