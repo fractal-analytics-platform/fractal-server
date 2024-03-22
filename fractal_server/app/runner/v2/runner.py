@@ -2,9 +2,9 @@ from concurrent.futures import ThreadPoolExecutor
 from copy import copy
 from copy import deepcopy
 
-from ....images import _filter_image_list
-from ....images import find_image_by_path
 from ....images import SingleImage
+from ....images.tools import _filter_image_list
+from ....images.tools import find_image_by_path
 from .models import Dataset
 from .models import DictStrAny
 from .models import WorkflowTask
