@@ -162,14 +162,14 @@ def execute_tasks_v2(
             if image.path not in current_task_output.image_list_removals
         ]
 
-        # Update Dataset.attribute_filters:
+        # Update Dataset.filters.attributes:
         # current + (task_output: not really, in current examples..)
         if current_task_output.filters is not None:
             tmp_dataset.filters.attributes.update(
                 current_task_output.filters.attributes
             )
 
-        # Update Dataset.flag_filters: current + (task_output + task_manifest)
+        # Update Dataset.filters.types: current + (task_output + task_manifest)
         types_from_manifest = task.output_types
         if current_task_output.filters is not None:
             types_from_task = current_task_output.filters.types
@@ -182,9 +182,9 @@ def execute_tasks_v2(
             overlap = set_types_from_manifest.intersection(set_types_from_task)
             raise ValueError(
                 "Both task and task manifest did set the same"
-                f"output flag. Overlapping keys: {overlap}."
+                f"output type. Overlapping keys: {overlap}."
             )
-        # Update Dataset.flag_filters
+        # Update Dataset.filters.types
         tmp_dataset.filters.types.update(types_from_manifest)
         tmp_dataset.filters.types.update(types_from_task)
 

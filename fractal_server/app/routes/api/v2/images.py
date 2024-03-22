@@ -7,16 +7,17 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from pydantic import BaseModel
-from pydantic import validator
+from pydantic import Field
 from sqlalchemy.orm.attributes import flag_modified
 
 from ._aux_functions import _get_dataset_check_owner
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
+from fractal_server.app.runner.v2.filters import Filters
 from fractal_server.app.security import current_active_user
 from fractal_server.app.security import User
 from fractal_server.images import SingleImage
-from fractal_server.images import val_scalar_dict
+from fractal_server.images.tools import match_filter
 
 router = APIRouter()
 
@@ -28,19 +29,14 @@ class ImagePage(BaseModel):
     current_page: int
 
     attributes: dict[str, list[Any]]
-    flags: list[str]
+    types: list[str]
 
     images: list[SingleImage]
 
 
 class ImageQuery(BaseModel):
     path: Optional[str]
-    attributes: Optional[dict[str, Any]]
-    flags: Optional[dict[str, bool]]
-
-    _attributes = validator("attributes", allow_reuse=True)(
-        val_scalar_dict("attributes")
-    )
+    filters: Filters = Field(default_factory=Filters)
 
 
 @router.post(
@@ -110,10 +106,7 @@ async def query_dataset_images(
         images = [
             image
             for image in images
-            if SingleImage(**image).match_filter(
-                attribute_filters=dataset.attribute_filters,
-                flag_filters=dataset.flag_filters,
-            )
+            if match_filter(SingleImage(**image), Filters(**dataset.filters))
         ]
 
     attributes = {}
@@ -123,8 +116,8 @@ async def query_dataset_images(
         for k, v in attributes.items():
             attributes[k] = list(set(v))
 
-    flags = list(
-        set(flag for image in images for flag in image["flags"].keys())
+    types = list(
+        set(type for image in images for type in image["types"].keys())
     )
 
     if query is not None:
@@ -139,13 +132,13 @@ async def query_dataset_images(
             else:
                 images = [image]
 
-        if (query.attributes is not None) or (query.flags is not None):
+        if query.filters.attributes or query.filters.types:
             images = [
                 image
                 for image in images
-                if SingleImage(**image).match_filter(
-                    attribute_filters=query.attributes,
-                    flag_filters=query.flags,
+                if match_filter(
+                    SingleImage(**image),
+                    Filters(**query.filters.dict()),
                 )
             ]
 
@@ -168,7 +161,7 @@ async def query_dataset_images(
         current_page=page,
         page_size=page_size,
         attributes=attributes,
-        flags=flags,
+        types=types,
         images=images,
     )
 

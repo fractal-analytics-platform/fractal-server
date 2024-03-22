@@ -22,6 +22,7 @@ from ....models.v2 import WorkflowTaskV2
 from ....models.v2 import WorkflowV2
 from ....schemas.v1 import JobStatusType
 from ....security import User
+from fractal_server.app.runner.v2.filters import Filters
 
 
 async def _get_project_check_owner(
@@ -395,8 +396,7 @@ async def _workflow_insert_task(
     order: Optional[int] = None,
     meta: Optional[dict[str, Any]] = None,
     args: Optional[dict[str, Any]] = None,
-    input_attributes: dict[str, Any] = None,
-    input_flags: dict[str, bool] = None,
+    input_filters: Optional[Filters] = None,
     db: AsyncSession,
 ) -> WorkflowTaskV2:
     """
@@ -429,8 +429,8 @@ async def _workflow_insert_task(
         else:
             raise ValueError(f"TaskV2 {task_id} not found.")
 
-    default_args = db_task.default_args_from_args_schema
     # Override default_args with args
+    default_args = db_task.default_args_from_args_schema
     actual_args = default_args.copy()
     if args is not None:
         for k, v in args.items():
@@ -444,6 +444,12 @@ async def _workflow_insert_task(
     if not wt_meta:
         wt_meta = None
 
+    # Prepare input_filters attribute
+    if input_filters is None:
+        input_filters_kwarg = {}
+    else:
+        input_filters_kwarg = dict(input_filters=input_filters)
+
     # Create DB entry
     if is_legacy_task:
         wf_task = WorkflowTaskV2(
@@ -451,8 +457,7 @@ async def _workflow_insert_task(
             task_legacy_id=task_id,
             args=actual_args,
             meta=wt_meta,
-            input_attributes=input_attributes or {},
-            input_flags=input_flags or {},
+            **input_filters_kwarg,
         )
     else:
         wf_task = WorkflowTaskV2(
@@ -460,8 +465,7 @@ async def _workflow_insert_task(
             task_id=task_id,
             args=actual_args,
             meta=wt_meta,
-            input_attributes=input_attributes or {},
-            input_flags=input_flags or {},
+            **input_filters_kwarg,
         )
     db.add(wf_task)
     db_workflow.task_list.insert(order, wf_task)
