@@ -1,21 +1,14 @@
-from typing import Optional
-
 from pydantic import BaseModel
 from pydantic import Field
 
 from ....images import SingleImage
-from .models import DictStrAny
-
-
-class TaskOutputFilters(BaseModel):
-    attributes: DictStrAny = Field(default_factory=dict)
-    flags: dict[str, bool] = Field(default_factory=dict)
+from fractal_server.app.runner.v2.models import Filters
 
 
 class TaskOutput(BaseModel):
     image_list_updates: list[SingleImage] = Field(default_factory=list)
     image_list_removals: list[str] = Field(default_factory=list)
-    filters: Optional[TaskOutputFilters] = None
+    filters: Filters = Field(default_factory=Filters)
 
     class Config:
         extra = "forbid"
