@@ -46,7 +46,7 @@ def execute_tasks_v2(
         attribute_filters.update(wftask.filters.attributes)
         filtered_images = _filter_image_list(
             images=tmp_dataset.images,
-            flag_filters=flag_filters,
+            type_filters=flag_filters,
             attribute_filters=attribute_filters,
         )
         # Verify that filtered images comply with output types
