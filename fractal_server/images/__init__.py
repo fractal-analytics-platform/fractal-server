@@ -82,16 +82,16 @@ def find_image_by_path(
 def _filter_image_list(
     images: list[SingleImage],
     attribute_filters: Optional[dict[str, Any]] = None,
-    flag_filters: Optional[dict[str, Any]] = None,
+    type_filters: Optional[dict[str, Any]] = None,
 ) -> list[SingleImage]:
-    if attribute_filters is None and flag_filters is None:
+    if attribute_filters is None and type_filters is None:
         # When no filter is provided, return all images
         return images
 
     filtered_images = []
     for this_image in images:
         if this_image.match_filter(
-            attribute_filters=attribute_filters, type_filters=flag_filters
+            attribute_filters=attribute_filters, type_filters=type_filters
         ):
             filtered_images.append(copy(this_image))
     return filtered_images
