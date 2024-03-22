@@ -5,17 +5,11 @@ from typing import Union
 from zipfile import ZipFile
 
 from .utils import _normalize_package_name
-from .utils import get_absolute_venv_path
-from .utils import get_collection_path
 from .utils import get_python_interpreter
 from .v1._TaskCollectPip import _TaskCollectPip as _TaskCollectPipV1
 from .v2._TaskCollectPip import _TaskCollectPip as _TaskCollectPipV2
 from fractal_server.app.schemas.v1 import ManifestV1
-from fractal_server.app.schemas.v1 import (
-    TaskCollectStatus as TaskCollectStatusV1,
-)
 from fractal_server.app.schemas.v2 import ManifestV2
-from fractal_server.app.schemas.v2 import TaskCollectStatusV2
 from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
 from fractal_server.syringe import Inject
@@ -23,22 +17,6 @@ from fractal_server.utils import execute_command
 
 
 FRACTAL_PUBLIC_TASK_SUBDIR = ".fractal"
-
-
-def get_collection_data_v1(venv_path: Path) -> TaskCollectStatusV1:
-    package_path = get_absolute_venv_path(venv_path)
-    collection_path = get_collection_path(package_path)
-    with collection_path.open() as f:
-        data = json.load(f)
-    return TaskCollectStatusV1(**data)
-
-
-def get_collection_data_v2(venv_path: Path) -> TaskCollectStatusV2:
-    package_path = get_absolute_venv_path(venv_path)
-    collection_path = get_collection_path(package_path)
-    with collection_path.open() as f:
-        data = json.load(f)
-    return TaskCollectStatusV2(**data)
 
 
 async def download_package(
