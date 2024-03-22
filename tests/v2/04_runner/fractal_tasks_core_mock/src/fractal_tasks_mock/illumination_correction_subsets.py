@@ -1,16 +1,8 @@
 from pathlib import Path
-from typing import Literal
 
-from pydantic import BaseModel
-from pydantic import Field
 from pydantic.decorator import validate_arguments
 
-
-class InitArgsIllumination(BaseModel):
-    raw_path: str
-    subsets: dict[Literal["T_index", "C_index", "Z_index"], int] = Field(
-        default_factory=dict
-    )
+from .input_models import InitArgsIllumination
 
 
 @validate_arguments

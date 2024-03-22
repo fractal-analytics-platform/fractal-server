@@ -1,15 +1,9 @@
 from pathlib import Path
-from typing import Optional
 
-from pydantic import BaseModel
 from pydantic.decorator import validate_arguments
 
+from .input_models import InitArgsCellVoyager
 from .utils import _check_path_is_absolute
-
-
-class InitArgsCellVoyager(BaseModel):
-    raw_path: str
-    acquisition: Optional[int]
 
 
 @validate_arguments

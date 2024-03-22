@@ -1,11 +1,8 @@
 from pathlib import Path
 
-from pydantic import BaseModel
 from pydantic.decorator import validate_arguments
 
-
-class InitArgsRegistration(BaseModel):
-    ref_path: str
+from .input_models import InitArgsRegistration
 
 
 @validate_arguments
