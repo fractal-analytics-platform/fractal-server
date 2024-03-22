@@ -85,7 +85,7 @@ def upgrade() -> None:
         sa.Column(
             "filters",
             sa.JSON(),
-            server_default="{'attributes': {}, 'types': {}}",
+            server_default='{"attributes": {}, "types": {}}',
             nullable=False,
         ),
         sa.ForeignKeyConstraint(
@@ -182,7 +182,7 @@ def upgrade() -> None:
         sa.Column(
             "input_filters",
             sa.JSON(),
-            server_default="{'attributes': {}, 'types': {}}",
+            server_default='{"attributes": {}, "types": {}}',
             nullable=False,
         ),
         sa.Column("is_legacy_task", sa.Boolean(), nullable=False),
