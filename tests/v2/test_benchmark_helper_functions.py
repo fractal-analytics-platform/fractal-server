@@ -4,6 +4,7 @@ from time import perf_counter
 import pytest
 from devtools import debug
 
+from fractal_server.app.runner.v2.filters import Filters
 from fractal_server.app.runner.v2.runner_functions import deduplicate_list
 from fractal_server.app.runner.v2.runner_functions import InitArgsModel
 from fractal_server.images import SingleImage
@@ -23,36 +24,51 @@ def benchmark(func):
     return wrapper
 
 
+def dummy_image_list(N):
+    assert N % 4 == 0
+    return [
+        SingleImage(
+            path=f"/tmp_{i}_small",
+            attributes=dict(a1=(i % 2), a2="a2", a3="whoknows"),
+            types=dict(t1=bool(i % 4)),
+        )
+        for i in range(N)
+    ]
+
+
 @pytest.mark.parametrize(
     "images",
-    [
-        [
-            SingleImage(path=f"/tmp_{i}_small", attributes=dict(tag=i % 2))
-            for i in range(10)
-        ],
-        [
-            SingleImage(path=f"/tmp_{i}_medium", attributes=dict(tag=i % 2))
-            for i in range(100)
-        ],
-        [
-            SingleImage(path=f"/tmp_{i}_large", attributes=dict(tag=i % 2))
-            for i in range(1000)
-        ],
-        [
-            SingleImage(path=f"/tmp_{i}_extra", attributes=dict(tag=i % 2))
-            for i in range(10000)
-        ],
-        [
-            SingleImage(path=f"/tmp_{i}_extra", attributes=dict(tag=i % 2))
-            for i in range(100000)
-        ],
-    ],
+    [dummy_image_list(N) for N in [20, 200, 2_000, 20_000]],
 )
 @benchmark
-def test_filter_image_list(
+def test_filter_image_list_with_filters(
     images,
 ):
-    _filter_image_list(images=images, attribute_filters=dict(tag=0))
+    new_list = _filter_image_list(
+        images=images,
+        filters=Filters(
+            attributes=dict(a1=0, a2="a2", a3=None),
+            types=dict(t1=True, t2=False),
+        ),
+    )
+    debug(len(images), len(new_list))
+    assert len(new_list) == len(images) // 4
+
+
+@pytest.mark.parametrize(
+    "images",
+    [dummy_image_list(N) for N in [20, 200, 2_000, 20_000]],
+)
+@benchmark
+def test_filter_image_list_few_filters(
+    images,
+):
+    new_list = _filter_image_list(
+        images=images,
+        filters=Filters(attributes=dict(a1=0)),
+    )
+    debug(len(images), len(new_list))
+    assert len(new_list) == len(images) // 2
 
 
 @pytest.mark.parametrize(
