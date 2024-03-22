@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from pydantic import BaseModel
-from pydantic import validator
+from pydantic import Field
 from sqlalchemy.orm.attributes import flag_modified
 
 from ._aux_functions import _get_dataset_check_owner
@@ -17,7 +17,6 @@ from fractal_server.app.runner.v2.filters import Filters
 from fractal_server.app.security import current_active_user
 from fractal_server.app.security import User
 from fractal_server.images import SingleImage
-from fractal_server.images import val_scalar_dict
 from fractal_server.images.tools import match_filter
 
 router = APIRouter()
@@ -37,12 +36,7 @@ class ImagePage(BaseModel):
 
 class ImageQuery(BaseModel):
     path: Optional[str]
-    attributes: Optional[dict[str, Any]]
-    types: Optional[dict[str, bool]]
-
-    _attributes = validator("attributes", allow_reuse=True)(
-        val_scalar_dict("attributes")
-    )
+    filters: Filters = Field(default_factory=Filters)
 
 
 @router.post(
@@ -142,13 +136,13 @@ async def query_dataset_images(
             else:
                 images = [image]
 
-        if (query.attributes is not None) or (query.types is not None):
+        if query.filters.attributes or query.filters.types:
             images = [
                 image
                 for image in images
                 if match_filter(
                     SingleImage(**image),
-                    Filters(attributes=query.attributes, types=query.types),
+                    Filters(**query.filters.dict()),
                 )
             ]
 

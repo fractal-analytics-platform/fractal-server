@@ -1,10 +1,9 @@
 from typing import Any
+from typing import Union
 
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import validator
-
-from fractal_server.images import val_scalar_dict
 
 
 class Filters(BaseModel):
@@ -15,6 +14,15 @@ class Filters(BaseModel):
         extra = "forbid"
 
     # Validators
-    _attributes = validator("attributes", allow_reuse=True)(
-        val_scalar_dict("attributes")
-    )
+    @validator("attributes")
+    def validate_attributes(
+        cls, v: dict[str, Any]
+    ) -> dict[str, Union[int, float, str, bool, None]]:
+        for key, value in v.items():
+            if not isinstance(value, (int, float, str, bool, None)):
+                raise ValueError(
+                    f"Filters.attributes[{key}] must be a scalar "
+                    "(int, float, str, bool, or None). "
+                    f"Given {value} ({type(value)})"
+                )
+        return v

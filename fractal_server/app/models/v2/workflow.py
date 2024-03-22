@@ -35,9 +35,9 @@ class WorkflowV2(SQLModel, table=True):
     )
 
     @property
-    def input_type(self):
-        return self.task_list[0].task.input_type
+    def input_types(self):
+        return self.task_list[0].task.input_types
 
     @property
-    def output_type(self):
-        return self.task_list[-1].task.output_type
+    def output_types(self):
+        return self.task_list[-1].task.output_types
