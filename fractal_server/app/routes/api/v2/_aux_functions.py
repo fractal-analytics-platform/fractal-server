@@ -390,8 +390,8 @@ def _get_submitted_jobs_statement() -> SelectOfScalar:
 async def _workflow_insert_task(
     *,
     workflow_id: int,
-    is_v2: bool,
     task_id: int,
+    is_legacy_task: bool = False,
     order: Optional[int] = None,
     meta: Optional[dict[str, Any]] = None,
     args: Optional[dict[str, Any]] = None,
@@ -418,14 +418,16 @@ async def _workflow_insert_task(
 
     # Get task from db, and extract default arguments via a Task property
     # method
-    if is_v2:
-        db_task = await db.get(TaskV2, task_id)
-    else:
+    if is_legacy_task is True:
         db_task = await db.get(Task, task_id)
+    else:
+        db_task = await db.get(TaskV2, task_id)
+
     if db_task is None:
-        raise ValueError(
-            f"Task{'V2' if is_v2 else ''} {task_id} does not exist"
-        )
+        if is_legacy_task is True:
+            raise ValueError(f"Task {task_id} not found.")
+        else:
+            raise ValueError(f"TaskV2 {task_id} not found.")
 
     default_args = db_task.default_args_from_args_schema
     # Override default_args with args
@@ -443,9 +445,10 @@ async def _workflow_insert_task(
         wt_meta = None
 
     # Create DB entry
-    if is_v2:
+    if is_legacy_task:
         wf_task = WorkflowTaskV2(
-            task_v2_id=task_id,
+            is_legacy_task=True,
+            task_legacy_id=task_id,
             args=actual_args,
             meta=wt_meta,
             input_attributes=input_attributes or {},
@@ -453,7 +456,8 @@ async def _workflow_insert_task(
         )
     else:
         wf_task = WorkflowTaskV2(
-            task_v1_id=task_id,
+            is_legacy_task=False,
+            task_id=task_id,
             args=actual_args,
             meta=wt_meta,
             input_attributes=input_attributes or {},
