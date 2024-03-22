@@ -57,8 +57,8 @@ def test_fractal_demos_01(tmp_path: Path, executor):
     )
 
     assert dataset.history == ["create_ome_zarr_compound"]
-    assert dataset.attribute_filters == {}
-    assert dataset.flag_filters == {}
+    assert dataset.filters.attributes == {}
+    assert dataset.filters.flags == {}
     _assert_image_data_exist(dataset.images)
     debug(dataset)
 
@@ -77,8 +77,8 @@ def test_fractal_demos_01(tmp_path: Path, executor):
         "create_ome_zarr_compound",
         "illumination_correction",
     ]
-    assert dataset.attribute_filters == {}
-    assert dataset.flag_filters == {
+    assert dataset.filters.attributes == {}
+    assert dataset.filters.flags == {
         "illumination_correction": True,
     }
     assert set(dataset.image_paths) == {
@@ -123,8 +123,8 @@ def test_fractal_demos_01(tmp_path: Path, executor):
         "MIP_compound",
     ]
 
-    assert dataset.attribute_filters == {}
-    assert dataset.flag_filters == {
+    assert dataset.filters.attributes == {}
+    assert dataset.filters.flags == {
         "illumination_correction": True,
         "has_z": False,
     }
@@ -207,8 +207,8 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
         "create_ome_zarr_compound",
         "illumination_correction",
     ]
-    assert dataset.attribute_filters == {}
-    assert dataset.flag_filters == {
+    assert dataset.filters.attributes == {}
+    assert dataset.filters.flags == {
         "illumination_correction": True,
     }
     assert dataset.image_paths == [
@@ -283,8 +283,8 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
         "illumination_correction",
         "MIP_compound",
     ]
-    assert dataset.attribute_filters == {}
-    assert dataset.flag_filters == {
+    assert dataset.filters.attributes == {}
+    assert dataset.filters.flags == {
         "has_z": False,
         "illumination_correction": True,
     }
@@ -322,8 +322,8 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
         },
     }
 
-    assert dataset.attribute_filters == {}
-    assert dataset.flag_filters == {
+    assert dataset.filters.attributes == {}
+    assert dataset.filters.flags == {
         "has_z": False,
         "illumination_correction": True,
     }
