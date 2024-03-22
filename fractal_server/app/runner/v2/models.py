@@ -18,7 +18,7 @@ class Dataset(BaseModel):
     zarr_dir: str
     images: list[SingleImage] = Field(default_factory=list)
     attribute_filters: DictStrAny = Field(default_factory=dict)
-    flag_filters: DictStrAny = Field(default_factory=dict)
+    flag_filters: dict[str, bool] = Field(default_factory=dict)
 
     @property
     def image_paths(self) -> list[str]:
