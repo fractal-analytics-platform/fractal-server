@@ -166,17 +166,16 @@ def yokogawa_to_zarr(
     with (Path(path) / "data").open("w") as f:
         f.write(f"Source data: {raw_path}\n")
     print("[yokogawa_to_zarr] END")
-    attributes = dict(well=well)
+    attributes = dict(well=well, plate=plate)
     if init_args.acquisition is not None:
         attributes["acquisition"] = init_args.acquisition
     out = dict(
-        added_images=[
+        image_list_updates=[
             dict(
                 path=path,
                 attributes=attributes,
+                types=dict(has_z=has_z),
             )
         ],
-        attributes=dict(plate=plate),
-        flags=dict(has_z=has_z),
     )
     return out
