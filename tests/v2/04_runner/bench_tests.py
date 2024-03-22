@@ -40,11 +40,11 @@ def benchmark(func):
         ],
         [
             SingleImage(path=f"/tmp_{i}_extra", attributes=dict(tag=i % 2))
-            for i in range(10000)
+            for i in range(10_000)
         ],
         [
             SingleImage(path=f"/tmp_{i}_extra", attributes=dict(tag=i % 2))
-            for i in range(100000)
+            for i in range(100_000)
         ],
     ],
 )
@@ -52,7 +52,9 @@ def benchmark(func):
 def test_filter_image_list(
     images,
 ):
-    _filter_image_list(images=images, attribute_filters=dict(tag=0))
+    debug(len(images))
+    new_list = _filter_image_list(images=images, attribute_filters=dict(tag=0))
+    assert len(new_list) == len(images) // 2
 
 
 @pytest.mark.parametrize(
