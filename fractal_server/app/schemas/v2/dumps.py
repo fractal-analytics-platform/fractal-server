@@ -8,18 +8,15 @@ These models are used in at least two situations:
 1. In the "*_dump" attributes of ApplyWorkflow models;
 2. In the `_DatasetHistoryItem.workflowtask` model, to trim its size.
 """
-from typing import Any
-from typing import Literal
 from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import root_validator
-from pydantic import validator
 
+from fractal_server.app.runner.v2.filters import Filters
 from fractal_server.app.schemas.v1.dumps import TaskDump as TaskDumpV1
 from fractal_server.images import SingleImage
-from fractal_server.images import val_scalar_dict
 
 
 class ProjectDumpV2(BaseModel, extra=Extra.forbid):
@@ -33,23 +30,28 @@ class ProjectDumpV2(BaseModel, extra=Extra.forbid):
 class TaskDumpV2(BaseModel):
     id: int
     name: str
-    type: Literal["parallel", "non_parallel", "compound"]
-    command_pre: str
-    command: str
+
+    command_non_parallel: Optional[str]
+    command_parallel: Optional[str]
     source: str
     owner: Optional[str]
     version: Optional[str]
+
+    input_types: dict[str, bool]
+    output_types: dict[str, bool]
 
 
 class WorkflowTaskDumpV2(BaseModel):
     id: int
     workflow_id: int
     order: Optional[int]
-    task_v1_id: Optional[int]
-    task_v1: Optional[TaskDumpV1]
-    task_v2_id: Optional[int]
-    task_v2: Optional[TaskDumpV2]
-    filters: dict[str, Any]
+
+    input_filters: Filters
+
+    task_id: Optional[int]
+    task: Optional[TaskDumpV2]
+    task_legacy_id: Optional[int]
+    task_legacy: Optional[TaskDumpV1]
 
     # Validators
     @root_validator
@@ -66,10 +68,6 @@ class WorkflowTaskDumpV2(BaseModel):
             )
         return values
 
-    _filters = validator("filters", allow_reuse=True)(
-        val_scalar_dict("filters")
-    )
-
 
 class WorkflowDumpV2(BaseModel):
     id: int
@@ -85,11 +83,6 @@ class DatasetDumpV2(BaseModel):
     read_only: bool
     timestamp_created: str
 
-    images: list[SingleImage]
-    filters: dict[str, Any]
     zarr_dir: str
-
-    # Validators
-    _filters = validator("filters", allow_reuse=True)(
-        val_scalar_dict("filters")
-    )
+    images: list[SingleImage]
+    filters: Filters

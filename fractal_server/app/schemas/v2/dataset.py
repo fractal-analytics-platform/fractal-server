@@ -1,16 +1,16 @@
 from datetime import datetime
-from typing import Any
 from typing import Optional
 
 from pydantic import BaseModel
+from pydantic import Field
 from pydantic import validator
 
-from ....images import val_scalar_dict
 from .._validators import valstr
 from .._validators import valutc
 from ..v1.project import ProjectRead
 from .dumps import WorkflowTaskDumpV2
 from .workflowtask import WorkflowTaskStatusTypeV2
+from fractal_server.app.runner.v2.filters import Filters
 
 
 class _DatasetHistoryItemV2(BaseModel):
@@ -47,14 +47,10 @@ class DatasetCreateV2(BaseModel):
     read_only: bool = False
     zarr_dir: str
 
-    attribute_filters: dict[str, Any] = {}
-    flag_filters: dict[str, bool] = {}
+    filters: Filters = Field(default_factory=Filters)
 
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))
-    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
-        val_scalar_dict("attribute_filters")
-    )
 
 
 class DatasetReadV2(BaseModel):
@@ -71,15 +67,11 @@ class DatasetReadV2(BaseModel):
     timestamp_created: datetime
 
     zarr_dir: str
-    attribute_filters: dict[str, Any] = {}
-    flag_filters: dict[str, bool] = {}
+    filters: Filters = Field(default_factory=Filters)
 
     # Validators
     _timestamp_created = validator("timestamp_created", allow_reuse=True)(
         valutc("timestamp_created")
-    )
-    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
-        val_scalar_dict("attribute_filters")
     )
 
 
@@ -90,11 +82,7 @@ class DatasetUpdateV2(BaseModel):
     name: Optional[str]
     read_only: Optional[bool]
     zarr_dir: Optional[str]
-    attribute_filters: Optional[dict[str, Any]]
-    flag_filters: Optional[dict[str, bool]]
+    filters: Optional[Filters]
 
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))
-    _attribute_filters = validator("attribute_filters", allow_reuse=True)(
-        val_scalar_dict("attribute_filters")
-    )

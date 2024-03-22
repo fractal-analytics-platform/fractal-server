@@ -60,7 +60,7 @@ def patched_run_squeue(monkeypatch):
     https://github.com/sampsyo/clusterfutures/pull/19.
 
     The code of run_squeue, below, is a copy of the function in
-    fractal_server.app.runner._slurm._check_jobs_status, with changes
+    fractal_server.app.runner.executors.slurm._check_jobs_status, with changes
     marked via # CHANGED comments.
     """
 
