@@ -15,7 +15,7 @@ def val_scalar_dict(attribute: str):
             if not isinstance(value, (int, float, str, bool)):
                 raise ValueError(
                     f"{attribute}[{key}] must be a scalar (int, float, str, "
-                    f"bool, or None). Given {value} ({type(value)})"
+                    f"bool). Given {value} ({type(value)})"
                 )
         return dict_str_any
 
