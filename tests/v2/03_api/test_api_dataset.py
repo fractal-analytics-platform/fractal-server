@@ -34,17 +34,7 @@ async def test_new_dataset_v2(client, MockCurrentUser):
             f"api/v2/project/{p2_id}/dataset/",
             json=dict(
                 name="dataset",
-                images=[
-                    {
-                        "path": "/tmp/xxx.yz",
-                        "attributes": {"x": 10},
-                    },
-                    {
-                        "path": "/tmp/xxx_corr.yz",
-                        "attributes": {"x": 10, "y": True, "z": 3.14},
-                    },
-                ],
-                filters={"x": 10},
+                filters={"attributes": {"x": 10}},
                 zarr_dir="/tmp",
             ),
         )

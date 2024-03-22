@@ -396,7 +396,7 @@ async def _workflow_insert_task(
     order: Optional[int] = None,
     meta: Optional[dict[str, Any]] = None,
     args: Optional[dict[str, Any]] = None,
-    input_filters: Filters,
+    input_filters: Filters = Filters(),
     db: AsyncSession,
 ) -> WorkflowTaskV2:
     """

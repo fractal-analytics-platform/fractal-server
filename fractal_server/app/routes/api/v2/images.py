@@ -117,11 +117,7 @@ async def query_dataset_images(
             attributes[k] = list(set(v))
 
     types = list(
-        set(
-            type
-            for image in images
-            for type in image["filters"]["types"].keys()
-        )
+        set(type for image in images for type in image["types"].keys())
     )
 
     if query is not None:

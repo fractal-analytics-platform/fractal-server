@@ -31,7 +31,7 @@ class WorkflowTaskV2(SQLModel, table=True):
         sa_column=Column(
             JSON,
             nullable=False,
-            server_default=str(dict(attributes=dict(), types=dict())),
+            server_default='{"attributes": {}, "types": {}}',
         )
     )
 
