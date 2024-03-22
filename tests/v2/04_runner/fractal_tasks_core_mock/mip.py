@@ -17,7 +17,6 @@ def new_ome_zarr(
     # Non-standard arguments
     suffix: str = "new",
 ) -> dict:
-
     dict_shared = _extract_common_root(paths)
     old_plate = dict_shared.get("shared_plate")
 
@@ -66,7 +65,6 @@ def maximum_intensity_projection(
     path: str,
     init_args: InitArgsMIP,
 ) -> DictStrAny:
-
     new_path = init_args.new_path
     new_plate = init_args.new_plate  # FIXME: re-compute it here
 
@@ -78,7 +76,12 @@ def maximum_intensity_projection(
     print("[maximum_intensity_projection] END")
 
     out = dict(
-        added_images=[dict(path=new_path, origin=path)],
-        attributes=dict(plate=new_plate),
+        image_list_updates=[
+            dict(
+                path=new_path,
+                origin=path,
+                attributes=dict(plate=new_plate),
+            )
+        ],
     )
     return out

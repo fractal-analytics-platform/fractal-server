@@ -9,8 +9,8 @@ from fractal_tasks_core_mock import TASK_LIST
 from fractal_server.app.runner.v2 import execute_tasks_v2
 from fractal_server.app.runner.v2.models import Dataset
 from fractal_server.app.runner.v2.models import WorkflowTask
-from fractal_server.images import find_image_by_path
 from fractal_server.images import SingleImage
+from fractal_server.images.tools import find_image_by_path
 
 
 @pytest.fixture()
@@ -57,8 +57,8 @@ def test_fractal_demos_01(tmp_path: Path, executor):
     )
 
     assert dataset.history == ["create_ome_zarr_compound"]
-    assert dataset.attribute_filters == {"plate": "my_plate.zarr"}
-    assert dataset.flag_filters == {"has_z": True}
+    assert dataset.filters.attributes == {}
+    assert dataset.filters.types == {}
     _assert_image_data_exist(dataset.images)
     debug(dataset)
 
@@ -77,9 +77,8 @@ def test_fractal_demos_01(tmp_path: Path, executor):
         "create_ome_zarr_compound",
         "illumination_correction",
     ]
-    assert dataset.attribute_filters == {"plate": "my_plate.zarr"}
-    assert dataset.flag_filters == {
-        "has_z": True,
+    assert dataset.filters.attributes == {}
+    assert dataset.filters.types == {
         "illumination_correction": True,
     }
     assert set(dataset.image_paths) == {
@@ -89,14 +88,14 @@ def test_fractal_demos_01(tmp_path: Path, executor):
 
     img = find_image_by_path(
         path=f"{zarr_dir}/my_plate.zarr/A/01/0", images=dataset.images
-    )
+    )["image"]
     assert img.dict() == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
         "attributes": {
             "well": "A01",
             "plate": "my_plate.zarr",
         },
-        "flags": {
+        "types": {
             "illumination_correction": True,
             "has_z": True,
         },
@@ -124,14 +123,14 @@ def test_fractal_demos_01(tmp_path: Path, executor):
         "MIP_compound",
     ]
 
-    assert dataset.attribute_filters == {"plate": "my_plate_mip.zarr"}
-    assert dataset.flag_filters == {
-        "has_z": False,
+    assert dataset.filters.attributes == {}
+    assert dataset.filters.types == {
         "illumination_correction": True,
+        "has_z": False,
     }
     img = find_image_by_path(
         path=f"{zarr_dir}/my_plate_mip.zarr/A/01/0", images=dataset.images
-    )
+    )["image"]
     assert img.dict() == {
         "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
         "origin": f"{zarr_dir}/my_plate.zarr/A/01/0",
@@ -139,7 +138,7 @@ def test_fractal_demos_01(tmp_path: Path, executor):
             "well": "A01",
             "plate": "my_plate_mip.zarr",
         },
-        "flags": {
+        "types": {
             "has_z": False,
             "illumination_correction": True,
         },
@@ -208,11 +207,8 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
         "create_ome_zarr_compound",
         "illumination_correction",
     ]
-    assert dataset.attribute_filters == {
-        "plate": "my_plate.zarr",
-    }
-    assert dataset.flag_filters == {
-        "has_z": True,
+    assert dataset.filters.attributes == {}
+    assert dataset.filters.types == {
         "illumination_correction": True,
     }
     assert dataset.image_paths == [
@@ -230,7 +226,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
             "well": "A01",
             "plate": "my_plate.zarr",
         },
-        "flags": {
+        "types": {
             "has_z": True,
         },
     }
@@ -241,7 +237,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
             "well": "A02",
             "plate": "my_plate.zarr",
         },
-        "flags": {
+        "types": {
             "has_z": True,
         },
     }
@@ -252,7 +248,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
             "well": "A01",
             "plate": "my_plate.zarr",
         },
-        "flags": {
+        "types": {
             "illumination_correction": True,
             "has_z": True,
         },
@@ -264,7 +260,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
             "well": "A02",
             "plate": "my_plate.zarr",
         },
-        "flags": {
+        "types": {
             "has_z": True,
             "illumination_correction": True,
         },
@@ -287,10 +283,8 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
         "illumination_correction",
         "MIP_compound",
     ]
-    assert dataset.attribute_filters == {
-        "plate": "my_plate_mip.zarr",
-    }
-    assert dataset.flag_filters == {
+    assert dataset.filters.attributes == {}
+    assert dataset.filters.types == {
         "has_z": False,
         "illumination_correction": True,
     }
@@ -310,7 +304,7 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
             "well": "A01",
             "plate": "my_plate_mip.zarr",
         },
-        "flags": {
+        "types": {
             "has_z": False,
             "illumination_correction": True,
         },
@@ -322,16 +316,14 @@ def test_fractal_demos_01_no_overwrite(tmp_path: Path, executor):
             "well": "A02",
             "plate": "my_plate_mip.zarr",
         },
-        "flags": {
+        "types": {
             "has_z": False,
             "illumination_correction": True,
         },
     }
 
-    assert dataset.attribute_filters == {
-        "plate": "my_plate_mip.zarr",
-    }
-    assert dataset.flag_filters == {
+    assert dataset.filters.attributes == {}
+    assert dataset.filters.types == {
         "has_z": False,
         "illumination_correction": True,
     }
@@ -508,7 +500,7 @@ def test_registration_overwrite(tmp_path: Path, executor):
     # Images are still the same number, but they are marked as registered
     assert len(dataset.images) == 6
     for image in dataset.images:
-        assert image.flags["registration"] is True
+        assert image.types["registration"] is True
 
     # Print current dataset information
     debug(dataset)
