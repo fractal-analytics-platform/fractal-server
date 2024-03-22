@@ -11,10 +11,12 @@ from .....logger import close_logger
 from .....logger import set_logger
 from ....db import AsyncSession
 from ....db import get_async_db
+from ....models.v1 import Task as TaskV1
 from ....models.v2 import JobV2
 from ....models.v2 import ProjectV2
 from ....models.v2 import TaskV2
 from ....models.v2 import WorkflowV2
+from ....schemas.v1 import WorkflowTaskCreate as WorkflowTaskCreateV1
 from ....schemas.v2 import WorkflowCreateV2
 from ....schemas.v2 import WorkflowExportV2
 from ....schemas.v2 import WorkflowImportV2
@@ -243,13 +245,23 @@ async def export_worfklow(
     # Emit a warning when exporting a workflow with custom tasks
     logger = set_logger(None)
     for wftask in workflow.task_list:
-        if wftask.task.owner is not None:
-            logger.warning(
-                f"Custom tasks (like the one with id={wftask.task.id} and "
-                f'source="{wftask.task.source}") are not meant to be '
-                "portable; re-importing this workflow may not work as "
-                "expected."
-            )
+        if wftask.is_legacy_task:
+            if wftask.task_legacy.owner is not None:
+                logger.warning(
+                    f"Custom tasks (like the one with "
+                    f"id={wftask.task_legacy_id} and "
+                    f"source='{wftask.task_legacy.source}') are not meant to "
+                    "be portable; re-importing this workflow may not work as "
+                    "expected."
+                )
+        else:
+            if wftask.task.owner is not None:
+                logger.warning(
+                    f"Custom tasks (like the one with id={wftask.task_id} and "
+                    f'source="{wftask.task.source}") are not meant to be '
+                    "portable; re-importing this workflow may not work as "
+                    "expected."
+                )
     close_logger(logger)
 
     await db.close()
@@ -286,21 +298,39 @@ async def import_workflow(
     )
 
     # Check that all required tasks are available
-    tasks = [wf_task.task for wf_task in workflow.task_list]
     source_to_id = {}
-    for task in tasks:
-        source = task.source
-        if source not in source_to_id.keys():
-            stm = select(TaskV2).where(TaskV2.source == source)
-            tasks_by_source = (await db.execute(stm)).scalars().all()
-            if len(tasks_by_source) != 1:
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=(
-                        f"Found {len(tasks_by_source)} tasks with {source=}."
-                    ),
-                )
-            source_to_id[source] = tasks_by_source[0].id
+    source_to_id_legacy = {}
+
+    for wf_task in workflow.task_list:
+
+        if wf_task.is_legacy_task is True:
+            source = wf_task.task_legacy.source
+            if source not in source_to_id_legacy.keys():
+                stm = select(TaskV1).where(TaskV1.source == source)
+                tasks_by_source = (await db.execute(stm)).scalars().all()
+                if len(tasks_by_source) != 1:
+                    raise HTTPException(
+                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                        detail=(
+                            f"Found {len(tasks_by_source)} tasks legacy "
+                            f"with {source=}."
+                        ),
+                    )
+                source_to_id_legacy[source] = tasks_by_source[0].id
+        else:
+            source = wf_task.task.source
+            if source not in source_to_id.keys():
+                stm = select(TaskV2).where(TaskV2.source == source)
+                tasks_by_source = (await db.execute(stm)).scalars().all()
+                if len(tasks_by_source) != 1:
+                    raise HTTPException(
+                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                        detail=(
+                            f"Found {len(tasks_by_source)} tasks "
+                            f"with {source=}."
+                        ),
+                    )
+                source_to_id[source] = tasks_by_source[0].id
 
     # Create new Workflow (with empty task_list)
     db_workflow = WorkflowV2(
@@ -312,22 +342,40 @@ async def import_workflow(
     await db.refresh(db_workflow)
 
     # Insert tasks
-    async with db:
-        for _, wf_task in enumerate(workflow.task_list):
-            # Identify task_id
-            source = wf_task.task.source
-            task_id = source_to_id[source]
-            # Prepare new_wf_task
-            new_wf_task = WorkflowTaskCreateV2(
-                **wf_task.dict(exclude_none=True),
-            )
-            # Insert task
-            await _workflow_insert_task(
-                **new_wf_task.dict(),
-                workflow_id=db_workflow.id,
-                task_id=task_id,
-                db=db,
-            )
+    async with db:  # FIXME why?
+
+        for wf_task in workflow.task_list:
+            if wf_task.is_legacy_task is True:
+                # Identify task_id
+                source = wf_task.task_legacy.source
+                task_id = source_to_id_legacy[source]
+                # Prepare new_wf_task
+                new_wf_task = WorkflowTaskCreateV1(
+                    **wf_task.dict(exclude_none=True)
+                )
+                # Insert task
+                await _workflow_insert_task(
+                    **new_wf_task.dict(),
+                    is_legacy_task=True,
+                    workflow_id=db_workflow.id,
+                    task_id=task_id,
+                    db=db,
+                )
+            else:
+                # Identify task_id
+                source = wf_task.task.source
+                task_id = source_to_id[source]
+                # Prepare new_wf_task
+                new_wf_task = WorkflowTaskCreateV2(
+                    **wf_task.dict(exclude_none=True)
+                )
+                # Insert task
+                await _workflow_insert_task(
+                    **new_wf_task.dict(),
+                    workflow_id=db_workflow.id,
+                    task_id=task_id,
+                    db=db,
+                )
 
     await db.close()
     return db_workflow

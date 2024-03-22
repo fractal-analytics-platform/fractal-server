@@ -1,6 +1,5 @@
 from typing import Any
 from typing import Optional
-from typing import Union
 
 from pydantic import validator
 from sqlalchemy import Column
@@ -32,32 +31,16 @@ class WorkflowTaskV2(SQLModel, table=True):
         sa_column=Column(JSON, nullable=False, server_default="{}")
     )
 
-    task_v1: Optional[Task] = Relationship(
+    # Task
+    is_legacy_task: bool
+    task_id: Optional[int] = Field(foreign_key="taskv2.id")
+    task: Optional[TaskV2] = Relationship(
         sa_relationship_kwargs=dict(lazy="selectin")
     )
-    task_v1_id: Optional[int] = Field(foreign_key="task.id")
-
-    task_v2: Optional[TaskV2] = Relationship(
+    task_legacy_id: Optional[int] = Field(foreign_key="task.id")
+    task_legacy: Optional[Task] = Relationship(
         sa_relationship_kwargs=dict(lazy="selectin")
     )
-    task_v2_id: Optional[int] = Field(foreign_key="taskv2.id")
-
-    @property
-    def is_v2(self) -> bool:
-        if self.task_v2_id is not None:
-            return True
-        elif self.task_v1_id is not None:
-            return False
-        else:
-            raise ValueError("This WorkflowTaskV2 is not related to any Task")
-
-    @property
-    def task(self) -> Union[Task, TaskV2]:
-        return self.task_v2 or self.task_v1
-
-    @property
-    def task_id(self) -> int:
-        return self.task_v2_id or self.task_v1_id
 
     @validator("args")
     def validate_args(cls, value):
