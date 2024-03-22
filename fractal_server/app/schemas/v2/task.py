@@ -24,8 +24,8 @@ class TaskCreateV2(BaseModel):
     docs_info: Optional[str]
     docs_link: Optional[HttpUrl]
 
-    input_flags: dict[str, bool] = Field(default={})
-    output_flags: dict[str, bool] = Field(default={})
+    input_types: dict[str, bool] = Field(default={})
+    output_types: dict[str, bool] = Field(default={})
 
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))
@@ -57,8 +57,8 @@ class TaskReadV2(BaseModel):
     args_schema_version: Optional[str]
     docs_info: Optional[str]
     docs_link: Optional[HttpUrl]
-    input_flags: dict[str, bool]
-    output_flags: dict[str, bool]
+    input_types: dict[str, bool]
+    output_types: dict[str, bool]
 
 
 class TaskUpdateV2(BaseModel):
@@ -73,8 +73,8 @@ class TaskUpdateV2(BaseModel):
     args_schema_version: Optional[str]
     docs_info: Optional[str]
     docs_link: Optional[HttpUrl]
-    input_flags: Optional[dict[str, bool]]
-    output_flags: Optional[dict[str, bool]]
+    input_types: Optional[dict[str, bool]]
+    output_types: Optional[dict[str, bool]]
 
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))

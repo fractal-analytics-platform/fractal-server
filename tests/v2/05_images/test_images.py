@@ -1,15 +1,20 @@
-from fractal_server.images import find_image_by_path
 from fractal_server.images import SingleImage
+from fractal_server.images.tools import find_image_by_path
 
 
 def test_find_image_by_path():
     images = [
         SingleImage(path="a", attributes=dict(name="a")),
-        SingleImage(path="b", flags=dict(has_z=True)),
+        SingleImage(path="b", types={"3D": True}),
     ]
 
-    image = find_image_by_path(path="a", images=images)
-    assert image.attributes["name"] == "a"
+    image_search = find_image_by_path(path="a", images=images)
+    assert image_search["image"].attributes["name"] == "a"
+    assert image_search["index"] == 0
 
-    image = find_image_by_path(path="invalid", images=images)
-    assert image is None
+    image_search = find_image_by_path(path="b", images=images)
+    assert image_search["image"].types["3D"] is True
+    assert image_search["index"] == 1
+
+    image_search = find_image_by_path(path="invalid", images=images)
+    assert image_search is None

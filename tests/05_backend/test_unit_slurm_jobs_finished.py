@@ -1,5 +1,9 @@
-from fractal_server.app.runner._slurm._check_jobs_status import _jobs_finished
-from fractal_server.app.runner._slurm._check_jobs_status import run_squeue
+from fractal_server.app.runner.executors.slurm._check_jobs_status import (
+    _jobs_finished,
+)
+from fractal_server.app.runner.executors.slurm._check_jobs_status import (
+    run_squeue,
+)
 
 
 def test_run_squeue_non_patched(monkey_slurm):

@@ -22,25 +22,18 @@ async def test_schemas_dataset_v2(db):
         # Non-scalar attribute
         DatasetCreateV2(
             name="name",
-            images=[{"path": "/tmp/xxx.yz", "attributes": {"x": [1, 0]}}],
+            zarr_dir="/zarr",
+            filters={"attributes": {"x": [1, 0]}},
         )
     with pytest.raises(ValidationError):
-        # Non-scalar filter
-        DatasetCreateV2(name="name", filters={"x": [1, 0]})
+        # Non-boolean types
+        DatasetCreateV2(
+            name="name", zarr_dir="/zarr", filters={"types": {"a": "b"}}
+        )
 
     dataset_create = DatasetCreateV2(
         name="name",
-        images=[
-            {
-                "path": "/tmp/xxx.yz",
-                "attributes": {"x": 10},
-            },
-            {
-                "path": "/tmp/xxx_corr.yz",
-                "attributes": {"x": 10, "y": True, "z": 3.14},
-            },
-        ],
-        filters={"x": 10},
+        filters={"attributes": {"x": 10}},
         zarr_dir="/tmp",
     )
     debug(dataset_create)

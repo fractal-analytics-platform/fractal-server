@@ -1,6 +1,8 @@
 from devtools import debug
 
+from fractal_server.app.runner.v2.filters import Filters
 from fractal_server.images import SingleImage
+from fractal_server.images.tools import match_filter
 
 PREFIX = "api/v2"
 
@@ -14,7 +16,7 @@ def n_images(n: int) -> list[SingleImage]:
                 "string_attribute": str(i % 2),
                 "int_attribute": i % 2,
             },
-            flags={
+            types={
                 str(i): bool(i % 2),
                 "flag": bool(i % 2 + 1),
             },
@@ -32,7 +34,7 @@ def assert_expected_attributes_and_flags(res, tot_images: int):
         else:
             assert values == [int(values[0])]
 
-    assert set(res.json()["flags"]) == set(
+    assert set(res.json()["types"]) == set(
         [str(i) for i in range(tot_images)] + ["flag"]
     )
 
@@ -131,11 +133,15 @@ async def test_query_images(
     # use `query.attributes`
     res = await client.post(
         f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/query/",
-        json=dict(attributes={"flag": 0}),
+        json=dict(filters=dict(types=dict(flag=False))),
     )
     assert res.status_code == 200
     assert res.json()["total_count"] == len(
-        [image for image in images if image.match_filter({"flag": 0})]
+        [
+            image
+            for image in images
+            if match_filter(image, Filters(types={"flag": False}))
+        ]
     )
     assert res.json()["current_page"] == 1
     assert res.json()["page_size"] == res.json()["total_count"]
@@ -145,22 +151,33 @@ async def test_query_images(
     res = await client.post(
         f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/query/"
         "?page_size=1000",
-        json=dict(attributes={"flag": 1}),
+        json=dict(filters=dict(types={"flag": True})),
     )
     assert res.status_code == 200
     assert res.json()["total_count"] == len(
-        [image for image in images if image.match_filter({"flag": 1})]
+        [
+            image
+            for image in images
+            if match_filter(image, filters=Filters(types={"flag": 1}))
+        ]
     )
     assert res.json()["page_size"] == 1000
     assert len(res.json()["images"]) == res.json()["total_count"]
 
+    # Filter with non-existing type
     res = await client.post(
         f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/query/",
-        json=dict(attributes={"flag": 2}),
+        json=dict(filters=dict(types={"foo": True})),
     )
     assert res.status_code == 200
     assert res.json()["total_count"] == 0
     assert res.json()["images"] == []
+    res = await client.post(
+        f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/query/",
+        json=dict(filters=dict(types={"foo": False})),
+    )
+    assert res.status_code == 200
+    assert res.json()["total_count"] == N
 
     res = await client.post(
         f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/query/"
@@ -214,7 +231,7 @@ async def test_post_new_image(
     new_image = SingleImage(
         path="/new_path",
         attributes={"new_attribute": "xyz"},
-        flags={"new_flag": True},
+        types={"new_type": True},
     )
     invalid_new_image = SingleImage(path=images[-1].path)
     async with MockCurrentUser() as user:
@@ -227,7 +244,7 @@ async def test_post_new_image(
     )
     assert res.json()["total_count"] == N
     assert "new_attribute" not in res.json()["attributes"].keys()
-    assert "new_flag" not in res.json()["flags"]
+    assert "new_type" not in res.json()["types"]
 
     # add ivalid new image
     res = await client.post(
@@ -249,4 +266,4 @@ async def test_post_new_image(
     )
     assert res.json()["total_count"] == N + 1
     assert "new_attribute" in res.json()["attributes"].keys()
-    assert "new_flag" in res.json()["flags"]
+    assert "new_type" in res.json()["types"]

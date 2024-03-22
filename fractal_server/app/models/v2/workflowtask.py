@@ -1,4 +1,5 @@
 from typing import Any
+from typing import Literal
 from typing import Optional
 
 from pydantic import validator
@@ -24,11 +25,14 @@ class WorkflowTaskV2(SQLModel, table=True):
     meta: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
     args: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
 
-    input_attributes: dict[str, Any] = Field(
-        sa_column=Column(JSON, nullable=False, server_default="{}")
-    )
-    input_flags: dict[str, bool] = Field(
-        sa_column=Column(JSON, nullable=False, server_default="{}")
+    input_filters: dict[
+        Literal["attributes", "types"], dict[str, Any]
+    ] = Field(
+        sa_column=Column(
+            JSON,
+            nullable=False,
+            server_default='{"attributes": {}, "types": {}}',
+        )
     )
 
     # Task

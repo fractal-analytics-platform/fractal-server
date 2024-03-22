@@ -157,8 +157,8 @@ def yokogawa_to_zarr(
     plate = Path(path).parents[2].name
     well = Path(path).parents[1].name + Path(path).parents[0].name
 
-    # Read has_z from data
-    has_z = True  # Mock
+    # Read 3D from data
+    is_3D = True  # Mock
 
     print(f"[yokogawa_to_zarr] {raw_path=}")
     # Write fake image data into image Zarr group
@@ -166,17 +166,16 @@ def yokogawa_to_zarr(
     with (Path(path) / "data").open("w") as f:
         f.write(f"Source data: {raw_path}\n")
     print("[yokogawa_to_zarr] END")
-    attributes = dict(well=well)
+    attributes = dict(well=well, plate=plate)
     if init_args.acquisition is not None:
         attributes["acquisition"] = init_args.acquisition
     out = dict(
-        added_images=[
+        image_list_updates=[
             dict(
                 path=path,
                 attributes=attributes,
+                types={"3D": is_3D},
             )
         ],
-        attributes=dict(plate=plate),
-        flags=dict(has_z=has_z),
     )
     return out

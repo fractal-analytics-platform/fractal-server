@@ -20,8 +20,8 @@ def create_images_from_scratch(
 ) -> dict[str, Any]:
     if new_paths is None:
         new_paths = ["a", "b", "c"]
-    added_images = [dict(path=new_path) for new_path in new_paths]
-    return dict(added_images=added_images)
+    image_list_updates = [dict(path=new_path) for new_path in new_paths]
+    return dict(image_list_updates=image_list_updates)
 
 
 def remove_images(
@@ -29,7 +29,7 @@ def remove_images(
     zarr_dir: str,
     removed_images_paths: list[str],
 ) -> dict[str, Any]:
-    return dict(removed_image_paths=removed_images_paths)
+    return dict(image_list_removals=removed_images_paths)
 
 
 # Parallel tasks
@@ -43,12 +43,14 @@ def print_path(
 
 
 def edit_image(path: str, custom_parameter: int = 1) -> dict[str, Any]:
-    edited_images = [dict(path=path)]
-    return dict(edited_images=edited_images)
+    return dict(image_list_updates=[dict(path=path)])
 
 
 def copy_and_edit_image(
     path: str,
 ) -> dict[str, Any]:
-    added_images = [dict(path=f"{path}_new", attributes=dict(processed=True))]
-    return dict(added_images=added_images)
+    return dict(
+        image_list_updates=[
+            dict(path=f"{path}_new", attributes=dict(processed=True))
+        ]
+    )
