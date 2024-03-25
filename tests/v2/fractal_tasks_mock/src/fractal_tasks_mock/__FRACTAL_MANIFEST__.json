@@ -4,7 +4,45 @@
   "manifest_version": "2",
   "task_list": [
     {
-      "args_schema_{step}": {
+      "args_schema_non_parallel": {
+        "additionalProperties": false,
+        "properties": {
+          "fake_list_relative_paths": {
+            "description": "Missing description",
+            "items": {
+              "type": "string"
+            },
+            "title": "Fake List Relative Paths",
+            "type": "array"
+          },
+          "image_dir": {
+            "description": "Missing description",
+            "title": "Image Dir",
+            "type": "string"
+          },
+          "paths": {
+            "description": "Missing description",
+            "items": {
+              "type": "string"
+            },
+            "title": "Paths",
+            "type": "array"
+          },
+          "zarr_dir": {
+            "description": "Missing description",
+            "title": "Zarr Dir",
+            "type": "string"
+          }
+        },
+        "required": [
+          "paths",
+          "zarr_dir",
+          "image_dir"
+        ],
+        "title": "CreateCellvoyagerOmeZarr",
+        "type": "object"
+      },
+      "args_schema_parallel": {
         "additionalProperties": false,
         "definitions": {
           "InitArgsCellVoyager": {
@@ -54,7 +92,37 @@
       "name": "create_ome_zarr_compound"
     },
     {
-      "args_schema_{step}": {
+      "args_schema_non_parallel": {
+        "additionalProperties": false,
+        "properties": {
+          "image_dir": {
+            "description": "Missing description",
+            "title": "Image Dir",
+            "type": "string"
+          },
+          "paths": {
+            "description": "Missing description",
+            "items": {
+              "type": "string"
+            },
+            "title": "Paths",
+            "type": "array"
+          },
+          "zarr_dir": {
+            "description": "Missing description",
+            "title": "Zarr Dir",
+            "type": "string"
+          }
+        },
+        "required": [
+          "paths",
+          "zarr_dir",
+          "image_dir"
+        ],
+        "title": "CreateCellvoyagerOmeZarrMultiplex",
+        "type": "object"
+      },
+      "args_schema_parallel": {
         "additionalProperties": false,
         "definitions": {
           "InitArgsCellVoyager": {
@@ -104,7 +172,37 @@
       "name": "create_ome_zarr_multiplex_compound"
     },
     {
-      "args_schema_{step}": {
+      "args_schema_non_parallel": {
+        "additionalProperties": false,
+        "properties": {
+          "paths": {
+            "description": "Missing description",
+            "items": {
+              "type": "string"
+            },
+            "title": "Paths",
+            "type": "array"
+          },
+          "suffix": {
+            "default": "new",
+            "description": "Missing description",
+            "title": "Suffix",
+            "type": "string"
+          },
+          "zarr_dir": {
+            "description": "Missing description",
+            "title": "Zarr Dir",
+            "type": "string"
+          }
+        },
+        "required": [
+          "paths",
+          "zarr_dir"
+        ],
+        "title": "NewOmeZarr",
+        "type": "object"
+      },
+      "args_schema_parallel": {
         "additionalProperties": false,
         "definitions": {
           "InitArgsMIP": {
@@ -161,7 +259,7 @@
       }
     },
     {
-      "args_schema_{step}": {
+      "args_schema_parallel": {
         "additionalProperties": false,
         "properties": {
           "overwrite_input": {
@@ -194,7 +292,37 @@
       }
     },
     {
-      "args_schema_{step}": {
+      "args_schema_non_parallel": {
+        "additionalProperties": false,
+        "properties": {
+          "overwrite_input": {
+            "default": false,
+            "description": "Missing description",
+            "title": "Overwrite Input",
+            "type": "boolean"
+          },
+          "paths": {
+            "description": "Missing description",
+            "items": {
+              "type": "string"
+            },
+            "title": "Paths",
+            "type": "array"
+          },
+          "zarr_dir": {
+            "description": "Missing description",
+            "title": "Zarr Dir",
+            "type": "string"
+          }
+        },
+        "required": [
+          "paths",
+          "zarr_dir"
+        ],
+        "title": "IlluminationCorrectionInit",
+        "type": "object"
+      },
+      "args_schema_parallel": {
         "additionalProperties": false,
         "definitions": {
           "InitArgsIllumination": {
@@ -253,7 +381,7 @@
       }
     },
     {
-      "args_schema_{step}": {
+      "args_schema_parallel": {
         "additionalProperties": false,
         "properties": {
           "path": {
@@ -274,7 +402,37 @@
       "name": "cellpose_segmentation"
     },
     {
-      "args_schema_{step}": {
+      "args_schema_non_parallel": {
+        "additionalProperties": false,
+        "properties": {
+          "paths": {
+            "description": "Missing description",
+            "items": {
+              "type": "string"
+            },
+            "title": "Paths",
+            "type": "array"
+          },
+          "ref_acquisition": {
+            "description": "Missing description",
+            "title": "Ref Acquisition",
+            "type": "integer"
+          },
+          "zarr_dir": {
+            "description": "Missing description",
+            "title": "Zarr Dir",
+            "type": "string"
+          }
+        },
+        "required": [
+          "paths",
+          "zarr_dir",
+          "ref_acquisition"
+        ],
+        "title": "CalculateRegistrationInit",
+        "type": "object"
+      },
+      "args_schema_parallel": {
         "additionalProperties": false,
         "definitions": {
           "InitArgsRegistration": {
@@ -319,7 +477,7 @@
       "name": "calculate_registration_compound"
     },
     {
-      "args_schema_{step}": {
+      "args_schema_non_parallel": {
         "additionalProperties": false,
         "properties": {
           "paths": {
@@ -349,7 +507,7 @@
       "name": "find_registration_consensus"
     },
     {
-      "args_schema_{step}": {
+      "args_schema_parallel": {
         "additionalProperties": false,
         "properties": {
           "overwrite_input": {

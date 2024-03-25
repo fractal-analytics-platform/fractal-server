@@ -10,7 +10,7 @@ def apply_registration_to_image(
     overwrite_input: bool = True,
 ) -> dict:
     """
-    Dummy task descritpion
+    Dummy task description.
     """
 
     prefix = "[apply_registration_to_image]"
