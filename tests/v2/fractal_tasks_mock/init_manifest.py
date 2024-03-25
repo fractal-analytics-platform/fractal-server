@@ -70,4 +70,4 @@ for key, value in TASK_LIST_DICT.items():
 
 debug(manifest.dict())
 with open("src/fractal_tasks_mock/__FRACTAL_MANIFEST__.json", "w") as f:
-    json.dump(manifest.dict(), f)
+    json.dump(manifest.dict(), f, indent=2, sort_keys=True)
