@@ -2,6 +2,7 @@ from typing import Any
 from typing import Callable
 from typing import Literal
 from typing import Optional
+from typing import Union
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -60,11 +61,31 @@ class Task(BaseModel):
                 return "compound"
 
 
+class TaskV1(BaseModel):
+    name: str
+    command: Callable  # str
+    source: str = Field(unique=True)
+    input_type: str
+    output_type: str
+
+    @property
+    def parallelization_level(self) -> Optional[str]:
+        try:
+            return self.meta["parallelization_level"]
+        except KeyError:
+            return None
+
+    @property
+    def is_parallel(self) -> bool:
+        return bool(self.parallelization_level)
+
+
 class WorkflowTask(BaseModel):
     args_non_parallel: DictStrAny = Field(default_factory=dict)
     args_parallel: DictStrAny = Field(default_factory=dict)
     meta: DictStrAny = Field(default_factory=dict)
-    task: Optional[Task] = None
+    is_legacy_task: Optional[bool]
+    task: Optional[Union[Task, TaskV1]] = None
     filters: Filters = Field(default_factory=Filters)
 
 
