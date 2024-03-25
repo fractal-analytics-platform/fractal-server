@@ -23,18 +23,18 @@ def _convert_v2_args_into_v1(
     return kwargs
 
 
-kwargs_v1 = _convert_v2_args_into_v1(
-    dict(path="/invalid/plate.zarr/A/01/0", arg1=1),
-    parallelization_level="image",
-)
-print(kwargs_v1)
-kwargs_v1 = _convert_v2_args_into_v1(
-    dict(path="/invalid/plate.zarr/A/01/0", arg1=1),
-    parallelization_level="well",
-)
-print(kwargs_v1)
-kwargs_v1 = _convert_v2_args_into_v1(
-    dict(path="/invalid/plate.zarr/A/01/0", arg1=1),
-    parallelization_level="plate",
-)
-print(kwargs_v1)
+# kwargs_v1 = _convert_v2_args_into_v1(
+#     dict(path="/invalid/plate.zarr/A/01/0", arg1=1),
+#     parallelization_level="image",
+# )
+# print(kwargs_v1)
+# kwargs_v1 = _convert_v2_args_into_v1(
+#     dict(path="/invalid/plate.zarr/A/01/0", arg1=1),
+#     parallelization_level="well",
+# )
+# print(kwargs_v1)
+# kwargs_v1 = _convert_v2_args_into_v1(
+#     dict(path="/invalid/plate.zarr/A/01/0", arg1=1),
+#     parallelization_level="plate",
+# )
+# print(kwargs_v1)
