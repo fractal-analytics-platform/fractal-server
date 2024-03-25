@@ -4,13 +4,13 @@ from pathlib import Path
 
 import pytest
 from devtools import debug
-from fractal_tasks_core_mock import TASK_LIST
 
 from fractal_server.app.runner.v2 import execute_tasks_v2
 from fractal_server.app.runner.v2.models import Dataset
 from fractal_server.app.runner.v2.models import WorkflowTask
 from fractal_server.images import SingleImage
 from fractal_server.images.tools import find_image_by_path
+from tests.v2.fractal_tasks_mock.task_list import TASK_LIST
 
 
 @pytest.fixture()
