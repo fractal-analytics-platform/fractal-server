@@ -1,0 +1,17 @@
+.pytest_cache/
+__pycache__
+*.cpython-*.pyc
+*.env
+.coverage
+.python-version
+*.db
+dist/
+nohup
+nohup.out
+logs
+site/
+venv
+tmp_*
+.*.swp
+*.db-shm
+*.db-wal
