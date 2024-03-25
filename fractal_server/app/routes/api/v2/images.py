@@ -13,9 +13,9 @@ from sqlalchemy.orm.attributes import flag_modified
 from ._aux_functions import _get_dataset_check_owner
 from fractal_server.app.db import AsyncSession
 from fractal_server.app.db import get_async_db
-from fractal_server.app.runner.v2.filters import Filters
 from fractal_server.app.security import current_active_user
 from fractal_server.app.security import User
+from fractal_server.images import Filters
 from fractal_server.images import SingleImage
 from fractal_server.images.tools import match_filter
 
