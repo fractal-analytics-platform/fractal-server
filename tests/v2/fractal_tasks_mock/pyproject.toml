@@ -12,7 +12,7 @@ dependencies = []
 
 [project.optional-dependencies]
 dev = ["fractal-tasks-core", "build"]
-extra = ["devtools"]
+my_extra = ["devtools"]
 
 [build-system]
 requires = ["setuptools", "build"]
