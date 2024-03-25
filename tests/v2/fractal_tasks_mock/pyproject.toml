@@ -8,10 +8,14 @@ authors = [
     { name = "Your Name", email = "first.last@example.com" },
 ]
 requires-python = ">=3.8"
-dependencies = ["build", "devtools", "fractal-tasks-core"]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["fractal-tasks-core", "build"]
+extra = ["devtools"]
 
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools", "build"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
