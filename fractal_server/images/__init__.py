@@ -26,3 +26,25 @@ class SingleImage(BaseModel):
                     f"(int, float, str or bool). Given {value} ({type(value)})"
                 )
         return v
+
+
+class Filters(BaseModel):
+    attributes: dict[str, Any] = Field(default_factory=dict)
+    types: dict[str, bool] = Field(default_factory=dict)
+
+    class Config:
+        extra = "forbid"
+
+    # Validators
+    @validator("attributes")
+    def validate_attributes(
+        cls, v: dict[str, Any]
+    ) -> dict[str, Union[int, float, str, bool, None]]:
+        for key, value in v.items():
+            if not isinstance(value, (int, float, str, bool, type(None))):
+                raise ValueError(
+                    f"Filters.attributes[{key}] must be a scalar "
+                    "(int, float, str, bool, or None). "
+                    f"Given {value} ({type(value)})"
+                )
+        return v

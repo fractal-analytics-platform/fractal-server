@@ -22,7 +22,7 @@ from ....models.v2 import WorkflowTaskV2
 from ....models.v2 import WorkflowV2
 from ....schemas.v1 import JobStatusType
 from ....security import User
-from fractal_server.app.runner.v2.filters import Filters
+from fractal_server.images import Filters
 
 
 async def _get_project_check_owner(

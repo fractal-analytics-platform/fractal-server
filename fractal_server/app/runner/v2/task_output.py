@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from pydantic import Field
 
 from ....images import SingleImage
-from fractal_server.app.runner.v2.filters import Filters
+from fractal_server.images import Filters
 
 
 class TaskOutput(BaseModel):
