@@ -1,81 +1,198 @@
+import shutil
 from pathlib import Path
+from typing import Optional
 
+import pytest
 from devtools import debug  # noqa
 
-from fractal_server.tasks.endpoint_operations import inspect_package
+from fractal_server.app.models.v2 import TaskV2
+from fractal_server.config import get_settings
+from fractal_server.syringe import Inject
+from fractal_server.tasks.utils import get_collection_path
+from fractal_server.tasks.utils import get_log_path
+from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
+from tests.fixtures_tasks import execute_command
 
 
 PREFIX = "api/v2/task"
 
 
-def _inspect_package_and_set_attributes(task_pkg) -> None:
+async def test_failed_collection_invalid_manifest(
+    client,
+    dummy_task_package_invalid_manifest,
+    dummy_task_package_missing_manifest,
+    MockCurrentUser,
+    override_settings_factory,
+    tmp_path: Path,
+):
     """
-    Reproduce a logical block that normally takes place in the task-collection
-    endpoint
+    GIVEN a package with invalid/missing manifest
+    WHEN the api to collect tasks from that package is called
+    THEN it returns 422 (Unprocessable Entity) with an informative message
     """
-    # Extract info form the wheel package (this is part of the endpoint)
-    pkg_info = inspect_package(task_pkg.package_path)
-    task_pkg.package_name = pkg_info["pkg_name"]
-    task_pkg.package_version = pkg_info["pkg_version"]
-    task_pkg.package_manifest = pkg_info["pkg_manifest"]
-    task_pkg.check()
 
-
-async def test_failed_get_collection_info(client, MockCurrentUser):
-    """
-    Get task-collection info for non-existing collection.
-    """
-    invalid_state_id = 99999
-    async with MockCurrentUser():
-        res = await client.get(f"{PREFIX}/collect/{invalid_state_id}/")
-    debug(res)
-    assert res.status_code == 404
-
-
-async def test_collection_non_verified_user(client, MockCurrentUser):
-    """
-    Test that non-verified users are not authorized to make calls
-    to `/api/v1/task/collect/pip/`.
-    """
-    async with MockCurrentUser(user_kwargs=dict(is_verified=False)):
-        res = await client.post(
-            f"{PREFIX}/collect/pip/", json={"package": "fractal-tasks-core"}
+    override_settings_factory(
+        FRACTAL_TASKS_DIR=(
+            tmp_path / "test_failed_collection_invalid_manifest"
         )
-        assert res.status_code == 401
+    )
+
+    task_collection = dict(
+        package=dummy_task_package_invalid_manifest.as_posix()
+    )
+    debug(dummy_task_package_invalid_manifest)
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
+        debug(res.json())
+        assert res.status_code == 422
+        assert "not supported" in res.json()["detail"]
+
+    task_collection = dict(
+        package=dummy_task_package_missing_manifest.as_posix()
+    )
+    debug(dummy_task_package_missing_manifest)
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
+        debug(res.json())
+        assert res.status_code == 422
+        assert "does not include" in res.json()["detail"]
 
 
+async def test_failed_collection_missing_wheel_file(
+    client,
+    MockCurrentUser,
+    tmp_path: Path,
+):
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=dict(package=str(tmp_path / "missing_file.whl")),
+        )
+        debug(res)
+        debug(res.json())
+        assert res.status_code == 422
+        assert "does not exist" in str(res.json())
+
+
+@pytest.mark.parametrize(
+    "python_version",
+    [
+        None,
+        pytest.param(
+            "3.10",
+            marks=pytest.mark.skipif(
+                not shutil.which("python3.10"), reason="No python3.10 on host"
+            ),
+        ),
+    ],
+)
 async def test_task_collection(
-    db, client, MockCurrentUser, testdata_path: Path
+    db,
+    client,
+    MockCurrentUser,
+    override_settings_factory,
+    tmp_path: Path,
+    testdata_path: Path,
+    python_version: Optional[str],
 ):
 
+    # Use scoped path, so that repeated test executions (due to
+    # parametrization) always start from a clean state
+    override_settings_factory(
+        FRACTAL_TASKS_DIR=(tmp_path / "FRACTAL_TASKS_DIR")
+    )
+
+    # Prepare absolute path to wheel file
     wheel_path = (
         testdata_path.parent
         / "v2/fractal_tasks_mock/dist"
         / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
     )
-    debug(wheel_path)
 
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
-        debug(user)
+    # Prepare and validate payload
+    payload = dict(package=wheel_path.as_posix())
+
+    # Prepare expected source
+    if python_version:
+        payload["python_version"] = python_version
+        EXPECTED_SOURCE = (
+            f"pip_local:fractal_tasks_mock:0.0.1::py{python_version}"
+        )
+    else:
+        EXPECTED_SOURCE = "pip_local:fractal_tasks_mock:0.0.1::"
+    debug(EXPECTED_SOURCE)
+
+    # Validate payload
+    debug(payload)
+    _TaskCollectPip(**payload)
+
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        # Trigger task collection
         res = await client.post(
             f"{PREFIX}/collect/pip/",
-            json={"package": wheel_path.as_posix()},
+            json=payload,
         )
+        debug(res.json())
         assert res.status_code == 201
-
         assert res.json()["data"]["status"] == "pending"
         state = res.json()
         state_id = state["id"]
         data = state["data"]
-        # venv_path = Path(data["venv_path"])
+        venv_path = Path(data["venv_path"])
+        debug(venv_path)
         assert "fractal-tasks-mock" in data["venv_path"]
 
-        # Get/check collection info
+        # Get collection info
         res = await client.get(f"{PREFIX}/collect/{state_id}/")
         assert res.status_code == 200
         state = res.json()
         data = state["data"]
-        # task_list = data["task_list"]
-        # task_names = (t["name"] for t in task_list)
+        task_list = data["task_list"]
+        task_names = (t["name"] for t in task_list)
+        debug(task_names)
         assert data["status"] == "OK"
         assert data["log"]
+
+        # Check on-disk files
+        settings = Inject(get_settings)
+        full_path = settings.FRACTAL_TASKS_DIR / venv_path
+        assert get_collection_path(full_path).exists()
+        assert get_log_path(full_path).exists()
+
+        # Check Python version
+        if python_version:
+            python_bin = data["task_list"][0]["command_non_parallel"].split()[
+                0
+            ]
+            version = await execute_command(f"{python_bin} --version")
+            assert python_version in version
+
+        # Check task source
+        for task in task_list:
+            print(task["source"])
+            assert task["source"].startswith(EXPECTED_SOURCE)
+
+        # Collect again (already installed)
+        res = await client.post(f"{PREFIX}/collect/pip/", json=payload)
+        debug(res.json())
+        assert res.status_code == 200
+        state = res.json()
+        data = state["data"]
+        assert data["info"] == "Already installed"
+
+        # Check that *verbose* collection info contains logs
+        res = await client.get(f"{PREFIX}/collect/{state_id}/?verbose=true")
+        assert res.status_code == 200
+        assert res.json()["data"]["log"] is not None
+
+        # Modify a task source (via DB, since endpoint cannot modify source)
+        db_task = await db.get(TaskV2, task_list[0]["id"])
+        db_task.source = "EDITED_SOURCE"
+        await db.merge(db_task)
+        await db.commit()
+        await db.close()
+
+        # Collect again, and check that collection fails
+        res = await client.post(f"{PREFIX}/collect/pip/", json=payload)
+        debug(res.json())
+        assert res.status_code == 422
