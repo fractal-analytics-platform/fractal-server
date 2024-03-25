@@ -15,3 +15,4 @@ tmp_*
 .*.swp
 *.db-shm
 *.db-wal
+src/fractal_tasks_mock.egg-info
