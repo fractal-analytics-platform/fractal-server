@@ -171,6 +171,7 @@ async def test_query_images(
     )
     assert res.status_code == 200
     assert res.json()["total_count"] == 0
+    assert res.json()["current_page"] == 1
     assert res.json()["images"] == []
     res = await client.post(
         f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/query/",
@@ -182,6 +183,11 @@ async def test_query_images(
     res = await client.post(
         f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/query/"
         "?page=-1"
+    )
+    assert res.status_code == 422
+    res = await client.post(
+        f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/query/"
+        "?page_size=0"
     )
     assert res.status_code == 422
     res = await client.post(
