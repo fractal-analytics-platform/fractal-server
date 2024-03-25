@@ -10,6 +10,9 @@ def cellpose_segmentation(
     *,
     path: str,
 ) -> None:
+    """
+    Dummy task description.
+    """
 
     _check_path_is_absolute(path)
     print("[cellpose_segmentation] START")

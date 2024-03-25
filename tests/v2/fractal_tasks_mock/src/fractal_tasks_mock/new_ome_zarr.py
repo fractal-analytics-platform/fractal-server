@@ -12,6 +12,9 @@ def new_ome_zarr(
     zarr_dir: str,
     suffix: str = "new",
 ) -> dict:
+    """
+    Dummy task description.
+    """
 
     dict_shared = _extract_common_root(paths)
     old_plate = dict_shared.get("shared_plate")

@@ -9,6 +9,9 @@ def illumination_correction(
     path: str,
     overwrite_input: bool = False,
 ) -> dict:
+    """
+    Dummy task description.
+    """
 
     print("[illumination_correction] START")
     print(f"[illumination_correction] {path=}")

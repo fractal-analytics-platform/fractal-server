@@ -19,6 +19,9 @@ def calculate_registration_init(
     zarr_dir: str,
     ref_acquisition: int,
 ) -> dict:
+    """
+    Dummy task description.
+    """
 
     print("[calculate_registration_init] START")
     print(f"[calculate_registration_init] {paths=}")

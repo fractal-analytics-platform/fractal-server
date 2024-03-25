@@ -9,6 +9,9 @@ def apply_registration_to_image(
     path: str,
     overwrite_input: bool = True,
 ) -> dict:
+    """
+    Dummy task descritpion
+    """
 
     prefix = "[apply_registration_to_image]"
     print(f"{prefix} START")

@@ -11,6 +11,9 @@ def calculate_registration_compute(
     path: str,
     init_args: InitArgsRegistration,
 ) -> None:
+    """
+    Dummy task description.
+    """
 
     ref_path = init_args.ref_path
     print("[calculate_registration_compute] START")

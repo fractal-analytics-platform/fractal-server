@@ -10,6 +10,9 @@ def illumination_correction_init(
     overwrite_input: bool = False,
     zarr_dir: str,
 ) -> dict:
+    """
+    Dummy task description.
+    """
 
     prefix = "[illumination_correction_init]"
     print(f"{prefix} START")

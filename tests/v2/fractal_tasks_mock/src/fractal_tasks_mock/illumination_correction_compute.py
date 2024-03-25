@@ -11,6 +11,9 @@ def illumination_correction_compute(
     path: str,
     init_args: InitArgsIllumination,
 ) -> dict:
+    """
+    Dummy task description.
+    """
 
     raw_path = init_args.raw_path
     subsets = init_args.subsets
