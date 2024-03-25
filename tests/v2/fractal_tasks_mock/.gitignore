@@ -5,7 +5,7 @@ __pycache__
 .coverage
 .python-version
 *.db
-dist/
+dist/*.tar.gz
 nohup
 nohup.out
 logs

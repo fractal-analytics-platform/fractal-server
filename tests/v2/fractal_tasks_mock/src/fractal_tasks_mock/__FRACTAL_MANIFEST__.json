@@ -1,7 +1,7 @@
 {
   "args_schema_version": null,
   "has_args_schemas": false,
-  "manifest_version": null,
+  "manifest_version": "2",
   "task_list": [
     {
       "args_schema": null,
@@ -75,7 +75,7 @@
       "docs_info": null,
       "docs_link": null,
       "executable_non_parallel": null,
-      "executable_parallel": "cellpose_segmentation",
+      "executable_parallel": "cellpose_segmentation.py",
       "input_types": {},
       "meta": {},
       "name": "cellpose_segmentation",
