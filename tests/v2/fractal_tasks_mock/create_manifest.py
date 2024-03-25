@@ -60,18 +60,6 @@ TASK_LIST = [
 ]
 
 
-"""
-TASK_LIST = [
-    dict(
-        name="illumination_correction",
-        input_types=dict(illumination_correction=False),
-        executable_parallel="illumination_correction.py",
-        output_types=dict(illumination_correction=True),
-    ),
-]
-"""
-
-
 PACKAGE = "fractal_tasks_mock"
 CUSTOM_PYDANTIC_MODELS = [
     ("fractal_tasks_mock", "input_models.py", "InitArgsRegistration"),
