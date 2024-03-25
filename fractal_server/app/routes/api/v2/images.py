@@ -143,14 +143,20 @@ async def query_dataset_images(
             ]
 
     total_count = len(images)
-    if page_size is not None:
-        if page_size < 0:
+    if (total_count > 0) and (page_size is not None):
+
+        if page_size <= 0:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
-                    f"Invalid pagination parameter: page_size={page_size} < 0"
+                    f"Invalid pagination parameter: page_size={page_size} <= 0"
                 ),
             )
+
+        last_page = (total_count // page_size) + (total_count % page_size > 0)
+        if page > last_page:
+            page = last_page
+
         offset = (page - 1) * page_size
         images = images[offset : offset + page_size]  # noqa E203
     else:
