@@ -100,7 +100,7 @@ for ind, task in enumerate(TASK_LIST):
             custom_pydantic_models=CUSTOM_PYDANTIC_MODELS,
         )
 
-        TASK_LIST[ind]["args_schema_{step}"] = schema
+        TASK_LIST[ind][f"args_schema_{step}"] = schema
 
     # Update docs_info, based on task-function description
     TASK_LIST[ind]["docs_info"] = f"This is task {task['name']}."
