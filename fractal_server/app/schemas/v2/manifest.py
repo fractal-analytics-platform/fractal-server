@@ -39,10 +39,10 @@ class TaskManifestV2(BaseModel):
     """
 
     name: str
-    exectuable_non_parallel: Optional[str] = None
-    exectuable_parallel: Optional[str] = None
-    input_flags: dict[str, bool] = Field(default_factory=dict)
-    output_flags: dict[str, bool] = Field(default_factory=dict)
+    executable_non_parallel: Optional[str] = None
+    executable_parallel: Optional[str] = None
+    input_types: dict[str, bool] = Field(default_factory=dict)
+    output_types: dict[str, bool] = Field(default_factory=dict)
     meta: dict[str, Any] = Field(default_factory=dict)
     args_schema: Optional[dict[str, Any]]
     docs_info: Optional[str]
