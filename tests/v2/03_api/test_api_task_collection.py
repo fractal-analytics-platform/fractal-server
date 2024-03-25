@@ -120,6 +120,13 @@ async def test_task_collection(
             print(task["source"])
             assert task["source"].startswith(EXPECTED_SOURCE)
 
+        # Check that argument JSON schemas are present
+        for task in task_list:
+            if task["command_non_parallel"] is not None:
+                assert task["args_schema_non_parallel"] is not None
+            if task["command_parallel"] is not None:
+                assert task["args_schema_parallel"] is not None
+
         # Collect again (already installed)
         res = await client.post(f"{PREFIX}/collect/pip/", json=payload)
         debug(res.json())
