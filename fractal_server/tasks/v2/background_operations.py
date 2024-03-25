@@ -5,13 +5,12 @@ is used as a background task for the task-collection endpoint.
 import json
 from pathlib import Path
 from shutil import rmtree as shell_rmtree
-from typing import Optional
 
+from ..utils import _init_venv
 from ..utils import _normalize_package_name
 from ..utils import get_collection_log
 from ..utils import get_collection_path
 from ..utils import get_log_path
-from ..utils import get_python_interpreter
 from ..utils import slugify_task_name
 from ._TaskCollectPip import _TaskCollectPip
 from fractal_server.app.db import DBSyncSession
@@ -25,39 +24,6 @@ from fractal_server.logger import close_logger
 from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
 from fractal_server.utils import execute_command
-
-
-async def _init_venv(
-    *,
-    path: Path,
-    python_version: Optional[str] = None,
-    logger_name: str,
-) -> Path:
-    """
-    Set a virtual environment at `path/venv`
-
-    Args:
-        path : Path
-            path to directory in which to set up the virtual environment
-        python_version : default=None
-            Python version the virtual environment will be based upon
-
-    Returns:
-        python_bin : Path
-            path to python interpreter
-    """
-    logger = get_logger(logger_name)
-    logger.debug(f"[_init_venv] {path=}")
-    interpreter = get_python_interpreter(version=python_version)
-    logger.debug(f"[_init_venv] {interpreter=}")
-    await execute_command(
-        cwd=path,
-        command=f"{interpreter} -m venv venv",
-        logger_name=logger_name,
-    )
-    python_bin = path / "venv/bin/python"
-    logger.debug(f"[_init_venv] {python_bin=}")
-    return python_bin
 
 
 async def _pip_install(
