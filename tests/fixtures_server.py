@@ -278,7 +278,7 @@ async def MockCurrentUser(app, db):
     from fractal_server.app.security import User
 
     def _random_email():
-        return f"{random.randint(0, 100000000)}@exact-lab.it"
+        return f"{random.randint(0, 100000000)}@example.org"
 
     @dataclass
     class _MockCurrentUser:
