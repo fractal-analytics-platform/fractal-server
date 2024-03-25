@@ -114,7 +114,7 @@ manifest = dict(
     manifest_version="2",
     task_list=TASK_LIST,
     has_args_schemas=True,
-    args_schemas_version="pydantic_v1",
+    args_schema_version="pydantic_v1",
 )
 debug(manifest)
 
