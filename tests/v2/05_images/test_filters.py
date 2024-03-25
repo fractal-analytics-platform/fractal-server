@@ -2,7 +2,7 @@ import pytest
 from devtools import debug
 from pydantic import ValidationError
 
-from fractal_server.app.runner.v2.filters import Filters
+from fractal_server.images import Filters
 from fractal_server.images import SingleImage
 from fractal_server.images.tools import _filter_image_list
 
