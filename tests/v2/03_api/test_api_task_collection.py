@@ -62,7 +62,7 @@ async def test_task_collection(
     if python_version:
         payload["python_version"] = python_version
         EXPECTED_SOURCE = (
-            f"pip_local:fractal_tasks_mock:0.0.1::py{python_version}"
+            f"pip_local:fractal_tasks_mock:0.0.1:my_extra:py{python_version}"
         )
     else:
         EXPECTED_SOURCE = "pip_local:fractal_tasks_mock:0.0.1:my_extra::"
