@@ -143,8 +143,6 @@ async def query_dataset_images(
             ]
 
     total_count = len(images)
-    if total_count == 0:
-        page = 1
 
     if page_size is not None:
         if page_size <= 0:
@@ -154,17 +152,18 @@ async def query_dataset_images(
                     f"Invalid pagination parameter: page_size={page_size} <= 0"
                 ),
             )
-
-        last_page = (total_count // page_size) + (total_count % page_size > 0)
-        if page > last_page:
-            page = last_page
-        if total_count == 0:
-            page_size = 0
     else:
         page_size = total_count
 
-    offset = (page - 1) * page_size
-    images = images[offset : offset + page_size]  # noqa E203
+    if total_count == 0:
+        page = 1
+        page_size = 0
+    else:
+        last_page = (total_count // page_size) + (total_count % page_size > 0)
+        if page > last_page:
+            page = last_page
+        offset = (page - 1) * page_size
+        images = images[offset : offset + page_size]  # noqa E203
 
     return ImagePage(
         total_count=total_count,
