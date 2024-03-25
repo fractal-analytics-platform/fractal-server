@@ -19,7 +19,8 @@ class TaskCreateV2(BaseModel):
 
     meta: Optional[dict[str, Any]] = Field(default={})
     version: Optional[str]
-    args_schema: Optional[dict[str, Any]]
+    args_schema_non_parallel: Optional[dict[str, Any]]
+    args_schema_parallel: Optional[dict[str, Any]]
     args_schema_version: Optional[str]
     docs_info: Optional[str]
     docs_link: Optional[HttpUrl]
@@ -53,7 +54,8 @@ class TaskReadV2(BaseModel):
     meta: dict[str, Any]
     owner: Optional[str]
     version: Optional[str]
-    args_schema: Optional[dict[str, Any]]
+    args_schema_non_parallel: Optional[dict[str, Any]] = None
+    args_schema_parallel: Optional[dict[str, Any]] = None
     args_schema_version: Optional[str]
     docs_info: Optional[str]
     docs_link: Optional[HttpUrl]
@@ -69,7 +71,8 @@ class TaskUpdateV2(BaseModel):
     source: Optional[str]
     meta: Optional[dict[str, Any]]
     version: Optional[str]
-    args_schema: Optional[dict[str, Any]]
+    args_schema_parallel: Optional[dict[str, Any]] = None
+    args_schema_non_parallel: Optional[dict[str, Any]] = None
     args_schema_version: Optional[str]
     docs_info: Optional[str]
     docs_link: Optional[HttpUrl]
