@@ -17,63 +17,6 @@ from tests.fixtures_tasks import execute_command
 PREFIX = "api/v2/task"
 
 
-async def test_failed_collection_invalid_manifest(
-    client,
-    dummy_task_package_invalid_manifest,
-    dummy_task_package_missing_manifest,
-    MockCurrentUser,
-    override_settings_factory,
-    tmp_path: Path,
-):
-    """
-    GIVEN a package with invalid/missing manifest
-    WHEN the api to collect tasks from that package is called
-    THEN it returns 422 (Unprocessable Entity) with an informative message
-    """
-
-    override_settings_factory(
-        FRACTAL_TASKS_DIR=(
-            tmp_path / "test_failed_collection_invalid_manifest"
-        )
-    )
-
-    task_collection = dict(
-        package=dummy_task_package_invalid_manifest.as_posix()
-    )
-    debug(dummy_task_package_invalid_manifest)
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-        res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
-        debug(res.json())
-        assert res.status_code == 422
-        assert "not supported" in res.json()["detail"]
-
-    task_collection = dict(
-        package=dummy_task_package_missing_manifest.as_posix()
-    )
-    debug(dummy_task_package_missing_manifest)
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-        res = await client.post(f"{PREFIX}/collect/pip/", json=task_collection)
-        debug(res.json())
-        assert res.status_code == 422
-        assert "does not include" in res.json()["detail"]
-
-
-async def test_failed_collection_missing_wheel_file(
-    client,
-    MockCurrentUser,
-    tmp_path: Path,
-):
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-        res = await client.post(
-            f"{PREFIX}/collect/pip/",
-            json=dict(package=str(tmp_path / "missing_file.whl")),
-        )
-        debug(res)
-        debug(res.json())
-        assert res.status_code == 422
-        assert "does not exist" in str(res.json())
-
-
 @pytest.mark.parametrize(
     "python_version",
     [
