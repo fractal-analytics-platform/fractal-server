@@ -39,7 +39,7 @@ TASK_LIST_DICT = {
     ),
     "cellpose_segmentation": dict(
         name="cellpose_segmentation",
-        executable_parallel="cellpose_segmentation",
+        executable_parallel="cellpose_segmentation.py",
     ),
     "calculate_registration_compound": dict(
         name="calculate_registration_compound",
