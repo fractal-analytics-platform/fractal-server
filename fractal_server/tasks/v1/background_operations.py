@@ -349,7 +349,7 @@ async def background_collect_pip(
             collection_path = get_collection_path(venv_path)
             data.task_list = [TaskRead(**task.model_dump()) for task in tasks]
             with collection_path.open("w") as f:
-                json.dump(data.sanitised_dict(), f)
+                json.dump(data.sanitised_dict(), f, indent=2)
 
             # Update DB
             data.status = "OK"
