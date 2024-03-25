@@ -10,7 +10,7 @@ from .._validators import valutc
 from ..v1.project import ProjectRead
 from .dumps import WorkflowTaskDumpV2
 from .workflowtask import WorkflowTaskStatusTypeV2
-from fractal_server.app.runner.v2.filters import Filters
+from fractal_server.images import Filters
 
 
 class _DatasetHistoryItemV2(BaseModel):

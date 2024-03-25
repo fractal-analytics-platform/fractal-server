@@ -2,7 +2,7 @@ from copy import copy
 from typing import Optional
 from typing import Union
 
-from fractal_server.app.runner.v2.filters import Filters
+from fractal_server.images import Filters
 from fractal_server.images import SingleImage
 
 

@@ -13,7 +13,7 @@ from ..v1.task import TaskRead
 from .task import TaskExportV2
 from .task import TaskImportV2
 from .task import TaskReadV2
-from fractal_server.app.runner.v2.filters import Filters
+from fractal_server.images import Filters
 
 
 class WorkflowTaskStatusTypeV2(str, Enum):
