@@ -1,3 +1,4 @@
+import logging
 import shutil
 from pathlib import Path
 from typing import Optional
@@ -38,11 +39,13 @@ async def test_task_collection(
     testdata_path: Path,
     python_version: Optional[str],
 ):
-
-    # Use scoped path, so that repeated test executions (due to
-    # parametrization) always start from a clean state
     override_settings_factory(
-        FRACTAL_TASKS_DIR=(tmp_path / "FRACTAL_TASKS_DIR")
+        # Use scoped path, so that repeated test executions (due to
+        # parametrization) always start from a clean state
+        FRACTAL_TASKS_DIR=(tmp_path / "FRACTAL_TASKS_DIR"),
+        # Set logging to CRITICAL, and then make sure that task-collection
+        # logs were included
+        FRACTAL_LOGGING_LEVEL=logging.CRITICAL,
     )
 
     # Prepare absolute path to wheel file
@@ -53,7 +56,7 @@ async def test_task_collection(
     )
 
     # Prepare and validate payload
-    payload = dict(package=wheel_path.as_posix())
+    payload = dict(package=wheel_path.as_posix(), package_extras="my_extra")
 
     # Prepare expected source
     if python_version:
@@ -62,7 +65,7 @@ async def test_task_collection(
             f"pip_local:fractal_tasks_mock:0.0.1::py{python_version}"
         )
     else:
-        EXPECTED_SOURCE = "pip_local:fractal_tasks_mock:0.0.1::"
+        EXPECTED_SOURCE = "pip_local:fractal_tasks_mock:0.0.1:my_extra::"
     debug(EXPECTED_SOURCE)
 
     # Validate payload
@@ -94,7 +97,11 @@ async def test_task_collection(
         task_names = (t["name"] for t in task_list)
         debug(task_names)
         assert data["status"] == "OK"
-        assert data["log"]
+        # Check that log were written, even with CRITICAL logging level
+        log = data["log"]
+        assert log is not None
+        # Check that my_extra was included, in a local-package collection
+        assert ".whl[my_extra]" in log
 
         # Check on-disk files
         settings = Inject(get_settings)
@@ -104,9 +111,7 @@ async def test_task_collection(
 
         # Check Python version
         if python_version:
-            python_bin = data["task_list"][0]["command_non_parallel"].split()[
-                0
-            ]
+            python_bin = task_list[0]["command_non_parallel"].split()[0]
             version = await execute_command(f"{python_bin} --version")
             assert python_version in version
 
