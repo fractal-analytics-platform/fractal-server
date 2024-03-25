@@ -95,3 +95,4 @@ class ManifestV2(BaseModel):
     def manifest_version_2(cls, value):
         if value != "2":
             raise ValueError(f"Wrong manifest version (given {value})")
+        return value

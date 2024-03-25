@@ -7,20 +7,20 @@ from pathlib import Path
 from shutil import rmtree as shell_rmtree
 from typing import Optional
 
+from ..utils import _normalize_package_name
+from ..utils import get_collection_log
+from ..utils import get_collection_path
+from ..utils import get_log_path
+from ..utils import get_python_interpreter
+from ..utils import slugify_task_name
 from ._TaskCollectPip import _TaskCollectPip
-from .utils import _normalize_package_name
-from .utils import get_collection_log
-from .utils import get_collection_path
-from .utils import get_log_path
-from .utils import get_python_interpreter
-from .utils import slugify_task_name
 from fractal_server.app.db import DBSyncSession
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import State
-from fractal_server.app.models import Task
-from fractal_server.app.schemas.v2 import TaskCollectStatus
-from fractal_server.app.schemas.v2 import TaskCreate
-from fractal_server.app.schemas.v2 import TaskRead
+from fractal_server.app.models.v2 import TaskV2
+from fractal_server.app.schemas.v2 import TaskCollectStatusV2
+from fractal_server.app.schemas.v2 import TaskCreateV2
+from fractal_server.app.schemas.v2 import TaskReadV2
 from fractal_server.logger import close_logger
 from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
@@ -218,7 +218,7 @@ async def create_package_environment_pip(
     task_pkg: _TaskCollectPip,
     venv_path: Path,
     logger_name: str,
-) -> list[TaskCreate]:
+) -> list[TaskCreateV2]:
     """
     Create environment, install package, and prepare task list
     """
@@ -247,28 +247,43 @@ async def create_package_environment_pip(
         task_list = []
         for t in task_pkg.package_manifest.task_list:
             # Fill in attributes for TaskCreate
-            task_executable = package_root / t.executable
-            cmd = f"{python_bin.as_posix()} {task_executable.as_posix()}"
+            task_attributes = {}
+            task_attributes["version"] = task_pkg.package_version
             task_name_slug = slugify_task_name(t.name)
-            task_source = f"{task_pkg.package_source}:{task_name_slug}"
-            if not task_executable.exists():
-                raise FileNotFoundError(
-                    f"Cannot find executable `{task_executable}` "
-                    f"for task `{t.name}`"
-                )
+            task_attributes[
+                "source"
+            ] = f"{task_pkg.package_source}:{task_name_slug}"
+            # Executables
+            if t.executable_non_parallel is not None:
+                non_parallel_path = package_root / t.executable_non_parallel
+                if not non_parallel_path.exists():
+                    raise FileNotFoundError(
+                        f"Cannot find executable `{non_parallel_path}` "
+                        f"for task `{t.name}`"
+                    )
+                task_attributes[
+                    "command_non_parallel"
+                ] = f"{python_bin.as_posix()} {non_parallel_path.as_posix()}"
+            if t.executable_parallel is not None:
+                parallel_path = package_root / t.executable_parallel
+                if not parallel_path.exists():
+                    raise FileNotFoundError(
+                        f"Cannot find executable `{parallel_path}` "
+                        f"for task `{t.name}`"
+                    )
+                task_attributes[
+                    "command_parallel"
+                ] = f"{python_bin.as_posix()} {parallel_path.as_posix()}"
+
             manifest = task_pkg.package_manifest
             if manifest.has_args_schemas:
-                additional_attrs = dict(
-                    args_schema_version=manifest.args_schema_version
-                )
-            else:
-                additional_attrs = {}
-            this_task = TaskCreate(
+                task_attributes[
+                    "args_schema_version"
+                ] = manifest.args_schema_version
+
+            this_task = TaskCreateV2(
                 **t.dict(),
-                command=cmd,
-                version=task_pkg.package_version,
-                **additional_attrs,
-                source=task_source,
+                **task_attributes,
             )
             task_list.append(this_task)
         logger.debug("Task list created correctly")
@@ -279,13 +294,13 @@ async def create_package_environment_pip(
 
 
 async def _insert_tasks(
-    task_list: list[TaskCreate],
+    task_list: list[TaskCreateV2],
     db: DBSyncSession,
-) -> list[Task]:
+) -> list[TaskV2]:
     """
     Insert tasks into database
     """
-    task_db_list = [Task(**t.dict()) for t in task_list]
+    task_db_list = [TaskV2(**t.dict()) for t in task_list]
     db.add_all(task_db_list)
     db.commit()
     for t in task_db_list:
@@ -319,7 +334,7 @@ async def background_collect_pip(
 
     with next(get_sync_db()) as db:
         state: State = db.get(State, state_id)
-        data = TaskCollectStatus(**state.data)
+        data = TaskCollectStatusV2(**state.data)
         data.info = None
 
         try:
@@ -347,7 +362,9 @@ async def background_collect_pip(
             # finalise
             logger.debug("Task-collection status: finalising")
             collection_path = get_collection_path(venv_path)
-            data.task_list = [TaskRead(**task.model_dump()) for task in tasks]
+            data.task_list = [
+                TaskReadV2(**task.model_dump()) for task in tasks
+            ]
             with collection_path.open("w") as f:
                 json.dump(data.sanitised_dict(), f)
 
