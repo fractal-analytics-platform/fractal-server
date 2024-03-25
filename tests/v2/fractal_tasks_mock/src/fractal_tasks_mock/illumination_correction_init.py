@@ -4,14 +4,14 @@ from pydantic.decorator import validate_arguments
 
 
 @validate_arguments
-def illumination_correction_channel_parallelization(
+def illumination_correction_init(
     *,
     paths: list[str],
     overwrite_input: bool = False,
     zarr_dir: str,
 ) -> dict:
 
-    prefix = "[illumination_correction_channel_parallelization]"
+    prefix = "[illumination_correction_init]"
     print(f"{prefix} START")
     print(f"{prefix} {paths=}")
     print(f"{prefix} {overwrite_input=}")

@@ -1,20 +1,38 @@
-from .apply_registration_to_image import apply_registration_to_image
-from .calculate_registration_compute import calculate_registration_compute
-from .calculate_registration_init import calculate_registration_init
-from .cellpose_segmentation import cellpose_segmentation
-from .create_cellvoyager_ome_zarr import create_cellvoyager_ome_zarr
-from .create_cellvoyager_ome_zarr_multiplex import (
+from .src.fractal_tasks_mock.apply_registration_to_image import (
+    apply_registration_to_image,
+)
+from .src.fractal_tasks_mock.calculate_registration_compute import (
+    calculate_registration_compute,
+)
+from .src.fractal_tasks_mock.calculate_registration_init import (
+    calculate_registration_init,
+)
+from .src.fractal_tasks_mock.cellpose_segmentation import cellpose_segmentation
+from .src.fractal_tasks_mock.create_cellvoyager_ome_zarr import (
+    create_cellvoyager_ome_zarr,
+)
+from .src.fractal_tasks_mock.create_cellvoyager_ome_zarr_multiplex import (
     create_cellvoyager_ome_zarr_multiplex,
 )
-from .fill_cellvoyager_ome_zarr import fill_cellvoyager_ome_zarr
-from .find_registration_consensus import find_registration_consensus
-from .illumination_correction import illumination_correction
-from .illumination_correction_channel_parallelization import (
-    illumination_correction_channel_parallelization,
+from .src.fractal_tasks_mock.fill_cellvoyager_ome_zarr import (
+    fill_cellvoyager_ome_zarr,
 )
-from .illumination_correction_subsets import illumination_correction_subsets
-from .maximum_intensity_projection import maximum_intensity_projection
-from .new_ome_zarr import new_ome_zarr
+from .src.fractal_tasks_mock.find_registration_consensus import (
+    find_registration_consensus,
+)
+from .src.fractal_tasks_mock.illumination_correction import (
+    illumination_correction,
+)
+from .src.fractal_tasks_mock.illumination_correction_compute import (
+    illumination_correction_compute,
+)
+from .src.fractal_tasks_mock.illumination_correction_init import (
+    illumination_correction_init,
+)
+from .src.fractal_tasks_mock.maximum_intensity_projection import (
+    maximum_intensity_projection,
+)
+from .src.fractal_tasks_mock.new_ome_zarr import new_ome_zarr
 from fractal_server.app.runner.v2.models import Task
 
 
@@ -45,8 +63,8 @@ TASK_LIST = {
     "illumination_correction_compound": Task(
         name="illumination_correction_compound",
         input_types=dict(illumination_correction=False),
-        function_non_parallel=illumination_correction_channel_parallelization,
-        function_parallel=illumination_correction_subsets,
+        function_non_parallel=illumination_correction_init,
+        function_parallel=illumination_correction_compute,
         output_types=dict(illumination_correction=True),
     ),
     "cellpose_segmentation": Task(
