@@ -3,23 +3,8 @@ from pathlib import Path
 
 from devtools import debug  # noqa
 
-from fractal_server.tasks.endpoint_operations import inspect_package
-
 
 PREFIX = "api/v2/task"
-
-
-def _inspect_package_and_set_attributes(task_pkg) -> None:
-    """
-    Reproduce a logical block that normally takes place in the task-collection
-    endpoint
-    """
-    # Extract info form the wheel package (this is part of the endpoint)
-    pkg_info = inspect_package(task_pkg.package_path)
-    task_pkg.package_name = pkg_info["pkg_name"]
-    task_pkg.package_version = pkg_info["pkg_version"]
-    task_pkg.package_manifest = pkg_info["pkg_manifest"]
-    task_pkg.check()
 
 
 async def test_failed_get_collection_info(client, MockCurrentUser):
