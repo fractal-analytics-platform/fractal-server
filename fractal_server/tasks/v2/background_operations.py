@@ -364,4 +364,5 @@ async def background_collect_pip(
             db.close()
 
             # Delete corrupted package dir
+            logger.info(f"Now deleting temporary folder {venv_path}")
             shell_rmtree(venv_path)
