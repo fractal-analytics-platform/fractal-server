@@ -12,6 +12,9 @@ def create_cellvoyager_ome_zarr(
     image_dir: str,
     fake_list_relative_paths: Optional[list[str]] = None,
 ) -> dict:
+    """
+    Dummy task description.
+    """
 
     zarr_dir = zarr_dir.rstrip("/")
 

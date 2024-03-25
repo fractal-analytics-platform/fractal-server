@@ -12,6 +12,9 @@ def fill_cellvoyager_ome_zarr(
     path: str,
     init_args: InitArgsCellVoyager,
 ) -> dict:
+    """
+    Dummy task description.
+    """
 
     print("[fill_cellvoyager_ome_zarr] START")
     print(f"[fill_cellvoyager_ome_zarr] {path=}")

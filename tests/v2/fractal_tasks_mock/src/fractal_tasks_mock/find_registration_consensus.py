@@ -11,6 +11,9 @@ def find_registration_consensus(
     paths: list[str],
     zarr_dir: str,
 ) -> None:
+    """
+    Dummy task description.
+    """
 
     print("[find_registration_consensus] START")
     well_to_paths = _group_paths_by_well(paths)

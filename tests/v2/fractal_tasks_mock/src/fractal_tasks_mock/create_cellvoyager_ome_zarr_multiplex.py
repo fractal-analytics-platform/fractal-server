@@ -10,6 +10,9 @@ def create_cellvoyager_ome_zarr_multiplex(
     zarr_dir: str,
     image_dir: str,
 ) -> dict:
+    """
+    Dummy task description.
+    """
 
     if len(paths) > 0:
         raise ValueError(

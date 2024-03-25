@@ -1,12 +1,8 @@
 import shutil
 
-from pydantic import BaseModel
 from pydantic.decorator import validate_arguments
 
-
-class InitArgsMIP(BaseModel):
-    new_path: str
-    new_plate: str  # FIXME: remove this
+from .input_models import InitArgsMIP
 
 
 @validate_arguments
@@ -15,6 +11,13 @@ def maximum_intensity_projection(
     path: str,
     init_args: InitArgsMIP,
 ) -> dict:
+    """
+    Dummy task description.
+
+    Arguments:
+        path: dummy argument description.
+        init_args: dummy argument description.
+    """
 
     new_path = init_args.new_path
     new_plate = init_args.new_plate  # FIXME: re-compute it here
