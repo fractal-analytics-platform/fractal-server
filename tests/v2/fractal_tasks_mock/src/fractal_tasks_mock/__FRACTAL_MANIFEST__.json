@@ -1,5 +1,5 @@
 {
-  "args_schemas_version": "pydantic_v1",
+  "args_schema_version": "pydantic_v1",
   "has_args_schemas": true,
   "manifest_version": "2",
   "task_list": [
