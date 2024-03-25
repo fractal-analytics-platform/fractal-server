@@ -44,9 +44,10 @@ class TaskManifestV2(BaseModel):
     input_types: dict[str, bool] = Field(default_factory=dict)
     output_types: dict[str, bool] = Field(default_factory=dict)
     meta: dict[str, Any] = Field(default_factory=dict)
-    args_schema: Optional[dict[str, Any]]
-    docs_info: Optional[str]
-    docs_link: Optional[HttpUrl]
+    args_schema_non_parallel: Optional[dict[str, Any]] = None
+    args_schema_parallel: Optional[dict[str, Any]] = None
+    docs_info: Optional[str] = None
+    docs_link: Optional[HttpUrl] = None
 
 
 class ManifestV2(BaseModel):
@@ -82,13 +83,22 @@ class ManifestV2(BaseModel):
     def _check_args_schemas_are_present(cls, values):
         has_args_schemas = values["has_args_schemas"]
         task_list = values["task_list"]
-        if has_args_schemas:
+        if has_args_schemas is True:
             for task in task_list:
-                if task.args_schema is None:
-                    raise ValueError(
-                        f'has_args_schemas={has_args_schemas} but task "'
-                        f'{task.name}" has args_schema={task.args_schema}.'
-                    )
+                if task.executable_parallel is not None:
+                    if task.args_schema_parallel is None:
+                        raise ValueError(
+                            f"Manifest has {has_args_schemas=}, but "
+                            f"task '{task.name}' has "
+                            f"{task.args_schema_parallel=}."
+                        )
+                if task.executable_non_parallel is not None:
+                    if task.args_schema_non_parallel is None:
+                        raise ValueError(
+                            f"Manifest has {has_args_schemas=}, but "
+                            f"task '{task.name}' has "
+                            f"{task.args_schema_non_parallel=}."
+                        )
         return values
 
     @validator("manifest_version")
