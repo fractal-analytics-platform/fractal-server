@@ -395,7 +395,8 @@ async def _workflow_insert_task(
     is_legacy_task: bool = False,
     order: Optional[int] = None,
     meta: Optional[dict[str, Any]] = None,
-    args: Optional[dict[str, Any]] = None,
+    args_non_parallel: Optional[dict[str, Any]] = None,
+    args_parallel: Optional[dict[str, Any]] = None,
     input_filters: Optional[Filters] = None,
     db: AsyncSession,
 ) -> WorkflowTaskV2:
@@ -430,13 +431,22 @@ async def _workflow_insert_task(
             raise ValueError(f"TaskV2 {task_id} not found.")
 
     # Override default_args with args
-    default_args = db_task.default_args_from_args_schema
-    actual_args = default_args.copy()
-    if args is not None:
-        for k, v in args.items():
-            actual_args[k] = v
-    if not actual_args:
-        actual_args = None
+    default_args_non_parallel = (
+        db_task.default_args_non_parallel_from_args_schema
+    )
+    actual_args_non_parallel = default_args_non_parallel.copy()
+    if args_non_parallel is not None:
+        for k, v in args_non_parallel.items():
+            actual_args_non_parallel[k] = v
+    if not actual_args_non_parallel:
+        actual_args_non_parallel = None
+    default_args_parallel = db_task.default_args_parallel_from_args_schema
+    actual_args_parallel = default_args_parallel.copy()
+    if args_parallel is not None:
+        for k, v in args_parallel.items():
+            actual_args_parallel[k] = v
+    if not actual_args_parallel:
+        actual_args_parallel = None
 
     # Combine meta (higher priority) and db_task.meta (lower priority)
     wt_meta = (db_task.meta or {}).copy()
@@ -455,7 +465,9 @@ async def _workflow_insert_task(
         wf_task = WorkflowTaskV2(
             is_legacy_task=True,
             task_legacy_id=task_id,
-            args=actual_args,
+            # FIXME: legacy task should not have non-parallel args
+            args_non_parallel=actual_args_non_parallel,
+            args_parallel=actual_args_parallel,
             meta=wt_meta,
             **input_filters_kwarg,
         )
@@ -463,7 +475,8 @@ async def _workflow_insert_task(
         wf_task = WorkflowTaskV2(
             is_legacy_task=False,
             task_id=task_id,
-            args=actual_args,
+            args_non_parallel=actual_args_non_parallel,
+            args_parallel=actual_args_parallel,
             meta=wt_meta,
             **input_filters_kwarg,
         )
