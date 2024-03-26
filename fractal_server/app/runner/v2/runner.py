@@ -80,6 +80,8 @@ def execute_tasks_v2(
             if task.task_type == "non_parallel_standalone":
                 current_task_output = _run_non_parallel_task(
                     filtered_images=filtered_images,
+                    zarr_dir=tmp_dataset.zarr_dir,
+                    wftask=wftask,
                     task=wftask.task,
                     executor=executor,
                 )
