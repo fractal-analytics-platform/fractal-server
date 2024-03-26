@@ -10,7 +10,6 @@ import shutil
 import subprocess  # nosec
 import traceback
 from concurrent.futures import Executor
-from copy import deepcopy
 from functools import partial
 from pathlib import Path
 from shlex import split as shlex_split
@@ -18,19 +17,20 @@ from typing import Any
 from typing import Callable
 from typing import Optional
 
-from .....config import get_settings
 from .....logger import get_logger
-from .....syringe import Inject
-from ....models import Task
 from ....models import WorkflowTask
 from ....schemas.v1 import WorkflowTaskStatusType
 from ...exceptions import JobExecutionError
 from ...exceptions import TaskExecutionError
 from .common import TaskParameters
 from .common import write_args_file
-from fractal_server.app.runner.filenames import HISTORY_FILENAME
-from fractal_server.app.runner.filenames import METADATA_FILENAME
 from fractal_server.app.runner.task_files import get_task_file_paths
+
+# from .....config import get_settings
+# from .....syringe import Inject
+# from ....models import Task
+# from fractal_server.app.runner.filenames import HISTORY_FILENAME
+# from fractal_server.app.runner.filenames import METADATA_FILENAME
 
 
 def no_op_submit_setup_call(
@@ -44,26 +44,6 @@ def no_op_submit_setup_call(
     Default (no-operation) interface of submit_setup_call.
     """
     return {}
-
-
-def _task_needs_image_list(_task: Task) -> bool:
-    """
-    Whether a task requires `metadata["image"]` in its `args.json` file.
-
-    For details see
-    https://github.com/fractal-analytics-platform/fractal-server/issues/1237
-
-    Args:
-        _task: The task to be checked.
-    """
-    settings = Inject(get_settings)
-    exception_task_names = settings.FRACTAL_RUNNER_TASKS_INCLUDE_IMAGE.split(
-        ";"
-    )
-    if _task.name in exception_task_names:
-        return True
-    else:
-        return False
 
 
 def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
@@ -339,26 +319,6 @@ def call_single_parallel_task(
     return this_meta_update
 
 
-def trim_TaskParameters(
-    task_params: TaskParameters,
-    _task: Task,
-) -> TaskParameters:
-    """
-    Return a smaller copy of a TaskParameter object.
-
-    Remove metadata["image"] key/value pair - see issues 1237 and 1242.
-    (https://github.com/fractal-analytics-platform/fractal-server/issues/1237)
-    This applies only to parallel tasks with names different from the ones
-    defined in `_task_needs_image_list`.
-    """
-    task_params_slim = deepcopy(task_params)
-    if not _task_needs_image_list(_task) and _task.is_parallel:
-        if "image" in task_params_slim.metadata.keys():
-            task_params_slim.metadata.pop("image")
-        task_params_slim.history = []
-    return task_params_slim
-
-
 def call_parallel_task(
     *,
     executor: Executor,
@@ -437,9 +397,7 @@ def call_parallel_task(
         )
 
     # Preliminary steps
-    actual_task_pars_depend = trim_TaskParameters(
-        task_pars_depend, wftask.task
-    )
+    actual_task_pars_depend = task_pars_depend
 
     partial_call_task = partial(
         call_single_parallel_task,
@@ -508,113 +466,113 @@ def call_parallel_task(
     return out_task_parameters
 
 
-def execute_tasks(
-    *,
-    executor: Executor,
-    task_list: list[WorkflowTask],
-    task_pars: TaskParameters,
-    workflow_dir: Path,
-    workflow_dir_user: Optional[Path] = None,
-    submit_setup_call: Callable = no_op_submit_setup_call,
-    logger_name: str,
-) -> TaskParameters:
-    """
-    Submit a list of WorkflowTasks for execution
+# def execute_tasks(
+#     *,
+#     executor: Executor,
+#     task_list: list[WorkflowTask],
+#     task_pars: TaskParameters,
+#     workflow_dir: Path,
+#     workflow_dir_user: Optional[Path] = None,
+#     submit_setup_call: Callable = no_op_submit_setup_call,
+#     logger_name: str,
+# ) -> TaskParameters:
+#     """
+#     Submit a list of WorkflowTasks for execution
 
-    **Note:** At the end of each task, write current metadata to `working_dir /
-    METADATA_FILENAME`, so that they can be read as part of the [`get_job`
-    endpoint](../../api/v1/job/#fractal_server.app.routes.api.v1.job.get_job).
+#     **Note:** At the end of each task, write current metadata to
+#     `working_dir /
+#     METADATA_FILENAME`, so that they can be read as part of the [`get_job`
+#     endpoint](
+#     ../../api/v1/job/#fractal_server.app.routes.api.v1.job.get_job).
 
-    Arguments:
-        executor:
-            The `concurrent.futures.Executor`-compatible executor that will
-            run the task.
-        task_list:
-            The list of wftasks to be run
-        task_pars:
-            The task parameters to be passed on to the first task of the list.
-        workflow_dir:
-            The server-side working directory for workflow execution.
-        workflow_dir_user:
-            The user-side working directory for workflow execution (only
-            relevant for multi-user executors). If `None`, it is set to be
-            equal to `workflow_dir`.
-        submit_setup_call:
-            An optional function that computes configuration parameters for
-            the executor.
-        logger_name:
-            Name of the logger
+#     Arguments:
+#         executor:
+#             The `concurrent.futures.Executor`-compatible executor that will
+#             run the task.
+#         task_list:
+#             The list of wftasks to be run
+#         task_pars:
+#             The task parameters to be passed on to the first task of the
+#             list.
+#         workflow_dir:
+#             The server-side working directory for workflow execution.
+#         workflow_dir_user:
+#             The user-side working directory for workflow execution (only
+#             relevant for multi-user executors). If `None`, it is set to be
+#             equal to `workflow_dir`.
+#         submit_setup_call:
+#             An optional function that computes configuration parameters for
+#             the executor.
+#         logger_name:
+#             Name of the logger
 
-    Returns:
-        current_task_pars:
-            A TaskParameters object which constitutes the output of the last
-            task in the list.
-    """
-    if not workflow_dir_user:
-        workflow_dir_user = workflow_dir
+#     Returns:
+#         current_task_pars:
+#             A TaskParameters object which constitutes the output of the last
+#             task in the list.
+#     """
+#     if not workflow_dir_user:
+#         workflow_dir_user = workflow_dir
 
-    logger = get_logger(logger_name)
+#     logger = get_logger(logger_name)
 
-    current_task_pars = task_pars.copy()
+#     current_task_pars = task_pars.copy()
 
-    for this_wftask in task_list:
-        logger.debug(
-            f"SUBMIT {this_wftask.order}-th task "
-            f'(name="{this_wftask.task.name}")'
-        )
-        if this_wftask.is_parallel:
-            current_task_pars = call_parallel_task(
-                executor=executor,
-                wftask=this_wftask,
-                task_pars_depend=current_task_pars,
-                workflow_dir=workflow_dir,
-                workflow_dir_user=workflow_dir_user,
-                submit_setup_call=submit_setup_call,
-                logger_name=logger_name,
-            )
-        else:
-            # Call backend-specific submit_setup_call
-            try:
-                extra_setup = submit_setup_call(
-                    wftask=this_wftask,
-                    task_pars=current_task_pars,
-                    workflow_dir=workflow_dir,
-                    workflow_dir_user=workflow_dir_user,
-                )
-            except Exception as e:
-                tb = "".join(traceback.format_tb(e.__traceback__))
-                raise RuntimeError(
-                    f"{type(e)} error in {submit_setup_call=}\n"
-                    f"Original traceback:\n{tb}"
-                )
-            # NOTE: executor.submit(call_single_task, ...) is non-blocking,
-            # i.e. the returned future may have `this_wftask_future.done() =
-            # False`. We make it blocking right away, by calling `.result()`
-            # NOTE: do not use trim_TaskParameters for non-parallel tasks,
-            # since the `task_pars` argument in `call_single_task` is also used
-            # as a basis for new `metadata`.
-            this_wftask_future = executor.submit(
-                call_single_task,
-                wftask=this_wftask,
-                task_pars=current_task_pars,
-                workflow_dir=workflow_dir,
-                workflow_dir_user=workflow_dir_user,
-                logger_name=logger_name,
-                **extra_setup,
-            )
-            # Wait for the future result (blocking)
-            current_task_pars = this_wftask_future.result()
-        logger.debug(
-            f"END    {this_wftask.order}-th task "
-            f'(name="{this_wftask.task.name}")'
-        )
+#     for this_wftask in task_list:
+#         logger.debug(
+#             f"SUBMIT {this_wftask.order}-th task "
+#             f'(name="{this_wftask.task.name}")'
+#         )
+#         if this_wftask.is_parallel:
+#             current_task_pars = call_parallel_task(
+#                 executor=executor,
+#                 wftask=this_wftask,
+#                 task_pars_depend=current_task_pars,
+#                 workflow_dir=workflow_dir,
+#                 workflow_dir_user=workflow_dir_user,
+#                 submit_setup_call=submit_setup_call,
+#                 logger_name=logger_name,
+#             )
+#         else:
+#             # Call backend-specific submit_setup_call
+#             try:
+#                 extra_setup = submit_setup_call(
+#                     wftask=this_wftask,
+#                     task_pars=current_task_pars,
+#                     workflow_dir=workflow_dir,
+#                     workflow_dir_user=workflow_dir_user,
+#                 )
+#             except Exception as e:
+#                 tb = "".join(traceback.format_tb(e.__traceback__))
+#                 raise RuntimeError(
+#                     f"{type(e)} error in {submit_setup_call=}\n"
+#                     f"Original traceback:\n{tb}"
+#                 )
+#             # NOTE: executor.submit(call_single_task, ...) is non-blocking,
+#             # i.e. the returned future may have `this_wftask_future.done() =
+#             # False`. We make it blocking right away, by calling `.result()`
+#             this_wftask_future = executor.submit(
+#                 call_single_task,
+#                 wftask=this_wftask,
+#                 task_pars=current_task_pars,
+#                 workflow_dir=workflow_dir,
+#                 workflow_dir_user=workflow_dir_user,
+#                 logger_name=logger_name,
+#                 **extra_setup,
+#             )
+#             # Wait for the future result (blocking)
+#             current_task_pars = this_wftask_future.result()
+#         logger.debug(
+#             f"END    {this_wftask.order}-th task "
+#             f'(name="{this_wftask.task.name}")'
+#         )
 
-        # Write most recent metadata to METADATA_FILENAME
-        with open(workflow_dir / METADATA_FILENAME, "w") as f:
-            json.dump(current_task_pars.metadata, f, indent=2)
+#         # Write most recent metadata to METADATA_FILENAME
+#         with open(workflow_dir / METADATA_FILENAME, "w") as f:
+#             json.dump(current_task_pars.metadata, f, indent=2)
 
-        # Write most recent metadata to HISTORY_FILENAME
-        with open(workflow_dir / HISTORY_FILENAME, "w") as f:
-            json.dump(current_task_pars.history, f, indent=2)
+#         # Write most recent metadata to HISTORY_FILENAME
+#         with open(workflow_dir / HISTORY_FILENAME, "w") as f:
+#             json.dump(current_task_pars.history, f, indent=2)
 
-    return current_task_pars
+#     return current_task_pars
