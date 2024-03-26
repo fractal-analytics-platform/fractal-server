@@ -149,9 +149,8 @@ def _run_v1_task(
             task_output = TaskOutput(**task_output)
         return task_output
 
-    results = executor.map(  # noqa
-        _wrapper_expand_kwargs, list_function_kwargs
-    )
+    results = executor.map(_wrapper_expand_kwargs, list_function_kwargs)
+    task_outputs = list(results)  # noqa
 
     return TaskOutput()
 
