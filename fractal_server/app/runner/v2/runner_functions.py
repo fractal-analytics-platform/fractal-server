@@ -142,12 +142,8 @@ def _run_v1_task(
         )
 
     def _wrapper_expand_kwargs(input_kwargs: dict[str, Any]):
-        task_output = task.command(**input_kwargs)
-        if task_output is None:
-            task_output = TaskOutput()
-        else:
-            task_output = TaskOutput(**task_output)
-        return task_output
+        task_output = task.command(**input_kwargs)  # noqa
+        return TaskOutput()
 
     results = executor.map(_wrapper_expand_kwargs, list_function_kwargs)
     task_outputs = list(results)  # noqa
