@@ -437,7 +437,9 @@ def call_parallel_task(
         )
 
     # Preliminary steps
-    actual_task_pars_depend = (task_pars_depend, wftask.task)
+    actual_task_pars_depend = trim_TaskParameters(
+        task_pars_depend, wftask.task
+    )
 
     partial_call_task = partial(
         call_single_parallel_task,
