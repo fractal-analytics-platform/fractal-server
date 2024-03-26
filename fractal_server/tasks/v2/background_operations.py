@@ -248,7 +248,9 @@ async def create_package_environment_pip(
                 ] = manifest.args_schema_version
 
             this_task = TaskCreateV2(
-                **t.dict(),
+                **t.dict(
+                    exclude={"executable_non_parallel", "executable_parallel"}
+                ),
                 **task_attributes,
             )
             task_list.append(this_task)
