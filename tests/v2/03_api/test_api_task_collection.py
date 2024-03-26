@@ -96,6 +96,8 @@ async def test_task_collection(
         task_list = data["task_list"]
         task_names = (t["name"] for t in task_list)
         debug(task_names)
+        if data["status"] != "OK":
+            print(data["log"])
         assert data["status"] == "OK"
         # Check that log were written, even with CRITICAL logging level
         log = data["log"]
