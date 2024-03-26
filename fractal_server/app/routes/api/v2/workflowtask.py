@@ -67,7 +67,8 @@ async def create_workflowtask(
             task_id=task_id,
             order=new_task.order,
             meta=new_task.meta,
-            args=new_task.args,
+            args_non_parallel=new_task.args_non_parallel,
+            args_parallel=new_task.args_parallel,
             input_filters=new_task.input_filters,
             db=db,
         )
@@ -124,7 +125,6 @@ async def update_workflowtask(
 
     for key, value in workflow_task_update.dict(exclude_unset=True).items():
         if key == "args":
-
             # Get default arguments via a Task property method
             default_args = deepcopy(
                 db_workflow_task.task.default_args_from_args_schema
