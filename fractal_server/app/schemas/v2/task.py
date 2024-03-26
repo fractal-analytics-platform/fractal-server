@@ -10,6 +10,8 @@ from .._validators import valstr
 
 
 class TaskCreateV2(BaseModel):
+    class Config:
+        extra = "forbid"
 
     name: str
 
