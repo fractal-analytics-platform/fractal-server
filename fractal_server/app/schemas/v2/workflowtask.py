@@ -38,7 +38,8 @@ class WorkflowTaskStatusTypeV2(str, Enum):
 class WorkflowTaskCreateV2(BaseModel):
 
     meta: Optional[dict[str, Any]]
-    args: Optional[dict[str, Any]]
+    args_non_parallel: Optional[dict[str, Any]]
+    args_parallel: Optional[dict[str, Any]]
     order: Optional[int]
     input_filters: Filters = Field(default_factory=Filters)
 
