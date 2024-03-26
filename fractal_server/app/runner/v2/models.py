@@ -34,14 +34,17 @@ class Task(BaseModel):
     function_non_parallel: Optional[Callable] = None
     function_parallel: Optional[Callable] = None
 
+    command_non_parallel: Optional[str] = None
+    command_parallel: Optional[str] = None
+
     @root_validator(pre=False)
     def _not_both_commands_none(cls, values):
         print(values)
-        _function_non_parallel = values.get("function_non_parallel")
-        _function_parallel = values.get("function_parallel")
-        if _function_non_parallel is None and _function_parallel is None:
+        _command_non_parallel = values.get("command_non_parallel")
+        _command_parallel = values.get("command_parallel")
+        if _command_non_parallel is None and _command_parallel is None:
             raise ValueError(
-                "Both function_non_parallel and function_parallel are None"
+                "Both command_non_parallel and command_parallel are None"
             )
         return values
 
@@ -56,6 +59,21 @@ class Task(BaseModel):
                 return "parallel_standalone"
         else:
             if self.function_parallel is None:
+                return "non_parallel_standalone"
+            else:
+                return "compound"
+
+    @property
+    def type(
+        self,
+    ) -> Literal["compound", "parallel_standalone", "non_parallel_standalone"]:
+        if self.command_non_parallel is None:
+            if self.command_parallel is None:
+                raise
+            else:
+                return "parallel_standalone"
+        else:
+            if self.command_parallel is None:
                 return "non_parallel_standalone"
             else:
                 return "compound"

@@ -10,11 +10,11 @@ from ....images.tools import match_filter
 from .models import Dataset
 from .models import DictStrAny
 from .models import WorkflowTask
-from .runner_functions import _run_compound_task
-from .runner_functions import _run_non_parallel_task
-from .runner_functions import _run_parallel_task
-from .runner_functions import _run_v1_task
-from .v1_compat import _convert_v2_args_into_v1
+from .runner_functions import run_compound_task
+from .runner_functions import run_non_parallel_task
+from .runner_functions import run_parallel_task
+from .runner_functions import run_parallel_task_v1
+
 
 # FIXME: define RESERVED_ARGUMENTS = [", ...]
 
@@ -54,12 +54,10 @@ def execute_tasks_v2(
         )
         if wftask.is_legacy_task:
 
-            converted_args = _convert_v2_args_into_v1(wftask.args_parallel)
-
-            current_task_output = _run_v1_task(
-                filtered_images=filtered_images,
-                converted_args=converted_args,
+            current_task_output = run_parallel_task_v1(
+                images=filtered_images,
                 task=wftask.task,
+                wftask=wftask,
                 executor=executor,
             )
 
@@ -75,26 +73,26 @@ def execute_tasks_v2(
             # ACTUAL TASK EXECUTION
 
             # Non-parallel task
-            if task.task_type == "non_parallel_standalone":
-                current_task_output = _run_non_parallel_task(
-                    filtered_images=filtered_images,
+            if task.type == "non_parallel_standalone":
+                current_task_output = run_non_parallel_task(
+                    images=filtered_images,
                     zarr_dir=tmp_dataset.zarr_dir,
                     wftask=wftask,
                     task=wftask.task,
                     executor=executor,
                 )
             # Parallel task
-            elif task.task_type == "parallel_standalone":
-                current_task_output = _run_parallel_task(
-                    filtered_images=filtered_images,
+            elif task.type == "parallel_standalone":
+                current_task_output = run_parallel_task(
+                    images=filtered_images,
                     wftask=wftask,
                     task=wftask.task,
                     executor=executor,
                 )
             # Compound task
-            elif task.task_type == "compound":
-                current_task_output = _run_compound_task(
-                    filtered_images=filtered_images,
+            elif task.type == "compound":
+                current_task_output = run_compound_task(
+                    images=filtered_images,
                     zarr_dir=tmp_dataset.zarr_dir,
                     wftask=wftask,
                     task=wftask.task,
