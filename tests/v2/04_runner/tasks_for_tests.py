@@ -54,3 +54,13 @@ def copy_and_edit_image(
             dict(path=f"{path}_new", attributes=dict(processed=True))
         ]
     )
+
+
+# Task v1
+
+
+def generic_task_v1(
+    input_paths: list[str], output_path: str, metadata: dict, component: str
+) -> dict[str, Any]:
+    print(f"Task v1, return {input_paths=}")
+    return {}

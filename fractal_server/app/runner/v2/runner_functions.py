@@ -10,6 +10,7 @@ from pydantic.main import ModelMetaclass
 from ....images import SingleImage
 from .models import DictStrAny
 from .models import Task
+from .models import TaskV1
 from .models import WorkflowTask
 from .task_output import TaskOutput
 
@@ -118,6 +119,36 @@ def merge_outputs(
     )
 
     return final_output
+
+
+def _run_v1_task(
+    *,
+    filtered_images: list[SingleImage],
+    task: TaskV1,
+    converted_args: dict,
+    executor,
+) -> TaskOutput:
+    list_function_kwargs = [
+        dict(
+            **converted_args,
+        )
+        for image in filtered_images
+    ]
+    if len(list_function_kwargs) > MAX_PARALLELIZATION_LIST_SIZE:
+        raise ValueError(
+            "Too many parallelization items.\n"
+            f"   {len(list_function_kwargs)=}\n"
+            f"   {MAX_PARALLELIZATION_LIST_SIZE=}\n"
+        )
+
+    def _wrapper_expand_kwargs(input_kwargs: dict[str, Any]):
+        task_output = task.command(**input_kwargs)  # noqa
+        return TaskOutput()
+
+    results = executor.map(_wrapper_expand_kwargs, list_function_kwargs)
+    task_outputs = list(results)  # noqa
+
+    return TaskOutput()
 
 
 def _run_parallel_task(
