@@ -57,7 +57,9 @@ class WorkflowTaskReadV2(BaseModel):
     workflow_id: int
     order: Optional[int]
     meta: Optional[dict[str, Any]]
-    args: Optional[dict[str, Any]]
+
+    args_non_parallel: Optional[dict[str, Any]]
+    args_parallel: Optional[dict[str, Any]]
 
     input_filters: Filters
 
