@@ -38,7 +38,6 @@ def no_op_submit_setup_call(
     wftask: WorkflowTask,
     workflow_dir: Path,
     workflow_dir_user: Path,
-    task_pars: TaskParameters,
 ) -> dict:
     """
     Default (no-operation) interface of submit_setup_call.
@@ -425,7 +424,6 @@ def call_parallel_task(
     try:
         extra_setup = submit_setup_call(
             wftask=wftask,
-            task_pars=task_pars_depend,
             workflow_dir=workflow_dir,
             workflow_dir_user=workflow_dir_user,
         )
@@ -577,7 +575,6 @@ def execute_tasks(
             try:
                 extra_setup = submit_setup_call(
                     wftask=this_wftask,
-                    task_pars=current_task_pars,
                     workflow_dir=workflow_dir,
                     workflow_dir_user=workflow_dir_user,
                 )

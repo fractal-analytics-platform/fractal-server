@@ -16,7 +16,6 @@ from typing import Optional
 
 from ....models.v1 import WorkflowTask
 from ...executors.local._local_config import get_local_backend_config
-from ..common import TaskParameters
 
 
 def _local_submit_setup(
@@ -24,7 +23,6 @@ def _local_submit_setup(
     wftask: WorkflowTask,
     workflow_dir: Optional[Path] = None,
     workflow_dir_user: Optional[Path] = None,
-    task_pars: Optional[TaskParameters] = None,
 ) -> dict[str, object]:
     """
     Collect WorfklowTask-specific configuration parameters from different
@@ -33,8 +31,6 @@ def _local_submit_setup(
     Arguments:
         wftask:
             WorkflowTask for which the configuration is to be assembled
-        task_pars:
-            Not used in this function.
         workflow_dir:
             Not used in this function.
         workflow_dir_user:
