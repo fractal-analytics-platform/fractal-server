@@ -115,7 +115,7 @@ async def update_workflowtask(
     Edit a WorkflowTask of a Workflow
     """
 
-    db_workflow_task, db_workflow = await _get_workflow_task_check_owner(
+    db_wf_task, db_workflow = await _get_workflow_task_check_owner(
         project_id=project_id,
         workflow_task_id=workflow_task_id,
         workflow_id=workflow_id,
@@ -123,11 +123,37 @@ async def update_workflowtask(
         db=db,
     )
 
+    if db_wf_task.is_legacy_task and (
+        workflow_task_update.args_non_parallel is not None
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Cannot set `args_non_parallel` for a legacy Task",
+        )
+
     for key, value in workflow_task_update.dict(exclude_unset=True).items():
-        if key == "args":
+        if key == "args_parallel":
+            # Get default arguments via a Task property method
+            if db_wf_task.is_legacy_task:
+                default_args = (
+                    db_wf_task.task_legacy.default_args_from_args_schema
+                )
+            else:
+                default_args = (
+                    db_wf_task.task.default_args_parallel_from_args_schema
+                )
+            # Override default_args with args value items
+            actual_args = deepcopy(default_args)
+            if value is not None:
+                for k, v in value.items():
+                    actual_args[k] = v
+            if not actual_args:
+                actual_args = None
+            setattr(db_wf_task, key, actual_args)
+        if key == "args_non_parallel":
             # Get default arguments via a Task property method
             default_args = deepcopy(
-                db_workflow_task.task.default_args_from_args_schema
+                db_wf_task.task.default_args_non_parallel_from_args_schema
             )
             # Override default_args with args value items
             actual_args = default_args.copy()
@@ -136,11 +162,12 @@ async def update_workflowtask(
                     actual_args[k] = v
             if not actual_args:
                 actual_args = None
-            setattr(db_workflow_task, key, actual_args)
+            setattr(db_wf_task, key, actual_args)
         elif key == "meta":
-            current_meta = deepcopy(db_workflow_task.meta) or {}
+            current_meta = deepcopy(db_wf_task.meta) or {}
             current_meta.update(value)
-            setattr(db_workflow_task, key, current_meta)
+            setattr(db_wf_task, key, current_meta)
+        # FIXME handle `input_filters`
         else:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -148,10 +175,10 @@ async def update_workflowtask(
             )
 
     await db.commit()
-    await db.refresh(db_workflow_task)
+    await db.refresh(db_wf_task)
     await db.close()
 
-    return db_workflow_task
+    return db_wf_task
 
 
 @router.delete(
