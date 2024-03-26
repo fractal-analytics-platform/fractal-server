@@ -5,21 +5,15 @@ This module includes utilities and routines that are of use to implement
 runner backends but that should also be exposed to the other components of
 `Fractal Server`.
 """
-import asyncio
 import json
-from functools import partial
-from functools import wraps
 from json import JSONEncoder
 from pathlib import Path
 from typing import Any
-from typing import Callable
 from typing import Optional
 
 from pydantic import BaseModel
 
 from .....logger import close_logger as close_job_logger  # noqa F401
-from ....models.v1 import Dataset
-from ....models.v1 import Workflow
 
 
 class TaskParameterEncoder(JSONEncoder):
@@ -61,65 +55,6 @@ class TaskParameters(BaseModel):
     class Config:
         arbitrary_types_allowed = True
         extra = "forbid"
-
-
-def validate_workflow_compatibility(
-    *,
-    input_dataset: Dataset,
-    workflow: Workflow,
-    output_dataset: Dataset,
-    first_task_index: int,
-    last_task_index: int,
-) -> None:
-    """
-    Check compatibility of workflow and input / ouptut dataset
-    """
-    # Check input_dataset type
-    workflow_input_type = workflow.task_list[first_task_index].task.input_type
-    if (
-        workflow_input_type != "Any"
-        and workflow_input_type != input_dataset.type
-    ):
-        raise TypeError(
-            f"Incompatible types `{workflow_input_type}` of workflow "
-            f"`{workflow.name}` and `{input_dataset.type}` of dataset "
-            f"`{input_dataset.name}`"
-        )
-
-    # Check output_dataset type
-    workflow_output_type = workflow.task_list[last_task_index].task.output_type
-    if (
-        workflow_output_type != "Any"
-        and workflow_output_type != output_dataset.type
-    ):
-        raise TypeError(
-            f"Incompatible types `{workflow_output_type}` of workflow "
-            f"`{workflow.name}` and `{output_dataset.type}` of dataset "
-            f"`{output_dataset.name}`"
-        )
-
-
-def async_wrap(func: Callable) -> Callable:
-    """
-    Wrap a synchronous callable in an async task
-
-    Ref: [issue #140](https://github.com/fractal-analytics-platform/fractal-server/issues/140)
-    and [this StackOverflow answer](https://stackoverflow.com/q/43241221/19085332).
-
-    Returns:
-        async_wrapper:
-            A factory that allows wrapping a blocking callable within a
-            coroutine.
-    """  # noqa: E501
-
-    @wraps(func)
-    async def async_wrapper(*args, loop=None, executor=None, **kwargs):
-        if loop is None:
-            loop = asyncio.get_event_loop()
-        pfunc = partial(func, *args, **kwargs)
-        return await loop.run_in_executor(executor, pfunc)
-
-    return async_wrapper
 
 
 def write_args_file(
