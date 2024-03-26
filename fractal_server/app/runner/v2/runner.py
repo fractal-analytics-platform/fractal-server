@@ -54,9 +54,7 @@ def execute_tasks_v2(
         )
         if wftask.is_legacy_task:
 
-            converted_args = _convert_v2_args_into_v1(
-                wftask.args_parallel, parallelization_level="image"
-            )
+            converted_args = _convert_v2_args_into_v1(wftask.args_parallel)
 
             current_task_output = _run_v1_task(
                 filtered_images=filtered_images,

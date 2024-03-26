@@ -3,18 +3,13 @@ from typing import Any
 
 
 def _convert_v2_args_into_v1(
-    kwargs: dict[str, Any], parallelization_level: str
+    kwargs: dict[str, Any],
 ):
 
     path = kwargs.pop("path")
     input_path = Path(path).parents[3].as_posix()
     image_component = path.replace(input_path, "").lstrip("/")
-    if parallelization_level == "image":
-        component = image_component
-    elif parallelization_level == "well":
-        component = str(Path(image_component).parent)
-    elif parallelization_level == "plate":
-        component = str(Path(image_component).parents[2])
+    component = image_component
 
     kwargs["input_paths"] = [input_path]
     kwargs["output_path"] = input_path  # TBD: is it always like this??
