@@ -23,7 +23,8 @@ class WorkflowTaskV2(SQLModel, table=True):
     workflow_id: int = Field(foreign_key="workflowv2.id")
     order: Optional[int]
     meta: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
-    args: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
+    args_parallel: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
+    args_non_parallel: Optional[dict[str, Any]] = Field(sa_column=Column(JSON))
 
     input_filters: dict[
         Literal["attributes", "types"], dict[str, Any]
@@ -46,13 +47,30 @@ class WorkflowTaskV2(SQLModel, table=True):
         sa_relationship_kwargs=dict(lazy="selectin")
     )
 
-    @validator("args")
-    def validate_args(cls, value):
+    @validator("args_non_parallel")
+    def validate_args_non_parallel(cls, value):
         """
-        Prevent fractal task reserved parameter names from entering args
+        FIXME V2 this requires an update
+        """
+        if value is None:
+            return
+        forbidden_args_keys = {
+            "metadata",
+            "component",
+        }
+        args_keys = set(value.keys())
+        intersect_keys = forbidden_args_keys.intersection(args_keys)
+        if intersect_keys:
+            raise ValueError(
+                "`args` contains the following forbidden keys: "
+                f"{intersect_keys}"
+            )
+        return value
 
-        Forbidden argument names are `metadata`,
-        `component`.
+    @validator("args_parallel")
+    def validate_args_parallel(cls, value):
+        """
+        FIXME V2 this requires an update
         """
         if value is None:
             return

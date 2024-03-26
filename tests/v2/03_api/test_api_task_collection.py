@@ -96,6 +96,8 @@ async def test_task_collection(
         task_list = data["task_list"]
         task_names = (t["name"] for t in task_list)
         debug(task_names)
+        if data["status"] != "OK":
+            print(data["log"])
         assert data["status"] == "OK"
         # Check that log were written, even with CRITICAL logging level
         log = data["log"]
@@ -119,6 +121,13 @@ async def test_task_collection(
         for task in task_list:
             print(task["source"])
             assert task["source"].startswith(EXPECTED_SOURCE)
+
+        # Check that argument JSON schemas are present
+        for task in task_list:
+            if task["command_non_parallel"] is not None:
+                assert task["args_schema_non_parallel"] is not None
+            if task["command_parallel"] is not None:
+                assert task["args_schema_parallel"] is not None
 
         # Collect again (already installed)
         res = await client.post(f"{PREFIX}/collect/pip/", json=payload)
