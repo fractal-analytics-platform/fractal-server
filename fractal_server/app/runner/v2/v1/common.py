@@ -11,8 +11,6 @@ from pathlib import Path
 from typing import Any
 from typing import Optional
 
-from pydantic import BaseModel
-
 from .....logger import close_logger as close_job_logger  # noqa F401
 
 
@@ -25,36 +23,6 @@ class TaskParameterEncoder(JSONEncoder):
         if isinstance(value, Path):
             return value.as_posix()
         return JSONEncoder.default(self, value)
-
-
-class TaskParameters(BaseModel):
-    """
-    Wrapper for task input parameters
-
-    Instances of this class are used to pass parameters from the output of a
-    task to the input of the next one.
-
-    Attributes:
-        input_paths:
-            Input paths as derived by the input dataset.
-        output_paths:
-            Output path as derived from the output dataset.
-        metadata:
-            Dataset metadata, as found in the input dataset or as updated by
-            the previous task.
-        history:
-            Dataset history, as found in the input dataset or as updated by
-            the previous task.
-    """
-
-    input_paths: list[Path]
-    output_path: Path
-    metadata: dict[str, Any]
-    history: list[dict[str, Any]]
-
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "forbid"
 
 
 def write_args_file(
