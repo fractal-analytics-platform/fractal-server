@@ -15,12 +15,10 @@ implementation of `submit_setup_call` in
 [fractal_server.app.runner._common][]).
 """
 from pathlib import Path
-from typing import Optional
 
 from ....models import WorkflowTask
 from ...executors.slurm._slurm_config import get_slurm_config
 from ...task_files import get_task_file_paths
-from ..common import TaskParameters
 
 
 def _slurm_submit_setup(
@@ -28,7 +26,6 @@ def _slurm_submit_setup(
     wftask: WorkflowTask,
     workflow_dir: Path,
     workflow_dir_user: Path,
-    task_pars: Optional[TaskParameters] = None,
 ) -> dict[str, object]:
     """
     Collect WorfklowTask-specific configuration parameters from different
@@ -46,9 +43,6 @@ def _slurm_submit_setup(
     Arguments:
         wftask:
             WorkflowTask for which the configuration is to be assembled
-        task_pars:
-            Task parameters to be passed to the task
-            (not used in this function)
         workflow_dir:
             Server-owned directory to store all task-execution-related relevant
             files (inputs, outputs, errors, and all meta files related to the
