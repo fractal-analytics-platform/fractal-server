@@ -68,32 +68,38 @@ class TaskReadV2(BaseModel):
 class TaskUpdateV2(BaseModel):
 
     name: Optional[str]
-    command_non_parallel: Optional[str]
-    command_parallel: Optional[str]
-    source: Optional[str]
-    meta: Optional[dict[str, Any]]
     version: Optional[str]
-    args_schema_parallel: Optional[dict[str, Any]] = None
-    args_schema_non_parallel: Optional[dict[str, Any]] = None
-    args_schema_version: Optional[str]
-    docs_info: Optional[str]
-    docs_link: Optional[HttpUrl]
+    command_parallel: Optional[str]
+    command_non_parallel: Optional[str]
     input_types: Optional[dict[str, bool]]
     output_types: Optional[dict[str, bool]]
 
-    # Validators
-    _name = validator("name", allow_reuse=True)(valstr("name"))
-    _command_non_parallel = validator(
-        "command_non_parallel", allow_reuse=True
-    )(valstr("command_non_parallel"))
-    _command_parallel = validator("command_parallel", allow_reuse=True)(
-        valstr("command_parallel")
-    )
+    # source: Optional[str]
+    # meta: Optional[dict[str, Any]]
+    # args_schema_parallel: Optional[dict[str, Any]] = None
+    # args_schema_non_parallel: Optional[dict[str, Any]] = None
+    # args_schema_version: Optional[str]
+    # docs_info: Optional[str]
+    # docs_link: Optional[HttpUrl]
+    # _source = validator("source", allow_reuse=True)(valstr("source"))
 
-    _source = validator("source", allow_reuse=True)(valstr("source"))
+    # Validators
+    @validator("input_types", "output_types")
+    def val_is_dict(cls, v):
+        if not isinstance(v, dict):
+            raise ValueError
+        return v
+
+    _name = validator("name", allow_reuse=True)(valstr("name"))
     _version = validator("version", allow_reuse=True)(
         valstr("version", accept_none=True)
     )
+    _command_parallel = validator("command_parallel", allow_reuse=True)(
+        valstr("command_parallel")
+    )
+    _command_non_parallel = validator(
+        "command_non_parallel", allow_reuse=True
+    )(valstr("command_non_parallel"))
 
 
 class TaskImportV2(BaseModel):

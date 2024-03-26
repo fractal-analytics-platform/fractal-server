@@ -87,25 +87,19 @@ async def patch_task(
 
     # Retrieve task from database
     db_task = await _get_task_check_owner(task_id=task_id, user=user, db=db)
-
     update = task_update.dict(exclude_unset=True)
+
+    # Forbid changes that set a previously unset command
+    if ("command_parallel" in update) and (db_task.command_parallel is None):
+        del update["command_parallel"]
+    if (
+        "command_non_parallel" in update
+        and db_task.command_non_parallel is None
+    ):
+        del update["command_non_parallel"]
+
     for key, value in update.items():
-        if isinstance(value, str) or (
-            key == "version" and value is None
-        ):  # special case (issue 817)
-            setattr(db_task, key, value)
-        elif isinstance(value, dict):
-            if key == "args_schema":
-                setattr(db_task, key, value)
-            else:
-                current_dict = deepcopy(getattr(db_task, key))
-                current_dict.update(value)
-                setattr(db_task, key, current_dict)
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Invalid {type(value)=} for {key=}",
-            )
+        setattr(db_task, key, value)
 
     await db.commit()
     await db.refresh(db_task)
