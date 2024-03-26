@@ -13,6 +13,8 @@ from .models import WorkflowTask
 from .runner_functions import _run_compound_task
 from .runner_functions import _run_non_parallel_task
 from .runner_functions import _run_parallel_task
+from .runner_functions import _run_v1_task
+from .v1_compat import _convert_v2_args_into_v1
 
 # FIXME: define RESERVED_ARGUMENTS = [", ...]
 
@@ -50,44 +52,56 @@ def execute_tasks_v2(
             images=tmp_dataset.images,
             filters=Filters(types=type_filters, attributes=attribute_filters),
         )
-        # Verify that filtered images comply with output types
-        for image in filtered_images:
-            if not match_filter(image, Filters(types=task.input_types)):
-                raise ValueError(
-                    f"Filtered images include {image.dict()}, which does "
-                    f"not comply with {task.input_types=}."
-                )
+        if wftask.is_legacy_task:
 
-        # ACTUAL TASK EXECUTION
+            converted_args = _convert_v2_args_into_v1(wftask.args_parallel)
 
-        # Non-parallel task
-        if task.task_type == "non_parallel_standalone":
-            current_task_output = _run_non_parallel_task(
+            current_task_output = _run_v1_task(
                 filtered_images=filtered_images,
-                zarr_dir=tmp_dataset.zarr_dir,
-                wftask=wftask,
+                converted_args=converted_args,
                 task=wftask.task,
                 executor=executor,
             )
-        # Parallel task
-        elif task.task_type == "parallel_standalone":
-            current_task_output = _run_parallel_task(
-                filtered_images=filtered_images,
-                wftask=wftask,
-                task=wftask.task,
-                executor=executor,
-            )
-        # Compound task
-        elif task.task_type == "compound":
-            current_task_output = _run_compound_task(
-                filtered_images=filtered_images,
-                zarr_dir=tmp_dataset.zarr_dir,
-                wftask=wftask,
-                task=wftask.task,
-                executor=executor,
-            )
+
         else:
-            raise ValueError(f"Invalid {task.task_type=}.")
+            # Verify that filtered images comply with output types
+            for image in filtered_images:
+                if not match_filter(image, Filters(types=task.input_types)):
+                    raise ValueError(
+                        f"Filtered images include {image.dict()}, which does "
+                        f"not comply with {task.input_types=}."
+                    )
+
+            # ACTUAL TASK EXECUTION
+
+            # Non-parallel task
+            if task.task_type == "non_parallel_standalone":
+                current_task_output = _run_non_parallel_task(
+                    filtered_images=filtered_images,
+                    zarr_dir=tmp_dataset.zarr_dir,
+                    wftask=wftask,
+                    task=wftask.task,
+                    executor=executor,
+                )
+            # Parallel task
+            elif task.task_type == "parallel_standalone":
+                current_task_output = _run_parallel_task(
+                    filtered_images=filtered_images,
+                    wftask=wftask,
+                    task=wftask.task,
+                    executor=executor,
+                )
+            # Compound task
+            elif task.task_type == "compound":
+                current_task_output = _run_compound_task(
+                    filtered_images=filtered_images,
+                    zarr_dir=tmp_dataset.zarr_dir,
+                    wftask=wftask,
+                    task=wftask.task,
+                    executor=executor,
+                )
+            else:
+                raise ValueError(f"Invalid {task.task_type=}.")
 
         # POST TASK EXECUTION
 
@@ -170,7 +184,10 @@ def execute_tasks_v2(
             )
 
         # Update Dataset.filters.types: current + (task_output + task_manifest)
-        types_from_manifest = task.output_types
+        if wftask.is_legacy_task:
+            types_from_manifest = {}
+        else:
+            types_from_manifest = task.output_types
         if current_task_output.filters is not None:
             types_from_task = current_task_output.filters.types
         else:

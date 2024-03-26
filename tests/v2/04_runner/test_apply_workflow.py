@@ -3,11 +3,13 @@ from concurrent.futures import ThreadPoolExecutor
 import pytest
 from devtools import debug
 from tasks_for_tests import create_images_from_scratch
+from tasks_for_tests import generic_task_v1
 from tasks_for_tests import print_path
 from tasks_for_tests import remove_images
 
 from fractal_server.app.runner.v2.models import Dataset
 from fractal_server.app.runner.v2.models import Task
+from fractal_server.app.runner.v2.models import TaskV1
 from fractal_server.app.runner.v2.models import WorkflowTask
 from fractal_server.app.runner.v2.runner import execute_tasks_v2
 
@@ -78,5 +80,24 @@ def test_single_parallel_task_no_parallization_list(executor):
     ]
     dataset_out = execute_tasks_v2(
         wf_task_list=task_list, dataset=dataset_in, executor=executor
+    )
+    debug(dataset_out.image_paths)
+
+    task_list_v1 = [
+        WorkflowTask(
+            task=TaskV1(
+                name="test_driven",
+                command=generic_task_v1,
+                source="/test",
+                input_type="zarr",
+                output_type="zarr",
+            ),
+            args_parallel=dict(path="/invalid/plate.zarr/A/01/0"),
+            is_legacy_task=True,
+        )
+    ]
+
+    dataset_out = execute_tasks_v2(
+        wf_task_list=task_list_v1, dataset=dataset_in, executor=executor
     )
     debug(dataset_out.image_paths)

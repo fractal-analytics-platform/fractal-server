@@ -131,3 +131,13 @@ def test_image_attribute_propagation(
         else:
             assert image.attributes["plate"] == "plate.zarr"
             assert "processed" not in image.attributes.keys()
+
+    # wf_task_list_v1 = [
+    #          WorkflowTask(
+    #         task=Task(
+    #             name="task_parallel",
+    #             task_type="parallel",
+    #             function=_copy_and_edit_image,
+    #         ),
+    #     )
+    # ]
