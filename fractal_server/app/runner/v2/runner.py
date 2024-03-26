@@ -63,8 +63,6 @@ def execute_tasks_v2(
                 executor=executor,
             )
 
-            types_from_manifest = {}
-
         else:
             # Verify that filtered images comply with output types
             for image in filtered_images:
@@ -171,8 +169,6 @@ def execute_tasks_v2(
                 # Add image into the dataset image list
                 tmp_dataset.images.append(new_image)
 
-                types_from_manifest = task.output_types
-
         # Remove images from Dataset.images
         tmp_dataset.images = [
             image
@@ -188,6 +184,10 @@ def execute_tasks_v2(
             )
 
         # Update Dataset.filters.types: current + (task_output + task_manifest)
+        if wftask.is_legacy_task:
+            types_from_manifest = {}
+        else:
+            types_from_manifest = task.output_types
         if current_task_output.filters is not None:
             types_from_task = current_task_output.filters.types
         else:
