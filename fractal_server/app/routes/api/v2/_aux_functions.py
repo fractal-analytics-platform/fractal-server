@@ -421,32 +421,38 @@ async def _workflow_insert_task(
     # method
     if is_legacy_task is True:
         db_task = await db.get(Task, task_id)
+        if db_task is None:
+            raise ValueError(f"Task {task_id} not found.")
+        default_args_parallel = db_task.default_args_from_args_schema
+        actual_args_parallel = default_args_parallel.copy()
+        if args_parallel is not None:
+            for k, v in args_parallel.items():
+                actual_args_parallel[k] = v
+        if not actual_args_parallel:
+            actual_args_parallel = None
     else:
         db_task = await db.get(TaskV2, task_id)
-
-    if db_task is None:
-        if is_legacy_task is True:
-            raise ValueError(f"Task {task_id} not found.")
-        else:
+        if db_task is None:
             raise ValueError(f"TaskV2 {task_id} not found.")
-
-    # Override default_args with args
-    default_args_non_parallel = (
-        db_task.default_args_non_parallel_from_args_schema
-    )
-    actual_args_non_parallel = default_args_non_parallel.copy()
-    if args_non_parallel is not None:
-        for k, v in args_non_parallel.items():
-            actual_args_non_parallel[k] = v
-    if not actual_args_non_parallel:
-        actual_args_non_parallel = None
-    default_args_parallel = db_task.default_args_parallel_from_args_schema
-    actual_args_parallel = default_args_parallel.copy()
-    if args_parallel is not None:
-        for k, v in args_parallel.items():
-            actual_args_parallel[k] = v
-    if not actual_args_parallel:
-        actual_args_parallel = None
+        # Override default_args with args
+        # non-parallel
+        default_args_non_parallel = (
+            db_task.default_args_non_parallel_from_args_schema
+        )
+        actual_args_non_parallel = default_args_non_parallel.copy()
+        if args_non_parallel is not None:
+            for k, v in args_non_parallel.items():
+                actual_args_non_parallel[k] = v
+        if not actual_args_non_parallel:
+            actual_args_non_parallel = None
+        # parallel
+        default_args_parallel = db_task.default_args_parallel_from_args_schema
+        actual_args_parallel = default_args_parallel.copy()
+        if args_parallel is not None:
+            for k, v in args_parallel.items():
+                actual_args_parallel[k] = v
+        if not actual_args_parallel:
+            actual_args_parallel = None
 
     # Combine meta (higher priority) and db_task.meta (lower priority)
     wt_meta = (db_task.meta or {}).copy()
@@ -465,8 +471,6 @@ async def _workflow_insert_task(
         wf_task = WorkflowTaskV2(
             is_legacy_task=True,
             task_legacy_id=task_id,
-            # FIXME: legacy task should not have non-parallel args
-            args_non_parallel=actual_args_non_parallel,
             args_parallel=actual_args_parallel,
             meta=wt_meta,
             **input_filters_kwarg,
