@@ -29,10 +29,10 @@ async def add_task(client, index):
     task = dict(
         name=f"task{index}",
         source=f"source{index}",
-        command="cmd",
-        type="non_parallel",
+        command_non_parallel="cmd",
     )
     res = await client.post(f"{PREFIX}/task/", json=task)
+    debug(res.json())
     assert res.status_code == 201
     return res.json()
 
@@ -114,7 +114,6 @@ async def test_delete_workflow(
             f"?task_id={collect_packages[0].id}",
             json=dict(is_legacy_task=True),
         )
-        debug(res.json())
         assert res.status_code == 201
 
         # Verify that the WorkflowTask was correctly inserted into the Workflow
@@ -125,7 +124,6 @@ async def test_delete_workflow(
         )
         res = await db.execute(stm)
         res = list(res)
-        debug(res)
         assert len(res) == 1
 
         # Delete the Workflow
@@ -139,7 +137,6 @@ async def test_delete_workflow(
         # Check that the WorkflowTask was deleted
         res = await db.execute(stm)
         res = list(res)
-        debug(res)
         assert len(res) == 0
 
         # Assert you cannot delete a Workflow linked to an ongoing Job
@@ -216,7 +213,7 @@ async def test_get_workflow(client, MockCurrentUser, project_factory_v2):
         # Get workflow, and check relationship
         res = await client.get(f"{PREFIX}/project/{p_id}/workflow/{wf_id}/")
         assert res.status_code == 200
-        debug(res.json())
+
         assert res.json()["name"] == WORFKLOW_NAME
         assert res.json()["project"] == EXPECTED_PROJECT
         assert (
@@ -302,7 +299,7 @@ async def test_post_worfkflow_task(
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
             f"?task_id={t2['id']}",
-            json=dict(args=args_payload),
+            json=dict(args_non_parallel=args_payload),
         )
         assert res.status_code == 201
 
@@ -324,7 +321,7 @@ async def test_post_worfkflow_task(
         assert task_list[1]["task"]["name"] == "task0b"
         assert task_list[2]["task"]["name"] == "task1"
         assert task_list[3]["task"]["name"] == "task2"
-        assert task_list[3]["args"] == args_payload
+        assert task_list[3]["args_non_parallel"] == args_payload
 
 
 async def test_delete_workflow_task(
