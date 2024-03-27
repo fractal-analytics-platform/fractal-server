@@ -28,7 +28,8 @@
 #     wrong_dataset_in = Dataset(id=1, zarr_dir="/wrong")
 #     with pytest.raises(ValueError):
 #         execute_tasks_v2(
-#             wf_task_list=task_list, dataset=wrong_dataset_in, executor=executor
+#             wf_task_list=task_list, dataset=wrong_dataset_in,
+#             executor=executor
 #         )
 #     dataset_in = Dataset(id=1, zarr_dir="/tmp")
 #     dataset_out = execute_tasks_v2(

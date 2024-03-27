@@ -1,11 +1,9 @@
 # from concurrent.futures import ThreadPoolExecutor
 # from typing import Any
 # from typing import Optional
-
 # import pytest
 # from devtools import debug
 # from tasks_for_tests import dummy_task
-
 # from fractal_server.app.runner.v2.models import Dataset
 # from fractal_server.app.runner.v2.models import SingleImage
 # from fractal_server.app.runner.v2.models import Task
@@ -14,14 +12,10 @@
 # from fractal_server.app.runner.v2.runner_functions import (
 #     MAX_PARALLELIZATION_LIST_SIZE,
 # )
-
-
 # @pytest.fixture()
 # def executor():
 #     with ThreadPoolExecutor() as e:
 #         yield e
-
-
 # @pytest.mark.xfail(reason="To be updated, in view of compound tasks")
 # @pytest.mark.parametrize("N", [100, 1000])
 # def test_max_parallelization_list_size(N: int, executor):
@@ -55,8 +49,6 @@
 #                 wf_task_list=wf_task_list, dataset=dataset, executor=executor
 #             )
 #         debug(N, str(e.value))
-
-
 # def _copy_and_edit_image(
 #     path: str,
 # ) -> dict[str, Any]:
@@ -67,8 +59,6 @@
 #         )
 #     ]
 #     return dict(added_images=added_images)
-
-
 # @pytest.mark.xfail(reason="To be updated, in view of compound tasks")
 # @pytest.mark.parametrize(
 #     "parallelization_list",
@@ -114,10 +104,8 @@
 #         wf_task_list=wf_task_list, dataset=dataset_pre, executor=executor
 #     )
 #     images_post = dataset_post.images
-
 #     debug(images_pre)
 #     debug(images_post)
-
 #     for image in images_post:
 #         print(f"Now validate {image}")
 #         if image.path == f"{zarr_dir}/plate.zarr/A/01/0_new":
@@ -131,7 +119,6 @@
 #         else:
 #             assert image.attributes["plate"] == "plate.zarr"
 #             assert "processed" not in image.attributes.keys()
-
 #     # wf_task_list_v1 = [
 #     #          WorkflowTask(
 #     #         task=Task(

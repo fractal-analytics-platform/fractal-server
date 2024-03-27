@@ -2,7 +2,8 @@
 # from pathlib import Path
 # import pytest
 # from devtools import debug
-# from fractal_server.app.runner.executors.local import FractalThreadPoolExecutor
+# from fractal_server.app.runner.executors.local import (
+#   FractalThreadPoolExecutor )
 # from fractal_server.app.runner.v2 import execute_tasks_v2
 # from fractal_server.app.runner.v2.models import Dataset
 # from fractal_server.app.runner.v2.models import Task
