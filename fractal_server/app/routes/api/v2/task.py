@@ -90,13 +90,11 @@ async def patch_task(
     update = task_update.dict(exclude_unset=True)
 
     # Forbid changes that set a previously unset command
-    if ("command_parallel" in update) and (db_task.command_parallel is None):
-        del update["command_parallel"]
-    if (
-        "command_non_parallel" in update
-        and db_task.command_non_parallel is None
-    ):
-        del update["command_non_parallel"]
+    if "command_parallel" in update:
+        if db_task.command_parallel is None:
+            del update["command_parallel"]
+        elif db_task.command_non_parallel is None:
+            del update["command_non_parallel"]
 
     for key, value in update.items():
         setattr(db_task, key, value)
