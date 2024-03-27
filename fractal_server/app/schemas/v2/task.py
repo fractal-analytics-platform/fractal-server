@@ -21,7 +21,8 @@ class TaskCreateV2(BaseModel):
     command_parallel: Optional[str]
     source: str
 
-    meta: Optional[dict[str, Any]] = Field(default={})
+    meta_parallel: Optional[dict[str, Any]] = Field(default={})
+    meta_non_parallel: Optional[dict[str, Any]] = Field(default={})
     version: Optional[str]
     args_schema_non_parallel: Optional[dict[str, Any]]
     args_schema_parallel: Optional[dict[str, Any]]
@@ -67,7 +68,8 @@ class TaskReadV2(BaseModel):
     command_non_parallel: Optional[str]
     command_parallel: Optional[str]
     source: str
-    meta: dict[str, Any]
+    meta_parallel: dict[str, Any]
+    meta_non_parallel: dict[str, Any]
     owner: Optional[str]
     version: Optional[str]
     args_schema_non_parallel: Optional[dict[str, Any]] = None
@@ -87,15 +89,6 @@ class TaskUpdateV2(BaseModel):
     command_non_parallel: Optional[str]
     input_types: Optional[dict[str, bool]]
     output_types: Optional[dict[str, bool]]
-
-    # source: Optional[str]
-    # meta: Optional[dict[str, Any]]
-    # args_schema_parallel: Optional[dict[str, Any]] = None
-    # args_schema_non_parallel: Optional[dict[str, Any]] = None
-    # args_schema_version: Optional[str]
-    # docs_info: Optional[str]
-    # docs_link: Optional[HttpUrl]
-    # _source = validator("source", allow_reuse=True)(valstr("source"))
 
     # Validators
     @validator("input_types", "output_types")
