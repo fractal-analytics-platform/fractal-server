@@ -19,9 +19,6 @@ def executor():
 
 def test_fractal_demos_01(tmp_path: Path, executor):
 
-    Path("/tmp/out.json").unlink(missing_ok=True)
-    Path("/tmp/args.json").unlink(missing_ok=True)
-
     # Define task
     task_path = Path(__file__).parent / "my_task.py"
     task_cmd = f"{sys.executable} {task_path.as_posix()}"
@@ -31,6 +28,8 @@ def test_fractal_demos_01(tmp_path: Path, executor):
     wftask = WorkflowTask(
         args_non_parallel=dict(image_dir="/tmp/input_images"),
         task=task,
+        order=0,
+        id=0,
     )
 
     # Define dataset
@@ -42,6 +41,7 @@ def test_fractal_demos_01(tmp_path: Path, executor):
         wf_task_list=[wftask],
         dataset=dataset,
         executor=executor,
+        workflow_dir=tmp_path,
     )
 
     debug(dataset)

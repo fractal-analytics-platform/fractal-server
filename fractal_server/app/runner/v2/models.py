@@ -105,6 +105,8 @@ class WorkflowTask(BaseModel):
     is_legacy_task: Optional[bool]
     task: Optional[Union[Task, TaskV1]] = None
     filters: Filters = Field(default_factory=Filters)
+    order: int
+    id: int
 
 
 class Workflow(BaseModel):

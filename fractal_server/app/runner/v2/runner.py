@@ -1,6 +1,8 @@
 from concurrent.futures import ThreadPoolExecutor
 from copy import copy
 from copy import deepcopy
+from pathlib import Path
+from typing import Optional
 
 from ....images import Filters
 from ....images import SingleImage
@@ -14,7 +16,6 @@ from .runner_functions import run_compound_task
 from .runner_functions import run_non_parallel_task
 from .runner_functions import run_parallel_task
 from .runner_functions import run_parallel_task_v1
-
 
 # FIXME: define RESERVED_ARGUMENTS = [", ...]
 
@@ -35,6 +36,8 @@ def execute_tasks_v2(
     wf_task_list: list[WorkflowTask],
     dataset: Dataset,
     executor: ThreadPoolExecutor,
+    workflow_dir: Path,
+    workflow_dir_user: Optional[Path] = None,
 ) -> Dataset:
     tmp_dataset = deepcopy(dataset)
 
@@ -79,6 +82,8 @@ def execute_tasks_v2(
                     zarr_dir=tmp_dataset.zarr_dir,
                     wftask=wftask,
                     task=wftask.task,
+                    workflow_dir=workflow_dir,
+                    workflow_dir_user=workflow_dir_user,
                     executor=executor,
                 )
             # Parallel task

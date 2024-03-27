@@ -1,5 +1,7 @@
 import functools
 from concurrent.futures import Executor
+from pathlib import Path
+from typing import Optional
 
 from ....images import SingleImage
 from ._v1_task_compatibility import _convert_v2_args_into_v1
@@ -8,12 +10,11 @@ from .merge_outputs import merge_outputs
 from .models import Task
 from .models import TaskV1
 from .models import WorkflowTask
-from .runner_functions_low_level import _run_single_non_parallel_task
-from .runner_functions_low_level import _run_single_parallel_task
-from .runner_functions_low_level import _run_single_parallel_task_v1
+from .runner_functions_low_level import _run_single_task
 from .task_interface import InitArgsModel
 from .task_interface import InitTaskOutput
 from .task_interface import TaskOutput
+
 
 __all__ = [
     "run_non_parallel_task",
@@ -31,21 +32,37 @@ def run_non_parallel_task(
     zarr_dir: str,
     task: Task,
     wftask: WorkflowTask,
+    workflow_dir: Path,
+    workflow_dir_user: Optional[Path] = None,
+    logger_name: Optional[str] = None,
     executor: Executor,
 ) -> TaskOutput:
-    paths = [image.path for image in images]
+    """
+    This runs server-side (see `executor` argument)
+    """
+
+    if not workflow_dir_user:
+        workflow_dir_user = workflow_dir
+
     function_kwargs = dict(
-        paths=paths,
+        paths=[image.path for image in images],
         zarr_dir=zarr_dir,
         **wftask.args_non_parallel,
     )
     future = executor.submit(
-        functools.partial(_run_single_non_parallel_task, task=task),
+        functools.partial(
+            _run_single_task,
+            wftask=wftask,
+            command=task.command_non_parallel,
+            workflow_dir=workflow_dir,
+            workflow_dir_user=workflow_dir_user,
+        ),
         function_kwargs,
     )
     output = future.result()
     # FIXME V2: handle validation errors
     validated_output = TaskOutput(**output)
+
     return validated_output
 
 
@@ -55,6 +72,9 @@ def run_parallel_task(
     task: Task,
     wftask: WorkflowTask,
     executor: Executor,
+    workflow_dir: Path,
+    workflow_dir_user: Optional[Path] = None,
+    logger_name: Optional[str] = None,
 ) -> TaskOutput:
     if len(images) > MAX_PARALLELIZATION_LIST_SIZE:
         raise ValueError(
@@ -71,7 +91,13 @@ def run_parallel_task(
         for image in images
     ]
     results_iterator = executor.map(
-        functools.partial(_run_single_parallel_task, task=task),
+        functools.partial(
+            _run_single_task,
+            wftask=wftask,
+            command=task.command_non_parallel,
+            workflow_dir=workflow_dir,
+            workflow_dir_user=workflow_dir_user,
+        ),
         list_function_kwargs,
     )
     # Explicitly iterate over the whole list, so that all futures are waited
@@ -97,16 +123,24 @@ def run_compound_task(
     task: Task,
     wftask: WorkflowTask,
     executor: Executor,
+    workflow_dir: Path,
+    workflow_dir_user: Optional[Path] = None,
+    logger_name: Optional[str] = None,
 ) -> TaskOutput:
     # 3/A: non-parallel init task
-    paths = [image.path for image in images]
     function_kwargs = dict(
-        paths=paths,
+        paths=[image.path for image in images],
         zarr_dir=zarr_dir,
         **wftask.args_non_parallel,
     )
     future = executor.submit(
-        functools.partial(_run_single_non_parallel_task, task=task),
+        functools.partial(
+            _run_single_task,
+            wftask=wftask,
+            command=task.command_non_parallel,
+            workflow_dir=workflow_dir,
+            workflow_dir_user=workflow_dir_user,
+        ),
         function_kwargs,
     )
     output = future.result()
@@ -127,7 +161,13 @@ def run_compound_task(
             )
         )
     results_iterator = executor.map(
-        functools.partial(_run_single_parallel_task, task=task),
+        functools.partial(
+            _run_single_task,
+            wftask=wftask,
+            command=task.command_parallel,
+            workflow_dir=workflow_dir,
+            workflow_dir_user=workflow_dir_user,
+        ),
         list_function_kwargs,
     )
     # Explicitly iterate over the whole list, so that all futures are waited
@@ -152,8 +192,10 @@ def run_parallel_task_v1(
     task: TaskV1,
     wftask: WorkflowTask,
     executor: Executor,
+    workflow_dir: Path,
+    workflow_dir_user: Optional[Path] = None,
+    logger_name: Optional[str] = None,
 ) -> TaskOutput:
-
     if len(images) > MAX_PARALLELIZATION_LIST_SIZE:
         raise ValueError(
             "Too many parallelization items.\n"
@@ -172,7 +214,14 @@ def run_parallel_task_v1(
     ]
 
     results_iterator = executor.map(
-        functools.partial(_run_single_parallel_task_v1, task=task),
+        functools.partial(
+            _run_single_task,
+            wftask=wftask,
+            command=task.command,
+            workflow_dir=workflow_dir,
+            workflow_dir_user=workflow_dir_user,
+            is_task_v1=True,
+        ),
         list_function_kwargs,
     )
     # Explicitly iterate over the whole list, so that all futures are waited
