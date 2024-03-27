@@ -1,4 +1,5 @@
 from typing import Any
+from typing import Literal
 from typing import Optional
 
 from pydantic import BaseModel
@@ -49,6 +50,7 @@ class TaskReadV2(BaseModel):
 
     id: int
     name: str
+    type: Literal["parallel", "non parallel", "compound"]
 
     command_non_parallel: Optional[str]
     command_parallel: Optional[str]
