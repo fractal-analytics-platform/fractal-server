@@ -1,6 +1,8 @@
 from concurrent.futures import ThreadPoolExecutor
 from copy import copy
 from copy import deepcopy
+from pathlib import Path
+from typing import Optional
 
 from ....images import Filters
 from ....images import SingleImage
@@ -10,11 +12,10 @@ from ....images.tools import match_filter
 from .models import Dataset
 from .models import DictStrAny
 from .models import WorkflowTask
-from .runner_functions import _run_compound_task
-from .runner_functions import _run_non_parallel_task
-from .runner_functions import _run_parallel_task
-from .runner_functions import _run_v1_task
-from .v1_compat import _convert_v2_args_into_v1
+from .runner_functions import run_compound_task
+from .runner_functions import run_non_parallel_task
+from .runner_functions import run_parallel_task
+from .runner_functions import run_parallel_task_v1
 
 # FIXME: define RESERVED_ARGUMENTS = [", ...]
 
@@ -35,6 +36,8 @@ def execute_tasks_v2(
     wf_task_list: list[WorkflowTask],
     dataset: Dataset,
     executor: ThreadPoolExecutor,
+    workflow_dir: Path,
+    workflow_dir_user: Optional[Path] = None,
 ) -> Dataset:
     tmp_dataset = deepcopy(dataset)
 
@@ -54,12 +57,10 @@ def execute_tasks_v2(
         )
         if wftask.is_legacy_task:
 
-            converted_args = _convert_v2_args_into_v1(wftask.args_parallel)
-
-            current_task_output = _run_v1_task(
-                filtered_images=filtered_images,
-                converted_args=converted_args,
+            current_task_output = run_parallel_task_v1(
+                images=filtered_images,
                 task=wftask.task,
+                wftask=wftask,
                 executor=executor,
             )
 
@@ -75,36 +76,44 @@ def execute_tasks_v2(
             # ACTUAL TASK EXECUTION
 
             # Non-parallel task
-            if task.task_type == "non_parallel_standalone":
-                current_task_output = _run_non_parallel_task(
-                    filtered_images=filtered_images,
+            if task.type == "non_parallel_standalone":
+                current_task_output = run_non_parallel_task(
+                    images=filtered_images,
                     zarr_dir=tmp_dataset.zarr_dir,
                     wftask=wftask,
                     task=wftask.task,
+                    workflow_dir=workflow_dir,
+                    workflow_dir_user=workflow_dir_user,
                     executor=executor,
                 )
             # Parallel task
-            elif task.task_type == "parallel_standalone":
-                current_task_output = _run_parallel_task(
-                    filtered_images=filtered_images,
+            elif task.type == "parallel_standalone":
+                current_task_output = run_parallel_task(
+                    images=filtered_images,
                     wftask=wftask,
                     task=wftask.task,
+                    workflow_dir=workflow_dir,
+                    workflow_dir_user=workflow_dir_user,
                     executor=executor,
                 )
             # Compound task
-            elif task.task_type == "compound":
-                current_task_output = _run_compound_task(
-                    filtered_images=filtered_images,
+            elif task.type == "compound":
+                current_task_output = run_compound_task(
+                    images=filtered_images,
                     zarr_dir=tmp_dataset.zarr_dir,
                     wftask=wftask,
                     task=wftask.task,
+                    workflow_dir=workflow_dir,
+                    workflow_dir_user=workflow_dir_user,
                     executor=executor,
                 )
             else:
                 raise ValueError(f"Invalid {task.task_type=}.")
 
         # POST TASK EXECUTION
+        from devtools import debug
 
+        debug("POST TASK EXECUTION", current_task_output)
         # Update image list
         current_task_output.check_paths_are_unique()
         for image in current_task_output.image_list_updates:
@@ -184,6 +193,7 @@ def execute_tasks_v2(
             )
 
         # Update Dataset.filters.types: current + (task_output + task_manifest)
+        debug(task)
         if wftask.is_legacy_task:
             types_from_manifest = {}
         else:
@@ -202,6 +212,7 @@ def execute_tasks_v2(
                 f"output type. Overlapping keys: {overlap}."
             )
         # Update Dataset.filters.types
+        debug(types_from_manifest)
         tmp_dataset.filters.types.update(types_from_manifest)
         tmp_dataset.filters.types.update(types_from_task)
 

@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from pydantic import Field
 
 from ....images import SingleImage
+from fractal_server.app.runner.v2.models import DictStrAny
 from fractal_server.images import Filters
 
 
@@ -24,3 +25,18 @@ class TaskOutput(BaseModel):
             for duplicate in duplicates:
                 msg = f"{msg}\n{duplicate}"
             raise ValueError(msg)
+
+
+class InitArgsModel(BaseModel):
+    class Config:
+        extra = "forbid"
+
+    path: str
+    init_args: DictStrAny = Field(default_factory=dict)
+
+
+class InitTaskOutput(BaseModel):
+    parallelization_list: list[InitArgsModel] = Field(default_factory=list)
+
+    class Config:
+        extra = "forbid"

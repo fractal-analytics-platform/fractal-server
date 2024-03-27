@@ -4,8 +4,8 @@ from time import perf_counter
 import pytest
 from devtools import debug
 
-from fractal_server.app.runner.v2.runner_functions import deduplicate_list
-from fractal_server.app.runner.v2.runner_functions import InitArgsModel
+from fractal_server.app.runner.v2.deduplicate_list import deduplicate_list
+from fractal_server.app.runner.v2.task_interface import InitArgsModel
 from fractal_server.images import Filters
 from fractal_server.images import SingleImage
 from fractal_server.images.tools import _filter_image_list
