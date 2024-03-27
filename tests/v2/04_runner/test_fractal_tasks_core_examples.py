@@ -538,154 +538,203 @@ def test_registration_no_overwrite(
     debug(dataset)
 
 
-# def test_registration_overwrite(tmp_path: Path, executor):
-#     """
-#     Test registration workflow, based on four tasks.
-#     """
+def test_registration_overwrite(
+    tmp_path: Path, executor: Executor, fractal_tasks_mock_task_list
+):
+    """
+    Test registration workflow, based on four tasks.
+    """
 
-#     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
-#     dataset = execute_tasks_v2(
-#         wf_task_list=[
-#             WorkflowTask(
-#                 task=fractal_tasks_mock_task_list["create_ome_zarr_multiplex_compound"],
-#                 args_non_parallel=dict(image_dir="/tmp/input_images"),
-#             ),
-#         ],
-#         dataset=Dataset(zarr_dir=zarr_dir),
-#                 **execute_tasks_v2_args,
-#     )
+    execute_tasks_v2_args = dict(
+        executor=executor,
+        workflow_dir=tmp_path,
+    )
 
-#     # Run init registration
-#     dataset = execute_tasks_v2(
-#         wf_task_list=[
-#             WorkflowTask(
-#                 task=fractal_tasks_mock_task_list["calculate_registration_compound"],
-#                 args_non_parallel={"ref_acquisition": 0},
-#             )
-#         ],
-#         dataset=dataset,
-#                 **execute_tasks_v2_args,
-#     )
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=fractal_tasks_mock_task_list[
+                    "create_ome_zarr_multiplex_compound"
+                ],
+                args_non_parallel=dict(image_dir="/tmp/input_images"),
+                id=0,
+                order=0,
+            ),
+        ],
+        dataset=Dataset(zarr_dir=zarr_dir),
+        **execute_tasks_v2_args,
+    )
 
-#     # Print current dataset information
-#     debug(dataset)
+    # Run init registration
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=fractal_tasks_mock_task_list[
+                    "calculate_registration_compound"
+                ],
+                args_non_parallel={"ref_acquisition": 0},
+                order=1,
+                id=1,
+            )
+        ],
+        dataset=dataset,
+        **execute_tasks_v2_args,
+    )
 
-#     # In all non-reference-cycle images, a certain table was updated
-#     for image in dataset.images:
-#         if image.attributes["acquisition"] == 0:
-#             assert not os.path.isfile(f"{image.path}/registration_table")
-#         else:
-#             assert os.path.isfile(f"{image.path}/registration_table")
+    # Print current dataset information
+    debug(dataset)
 
-#     # Run find_registration_consensus
-#     dataset = execute_tasks_v2(
-#         wf_task_list=[
-#             WorkflowTask(task=fractal_tasks_mock_task_list["find_registration_consensus"])
-#         ],
-#         dataset=dataset,
-#                 **execute_tasks_v2_args,
-#     )
+    # In all non-reference-cycle images, a certain table was updated
+    for image in dataset.images:
+        if image.attributes["acquisition"] == 0:
+            assert not os.path.isfile(f"{image.path}/registration_table")
+        else:
+            assert os.path.isfile(f"{image.path}/registration_table")
 
-#     # Print current dataset information
-#     debug(dataset)
+    # Run find_registration_consensus
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=fractal_tasks_mock_task_list[
+                    "find_registration_consensus"
+                ],
+                id=2,
+                order=2,
+            )
+        ],
+        dataset=dataset,
+        **execute_tasks_v2_args,
+    )
 
-#     # In all images, a certain (post-consensus) table was updated
-#     for image in dataset.images:
-#         assert os.path.isfile(f"{image.path}/registration_table_final")
+    # Print current dataset information
+    debug(dataset)
 
-#     # The image list still has the original six images only
-#     assert len(dataset.images) == 6
+    # In all images, a certain (post-consensus) table was updated
+    for image in dataset.images:
+        assert os.path.isfile(f"{image.path}/registration_table_final")
 
-#     # Run apply_registration_to_image
-#     dataset = execute_tasks_v2(
-#         wf_task_list=[
-#             WorkflowTask(
-#                 task=fractal_tasks_mock_task_list["apply_registration_to_image"],
-#                 args_parallel={"overwrite_input": True},
-#             )
-#         ],
-#         dataset=dataset,
-#                 **execute_tasks_v2_args,
-#     )
+    # The image list still has the original six images only
+    assert len(dataset.images) == 6
 
-#     # Images are still the same number, but they are marked as registered
-#     assert len(dataset.images) == 6
-#     for image in dataset.images:
-#         assert image.types["registration"] is True
+    # Run apply_registration_to_image
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=fractal_tasks_mock_task_list[
+                    "apply_registration_to_image"
+                ],
+                args_parallel={"overwrite_input": True},
+                id=3,
+                order=3,
+            )
+        ],
+        dataset=dataset,
+        **execute_tasks_v2_args,
+    )
 
-#     # Print current dataset information
-#     debug(dataset)
+    # Images are still the same number, but they are marked as registered
+    assert len(dataset.images) == 6
+    for image in dataset.images:
+        assert image.types["registration"] is True
 
-
-# def test_channel_parallelization_with_overwrite(tmp_path: Path, executor):
-#     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
-
-#     # Run create_ome_zarr+yokogawa_to_zarr
-#     dataset = execute_tasks_v2(
-#         wf_task_list=[
-#             WorkflowTask(
-#                 task=fractal_tasks_mock_task_list["create_ome_zarr_compound"],
-#                 args_non_parallel=dict(image_dir="/tmp/input_images"),
-#             ),
-#         ],
-#         dataset=Dataset(zarr_dir=zarr_dir),
-#                 **execute_tasks_v2_args,
-#     )
-
-#     # Print current dataset information
-#     debug(dataset)
-
-#     # Run init_channel_parallelization
-#     dataset = execute_tasks_v2(
-#         wf_task_list=[
-#             WorkflowTask(
-#                 task=fractal_tasks_mock_task_list["illumination_correction_compound"],
-#                 args_non_parallel=dict(overwrite_input=True),
-#             ),
-#         ],
-#         dataset=dataset,
-#                 **execute_tasks_v2_args,
-#     )
-
-#     # Print current dataset information
-#     debug(dataset)
-
-#     # Check that there are now 2 images
-#     assert len(dataset.images) == 2
+    # Print current dataset information
+    debug(dataset)
 
 
-# def test_channel_parallelization_no_overwrite(tmp_path: Path, executor):
-#     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+def test_channel_parallelization_with_overwrite(
+    tmp_path: Path, executor: Executor, fractal_tasks_mock_task_list
+):
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
 
-#     # Run create_ome_zarr+yokogawa_to_zarr
-#     dataset = execute_tasks_v2(
-#         wf_task_list=[
-#             WorkflowTask(
-#                 task=fractal_tasks_mock_task_list["create_ome_zarr_compound"],
-#                 args_non_parallel=dict(image_dir="/tmp/input_images"),
-#             ),
-#         ],
-#         dataset=Dataset(zarr_dir=zarr_dir),
-#                 **execute_tasks_v2_args,
-#     )
+    execute_tasks_v2_args = dict(
+        executor=executor,
+        workflow_dir=tmp_path,
+    )
+    # Run create_ome_zarr+yokogawa_to_zarr
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=fractal_tasks_mock_task_list["create_ome_zarr_compound"],
+                args_non_parallel=dict(image_dir="/tmp/input_images"),
+                id=0,
+                order=0,
+            ),
+        ],
+        dataset=Dataset(zarr_dir=zarr_dir),
+        **execute_tasks_v2_args,
+    )
 
-#     # Print current dataset information
-#     debug(dataset)
+    # Print current dataset information
+    debug(dataset)
 
-#     # Run init_channel_parallelization
-#     dataset = execute_tasks_v2(
-#         wf_task_list=[
-#             WorkflowTask(
-#                 task=fractal_tasks_mock_task_list["illumination_correction_compound"],
-#                 args_non_parallel=dict(overwrite_input=False),
-#             ),
-#         ],
-#         dataset=dataset,
-#                 **execute_tasks_v2_args,
-#     )
+    # Run illumination_correction_compound
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=fractal_tasks_mock_task_list[
+                    "illumination_correction_compound"
+                ],
+                args_non_parallel=dict(overwrite_input=True),
+                id=1,
+                order=1,
+            ),
+        ],
+        dataset=dataset,
+        **execute_tasks_v2_args,
+    )
 
-#     # Print current dataset information
-#     debug(dataset)
+    # Print current dataset information
+    debug(dataset)
 
-#     # Check that there are now 4 images
-#     assert len(dataset.images) == 4
+    # Check that there are now 2 images
+    assert len(dataset.images) == 2
+
+
+def test_channel_parallelization_no_overwrite(
+    tmp_path: Path, executor: Executor, fractal_tasks_mock_task_list
+):
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+
+    execute_tasks_v2_args = dict(
+        executor=executor,
+        workflow_dir=tmp_path,
+    )
+    # Run create_ome_zarr+yokogawa_to_zarr
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=fractal_tasks_mock_task_list["create_ome_zarr_compound"],
+                args_non_parallel=dict(image_dir="/tmp/input_images"),
+                id=0,
+                order=0,
+            ),
+        ],
+        dataset=Dataset(zarr_dir=zarr_dir),
+        **execute_tasks_v2_args,
+    )
+
+    # Print current dataset information
+    debug(dataset)
+
+    # Run init_channel_parallelization
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=fractal_tasks_mock_task_list[
+                    "illumination_correction_compound"
+                ],
+                args_non_parallel=dict(overwrite_input=False),
+                id=1,
+                order=1,
+            ),
+        ],
+        dataset=dataset,
+        **execute_tasks_v2_args,
+    )
+
+    # Print current dataset information
+    debug(dataset)
+
+    # Check that there are now 4 images
+    assert len(dataset.images) == 4
