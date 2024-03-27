@@ -5,6 +5,7 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import HttpUrl
+from pydantic import root_validator
 from pydantic import validator
 
 from .._validators import valstr
@@ -32,6 +33,17 @@ class TaskCreateV2(BaseModel):
     output_types: dict[str, bool] = Field(default={})
 
     # Validators
+    @root_validator
+    def validate_commands(cls, values):
+        command_parallel = values.get("command_parallel")
+        command_non_parallel = values.get("command_non_parallel")
+        if (command_parallel is None) and (command_non_parallel is None):
+            raise ValueError(
+                "Task must have at least one valid command"
+                "(parallel and/or non_parallel)"
+            )
+        return values
+
     _name = validator("name", allow_reuse=True)(valstr("name"))
     _command_non_parallel = validator(
         "command_non_parallel", allow_reuse=True
