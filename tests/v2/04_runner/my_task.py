@@ -31,9 +31,9 @@ def run_fractal_task(task_function: Callable) -> None:
         task_args = json.load(f)
 
     # Run task
-    logging.info(f"START {task_function.__name__} task")
+    logging.warning(f"START {task_function.__name__} task")
     metadata_update = task_function(**task_args)
-    logging.info(f"END {task_function.__name__} task")
+    logging.warning(f"END {task_function.__name__} task")
 
     # Write output metadata to file
     with open(cli_args.out_json, "w") as fout:
@@ -62,10 +62,10 @@ def create_dummy_images(
     plate_zarr_name = "my_plate.zarr"
     zarr_path = (Path(zarr_dir) / plate_zarr_name).as_posix()
 
-    logging.info("[create_dummy_images] START")
-    logging.info(f"[create_dummy_images] {image_dir=}")
-    logging.info(f"[create_dummy_images] {zarr_dir=}")
-    logging.info(f"[create_dummy_images] {zarr_path=}")
+    logging.warning("[create_dummy_images] START")
+    logging.warning(f"[create_dummy_images] {image_dir=}")
+    logging.warning(f"[create_dummy_images] {zarr_dir=}")
+    logging.warning(f"[create_dummy_images] {zarr_path=}")
 
     # Create (fake) OME-Zarr folder on disk
     Path(zarr_path).mkdir(parents=True)
@@ -76,7 +76,7 @@ def create_dummy_images(
         image_list_updates.append(dict(path=path))
 
     out = dict(image_list_updates=image_list_updates)
-    logging.info("[create_dummy_images] END")
+    logging.warning("[create_dummy_images] END")
     return out
 
 
