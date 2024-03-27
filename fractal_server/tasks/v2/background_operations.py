@@ -261,6 +261,15 @@ async def create_package_environment_pip(
     return task_list
 
 
+def _get_task_type(task: TaskCreateV2) -> str:
+    if task.command_non_parallel is None:
+        return "parallel"
+    elif task.command_parallel is None:
+        return "non parallel"
+    else:
+        return "compound"
+
+
 async def _insert_tasks(
     task_list: list[TaskCreateV2],
     db: DBSyncSession,
@@ -268,7 +277,10 @@ async def _insert_tasks(
     """
     Insert tasks into database
     """
-    task_db_list = [TaskV2(**t.dict()) for t in task_list]
+
+    task_db_list = [
+        TaskV2(**t.dict(), type=_get_task_type(t)) for t in task_list
+    ]
     db.add_all(task_db_list)
     db.commit()
     for t in task_db_list:

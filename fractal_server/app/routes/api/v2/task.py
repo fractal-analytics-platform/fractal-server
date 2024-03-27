@@ -125,16 +125,7 @@ async def create_task(
     Create a new task
     """
 
-    if task.command_parallel is None and task.command_non_parallel is None:
-        # use validator?
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                "Must set one between "
-                "`command_parallel` and `command_not_parallel",
-            ),
-        )
-    elif task.command_non_parallel is None:
+    if task.command_non_parallel is None:
         task_type = "parallel"
     elif task.command_parallel is None:
         task_type = "non parallel"

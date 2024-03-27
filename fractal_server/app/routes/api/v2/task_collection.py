@@ -194,6 +194,7 @@ async def collect_tasks_pip(
     state.data["info"] = info
     response.status_code = status.HTTP_201_CREATED
     await db.close()
+
     return state
 
 
