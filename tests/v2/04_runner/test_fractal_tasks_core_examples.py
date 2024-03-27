@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 from concurrent.futures import Executor
 from pathlib import Path
@@ -12,8 +13,6 @@ from fractal_server.app.runner.v2.models import Dataset
 from fractal_server.app.runner.v2.models import WorkflowTask
 from fractal_server.images import SingleImage
 from fractal_server.images.tools import find_image_by_path
-
-# import os
 
 
 @pytest.fixture()
@@ -438,81 +437,105 @@ def test_fractal_demos_01_no_overwrite(
     ]
 
 
-# def test_registration_no_overwrite(tmp_path: Path, executor):
-#     """
-#     Test registration workflow, based on four tasks.
-#     """
+def test_registration_no_overwrite(
+    tmp_path: Path, executor: Executor, fractal_tasks_mock_task_list
+):
+    """
+    Test registration workflow, based on four tasks.
+    """
 
-#     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
-#     dataset = execute_tasks_v2(
-#         wf_task_list=[
-#             WorkflowTask(
-#                 task=fractal_tasks_mock_task_list["create_ome_zarr_multiplex_compound"],
-#                 args_non_parallel=dict(image_dir="/tmp/input_images"),
-#             ),
-#         ],
-#         dataset=Dataset(zarr_dir=zarr_dir),
-#                 **execute_tasks_v2_args,
-#     )
+    execute_tasks_v2_args = dict(
+        executor=executor,
+        workflow_dir=tmp_path,
+    )
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=fractal_tasks_mock_task_list[
+                    "create_ome_zarr_multiplex_compound"
+                ],
+                args_non_parallel=dict(image_dir="/tmp/input_images"),
+                id=0,
+                order=0,
+            ),
+        ],
+        dataset=Dataset(zarr_dir=zarr_dir),
+        **execute_tasks_v2_args,
+    )
 
-#     # Run init registration
-#     dataset = execute_tasks_v2(
-#         wf_task_list=[
-#             WorkflowTask(
-#                 task=fractal_tasks_mock_task_list["calculate_registration_compound"],
-#                 args_non_parallel={"ref_acquisition": 0},
-#             )
-#         ],
-#         dataset=dataset,
-#                 **execute_tasks_v2_args,
-#     )
+    # Run init registration
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=fractal_tasks_mock_task_list[
+                    "calculate_registration_compound"
+                ],
+                args_non_parallel={"ref_acquisition": 0},
+                id=1,
+                order=1,
+            )
+        ],
+        dataset=dataset,
+        **execute_tasks_v2_args,
+    )
 
-#     # Print current dataset information
-#     debug(dataset)
+    # Print current dataset information
+    debug(dataset)
 
-#     # In all non-reference-cycle images, a certain table was updated
-#     for image in dataset.images:
-#         if image.attributes["acquisition"] == 0:
-#             assert not os.path.isfile(f"{image.path}/registration_table")
-#         else:
-#             assert os.path.isfile(f"{image.path}/registration_table")
+    # In all non-reference-cycle images, a certain table was updated
+    for image in dataset.images:
+        if image.attributes["acquisition"] == 0:
+            assert not os.path.isfile(f"{image.path}/registration_table")
+        else:
+            assert os.path.isfile(f"{image.path}/registration_table")
 
-#     # Run find_registration_consensus
-#     dataset = execute_tasks_v2(
-#         wf_task_list=[
-#             WorkflowTask(task=fractal_tasks_mock_task_list["find_registration_consensus"])
-#         ],
-#         dataset=dataset,
-#                 **execute_tasks_v2_args,
-#     )
+    # Run find_registration_consensus
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=fractal_tasks_mock_task_list[
+                    "find_registration_consensus"
+                ],
+                id=2,
+                order=2,
+            )
+        ],
+        dataset=dataset,
+        **execute_tasks_v2_args,
+    )
 
-#     # Print current dataset information
-#     debug(dataset)
+    # Print current dataset information
+    debug(dataset)
 
-#     # In all images, a certain (post-consensus) table was updated
-#     for image in dataset.images:
-#         assert os.path.isfile(f"{image.path}/registration_table_final")
+    # In all images, a certain (post-consensus) table was updated
+    for image in dataset.images:
+        assert os.path.isfile(f"{image.path}/registration_table_final")
 
-#     # The image list still has the original six images only
-#     assert len(dataset.images) == 6
+    # The image list still has the original six images only
+    assert len(dataset.images) == 6
 
-#     # Run apply_registration_to_image
-#     dataset = execute_tasks_v2(
-#         wf_task_list=[
-#             WorkflowTask(
-#                 task=fractal_tasks_mock_task_list["apply_registration_to_image"],
-#                 args_parallel={"overwrite_input": False},
-#             )
-#         ],
-#         dataset=dataset,
-#                 **execute_tasks_v2_args,
-#     )
+    # Run apply_registration_to_image
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTask(
+                task=fractal_tasks_mock_task_list[
+                    "apply_registration_to_image"
+                ],
+                args_parallel={"overwrite_input": False},
+                id=3,
+                order=3,
+            )
+        ],
+        dataset=dataset,
+        **execute_tasks_v2_args,
+    )
 
-#     # A new copy of each image was created
-#     assert len(dataset.images) == 12
+    # A new copy of each image was created
+    assert len(dataset.images) == 12
 
-#     # Print current dataset information
-#     debug(dataset)
+    # Print current dataset information
+    debug(dataset)
 
 
 # def test_registration_overwrite(tmp_path: Path, executor):
