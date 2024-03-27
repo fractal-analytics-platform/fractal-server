@@ -507,7 +507,7 @@ async def test_patch_workflow_task(
 
         payload = dict(
             args_non_parallel={"a": 123, "d": 321},
-            meta={"executor": "cpu-low"},
+            meta_parallel={"executor": "cpu-low"},
         )
         res = await client.patch(
             f"{PREFIX}/project/{project.id}/workflow/{workflow['id']}/"
@@ -521,7 +521,9 @@ async def test_patch_workflow_task(
             patched_workflow_task["args_non_parallel"]
             == payload["args_non_parallel"]
         )
-        assert patched_workflow_task["meta"] == payload["meta"]
+        assert (
+            patched_workflow_task["meta_parallel"] == payload["meta_parallel"]
+        )
         assert res.status_code == 200
 
         payload_up = dict(args_non_parallel={"a": {"c": 43}, "b": 123})
@@ -689,7 +691,7 @@ async def test_patch_workflow_task_failures(
         workflow_task_2 = workflow2["task_list"][0]
 
         # Modify parallelization_level
-        payload = dict(meta={"parallelization_level": "XXX"})
+        payload = dict(meta_parallel={"parallelization_level": "XXX"})
         res = await client.patch(
             (
                 f"{PREFIX}/project/{project.id}/workflow/{workflow1['id']}/"
@@ -1024,12 +1026,16 @@ async def test_import_export_workflow(
     assert len(wf_old["task_list"]) == len(wf_new["task_list"])
     for task_old, task_new in zip(wf_old["task_list"], wf_new["task_list"]):
         assert task_old.keys() <= task_new.keys()
-        if "meta" in task_old:  # then "meta" is also in task_new
-            assert task_old["meta"].items() <= task_new["meta"].items()
-            task_old.pop("meta")
-            task_new.pop("meta")
-        elif "meta" in task_new:  # but not in task_old
-            task_new.pop("meta")
+        if "meta_parallel" in task_old:
+            # then "meta_parallel" is also in task_new
+            assert (
+                task_old["meta_parallel"].items()
+                <= task_new["meta_parallel"].items()
+            )
+            task_old.pop("meta_parallel")
+            task_new.pop("meta_parallel")
+        elif "meta_parallel" in task_new:  # but not in task_old
+            task_new.pop("meta_parallel")
         debug(task_old, task_new)
         assert task_old == task_new
 
