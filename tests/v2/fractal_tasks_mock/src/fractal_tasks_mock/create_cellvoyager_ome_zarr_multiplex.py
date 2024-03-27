@@ -63,3 +63,9 @@ def create_cellvoyager_ome_zarr_multiplex(
     out = dict(parallelization_list=parallelization_list)
     print("[create_cellvoyager_ome_zarr_multiplex] END")
     return out
+
+
+if __name__ == "__main__":
+    from utils import run_fractal_task
+
+    run_fractal_task(task_function=create_cellvoyager_ome_zarr_multiplex)

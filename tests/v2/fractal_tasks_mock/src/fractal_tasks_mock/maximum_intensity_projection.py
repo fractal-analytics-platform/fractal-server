@@ -1,8 +1,7 @@
 import shutil
 
+from input_models import InitArgsMIP
 from pydantic.decorator import validate_arguments
-
-from .input_models import InitArgsMIP
 
 
 @validate_arguments
@@ -39,3 +38,9 @@ def maximum_intensity_projection(
         ],
     )
     return out
+
+
+if __name__ == "__main__":
+    from utils import run_fractal_task
+
+    run_fractal_task(task_function=maximum_intensity_projection)

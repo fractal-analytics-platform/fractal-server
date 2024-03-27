@@ -14,6 +14,8 @@ from .runner_functions_low_level import _run_single_task
 from .task_interface import InitArgsModel
 from .task_interface import InitTaskOutput
 from .task_interface import TaskOutput
+from fractal_server.app.runner.v2.components import KEY
+from fractal_server.app.runner.v2.components import MAKE_COMPONENT
 
 
 __all__ = [
@@ -61,9 +63,11 @@ def run_non_parallel_task(
     )
     output = future.result()
     # FIXME V2: handle validation errors
-    validated_output = TaskOutput(**output)
-
-    return validated_output
+    if output is None:
+        return TaskOutput()
+    else:
+        validated_output = TaskOutput(**output)
+        return validated_output
 
 
 def run_parallel_task(
@@ -83,18 +87,21 @@ def run_parallel_task(
             f"   {MAX_PARALLELIZATION_LIST_SIZE=}\n"
         )
 
-    list_function_kwargs = [
-        dict(
-            path=image.path,
-            **wftask.args_parallel,
+    list_function_kwargs = []
+    for ind, image in enumerate(images):
+        list_function_kwargs.append(
+            dict(
+                path=image.path,
+                **wftask.args_parallel,
+            ),
         )
-        for image in images
-    ]
+        list_function_kwargs[-1][KEY] = MAKE_COMPONENT(ind)
+
     results_iterator = executor.map(
         functools.partial(
             _run_single_task,
             wftask=wftask,
-            command=task.command_non_parallel,
+            command=task.command_parallel,
             workflow_dir=workflow_dir,
             workflow_dir_user=workflow_dir_user,
         ),
@@ -103,6 +110,9 @@ def run_parallel_task(
     # Explicitly iterate over the whole list, so that all futures are waited
     outputs = list(results_iterator)
 
+    from devtools import debug
+
+    debug("PARALLEL_TASK", outputs)
     # Validate all non-None outputs
     for ind, output in enumerate(outputs):
         if output is None:
@@ -144,7 +154,13 @@ def run_compound_task(
         function_kwargs,
     )
     output = future.result()
-    init_task_output = InitTaskOutput(**output)
+    from devtools import debug
+
+    debug(output)
+    if output is None:
+        init_task_output = InitTaskOutput()
+    else:
+        init_task_output = InitTaskOutput(**output)
     parallelization_list = init_task_output.parallelization_list
     parallelization_list = deduplicate_list(
         parallelization_list, PydanticModel=InitArgsModel
@@ -158,8 +174,10 @@ def run_compound_task(
                 path=parallelization_item.path,
                 init_args=parallelization_item.init_args,
                 **wftask.args_parallel,
-            )
+            ),
         )
+        list_function_kwargs[-1][KEY] = MAKE_COMPONENT(ind)
+
     results_iterator = executor.map(
         functools.partial(
             _run_single_task,

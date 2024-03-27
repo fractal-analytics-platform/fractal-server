@@ -64,7 +64,7 @@ def run_fractal_task(task_function: Callable) -> None:
     cli_args = parser.parse_args()
 
     # Preliminary check
-    if Path(cli_args.metadata_out).exists():
+    if Path(cli_args.out_json).exists():
         logging.error(f"Output file {cli_args.out_json} already exists, exit.")
         sys.exit(1)
 
@@ -78,5 +78,5 @@ def run_fractal_task(task_function: Callable) -> None:
     logging.info(f"END {task_function.__name__} task")
 
     # Write output metadata to file
-    with open(cli_args.metadata_out, "w") as fout:
+    with open(cli_args.out_json, "w") as fout:
         json.dump(metadata_update, fout, indent=2)

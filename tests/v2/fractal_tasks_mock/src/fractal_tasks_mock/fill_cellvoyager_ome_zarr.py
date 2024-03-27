@@ -1,9 +1,8 @@
 from pathlib import Path
 
+from input_models import InitArgsCellVoyager
 from pydantic.decorator import validate_arguments
-
-from .input_models import InitArgsCellVoyager
-from .utils import _check_path_is_absolute
+from utils import _check_path_is_absolute
 
 
 @validate_arguments
@@ -47,3 +46,9 @@ def fill_cellvoyager_ome_zarr(
         ],
     )
     return out
+
+
+if __name__ == "__main__":
+    from utils import run_fractal_task
+
+    run_fractal_task(task_function=fill_cellvoyager_ome_zarr)
