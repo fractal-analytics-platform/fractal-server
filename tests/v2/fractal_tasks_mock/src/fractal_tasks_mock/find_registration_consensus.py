@@ -1,8 +1,7 @@
 from pathlib import Path
 
 from pydantic.decorator import validate_arguments
-
-from .utils import _group_paths_by_well
+from utils import _group_paths_by_well
 
 
 @validate_arguments
@@ -46,3 +45,9 @@ def find_registration_consensus(
                 f.write("This is the consensus-based new table.\n")
 
     print("[find_registration_consensus] END")
+
+
+if __name__ == "__main__":
+    from utils import run_fractal_task
+
+    run_fractal_task(task_function=find_registration_consensus)

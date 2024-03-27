@@ -92,6 +92,8 @@ def execute_tasks_v2(
                     images=filtered_images,
                     wftask=wftask,
                     task=wftask.task,
+                    workflow_dir=workflow_dir,
+                    workflow_dir_user=workflow_dir_user,
                     executor=executor,
                 )
             # Compound task
@@ -101,13 +103,17 @@ def execute_tasks_v2(
                     zarr_dir=tmp_dataset.zarr_dir,
                     wftask=wftask,
                     task=wftask.task,
+                    workflow_dir=workflow_dir,
+                    workflow_dir_user=workflow_dir_user,
                     executor=executor,
                 )
             else:
                 raise ValueError(f"Invalid {task.task_type=}.")
 
         # POST TASK EXECUTION
+        from devtools import debug
 
+        debug("POST TASK EXECUTION", current_task_output)
         # Update image list
         current_task_output.check_paths_are_unique()
         for image in current_task_output.image_list_updates:
@@ -187,6 +193,7 @@ def execute_tasks_v2(
             )
 
         # Update Dataset.filters.types: current + (task_output + task_manifest)
+        debug(task)
         if wftask.is_legacy_task:
             types_from_manifest = {}
         else:
@@ -205,6 +212,7 @@ def execute_tasks_v2(
                 f"output type. Overlapping keys: {overlap}."
             )
         # Update Dataset.filters.types
+        debug(types_from_manifest)
         tmp_dataset.filters.types.update(types_from_manifest)
         tmp_dataset.filters.types.update(types_from_task)
 

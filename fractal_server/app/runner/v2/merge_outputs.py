@@ -9,6 +9,7 @@ def merge_outputs(task_outputs: list[TaskOutput]) -> TaskOutput:
 
     final_image_list_updates = []
     final_image_list_removals = []
+    last_new_filters = None
 
     for ind, task_output in enumerate(task_outputs):
 
@@ -27,10 +28,14 @@ def merge_outputs(task_outputs: list[TaskOutput]) -> TaskOutput:
         final_image_list_updates, PydanticModel=SingleImage
     )
 
+    additional_args = {}
+    if last_new_filters is not None:
+        additional_args["filters"] = last_new_filters
+
     final_output = TaskOutput(
         image_list_updates=final_image_list_updates,
         image_list_removals=final_image_list_removals,
-        filters=last_new_filters,
+        **additional_args,
     )
 
     return final_output

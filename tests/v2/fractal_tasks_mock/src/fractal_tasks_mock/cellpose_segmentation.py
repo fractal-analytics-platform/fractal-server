@@ -1,8 +1,7 @@
 from pathlib import Path
 
 from pydantic.decorator import validate_arguments
-
-from .utils import _check_path_is_absolute
+from utils import _check_path_is_absolute
 
 
 @validate_arguments
@@ -23,3 +22,9 @@ def cellpose_segmentation(
 
     print("[cellpose_segmentation] END")
     return None
+
+
+if __name__ == "__main__":
+    from utils import run_fractal_task
+
+    run_fractal_task(task_function=cellpose_segmentation)

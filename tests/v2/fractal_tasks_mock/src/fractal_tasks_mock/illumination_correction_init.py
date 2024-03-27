@@ -49,3 +49,9 @@ def illumination_correction_init(
             )
     print(f"{prefix} END")
     return dict(parallelization_list=parallelization_list)
+
+
+if __name__ == "__main__":
+    from utils import run_fractal_task
+
+    run_fractal_task(task_function=illumination_correction_init)

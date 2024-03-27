@@ -1,8 +1,7 @@
 from pathlib import Path
 
 from pydantic.decorator import validate_arguments
-
-from .utils import _extract_common_root
+from utils import _extract_common_root
 
 
 @validate_arguments
@@ -51,3 +50,9 @@ def new_ome_zarr(
     out = dict(parallelization_list=parallelization_list)
     print("[new_ome_zarr] END")
     return out
+
+
+if __name__ == "__main__":
+    from utils import run_fractal_task
+
+    run_fractal_task(task_function=new_ome_zarr)

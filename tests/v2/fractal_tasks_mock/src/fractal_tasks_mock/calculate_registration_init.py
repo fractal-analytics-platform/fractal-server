@@ -1,7 +1,6 @@
 from pydantic.decorator import validate_arguments
-
-from .utils import _extract_common_root
-from .utils import _group_paths_by_well
+from utils import _extract_common_root
+from utils import _group_paths_by_well
 
 
 def _read_acquisition_index_from_ngff_metadata(path: str) -> int:
@@ -62,3 +61,9 @@ def calculate_registration_init(
 
     print("[calculate_registration_init] END")
     return dict(parallelization_list=parallelization_list)
+
+
+if __name__ == "__main__":
+    from utils import run_fractal_task
+
+    run_fractal_task(task_function=calculate_registration_init)

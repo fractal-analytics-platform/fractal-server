@@ -18,6 +18,7 @@ from typing import Optional
 
 from ..exceptions import JobExecutionError
 from ..exceptions import TaskExecutionError
+from .components import KEY
 from fractal_server.app.runner.task_files import get_task_file_paths
 from fractal_server.app.runner.v2.models import WorkflowTask
 
@@ -80,15 +81,25 @@ def _run_single_task(
     """
 
     logger = logging.getLogger(logger_name)
+    logger.warning(f"Now start running {command=}")
 
     if not workflow_dir_user:
         workflow_dir_user = workflow_dir
 
-    task_files = get_task_file_paths(
-        workflow_dir=workflow_dir,
-        workflow_dir_user=workflow_dir_user,
-        task_order=wftask.order,
-    )
+    component = args.pop(KEY, None)
+    if component is None:
+        task_files = get_task_file_paths(
+            workflow_dir=workflow_dir,
+            workflow_dir_user=workflow_dir_user,
+            task_order=wftask.order,
+        )
+    else:
+        task_files = get_task_file_paths(
+            workflow_dir=workflow_dir,
+            workflow_dir_user=workflow_dir_user,
+            task_order=wftask.order,
+            component=component,
+        )
 
     # Write arguments to args.json file
     with task_files.args.open("w") as f:
@@ -123,7 +134,7 @@ def _run_single_task(
     try:
         with task_files.metadiff.open("r") as f:
             out_meta = json.load(f)
-    except FileExistsError as e:
+    except FileNotFoundError as e:
         logger.warning(
             f"Task did not produce output metadata. Original error: {str(e)}"
         )
