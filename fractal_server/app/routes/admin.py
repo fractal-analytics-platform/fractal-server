@@ -22,16 +22,16 @@ from ..db import AsyncSession
 from ..db import get_async_db
 from ..models import ApplyWorkflow
 from ..models import Dataset
-from ..models import JobStatusType
+from ..models import JobStatusTypeV1
 from ..models import Project
 from ..models import Workflow
 from ..models.security import UserOAuth as User
 from ..runner.filenames import WORKFLOW_LOG_FILENAME
-from ..schemas.v1 import ApplyWorkflowRead
-from ..schemas.v1 import ApplyWorkflowUpdate
-from ..schemas.v1 import DatasetRead
-from ..schemas.v1 import ProjectRead
-from ..schemas.v1 import WorkflowRead
+from ..schemas.v1 import ApplyWorkflowReadV1
+from ..schemas.v1 import ApplyWorkflowUpdateV1
+from ..schemas.v1 import DatasetReadV1
+from ..schemas.v1 import ProjectReadV1
+from ..schemas.v1 import WorkflowReadV1
 from ..security import current_active_superuser
 from .aux._job import _write_shutdown_file
 from .aux._job import _zip_folder_to_byte_stream
@@ -57,7 +57,7 @@ def _convert_to_db_timestamp(dt: datetime) -> datetime:
     return _dt
 
 
-@router_admin.get("/project/", response_model=list[ProjectRead])
+@router_admin.get("/project/", response_model=list[ProjectReadV1])
 async def view_project(
     id: Optional[int] = None,
     user_id: Optional[int] = None,
@@ -65,7 +65,7 @@ async def view_project(
     timestamp_created_max: Optional[datetime] = None,
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
-) -> list[ProjectRead]:
+) -> list[ProjectReadV1]:
     """
     Query `project` table.
 
@@ -95,7 +95,7 @@ async def view_project(
     return project_list
 
 
-@router_admin.get("/workflow/", response_model=list[WorkflowRead])
+@router_admin.get("/workflow/", response_model=list[WorkflowReadV1])
 async def view_workflow(
     id: Optional[int] = None,
     user_id: Optional[int] = None,
@@ -105,7 +105,7 @@ async def view_workflow(
     timestamp_created_max: Optional[datetime] = None,
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
-) -> list[WorkflowRead]:
+) -> list[WorkflowReadV1]:
     """
     Query `workflow` table.
 
@@ -144,7 +144,7 @@ async def view_workflow(
     return workflow_list
 
 
-@router_admin.get("/dataset/", response_model=list[DatasetRead])
+@router_admin.get("/dataset/", response_model=list[DatasetReadV1])
 async def view_dataset(
     id: Optional[int] = None,
     user_id: Optional[int] = None,
@@ -155,7 +155,7 @@ async def view_dataset(
     timestamp_created_max: Optional[datetime] = None,
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
-) -> list[DatasetRead]:
+) -> list[DatasetReadV1]:
     """
     Query `dataset` table.
 
@@ -197,7 +197,7 @@ async def view_dataset(
     return dataset_list
 
 
-@router_admin.get("/job/", response_model=list[ApplyWorkflowRead])
+@router_admin.get("/job/", response_model=list[ApplyWorkflowReadV1])
 async def view_job(
     id: Optional[int] = None,
     user_id: Optional[int] = None,
@@ -205,7 +205,7 @@ async def view_job(
     input_dataset_id: Optional[int] = None,
     output_dataset_id: Optional[int] = None,
     workflow_id: Optional[int] = None,
-    status: Optional[JobStatusType] = None,
+    status: Optional[JobStatusTypeV1] = None,
     start_timestamp_min: Optional[datetime] = None,
     start_timestamp_max: Optional[datetime] = None,
     end_timestamp_min: Optional[datetime] = None,
@@ -213,7 +213,7 @@ async def view_job(
     log: bool = True,
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
-) -> list[ApplyWorkflowRead]:
+) -> list[ApplyWorkflowReadV1]:
     """
     Query `ApplyWorkflow` table.
 
@@ -278,13 +278,13 @@ async def view_job(
     return job_list
 
 
-@router_admin.get("/job/{job_id}/", response_model=ApplyWorkflowRead)
+@router_admin.get("/job/{job_id}/", response_model=ApplyWorkflowReadV1)
 async def view_single_job(
     job_id: int = None,
     show_tmp_logs: bool = False,
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
-) -> ApplyWorkflowRead:
+) -> ApplyWorkflowReadV1:
 
     job = await db.get(ApplyWorkflow, job_id)
     if not job:
@@ -294,7 +294,7 @@ async def view_single_job(
         )
     await db.close()
 
-    if show_tmp_logs and (job.status == JobStatusType.SUBMITTED):
+    if show_tmp_logs and (job.status == JobStatusTypeV1.SUBMITTED):
         try:
             with open(f"{job.working_dir}/{WORKFLOW_LOG_FILENAME}", "r") as f:
                 job.log = f.read()
@@ -306,14 +306,14 @@ async def view_single_job(
 
 @router_admin.patch(
     "/job/{job_id}/",
-    response_model=ApplyWorkflowRead,
+    response_model=ApplyWorkflowReadV1,
 )
 async def update_job(
-    job_update: ApplyWorkflowUpdate,
+    job_update: ApplyWorkflowUpdateV1,
     job_id: int,
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[ApplyWorkflowRead]:
+) -> Optional[ApplyWorkflowReadV1]:
     """
     Change the status of an existing job.
 
@@ -327,7 +327,7 @@ async def update_job(
             detail=f"Job {job_id} not found",
         )
 
-    if job_update.status != JobStatusType.FAILED:
+    if job_update.status != JobStatusTypeV1.FAILED:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Cannot set job status to {job_update.status}",

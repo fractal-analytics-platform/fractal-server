@@ -23,9 +23,9 @@ from fastapi import status
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models import Task
-from ....schemas.v1 import WorkflowTaskCreate
-from ....schemas.v1 import WorkflowTaskRead
-from ....schemas.v1 import WorkflowTaskUpdate
+from ....schemas.v1 import WorkflowTaskCreateV1
+from ....schemas.v1 import WorkflowTaskReadV1
+from ....schemas.v1 import WorkflowTaskUpdateV1
 from ....security import current_active_user
 from ....security import User
 from ._aux_functions import _get_workflow_check_owner
@@ -37,17 +37,17 @@ router = APIRouter()
 
 @router.post(
     "/project/{project_id}/workflow/{workflow_id}/wftask/",
-    response_model=WorkflowTaskRead,
+    response_model=WorkflowTaskReadV1,
     status_code=status.HTTP_201_CREATED,
 )
 async def create_workflowtask(
     project_id: int,
     workflow_id: int,
     task_id: int,
-    new_task: WorkflowTaskCreate,
+    new_task: WorkflowTaskCreateV1,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[WorkflowTaskRead]:
+) -> Optional[WorkflowTaskReadV1]:
     """
     Add a WorkflowTask to a Workflow
     """
@@ -78,7 +78,7 @@ async def create_workflowtask(
 
 @router.get(
     "/project/{project_id}/workflow/{workflow_id}/wftask/{workflow_task_id}/",
-    response_model=WorkflowTaskRead,
+    response_model=WorkflowTaskReadV1,
 )
 async def read_workflowtask(
     project_id: int,
@@ -99,16 +99,16 @@ async def read_workflowtask(
 
 @router.patch(
     "/project/{project_id}/workflow/{workflow_id}/wftask/{workflow_task_id}/",
-    response_model=WorkflowTaskRead,
+    response_model=WorkflowTaskReadV1,
 )
 async def update_workflowtask(
     project_id: int,
     workflow_id: int,
     workflow_task_id: int,
-    workflow_task_update: WorkflowTaskUpdate,
+    workflow_task_update: WorkflowTaskUpdateV1,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[WorkflowTaskRead]:
+) -> Optional[WorkflowTaskReadV1]:
     """
     Edit a WorkflowTask of a Workflow
     """

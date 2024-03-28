@@ -6,38 +6,38 @@ from devtools import debug
 from pydantic.error_wrappers import ValidationError
 
 from fractal_server.app.schemas.v1 import _StateBase
-from fractal_server.app.schemas.v1 import ApplyWorkflowCreate
-from fractal_server.app.schemas.v1 import ApplyWorkflowRead
-from fractal_server.app.schemas.v1 import ApplyWorkflowUpdate
-from fractal_server.app.schemas.v1 import DatasetCreate
-from fractal_server.app.schemas.v1 import DatasetRead
-from fractal_server.app.schemas.v1 import DatasetUpdate
+from fractal_server.app.schemas.v1 import ApplyWorkflowCreateV1
+from fractal_server.app.schemas.v1 import ApplyWorkflowReadV1
+from fractal_server.app.schemas.v1 import ApplyWorkflowUpdateV1
+from fractal_server.app.schemas.v1 import DatasetCreateV1
+from fractal_server.app.schemas.v1 import DatasetReadV1
+from fractal_server.app.schemas.v1 import DatasetUpdateV1
 from fractal_server.app.schemas.v1 import ManifestV1
-from fractal_server.app.schemas.v1 import ProjectCreate
-from fractal_server.app.schemas.v1 import ProjectRead
-from fractal_server.app.schemas.v1 import ResourceCreate
-from fractal_server.app.schemas.v1 import ResourceRead
+from fractal_server.app.schemas.v1 import ProjectCreateV1
+from fractal_server.app.schemas.v1 import ProjectReadV1
+from fractal_server.app.schemas.v1 import ResourceCreateV1
+from fractal_server.app.schemas.v1 import ResourceReadV1
 from fractal_server.app.schemas.v1 import StateRead
-from fractal_server.app.schemas.v1 import TaskCollectPip
-from fractal_server.app.schemas.v1 import TaskCreate
-from fractal_server.app.schemas.v1 import TaskImport
+from fractal_server.app.schemas.v1 import TaskCollectPipV1
+from fractal_server.app.schemas.v1 import TaskCreateV1
+from fractal_server.app.schemas.v1 import TaskImportV1
 from fractal_server.app.schemas.v1 import TaskManifestV1
-from fractal_server.app.schemas.v1 import TaskRead
-from fractal_server.app.schemas.v1 import TaskUpdate
+from fractal_server.app.schemas.v1 import TaskReadV1
+from fractal_server.app.schemas.v1 import TaskUpdateV1
 from fractal_server.app.schemas.v1 import UserCreate
 from fractal_server.app.schemas.v1 import UserUpdate
 from fractal_server.app.schemas.v1 import UserUpdateStrict
-from fractal_server.app.schemas.v1 import WorkflowCreate
-from fractal_server.app.schemas.v1 import WorkflowImport
-from fractal_server.app.schemas.v1 import WorkflowRead
-from fractal_server.app.schemas.v1 import WorkflowTaskCreate
-from fractal_server.app.schemas.v1 import WorkflowTaskImport
-from fractal_server.app.schemas.v1 import WorkflowTaskRead
-from fractal_server.app.schemas.v1 import WorkflowTaskUpdate
-from fractal_server.app.schemas.v1 import WorkflowUpdate
-from fractal_server.app.schemas.v1.dumps import DatasetDump
-from fractal_server.app.schemas.v1.dumps import ProjectDump
-from fractal_server.app.schemas.v1.dumps import WorkflowDump
+from fractal_server.app.schemas.v1 import WorkflowCreateV1
+from fractal_server.app.schemas.v1 import WorkflowImportV1
+from fractal_server.app.schemas.v1 import WorkflowReadV1
+from fractal_server.app.schemas.v1 import WorkflowTaskCreateV1
+from fractal_server.app.schemas.v1 import WorkflowTaskImportV1
+from fractal_server.app.schemas.v1 import WorkflowTaskReadV1
+from fractal_server.app.schemas.v1 import WorkflowTaskUpdateV1
+from fractal_server.app.schemas.v1 import WorkflowUpdateV1
+from fractal_server.app.schemas.v1.dumps import DatasetDumpV1
+from fractal_server.app.schemas.v1.dumps import ProjectDumpV1
+from fractal_server.app.schemas.v1.dumps import WorkflowDumpV1
 from fractal_server.utils import get_timestamp
 
 
@@ -50,37 +50,37 @@ def test_apply_workflow_create():
         last_task_index=10,
         slurm_account="slurm account",
     )
-    ApplyWorkflowCreate(**valid_args)
+    ApplyWorkflowCreateV1(**valid_args)
     with pytest.raises(ValueError):
         invalid_args = {**valid_args, "worker_init": " "}
-        ApplyWorkflowCreate(**invalid_args)
+        ApplyWorkflowCreateV1(**invalid_args)
     with pytest.raises(ValueError):
         invalid_args = {**valid_args, "worker_init": None}
-        ApplyWorkflowCreate(**invalid_args)
+        ApplyWorkflowCreateV1(**invalid_args)
     with pytest.raises(ValueError):
         invalid_args = {**valid_args, "first_task_index": -1}
-        ApplyWorkflowCreate(**invalid_args)
+        ApplyWorkflowCreateV1(**invalid_args)
     with pytest.raises(ValueError):
         invalid_args = {**valid_args, "last_task_index": -1}
-        ApplyWorkflowCreate(**invalid_args)
+        ApplyWorkflowCreateV1(**invalid_args)
     with pytest.raises(ValueError):
         invalid_args = {
             **valid_args,
             "first_task_index": 2,
             "last_task_index": 0,
         }
-        ApplyWorkflowCreate(**invalid_args)
+        ApplyWorkflowCreateV1(**invalid_args)
 
 
 def test_apply_workflow_update():
     for status in ["submitted", "done", "failed"]:
-        ApplyWorkflowUpdate(status=status)
+        ApplyWorkflowUpdateV1(status=status)
     with pytest.raises(ValueError):
-        ApplyWorkflowUpdate(status=" ")
+        ApplyWorkflowUpdateV1(status=" ")
     with pytest.raises(ValueError):
-        ApplyWorkflowUpdate(status=None)
+        ApplyWorkflowUpdateV1(status=None)
     with pytest.raises(ValueError):
-        ApplyWorkflowUpdate(status="foo")
+        ApplyWorkflowUpdateV1(status="foo")
 
 
 def test_apply_workflow_read():
@@ -106,7 +106,7 @@ def test_apply_workflow_read():
         read_only=False,
         timestamp_created=str(get_timestamp()),
     )
-    job1 = ApplyWorkflowRead(
+    job1 = ApplyWorkflowReadV1(
         id=1,
         project_id=1,
         workflow_id=1,
@@ -123,14 +123,14 @@ def test_apply_workflow_read():
     debug(job1)
     debug(job1.start_timestamp)
 
-    assert isinstance(job1.project_dump, ProjectDump)
-    assert isinstance(job1.workflow_dump, WorkflowDump)
-    assert isinstance(job1.input_dataset_dump, DatasetDump)
-    assert isinstance(job1.output_dataset_dump, DatasetDump)
+    assert isinstance(job1.project_dump, ProjectDumpV1)
+    assert isinstance(job1.workflow_dump, WorkflowDumpV1)
+    assert isinstance(job1.input_dataset_dump, DatasetDumpV1)
+    assert isinstance(job1.output_dataset_dump, DatasetDumpV1)
 
     assert isinstance(job1.start_timestamp, datetime)
 
-    job2 = ApplyWorkflowRead(
+    job2 = ApplyWorkflowReadV1(
         id=1,
         start_timestamp="2019-12-23T23:10:11.115310Z",
         status="good",
@@ -145,7 +145,7 @@ def test_apply_workflow_read():
     assert job2.output_dataset_id is None
     assert job2.workflow_id is None
 
-    job3 = ApplyWorkflowRead(
+    job3 = ApplyWorkflowReadV1(
         id=1,
         start_timestamp=datetime(2000, 1, 1, tzinfo=None),
         end_timestamp=datetime(2000, 1, 2, tzinfo=None),
@@ -162,26 +162,26 @@ def test_apply_workflow_read():
 
 def test_dataset_create():
     # Successful creation
-    d = DatasetCreate(name="name")
+    d = DatasetCreateV1(name="name")
     # Successful sanification of whitespaces
     NAME = "name"
-    d = DatasetCreate(name=f"   {NAME}   ")
+    d = DatasetCreateV1(name=f"   {NAME}   ")
     assert d.name == NAME
     assert not d.read_only  # Because of default False value
     # Missing argument
     with pytest.raises(ValidationError):
-        d = DatasetCreate()
+        d = DatasetCreateV1()
     # Empty-string argument
     with pytest.raises(ValidationError):
-        d = DatasetCreate(name="  ")
+        d = DatasetCreateV1(name="  ")
 
 
 def test_dataset_read():
     # Successful creation - empty resource_list
-    d = DatasetRead(
+    d = DatasetReadV1(
         id=1,
         project_id=1,
-        project=ProjectRead(
+        project=ProjectReadV1(
             id=1,
             name="project",
             read_only=False,
@@ -196,12 +196,12 @@ def test_dataset_read():
     assert d.timestamp_created.tzinfo == timezone.utc  # because of valutc
     assert d.project.timestamp_created.tzinfo == timezone.utc  # valutc
     # Successful creation - non-trivial resource_list
-    r1 = ResourceRead(id=1, dataset_id=1, path="/something")
-    r2 = ResourceRead(id=1, dataset_id=1, path="/something")
+    r1 = ResourceReadV1(id=1, dataset_id=1, path="/something")
+    r2 = ResourceReadV1(id=1, dataset_id=1, path="/something")
     rlist = [r1, r2]
     with pytest.raises(ValidationError):
         # missing "project"
-        DatasetRead(
+        DatasetReadV1(
             id=1,
             project_id=1,
             resource_list=rlist,
@@ -216,22 +216,22 @@ def test_dataset_update():
     # exclude_unset=True
 
     payload = dict(name="name")
-    dataset_update_dict = DatasetUpdate(**payload).dict(exclude_unset=True)
+    dataset_update_dict = DatasetUpdateV1(**payload).dict(exclude_unset=True)
     debug(dataset_update_dict)
     assert dataset_update_dict.keys() == payload.keys()
 
     payload = dict(type="type")
-    dataset_update_dict = DatasetUpdate(**payload).dict(exclude_unset=True)
+    dataset_update_dict = DatasetUpdateV1(**payload).dict(exclude_unset=True)
     debug(dataset_update_dict)
     assert dataset_update_dict.keys() == payload.keys()
 
     payload = dict(read_only=True)
-    dataset_update_dict = DatasetUpdate(**payload).dict(exclude_unset=True)
+    dataset_update_dict = DatasetUpdateV1(**payload).dict(exclude_unset=True)
     debug(dataset_update_dict)
     assert dataset_update_dict.keys() == payload.keys()
 
     payload = dict(read_only=True, name="name")
-    dataset_update_dict = DatasetUpdate(**payload).dict(exclude_unset=True)
+    dataset_update_dict = DatasetUpdateV1(**payload).dict(exclude_unset=True)
     debug(dataset_update_dict)
     assert dataset_update_dict.keys() == payload.keys()
 
@@ -312,16 +312,16 @@ def test_ManifestV1():
 
 def test_project_create():
     # Successful creation
-    p = ProjectCreate(name="my project")
+    p = ProjectCreateV1(name="my project")
     debug(p)
     # Check that whitespaces are stripped from beginning/end of string
     NAME = "some project name"
-    p = ProjectCreate(name=f"  {NAME}  ")
+    p = ProjectCreateV1(name=f"  {NAME}  ")
     debug(p)
     assert p.name == NAME
     # Fail due to empty string
     with pytest.raises(ValidationError):
-        ProjectCreate(name="  ")
+        ProjectCreateV1(name="  ")
 
 
 def test_state():
@@ -343,47 +343,47 @@ def test_state_read():
 
 def test_TaskCollectPip():
     # Successful creation
-    TaskCollectPip(package="some-package")
-    TaskCollectPip(package="some-package", package_version="0.0.1")
-    TaskCollectPip(package="/some/package.whl")
+    TaskCollectPipV1(package="some-package")
+    TaskCollectPipV1(package="some-package", package_version="0.0.1")
+    TaskCollectPipV1(package="/some/package.whl")
     # Failed creation
     with pytest.raises(ValidationError):
-        TaskCollectPip(package="some/package")
+        TaskCollectPipV1(package="some/package")
     with pytest.raises(ValidationError):
-        TaskCollectPip(package="some/package.whl")
+        TaskCollectPipV1(package="some/package.whl")
     with pytest.raises(ValidationError):
-        TaskCollectPip(package="/some/package", package_version=None)
+        TaskCollectPipV1(package="/some/package", package_version=None)
     with pytest.raises(ValidationError):
-        TaskCollectPip(package="/some/package.whl", package_version="0.0.1")
+        TaskCollectPipV1(package="/some/package.whl", package_version="0.0.1")
     with pytest.raises(ValidationError):
-        TaskCollectPip(package="/some/package.tar.gz")
+        TaskCollectPipV1(package="/some/package.tar.gz")
     with pytest.raises(ValidationError):
-        TaskCollectPip(package="some-package", package_extras="")
+        TaskCollectPipV1(package="some-package", package_extras="")
     with pytest.raises(ValidationError):
-        TaskCollectPip(package="some-package", package_extras=None)
+        TaskCollectPipV1(package="some-package", package_extras=None)
 
-    TaskCollectPip(package="some-package", pinned_package_versions={})
+    TaskCollectPipV1(package="some-package", pinned_package_versions={})
 
-    TaskCollectPip(
+    TaskCollectPipV1(
         package="some-package",
         pinned_package_versions={"numpy": "1.22.0", "pydantic": "1.10.10"},
     )
     with pytest.raises(ValidationError):
-        TaskCollectPip(package="some-package", pinned_package_versions=1)
+        TaskCollectPipV1(package="some-package", pinned_package_versions=1)
 
 
 def test_task_update():
     # Successful creation, with many unset fields
-    t = TaskUpdate(name="name")
+    t = TaskUpdateV1(name="name")
     debug(t)
     assert list(t.dict(exclude_none=True).keys()) == ["name"]
     assert list(t.dict(exclude_unset=True).keys()) == ["name"]
     # Some failures
     with pytest.raises(ValidationError):
-        TaskUpdate(name="task", version="")
-    TaskUpdate(name="task", version=None)
+        TaskUpdateV1(name="task", version="")
+    TaskUpdateV1(name="task", version=None)
     # Successful cretion, with mutliple fields set
-    t = TaskUpdate(
+    t = TaskUpdateV1(
         name="task",
         version="1.2.3",
         owner="someone",
@@ -395,7 +395,7 @@ def test_task_update():
 
 def test_task_create():
     # Successful creation
-    t = TaskCreate(
+    t = TaskCreateV1(
         name="task",
         source="source",
         command="command",
@@ -407,11 +407,11 @@ def test_task_create():
     debug(t)
     # Missing arguments
     with pytest.raises(ValidationError):
-        TaskCreate(name="task", source="source")
+        TaskCreateV1(name="task", source="source")
 
     # Bad docs link
     with pytest.raises(ValidationError):
-        TaskCreate(
+        TaskCreateV1(
             name="task",
             source="source",
             command="command",
@@ -527,76 +527,76 @@ def test_user_update_strict():
 
 
 def test_fail_valstr():
-    ProjectCreate(name="  valid    name ")
+    ProjectCreateV1(name="  valid    name ")
     with pytest.raises(ValueError):
-        ProjectCreate(name=None)
+        ProjectCreateV1(name=None)
     with pytest.raises(ValueError):
-        ProjectCreate(name="   ")
+        ProjectCreateV1(name="   ")
 
-    TaskUpdate(version=None)
+    TaskUpdateV1(version=None)
     with pytest.raises(ValueError):
-        TaskUpdate(version="   ")
+        TaskUpdateV1(version="   ")
 
 
 def test_fail_val_absolute_path():
-    ResourceCreate(path="/valid/path")
+    ResourceCreateV1(path="/valid/path")
     with pytest.raises(ValueError):
-        ResourceCreate(path=None)
+        ResourceCreateV1(path=None)
     with pytest.raises(ValueError):
-        ResourceCreate(path="./invalid/path")
+        ResourceCreateV1(path="./invalid/path")
 
 
 def test_fail_valint():
-    WorkflowTaskCreate(order=1)
+    WorkflowTaskCreateV1(order=1)
     with pytest.raises(ValueError):
-        WorkflowTaskCreate(order=None)
+        WorkflowTaskCreateV1(order=None)
     with pytest.raises(ValueError):
-        WorkflowTaskCreate(order=-1)
+        WorkflowTaskCreateV1(order=-1)
 
 
 def test_workflow_task_create():
     # Successful creation
-    t = WorkflowTaskCreate(order=1)
+    t = WorkflowTaskCreateV1(order=1)
     debug(t)
     # Invalid arguments
     with pytest.raises(ValidationError):
-        WorkflowTaskCreate(order=-1)
+        WorkflowTaskCreateV1(order=-1)
     with pytest.raises(ValidationError):
-        WorkflowTaskCreate(order=None)
+        WorkflowTaskCreateV1(order=None)
 
 
 def test_workflow_task_update():
     # Successful creation
-    t = WorkflowTaskUpdate(meta=dict(something="else"))
+    t = WorkflowTaskUpdateV1(meta=dict(something="else"))
     # Forbidden key-value update
     with pytest.raises(ValidationError):
-        t = WorkflowTaskUpdate(meta=dict(parallelization_level="new"))
+        t = WorkflowTaskUpdateV1(meta=dict(parallelization_level="new"))
     debug(t)
 
 
 def test_workflow_create():
-    w = WorkflowCreate(name="workflow")
+    w = WorkflowCreateV1(name="workflow")
     debug(w)
 
 
 def test_workflow_import():
     # Successful creation
-    t = TaskImport(name="name", source="source")
-    wft = WorkflowTaskImport(task=t)
-    w = WorkflowImport(name="workflow", task_list=[wft])
+    t = TaskImportV1(name="name", source="source")
+    wft = WorkflowTaskImportV1(task=t)
+    w = WorkflowImportV1(name="workflow", task_list=[wft])
     debug(w)
     # Empty-string argument
     with pytest.raises(ValidationError):
-        WorkflowImport(name=" ", task_list=[wft])
+        WorkflowImportV1(name=" ", task_list=[wft])
 
 
 def test_workflow_read_empty_task_list():
-    w = WorkflowRead(
+    w = WorkflowReadV1(
         id=1,
         name="workflow",
         project_id=1,
         task_list=[],
-        project=ProjectRead(
+        project=ProjectReadV1(
             id=1,
             name="project",
             read_only=False,
@@ -610,7 +610,7 @@ def test_workflow_read_empty_task_list():
 
 def test_workflow_read_non_empty_task_list():
     # Create a TaskRead
-    t1 = TaskRead(
+    t1 = TaskReadV1(
         id=9,
         name="name",
         source="source",
@@ -620,15 +620,15 @@ def test_workflow_read_non_empty_task_list():
         meta=dict(something="else"),
     )
     # Create two WorkflowTaskRead
-    wft1 = WorkflowTaskRead(id=1, task_id=1, workflow_id=1, task=t1)
-    wft2 = WorkflowTaskRead(id=2, task_id=1, workflow_id=1, task=t1)
+    wft1 = WorkflowTaskReadV1(id=1, task_id=1, workflow_id=1, task=t1)
+    wft2 = WorkflowTaskReadV1(id=2, task_id=1, workflow_id=1, task=t1)
     # Create a WorkflowRead
-    w = WorkflowRead(
+    w = WorkflowReadV1(
         id=1,
         name="workflow",
         project_id=1,
         task_list=[wft1, wft2],
-        project=ProjectRead(
+        project=ProjectReadV1(
             id=1,
             name="project",
             read_only=False,
@@ -640,10 +640,12 @@ def test_workflow_read_non_empty_task_list():
 
 
 def test_workflow_update():
-    WorkflowUpdate(name="workflow", reordered_workflowtask_ids=[0, 1, 3, 2])
-    WorkflowUpdate(name="workflow")
-    WorkflowUpdate(reordered_workflowtask_ids=[0, 1, 3, 2])
+    WorkflowUpdateV1(name="workflow", reordered_workflowtask_ids=[0, 1, 3, 2])
+    WorkflowUpdateV1(name="workflow")
+    WorkflowUpdateV1(reordered_workflowtask_ids=[0, 1, 3, 2])
     with pytest.raises(ValidationError):
-        WorkflowUpdate(name="workflow", reordered_workflowtask_ids=[1, 3, 1])
+        WorkflowUpdateV1(name="workflow", reordered_workflowtask_ids=[1, 3, 1])
     with pytest.raises(ValidationError):
-        WorkflowUpdate(name="workflow", reordered_workflowtask_ids=[1, 3, -1])
+        WorkflowUpdateV1(
+            name="workflow", reordered_workflowtask_ids=[1, 3, -1]
+        )

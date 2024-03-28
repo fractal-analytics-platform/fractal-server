@@ -11,7 +11,9 @@ from sqlmodel import select
 
 from fractal_server.app.models import State
 from fractal_server.app.models import Task
-from fractal_server.app.routes.api.v1.task_collection import TaskCollectStatus
+from fractal_server.app.routes.api.v1.task_collection import (
+    TaskCollectStatusV1,
+)
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 from fractal_server.tasks.endpoint_operations import (
@@ -257,7 +259,7 @@ async def test_collection_with_json_schemas(
     debug(task_pkg)
 
     venv_path = create_package_dir_pip(task_pkg=task_pkg)
-    collection_status = TaskCollectStatus(
+    collection_status = TaskCollectStatusV1(
         status="pending", venv_path=venv_path, package=task_pkg.package
     )
     # Replacing with path because of non-serializable Path
@@ -496,7 +498,7 @@ async def test_logs(
 
     venv_path = create_package_dir_pip(task_pkg=task_pkg)
     debug(venv_path)
-    collection_status = TaskCollectStatus(
+    collection_status = TaskCollectStatusV1(
         status="pending", venv_path=venv_path, package=task_pkg.package
     )
     # replacing with path because of non-serializable Path

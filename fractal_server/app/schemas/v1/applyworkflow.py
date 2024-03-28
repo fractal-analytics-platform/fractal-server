@@ -8,19 +8,19 @@ from pydantic.types import StrictStr
 
 from .._validators import valstr
 from .._validators import valutc
-from .dumps import DatasetDump
-from .dumps import ProjectDump
-from .dumps import WorkflowDump
+from .dumps import DatasetDumpV1
+from .dumps import ProjectDumpV1
+from .dumps import WorkflowDumpV1
 
 
 __all__ = (
-    "_ApplyWorkflowBase",
-    "ApplyWorkflowCreate",
-    "ApplyWorkflowRead",
+    "_ApplyWorkflowBaseV1",
+    "ApplyWorkflowCreateV1",
+    "ApplyWorkflowReadV1",
 )
 
 
-class JobStatusType(str, Enum):
+class JobStatusTypeV1(str, Enum):
     """
     Define the available job statuses
 
@@ -41,7 +41,7 @@ class JobStatusType(str, Enum):
     FAILED = "failed"
 
 
-class _ApplyWorkflowBase(BaseModel):
+class _ApplyWorkflowBaseV1(BaseModel):
     """
     Base class for `ApplyWorkflow`.
 
@@ -52,7 +52,7 @@ class _ApplyWorkflowBase(BaseModel):
     worker_init: Optional[str]
 
 
-class ApplyWorkflowCreate(_ApplyWorkflowBase):
+class ApplyWorkflowCreateV1(_ApplyWorkflowBaseV1):
     """
     Class for `ApplyWorkflow` creation.
 
@@ -104,7 +104,7 @@ class ApplyWorkflowCreate(_ApplyWorkflowBase):
         return v
 
 
-class ApplyWorkflowRead(_ApplyWorkflowBase):
+class ApplyWorkflowReadV1(_ApplyWorkflowBaseV1):
     """
     Class for `ApplyWorkflow` read from database.
 
@@ -132,15 +132,15 @@ class ApplyWorkflowRead(_ApplyWorkflowBase):
 
     id: int
     project_id: Optional[int]
-    project_dump: ProjectDump
+    project_dump: ProjectDumpV1
     user_email: str
     slurm_account: Optional[str]
     workflow_id: Optional[int]
-    workflow_dump: WorkflowDump
+    workflow_dump: WorkflowDumpV1
     input_dataset_id: Optional[int]
-    input_dataset_dump: DatasetDump
+    input_dataset_dump: DatasetDumpV1
     output_dataset_id: Optional[int]
-    output_dataset_dump: DatasetDump
+    output_dataset_dump: DatasetDumpV1
     start_timestamp: datetime
     end_timestamp: Optional[datetime]
     status: str
@@ -158,7 +158,7 @@ class ApplyWorkflowRead(_ApplyWorkflowBase):
     )
 
 
-class ApplyWorkflowUpdate(BaseModel):
+class ApplyWorkflowUpdateV1(BaseModel):
     """
     Class for updating a job status.
 
@@ -166,4 +166,4 @@ class ApplyWorkflowUpdate(BaseModel):
         status: New job status.
     """
 
-    status: JobStatusType
+    status: JobStatusTypeV1

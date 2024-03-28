@@ -6,7 +6,9 @@ import pytest
 from devtools import debug
 
 from fractal_server.app.models import State
-from fractal_server.app.routes.api.v1.task_collection import TaskCollectStatus
+from fractal_server.app.routes.api.v1.task_collection import (
+    TaskCollectStatusV1,
+)
 from fractal_server.tasks.endpoint_operations import (
     create_package_dir_pip,
 )
@@ -247,7 +249,7 @@ async def test_logs_failed_collection(
     debug(task_pkg)
 
     venv_path = create_package_dir_pip(task_pkg=task_pkg)
-    collection_status = TaskCollectStatus(
+    collection_status = TaskCollectStatusV1(
         status="pending", venv_path=venv_path, package=task_pkg.package
     )
     # replacing with path because of non-serializable Path
