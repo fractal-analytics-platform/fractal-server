@@ -430,8 +430,8 @@ async def test_delete_task(
 
 async def test_post_same_source(client, MockCurrentUser):
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-        V1 = "/api/v1/task"
-        V2 = "/api/v2/task"
+        V1 = "/api/v1/task/"
+        V2 = "/api/v2/task/"
         args_v1 = dict(
             name="name", command="cmd", input_type="zarr", output_type="zarr"
         )
@@ -444,31 +444,21 @@ async def test_post_same_source(client, MockCurrentUser):
         task_v2_b = TaskCreateV2(**args_v2, source="b")
 
         # POST v1_a OK
-        res = await client.post(
-            f"{V1}/", json=task_v1_a.dict(exclude_unset=True)
-        )
+        res = await client.post(V1, json=task_v1_a.dict(exclude_unset=True))
         assert res.status_code == 201
 
         # POST v2_a FAIL
-        res = await client.post(
-            f"{V2}/", json=task_v2_a.dict(exclude_unset=True)
-        )
+        res = await client.post(V2, json=task_v2_a.dict(exclude_unset=True))
         assert res.status_code == 422
 
         # POST v2_b OK
-        res = await client.post(
-            f"{V2}/", json=task_v2_b.dict(exclude_unset=True)
-        )
+        res = await client.post(V2, json=task_v2_b.dict(exclude_unset=True))
         assert res.status_code == 201
 
         # POST v1_b FAIL
-        res = await client.post(
-            f"{V1}/", json=task_v1_b.dict(exclude_unset=True)
-        )
+        res = await client.post(V1, json=task_v1_b.dict(exclude_unset=True))
         assert res.status_code == 422
 
         # POST v1_c OK
-        res = await client.post(
-            f"{V1}/", json=task_v1_c.dict(exclude_unset=True)
-        )
+        res = await client.post(V1, json=task_v1_c.dict(exclude_unset=True))
         assert res.status_code == 201
