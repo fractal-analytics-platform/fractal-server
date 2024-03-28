@@ -1,8 +1,7 @@
 from pathlib import Path
 
+from input_models import InitArgsIllumination
 from pydantic.decorator import validate_arguments
-
-from .input_models import InitArgsIllumination
 
 
 @validate_arguments
@@ -37,3 +36,9 @@ def illumination_correction_compute(
 
     print("[illumination_correction_compute] END")
     return out
+
+
+if __name__ == "__main__":
+    from utils import run_fractal_task
+
+    run_fractal_task(task_function=illumination_correction_compute)

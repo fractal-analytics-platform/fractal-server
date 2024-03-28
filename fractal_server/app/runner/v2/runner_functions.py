@@ -1,238 +1,172 @@
-from concurrent.futures import ThreadPoolExecutor
-from copy import copy
-from typing import Any
-from typing import TypeVar
-
-from pydantic import BaseModel
-from pydantic import Field
-from pydantic.main import ModelMetaclass
+import functools
+from concurrent.futures import Executor
+from pathlib import Path
+from typing import Optional
 
 from ....images import SingleImage
-from .models import DictStrAny
+from ._v1_task_compatibility import _convert_v2_args_into_v1
+from .deduplicate_list import deduplicate_list
+from .merge_outputs import merge_outputs
 from .models import Task
 from .models import TaskV1
 from .models import WorkflowTask
-from .task_output import TaskOutput
+from .runner_functions_low_level import _run_single_task
+from .task_interface import InitArgsModel
+from .task_interface import InitTaskOutput
+from .task_interface import TaskOutput
+from fractal_server.app.runner.v2.components import KEY
+from fractal_server.app.runner.v2.components import MAKE_COMPONENT
 
+
+__all__ = [
+    "run_non_parallel_task",
+    "run_parallel_task",
+    "run_compound_task",
+    "run_parallel_task_v1",
+]
 
 MAX_PARALLELIZATION_LIST_SIZE = 200
 
 
-def _run_non_parallel_task(
+def run_non_parallel_task(
     *,
-    filtered_images: list[SingleImage],
+    images: list[SingleImage],
     zarr_dir: str,
     task: Task,
     wftask: WorkflowTask,
-    executor,
+    workflow_dir: Path,
+    workflow_dir_user: Optional[Path] = None,
+    logger_name: Optional[str] = None,
+    executor: Executor,
 ) -> TaskOutput:
+    """
+    This runs server-side (see `executor` argument)
+    """
 
-    paths = [image.path for image in filtered_images]
+    if not workflow_dir_user:
+        workflow_dir_user = workflow_dir
+
     function_kwargs = dict(
-        paths=paths,
+        paths=[image.path for image in images],
         zarr_dir=zarr_dir,
         **wftask.args_non_parallel,
     )
-
-    def _wrapper_expand_kwargs(input_kwargs: dict[str, Any]):
-        task_output = task.function_non_parallel(**input_kwargs)
-        if task_output is None:
-            task_output = TaskOutput()
-        else:
-            task_output = TaskOutput(**task_output)
-        return task_output
-
-    task_output = executor.submit(
-        _wrapper_expand_kwargs, function_kwargs
-    ).result()
-
-    return TaskOutput(**task_output.dict())
-
-
-class InitArgsModel(BaseModel):
-    class Config:
-        extra = "forbid"
-
-    path: str
-    init_args: DictStrAny = Field(default_factory=dict)
-
-
-T = TypeVar("T", SingleImage, InitArgsModel)
-
-
-class InitTaskOutput(BaseModel):
-    parallelization_list: list[InitArgsModel] = Field(default_factory=list)
-
-    class Config:
-        extra = "forbid"
-
-
-def _run_non_parallel_task_init(
-    *,
-    task: Task,
-    function_kwargs: DictStrAny,
-    executor: ThreadPoolExecutor,
-) -> InitTaskOutput:
-    def _wrapper_expand_kwargs(input_kwargs: dict[str, Any]):
-        task_output = task.function_non_parallel(**input_kwargs)
-        if task_output is None:
-            task_output = InitTaskOutput()
-        else:
-            task_output = InitTaskOutput(**task_output)
-        return task_output
-
-    task_output = executor.submit(
-        _wrapper_expand_kwargs, function_kwargs
-    ).result()
-
-    return InitTaskOutput(**task_output.dict())
-
-
-def merge_outputs(
-    task_outputs: list[TaskOutput],
-) -> TaskOutput:
-
-    final_image_list_updates = []
-    final_image_list_removals = []
-
-    for ind, task_output in enumerate(task_outputs):
-
-        final_image_list_updates.extend(task_output.image_list_updates)
-        final_image_list_removals.extend(task_output.image_list_removals)
-
-        # Check that all filters are the same
-        current_new_filters = task_output.filters
-        if ind == 0:
-            last_new_filters = copy(current_new_filters)
-        if current_new_filters != last_new_filters:
-            raise ValueError(f"{current_new_filters=} but {last_new_filters=}")
-        last_new_filters = copy(current_new_filters)
-
-    final_image_list_updates = deduplicate_list(
-        final_image_list_updates, PydanticModel=SingleImage
+    future = executor.submit(
+        functools.partial(
+            _run_single_task,
+            wftask=wftask,
+            command=task.command_non_parallel,
+            workflow_dir=workflow_dir,
+            workflow_dir_user=workflow_dir_user,
+        ),
+        function_kwargs,
     )
-
-    final_output = TaskOutput(
-        image_list_updates=final_image_list_updates,
-        image_list_removals=final_image_list_removals,
-        filters=last_new_filters,
-    )
-
-    return final_output
-
-
-def _run_v1_task(
-    *,
-    filtered_images: list[SingleImage],
-    task: TaskV1,
-    converted_args: dict,
-    executor,
-) -> TaskOutput:
-    list_function_kwargs = [
-        dict(
-            **converted_args,
-        )
-        for image in filtered_images
-    ]
-    if len(list_function_kwargs) > MAX_PARALLELIZATION_LIST_SIZE:
-        raise ValueError(
-            "Too many parallelization items.\n"
-            f"   {len(list_function_kwargs)=}\n"
-            f"   {MAX_PARALLELIZATION_LIST_SIZE=}\n"
-        )
-
-    def _wrapper_expand_kwargs(input_kwargs: dict[str, Any]):
-        task_output = task.command(**input_kwargs)  # noqa
+    output = future.result()
+    # FIXME V2: handle validation errors
+    if output is None:
         return TaskOutput()
-
-    results = executor.map(_wrapper_expand_kwargs, list_function_kwargs)
-    task_outputs = list(results)  # noqa
-
-    return TaskOutput()
+    else:
+        validated_output = TaskOutput(**output)
+        return validated_output
 
 
-def _run_parallel_task(
+def run_parallel_task(
     *,
-    filtered_images: list[SingleImage],
+    images: list[SingleImage],
     task: Task,
     wftask: WorkflowTask,
-    executor,
+    executor: Executor,
+    workflow_dir: Path,
+    workflow_dir_user: Optional[Path] = None,
+    logger_name: Optional[str] = None,
 ) -> TaskOutput:
-
-    list_function_kwargs = [
-        dict(
-            path=image.path,
-            **wftask.args_parallel,
-        )
-        for image in filtered_images
-    ]
-
-    if len(list_function_kwargs) > MAX_PARALLELIZATION_LIST_SIZE:
+    if len(images) > MAX_PARALLELIZATION_LIST_SIZE:
         raise ValueError(
             "Too many parallelization items.\n"
-            f"   {len(list_function_kwargs)=}\n"
+            f"   {len(images)=}\n"
             f"   {MAX_PARALLELIZATION_LIST_SIZE=}\n"
         )
 
-    def _wrapper_expand_kwargs(input_kwargs: dict[str, Any]):
-        task_output = task.function_parallel(**input_kwargs)
-        if task_output is None:
-            task_output = TaskOutput()
-        else:
-            task_output = TaskOutput(**task_output)
-        return task_output
+    list_function_kwargs = []
+    for ind, image in enumerate(images):
+        list_function_kwargs.append(
+            dict(
+                path=image.path,
+                **wftask.args_parallel,
+            ),
+        )
+        list_function_kwargs[-1][KEY] = MAKE_COMPONENT(ind)
 
-    results = executor.map(_wrapper_expand_kwargs, list_function_kwargs)
-    task_outputs = list(results)
-
-    merged_output = merge_outputs(
-        task_outputs,
+    results_iterator = executor.map(
+        functools.partial(
+            _run_single_task,
+            wftask=wftask,
+            command=task.command_parallel,
+            workflow_dir=workflow_dir,
+            workflow_dir_user=workflow_dir_user,
+        ),
+        list_function_kwargs,
     )
+    # Explicitly iterate over the whole list, so that all futures are waited
+    outputs = list(results_iterator)
+
+    from devtools import debug
+
+    debug("PARALLEL_TASK", outputs)
+    # Validate all non-None outputs
+    for ind, output in enumerate(outputs):
+        if output is None:
+            outputs[ind] = TaskOutput()
+        else:
+            # FIXME: improve handling of validation errors
+            validated_output = TaskOutput(**output)
+            outputs[ind] = validated_output
+
+    merged_output = merge_outputs(outputs)
     return merged_output
 
 
-def deduplicate_list(
-    this_list: list[T], PydanticModel: ModelMetaclass
-) -> list[T]:
-    """
-    Custom replacement for `set(this_list)`, when items are Pydantic-model
-    instances and then non-hashable (e.g. SingleImage or InitArgsModel).
-    """
-    this_list_dict = [this_item.dict() for this_item in this_list]
-    new_list_dict = []
-    for this_dict in this_list_dict:
-        if this_dict not in new_list_dict:
-            new_list_dict.append(this_dict)
-    new_list = [PydanticModel(**this_dict) for this_dict in new_list_dict]
-    return new_list
-
-
-def _run_compound_task(
+def run_compound_task(
     *,
-    filtered_images: list[SingleImage],
+    images: list[SingleImage],
     zarr_dir: str,
     task: Task,
     wftask: WorkflowTask,
-    executor,
+    executor: Executor,
+    workflow_dir: Path,
+    workflow_dir_user: Optional[Path] = None,
+    logger_name: Optional[str] = None,
 ) -> TaskOutput:
     # 3/A: non-parallel init task
-    paths = [image.path for image in filtered_images]
     function_kwargs = dict(
-        paths=paths,
+        paths=[image.path for image in images],
         zarr_dir=zarr_dir,
         **wftask.args_non_parallel,
     )
-    init_task_output = _run_non_parallel_task_init(
-        task=task,
-        function_kwargs=function_kwargs,
-        executor=executor,
+    future = executor.submit(
+        functools.partial(
+            _run_single_task,
+            wftask=wftask,
+            command=task.command_non_parallel,
+            workflow_dir=workflow_dir,
+            workflow_dir_user=workflow_dir_user,
+        ),
+        function_kwargs,
     )
+    output = future.result()
+    from devtools import debug
 
-    # 3/B: parallel part of a compound task
+    debug(output)
+    if output is None:
+        init_task_output = InitTaskOutput()
+    else:
+        init_task_output = InitTaskOutput(**output)
     parallelization_list = init_task_output.parallelization_list
     parallelization_list = deduplicate_list(
         parallelization_list, PydanticModel=InitArgsModel
     )
+
+    # 3/B: parallel part of a compound task
     list_function_kwargs = []
     for ind, parallelization_item in enumerate(parallelization_list):
         list_function_kwargs.append(
@@ -240,26 +174,76 @@ def _run_compound_task(
                 path=parallelization_item.path,
                 init_args=parallelization_item.init_args,
                 **wftask.args_parallel,
-            )
+            ),
         )
+        list_function_kwargs[-1][KEY] = MAKE_COMPONENT(ind)
 
-    if len(list_function_kwargs) > MAX_PARALLELIZATION_LIST_SIZE:
+    results_iterator = executor.map(
+        functools.partial(
+            _run_single_task,
+            wftask=wftask,
+            command=task.command_parallel,
+            workflow_dir=workflow_dir,
+            workflow_dir_user=workflow_dir_user,
+        ),
+        list_function_kwargs,
+    )
+    # Explicitly iterate over the whole list, so that all futures are waited
+    outputs = list(results_iterator)
+
+    # Validate all non-None outputs
+    for ind, output in enumerate(outputs):
+        if output is None:
+            outputs[ind] = TaskOutput()
+        else:
+            # FIXME: improve handling of validation errors
+            validated_output = TaskOutput(**output)
+            outputs[ind] = validated_output
+
+    merged_output = merge_outputs(outputs)
+    return merged_output
+
+
+def run_parallel_task_v1(
+    *,
+    images: list[SingleImage],
+    task: TaskV1,
+    wftask: WorkflowTask,
+    executor: Executor,
+    workflow_dir: Path,
+    workflow_dir_user: Optional[Path] = None,
+    logger_name: Optional[str] = None,
+) -> TaskOutput:
+    if len(images) > MAX_PARALLELIZATION_LIST_SIZE:
         raise ValueError(
             "Too many parallelization items.\n"
-            f"   {len(list_function_kwargs)=}\n"
+            f"   {len(images)=}\n"
             f"   {MAX_PARALLELIZATION_LIST_SIZE=}\n"
         )
 
-    def _wrapper_expand_kwargs(input_kwargs: dict[str, Any]):
-        task_output = task.function_parallel(**input_kwargs)
-        if task_output is None:
-            task_output = TaskOutput()
-        else:
-            task_output = TaskOutput(**task_output)
-        return task_output
+    list_function_kwargs = [
+        _convert_v2_args_into_v1(
+            dict(
+                path=image.path,
+                **wftask.args_parallel,
+            )
+        )
+        for image in images
+    ]
 
-    results = executor.map(_wrapper_expand_kwargs, list_function_kwargs)
-    task_outputs = list(results)
+    results_iterator = executor.map(
+        functools.partial(
+            _run_single_task,
+            wftask=wftask,
+            command=task.command,
+            workflow_dir=workflow_dir,
+            workflow_dir_user=workflow_dir_user,
+            is_task_v1=True,
+        ),
+        list_function_kwargs,
+    )
+    # Explicitly iterate over the whole list, so that all futures are waited
+    list(results_iterator)
 
-    merged_output = merge_outputs(task_outputs)
-    return merged_output
+    # Ignore any output metadata for V1 tasks, and return an empty object
+    return TaskOutput()

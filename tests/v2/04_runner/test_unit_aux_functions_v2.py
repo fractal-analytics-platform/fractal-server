@@ -1,7 +1,7 @@
 from devtools import debug
 
-from fractal_server.app.runner.v2.runner_functions import deduplicate_list
-from fractal_server.app.runner.v2.runner_functions import InitArgsModel
+from fractal_server.app.runner.v2.deduplicate_list import deduplicate_list
+from fractal_server.app.runner.v2.task_interface import InitArgsModel
 
 
 def test_deduplicate_list_of_dicts():

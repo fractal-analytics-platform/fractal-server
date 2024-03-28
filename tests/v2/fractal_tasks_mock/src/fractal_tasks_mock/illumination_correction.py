@@ -33,3 +33,9 @@ def illumination_correction(
 
     print("[illumination_correction] END")
     return out
+
+
+if __name__ == "__main__":
+    from utils import run_fractal_task
+
+    run_fractal_task(task_function=illumination_correction)
