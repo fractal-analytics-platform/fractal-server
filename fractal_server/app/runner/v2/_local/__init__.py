@@ -23,22 +23,19 @@ from pathlib import Path
 from typing import Any
 from typing import Optional
 
-from ....models import Workflow  # FIXME: this is v1 specific
+from ....models.v2 import DatasetV2
+from ....models.v2 import WorkflowV2
 from ...async_wrap import async_wrap
 from ...executors.local.executor import FractalThreadPoolExecutor
 from ...set_start_and_last_task_index import set_start_and_last_task_index
-from .._common import execute_tasks  # FIXME: this is v1 specific
-from ..common import TaskParameters  # FIXME: this is v1 specific
+from ..runner import execute_tasks_v2
 from ._submit_setup import _local_submit_setup
 
 
 def _process_workflow(
     *,
-    workflow: Workflow,
-    input_paths: list[Path],
-    output_path: Path,
-    input_metadata: dict[str, Any],
-    input_history: list[dict[str, Any]],
+    workflow: WorkflowV2,
+    dataset: DatasetV2,
     logger_name: str,
     workflow_dir: Path,
     first_task_index: int,
@@ -54,44 +51,35 @@ def _process_workflow(
     """
 
     with FractalThreadPoolExecutor() as executor:
-        output_task_pars = execute_tasks(
-            executor=executor,
-            task_list=workflow.task_list[
+        processed_dataset = execute_tasks_v2(
+            wf_task_list=workflow.task_list[
                 first_task_index : (last_task_index + 1)  # noqa
             ],  # noqa
-            task_pars=TaskParameters(
-                input_paths=input_paths,
-                output_path=output_path,
-                metadata=input_metadata,
-                history=input_history,
-            ),
+            dataset=dataset,
+            executor=executor,
             workflow_dir=workflow_dir,
             workflow_dir_user=workflow_dir,
             logger_name=logger_name,
             submit_setup_call=_local_submit_setup,
         )
-    output_dataset_metadata_history = dict(
-        metadata=output_task_pars.metadata, history=output_task_pars.history
-    )
-    return output_dataset_metadata_history
+        processed_dataset
+    return {}  # FIXME
 
 
 async def process_workflow(
     *,
-    workflow: Workflow,
-    input_paths: list[Path],
-    output_path: Path,
-    input_metadata: dict[str, Any],
-    input_history: list[dict[str, Any]],
-    logger_name: str,
+    workflow: WorkflowV2,
+    dataset: DatasetV2,
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
-    slurm_user: Optional[str] = None,
-    slurm_account: Optional[str] = None,
-    user_cache_dir: Optional[str] = None,
-    worker_init: Optional[str] = None,
     first_task_index: Optional[int] = None,
     last_task_index: Optional[int] = None,
+    logger_name: str,
+    # Slurm-specific
+    user_cache_dir: Optional[str] = None,
+    slurm_user: Optional[str] = None,
+    slurm_account: Optional[str] = None,
+    worker_init: Optional[str] = None,
 ) -> dict[str, Any]:
     """
     Run a workflow
@@ -172,10 +160,7 @@ async def process_workflow(
 
     output_dataset_metadata_history = await async_wrap(_process_workflow)(
         workflow=workflow,
-        input_paths=input_paths,
-        output_path=output_path,
-        input_metadata=input_metadata,
-        input_history=input_history,
+        dataset=dataset,
         logger_name=logger_name,
         workflow_dir=workflow_dir,
         first_task_index=first_task_index,

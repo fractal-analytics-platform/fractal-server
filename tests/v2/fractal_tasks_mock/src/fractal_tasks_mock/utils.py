@@ -78,5 +78,6 @@ def run_fractal_task(task_function: Callable) -> None:
     logging.info(f"END {task_function.__name__} task")
 
     # Write output metadata to file
-    with open(cli_args.out_json, "w") as fout:
-        json.dump(metadata_update, fout, indent=2)
+    if metadata_update not in [None, {}]:
+        with open(cli_args.out_json, "w") as fout:
+            json.dump(metadata_update, fout, indent=2)

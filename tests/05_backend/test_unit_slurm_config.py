@@ -10,10 +10,10 @@ from fractal_server.app.runner.executors.slurm._slurm_config import (
     get_default_slurm_config,
 )
 from fractal_server.app.runner.executors.slurm._slurm_config import (
-    get_slurm_config,
-)
-from fractal_server.app.runner.executors.slurm._slurm_config import (
     SlurmConfigError,
+)
+from fractal_server.app.runner.v1._slurm import (
+    get_slurm_config,
 )
 from fractal_server.app.runner.v1._slurm._submit_setup import (
     _slurm_submit_setup,
