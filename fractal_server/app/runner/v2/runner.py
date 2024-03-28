@@ -176,7 +176,7 @@ def execute_tasks_v2(
                     types=updated_types,
                 )
                 # Add image into the dataset image list
-                tmp_dataset.images.append(new_image)
+                tmp_dataset.images.append(new_image.dict())
 
         # Remove images from Dataset.images
         for image in current_task_output.image_list_removals:
