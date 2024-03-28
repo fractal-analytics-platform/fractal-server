@@ -3,6 +3,7 @@ from devtools import debug
 from sqlmodel import select
 
 from fractal_server.app.models.v2 import TaskV2
+from fractal_server.app.schemas.v1 import TaskCreate as TaskCreateV1
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.app.schemas.v2 import TaskUpdateV2
 
@@ -425,3 +426,39 @@ async def test_delete_task(
         assert res.status_code == 204
         task_list = (await db.execute(select(TaskV2))).scalars().all()
         assert len(task_list) == 1
+
+
+async def test_post_same_source(client, MockCurrentUser):
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        V1 = "/api/v1/task/"
+        V2 = "/api/v2/task/"
+        args_v1 = dict(
+            name="name", command="cmd", input_type="zarr", output_type="zarr"
+        )
+        args_v2 = dict(name="name", command_parallel="cmd")
+
+        task_v1_a = TaskCreateV1(**args_v1, source="a")
+        task_v1_b = TaskCreateV1(**args_v1, source="b")
+        task_v1_c = TaskCreateV1(**args_v1, source="c")
+        task_v2_a = TaskCreateV2(**args_v2, source="a")
+        task_v2_b = TaskCreateV2(**args_v2, source="b")
+
+        # POST v1_a OK
+        res = await client.post(V1, json=task_v1_a.dict(exclude_unset=True))
+        assert res.status_code == 201
+
+        # POST v2_a FAIL
+        res = await client.post(V2, json=task_v2_a.dict(exclude_unset=True))
+        assert res.status_code == 422
+
+        # POST v2_b OK
+        res = await client.post(V2, json=task_v2_b.dict(exclude_unset=True))
+        assert res.status_code == 201
+
+        # POST v1_b FAIL
+        res = await client.post(V1, json=task_v1_b.dict(exclude_unset=True))
+        assert res.status_code == 422
+
+        # POST v1_c OK
+        res = await client.post(V1, json=task_v1_c.dict(exclude_unset=True))
+        assert res.status_code == 201
