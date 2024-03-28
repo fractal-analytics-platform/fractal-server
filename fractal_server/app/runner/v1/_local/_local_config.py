@@ -69,7 +69,7 @@ def get_local_backend_config(
 
     Arguments:
         wftask:
-            WorkflowTask (V1 or V2) for which the backend configuration should
+            WorkflowTask (V1) for which the backend configuration should
             be prepared.
         config_path:
             Path of local-backend configuration file; if `None`, use
