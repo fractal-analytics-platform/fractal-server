@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Optional
 
 from ....models.v1 import WorkflowTask
-from ...executors.local._local_config import get_local_backend_config
+from ._local_config import get_local_backend_config
 
 
 def _local_submit_setup(

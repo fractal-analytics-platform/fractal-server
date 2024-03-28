@@ -1,7 +1,7 @@
 from pathlib import Path
 
+from fractal_tasks_mock.utils import _group_paths_by_well
 from pydantic.decorator import validate_arguments
-from utils import _group_paths_by_well
 
 
 @validate_arguments

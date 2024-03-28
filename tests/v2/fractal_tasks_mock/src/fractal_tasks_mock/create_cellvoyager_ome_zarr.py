@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 from pydantic.decorator import validate_arguments
 
@@ -10,7 +9,7 @@ def create_cellvoyager_ome_zarr(
     paths: list[str],
     zarr_dir: str,
     image_dir: str,
-    fake_list_relative_paths: Optional[list[str]] = None,
+    num_images: int = 2,
 ) -> dict:
     """
     Dummy task description.
@@ -39,10 +38,9 @@ def create_cellvoyager_ome_zarr(
     Path(zarr_path).mkdir()
 
     # Prepare fake list of OME-Zarr images
-    if fake_list_relative_paths is None:
-        image_relative_paths = ["A/01/0", "A/02/0"]
-    else:
-        image_relative_paths = fake_list_relative_paths
+    image_relative_paths = [
+        f"A/{ind_image:02d}/0" for ind_image in range(1, num_images + 1)
+    ]
 
     # Create well/image OME-Zarr folders on disk, and prepare output
     # metadata

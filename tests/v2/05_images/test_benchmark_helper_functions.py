@@ -31,7 +31,7 @@ def dummy_image_list(N):
             path=f"/tmp_{i}_small",
             attributes=dict(a1=(i % 2), a2="a2", a3="whoknows"),
             types=dict(t1=bool(i % 4)),
-        )
+        ).dict()
         for i in range(N)
     ]
 

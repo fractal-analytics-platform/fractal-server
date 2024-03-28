@@ -23,9 +23,11 @@ from ....models import Dataset
 from ....models import LinkUserProject
 from ....models import Project
 from ....models import Workflow
+from ....runner.set_start_and_last_task_index import (
+    set_start_and_last_task_index,
+)
 from ....runner.v1 import submit_workflow
 from ....runner.v1 import validate_workflow_compatibility
-from ....runner.v1.common import set_start_and_last_task_index
 from ....schemas.v1 import ApplyWorkflowCreateV1
 from ....schemas.v1 import ApplyWorkflowReadV1
 from ....schemas.v1 import JobStatusTypeV1

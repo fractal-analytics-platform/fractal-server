@@ -14,7 +14,6 @@ Submodule to handle the local-backend configuration for a WorkflowTask
 import json
 from pathlib import Path
 from typing import Optional
-from typing import Union
 
 from pydantic import BaseModel
 from pydantic import Extra
@@ -23,7 +22,6 @@ from pydantic.error_wrappers import ValidationError
 from .....config import get_settings
 from .....syringe import Inject
 from ....models.v1 import WorkflowTask
-from ....models.v2 import WorkflowTaskV2
 
 
 class LocalBackendConfigError(ValueError):
@@ -56,7 +54,7 @@ def get_default_local_backend_config():
 
 
 def get_local_backend_config(
-    wftask: Union[WorkflowTask, WorkflowTaskV2],
+    wftask: WorkflowTask,
     config_path: Optional[Path] = None,
 ) -> LocalBackendConfig:
     """
@@ -71,7 +69,7 @@ def get_local_backend_config(
 
     Arguments:
         wftask:
-            WorkflowTask (V1 or V2) for which the backend configuration should
+            WorkflowTask (V1) for which the backend configuration should
             be prepared.
         config_path:
             Path of local-backend configuration file; if `None`, use
