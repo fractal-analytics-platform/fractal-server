@@ -211,6 +211,7 @@ async def submit_workflow(
             first_task_index=job.first_task_index,
             last_task_index=job.last_task_index,
         )
+        processed_dataset_meta_hist
 
         logger.info(
             f'End execution of workflow "{workflow.name}"; '
@@ -220,7 +221,8 @@ async def submit_workflow(
 
         # FIXME: update dataset attributes with what was produced
         # within process_workflow
-        dataset.history = processed_dataset_meta_hist.pop("history")
+        pass
+        # dataset.history = processed_dataset_meta_hist.pop("history")
         db_sync.merge(dataset)
 
         # Update job DB entry

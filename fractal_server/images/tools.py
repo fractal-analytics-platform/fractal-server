@@ -1,4 +1,5 @@
 from copy import copy
+from typing import Any
 from typing import Optional
 from typing import Union
 
@@ -8,9 +9,9 @@ from fractal_server.images import SingleImage
 
 def find_image_by_path(
     *,
-    images: list[SingleImage],
+    images: list[dict[str, Any]],
     path: str,
-) -> Optional[dict[str, Union[int, SingleImage]]]:
+) -> Optional[dict[str, Union[int, dict[str, Any]]]]:
     """
     Return a copy of the image with a given path and its positional index.
 
@@ -21,7 +22,7 @@ def find_image_by_path(
     Returns:
         The first image from `images` which has path equal to `path`.
     """
-    image_paths = [img.path for img in images]
+    image_paths = [img["path"] for img in images]
     try:
         ind = image_paths.index(path)
     except ValueError:
