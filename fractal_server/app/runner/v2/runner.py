@@ -5,13 +5,12 @@ from pathlib import Path
 from typing import Callable
 from typing import Optional
 
-from runner_functions import no_op_submit_setup_call
-
 from ....images import Filters
 from ....images import SingleImage
 from ....images.tools import _filter_image_list
 from ....images.tools import find_image_by_path
 from ....images.tools import match_filter
+from .runner_functions import no_op_submit_setup_call
 from .runner_functions import run_v1_task_parallel
 from .runner_functions import run_v2_task_compound
 from .runner_functions import run_v2_task_non_parallel
