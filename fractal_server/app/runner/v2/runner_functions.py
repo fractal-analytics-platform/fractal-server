@@ -14,21 +14,21 @@ from .task_interface import TaskOutput
 from fractal_server.app.models.v1 import Task as TaskV1
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
-from fractal_server.app.runner.v2.components import KEY
-from fractal_server.app.runner.v2.components import MAKE_COMPONENT
+from fractal_server.app.runner.v2.components import _COMPONENT_KEY_
+from fractal_server.app.runner.v2.components import _index_to_component
 
 
 __all__ = [
-    "run_non_parallel_task",
-    "run_parallel_task",
-    "run_compound_task",
-    "run_parallel_task_v1",
+    "run_v2_task_non_parallel",
+    "run_v2_task_parallel",
+    "run_v2_task_compound",
+    "run_v1_task_parallel",
 ]
 
 MAX_PARALLELIZATION_LIST_SIZE = 200
 
 
-def run_non_parallel_task(
+def run_v2_task_non_parallel(
     *,
     images: list[SingleImage],
     zarr_dir: str,
@@ -70,7 +70,7 @@ def run_non_parallel_task(
         return validated_output
 
 
-def run_parallel_task(
+def run_v2_task_parallel(
     *,
     images: list[SingleImage],
     task: TaskV2,
@@ -95,7 +95,7 @@ def run_parallel_task(
                 **wftask.args_parallel,
             ),
         )
-        list_function_kwargs[-1][KEY] = MAKE_COMPONENT(ind)
+        list_function_kwargs[-1][_COMPONENT_KEY_] = _index_to_component(ind)
 
     results_iterator = executor.map(
         functools.partial(
@@ -126,7 +126,7 @@ def run_parallel_task(
     return merged_output
 
 
-def run_compound_task(
+def run_v2_task_compound(
     *,
     images: list[SingleImage],
     zarr_dir: str,
@@ -176,7 +176,7 @@ def run_compound_task(
                 **wftask.args_parallel,
             ),
         )
-        list_function_kwargs[-1][KEY] = MAKE_COMPONENT(ind)
+        list_function_kwargs[-1][_COMPONENT_KEY_] = _index_to_component(ind)
 
     results_iterator = executor.map(
         functools.partial(
@@ -204,10 +204,10 @@ def run_compound_task(
     return merged_output
 
 
-def run_parallel_task_v1(
+def run_v1_task_parallel(
     *,
     images: list[SingleImage],
-    task: TaskV1,
+    task_legacy: TaskV1,
     wftask: WorkflowTaskV2,
     executor: Executor,
     workflow_dir: Path,
@@ -222,21 +222,23 @@ def run_parallel_task_v1(
             f"   {MAX_PARALLELIZATION_LIST_SIZE=}\n"
         )
 
-    list_function_kwargs = [
-        _convert_v2_args_into_v1(
-            dict(
-                path=image.path,
-                **wftask.args_parallel,
-            )
+    list_function_kwargs = []
+    for ind, image in enumerate(images):
+        list_function_kwargs.append(
+            _convert_v2_args_into_v1(
+                dict(
+                    path=image.path,
+                    **wftask.args_parallel,
+                )
+            ),
         )
-        for image in images
-    ]
+        list_function_kwargs[-1][_COMPONENT_KEY_] = _index_to_component(ind)
 
     results_iterator = executor.map(
         functools.partial(
             _run_single_task,
             wftask=wftask,
-            command=task.command,
+            command=task_legacy.command,
             workflow_dir=workflow_dir,
             workflow_dir_user=workflow_dir_user,
             is_task_v1=True,

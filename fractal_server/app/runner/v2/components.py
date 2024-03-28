@@ -1,5 +1,5 @@
-def MAKE_COMPONENT(ind: int) -> str:
+def _index_to_component(ind: int) -> str:
     return f"{ind:07d}"
 
 
-KEY = "__FRACTAL_PARALLEL_COMPONENT_NAME__"
+_COMPONENT_KEY_ = "__FRACTAL_PARALLEL_COMPONENT__"

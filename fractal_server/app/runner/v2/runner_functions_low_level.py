@@ -18,7 +18,7 @@ from typing import Optional
 
 from ..exceptions import JobExecutionError
 from ..exceptions import TaskExecutionError
-from .components import KEY
+from .components import _COMPONENT_KEY_
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.task_files import get_task_file_paths
 
@@ -86,7 +86,7 @@ def _run_single_task(
     if not workflow_dir_user:
         workflow_dir_user = workflow_dir
 
-    component = args.pop(KEY, None)
+    component = args.pop(_COMPONENT_KEY_, None)
     if component is None:
         task_files = get_task_file_paths(
             workflow_dir=workflow_dir,

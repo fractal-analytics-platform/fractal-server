@@ -9,10 +9,10 @@ from ....images import SingleImage
 from ....images.tools import _filter_image_list
 from ....images.tools import find_image_by_path
 from ....images.tools import match_filter
-from .runner_functions import run_compound_task
-from .runner_functions import run_non_parallel_task
-from .runner_functions import run_parallel_task
-from .runner_functions import run_parallel_task_v1
+from .runner_functions import run_v1_task_parallel
+from .runner_functions import run_v2_task_compound
+from .runner_functions import run_v2_task_non_parallel
+from .runner_functions import run_v2_task_parallel
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 
@@ -26,6 +26,7 @@ def execute_tasks_v2(
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
 ) -> DatasetV2:
+
     tmp_dataset = deepcopy(dataset)
 
     for wftask in wf_task_list:
@@ -34,41 +35,29 @@ def execute_tasks_v2(
         # PRE TASK EXECUTION
 
         # Get filtered images
-        type_filters = copy(dataset.filters["types"])
-        type_filters.update(wftask.input_filters["types"])
-        attribute_filters = copy(dataset.filters["attributes"])
-        attribute_filters.update(wftask.input_filters["attributes"])
+        pre_type_filters = copy(dataset.filters["types"])
+        pre_type_filters.update(wftask.input_filters["types"])
+        pre_attribute_filters = copy(dataset.filters["attributes"])
+        pre_attribute_filters.update(wftask.input_filters["attributes"])
         filtered_images = _filter_image_list(
             images=tmp_dataset.images,
-            filters=Filters(types=type_filters, attributes=attribute_filters),
+            filters=Filters(
+                types=pre_type_filters,
+                attributes=pre_attribute_filters,
+            ),
         )
-        if wftask.is_legacy_task:
-
-            from .task_interface import TaskOutput
-
-            current_task_output = TaskOutput(
-                run_parallel_task_v1(
-                    images=filtered_images,
-                    task=wftask.task,
-                    wftask=wftask,
-                    executor=executor,
+        # Verify that filtered images comply with output types
+        for image in filtered_images:
+            if not match_filter(image, Filters(types=task.input_types)):
+                raise ValueError(
+                    f"Filtered images include {image.dict()}, which does "
+                    f"not comply with {task.input_types=}."
                 )
-            )
 
-        else:
-            # Verify that filtered images comply with output types
-            for image in filtered_images:
-                if not match_filter(image, Filters(types=task.input_types)):
-                    raise ValueError(
-                        f"Filtered images include {image.dict()}, which does "
-                        f"not comply with {task.input_types=}."
-                    )
-
-            # ACTUAL TASK EXECUTION
-
-            # Non-parallel task
+        # TASK EXECUTION (V2 or V1)
+        if not wftask.is_legacy_task:
             if task.type == "non_parallel":
-                current_task_output = run_non_parallel_task(
+                current_task_output = run_v2_task_non_parallel(
                     images=filtered_images,
                     zarr_dir=tmp_dataset.zarr_dir,
                     wftask=wftask,
@@ -77,9 +66,8 @@ def execute_tasks_v2(
                     workflow_dir_user=workflow_dir_user,
                     executor=executor,
                 )
-            # Parallel task
             elif task.type == "parallel":
-                current_task_output = run_parallel_task(
+                current_task_output = run_v2_task_parallel(
                     images=filtered_images,
                     wftask=wftask,
                     task=wftask.task,
@@ -87,9 +75,8 @@ def execute_tasks_v2(
                     workflow_dir_user=workflow_dir_user,
                     executor=executor,
                 )
-            # Compound task
             elif task.type == "compound":
-                current_task_output = run_compound_task(
+                current_task_output = run_v2_task_compound(
                     images=filtered_images,
                     zarr_dir=tmp_dataset.zarr_dir,
                     wftask=wftask,
@@ -100,6 +87,16 @@ def execute_tasks_v2(
                 )
             else:
                 raise ValueError(f"Invalid {task.type=}.")
+
+        else:
+            # from .task_interface import TaskOutput
+
+            current_task_output = run_v1_task_parallel(
+                images=filtered_images,
+                wftask=wftask,
+                task_legacy=wftask.task_legacy,
+                executor=executor,
+            )
 
         # POST TASK EXECUTION
 
