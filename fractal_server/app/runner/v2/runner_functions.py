@@ -214,6 +214,7 @@ def run_parallel_task_v1(
     workflow_dir_user: Optional[Path] = None,
     logger_name: Optional[str] = None,
 ) -> TaskOutput:
+
     if len(images) > MAX_PARALLELIZATION_LIST_SIZE:
         raise ValueError(
             "Too many parallelization items.\n"
@@ -246,4 +247,5 @@ def run_parallel_task_v1(
     list(results_iterator)
 
     # Ignore any output metadata for V1 tasks, and return an empty object
-    return TaskOutput()
+    out = TaskOutput()
+    return out

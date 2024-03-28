@@ -34,21 +34,25 @@ def execute_tasks_v2(
         # PRE TASK EXECUTION
 
         # Get filtered images
-        type_filters = copy(dataset.filters.types)
-        type_filters.update(wftask.filters.types)
-        attribute_filters = copy(dataset.filters.attributes)
-        attribute_filters.update(wftask.filters.attributes)
+        type_filters = copy(dataset.filters["types"])
+        type_filters.update(wftask.input_filters["types"])
+        attribute_filters = copy(dataset.filters["attributes"])
+        attribute_filters.update(wftask.input_filters["attributes"])
         filtered_images = _filter_image_list(
             images=tmp_dataset.images,
             filters=Filters(types=type_filters, attributes=attribute_filters),
         )
         if wftask.is_legacy_task:
 
-            current_task_output = run_parallel_task_v1(
-                images=filtered_images,
-                task=wftask.task,
-                wftask=wftask,
-                executor=executor,
+            from .task_interface import TaskOutput
+
+            current_task_output = TaskOutput(
+                run_parallel_task_v1(
+                    images=filtered_images,
+                    task=wftask.task,
+                    wftask=wftask,
+                    executor=executor,
+                )
             )
 
         else:
@@ -63,7 +67,7 @@ def execute_tasks_v2(
             # ACTUAL TASK EXECUTION
 
             # Non-parallel task
-            if task.type == "non_parallel_standalone":
+            if task.type == "non_parallel":
                 current_task_output = run_non_parallel_task(
                     images=filtered_images,
                     zarr_dir=tmp_dataset.zarr_dir,
@@ -74,7 +78,7 @@ def execute_tasks_v2(
                     executor=executor,
                 )
             # Parallel task
-            elif task.type == "parallel_standalone":
+            elif task.type == "parallel":
                 current_task_output = run_parallel_task(
                     images=filtered_images,
                     wftask=wftask,
@@ -95,12 +99,10 @@ def execute_tasks_v2(
                     executor=executor,
                 )
             else:
-                raise ValueError(f"Invalid {task.task_type=}.")
+                raise ValueError(f"Invalid {task.type=}.")
 
         # POST TASK EXECUTION
-        from devtools import debug
 
-        debug("POST TASK EXECUTION", current_task_output)
         # Update image list
         current_task_output.check_paths_are_unique()
         for image in current_task_output.image_list_updates:
@@ -166,21 +168,23 @@ def execute_tasks_v2(
                 tmp_dataset.images.append(new_image)
 
         # Remove images from Dataset.images
-        tmp_dataset.images = [
-            image
-            for image in tmp_dataset.images
-            if image.path not in current_task_output.image_list_removals
-        ]
+        for image in current_task_output.image_list_removals:
+            image_search = find_image_by_path(
+                images=tmp_dataset.images, path=image["path"]
+            )
+            if image_search["index"] is None:
+                raise
+            else:
+                tmp_dataset.images.pop(image_search["index"])
 
         # Update Dataset.filters.attributes:
         # current + (task_output: not really, in current examples..)
         if current_task_output.filters is not None:
-            tmp_dataset.filters.attributes.update(
+            tmp_dataset.filters["attributes"].update(
                 current_task_output.filters.attributes
             )
 
         # Update Dataset.filters.types: current + (task_output + task_manifest)
-        debug(task)
         if wftask.is_legacy_task:
             types_from_manifest = {}
         else:
@@ -199,9 +203,8 @@ def execute_tasks_v2(
                 f"output type. Overlapping keys: {overlap}."
             )
         # Update Dataset.filters.types
-        debug(types_from_manifest)
-        tmp_dataset.filters.types.update(types_from_manifest)
-        tmp_dataset.filters.types.update(types_from_task)
+        tmp_dataset.filters["types"].update(types_from_manifest)
+        tmp_dataset.filters["types"].update(types_from_task)
 
         # Update Dataset.history
         tmp_dataset.history.append(task.name)
