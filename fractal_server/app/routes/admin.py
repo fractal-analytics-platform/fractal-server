@@ -24,6 +24,7 @@ from ..models import ApplyWorkflow
 from ..models import Dataset
 from ..models import JobStatusTypeV1
 from ..models import Project
+from ..models import Task
 from ..models import Workflow
 from ..models.security import UserOAuth as User
 from ..runner.filenames import WORKFLOW_LOG_FILENAME
@@ -397,3 +398,29 @@ async def download_job_logs(
         media_type="application/x-zip-compressed",
         headers={"Content-Disposition": f"attachment;filename={zip_filename}"},
     )
+
+
+@router_admin.patch(
+    "/task/{task_id}/",
+    status_code=status.HTTP_200_OK,
+)
+async def flag_task_v2_compatible(
+    task_id: int,
+    is_v2_compatible: bool = True,
+    user: User = Depends(current_active_superuser),
+    db: AsyncSession = Depends(get_async_db),
+) -> Response:
+
+    task = await db.get(Task, task_id)
+    if task is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Task {task_id} not found",
+        )
+
+    task.is_v2_compatible = is_v2_compatible
+    db.add(task)
+    await db.commit()
+    await db.close()
+
+    return Response(status_code=status.HTTP_200_OK)
