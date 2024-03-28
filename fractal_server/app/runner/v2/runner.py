@@ -2,7 +2,10 @@ from concurrent.futures import ThreadPoolExecutor
 from copy import copy
 from copy import deepcopy
 from pathlib import Path
+from typing import Callable
 from typing import Optional
+
+from runner_functions import no_op_submit_setup_call
 
 from ....images import Filters
 from ....images import SingleImage
@@ -25,6 +28,8 @@ def execute_tasks_v2(
     executor: ThreadPoolExecutor,
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
+    logger_name: Optional[str] = None,
+    submit_setup_call: Callable = no_op_submit_setup_call,
 ) -> DatasetV2:
 
     if not workflow_dir.exists():
@@ -68,6 +73,8 @@ def execute_tasks_v2(
                     workflow_dir=workflow_dir,
                     workflow_dir_user=workflow_dir_user,
                     executor=executor,
+                    logger_name=logger_name,
+                    submit_setup_call=submit_setup_call,
                 )
             elif task.type == "parallel":
                 current_task_output = run_v2_task_parallel(
@@ -77,6 +84,8 @@ def execute_tasks_v2(
                     workflow_dir=workflow_dir,
                     workflow_dir_user=workflow_dir_user,
                     executor=executor,
+                    logger_name=logger_name,
+                    submit_setup_call=submit_setup_call,
                 )
             elif task.type == "compound":
                 current_task_output = run_v2_task_compound(
@@ -87,18 +96,21 @@ def execute_tasks_v2(
                     workflow_dir=workflow_dir,
                     workflow_dir_user=workflow_dir_user,
                     executor=executor,
+                    logger_name=logger_name,
+                    submit_setup_call=submit_setup_call,
                 )
             else:
                 raise ValueError(f"Invalid {task.type=}.")
 
         else:
-            # from .task_interface import TaskOutput
 
             current_task_output = run_v1_task_parallel(
                 images=filtered_images,
                 wftask=wftask,
                 task_legacy=wftask.task_legacy,
                 executor=executor,
+                logger_name=logger_name,
+                submit_setup_call=submit_setup_call,
             )
 
         # POST TASK EXECUTION
