@@ -16,14 +16,14 @@ implementation of `submit_setup_call` in
 """
 from pathlib import Path
 
-from ....models import WorkflowTask
-from ...executors.slurm._slurm_config import get_slurm_config
 from ...task_files import get_task_file_paths
+from .get_slurm_config import get_slurm_config
+from fractal_server.app.models.v2 import WorkflowTaskV2
 
 
 def _slurm_submit_setup(
     *,
-    wftask: WorkflowTask,
+    wftask: WorkflowTaskV2,
     workflow_dir: Path,
     workflow_dir_user: Path,
 ) -> dict[str, object]:
