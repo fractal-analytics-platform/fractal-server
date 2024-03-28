@@ -14,6 +14,7 @@ Submodule to handle the local-backend configuration for a WorkflowTask
 import json
 from pathlib import Path
 from typing import Optional
+from typing import Union
 
 from pydantic import BaseModel
 from pydantic import Extra
@@ -21,7 +22,8 @@ from pydantic.error_wrappers import ValidationError
 
 from .....config import get_settings
 from .....syringe import Inject
-from ....models import WorkflowTask
+from ....models.v1 import WorkflowTask
+from ....models.v2 import WorkflowTaskV2
 
 
 class LocalBackendConfigError(ValueError):
@@ -54,7 +56,7 @@ def get_default_local_backend_config():
 
 
 def get_local_backend_config(
-    wftask: WorkflowTask,
+    wftask: Union[WorkflowTask, WorkflowTaskV2],
     config_path: Optional[Path] = None,
 ) -> LocalBackendConfig:
     """
@@ -63,15 +65,14 @@ def get_local_backend_config(
     The sources for `parallel_tasks_per_job` attributes, starting from the
     highest-priority one, are
 
-    1. Properties in `wftask.meta` (which, for `WorkflowTask`s added through
-       `Workflow.insert_task`, also includes `wftask.task.meta`);
+    1. Properties in `wftask.meta`;
     2. The general content of the local-backend configuration file;
     3. The default value (`None`).
 
     Arguments:
         wftask:
-            WorkflowTask for which the backend configuration is is to be
-            prepared.
+            WorkflowTask (V1 or V2) for which the backend configuration should
+            be prepared.
         config_path:
             Path of local-backend configuration file; if `None`, use
             `FRACTAL_LOCAL_CONFIG_FILE` variable from settings.
