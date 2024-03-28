@@ -5,15 +5,10 @@ This module includes utilities and routines that are of use to implement
 runner backends but that should also be exposed to the other components of
 `Fractal Server`.
 """
-import asyncio
 import json
-from functools import partial
-from functools import wraps
 from json import JSONEncoder
 from pathlib import Path
 from typing import Any
-from typing import Callable
-from typing import Optional
 
 from pydantic import BaseModel
 
@@ -99,29 +94,6 @@ def validate_workflow_compatibility(
         )
 
 
-def async_wrap(func: Callable) -> Callable:
-    """
-    Wrap a synchronous callable in an async task
-
-    Ref: [issue #140](https://github.com/fractal-analytics-platform/fractal-server/issues/140)
-    and [this StackOverflow answer](https://stackoverflow.com/q/43241221/19085332).
-
-    Returns:
-        async_wrapper:
-            A factory that allows wrapping a blocking callable within a
-            coroutine.
-    """  # noqa: E501
-
-    @wraps(func)
-    async def async_wrapper(*args, loop=None, executor=None, **kwargs):
-        if loop is None:
-            loop = asyncio.get_event_loop()
-        pfunc = partial(func, *args, **kwargs)
-        return await loop.run_in_executor(executor, pfunc)
-
-    return async_wrapper
-
-
 def write_args_file(
     *args: dict[str, Any],
     path: Path,
@@ -143,41 +115,3 @@ def write_args_file(
 
     with open(path, "w") as f:
         json.dump(out, f, cls=TaskParameterEncoder, indent=4)
-
-
-def set_start_and_last_task_index(
-    num_tasks: int,
-    first_task_index: Optional[int] = None,
-    last_task_index: Optional[int] = None,
-) -> tuple[int, int]:
-    """
-    Handle `first_task_index` and `last_task_index`, by setting defaults and
-    validating values.
-
-    num_tasks:
-        Total number of tasks in a workflow task list
-    first_task_index:
-        Positional index of the first task to execute
-    last_task_index:
-        Positional index of the last task to execute
-    """
-    # Set default values
-    if first_task_index is None:
-        first_task_index = 0
-    if last_task_index is None:
-        last_task_index = num_tasks - 1
-
-    # Perform checks
-    if first_task_index < 0:
-        raise ValueError(f"{first_task_index=} cannot be negative")
-    if last_task_index < 0:
-        raise ValueError(f"{last_task_index=} cannot be negative")
-    if last_task_index > num_tasks - 1:
-        raise ValueError(
-            f"{last_task_index=} cannot be larger than {(num_tasks-1)=}"
-        )
-    if first_task_index > last_task_index:
-        raise ValueError(
-            f"{first_task_index=} cannot be larger than {last_task_index=}"
-        )
-    return (first_task_index, last_task_index)

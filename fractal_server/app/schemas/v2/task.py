@@ -64,14 +64,14 @@ class TaskReadV2(BaseModel):
     id: int
     name: str
     type: Literal["parallel", "non_parallel", "compound"]
+    source: str
+    owner: Optional[str]
+    version: Optional[str]
 
     command_non_parallel: Optional[str]
     command_parallel: Optional[str]
-    source: str
     meta_parallel: dict[str, Any]
     meta_non_parallel: dict[str, Any]
-    owner: Optional[str]
-    version: Optional[str]
     args_schema_non_parallel: Optional[dict[str, Any]] = None
     args_schema_parallel: Optional[dict[str, Any]] = None
     args_schema_version: Optional[str]

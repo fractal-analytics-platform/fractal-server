@@ -26,7 +26,7 @@ class InitArgsCellVoyager(BaseModel):
     """
 
     raw_path: str
-    acquisition: Optional[int]
+    acquisition: Optional[int] = None
 
 
 class InitArgsIllumination(BaseModel):
