@@ -19,8 +19,8 @@ from typing import Optional
 from ..exceptions import JobExecutionError
 from ..exceptions import TaskExecutionError
 from .components import KEY
+from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.task_files import get_task_file_paths
-from fractal_server.app.runner.v2.models import WorkflowTask
 
 
 def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
@@ -70,7 +70,7 @@ def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
 def _run_single_task(
     args: dict[str, Any],
     command: str,
-    wftask: WorkflowTask,
+    wftask: WorkflowTaskV2,
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
     logger_name: Optional[str] = None,

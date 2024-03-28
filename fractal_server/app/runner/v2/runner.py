@@ -9,36 +9,23 @@ from ....images import SingleImage
 from ....images.tools import _filter_image_list
 from ....images.tools import find_image_by_path
 from ....images.tools import match_filter
-from .models import Dataset
-from .models import DictStrAny
-from .models import WorkflowTask
 from .runner_functions import run_compound_task
 from .runner_functions import run_non_parallel_task
 from .runner_functions import run_parallel_task
 from .runner_functions import run_parallel_task_v1
+from fractal_server.app.models.v2 import DatasetV2
+from fractal_server.app.models.v2 import WorkflowTaskV2
 
 # FIXME: define RESERVED_ARGUMENTS = [", ...]
 
 
-def _apply_attributes_to_image(
-    *,
-    image: SingleImage,
-    new_attributes: DictStrAny,
-    new_types: DictStrAny,
-) -> SingleImage:
-    updated_image = copy(image)
-    updated_image.attributes.update(new_attributes)
-    updated_image.types.update(new_types)
-    return updated_image
-
-
 def execute_tasks_v2(
-    wf_task_list: list[WorkflowTask],
-    dataset: Dataset,
+    wf_task_list: list[WorkflowTaskV2],
+    dataset: DatasetV2,
     executor: ThreadPoolExecutor,
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
-) -> Dataset:
+) -> DatasetV2:
     tmp_dataset = deepcopy(dataset)
 
     for wftask in wf_task_list:

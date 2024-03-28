@@ -1,8 +1,9 @@
+from typing import Any
+
 from pydantic import BaseModel
 from pydantic import Field
 
 from ....images import SingleImage
-from fractal_server.app.runner.v2.models import DictStrAny
 from fractal_server.images import Filters
 
 
@@ -32,7 +33,7 @@ class InitArgsModel(BaseModel):
         extra = "forbid"
 
     path: str
-    init_args: DictStrAny = Field(default_factory=dict)
+    init_args: dict[str, Any] = Field(default_factory=dict)
 
 
 class InitTaskOutput(BaseModel):
