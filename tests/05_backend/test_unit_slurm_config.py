@@ -15,7 +15,7 @@ from fractal_server.app.runner.executors.slurm._slurm_config import (
 from fractal_server.app.runner.v1._slurm import (
     get_slurm_config,
 )
-from fractal_server.app.runner.v2._slurm._submit_setup import (
+from fractal_server.app.runner.v1._slurm._submit_setup import (
     _slurm_submit_setup,
 )
 from tests.fixtures_tasks import MockTask
