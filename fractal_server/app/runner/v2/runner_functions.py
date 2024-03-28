@@ -1,6 +1,8 @@
 import functools
+import traceback
 from concurrent.futures import Executor
 from pathlib import Path
+from typing import Callable
 from typing import Optional
 
 from ....images import SingleImage
@@ -17,7 +19,6 @@ from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.v2.components import _COMPONENT_KEY_
 from fractal_server.app.runner.v2.components import _index_to_component
 
-
 __all__ = [
     "run_v2_task_non_parallel",
     "run_v2_task_parallel",
@@ -26,6 +27,50 @@ __all__ = [
 ]
 
 MAX_PARALLELIZATION_LIST_SIZE = 20_000
+
+
+def no_op_submit_setup_call(
+    *,
+    wftask: WorkflowTaskV2,
+    workflow_dir: Path,
+    workflow_dir_user: Path,
+) -> dict:
+    """
+    Default (no-operation) interface of submit_setup_call.
+    """
+    return {}
+
+
+# Backend-specific configuration
+def _get_executor_options(
+    *,
+    wftask: WorkflowTaskV2,
+    workflow_dir: Path,
+    workflow_dir_user: Path,
+    submit_setup_call: Callable,
+) -> dict:
+    try:
+        options = submit_setup_call(
+            wftask=wftask,
+            workflow_dir=workflow_dir,
+            workflow_dir_user=workflow_dir_user,
+        )
+    except Exception as e:
+        tb = "".join(traceback.format_tb(e.__traceback__))
+        raise RuntimeError(
+            f"{type(e)} error in {submit_setup_call=}\n"
+            f"Original traceback:\n{tb}"
+        )
+    return options
+
+
+def _check_parallelization_list_size(my_list):
+    if len(my_list) > MAX_PARALLELIZATION_LIST_SIZE:
+        raise ValueError(
+            "Too many parallelization items.\n"
+            f"   {len(my_list)}\n"
+            f"   {MAX_PARALLELIZATION_LIST_SIZE=}\n"
+        )
 
 
 def run_v2_task_non_parallel(
@@ -38,6 +83,7 @@ def run_v2_task_non_parallel(
     workflow_dir_user: Optional[Path] = None,
     logger_name: Optional[str] = None,
     executor: Executor,
+    submit_setup_call: Callable = no_op_submit_setup_call,
 ) -> TaskOutput:
     """
     This runs server-side (see `executor` argument)
@@ -45,6 +91,13 @@ def run_v2_task_non_parallel(
 
     if not workflow_dir_user:
         workflow_dir_user = workflow_dir
+
+    executor_options = _get_executor_options(
+        wftask=wftask,
+        workflow_dir=workflow_dir,
+        workflow_dir_user=workflow_dir_user,
+        submit_setup_call=submit_setup_call,
+    )
 
     function_kwargs = dict(
         paths=[image.path for image in images],
@@ -60,6 +113,7 @@ def run_v2_task_non_parallel(
             workflow_dir_user=workflow_dir_user,
         ),
         function_kwargs,
+        **executor_options,
     )
     output = future.result()
     # FIXME V2: handle validation errors
@@ -68,15 +122,6 @@ def run_v2_task_non_parallel(
     else:
         validated_output = TaskOutput(**output)
         return validated_output
-
-
-def _check_parallelization_list_size(my_list):
-    if len(my_list) > MAX_PARALLELIZATION_LIST_SIZE:
-        raise ValueError(
-            "Too many parallelization items.\n"
-            f"   {len(my_list)}\n"
-            f"   {MAX_PARALLELIZATION_LIST_SIZE=}\n"
-        )
 
 
 def run_v2_task_parallel(
@@ -88,9 +133,17 @@ def run_v2_task_parallel(
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
     logger_name: Optional[str] = None,
+    submit_setup_call: Callable = no_op_submit_setup_call,
 ) -> TaskOutput:
 
     _check_parallelization_list_size(images)
+
+    executor_options = _get_executor_options(
+        wftask=wftask,
+        workflow_dir=workflow_dir,
+        workflow_dir_user=workflow_dir_user,
+        submit_setup_call=submit_setup_call,
+    )
 
     list_function_kwargs = []
     for ind, image in enumerate(images):
@@ -111,6 +164,7 @@ def run_v2_task_parallel(
             workflow_dir_user=workflow_dir_user,
         ),
         list_function_kwargs,
+        **executor_options,
     )
     # Explicitly iterate over the whole list, so that all futures are waited
     outputs = list(results_iterator)
@@ -138,7 +192,22 @@ def run_v2_task_compound(
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
     logger_name: Optional[str] = None,
+    submit_setup_call: Callable = no_op_submit_setup_call,
 ) -> TaskOutput:
+
+    executor_options_init = _get_executor_options(
+        wftask=wftask,
+        workflow_dir=workflow_dir,
+        workflow_dir_user=workflow_dir_user,
+        submit_setup_call=submit_setup_call,
+    )
+    executor_options_compute = _get_executor_options(
+        wftask=wftask,
+        workflow_dir=workflow_dir,
+        workflow_dir_user=workflow_dir_user,
+        submit_setup_call=submit_setup_call,
+    )
+
     # 3/A: non-parallel init task
     function_kwargs = dict(
         paths=[image.path for image in images],
@@ -154,6 +223,7 @@ def run_v2_task_compound(
             workflow_dir_user=workflow_dir_user,
         ),
         function_kwargs,
+        **executor_options_init,
     )
     output = future.result()
     from devtools import debug
@@ -191,6 +261,7 @@ def run_v2_task_compound(
             workflow_dir_user=workflow_dir_user,
         ),
         list_function_kwargs,
+        **executor_options_compute,
     )
     # Explicitly iterate over the whole list, so that all futures are waited
     outputs = list(results_iterator)
