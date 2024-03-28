@@ -79,12 +79,6 @@ async def patch_task(
     Edit a specific task (restricted to superusers and task owner)
     """
 
-    if task_update.source:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="patch_task endpoint cannot set `source`",
-        )
-
     # Retrieve task from database
     db_task = await _get_task_check_owner(task_id=task_id, user=user, db=db)
     update = task_update.dict(exclude_unset=True)

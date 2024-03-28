@@ -187,6 +187,7 @@ async def task_factory_v2(db: AsyncSession):
             command_non_parallel="cmd",
             type="non_parallel",
             source=f"source{index}",
+            version=f"{index}",
         )
         args = dict(**defaults)
         args.update(kwargs)
