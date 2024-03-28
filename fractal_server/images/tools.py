@@ -30,7 +30,35 @@ def find_image_by_path(
     return dict(image=copy(images[ind]), index=ind)
 
 
-def match_filter(image: SingleImage, filters: Filters):
+def match_filter(image: dict[str, Any], filters: Filters):
+    for key, value in filters.types.items():
+        if image["types"].get(key, False) != value:
+            return False
+    for key, value in filters.attributes.items():
+        if value is None:
+            continue
+        if image["attributes"].get(key) != value:
+            return False
+    return True
+
+
+def _filter_image_list(
+    images: list[dict[str, Any]],
+    filters: Filters,
+) -> list[dict[str, Any]]:
+
+    # When no filter is provided, return all images
+    if filters.attributes == {} and filters.types == {}:
+        return images
+
+    filtered_images = []
+    for this_image in images:
+        if match_filter(this_image, filters=filters):
+            filtered_images.append(copy(this_image))
+    return filtered_images
+
+
+def match_filter_SingleImage(image: SingleImage, filters: Filters):
     for key, value in filters.types.items():
         if image.types.get(key, False) != value:
             return False
@@ -42,7 +70,7 @@ def match_filter(image: SingleImage, filters: Filters):
     return True
 
 
-def _filter_image_list(
+def _filter_image_list_SingleImage(
     images: list[SingleImage],
     filters: Filters,
 ) -> list[SingleImage]:

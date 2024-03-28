@@ -24,7 +24,7 @@ def executor():
 
 def _assert_image_data_exist(image_list: list[dict]):
     for image in image_list:
-        assert (Path(image.path) / "data").exists()
+        assert (Path(image["path"]) / "data").exists()
 
 
 def image_data_exist_on_disk(image_list: list[SingleImage]):
@@ -34,10 +34,10 @@ def image_data_exist_on_disk(image_list: list[SingleImage]):
     prefix = "[image_data_exist_on_disk]"
     all_images_have_data = True
     for image in image_list:
-        if (Path(image.path) / "data").exists():
-            print(f"{prefix} {image.path} contains data")
+        if (Path(image["path"]) / "data").exists():
+            print(f"{prefix} {image['path']} contains data")
         else:
-            print(f"{prefix} {image.path} does *not* contain data")
+            print(f"{prefix} {image['path']} does *not* contain data")
             all_images_have_data = False
     return all_images_have_data
 
@@ -204,7 +204,7 @@ def test_fractal_demos_01(
     img = find_image_by_path(
         path=f"{zarr_dir}/my_plate.zarr/A/01/0", images=dataset.images
     )["image"]
-    assert img.dict() == {
+    assert img == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
         "attributes": {
             "well": "A01",
@@ -248,7 +248,7 @@ def test_fractal_demos_01(
     img = find_image_by_path(
         path=f"{zarr_dir}/my_plate_mip.zarr/A/01/0", images=dataset.images
     )["image"]
-    assert img.dict() == {
+    assert img == {
         "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
         "origin": f"{zarr_dir}/my_plate.zarr/A/01/0",
         "attributes": {
@@ -349,7 +349,7 @@ def test_fractal_demos_01_no_overwrite(
     ]
     debug(dataset)
 
-    assert dataset.images[0].dict() == {
+    assert dataset.images[0] == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
         "origin": None,
         "attributes": {
@@ -360,7 +360,7 @@ def test_fractal_demos_01_no_overwrite(
             "3D": True,
         },
     }
-    assert dataset.images[1].dict() == {
+    assert dataset.images[1] == {
         "path": f"{zarr_dir}/my_plate.zarr/A/02/0",
         "origin": None,
         "attributes": {
@@ -371,7 +371,7 @@ def test_fractal_demos_01_no_overwrite(
             "3D": True,
         },
     }
-    assert dataset.images[2].dict() == {
+    assert dataset.images[2] == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
         "origin": f"{zarr_dir}/my_plate.zarr/A/01/0",
         "attributes": {
@@ -383,7 +383,7 @@ def test_fractal_demos_01_no_overwrite(
             "3D": True,
         },
     }
-    assert dataset.images[3].dict() == {
+    assert dataset.images[3] == {
         "path": f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
         "origin": f"{zarr_dir}/my_plate.zarr/A/02/0",
         "attributes": {
@@ -429,7 +429,7 @@ def test_fractal_demos_01_no_overwrite(
         f"{zarr_dir}/my_plate_mip.zarr/A/02/0_corr",
     ]
 
-    assert dataset.images[4].dict() == {
+    assert dataset.images[4] == {
         "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0_corr",
         "origin": f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
         "attributes": {
@@ -441,7 +441,7 @@ def test_fractal_demos_01_no_overwrite(
             "illumination_correction": True,
         },
     }
-    assert dataset.images[5].dict() == {
+    assert dataset.images[5] == {
         "path": f"{zarr_dir}/my_plate_mip.zarr/A/02/0_corr",
         "origin": f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
         "attributes": {
@@ -527,10 +527,10 @@ def test_registration_no_overwrite(
 
     # In all non-reference-cycle images, a certain table was updated
     for image in dataset.images:
-        if image.attributes["acquisition"] == 0:
-            assert not os.path.isfile(f"{image.path}/registration_table")
+        if image["attributes"]["acquisition"] == 0:
+            assert not os.path.isfile(f"{image['path']}/registration_table")
         else:
-            assert os.path.isfile(f"{image.path}/registration_table")
+            assert os.path.isfile(f"{image['path']}/registration_table")
 
     # Run find_registration_consensus
     dataset = execute_tasks_v2(
@@ -550,7 +550,7 @@ def test_registration_no_overwrite(
 
     # In all images, a certain (post-consensus) table was updated
     for image in dataset.images:
-        assert os.path.isfile(f"{image.path}/registration_table_final")
+        assert os.path.isfile(f"{image['path']}/registration_table_final")
 
     # The image list still has the original six images only
     assert len(dataset.images) == 6
@@ -621,10 +621,10 @@ def test_registration_overwrite(
 
     # In all non-reference-cycle images, a certain table was updated
     for image in dataset.images:
-        if image.attributes["acquisition"] == 0:
-            assert not os.path.isfile(f"{image.path}/registration_table")
+        if image["attributes"]["acquisition"] == 0:
+            assert not os.path.isfile(f"{image['path']}/registration_table")
         else:
-            assert os.path.isfile(f"{image.path}/registration_table")
+            assert os.path.isfile(f"{image['path']}/registration_table")
 
     # Run find_registration_consensus
     dataset = execute_tasks_v2(
@@ -644,7 +644,7 @@ def test_registration_overwrite(
 
     # In all images, a certain (post-consensus) table was updated
     for image in dataset.images:
-        assert os.path.isfile(f"{image.path}/registration_table_final")
+        assert os.path.isfile(f"{image['path']}/registration_table_final")
 
     # The image list still has the original six images only
     assert len(dataset.images) == 6
@@ -666,7 +666,7 @@ def test_registration_overwrite(
     # Images are still the same number, but they are marked as registered
     assert len(dataset.images) == 6
     for image in dataset.images:
-        assert image.types["registration"] is True
+        assert image["types"]["registration"] is True
 
     # Print current dataset information
     debug(dataset)
@@ -827,7 +827,7 @@ def test_fractal_demos_01_scaling(
     img = find_image_by_path(
         path=f"{zarr_dir}/my_plate.zarr/A/01/0", images=dataset.images
     )["image"]
-    assert img.dict() == {
+    assert img == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
         "attributes": {
             "well": "A01",
@@ -869,7 +869,7 @@ def test_fractal_demos_01_scaling(
     img = find_image_by_path(
         path=f"{zarr_dir}/my_plate_mip.zarr/A/01/0", images=dataset.images
     )["image"]
-    assert img.dict() == {
+    assert img == {
         "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
         "origin": f"{zarr_dir}/my_plate.zarr/A/01/0",
         "attributes": {
