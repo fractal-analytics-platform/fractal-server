@@ -1,5 +1,8 @@
+import pytest
 from devtools import debug
+from sqlmodel import select
 
+from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.app.schemas.v2 import TaskUpdateV2
 
@@ -322,3 +325,89 @@ async def test_patch_task(
         assert res_compound.status_code == 200
         assert res_non_parallel.status_code == 422
         assert res_parallel.status_code == 200
+
+
+@pytest.mark.parametrize("username", (None, "myself"))
+@pytest.mark.parametrize("slurm_user", (None, "myself_slurm"))
+@pytest.mark.parametrize("owner", (None, "another_owner"))
+async def test_patch_task_different_users(
+    MockCurrentUser,
+    client,
+    task_factory_v2,
+    username,
+    slurm_user,
+    owner,
+):
+    """
+    Test that the `username` or `slurm_user` attributes of a (super)user do not
+    affect their ability to patch a task. They do raise warnings, but the PATCH
+    endpoint returns correctly.
+    """
+
+    task = await task_factory_v2(name="task", owner=owner)
+    assert task.owner == owner
+
+    # User kwargs
+    user_payload = {}
+    if username:
+        user_payload["username"] = username
+    if slurm_user:
+        user_payload["slurm_user"] = slurm_user
+
+    # Patch task
+    NEW_NAME = "new name"
+    payload = TaskUpdateV2(name=NEW_NAME).dict(exclude_unset=True)
+    async with MockCurrentUser(
+        user_kwargs=dict(is_superuser=True, is_verified=True, **user_payload)
+    ):
+        res = await client.patch(f"{PREFIX}/{task.id}/", json=payload)
+        debug(res.json())
+        assert res.status_code == 200
+        assert res.json()["owner"] == owner
+        assert res.json()["name"] == NEW_NAME
+        if username:
+            assert res.json()["owner"] != username
+        if slurm_user:
+            assert res.json()["owner"] != slurm_user
+
+
+async def test_get_task(task_factory_v2, client, MockCurrentUser):
+    async with MockCurrentUser():
+        task = await task_factory_v2(name="name")
+        res = await client.get(f"{PREFIX}/{task.id}/")
+        assert res.status_code == 200
+        res = await client.get(f"{PREFIX}/{task.id+999}/")
+        assert res.status_code == 404
+        assert res.json()["detail"] == "TaskV2 not found"
+
+
+async def test_delete_task(
+    db,
+    client,
+    MockCurrentUser,
+    workflow_factory_v2,
+    project_factory_v2,
+    task_factory_v2,
+    workflowtask_factory_v2,
+):
+    async with MockCurrentUser(user_kwargs={"username": "bob"}) as user:
+        project = await project_factory_v2(user)
+        workflow = await workflow_factory_v2(project_id=project.id)
+        taskA = await task_factory_v2(source="A", owner=user.username)
+        taskB = await task_factory_v2(source="B", owner=user.username)
+        await workflowtask_factory_v2(
+            workflow_id=workflow.id, task_id=taskA.id
+        )
+
+        # test 422
+        res = await client.delete(f"{PREFIX}/{taskA.id}/")
+        assert res.status_code == 422
+        assert "Cannot remove Task" in res.json()["detail"][0]
+
+        # test success
+        task_list = (await db.execute(select(TaskV2))).scalars().all()
+        assert len(task_list) == 2
+        res = await client.delete(f"{PREFIX}/{taskB.id}/")
+        assert res.status_code == 204
+        task_list = (await db.execute(select(TaskV2))).scalars().all()
+        assert len(task_list) == 1

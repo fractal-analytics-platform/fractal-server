@@ -198,3 +198,29 @@ async def task_factory_v2(db: AsyncSession):
         return t
 
     return __task_factory
+
+
+@pytest.fixture
+async def workflowtask_factory_v2(db: AsyncSession):
+    """
+    Insert workflowtaskv2 in db
+    """
+    from fractal_server.app.models.v2 import WorkflowTaskV2
+
+    async def __workflowtask_factory(
+        workflow_id: int, task_id: int, db: AsyncSession = db, **kwargs
+    ):
+        defaults = dict(
+            workflow_id=workflow_id,
+            task_id=task_id,
+            is_legacy_task=False,
+        )
+        args = dict(**defaults)
+        args.update(kwargs)
+        wft = WorkflowTaskV2(**args)
+        db.add(wft)
+        await db.commit()
+        await db.refresh(wft)
+        return wft
+
+    return __workflowtask_factory
