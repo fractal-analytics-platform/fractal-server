@@ -74,9 +74,23 @@ async def test_post_task(client, MockCurrentUser):
             f"{PREFIX}/", json=task.dict(exclude_unset=True)
         )
         assert res.status_code == 201
+        assert res.json()["name"] == task.name
         assert res.json()["type"] == "compound"
+        assert res.json()["command_non_parallel"] == task.command_non_parallel
+        assert res.json()["command_parallel"] == task.command_parallel
+        assert res.json()["source"] == f"{TASK_OWNER}:{task.source}"
+        assert res.json()["meta_non_parallel"] == {}
+        assert res.json()["meta_parallel"] == {}
         assert res.json()["owner"] == TASK_OWNER
-        assert res.json()["source"] == f"{TASK_OWNER}:{TASK_SOURCE}-compound"
+        assert res.json()["version"] is None
+        assert res.json()["args_schema_non_parallel"] is None
+        assert res.json()["args_schema_parallel"] is None
+        assert res.json()["args_schema_version"] is None
+        assert res.json()["docs_info"] is None
+        assert res.json()["docs_link"] is None
+        assert res.json()["input_types"] == {}
+        assert res.json()["output_types"] == {}
+
         task = TaskCreateV2(
             name="task_name",
             # Parallel
