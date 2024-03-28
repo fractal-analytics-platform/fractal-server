@@ -354,7 +354,7 @@ async def _get_task_check_owner(
     if not task:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Task {task_id} not found.",
+            detail=f"TaskV2 {task_id} not found.",
         )
 
     if not user.is_superuser:
@@ -362,7 +362,7 @@ async def _get_task_check_owner(
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=(
-                    "Only a superuser can modify a Task with `owner=None`."
+                    "Only a superuser can modify a TaskV2 with `owner=None`."
                 ),
             )
         else:
@@ -371,8 +371,8 @@ async def _get_task_check_owner(
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail=(
-                        f"Current user ({owner}) cannot modify Task {task.id} "
-                        f"with different owner ({task.owner})."
+                        f"Current user ({owner}) cannot modify TaskV2 "
+                        f"{task.id} with different owner ({task.owner})."
                     ),
                 )
     return task

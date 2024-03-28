@@ -40,7 +40,7 @@ class TaskCreateV2(BaseModel):
         command_non_parallel = values.get("command_non_parallel")
         if (command_parallel is None) and (command_non_parallel is None):
             raise ValueError(
-                "Task must have at least one valid command"
+                "Task must have at least one valid command "
                 "(parallel and/or non_parallel)"
             )
         return values
