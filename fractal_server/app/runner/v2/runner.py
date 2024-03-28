@@ -27,6 +27,9 @@ def execute_tasks_v2(
     workflow_dir_user: Optional[Path] = None,
 ) -> DatasetV2:
 
+    if not workflow_dir.exists():
+        workflow_dir.mkdir()
+
     tmp_dataset = deepcopy(dataset)
 
     for wftask in wf_task_list:
