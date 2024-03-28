@@ -1,12 +1,3 @@
-"""
-Homogeneous set of Python functions that wrap executable commands.
-Each function in this module should have
-1. An input argument `input_kwargs`
-2. An input argument `task`
-3. A `dict[str, Any]` return type, that will be validated downstram with
-    either TaskOutput or InitTaskOutput
-... TBD
-"""
 import json
 import logging
 import shutil
