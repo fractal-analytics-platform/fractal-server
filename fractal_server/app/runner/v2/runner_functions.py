@@ -7,7 +7,7 @@ from ....images import SingleImage
 from ._v1_task_compatibility import _convert_v2_args_into_v1
 from .deduplicate_list import deduplicate_list
 from .merge_outputs import merge_outputs
-from .runner_functions_low_level import _run_single_task
+from .runner_functions_low_level import run_single_task
 from .task_interface import InitArgsModel
 from .task_interface import InitTaskOutput
 from .task_interface import TaskOutput
@@ -25,7 +25,7 @@ __all__ = [
     "run_v1_task_parallel",
 ]
 
-MAX_PARALLELIZATION_LIST_SIZE = 200
+MAX_PARALLELIZATION_LIST_SIZE = 20_000
 
 
 def run_v2_task_non_parallel(
@@ -53,7 +53,7 @@ def run_v2_task_non_parallel(
     )
     future = executor.submit(
         functools.partial(
-            _run_single_task,
+            run_single_task,
             wftask=wftask,
             command=task.command_non_parallel,
             workflow_dir=workflow_dir,
@@ -70,6 +70,15 @@ def run_v2_task_non_parallel(
         return validated_output
 
 
+def _check_parallelization_list_size(my_list):
+    if len(my_list) > MAX_PARALLELIZATION_LIST_SIZE:
+        raise ValueError(
+            "Too many parallelization items.\n"
+            f"   {len(my_list)}\n"
+            f"   {MAX_PARALLELIZATION_LIST_SIZE=}\n"
+        )
+
+
 def run_v2_task_parallel(
     *,
     images: list[SingleImage],
@@ -80,12 +89,8 @@ def run_v2_task_parallel(
     workflow_dir_user: Optional[Path] = None,
     logger_name: Optional[str] = None,
 ) -> TaskOutput:
-    if len(images) > MAX_PARALLELIZATION_LIST_SIZE:
-        raise ValueError(
-            "Too many parallelization items.\n"
-            f"   {len(images)=}\n"
-            f"   {MAX_PARALLELIZATION_LIST_SIZE=}\n"
-        )
+
+    _check_parallelization_list_size(images)
 
     list_function_kwargs = []
     for ind, image in enumerate(images):
@@ -99,7 +104,7 @@ def run_v2_task_parallel(
 
     results_iterator = executor.map(
         functools.partial(
-            _run_single_task,
+            run_single_task,
             wftask=wftask,
             command=task.command_parallel,
             workflow_dir=workflow_dir,
@@ -110,9 +115,6 @@ def run_v2_task_parallel(
     # Explicitly iterate over the whole list, so that all futures are waited
     outputs = list(results_iterator)
 
-    from devtools import debug
-
-    debug("PARALLEL_TASK", outputs)
     # Validate all non-None outputs
     for ind, output in enumerate(outputs):
         if output is None:
@@ -145,7 +147,7 @@ def run_v2_task_compound(
     )
     future = executor.submit(
         functools.partial(
-            _run_single_task,
+            run_single_task,
             wftask=wftask,
             command=task.command_non_parallel,
             workflow_dir=workflow_dir,
@@ -167,6 +169,8 @@ def run_v2_task_compound(
     )
 
     # 3/B: parallel part of a compound task
+    _check_parallelization_list_size(parallelization_list)
+
     list_function_kwargs = []
     for ind, parallelization_item in enumerate(parallelization_list):
         list_function_kwargs.append(
@@ -180,7 +184,7 @@ def run_v2_task_compound(
 
     results_iterator = executor.map(
         functools.partial(
-            _run_single_task,
+            run_single_task,
             wftask=wftask,
             command=task.command_parallel,
             workflow_dir=workflow_dir,
@@ -215,12 +219,7 @@ def run_v1_task_parallel(
     logger_name: Optional[str] = None,
 ) -> TaskOutput:
 
-    if len(images) > MAX_PARALLELIZATION_LIST_SIZE:
-        raise ValueError(
-            "Too many parallelization items.\n"
-            f"   {len(images)=}\n"
-            f"   {MAX_PARALLELIZATION_LIST_SIZE=}\n"
-        )
+    _check_parallelization_list_size(images)
 
     list_function_kwargs = []
     for ind, image in enumerate(images):
@@ -236,7 +235,7 @@ def run_v1_task_parallel(
 
     results_iterator = executor.map(
         functools.partial(
-            _run_single_task,
+            run_single_task,
             wftask=wftask,
             command=task_legacy.command,
             workflow_dir=workflow_dir,
