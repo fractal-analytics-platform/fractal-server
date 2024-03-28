@@ -15,6 +15,7 @@ implementation of `submit_setup_call` in
 [fractal_server.app.runner._common][]).
 """
 from pathlib import Path
+from typing import Literal
 
 from ...task_files import get_task_file_paths
 from .get_slurm_config import get_slurm_config
@@ -26,6 +27,7 @@ def _slurm_submit_setup(
     wftask: WorkflowTaskV2,
     workflow_dir: Path,
     workflow_dir_user: Path,
+    which_type: Literal["non_parallel", "parallel"],
 ) -> dict[str, object]:
     """
     Collect WorfklowTask-specific configuration parameters from different
@@ -63,6 +65,7 @@ def _slurm_submit_setup(
         wftask=wftask,
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
+        which_type=which_type,
     )
 
     # Get TaskFiles object

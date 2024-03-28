@@ -3,21 +3,23 @@ import traceback
 from concurrent.futures import Executor
 from pathlib import Path
 from typing import Callable
+from typing import Literal
 from typing import Optional
 
 from ....images import SingleImage
-from ._v1_task_compatibility import _convert_v2_args_into_v1
 from .deduplicate_list import deduplicate_list
 from .merge_outputs import merge_outputs
 from .runner_functions_low_level import run_single_task
 from .task_interface import InitArgsModel
 from .task_interface import InitTaskOutput
 from .task_interface import TaskOutput
+from .v1_compat import convert_v2_args_into_v1
 from fractal_server.app.models.v1 import Task as TaskV1
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.v2.components import _COMPONENT_KEY_
 from fractal_server.app.runner.v2.components import _index_to_component
+
 
 __all__ = [
     "run_v2_task_non_parallel",
@@ -34,9 +36,10 @@ def no_op_submit_setup_call(
     wftask: WorkflowTaskV2,
     workflow_dir: Path,
     workflow_dir_user: Path,
+    which_type: Literal["non_parallel", "parallel"],
 ) -> dict:
     """
-    Default (no-operation) interface of submit_setup_call.
+    Default (no-operation) interface of submit_setup_call in V2.
     """
     return {}
 
@@ -48,12 +51,14 @@ def _get_executor_options(
     workflow_dir: Path,
     workflow_dir_user: Path,
     submit_setup_call: Callable,
+    which_type: Literal["non_parallel", "parallel"],
 ) -> dict:
     try:
         options = submit_setup_call(
             wftask=wftask,
             workflow_dir=workflow_dir,
             workflow_dir_user=workflow_dir_user,
+            which_type=which_type,
         )
     except Exception as e:
         tb = "".join(traceback.format_tb(e.__traceback__))
@@ -97,6 +102,7 @@ def run_v2_task_non_parallel(
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
         submit_setup_call=submit_setup_call,
+        which_type="non_parallel",
     )
 
     function_kwargs = dict(
@@ -143,6 +149,7 @@ def run_v2_task_parallel(
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
         submit_setup_call=submit_setup_call,
+        which_type="parallel",
     )
 
     list_function_kwargs = []
@@ -200,12 +207,14 @@ def run_v2_task_compound(
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
         submit_setup_call=submit_setup_call,
+        which_type="non_parallel",
     )
     executor_options_compute = _get_executor_options(
         wftask=wftask,
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
         submit_setup_call=submit_setup_call,
+        which_type="parallel",
     )
 
     # 3/A: non-parallel init task
@@ -288,14 +297,23 @@ def run_v1_task_parallel(
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
     logger_name: Optional[str] = None,
+    submit_setup_call: Callable = no_op_submit_setup_call,
 ) -> TaskOutput:
 
     _check_parallelization_list_size(images)
 
+    executor_options = _get_executor_options(
+        wftask=wftask,
+        workflow_dir=workflow_dir,
+        workflow_dir_user=workflow_dir_user,
+        submit_setup_call=submit_setup_call,
+        which_type="parallel",
+    )
+
     list_function_kwargs = []
     for ind, image in enumerate(images):
         list_function_kwargs.append(
-            _convert_v2_args_into_v1(
+            convert_v2_args_into_v1(
                 dict(
                     path=image.path,
                     **wftask.args_parallel,
@@ -314,6 +332,7 @@ def run_v1_task_parallel(
             is_task_v1=True,
         ),
         list_function_kwargs,
+        **executor_options,
     )
     # Explicitly iterate over the whole list, so that all futures are waited
     list(results_iterator)
