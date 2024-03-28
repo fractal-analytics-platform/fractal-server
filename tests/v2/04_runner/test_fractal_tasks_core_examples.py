@@ -741,3 +741,140 @@ def test_channel_parallelization_no_overwrite(
 
     # Check that there are now 4 images
     assert len(dataset.images) == 4
+
+
+@pytest.mark.skip
+def test_fractal_demos_01_scaling(
+    tmp_path: Path, executor: Executor, fractal_tasks_mock_task_list
+):
+    NUM_IMAGES = 1_000
+
+    execute_tasks_v2_args = dict(
+        executor=executor,
+        workflow_dir=tmp_path / "job_folder",
+    )
+    (tmp_path / "job_folder").mkdir()
+
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTaskV2Mock(
+                task=fractal_tasks_mock_task_list["create_ome_zarr_compound"],
+                args_non_parallel=dict(
+                    image_dir="/tmp/input_images", num_images=NUM_IMAGES
+                ),
+                args_parallel={},
+                id=0,
+                order=0,
+            )
+        ],
+        dataset=DatasetV2Mock(name="dataset", zarr_dir=zarr_dir),
+        **execute_tasks_v2_args,
+    )
+
+    assert dataset.history == ["create_ome_zarr_compound"]
+    assert dataset.filters["attributes"] == {}
+    assert dataset.filters["types"] == {}
+    _assert_image_data_exist(dataset.images)
+    assert len(dataset.images) == NUM_IMAGES
+
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTaskV2Mock(
+                task=fractal_tasks_mock_task_list["illumination_correction"],
+                args_parallel=dict(overwrite_input=True),
+                id=1,
+                order=1,
+            )
+        ],
+        dataset=dataset,
+        **execute_tasks_v2_args,
+    )
+
+    assert dataset.history == [
+        "create_ome_zarr_compound",
+        "illumination_correction",
+    ]
+    assert dataset.filters["attributes"] == {}
+    assert dataset.filters["types"] == {
+        "illumination_correction": True,
+    }
+    assert len(dataset.images) == NUM_IMAGES
+
+    img = find_image_by_path(
+        path=f"{zarr_dir}/my_plate.zarr/A/01/0", images=dataset.images
+    )["image"]
+    assert img.dict() == {
+        "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
+        "attributes": {
+            "well": "A01",
+            "plate": "my_plate.zarr",
+        },
+        "types": {
+            "illumination_correction": True,
+            "3D": True,
+        },
+        "origin": None,
+    }
+
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTaskV2Mock(
+                task=fractal_tasks_mock_task_list["MIP_compound"],
+                args_non_parallel=dict(suffix="mip"),
+                args_parallel={},
+                id=2,
+                order=2,
+            )
+        ],
+        dataset=dataset,
+        **execute_tasks_v2_args,
+    )
+
+    assert dataset.history == [
+        "create_ome_zarr_compound",
+        "illumination_correction",
+        "MIP_compound",
+    ]
+
+    assert dataset.filters["attributes"] == {}
+    assert dataset.filters["types"] == {
+        "illumination_correction": True,
+        "3D": False,
+    }
+    assert len(dataset.images) == NUM_IMAGES * 2
+    img = find_image_by_path(
+        path=f"{zarr_dir}/my_plate_mip.zarr/A/01/0", images=dataset.images
+    )["image"]
+    assert img.dict() == {
+        "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
+        "origin": f"{zarr_dir}/my_plate.zarr/A/01/0",
+        "attributes": {
+            "well": "A01",
+            "plate": "my_plate_mip.zarr",
+        },
+        "types": {
+            "3D": False,
+            "illumination_correction": True,
+        },
+    }
+
+    dataset = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTaskV2Mock(
+                task=fractal_tasks_mock_task_list["cellpose_segmentation"],
+                args_parallel={},
+                id=3,
+                order=3,
+            )
+        ],
+        dataset=dataset,
+        **execute_tasks_v2_args,
+    )
+
+    assert dataset.history == [
+        "create_ome_zarr_compound",
+        "illumination_correction",
+        "MIP_compound",
+        "cellpose_segmentation",
+    ]
