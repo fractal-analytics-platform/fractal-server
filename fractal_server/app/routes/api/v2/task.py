@@ -28,8 +28,9 @@ logger = set_logger(__name__)
 
 @router.get("/", response_model=list[TaskReadV2])
 async def get_list_task(
+    args_schema_parallel: bool = True,
+    args_schema_non_parallel: bool = True,
     user: User = Depends(current_active_user),
-    args_schema: bool = True,
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskReadV2]:
     """
@@ -39,9 +40,12 @@ async def get_list_task(
     res = await db.execute(stm)
     task_list = res.scalars().all()
     await db.close()
-    if not args_schema:
+    if args_schema_parallel is False:
         for task in task_list:
-            setattr(task, "args_schema", None)
+            setattr(task, "args_schema_parallel", None)
+    if args_schema_non_parallel is False:
+        for task in task_list:
+            setattr(task, "args_schema_non_parallel", None)
 
     return task_list
 
@@ -83,25 +87,25 @@ async def patch_task(
 
     # Retrieve task from database
     db_task = await _get_task_check_owner(task_id=task_id, user=user, db=db)
-
     update = task_update.dict(exclude_unset=True)
+
+    # Forbid changes that set a previously unset command
+    if ("command_parallel" in update) and (db_task.command_parallel is None):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Cannot set an unset `command_parallel`.",
+        )
+    if (
+        "command_non_parallel" in update
+        and db_task.command_non_parallel is None
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Cannot set an unset `command_non_parallel`.",
+        )
+
     for key, value in update.items():
-        if isinstance(value, str) or (
-            key == "version" and value is None
-        ):  # special case (issue 817)
-            setattr(db_task, key, value)
-        elif isinstance(value, dict):
-            if key == "args_schema":
-                setattr(db_task, key, value)
-            else:
-                current_dict = deepcopy(getattr(db_task, key))
-                current_dict.update(value)
-                setattr(db_task, key, current_dict)
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Invalid {type(value)=} for {key=}",
-            )
+        setattr(db_task, key, value)
 
     await db.commit()
     await db.refresh(db_task)
@@ -120,6 +124,14 @@ async def create_task(
     """
     Create a new task
     """
+
+    if task.command_non_parallel is None:
+        task_type = "parallel"
+    elif task.command_parallel is None:
+        task_type = "non parallel"
+    else:
+        task_type = "compound"
+
     # Set task.owner attribute
     if user.username:
         owner = user.username
@@ -149,7 +161,7 @@ async def create_task(
         )
 
     # Add task
-    db_task = TaskV2(**task.dict(), owner=owner)
+    db_task = TaskV2(**task.dict(), owner=owner, type=task_type)
     db.add(db_task)
     await db.commit()
     await db.refresh(db_task)
