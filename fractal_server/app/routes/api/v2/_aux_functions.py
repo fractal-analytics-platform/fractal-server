@@ -20,7 +20,7 @@ from ....models.v2 import ProjectV2
 from ....models.v2 import TaskV2
 from ....models.v2 import WorkflowTaskV2
 from ....models.v2 import WorkflowV2
-from ....schemas.v1 import JobStatusType
+from ....schemas.v1 import JobStatusTypeV1
 from ....security import User
 from fractal_server.images import Filters
 
@@ -384,7 +384,7 @@ def _get_submitted_jobs_statement() -> SelectOfScalar:
         A sqlmodel statement that selects all `ApplyWorkflow`s with
         `ApplyWorkflow.status` equal to `submitted`.
     """
-    stm = select(JobV2).where(JobV2.status == JobStatusType.SUBMITTED)
+    stm = select(JobV2).where(JobV2.status == JobStatusTypeV1.SUBMITTED)
     return stm
 
 

@@ -7,15 +7,15 @@ from pydantic import Field
 from pydantic import validator
 
 from .._validators import valstr
-from .task import TaskRead
+from .task import TaskReadV1
 
 __all__ = (
-    "TaskCollectPip",
-    "TaskCollectStatus",
+    "TaskCollectPipV1",
+    "TaskCollectStatusV1",
 )
 
 
-class TaskCollectPip(BaseModel):
+class TaskCollectPipV1(BaseModel):
     """
     TaskCollectPip class
 
@@ -81,7 +81,7 @@ class TaskCollectPip(BaseModel):
         return v
 
 
-class TaskCollectStatus(BaseModel):
+class TaskCollectStatusV1(BaseModel):
     """
     TaskCollectStatus class
 
@@ -97,7 +97,7 @@ class TaskCollectStatus(BaseModel):
     status: Literal["pending", "installing", "collecting", "fail", "OK"]
     package: str
     venv_path: Path
-    task_list: Optional[list[TaskRead]] = Field(default=[])
+    task_list: Optional[list[TaskReadV1]] = Field(default=[])
     log: Optional[str]
     info: Optional[str]
 

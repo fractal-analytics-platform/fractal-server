@@ -9,15 +9,15 @@ from pydantic import validator
 from .._validators import valstr
 
 __all__ = (
-    "TaskCreate",
-    "TaskUpdate",
-    "TaskRead",
-    "TaskImport",
-    "TaskExport",
+    "TaskCreateV1",
+    "TaskUpdateV1",
+    "TaskReadV1",
+    "TaskImportV1",
+    "TaskExportV1",
 )
 
 
-class _TaskBase(BaseModel):
+class _TaskBaseV1(BaseModel):
     """
 
     Base class for `Task`.
@@ -32,7 +32,7 @@ class _TaskBase(BaseModel):
     _source = validator("source", allow_reuse=True)(valstr("source"))
 
 
-class TaskUpdate(_TaskBase):
+class TaskUpdateV1(_TaskBaseV1):
     """
     Class for `Task` update.
 
@@ -76,7 +76,7 @@ class TaskUpdate(_TaskBase):
     )
 
 
-class TaskImport(_TaskBase):
+class TaskImportV1(_TaskBaseV1):
     """
     Class for `Task` import.
     """
@@ -84,7 +84,7 @@ class TaskImport(_TaskBase):
     pass
 
 
-class TaskExport(_TaskBase):
+class TaskExportV1(_TaskBaseV1):
     """
     Class for `Task` export.
     """
@@ -92,7 +92,7 @@ class TaskExport(_TaskBase):
     pass
 
 
-class TaskRead(_TaskBase):
+class TaskReadV1(_TaskBaseV1):
     """
     Class for `Task` read from database.
 
@@ -124,7 +124,7 @@ class TaskRead(_TaskBase):
     docs_link: Optional[HttpUrl]
 
 
-class TaskCreate(_TaskBase):
+class TaskCreateV1(_TaskBaseV1):
     """
     Class for `Task` creation.
 

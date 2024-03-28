@@ -17,9 +17,9 @@ from fractal_server.app.db import DBSyncSession
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models import State
 from fractal_server.app.models import Task
-from fractal_server.app.schemas.v1 import TaskCollectStatus
-from fractal_server.app.schemas.v1 import TaskCreate
-from fractal_server.app.schemas.v1 import TaskRead
+from fractal_server.app.schemas.v1 import TaskCollectStatusV1
+from fractal_server.app.schemas.v1 import TaskCreateV1
+from fractal_server.app.schemas.v1 import TaskReadV1
 from fractal_server.logger import close_logger
 from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
@@ -184,7 +184,7 @@ async def create_package_environment_pip(
     task_pkg: _TaskCollectPip,
     venv_path: Path,
     logger_name: str,
-) -> list[TaskCreate]:
+) -> list[TaskCreateV1]:
     """
     Create environment, install package, and prepare task list
     """
@@ -229,7 +229,7 @@ async def create_package_environment_pip(
                 )
             else:
                 additional_attrs = {}
-            this_task = TaskCreate(
+            this_task = TaskCreateV1(
                 **t.dict(),
                 command=cmd,
                 version=task_pkg.package_version,
@@ -245,7 +245,7 @@ async def create_package_environment_pip(
 
 
 async def _insert_tasks(
-    task_list: list[TaskCreate],
+    task_list: list[TaskCreateV1],
     db: DBSyncSession,
 ) -> list[Task]:
     """
@@ -285,7 +285,7 @@ async def background_collect_pip(
 
     with next(get_sync_db()) as db:
         state: State = db.get(State, state_id)
-        data = TaskCollectStatus(**state.data)
+        data = TaskCollectStatusV1(**state.data)
         data.info = None
 
         try:
@@ -313,7 +313,9 @@ async def background_collect_pip(
             # finalise
             logger.debug("Task-collection status: finalising")
             collection_path = get_collection_path(venv_path)
-            data.task_list = [TaskRead(**task.model_dump()) for task in tasks]
+            data.task_list = [
+                TaskReadV1(**task.model_dump()) for task in tasks
+            ]
             with collection_path.open("w") as f:
                 json.dump(data.sanitised_dict(), f, indent=2)
 
