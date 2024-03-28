@@ -151,7 +151,7 @@ async def update_workflowtask(
             if not actual_args:
                 actual_args = None
             setattr(db_wf_task, key, actual_args)
-        if key == "args_non_parallel":
+        elif key == "args_non_parallel":
             # Get default arguments via a Task property method
             default_args = deepcopy(
                 db_wf_task.task.default_args_non_parallel_from_args_schema
