@@ -79,7 +79,7 @@ def run_single_task(
     """
 
     logger = logging.getLogger(logger_name)
-    logger.info(f"Now start running {command=}")
+    logger.debug(f"Now start running {command=}")
 
     if not workflow_dir_user:
         workflow_dir_user = workflow_dir
@@ -132,8 +132,9 @@ def run_single_task(
         with task_files.metadiff.open("r") as f:
             out_meta = json.load(f)
     except FileNotFoundError as e:
-        logger.warning(
-            f"Task did not produce output metadata. Original error: {str(e)}"
+        logger.debug(
+            "Task did not produce output metadata. "
+            f"Original FileNotFoundError: {str(e)}"
         )
         out_meta = None
 
