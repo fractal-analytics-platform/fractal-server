@@ -8,12 +8,12 @@ from fractal_server.images import Filters
 
 
 class TaskOutput(BaseModel):
+    class Config:
+        extra = "forbid"
+
     image_list_updates: list[SingleImage] = Field(default_factory=list)
     image_list_removals: list[str] = Field(default_factory=list)
     filters: Filters = Field(default_factory=Filters)
-
-    class Config:
-        extra = "forbid"
 
     def check_paths_are_unique(self) -> None:
         paths = [img.path for img in self.image_list_updates]
@@ -37,7 +37,7 @@ class InitArgsModel(BaseModel):
 
 
 class InitTaskOutput(BaseModel):
-    parallelization_list: list[InitArgsModel] = Field(default_factory=list)
-
     class Config:
         extra = "forbid"
+
+    parallelization_list: list[InitArgsModel] = Field(default_factory=list)
