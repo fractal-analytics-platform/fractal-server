@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from input_models import InitArgsCellVoyager
+from fractal_tasks_mock.input_models import InitArgsCellVoyager
+from fractal_tasks_mock.utils import _check_path_is_absolute
 from pydantic.decorator import validate_arguments
-from utils import _check_path_is_absolute
 
 
 @validate_arguments

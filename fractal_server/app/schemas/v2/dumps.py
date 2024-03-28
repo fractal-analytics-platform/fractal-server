@@ -14,9 +14,8 @@ from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import root_validator
 
-from fractal_server.app.schemas.v1.dumps import TaskDumpV1 as TaskDumpV1
+from fractal_server.app.schemas.v1.dumps import TaskDumpV1
 from fractal_server.images import Filters
-from fractal_server.images import SingleImage
 
 
 class ProjectDumpV2(BaseModel, extra=Extra.forbid):
@@ -30,6 +29,7 @@ class ProjectDumpV2(BaseModel, extra=Extra.forbid):
 class TaskDumpV2(BaseModel):
     id: int
     name: str
+    type: str
 
     command_non_parallel: Optional[str]
     command_parallel: Optional[str]
@@ -56,15 +56,15 @@ class WorkflowTaskDumpV2(BaseModel):
     # Validators
     @root_validator
     def task_v1_or_v2(cls, values):
-        v1 = values.get("task_v1_id")
-        v2 = values.get("task_v2_id")
+        v1 = values.get("task_legacy_id")
+        v2 = values.get("task_id")
         if ((v1 is not None) and (v2 is not None)) or (
             (v1 is None) and (v2 is None)
         ):
             message = "both" if (v1 and v2) else "none"
             raise ValueError(
                 "One and only one must be provided between "
-                f"'task_v1_id' and 'task_v2_id' (you provided {message})"
+                f"'task_legacy_id' and 'task_id' (you provided {message})"
             )
         return values
 
@@ -84,5 +84,4 @@ class DatasetDumpV2(BaseModel):
     timestamp_created: str
 
     zarr_dir: str
-    images: list[SingleImage]
     filters: Filters

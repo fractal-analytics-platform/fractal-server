@@ -1,6 +1,6 @@
 import shutil
 
-from input_models import InitArgsMIP
+from fractal_tasks_mock.input_models import InitArgsMIP
 from pydantic.decorator import validate_arguments
 
 

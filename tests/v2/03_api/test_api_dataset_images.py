@@ -20,7 +20,7 @@ def n_images(n: int) -> list[SingleImage]:
                 str(i): bool(i % 2),
                 "flag": bool(i % 2 + 1),
             },
-        )
+        ).dict()
         for i in range(n)
     ]
 
@@ -121,7 +121,7 @@ async def test_query_images(
     # use `query.path`
     res = await client.post(
         f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/query/",
-        json=dict(path=images[3].path),
+        json=dict(path=images[3]["path"]),
     )
     assert res.status_code == 200
     assert res.json()["total_count"] == 1
@@ -216,7 +216,7 @@ async def test_delete_images(
     for i, image in enumerate(IMAGES):
         res = await client.delete(
             f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/"
-            f"?path={image.path}",
+            f"?path={image['path']}",
         )
         assert res.status_code == 204
         res = await client.post(
@@ -238,8 +238,8 @@ async def test_post_new_image(
         path="/new_path",
         attributes={"new_attribute": "xyz"},
         types={"new_type": True},
-    )
-    invalid_new_image = SingleImage(path=images[-1].path)
+    ).dict()
+    invalid_new_image = SingleImage(path=images[-1]["path"]).dict()
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
 
@@ -255,14 +255,14 @@ async def test_post_new_image(
     # add ivalid new image
     res = await client.post(
         f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/",
-        json=invalid_new_image.dict(),
+        json=invalid_new_image,
     )
     assert res.status_code == 422
     debug(res.json())
     # add new image
     res = await client.post(
         f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/",
-        json=new_image.dict(),
+        json=new_image,
     )
     assert res.status_code == 201
 

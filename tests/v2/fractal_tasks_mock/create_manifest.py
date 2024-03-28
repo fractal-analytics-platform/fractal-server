@@ -1,7 +1,6 @@
 import json
 import logging
 
-from devtools import debug
 from fractal_tasks_core.dev.lib_args_schemas import (
     create_schema_for_single_task,
 )
@@ -104,7 +103,6 @@ manifest = dict(
     has_args_schemas=True,
     args_schema_version="pydantic_v1",
 )
-debug(manifest)
 
 with open("src/fractal_tasks_mock/__FRACTAL_MANIFEST__.json", "w") as f:
     json.dump(manifest, f, indent=2, sort_keys=True)

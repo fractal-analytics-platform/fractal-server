@@ -17,7 +17,7 @@ from fractal_server.app.security import current_active_user
 from fractal_server.app.security import User
 from fractal_server.images import Filters
 from fractal_server.images import SingleImage
-from fractal_server.images.tools import match_filter
+from fractal_server.images.tools import match_filter_SingleImage
 
 router = APIRouter()
 
@@ -106,7 +106,9 @@ async def query_dataset_images(
         images = [
             image
             for image in images
-            if match_filter(SingleImage(**image), Filters(**dataset.filters))
+            if match_filter_SingleImage(
+                SingleImage(**image), Filters(**dataset.filters)
+            )
         ]
 
     attributes = {}
@@ -136,7 +138,7 @@ async def query_dataset_images(
             images = [
                 image
                 for image in images
-                if match_filter(
+                if match_filter_SingleImage(
                     SingleImage(**image),
                     Filters(**query.filters.dict()),
                 )
