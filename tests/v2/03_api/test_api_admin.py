@@ -8,7 +8,7 @@ import pytest
 from devtools import debug
 
 from fractal_server.app.models import JobStatusTypeV1
-from fractal_server.app.routes.api.v1._aux_functions import (
+from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
@@ -17,7 +17,7 @@ from fractal_server.app.runner.v1 import _backends
 
 backends_available = list(_backends.keys())
 
-PREFIX = "/admin/v1"
+PREFIX = "/admin/v2"
 
 
 async def test_unauthorized_to_admin(client, MockCurrentUser):
@@ -43,7 +43,7 @@ async def test_unauthorized_to_admin(client, MockCurrentUser):
         assert res.status_code == 200
 
 
-async def test_view_project(client, MockCurrentUser, project_factory):
+async def test_view_project(client, MockCurrentUser, project_factory_v2):
 
     async with MockCurrentUser(
         user_kwargs={"is_superuser": True}
@@ -51,12 +51,12 @@ async def test_view_project(client, MockCurrentUser, project_factory):
         res = await client.get(f"{PREFIX}/project/")
         assert res.status_code == 200
         assert res.json() == []
-        await project_factory(superuser)
+        await project_factory_v2(superuser)
 
     async with MockCurrentUser(user_kwargs={"is_superuser": False}) as user:
-        project = await project_factory(user)
+        project = await project_factory_v2(user)
         prj_id = project.id
-        await project_factory(user)
+        await project_factory_v2(user)
         user_id = user.id
 
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
@@ -110,29 +110,29 @@ async def test_view_project(client, MockCurrentUser, project_factory):
 
 
 async def test_view_workflow(
-    client, MockCurrentUser, project_factory, workflow_factory
+    client, MockCurrentUser, project_factory_v2, workflow_factory_v2
 ):
 
     async with MockCurrentUser(user_kwargs={"is_superuser": False}) as user:
 
-        project1 = await project_factory(user)
-        workflow1a = await workflow_factory(
+        project1 = await project_factory_v2(user)
+        workflow1a = await workflow_factory_v2(
             project_id=project1.id, name="Workflow 1a"
         )
-        workflow1b = await workflow_factory(
+        workflow1b = await workflow_factory_v2(
             project_id=project1.id, name="Workflow 1b"
         )
 
-        project2 = await project_factory(user)
-        workflow2a = await workflow_factory(
+        project2 = await project_factory_v2(user)
+        workflow2a = await workflow_factory_v2(
             project_id=project2.id, name="Workflow 2a"
         )
 
     async with MockCurrentUser(
         user_kwargs={"is_superuser": True}
     ) as superuser:
-        project3 = await project_factory(superuser)
-        await workflow_factory(project_id=project3.id, name="super")
+        project3 = await project_factory_v2(superuser)
+        await workflow_factory_v2(project_id=project3.id, name="super")
 
         # get all workflows
         res = await client.get(f"{PREFIX}/workflow/")
@@ -240,40 +240,36 @@ async def test_view_workflow(
 
 
 async def test_view_dataset(
-    client, MockCurrentUser, project_factory, dataset_factory
+    client, MockCurrentUser, project_factory_v2, dataset_factory_v2
 ):
 
     async with MockCurrentUser(user_kwargs={"is_superuser": False}) as user:
 
-        project1 = await project_factory(user)
+        project1 = await project_factory_v2(user)
 
-        ds1a = await dataset_factory(
+        ds1a = await dataset_factory_v2(
             project_id=project1.id,
             name="ds1a",
-            type="zarr",
         )
-        ds1b = await dataset_factory(
+        ds1b = await dataset_factory_v2(
             project_id=project1.id,
             name="ds1b",
-            type="image",
         )
 
-        project2 = await project_factory(user)
+        project2 = await project_factory_v2(user)
 
-        await dataset_factory(
+        await dataset_factory_v2(
             project_id=project2.id,
             name="ds2a",
-            type="zarr",
         )
 
     async with MockCurrentUser(
         user_kwargs={"is_superuser": True}
     ) as superuser:
-        super_project = await project_factory(superuser)
-        await dataset_factory(
+        super_project = await project_factory_v2(superuser)
+        await dataset_factory_v2(
             project_id=super_project.id,
             name="super-d",
-            type="zarr",
         )
 
         # get all datasets
@@ -316,16 +312,6 @@ async def test_view_dataset(
         assert res.status_code == 200
         assert len(res.json()) == 0
 
-        # get datasets by type
-        res = await client.get(
-            f"{PREFIX}/dataset/?type=zarr&user_id={user.id}"
-        )
-        assert res.status_code == 200
-        assert len(res.json()) == 2
-        res = await client.get(f"{PREFIX}/dataset/?type=image")
-        assert res.status_code == 200
-        assert len(res.json()) == 1
-
         res = await client.get(
             f"{PREFIX}/dataset/?timestamp_created_min="
             f"{quote('2000-01-01T01:01:01')}"
@@ -360,22 +346,21 @@ async def test_view_job(
     client,
     MockCurrentUser,
     tmp_path,
-    project_factory,
-    workflow_factory,
-    dataset_factory,
-    task_factory,
-    job_factory,
+    project_factory_v2,
+    workflow_factory_v2,
+    dataset_factory_v2,
+    task_factory_v2,
+    job_factory_v2,
 ):
     async with MockCurrentUser(user_kwargs={"is_superuser": False}) as user:
 
-        project = await project_factory(user)
+        project = await project_factory_v2(user)
 
-        workflow1 = await workflow_factory(project_id=project.id)
-        workflow2 = await workflow_factory(project_id=project.id)
+        workflow1 = await workflow_factory_v2(project_id=project.id)
+        workflow2 = await workflow_factory_v2(project_id=project.id)
 
-        task = await task_factory(name="task", source="source")
-        dataset1 = await dataset_factory(project_id=project.id)
-        dataset2 = await dataset_factory(project_id=project.id)
+        task = await task_factory_v2(name="task", source="source")
+        dataset = await dataset_factory_v2(project_id=project.id)
 
         await _workflow_insert_task(
             workflow_id=workflow1.id, task_id=task.id, db=db
@@ -384,24 +369,22 @@ async def test_view_job(
             workflow_id=workflow2.id, task_id=task.id, db=db
         )
 
-        job1 = await job_factory(
+        job1 = await job_factory_v2(
             working_dir=f"{tmp_path.as_posix()}/aaaa1111",
             working_dir_user=f"{tmp_path.as_posix()}/aaaa2222",
             project_id=project.id,
             log="asdasd",
-            input_dataset_id=dataset1.id,
-            output_dataset_id=dataset2.id,
+            dataset_id=dataset.id,
             workflow_id=workflow1.id,
             start_timestamp=datetime(2000, 1, 1, tzinfo=timezone.utc),
         )
 
-        job2 = await job_factory(
+        await job_factory_v2(
             working_dir=f"{tmp_path.as_posix()}/bbbb1111",
             working_dir_user=f"{tmp_path.as_posix()}/bbbb2222",
             project_id=project.id,
             log="asdasd",
-            input_dataset_id=dataset2.id,
-            output_dataset_id=dataset1.id,
+            dataset_id=dataset.id,
             workflow_id=workflow2.id,
             start_timestamp=datetime(2023, 1, 1, tzinfo=timezone.utc),
             end_timestamp=datetime(2023, 11, 9, tzinfo=timezone.utc),
@@ -442,16 +425,9 @@ async def test_view_job(
         assert len(res.json()) == 0
 
         # get jobs by [input/output]_dataset_id
-        res = await client.get(f"{PREFIX}/job/?input_dataset_id={dataset1.id}")
+        res = await client.get(f"{PREFIX}/job/?dataset_id={dataset.id}")
         assert res.status_code == 200
-        assert len(res.json()) == 1
-        assert res.json()[0]["id"] == job1.id
-        res = await client.get(
-            f"{PREFIX}/job/?output_dataset_id={dataset1.id}"
-        )
-        assert res.status_code == 200
-        assert len(res.json()) == 1
-        assert res.json()[0]["id"] == job2.id
+        assert len(res.json()) == 2
 
         # get jobs by workflow_id
         res = await client.get(f"{PREFIX}/job/?workflow_id={workflow2.id}")
@@ -526,22 +502,21 @@ async def test_view_single_job(
     client,
     MockCurrentUser,
     tmp_path,
-    project_factory,
-    workflow_factory,
-    dataset_factory,
-    task_factory,
-    job_factory,
+    project_factory_v2,
+    workflow_factory_v2,
+    dataset_factory_v2,
+    task_factory_v2,
+    job_factory_v2,
 ):
     async with MockCurrentUser(user_kwargs={"is_superuser": False}) as user:
 
-        project = await project_factory(user)
+        project = await project_factory_v2(user)
 
-        workflow1 = await workflow_factory(project_id=project.id)
-        workflow2 = await workflow_factory(project_id=project.id)
+        workflow1 = await workflow_factory_v2(project_id=project.id)
+        workflow2 = await workflow_factory_v2(project_id=project.id)
 
-        task = await task_factory(name="task", source="source")
-        dataset1 = await dataset_factory(project_id=project.id)
-        dataset2 = await dataset_factory(project_id=project.id)
+        task = await task_factory_v2(name="task", source="source")
+        dataset = await dataset_factory_v2(project_id=project.id)
 
         await _workflow_insert_task(
             workflow_id=workflow1.id, task_id=task.id, db=db
@@ -550,11 +525,10 @@ async def test_view_single_job(
             workflow_id=workflow2.id, task_id=task.id, db=db
         )
 
-        job = await job_factory(
+        job = await job_factory_v2(
             working_dir=tmp_path.as_posix(),
             project_id=project.id,
-            input_dataset_id=dataset1.id,
-            output_dataset_id=dataset2.id,
+            dataset_id=dataset.id,
             workflow_id=workflow1.id,
             status="submitted",
         )
@@ -584,11 +558,11 @@ async def test_view_single_job(
 
 async def test_patch_job(
     MockCurrentUser,
-    project_factory,
-    dataset_factory,
-    workflow_factory,
-    job_factory,
-    task_factory,
+    project_factory_v2,
+    dataset_factory_v2,
+    workflow_factory_v2,
+    job_factory_v2,
+    task_factory_v2,
     client,
     registered_superuser_client,
     db,
@@ -598,23 +572,22 @@ async def test_patch_job(
     NEW_STATUS = JobStatusTypeV1.FAILED
 
     async with MockCurrentUser(user_kwargs={"id": 111111}) as user:
-        project = await project_factory(user)
-        workflow = await workflow_factory(project_id=project.id)
-        task = await task_factory(name="task", source="source")
+        project = await project_factory_v2(user)
+        workflow = await workflow_factory_v2(project_id=project.id)
+        task = await task_factory_v2(name="task", source="source")
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
-        dataset = await dataset_factory(project_id=project.id)
-        job = await job_factory(
+        dataset = await dataset_factory_v2(project_id=project.id)
+        job = await job_factory_v2(
             working_dir=tmp_path.as_posix(),
             project_id=project.id,
-            input_dataset_id=dataset.id,
-            output_dataset_id=dataset.id,
+            dataset_id=dataset.id,
             workflow_id=workflow.id,
             status=ORIGINAL_STATUS,
         )
         # Read job as job owner (standard user)
-        res = await client.get(f"/api/v1/project/{project.id}/job/{job.id}/")
+        res = await client.get(f"/api/v2/project/{project.id}/job/{job.id}/")
         assert res.status_code == 200
         assert res.json()["status"] == ORIGINAL_STATUS
         assert res.json()["end_timestamp"] is None
@@ -665,7 +638,7 @@ async def test_patch_job(
             assert res.json()["end_timestamp"] is not None
 
         # Read job as job owner (standard user)
-        res = await client.get(f"/api/v1/project/{project.id}/job/{job.id}/")
+        res = await client.get(f"/api/v2/project/{project.id}/job/{job.id}/")
         assert res.status_code == 200
         assert res.json()["status"] == NEW_STATUS
         assert res.json()["end_timestamp"] is not None
@@ -675,11 +648,11 @@ async def test_patch_job(
 async def test_stop_job(
     backend,
     MockCurrentUser,
-    project_factory,
-    dataset_factory,
-    workflow_factory,
-    job_factory,
-    task_factory,
+    project_factory_v2,
+    dataset_factory_v2,
+    workflow_factory_v2,
+    job_factory_v2,
+    task_factory_v2,
     registered_superuser_client,
     db,
     tmp_path,
@@ -688,18 +661,17 @@ async def test_stop_job(
     override_settings_factory(FRACTAL_RUNNER_BACKEND=backend)
 
     async with MockCurrentUser(user_kwargs={"id": 1111}) as user:
-        project = await project_factory(user)
-        workflow = await workflow_factory(project_id=project.id)
-        task = await task_factory(name="task", source="source")
+        project = await project_factory_v2(user)
+        workflow = await workflow_factory_v2(project_id=project.id)
+        task = await task_factory_v2(name="task", source="source")
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
-        dataset = await dataset_factory(project_id=project.id)
-        job = await job_factory(
+        dataset = await dataset_factory_v2(project_id=project.id)
+        job = await job_factory_v2(
             working_dir=tmp_path.as_posix(),
             project_id=project.id,
-            input_dataset_id=dataset.id,
-            output_dataset_id=dataset.id,
+            dataset_id=dataset.id,
             workflow_id=workflow.id,
             status=JobStatusTypeV1.SUBMITTED,
         )
@@ -726,32 +698,28 @@ async def test_stop_job(
 async def test_download_job_logs(
     client,
     MockCurrentUser,
-    project_factory,
-    dataset_factory,
-    workflow_factory,
-    job_factory,
-    task_factory,
+    project_factory_v2,
+    dataset_factory_v2,
+    workflow_factory_v2,
+    job_factory_v2,
+    task_factory_v2,
     db,
     tmp_path,
 ):
     async with MockCurrentUser(user_kwargs={"id": 1111}) as user:
-        prj = await project_factory(user)
-        input_dataset = await dataset_factory(project_id=prj.id, name="input")
-        output_dataset = await dataset_factory(
-            project_id=prj.id, name="output"
-        )
-        workflow = await workflow_factory(project_id=prj.id)
-        task = await task_factory()
+        prj = await project_factory_v2(user)
+        dataset = await dataset_factory_v2(project_id=prj.id, name="dataset")
+        workflow = await workflow_factory_v2(project_id=prj.id)
+        task = await task_factory_v2()
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
         working_dir = (tmp_path / "workflow_dir_for_zipping").as_posix()
-        job = await job_factory(
+        job = await job_factory_v2(
             project_id=prj.id,
             workflow_id=workflow.id,
             working_dir=working_dir,
-            input_dataset_id=input_dataset.id,
-            output_dataset_id=output_dataset.id,
+            dataset_id=dataset.id,
         )
 
     async with MockCurrentUser(user_kwargs={"id": 2222, "is_superuser": True}):
@@ -790,3 +758,29 @@ async def test_download_job_logs(
         with (unzipped_archived_path / LOG_FILE).open("r") as f:
             actual_logs = f.read()
         assert LOG_CONTENT in actual_logs
+
+
+async def test_flag_task_v2_compatible(
+    db,
+    client,
+    MockCurrentUser,
+    task_factory,
+):
+    task = await task_factory()
+    assert task.is_v2_compatible is False
+
+    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+
+        for _ in range(2):
+            res = await client.patch(f"{PREFIX}/task/{task.id}/")
+            assert res.status_code == 200
+            await db.refresh(task)
+            assert task.is_v2_compatible is True
+
+        for _ in range(2):
+            res = await client.patch(
+                f"{PREFIX}/task/{task.id}/?is_v2_compatible=false"
+            )
+            assert res.status_code == 200
+            await db.refresh(task)
+            assert task.is_v2_compatible is False

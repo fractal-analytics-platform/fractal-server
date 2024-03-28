@@ -15,29 +15,29 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import func
 from sqlmodel import select
 
-from ...config import get_settings
-from ...syringe import Inject
-from ...utils import get_timestamp
-from ..db import AsyncSession
-from ..db import get_async_db
-from ..models import ApplyWorkflow
-from ..models import Dataset
-from ..models import JobStatusTypeV1
-from ..models import Project
-from ..models import Workflow
-from ..models.security import UserOAuth as User
-from ..runner.filenames import WORKFLOW_LOG_FILENAME
-from ..schemas.v1 import ApplyWorkflowReadV1
-from ..schemas.v1 import ApplyWorkflowUpdateV1
-from ..schemas.v1 import DatasetReadV1
-from ..schemas.v1 import ProjectReadV1
-from ..schemas.v1 import WorkflowReadV1
-from ..security import current_active_superuser
-from .aux._job import _write_shutdown_file
-from .aux._job import _zip_folder_to_byte_stream
-from .aux._runner import _check_backend_is_slurm
+from ....config import get_settings
+from ....syringe import Inject
+from ....utils import get_timestamp
+from ...db import AsyncSession
+from ...db import get_async_db
+from ...models import ApplyWorkflow
+from ...models import Dataset
+from ...models import JobStatusTypeV1
+from ...models import Project
+from ...models import Workflow
+from ...models.security import UserOAuth as User
+from ...runner.filenames import WORKFLOW_LOG_FILENAME
+from ...schemas.v1 import ApplyWorkflowReadV1
+from ...schemas.v1 import ApplyWorkflowUpdateV1
+from ...schemas.v1 import DatasetReadV1
+from ...schemas.v1 import ProjectReadV1
+from ...schemas.v1 import WorkflowReadV1
+from ...security import current_active_superuser
+from ..aux._job import _write_shutdown_file
+from ..aux._job import _zip_folder_to_byte_stream
+from ..aux._runner import _check_backend_is_slurm
 
-router_admin = APIRouter()
+router_admin_v1 = APIRouter()
 
 
 def _convert_to_db_timestamp(dt: datetime) -> datetime:
@@ -57,7 +57,7 @@ def _convert_to_db_timestamp(dt: datetime) -> datetime:
     return _dt
 
 
-@router_admin.get("/project/", response_model=list[ProjectReadV1])
+@router_admin_v1.get("/project/", response_model=list[ProjectReadV1])
 async def view_project(
     id: Optional[int] = None,
     user_id: Optional[int] = None,
@@ -95,7 +95,7 @@ async def view_project(
     return project_list
 
 
-@router_admin.get("/workflow/", response_model=list[WorkflowReadV1])
+@router_admin_v1.get("/workflow/", response_model=list[WorkflowReadV1])
 async def view_workflow(
     id: Optional[int] = None,
     user_id: Optional[int] = None,
@@ -144,7 +144,7 @@ async def view_workflow(
     return workflow_list
 
 
-@router_admin.get("/dataset/", response_model=list[DatasetReadV1])
+@router_admin_v1.get("/dataset/", response_model=list[DatasetReadV1])
 async def view_dataset(
     id: Optional[int] = None,
     user_id: Optional[int] = None,
@@ -197,7 +197,7 @@ async def view_dataset(
     return dataset_list
 
 
-@router_admin.get("/job/", response_model=list[ApplyWorkflowReadV1])
+@router_admin_v1.get("/job/", response_model=list[ApplyWorkflowReadV1])
 async def view_job(
     id: Optional[int] = None,
     user_id: Optional[int] = None,
@@ -278,7 +278,7 @@ async def view_job(
     return job_list
 
 
-@router_admin.get("/job/{job_id}/", response_model=ApplyWorkflowReadV1)
+@router_admin_v1.get("/job/{job_id}/", response_model=ApplyWorkflowReadV1)
 async def view_single_job(
     job_id: int = None,
     show_tmp_logs: bool = False,
@@ -304,7 +304,7 @@ async def view_single_job(
     return job
 
 
-@router_admin.patch(
+@router_admin_v1.patch(
     "/job/{job_id}/",
     response_model=ApplyWorkflowReadV1,
 )
@@ -341,7 +341,7 @@ async def update_job(
     return job
 
 
-@router_admin.get("/job/{job_id}/stop/", status_code=202)
+@router_admin_v1.get("/job/{job_id}/stop/", status_code=202)
 async def stop_job(
     job_id: int,
     user: User = Depends(current_active_superuser),
@@ -367,7 +367,7 @@ async def stop_job(
     return Response(status_code=status.HTTP_202_ACCEPTED)
 
 
-@router_admin.get(
+@router_admin_v1.get(
     "/job/{job_id}/download/",
     response_class=StreamingResponse,
 )
