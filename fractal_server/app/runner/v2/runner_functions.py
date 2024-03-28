@@ -86,8 +86,8 @@ def run_v2_task_non_parallel(
     wftask: WorkflowTaskV2,
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
-    logger_name: Optional[str] = None,
     executor: Executor,
+    logger_name: Optional[str] = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
 ) -> TaskOutput:
     """

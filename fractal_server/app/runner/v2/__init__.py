@@ -10,6 +10,8 @@ import traceback
 from pathlib import Path
 from typing import Optional
 
+from ....config import get_settings
+from ....logger import close_logger
 from ....logger import set_logger
 from ....syringe import Inject
 from ....utils import get_timestamp
@@ -28,8 +30,6 @@ from .handle_failed_job import assemble_history_failed_job
 from .handle_failed_job import assemble_meta_failed_job
 from .runner import execute_tasks_v2  # noqa
 from fractal_server import __VERSION__
-from fractal_server.config import get_settings
-from fractal_server.logger import close_logger
 
 _backends = {}
 _backends["local"] = local_process_workflow

@@ -23,19 +23,20 @@ from pathlib import Path
 from typing import Any
 from typing import Optional
 
-from ....models.v2 import WorkflowV2  # FIXME: this is v1 specific
+from runner import execute_tasks_v2
 
-# from ...executors.local.executor import FractalThreadPoolExecutor
-# from ._submit_setup import _local_submit_setup
+from ....models.v2 import DatasetV2
+from ....models.v2 import WorkflowV2
+from ...async_wrap import async_wrap
+from ...executors.local.executor import FractalThreadPoolExecutor
+from ...set_start_and_last_task_index import set_start_and_last_task_index
+from ._submit_setup import _local_submit_setup
 
 
 def _process_workflow(
     *,
     workflow: WorkflowV2,
-    input_paths: list[Path],
-    output_path: Path,
-    input_metadata: dict[str, Any],
-    input_history: list[dict[str, Any]],
+    dataset: DatasetV2,
     logger_name: str,
     workflow_dir: Path,
     first_task_index: int,
@@ -49,47 +50,37 @@ def _process_workflow(
     Cf. [process_workflow][fractal_server.app.runner._local.process_workflow]
     for the call signature.
     """
-    raise NotImplementedError
 
-    # with FractalThreadPoolExecutor() as executor:
-    #     output_task_pars = execute_tasks(
-    #         executor=executor,
-    #         task_list=workflow.task_list[
-    #             first_task_index : (last_task_index + 1)  # noqa
-    #         ],  # noqa
-    #         task_pars=TaskParameters(
-    #             input_paths=input_paths,
-    #             output_path=output_path,
-    #             metadata=input_metadata,
-    #             history=input_history,
-    #         ),
-    #         workflow_dir=workflow_dir,
-    #         workflow_dir_user=workflow_dir,
-    #         logger_name=logger_name,
-    #         submit_setup_call=_local_submit_setup,
-    #     )
-    # output_dataset_metadata_history = dict(
-    #     metadata=output_task_pars.metadata, history=output_task_pars.history
-    # )
-    # return output_dataset_metadata_history
+    with FractalThreadPoolExecutor() as executor:
+        processed_dataset = execute_tasks_v2(
+            wf_task_list=workflow.task_list[
+                first_task_index : (last_task_index + 1)  # noqa
+            ],  # noqa
+            dataset=dataset,
+            executor=executor,
+            workflow_dir=workflow_dir,
+            workflow_dir_user=workflow_dir,
+            logger_name=logger_name,
+            submit_setup_call=_local_submit_setup,
+        )
+        processed_dataset
+    return {}  # FIXME
 
 
 async def process_workflow(
     *,
     workflow: WorkflowV2,
-    input_paths: list[Path],
-    output_path: Path,
-    input_metadata: dict[str, Any],
-    input_history: list[dict[str, Any]],
-    logger_name: str,
+    dataset: DatasetV2,
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
-    slurm_user: Optional[str] = None,
-    slurm_account: Optional[str] = None,
-    user_cache_dir: Optional[str] = None,
-    worker_init: Optional[str] = None,
     first_task_index: Optional[int] = None,
     last_task_index: Optional[int] = None,
+    logger_name: str,
+    # Slurm-specific
+    user_cache_dir: Optional[str] = None,
+    slurm_user: Optional[str] = None,
+    slurm_account: Optional[str] = None,
+    worker_init: Optional[str] = None,
 ) -> dict[str, Any]:
     """
     Run a workflow
@@ -160,25 +151,20 @@ async def process_workflow(
             f"{workflow_dir=} and {workflow_dir_user=}"
         )
 
-    raise NotImplementedError
+    # Set values of first_task_index and last_task_index
+    num_tasks = len(workflow.task_list)
+    first_task_index, last_task_index = set_start_and_last_task_index(
+        num_tasks,
+        first_task_index=first_task_index,
+        last_task_index=last_task_index,
+    )
 
-    # # Set values of first_task_index and last_task_index
-    # num_tasks = len(workflow.task_list)
-    # first_task_index, last_task_index = set_start_and_last_task_index(
-    #     num_tasks,
-    #     first_task_index=first_task_index,
-    #     last_task_index=last_task_index,
-    # )
-
-    # output_dataset_metadata_history = await async_wrap(_process_workflow)(
-    #     workflow=workflow,
-    #     input_paths=input_paths,
-    #     output_path=output_path,
-    #     input_metadata=input_metadata,
-    #     input_history=input_history,
-    #     logger_name=logger_name,
-    #     workflow_dir=workflow_dir,
-    #     first_task_index=first_task_index,
-    #     last_task_index=last_task_index,
-    # )
-    # return output_dataset_metadata_history
+    output_dataset_metadata_history = await async_wrap(_process_workflow)(
+        workflow=workflow,
+        dataset=dataset,
+        logger_name=logger_name,
+        workflow_dir=workflow_dir,
+        first_task_index=first_task_index,
+        last_task_index=last_task_index,
+    )
+    return output_dataset_metadata_history
