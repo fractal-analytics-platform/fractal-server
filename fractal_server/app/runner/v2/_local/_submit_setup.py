@@ -12,10 +12,11 @@
 Submodule to define _local_submit_setup
 """
 from pathlib import Path
+from typing import Literal
 from typing import Optional
 
 from ....models.v2 import WorkflowTaskV2
-from ...v1._local._local_config import get_local_backend_config
+from ._local_config import get_local_backend_config
 
 
 def _local_submit_setup(
@@ -23,6 +24,7 @@ def _local_submit_setup(
     wftask: WorkflowTaskV2,
     workflow_dir: Optional[Path] = None,
     workflow_dir_user: Optional[Path] = None,
+    which_type: Literal["non_parallel", "parallel"],
 ) -> dict[str, object]:
     """
     Collect WorfklowTask-specific configuration parameters from different
@@ -43,6 +45,8 @@ def _local_submit_setup(
             `FractalThreadPoolExecutor.map`, so as to set extra options.
     """
 
-    local_backend_config = get_local_backend_config(wftask=wftask)
+    local_backend_config = get_local_backend_config(
+        wftask=wftask, which_type=which_type
+    )
 
     return dict(local_backend_config=local_backend_config)
