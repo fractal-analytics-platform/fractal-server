@@ -49,6 +49,7 @@ class TaskFiles:
     args: Path
     out: Path
     err: Path
+    log: Path
     metadiff: Path
 
     def __init__(
@@ -77,6 +78,7 @@ class TaskFiles:
         self.args = self.workflow_dir_user / f"{self.file_prefix}.args.json"
         self.out = self.workflow_dir_user / f"{self.file_prefix}.out"
         self.err = self.workflow_dir_user / f"{self.file_prefix}.err"
+        self.log = self.workflow_dir_user / f"{self.file_prefix}.log"
         self.metadiff = (
             self.workflow_dir_user / f"{self.file_prefix}.metadiff.json"
         )
