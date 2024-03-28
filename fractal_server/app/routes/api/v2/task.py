@@ -128,7 +128,7 @@ async def create_task(
     if task.command_non_parallel is None:
         task_type = "parallel"
     elif task.command_parallel is None:
-        task_type = "non parallel"
+        task_type = "non_parallel"
     else:
         task_type = "compound"
 
