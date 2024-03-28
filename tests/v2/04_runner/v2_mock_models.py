@@ -14,28 +14,28 @@ from fractal_server.images import SingleImage
 DictStrAny = dict[str, Any]
 
 
-class Dataset(BaseModel):
+class DatasetV2Mock(BaseModel):
     id: Optional[int] = None
-    history: list[DictStrAny] = []
+    name: str
     zarr_dir: str
     images: list[SingleImage] = Field(default_factory=list)
     filters: Filters = Field(default_factory=Filters)
+    history: list = Field(default_factory=list)
 
     @property
     def image_paths(self) -> list[str]:
         return [image.path for image in self.images]
 
 
-class Task(BaseModel):
+class TaskV2Mock(BaseModel):
     name: str
+    source: str
     input_types: dict[str, bool] = Field(default_factory=dict)
     output_types: dict[str, bool] = Field(default_factory=dict)
 
-    function_non_parallel: Optional[Callable] = None
-    function_parallel: Optional[Callable] = None
-
     command_non_parallel: Optional[str] = None
     command_parallel: Optional[str] = None
+    meta_paralell: Optional[dict[str, Any]] = Field(default_factory=dict)
 
     @root_validator(pre=False)
     def _not_both_commands_none(cls, values):
@@ -79,7 +79,7 @@ class Task(BaseModel):
                 return "compound"
 
 
-class TaskV1(BaseModel):
+class TaskV1Mock(BaseModel):
     name: str
     command: Callable  # str
     source: str = Field(unique=True)
@@ -98,16 +98,12 @@ class TaskV1(BaseModel):
         return bool(self.parallelization_level)
 
 
-class WorkflowTask(BaseModel):
+class WorkflowTaskV2Mock(BaseModel):
     args_non_parallel: DictStrAny = Field(default_factory=dict)
     args_parallel: DictStrAny = Field(default_factory=dict)
     meta: DictStrAny = Field(default_factory=dict)
     is_legacy_task: Optional[bool]
-    task: Optional[Union[Task, TaskV1]] = None
+    task: Optional[Union[TaskV2Mock, TaskV1Mock]] = None
     filters: Filters = Field(default_factory=Filters)
     order: int
     id: int
-
-
-class Workflow(BaseModel):
-    task_list: list[WorkflowTask] = Field(default_factory=list)
