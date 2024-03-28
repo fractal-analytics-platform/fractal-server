@@ -1,6 +1,6 @@
+from fractal_tasks_mock.utils import _extract_common_root
+from fractal_tasks_mock.utils import _group_paths_by_well
 from pydantic.decorator import validate_arguments
-from utils import _extract_common_root
-from utils import _group_paths_by_well
 
 
 def _read_acquisition_index_from_ngff_metadata(path: str) -> int:

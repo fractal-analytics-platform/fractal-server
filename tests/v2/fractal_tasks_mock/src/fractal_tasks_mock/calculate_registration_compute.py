@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from input_models import InitArgsRegistration
+from fractal_tasks_mock.input_models import InitArgsRegistration
 from pydantic.decorator import validate_arguments
 
 

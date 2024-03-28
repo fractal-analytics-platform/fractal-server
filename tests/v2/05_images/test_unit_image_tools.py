@@ -16,7 +16,7 @@ images = [
             a=(i <= N // 2),
             b=(i >= N // 3),
         ),
-    )
+    ).dict()
     for i in range(N)
 ]
 
@@ -27,7 +27,7 @@ def test_find_image_by_path():
         image_search = find_image_by_path(
             path=f"/a/b/c{i}.zarr", images=images
         )
-        assert image_search["image"].path == f"/a/b/c{i}.zarr"
+        assert image_search["image"]["path"] == f"/a/b/c{i}.zarr"
         assert image_search["index"] == i
 
     image_search = find_image_by_path(path="/xxx", images=images)
@@ -46,7 +46,7 @@ def test_match_filter():
             a=True,
             b=False,
         ),
-    )
+    ).dict()
 
     # Empty
     assert match_filter(image, Filters()) is True

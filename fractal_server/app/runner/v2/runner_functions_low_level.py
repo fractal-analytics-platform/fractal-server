@@ -1,12 +1,3 @@
-"""
-Homogeneous set of Python functions that wrap executable commands.
-Each function in this module should have
-1. An input argument `input_kwargs`
-2. An input argument `task`
-3. A `dict[str, Any]` return type, that will be validated downstram with
-    either TaskOutput or InitTaskOutput
-... TBD
-"""
 import json
 import logging
 import shutil
@@ -18,12 +9,12 @@ from typing import Optional
 
 from ..exceptions import JobExecutionError
 from ..exceptions import TaskExecutionError
-from .components import KEY
+from .components import _COMPONENT_KEY_
+from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.task_files import get_task_file_paths
-from fractal_server.app.runner.v2.models import WorkflowTask
 
 
-def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
+def _call_command_wrapper(cmd: str, log_path: Path) -> None:
     """
     Call a command and write its stdout and stderr to files
 
@@ -43,22 +34,20 @@ def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
         )
         raise TaskExecutionError(msg)
 
-    fp_stdout = open(stdout, "w")
-    fp_stderr = open(stderr, "w")
+    fp_log = open(log_path, "w")
     try:
         result = subprocess.run(  # nosec
             shlex_split(cmd),
-            stderr=fp_stderr,
-            stdout=fp_stdout,
+            stderr=fp_log,
+            stdout=fp_log,
         )
     except Exception as e:
         raise e
     finally:
-        fp_stdout.close()
-        fp_stderr.close()
+        fp_log.close()
 
     if result.returncode > 0:
-        with stderr.open("r") as fp_stderr:
+        with log_path.open("r") as fp_stderr:
             err = fp_stderr.read()
         raise TaskExecutionError(err)
     elif result.returncode < 0:
@@ -67,10 +56,10 @@ def _call_command_wrapper(cmd: str, stdout: Path, stderr: Path) -> None:
         )
 
 
-def _run_single_task(
+def run_single_task(
     args: dict[str, Any],
     command: str,
-    wftask: WorkflowTask,
+    wftask: WorkflowTaskV2,
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
     logger_name: Optional[str] = None,
@@ -81,12 +70,12 @@ def _run_single_task(
     """
 
     logger = logging.getLogger(logger_name)
-    logger.warning(f"Now start running {command=}")
+    logger.debug(f"Now start running {command=}")
 
     if not workflow_dir_user:
         workflow_dir_user = workflow_dir
 
-    component = args.pop(KEY, None)
+    component = args.pop(_COMPONENT_KEY_, None)
     if component is None:
         task_files = get_task_file_paths(
             workflow_dir=workflow_dir,
@@ -122,8 +111,7 @@ def _run_single_task(
     try:
         _call_command_wrapper(
             full_command,
-            stdout=task_files.out,
-            stderr=task_files.err,
+            log_path=task_files.log,
         )
     except TaskExecutionError as e:
         e.workflow_task_order = wftask.order
@@ -135,8 +123,9 @@ def _run_single_task(
         with task_files.metadiff.open("r") as f:
             out_meta = json.load(f)
     except FileNotFoundError as e:
-        logger.warning(
-            f"Task did not produce output metadata. Original error: {str(e)}"
+        logger.debug(
+            "Task did not produce output metadata. "
+            f"Original FileNotFoundError: {str(e)}"
         )
         out_meta = None
 
