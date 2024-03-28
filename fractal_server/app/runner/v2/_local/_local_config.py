@@ -63,13 +63,13 @@ def get_local_backend_config(
     The sources for `parallel_tasks_per_job` attributes, starting from the
     highest-priority one, are
 
-    1. Properties in `wftask.meta`;
+    1. Properties in `wftask.meta_parallel`;
     2. The general content of the local-backend configuration file;
     3. The default value (`None`).
 
     Arguments:
         wftask:
-            WorkflowTask (V1 or V2) for which the backend configuration should
+            WorkflowTaskV2 for which the backend configuration should
             be prepared.
         config_path:
             Path of local-backend configuration file; if `None`, use
@@ -79,21 +79,17 @@ def get_local_backend_config(
         A local-backend configuration object
     """
 
-    raise NotImplementedError(
-        "This function lacks the whole parallel/non-parallel logic"
-    )
-
     key = "parallel_tasks_per_job"
-    default = None
+    default_value = None
 
-    if wftask.meta and key in wftask.meta:
+    if wftask.meta_parallel and key in wftask.meta_parallel:
         parallel_tasks_per_job = wftask.meta[key]
     else:
         if not config_path:
             settings = Inject(get_settings)
             config_path = settings.FRACTAL_LOCAL_CONFIG_FILE
         if config_path is None:
-            parallel_tasks_per_job = default
+            parallel_tasks_per_job = default_value
         else:
             with config_path.open("r") as f:
                 env = json.load(f)
@@ -105,5 +101,5 @@ def get_local_backend_config(
                     f"Original error:\n{str(e)}"
                 )
 
-            parallel_tasks_per_job = env.get(key, default)
+            parallel_tasks_per_job = env.get(key, default_value)
     return LocalBackendConfig(parallel_tasks_per_job=parallel_tasks_per_job)
