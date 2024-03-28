@@ -107,6 +107,8 @@ async def test_full_workflow(
                 ).as_posix()
             ),
         )
+        if res.status_code != 201:
+            raise ValueError(f"{res.status_code=}\n{res.json()=}")
         assert res.status_code == 201
         state_id = res.json()["id"]
         # Get collection info
