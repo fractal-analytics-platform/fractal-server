@@ -18,7 +18,7 @@ from ...models.v2 import DatasetV2
 from ...models.v2 import JobV2
 from ...models.v2 import WorkflowTaskV2
 from ...models.v2 import WorkflowV2
-from ...schemas import JobStatusType
+from ...schemas.v2 import JobStatusTypeV2
 from ..exceptions import JobExecutionError
 from ..exceptions import TaskExecutionError
 from ..filenames import WORKFLOW_LOG_FILENAME
@@ -97,7 +97,7 @@ async def submit_workflow(
                 log_msg += (
                     f"Cannot fetch workflow {workflow_id} from database\n"
                 )
-            job.status = JobStatusType.FAILED
+            job.status = JobStatusTypeV2.FAILED
             job.end_timestamp = get_timestamp()
             job.log = log_msg
             db_sync.merge(job)
@@ -223,7 +223,7 @@ async def submit_workflow(
         db_sync.merge(dataset)
 
         # Update job DB entry
-        job.status = JobStatusType.DONE
+        job.status = JobStatusTypeV2.DONE
         job.end_timestamp = get_timestamp()
         with log_file_path.open("r") as f:
             logs = f.read()
@@ -254,7 +254,7 @@ async def submit_workflow(
 
         db_sync.merge(dataset)
 
-        job.status = JobStatusType.FAILED
+        job.status = JobStatusTypeV2.FAILED
         job.end_timestamp = get_timestamp()
 
         exception_args_string = "\n".join(e.args)
@@ -289,7 +289,7 @@ async def submit_workflow(
 
         db_sync.merge(dataset)
 
-        job.status = JobStatusType.FAILED
+        job.status = JobStatusTypeV2.FAILED
         job.end_timestamp = get_timestamp()
         error = e.assemble_error()
         job.log = f"JOB ERROR in Fractal job {job.id}:\nTRACEBACK:\n{error}"
@@ -318,7 +318,7 @@ async def submit_workflow(
 
         db_sync.merge(dataset)
 
-        job.status = JobStatusType.FAILED
+        job.status = JobStatusTypeV2.FAILED
         job.end_timestamp = get_timestamp()
         job.log = (
             f"UNKNOWN ERROR in Fractal job {job.id}\n"
