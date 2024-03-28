@@ -790,3 +790,29 @@ async def test_download_job_logs(
         with (unzipped_archived_path / LOG_FILE).open("r") as f:
             actual_logs = f.read()
         assert LOG_CONTENT in actual_logs
+
+
+async def test_flag_task_v2_compatible(
+    db,
+    client,
+    MockCurrentUser,
+    task_factory,
+):
+    task = await task_factory()
+    assert task.is_v2_compatible is False
+
+    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
+
+        for _ in range(2):
+            res = await client.patch(f"{PREFIX}/task/{task.id}/")
+            assert res.status_code == 200
+            await db.refresh(task)
+            assert task.is_v2_compatible is True
+
+        for _ in range(2):
+            res = await client.patch(
+                f"{PREFIX}/task/{task.id}/?is_v2_compatible=false"
+            )
+            assert res.status_code == 200
+            await db.refresh(task)
+            assert task.is_v2_compatible is False
