@@ -13,6 +13,7 @@ from ....db import AsyncSession
 from ....db import get_async_db
 from ....models import Task
 from ....models import WorkflowTask
+from ....models.v2 import TaskV2
 from ....schemas.v1 import TaskCreate
 from ....schemas.v1 import TaskRead
 from ....schemas.v1 import TaskUpdate
@@ -143,7 +144,14 @@ async def create_task(
     if res.scalars().all():
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f'Task source "{task.source}" already in use',
+            detail=f"Source '{task.source}' already used by some TaskV1",
+        )
+    stm = select(TaskV2).where(TaskV2.source == task.source)
+    res = await db.execute(stm)
+    if res.scalars().all():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Source '{task.source}' already used by some TaskV2",
         )
 
     # Add task

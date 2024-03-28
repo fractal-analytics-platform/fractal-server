@@ -11,6 +11,7 @@ from sqlmodel import select
 from .....logger import set_logger
 from ....db import AsyncSession
 from ....db import get_async_db
+from ....models.v1 import Task as TaskV1
 from ....models.v2 import TaskV2
 from ....models.v2 import WorkflowTaskV2
 from ....schemas.v2 import TaskCreateV2
@@ -151,9 +152,15 @@ async def create_task(
     if res.scalars().all():
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f'TaskV2 source "{task.source}" already in use',
+            detail=f"Source '{task.source}' already used by some TaskV2",
         )
-
+    stm = select(TaskV1).where(TaskV1.source == task.source)
+    res = await db.execute(stm)
+    if res.scalars().all():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Source '{task.source}' already used by some TaskV1",
+        )
     # Add task
     db_task = TaskV2(**task.dict(), owner=owner, type=task_type)
     db.add(db_task)
