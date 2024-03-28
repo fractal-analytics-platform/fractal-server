@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 from devtools import debug
-from v2_mock_models import Dataset
-from v2_mock_models import WorkflowTask
+from v2_mock_models import DatasetV2Mock
+from v2_mock_models import WorkflowTaskV2Mock
 
 from fractal_server.app.runner.executors.local import FractalThreadPoolExecutor
 from fractal_server.app.runner.v2 import execute_tasks_v2
@@ -43,7 +43,7 @@ def image_data_exist_on_disk(image_list: list[SingleImage]):
 
 @pytest.fixture
 def fractal_tasks_mock_task_list(testdata_path) -> dict:
-    from v2_mock_models import Task
+    from v2_mock_models import TaskV2Mock
 
     src_dir = (
         testdata_path.parent
@@ -89,7 +89,7 @@ def fractal_tasks_mock_task_list(testdata_path) -> dict:
                 task_attributes[
                     f"command_{step}"
                 ] = f"{python_str} {task_path}"
-        t = Task(**task_attributes)
+        t = TaskV2Mock(**task_attributes)
         task_dict[t.name] = t
 
     return task_dict
@@ -110,7 +110,7 @@ def test_fractal_demos_01(
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     dataset = execute_tasks_v2(
         wf_task_list=[
-            WorkflowTask(
+            WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_task_list["create_ome_zarr_compound"],
                 args_non_parallel=dict(image_dir="/tmp/input_images"),
                 args_parallel={},
@@ -118,7 +118,7 @@ def test_fractal_demos_01(
                 order=0,
             )
         ],
-        dataset=Dataset(zarr_dir=zarr_dir),
+        dataset=DatasetV2Mock(zarr_dir=zarr_dir),
         **execute_tasks_v2_args,
     )
 
@@ -131,7 +131,7 @@ def test_fractal_demos_01(
 
     dataset = execute_tasks_v2(
         wf_task_list=[
-            WorkflowTask(
+            WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_task_list["illumination_correction"],
                 args_parallel=dict(overwrite_input=True),
                 id=1,
@@ -175,7 +175,7 @@ def test_fractal_demos_01(
 
     dataset = execute_tasks_v2(
         wf_task_list=[
-            WorkflowTask(
+            WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_task_list["MIP_compound"],
                 args_non_parallel=dict(suffix="mip"),
                 args_parallel={},
@@ -218,7 +218,7 @@ def test_fractal_demos_01(
 
     dataset = execute_tasks_v2(
         wf_task_list=[
-            WorkflowTask(
+            WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_task_list["cellpose_segmentation"],
                 args_parallel={},
                 id=3,
@@ -256,14 +256,14 @@ def test_fractal_demos_01_no_overwrite(
 
     dataset = execute_tasks_v2(
         wf_task_list=[
-            WorkflowTask(
+            WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_task_list["create_ome_zarr_compound"],
                 args_non_parallel=dict(image_dir="/tmp/input_images"),
                 id=0,
                 order=0,
             )
         ],
-        dataset=Dataset(zarr_dir=zarr_dir),
+        dataset=DatasetV2Mock(zarr_dir=zarr_dir),
         **execute_tasks_v2_args,
     )
     assert dataset.image_paths == [
@@ -276,7 +276,7 @@ def test_fractal_demos_01_no_overwrite(
     # Run illumination correction with overwrite_input=False
     dataset = execute_tasks_v2(
         wf_task_list=[
-            WorkflowTask(
+            WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_task_list["illumination_correction"],
                 args_parallel=dict(overwrite_input=False),
                 id=1,
@@ -353,7 +353,7 @@ def test_fractal_demos_01_no_overwrite(
 
     dataset = execute_tasks_v2(
         wf_task_list=[
-            WorkflowTask(
+            WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_task_list["MIP_compound"],
                 args_non_parallel=dict(suffix="mip"),
                 id=2,
@@ -418,7 +418,7 @@ def test_fractal_demos_01_no_overwrite(
 
     dataset = execute_tasks_v2(
         wf_task_list=[
-            WorkflowTask(
+            WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_task_list["cellpose_segmentation"],
                 id=3,
                 order=3,
@@ -451,7 +451,7 @@ def test_registration_no_overwrite(
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     dataset = execute_tasks_v2(
         wf_task_list=[
-            WorkflowTask(
+            WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_task_list[
                     "create_ome_zarr_multiplex_compound"
                 ],
@@ -460,14 +460,14 @@ def test_registration_no_overwrite(
                 order=0,
             ),
         ],
-        dataset=Dataset(zarr_dir=zarr_dir),
+        dataset=DatasetV2Mock(zarr_dir=zarr_dir),
         **execute_tasks_v2_args,
     )
 
     # Run init registration
     dataset = execute_tasks_v2(
         wf_task_list=[
-            WorkflowTask(
+            WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_task_list[
                     "calculate_registration_compound"
                 ],
@@ -493,7 +493,7 @@ def test_registration_no_overwrite(
     # Run find_registration_consensus
     dataset = execute_tasks_v2(
         wf_task_list=[
-            WorkflowTask(
+            WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_task_list[
                     "find_registration_consensus"
                 ],
@@ -518,7 +518,7 @@ def test_registration_no_overwrite(
     # Run apply_registration_to_image
     dataset = execute_tasks_v2(
         wf_task_list=[
-            WorkflowTask(
+            WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_task_list[
                     "apply_registration_to_image"
                 ],
@@ -553,7 +553,7 @@ def test_registration_overwrite(
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     dataset = execute_tasks_v2(
         wf_task_list=[
-            WorkflowTask(
+            WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_task_list[
                     "create_ome_zarr_multiplex_compound"
                 ],
@@ -562,14 +562,14 @@ def test_registration_overwrite(
                 order=0,
             ),
         ],
-        dataset=Dataset(zarr_dir=zarr_dir),
+        dataset=DatasetV2Mock(zarr_dir=zarr_dir),
         **execute_tasks_v2_args,
     )
 
     # Run init registration
     dataset = execute_tasks_v2(
         wf_task_list=[
-            WorkflowTask(
+            WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_task_list[
                     "calculate_registration_compound"
                 ],
@@ -595,7 +595,7 @@ def test_registration_overwrite(
     # Run find_registration_consensus
     dataset = execute_tasks_v2(
         wf_task_list=[
-            WorkflowTask(
+            WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_task_list[
                     "find_registration_consensus"
                 ],
@@ -620,7 +620,7 @@ def test_registration_overwrite(
     # Run apply_registration_to_image
     dataset = execute_tasks_v2(
         wf_task_list=[
-            WorkflowTask(
+            WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_task_list[
                     "apply_registration_to_image"
                 ],
@@ -654,14 +654,14 @@ def test_channel_parallelization_with_overwrite(
     # Run create_ome_zarr+yokogawa_to_zarr
     dataset = execute_tasks_v2(
         wf_task_list=[
-            WorkflowTask(
+            WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_task_list["create_ome_zarr_compound"],
                 args_non_parallel=dict(image_dir="/tmp/input_images"),
                 id=0,
                 order=0,
             ),
         ],
-        dataset=Dataset(zarr_dir=zarr_dir),
+        dataset=DatasetV2Mock(zarr_dir=zarr_dir),
         **execute_tasks_v2_args,
     )
 
@@ -671,7 +671,7 @@ def test_channel_parallelization_with_overwrite(
     # Run illumination_correction_compound
     dataset = execute_tasks_v2(
         wf_task_list=[
-            WorkflowTask(
+            WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_task_list[
                     "illumination_correction_compound"
                 ],
@@ -703,14 +703,14 @@ def test_channel_parallelization_no_overwrite(
     # Run create_ome_zarr+yokogawa_to_zarr
     dataset = execute_tasks_v2(
         wf_task_list=[
-            WorkflowTask(
+            WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_task_list["create_ome_zarr_compound"],
                 args_non_parallel=dict(image_dir="/tmp/input_images"),
                 id=0,
                 order=0,
             ),
         ],
-        dataset=Dataset(zarr_dir=zarr_dir),
+        dataset=DatasetV2Mock(zarr_dir=zarr_dir),
         **execute_tasks_v2_args,
     )
 
@@ -720,7 +720,7 @@ def test_channel_parallelization_no_overwrite(
     # Run init_channel_parallelization
     dataset = execute_tasks_v2(
         wf_task_list=[
-            WorkflowTask(
+            WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_task_list[
                     "illumination_correction_compound"
                 ],
