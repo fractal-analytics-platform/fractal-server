@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Any
 
 
-def _convert_v2_args_into_v1(kwargs_v2: dict[str, Any]) -> dict[str, Any]:
+def convert_v2_args_into_v1(kwargs_v2: dict[str, Any]) -> dict[str, Any]:
 
     kwargs_v1 = deepcopy(kwargs_v2)
 
