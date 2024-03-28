@@ -7,18 +7,16 @@
       "args_schema_non_parallel": {
         "additionalProperties": false,
         "properties": {
-          "fake_list_relative_paths": {
-            "description": "Missing description",
-            "items": {
-              "type": "string"
-            },
-            "title": "Fake List Relative Paths",
-            "type": "array"
-          },
           "image_dir": {
             "description": "Missing description",
             "title": "Image Dir",
             "type": "string"
+          },
+          "num_images": {
+            "default": 2,
+            "description": "Missing description",
+            "title": "Num Images",
+            "type": "integer"
           },
           "paths": {
             "description": "Missing description",
