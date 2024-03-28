@@ -18,15 +18,15 @@ from ....models import Dataset
 from ....models import Project
 from ....models import Resource
 from ....runner.filenames import HISTORY_FILENAME
-from ....schemas.v1 import DatasetCreate
-from ....schemas.v1 import DatasetRead
-from ....schemas.v1 import DatasetStatusRead
-from ....schemas.v1 import DatasetUpdate
-from ....schemas.v1 import ResourceCreate
-from ....schemas.v1 import ResourceRead
-from ....schemas.v1 import ResourceUpdate
-from ....schemas.v1 import WorkflowExport
-from ....schemas.v1 import WorkflowTaskExport
+from ....schemas.v1 import DatasetCreateV1
+from ....schemas.v1 import DatasetReadV1
+from ....schemas.v1 import DatasetStatusReadV1
+from ....schemas.v1 import DatasetUpdateV1
+from ....schemas.v1 import ResourceCreateV1
+from ....schemas.v1 import ResourceReadV1
+from ....schemas.v1 import ResourceUpdateV1
+from ....schemas.v1 import WorkflowExportV1
+from ....schemas.v1 import WorkflowTaskExportV1
 from ....security import current_active_user
 from ....security import User
 from ._aux_functions import _get_dataset_check_owner
@@ -40,15 +40,15 @@ router = APIRouter()
 
 @router.post(
     "/project/{project_id}/dataset/",
-    response_model=DatasetRead,
+    response_model=DatasetReadV1,
     status_code=status.HTTP_201_CREATED,
 )
 async def create_dataset(
     project_id: int,
-    dataset: DatasetCreate,
+    dataset: DatasetCreateV1,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[DatasetRead]:
+) -> Optional[DatasetReadV1]:
     """
     Add new dataset to current project
     """
@@ -66,14 +66,14 @@ async def create_dataset(
 
 @router.get(
     "/project/{project_id}/dataset/",
-    response_model=list[DatasetRead],
+    response_model=list[DatasetReadV1],
 )
 async def read_dataset_list(
     project_id: int,
     history: bool = True,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[list[DatasetRead]]:
+) -> Optional[list[DatasetReadV1]]:
     """
     Get dataset list for given project
     """
@@ -97,14 +97,14 @@ async def read_dataset_list(
 
 @router.get(
     "/project/{project_id}/dataset/{dataset_id}/",
-    response_model=DatasetRead,
+    response_model=DatasetReadV1,
 )
 async def read_dataset(
     project_id: int,
     dataset_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[DatasetRead]:
+) -> Optional[DatasetReadV1]:
     """
     Get info on a dataset associated to the current project
     """
@@ -121,15 +121,15 @@ async def read_dataset(
 
 @router.patch(
     "/project/{project_id}/dataset/{dataset_id}/",
-    response_model=DatasetRead,
+    response_model=DatasetReadV1,
 )
 async def update_dataset(
     project_id: int,
     dataset_id: int,
-    dataset_update: DatasetUpdate,
+    dataset_update: DatasetUpdateV1,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[DatasetRead]:
+) -> Optional[DatasetReadV1]:
     """
     Edit a dataset associated to the current project
     """
@@ -230,16 +230,16 @@ async def delete_dataset(
 
 @router.post(
     "/project/{project_id}/dataset/{dataset_id}/resource/",
-    response_model=ResourceRead,
+    response_model=ResourceReadV1,
     status_code=status.HTTP_201_CREATED,
 )
 async def create_resource(
     project_id: int,
     dataset_id: int,
-    resource: ResourceCreate,
+    resource: ResourceCreateV1,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[ResourceRead]:
+) -> Optional[ResourceReadV1]:
     """
     Add resource to an existing dataset
     """
@@ -260,14 +260,14 @@ async def create_resource(
 
 @router.get(
     "/project/{project_id}/dataset/{dataset_id}/resource/",
-    response_model=list[ResourceRead],
+    response_model=list[ResourceReadV1],
 )
 async def get_resource_list(
     project_id: int,
     dataset_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[list[ResourceRead]]:
+) -> Optional[list[ResourceReadV1]]:
     """
     Get resources from a dataset
     """
@@ -286,16 +286,16 @@ async def get_resource_list(
 
 @router.patch(
     "/project/{project_id}/dataset/{dataset_id}/resource/{resource_id}/",
-    response_model=ResourceRead,
+    response_model=ResourceReadV1,
 )
 async def update_resource(
     project_id: int,
     dataset_id: int,
     resource_id: int,
-    resource_update: ResourceUpdate,
+    resource_update: ResourceUpdateV1,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[ResourceRead]:
+) -> Optional[ResourceReadV1]:
     """
     Edit a resource of a dataset
     """
@@ -361,14 +361,14 @@ async def delete_resource(
 
 @router.get(
     "/project/{project_id}/dataset/{dataset_id}/export_history/",
-    response_model=WorkflowExport,
+    response_model=WorkflowExportV1,
 )
 async def export_history_as_workflow(
     project_id: int,
     dataset_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[WorkflowExport]:
+) -> Optional[WorkflowExportV1]:
     """
     Extract a reproducible workflow from the dataset history.
     """
@@ -413,7 +413,7 @@ async def export_history_as_workflow(
         wftask = history_item["workflowtask"]
         wftask_status = history_item["status"]
         if wftask_status == "done":
-            task_list.append(WorkflowTaskExport(**wftask))
+            task_list.append(WorkflowTaskExportV1(**wftask))
 
     def _slugify_dataset_name(_name: str) -> str:
         _new_name = _name
@@ -423,20 +423,20 @@ async def export_history_as_workflow(
 
     name = f"history_{_slugify_dataset_name(dataset.name)}"
 
-    workflow = WorkflowExport(name=name, task_list=task_list)
+    workflow = WorkflowExportV1(name=name, task_list=task_list)
     return workflow
 
 
 @router.get(
     "/project/{project_id}/dataset/{dataset_id}/status/",
-    response_model=DatasetStatusRead,
+    response_model=DatasetStatusReadV1,
 )
 async def get_workflowtask_status(
     project_id: int,
     dataset_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[DatasetStatusRead]:
+) -> Optional[DatasetStatusReadV1]:
     """
     Extract the status of all `WorkflowTask`s that ran on a given `Dataset`.
     """
@@ -523,16 +523,16 @@ async def get_workflowtask_status(
             wftask_status = history_item["status"]
             workflow_tasks_status_dict[wftask_id] = wftask_status
 
-    response_body = DatasetStatusRead(status=workflow_tasks_status_dict)
+    response_body = DatasetStatusReadV1(status=workflow_tasks_status_dict)
     return response_body
 
 
-@router.get("/dataset/", response_model=list[DatasetRead])
+@router.get("/dataset/", response_model=list[DatasetReadV1])
 async def get_user_datasets(
     history: bool = True,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> list[DatasetRead]:
+) -> list[DatasetReadV1]:
     """
     Returns all the datasets of the current user
     """

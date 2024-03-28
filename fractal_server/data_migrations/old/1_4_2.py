@@ -13,9 +13,9 @@ from sqlalchemy.exc import IntegrityError
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v1.job import ApplyWorkflow
 from fractal_server.app.models.v1.project import Project
-from fractal_server.app.schemas.v1.applyworkflow import ApplyWorkflowRead
-from fractal_server.app.schemas.v1.dumps import ProjectDump
-from fractal_server.app.schemas.v1.project import ProjectRead
+from fractal_server.app.schemas.v1.applyworkflow import ApplyWorkflowReadV1
+from fractal_server.app.schemas.v1.dumps import ProjectDumpV1
+from fractal_server.app.schemas.v1.project import ProjectReadV1
 
 
 REFERENCE_TIMESTAMP = datetime(2000, 1, 1, tzinfo=timezone.utc)
@@ -55,7 +55,7 @@ with next(get_sync_db()) as db:
             db.commit()
             db.refresh(project)
             db.expunge(project)
-            ProjectRead(**project.model_dump())
+            ProjectReadV1(**project.model_dump())
 
     # Get list of all jobs
     stm = select(ApplyWorkflow)
@@ -91,7 +91,7 @@ with next(get_sync_db()) as db:
                 project_dump = json.loads(project.json(exclude={"user_list"}))
 
             logging.warning(f"[Job {job.id:4d}] setting {project_dump=}")
-            ProjectDump(**project_dump)
+            ProjectDumpV1(**project_dump)
             job.project_dump = project_dump
             db.add(job)
             db.commit()
@@ -99,4 +99,4 @@ with next(get_sync_db()) as db:
             # Also validate that the row can be cast into ApplyWorkflowRead
             db.refresh(job)
             db.expunge(job)
-            ApplyWorkflowRead(**job.model_dump())
+            ApplyWorkflowReadV1(**job.model_dump())

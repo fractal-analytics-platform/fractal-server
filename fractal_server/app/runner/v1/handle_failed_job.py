@@ -23,7 +23,7 @@ from ...models.v1 import ApplyWorkflow
 from ...models.v1 import Dataset
 from ...models.v1 import Workflow
 from ...models.v1 import WorkflowTask
-from ...schemas.v1 import WorkflowTaskStatusType
+from ...schemas.v1 import WorkflowTaskStatusTypeV1
 from ..filenames import HISTORY_FILENAME
 from ..filenames import METADATA_FILENAME
 
@@ -98,7 +98,7 @@ def assemble_history_failed_job(
         failed_wftask_dump["task"] = failed_wftask.task.model_dump()
         new_history_item = dict(
             workflowtask=failed_wftask_dump,
-            status=WorkflowTaskStatusType.FAILED,
+            status=WorkflowTaskStatusTypeV1.FAILED,
             parallelization=dict(
                 parallelization_level=failed_wftask.parallelization_level,
             ),

@@ -9,10 +9,10 @@ from sqlalchemy.types import JSON
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
-from ...schemas.v1.task import _TaskBase
+from ...schemas.v1.task import _TaskBaseV1
 
 
-class Task(_TaskBase, SQLModel, table=True):
+class Task(_TaskBaseV1, SQLModel, table=True):
     """
     Task model
 

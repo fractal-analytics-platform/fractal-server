@@ -14,7 +14,7 @@ from pydantic import BaseModel
 from pydantic import Extra
 
 
-class ProjectDump(BaseModel, extra=Extra.forbid):
+class ProjectDumpV1(BaseModel, extra=Extra.forbid):
 
     id: int
     name: str
@@ -22,7 +22,7 @@ class ProjectDump(BaseModel, extra=Extra.forbid):
     timestamp_created: str
 
 
-class TaskDump(BaseModel):
+class TaskDumpV1(BaseModel):
     id: int
     source: str
     name: str
@@ -33,32 +33,32 @@ class TaskDump(BaseModel):
     version: Optional[str]
 
 
-class WorkflowTaskDump(BaseModel):
+class WorkflowTaskDumpV1(BaseModel):
     id: int
     order: Optional[int]
     workflow_id: int
     task_id: int
-    task: TaskDump
+    task: TaskDumpV1
 
 
-class WorkflowDump(BaseModel):
+class WorkflowDumpV1(BaseModel):
     id: int
     name: str
     project_id: int
     timestamp_created: str
 
 
-class ResourceDump(BaseModel):
+class ResourceDumpV1(BaseModel):
     id: int
     path: str
     dataset_id: int
 
 
-class DatasetDump(BaseModel):
+class DatasetDumpV1(BaseModel):
     id: int
     name: str
     type: Optional[str]
     read_only: bool
-    resource_list: list[ResourceDump]
+    resource_list: list[ResourceDumpV1]
     project_id: int
     timestamp_created: str

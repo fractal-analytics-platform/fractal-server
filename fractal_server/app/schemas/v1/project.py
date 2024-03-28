@@ -9,13 +9,13 @@ from .._validators import valutc
 
 
 __all__ = (
-    "ProjectCreate",
-    "ProjectRead",
-    "ProjectUpdate",
+    "ProjectCreateV1",
+    "ProjectReadV1",
+    "ProjectUpdateV1",
 )
 
 
-class _ProjectBase(BaseModel):
+class _ProjectBaseV1(BaseModel):
     """
     Base class for `Project`.
 
@@ -28,7 +28,7 @@ class _ProjectBase(BaseModel):
     read_only: bool = False
 
 
-class ProjectCreate(_ProjectBase):
+class ProjectCreateV1(_ProjectBaseV1):
     """
     Class for `Project` creation.
     """
@@ -37,7 +37,7 @@ class ProjectCreate(_ProjectBase):
     _name = validator("name", allow_reuse=True)(valstr("name"))
 
 
-class ProjectRead(_ProjectBase):
+class ProjectReadV1(_ProjectBaseV1):
     """
     Class for `Project` read from database.
 
@@ -55,7 +55,7 @@ class ProjectRead(_ProjectBase):
     )
 
 
-class ProjectUpdate(_ProjectBase):
+class ProjectUpdateV1(_ProjectBaseV1):
     """
     Class for `Project` update.
 

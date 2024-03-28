@@ -11,7 +11,7 @@ from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.runner.v1 import submit_workflow
-from fractal_server.app.schemas.v1 import JobStatusType
+from fractal_server.app.schemas.v1 import JobStatusTypeV1
 
 
 async def test_success_submit_workflows(
@@ -179,7 +179,7 @@ async def test_fail_submit_workflows_wrong_IDs(
             job_id=job.id,
         )
         await db.refresh(job)
-        assert job.status == JobStatusType.FAILED
+        assert job.status == JobStatusTypeV1.FAILED
         assert job.log == "Cannot fetch workflow 1234 from database\n"
 
         await submit_workflow(
@@ -190,7 +190,7 @@ async def test_fail_submit_workflows_wrong_IDs(
         )
         await db.refresh(job)
         debug(job)
-        assert job.status == JobStatusType.FAILED
+        assert job.status == JobStatusTypeV1.FAILED
         assert job.log == (
             "Cannot fetch input_dataset 1111 from database\n"
             "Cannot fetch output_dataset 2222 from database\n"

@@ -14,9 +14,9 @@ from ....db import get_async_db
 from ....models import Task
 from ....models import WorkflowTask
 from ....models.v2 import TaskV2
-from ....schemas.v1 import TaskCreate
-from ....schemas.v1 import TaskRead
-from ....schemas.v1 import TaskUpdate
+from ....schemas.v1 import TaskCreateV1
+from ....schemas.v1 import TaskReadV1
+from ....schemas.v1 import TaskUpdateV1
 from ....security import current_active_user
 from ....security import current_active_verified_user
 from ....security import User
@@ -27,12 +27,12 @@ router = APIRouter()
 logger = set_logger(__name__)
 
 
-@router.get("/", response_model=list[TaskRead])
+@router.get("/", response_model=list[TaskReadV1])
 async def get_list_task(
     user: User = Depends(current_active_user),
     args_schema: bool = True,
     db: AsyncSession = Depends(get_async_db),
-) -> list[TaskRead]:
+) -> list[TaskReadV1]:
     """
     Get list of available tasks
     """
@@ -47,12 +47,12 @@ async def get_list_task(
     return task_list
 
 
-@router.get("/{task_id}/", response_model=TaskRead)
+@router.get("/{task_id}/", response_model=TaskReadV1)
 async def get_task(
     task_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> TaskRead:
+) -> TaskReadV1:
     """
     Get info on a specific task
     """
@@ -65,13 +65,13 @@ async def get_task(
     return task
 
 
-@router.patch("/{task_id}/", response_model=TaskRead)
+@router.patch("/{task_id}/", response_model=TaskReadV1)
 async def patch_task(
     task_id: int,
-    task_update: TaskUpdate,
+    task_update: TaskUpdateV1,
     user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[TaskRead]:
+) -> Optional[TaskReadV1]:
     """
     Edit a specific task (restricted to superusers and task owner)
     """
@@ -110,12 +110,14 @@ async def patch_task(
     return db_task
 
 
-@router.post("/", response_model=TaskRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/", response_model=TaskReadV1, status_code=status.HTTP_201_CREATED
+)
 async def create_task(
-    task: TaskCreate,
+    task: TaskCreateV1,
     user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[TaskRead]:
+) -> Optional[TaskReadV1]:
     """
     Create a new task
     """
