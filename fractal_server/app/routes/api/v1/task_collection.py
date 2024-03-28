@@ -20,8 +20,8 @@ from ....db import get_async_db
 from ....models import State
 from ....models import Task
 from ....schemas.v1 import StateRead
-from ....schemas.v1 import TaskCollectPip
-from ....schemas.v1 import TaskCollectStatus
+from ....schemas.v1 import TaskCollectPipV1
+from ....schemas.v1 import TaskCollectStatusV1
 from ....security import current_active_user
 from ....security import current_active_verified_user
 from ....security import User
@@ -59,7 +59,7 @@ logger = set_logger(__name__)
     },
 )
 async def collect_tasks_pip(
-    task_collect: TaskCollectPip,
+    task_collect: TaskCollectPipV1,
     background_tasks: BackgroundTasks,
     response: Response,
     user: User = Depends(current_active_verified_user),
@@ -164,7 +164,7 @@ async def collect_tasks_pip(
 
     # All checks are OK, proceed with task collection
     full_venv_path = venv_path.relative_to(settings.FRACTAL_TASKS_DIR)
-    collection_status = TaskCollectStatus(
+    collection_status = TaskCollectStatusV1(
         status="pending", venv_path=full_venv_path, package=task_pkg.package
     )
 
@@ -216,7 +216,7 @@ async def check_collection_status(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No task collection info with id={state_id}",
         )
-    data = TaskCollectStatus(**state.data)
+    data = TaskCollectStatusV1(**state.data)
 
     # In some cases (i.e. a successful or ongoing task collection), data.log is
     # not set; if so, we collect the current logs

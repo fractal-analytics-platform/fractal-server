@@ -19,7 +19,7 @@ from ....models import Project
 from ....models import Task
 from ....models import Workflow
 from ....models import WorkflowTask
-from ....schemas.v1 import JobStatusType
+from ....schemas.v1 import JobStatusTypeV1
 from ....security import User
 
 
@@ -375,7 +375,7 @@ def _get_submitted_jobs_statement() -> SelectOfScalar:
         `ApplyWorkflow.status` equal to `submitted`.
     """
     stm = select(ApplyWorkflow).where(
-        ApplyWorkflow.status == JobStatusType.SUBMITTED
+        ApplyWorkflow.status == JobStatusTypeV1.SUBMITTED
     )
     return stm
 

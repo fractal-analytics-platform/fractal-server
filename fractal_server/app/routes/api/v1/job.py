@@ -11,10 +11,10 @@ from sqlmodel import select
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models import ApplyWorkflow
-from ....models import JobStatusType
+from ....models import JobStatusTypeV1
 from ....models import Project
 from ....runner.filenames import WORKFLOW_LOG_FILENAME
-from ....schemas.v1 import ApplyWorkflowRead
+from ....schemas.v1 import ApplyWorkflowReadV1
 from ....security import current_active_user
 from ....security import User
 from ...aux._job import _write_shutdown_file
@@ -27,12 +27,12 @@ from ._aux_functions import _get_workflow_check_owner
 router = APIRouter()
 
 
-@router.get("/job/", response_model=list[ApplyWorkflowRead])
+@router.get("/job/", response_model=list[ApplyWorkflowReadV1])
 async def get_user_jobs(
     user: User = Depends(current_active_user),
     log: bool = True,
     db: AsyncSession = Depends(get_async_db),
-) -> list[ApplyWorkflowRead]:
+) -> list[ApplyWorkflowReadV1]:
     """
     Returns all the jobs of the current user
     """
@@ -50,14 +50,14 @@ async def get_user_jobs(
 
 @router.get(
     "/project/{project_id}/workflow/{workflow_id}/job/",
-    response_model=list[ApplyWorkflowRead],
+    response_model=list[ApplyWorkflowReadV1],
 )
 async def get_workflow_jobs(
     project_id: int,
     workflow_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[list[ApplyWorkflowRead]]:
+) -> Optional[list[ApplyWorkflowReadV1]]:
     """
     Returns all the jobs related to a specific workflow
     """
@@ -72,7 +72,7 @@ async def get_workflow_jobs(
 
 @router.get(
     "/project/{project_id}/job/{job_id}/",
-    response_model=ApplyWorkflowRead,
+    response_model=ApplyWorkflowReadV1,
 )
 async def read_job(
     project_id: int,
@@ -80,7 +80,7 @@ async def read_job(
     show_tmp_logs: bool = False,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[ApplyWorkflowRead]:
+) -> Optional[ApplyWorkflowReadV1]:
     """
     Return info on an existing job
     """
@@ -94,7 +94,7 @@ async def read_job(
     job = output["job"]
     await db.close()
 
-    if show_tmp_logs and (job.status == JobStatusType.SUBMITTED):
+    if show_tmp_logs and (job.status == JobStatusTypeV1.SUBMITTED):
         try:
             with open(f"{job.working_dir}/{WORKFLOW_LOG_FILENAME}", "r") as f:
                 job.log = f.read()
@@ -140,14 +140,14 @@ async def download_job_logs(
 
 @router.get(
     "/project/{project_id}/job/",
-    response_model=list[ApplyWorkflowRead],
+    response_model=list[ApplyWorkflowReadV1],
 )
 async def get_job_list(
     project_id: int,
     user: User = Depends(current_active_user),
     log: bool = True,
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[list[ApplyWorkflowRead]]:
+) -> Optional[list[ApplyWorkflowReadV1]]:
     """
     Get job list for given project
     """

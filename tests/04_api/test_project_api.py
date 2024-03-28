@@ -12,7 +12,7 @@ from fractal_server.app.models import Workflow
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
-from fractal_server.app.schemas.v1 import JobStatusType
+from fractal_server.app.schemas.v1 import JobStatusTypeV1
 
 PREFIX = "/api/v1"
 
@@ -214,7 +214,7 @@ async def test_delete_project(
             working_dir=(tmp_path / "some_working_dir").as_posix(),
             input_dataset_id=dataset_id,
             output_dataset_id=dataset_id,
-            status=JobStatusType.DONE,
+            status=JobStatusTypeV1.DONE,
         )
 
         # Check that a project-related job exists - via query
@@ -270,7 +270,7 @@ async def test_delete_project_ongoing_jobs(
 ):
     async with MockCurrentUser() as user:
 
-        async def get_project_id_linked_to_job(status: JobStatusType) -> int:
+        async def get_project_id_linked_to_job(status: JobStatusTypeV1) -> int:
             p = await project_factory(user)
             d = await dataset_factory(project_id=p.id)
             w = await workflow_factory(project_id=p.id)
@@ -288,10 +288,10 @@ async def test_delete_project_ongoing_jobs(
             )
             return p.id
 
-        prj_done = await get_project_id_linked_to_job(JobStatusType.DONE)
-        prj_failed = await get_project_id_linked_to_job(JobStatusType.FAILED)
+        prj_done = await get_project_id_linked_to_job(JobStatusTypeV1.DONE)
+        prj_failed = await get_project_id_linked_to_job(JobStatusTypeV1.FAILED)
         prj_submitted = await get_project_id_linked_to_job(
-            JobStatusType.SUBMITTED
+            JobStatusTypeV1.SUBMITTED
         )
 
         res = await client.delete(f"api/v1/project/{prj_done}/")

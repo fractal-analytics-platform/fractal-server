@@ -12,7 +12,7 @@ from pydantic import validator
 __all__ = ("TaskManifestV1", "ManifestV1")
 
 
-class _TaskManifestBase(BaseModel):
+class _TaskManifestBaseV1(BaseModel):
     """
     Base class for `TaskManifestV1`.
 
@@ -54,10 +54,10 @@ class _TaskManifestBase(BaseModel):
     docs_link: Optional[HttpUrl]
 
 
-TaskManifestType = TypeVar("TaskManifestType", bound=_TaskManifestBase)
+TaskManifestType = TypeVar("TaskManifestType", bound=_TaskManifestBaseV1)
 
 
-class _ManifestBase(BaseModel):
+class _ManifestBaseV1(BaseModel):
     """
     Base class for `ManifestV1`.
 
@@ -102,7 +102,7 @@ class _ManifestBase(BaseModel):
         return values
 
 
-class TaskManifestV1(_TaskManifestBase):
+class TaskManifestV1(_TaskManifestBaseV1):
     """
     Task manifest schema version 1.
     """
@@ -110,7 +110,7 @@ class TaskManifestV1(_TaskManifestBase):
     pass
 
 
-class ManifestV1(_ManifestBase):
+class ManifestV1(_ManifestBaseV1):
     """
     Manifest schema version 1.
 

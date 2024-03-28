@@ -7,7 +7,7 @@ from pydantic import validator
 
 from .._validators import valstr
 from .._validators import valutc
-from ..v1.project import ProjectRead
+from ..v1.project import ProjectReadV1
 from .dumps import WorkflowTaskDumpV2
 from .workflowtask import WorkflowTaskStatusTypeV2
 from fractal_server.images import Filters
@@ -59,7 +59,7 @@ class DatasetReadV2(BaseModel):
     name: str
 
     project_id: int
-    project: ProjectRead
+    project: ProjectReadV1
 
     history: list[_DatasetHistoryItemV2]
     read_only: bool

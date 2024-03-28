@@ -7,9 +7,9 @@ from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.routes.api.v1.project import _encode_as_utc
-from fractal_server.app.schemas.v1.dumps import DatasetDump
-from fractal_server.app.schemas.v1.dumps import ProjectDump
-from fractal_server.app.schemas.v1.dumps import WorkflowDump
+from fractal_server.app.schemas.v1.dumps import DatasetDumpV1
+from fractal_server.app.schemas.v1.dumps import ProjectDumpV1
+from fractal_server.app.schemas.v1.dumps import WorkflowDumpV1
 
 PREFIX = "/api/v1"
 
@@ -497,22 +497,22 @@ async def test_project_apply_workflow_subset(
             f"&output_dataset_id={dataset3.id}",
             json=dict(first_task_index=0, last_task_index=1),
         )
-        expected_project_dump = ProjectDump(
+        expected_project_dump = ProjectDumpV1(
             **project.model_dump(exclude={"user_list", "timestamp_created"}),
             timestamp_created=_encode_as_utc(project.timestamp_created),
         ).dict()
-        expected_workflow_dump = WorkflowDump(
+        expected_workflow_dump = WorkflowDumpV1(
             **workflow.model_dump(exclude={"task_list", "timestamp_created"}),
             timestamp_created=_encode_as_utc(workflow.timestamp_created),
         ).dict()
-        expected_input_dataset_dump = DatasetDump(
+        expected_input_dataset_dump = DatasetDumpV1(
             **dataset1.model_dump(exclude={"timestamp_created"}),
             timestamp_created=_encode_as_utc(dataset1.timestamp_created),
             resource_list=[
                 resource.model_dump() for resource in dataset1.resource_list
             ],
         ).dict()
-        expected_output_dataset_dump = DatasetDump(
+        expected_output_dataset_dump = DatasetDumpV1(
             **dataset3.model_dump(exclude={"timestamp_created"}),
             timestamp_created=_encode_as_utc(dataset3.timestamp_created),
             resource_list=[

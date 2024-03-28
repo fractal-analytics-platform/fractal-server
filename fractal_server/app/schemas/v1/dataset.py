@@ -9,22 +9,22 @@ from pydantic import validator
 from .._validators import val_absolute_path
 from .._validators import valstr
 from .._validators import valutc
-from .dumps import WorkflowTaskDump
-from .project import ProjectRead
-from .workflow import WorkflowTaskStatusType
+from .dumps import WorkflowTaskDumpV1
+from .project import ProjectReadV1
+from .workflow import WorkflowTaskStatusTypeV1
 
 __all__ = (
-    "DatasetUpdate",
-    "DatasetCreate",
-    "DatasetRead",
-    "ResourceCreate",
-    "ResourceRead",
-    "ResourceUpdate",
-    "DatasetStatusRead",
+    "DatasetUpdateV1",
+    "DatasetCreateV1",
+    "DatasetReadV1",
+    "ResourceCreateV1",
+    "ResourceReadV1",
+    "ResourceUpdateV1",
+    "DatasetStatusReadV1",
 )
 
 
-class _ResourceBase(BaseModel):
+class _ResourceBaseV1(BaseModel):
     """
     Base class for `Resource`.
 
@@ -35,7 +35,7 @@ class _ResourceBase(BaseModel):
     path: str
 
 
-class ResourceCreate(_ResourceBase):
+class ResourceCreateV1(_ResourceBaseV1):
     """
     Class for `Resource` creation.
     """
@@ -44,7 +44,7 @@ class ResourceCreate(_ResourceBase):
     _path = validator("path", allow_reuse=True)(val_absolute_path("path"))
 
 
-class ResourceUpdate(_ResourceBase):
+class ResourceUpdateV1(_ResourceBaseV1):
     """
     Class for `Resource` update.
     """
@@ -53,7 +53,7 @@ class ResourceUpdate(_ResourceBase):
     _path = validator("path", allow_reuse=True)(val_absolute_path("path"))
 
 
-class ResourceRead(_ResourceBase):
+class ResourceReadV1(_ResourceBaseV1):
     """
     Class for `Resource` read from database.
 
@@ -66,7 +66,7 @@ class ResourceRead(_ResourceBase):
     dataset_id: int
 
 
-class _DatasetHistoryItem(BaseModel):
+class _DatasetHistoryItemV1(BaseModel):
     """
     Class for an item of `Dataset.history`.
 
@@ -77,12 +77,12 @@ class _DatasetHistoryItem(BaseModel):
             and `component_list`.
     """
 
-    workflowtask: WorkflowTaskDump
-    status: WorkflowTaskStatusType
+    workflowtask: WorkflowTaskDumpV1
+    status: WorkflowTaskStatusTypeV1
     parallelization: Optional[dict]
 
 
-class _DatasetBase(BaseModel):
+class _DatasetBaseV1(BaseModel):
     """
     Base class for `Dataset`.
 
@@ -97,11 +97,11 @@ class _DatasetBase(BaseModel):
     name: str
     type: Optional[str]
     meta: dict[str, Any] = Field(default={})
-    history: list[_DatasetHistoryItem] = Field(default=[])
+    history: list[_DatasetHistoryItemV1] = Field(default=[])
     read_only: bool = False
 
 
-class DatasetUpdate(_DatasetBase):
+class DatasetUpdateV1(_DatasetBaseV1):
     """
     Class for `Dataset` update.
 
@@ -114,7 +114,7 @@ class DatasetUpdate(_DatasetBase):
 
     name: Optional[str]
     meta: Optional[dict[str, Any]] = None
-    history: Optional[list[_DatasetHistoryItem]] = None
+    history: Optional[list[_DatasetHistoryItemV1]] = None
     read_only: Optional[bool]
 
     # Validators
@@ -122,7 +122,7 @@ class DatasetUpdate(_DatasetBase):
     _type = validator("type", allow_reuse=True)(valstr("type"))
 
 
-class DatasetCreate(_DatasetBase):
+class DatasetCreateV1(_DatasetBaseV1):
     """
     Class for `Dataset` creation.
     """
@@ -132,7 +132,7 @@ class DatasetCreate(_DatasetBase):
     _type = validator("type", allow_reuse=True)(valstr("type"))
 
 
-class DatasetRead(_DatasetBase):
+class DatasetReadV1(_DatasetBaseV1):
     """
     Class for `Dataset` read from database.
 
@@ -145,10 +145,10 @@ class DatasetRead(_DatasetBase):
     """
 
     id: int
-    resource_list: list[ResourceRead]
+    resource_list: list[ResourceReadV1]
     project_id: int
     read_only: bool
-    project: ProjectRead
+    project: ProjectReadV1
     timestamp_created: datetime
 
     _timestamp_created = validator("timestamp_created", allow_reuse=True)(
@@ -156,7 +156,7 @@ class DatasetRead(_DatasetBase):
     )
 
 
-class DatasetStatusRead(BaseModel):
+class DatasetStatusReadV1(BaseModel):
     """
     Response type for the
     `/project/{project_id}/dataset/{dataset_id}/status/` endpoint
@@ -165,6 +165,6 @@ class DatasetStatusRead(BaseModel):
     status: Optional[
         dict[
             int,
-            WorkflowTaskStatusType,
+            WorkflowTaskStatusTypeV1,
         ]
     ] = None

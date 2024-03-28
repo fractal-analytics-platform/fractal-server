@@ -23,7 +23,7 @@ from ....logger import get_logger
 from ....syringe import Inject
 from ...models import Task
 from ...models import WorkflowTask
-from ...schemas.v1 import WorkflowTaskStatusType
+from ...schemas.v1 import WorkflowTaskStatusTypeV1
 from ..exceptions import JobExecutionError
 from ..exceptions import TaskExecutionError
 from .common import TaskParameters
@@ -226,7 +226,7 @@ def call_single_task(
     wftask_dump["task"] = wftask.task.model_dump()
     new_history_item = dict(
         workflowtask=wftask_dump,
-        status=WorkflowTaskStatusType.DONE,
+        status=WorkflowTaskStatusTypeV1.DONE,
         parallelization=None,
     )
     updated_history = task_pars.history.copy()
@@ -486,7 +486,7 @@ def call_parallel_task(
     wftask_dump["task"] = wftask.task.model_dump()
     new_history_item = dict(
         workflowtask=wftask_dump,
-        status=WorkflowTaskStatusType.DONE,
+        status=WorkflowTaskStatusTypeV1.DONE,
         parallelization=dict(
             parallelization_level=wftask.parallelization_level,
             component_list=component_list,

@@ -16,7 +16,7 @@ from ....models.v2 import JobV2
 from ....models.v2 import ProjectV2
 from ....models.v2 import TaskV2
 from ....models.v2 import WorkflowV2
-from ....schemas.v1 import WorkflowTaskCreate as WorkflowTaskCreateV1
+from ....schemas.v1 import WorkflowTaskCreateV1
 from ....schemas.v2 import WorkflowCreateV2
 from ....schemas.v2 import WorkflowExportV2
 from ....schemas.v2 import WorkflowImportV2

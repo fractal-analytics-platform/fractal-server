@@ -9,21 +9,21 @@ from fractal_server.app.models import Resource
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
-from fractal_server.app.schemas.v1 import JobStatusType
-from fractal_server.app.schemas.v1 import WorkflowTaskStatusType
-from fractal_server.app.schemas.v1.dataset import _DatasetHistoryItem
-from fractal_server.app.schemas.v1.dumps import TaskDump
-from fractal_server.app.schemas.v1.dumps import WorkflowTaskDump
+from fractal_server.app.schemas.v1 import JobStatusTypeV1
+from fractal_server.app.schemas.v1 import WorkflowTaskStatusTypeV1
+from fractal_server.app.schemas.v1.dataset import _DatasetHistoryItemV1
+from fractal_server.app.schemas.v1.dumps import TaskDumpV1
+from fractal_server.app.schemas.v1.dumps import WorkflowTaskDumpV1
 
 PREFIX = "api/v1"
 
 HISTORY = [
-    _DatasetHistoryItem(
-        workflowtask=WorkflowTaskDump(
+    _DatasetHistoryItemV1(
+        workflowtask=WorkflowTaskDumpV1(
             id=1,
             workflow_id=1,
             task_id=1,
-            task=TaskDump(
+            task=TaskDumpV1(
                 id=1,
                 source="...",
                 name="test",
@@ -32,7 +32,7 @@ HISTORY = [
                 output_type="zarr",
             ).dict(),
         ).dict(),
-        status=WorkflowTaskStatusType.DONE,
+        status=WorkflowTaskStatusTypeV1.DONE,
     ).dict()
 ]
 
@@ -266,7 +266,7 @@ async def test_delete_dataset_cascade_jobs(
             input_dataset_id=input_ds.id,
             output_dataset_id=output_ds.id,
             working_dir=(tmp_path / "some_working_dir").as_posix(),
-            status=JobStatusType.DONE,
+            status=JobStatusTypeV1.DONE,
         )
         assert job.input_dataset_id == input_ds.id
         assert job.output_dataset_id == output_ds.id
@@ -303,19 +303,19 @@ async def test_delete_dataset_cascade_jobs(
         await job_factory(
             input_dataset_id=ds_deletable_1.id,
             output_dataset_id=ds_not_deletable_1.id,
-            status=JobStatusType.DONE,
+            status=JobStatusTypeV1.DONE,
             **common_args,
         )
         await job_factory(
             input_dataset_id=ds_not_deletable_2.id,
             output_dataset_id=ds_deletable_2.id,
-            status=JobStatusType.FAILED,
+            status=JobStatusTypeV1.FAILED,
             **common_args,
         )
         await job_factory(
             input_dataset_id=ds_not_deletable_1.id,
             output_dataset_id=ds_not_deletable_2.id,
-            status=JobStatusType.SUBMITTED,  # this is why ds are not deletable
+            status=JobStatusTypeV1.SUBMITTED,  # why ds are not deletable
             **common_args,
         )
         res = await client.delete(

@@ -8,14 +8,14 @@ from devtools import debug  # noqa
 from sqlmodel import select
 
 from fractal_server.app.models import Workflow
-from fractal_server.app.models import WorkflowExport
-from fractal_server.app.models import WorkflowImport
-from fractal_server.app.models import WorkflowRead
+from fractal_server.app.models import WorkflowExportV1
+from fractal_server.app.models import WorkflowImportV1
+from fractal_server.app.models import WorkflowReadV1
 from fractal_server.app.models import WorkflowTask
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
-from fractal_server.app.schemas.v1 import JobStatusType
+from fractal_server.app.schemas.v1 import JobStatusTypeV1
 
 
 async def get_workflow(client, p_id, wf_id):
@@ -178,17 +178,17 @@ async def test_delete_workflow(
         }
         await job_factory(
             workflow_id=wf_deletable_1.id,
-            status=JobStatusType.DONE,
+            status=JobStatusTypeV1.DONE,
             **common_args,
         )
         await job_factory(
             workflow_id=wf_deletable_2.id,
-            status=JobStatusType.FAILED,
+            status=JobStatusTypeV1.FAILED,
             **common_args,
         )
         await job_factory(
             workflow_id=wf_not_deletable_1.id,
-            status=JobStatusType.SUBMITTED,
+            status=JobStatusTypeV1.SUBMITTED,
             **common_args,
         )
         res = await client.delete(
@@ -793,7 +793,7 @@ async def test_import_export_workflow(
         prj = await project_factory(user)
 
     # Import workflow into project
-    payload = WorkflowImport(**workflow_from_file).dict(exclude_none=True)
+    payload = WorkflowImportV1(**workflow_from_file).dict(exclude_none=True)
     debug(payload)
     res = await client.post(
         f"/api/v1/project/{prj.id}/workflow/import/", json=payload
@@ -804,7 +804,7 @@ async def test_import_export_workflow(
     debug(workflow_imported)
 
     # Check that output can be cast to WorkflowRead
-    WorkflowRead(**workflow_imported)
+    WorkflowReadV1(**workflow_imported)
 
     # Export workflow
     workflow_id = workflow_imported["id"]
@@ -826,8 +826,8 @@ async def test_import_export_workflow(
 
     # Check that the exported workflow is an extension of the one in the
     # original JSON file
-    wf_old = WorkflowExport(**workflow_from_file).dict(exclude_none=True)
-    wf_new = WorkflowExport(**workflow_exported).dict(exclude_none=True)
+    wf_old = WorkflowExportV1(**workflow_from_file).dict(exclude_none=True)
+    wf_new = WorkflowExportV1(**workflow_exported).dict(exclude_none=True)
     assert len(wf_old["task_list"]) == len(wf_new["task_list"])
     for task_old, task_new in zip(wf_old["task_list"], wf_new["task_list"]):
         assert task_old.keys() <= task_new.keys()
@@ -1101,7 +1101,7 @@ async def test_delete_workflow_with_job(
             input_dataset_id=input_ds.id,
             output_dataset_id=output_ds.id,
             working_dir=(tmp_path / "some_working_dir").as_posix(),
-            status=JobStatusType.DONE,
+            status=JobStatusTypeV1.DONE,
         )
 
         assert job.workflow_id == workflow.id
