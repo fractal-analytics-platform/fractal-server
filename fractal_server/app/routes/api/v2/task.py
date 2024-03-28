@@ -11,6 +11,7 @@ from sqlmodel import select
 from .....logger import set_logger
 from ....db import AsyncSession
 from ....db import get_async_db
+from ....models.v1 import Task as TaskV1
 from ....models.v2 import TaskV2
 from ....models.v2 import WorkflowTaskV2
 from ....schemas.v2 import TaskCreateV2
@@ -79,12 +80,6 @@ async def patch_task(
     Edit a specific task (restricted to superusers and task owner)
     """
 
-    if task_update.source:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="patch_task endpoint cannot set `source`",
-        )
-
     # Retrieve task from database
     db_task = await _get_task_check_owner(task_id=task_id, user=user, db=db)
     update = task_update.dict(exclude_unset=True)
@@ -128,7 +123,7 @@ async def create_task(
     if task.command_non_parallel is None:
         task_type = "parallel"
     elif task.command_parallel is None:
-        task_type = "non parallel"
+        task_type = "non_parallel"
     else:
         task_type = "compound"
 
@@ -157,9 +152,15 @@ async def create_task(
     if res.scalars().all():
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f'TaskV2 source "{task.source}" already in use',
+            detail=f"Source '{task.source}' already used by some TaskV2",
         )
-
+    stm = select(TaskV1).where(TaskV1.source == task.source)
+    res = await db.execute(stm)
+    if res.scalars().all():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Source '{task.source}' already used by some TaskV1",
+        )
     # Add task
     db_task = TaskV2(**task.dict(), owner=owner, type=task_type)
     db.add(db_task)

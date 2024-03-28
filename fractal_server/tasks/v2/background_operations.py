@@ -265,7 +265,7 @@ def _get_task_type(task: TaskCreateV2) -> str:
     if task.command_non_parallel is None:
         return "parallel"
     elif task.command_parallel is None:
-        return "non parallel"
+        return "non_parallel"
     else:
         return "compound"
 
