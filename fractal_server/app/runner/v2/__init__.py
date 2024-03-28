@@ -18,7 +18,6 @@ from ....utils import get_timestamp
 from ...db import DB
 from ...models.v2 import DatasetV2
 from ...models.v2 import JobV2
-from ...models.v2 import WorkflowTaskV2
 from ...models.v2 import WorkflowV2
 from ...schemas.v2 import JobStatusTypeV2
 from ..exceptions import JobExecutionError
@@ -26,10 +25,12 @@ from ..exceptions import TaskExecutionError
 from ..filenames import WORKFLOW_LOG_FILENAME
 from ._local import process_workflow as local_process_workflow
 from ._slurm import process_workflow as slurm_process_workflow
-from .handle_failed_job import assemble_history_failed_job
-from .handle_failed_job import assemble_meta_failed_job
 from .runner import execute_tasks_v2  # noqa
 from fractal_server import __VERSION__
+
+# from ...models.v2 import WorkflowTaskV2
+# from .handle_failed_job import assemble_history_failed_job
+# from .handle_failed_job import assemble_meta_failed_job
 
 _backends = {}
 _backends["local"] = local_process_workflow
@@ -199,7 +200,7 @@ async def submit_workflow(
 
         processed_dataset_meta_hist = await process_workflow(
             workflow=workflow,
-            daaset=dataset,
+            dataset=dataset,
             slurm_user=slurm_user,
             slurm_account=job.slurm_account,
             user_cache_dir=user_cache_dir,
@@ -243,14 +244,14 @@ async def submit_workflow(
         pass
 
         # Assemble new history and assign it to output_dataset.meta
-        failed_wftask = db_sync.get(WorkflowTaskV2, e.workflow_task_id)
-        dataset.history = assemble_history_failed_job(
-            job,
-            dataset,
-            workflow,
-            logger,
-            failed_wftask=failed_wftask,
-        )
+        # failed_wftask = db_sync.get(WorkflowTaskV2, e.workflow_task_id)
+        # dataset.history = assemble_history_failed_job(
+        #     job,
+        #     dataset,
+        #     workflow,
+        #     logger,
+        #     failed_wftask=failed_wftask,
+        # )
 
         db_sync.merge(dataset)
 
@@ -280,12 +281,12 @@ async def submit_workflow(
         pass
 
         # Assemble new history and assign it to output_dataset.meta
-        dataset.history = assemble_history_failed_job(
-            job,
-            dataset,
-            workflow,
-            logger,
-        )
+        # dataset.history = assemble_history_failed_job(
+        #     job,
+        #     dataset,
+        #     workflow,
+        #     logger,
+        # )
 
         db_sync.merge(dataset)
 
@@ -306,15 +307,15 @@ async def submit_workflow(
 
         # Assemble output_dataset.meta based on the last successful task, i.e.
         # based on METADATA_FILENAME
-        dataset.meta = assemble_meta_failed_job(job, dataset)
+        # dataset.meta = assemble_meta_failed_job(job, dataset)
 
         # Assemble new history and assign it to output_dataset.meta
-        dataset.history = assemble_history_failed_job(
-            job,
-            dataset,
-            workflow,
-            logger,
-        )
+        # dataset.history = assemble_history_failed_job(
+        #     job,
+        #     dataset,
+        #     workflow,
+        #     logger,
+        # )
 
         db_sync.merge(dataset)
 
