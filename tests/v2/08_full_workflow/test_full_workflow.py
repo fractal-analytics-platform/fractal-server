@@ -39,6 +39,7 @@ async def test_full_workflow(
     client,
     MockCurrentUser,
     testdata_path,
+    tmp_path,
     tmp777_path,
     project_factory_v2,
     dataset_factory_v2,
@@ -49,6 +50,7 @@ async def test_full_workflow(
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=backend,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
+        FRACTAL_TASKS_DIR=tmp_path / f"tasks-{backend}",
     )
     if backend == "slurm":
         override_settings_factory(
