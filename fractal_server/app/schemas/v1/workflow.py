@@ -9,27 +9,27 @@ from pydantic import validator
 from .._validators import valint
 from .._validators import valstr
 from .._validators import valutc
-from .project import ProjectRead
-from .task import TaskExport
-from .task import TaskImport
-from .task import TaskRead
+from .project import ProjectReadV1
+from .task import TaskExportV1
+from .task import TaskImportV1
+from .task import TaskReadV1
 
 __all__ = (
-    "WorkflowCreate",
-    "WorkflowRead",
-    "WorkflowUpdate",
-    "WorkflowImport",
-    "WorkflowExport",
-    "WorkflowTaskCreate",
-    "WorkflowTaskImport",
-    "WorkflowTaskExport",
-    "WorkflowTaskRead",
-    "WorkflowTaskUpdate",
-    "WorkflowTaskStatusType",
+    "WorkflowCreateV1",
+    "WorkflowReadV1",
+    "WorkflowUpdateV1",
+    "WorkflowImportV1",
+    "WorkflowExportV1",
+    "WorkflowTaskCreateV1",
+    "WorkflowTaskImportV1",
+    "WorkflowTaskExportV1",
+    "WorkflowTaskReadV1",
+    "WorkflowTaskUpdateV1",
+    "WorkflowTaskStatusTypeV1",
 )
 
 
-class _WorkflowTaskBase(BaseModel):
+class _WorkflowTaskBaseV1(BaseModel):
     """
     Base class for `WorkflowTask`.
     """
@@ -38,7 +38,7 @@ class _WorkflowTaskBase(BaseModel):
     args: Optional[dict[str, Any]] = None
 
 
-class WorkflowTaskCreate(_WorkflowTaskBase):
+class WorkflowTaskCreateV1(_WorkflowTaskBaseV1):
     """
     Class for `WorkflowTask` creation.
 
@@ -51,7 +51,7 @@ class WorkflowTaskCreate(_WorkflowTaskBase):
     _order = validator("order", allow_reuse=True)(valint("order", min_val=0))
 
 
-class WorkflowTaskRead(_WorkflowTaskBase):
+class WorkflowTaskReadV1(_WorkflowTaskBaseV1):
     """
     Class for `WorkflowTask` read from database.
 
@@ -67,10 +67,10 @@ class WorkflowTaskRead(_WorkflowTaskBase):
     order: Optional[int]
     workflow_id: int
     task_id: int
-    task: TaskRead
+    task: TaskReadV1
 
 
-class WorkflowTaskImport(_WorkflowTaskBase):
+class WorkflowTaskImportV1(_WorkflowTaskBaseV1):
     """
     Class for `WorkflowTask` import.
 
@@ -78,10 +78,10 @@ class WorkflowTaskImport(_WorkflowTaskBase):
         task:
     """
 
-    task: TaskImport
+    task: TaskImportV1
 
 
-class WorkflowTaskExport(_WorkflowTaskBase):
+class WorkflowTaskExportV1(_WorkflowTaskBaseV1):
     """
     Class for `WorkflowTask` export.
 
@@ -89,10 +89,10 @@ class WorkflowTaskExport(_WorkflowTaskBase):
         task:
     """
 
-    task: TaskExport
+    task: TaskExportV1
 
 
-class WorkflowTaskUpdate(_WorkflowTaskBase):
+class WorkflowTaskUpdateV1(_WorkflowTaskBaseV1):
     """
     Class for `WorkflowTask` update.
     """
@@ -107,7 +107,7 @@ class WorkflowTaskUpdate(_WorkflowTaskBase):
         return m
 
 
-class _WorkflowBase(BaseModel):
+class _WorkflowBaseV1(BaseModel):
     """
     Base class for `Workflow`.
 
@@ -118,7 +118,7 @@ class _WorkflowBase(BaseModel):
     name: str
 
 
-class WorkflowRead(_WorkflowBase):
+class WorkflowReadV1(_WorkflowBaseV1):
     """
     Task for `Workflow` read from database.
 
@@ -131,8 +131,8 @@ class WorkflowRead(_WorkflowBase):
 
     id: int
     project_id: int
-    task_list: list[WorkflowTaskRead]
-    project: ProjectRead
+    task_list: list[WorkflowTaskReadV1]
+    project: ProjectReadV1
     timestamp_created: datetime
 
     _timestamp_created = validator("timestamp_created", allow_reuse=True)(
@@ -140,7 +140,7 @@ class WorkflowRead(_WorkflowBase):
     )
 
 
-class WorkflowCreate(_WorkflowBase):
+class WorkflowCreateV1(_WorkflowBaseV1):
     """
     Task for `Workflow` creation.
     """
@@ -149,7 +149,7 @@ class WorkflowCreate(_WorkflowBase):
     _name = validator("name", allow_reuse=True)(valstr("name"))
 
 
-class WorkflowUpdate(_WorkflowBase):
+class WorkflowUpdateV1(_WorkflowBaseV1):
     """
     Task for `Workflow` update.
 
@@ -173,7 +173,7 @@ class WorkflowUpdate(_WorkflowBase):
         return value
 
 
-class WorkflowImport(_WorkflowBase):
+class WorkflowImportV1(_WorkflowBaseV1):
     """
     Class for `Workflow` import.
 
@@ -181,13 +181,13 @@ class WorkflowImport(_WorkflowBase):
         task_list:
     """
 
-    task_list: list[WorkflowTaskImport]
+    task_list: list[WorkflowTaskImportV1]
 
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))
 
 
-class WorkflowExport(_WorkflowBase):
+class WorkflowExportV1(_WorkflowBaseV1):
     """
     Class for `Workflow` export.
 
@@ -195,10 +195,10 @@ class WorkflowExport(_WorkflowBase):
         task_list:
     """
 
-    task_list: list[WorkflowTaskExport]
+    task_list: list[WorkflowTaskExportV1]
 
 
-class WorkflowTaskStatusType(str, Enum):
+class WorkflowTaskStatusTypeV1(str, Enum):
     """
     Define the available values for the status of a `WorkflowTask`.
 

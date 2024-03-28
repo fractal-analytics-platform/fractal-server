@@ -11,16 +11,16 @@ from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
 from ....utils import get_timestamp
-from ...schemas.v1.dataset import _DatasetBase
-from ...schemas.v1.dataset import _ResourceBase
+from ...schemas.v1.dataset import _DatasetBaseV1
+from ...schemas.v1.dataset import _ResourceBaseV1
 
 
-class Resource(_ResourceBase, SQLModel, table=True):
+class Resource(_ResourceBaseV1, SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     dataset_id: int = Field(foreign_key="dataset.id")
 
 
-class Dataset(_DatasetBase, SQLModel, table=True):
+class Dataset(_DatasetBaseV1, SQLModel, table=True):
     """
     Represent a dataset
 

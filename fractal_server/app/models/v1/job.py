@@ -9,11 +9,11 @@ from sqlmodel import Field
 from sqlmodel import SQLModel
 
 from ....utils import get_timestamp
-from ...schemas.v1 import JobStatusType
-from ...schemas.v1.applyworkflow import _ApplyWorkflowBase
+from ...schemas.v1 import JobStatusTypeV1
+from ...schemas.v1.applyworkflow import _ApplyWorkflowBaseV1
 
 
-class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
+class ApplyWorkflow(_ApplyWorkflowBaseV1, SQLModel, table=True):
     """
     Represent a workflow run
 
@@ -97,5 +97,5 @@ class ApplyWorkflow(_ApplyWorkflowBase, SQLModel, table=True):
     end_timestamp: Optional[datetime] = Field(
         default=None, sa_column=Column(DateTime(timezone=True))
     )
-    status: str = JobStatusType.SUBMITTED
+    status: str = JobStatusTypeV1.SUBMITTED
     log: Optional[str] = None

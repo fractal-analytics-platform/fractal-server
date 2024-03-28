@@ -8,12 +8,12 @@ from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
 from ....utils import get_timestamp
-from ...schemas.v1.project import _ProjectBase
+from ...schemas.v1.project import _ProjectBaseV1
 from ..linkuserproject import LinkUserProject
 from ..security import UserOAuth
 
 
-class Project(_ProjectBase, SQLModel, table=True):
+class Project(_ProjectBaseV1, SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     timestamp_created: datetime = Field(

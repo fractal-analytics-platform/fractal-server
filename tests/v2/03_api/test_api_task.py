@@ -3,7 +3,7 @@ from devtools import debug
 from sqlmodel import select
 
 from fractal_server.app.models.v2 import TaskV2
-from fractal_server.app.schemas.v1 import TaskCreate as TaskCreateV1
+from fractal_server.app.schemas.v1 import TaskCreateV1
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.app.schemas.v2 import TaskUpdateV2
 

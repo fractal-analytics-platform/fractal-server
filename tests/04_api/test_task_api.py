@@ -3,8 +3,8 @@ from devtools import debug
 from sqlmodel import select
 
 from fractal_server.app.models import Task
-from fractal_server.app.schemas.v1.task import TaskCreate
-from fractal_server.app.schemas.v1.task import TaskUpdate
+from fractal_server.app.schemas.v1.task import TaskCreateV1
+from fractal_server.app.schemas.v1.task import TaskUpdateV1
 
 PREFIX = "/api/v1/task"
 
@@ -51,7 +51,7 @@ async def test_post_task(client, MockCurrentUser):
 
         # Successful task creation
         VERSION = "1.2.3"
-        task = TaskCreate(
+        task = TaskCreateV1(
             name="task_name",
             command="task_command",
             source=TASK_SOURCE,
@@ -68,7 +68,7 @@ async def test_post_task(client, MockCurrentUser):
         assert res.json()["source"] == f"{TASK_OWNER}:{TASK_SOURCE}"
 
         # Fail for repeated task.source
-        new_task = TaskCreate(
+        new_task = TaskCreateV1(
             name="new_task_name",
             command="new_task_command",
             source=TASK_SOURCE,  # same source as `task`
@@ -143,7 +143,7 @@ async def test_patch_task_auth(
     async with MockCurrentUser(
         user_kwargs={"username": USER_1, "is_verified": True}
     ):
-        task = TaskCreate(
+        task = TaskCreateV1(
             name="task_name",
             command="task_command",
             source="task_source",
@@ -159,7 +159,7 @@ async def test_patch_task_auth(
         task_id = res.json()["id"]
 
         # Test success: owner == user
-        update = TaskUpdate(name="new_name_1")
+        update = TaskUpdateV1(name="new_name_1")
         res = await client.patch(
             f"{PREFIX}/{task_id}/", json=update.dict(exclude_unset=True)
         )
@@ -169,7 +169,7 @@ async def test_patch_task_auth(
     async with MockCurrentUser(
         user_kwargs={"slurm_user": USER_2, "is_verified": True}
     ):
-        update = TaskUpdate(name="new_name_2")
+        update = TaskUpdateV1(name="new_name_2")
 
         # Test fail: (not user.is_superuser) and (owner != user)
         res = await client.patch(
@@ -198,7 +198,7 @@ async def test_patch_task_auth(
         assert res.json()["name"] == "new_name_1"
 
         # Test success: (owner != user) but (user.is_superuser)
-        update = TaskUpdate(name="new_name_3")
+        update = TaskUpdateV1(name="new_name_3")
         res = await client.patch(
             f"{PREFIX}/{task_id}/", json=update.dict(exclude_unset=True)
         )
@@ -206,7 +206,7 @@ async def test_patch_task_auth(
         assert res.json()["name"] == "new_name_3"
 
         # Test success: (owner == None) but (user.is_superuser)
-        update = TaskUpdate(name="new_name_4")
+        update = TaskUpdateV1(name="new_name_4")
         res = await client.patch(
             f"{PREFIX}/{task_with_no_owner_id}/",
             json=update.dict(exclude_unset=True),
@@ -232,7 +232,7 @@ async def test_patch_task(
     NEW_SOURCE = "new source"
     NEW_META = {"key3": "3", "key4": "4"}
     NEW_VERSION = "1.2.3"
-    update = TaskUpdate(
+    update = TaskUpdateV1(
         name=NEW_NAME,
         input_type=NEW_INPUT_TYPE,
         output_type=NEW_OUTPUT_TYPE,
@@ -273,7 +273,7 @@ async def test_patch_task(
 
         # Test dictionaries update
         OTHER_META = {"key4": [4, 8, 15], "key0": [16, 23, 42]}
-        second_update = TaskUpdate(meta=OTHER_META, version=None)
+        second_update = TaskUpdateV1(meta=OTHER_META, version=None)
         res = await client.patch(
             f"{PREFIX}/{task.id}/",
             json=second_update.dict(exclude_unset=True),
@@ -319,7 +319,7 @@ async def test_patch_task_different_users(
 
     # Patch task
     NEW_NAME = "new name"
-    payload = TaskUpdate(name=NEW_NAME).dict(exclude_unset=True)
+    payload = TaskUpdateV1(name=NEW_NAME).dict(exclude_unset=True)
     debug(payload)
     async with MockCurrentUser(
         user_kwargs=dict(is_superuser=True, is_verified=True, **user_payload)
@@ -385,7 +385,7 @@ async def test_patch_args_schema(MockCurrentUser, client):
     """
 
     async with MockCurrentUser(user_kwargs={"is_verified": True}):
-        task = TaskCreate(
+        task = TaskCreateV1(
             name="task_name",
             command="task_command",
             source="some_source",

@@ -14,7 +14,7 @@ from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import root_validator
 
-from fractal_server.app.schemas.v1.dumps import TaskDump as TaskDumpV1
+from fractal_server.app.schemas.v1.dumps import TaskDumpV1 as TaskDumpV1
 from fractal_server.images import Filters
 from fractal_server.images import SingleImage
 
