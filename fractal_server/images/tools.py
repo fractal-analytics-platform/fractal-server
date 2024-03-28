@@ -81,6 +81,6 @@ def _filter_image_list_SingleImage(
 
     filtered_images = []
     for this_image in images:
-        if match_filter(this_image, filters=filters):
+        if match_filter_SingleImage(this_image, filters=filters):
             filtered_images.append(copy(this_image))
     return filtered_images
