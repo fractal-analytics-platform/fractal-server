@@ -66,7 +66,8 @@ async def create_workflowtask(
             is_legacy_task=new_task.is_legacy_task,
             task_id=task_id,
             order=new_task.order,
-            meta=new_task.meta,
+            meta_non_parallel=new_task.meta_non_parallel,
+            meta_parallel=new_task.meta_parallel,
             args_non_parallel=new_task.args_non_parallel,
             args_parallel=new_task.args_parallel,
             input_filters=new_task.input_filters,
@@ -163,10 +164,16 @@ async def update_workflowtask(
             if not actual_args:
                 actual_args = None
             setattr(db_wf_task, key, actual_args)
-        elif key == "meta":
-            current_meta = deepcopy(db_wf_task.meta) or {}
-            current_meta.update(value)
-            setattr(db_wf_task, key, current_meta)
+        elif key == "meta_parallel":
+            current_meta_parallel = deepcopy(db_wf_task.meta_parallel) or {}
+            current_meta_parallel.update(value)
+            setattr(db_wf_task, key, current_meta_parallel)
+        elif key == "meta_non_parallel":
+            current_meta_non_parallel = (
+                deepcopy(db_wf_task.meta_non_parallel) or {}
+            )
+            current_meta_non_parallel.update(value)
+            setattr(db_wf_task, key, current_meta_non_parallel)
         # FIXME handle `input_filters`
         else:
             raise HTTPException(

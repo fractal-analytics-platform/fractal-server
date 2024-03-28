@@ -43,7 +43,8 @@ class TaskManifestV2(BaseModel):
     executable_parallel: Optional[str] = None
     input_types: dict[str, bool] = Field(default_factory=dict)
     output_types: dict[str, bool] = Field(default_factory=dict)
-    meta: dict[str, Any] = Field(default_factory=dict)
+    meta_parallel: dict[str, Any] = Field(default_factory=dict)
+    meta_non_parallel: dict[str, Any] = Field(default_factory=dict)
     args_schema_non_parallel: Optional[dict[str, Any]] = None
     args_schema_parallel: Optional[dict[str, Any]] = None
     docs_info: Optional[str] = None

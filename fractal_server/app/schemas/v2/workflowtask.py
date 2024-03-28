@@ -37,7 +37,8 @@ class WorkflowTaskStatusTypeV2(str, Enum):
 
 class WorkflowTaskCreateV2(BaseModel):
 
-    meta: Optional[dict[str, Any]]
+    meta_parallel: Optional[dict[str, Any]]
+    meta_non_parallel: Optional[dict[str, Any]]
     args_non_parallel: Optional[dict[str, Any]]
     args_parallel: Optional[dict[str, Any]]
     order: Optional[int]
@@ -57,7 +58,8 @@ class WorkflowTaskReadV2(BaseModel):
 
     workflow_id: int
     order: Optional[int]
-    meta: Optional[dict[str, Any]]
+    meta_parallel: Optional[dict[str, Any]]
+    meta_non_parallel: Optional[dict[str, Any]]
 
     args_non_parallel: Optional[dict[str, Any]]
     args_parallel: Optional[dict[str, Any]]
@@ -73,14 +75,15 @@ class WorkflowTaskReadV2(BaseModel):
 
 class WorkflowTaskUpdateV2(BaseModel):
 
-    meta: Optional[dict[str, Any]]
+    meta_parallel: Optional[dict[str, Any]]
+    meta_non_parallel: Optional[dict[str, Any]]
     args_non_parallel: Optional[dict[str, Any]]
     args_parallel: Optional[dict[str, Any]]
     input_filters: Optional[Filters]
 
     # Validators
 
-    @validator("meta")
+    @validator("meta_parallel", "meta_non_parallel")
     def check_no_parallelisation_level(cls, m):
         if "parallelization_level" in m:
             raise ValueError(
@@ -91,7 +94,8 @@ class WorkflowTaskUpdateV2(BaseModel):
 
 class WorkflowTaskImportV2(BaseModel):
 
-    meta: Optional[dict[str, Any]] = None
+    meta_parallel: Optional[dict[str, Any]] = None
+    meta_non_parallel: Optional[dict[str, Any]] = None
     args: Optional[dict[str, Any]] = None  # FIXME
 
     input_filters: Optional[Filters] = None
@@ -103,7 +107,8 @@ class WorkflowTaskImportV2(BaseModel):
 
 class WorkflowTaskExportV2(BaseModel):
 
-    meta: Optional[dict[str, Any]] = None
+    meta_parallel: Optional[dict[str, Any]] = None
+    meta_non_parallel: Optional[dict[str, Any]] = None
     args: Optional[dict[str, Any]] = None  # FIXME
     input_filters: Filters = Field(default_factory=Filters)
 
