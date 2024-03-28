@@ -14,7 +14,6 @@ Submodule to handle the local-backend configuration for a WorkflowTask
 import json
 from pathlib import Path
 from typing import Optional
-from typing import Union
 
 from pydantic import BaseModel
 from pydantic import Extra
@@ -22,7 +21,6 @@ from pydantic.error_wrappers import ValidationError
 
 from .....config import get_settings
 from .....syringe import Inject
-from ....models.v1 import WorkflowTask
 from ....models.v2 import WorkflowTaskV2
 
 
@@ -56,7 +54,7 @@ def get_default_local_backend_config():
 
 
 def get_local_backend_config(
-    wftask: Union[WorkflowTask, WorkflowTaskV2],
+    wftask: WorkflowTaskV2,
     config_path: Optional[Path] = None,
 ) -> LocalBackendConfig:
     """
@@ -80,6 +78,10 @@ def get_local_backend_config(
     Returns:
         A local-backend configuration object
     """
+
+    raise NotImplementedError(
+        "This function lacks the whole parallel/non-parallel logic"
+    )
 
     key = "parallel_tasks_per_job"
     default = None

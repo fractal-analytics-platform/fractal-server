@@ -24,12 +24,12 @@ from typing import Any
 from typing import Optional
 
 from ....models import Workflow  # FIXME: this is v1 specific
-from ...executors.local._submit_setup import _local_submit_setup
 from ...executors.local.executor import FractalThreadPoolExecutor
 from .._common import execute_tasks  # FIXME: this is v1 specific
 from ..common import async_wrap
 from ..common import set_start_and_last_task_index
 from ..common import TaskParameters  # FIXME: this is v1 specific
+from ._submit_setup import _local_submit_setup
 
 
 def _process_workflow(
