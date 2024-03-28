@@ -1,14 +1,12 @@
 from typing import Any
-from typing import Callable
 from typing import Literal
 from typing import Optional
-from typing import Union
 
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import root_validator
+from pydantic import validator
 
-from fractal_server.images import Filters
 from fractal_server.images import SingleImage
 
 DictStrAny = dict[str, Any]
@@ -19,12 +17,19 @@ class DatasetV2Mock(BaseModel):
     name: str
     zarr_dir: str
     images: list[SingleImage] = Field(default_factory=list)
-    filters: Filters = Field(default_factory=Filters)
+    filters: dict[Literal["types", "attributes"], dict[str, Any]] = Field(
+        default_factory=dict
+    )
     history: list = Field(default_factory=list)
 
     @property
     def image_paths(self) -> list[str]:
         return [image.path for image in self.images]
+
+    @validator("filters", always=True)
+    def _default_filters(cls, value):
+        if value == {}:
+            return {"types": {}, "attributes": {}}
 
 
 class TaskV2Mock(BaseModel):
@@ -36,6 +41,7 @@ class TaskV2Mock(BaseModel):
     command_non_parallel: Optional[str] = None
     command_parallel: Optional[str] = None
     meta_paralell: Optional[dict[str, Any]] = Field(default_factory=dict)
+    meta_non_paralell: Optional[dict[str, Any]] = Field(default_factory=dict)
 
     @root_validator(pre=False)
     def _not_both_commands_none(cls, values):
@@ -49,42 +55,30 @@ class TaskV2Mock(BaseModel):
         return values
 
     @property
-    def task_type(
-        self,
-    ) -> Literal["compound", "parallel_standalone", "non_parallel_standalone"]:
-        if self.function_non_parallel is None:
-            if self.function_parallel is None:
-                raise
-            else:
-                return "parallel_standalone"
-        else:
-            if self.function_parallel is None:
-                return "non_parallel_standalone"
-            else:
-                return "compound"
-
-    @property
     def type(
         self,
-    ) -> Literal["compound", "parallel_standalone", "non_parallel_standalone"]:
+    ) -> Literal["compound", "parallel", "non_parallel"]:
         if self.command_non_parallel is None:
             if self.command_parallel is None:
-                raise
+                raise ValueError(
+                    "This TaskV2Mock object has both commands unset."
+                )
             else:
-                return "parallel_standalone"
+                return "parallel"
         else:
             if self.command_parallel is None:
-                return "non_parallel_standalone"
+                return "non_parallel"
             else:
                 return "compound"
 
 
 class TaskV1Mock(BaseModel):
     name: str
-    command: Callable  # str
+    command: str  # str
     source: str = Field(unique=True)
     input_type: str
     output_type: str
+    meta: Optional[dict[str, Any]] = Field(default_factory=dict)
 
     @property
     def parallelization_level(self) -> Optional[str]:
@@ -103,7 +97,29 @@ class WorkflowTaskV2Mock(BaseModel):
     args_parallel: DictStrAny = Field(default_factory=dict)
     meta: DictStrAny = Field(default_factory=dict)
     is_legacy_task: Optional[bool]
-    task: Optional[Union[TaskV2Mock, TaskV1Mock]] = None
-    filters: Filters = Field(default_factory=Filters)
+    meta_parallel: Optional[dict[str, Any]] = Field()
+    meta_non_parallel: Optional[dict[str, Any]] = Field()
+    task: Optional[TaskV2Mock] = None
+    task_legacy: Optional[TaskV1Mock] = None
+    is_legacy_task: bool = False
+    input_filters: dict[str, Any] = Field(default_factory=dict)
     order: int
     id: int
+
+    @root_validator(pre=False)
+    def _legacy_or_not(cls, values):
+        is_legacy_task = values["is_legacy_task"]
+        task = values.get("task")
+        task_legacy = values.get("task_legacy")
+        if is_legacy_task:
+            if task_legacy is None or task is not None:
+                raise ValueError(f"Invalud WorkflowTaskV2Mock with {values=}")
+        else:
+            if task is None or task_legacy is not None:
+                raise ValueError(f"Invalud WorkflowTaskV2Mock with {values=}")
+        return values
+
+    @validator("input_filters", always=True)
+    def _default_filters(cls, value):
+        if value == {}:
+            return {"types": {}, "attributes": {}}

@@ -57,7 +57,10 @@ def fractal_tasks_mock_task_list(testdata_path) -> dict:
 
     task_dict = {}
     for task in manifest["task_list"]:
-        task_attributes = dict(name=task["name"])
+        task_attributes = dict(
+            name=task["name"],
+            source=task["name"].replace(" ", "_"),
+        )
         if task["name"] == "MIP_compound":
             task_attributes.update(
                 dict(
@@ -118,13 +121,13 @@ def test_fractal_demos_01(
                 order=0,
             )
         ],
-        dataset=DatasetV2Mock(zarr_dir=zarr_dir),
+        dataset=DatasetV2Mock(name="dataset", zarr_dir=zarr_dir),
         **execute_tasks_v2_args,
     )
 
     assert dataset.history == ["create_ome_zarr_compound"]
-    assert dataset.filters.attributes == {}
-    assert dataset.filters.types == {}
+    assert dataset.filters["attributes"] == {}
+    assert dataset.filters["types"] == {}
     _assert_image_data_exist(dataset.images)
     debug(dataset)
     assert len(dataset.images) == 2
@@ -146,8 +149,8 @@ def test_fractal_demos_01(
         "create_ome_zarr_compound",
         "illumination_correction",
     ]
-    assert dataset.filters.attributes == {}
-    assert dataset.filters.types == {
+    assert dataset.filters["attributes"] == {}
+    assert dataset.filters["types"] == {
         "illumination_correction": True,
     }
     assert set(dataset.image_paths) == {
@@ -194,8 +197,8 @@ def test_fractal_demos_01(
         "MIP_compound",
     ]
 
-    assert dataset.filters.attributes == {}
-    assert dataset.filters.types == {
+    assert dataset.filters["attributes"] == {}
+    assert dataset.filters["types"] == {
         "illumination_correction": True,
         "3D": False,
     }
@@ -263,7 +266,7 @@ def test_fractal_demos_01_no_overwrite(
                 order=0,
             )
         ],
-        dataset=DatasetV2Mock(zarr_dir=zarr_dir),
+        dataset=DatasetV2Mock(name="dataset", zarr_dir=zarr_dir),
         **execute_tasks_v2_args,
     )
     assert dataset.image_paths == [
@@ -291,8 +294,8 @@ def test_fractal_demos_01_no_overwrite(
         "create_ome_zarr_compound",
         "illumination_correction",
     ]
-    assert dataset.filters.attributes == {}
-    assert dataset.filters.types == {
+    assert dataset.filters["attributes"] == {}
+    assert dataset.filters["types"] == {
         "illumination_correction": True,
     }
     assert dataset.image_paths == [
@@ -369,8 +372,8 @@ def test_fractal_demos_01_no_overwrite(
         "illumination_correction",
         "MIP_compound",
     ]
-    assert dataset.filters.attributes == {}
-    assert dataset.filters.types == {
+    assert dataset.filters["attributes"] == {}
+    assert dataset.filters["types"] == {
         "3D": False,
         "illumination_correction": True,
     }
@@ -408,8 +411,8 @@ def test_fractal_demos_01_no_overwrite(
         },
     }
 
-    assert dataset.filters.attributes == {}
-    assert dataset.filters.types == {
+    assert dataset.filters["attributes"] == {}
+    assert dataset.filters["types"] == {
         "3D": False,
         "illumination_correction": True,
     }
@@ -460,7 +463,7 @@ def test_registration_no_overwrite(
                 order=0,
             ),
         ],
-        dataset=DatasetV2Mock(zarr_dir=zarr_dir),
+        dataset=DatasetV2Mock(name="dataset", zarr_dir=zarr_dir),
         **execute_tasks_v2_args,
     )
 
@@ -562,7 +565,7 @@ def test_registration_overwrite(
                 order=0,
             ),
         ],
-        dataset=DatasetV2Mock(zarr_dir=zarr_dir),
+        dataset=DatasetV2Mock(name="dataset", zarr_dir=zarr_dir),
         **execute_tasks_v2_args,
     )
 
@@ -661,7 +664,7 @@ def test_channel_parallelization_with_overwrite(
                 order=0,
             ),
         ],
-        dataset=DatasetV2Mock(zarr_dir=zarr_dir),
+        dataset=DatasetV2Mock(name="dataset", zarr_dir=zarr_dir),
         **execute_tasks_v2_args,
     )
 
@@ -710,7 +713,7 @@ def test_channel_parallelization_no_overwrite(
                 order=0,
             ),
         ],
-        dataset=DatasetV2Mock(zarr_dir=zarr_dir),
+        dataset=DatasetV2Mock(name="dataset", zarr_dir=zarr_dir),
         **execute_tasks_v2_args,
     )
 
