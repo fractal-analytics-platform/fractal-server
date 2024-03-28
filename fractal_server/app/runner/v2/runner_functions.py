@@ -106,7 +106,7 @@ def run_v2_task_non_parallel(
     )
 
     function_kwargs = dict(
-        paths=[image.path for image in images],
+        paths=[image["path"] for image in images],
         zarr_dir=zarr_dir,
         **(wftask.args_non_parallel or {}),
     )
@@ -156,7 +156,7 @@ def run_v2_task_parallel(
     for ind, image in enumerate(images):
         list_function_kwargs.append(
             dict(
-                path=image.path,
+                path=image["path"],
                 **(wftask.args_parallel or {}),
             ),
         )
@@ -219,7 +219,7 @@ def run_v2_task_compound(
 
     # 3/A: non-parallel init task
     function_kwargs = dict(
-        paths=[image.path for image in images],
+        paths=[image["path"] for image in images],
         zarr_dir=zarr_dir,
         **(wftask.args_non_parallel or {}),
     )
@@ -315,7 +315,7 @@ def run_v1_task_parallel(
         list_function_kwargs.append(
             convert_v2_args_into_v1(
                 dict(
-                    path=image.path,
+                    path=image["path"],
                     **(wftask.args_parallel or {}),
                 )
             ),

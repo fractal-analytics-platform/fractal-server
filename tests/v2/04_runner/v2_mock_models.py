@@ -7,16 +7,12 @@ from pydantic import Field
 from pydantic import root_validator
 from pydantic import validator
 
-from fractal_server.images import SingleImage
-
-DictStrAny = dict[str, Any]
-
 
 class DatasetV2Mock(BaseModel):
     id: Optional[int] = None
     name: str
     zarr_dir: str
-    images: list[SingleImage] = Field(default_factory=list)
+    images: list[dict[str, Any]] = Field(default_factory=list)
     filters: dict[Literal["types", "attributes"], dict[str, Any]] = Field(
         default_factory=dict
     )
@@ -24,7 +20,7 @@ class DatasetV2Mock(BaseModel):
 
     @property
     def image_paths(self) -> list[str]:
-        return [image.path for image in self.images]
+        return [image["path"] for image in self.images]
 
     @validator("filters", always=True)
     def _default_filters(cls, value):
@@ -93,9 +89,10 @@ class TaskV1Mock(BaseModel):
 
 
 class WorkflowTaskV2Mock(BaseModel):
-    args_non_parallel: DictStrAny = Field(default_factory=dict)
-    args_parallel: DictStrAny = Field(default_factory=dict)
-    meta: DictStrAny = Field(default_factory=dict)
+    args_non_parallel: dict[str, Any] = Field(default_factory=dict)
+    args_parallel: dict[str, Any] = Field(default_factory=dict)
+    meta_non_parallel: dict[str, Any] = Field(default_factory=dict)
+    meta_parallel: dict[str, Any] = Field(default_factory=dict)
     is_legacy_task: Optional[bool]
     meta_parallel: Optional[dict[str, Any]] = Field()
     meta_non_parallel: Optional[dict[str, Any]] = Field()
