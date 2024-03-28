@@ -7,13 +7,13 @@ from ....images import SingleImage
 from ._v1_task_compatibility import _convert_v2_args_into_v1
 from .deduplicate_list import deduplicate_list
 from .merge_outputs import merge_outputs
-from .models import Task
-from .models import TaskV1
-from .models import WorkflowTask
 from .runner_functions_low_level import _run_single_task
 from .task_interface import InitArgsModel
 from .task_interface import InitTaskOutput
 from .task_interface import TaskOutput
+from fractal_server.app.models.v1 import Task as TaskV1
+from fractal_server.app.models.v2 import TaskV2
+from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.v2.components import KEY
 from fractal_server.app.runner.v2.components import MAKE_COMPONENT
 
@@ -32,8 +32,8 @@ def run_non_parallel_task(
     *,
     images: list[SingleImage],
     zarr_dir: str,
-    task: Task,
-    wftask: WorkflowTask,
+    task: TaskV2,
+    wftask: WorkflowTaskV2,
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
     logger_name: Optional[str] = None,
@@ -73,8 +73,8 @@ def run_non_parallel_task(
 def run_parallel_task(
     *,
     images: list[SingleImage],
-    task: Task,
-    wftask: WorkflowTask,
+    task: TaskV2,
+    wftask: WorkflowTaskV2,
     executor: Executor,
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
@@ -130,8 +130,8 @@ def run_compound_task(
     *,
     images: list[SingleImage],
     zarr_dir: str,
-    task: Task,
-    wftask: WorkflowTask,
+    task: TaskV2,
+    wftask: WorkflowTaskV2,
     executor: Executor,
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,
@@ -208,7 +208,7 @@ def run_parallel_task_v1(
     *,
     images: list[SingleImage],
     task: TaskV1,
-    wftask: WorkflowTask,
+    wftask: WorkflowTaskV2,
     executor: Executor,
     workflow_dir: Path,
     workflow_dir_user: Optional[Path] = None,

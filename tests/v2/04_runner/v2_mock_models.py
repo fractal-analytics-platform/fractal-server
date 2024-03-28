@@ -8,8 +8,8 @@ from pydantic import BaseModel
 from pydantic import Field
 from pydantic import root_validator
 
-from ....images import SingleImage
 from fractal_server.images import Filters
+from fractal_server.images import SingleImage
 
 DictStrAny = dict[str, Any]
 

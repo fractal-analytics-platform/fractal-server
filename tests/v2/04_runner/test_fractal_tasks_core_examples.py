@@ -6,11 +6,11 @@ from pathlib import Path
 
 import pytest
 from devtools import debug
+from v2_mock_models import Dataset
+from v2_mock_models import WorkflowTask
 
 from fractal_server.app.runner.executors.local import FractalThreadPoolExecutor
 from fractal_server.app.runner.v2 import execute_tasks_v2
-from fractal_server.app.runner.v2.models import Dataset
-from fractal_server.app.runner.v2.models import WorkflowTask
 from fractal_server.images import SingleImage
 from fractal_server.images.tools import find_image_by_path
 
@@ -43,7 +43,7 @@ def image_data_exist_on_disk(image_list: list[SingleImage]):
 
 @pytest.fixture
 def fractal_tasks_mock_task_list(testdata_path) -> dict:
-    from fractal_server.app.runner.v2.models import Task
+    from v2_mock_models import Task
 
     src_dir = (
         testdata_path.parent
