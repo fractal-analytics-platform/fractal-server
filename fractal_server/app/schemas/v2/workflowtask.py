@@ -7,9 +7,9 @@ from pydantic import Field
 from pydantic import validator
 
 from .._validators import valint
-from ..v1.task import TaskExport
-from ..v1.task import TaskImport
-from ..v1.task import TaskRead
+from ..v1.task import TaskExportV1
+from ..v1.task import TaskImportV1
+from ..v1.task import TaskReadV1
 from .task import TaskExportV2
 from .task import TaskImportV2
 from .task import TaskReadV2
@@ -70,7 +70,7 @@ class WorkflowTaskReadV2(BaseModel):
     task_id: Optional[int]
     task: Optional[TaskReadV2]
     task_legacy_id: Optional[int]
-    task_legacy: Optional[TaskRead]
+    task_legacy: Optional[TaskReadV1]
 
 
 class WorkflowTaskUpdateV2(BaseModel):
@@ -102,7 +102,7 @@ class WorkflowTaskImportV2(BaseModel):
 
     is_legacy_task: bool = False
     task: Optional[TaskImportV2] = None
-    task_legacy: Optional[TaskImport] = None
+    task_legacy: Optional[TaskImportV1] = None
 
 
 class WorkflowTaskExportV2(BaseModel):
@@ -114,4 +114,4 @@ class WorkflowTaskExportV2(BaseModel):
 
     is_legacy_task: bool = False
     task: Optional[TaskExportV2]
-    task_legacy: Optional[TaskExport]
+    task_legacy: Optional[TaskExportV1]

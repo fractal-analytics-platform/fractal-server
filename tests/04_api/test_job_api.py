@@ -6,7 +6,7 @@ from zipfile import ZipFile
 import pytest
 from devtools import debug
 
-from fractal_server.app.models import JobStatusType
+from fractal_server.app.models import JobStatusTypeV1
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
@@ -406,7 +406,7 @@ async def test_view_log_submitted_jobs(
             output_dataset_id=dataset.id,
             workflow_id=workflow.id,
             working_dir=working_dir,
-            status=JobStatusType.SUBMITTED,
+            status=JobStatusTypeV1.SUBMITTED,
         )
         job_done = await job_factory(
             project_id=project.id,
@@ -414,7 +414,7 @@ async def test_view_log_submitted_jobs(
             output_dataset_id=dataset.id,
             workflow_id=workflow.id,
             working_dir=working_dir,
-            status=JobStatusType.DONE,
+            status=JobStatusTypeV1.DONE,
         )
         job_failed = await job_factory(
             project_id=project.id,
@@ -422,7 +422,7 @@ async def test_view_log_submitted_jobs(
             output_dataset_id=dataset.id,
             workflow_id=workflow.id,
             working_dir=working_dir,
-            status=JobStatusType.FAILED,
+            status=JobStatusTypeV1.FAILED,
         )
 
         res = await client.get(

@@ -4,7 +4,7 @@ from fractal_server.app.db import get_sync_db
 from fractal_server.app.models.v1.dataset import Dataset
 from fractal_server.app.models.v1.job import ApplyWorkflow
 from fractal_server.app.models.v1.workflow import Workflow
-from fractal_server.app.schemas.v1.workflow import WorkflowRead
+from fractal_server.app.schemas.v1.workflow import WorkflowReadV1
 
 
 with next(get_sync_db()) as db:
@@ -51,7 +51,7 @@ with next(get_sync_db()) as db:
             ],
         )
 
-        WorkflowRead(**workflow_dump)
+        WorkflowReadV1(**workflow_dump)
 
         row.workflow_dump = workflow_dump
 

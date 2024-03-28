@@ -13,12 +13,12 @@ from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
 from ....utils import get_timestamp
-from ...schemas.v1.workflow import _WorkflowBase
-from ...schemas.v1.workflow import _WorkflowTaskBase
+from ...schemas.v1.workflow import _WorkflowBaseV1
+from ...schemas.v1.workflow import _WorkflowTaskBaseV1
 from .task import Task
 
 
-class WorkflowTask(_WorkflowTaskBase, SQLModel, table=True):
+class WorkflowTask(_WorkflowTaskBaseV1, SQLModel, table=True):
     """
     A Task as part of a Workflow
 
@@ -92,7 +92,7 @@ class WorkflowTask(_WorkflowTaskBase, SQLModel, table=True):
         return self.task.parallelization_level
 
 
-class Workflow(_WorkflowBase, SQLModel, table=True):
+class Workflow(_WorkflowBaseV1, SQLModel, table=True):
     """
     Workflow
 
