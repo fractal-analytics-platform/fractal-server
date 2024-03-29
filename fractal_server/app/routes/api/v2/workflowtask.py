@@ -47,6 +47,11 @@ async def create_workflowtask(
     # Check that task exists
     if new_task.is_legacy_task is True:
         task = await db.get(Task, task_id)
+        if not task.is_v2_compatible:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Task {task_id} is not V2-compatible.",
+            )
     else:
         task = await db.get(TaskV2, task_id)
 

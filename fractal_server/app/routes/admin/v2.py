@@ -393,7 +393,7 @@ async def download_job_logs(
 
 
 @router_admin_v2.patch(
-    "/task/{task_id}/",
+    "/task-v1/{task_id}/",
     status_code=status.HTTP_200_OK,
 )
 async def flag_task_v1_as_v2_compatible(
