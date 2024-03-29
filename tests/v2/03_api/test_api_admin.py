@@ -786,3 +786,8 @@ async def test_flag_task_v2_compatible(
             assert res.status_code == 200
             await db.refresh(task)
             assert task.is_v2_compatible is False
+
+        res = await client.patch(
+            f"{PREFIX}/task-v1/{task.id + 100}/?is_v2_compatible=true"
+        )
+        assert res.status_code == 404
