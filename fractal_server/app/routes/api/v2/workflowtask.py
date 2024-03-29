@@ -44,46 +44,27 @@ async def create_workflowtask(
         project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )
 
-    # Check that task exists
     if new_task.is_legacy_task is True:
+        if (
+            new_task.meta_non_parallel is not None
+            or new_task.args_non_parallel is not None
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "Cannot set `WorkflowTask.meta_non_parallel` or "
+                    "`WorkflowTask.args_non_parallel` if "
+                    "`WorkflowTask.is_legacy_task` is True"
+                ),
+            )
         task = await db.get(Task, task_id)
         if not task.is_v2_compatible:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=f"Task {task_id} is not V2-compatible.",
             )
-        if new_task.args_non_parallel is not None:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    "Cannot set `WorkflowTask.args_non_parallel` if "
-                    "`WorkflowTask.is_legacy_task==True`."
-                ),
-            )
     else:
         task = await db.get(TaskV2, task_id)
-        if (
-            new_task.args_non_parallel is not None
-            and task.args_schema_non_parallel is None
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    "Cannot set `WorkflowTask.args_non_parallel` when "
-                    "`Workflowtask.task.args_schema_non_parallel` is unset.",
-                ),
-            )
-        if (
-            new_task.args_parallel is not None
-            and task.args_schema_parallel is None
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    "Cannot set `WorkflowTask.args_parallel` when "
-                    "`Workflowtask.task.args_schema_parallel` is unset.",
-                ),
-            )
 
     if not task:
         if new_task.is_legacy_task:
@@ -159,39 +140,30 @@ async def update_workflowtask(
         db=db,
     )
 
-    if db_wf_task.is_legacy_task and (
+    if db_wf_task.task_type == "parallel" and (
         workflow_task_update.args_non_parallel is not None
+        or workflow_task_update.meta_non_parallel is not None
     ):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
-                "Cannot patch `WorkflowTask.args_non_parallel` if "
-                "`WorkflowTask.is_legacy_task==True`."
+                "Cannot set `WorkflowTask.args_non_parallel` or "
+                "`WorkflowTask.meta_non_parallel` if the associated Task is "
+                "parallel.",
             ),
         )
-    else:
-        if (
-            workflow_task_update.args_non_parallel is not None
-            and db_wf_task.task.args_schema_non_parallel is None
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    "Cannot patch `WorkflowTask.args_non_parallel` if "
-                    "`WorkflowTask.task.args_schema_non_parallel` is None."
-                ),
-            )
-        if (
-            workflow_task_update.args_parallel is not None
-            and db_wf_task.task.args_schema_parallel is None
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    "Cannot patch `WorkflowTask.args_parallel` if "
-                    "`WorkflowTask.task.args_schema_parallel` is None."
-                ),
-            )
+    elif db_wf_task.task_type == "non_parallel" and (
+        workflow_task_update.args_parallel is not None
+        or workflow_task_update.meta_parallel is not None
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Cannot set `WorkflowTask.args_parallel` or "
+                "`WorkflowTask.meta_parallel` if the associated Task is "
+                "non parallel.",
+            ),
+        )
 
     for key, value in workflow_task_update.dict(exclude_unset=True).items():
         if key == "args_parallel":
