@@ -164,8 +164,34 @@ async def update_workflowtask(
     ):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Cannot set `args_non_parallel` for a legacy Task",
+            detail=(
+                "Cannot patch `WorkflowTask.args_non_parallel` if "
+                "`WorkflowTask.is_legacy_task==True`."
+            ),
         )
+    else:
+        if (
+            workflow_task_update.args_non_parallel is not None
+            and db_wf_task.task.args_schema_non_parallel is None
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "Cannot patch `WorkflowTask.args_non_parallel` if "
+                    "`WorkflowTask.task.args_schema_non_parallel` is None."
+                ),
+            )
+        if (
+            workflow_task_update.args_parallel is not None
+            and db_wf_task.task.args_schema_parallel is None
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "Cannot patch `WorkflowTask.args_parallel` if "
+                    "`WorkflowTask.task.args_schema_parallel` is None."
+                ),
+            )
 
     for key, value in workflow_task_update.dict(exclude_unset=True).items():
         if key == "args_parallel":
