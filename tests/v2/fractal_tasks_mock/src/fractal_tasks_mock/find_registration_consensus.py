@@ -12,6 +12,10 @@ def find_registration_consensus(
 ) -> None:
     """
     Dummy task description.
+
+    Arguments:
+        paths: description
+        zarr_dir: description
     """
 
     print("[find_registration_consensus] START")

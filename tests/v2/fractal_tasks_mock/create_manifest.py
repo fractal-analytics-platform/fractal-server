@@ -56,6 +56,10 @@ TASK_LIST = [
         executable_parallel="apply_registration_to_image.py",
         output_types=dict(registration=True),
     ),
+    dict(
+        name="generic_task",
+        executable_non_parallel="generic_task.py",
+    ),
 ]
 
 

@@ -12,6 +12,10 @@ def illumination_correction_compute(
 ) -> dict:
     """
     Dummy task description.
+
+    Arguments:
+        path: description
+        init_args: description
     """
 
     raw_path = init_args.raw_path

@@ -20,7 +20,7 @@ from fractal_server.tasks.v1.background_operations import _pip_install
 from fractal_server.tasks.v1.background_operations import (
     background_collect_pip,
 )
-from tests.fixtures_tasks import execute_command
+from tests.execute_command import execute_command
 
 
 @pytest.mark.parametrize("python_version", [None, "3.10"])

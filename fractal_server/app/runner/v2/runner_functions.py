@@ -235,9 +235,6 @@ def run_v2_task_compound(
         **executor_options_init,
     )
     output = future.result()
-    from devtools import debug
-
-    debug(output)
     if output is None:
         init_task_output = InitTaskOutput()
     else:
