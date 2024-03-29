@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Literal
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -181,15 +182,45 @@ async def task_factory_v2(db: AsyncSession):
     """
     from fractal_server.app.models.v2 import TaskV2
 
-    async def __task_factory(db: AsyncSession = db, index: int = 0, **kwargs):
-        defaults = dict(
+    async def __task_factory(
+        db: AsyncSession = db,
+        index: int = 0,
+        type: Literal["parallel", "non_parallel", "compound"] = "compound",
+        **kwargs,
+    ):
+        args = dict(
+            type=type,
             name=f"task{index}",
-            command_non_parallel="cmd",
-            type="non_parallel",
             source=f"source{index}",
             version=f"{index}",
+            command_parallel="cmd_parallel",
+            command_non_parallel="cmd_non_parallel",
         )
-        args = dict(**defaults)
+        if type == "parallel":
+            if any(
+                arg in kwargs
+                for arg in [
+                    "meta_non_parallel",
+                    "args_schema_non_parallel",
+                    "command_non_parallel",
+                ]
+            ):
+                raise TypeError("Invalid argument for a parallel TaskV2")
+            else:
+                del args["command_non_parallel"]
+        elif type == "non_parallel":
+            if any(
+                arg in kwargs
+                for arg in [
+                    "meta_parallel",
+                    "args_schema_parallel",
+                    "command_parallel",
+                ]
+            ):
+                raise TypeError("Invalid argument for a non_parallel TaskV2")
+            else:
+                del args["command_parallel"]
+
         args.update(kwargs)
         t = TaskV2(**args)
         db.add(t)
