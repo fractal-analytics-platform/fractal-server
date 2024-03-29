@@ -258,6 +258,7 @@ async def test_full_workflow_TaskExecutionError(
             json=dict(args_non_parallel=dict(raise_error=True)),
         )
         assert res.status_code == 201
+        workflow_task_id = res.json()["id"]  # noqa
 
         # EXECUTE WORKFLOW
         res = await client.post(
@@ -281,7 +282,18 @@ async def test_full_workflow_TaskExecutionError(
         assert job_status_data["status"] == "failed"
         assert "ValueError" in job_status_data["log"]
 
-        # FIXME:
+        # FIXME: test something about partial updates of dataset,
+        # for a workflow with N>1 tasks
+
+        # Test get_workflowtask_status endpoint
+        res = await client.get(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/status/"
+        )
+        debug(res.status_code)
+        assert res.status_code == 200
+        statuses = res.json()["status"]
+        debug(statuses)
+        # assert statuses[workflow_task_id] == "failed"  # FIXME re-enable this
 
 
 # @pytest.mark.parametrize("backend", backends_available)
