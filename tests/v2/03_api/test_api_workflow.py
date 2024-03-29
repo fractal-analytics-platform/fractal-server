@@ -30,6 +30,7 @@ async def add_task(client, index):
         name=f"task{index}",
         source=f"source{index}",
         command_non_parallel="cmd",
+        command_parallel="cmd",
     )
     res = await client.post(f"{PREFIX}/task/", json=task)
     debug(res.json())
