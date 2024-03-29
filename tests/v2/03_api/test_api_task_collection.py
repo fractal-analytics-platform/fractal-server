@@ -12,7 +12,7 @@ from fractal_server.syringe import Inject
 from fractal_server.tasks.utils import get_collection_path
 from fractal_server.tasks.utils import get_log_path
 from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
-from tests.fixtures_tasks import execute_command
+from tests.fixtures_tasks_v1 import execute_command
 
 
 PREFIX = "api/v2/task"
@@ -121,6 +121,16 @@ async def test_task_collection(
         for task in task_list:
             print(task["source"])
             assert task["source"].startswith(EXPECTED_SOURCE)
+
+        # Check task type
+        for task in task_list:
+            if task["command_non_parallel"] is None:
+                expected_type = "parallel"
+            elif task["command_parallel"] is None:
+                expected_type = "non_parallel"
+            else:
+                expected_type = "compound"
+            assert task["type"] == expected_type
 
         # Check that argument JSON schemas are present
         for task in task_list:

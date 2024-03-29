@@ -9,8 +9,8 @@ from fractal_server.app.runner.v1._local._local_config import (
 from fractal_server.app.runner.v1._local._local_config import (
     LocalBackendConfigError,
 )
-from tests.fixtures_tasks import MockTask
-from tests.fixtures_tasks import MockWorkflowTask
+from tests.fixtures_tasks_v1 import MockTask
+from tests.fixtures_tasks_v1 import MockWorkflowTask
 
 
 def test_get_local_backend_config(tmp_path):

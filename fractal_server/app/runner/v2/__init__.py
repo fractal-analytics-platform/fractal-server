@@ -10,6 +10,8 @@ import traceback
 from pathlib import Path
 from typing import Optional
 
+from sqlalchemy.orm.attributes import flag_modified
+
 from ....config import get_settings
 from ....logger import close_logger
 from ....logger import set_logger
@@ -198,7 +200,7 @@ async def submit_workflow(
         db_sync = next(DB.get_sync_db())
         db_sync.close()
 
-        processed_dataset_meta_hist = await process_workflow(
+        processed_dataset = await process_workflow(
             workflow=workflow,
             dataset=dataset,
             slurm_user=slurm_user,
@@ -211,7 +213,6 @@ async def submit_workflow(
             first_task_index=job.first_task_index,
             last_task_index=job.last_task_index,
         )
-        processed_dataset_meta_hist
 
         logger.info(
             f'End execution of workflow "{workflow.name}"; '
@@ -219,10 +220,11 @@ async def submit_workflow(
         )
         logger.debug(f'END workflow "{workflow.name}"')
 
-        # FIXME: update dataset attributes with what was produced
-        # within process_workflow
-        pass
-        # dataset.history = processed_dataset_meta_hist.pop("history")
+        # Update dataset attributes, in case of successful execution
+        for attribute_name in ["filters", "history", "images"]:
+            new_attribute = getattr(processed_dataset, attribute_name)
+            setattr(dataset, attribute_name, new_attribute)
+            flag_modified(dataset, attribute_name)
         db_sync.merge(dataset)
 
         # Update job DB entry
