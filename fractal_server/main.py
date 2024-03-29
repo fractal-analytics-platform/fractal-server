@@ -41,10 +41,10 @@ def collect_routers(app: FastAPI) -> None:
     app.include_router(router_api_v1, prefix="/api/v1")
     app.include_router(router_api_v2, prefix="/api/v2")
     app.include_router(
-        router_admin_v1, prefix="/admin/v1", tags=["Admin area"]
+        router_admin_v1, prefix="/admin/v1", tags=["V1 Admin area"]
     )
     app.include_router(
-        router_admin_v2, prefix="/admin/v2", tags=["Admin area"]
+        router_admin_v2, prefix="/admin/v2", tags=["V2 Admin area"]
     )
     app.include_router(router_auth, prefix="/auth", tags=["Authentication"])
 
