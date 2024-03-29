@@ -15,11 +15,13 @@ from ....models.v2 import ProjectV2
 from ....schemas.v2 import DatasetCreateV2
 from ....schemas.v2 import DatasetReadV2
 from ....schemas.v2 import DatasetUpdateV2
+from ....schemas.v2.dataset import DatasetStatusReadV2
 from ....security import current_active_user
 from ....security import User
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
+from ._aux_functions import _get_workflow_check_owner
 
 router = APIRouter()
 
@@ -213,97 +215,94 @@ async def get_user_datasets(
     return dataset_list
 
 
-# OTHER ENDPOINTS
+@router.get(
+    "/project/{project_id}/dataset/{dataset_id}/status/",
+    response_model=DatasetStatusReadV2,
+)
+async def get_workflowtask_status(
+    project_id: int,
+    dataset_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> Optional[DatasetStatusReadV2]:
+    """
+    Extract the status of all `WorkflowTask`s that ran on a given `Dataset`.
+    """
+    # Get the dataset DB entry
+    output = await _get_dataset_check_owner(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        db=db,
+    )
+    dataset = output["dataset"]
 
-# @router.get(
-#     "/project/{project_id}/dataset/{dataset_id}/status/",
-#     response_model=DatasetStatusRead,
-# )
-# async def get_workflowtask_status(
-#     project_id: int,
-#     dataset_id: int,
-#     user: User = Depends(current_active_user),
-#     db: AsyncSession = Depends(get_async_db),
-# ) -> Optional[DatasetStatusRead]:
-#     """
-#     Extract the status of all `WorkflowTask`s that ran on a given `Dataset`.
-#     """
-#     # Get the dataset DB entry
-#     output = await _get_dataset_check_owner(
-#         project_id=project_id,
-#         dataset_id=dataset_id,
-#         user_id=user.id,
-#         db=db,
-#     )
-#     dataset = output["dataset"]
+    # Check whether there exists a job such that
+    # 1. `job.dataset_id == dataset_id`, and
+    # 2. `job.status` is submitted
+    # If one such job exists, it will be used later. If there are multiple
+    # jobs, raise an error.
+    # Note: see
+    # https://sqlmodel.tiangolo.com/tutorial/where/#type-annotations-and-errors
+    # regarding the type-ignore in this code block
+    stm = _get_submitted_jobs_statement().where(JobV2.dataset_id == dataset_id)
+    res = await db.execute(stm)
+    running_jobs = res.scalars().all()
+    if len(running_jobs) == 0:
+        running_job = None
+    elif len(running_jobs) == 1:
+        running_job = running_jobs[0]
+    else:
+        string_ids = str([job.id for job in running_jobs])[1:-1]
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Cannot get WorkflowTask statuses as dataset {dataset.id} "
+                f"is linked to multiple active jobs: {string_ids}"
+            ),
+        )
 
-#     # Check whether there exists a job such that
-#     # 1. `job.output_dataset_id == dataset_id`, and
-#     # 2. `job.status` is either submitted or running.
-#     # If one such job exists, it will be used later. If there are multiple
-#     # jobs, raise an error.
-#     # Note: see
-#   # https://sqlmodel.tiangolo.com/tutorial/where/#type-annotations-and-errors
-#     # regarding the type-ignore in this code block
-#     stm = _get_submitted_jobs_statement().where(
-#         ApplyWorkflow.output_dataset_id == dataset_id
-#     )
-#     res = await db.execute(stm)
-#     running_jobs = res.scalars().all()
-#     if len(running_jobs) == 0:
-#         running_job = None
-#     elif len(running_jobs) == 1:
-#         running_job = running_jobs[0]
-#     else:
-#         string_ids = str([job.id for job in running_jobs])[1:-1]
-#         raise HTTPException(
-#             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-#             detail=(
-#                 f"Cannot get WorkflowTask statuses as dataset {dataset.id} "
-#                 f"is linked to multiple active jobs: {string_ids}"
-#             ),
-#         )
+    # Initialize empty dictionary for workflowtasks status
+    workflow_tasks_status_dict: dict = {}
 
-#     # Initialize empty dictionary for workflowtasks status
-#     workflow_tasks_status_dict: dict = {}
+    # Lowest priority: read status from DB, which corresponds to jobs that are
+    # not running
+    history = dataset.history
+    for history_item in history:
+        wftask_id = history_item["workflowtask"]["id"]
+        wftask_status = history_item["status"]
+        workflow_tasks_status_dict[wftask_id] = wftask_status
 
-#   # Lowest priority: read status from DB, which corresponds to jobs that are
-#     # not running
-#     history = dataset.history
-#     for history_item in history:
-#         wftask_id = history_item["workflowtask"]["id"]
-#         wftask_status = history_item["status"]
-#         workflow_tasks_status_dict[wftask_id] = wftask_status
+    # If a job is running, then gather more up-to-date information
+    if running_job is not None:
+        # Get the workflow DB entry
+        running_workflow = await _get_workflow_check_owner(
+            project_id=project_id,
+            workflow_id=running_job.workflow_id,
+            user_id=user.id,
+            db=db,
+        )
+        # Mid priority: Set all WorkflowTask's that are part of the running job
+        # as "submitted"
+        start = running_job.first_task_index
+        end = running_job.last_task_index + 1
+        for wftask in running_workflow.task_list[start:end]:
+            workflow_tasks_status_dict[wftask.id] = "submitted"
 
-#     # If a job is running, then gather more up-to-date information
-#     if running_job is not None:
-#         # Get the workflow DB entry
-#         running_workflow = await _get_workflow_check_owner(
-#             project_id=project_id,
-#             workflow_id=running_job.workflow_id,
-#             user_id=user.id,
-#             db=db,
-#         )
-#       # Mid priority: Set all WorkflowTask's that are part of the running job
-#         # as "submitted"
-#         start = running_job.first_task_index
-#         end = running_job.last_task_index + 1
-#         for wftask in running_workflow.task_list[start:end]:
-#             workflow_tasks_status_dict[wftask.id] = "submitted"
+        # FIXME: the following is not yet implemented in the runner
+        # Highest priority: Read status updates coming from the running-job
+        # temporary file. Note: this file only contains information on
+        # # WorkflowTask's that ran through successfully
+        # tmp_file = Path(running_job.working_dir) / HISTORY_FILENAME
+        # try:
+        #     with tmp_file.open("r") as f:
+        #         history = json.load(f)
+        # except FileNotFoundError:
+        #     history = []
+        # for history_item in history:
+        #     wftask_id = history_item["workflowtask"]["id"]
+        #     wftask_status = history_item["status"]
+        #     workflow_tasks_status_dict[wftask_id] = wftask_status
 
-#         # Highest priority: Read status updates coming from the running-job
-#         # temporary file. Note: this file only contains information on
-#         # WorkflowTask's that ran through successfully
-#         tmp_file = Path(running_job.working_dir) / HISTORY_FILENAME
-#         try:
-#             with tmp_file.open("r") as f:
-#                 history = json.load(f)
-#         except FileNotFoundError:
-#             history = []
-#         for history_item in history:
-#             wftask_id = history_item["workflowtask"]["id"]
-#             wftask_status = history_item["status"]
-#             workflow_tasks_status_dict[wftask_id] = wftask_status
-
-#     response_body = DatasetStatusRead(status=workflow_tasks_status_dict)
-#     return response_body
+    response_body = DatasetStatusReadV2(status=workflow_tasks_status_dict)
+    return response_body
