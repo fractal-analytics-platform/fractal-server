@@ -174,9 +174,9 @@ async def update_workflowtask(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
-                "Cannot set `WorkflowTask.args_parallel` or "
+                "Cannot patch `WorkflowTask.args_parallel` or "
                 "`WorkflowTask.meta_parallel` if the associated Task is "
-                "non parallel.",
+                "non parallel."
             ),
         )
 
