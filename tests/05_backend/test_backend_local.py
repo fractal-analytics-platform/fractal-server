@@ -34,8 +34,8 @@ from fractal_server.app.schemas.v1 import WorkflowTaskStatusTypeV1
 from fractal_server.logger import set_logger
 from tests.data.tasks_dummy import dummy as dummy_module
 from tests.data.tasks_dummy import dummy_parallel as dummy_parallel_module
-from tests.fixtures_tasks import MockTask
-from tests.fixtures_tasks import MockWorkflowTask
+from tests.fixtures_tasks_v1 import MockTask
+from tests.fixtures_tasks_v1 import MockWorkflowTask
 
 
 async def test_command_wrapper(tmp_path):
