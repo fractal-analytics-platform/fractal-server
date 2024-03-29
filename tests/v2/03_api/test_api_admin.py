@@ -772,14 +772,14 @@ async def test_flag_task_v2_compatible(
     async with MockCurrentUser(user_kwargs={"is_superuser": True}):
 
         for _ in range(2):
-            res = await client.patch(f"{PREFIX}/task/{task.id}/")
+            res = await client.patch(f"{PREFIX}/task-v1/{task.id}/")
             assert res.status_code == 200
             await db.refresh(task)
             assert task.is_v2_compatible is True
 
         for _ in range(2):
             res = await client.patch(
-                f"{PREFIX}/task/{task.id}/?is_v2_compatible=false"
+                f"{PREFIX}/task-v1/{task.id}/?is_v2_compatible=false"
             )
             assert res.status_code == 200
             await db.refresh(task)
