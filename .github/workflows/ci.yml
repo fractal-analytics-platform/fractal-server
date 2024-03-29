@@ -195,7 +195,7 @@ jobs:
           path: ".coverage*"
 
 
-  test_runner_v2:
+  test_full_workflow_v2:
 
     name: "V2 Runner - Python ${{ matrix.python-version }} - ${{ matrix.db }}"
     runs-on: ubuntu-22.04
@@ -260,7 +260,7 @@ jobs:
   coverage:
     name: Coverage
     runs-on: ubuntu-22.04
-    needs: [tests_core_v1, tests_runner_v1, tests_core_v2, test_runner_v2]
+    needs: [tests_core_v1, tests_runner_v1, tests_core_v2, test_full_workflow_v2]
 
     permissions:
       pull-requests: write
