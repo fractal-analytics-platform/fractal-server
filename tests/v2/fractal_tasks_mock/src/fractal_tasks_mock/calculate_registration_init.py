@@ -20,6 +20,11 @@ def calculate_registration_init(
 ) -> dict:
     """
     Dummy task description.
+
+    Arguments:
+        paths: description
+        zarr_dir: description
+        ref_acquisition: Reference-cycle acquisition number
     """
 
     print("[calculate_registration_init] START")

@@ -13,6 +13,10 @@ def fill_cellvoyager_ome_zarr(
 ) -> dict:
     """
     Dummy task description.
+
+    Arguments:
+        path: description
+        init_args: description
     """
 
     print("[fill_cellvoyager_ome_zarr] START")
