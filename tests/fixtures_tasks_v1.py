@@ -1,4 +1,3 @@
-import asyncio
 import json
 from pathlib import Path
 from typing import AsyncGenerator
@@ -9,9 +8,10 @@ from devtools import debug  # noqa
 from pydantic import BaseModel
 from pydantic import validator
 
-from .fixtures_server import HAS_LOCAL_SBATCH
+from .fixtures_server_v1 import HAS_LOCAL_SBATCH
 from fractal_server.tasks.endpoint_operations import create_package_dir_pip
 from fractal_server.tasks.endpoint_operations import inspect_package
+from tests.execute_command import execute_command
 
 
 class MockTask(BaseModel):
@@ -63,19 +63,6 @@ class MockWorkflowTask(BaseModel):
     @property
     def parallelization_level(self) -> Optional[str]:
         return self.task.parallelization_level
-
-
-async def execute_command(cmd, **kwargs):
-    proc = await asyncio.create_subprocess_shell(
-        cmd,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-        **kwargs,
-    )
-    stdout, stderr = await proc.communicate()
-    if proc.returncode != 0:
-        raise RuntimeError(stderr.decode("UTF-8"))
-    return stdout.decode("UTF-8").strip()
 
 
 @pytest.fixture(scope="session")
