@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 from datetime import timezone
+from typing import Literal
 
 import pytest
 from devtools import debug  # noqa
@@ -25,13 +26,21 @@ async def get_workflow(client, p_id, wf_id):
     return res.json()
 
 
-async def add_task(client, index):
+async def add_task(
+    client,
+    index,
+    type: Literal["parallel", "non_parallel", "compound"] = "compound",
+):
     task = dict(
         name=f"task{index}",
         source=f"source{index}",
         command_non_parallel="cmd",
         command_parallel="cmd",
     )
+    if type == "parallel":
+        del task["command_non_parallel"]
+    elif type == "non_parallel":
+        del task["command_parallel"]
     res = await client.post(f"{PREFIX}/task/", json=task)
     debug(res.json())
     assert res.status_code == 201
@@ -329,6 +338,31 @@ async def test_post_worfkflow_task(
         assert task_list[3]["task"]["name"] == "task2"
         assert task_list[3]["args_non_parallel"] == args_payload
 
+        # Test 422
+
+        parallel_task = await add_task(client, index=100, type="parallel")
+        non_parallel_task = await add_task(
+            client, index=101, type="non_parallel"
+        )
+
+        for forbidden in ["meta_non_parallel", "args_non_parallel"]:
+            res = await client.post(
+                f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
+                f"?task_id={parallel_task['id']}",
+                json={forbidden: {"a": "b"}},
+            )
+            assert res.status_code == 422
+            assert "Cannot set" in res.json()["detail"]
+
+        for forbidden in ["meta_parallel", "args_parallel"]:
+            res = await client.post(
+                f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
+                f"?task_id={non_parallel_task['id']}",
+                json={forbidden: {"a": "b"}},
+            )
+            assert res.status_code == 422
+            assert "Cannot set" in res.json()["detail"]
+
 
 async def test_delete_workflow_task(
     db, client, MockCurrentUser, project_factory_v2
@@ -568,6 +602,42 @@ async def test_patch_workflow_task(
         debug(patched_workflow_task["args_non_parallel"])
         assert patched_workflow_task["args_non_parallel"] is None
         assert res.status_code == 200
+
+        # Test 422
+
+        parallel_task = await add_task(client, index=100, type="parallel")
+        non_parallel_task = await add_task(
+            client, index=101, type="non_parallel"
+        )
+
+        parallel_wftask = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
+            f"?task_id={parallel_task['id']}",
+            json=dict(),
+        )
+        non_parallel_wftask = await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
+            f"?task_id={non_parallel_task['id']}",
+            json=dict(),
+        )
+
+        for forbidden in ["args_non_parallel", "meta_non_parallel"]:
+            res = await client.patch(
+                f"{PREFIX}/project/{project.id}/workflow/{workflow['id']}/"
+                f"wftask/{parallel_wftask.json()['id']}/",
+                json={forbidden: {"a": "b"}},
+            )
+            assert res.status_code == 422
+            assert "Cannot patch" in res.json()["detail"]
+
+        for forbidden in ["args_parallel", "meta_parallel"]:
+            res = await client.patch(
+                f"{PREFIX}/project/{project.id}/workflow/{workflow['id']}/"
+                f"wftask/{non_parallel_wftask.json()['id']}/",
+                json={forbidden: {"a": "b"}},
+            )
+            assert res.status_code == 422
+            assert "Cannot patch" in res.json()["detail"]
 
 
 async def test_patch_workflow_task_with_args_schema(
@@ -1046,7 +1116,7 @@ async def test_import_export_workflow(
         assert task_old == task_new
 
 
-async def test_check_is_v2_compatible(
+async def test_task_legacy_is_v2_compatible(
     MockCurrentUser,
     client,
     project_factory_v2,
