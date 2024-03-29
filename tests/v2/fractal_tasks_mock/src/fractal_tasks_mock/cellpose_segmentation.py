@@ -11,6 +11,9 @@ def cellpose_segmentation(
 ) -> None:
     """
     Dummy task description.
+
+    Arguments:
+        path: description
     """
 
     _check_path_is_absolute(path)

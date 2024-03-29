@@ -11,6 +11,10 @@ def apply_registration_to_image(
 ) -> dict:
     """
     Dummy task description.
+
+    Arguments:
+        path: description
+        overwrite_input: whether to overwrite the existing image
     """
 
     prefix = "[apply_registration_to_image]"
