@@ -122,6 +122,16 @@ async def test_task_collection(
             print(task["source"])
             assert task["source"].startswith(EXPECTED_SOURCE)
 
+        # Check task type
+        for task in task_list:
+            if task["command_non_parallel"] is None:
+                expected_type = "parallel"
+            elif task["command_parallel"] is None:
+                expected_type = "non_parallel"
+            else:
+                expected_type = "compound"
+            assert task["type"] == expected_type
+
         # Check that argument JSON schemas are present
         for task in task_list:
             if task["command_non_parallel"] is not None:
