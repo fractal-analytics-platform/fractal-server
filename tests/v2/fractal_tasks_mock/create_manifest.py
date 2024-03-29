@@ -58,7 +58,7 @@ TASK_LIST = [
     ),
     dict(
         name="generic_task",
-        executable_parallel="generic_task.py",
+        executable_non_parallel="generic_task.py",
     ),
 ]
 

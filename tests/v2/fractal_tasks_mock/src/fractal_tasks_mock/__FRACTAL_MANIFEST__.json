@@ -538,7 +538,7 @@
       }
     },
     {
-      "args_schema_parallel": {
+      "args_schema_non_parallel": {
         "additionalProperties": false,
         "properties": {
           "paths": {
@@ -576,7 +576,7 @@
       },
       "docs_info": "This is task generic_task.",
       "docs_link": "https://example.org",
-      "executable_parallel": "generic_task.py",
+      "executable_non_parallel": "generic_task.py",
       "name": "generic_task"
     }
   ]
