@@ -20,7 +20,6 @@ to run tasks in several threads.
 Incidentally, it also represents the reference implementation for a backend.
 """
 from pathlib import Path
-from typing import Any
 from typing import Optional
 
 from ....models.v2 import DatasetV2
@@ -31,6 +30,8 @@ from ...set_start_and_last_task_index import set_start_and_last_task_index
 from ..runner import execute_tasks_v2
 from ._submit_setup import _local_submit_setup
 
+# from typing import Any
+
 
 def _process_workflow(
     *,
@@ -40,7 +41,7 @@ def _process_workflow(
     workflow_dir: Path,
     first_task_index: int,
     last_task_index: int,
-) -> dict[str, Any]:
+) -> DatasetV2:
     """
     Internal processing routine
 
@@ -62,8 +63,7 @@ def _process_workflow(
             logger_name=logger_name,
             submit_setup_call=_local_submit_setup,
         )
-        processed_dataset
-    return {}  # FIXME
+    return processed_dataset
 
 
 async def process_workflow(
@@ -80,7 +80,7 @@ async def process_workflow(
     slurm_user: Optional[str] = None,
     slurm_account: Optional[str] = None,
     worker_init: Optional[str] = None,
-) -> dict[str, Any]:
+) -> DatasetV2:
     """
     Run a workflow
 
@@ -158,7 +158,7 @@ async def process_workflow(
         last_task_index=last_task_index,
     )
 
-    output_dataset_metadata_history = await async_wrap(_process_workflow)(
+    new_dataset = await async_wrap(_process_workflow)(
         workflow=workflow,
         dataset=dataset,
         logger_name=logger_name,
@@ -166,4 +166,4 @@ async def process_workflow(
         first_task_index=first_task_index,
         last_task_index=last_task_index,
     )
-    return output_dataset_metadata_history
+    return new_dataset
