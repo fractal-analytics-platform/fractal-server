@@ -221,15 +221,15 @@ async def test_full_workflow(
         assert len(list(images_2D)) == 2
         assert len(list(images_3D)) == 2
 
-        # # Test get_workflowtask_status endpoint
-        # res = await client.get(
-        #     f"api/v1/project/{project_id}/dataset/{output_dataset_id}/status/"
-        # )
-        # debug(res.status_code)
-        # assert res.status_code == 200
-        # statuses = res.json()["status"]
-        # debug(statuses)
-        # assert set(statuses.values()) == {"done"}
+        # Test get_workflowtask_status endpoint
+        res = await client.get(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/status/"
+        )
+        debug(res.status_code)
+        assert res.status_code == 200
+        statuses = res.json()["status"]
+        debug(statuses)
+        assert set(statuses.values()) == {"done"}
 
 
 # @pytest.mark.parametrize("backend", backends_available)
