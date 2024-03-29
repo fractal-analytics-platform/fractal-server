@@ -4,6 +4,7 @@ import os
 import sys
 from concurrent.futures import Executor
 from pathlib import Path
+from typing import Any
 
 import pytest
 from devtools import debug
@@ -25,6 +26,10 @@ def executor():
 def _assert_image_data_exist(image_list: list[dict]):
     for image in image_list:
         assert (Path(image["path"]) / "data").exists()
+
+
+def _task_names_from_history(history: list[dict[str, Any]]) -> list[str]:
+    return [item["workflowtask"]["task"]["name"] for item in history]
 
 
 def image_data_exist_on_disk(image_list: list[SingleImage]):
@@ -99,8 +104,9 @@ def fractal_tasks_mock_venv(testdata_path, tmp_path_factory) -> dict:
     with (src_dir / "__FRACTAL_MANIFEST__.json").open("r") as f:
         manifest = json.load(f)
     task_dict = {}
-    for task in manifest["task_list"]:
+    for ind, task in enumerate(manifest["task_list"]):
         task_attributes = dict(
+            id=ind,
             name=task["name"],
             source=task["name"].replace(" ", "_"),
         )
@@ -168,7 +174,9 @@ def test_fractal_demos_01(
         **execute_tasks_v2_args,
     )
 
-    assert dataset.history == ["create_ome_zarr_compound"]
+    assert _task_names_from_history(dataset.history) == [
+        "create_ome_zarr_compound"
+    ]
     assert dataset.filters["attributes"] == {}
     assert dataset.filters["types"] == {}
     _assert_image_data_exist(dataset.images)
@@ -188,7 +196,7 @@ def test_fractal_demos_01(
         **execute_tasks_v2_args,
     )
 
-    assert dataset.history == [
+    assert _task_names_from_history(dataset.history) == [
         "create_ome_zarr_compound",
         "illumination_correction",
     ]
@@ -234,7 +242,7 @@ def test_fractal_demos_01(
     )
     debug(dataset)
 
-    assert dataset.history == [
+    assert _task_names_from_history(dataset.history) == [
         "create_ome_zarr_compound",
         "illumination_correction",
         "MIP_compound",
@@ -277,7 +285,7 @@ def test_fractal_demos_01(
 
     debug(dataset)
 
-    assert dataset.history == [
+    assert _task_names_from_history(dataset.history) == [
         "create_ome_zarr_compound",
         "illumination_correction",
         "MIP_compound",
@@ -333,7 +341,7 @@ def test_fractal_demos_01_no_overwrite(
         **execute_tasks_v2_args,
     )
 
-    assert dataset.history == [
+    assert _task_names_from_history(dataset.history) == [
         "create_ome_zarr_compound",
         "illumination_correction",
     ]
@@ -410,7 +418,7 @@ def test_fractal_demos_01_no_overwrite(
         **execute_tasks_v2_args,
     )
 
-    assert dataset.history == [
+    assert _task_names_from_history(dataset.history) == [
         "create_ome_zarr_compound",
         "illumination_correction",
         "MIP_compound",
@@ -475,7 +483,7 @@ def test_fractal_demos_01_no_overwrite(
     )
     debug(dataset)
 
-    assert dataset.history == [
+    assert _task_names_from_history(dataset.history) == [
         "create_ome_zarr_compound",
         "illumination_correction",
         "MIP_compound",
@@ -807,7 +815,9 @@ def test_fractal_demos_01_scaling(
         **execute_tasks_v2_args,
     )
 
-    assert dataset.history == ["create_ome_zarr_compound"]
+    assert _task_names_from_history(dataset.history) == [
+        "create_ome_zarr_compound"
+    ]
     assert dataset.filters["attributes"] == {}
     assert dataset.filters["types"] == {}
     _assert_image_data_exist(dataset.images)
@@ -826,7 +836,7 @@ def test_fractal_demos_01_scaling(
         **execute_tasks_v2_args,
     )
 
-    assert dataset.history == [
+    assert _task_names_from_history(dataset.history) == [
         "create_ome_zarr_compound",
         "illumination_correction",
     ]
@@ -866,7 +876,7 @@ def test_fractal_demos_01_scaling(
         **execute_tasks_v2_args,
     )
 
-    assert dataset.history == [
+    assert _task_names_from_history(dataset.history) == [
         "create_ome_zarr_compound",
         "illumination_correction",
         "MIP_compound",
@@ -907,7 +917,7 @@ def test_fractal_demos_01_scaling(
         **execute_tasks_v2_args,
     )
 
-    assert dataset.history == [
+    assert _task_names_from_history(dataset.history) == [
         "create_ome_zarr_compound",
         "illumination_correction",
         "MIP_compound",
