@@ -17,6 +17,8 @@ from .runner_functions import run_v2_task_non_parallel
 from .runner_functions import run_v2_task_parallel
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
+from fractal_server.app.schemas.v2.dataset import _DatasetHistoryItemV2
+from fractal_server.app.schemas.v2.workflowtask import WorkflowTaskStatusTypeV2
 
 # FIXME: define RESERVED_ARGUMENTS = [", ...]
 
@@ -221,7 +223,15 @@ def execute_tasks_v2(
         tmp_dataset.filters["types"].update(types_from_manifest)
         tmp_dataset.filters["types"].update(types_from_task)
 
-        # Update Dataset.history
-        tmp_dataset.history.append(task.name)
+        # Update Dataset.history (based on _DatasetHistoryItemV2)
+        history_item = _DatasetHistoryItemV2(
+            workflowtask=wftask,
+            status=WorkflowTaskStatusTypeV2.DONE,
+            parallelization=dict(
+                task_type=wftask.task.type,
+                # component_list=fil, #FIXME
+            ),
+        ).dict()
+        tmp_dataset.history.append(history_item)
 
     return tmp_dataset

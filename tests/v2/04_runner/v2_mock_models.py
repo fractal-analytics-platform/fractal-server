@@ -29,6 +29,7 @@ class DatasetV2Mock(BaseModel):
 
 
 class TaskV2Mock(BaseModel):
+    id: int
     name: str
     source: str
     input_types: dict[str, bool] = Field(default_factory=dict)
@@ -38,6 +39,7 @@ class TaskV2Mock(BaseModel):
     command_parallel: Optional[str] = None
     meta_paralell: Optional[dict[str, Any]] = Field(default_factory=dict)
     meta_non_paralell: Optional[dict[str, Any]] = Field(default_factory=dict)
+    type: Optional[str]
 
     @root_validator(pre=False)
     def _not_both_commands_none(cls, values):
@@ -50,25 +52,24 @@ class TaskV2Mock(BaseModel):
             )
         return values
 
-    @property
-    def type(
-        self,
-    ) -> Literal["compound", "parallel", "non_parallel"]:
-        if self.command_non_parallel is None:
-            if self.command_parallel is None:
+    @validator("type", always=True)
+    def _set_type(cls, value, values):
+        if values.get("command_non_parallel") is None:
+            if values.get("command_parallel") is None:
                 raise ValueError(
                     "This TaskV2Mock object has both commands unset."
                 )
             else:
                 return "parallel"
         else:
-            if self.command_parallel is None:
+            if values.get("command_parallel") is None:
                 return "non_parallel"
             else:
                 return "compound"
 
 
 class TaskV1Mock(BaseModel):
+    id: int
     name: str
     command: str  # str
     source: str = Field(unique=True)
@@ -102,6 +103,9 @@ class WorkflowTaskV2Mock(BaseModel):
     input_filters: dict[str, Any] = Field(default_factory=dict)
     order: int
     id: int
+    workflow_id: int = 0
+    task_legacy_id: Optional[int]
+    task_id: Optional[int]
 
     @root_validator(pre=False)
     def _legacy_or_not(cls, values):
@@ -111,9 +115,11 @@ class WorkflowTaskV2Mock(BaseModel):
         if is_legacy_task:
             if task_legacy is None or task is not None:
                 raise ValueError(f"Invalud WorkflowTaskV2Mock with {values=}")
+            values["task_legacy_id"] = task_legacy.id
         else:
             if task is None or task_legacy is not None:
                 raise ValueError(f"Invalud WorkflowTaskV2Mock with {values=}")
+            values["task_id"] = task.id
         return values
 
     @validator("input_filters", always=True)

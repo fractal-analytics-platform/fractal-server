@@ -22,9 +22,11 @@ from devtools import debug
 
 from fractal_server.app.runner.v2 import _backends
 
+
 # import shlex
 # import subprocess
-# from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
+# from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAM
+
 
 PREFIX = "/api/v2"
 
@@ -35,11 +37,9 @@ backends_available = ["local"]
 
 @pytest.mark.parametrize("backend", backends_available)
 async def test_full_workflow(
-    db,
     client,
     MockCurrentUser,
     testdata_path,
-    tmp_path,
     tmp777_path,
     project_factory_v2,
     dataset_factory_v2,
@@ -50,7 +50,7 @@ async def test_full_workflow(
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=backend,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
-        FRACTAL_TASKS_DIR=tmp_path / f"tasks-{backend}",
+        FRACTAL_TASKS_DIR=tmp777_path / f"tasks-{backend}",
     )
     if backend == "slurm":
         override_settings_factory(
@@ -134,7 +134,18 @@ async def test_full_workflow(
             f"?task_id={task_id_A}",
             json=dict(args_non_parallel=dict(image_dir="/somewhere")),
         )
-        debug(res.json())
+        assert res.status_code == 201
+
+        # Add "MIP_compound" task
+        task_id_B = next(
+            task["id"] for task in task_list if task["name"] == "MIP_compound"
+        )
+        debug(task_id_B)
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
+            f"?task_id={task_id_B}",
+            json={},
+        )
         assert res.status_code == 201
 
         # EXECUTE WORKFLOW
@@ -158,6 +169,7 @@ async def test_full_workflow(
         assert res.status_code == 200
         assert len(res.json()) == 1
 
+        # Check job
         res = await client.get(
             f"{PREFIX}/project/{project_id}/job/{job_data['id']}/"
         )
@@ -182,13 +194,32 @@ async def test_full_workflow(
         debug(non_accessible_files)
         assert len(non_accessible_files) == 0
 
-        # # Verify output
-        # res = await client.get(
-        #     f"{PREFIX}/project/{project_id}/dataset/{output_dataset_id}/"
-        # )
-        # data = res.json()
-        # debug(data)
-        # assert "dummy" in data["meta"]
+        # Check output dataset and image
+        res = await client.get(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/"
+        )
+        assert res.status_code == 200
+        dataset = res.json()
+        debug(dataset)
+        assert len(dataset["history"]) == 2
+        assert dataset["filters"]["types"] == {"3D": False}
+        # assert dataset["filters"]["attributes"] == {}
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/"
+            "images/query/",
+            json={},
+        )
+        assert res.status_code == 200
+        image_page = res.json()
+        debug(image_page)
+        # There should be two 3D images and two 2D images
+        assert image_page["total_count"] == 4
+        images = image_page["images"]
+        debug(images)
+        images_3D = filter(lambda img: img["types"]["3D"], images)
+        images_2D = filter(lambda img: not img["types"]["3D"], images)
+        assert len(list(images_2D)) == 2
+        assert len(list(images_3D)) == 2
 
         # # Test get_workflowtask_status endpoint
         # res = await client.get(
@@ -199,16 +230,6 @@ async def test_full_workflow(
         # statuses = res.json()["status"]
         # debug(statuses)
         # assert set(statuses.values()) == {"done"}
-
-        # # Check that `output_dataset.meta` was updated with the `index`
-        # # component list
-        # res = await client.get(
-        #     f"{PREFIX}/project/{project_id}/dataset/{output_dataset_id}/"
-        # )
-        # assert res.status_code == 200
-        # output_dataset_json = res.json()
-        # debug(output_dataset_json["meta"])
-        # assert "index" in list(output_dataset_json["meta"].keys())
 
 
 # @pytest.mark.parametrize("backend", backends_available)
