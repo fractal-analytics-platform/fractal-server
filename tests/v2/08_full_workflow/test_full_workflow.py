@@ -137,6 +137,19 @@ async def test_full_workflow(
         debug(res.json())
         assert res.status_code == 201
 
+        # Add "MIP_compound" task
+        task_id_B = next(
+            task["id"] for task in task_list if task["name"] == "MIP_compound"
+        )
+        debug(task_id_B)
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
+            f"?task_id={task_id_B}",
+            json={},
+        )
+        debug(res.json())
+        assert res.status_code == 201
+
         # EXECUTE WORKFLOW
         res = await client.post(
             f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/apply/"
@@ -158,6 +171,7 @@ async def test_full_workflow(
         assert res.status_code == 200
         assert len(res.json()) == 1
 
+        # Check job
         res = await client.get(
             f"{PREFIX}/project/{project_id}/job/{job_data['id']}/"
         )
@@ -182,13 +196,39 @@ async def test_full_workflow(
         debug(non_accessible_files)
         assert len(non_accessible_files) == 0
 
-        # # Verify output
-        # res = await client.get(
-        #     f"{PREFIX}/project/{project_id}/dataset/{output_dataset_id}/"
-        # )
-        # data = res.json()
-        # debug(data)
-        # assert "dummy" in data["meta"]
+        # Check output dataset and image
+        res = await client.get(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/"
+        )
+        assert res.status_code == 200
+        dataset = res.json()
+        debug(dataset)
+        assert dataset["filters"]["types"] == {"3D": False}
+        # assert dataset["filters"]["attributes"] == {}
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/"
+            "images/query/",
+            json={},
+        )
+        assert res.status_code == 200
+        image_page = res.json()
+        debug(image_page)
+        # There should be two 3D images and two 2D images
+        assert image_page["total_count"] == 4
+        assert (
+            len(
+                image for image in image_page["images"] if image["types"]["3D"]
+            )
+            == 2
+        )
+        assert (
+            len(
+                image
+                for image in image_page["images"]
+                if not image["types"]["3D"]
+            )
+            == 2
+        )
 
         # # Test get_workflowtask_status endpoint
         # res = await client.get(
@@ -199,16 +239,6 @@ async def test_full_workflow(
         # statuses = res.json()["status"]
         # debug(statuses)
         # assert set(statuses.values()) == {"done"}
-
-        # # Check that `output_dataset.meta` was updated with the `index`
-        # # component list
-        # res = await client.get(
-        #     f"{PREFIX}/project/{project_id}/dataset/{output_dataset_id}/"
-        # )
-        # assert res.status_code == 200
-        # output_dataset_json = res.json()
-        # debug(output_dataset_json["meta"])
-        # assert "index" in list(output_dataset_json["meta"].keys())
 
 
 # @pytest.mark.parametrize("backend", backends_available)
