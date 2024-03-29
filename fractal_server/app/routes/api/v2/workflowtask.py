@@ -52,8 +52,38 @@ async def create_workflowtask(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=f"Task {task_id} is not V2-compatible.",
             )
+        if new_task.args_non_parallel is not None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "Cannot set `WorkflowTask.args_non_parallel` if "
+                    "`WorkflowTask.is_legacy_task==True`."
+                ),
+            )
     else:
         task = await db.get(TaskV2, task_id)
+        if (
+            new_task.args_non_parallel is not None
+            and task.args_schema_non_parallel is None
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "Cannot set `WorkflowTask.args_non_parallel` when "
+                    "`Workflowtask.task.args_schema_non_parallel` is unset.",
+                ),
+            )
+        if (
+            new_task.args_parallel is not None
+            and task.args_schema_parallel is None
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "Cannot set `WorkflowTask.args_parallel` when "
+                    "`Workflowtask.task.args_schema_parallel` is unset.",
+                ),
+            )
 
     if not task:
         if new_task.is_legacy_task:
