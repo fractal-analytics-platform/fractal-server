@@ -12,6 +12,11 @@ def illumination_correction_init(
 ) -> dict:
     """
     Dummy task description.
+
+    Arguments:
+        paths: description
+        zarr_dir: description
+        overwrite_input: Whether to overwrite the current image
     """
 
     prefix = "[illumination_correction_init]"

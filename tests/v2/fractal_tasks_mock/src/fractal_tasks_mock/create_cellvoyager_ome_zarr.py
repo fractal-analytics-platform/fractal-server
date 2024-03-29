@@ -13,6 +13,12 @@ def create_cellvoyager_ome_zarr(
 ) -> dict:
     """
     Dummy task description.
+
+    Arguments:
+        paths: description
+        zarr_dir: description
+        image_dir: Image where the raw images are
+        num_images: Number of images that this dummy task will produce.
     """
 
     zarr_dir = zarr_dir.rstrip("/")

@@ -22,9 +22,6 @@ from devtools import debug
 
 from fractal_server.app.runner.v2 import _backends
 
-# import shlex
-# import subprocess
-# from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
 
 PREFIX = "/api/v2"
 
@@ -35,22 +32,21 @@ backends_available = ["local"]
 
 @pytest.mark.parametrize("backend", backends_available)
 async def test_full_workflow(
-    db,
     client,
     MockCurrentUser,
     testdata_path,
-    tmp_path,
     tmp777_path,
     project_factory_v2,
     dataset_factory_v2,
+    workflow_factory_v2,
     backend,
     request,
     override_settings_factory,
+    fractal_tasks_mock,
 ):
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=backend,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
-        FRACTAL_TASKS_DIR=tmp_path / f"tasks-{backend}",
     )
     if backend == "slurm":
         override_settings_factory(
@@ -66,25 +62,16 @@ async def test_full_workflow(
         user_kwargs["cache_dir"] = user_cache_dir
 
     async with MockCurrentUser(user_kwargs=user_kwargs) as user:
-        debug(user)
-
         project = await project_factory_v2(user)
-
         project_id = project.id
         dataset = await dataset_factory_v2(
             project_id=project_id, name="dataset", read_only=False
         )
         dataset_id = dataset.id
-
-        # CREATE WORKFLOW
-        res = await client.post(
-            f"{PREFIX}/project/{project_id}/workflow/",
-            json=dict(name="test workflow"),
+        workflow = await workflow_factory_v2(
+            project_id=project_id, name="workflow"
         )
-        debug(res.json())
-        assert res.status_code == 201
-        workflow_dict = res.json()
-        workflow_id = workflow_dict["id"]
+        workflow_id = workflow.id
 
         # Check project-related objects
         res = await client.get(f"{PREFIX}/project/{project_id}/workflow/")
@@ -97,30 +84,10 @@ async def test_full_workflow(
         assert res.status_code == 200
         assert len(res.json()) == 0
 
-        # TASK COLLECTION
-        # Trigger task collection
-        res = await client.post(
-            f"{PREFIX}/task/collect/pip/",
-            json=dict(
-                package=(
-                    testdata_path.parent
-                    / "v2/fractal_tasks_mock/dist"
-                    / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
-                ).as_posix()
-            ),
-        )
-        if res.status_code != 201:
-            raise ValueError(f"{res.status_code=}\n{res.json()=}")
-        assert res.status_code == 201
-        state_id = res.json()["id"]
-        # Get collection info
-        res = await client.get(f"{PREFIX}/task/collect/{state_id}/")
+        # Retrieve task list
+        res = await client.get(f"{PREFIX}/task/")
         assert res.status_code == 200
-        data = res.json()["data"]
-        if data["status"] != "OK":
-            print(data["log"])
-        assert data["status"] == "OK"
-        task_list = data["task_list"]
+        task_list = res.json()
 
         # Add "create_ome_zarr_compound" task
         task_id_A = next(
@@ -134,7 +101,18 @@ async def test_full_workflow(
             f"?task_id={task_id_A}",
             json=dict(args_non_parallel=dict(image_dir="/somewhere")),
         )
-        debug(res.json())
+        assert res.status_code == 201
+
+        # Add "MIP_compound" task
+        task_id_B = next(
+            task["id"] for task in task_list if task["name"] == "MIP_compound"
+        )
+        debug(task_id_B)
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
+            f"?task_id={task_id_B}",
+            json={},
+        )
         assert res.status_code == 201
 
         # EXECUTE WORKFLOW
@@ -158,6 +136,7 @@ async def test_full_workflow(
         assert res.status_code == 200
         assert len(res.json()) == 1
 
+        # Check job
         res = await client.get(
             f"{PREFIX}/project/{project_id}/job/{job_data['id']}/"
         )
@@ -182,33 +161,139 @@ async def test_full_workflow(
         debug(non_accessible_files)
         assert len(non_accessible_files) == 0
 
-        # # Verify output
-        # res = await client.get(
-        #     f"{PREFIX}/project/{project_id}/dataset/{output_dataset_id}/"
-        # )
-        # data = res.json()
-        # debug(data)
-        # assert "dummy" in data["meta"]
+        # Check output dataset and image
+        res = await client.get(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/"
+        )
+        assert res.status_code == 200
+        dataset = res.json()
+        debug(dataset)
+        assert len(dataset["history"]) == 2
+        assert dataset["filters"]["types"] == {"3D": False}
+        # assert dataset["filters"]["attributes"] == {}
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/"
+            "images/query/",
+            json={},
+        )
+        assert res.status_code == 200
+        image_page = res.json()
+        debug(image_page)
+        # There should be two 3D images and two 2D images
+        assert image_page["total_count"] == 4
+        images = image_page["images"]
+        debug(images)
+        images_3D = filter(lambda img: img["types"]["3D"], images)
+        images_2D = filter(lambda img: not img["types"]["3D"], images)
+        assert len(list(images_2D)) == 2
+        assert len(list(images_3D)) == 2
 
-        # # Test get_workflowtask_status endpoint
-        # res = await client.get(
-        #     f"api/v1/project/{project_id}/dataset/{output_dataset_id}/status/"
-        # )
-        # debug(res.status_code)
-        # assert res.status_code == 200
-        # statuses = res.json()["status"]
-        # debug(statuses)
-        # assert set(statuses.values()) == {"done"}
+        # Test get_workflowtask_status endpoint
+        res = await client.get(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/status/"
+        )
+        debug(res.status_code)
+        assert res.status_code == 200
+        statuses = res.json()["status"]
+        debug(statuses)
+        assert set(statuses.values()) == {"done"}
 
-        # # Check that `output_dataset.meta` was updated with the `index`
-        # # component list
-        # res = await client.get(
-        #     f"{PREFIX}/project/{project_id}/dataset/{output_dataset_id}/"
-        # )
-        # assert res.status_code == 200
-        # output_dataset_json = res.json()
-        # debug(output_dataset_json["meta"])
-        # assert "index" in list(output_dataset_json["meta"].keys())
+
+@pytest.mark.parametrize("backend", backends_available)
+async def test_full_workflow_TaskExecutionError(
+    client,
+    MockCurrentUser,
+    testdata_path,
+    tmp777_path,
+    project_factory_v2,
+    dataset_factory_v2,
+    workflow_factory_v2,
+    backend,
+    request,
+    override_settings_factory,
+    fractal_tasks_mock,
+):
+    override_settings_factory(
+        FRACTAL_RUNNER_BACKEND=backend,
+        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
+    )
+    if backend == "slurm":
+        override_settings_factory(
+            FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
+        )
+
+    debug(f"Testing with {backend=}")
+    user_kwargs = {"is_verified": True}
+    if backend == "slurm":
+        request.getfixturevalue("monkey_slurm")
+        request.getfixturevalue("relink_python_interpreter")
+        user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
+        user_kwargs["cache_dir"] = user_cache_dir
+
+    async with MockCurrentUser(user_kwargs=user_kwargs) as user:
+        project = await project_factory_v2(user)
+        project_id = project.id
+        dataset = await dataset_factory_v2(
+            project_id=project_id, name="dataset", read_only=False
+        )
+        dataset_id = dataset.id
+        workflow = await workflow_factory_v2(
+            project_id=project_id, name="workflow"
+        )
+        workflow_id = workflow.id
+
+        # Retrieve task list
+        res = await client.get(f"{PREFIX}/task/")
+        assert res.status_code == 200
+        task_list = res.json()
+
+        # Add "generic_task" task
+        task_id = next(
+            task["id"] for task in task_list if task["name"] == "generic_task"
+        )
+        debug(task_id)
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
+            f"?task_id={task_id}",
+            json=dict(args_non_parallel=dict(raise_error=True)),
+        )
+        assert res.status_code == 201
+        workflow_task_id = res.json()["id"]  # noqa
+
+        # EXECUTE WORKFLOW
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/apply/"
+            f"?dataset_id={dataset_id}",
+            json={},
+        )
+        job_data = res.json()
+        debug(job_data)
+        assert res.status_code == 202
+
+        # Check job
+        res = await client.get(
+            f"{PREFIX}/project/{project_id}/job/{job_data['id']}/"
+        )
+        assert res.status_code == 200
+        job_status_data = res.json()
+        debug(job_status_data)
+        assert job_status_data["log"]
+        debug(job_status_data["working_dir"])
+        assert job_status_data["status"] == "failed"
+        assert "ValueError" in job_status_data["log"]
+
+        # FIXME: test something about partial updates of dataset,
+        # for a workflow with N>1 tasks
+
+        # Test get_workflowtask_status endpoint
+        res = await client.get(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/status/"
+        )
+        debug(res.status_code)
+        assert res.status_code == 200
+        statuses = res.json()["status"]
+        debug(statuses)
+        # assert statuses[workflow_task_id] == "failed"  # FIXME re-enable this
 
 
 # @pytest.mark.parametrize("backend", backends_available)

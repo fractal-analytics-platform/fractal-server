@@ -8,18 +8,18 @@
         "additionalProperties": false,
         "properties": {
           "image_dir": {
-            "description": "Missing description",
+            "description": "Image where the raw images are",
             "title": "Image Dir",
             "type": "string"
           },
           "num_images": {
             "default": 2,
-            "description": "Missing description",
+            "description": "Number of images that this dummy task will produce.",
             "title": "Num Images",
             "type": "integer"
           },
           "paths": {
-            "description": "Missing description",
+            "description": "description",
             "items": {
               "type": "string"
             },
@@ -27,7 +27,7 @@
             "type": "array"
           },
           "zarr_dir": {
-            "description": "Missing description",
+            "description": "description",
             "title": "Zarr Dir",
             "type": "string"
           }
@@ -67,11 +67,11 @@
         "properties": {
           "init_args": {
             "$ref": "#/definitions/InitArgsCellVoyager",
-            "description": "Missing description",
+            "description": "description",
             "title": "Init_Args"
           },
           "path": {
-            "description": "Missing description",
+            "description": "description",
             "title": "Path",
             "type": "string"
           }
@@ -94,12 +94,12 @@
         "additionalProperties": false,
         "properties": {
           "image_dir": {
-            "description": "Missing description",
+            "description": "Image where the raw images are",
             "title": "Image Dir",
             "type": "string"
           },
           "paths": {
-            "description": "Missing description",
+            "description": "description",
             "items": {
               "type": "string"
             },
@@ -107,7 +107,7 @@
             "type": "array"
           },
           "zarr_dir": {
-            "description": "Missing description",
+            "description": "description",
             "title": "Zarr Dir",
             "type": "string"
           }
@@ -147,11 +147,11 @@
         "properties": {
           "init_args": {
             "$ref": "#/definitions/InitArgsCellVoyager",
-            "description": "Missing description",
+            "description": "description",
             "title": "Init_Args"
           },
           "path": {
-            "description": "Missing description",
+            "description": "description",
             "title": "Path",
             "type": "string"
           }
@@ -295,12 +295,12 @@
         "properties": {
           "overwrite_input": {
             "default": false,
-            "description": "Missing description",
+            "description": "Whether to overwrite the current image",
             "title": "Overwrite Input",
             "type": "boolean"
           },
           "paths": {
-            "description": "Missing description",
+            "description": "description",
             "items": {
               "type": "string"
             },
@@ -308,7 +308,7 @@
             "type": "array"
           },
           "zarr_dir": {
-            "description": "Missing description",
+            "description": "description",
             "title": "Zarr Dir",
             "type": "string"
           }
@@ -350,11 +350,11 @@
         "properties": {
           "init_args": {
             "$ref": "#/definitions/InitArgsIllumination",
-            "description": "Missing description",
+            "description": "description",
             "title": "Init_Args"
           },
           "path": {
-            "description": "Missing description",
+            "description": "description",
             "title": "Path",
             "type": "string"
           }
@@ -383,7 +383,7 @@
         "additionalProperties": false,
         "properties": {
           "path": {
-            "description": "Missing description",
+            "description": "description",
             "title": "Path",
             "type": "string"
           }
@@ -404,7 +404,7 @@
         "additionalProperties": false,
         "properties": {
           "paths": {
-            "description": "Missing description",
+            "description": "description",
             "items": {
               "type": "string"
             },
@@ -412,12 +412,12 @@
             "type": "array"
           },
           "ref_acquisition": {
-            "description": "Missing description",
+            "description": "Reference-cycle acquisition number",
             "title": "Ref Acquisition",
             "type": "integer"
           },
           "zarr_dir": {
-            "description": "Missing description",
+            "description": "description",
             "title": "Zarr Dir",
             "type": "string"
           }
@@ -452,11 +452,11 @@
         "properties": {
           "init_args": {
             "$ref": "#/definitions/InitArgsRegistration",
-            "description": "Missing description",
+            "description": "description",
             "title": "Init_Args"
           },
           "path": {
-            "description": "Missing description",
+            "description": "description",
             "title": "Path",
             "type": "string"
           }
@@ -479,7 +479,7 @@
         "additionalProperties": false,
         "properties": {
           "paths": {
-            "description": "Missing description",
+            "description": "description",
             "items": {
               "type": "string"
             },
@@ -487,7 +487,7 @@
             "type": "array"
           },
           "zarr_dir": {
-            "description": "Missing description",
+            "description": "description",
             "title": "Zarr Dir",
             "type": "string"
           }
@@ -510,12 +510,12 @@
         "properties": {
           "overwrite_input": {
             "default": true,
-            "description": "Missing description",
+            "description": "whether to overwrite the existing image",
             "title": "Overwrite Input",
             "type": "boolean"
           },
           "path": {
-            "description": "Missing description",
+            "description": "description",
             "title": "Path",
             "type": "string"
           }
@@ -536,6 +536,48 @@
       "output_types": {
         "registration": true
       }
+    },
+    {
+      "args_schema_non_parallel": {
+        "additionalProperties": false,
+        "properties": {
+          "paths": {
+            "description": "description",
+            "items": {
+              "type": "string"
+            },
+            "title": "Paths",
+            "type": "array"
+          },
+          "raise_error": {
+            "default": false,
+            "description": "If true, the task raises a ValueError",
+            "title": "Raise Error",
+            "type": "boolean"
+          },
+          "sleep_time": {
+            "default": 1,
+            "description": "Time to sleep, in seconds",
+            "title": "Sleep Time",
+            "type": "integer"
+          },
+          "zarr_dir": {
+            "description": "description",
+            "title": "Zarr Dir",
+            "type": "string"
+          }
+        },
+        "required": [
+          "paths",
+          "zarr_dir"
+        ],
+        "title": "GenericTask",
+        "type": "object"
+      },
+      "docs_info": "This is task generic_task.",
+      "docs_link": "https://example.org",
+      "executable_non_parallel": "generic_task.py",
+      "name": "generic_task"
     }
   ]
 }

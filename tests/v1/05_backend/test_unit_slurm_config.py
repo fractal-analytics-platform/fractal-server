@@ -18,8 +18,8 @@ from fractal_server.app.runner.v1._slurm import (
 from fractal_server.app.runner.v1._slurm._submit_setup import (
     _slurm_submit_setup,
 )
-from tests.fixtures_tasks import MockTask
-from tests.fixtures_tasks import MockWorkflowTask
+from tests.fixtures_tasks_v1 import MockTask
+from tests.fixtures_tasks_v1 import MockWorkflowTask
 
 
 @pytest.mark.parametrize("fail", [True, False])
