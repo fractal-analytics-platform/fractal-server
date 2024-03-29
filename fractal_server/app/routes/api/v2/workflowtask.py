@@ -80,7 +80,7 @@ async def create_workflowtask(
     elif task.type == "non_parallel":
         if (
             new_task.meta_parallel is not None
-            or new_task.args_arallel is not None
+            or new_task.args_parallel is not None
         ):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
