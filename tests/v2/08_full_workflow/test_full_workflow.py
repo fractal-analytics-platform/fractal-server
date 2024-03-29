@@ -134,7 +134,6 @@ async def test_full_workflow(
             f"?task_id={task_id_A}",
             json=dict(args_non_parallel=dict(image_dir="/somewhere")),
         )
-        debug(res.json())
         assert res.status_code == 201
 
         # Add "MIP_compound" task
@@ -147,7 +146,6 @@ async def test_full_workflow(
             f"?task_id={task_id_B}",
             json={},
         )
-        debug(res.json())
         assert res.status_code == 201
 
         # EXECUTE WORKFLOW
@@ -203,6 +201,7 @@ async def test_full_workflow(
         assert res.status_code == 200
         dataset = res.json()
         debug(dataset)
+        assert len(dataset["history"]) == 2
         assert dataset["filters"]["types"] == {"3D": False}
         # assert dataset["filters"]["attributes"] == {}
         res = await client.post(
@@ -215,20 +214,12 @@ async def test_full_workflow(
         debug(image_page)
         # There should be two 3D images and two 2D images
         assert image_page["total_count"] == 4
-        assert (
-            len(
-                image for image in image_page["images"] if image["types"]["3D"]
-            )
-            == 2
-        )
-        assert (
-            len(
-                image
-                for image in image_page["images"]
-                if not image["types"]["3D"]
-            )
-            == 2
-        )
+        images = image_page["images"]
+        debug(images)
+        images_3D = filter(lambda img: img["types"]["3D"], images)
+        images_2D = filter(lambda img: not img["types"]["3D"], images)
+        assert len(list(images_2D)) == 2
+        assert len(list(images_3D)) == 2
 
         # # Test get_workflowtask_status endpoint
         # res = await client.get(
