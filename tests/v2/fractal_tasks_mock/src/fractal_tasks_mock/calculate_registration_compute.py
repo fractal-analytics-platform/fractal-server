@@ -12,6 +12,10 @@ def calculate_registration_compute(
 ) -> None:
     """
     Dummy task description.
+
+    Arguments:
+        path: description
+        init_args: description
     """
 
     ref_path = init_args.ref_path
