@@ -134,7 +134,7 @@ jobs:
 
   tests_v2:
 
-    name: "V2 Core - Python ${{ matrix.python-version }} - ${{ matrix.db }}"
+    name: "V2 - Python ${{ matrix.python-version }} - ${{ matrix.db }}"
     runs-on: ubuntu-22.04
     timeout-minutes: 30
 
