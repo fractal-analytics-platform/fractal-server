@@ -398,7 +398,7 @@ async def download_job_logs(
 )
 async def flag_task_v1_as_v2_compatible(
     task_id: int,
-    is_v2_compatible: bool = True,
+    is_v2_compatible: bool,
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
