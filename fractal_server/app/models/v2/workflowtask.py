@@ -87,3 +87,7 @@ class WorkflowTaskV2(SQLModel, table=True):
                 f"{intersect_keys}"
             )
         return value
+
+    @property
+    def task_type(self):
+        return self.task.type if self.is_legacy_task is False else "parallel"
