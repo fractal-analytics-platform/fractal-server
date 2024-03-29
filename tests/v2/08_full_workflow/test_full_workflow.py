@@ -22,9 +22,11 @@ from devtools import debug
 
 from fractal_server.app.runner.v2 import _backends
 
+
 # import shlex
 # import subprocess
-# from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
+# from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAM
+
 
 PREFIX = "/api/v2"
 
@@ -35,11 +37,9 @@ backends_available = ["local"]
 
 @pytest.mark.parametrize("backend", backends_available)
 async def test_full_workflow(
-    db,
     client,
     MockCurrentUser,
     testdata_path,
-    tmp_path,
     tmp777_path,
     project_factory_v2,
     dataset_factory_v2,
@@ -50,7 +50,7 @@ async def test_full_workflow(
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=backend,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
-        FRACTAL_TASKS_DIR=tmp_path / f"tasks-{backend}",
+        FRACTAL_TASKS_DIR=tmp777_path / f"tasks-{backend}",
     )
     if backend == "slurm":
         override_settings_factory(
