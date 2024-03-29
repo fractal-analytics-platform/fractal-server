@@ -267,15 +267,9 @@ async def test_patch_task(
     client,
 ):
 
-    task_parallel = await task_factory_v2(
-        index=1, command_parallel="cmd", command_non_parallel=None
-    )
-    task_non_parallel = await task_factory_v2(
-        index=2, command_parallel=None, command_non_parallel="cmd"
-    )
-    task_compound = await task_factory_v2(
-        index=3, command_parallel="cmd", command_non_parallel="cmd"
-    )
+    task_parallel = await task_factory_v2(index=1, type="parallel")
+    task_non_parallel = await task_factory_v2(index=2, type="non_parallel")
+    task_compound = await task_factory_v2(index=3)
 
     async with MockCurrentUser(
         user_kwargs=dict(is_superuser=True, is_verified=True)

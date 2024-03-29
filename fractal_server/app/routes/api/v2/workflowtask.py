@@ -72,7 +72,7 @@ async def create_workflowtask(
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
-                    "Cannot set `WorkflowTask.meta_non_parallel` or "
+                    "Cannot set `WorkflowTaskV2.meta_non_parallel` or "
                     "`WorkflowTask.args_non_parallel` if the associated Task "
                     "is `parallel` (or legacy)."
                 ),
@@ -85,7 +85,7 @@ async def create_workflowtask(
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
-                    "Cannot set `WorkflowTask.meta_parallel` or "
+                    "Cannot set `WorkflowTaskV2.meta_parallel` or "
                     "`WorkflowTask.args_parallel` if the associated Task "
                     "is `non_parallel`."
                 ),
@@ -162,7 +162,7 @@ async def update_workflowtask(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
-                "Cannot patch `WorkflowTask.args_non_parallel` or "
+                "Cannot patch `WorkflowTaskV2.args_non_parallel` or "
                 "`WorkflowTask.meta_non_parallel` if the associated Task is "
                 "parallel."
             ),
@@ -174,7 +174,7 @@ async def update_workflowtask(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
-                "Cannot patch `WorkflowTask.args_parallel` or "
+                "Cannot patch `WorkflowTaskV2.args_parallel` or "
                 "`WorkflowTask.meta_parallel` if the associated Task is "
                 "non parallel."
             ),
