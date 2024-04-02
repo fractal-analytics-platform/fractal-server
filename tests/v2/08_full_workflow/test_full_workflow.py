@@ -104,8 +104,8 @@ async def test_full_workflow(
 
         # EXECUTE WORKFLOW
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/apply/"
-            f"?dataset_id={dataset_id}",
+            f"{PREFIX}/project/{project_id}/job/submit/"
+            f"?workflow_id={workflow_id}&dataset_id={dataset_id}",
             json={},
         )
         job_data = res.json()
@@ -184,19 +184,6 @@ async def test_full_workflow(
         statuses = res.json()["status"]
         debug(statuses)
         assert set(statuses.values()) == {"done"}
-
-        # Test cannot apply workflow using read-only dataset
-        dataset_read_only = await dataset_factory_v2(
-            project_id=project_id, name="dataset-read-only", read_only=True
-        )
-        dataset_read_only_id = dataset_read_only.id
-        res = await client.post(
-            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/apply/"
-            f"?dataset_id={dataset_read_only_id}",
-            json={},
-        )
-        assert res.status_code == 422
-        assert "read_only" in res.json()["detail"]
 
 
 @pytest.mark.parametrize("backend", backends_available)
@@ -285,8 +272,8 @@ async def test_full_workflow_TaskExecutionError(
 
         # EXECUTE WORKFLOW
         res = await client.post(
-            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/apply/"
-            f"?dataset_id={dataset_id}",
+            f"{PREFIX}/project/{project_id}/job/submit/"
+            f"?workflow_id={workflow_id}&dataset_id={dataset_id}",
             json={},
         )
         job_data = res.json()
