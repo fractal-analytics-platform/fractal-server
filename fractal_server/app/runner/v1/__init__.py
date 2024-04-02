@@ -34,8 +34,8 @@ from ...schemas.v1 import JobStatusTypeV1
 from ..exceptions import JobExecutionError
 from ..exceptions import TaskExecutionError
 from ..filenames import WORKFLOW_LOG_FILENAME
-from ..v1._local import process_workflow as local_process_workflow
-from ..v1._slurm import process_workflow as slurm_process_workflow
+from ._local import process_workflow as local_process_workflow
+from ._slurm import process_workflow as slurm_process_workflow
 from .common import close_job_logger
 from .common import validate_workflow_compatibility  # noqa: F401
 from .handle_failed_job import assemble_history_failed_job
