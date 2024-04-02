@@ -508,7 +508,7 @@ async def test_failing_workflow_JobExecutionError(
     override_settings_factory,
     monkey_slurm,
     monkey_slurm_user,
-    relink_python_interpreter,
+    relink_python_interpreter_v1,
     resource_factory,
     tmp_path,
 ):
