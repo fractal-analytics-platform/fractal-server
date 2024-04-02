@@ -170,7 +170,7 @@ async def test_post_task(client, MockCurrentUser):
         assert res.status_code == 201
         assert res.json()["owner"] == USERNAME
 
-    # Fail giving "parallel" args to "non-parallel" tasks, and vice versa
+    # Fail giving "non parallel" args to "parallel" tasks, and vice versa
     res = await client.post(
         f"{PREFIX}/",
         json=dict(
