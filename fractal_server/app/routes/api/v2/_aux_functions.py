@@ -424,6 +424,7 @@ async def _workflow_insert_task(
         db_task = await db.get(Task, task_id)
         if db_task is None:
             raise ValueError(f"Task {task_id} not found.")
+        task_type = "parallel"
 
         final_args_parallel = db_task.default_args_from_args_schema.copy()
         final_args_non_parallel = {}
@@ -434,6 +435,8 @@ async def _workflow_insert_task(
         db_task = await db.get(TaskV2, task_id)
         if db_task is None:
             raise ValueError(f"TaskV2 {task_id} not found.")
+        task_type = db_task.type
+
         final_args_non_parallel = (
             db_task.default_args_non_parallel_from_args_schema.copy()
         )
@@ -475,6 +478,7 @@ async def _workflow_insert_task(
 
     # Create DB entry
     wf_task = WorkflowTaskV2(
+        task_type=task_type,
         is_legacy_task=is_legacy_task,
         task_id=(task_id if not is_legacy_task else None),
         task_legacy_id=(task_id if is_legacy_task else None),

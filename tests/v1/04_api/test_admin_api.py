@@ -17,7 +17,7 @@ from fractal_server.app.runner.v1 import _backends
 
 backends_available = list(_backends.keys())
 
-PREFIX = "/admin"
+PREFIX = "/admin/v1"
 
 
 async def test_unauthorized_to_admin(client, MockCurrentUser):
