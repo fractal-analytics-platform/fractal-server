@@ -31,7 +31,7 @@ class DatasetStatusReadV2(BaseModel):
 
     status: Optional[
         dict[
-            int,
+            str,
             WorkflowTaskStatusTypeV2,
         ]
     ] = None
