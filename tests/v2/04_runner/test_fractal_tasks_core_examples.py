@@ -11,8 +11,8 @@ from devtools import debug
 from v2_mock_models import DatasetV2Mock
 from v2_mock_models import WorkflowTaskV2Mock
 
-from fractal_server.app.runner.executors.local import FractalThreadPoolExecutor
-from fractal_server.app.runner.v2 import execute_tasks_v2
+from fractal_server.app.runner.v2._local import FractalThreadPoolExecutor
+from fractal_server.app.runner.v2.runner import execute_tasks_v2
 from fractal_server.images import SingleImage
 from fractal_server.images.tools import find_image_by_path
 
