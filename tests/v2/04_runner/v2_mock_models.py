@@ -26,6 +26,7 @@ class DatasetV2Mock(BaseModel):
     def _default_filters(cls, value):
         if value == {}:
             return {"types": {}, "attributes": {}}
+        return value
 
 
 class TaskV2Mock(BaseModel):
