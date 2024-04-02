@@ -20,6 +20,7 @@ from ....utils import get_timestamp
 from ...db import DB
 from ...models.v2 import DatasetV2
 from ...models.v2 import JobV2
+from ...models.v2 import WorkflowTaskV2
 from ...models.v2 import WorkflowV2
 from ...schemas.v2 import JobStatusTypeV2
 from ..exceptions import JobExecutionError
@@ -27,12 +28,11 @@ from ..exceptions import TaskExecutionError
 from ..filenames import WORKFLOW_LOG_FILENAME
 from ._local import process_workflow as local_process_workflow
 from ._slurm import process_workflow as slurm_process_workflow
+from .handle_failed_job import assemble_filters_failed_job
+from .handle_failed_job import assemble_history_failed_job
+from .handle_failed_job import assemble_images_failed_job
 from .runner import execute_tasks_v2  # noqa
 from fractal_server import __VERSION__
-
-# from ...models.v2 import WorkflowTaskV2
-# from .handle_failed_job import assemble_history_failed_job
-# from .handle_failed_job import assemble_meta_failed_job
 
 _backends = {}
 _backends["local"] = local_process_workflow
@@ -200,7 +200,7 @@ async def submit_workflow(
         db_sync = next(DB.get_sync_db())
         db_sync.close()
 
-        processed_dataset = await process_workflow(
+        new_dataset_attributes = await process_workflow(
             workflow=workflow,
             dataset=dataset,
             slurm_user=slurm_user,
@@ -221,9 +221,10 @@ async def submit_workflow(
         logger.debug(f'END workflow "{workflow.name}"')
 
         # Update dataset attributes, in case of successful execution
+        dataset.history.extend(new_dataset_attributes["history"])
+        dataset.filters = new_dataset_attributes["filters"]
+        dataset.images = new_dataset_attributes["images"]
         for attribute_name in ["filters", "history", "images"]:
-            new_attribute = getattr(processed_dataset, attribute_name)
-            setattr(dataset, attribute_name, new_attribute)
             flag_modified(dataset, attribute_name)
         db_sync.merge(dataset)
 
@@ -234,7 +235,6 @@ async def submit_workflow(
             logs = f.read()
         job.log = logs
         db_sync.merge(job)
-        close_logger(logger)
         db_sync.commit()
 
     except TaskExecutionError as e:
@@ -242,21 +242,22 @@ async def submit_workflow(
         logger.debug(f'FAILED workflow "{workflow.name}", TaskExecutionError.')
         logger.info(f'Workflow "{workflow.name}" failed (TaskExecutionError).')
 
-        # FIXME: update dataset attributes with what was produced
-        # within process_workflow for the last successful task (i.e.
-        # based on some TMP files)
-        pass
-
-        # Assemble new history and assign it to output_dataset.meta
-        # failed_wftask = db_sync.get(WorkflowTaskV2, e.workflow_task_id)
-        # dataset.history = assemble_history_failed_job(
-        #     job,
-        #     dataset,
-        #     workflow,
-        #     logger,
-        #     failed_wftask=failed_wftask,
-        # )
-
+        # Read dataset attributes produced by the last successful task, and
+        # update the DB dataset accordingly
+        failed_wftask = db_sync.get(WorkflowTaskV2, e.workflow_task_id)
+        dataset.history = assemble_history_failed_job(
+            job,
+            dataset,
+            workflow,
+            logger,
+            failed_wftask=failed_wftask,
+        )
+        latest_filters = assemble_filters_failed_job(job)
+        if latest_filters is not None:
+            dataset.filters = latest_filters
+        latest_images = assemble_images_failed_job(job)
+        if latest_images is not None:
+            dataset.images = latest_images
         db_sync.merge(dataset)
 
         job.status = JobStatusTypeV2.FAILED
@@ -270,7 +271,6 @@ async def submit_workflow(
             f"TRACEBACK:\n{exception_args_string}"
         )
         db_sync.merge(job)
-        close_logger(logger)
         db_sync.commit()
 
     except JobExecutionError as e:
@@ -278,20 +278,20 @@ async def submit_workflow(
         logger.debug(f'FAILED workflow "{workflow.name}", JobExecutionError.')
         logger.info(f'Workflow "{workflow.name}" failed (JobExecutionError).')
 
-        # FIXME: update dataset attributes with what was produced
-        # within process_workflow for the last successful task (i.e.
-        # based on some TMP files)
-        # dataset.meta = assemble_meta_failed_job(job, dataset)
-        pass
-
-        # Assemble new history and assign it to output_dataset.meta
-        # dataset.history = assemble_history_failed_job(
-        #     job,
-        #     dataset,
-        #     workflow,
-        #     logger,
-        # )
-
+        # Read dataset attributes produced by the last successful task, and
+        # update the DB dataset accordingly
+        dataset.history = assemble_history_failed_job(
+            job,
+            dataset,
+            workflow,
+            logger,
+        )
+        latest_filters = assemble_filters_failed_job(job)
+        if latest_filters is not None:
+            dataset.filters = latest_filters
+        latest_images = assemble_images_failed_job(job)
+        if latest_images is not None:
+            dataset.images = latest_images
         db_sync.merge(dataset)
 
         job.status = JobStatusTypeV2.FAILED
@@ -299,7 +299,6 @@ async def submit_workflow(
         error = e.assemble_error()
         job.log = f"JOB ERROR in Fractal job {job.id}:\nTRACEBACK:\n{error}"
         db_sync.merge(job)
-        close_logger(logger)
         db_sync.commit()
 
     except Exception:
@@ -309,18 +308,20 @@ async def submit_workflow(
 
         current_traceback = traceback.format_exc()
 
-        # Assemble output_dataset.meta based on the last successful task, i.e.
-        # based on METADATA_FILENAME
-        # dataset.meta = assemble_meta_failed_job(job, dataset)
-
-        # Assemble new history and assign it to output_dataset.meta
-        # dataset.history = assemble_history_failed_job(
-        #     job,
-        #     dataset,
-        #     workflow,
-        #     logger,
-        # )
-
+        # Read dataset attributes produced by the last successful task, and
+        # update the DB dataset accordingly
+        dataset.history = assemble_history_failed_job(
+            job,
+            dataset,
+            workflow,
+            logger,
+        )
+        latest_filters = assemble_filters_failed_job(job)
+        if latest_filters is not None:
+            dataset.filters = latest_filters
+        latest_images = assemble_images_failed_job(job)
+        if latest_images is not None:
+            dataset.images = latest_images
         db_sync.merge(dataset)
 
         job.status = JobStatusTypeV2.FAILED
@@ -330,7 +331,7 @@ async def submit_workflow(
             f"TRACEBACK:\n{current_traceback}"
         )
         db_sync.merge(job)
-        close_logger(logger)
         db_sync.commit()
     finally:
+        close_logger(logger)
         db_sync.close()
