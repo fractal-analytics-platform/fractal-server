@@ -1,19 +1,3 @@
-"""
-Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
-University of Zurich
-
-Original author(s):
-Jacopo Nespolo <jacopo.nespolo@exact-lab.it>
-Tommaso Comparin <tommaso.comparin@exact-lab.it>
-Marco Franzon <marco.franzon@exact-lab.it>
-Yuri Chiucconi <yuri.chiucconi@exact-lab.it>
-
-This file is part of Fractal and was originally developed by eXact lab S.r.l.
-<exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
-Institute for Biomedical Research and Pelkmans Lab from the University of
-Zurich.
-"""
-# import glob
 import os
 from pathlib import Path
 from typing import Any
@@ -200,6 +184,19 @@ async def test_full_workflow(
         statuses = res.json()["status"]
         debug(statuses)
         assert set(statuses.values()) == {"done"}
+
+        # Test cannot apply workflow using read-only dataset
+        dataset_read_only = await dataset_factory_v2(
+            project_id=project_id, name="dataset-read-only", read_only=True
+        )
+        dataset_read_only_id = dataset_read_only.id
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/apply/"
+            f"?dataset_id={dataset_read_only_id}",
+            json={},
+        )
+        assert res.status_code == 422
+        assert "read_only" in res.json()["detail"]
 
 
 @pytest.mark.parametrize("backend", backends_available)
