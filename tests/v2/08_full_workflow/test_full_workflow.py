@@ -35,7 +35,7 @@ PREFIX = "/api/v2"
 
 
 backends_available = list(_backends.keys())
-backends_available = ["local"]  # FIXME
+# backends_available = ["local"]  # FIXME
 
 
 @pytest.mark.parametrize("backend", backends_available)
