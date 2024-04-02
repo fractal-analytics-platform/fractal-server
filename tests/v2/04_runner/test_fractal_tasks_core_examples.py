@@ -160,7 +160,7 @@ def test_fractal_demos_01(
     )
 
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
-    dataset = execute_tasks_v2(
+    dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv["create_ome_zarr_compound"],
@@ -174,16 +174,15 @@ def test_fractal_demos_01(
         **execute_tasks_v2_args,
     )
 
-    assert _task_names_from_history(dataset.history) == [
+    assert _task_names_from_history(dataset_attrs["history"]) == [
         "create_ome_zarr_compound"
     ]
-    assert dataset.filters["attributes"] == {}
-    assert dataset.filters["types"] == {}
-    _assert_image_data_exist(dataset.images)
-    debug(dataset)
-    assert len(dataset.images) == 2
+    assert dataset_attrs["filters"]["attributes"] == {}
+    assert dataset_attrs["filters"]["types"] == {}
+    _assert_image_data_exist(dataset_attrs["images"])
+    assert len(dataset_attrs["images"]) == 2
 
-    dataset = execute_tasks_v2(
+    dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv["illumination_correction"],
@@ -192,25 +191,25 @@ def test_fractal_demos_01(
                 order=1,
             )
         ],
-        dataset=dataset,
+        dataset=DatasetV2Mock(
+            name="dataset", zarr_dir=zarr_dir, **dataset_attrs
+        ),
         **execute_tasks_v2_args,
     )
-
-    assert _task_names_from_history(dataset.history) == [
-        "create_ome_zarr_compound",
+    assert _task_names_from_history(dataset_attrs["history"]) == [
         "illumination_correction",
     ]
-    assert dataset.filters["attributes"] == {}
-    assert dataset.filters["types"] == {
+    assert dataset_attrs["filters"]["attributes"] == {}
+    assert dataset_attrs["filters"]["types"] == {
         "illumination_correction": True,
     }
-    assert set(dataset.image_paths) == {
+    assert set(img["path"] for img in dataset_attrs["images"]) == {
         f"{zarr_dir}/my_plate.zarr/A/01/0",
         f"{zarr_dir}/my_plate.zarr/A/02/0",
     }
 
     img = find_image_by_path(
-        path=f"{zarr_dir}/my_plate.zarr/A/01/0", images=dataset.images
+        path=f"{zarr_dir}/my_plate.zarr/A/01/0", images=dataset_attrs["images"]
     )["image"]
     assert img == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
@@ -225,9 +224,9 @@ def test_fractal_demos_01(
         "origin": None,
     }
 
-    _assert_image_data_exist(dataset.images)
+    _assert_image_data_exist(dataset_attrs["images"])
 
-    dataset = execute_tasks_v2(
+    dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv["MIP_compound"],
@@ -237,24 +236,25 @@ def test_fractal_demos_01(
                 order=2,
             )
         ],
-        dataset=dataset,
+        dataset=DatasetV2Mock(
+            name="dataset", zarr_dir=zarr_dir, **dataset_attrs
+        ),
         **execute_tasks_v2_args,
     )
-    debug(dataset)
+    debug(dataset_attrs)
 
-    assert _task_names_from_history(dataset.history) == [
-        "create_ome_zarr_compound",
-        "illumination_correction",
+    assert _task_names_from_history(dataset_attrs["history"]) == [
         "MIP_compound",
     ]
 
-    assert dataset.filters["attributes"] == {}
-    assert dataset.filters["types"] == {
+    assert dataset_attrs["filters"]["attributes"] == {}
+    assert dataset_attrs["filters"]["types"] == {
         "illumination_correction": True,
         "3D": False,
     }
     img = find_image_by_path(
-        path=f"{zarr_dir}/my_plate_mip.zarr/A/01/0", images=dataset.images
+        path=f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
+        images=dataset_attrs["images"],
     )["image"]
     assert img == {
         "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
@@ -268,9 +268,9 @@ def test_fractal_demos_01(
             "illumination_correction": True,
         },
     }
-    _assert_image_data_exist(dataset.images)
+    _assert_image_data_exist(dataset_attrs["images"])
 
-    dataset = execute_tasks_v2(
+    dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv["cellpose_segmentation"],
@@ -279,16 +279,15 @@ def test_fractal_demos_01(
                 order=3,
             )
         ],
-        dataset=dataset,
+        dataset=DatasetV2Mock(
+            name="dataset", zarr_dir=zarr_dir, **dataset_attrs
+        ),
         **execute_tasks_v2_args,
     )
 
-    debug(dataset)
+    debug(dataset_attrs)
 
-    assert _task_names_from_history(dataset.history) == [
-        "create_ome_zarr_compound",
-        "illumination_correction",
-        "MIP_compound",
+    assert _task_names_from_history(dataset_attrs["history"]) == [
         "cellpose_segmentation",
     ]
 
@@ -308,7 +307,7 @@ def test_fractal_demos_01_no_overwrite(
         workflow_dir=tmp_path / "job_dir",
     )
 
-    dataset = execute_tasks_v2(
+    dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv["create_ome_zarr_compound"],
@@ -320,15 +319,14 @@ def test_fractal_demos_01_no_overwrite(
         dataset=DatasetV2Mock(name="dataset", zarr_dir=zarr_dir),
         **execute_tasks_v2_args,
     )
-    assert dataset.image_paths == [
+    assert [img["path"] for img in dataset_attrs["images"]] == [
         f"{zarr_dir}/my_plate.zarr/A/01/0",
         f"{zarr_dir}/my_plate.zarr/A/02/0",
     ]
 
-    debug(dataset)
-    _assert_image_data_exist(dataset.images)
+    _assert_image_data_exist(dataset_attrs["images"])
     # Run illumination correction with overwrite_input=False
-    dataset = execute_tasks_v2(
+    dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv["illumination_correction"],
@@ -337,27 +335,26 @@ def test_fractal_demos_01_no_overwrite(
                 order=1,
             )
         ],
-        dataset=dataset,
+        dataset=DatasetV2Mock(
+            name="dataset", zarr_dir=zarr_dir, **dataset_attrs
+        ),
         **execute_tasks_v2_args,
     )
 
-    assert _task_names_from_history(dataset.history) == [
-        "create_ome_zarr_compound",
+    assert _task_names_from_history(dataset_attrs["history"]) == [
         "illumination_correction",
     ]
-    assert dataset.filters["attributes"] == {}
-    assert dataset.filters["types"] == {
+    assert dataset_attrs["filters"]["attributes"] == {}
+    assert dataset_attrs["filters"]["types"] == {
         "illumination_correction": True,
     }
-    assert dataset.image_paths == [
+    assert [img["path"] for img in dataset_attrs["images"]] == [
         f"{zarr_dir}/my_plate.zarr/A/01/0",
         f"{zarr_dir}/my_plate.zarr/A/02/0",
         f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
         f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
     ]
-    debug(dataset)
-
-    assert dataset.images[0] == {
+    assert dataset_attrs["images"][0] == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
         "origin": None,
         "attributes": {
@@ -368,7 +365,7 @@ def test_fractal_demos_01_no_overwrite(
             "3D": True,
         },
     }
-    assert dataset.images[1] == {
+    assert dataset_attrs["images"][1] == {
         "path": f"{zarr_dir}/my_plate.zarr/A/02/0",
         "origin": None,
         "attributes": {
@@ -379,7 +376,7 @@ def test_fractal_demos_01_no_overwrite(
             "3D": True,
         },
     }
-    assert dataset.images[2] == {
+    assert dataset_attrs["images"][2] == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
         "origin": f"{zarr_dir}/my_plate.zarr/A/01/0",
         "attributes": {
@@ -391,7 +388,7 @@ def test_fractal_demos_01_no_overwrite(
             "3D": True,
         },
     }
-    assert dataset.images[3] == {
+    assert dataset_attrs["images"][3] == {
         "path": f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
         "origin": f"{zarr_dir}/my_plate.zarr/A/02/0",
         "attributes": {
@@ -403,9 +400,9 @@ def test_fractal_demos_01_no_overwrite(
             "illumination_correction": True,
         },
     }
-    _assert_image_data_exist(dataset.images)
+    _assert_image_data_exist(dataset_attrs["images"])
 
-    dataset = execute_tasks_v2(
+    dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv["MIP_compound"],
@@ -414,21 +411,21 @@ def test_fractal_demos_01_no_overwrite(
                 order=2,
             )
         ],
-        dataset=dataset,
+        dataset=DatasetV2Mock(
+            name="dataset", zarr_dir=zarr_dir, **dataset_attrs
+        ),
         **execute_tasks_v2_args,
     )
 
-    assert _task_names_from_history(dataset.history) == [
-        "create_ome_zarr_compound",
-        "illumination_correction",
+    assert _task_names_from_history(dataset_attrs["history"]) == [
         "MIP_compound",
     ]
-    assert dataset.filters["attributes"] == {}
-    assert dataset.filters["types"] == {
+    assert dataset_attrs["filters"]["attributes"] == {}
+    assert dataset_attrs["filters"]["types"] == {
         "3D": False,
         "illumination_correction": True,
     }
-    assert dataset.image_paths == [
+    assert [img["path"] for img in dataset_attrs["images"]] == [
         f"{zarr_dir}/my_plate.zarr/A/01/0",
         f"{zarr_dir}/my_plate.zarr/A/02/0",
         f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
@@ -437,7 +434,7 @@ def test_fractal_demos_01_no_overwrite(
         f"{zarr_dir}/my_plate_mip.zarr/A/02/0_corr",
     ]
 
-    assert dataset.images[4] == {
+    assert dataset_attrs["images"][4] == {
         "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0_corr",
         "origin": f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
         "attributes": {
@@ -449,7 +446,7 @@ def test_fractal_demos_01_no_overwrite(
             "illumination_correction": True,
         },
     }
-    assert dataset.images[5] == {
+    assert dataset_attrs["images"][5] == {
         "path": f"{zarr_dir}/my_plate_mip.zarr/A/02/0_corr",
         "origin": f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
         "attributes": {
@@ -462,15 +459,15 @@ def test_fractal_demos_01_no_overwrite(
         },
     }
 
-    assert dataset.filters["attributes"] == {}
-    assert dataset.filters["types"] == {
+    assert dataset_attrs["filters"]["attributes"] == {}
+    assert dataset_attrs["filters"]["types"] == {
         "3D": False,
         "illumination_correction": True,
     }
 
-    _assert_image_data_exist(dataset.images)
+    _assert_image_data_exist(dataset_attrs["images"])
 
-    dataset = execute_tasks_v2(
+    dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv["cellpose_segmentation"],
@@ -478,15 +475,13 @@ def test_fractal_demos_01_no_overwrite(
                 order=3,
             )
         ],
-        dataset=dataset,
+        dataset=DatasetV2Mock(
+            name="dataset", zarr_dir=zarr_dir, **dataset_attrs
+        ),
         **execute_tasks_v2_args,
     )
-    debug(dataset)
 
-    assert _task_names_from_history(dataset.history) == [
-        "create_ome_zarr_compound",
-        "illumination_correction",
-        "MIP_compound",
+    assert _task_names_from_history(dataset_attrs["history"]) == [
         "cellpose_segmentation",
     ]
 
@@ -503,7 +498,7 @@ def test_registration_no_overwrite(
         workflow_dir=tmp_path / "job_dir",
     )
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
-    dataset = execute_tasks_v2(
+    dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv[
@@ -519,7 +514,7 @@ def test_registration_no_overwrite(
     )
 
     # Run init registration
-    dataset = execute_tasks_v2(
+    dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv[
@@ -530,22 +525,21 @@ def test_registration_no_overwrite(
                 order=1,
             )
         ],
-        dataset=dataset,
+        dataset=DatasetV2Mock(
+            name="dataset", zarr_dir=zarr_dir, **dataset_attrs
+        ),
         **execute_tasks_v2_args,
     )
 
-    # Print current dataset information
-    debug(dataset)
-
     # In all non-reference-cycle images, a certain table was updated
-    for image in dataset.images:
+    for image in dataset_attrs["images"]:
         if image["attributes"]["acquisition"] == 0:
             assert not os.path.isfile(f"{image['path']}/registration_table")
         else:
             assert os.path.isfile(f"{image['path']}/registration_table")
 
     # Run find_registration_consensus
-    dataset = execute_tasks_v2(
+    dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv["find_registration_consensus"],
@@ -553,22 +547,21 @@ def test_registration_no_overwrite(
                 order=2,
             )
         ],
-        dataset=dataset,
+        dataset=DatasetV2Mock(
+            name="dataset", zarr_dir=zarr_dir, **dataset_attrs
+        ),
         **execute_tasks_v2_args,
     )
 
-    # Print current dataset information
-    debug(dataset)
-
     # In all images, a certain (post-consensus) table was updated
-    for image in dataset.images:
+    for image in dataset_attrs["images"]:
         assert os.path.isfile(f"{image['path']}/registration_table_final")
 
     # The image list still has the original six images only
-    assert len(dataset.images) == 6
+    assert len(dataset_attrs["images"]) == 6
 
     # Run apply_registration_to_image
-    dataset = execute_tasks_v2(
+    dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv["apply_registration_to_image"],
@@ -577,15 +570,14 @@ def test_registration_no_overwrite(
                 order=3,
             )
         ],
-        dataset=dataset,
+        dataset=DatasetV2Mock(
+            name="dataset", zarr_dir=zarr_dir, **dataset_attrs
+        ),
         **execute_tasks_v2_args,
     )
 
     # A new copy of each image was created
-    assert len(dataset.images) == 12
-
-    # Print current dataset information
-    debug(dataset)
+    assert len(dataset_attrs["images"]) == 12
 
 
 def test_registration_overwrite(
@@ -601,7 +593,7 @@ def test_registration_overwrite(
     )
 
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
-    dataset = execute_tasks_v2(
+    dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv[
@@ -617,7 +609,7 @@ def test_registration_overwrite(
     )
 
     # Run init registration
-    dataset = execute_tasks_v2(
+    dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv[
@@ -628,22 +620,21 @@ def test_registration_overwrite(
                 id=1,
             )
         ],
-        dataset=dataset,
+        dataset=DatasetV2Mock(
+            name="dataset", zarr_dir=zarr_dir, **dataset_attrs
+        ),
         **execute_tasks_v2_args,
     )
 
-    # Print current dataset information
-    debug(dataset)
-
     # In all non-reference-cycle images, a certain table was updated
-    for image in dataset.images:
+    for image in dataset_attrs["images"]:
         if image["attributes"]["acquisition"] == 0:
             assert not os.path.isfile(f"{image['path']}/registration_table")
         else:
             assert os.path.isfile(f"{image['path']}/registration_table")
 
     # Run find_registration_consensus
-    dataset = execute_tasks_v2(
+    dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv["find_registration_consensus"],
@@ -651,22 +642,21 @@ def test_registration_overwrite(
                 order=2,
             )
         ],
-        dataset=dataset,
+        dataset=DatasetV2Mock(
+            name="dataset", zarr_dir=zarr_dir, **dataset_attrs
+        ),
         **execute_tasks_v2_args,
     )
 
-    # Print current dataset information
-    debug(dataset)
-
     # In all images, a certain (post-consensus) table was updated
-    for image in dataset.images:
+    for image in dataset_attrs["images"]:
         assert os.path.isfile(f"{image['path']}/registration_table_final")
 
     # The image list still has the original six images only
-    assert len(dataset.images) == 6
+    assert len(dataset_attrs["images"]) == 6
 
     # Run apply_registration_to_image
-    dataset = execute_tasks_v2(
+    dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv["apply_registration_to_image"],
@@ -675,17 +665,16 @@ def test_registration_overwrite(
                 order=3,
             )
         ],
-        dataset=dataset,
+        dataset=DatasetV2Mock(
+            name="dataset", zarr_dir=zarr_dir, **dataset_attrs
+        ),
         **execute_tasks_v2_args,
     )
 
     # Images are still the same number, but they are marked as registered
-    assert len(dataset.images) == 6
-    for image in dataset.images:
+    assert len(dataset_attrs["images"]) == 6
+    for image in dataset_attrs["images"]:
         assert image["types"]["registration"] is True
-
-    # Print current dataset information
-    debug(dataset)
 
 
 def test_channel_parallelization_with_overwrite(
@@ -698,7 +687,7 @@ def test_channel_parallelization_with_overwrite(
         workflow_dir=tmp_path / "job_dir",
     )
     # Run create_ome_zarr+yokogawa_to_zarr
-    dataset = execute_tasks_v2(
+    dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv["create_ome_zarr_compound"],
@@ -711,11 +700,8 @@ def test_channel_parallelization_with_overwrite(
         **execute_tasks_v2_args,
     )
 
-    # Print current dataset information
-    debug(dataset)
-
     # Run illumination_correction_compound
-    dataset = execute_tasks_v2(
+    dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv[
@@ -726,15 +712,14 @@ def test_channel_parallelization_with_overwrite(
                 order=1,
             ),
         ],
-        dataset=dataset,
+        dataset=DatasetV2Mock(
+            name="dataset", zarr_dir=zarr_dir, **dataset_attrs
+        ),
         **execute_tasks_v2_args,
     )
 
-    # Print current dataset information
-    debug(dataset)
-
     # Check that there are now 2 images
-    assert len(dataset.images) == 2
+    assert len(dataset_attrs["images"]) == 2
 
 
 def test_channel_parallelization_no_overwrite(
@@ -747,7 +732,7 @@ def test_channel_parallelization_no_overwrite(
         workflow_dir=tmp_path / "job_dir",
     )
     # Run create_ome_zarr+yokogawa_to_zarr
-    dataset = execute_tasks_v2(
+    dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv["create_ome_zarr_compound"],
@@ -760,11 +745,8 @@ def test_channel_parallelization_no_overwrite(
         **execute_tasks_v2_args,
     )
 
-    # Print current dataset information
-    debug(dataset)
-
     # Run init_channel_parallelization
-    dataset = execute_tasks_v2(
+    dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv[
@@ -775,15 +757,14 @@ def test_channel_parallelization_no_overwrite(
                 order=1,
             ),
         ],
-        dataset=dataset,
+        dataset=DatasetV2Mock(
+            name="dataset", zarr_dir=zarr_dir, **dataset_attrs
+        ),
         **execute_tasks_v2_args,
     )
 
-    # Print current dataset information
-    debug(dataset)
-
     # Check that there are now 4 images
-    assert len(dataset.images) == 4
+    assert len(dataset_attrs["images"]) == 4
 
 
 @pytest.mark.skip
@@ -796,10 +777,10 @@ def test_fractal_demos_01_scaling(
         executor=executor,
         workflow_dir=tmp_path / "job_dir",
     )
-    (tmp_path / "job_folder").mkdir()
+    (tmp_path / "job_dir").mkdir()
 
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
-    dataset = execute_tasks_v2(
+    dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv["create_ome_zarr_compound"],
@@ -815,15 +796,15 @@ def test_fractal_demos_01_scaling(
         **execute_tasks_v2_args,
     )
 
-    assert _task_names_from_history(dataset.history) == [
+    assert _task_names_from_history(dataset_attrs["history"]) == [
         "create_ome_zarr_compound"
     ]
-    assert dataset.filters["attributes"] == {}
-    assert dataset.filters["types"] == {}
-    _assert_image_data_exist(dataset.images)
-    assert len(dataset.images) == NUM_IMAGES
+    assert dataset_attrs["filters"]["attributes"] == {}
+    assert dataset_attrs["filters"]["types"] == {}
+    _assert_image_data_exist(dataset_attrs["images"])
+    assert len(dataset_attrs["images"]) == NUM_IMAGES
 
-    dataset = execute_tasks_v2(
+    dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv["illumination_correction"],
@@ -832,22 +813,23 @@ def test_fractal_demos_01_scaling(
                 order=1,
             )
         ],
-        dataset=dataset,
+        dataset=DatasetV2Mock(
+            name="dataset", zarr_dir=zarr_dir, **dataset_attrs
+        ),
         **execute_tasks_v2_args,
     )
 
-    assert _task_names_from_history(dataset.history) == [
-        "create_ome_zarr_compound",
+    assert _task_names_from_history(dataset_attrs["history"]) == [
         "illumination_correction",
     ]
-    assert dataset.filters["attributes"] == {}
-    assert dataset.filters["types"] == {
+    assert dataset_attrs["filters"]["attributes"] == {}
+    assert dataset_attrs["filters"]["types"] == {
         "illumination_correction": True,
     }
-    assert len(dataset.images) == NUM_IMAGES
+    assert len(dataset_attrs["images"]) == NUM_IMAGES
 
     img = find_image_by_path(
-        path=f"{zarr_dir}/my_plate.zarr/A/01/0", images=dataset.images
+        path=f"{zarr_dir}/my_plate.zarr/A/01/0", images=dataset_attrs["images"]
     )["image"]
     assert img == {
         "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
@@ -862,7 +844,7 @@ def test_fractal_demos_01_scaling(
         "origin": None,
     }
 
-    dataset = execute_tasks_v2(
+    dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv["MIP_compound"],
@@ -872,24 +854,25 @@ def test_fractal_demos_01_scaling(
                 order=2,
             )
         ],
-        dataset=dataset,
+        dataset=DatasetV2Mock(
+            name="dataset", zarr_dir=zarr_dir, **dataset_attrs
+        ),
         **execute_tasks_v2_args,
     )
 
-    assert _task_names_from_history(dataset.history) == [
-        "create_ome_zarr_compound",
-        "illumination_correction",
+    assert _task_names_from_history(dataset_attrs["history"]) == [
         "MIP_compound",
     ]
 
-    assert dataset.filters["attributes"] == {}
-    assert dataset.filters["types"] == {
+    assert dataset_attrs["filters"]["attributes"] == {}
+    assert dataset_attrs["filters"]["types"] == {
         "illumination_correction": True,
         "3D": False,
     }
-    assert len(dataset.images) == NUM_IMAGES * 2
+    assert len(dataset_attrs["images"]) == NUM_IMAGES * 2
     img = find_image_by_path(
-        path=f"{zarr_dir}/my_plate_mip.zarr/A/01/0", images=dataset.images
+        path=f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
+        images=dataset_attrs["images"],
     )["image"]
     assert img == {
         "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
@@ -904,7 +887,7 @@ def test_fractal_demos_01_scaling(
         },
     }
 
-    dataset = execute_tasks_v2(
+    dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv["cellpose_segmentation"],
@@ -913,13 +896,12 @@ def test_fractal_demos_01_scaling(
                 order=3,
             )
         ],
-        dataset=dataset,
+        dataset=DatasetV2Mock(
+            name="dataset", zarr_dir=zarr_dir, **dataset_attrs
+        ),
         **execute_tasks_v2_args,
     )
 
-    assert _task_names_from_history(dataset.history) == [
-        "create_ome_zarr_compound",
-        "illumination_correction",
-        "MIP_compound",
+    assert _task_names_from_history(dataset_attrs["history"]) == [
         "cellpose_segmentation",
     ]
