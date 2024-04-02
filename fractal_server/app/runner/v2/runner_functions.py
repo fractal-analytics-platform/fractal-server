@@ -1,4 +1,5 @@
 import functools
+import logging
 import traceback
 from concurrent.futures import Executor
 from pathlib import Path
@@ -94,7 +95,11 @@ def run_v2_task_non_parallel(
     This runs server-side (see `executor` argument)
     """
 
-    if not workflow_dir_user:
+    if workflow_dir_user is None:
+        workflow_dir_user = workflow_dir
+        logging.error(
+            "In `run_single_task`, workflow_dir_user=None. Is this right?"
+        )
         workflow_dir_user = workflow_dir
 
     executor_options = _get_executor_options(
