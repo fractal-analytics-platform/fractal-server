@@ -67,6 +67,7 @@ class WorkflowTaskReadV2(BaseModel):
     input_filters: Filters
 
     is_legacy_task: bool
+    task_type: str
     task_id: Optional[int]
     task: Optional[TaskReadV2]
     task_legacy_id: Optional[int]

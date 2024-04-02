@@ -7,6 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import ProjectV2
+from fractal_server.app.models.v2 import TaskV2
+from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.routes.api.v2.apply import _encode_as_utc
 from fractal_server.app.runner.set_start_and_last_task_index import (
@@ -38,8 +40,6 @@ async def dataset_factory_v2(db: AsyncSession, tmp_path):
     """
     Insert DatasetV2 in db
     """
-    from fractal_server.app.models.v2 import ProjectV2
-    from fractal_server.app.models.v2 import DatasetV2
 
     async def __dataset_factory_v2(db: AsyncSession = db, **kwargs):
         defaults = dict(
@@ -71,8 +71,6 @@ async def workflow_factory_v2(db: AsyncSession):
     """
     Insert WorkflowV2 in db
     """
-    from fractal_server.app.models.v2 import ProjectV2
-    from fractal_server.app.models.v2 import WorkflowV2
 
     async def __workflow_factory(db: AsyncSession = db, **kwargs):
         defaults = dict(
@@ -180,7 +178,6 @@ async def task_factory_v2(db: AsyncSession):
     """
     Insert TaskV2 in db
     """
-    from fractal_server.app.models.v2 import TaskV2
 
     async def __task_factory(
         db: AsyncSession = db,
@@ -236,15 +233,18 @@ async def workflowtask_factory_v2(db: AsyncSession):
     """
     Insert workflowtaskv2 in db
     """
-    from fractal_server.app.models.v2 import WorkflowTaskV2
 
     async def __workflowtask_factory(
         workflow_id: int, task_id: int, db: AsyncSession = db, **kwargs
     ):
+        task = await db.get(TaskV2, task_id)
+        if task is None:
+            raise Exception(f"TaskV2[{task_id}] not found.")
         defaults = dict(
             workflow_id=workflow_id,
             task_id=task_id,
             is_legacy_task=False,
+            task_type=task.type,
         )
         args = dict(**defaults)
         args.update(kwargs)
