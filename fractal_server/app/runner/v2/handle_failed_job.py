@@ -14,7 +14,6 @@ Helper functions to handle Dataset history.
 """
 import json
 import logging
-from copy import deepcopy
 from pathlib import Path
 from typing import Any
 from typing import Optional
@@ -24,13 +23,14 @@ from ...models.v2 import JobV2
 from ...models.v2 import WorkflowTaskV2
 from ...models.v2 import WorkflowV2
 from ...schemas.v2 import WorkflowTaskStatusTypeV2
+from ..filenames import FILTERS_FILENAME
 from ..filenames import HISTORY_FILENAME
-from ..filenames import METADATA_FILENAME
+from ..filenames import IMAGES_FILENAME
 
 
 def assemble_history_failed_job(
     job: JobV2,
-    output_dataset: DatasetV2,
+    dataset: DatasetV2,
     workflow: WorkflowV2,
     logger: logging.Logger,
     failed_wftask: Optional[WorkflowTaskV2] = None,
@@ -42,30 +42,28 @@ def assemble_history_failed_job(
         job:
             The failed `ApplyWorkflow` object.
         output_dataset:
-            The `output_dataset` associated to `job`.
+            The `dataset` associated to `job`.
         workflow:
             The `workflow` associated to `job`.
         logger: A logger instance.
         failed_wftask:
             If set, append it to `history` during step 3; if `None`, infer
             it by comparing the job task list and the one in
-            `tmp_metadata_file`.
+            `HISTORY_FILENAME`.
 
     Returns:
         The new value of `history`, to be merged into
         `output_dataset.meta`.
     """
 
-    raise NotImplementedError("This is just a copy of V1")
-
     # The final value of the history attribute should include up to three
     # parts, coming from: the database, the temporary file, the failed-task
     # information.
 
     # Part 1: Read exising history from DB
-    new_history = output_dataset.history
+    new_history = dataset.history
 
-    # Part 2: Extend history based on tmp_metadata_file
+    # Part 2: Extend history based on temporary-file contents
     tmp_history_file = Path(job.working_dir) / HISTORY_FILENAME
     try:
         with tmp_history_file.open("r") as f:
@@ -101,45 +99,58 @@ def assemble_history_failed_job(
         new_history_item = dict(
             workflowtask=failed_wftask_dump,
             status=WorkflowTaskStatusTypeV2.FAILED,
-            parallelization=dict(
-                parallelization_level=failed_wftask.parallelization_level,
-            ),
+            parallelization=dict(),  # FIXME: re-include parallelization
         )
         new_history.append(new_history_item)
 
     return new_history
 
 
-def assemble_meta_failed_job(
-    job: JobV2,
-    output_dataset: DatasetV2,
-) -> dict[str, Any]:
+def assemble_images_failed_job(job: JobV2) -> Optional[dict[str, Any]]:
     """
-    Assemble `Dataset.meta` (history excluded) for a failed workflow-execution.
+    Assemble `DatasetV2.images` for a failed workflow-execution.
 
-    Assemble new value of `output_dataset.meta` based on the last successful
-    task, i.e. based on the content of the temporary `METADATA_FILENAME` file.
+    Assemble new value of `images` based on the last successful task, i.e.
+    based on the content of the temporary `IMAGES_FILENAME` file. If the file
+    is missing, return `None`.
 
-    Args:
+    Argumentss:
         job:
-            The failed `ApplyWorkflow` object.
-        output_dataset:
-            The `output_dataset` associated to `job`.
+            The failed `JobV2` object.
 
     Returns:
-        The new value of `output_dataset.meta`, apart from its `history` key.
+        The new value of `dataset.images`, or `None` if `IMAGES_FILENAME`
+        is missing.
     """
-
-    raise NotImplementedError("This is just a copy of V1")
-
-    new_meta = deepcopy(output_dataset.meta)
-    metadata_file = Path(job.working_dir) / METADATA_FILENAME
+    tmp_file = Path(job.working_dir) / IMAGES_FILENAME
     try:
-        with metadata_file.open("r") as f:
-            metadata_update = json.load(f)
-        for key, value in metadata_update.items():
-            new_meta[key] = value
+        with tmp_file.open("r") as f:
+            new_images = json.load(f)
+        return new_images
     except FileNotFoundError:
-        pass
+        return None
 
-    return new_meta
+
+def assemble_filters_failed_job(job: JobV2) -> Optional[dict[str, Any]]:
+    """
+    Assemble `DatasetV2.filters` for a failed workflow-execution.
+
+    Assemble new value of `filters` based on the last successful task, i.e.
+    based on the content of the temporary `FILTERS_FILENAME` file. If the file
+    is missing, return `None`.
+
+    Argumentss:
+        job:
+            The failed `JobV2` object.
+
+    Returns:
+        The new value of `dataset.filters`, or `None` if `FILTERS_FILENAME`
+        is missing.
+    """
+    tmp_file = Path(job.working_dir) / FILTERS_FILENAME
+    try:
+        with tmp_file.open("r") as f:
+            new_filters = json.load(f)
+        return new_filters
+    except FileNotFoundError:
+        return None
