@@ -258,7 +258,7 @@ async def test_full_workflow_TaskExecutionError(
             json=dict(args_non_parallel=dict(raise_error=True)),
         )
         assert res.status_code == 201
-        workflow_task_id = res.json()["id"]  # noqa
+        workflow_task_id = res.json()["id"]
 
         # EXECUTE WORKFLOW
         res = await client.post(
@@ -293,7 +293,7 @@ async def test_full_workflow_TaskExecutionError(
         assert res.status_code == 200
         statuses = res.json()["status"]
         debug(statuses)
-        # assert statuses[workflow_task_id] == "failed"  # FIXME re-enable this
+        assert statuses[workflow_task_id] == "failed"  # FIXME re-enable this
 
 
 # @pytest.mark.parametrize("backend", backends_available)
