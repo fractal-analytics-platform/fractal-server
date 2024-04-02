@@ -41,7 +41,7 @@ def _process_workflow(
     workflow_dir: Path,
     first_task_index: int,
     last_task_index: int,
-) -> DatasetV2:
+) -> dict:
     """
     Internal processing routine
 
@@ -52,7 +52,7 @@ def _process_workflow(
     """
 
     with FractalThreadPoolExecutor() as executor:
-        processed_dataset = execute_tasks_v2(
+        new_dataset_attributes = execute_tasks_v2(
             wf_task_list=workflow.task_list[
                 first_task_index : (last_task_index + 1)  # noqa
             ],  # noqa
@@ -63,7 +63,7 @@ def _process_workflow(
             logger_name=logger_name,
             submit_setup_call=_local_submit_setup,
         )
-    return processed_dataset
+    return new_dataset_attributes
 
 
 async def process_workflow(
@@ -80,7 +80,7 @@ async def process_workflow(
     slurm_user: Optional[str] = None,
     slurm_account: Optional[str] = None,
     worker_init: Optional[str] = None,
-) -> DatasetV2:
+) -> dict:
     """
     Run a workflow
 
@@ -158,7 +158,7 @@ async def process_workflow(
         last_task_index=last_task_index,
     )
 
-    new_dataset = await async_wrap(_process_workflow)(
+    new_dataset_attributes = await async_wrap(_process_workflow)(
         workflow=workflow,
         dataset=dataset,
         logger_name=logger_name,
@@ -166,4 +166,4 @@ async def process_workflow(
         first_task_index=first_task_index,
         last_task_index=last_task_index,
     )
-    return new_dataset
+    return new_dataset_attributes
