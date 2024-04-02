@@ -87,7 +87,7 @@ def _process_workflow(
             dataset=dataset,
             executor=executor,
             workflow_dir=workflow_dir,
-            workflow_dir_user=workflow_dir,
+            workflow_dir_user=workflow_dir_user,
             logger_name=logger_name,
             submit_setup_call=_slurm_submit_setup,
         )
