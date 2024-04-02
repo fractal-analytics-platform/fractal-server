@@ -170,6 +170,53 @@ async def test_post_task(client, MockCurrentUser):
         assert res.status_code == 201
         assert res.json()["owner"] == USERNAME
 
+    # Fail giving "parallel" args to "non-parallel" tasks, and vice versa
+    res = await client.post(
+        f"{PREFIX}/",
+        json=dict(
+            name="name",
+            source="xxx",
+            command_parallel="cmd",
+            args_schema_non_parallel={"a": "b"},
+        ),
+    )
+    assert res.status_code == 422
+    assert "Cannot set" in res.json()["detail"]
+    res = await client.post(
+        f"{PREFIX}/",
+        json=dict(
+            name="name",
+            source="xxx",
+            command_parallel="cmd",
+            meta_non_parallel={"a": "b"},
+        ),
+    )
+    assert res.status_code == 422
+    assert "Cannot set" in res.json()["detail"]
+
+    res = await client.post(
+        f"{PREFIX}/",
+        json=dict(
+            name="name",
+            source="xxx",
+            command_non_parallel="cmd",
+            args_schema_parallel={"a": "b"},
+        ),
+    )
+    assert res.status_code == 422
+    assert "Cannot set" in res.json()["detail"]
+    res = await client.post(
+        f"{PREFIX}/",
+        json=dict(
+            name="name",
+            source="xxx",
+            command_non_parallel="cmd",
+            meta_parallel={"a": "b"},
+        ),
+    )
+    assert res.status_code == 422
+    assert "Cannot set" in res.json()["detail"]
+
 
 async def test_patch_task_auth(
     MockCurrentUser,
