@@ -18,8 +18,8 @@ from typing import Iterable
 from typing import Optional
 from typing import Sequence
 
-from ...v1._local._local_config import get_default_local_backend_config
-from ...v1._local._local_config import LocalBackendConfig
+from ._local_config import get_default_local_backend_config
+from ._local_config import LocalBackendConfig
 
 
 class FractalThreadPoolExecutor(ThreadPoolExecutor):
