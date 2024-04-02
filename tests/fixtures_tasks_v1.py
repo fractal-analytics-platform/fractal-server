@@ -8,7 +8,7 @@ from devtools import debug  # noqa
 from pydantic import BaseModel
 from pydantic import validator
 
-from .fixtures_server_v1 import HAS_LOCAL_SBATCH
+from .fixtures_slurm import HAS_LOCAL_SBATCH
 from fractal_server.tasks.endpoint_operations import create_package_dir_pip
 from fractal_server.tasks.endpoint_operations import inspect_package
 from tests.execute_command import execute_command
