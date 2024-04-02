@@ -16,6 +16,7 @@ Zurich.
 # import glob
 import os
 from pathlib import Path
+from typing import Any
 
 import pytest
 from devtools import debug
@@ -23,11 +24,18 @@ from devtools import debug
 from fractal_server.app.runner.v2 import _backends
 
 
+def _task_name_to_id(task_name: str, task_list: list[dict[str, Any]]) -> int:
+    task_id = next(
+        task["id"] for task in task_list if task["name"] == task_name
+    )
+    return task_id
+
+
 PREFIX = "/api/v2"
 
 
 backends_available = list(_backends.keys())
-backends_available = ["local"]
+backends_available = ["local"]  # FIXME
 
 
 @pytest.mark.parametrize("backend", backends_available)
@@ -90,24 +98,19 @@ async def test_full_workflow(
         task_list = res.json()
 
         # Add "create_ome_zarr_compound" task
-        task_id_A = next(
-            task["id"]
-            for task in task_list
-            if task["name"] == "create_ome_zarr_compound"
+        task_id_A = _task_name_to_id(
+            task_name="create_ome_zarr_compound", task_list=task_list
         )
-        debug(task_id_A)
         res = await client.post(
             f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
             f"?task_id={task_id_A}",
             json=dict(args_non_parallel=dict(image_dir="/somewhere")),
         )
         assert res.status_code == 201
-
         # Add "MIP_compound" task
-        task_id_B = next(
-            task["id"] for task in task_list if task["name"] == "MIP_compound"
+        task_id_B = _task_name_to_id(
+            task_name="MIP_compound", task_list=task_list
         )
-        debug(task_id_B)
         res = await client.post(
             f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
             f"?task_id={task_id_B}",
@@ -213,6 +216,12 @@ async def test_full_workflow_TaskExecutionError(
     override_settings_factory,
     fractal_tasks_mock,
 ):
+    """ "
+    Run a workflow made of three tasks, two successful tasks and one
+    that raises an error.
+    """
+    EXPECTED_STATUSES = {}
+
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=backend,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
@@ -247,11 +256,27 @@ async def test_full_workflow_TaskExecutionError(
         assert res.status_code == 200
         task_list = res.json()
 
-        # Add "generic_task" task
-        task_id = next(
-            task["id"] for task in task_list if task["name"] == "generic_task"
+        # Add "create_ome_zarr_compound" and "MIP_compound" tasks
+        task_id = _task_name_to_id("create_ome_zarr_compound", task_list)
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
+            f"?task_id={task_id}",
+            json=dict(args_non_parallel=dict(image_dir="/somewhere")),
         )
-        debug(task_id)
+        assert res.status_code == 201
+        workflow_task_id = res.json()["id"]
+        EXPECTED_STATUSES[str(workflow_task_id)] = "done"
+        task_id = _task_name_to_id("MIP_compound", task_list)
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
+            f"?task_id={task_id}",
+            json={},
+        )
+        assert res.status_code == 201
+        workflow_task_id = res.json()["id"]
+        EXPECTED_STATUSES[str(workflow_task_id)] = "done"
+        # Add "generic_task" task
+        task_id = _task_name_to_id("generic_task", task_list)
         res = await client.post(
             f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
             f"?task_id={task_id}",
@@ -259,6 +284,7 @@ async def test_full_workflow_TaskExecutionError(
         )
         assert res.status_code == 201
         workflow_task_id = res.json()["id"]
+        EXPECTED_STATUSES[str(workflow_task_id)] = "failed"
 
         # EXECUTE WORKFLOW
         res = await client.post(
@@ -277,23 +303,48 @@ async def test_full_workflow_TaskExecutionError(
         assert res.status_code == 200
         job_status_data = res.json()
         debug(job_status_data)
-        assert job_status_data["log"]
         debug(job_status_data["working_dir"])
+        assert job_status_data["log"]
         assert job_status_data["status"] == "failed"
         assert "ValueError" in job_status_data["log"]
 
-        # FIXME: test something about partial updates of dataset,
-        # for a workflow with N>1 tasks
+        # The temporary output of the successful tasks must have been written
+        # into the dataset filters&images attributes, and the history must
+        # include both successful and failed tasks
+        res = await client.get(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/"
+        )
+        assert res.status_code == 200
+        dataset = res.json()
+        EXPECTED_FILTERS = {
+            "attributes": {},
+            "types": {
+                "3D": False,
+            },
+        }
+        assert dataset["filters"] == EXPECTED_FILTERS
+        assert len(dataset["history"]) == 3
+        assert [item["status"] for item in dataset["history"]] == [
+            "done",
+            "done",
+            "failed",
+        ]
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/images/query/"
+        )
+        assert res.status_code == 200
+        image_list = res.json()["images"]
+        debug(image_list)
+        assert len(image_list) == 4
 
         # Test get_workflowtask_status endpoint
         res = await client.get(
             f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/status/"
         )
-        debug(res.status_code)
         assert res.status_code == 200
         statuses = res.json()["status"]
         debug(statuses)
-        assert statuses[workflow_task_id] == "failed"  # FIXME re-enable this
+        assert statuses == EXPECTED_STATUSES
 
 
 # @pytest.mark.parametrize("backend", backends_available)
