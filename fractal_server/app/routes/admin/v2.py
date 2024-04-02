@@ -12,7 +12,6 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from fastapi.responses import StreamingResponse
-from sqlalchemy import func
 from sqlmodel import select
 
 from ....config import get_settings
@@ -23,16 +22,11 @@ from ...db import get_async_db
 from ...models import JobStatusTypeV1
 from ...models.security import UserOAuth as User
 from ...models.v1 import Task
-from ...models.v2 import DatasetV2
 from ...models.v2 import JobV2
 from ...models.v2 import ProjectV2
-from ...models.v2 import WorkflowV2
 from ...runner.filenames import WORKFLOW_LOG_FILENAME
-from ...schemas.v2 import DatasetReadV2
 from ...schemas.v2 import JobReadV2
 from ...schemas.v2 import JobUpdateV2
-from ...schemas.v2 import ProjectReadV2
-from ...schemas.v2 import WorkflowReadV2
 from ...security import current_active_superuser
 from ..aux._job import _write_shutdown_file
 from ..aux._job import _zip_folder_to_byte_stream
@@ -56,143 +50,6 @@ def _convert_to_db_timestamp(dt: datetime) -> datetime:
     if Inject(get_settings).DB_ENGINE == "sqlite":
         return _dt.replace(tzinfo=None)
     return _dt
-
-
-@router_admin_v2.get("/project/", response_model=list[ProjectReadV2])
-async def view_project(
-    id: Optional[int] = None,
-    user_id: Optional[int] = None,
-    timestamp_created_min: Optional[datetime] = None,
-    timestamp_created_max: Optional[datetime] = None,
-    user: User = Depends(current_active_superuser),
-    db: AsyncSession = Depends(get_async_db),
-) -> list[ProjectReadV2]:
-    """
-    Query `project` table.
-
-    Args:
-        id: If not `None`, select a given `project.id`.
-        user_id: If not `None`, select a given `project.user_id`.
-    """
-
-    stm = select(ProjectV2)
-
-    if id is not None:
-        stm = stm.where(ProjectV2.id == id)
-
-    if user_id is not None:
-        stm = stm.where(ProjectV2.user_list.any(User.id == user_id))
-    if timestamp_created_min is not None:
-        timestamp_created_min = _convert_to_db_timestamp(timestamp_created_min)
-        stm = stm.where(ProjectV2.timestamp_created >= timestamp_created_min)
-    if timestamp_created_max is not None:
-        timestamp_created_max = _convert_to_db_timestamp(timestamp_created_max)
-        stm = stm.where(ProjectV2.timestamp_created <= timestamp_created_max)
-
-    res = await db.execute(stm)
-    project_list = res.scalars().all()
-    await db.close()
-
-    return project_list
-
-
-@router_admin_v2.get("/workflow/", response_model=list[WorkflowReadV2])
-async def view_workflow(
-    id: Optional[int] = None,
-    user_id: Optional[int] = None,
-    project_id: Optional[int] = None,
-    name_contains: Optional[str] = None,
-    timestamp_created_min: Optional[datetime] = None,
-    timestamp_created_max: Optional[datetime] = None,
-    user: User = Depends(current_active_superuser),
-    db: AsyncSession = Depends(get_async_db),
-) -> list[WorkflowReadV2]:
-    """
-    Query `workflow` table.
-
-    Args:
-        id: If not `None`, select a given `workflow.id`.
-        project_id: If not `None`, select a given `workflow.project_id`.
-        name_contains: If not `None`, select workflows such that their
-            `name` attribute contains `name_contains` (case-insensitive).
-    """
-    stm = select(WorkflowV2)
-
-    if user_id is not None:
-        stm = stm.join(ProjectV2).where(
-            ProjectV2.user_list.any(User.id == user_id)
-        )
-    if id is not None:
-        stm = stm.where(WorkflowV2.id == id)
-    if project_id is not None:
-        stm = stm.where(WorkflowV2.project_id == project_id)
-    if name_contains is not None:
-        # SQLAlchemy2: use icontains
-        stm = stm.where(
-            func.lower(WorkflowV2.name).contains(name_contains.lower())
-        )
-    if timestamp_created_min is not None:
-        timestamp_created_min = _convert_to_db_timestamp(timestamp_created_min)
-        stm = stm.where(WorkflowV2.timestamp_created >= timestamp_created_min)
-    if timestamp_created_max is not None:
-        timestamp_created_max = _convert_to_db_timestamp(timestamp_created_max)
-        stm = stm.where(WorkflowV2.timestamp_created <= timestamp_created_max)
-
-    res = await db.execute(stm)
-    workflow_list = res.scalars().all()
-    await db.close()
-
-    return workflow_list
-
-
-@router_admin_v2.get("/dataset/", response_model=list[DatasetReadV2])
-async def view_dataset(
-    id: Optional[int] = None,
-    user_id: Optional[int] = None,
-    project_id: Optional[int] = None,
-    name_contains: Optional[str] = None,
-    timestamp_created_min: Optional[datetime] = None,
-    timestamp_created_max: Optional[datetime] = None,
-    user: User = Depends(current_active_superuser),
-    db: AsyncSession = Depends(get_async_db),
-) -> list[DatasetReadV2]:
-    """
-    Query `dataset` table.
-
-    Args:
-        id: If not `None`, select a given `dataset.id`.
-        project_id: If not `None`, select a given `dataset.project_id`.
-        name_contains: If not `None`, select datasets such that their
-            `name` attribute contains `name_contains` (case-insensitive).
-        type: If not `None`, select a given `dataset.type`.
-    """
-    stm = select(DatasetV2)
-
-    if user_id is not None:
-        stm = stm.join(ProjectV2).where(
-            ProjectV2.user_list.any(User.id == user_id)
-        )
-    if id is not None:
-        stm = stm.where(DatasetV2.id == id)
-    if project_id is not None:
-        stm = stm.where(DatasetV2.project_id == project_id)
-    if name_contains is not None:
-        # SQLAlchemy2: use icontains
-        stm = stm.where(
-            func.lower(DatasetV2.name).contains(name_contains.lower())
-        )
-    if timestamp_created_min is not None:
-        timestamp_created_min = _convert_to_db_timestamp(timestamp_created_min)
-        stm = stm.where(DatasetV2.timestamp_created >= timestamp_created_min)
-    if timestamp_created_max is not None:
-        timestamp_created_max = _convert_to_db_timestamp(timestamp_created_max)
-        stm = stm.where(DatasetV2.timestamp_created <= timestamp_created_max)
-
-    res = await db.execute(stm)
-    dataset_list = res.scalars().all()
-    await db.close()
-
-    return dataset_list
 
 
 @router_admin_v2.get("/job/", response_model=list[JobReadV2])
