@@ -21,10 +21,10 @@ class TaskV2(SQLModel, table=True):
     source: str = Field(unique=True)
 
     meta_non_parallel: dict[str, Any] = Field(
-        sa_column=Column(JSON, server_default="{}", nullable=False)
+        sa_column=Column(JSON, server_default="{}", default={}, nullable=False)
     )
     meta_parallel: dict[str, Any] = Field(
-        sa_column=Column(JSON, server_default="{}", nullable=False)
+        sa_column=Column(JSON, server_default="{}", default={}, nullable=False)
     )
 
     owner: Optional[str] = None
