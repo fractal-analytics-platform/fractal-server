@@ -4,61 +4,66 @@ import logging
 from fractal_tasks_core.dev.lib_args_schemas import (
     create_schema_for_single_task,
 )
+from task_models import CompoundTask
+from task_models import NonParallelTask
+from task_models import ParallelTask
 
 
 TASK_LIST = [
-    dict(
+    CompoundTask(
         name="create_ome_zarr_compound",
-        executable_non_parallel="create_cellvoyager_ome_zarr.py",
-        executable_parallel="fill_cellvoyager_ome_zarr.py",
+        executable_init="create_cellvoyager_ome_zarr.py",
+        executable="fill_cellvoyager_ome_zarr.py",
+        meta_init={"key1": "value1"},
+        meta={"key2": "value2"},
     ),
-    dict(
+    CompoundTask(
         name="create_ome_zarr_multiplex_compound",
-        executable_non_parallel="create_cellvoyager_ome_zarr_multiplex.py",
-        executable_parallel="fill_cellvoyager_ome_zarr.py",
+        executable_init="create_cellvoyager_ome_zarr_multiplex.py",
+        executable="fill_cellvoyager_ome_zarr.py",
     ),
-    dict(
+    CompoundTask(
         name="MIP_compound",
         input_types={"3D": True},
-        executable_non_parallel="new_ome_zarr.py",
-        executable_parallel="maximum_intensity_projection.py",
+        executable_init="new_ome_zarr.py",
+        executable="maximum_intensity_projection.py",
         output_types={"3D": False},
     ),
-    dict(
+    ParallelTask(
         name="illumination_correction",
         input_types=dict(illumination_correction=False),
-        executable_parallel="illumination_correction.py",
+        executable="illumination_correction.py",
         output_types=dict(illumination_correction=True),
     ),
-    dict(
+    CompoundTask(
         name="illumination_correction_compound",
         input_types=dict(illumination_correction=False),
-        executable_non_parallel="illumination_correction_init.py",
-        executable_parallel="illumination_correction_compute.py",
+        executable_init="illumination_correction_init.py",
+        executable="illumination_correction_compute.py",
         output_types=dict(illumination_correction=True),
     ),
-    dict(
+    ParallelTask(
         name="cellpose_segmentation",
-        executable_parallel="cellpose_segmentation.py",
+        executable="cellpose_segmentation.py",
     ),
-    dict(
+    CompoundTask(
         name="calculate_registration_compound",
-        executable_non_parallel="calculate_registration_init.py",
-        executable_parallel="calculate_registration_compute.py",
+        executable_init="calculate_registration_init.py",
+        executable="calculate_registration_compute.py",
     ),
-    dict(
+    NonParallelTask(
         name="find_registration_consensus",
-        executable_non_parallel="find_registration_consensus.py",
+        executable="find_registration_consensus.py",
     ),
-    dict(
+    ParallelTask(
         name="apply_registration_to_image",
         input_types=dict(registration=False),
-        executable_parallel="apply_registration_to_image.py",
+        executable="apply_registration_to_image.py",
         output_types=dict(registration=True),
     ),
-    dict(
+    NonParallelTask(
         name="generic_task",
-        executable_non_parallel="generic_task.py",
+        executable="generic_task.py",
     ),
 ]
 
@@ -73,32 +78,42 @@ CUSTOM_PYDANTIC_MODELS = [
 
 
 for ind, task in enumerate(TASK_LIST):
-    print(task)
+    TASK_LIST[ind] = TASK_LIST[ind].dict(
+        exclude={"meta_init", "executable_init", "meta", "executable"},
+        exclude_unset=True,
+    )
+
+    if task.executable_non_parallel is not None:
+        TASK_LIST[ind][
+            "executable_non_parallel"
+        ] = task.executable_non_parallel
+    if task.executable_parallel is not None:
+        TASK_LIST[ind]["executable_parallel"] = task.executable_parallel
 
     for step in ["non_parallel", "parallel"]:
-
-        key = f"executable_{step}"
-        if key not in task.keys():
+        executable = TASK_LIST[ind].get(f"executable_{step}")
+        if executable is None:
             continue
 
-        executable = task[key]
-        logging.info(f"[{executable}] START")
-
         # Create new JSON Schema for task arguments
+        logging.info(f"[{executable}] START")
         schema = create_schema_for_single_task(
             executable,
             package=PACKAGE,
             custom_pydantic_models=CUSTOM_PYDANTIC_MODELS,
         )
+        logging.info(f"[{executable}] END (new schema)")
 
         TASK_LIST[ind][f"args_schema_{step}"] = schema
 
-    # Update docs_info, based on task-function description
-    TASK_LIST[ind]["docs_info"] = f"This is task {task['name']}."
-    TASK_LIST[ind]["docs_link"] = "https://example.org"
+    if task.meta_non_parallel is not None:
+        TASK_LIST[ind]["meta_non_parallel"] = task.meta_non_parallel
+    if task.meta_parallel is not None:
+        TASK_LIST[ind]["meta_parallel"] = task.meta_parallel
 
-    logging.info(f"[{executable}] END (new schema/description/link)")
-    print()
+    # Update docs_info, based on task-function description
+    TASK_LIST[ind]["docs_info"] = f"This is task {task.name}."
+    TASK_LIST[ind]["docs_link"] = "https://example.org"
 
 
 manifest = dict(
