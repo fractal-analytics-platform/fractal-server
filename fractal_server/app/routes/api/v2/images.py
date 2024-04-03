@@ -159,7 +159,6 @@ async def query_dataset_images(
 
     if total_count == 0:
         page = 1
-        page_size = 0
     else:
         last_page = (total_count // page_size) + (total_count % page_size > 0)
         if page > last_page:
