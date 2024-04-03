@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Literal
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,8 +7,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import ProjectV2
+from fractal_server.app.models.v2 import TaskV2
+from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
-from fractal_server.app.routes.api.v2.apply import _encode_as_utc
+from fractal_server.app.routes.api.v2.submit import _encode_as_utc
 from fractal_server.app.runner.set_start_and_last_task_index import (
     set_start_and_last_task_index,  # FIXME v2
 )
@@ -37,8 +40,6 @@ async def dataset_factory_v2(db: AsyncSession, tmp_path):
     """
     Insert DatasetV2 in db
     """
-    from fractal_server.app.models.v2 import ProjectV2
-    from fractal_server.app.models.v2 import DatasetV2
 
     async def __dataset_factory_v2(db: AsyncSession = db, **kwargs):
         defaults = dict(
@@ -70,8 +71,6 @@ async def workflow_factory_v2(db: AsyncSession):
     """
     Insert WorkflowV2 in db
     """
-    from fractal_server.app.models.v2 import ProjectV2
-    from fractal_server.app.models.v2 import WorkflowV2
 
     async def __workflow_factory(db: AsyncSession = db, **kwargs):
         defaults = dict(
@@ -179,17 +178,46 @@ async def task_factory_v2(db: AsyncSession):
     """
     Insert TaskV2 in db
     """
-    from fractal_server.app.models.v2 import TaskV2
 
-    async def __task_factory(db: AsyncSession = db, index: int = 0, **kwargs):
-        defaults = dict(
+    async def __task_factory(
+        db: AsyncSession = db,
+        index: int = 0,
+        type: Literal["parallel", "non_parallel", "compound"] = "compound",
+        **kwargs,
+    ):
+        args = dict(
+            type=type,
             name=f"task{index}",
-            command_non_parallel="cmd",
-            type="non_parallel",
             source=f"source{index}",
             version=f"{index}",
+            command_parallel="cmd_parallel",
+            command_non_parallel="cmd_non_parallel",
         )
-        args = dict(**defaults)
+        if type == "parallel":
+            if any(
+                arg in kwargs
+                for arg in [
+                    "meta_non_parallel",
+                    "args_schema_non_parallel",
+                    "command_non_parallel",
+                ]
+            ):
+                raise TypeError("Invalid argument for a parallel TaskV2")
+            else:
+                del args["command_non_parallel"]
+        elif type == "non_parallel":
+            if any(
+                arg in kwargs
+                for arg in [
+                    "meta_parallel",
+                    "args_schema_parallel",
+                    "command_parallel",
+                ]
+            ):
+                raise TypeError("Invalid argument for a non_parallel TaskV2")
+            else:
+                del args["command_parallel"]
+
         args.update(kwargs)
         t = TaskV2(**args)
         db.add(t)
@@ -205,15 +233,18 @@ async def workflowtask_factory_v2(db: AsyncSession):
     """
     Insert workflowtaskv2 in db
     """
-    from fractal_server.app.models.v2 import WorkflowTaskV2
 
     async def __workflowtask_factory(
         workflow_id: int, task_id: int, db: AsyncSession = db, **kwargs
     ):
+        task = await db.get(TaskV2, task_id)
+        if task is None:
+            raise Exception(f"TaskV2[{task_id}] not found.")
         defaults = dict(
             workflow_id=workflow_id,
             task_id=task_id,
             is_legacy_task=False,
+            task_type=task.type,
         )
         args = dict(**defaults)
         args.update(kwargs)

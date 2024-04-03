@@ -3,15 +3,14 @@ import logging
 import traceback
 from concurrent.futures import Executor
 from pathlib import Path
+from typing import Any
 from typing import Callable
 from typing import Literal
 from typing import Optional
 
-from ....images import SingleImage
 from .deduplicate_list import deduplicate_list
 from .merge_outputs import merge_outputs
 from .runner_functions_low_level import run_single_task
-from .task_interface import InitArgsModel
 from .task_interface import InitTaskOutput
 from .task_interface import TaskOutput
 from .v1_compat import convert_v2_args_into_v1
@@ -81,7 +80,7 @@ def _check_parallelization_list_size(my_list):
 
 def run_v2_task_non_parallel(
     *,
-    images: list[SingleImage],
+    images: list[dict[str, Any]],
     zarr_dir: str,
     task: TaskV2,
     wftask: WorkflowTaskV2,
@@ -137,7 +136,7 @@ def run_v2_task_non_parallel(
 
 def run_v2_task_parallel(
     *,
-    images: list[SingleImage],
+    images: list[dict[str, Any]],
     task: TaskV2,
     wftask: WorkflowTaskV2,
     executor: Executor,
@@ -196,7 +195,7 @@ def run_v2_task_parallel(
 
 def run_v2_task_compound(
     *,
-    images: list[SingleImage],
+    images: list[dict[str, Any]],
     zarr_dir: str,
     task: TaskV2,
     wftask: WorkflowTaskV2,
@@ -245,9 +244,7 @@ def run_v2_task_compound(
     else:
         init_task_output = InitTaskOutput(**output)
     parallelization_list = init_task_output.parallelization_list
-    parallelization_list = deduplicate_list(
-        parallelization_list, PydanticModel=InitArgsModel
-    )
+    parallelization_list = deduplicate_list(parallelization_list)
 
     # 3/B: parallel part of a compound task
     _check_parallelization_list_size(parallelization_list)
@@ -292,7 +289,7 @@ def run_v2_task_compound(
 
 def run_v1_task_parallel(
     *,
-    images: list[SingleImage],
+    images: list[dict[str, Any]],
     task_legacy: TaskV1,
     wftask: WorkflowTaskV2,
     executor: Executor,

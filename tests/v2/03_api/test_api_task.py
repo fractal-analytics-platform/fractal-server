@@ -170,6 +170,53 @@ async def test_post_task(client, MockCurrentUser):
         assert res.status_code == 201
         assert res.json()["owner"] == USERNAME
 
+    # Fail giving "non parallel" args to "parallel" tasks, and vice versa
+    res = await client.post(
+        f"{PREFIX}/",
+        json=dict(
+            name="name",
+            source="xxx",
+            command_parallel="cmd",
+            args_schema_non_parallel={"a": "b"},
+        ),
+    )
+    assert res.status_code == 422
+    assert "Cannot set" in res.json()["detail"]
+    res = await client.post(
+        f"{PREFIX}/",
+        json=dict(
+            name="name",
+            source="xxx",
+            command_parallel="cmd",
+            meta_non_parallel={"a": "b"},
+        ),
+    )
+    assert res.status_code == 422
+    assert "Cannot set" in res.json()["detail"]
+
+    res = await client.post(
+        f"{PREFIX}/",
+        json=dict(
+            name="name",
+            source="xxx",
+            command_non_parallel="cmd",
+            args_schema_parallel={"a": "b"},
+        ),
+    )
+    assert res.status_code == 422
+    assert "Cannot set" in res.json()["detail"]
+    res = await client.post(
+        f"{PREFIX}/",
+        json=dict(
+            name="name",
+            source="xxx",
+            command_non_parallel="cmd",
+            meta_parallel={"a": "b"},
+        ),
+    )
+    assert res.status_code == 422
+    assert "Cannot set" in res.json()["detail"]
+
 
 async def test_patch_task_auth(
     MockCurrentUser,
@@ -267,15 +314,9 @@ async def test_patch_task(
     client,
 ):
 
-    task_parallel = await task_factory_v2(
-        index=1, command_parallel="cmd", command_non_parallel=None
-    )
-    task_non_parallel = await task_factory_v2(
-        index=2, command_parallel=None, command_non_parallel="cmd"
-    )
-    task_compound = await task_factory_v2(
-        index=3, command_parallel="cmd", command_non_parallel="cmd"
-    )
+    task_parallel = await task_factory_v2(index=1, type="parallel")
+    task_non_parallel = await task_factory_v2(index=2, type="non_parallel")
+    task_compound = await task_factory_v2(index=3)
 
     async with MockCurrentUser(
         user_kwargs=dict(is_superuser=True, is_verified=True)

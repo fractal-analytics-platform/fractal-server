@@ -20,11 +20,11 @@ class TaskV2(SQLModel, table=True):
     command_parallel: Optional[str] = None
     source: str = Field(unique=True)
 
-    meta_non_parallel: Optional[dict[str, Any]] = Field(
-        sa_column=Column(JSON), default={}
+    meta_non_parallel: dict[str, Any] = Field(
+        sa_column=Column(JSON, server_default="{}", default={}, nullable=False)
     )
-    meta_parallel: Optional[dict[str, Any]] = Field(
-        sa_column=Column(JSON), default={}
+    meta_parallel: dict[str, Any] = Field(
+        sa_column=Column(JSON, server_default="{}", default={}, nullable=False)
     )
 
     owner: Optional[str] = None

@@ -39,6 +39,7 @@ class WorkflowTaskV2(SQLModel, table=True):
 
     # Task
     is_legacy_task: bool
+    task_type: str
     task_id: Optional[int] = Field(foreign_key="taskv2.id")
     task: Optional[TaskV2] = Relationship(
         sa_relationship_kwargs=dict(lazy="selectin")

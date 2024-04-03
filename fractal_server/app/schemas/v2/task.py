@@ -21,8 +21,8 @@ class TaskCreateV2(BaseModel):
     command_parallel: Optional[str]
     source: str
 
-    meta_parallel: Optional[dict[str, Any]] = Field(default={})
-    meta_non_parallel: Optional[dict[str, Any]] = Field(default={})
+    meta_parallel: Optional[dict[str, Any]]
+    meta_non_parallel: Optional[dict[str, Any]]
     version: Optional[str]
     args_schema_non_parallel: Optional[dict[str, Any]]
     args_schema_parallel: Optional[dict[str, Any]]
