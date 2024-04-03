@@ -10,9 +10,9 @@ from sqlmodel import select
 
 from ....db import AsyncSession
 from ....db import get_async_db
-from ....models import ApplyWorkflow
-from ....models import JobStatusTypeV1
-from ....models import Project
+from ....models.v1 import ApplyWorkflow
+from ....models.v1 import JobStatusTypeV1
+from ....models.v1 import Project
 from ....runner.filenames import WORKFLOW_LOG_FILENAME
 from ....schemas.v1 import ApplyWorkflowReadV1
 from ....security import current_active_user
