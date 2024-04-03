@@ -1,15 +1,15 @@
-name: Benchmark
+name: Benchmarks
 
 on:
   push:
-    branches: ["main"]
+    branches: []
   pull_request:
-    branches: ["main"]
+    branches: []
 
 jobs:
 
   benchmark_api:
-    name: Benchmark
+    name: Benchmarks
     runs-on: ubuntu-22.04
 
     services:
