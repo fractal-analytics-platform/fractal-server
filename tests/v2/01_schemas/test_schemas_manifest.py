@@ -113,7 +113,7 @@ def test_ManifestV2():
         ],
     )
 
-    # 1: invalid maninifest_version
+    # 1: invalid manifest_version
     with pytest.raises(ValidationError) as e:
         ManifestV2(manifest_version=1, task_list=[])
     assert "Wrong manifest version" in msg(e)
