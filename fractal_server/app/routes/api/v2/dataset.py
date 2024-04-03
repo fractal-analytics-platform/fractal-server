@@ -186,7 +186,6 @@ async def delete_dataset(
     jobs = res.scalars().all()
     for job in jobs:
         job.dataset_id = None
-        await db.merge(job)
     await db.commit()
 
     # Delete dataset
