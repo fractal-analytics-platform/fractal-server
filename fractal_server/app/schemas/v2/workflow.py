@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
+from pydantic import Extra
 from pydantic import validator
 
 from .._validators import valstr
@@ -12,7 +13,7 @@ from .workflowtask import WorkflowTaskImportV2
 from .workflowtask import WorkflowTaskReadV2
 
 
-class WorkflowCreateV2(BaseModel):
+class WorkflowCreateV2(BaseModel, extra=Extra.forbid):
 
     name: str
 
