@@ -60,7 +60,6 @@ async def test_schemas_dataset_v2(db):
     for key, value in dataset_update.dict(exclude_unset=True).items():
         setattr(dataset, key, value)
 
-    db.add(dataset)
     await db.commit()
     assert dataset.name == "new name"
     debug(dataset)
