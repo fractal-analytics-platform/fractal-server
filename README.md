@@ -104,15 +104,15 @@
 | fractal\_server/app/schemas/v1/task\_collection.py                        |       42 |        0 |       12 |        2 |     96% |59->58, 73->72 |
 | fractal\_server/app/schemas/v1/workflow.py                                |       67 |        0 |       11 |        2 |     97% |102->101, 168->167 |
 | fractal\_server/app/schemas/v2/\_\_init\_\_.py                            |       34 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/schemas/v2/dataset.py                                 |       42 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/app/schemas/v2/dataset.py                                 |       43 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/v2/dumps.py                                   |       52 |        2 |        4 |        2 |     93% |58->57, 64-65 |
-| fractal\_server/app/schemas/v2/job.py                                     |       59 |        1 |       12 |        3 |     94% |50->49, 61->60, 67 |
+| fractal\_server/app/schemas/v2/job.py                                     |       60 |        1 |       12 |        3 |     94% |51->50, 62->61, 68 |
 | fractal\_server/app/schemas/v2/manifest.py                                |       63 |        0 |       34 |        3 |     97% |54->53, 134->133, 156->155 |
-| fractal\_server/app/schemas/v2/project.py                                 |       20 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/schemas/v2/task.py                                    |       79 |        2 |        8 |        4 |     93% |38->37, 42, 95->94, 97 |
+| fractal\_server/app/schemas/v2/project.py                                 |       21 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/app/schemas/v2/task.py                                    |       78 |        2 |        8 |        4 |     93% |37->36, 41, 94->93, 96 |
 | fractal\_server/app/schemas/v2/task\_collection.py                        |       41 |        3 |       12 |        5 |     85% |54->53, 57, 62, 68->67, 73 |
-| fractal\_server/app/schemas/v2/workflow.py                                |       39 |        1 |        7 |        2 |     93% |46->45, 48 |
-| fractal\_server/app/schemas/v2/workflowtask.py                            |       69 |        0 |        4 |        1 |     99% |    88->87 |
+| fractal\_server/app/schemas/v2/workflow.py                                |       40 |        1 |        7 |        2 |     94% |47->46, 49 |
+| fractal\_server/app/schemas/v2/workflowtask.py                            |       70 |        0 |        4 |        1 |     99% |    89->88 |
 | fractal\_server/app/security/\_\_init\_\_.py                              |      144 |       28 |       32 |        3 |     77% |114-127, 146-147, 152-161, 166-174, 188, 192, 316 |
 | fractal\_server/config.py                                                 |      170 |        4 |       63 |       11 |     93% |76->75, 126->125, 204->203, 207, 216->exit, 228->227, 231, 235->exit, 276->275, 414-415, 420->exit |
 | fractal\_server/images/\_\_init\_\_.py                                    |        2 |        0 |        0 |        0 |    100% |           |
@@ -131,7 +131,7 @@
 | fractal\_server/tasks/v2/background\_operations.py                        |      158 |        2 |       38 |        5 |     96% |90->exit, 121->exit, 143, 226, 245->250 |
 | fractal\_server/tasks/v2/get\_collection\_data.py                         |       11 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/utils.py                                                  |       22 |        0 |        2 |        0 |    100% |           |
-|                                                                 **TOTAL** | **7272** |  **437** | **2082** |  **323** | **91%** |           |
+|                                                                 **TOTAL** | **7276** |  **437** | **2082** |  **323** | **91%** |           |
 
 
 ## Setup coverage badge
