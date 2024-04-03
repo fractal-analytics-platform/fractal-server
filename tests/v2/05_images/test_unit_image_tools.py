@@ -1,6 +1,6 @@
 from fractal_server.images import Filters
 from fractal_server.images import SingleImage
-from fractal_server.images.tools import _filter_image_list
+from fractal_server.images.tools import filter_image_list
 from fractal_server.images.tools import find_image_by_path
 from fractal_server.images.tools import match_filter
 
@@ -191,36 +191,36 @@ def test_match_filter():
 
 def test_filter_image_list():
     # Empty
-    res = _filter_image_list(images, Filters())
+    res = filter_image_list(images, Filters())
     assert res == images
     # Attributes
     f = Filters(attributes=dict(name="a"))
-    res = _filter_image_list(images, f)
+    res = filter_image_list(images, f)
     k = (N // 2) if not N % 2 else (N + 1) // 2
     assert len(res) == k
     f = Filters(attributes=dict(name="b"))
-    res = _filter_image_list(images, f)
+    res = filter_image_list(images, f)
     assert len(res) == N - k
     f = Filters(attributes=dict(num=0))
-    res = _filter_image_list(images, f)
+    res = filter_image_list(images, f)
     assert len(res) == len([i for i in range(N) if i % 3 == 0])
     f = Filters(attributes=dict(num=1))
-    res = _filter_image_list(images, f)
+    res = filter_image_list(images, f)
     assert len(res) == len([i for i in range(N) if i % 3 == 1])
     f = Filters(attributes=dict(num=2))
-    res = _filter_image_list(images, f)
+    res = filter_image_list(images, f)
     assert len(res) == len([i for i in range(N) if i % 3 == 2])
     f = Filters(attributes=dict(name="foo"))
-    res = _filter_image_list(images, f)
+    res = filter_image_list(images, f)
     assert len(res) == 0
     f = Filters(attributes=dict(num=3))
-    res = _filter_image_list(images, f)
+    res = filter_image_list(images, f)
     assert len(res) == 0
     f = Filters(attributes=dict(name="a", num=3))
-    res = _filter_image_list(images, f)
+    res = filter_image_list(images, f)
     assert len(res) == 0
     f = Filters(attributes=dict(name="foo", num=0))
-    res = _filter_image_list(images, f)
+    res = filter_image_list(images, f)
     assert len(res) == 0
     f = Filters(
         types=dict(
@@ -228,5 +228,5 @@ def test_filter_image_list():
             b=True,
         )
     )
-    res = _filter_image_list(images, f)
+    res = filter_image_list(images, f)
     assert len(res) == N // 2 - N // 3 + 1

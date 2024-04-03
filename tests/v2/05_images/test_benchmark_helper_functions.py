@@ -8,7 +8,7 @@ from fractal_server.app.runner.v2.deduplicate_list import deduplicate_list
 from fractal_server.app.runner.v2.task_interface import InitArgsModel
 from fractal_server.images import Filters
 from fractal_server.images import SingleImage
-from fractal_server.images.tools import _filter_image_list
+from fractal_server.images.tools import filter_image_list
 
 
 def benchmark(func):
@@ -44,7 +44,7 @@ def dummy_image_list(N):
 def test_filter_image_list_with_filters(
     images,
 ):
-    new_list = _filter_image_list(
+    new_list = filter_image_list(
         images=images,
         filters=Filters(
             attributes=dict(a1=0, a2="a2", a3=None),
@@ -63,7 +63,7 @@ def test_filter_image_list_with_filters(
 def test_filter_image_list_few_filters(
     images,
 ):
-    new_list = _filter_image_list(
+    new_list = filter_image_list(
         images=images,
         filters=Filters(attributes=dict(a1=0)),
     )
@@ -72,50 +72,38 @@ def test_filter_image_list_few_filters(
 
 
 @pytest.mark.parametrize(
-    "this_list,model",
+    "this_list",
     [
-        (
-            [
-                SingleImage(
-                    path=f"/tmp_{ind_image}",
-                    types=dict(a=True),
-                    attributes=dict(b=1),
-                )
-                for ind_time_slice in range(25)
-                for ind_image in range(400)
-            ],
-            SingleImage,
-        ),
-        (
-            [
-                SingleImage(
-                    path=f"/tmp_{ind_image}",
-                    types=dict(a=True),
-                    attributes=dict(b=1),
-                )
-                for ind_image in range(10_000)
-            ],
-            SingleImage,
-        ),
-        (
-            [
-                InitArgsModel(path=f"/tmp_{ind_image}", init_args=dict(a=1))
-                for ind_time_slice in range(25)
-                for ind_image in range(400)
-            ],
-            InitArgsModel,
-        ),
-        (
-            [
-                InitArgsModel(path=f"/tmp_{ind_image}", init_args=dict(a=1))
-                for ind_image in range(10_000)
-            ],
-            InitArgsModel,
-        ),
+        [
+            SingleImage(
+                path=f"/tmp_{ind_image}",
+                types=dict(a=True),
+                attributes=dict(b=1),
+            )
+            for ind_time_slice in range(25)
+            for ind_image in range(400)
+        ],
+        [
+            SingleImage(
+                path=f"/tmp_{ind_image}",
+                types=dict(a=True),
+                attributes=dict(b=1),
+            )
+            for ind_image in range(10_000)
+        ],
+        [
+            InitArgsModel(path=f"/tmp_{ind_image}", init_args=dict(a=1))
+            for ind_time_slice in range(25)
+            for ind_image in range(400)
+        ],
+        [
+            InitArgsModel(path=f"/tmp_{ind_image}", init_args=dict(a=1))
+            for ind_image in range(10_000)
+        ],
     ],
 )
 @benchmark
-def test_deduplicate_list(this_list, model):
-    new_list = deduplicate_list(this_list=this_list, PydanticModel=model)
+def test_deduplicate_list(this_list):
+    new_list = deduplicate_list(this_list=this_list)
 
     debug(len(this_list), len(new_list))
