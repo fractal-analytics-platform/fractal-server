@@ -7,15 +7,15 @@ import pytest
 from devtools import debug  # noqa
 from sqlmodel import select
 
-from fractal_server.app.models import Workflow
-from fractal_server.app.models import WorkflowExportV1
-from fractal_server.app.models import WorkflowImportV1
-from fractal_server.app.models import WorkflowReadV1
-from fractal_server.app.models import WorkflowTask
+from fractal_server.app.models.v1 import Workflow
+from fractal_server.app.models.v1 import WorkflowTask
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.schemas.v1 import JobStatusTypeV1
+from fractal_server.app.schemas.v1 import WorkflowExportV1
+from fractal_server.app.schemas.v1 import WorkflowImportV1
+from fractal_server.app.schemas.v1 import WorkflowReadV1
 
 
 async def get_workflow(client, p_id, wf_id):
