@@ -1,0 +1,29 @@
+{
+    "name": "MyWorkflow-V2",
+    "task_list": [
+        {
+            "args": {
+                "message": "task 0",
+                "arg": "value"
+            },
+            "meta": {"key": "value"},
+            "order": 0,
+            "is_legacy_task": false,
+            "task": {
+                "source": "PKG_SOURCE:dummy"
+            }
+        },
+        {
+            "args": {
+                "message": "task 0",
+                "arg": "value"
+            },
+            "meta": {"key": "value"},
+            "order": 1,
+            "is_legacy_task": true,
+            "task_legacy": {
+                "source": "PKG_SOURCE:dummy"
+            }
+        }
+    ]
+}

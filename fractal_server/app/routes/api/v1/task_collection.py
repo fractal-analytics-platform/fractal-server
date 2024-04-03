@@ -15,24 +15,26 @@ from .....config import get_settings
 from .....logger import close_logger
 from .....logger import set_logger
 from .....syringe import Inject
-from .....tasks._TaskCollectPip import _TaskCollectPip
-from .....tasks.background_operations import background_collect_pip
-from .....tasks.endpoint_operations import create_package_dir_pip
-from .....tasks.endpoint_operations import download_package
-from .....tasks.endpoint_operations import get_collection_data
-from .....tasks.endpoint_operations import inspect_package
-from .....tasks.utils import get_collection_log
-from .....tasks.utils import slugify_task_name
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models import State
 from ....models import Task
-from ....schemas import StateRead
-from ....schemas import TaskCollectPip
-from ....schemas import TaskCollectStatus
+from ....schemas.v1 import StateRead
+from ....schemas.v1 import TaskCollectPipV1
+from ....schemas.v1 import TaskCollectStatusV1
 from ....security import current_active_user
 from ....security import current_active_verified_user
 from ....security import User
+from fractal_server.tasks.endpoint_operations import create_package_dir_pip
+from fractal_server.tasks.endpoint_operations import download_package
+from fractal_server.tasks.endpoint_operations import inspect_package
+from fractal_server.tasks.utils import get_collection_log
+from fractal_server.tasks.utils import slugify_task_name
+from fractal_server.tasks.v1._TaskCollectPip import _TaskCollectPip
+from fractal_server.tasks.v1.background_operations import (
+    background_collect_pip,
+)
+from fractal_server.tasks.v1.get_collection_data import get_collection_data
 
 router = APIRouter()
 
@@ -57,7 +59,7 @@ logger = set_logger(__name__)
     },
 )
 async def collect_tasks_pip(
-    task_collect: TaskCollectPip,
+    task_collect: TaskCollectPipV1,
     background_tasks: BackgroundTasks,
     response: Response,
     user: User = Depends(current_active_verified_user),
@@ -162,7 +164,7 @@ async def collect_tasks_pip(
 
     # All checks are OK, proceed with task collection
     full_venv_path = venv_path.relative_to(settings.FRACTAL_TASKS_DIR)
-    collection_status = TaskCollectStatus(
+    collection_status = TaskCollectStatusV1(
         status="pending", venv_path=full_venv_path, package=task_pkg.package
     )
 
@@ -214,7 +216,7 @@ async def check_collection_status(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No task collection info with id={state_id}",
         )
-    data = TaskCollectStatus(**state.data)
+    data = TaskCollectStatusV1(**state.data)
 
     # In some cases (i.e. a successful or ongoing task collection), data.log is
     # not set; if so, we collect the current logs

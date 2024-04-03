@@ -1,0 +1,583 @@
+{
+  "args_schema_version": "pydantic_v1",
+  "has_args_schemas": true,
+  "manifest_version": "2",
+  "task_list": [
+    {
+      "args_schema_non_parallel": {
+        "additionalProperties": false,
+        "properties": {
+          "image_dir": {
+            "description": "Image where the raw images are",
+            "title": "Image Dir",
+            "type": "string"
+          },
+          "num_images": {
+            "default": 2,
+            "description": "Number of images that this dummy task will produce.",
+            "title": "Num Images",
+            "type": "integer"
+          },
+          "paths": {
+            "description": "description",
+            "items": {
+              "type": "string"
+            },
+            "title": "Paths",
+            "type": "array"
+          },
+          "zarr_dir": {
+            "description": "description",
+            "title": "Zarr Dir",
+            "type": "string"
+          }
+        },
+        "required": [
+          "paths",
+          "zarr_dir",
+          "image_dir"
+        ],
+        "title": "CreateCellvoyagerOmeZarr",
+        "type": "object"
+      },
+      "args_schema_parallel": {
+        "additionalProperties": false,
+        "definitions": {
+          "InitArgsCellVoyager": {
+            "description": "Dummy model description.",
+            "properties": {
+              "acquisition": {
+                "description": "dummy attribute description.",
+                "title": "Acquisition",
+                "type": "integer"
+              },
+              "raw_path": {
+                "description": "dummy attribute description.",
+                "title": "Raw Path",
+                "type": "string"
+              }
+            },
+            "required": [
+              "raw_path"
+            ],
+            "title": "InitArgsCellVoyager",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "init_args": {
+            "$ref": "#/definitions/InitArgsCellVoyager",
+            "description": "description",
+            "title": "Init_Args"
+          },
+          "path": {
+            "description": "description",
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "init_args"
+        ],
+        "title": "FillCellvoyagerOmeZarr",
+        "type": "object"
+      },
+      "docs_info": "This is task create_ome_zarr_compound.",
+      "docs_link": "https://example.org",
+      "executable_non_parallel": "create_cellvoyager_ome_zarr.py",
+      "executable_parallel": "fill_cellvoyager_ome_zarr.py",
+      "name": "create_ome_zarr_compound"
+    },
+    {
+      "args_schema_non_parallel": {
+        "additionalProperties": false,
+        "properties": {
+          "image_dir": {
+            "description": "Image where the raw images are",
+            "title": "Image Dir",
+            "type": "string"
+          },
+          "paths": {
+            "description": "description",
+            "items": {
+              "type": "string"
+            },
+            "title": "Paths",
+            "type": "array"
+          },
+          "zarr_dir": {
+            "description": "description",
+            "title": "Zarr Dir",
+            "type": "string"
+          }
+        },
+        "required": [
+          "paths",
+          "zarr_dir",
+          "image_dir"
+        ],
+        "title": "CreateCellvoyagerOmeZarrMultiplex",
+        "type": "object"
+      },
+      "args_schema_parallel": {
+        "additionalProperties": false,
+        "definitions": {
+          "InitArgsCellVoyager": {
+            "description": "Dummy model description.",
+            "properties": {
+              "acquisition": {
+                "description": "dummy attribute description.",
+                "title": "Acquisition",
+                "type": "integer"
+              },
+              "raw_path": {
+                "description": "dummy attribute description.",
+                "title": "Raw Path",
+                "type": "string"
+              }
+            },
+            "required": [
+              "raw_path"
+            ],
+            "title": "InitArgsCellVoyager",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "init_args": {
+            "$ref": "#/definitions/InitArgsCellVoyager",
+            "description": "description",
+            "title": "Init_Args"
+          },
+          "path": {
+            "description": "description",
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "init_args"
+        ],
+        "title": "FillCellvoyagerOmeZarr",
+        "type": "object"
+      },
+      "docs_info": "This is task create_ome_zarr_multiplex_compound.",
+      "docs_link": "https://example.org",
+      "executable_non_parallel": "create_cellvoyager_ome_zarr_multiplex.py",
+      "executable_parallel": "fill_cellvoyager_ome_zarr.py",
+      "name": "create_ome_zarr_multiplex_compound"
+    },
+    {
+      "args_schema_non_parallel": {
+        "additionalProperties": false,
+        "properties": {
+          "paths": {
+            "description": "Missing description",
+            "items": {
+              "type": "string"
+            },
+            "title": "Paths",
+            "type": "array"
+          },
+          "suffix": {
+            "default": "new",
+            "description": "Missing description",
+            "title": "Suffix",
+            "type": "string"
+          },
+          "zarr_dir": {
+            "description": "Missing description",
+            "title": "Zarr Dir",
+            "type": "string"
+          }
+        },
+        "required": [
+          "paths",
+          "zarr_dir"
+        ],
+        "title": "NewOmeZarr",
+        "type": "object"
+      },
+      "args_schema_parallel": {
+        "additionalProperties": false,
+        "definitions": {
+          "InitArgsMIP": {
+            "description": "Dummy model description.",
+            "properties": {
+              "new_path": {
+                "description": "dummy attribute description.",
+                "title": "New Path",
+                "type": "string"
+              },
+              "new_plate": {
+                "description": "dummy attribute description.",
+                "title": "New Plate",
+                "type": "string"
+              }
+            },
+            "required": [
+              "new_path",
+              "new_plate"
+            ],
+            "title": "InitArgsMIP",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "init_args": {
+            "$ref": "#/definitions/InitArgsMIP",
+            "description": "dummy argument description.",
+            "title": "Init_Args"
+          },
+          "path": {
+            "description": "dummy argument description.",
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "init_args"
+        ],
+        "title": "MaximumIntensityProjection",
+        "type": "object"
+      },
+      "docs_info": "This is task MIP_compound.",
+      "docs_link": "https://example.org",
+      "executable_non_parallel": "new_ome_zarr.py",
+      "executable_parallel": "maximum_intensity_projection.py",
+      "input_types": {
+        "3D": true
+      },
+      "name": "MIP_compound",
+      "output_types": {
+        "3D": false
+      }
+    },
+    {
+      "args_schema_parallel": {
+        "additionalProperties": false,
+        "properties": {
+          "overwrite_input": {
+            "default": false,
+            "description": "Missing description",
+            "title": "Overwrite Input",
+            "type": "boolean"
+          },
+          "path": {
+            "description": "Missing description",
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "IlluminationCorrection",
+        "type": "object"
+      },
+      "docs_info": "This is task illumination_correction.",
+      "docs_link": "https://example.org",
+      "executable_parallel": "illumination_correction.py",
+      "input_types": {
+        "illumination_correction": false
+      },
+      "name": "illumination_correction",
+      "output_types": {
+        "illumination_correction": true
+      }
+    },
+    {
+      "args_schema_non_parallel": {
+        "additionalProperties": false,
+        "properties": {
+          "overwrite_input": {
+            "default": false,
+            "description": "Whether to overwrite the current image",
+            "title": "Overwrite Input",
+            "type": "boolean"
+          },
+          "paths": {
+            "description": "description",
+            "items": {
+              "type": "string"
+            },
+            "title": "Paths",
+            "type": "array"
+          },
+          "zarr_dir": {
+            "description": "description",
+            "title": "Zarr Dir",
+            "type": "string"
+          }
+        },
+        "required": [
+          "paths",
+          "zarr_dir"
+        ],
+        "title": "IlluminationCorrectionInit",
+        "type": "object"
+      },
+      "args_schema_parallel": {
+        "additionalProperties": false,
+        "definitions": {
+          "InitArgsIllumination": {
+            "description": "Dummy model description.",
+            "properties": {
+              "raw_path": {
+                "description": "dummy attribute description.",
+                "title": "Raw Path",
+                "type": "string"
+              },
+              "subsets": {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "description": "dummy attribute description.",
+                "title": "Subsets",
+                "type": "object"
+              }
+            },
+            "required": [
+              "raw_path"
+            ],
+            "title": "InitArgsIllumination",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "init_args": {
+            "$ref": "#/definitions/InitArgsIllumination",
+            "description": "description",
+            "title": "Init_Args"
+          },
+          "path": {
+            "description": "description",
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "init_args"
+        ],
+        "title": "IlluminationCorrectionCompute",
+        "type": "object"
+      },
+      "docs_info": "This is task illumination_correction_compound.",
+      "docs_link": "https://example.org",
+      "executable_non_parallel": "illumination_correction_init.py",
+      "executable_parallel": "illumination_correction_compute.py",
+      "input_types": {
+        "illumination_correction": false
+      },
+      "name": "illumination_correction_compound",
+      "output_types": {
+        "illumination_correction": true
+      }
+    },
+    {
+      "args_schema_parallel": {
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "description": "description",
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "CellposeSegmentation",
+        "type": "object"
+      },
+      "docs_info": "This is task cellpose_segmentation.",
+      "docs_link": "https://example.org",
+      "executable_parallel": "cellpose_segmentation.py",
+      "name": "cellpose_segmentation"
+    },
+    {
+      "args_schema_non_parallel": {
+        "additionalProperties": false,
+        "properties": {
+          "paths": {
+            "description": "description",
+            "items": {
+              "type": "string"
+            },
+            "title": "Paths",
+            "type": "array"
+          },
+          "ref_acquisition": {
+            "description": "Reference-cycle acquisition number",
+            "title": "Ref Acquisition",
+            "type": "integer"
+          },
+          "zarr_dir": {
+            "description": "description",
+            "title": "Zarr Dir",
+            "type": "string"
+          }
+        },
+        "required": [
+          "paths",
+          "zarr_dir",
+          "ref_acquisition"
+        ],
+        "title": "CalculateRegistrationInit",
+        "type": "object"
+      },
+      "args_schema_parallel": {
+        "additionalProperties": false,
+        "definitions": {
+          "InitArgsRegistration": {
+            "description": "Dummy model description.",
+            "properties": {
+              "ref_path": {
+                "description": "dummy attribute description.",
+                "title": "Ref Path",
+                "type": "string"
+              }
+            },
+            "required": [
+              "ref_path"
+            ],
+            "title": "InitArgsRegistration",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "init_args": {
+            "$ref": "#/definitions/InitArgsRegistration",
+            "description": "description",
+            "title": "Init_Args"
+          },
+          "path": {
+            "description": "description",
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "init_args"
+        ],
+        "title": "CalculateRegistrationCompute",
+        "type": "object"
+      },
+      "docs_info": "This is task calculate_registration_compound.",
+      "docs_link": "https://example.org",
+      "executable_non_parallel": "calculate_registration_init.py",
+      "executable_parallel": "calculate_registration_compute.py",
+      "name": "calculate_registration_compound"
+    },
+    {
+      "args_schema_non_parallel": {
+        "additionalProperties": false,
+        "properties": {
+          "paths": {
+            "description": "description",
+            "items": {
+              "type": "string"
+            },
+            "title": "Paths",
+            "type": "array"
+          },
+          "zarr_dir": {
+            "description": "description",
+            "title": "Zarr Dir",
+            "type": "string"
+          }
+        },
+        "required": [
+          "paths",
+          "zarr_dir"
+        ],
+        "title": "FindRegistrationConsensus",
+        "type": "object"
+      },
+      "docs_info": "This is task find_registration_consensus.",
+      "docs_link": "https://example.org",
+      "executable_non_parallel": "find_registration_consensus.py",
+      "name": "find_registration_consensus"
+    },
+    {
+      "args_schema_parallel": {
+        "additionalProperties": false,
+        "properties": {
+          "overwrite_input": {
+            "default": true,
+            "description": "whether to overwrite the existing image",
+            "title": "Overwrite Input",
+            "type": "boolean"
+          },
+          "path": {
+            "description": "description",
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ApplyRegistrationToImage",
+        "type": "object"
+      },
+      "docs_info": "This is task apply_registration_to_image.",
+      "docs_link": "https://example.org",
+      "executable_parallel": "apply_registration_to_image.py",
+      "input_types": {
+        "registration": false
+      },
+      "name": "apply_registration_to_image",
+      "output_types": {
+        "registration": true
+      }
+    },
+    {
+      "args_schema_non_parallel": {
+        "additionalProperties": false,
+        "properties": {
+          "paths": {
+            "description": "description",
+            "items": {
+              "type": "string"
+            },
+            "title": "Paths",
+            "type": "array"
+          },
+          "raise_error": {
+            "default": false,
+            "description": "If true, the task raises a ValueError",
+            "title": "Raise Error",
+            "type": "boolean"
+          },
+          "sleep_time": {
+            "default": 1,
+            "description": "Time to sleep, in seconds",
+            "title": "Sleep Time",
+            "type": "integer"
+          },
+          "zarr_dir": {
+            "description": "description",
+            "title": "Zarr Dir",
+            "type": "string"
+          }
+        },
+        "required": [
+          "paths",
+          "zarr_dir"
+        ],
+        "title": "GenericTask",
+        "type": "object"
+      },
+      "docs_info": "This is task generic_task.",
+      "docs_link": "https://example.org",
+      "executable_non_parallel": "generic_task.py",
+      "name": "generic_task"
+    }
+  ]
+}

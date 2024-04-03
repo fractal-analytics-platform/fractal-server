@@ -7,8 +7,8 @@ import logging
 from sqlalchemy import select
 
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.models.job import ApplyWorkflow
-from fractal_server.app.models.project import Project
+from fractal_server.app.models.v1.job import ApplyWorkflow
+from fractal_server.app.models.v1.project import Project
 
 
 with next(get_sync_db()) as db:
