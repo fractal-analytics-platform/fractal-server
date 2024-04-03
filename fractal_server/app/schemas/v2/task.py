@@ -3,6 +3,7 @@ from typing import Literal
 from typing import Optional
 
 from pydantic import BaseModel
+from pydantic import Extra
 from pydantic import Field
 from pydantic import HttpUrl
 from pydantic import root_validator
@@ -11,9 +12,7 @@ from pydantic import validator
 from .._validators import valstr
 
 
-class TaskCreateV2(BaseModel):
-    class Config:
-        extra = "forbid"
+class TaskCreateV2(BaseModel, extra=Extra.forbid):
 
     name: str
 
