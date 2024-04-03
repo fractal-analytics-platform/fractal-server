@@ -323,7 +323,6 @@ async def background_collect_pip(
             data.status = "installing"
 
             state.data = data.sanitised_dict()
-            db.merge(state)
             db.commit()
             task_list = await create_package_environment_pip(
                 venv_path=venv_path,
@@ -335,7 +334,6 @@ async def background_collect_pip(
             logger.debug("Task-collection status: collecting")
             data.status = "collecting"
             state.data = data.sanitised_dict()
-            db.merge(state)
             db.commit()
             tasks = await _insert_tasks(task_list=task_list, db=db)
 
@@ -352,7 +350,6 @@ async def background_collect_pip(
             data.status = "OK"
             data.log = get_collection_log(venv_path)
             state.data = data.sanitised_dict()
-            db.merge(state)
             db.commit()
 
             # Write last logs to file
@@ -372,7 +369,6 @@ async def background_collect_pip(
             data.info = f"Original error: {e}"
             data.log = get_collection_log(venv_path)
             state.data = data.sanitised_dict()
-            db.merge(state)
             db.commit()
             db.close()
 
