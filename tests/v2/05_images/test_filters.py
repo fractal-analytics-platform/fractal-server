@@ -4,7 +4,7 @@ from pydantic import ValidationError
 
 from fractal_server.images import Filters
 from fractal_server.images import SingleImage
-from fractal_server.images.tools import _filter_image_list_SingleImage
+from fractal_server.images.tools import filter_image_list
 
 IMAGES = [
     SingleImage(
@@ -68,6 +68,7 @@ IMAGES = [
         ),
     ),
 ]
+IMAGES = [img.dict() for img in IMAGES]
 
 
 def test_singleimage_attributes_validation():
@@ -162,7 +163,7 @@ def test_filter_image_list_SingleImage(
     type_filters,
     expected_number,
 ):
-    filtered_list = _filter_image_list_SingleImage(
+    filtered_list = filter_image_list(
         images=IMAGES,
         filters=Filters(attributes=attribute_filters, types=type_filters),
     )
