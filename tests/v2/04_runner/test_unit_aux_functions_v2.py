@@ -10,7 +10,7 @@ def test_deduplicate_list_of_dicts():
         InitArgsModel(path="/asd", init_args=dict(a=1)),
         InitArgsModel(path="/asd", init_args=dict(a=2)),
     ]
-    new = deduplicate_list(old, PydanticModel=InitArgsModel)
+    new = deduplicate_list(old)
     assert len(new) == 2
 
     #
@@ -20,6 +20,6 @@ def test_deduplicate_list_of_dicts():
         InitArgsModel(path="/asd", init_args=dict(a=2)),
     ]
     debug(old)
-    new = deduplicate_list(old, PydanticModel=InitArgsModel)
+    new = deduplicate_list(old)
     debug(new)
     assert len(new) == 2
