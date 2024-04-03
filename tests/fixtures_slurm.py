@@ -7,10 +7,10 @@ from pathlib import Path
 import pytest
 from devtools import debug
 
-from fractal_server.app.runner._slurm._subprocess_run_as_user import (
+from fractal_server.app.runner.executors.slurm._subprocess_run_as_user import (
     _mkdir_as_user,
 )
-from fractal_server.app.runner._slurm._subprocess_run_as_user import (
+from fractal_server.app.runner.executors.slurm._subprocess_run_as_user import (
     _run_command_as_user,
 )
 
@@ -60,11 +60,11 @@ def patched_run_squeue(monkeypatch):
     https://github.com/sampsyo/clusterfutures/pull/19.
 
     The code of run_squeue, below, is a copy of the function in
-    fractal_server.app.runner._slurm._check_jobs_status, with changes
+    fractal_server.app.runner.executors.slurm._check_jobs_status, with changes
     marked via # CHANGED comments.
     """
 
-    import fractal_server.app.runner._slurm._check_jobs_status
+    import fractal_server.app.runner.executors.slurm._check_jobs_status
     from subprocess import run
 
     def patched_run_squeue(job_ids):
@@ -90,7 +90,7 @@ def patched_run_squeue(monkeypatch):
         return res
 
     monkeypatch.setattr(
-        fractal_server.app.runner._slurm._check_jobs_status,
+        fractal_server.app.runner.executors.slurm._check_jobs_status,
         "run_squeue",
         patched_run_squeue,
     )

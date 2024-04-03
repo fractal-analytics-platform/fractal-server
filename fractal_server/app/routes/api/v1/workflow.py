@@ -27,12 +27,12 @@ from ....models import ApplyWorkflow
 from ....models import Project
 from ....models import Task
 from ....models import Workflow
-from ....schemas import WorkflowCreate
-from ....schemas import WorkflowExport
-from ....schemas import WorkflowImport
-from ....schemas import WorkflowRead
-from ....schemas import WorkflowTaskCreate
-from ....schemas import WorkflowUpdate
+from ....schemas.v1 import WorkflowCreateV1
+from ....schemas.v1 import WorkflowExportV1
+from ....schemas.v1 import WorkflowImportV1
+from ....schemas.v1 import WorkflowReadV1
+from ....schemas.v1 import WorkflowTaskCreateV1
+from ....schemas.v1 import WorkflowUpdateV1
 from ....security import current_active_user
 from ....security import User
 from ._aux_functions import _check_workflow_exists
@@ -47,13 +47,13 @@ router = APIRouter()
 
 @router.get(
     "/project/{project_id}/workflow/",
-    response_model=list[WorkflowRead],
+    response_model=list[WorkflowReadV1],
 )
 async def get_workflow_list(
     project_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[list[WorkflowRead]]:
+) -> Optional[list[WorkflowReadV1]]:
     """
     Get workflow list for given project
     """
@@ -72,15 +72,15 @@ async def get_workflow_list(
 
 @router.post(
     "/project/{project_id}/workflow/",
-    response_model=WorkflowRead,
+    response_model=WorkflowReadV1,
     status_code=status.HTTP_201_CREATED,
 )
 async def create_workflow(
     project_id: int,
-    workflow: WorkflowCreate,
+    workflow: WorkflowCreateV1,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[WorkflowRead]:
+) -> Optional[WorkflowReadV1]:
     """
     Create a workflow, associate to a project
     """
@@ -103,14 +103,14 @@ async def create_workflow(
 
 @router.get(
     "/project/{project_id}/workflow/{workflow_id}/",
-    response_model=WorkflowRead,
+    response_model=WorkflowReadV1,
 )
 async def read_workflow(
     project_id: int,
     workflow_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[WorkflowRead]:
+) -> Optional[WorkflowReadV1]:
     """
     Get info on an existing workflow
     """
@@ -124,15 +124,15 @@ async def read_workflow(
 
 @router.patch(
     "/project/{project_id}/workflow/{workflow_id}/",
-    response_model=WorkflowRead,
+    response_model=WorkflowReadV1,
 )
 async def update_workflow(
     project_id: int,
     workflow_id: int,
-    patch: WorkflowUpdate,
+    patch: WorkflowUpdateV1,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[WorkflowRead]:
+) -> Optional[WorkflowReadV1]:
     """
     Edit a workflow
     """
@@ -228,14 +228,14 @@ async def delete_workflow(
 
 @router.get(
     "/project/{project_id}/workflow/{workflow_id}/export/",
-    response_model=WorkflowExport,
+    response_model=WorkflowExportV1,
 )
 async def export_worfklow(
     project_id: int,
     workflow_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[WorkflowExport]:
+) -> Optional[WorkflowExportV1]:
     """
     Export an existing workflow, after stripping all IDs
     """
@@ -260,15 +260,15 @@ async def export_worfklow(
 
 @router.post(
     "/project/{project_id}/workflow/import/",
-    response_model=WorkflowRead,
+    response_model=WorkflowReadV1,
     status_code=status.HTTP_201_CREATED,
 )
 async def import_workflow(
     project_id: int,
-    workflow: WorkflowImport,
+    workflow: WorkflowImportV1,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[WorkflowRead]:
+) -> Optional[WorkflowReadV1]:
     """
     Import an existing workflow into a project
 
@@ -320,7 +320,7 @@ async def import_workflow(
             source = wf_task.task.source
             task_id = source_to_id[source]
             # Prepare new_wf_task
-            new_wf_task = WorkflowTaskCreate(
+            new_wf_task = WorkflowTaskCreateV1(
                 **wf_task.dict(exclude_none=True),
             )
             # Insert task
@@ -335,11 +335,11 @@ async def import_workflow(
     return db_workflow
 
 
-@router.get("/workflow/", response_model=list[WorkflowRead])
+@router.get("/workflow/", response_model=list[WorkflowReadV1])
 async def get_user_workflows(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> list[WorkflowRead]:
+) -> list[WorkflowReadV1]:
     """
     Returns all the workflows of the current user
     """

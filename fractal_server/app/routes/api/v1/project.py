@@ -23,15 +23,17 @@ from ....models import Dataset
 from ....models import LinkUserProject
 from ....models import Project
 from ....models import Workflow
-from ....runner import submit_workflow
-from ....runner import validate_workflow_compatibility
-from ....runner.common import set_start_and_last_task_index
-from ....schemas import ApplyWorkflowCreate
-from ....schemas import ApplyWorkflowRead
-from ....schemas import JobStatusType
-from ....schemas import ProjectCreate
-from ....schemas import ProjectRead
-from ....schemas import ProjectUpdate
+from ....runner.set_start_and_last_task_index import (
+    set_start_and_last_task_index,
+)
+from ....runner.v1 import submit_workflow
+from ....runner.v1 import validate_workflow_compatibility
+from ....schemas.v1 import ApplyWorkflowCreateV1
+from ....schemas.v1 import ApplyWorkflowReadV1
+from ....schemas.v1 import JobStatusTypeV1
+from ....schemas.v1 import ProjectCreateV1
+from ....schemas.v1 import ProjectReadV1
+from ....schemas.v1 import ProjectUpdateV1
 from ....security import current_active_user
 from ....security import current_active_verified_user
 from ....security import User
@@ -48,7 +50,7 @@ def _encode_as_utc(dt: datetime):
     return dt.replace(tzinfo=timezone.utc).isoformat()
 
 
-@router.get("/", response_model=list[ProjectRead])
+@router.get("/", response_model=list[ProjectReadV1])
 async def get_list_project(
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
@@ -67,12 +69,12 @@ async def get_list_project(
     return project_list
 
 
-@router.post("/", response_model=ProjectRead, status_code=201)
+@router.post("/", response_model=ProjectReadV1, status_code=201)
 async def create_project(
-    project: ProjectCreate,
+    project: ProjectCreateV1,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[ProjectRead]:
+) -> Optional[ProjectReadV1]:
     """
     Create new poject
     """
@@ -102,12 +104,12 @@ async def create_project(
     return db_project
 
 
-@router.get("/{project_id}/", response_model=ProjectRead)
+@router.get("/{project_id}/", response_model=ProjectReadV1)
 async def read_project(
     project_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[ProjectRead]:
+) -> Optional[ProjectReadV1]:
     """
     Return info on an existing project
     """
@@ -118,10 +120,10 @@ async def read_project(
     return project
 
 
-@router.patch("/{project_id}/", response_model=ProjectRead)
+@router.patch("/{project_id}/", response_model=ProjectReadV1)
 async def update_project(
     project_id: int,
-    project_update: ProjectUpdate,
+    project_update: ProjectUpdateV1,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ):
@@ -241,18 +243,18 @@ async def delete_project(
 @router.post(
     "/{project_id}/workflow/{workflow_id}/apply/",
     status_code=status.HTTP_202_ACCEPTED,
-    response_model=ApplyWorkflowRead,
+    response_model=ApplyWorkflowReadV1,
 )
 async def apply_workflow(
     project_id: int,
     workflow_id: int,
-    apply_workflow: ApplyWorkflowCreate,
+    apply_workflow: ApplyWorkflowCreateV1,
     background_tasks: BackgroundTasks,
     input_dataset_id: int,
     output_dataset_id: int,
     user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[ApplyWorkflowRead]:
+) -> Optional[ApplyWorkflowReadV1]:
 
     output = await _get_dataset_check_owner(
         project_id=project_id,
@@ -362,7 +364,7 @@ async def apply_workflow(
     stm = (
         select(ApplyWorkflow)
         .where(ApplyWorkflow.output_dataset_id == output_dataset_id)
-        .where(ApplyWorkflow.status == JobStatusType.SUBMITTED)
+        .where(ApplyWorkflow.status == JobStatusTypeV1.SUBMITTED)
     )
     res = await db.execute(stm)
     if res.scalars().all():

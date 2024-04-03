@@ -12,11 +12,11 @@ from fractal_server.app.models import ApplyWorkflow
 from fractal_server.app.models import Dataset
 from fractal_server.app.models import Project
 from fractal_server.app.models import Workflow
-from fractal_server.app.schemas import ApplyWorkflowRead
-from fractal_server.app.schemas import WorkflowRead
-from fractal_server.app.schemas.dataset import DatasetRead
-from fractal_server.app.schemas.dumps import DatasetDump
-from fractal_server.app.schemas.dumps import WorkflowDump
+from fractal_server.app.schemas.v1 import ApplyWorkflowReadV1
+from fractal_server.app.schemas.v1 import WorkflowReadV1
+from fractal_server.app.schemas.v1.dataset import DatasetReadV1
+from fractal_server.app.schemas.v1.dumps import DatasetDumpV1
+from fractal_server.app.schemas.v1.dumps import WorkflowDumpV1
 
 
 REFERENCE_TIMESTAMP = datetime(2000, 1, 1, tzinfo=timezone.utc)
@@ -71,7 +71,7 @@ def fix_db():
                 db.commit()
                 db.refresh(workflow)
                 db.expunge(workflow)
-                WorkflowRead(
+                WorkflowReadV1(
                     **workflow.model_dump(exclude={"task_list", "project"}),
                     task_list=workflow.task_list,
                     project=workflow.project,
@@ -108,7 +108,7 @@ def fix_db():
                 db.commit()
                 db.refresh(dataset)
                 db.expunge(dataset)
-                DatasetRead(
+                DatasetReadV1(
                     **dataset.model_dump(exclude={"resource_list", "project"}),
                     resource_list=dataset.resource_list,
                     project=dataset.project,
@@ -246,9 +246,9 @@ def fix_db():
                 db.commit()
                 db.refresh(job)
             db.expunge(job)
-            WorkflowDump(**job.workflow_dump)
-            DatasetDump(**job.input_dataset_dump)
-            DatasetDump(**job.output_dataset_dump)
-            ApplyWorkflowRead(**job.model_dump())
+            WorkflowDumpV1(**job.workflow_dump)
+            DatasetDumpV1(**job.input_dataset_dump)
+            DatasetDumpV1(**job.output_dataset_dump)
+            ApplyWorkflowReadV1(**job.model_dump())
 
     logger.warning("END of execution of fix_db function")
