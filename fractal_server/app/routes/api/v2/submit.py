@@ -36,7 +36,7 @@ router = APIRouter()
 
 
 @router.post(
-    "/project/{project_id}/workflow/{workflow_id}/apply/",
+    "/project/{project_id}/job/submit/",
     status_code=status.HTTP_202_ACCEPTED,
     response_model=JobReadV2,
 )

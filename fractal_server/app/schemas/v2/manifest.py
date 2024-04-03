@@ -43,12 +43,62 @@ class TaskManifestV2(BaseModel):
     executable_parallel: Optional[str] = None
     input_types: dict[str, bool] = Field(default_factory=dict)
     output_types: dict[str, bool] = Field(default_factory=dict)
-    meta_parallel: dict[str, Any] = Field(default_factory=dict)
     meta_non_parallel: dict[str, Any] = Field(default_factory=dict)
+    meta_parallel: dict[str, Any] = Field(default_factory=dict)
     args_schema_non_parallel: Optional[dict[str, Any]] = None
     args_schema_parallel: Optional[dict[str, Any]] = None
     docs_info: Optional[str] = None
     docs_link: Optional[HttpUrl] = None
+
+    @root_validator
+    def validate_executable_args_meta(cls, values):
+
+        executable_non_parallel = values.get("executable_non_parallel")
+        executable_parallel = values.get("executable_parallel")
+        if (executable_non_parallel is None) and (executable_parallel is None):
+
+            raise ValueError(
+                "`TaskManifestV2.executable_non_parallel` and "
+                "`TaskManifestV2.executable_parallel` cannot be both None."
+            )
+
+        elif executable_non_parallel is None:
+
+            meta_non_parallel = values.get("meta_non_parallel")
+            if meta_non_parallel != {}:
+                raise ValueError(
+                    "`TaskManifestV2.meta_non_parallel` must be an empty dict "
+                    "if `TaskManifestV2.executable_non_parallel` is None. "
+                    f"Given: {meta_non_parallel}."
+                )
+
+            args_schema_non_parallel = values.get("args_schema_non_parallel")
+            if args_schema_non_parallel is not None:
+                raise ValueError(
+                    "`TaskManifestV2.args_schema_non_parallel` must be None "
+                    "if `TaskManifestV2.executable_non_parallel` is None. "
+                    f"Given: {args_schema_non_parallel}."
+                )
+
+        elif executable_parallel is None:
+
+            meta_parallel = values.get("meta_parallel")
+            if meta_parallel != {}:
+                raise ValueError(
+                    "`TaskManifestV2.meta_parallel` must be an empty dict if "
+                    "`TaskManifestV2.executable_parallel` is None. "
+                    f"Given: {meta_parallel}."
+                )
+
+            args_schema_parallel = values.get("args_schema_parallel")
+            if args_schema_parallel is not None:
+                raise ValueError(
+                    "`TaskManifestV2.args_schema_parallel` must be None if "
+                    "`TaskManifestV2.executable_parallel` is None. "
+                    f"Given: {args_schema_parallel}."
+                )
+
+        return values
 
 
 class ManifestV2(BaseModel):

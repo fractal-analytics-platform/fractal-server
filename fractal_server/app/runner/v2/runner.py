@@ -8,7 +8,7 @@ from typing import Optional
 
 from ....images import Filters
 from ....images import SingleImage
-from ....images.tools import _filter_image_list
+from ....images.tools import filter_image_list
 from ....images.tools import find_image_by_path
 from ....images.tools import match_filter
 from ..filenames import FILTERS_FILENAME
@@ -52,16 +52,15 @@ def execute_tasks_v2(
         # PRE TASK EXECUTION
 
         # Get filtered images
-        pre_type_filters = copy(tmp_filters["types"])
-        pre_type_filters.update(wftask.input_filters["types"])
-        pre_attribute_filters = copy(tmp_filters["attributes"])
-        pre_attribute_filters.update(wftask.input_filters["attributes"])
-        filtered_images = _filter_image_list(
+        pre_filters = dict(
+            types=copy(tmp_filters["types"]),
+            attributes=copy(tmp_filters["attributes"]),
+        )
+        pre_filters["types"].update(wftask.input_filters["types"])
+        pre_filters["attributes"].update(wftask.input_filters["attributes"])
+        filtered_images = filter_image_list(
             images=tmp_images,
-            filters=Filters(
-                types=pre_type_filters,
-                attributes=pre_attribute_filters,
-            ),
+            filters=Filters(**pre_filters),
         )
         # Verify that filtered images comply with task input_types
         for image in filtered_images:
@@ -183,14 +182,16 @@ def execute_tasks_v2(
                 updated_attributes.update(image["attributes"])
                 updated_types.update(image["types"])
                 updated_types.update(task.output_types)
-                new_image = SingleImage(
+                new_image = dict(
                     path=image["path"],
                     origin=image["origin"],
                     attributes=updated_attributes,
                     types=updated_types,
                 )
+                # Validate new image
+                SingleImage(**new_image)
                 # Add image into the dataset image list
-                tmp_images.append(new_image.dict())
+                tmp_images.append(new_image)
 
         # Remove images from tmp_images
         for image in current_task_output.image_list_removals:

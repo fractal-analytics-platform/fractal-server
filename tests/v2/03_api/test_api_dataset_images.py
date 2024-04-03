@@ -166,11 +166,13 @@ async def test_query_images(
 
     # Filter with non-existing type
     res = await client.post(
-        f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/query/",
+        f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/query/"
+        "?page_size=42",
         json=dict(filters=dict(types={"foo": True})),
     )
     assert res.status_code == 200
     assert res.json()["total_count"] == 0
+    assert res.json()["page_size"] == 42
     assert res.json()["current_page"] == 1
     assert res.json()["images"] == []
     res = await client.post(
