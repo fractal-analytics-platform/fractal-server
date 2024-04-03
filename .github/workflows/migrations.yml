@@ -9,9 +9,9 @@ name: migrations
 
 on:
   push:
-    branches: ["main", "dev-v2"]
+    branches: ["main"]
   pull_request:
-    branches: ["main", "dev-v2"]
+    branches: ["main"]
 
 
 env:
