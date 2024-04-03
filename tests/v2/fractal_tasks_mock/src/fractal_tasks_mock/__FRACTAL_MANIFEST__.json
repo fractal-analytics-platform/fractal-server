@@ -87,6 +87,12 @@
       "docs_link": "https://example.org",
       "executable_non_parallel": "create_cellvoyager_ome_zarr.py",
       "executable_parallel": "fill_cellvoyager_ome_zarr.py",
+      "meta_non_parallel": {
+        "key1": "value1"
+      },
+      "meta_parallel": {
+        "key2": "value2"
+      },
       "name": "create_ome_zarr_compound"
     },
     {
