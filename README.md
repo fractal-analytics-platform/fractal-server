@@ -7,11 +7,11 @@
 | fractal\_server/\_\_init\_\_.py                                           |        1 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/\_\_init\_\_.py                                       |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/db/\_\_init\_\_.py                                    |       75 |        0 |       24 |        7 |     93% |36->35, 44->43, 52->51, 79->78, 108->107, 115->114, 128->127 |
-| fractal\_server/app/models/\_\_init\_\_.py                                |        5 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/app/models/\_\_init\_\_.py                                |        4 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/linkuserproject.py                             |        8 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/security.py                                    |       39 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/state.py                                       |       14 |        0 |        0 |        0 |    100% |           |
-| fractal\_server/app/models/v1/\_\_init\_\_.py                             |        7 |        0 |        0 |        0 |    100% |           |
+| fractal\_server/app/models/v1/\_\_init\_\_.py                             |        8 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/v1/dataset.py                                  |       29 |        0 |        2 |        1 |     97% |    70->69 |
 | fractal\_server/app/models/v1/job.py                                      |       33 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/models/v1/project.py                                  |       15 |        0 |        0 |        0 |    100% |           |
