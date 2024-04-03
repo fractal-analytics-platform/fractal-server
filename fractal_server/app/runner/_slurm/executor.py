@@ -403,6 +403,8 @@ class FractalSlurmExecutor(SlurmExecutor):
         2. `*iterables` argument replaced with a single `iterable`;
         3. `timeout` and `chunksize` arguments are not supported.
 
+        FIXME: re-introduce "Returns: An iterator of results."
+
         Arguments:
             fn:
                 The function to be executed
@@ -416,8 +418,6 @@ class FractalSlurmExecutor(SlurmExecutor):
                 A `TaskFiles` object; if `None`, use
                 `self.get_default_task_files()`.
 
-        Returns:
-            An iterator of results.
         """
 
         def _result_or_cancel(fut):
