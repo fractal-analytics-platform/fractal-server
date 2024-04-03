@@ -5,7 +5,7 @@ from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.app.schemas.v2.manifest import TaskManifestV2
 
 
-def msg(e: ValidationError) -> str:
+def msg(e: pytest.ExceptionInfo) -> str:
     return e.value.errors()[0]["msg"]
 
 

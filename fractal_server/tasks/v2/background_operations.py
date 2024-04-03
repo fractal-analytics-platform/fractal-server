@@ -352,7 +352,6 @@ async def background_collect_pip(
             data.status = "OK"
             data.log = get_collection_log(venv_path)
             state.data = data.sanitised_dict()
-            db.add(state)
             db.merge(state)
             db.commit()
 

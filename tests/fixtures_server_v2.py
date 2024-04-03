@@ -58,7 +58,6 @@ async def dataset_factory_v2(db: AsyncSession, tmp_path):
 
         _dataset = DatasetV2(**args)
         db.add(_dataset)
-        db.add(project)
         await db.commit()
         await db.refresh(_dataset)
         return _dataset
@@ -90,7 +89,6 @@ async def workflow_factory_v2(db: AsyncSession):
 
         w = WorkflowV2(**args)
         db.add(w)
-        db.add(project)
         await db.commit()
         await db.refresh(w)
         return w
@@ -165,7 +163,6 @@ async def job_factory_v2(db: AsyncSession):
         args.update(**kwargs)
         job = JobV2(**args)
         db.add(job)
-        db.add(project)
         await db.commit()
         await db.refresh(job)
         return job
