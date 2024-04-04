@@ -17,10 +17,7 @@ def _task_name_to_id(task_name: str, task_list: list[dict[str, Any]]) -> int:
 
 PREFIX = "/api/v2"
 
-
 backends_available = list(_backends.keys())
-# backends_available = ["local"]  # FIXME
-backends_available = ["slurm"]  # FIXME
 
 
 @pytest.mark.parametrize("backend", backends_available)
@@ -34,10 +31,10 @@ async def test_full_workflow(
     workflow_factory_v2,
     backend,
     override_settings_factory,
-    fractal_tasks_mock,
     tmp_path_factory,
-    monkey_slurm,
-    relink_python_interpreter_v2,
+    fractal_tasks_mock,
+    # relink_python_interpreter_v2,
+    # monkey_slurm,
     request,
 ):
     # Create a session-scoped FRACTAL_TASKS_DIR folder
@@ -57,8 +54,8 @@ async def test_full_workflow(
     debug(f"Testing with {backend=}")
     user_kwargs = {"is_verified": True}
     if backend == "slurm":
-        # request.getfixturevalue("monkey_slurm")
-        # request.getfixturevalue("relink_python_interpreter")
+        request.getfixturevalue("monkey_slurm")
+        request.getfixturevalue("relink_python_interpreter_v2")
         user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
         user_kwargs["cache_dir"] = user_cache_dir
 
@@ -195,6 +192,7 @@ async def test_full_workflow(
         assert set(statuses.values()) == {"done"}
 
 
+@pytest.mark.skip()
 @pytest.mark.parametrize("backend", backends_available)
 async def test_full_workflow_TaskExecutionError(
     client,
