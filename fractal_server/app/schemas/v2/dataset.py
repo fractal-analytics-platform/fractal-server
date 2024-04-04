@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
+from pydantic import Extra
 from pydantic import Field
 from pydantic import validator
 
@@ -40,7 +41,7 @@ class DatasetStatusReadV2(BaseModel):
 # CRUD
 
 
-class DatasetCreateV2(BaseModel):
+class DatasetCreateV2(BaseModel, extra=Extra.forbid):
 
     name: str
 

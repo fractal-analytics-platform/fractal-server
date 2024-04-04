@@ -3,6 +3,7 @@ from typing import Any
 from typing import Optional
 
 from pydantic import BaseModel
+from pydantic import Extra
 from pydantic import Field
 from pydantic import validator
 
@@ -35,7 +36,7 @@ class WorkflowTaskStatusTypeV2(str, Enum):
     FAILED = "failed"
 
 
-class WorkflowTaskCreateV2(BaseModel):
+class WorkflowTaskCreateV2(BaseModel, extra=Extra.forbid):
 
     meta_parallel: Optional[dict[str, Any]]
     meta_non_parallel: Optional[dict[str, Any]]
