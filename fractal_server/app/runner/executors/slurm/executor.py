@@ -544,7 +544,7 @@ class FractalSlurmExecutor(SlurmExecutor):
         single_task_submission: bool = False,
         args: Optional[Sequence[Any]] = None,
         kwargs: Optional[dict] = None,
-        components: list[Any] = None,
+        components: Optional[list[Any]] = None,
     ) -> Future:
         """
         Submit a multi-task job to the pool, where each task is handled via the
@@ -580,6 +580,10 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         # Define slurm-job-related files
         if single_task_submission:
+            if components is not None:
+                raise ValueError(
+                    f"{single_task_submission=} but components is not None"
+                )
             job = SlurmJob(
                 slurm_file_prefix=slurm_file_prefix,
                 num_tasks_tot=1,
@@ -603,6 +607,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                 num_tasks_tot=num_tasks_tot,
                 slurm_config=slurm_config,
             )
+
             job.wftask_file_prefixes = tuple(
                 get_task_file_paths(
                     workflow_dir=task_files.workflow_dir,
