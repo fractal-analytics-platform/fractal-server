@@ -31,7 +31,6 @@ from ._slurm import process_workflow as slurm_process_workflow
 from .handle_failed_job import assemble_filters_failed_job
 from .handle_failed_job import assemble_history_failed_job
 from .handle_failed_job import assemble_images_failed_job
-from .runner import execute_tasks_v2  # noqa
 from fractal_server import __VERSION__
 
 _backends = {}

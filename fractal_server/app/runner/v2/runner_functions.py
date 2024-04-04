@@ -1,4 +1,5 @@
 import functools
+import logging
 import traceback
 from concurrent.futures import Executor
 from pathlib import Path
@@ -16,8 +17,8 @@ from .v1_compat import convert_v2_args_into_v1
 from fractal_server.app.models.v1 import Task as TaskV1
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
-from fractal_server.app.runner.v2.components import _COMPONENT_KEY_
-from fractal_server.app.runner.v2.components import _index_to_component
+from fractal_server.app.runner.components import _COMPONENT_KEY_
+from fractal_server.app.runner.components import _index_to_component
 
 
 __all__ = [
@@ -93,7 +94,11 @@ def run_v2_task_non_parallel(
     This runs server-side (see `executor` argument)
     """
 
-    if not workflow_dir_user:
+    if workflow_dir_user is None:
+        workflow_dir_user = workflow_dir
+        logging.error(
+            "In `run_single_task`, workflow_dir_user=None. Is this right?"
+        )
         workflow_dir_user = workflow_dir
 
     executor_options = _get_executor_options(

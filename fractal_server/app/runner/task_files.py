@@ -1,4 +1,3 @@
-from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 
@@ -84,7 +83,6 @@ class TaskFiles:
         )
 
 
-@lru_cache()
 def get_task_file_paths(
     workflow_dir: Path,
     workflow_dir_user: Path,

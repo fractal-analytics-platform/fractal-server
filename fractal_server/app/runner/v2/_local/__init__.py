@@ -25,12 +25,10 @@ from typing import Optional
 from ....models.v2 import DatasetV2
 from ....models.v2 import WorkflowV2
 from ...async_wrap import async_wrap
-from ...executors.local.executor import FractalThreadPoolExecutor
 from ...set_start_and_last_task_index import set_start_and_last_task_index
 from ..runner import execute_tasks_v2
 from ._submit_setup import _local_submit_setup
-
-# from typing import Any
+from .executor import FractalThreadPoolExecutor
 
 
 def _process_workflow(

@@ -7,9 +7,9 @@ from shlex import split as shlex_split
 from typing import Any
 from typing import Optional
 
+from ..components import _COMPONENT_KEY_
 from ..exceptions import JobExecutionError
 from ..exceptions import TaskExecutionError
-from .components import _COMPONENT_KEY_
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.runner.task_files import get_task_file_paths
 
