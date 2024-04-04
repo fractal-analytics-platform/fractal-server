@@ -268,7 +268,6 @@ async def flag_task_v1_as_v2_compatible(
         )
 
     task.is_v2_compatible = is_v2_compatible
-    db.add(task)
     await db.commit()
     await db.close()
 

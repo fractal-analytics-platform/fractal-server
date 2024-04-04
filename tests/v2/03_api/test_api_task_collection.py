@@ -155,7 +155,6 @@ async def test_task_collection(
         # Modify a task source (via DB, since endpoint cannot modify source)
         db_task = await db.get(TaskV2, task_list[0]["id"])
         db_task.source = "EDITED_SOURCE"
-        await db.merge(db_task)
         await db.commit()
         await db.close()
 
