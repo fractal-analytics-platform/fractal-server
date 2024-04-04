@@ -43,7 +43,6 @@ async def test_schemas_workflow_v2(db):
     for key, value in workflow_update.dict(exclude_unset=True).items():
         setattr(workflow, key, value)
 
-    db.add(workflow)
     await db.commit()
     assert workflow.name == "new name"
     debug(workflow)

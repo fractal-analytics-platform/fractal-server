@@ -68,7 +68,6 @@ async def post_new_image(
     dataset.images.append(new_image.dict())
     flag_modified(dataset, "images")
 
-    await db.merge(dataset)
     await db.commit()
 
     return Response(status_code=status.HTTP_201_CREATED)
@@ -203,7 +202,6 @@ async def delete_dataset_images(
     dataset.images.remove(image_to_remove)
     flag_modified(dataset, "images")
 
-    await db.merge(dataset)
     await db.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)

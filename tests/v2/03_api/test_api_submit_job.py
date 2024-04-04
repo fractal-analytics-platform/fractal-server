@@ -224,7 +224,6 @@ async def test_project_apply_missing_user_attributes(
 
         user.cache_dir = "/tmp"
         user.slurm_user = None
-        await db.merge(user)
         await db.commit()
 
         res = await client.post(
