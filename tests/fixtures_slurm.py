@@ -1,6 +1,7 @@
 import logging
 import os
 import shlex
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -13,6 +14,9 @@ from fractal_server.app.runner.executors.slurm._subprocess_run_as_user import (
 from fractal_server.app.runner.executors.slurm._subprocess_run_as_user import (
     _run_command_as_user,
 )
+
+
+HAS_LOCAL_SBATCH = bool(shutil.which("sbatch"))
 
 
 def is_responsive(container_name):

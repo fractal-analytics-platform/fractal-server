@@ -17,9 +17,7 @@ def _task_name_to_id(task_name: str, task_list: list[dict[str, Any]]) -> int:
 
 PREFIX = "/api/v2"
 
-
 backends_available = list(_backends.keys())
-backends_available = ["local"]  # FIXME
 
 
 @pytest.mark.parametrize("backend", backends_available)
@@ -32,24 +30,30 @@ async def test_full_workflow(
     dataset_factory_v2,
     workflow_factory_v2,
     backend,
-    request,
     override_settings_factory,
+    tmp_path_factory,
     fractal_tasks_mock,
+    request,
 ):
-    override_settings_factory(
+    # Use a session-scoped FRACTAL_TASKS_DIR folder
+    basetemp = tmp_path_factory.getbasetemp()
+    FRACTAL_TASKS_DIR = basetemp / "FRACTAL_TASKS_DIR"
+    selected_new_settings = dict(
         FRACTAL_RUNNER_BACKEND=backend,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
+        FRACTAL_TASKS_DIR=FRACTAL_TASKS_DIR,
     )
     if backend == "slurm":
-        override_settings_factory(
-            FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
+        selected_new_settings.update(
+            dict(FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json")
         )
+    override_settings_factory(**selected_new_settings)
 
     debug(f"Testing with {backend=}")
     user_kwargs = {"is_verified": True}
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
-        request.getfixturevalue("relink_python_interpreter")
+        request.getfixturevalue("relink_python_interpreter_v2")
         user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
         user_kwargs["cache_dir"] = user_cache_dir
 
@@ -199,6 +203,7 @@ async def test_full_workflow_TaskExecutionError(
     request,
     override_settings_factory,
     fractal_tasks_mock,
+    tmp_path_factory,
 ):
     """ "
     Run a workflow made of three tasks, two successful tasks and one
@@ -206,20 +211,25 @@ async def test_full_workflow_TaskExecutionError(
     """
     EXPECTED_STATUSES = {}
 
-    override_settings_factory(
+    # Use a session-scoped FRACTAL_TASKS_DIR folder
+    basetemp = tmp_path_factory.getbasetemp()
+    FRACTAL_TASKS_DIR = basetemp / "FRACTAL_TASKS_DIR"
+    selected_new_settings = dict(
         FRACTAL_RUNNER_BACKEND=backend,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
+        FRACTAL_TASKS_DIR=FRACTAL_TASKS_DIR,
     )
     if backend == "slurm":
-        override_settings_factory(
-            FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
+        selected_new_settings.update(
+            dict(FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json")
         )
+    override_settings_factory(**selected_new_settings)
 
     debug(f"Testing with {backend=}")
     user_kwargs = {"is_verified": True}
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
-        request.getfixturevalue("relink_python_interpreter")
+        request.getfixturevalue("relink_python_interpreter_v2")
         user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
         user_kwargs["cache_dir"] = user_cache_dir
 

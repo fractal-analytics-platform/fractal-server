@@ -8,7 +8,7 @@ from devtools import debug  # noqa
 from pydantic import BaseModel
 from pydantic import validator
 
-from .fixtures_server_v1 import HAS_LOCAL_SBATCH
+from .fixtures_slurm import HAS_LOCAL_SBATCH
 from fractal_server.tasks.endpoint_operations import create_package_dir_pip
 from fractal_server.tasks.endpoint_operations import inspect_package
 from tests.execute_command import execute_command
@@ -198,7 +198,7 @@ async def collect_packages(db_sync, install_dummy_packages):
 
 
 @pytest.fixture(scope="function")
-def relink_python_interpreter(collect_packages):
+def relink_python_interpreter_v1(collect_packages):
     """
     Rewire python executable in tasks
 

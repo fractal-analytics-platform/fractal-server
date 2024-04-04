@@ -12,7 +12,6 @@ Zurich.
 """
 import logging
 import random
-import shutil
 from dataclasses import dataclass
 from dataclasses import field
 from pathlib import Path
@@ -34,6 +33,7 @@ from fractal_server.app.security import _create_first_user
 from fractal_server.config import get_settings
 from fractal_server.config import Settings
 from fractal_server.syringe import Inject
+from tests.fixtures_slurm import HAS_LOCAL_SBATCH
 
 try:
     import asyncpg  # noqa: F401
@@ -41,8 +41,6 @@ try:
     DB_ENGINE = "postgres"
 except ModuleNotFoundError:
     DB_ENGINE = "sqlite"
-
-HAS_LOCAL_SBATCH = bool(shutil.which("sbatch"))
 
 
 def check_python_has_venv(python_path: str, temp_path: Path):
