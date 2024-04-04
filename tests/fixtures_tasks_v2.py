@@ -73,7 +73,8 @@ async def fractal_tasks_mock(
                         testdata_path.parent
                         / "v2/fractal_tasks_mock/dist"
                         / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
-                    ).as_posix()
+                    ).as_posix(),
+                    python_version="3.9",
                 ),
             )
             state_id = res.json()["id"]
@@ -85,10 +86,11 @@ async def fractal_tasks_mock(
 
 
 @pytest.fixture(scope="function")
-def relink_python_interpreter_v2(tmp_path_factory, fractal_tasks_mock):
+def relink_python_interpreter_v2(
+    tmp_path_factory, fractal_tasks_mock, testdata_path
+):
     """
     Rewire python executable in tasks
-
     """
     import os
     import json
@@ -106,6 +108,7 @@ def relink_python_interpreter_v2(tmp_path_factory, fractal_tasks_mock):
         logger = logging.getLogger("RELINK")
         logger.setLevel(logging.INFO)
 
+        # Identify task Python
         basetemp = tmp_path_factory.getbasetemp()
         FRACTAL_TASKS_DIR = basetemp / "FRACTAL_TASKS_DIR"
         FRACTAL_TASKS_MOCK_DIR = (
@@ -115,34 +118,33 @@ def relink_python_interpreter_v2(tmp_path_factory, fractal_tasks_mock):
         with collection_json.open("r") as f:
             collection_data = json.load(f)
         task_collection = TaskCollectStatusV2(**collection_data)
-
-        logger.warning(
-            f"RELINK: {task_collection.task_list[0].command_non_parallel}"
-        )
         task_python = Path(
             task_collection.task_list[0].command_non_parallel.split()[0]
         )
-        orig_python = os.readlink(task_python)
+        logger.warning(f"Original tasks Python: {task_python.as_posix()}")
+
+        actual_task_python = os.readlink(task_python)
         logger.warning(
-            f"RELINK: Original status: {task_python=} -> {orig_python}"
+            f"Actual tasks Python (after readlink): {actual_task_python}"
         )
-        task_python.unlink()
+
         # NOTE that the docker container in the CI only has python3.9
         # installed, therefore we explicitly hardcode this version here, to
         # make debugging easier
-        task_python.symlink_to("/usr/bin/python3.9")
-        logger.warning(
-            f"RELINK: Updated status: {task_python=} -> "
-            f"{os.readlink(task_python.as_posix())}"
-        )
+        # NOTE that the slurm-node container also installs a version of
+        # fractal-tasks-core
+        task_python.unlink()
+        new_actual_task_python = "/usr/bin/python3.9"
+        task_python.symlink_to(new_actual_task_python)
+        logger.warning(f"New tasks Python: {new_actual_task_python}")
 
         yield
 
         task_python.unlink()
-        task_python.symlink_to(orig_python)
+        task_python.symlink_to(actual_task_python)
         logger.warning(
-            f"RELINK: Restore original: {task_python=} -> "
-            f"{os.readlink(task_python.as_posix())}"
+            f"Restored link from "
+            f"{task_python.as_posix()} to {os.readlink(task_python)}"
         )
     else:
         yield
