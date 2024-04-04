@@ -46,6 +46,7 @@ from ._subprocess_run_as_user import _glob_as_user_strict
 from ._subprocess_run_as_user import _path_exists_as_user
 from ._subprocess_run_as_user import _run_command_as_user
 from fractal_server import __VERSION__
+from fractal_server.app.runner.components import _COMPONENT_KEY_
 
 
 logger = set_logger(__name__)
@@ -608,15 +609,22 @@ class FractalSlurmExecutor(SlurmExecutor):
                 slurm_config=slurm_config,
             )
 
-            job.wftask_file_prefixes = tuple(
-                get_task_file_paths(
-                    workflow_dir=task_files.workflow_dir,
-                    workflow_dir_user=task_files.workflow_dir_user,
-                    task_order=task_files.task_order,
-                    component=component,
-                ).file_prefix
-                for component in components
-            )
+            _prefixes = []
+            for component in components:
+                if isinstance(component, dict):
+                    # This is needed for V2
+                    actual_component = component.get(_COMPONENT_KEY_, None)
+                else:
+                    actual_component = component
+                _prefixes.append(
+                    get_task_file_paths(
+                        workflow_dir=task_files.workflow_dir,
+                        workflow_dir_user=task_files.workflow_dir_user,
+                        task_order=task_files.task_order,
+                        component=actual_component,
+                    ).file_prefix
+                )
+            job.wftask_file_prefixes = tuple(_prefixes)
 
         # Define I/O pickle file names/paths
         job.input_pickle_files = tuple(
