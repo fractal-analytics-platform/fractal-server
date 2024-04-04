@@ -36,6 +36,7 @@ def docker_compose_file(pytestconfig, testdata_path: Path):
 
     import fractal_server
     import tarfile
+    import shutil
 
     # This same path is hardocded in the Dockerfile of the SLURM node.
     CODE_ROOT = Path(fractal_server.__file__).parent.parent
@@ -52,6 +53,15 @@ def docker_compose_file(pytestconfig, testdata_path: Path):
         ]:
             f = CODE_ROOT / name
             tar.add(f, arcname=f.relative_to(CODE_ROOT.parent))
+
+    # This same path is hardocded in the Dockerfile of the SLURM node.
+    WHEEL_NAME = "fractal_tasks_mock-0.0.1-py3-none-any.whl"
+    WHEEL_PATH = (
+        testdata_path.parent / "v2/fractal_tasks_mock/dist" / WHEEL_NAME
+    )
+    shutil.copy(
+        WHEEL_PATH, testdata_path / "slurm_docker_images/node/" / WHEEL_NAME
+    )
 
     return str(testdata_path / "slurm_docker_images/docker-compose.yml")
 
