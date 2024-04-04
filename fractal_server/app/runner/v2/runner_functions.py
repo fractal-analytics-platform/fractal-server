@@ -17,8 +17,8 @@ from .v1_compat import convert_v2_args_into_v1
 from fractal_server.app.models.v1 import Task as TaskV1
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
-from fractal_server.app.runner.v2.components import _COMPONENT_KEY_
-from fractal_server.app.runner.v2.components import _index_to_component
+from fractal_server.app.runner.components import _COMPONENT_KEY_
+from fractal_server.app.runner.components import _index_to_component
 
 
 __all__ = [
