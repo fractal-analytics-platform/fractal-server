@@ -65,7 +65,7 @@ async def test_runner(
     if backend == "slurm":
 
         request.getfixturevalue("monkey_slurm")
-        request.getfixturevalue("relink_python_interpreter")
+        request.getfixturevalue("relink_python_interpreter_v1")
         monkey_slurm_user = request.getfixturevalue("monkey_slurm_user")
     if backend == "slurm":
         override_settings_factory(

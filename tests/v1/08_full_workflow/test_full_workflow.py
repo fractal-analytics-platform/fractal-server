@@ -58,7 +58,7 @@ async def test_full_workflow(
     user_kwargs = {"is_verified": True}
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
-        request.getfixturevalue("relink_python_interpreter")
+        request.getfixturevalue("relink_python_interpreter_v1")
         user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
         user_kwargs["cache_dir"] = user_cache_dir
 
@@ -264,7 +264,7 @@ async def test_failing_workflow_UnknownError(
     user_kwargs = {"is_verified": True}
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
-        request.getfixturevalue("relink_python_interpreter")
+        request.getfixturevalue("relink_python_interpreter_v1")
         user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
         user_kwargs["cache_dir"] = user_cache_dir
 
@@ -359,7 +359,7 @@ async def test_failing_workflow_TaskExecutionError(
     user_kwargs = {"is_verified": True}
     if backend == "slurm":
         request.getfixturevalue("monkey_slurm")
-        request.getfixturevalue("relink_python_interpreter")
+        request.getfixturevalue("relink_python_interpreter_v1")
         user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
         user_kwargs["cache_dir"] = user_cache_dir
 
