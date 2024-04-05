@@ -213,31 +213,8 @@ async def update_workflowtask(
             if not actual_args:
                 actual_args = None
             setattr(db_wf_task, key, actual_args)
-        elif key == "meta_parallel":
-            current_meta_parallel = deepcopy(db_wf_task.meta_parallel) or {}
-            current_meta_parallel.update(value)
-            setattr(db_wf_task, key, current_meta_parallel)
-        elif key == "meta_non_parallel":
-            current_meta_non_parallel = (
-                deepcopy(db_wf_task.meta_non_parallel) or {}
-            )
-            current_meta_non_parallel.update(value)
-            setattr(db_wf_task, key, current_meta_non_parallel)
-        elif key == "input_filters":
-            current_filters_attributes = deepcopy(
-                db_wf_task.input_filters.attributes
-            )
-            current_filters_attributes.update(value.attributes)
-            current_filters_types = deepcopy(db_wf_task.input_filters.types)
-            current_filters_types.update(value.types)
-            setattr(
-                db_wf_task,
-                key,
-                Filters(
-                    attributes=current_filters_attributes,
-                    types=current_filters_types,
-                ),
-            )
+        elif key in ["meta_parallel", "meta_non_parallel", "input_filters"]:
+            setattr(db_wf_task, key, value)
         else:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
