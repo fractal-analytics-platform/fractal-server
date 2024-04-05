@@ -548,6 +548,10 @@ async def test_patch_workflow_task(
         payload = dict(
             args_non_parallel={"a": 123, "d": 321},
             meta_parallel={"executor": "cpu-low"},
+            input_filters={
+                "attributes": {"a": "b", "c": "d"},
+                "types": {"e": True, "f": False, "g": True},
+            },
         )
         res = await client.patch(
             f"{PREFIX}/project/{project.id}/workflow/{workflow['id']}/"
@@ -563,6 +567,9 @@ async def test_patch_workflow_task(
         )
         assert (
             patched_workflow_task["meta_parallel"] == payload["meta_parallel"]
+        )
+        assert (
+            patched_workflow_task["input_filters"] == payload["input_filters"]
         )
         assert res.status_code == 200
 
