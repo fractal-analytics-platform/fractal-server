@@ -87,9 +87,9 @@
 | fractal\_server/app/runner/v2/deduplicate\_list.py                        |       13 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/app/runner/v2/handle\_failed\_job.py                      |       54 |        8 |       12 |        2 |     82% |77-93, 96->106 |
 | fractal\_server/app/runner/v2/merge\_outputs.py                           |       22 |        1 |        8 |        2 |     90% |23, 29->32 |
-| fractal\_server/app/runner/v2/runner.py                                   |      113 |       14 |       48 |       12 |     83% |68, 111-114, 135, 144, 165, 177->182, 198-204, 208->214, 215, 221, 226-227 |
-| fractal\_server/app/runner/v2/runner\_functions.py                        |       99 |       17 |       22 |        3 |     82% |63-65, 74, 133-134, 243, 302-341 |
-| fractal\_server/app/runner/v2/runner\_functions\_low\_level.py            |       59 |        5 |       22 |        4 |     89% |44-45, 47->exit, 54, 99, 133 |
+| fractal\_server/app/runner/v2/runner.py                                   |      113 |        9 |       48 |       10 |     88% |68, 111-114, 135, 144, 177->182, 210->216, 217, 223, 228-229 |
+| fractal\_server/app/runner/v2/runner\_functions.py                        |       99 |       18 |       22 |        3 |     81% |63-65, 74, 98-102, 243, 302-341 |
+| fractal\_server/app/runner/v2/runner\_functions\_low\_level.py            |       59 |        6 |       22 |        5 |     86% |44-45, 47->exit, 54, 76, 99, 133 |
 | fractal\_server/app/runner/v2/task\_interface.py                          |       29 |        5 |        4 |        1 |     76% |     22-28 |
 | fractal\_server/app/runner/v2/v1\_compat.py                               |       10 |        6 |        0 |        0 |     40% |      8-21 |
 | fractal\_server/app/schemas/\_\_init\_\_.py                               |        4 |        0 |        0 |        0 |    100% |           |
@@ -133,7 +133,7 @@
 | fractal\_server/tasks/v2/background\_operations.py                        |      158 |        2 |       38 |        5 |     96% |90->exit, 121->exit, 143, 226, 245->250 |
 | fractal\_server/tasks/v2/get\_collection\_data.py                         |       11 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/utils.py                                                  |       22 |        0 |        2 |        0 |    100% |           |
-|                                                                 **TOTAL** | **7406** |  **448** | **2132** |  **334** | **91%** |           |
+|                                                                 **TOTAL** | **7406** |  **445** | **2132** |  **333** | **91%** |           |
 
 
 ## Setup coverage badge
