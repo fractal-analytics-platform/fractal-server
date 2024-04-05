@@ -2,7 +2,7 @@ from pydantic.decorator import validate_arguments
 
 
 @validate_arguments
-def dummy_unset_attributes(
+def dummy_unset_attribute(
     *,
     paths: list[str],
     zarr_dir: str,
@@ -33,4 +33,4 @@ def dummy_unset_attributes(
 if __name__ == "__main__":
     from utils import run_fractal_task
 
-    run_fractal_task(task_function=dummy_unset_attributes)
+    run_fractal_task(task_function=dummy_unset_attribute)

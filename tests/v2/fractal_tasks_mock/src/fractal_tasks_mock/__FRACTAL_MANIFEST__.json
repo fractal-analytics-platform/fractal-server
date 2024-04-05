@@ -658,6 +658,42 @@
       "docs_link": "https://example.org",
       "executable_non_parallel": "dummy_insert_single_image.py",
       "name": "dummy_insert_single_image"
+    },
+    {
+      "args_schema_non_parallel": {
+        "additionalProperties": false,
+        "properties": {
+          "attribute": {
+            "description": "The attribute that should be unset for all input images.",
+            "title": "Attribute",
+            "type": "string"
+          },
+          "paths": {
+            "description": "description",
+            "items": {
+              "type": "string"
+            },
+            "title": "Paths",
+            "type": "array"
+          },
+          "zarr_dir": {
+            "description": "description",
+            "title": "Zarr Dir",
+            "type": "string"
+          }
+        },
+        "required": [
+          "paths",
+          "zarr_dir",
+          "attribute"
+        ],
+        "title": "DummyUnsetAttribute",
+        "type": "object"
+      },
+      "docs_info": "This is task dummy_unset_attribute.",
+      "docs_link": "https://example.org",
+      "executable_non_parallel": "dummy_unset_attribute.py",
+      "name": "dummy_unset_attribute"
     }
   ]
 }

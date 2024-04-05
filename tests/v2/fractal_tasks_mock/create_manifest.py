@@ -72,6 +72,10 @@ TASK_LIST = [
         name="dummy_insert_single_image",
         executable="dummy_insert_single_image.py",
     ),
+    NonParallelTask(
+        name="dummy_unset_attribute",
+        executable="dummy_unset_attribute.py",
+    ),
 ]
 
 
