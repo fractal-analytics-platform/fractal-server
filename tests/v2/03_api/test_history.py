@@ -23,7 +23,7 @@ async def test_get_workflowtask_status(
     `/project/{project_id}/dataset/{dataset_id}/status/` which gives different
     priority to different sources. From lowest to highest priority:
 
-    * Statuses already present in `output_dataset.history`, in the
+    * Statuses already present in `dataset.history`, in the
         database;
     * "submitted" status for all task in the current job;
     * Temporary-file contents.
@@ -73,7 +73,7 @@ async def test_get_workflowtask_status(
             history.append(dict(workflowtask=dict(id=ID), status=status))
             RESULTS[status].add(ID)
 
-        # Create output_dataset and job
+        # Create dataset and job
         dataset = await dataset_factory_v2(
             project_id=project.id, history=history
         )
@@ -126,7 +126,7 @@ async def test_get_workflowtask_status_simple(
 
         # (B) The statuses for these IDs will be overwritten by "submitted",
         # because they match with the task_list of the workflow associated to a
-        # job associated to output_dataset
+        # job associated to dataset
         history = []
         for dummy_status in ["done", "failed", "submitted"]:
             await _workflow_insert_task(
