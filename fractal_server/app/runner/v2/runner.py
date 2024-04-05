@@ -198,8 +198,10 @@ def execute_tasks_v2(
             image_search = find_image_by_path(
                 images=tmp_images, path=image_path
             )
-            if image_search["index"] is None:
-                raise
+            if image_search is None:
+                raise ValueError(
+                    f"Cannot remove missing image with path {image_path=}"
+                )
             else:
                 tmp_images.pop(image_search["index"])
 
