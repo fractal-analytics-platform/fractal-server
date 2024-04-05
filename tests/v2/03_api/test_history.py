@@ -7,6 +7,7 @@ from fractal_server.app.routes.api.v2._aux_functions import (
 )
 from fractal_server.app.runner.filenames import HISTORY_FILENAME
 
+
 async def test_get_workflowtask_status(
     db,
     MockCurrentUser,
@@ -65,7 +66,6 @@ async def test_get_workflowtask_status(
             RESULTS["submitted"].add(ID)
         await db.close()
 
-        
         # (C) The statuses for these IDs will be the final ones, as there are
         # no corresponding WorkflowTasks
         for shift, status in enumerate(["done", "failed", "submitted"]):
