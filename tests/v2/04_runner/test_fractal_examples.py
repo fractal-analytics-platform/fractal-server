@@ -48,6 +48,7 @@ def test_fractal_demos_01(
     execute_tasks_v2_args = dict(
         executor=executor,
         workflow_dir=tmp_path / "job_dir",
+        workflow_dir_user=tmp_path / "job_dir",
     )
 
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
@@ -196,6 +197,7 @@ def test_fractal_demos_01_no_overwrite(
     execute_tasks_v2_args = dict(
         executor=executor,
         workflow_dir=tmp_path / "job_dir",
+        workflow_dir_user=tmp_path / "job_dir",
     )
 
     dataset_attrs = execute_tasks_v2(
@@ -387,6 +389,7 @@ def test_registration_no_overwrite(
     execute_tasks_v2_args = dict(
         executor=executor,
         workflow_dir=tmp_path / "job_dir",
+        workflow_dir_user=tmp_path / "job_dir",
     )
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     dataset_attrs = execute_tasks_v2(
@@ -481,6 +484,7 @@ def test_registration_overwrite(
     execute_tasks_v2_args = dict(
         executor=executor,
         workflow_dir=tmp_path / "job_dir",
+        workflow_dir_user=tmp_path / "job_dir",
     )
 
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
@@ -576,6 +580,7 @@ def test_channel_parallelization_with_overwrite(
     execute_tasks_v2_args = dict(
         executor=executor,
         workflow_dir=tmp_path / "job_dir",
+        workflow_dir_user=tmp_path / "job_dir",
     )
     # Run create_ome_zarr+yokogawa_to_zarr
     dataset_attrs = execute_tasks_v2(
@@ -621,6 +626,7 @@ def test_channel_parallelization_no_overwrite(
     execute_tasks_v2_args = dict(
         executor=executor,
         workflow_dir=tmp_path / "job_dir",
+        workflow_dir_user=tmp_path / "job_dir",
     )
     # Run create_ome_zarr+yokogawa_to_zarr
     dataset_attrs = execute_tasks_v2(
@@ -667,6 +673,7 @@ def test_fractal_demos_01_scaling(
     execute_tasks_v2_args = dict(
         executor=executor,
         workflow_dir=tmp_path / "job_dir",
+        workflow_dir_user=tmp_path / "job_dir",
     )
     (tmp_path / "job_dir").mkdir()
 
