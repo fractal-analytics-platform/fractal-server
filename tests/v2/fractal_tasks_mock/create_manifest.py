@@ -65,6 +65,17 @@ TASK_LIST = [
         name="generic_task",
         executable="generic_task.py",
     ),
+    NonParallelTask(
+        name="dummy_remove_images", executable="dummy_remove_images.py"
+    ),
+    NonParallelTask(
+        name="dummy_insert_single_image",
+        executable="dummy_insert_single_image.py",
+    ),
+    NonParallelTask(
+        name="dummy_unset_attribute",
+        executable="dummy_unset_attribute.py",
+    ),
 ]
 
 
