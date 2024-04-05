@@ -7,6 +7,7 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 
+from .....images.models import Filters
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v1 import Task
@@ -222,7 +223,21 @@ async def update_workflowtask(
             )
             current_meta_non_parallel.update(value)
             setattr(db_wf_task, key, current_meta_non_parallel)
-        # FIXME handle `input_filters`
+        elif key == "input_filters":
+            current_filters_attributes = deepcopy(
+                db_wf_task.input_filters.attributes
+            )
+            current_filters_attributes.update(value.attributes)
+            current_filters_types = deepcopy(db_wf_task.input_filters.types)
+            current_filters_types.update(value.types)
+            setattr(
+                db_wf_task,
+                key,
+                Filters(
+                    attributes=current_filters_attributes,
+                    types=current_filters_types,
+                ),
+            )
         else:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
