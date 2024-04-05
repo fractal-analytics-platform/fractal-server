@@ -123,3 +123,57 @@ def test_dummy_remove_images(
         )
     error_msg = str(e.value)
     assert "Cannot remove missing image" in error_msg
+
+
+@pytest.mark.skip("Not yet implemented in the runner")
+def test_dummy_unset_attribute(
+    tmp_path: Path, executor: Executor, fractal_tasks_mock_venv
+):
+    # Preliminary setup
+    execute_tasks_v2_args = dict(
+        executor=executor,
+        workflow_dir=tmp_path / "job_dir",
+        workflow_dir_user=tmp_path / "job_dir",
+    )
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+
+    dataset_pre = DatasetV2Mock(
+        name="dataset",
+        zarr_dir=zarr_dir,
+        images=[
+            dict(
+                path=Path(zarr_dir, "my-image").as_posix(),
+                attributes={"key1": "value1", "key2": "value2"},
+            )
+        ],
+    )
+
+    # Unset an existing attribute
+    dataset_attrs = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTaskV2Mock(
+                task=fractal_tasks_mock_venv["dummy_unset_attribute"],
+                args_non_parallel=dict(attribute="key2"),
+                id=0,
+                order=0,
+            )
+        ],
+        dataset=dataset_pre,
+        **execute_tasks_v2_args,
+    )
+    debug(dataset_attrs["images"])
+
+    # Unset a missing attribute
+    dataset_attrs = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTaskV2Mock(
+                task=fractal_tasks_mock_venv["dummy_unset_attribute"],
+                args_non_parallel=dict(attribute="missing-attribute"),
+                id=0,
+                order=0,
+            )
+        ],
+        dataset=dataset_pre,
+        **execute_tasks_v2_args,
+    )
+    debug(dataset_attrs["images"])
