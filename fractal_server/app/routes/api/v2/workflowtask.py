@@ -7,7 +7,6 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 
-from .....images.models import Filters
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v1 import Task
