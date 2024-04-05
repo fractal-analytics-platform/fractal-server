@@ -584,6 +584,116 @@
       "docs_link": "https://example.org",
       "executable_non_parallel": "generic_task.py",
       "name": "generic_task"
+    },
+    {
+      "args_schema_non_parallel": {
+        "additionalProperties": false,
+        "properties": {
+          "more_paths": {
+            "description": "Other paths that should be removed",
+            "items": {
+              "type": "string"
+            },
+            "title": "More Paths",
+            "type": "array"
+          },
+          "paths": {
+            "description": "description",
+            "items": {
+              "type": "string"
+            },
+            "title": "Paths",
+            "type": "array"
+          },
+          "zarr_dir": {
+            "description": "Missing description",
+            "title": "Zarr Dir",
+            "type": "string"
+          }
+        },
+        "required": [
+          "paths",
+          "zarr_dir"
+        ],
+        "title": "DummyRemoveImages",
+        "type": "object"
+      },
+      "docs_info": "This is task dummy_remove_images.",
+      "docs_link": "https://example.org",
+      "executable_non_parallel": "dummy_remove_images.py",
+      "name": "dummy_remove_images"
+    },
+    {
+      "args_schema_non_parallel": {
+        "additionalProperties": false,
+        "properties": {
+          "fail": {
+            "default": false,
+            "description": "If `True`, make images invalid.",
+            "title": "Fail",
+            "type": "boolean"
+          },
+          "paths": {
+            "description": "description",
+            "items": {
+              "type": "string"
+            },
+            "title": "Paths",
+            "type": "array"
+          },
+          "zarr_dir": {
+            "description": "Missing description",
+            "title": "Zarr Dir",
+            "type": "string"
+          }
+        },
+        "required": [
+          "paths",
+          "zarr_dir"
+        ],
+        "title": "DummyInsertSingleImage",
+        "type": "object"
+      },
+      "docs_info": "This is task dummy_insert_single_image.",
+      "docs_link": "https://example.org",
+      "executable_non_parallel": "dummy_insert_single_image.py",
+      "name": "dummy_insert_single_image"
+    },
+    {
+      "args_schema_non_parallel": {
+        "additionalProperties": false,
+        "properties": {
+          "attribute": {
+            "description": "The attribute that should be unset for all input images.",
+            "title": "Attribute",
+            "type": "string"
+          },
+          "paths": {
+            "description": "description",
+            "items": {
+              "type": "string"
+            },
+            "title": "Paths",
+            "type": "array"
+          },
+          "zarr_dir": {
+            "description": "description",
+            "title": "Zarr Dir",
+            "type": "string"
+          }
+        },
+        "required": [
+          "paths",
+          "zarr_dir",
+          "attribute"
+        ],
+        "title": "DummyUnsetAttribute",
+        "type": "object"
+      },
+      "docs_info": "This is task dummy_unset_attribute.",
+      "docs_link": "https://example.org",
+      "executable_non_parallel": "dummy_unset_attribute.py",
+      "name": "dummy_unset_attribute"
     }
   ]
 }
