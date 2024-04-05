@@ -96,7 +96,7 @@ def run_v2_task_non_parallel(
 
     if workflow_dir_user is None:
         workflow_dir_user = workflow_dir
-        logging.error(
+        logging.warning(
             "In `run_single_task`, workflow_dir_user=None. Is this right?"
         )
         workflow_dir_user = workflow_dir
