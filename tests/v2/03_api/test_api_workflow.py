@@ -177,12 +177,12 @@ async def test_delete_workflow(
             dataset_id=dataset.id,
             working_dir=(tmp_path / "some_working_dir").as_posix(),
         )
-        await job_factory_v2(
+        j1 = await job_factory_v2(
             workflow_id=wf_deletable_1.id,
             status=JobStatusTypeV2.DONE,
             **payload,
         )
-        await job_factory_v2(
+        j2 = await job_factory_v2(
             workflow_id=wf_deletable_2.id,
             status=JobStatusTypeV2.FAILED,
             **payload,
@@ -196,10 +196,16 @@ async def test_delete_workflow(
             f"{PREFIX}/project/{project.id}/workflow/{wf_deletable_1.id}/"
         )
         assert res.status_code == 204
+        await db.refresh(j1)
+        assert j1.workflow_id is None
+
         res = await client.delete(
             f"{PREFIX}/project/{project.id}/workflow/{wf_deletable_2.id}/"
         )
         assert res.status_code == 204
+        await db.refresh(j2)
+        assert j2.workflow_id is None
+
         res = await client.delete(
             f"{PREFIX}/project/{project.id}/workflow/{wf_not_deletable_1.id}/"
         )
