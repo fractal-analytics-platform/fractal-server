@@ -8,7 +8,7 @@ from fractal_server.images.tools import filter_image_list
 
 IMAGES = [
     SingleImage(
-        path="plate.zarr/A/01/0",
+        zarr_url="plate.zarr/A/01/0",
         types={"3D": True},
         attributes=dict(
             plate="plate.zarr",
@@ -16,7 +16,7 @@ IMAGES = [
         ),
     ),
     SingleImage(
-        path="plate.zarr/A/02/0",
+        zarr_url="plate.zarr/A/02/0",
         types={"3D": True},
         attributes=dict(
             plate="plate.zarr",
@@ -24,7 +24,7 @@ IMAGES = [
         ),
     ),
     SingleImage(
-        path="plate.zarr/A/01/0_corr",
+        zarr_url="plate.zarr/A/01/0_corr",
         types={
             "3D": True,
             "illumination_correction": True,
@@ -35,7 +35,7 @@ IMAGES = [
         ),
     ),
     SingleImage(
-        path="plate.zarr/A/02/0_corr",
+        zarr_url="plate.zarr/A/02/0_corr",
         types={
             "3D": True,
             "illumination_correction": True,
@@ -46,7 +46,7 @@ IMAGES = [
         ),
     ),
     SingleImage(
-        path="plate_2d.zarr/A/01/0_corr",
+        zarr_url="plate_2d.zarr/A/01/0_corr",
         types={
             "3D": False,
             "illumination_correction": True,
@@ -57,7 +57,7 @@ IMAGES = [
         ),
     ),
     SingleImage(
-        path="plate_2d.zarr/A/02/0_corr",
+        zarr_url="plate_2d.zarr/A/02/0_corr",
         types={
             "3D": False,
             "illumination_correction": True,
@@ -84,12 +84,12 @@ def test_singleimage_attributes_validation():
 
     for item in invalid:
         with pytest.raises(ValidationError):
-            SingleImage(path="/xyz", attributes={"key": item})
+            SingleImage(zarr_url="/xyz", attributes={"key": item})
 
     valid = ["string", -7, 3.14, True]
     for item in valid:
         assert (
-            SingleImage(path="/xyz", attributes={"key": item}).attributes[
+            SingleImage(zarr_url="/xyz", attributes={"key": item}).attributes[
                 "key"
             ]
             == item

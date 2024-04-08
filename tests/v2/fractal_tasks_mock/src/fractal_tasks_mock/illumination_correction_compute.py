@@ -7,34 +7,36 @@ from pydantic.decorator import validate_arguments
 @validate_arguments
 def illumination_correction_compute(
     *,
-    path: str,
+    zarr_url: str,
     init_args: InitArgsIllumination,
 ) -> dict:
     """
     Dummy task description.
 
     Arguments:
-        path: description
+        zarr_url: description
         init_args: description
     """
 
-    raw_path = init_args.raw_path
+    raw_zarr_url = init_args.raw_zarr_url
     subsets = init_args.subsets
     print("[illumination_correction_compute] START")
-    print(f"[illumination_correction_compute] {path=}")
-    print(f"[illumination_correction_compute] {raw_path=}")
+    print(f"[illumination_correction_compute] {zarr_url=}")
+    print(f"[illumination_correction_compute] {raw_zarr_url=}")
     print(f"[illumination_correction_compute] {subsets=}")
 
-    # Prepare output metadata and set actual_path
-    if path == raw_path:
-        out = dict(image_list_updates=[dict(path=path)])
+    # Prepare output metadata
+    if zarr_url == raw_zarr_url:
+        out = dict(image_list_updates=[dict(zarr_url=zarr_url)])
     else:
-        out = dict(image_list_updates=[dict(path=path, origin=raw_path)])
-        print(f"[illumination_correction_compute] {path=}")
+        out = dict(
+            image_list_updates=[dict(zarr_url=zarr_url, origin=raw_zarr_url)]
+        )
+        print(f"[illumination_correction_compute] {zarr_url=}")
 
-    with (Path(path) / "data").open("a") as f:
+    with (Path(zarr_url) / "data").open("a") as f:
         f.write(
-            f"[illumination_correction_compute] Running with {raw_path=}, "
+            f"[illumination_correction_compute] Running with {raw_zarr_url=}, "
             f"{subsets=}\n"
         )
 

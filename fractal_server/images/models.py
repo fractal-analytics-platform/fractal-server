@@ -9,7 +9,7 @@ from pydantic import validator
 
 class SingleImage(BaseModel):
 
-    path: str
+    zarr_url: str
     origin: Optional[str] = None
 
     attributes: dict[str, Any] = Field(default_factory=dict)

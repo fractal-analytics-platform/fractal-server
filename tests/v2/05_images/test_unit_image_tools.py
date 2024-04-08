@@ -1,13 +1,13 @@
 from fractal_server.images import Filters
 from fractal_server.images import SingleImage
 from fractal_server.images.tools import filter_image_list
-from fractal_server.images.tools import find_image_by_path
+from fractal_server.images.tools import find_image_by_zarr_url
 from fractal_server.images.tools import match_filter
 
 N = 100
 images = [
     SingleImage(
-        path=f"/a/b/c{i}.zarr",
+        zarr_url=f"/a/b/c{i}.zarr",
         attributes=dict(
             name=("a" if i % 2 == 0 else "b"),
             num=i % 3,
@@ -21,23 +21,23 @@ images = [
 ]
 
 
-def test_find_image_by_path():
+def test_find_image_by_zarr_url():
 
     for i in range(N):
-        image_search = find_image_by_path(
-            path=f"/a/b/c{i}.zarr", images=images
+        image_search = find_image_by_zarr_url(
+            zarr_url=f"/a/b/c{i}.zarr", images=images
         )
-        assert image_search["image"]["path"] == f"/a/b/c{i}.zarr"
+        assert image_search["image"]["zarr_url"] == f"/a/b/c{i}.zarr"
         assert image_search["index"] == i
 
-    image_search = find_image_by_path(path="/xxx", images=images)
+    image_search = find_image_by_zarr_url(zarr_url="/xxx", images=images)
     assert image_search is None
 
 
 def test_match_filter():
 
     image = SingleImage(
-        path="/a/b/c0.zarr",
+        zarr_url="/a/b/c0.zarr",
         attributes=dict(
             name="a",
             num=0,
