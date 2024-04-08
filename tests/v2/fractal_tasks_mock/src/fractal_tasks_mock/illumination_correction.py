@@ -6,7 +6,7 @@ from pydantic.decorator import validate_arguments
 @validate_arguments
 def illumination_correction(
     *,
-    path: str,
+    zarr_url: str,
     overwrite_input: bool = False,
 ) -> dict:
     """
@@ -14,21 +14,23 @@ def illumination_correction(
     """
 
     print("[illumination_correction] START")
-    print(f"[illumination_correction] {path=}")
+    print(f"[illumination_correction] {zarr_url=}")
     print(f"[illumination_correction] {overwrite_input=}")
 
-    # Prepare output metadata and set actual_path
+    # Prepare output metadata and set actual_zarr_url
     if overwrite_input:
-        out = dict(image_list_updates=[dict(path=path)])
-        actual_path = path
+        out = dict(image_list_updates=[dict(zarr_url=zarr_url)])
+        actual_zarr_url = zarr_url
     else:
-        new_path = f"{path}_corr"
-        Path(new_path).mkdir(exist_ok=True)
-        out = dict(image_list_updates=[dict(path=new_path, origin=path)])
-        actual_path = new_path
-        print(f"[illumination_correction] {new_path=}")
+        new_zarr_url = f"{zarr_url}_corr"
+        Path(new_zarr_url).mkdir(exist_ok=True)
+        out = dict(
+            image_list_updates=[dict(zarr_url=new_zarr_url, origin=zarr_url)]
+        )
+        actual_zarr_url = new_zarr_url
+        print(f"[illumination_correction] {new_zarr_url=}")
 
-    with (Path(actual_path) / "data").open("a") as f:
+    with (Path(actual_zarr_url) / "data").open("a") as f:
         f.write(f"[illumination_correction] ({overwrite_input=})\n")
 
     print("[illumination_correction] END")

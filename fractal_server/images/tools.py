@@ -10,24 +10,24 @@ from fractal_server.images import Filters
 ImageSearch = dict[Literal["image", "index"], Union[int, dict[str, Any]]]
 
 
-def find_image_by_path(
+def find_image_by_zarr_url(
     *,
     images: list[dict[str, Any]],
-    path: str,
+    zarr_url: str,
 ) -> Optional[ImageSearch]:
     """
-    Return a copy of the image with a given path, and its positional index.
+    Return a copy of the image with a given zarr_url, and its positional index.
 
     Arguments:
         images: List of images.
-        path: Path that the returned image must have.
+        zarr_url: Path that the returned image must have.
 
     Returns:
-        The first image from `images` which has path equal to `path`.
+        The first image from `images` which has zarr_url equal to `zarr_url`.
     """
-    image_paths = [img["path"] for img in images]
+    image_urls = [img["zarr_url"] for img in images]
     try:
-        ind = image_paths.index(path)
+        ind = image_urls.index(zarr_url)
     except ValueError:
         return None
     return dict(image=copy(images[ind]), index=ind)

@@ -35,7 +35,7 @@ class ImagePage(BaseModel):
 
 
 class ImageQuery(BaseModel):
-    path: Optional[str]
+    zarr_url: Optional[str]
     filters: Filters = Field(default_factory=Filters)
 
 
@@ -56,11 +56,11 @@ async def post_new_image(
     )
     dataset = output["dataset"]
 
-    if new_image.path in dataset.image_paths:
+    if new_image.zarr_url in dataset.image_zarr_urls:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
-                f"Image with path '{new_image.path}' "
+                f"Image with zarr_url '{new_image.zarr_url}' "
                 f"already in DatasetV2 {dataset_id}",
             ),
         )
@@ -121,9 +121,13 @@ async def query_dataset_images(
 
     if query is not None:
 
-        if query.path is not None:
+        if query.zarr_url is not None:
             image = next(
-                (image for image in images if image["path"] == query.path),
+                (
+                    image
+                    for image in images
+                    if image["zarr_url"] == query.zarr_url
+                ),
                 None,
             )
             if image is None:
@@ -180,7 +184,7 @@ async def query_dataset_images(
 async def delete_dataset_images(
     project_id: int,
     dataset_id: int,
-    path: str,
+    zarr_url: str,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
@@ -191,12 +195,16 @@ async def delete_dataset_images(
     dataset = output["dataset"]
 
     image_to_remove = next(
-        (image for image in dataset.images if image["path"] == path), None
+        (image for image in dataset.images if image["zarr_url"] == zarr_url),
+        None,
     )
     if image_to_remove is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No image with path '{path}' in DatasetV2 {dataset_id}.",
+            detail=(
+                f"No image with zarr_url '{zarr_url}' in "
+                f"DatasetV2 {dataset_id}."
+            ),
         )
 
     dataset.images.remove(image_to_remove)

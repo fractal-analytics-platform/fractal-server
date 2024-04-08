@@ -7,32 +7,32 @@ from pydantic.decorator import validate_arguments
 @validate_arguments
 def maximum_intensity_projection(
     *,
-    path: str,
+    zarr_url: str,
     init_args: InitArgsMIP,
 ) -> dict:
     """
     Dummy task description.
 
     Arguments:
-        path: dummy argument description.
+        zarr_url: dummy argument description.
         init_args: dummy argument description.
     """
 
-    new_path = init_args.new_path
+    new_zarr_url = init_args.new_zarr_url
     new_plate = init_args.new_plate  # FIXME: re-compute it here
 
-    shutil.copytree(path, new_path)
+    shutil.copytree(zarr_url, new_zarr_url)
 
     print("[maximum_intensity_projection] START")
-    print(f"[maximum_intensity_projection] {path=}")
-    print(f"[maximum_intensity_projection] {new_path=}")
+    print(f"[maximum_intensity_projection] {zarr_url=}")
+    print(f"[maximum_intensity_projection] {new_zarr_url=}")
     print("[maximum_intensity_projection] END")
 
     out = dict(
         image_list_updates=[
             dict(
-                path=new_path,
-                origin=path,
+                zarr_url=new_zarr_url,
+                origin=zarr_url,
                 attributes=dict(plate=new_plate),
             )
         ],

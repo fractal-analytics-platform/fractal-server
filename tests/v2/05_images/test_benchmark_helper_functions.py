@@ -28,7 +28,7 @@ def dummy_image_list(N):
     assert N % 4 == 0
     return [
         SingleImage(
-            path=f"/tmp_{i}_small",
+            zarr_url=f"/tmp_{i}_small",
             attributes=dict(a1=(i % 2), a2="a2", a3="whoknows"),
             types=dict(t1=bool(i % 4)),
         ).dict()
@@ -76,7 +76,7 @@ def test_filter_image_list_few_filters(
     [
         [
             SingleImage(
-                path=f"/tmp_{ind_image}",
+                zarr_url=f"/tmp_{ind_image}",
                 types=dict(a=True),
                 attributes=dict(b=1),
             )
@@ -85,19 +85,19 @@ def test_filter_image_list_few_filters(
         ],
         [
             SingleImage(
-                path=f"/tmp_{ind_image}",
+                zarr_url=f"/tmp_{ind_image}",
                 types=dict(a=True),
                 attributes=dict(b=1),
             )
             for ind_image in range(10_000)
         ],
         [
-            InitArgsModel(path=f"/tmp_{ind_image}", init_args=dict(a=1))
+            InitArgsModel(zarr_url=f"/tmp_{ind_image}", init_args=dict(a=1))
             for ind_time_slice in range(25)
             for ind_image in range(400)
         ],
         [
-            InitArgsModel(path=f"/tmp_{ind_image}", init_args=dict(a=1))
+            InitArgsModel(zarr_url=f"/tmp_{ind_image}", init_args=dict(a=1))
             for ind_image in range(10_000)
         ],
     ],

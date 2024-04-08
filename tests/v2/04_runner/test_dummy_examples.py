@@ -84,7 +84,7 @@ def test_dummy_remove_images(
         name="dataset",
         zarr_dir=zarr_dir,
         images=[
-            dict(path=Path(zarr_dir, str(index)).as_posix())
+            dict(zarr_url=Path(zarr_dir, str(index)).as_posix())
             for index in [0, 1, 2]
         ],
     )
@@ -114,7 +114,9 @@ def test_dummy_remove_images(
                     id=1,
                     order=1,
                     args_non_parallel=dict(
-                        more_paths=[Path(zarr_dir, "missing-image").as_posix()]
+                        more_zarr_urls=[
+                            Path(zarr_dir, "missing-image").as_posix()
+                        ]
                     ),
                 )
             ],
@@ -142,7 +144,7 @@ def test_dummy_unset_attribute(
         zarr_dir=zarr_dir,
         images=[
             dict(
-                path=Path(zarr_dir, "my-image").as_posix(),
+                zarr_url=Path(zarr_dir, "my-image").as_posix(),
                 attributes={"key1": "value1", "key2": "value2"},
             )
         ],

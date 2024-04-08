@@ -1,30 +1,30 @@
 from pathlib import Path
 
-from fractal_tasks_mock.utils import _group_paths_by_well
+from fractal_tasks_mock.utils import _group_zarr_urls_by_well
 from pydantic.decorator import validate_arguments
 
 
 @validate_arguments
 def find_registration_consensus(
     *,
-    paths: list[str],
+    zarr_urls: list[str],
     zarr_dir: str,
 ) -> None:
     """
     Dummy task description.
 
     Arguments:
-        paths: description
+        zarr_urls: description
         zarr_dir: description
     """
 
     print("[find_registration_consensus] START")
-    well_to_paths = _group_paths_by_well(paths)
-    for well, well_paths in well_to_paths.items():
+    well_to_zarr_urls = _group_zarr_urls_by_well(zarr_urls)
+    for well, well_zarr_urls in well_to_zarr_urls.items():
         print(f"[find_registration_consensus] {well=}")
-        for path in well_paths:
+        for zarr_url in well_zarr_urls:
 
-            table_path = Path(path) / "registration_table"
+            table_path = Path(zarr_url) / "registration_table"
             try:
                 with table_path.open("r") as f:
                     f.read()
@@ -39,8 +39,8 @@ def find_registration_consensus(
                 )
 
         print(f"[find_registration_consensus] Find consensus for {well=}")
-        for path in well_paths:
-            table_path = Path(path) / "registration_table_final"
+        for zarr_url in well_zarr_urls:
+            table_path = Path(zarr_url) / "registration_table_final"
             print(
                 "[find_registration_consensus]"
                 f"   Write {table_path.as_posix()}"
