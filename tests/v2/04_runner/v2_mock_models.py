@@ -19,8 +19,8 @@ class DatasetV2Mock(BaseModel):
     history: list = Field(default_factory=list)
 
     @property
-    def image_paths(self) -> list[str]:
-        return [image["path"] for image in self.images]
+    def image_zarr_urls(self) -> list[str]:
+        return [image["zarr_urls"] for image in self.images]
 
     @validator("filters", always=True)
     def _default_filters(cls, value):

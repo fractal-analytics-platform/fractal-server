@@ -7,7 +7,7 @@ from pydantic.decorator import validate_arguments
 @validate_arguments
 def calculate_registration_compute(
     *,
-    path: str,
+    zarr_url: str,
     init_args: InitArgsRegistration,
 ) -> None:
     """
@@ -18,18 +18,22 @@ def calculate_registration_compute(
         init_args: description
     """
 
-    ref_path = init_args.ref_path
+    ref_zarr_url = init_args.ref_zarr_url
     print("[calculate_registration_compute] START")
-    print(f"[calculate_registration_compute] {path=}")
-    print(f"[calculate_registration_compute] {ref_path=}")
+    print(f"[calculate_registration_compute] {zarr_url=}")
+    print(f"[calculate_registration_compute] {ref_zarr_url=}")
 
-    table_path = Path(path) / "registration_table"
+    table_path = Path(zarr_url) / "registration_table"
     print(
         f"[calculate_registration_compute] Writing to {table_path.as_posix()}"
     )
 
     with table_path.open("w") as f:
-        f.write("Calculate registration for\n" f"{path=}\n" f"{ref_path=}\n")
+        f.write(
+            "Calculate registration for\n"
+            f"{zarr_url=}\n"
+            f"{ref_zarr_url=}\n"
+        )
     print("[calculate_registration_compute] END")
 
 

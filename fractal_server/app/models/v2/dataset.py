@@ -51,5 +51,5 @@ class DatasetV2(SQLModel, table=True):
     )
 
     @property
-    def image_paths(self) -> list[str]:
-        return [image["path"] for image in self.images]
+    def image_zarr_urls(self) -> list[str]:
+        return [image["zarr_url"] for image in self.images]

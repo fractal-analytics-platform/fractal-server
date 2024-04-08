@@ -7,7 +7,7 @@ from pydantic.decorator import validate_arguments
 @validate_arguments
 def new_ome_zarr(
     *,
-    paths: list[str],
+    zarr_urls: list[str],
     zarr_dir: str,
     suffix: str = "new",
 ) -> dict:
@@ -15,11 +15,11 @@ def new_ome_zarr(
     Dummy task description.
     """
 
-    dict_shared = _extract_common_root(paths)
+    dict_shared = _extract_common_root(zarr_urls)
     old_plate = dict_shared.get("shared_plate")
 
     print("[new_ome_zarr] START")
-    print(f"[new_ome_zarr] {paths=}")
+    print(f"[new_ome_zarr] {zarr_urls=}")
     print(f"[new_ome_zarr] Identified {old_plate=}")
 
     assert old_plate.endswith(".zarr")  # nosec
@@ -34,13 +34,13 @@ def new_ome_zarr(
     Path(new_zarr_path).mkdir()
 
     parallelization_list = []
-    for old_path in paths:
-        new_path = old_path.replace(old_plate, new_plate)
+    for old_zarr_url in zarr_urls:
+        new_zarr_url = old_zarr_url.replace(old_plate, new_plate)
         parallelization_list.append(
             dict(
-                path=old_path,
+                zarr_url=old_zarr_url,
                 init_args=dict(
-                    new_path=new_path,
+                    new_zarr_url=new_zarr_url,
                     new_plate=new_plate,
                 ),
             )

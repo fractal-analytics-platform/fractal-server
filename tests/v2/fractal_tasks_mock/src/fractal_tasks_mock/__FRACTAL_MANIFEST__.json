@@ -18,22 +18,22 @@
             "title": "Num Images",
             "type": "integer"
           },
-          "paths": {
-            "description": "description",
-            "items": {
-              "type": "string"
-            },
-            "title": "Paths",
-            "type": "array"
-          },
           "zarr_dir": {
             "description": "description",
             "title": "Zarr Dir",
             "type": "string"
+          },
+          "zarr_urls": {
+            "description": "description",
+            "items": {
+              "type": "string"
+            },
+            "title": "Zarr Urls",
+            "type": "array"
           }
         },
         "required": [
-          "paths",
+          "zarr_urls",
           "zarr_dir",
           "image_dir"
         ],
@@ -51,14 +51,14 @@
                 "title": "Acquisition",
                 "type": "integer"
               },
-              "raw_path": {
+              "raw_zarr_url": {
                 "description": "dummy attribute description.",
-                "title": "Raw Path",
+                "title": "Raw Zarr Url",
                 "type": "string"
               }
             },
             "required": [
-              "raw_path"
+              "raw_zarr_url"
             ],
             "title": "InitArgsCellVoyager",
             "type": "object"
@@ -70,14 +70,14 @@
             "description": "description",
             "title": "Init_Args"
           },
-          "path": {
+          "zarr_url": {
             "description": "description",
-            "title": "Path",
+            "title": "Zarr Url",
             "type": "string"
           }
         },
         "required": [
-          "path",
+          "zarr_url",
           "init_args"
         ],
         "title": "FillCellvoyagerOmeZarr",
@@ -104,22 +104,22 @@
             "title": "Image Dir",
             "type": "string"
           },
-          "paths": {
-            "description": "description",
-            "items": {
-              "type": "string"
-            },
-            "title": "Paths",
-            "type": "array"
-          },
           "zarr_dir": {
             "description": "description",
             "title": "Zarr Dir",
             "type": "string"
+          },
+          "zarr_urls": {
+            "description": "description",
+            "items": {
+              "type": "string"
+            },
+            "title": "Zarr Urls",
+            "type": "array"
           }
         },
         "required": [
-          "paths",
+          "zarr_urls",
           "zarr_dir",
           "image_dir"
         ],
@@ -137,14 +137,14 @@
                 "title": "Acquisition",
                 "type": "integer"
               },
-              "raw_path": {
+              "raw_zarr_url": {
                 "description": "dummy attribute description.",
-                "title": "Raw Path",
+                "title": "Raw Zarr Url",
                 "type": "string"
               }
             },
             "required": [
-              "raw_path"
+              "raw_zarr_url"
             ],
             "title": "InitArgsCellVoyager",
             "type": "object"
@@ -156,14 +156,14 @@
             "description": "description",
             "title": "Init_Args"
           },
-          "path": {
+          "zarr_url": {
             "description": "description",
-            "title": "Path",
+            "title": "Zarr Url",
             "type": "string"
           }
         },
         "required": [
-          "path",
+          "zarr_url",
           "init_args"
         ],
         "title": "FillCellvoyagerOmeZarr",
@@ -179,14 +179,6 @@
       "args_schema_non_parallel": {
         "additionalProperties": false,
         "properties": {
-          "paths": {
-            "description": "Missing description",
-            "items": {
-              "type": "string"
-            },
-            "title": "Paths",
-            "type": "array"
-          },
           "suffix": {
             "default": "new",
             "description": "Missing description",
@@ -197,10 +189,18 @@
             "description": "Missing description",
             "title": "Zarr Dir",
             "type": "string"
+          },
+          "zarr_urls": {
+            "description": "Missing description",
+            "items": {
+              "type": "string"
+            },
+            "title": "Zarr Urls",
+            "type": "array"
           }
         },
         "required": [
-          "paths",
+          "zarr_urls",
           "zarr_dir"
         ],
         "title": "NewOmeZarr",
@@ -212,19 +212,19 @@
           "InitArgsMIP": {
             "description": "Dummy model description.",
             "properties": {
-              "new_path": {
-                "description": "dummy attribute description.",
-                "title": "New Path",
-                "type": "string"
-              },
               "new_plate": {
                 "description": "dummy attribute description.",
                 "title": "New Plate",
                 "type": "string"
+              },
+              "new_zarr_url": {
+                "description": "dummy attribute description.",
+                "title": "New Zarr Url",
+                "type": "string"
               }
             },
             "required": [
-              "new_path",
+              "new_zarr_url",
               "new_plate"
             ],
             "title": "InitArgsMIP",
@@ -237,14 +237,14 @@
             "description": "dummy argument description.",
             "title": "Init_Args"
           },
-          "path": {
+          "zarr_url": {
             "description": "dummy argument description.",
-            "title": "Path",
+            "title": "Zarr Url",
             "type": "string"
           }
         },
         "required": [
-          "path",
+          "zarr_url",
           "init_args"
         ],
         "title": "MaximumIntensityProjection",
@@ -272,14 +272,14 @@
             "title": "Overwrite Input",
             "type": "boolean"
           },
-          "path": {
+          "zarr_url": {
             "description": "Missing description",
-            "title": "Path",
+            "title": "Zarr Url",
             "type": "string"
           }
         },
         "required": [
-          "path"
+          "zarr_url"
         ],
         "title": "IlluminationCorrection",
         "type": "object"
@@ -305,22 +305,22 @@
             "title": "Overwrite Input",
             "type": "boolean"
           },
-          "paths": {
-            "description": "description",
-            "items": {
-              "type": "string"
-            },
-            "title": "Paths",
-            "type": "array"
-          },
           "zarr_dir": {
             "description": "description",
             "title": "Zarr Dir",
             "type": "string"
+          },
+          "zarr_urls": {
+            "description": "description",
+            "items": {
+              "type": "string"
+            },
+            "title": "Zarr Urls",
+            "type": "array"
           }
         },
         "required": [
-          "paths",
+          "zarr_urls",
           "zarr_dir"
         ],
         "title": "IlluminationCorrectionInit",
@@ -332,9 +332,9 @@
           "InitArgsIllumination": {
             "description": "Dummy model description.",
             "properties": {
-              "raw_path": {
+              "raw_zarr_url": {
                 "description": "dummy attribute description.",
-                "title": "Raw Path",
+                "title": "Raw Zarr Url",
                 "type": "string"
               },
               "subsets": {
@@ -347,7 +347,7 @@
               }
             },
             "required": [
-              "raw_path"
+              "raw_zarr_url"
             ],
             "title": "InitArgsIllumination",
             "type": "object"
@@ -359,14 +359,14 @@
             "description": "description",
             "title": "Init_Args"
           },
-          "path": {
+          "zarr_url": {
             "description": "description",
-            "title": "Path",
+            "title": "Zarr Url",
             "type": "string"
           }
         },
         "required": [
-          "path",
+          "zarr_url",
           "init_args"
         ],
         "title": "IlluminationCorrectionCompute",
@@ -388,14 +388,14 @@
       "args_schema_parallel": {
         "additionalProperties": false,
         "properties": {
-          "path": {
+          "zarr_url": {
             "description": "description",
-            "title": "Path",
+            "title": "Zarr Url",
             "type": "string"
           }
         },
         "required": [
-          "path"
+          "zarr_url"
         ],
         "title": "CellposeSegmentation",
         "type": "object"
@@ -409,14 +409,6 @@
       "args_schema_non_parallel": {
         "additionalProperties": false,
         "properties": {
-          "paths": {
-            "description": "description",
-            "items": {
-              "type": "string"
-            },
-            "title": "Paths",
-            "type": "array"
-          },
           "ref_acquisition": {
             "description": "Reference-cycle acquisition number",
             "title": "Ref Acquisition",
@@ -426,10 +418,18 @@
             "description": "description",
             "title": "Zarr Dir",
             "type": "string"
+          },
+          "zarr_urls": {
+            "description": "description",
+            "items": {
+              "type": "string"
+            },
+            "title": "Zarr Urls",
+            "type": "array"
           }
         },
         "required": [
-          "paths",
+          "zarr_urls",
           "zarr_dir",
           "ref_acquisition"
         ],
@@ -442,14 +442,14 @@
           "InitArgsRegistration": {
             "description": "Dummy model description.",
             "properties": {
-              "ref_path": {
+              "ref_zarr_url": {
                 "description": "dummy attribute description.",
-                "title": "Ref Path",
+                "title": "Ref Zarr Url",
                 "type": "string"
               }
             },
             "required": [
-              "ref_path"
+              "ref_zarr_url"
             ],
             "title": "InitArgsRegistration",
             "type": "object"
@@ -461,14 +461,14 @@
             "description": "description",
             "title": "Init_Args"
           },
-          "path": {
-            "description": "description",
-            "title": "Path",
+          "zarr_url": {
+            "description": "Missing description",
+            "title": "Zarr Url",
             "type": "string"
           }
         },
         "required": [
-          "path",
+          "zarr_url",
           "init_args"
         ],
         "title": "CalculateRegistrationCompute",
@@ -484,22 +484,22 @@
       "args_schema_non_parallel": {
         "additionalProperties": false,
         "properties": {
-          "paths": {
-            "description": "description",
-            "items": {
-              "type": "string"
-            },
-            "title": "Paths",
-            "type": "array"
-          },
           "zarr_dir": {
             "description": "description",
             "title": "Zarr Dir",
             "type": "string"
+          },
+          "zarr_urls": {
+            "description": "description",
+            "items": {
+              "type": "string"
+            },
+            "title": "Zarr Urls",
+            "type": "array"
           }
         },
         "required": [
-          "paths",
+          "zarr_urls",
           "zarr_dir"
         ],
         "title": "FindRegistrationConsensus",
@@ -520,14 +520,14 @@
             "title": "Overwrite Input",
             "type": "boolean"
           },
-          "path": {
+          "zarr_url": {
             "description": "description",
-            "title": "Path",
+            "title": "Zarr Url",
             "type": "string"
           }
         },
         "required": [
-          "path"
+          "zarr_url"
         ],
         "title": "ApplyRegistrationToImage",
         "type": "object"
@@ -547,14 +547,6 @@
       "args_schema_non_parallel": {
         "additionalProperties": false,
         "properties": {
-          "paths": {
-            "description": "description",
-            "items": {
-              "type": "string"
-            },
-            "title": "Paths",
-            "type": "array"
-          },
           "raise_error": {
             "default": false,
             "description": "If true, the task raises a ValueError",
@@ -571,10 +563,18 @@
             "description": "description",
             "title": "Zarr Dir",
             "type": "string"
+          },
+          "zarr_urls": {
+            "description": "description",
+            "items": {
+              "type": "string"
+            },
+            "title": "Zarr Urls",
+            "type": "array"
           }
         },
         "required": [
-          "paths",
+          "zarr_urls",
           "zarr_dir"
         ],
         "title": "GenericTask",
@@ -589,30 +589,30 @@
       "args_schema_non_parallel": {
         "additionalProperties": false,
         "properties": {
-          "more_paths": {
+          "more_zarr_urls": {
             "description": "Other paths that should be removed",
             "items": {
               "type": "string"
             },
-            "title": "More Paths",
-            "type": "array"
-          },
-          "paths": {
-            "description": "description",
-            "items": {
-              "type": "string"
-            },
-            "title": "Paths",
+            "title": "More Zarr Urls",
             "type": "array"
           },
           "zarr_dir": {
             "description": "Missing description",
             "title": "Zarr Dir",
             "type": "string"
+          },
+          "zarr_urls": {
+            "description": "description",
+            "items": {
+              "type": "string"
+            },
+            "title": "Zarr Urls",
+            "type": "array"
           }
         },
         "required": [
-          "paths",
+          "zarr_urls",
           "zarr_dir"
         ],
         "title": "DummyRemoveImages",
@@ -633,22 +633,22 @@
             "title": "Fail",
             "type": "boolean"
           },
-          "paths": {
-            "description": "description",
-            "items": {
-              "type": "string"
-            },
-            "title": "Paths",
-            "type": "array"
-          },
           "zarr_dir": {
             "description": "Missing description",
             "title": "Zarr Dir",
             "type": "string"
+          },
+          "zarr_urls": {
+            "description": "description",
+            "items": {
+              "type": "string"
+            },
+            "title": "Zarr Urls",
+            "type": "array"
           }
         },
         "required": [
-          "paths",
+          "zarr_urls",
           "zarr_dir"
         ],
         "title": "DummyInsertSingleImage",
@@ -668,22 +668,22 @@
             "title": "Attribute",
             "type": "string"
           },
-          "paths": {
-            "description": "description",
-            "items": {
-              "type": "string"
-            },
-            "title": "Paths",
-            "type": "array"
-          },
           "zarr_dir": {
             "description": "description",
             "title": "Zarr Dir",
             "type": "string"
+          },
+          "zarr_urls": {
+            "description": "description",
+            "items": {
+              "type": "string"
+            },
+            "title": "Zarr Urls",
+            "type": "array"
           }
         },
         "required": [
-          "paths",
+          "zarr_urls",
           "zarr_dir",
           "attribute"
         ],
