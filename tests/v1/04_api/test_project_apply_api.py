@@ -1,6 +1,5 @@
 import time
 
-import pytest
 from devtools import debug
 
 from fractal_server.app.routes.api.v1._aux_functions import (
