@@ -169,7 +169,6 @@ async def delete_project(
             job.workflow_id = None
         # Delete workflow
         await db.delete(wf)
-    await db.commit()
 
     # Dataset
     stm = select(DatasetV2).where(DatasetV2.project_id == project_id)
@@ -185,7 +184,6 @@ async def delete_project(
             job.dataset_id = None
         # Delete dataset
         await db.delete(ds)
-    await db.commit()
 
     # Job
     stm = select(JobV2).where(JobV2.project_id == project_id)
@@ -193,8 +191,6 @@ async def delete_project(
     jobs = res.scalars().all()
     for job in jobs:
         job.project_id = None
-
-    await db.commit()
 
     await db.delete(project)
     await db.commit()
