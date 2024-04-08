@@ -455,7 +455,6 @@ async def test_project_apply_slurm_account(
         assert res.status_code == 422
 
 
-@pytest.mark.skip(reason="FIXME: this fails too often")
 async def test_rate_limit(
     MockCurrentUser,
     project_factory_v2,
@@ -503,7 +502,7 @@ async def test_rate_limit(
         # Call 3: OK
         res = await client.post(
             f"{PREFIX}/project/{project.id}/job/submit/"
-            f"?workflow_id={workflow.id}&input_dataset_id={dataset.id}",
+            f"?workflow_id={workflow.id}&dataset_id={dataset.id}",
             json={},
         )
         assert res.status_code == 202
