@@ -1054,7 +1054,6 @@ async def test_read_workflowtask(MockCurrentUser, project_factory_v2, client):
         assert res.json()["task"] == t
 
 
-@pytest.mark.skip()
 async def test_import_export_workflow(
     client,
     MockCurrentUser,
@@ -1068,8 +1067,8 @@ async def test_import_export_workflow(
     with (testdata_path / "import_export/workflow-v2.json").open("r") as f:
         workflow_from_file = json.load(f)
 
-    await task_factory_v2(name="task", source="PKG_SOURCE:dummy")
-    await task_factory(name="task", source="PKG_SOURCE:dummy")
+    await task_factory_v2(name="task", source="PKG_SOURCE:dummy2")
+    await task_factory(name="task", source="PKG_SOURCE:dummy1")
 
     # Create project
     async with MockCurrentUser() as user:
@@ -1096,6 +1095,7 @@ async def test_import_export_workflow(
     debug(res.status_code)
     workflow_exported = res.json()
     debug(workflow_exported)
+
     assert "id" not in workflow_exported
     assert "project_id" not in workflow_exported
     for wftask in workflow_exported["task_list"]:

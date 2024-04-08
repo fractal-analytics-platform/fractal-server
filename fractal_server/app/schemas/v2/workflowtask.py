@@ -98,7 +98,8 @@ class WorkflowTaskImportV2(BaseModel):
 
     meta_parallel: Optional[dict[str, Any]] = None
     meta_non_parallel: Optional[dict[str, Any]] = None
-    args: Optional[dict[str, Any]] = None  # FIXME
+    args_parallel: Optional[dict[str, Any]] = None
+    args_non_parallel: Optional[dict[str, Any]] = None
 
     input_filters: Optional[Filters] = None
 
@@ -111,7 +112,8 @@ class WorkflowTaskExportV2(BaseModel):
 
     meta_parallel: Optional[dict[str, Any]] = None
     meta_non_parallel: Optional[dict[str, Any]] = None
-    args: Optional[dict[str, Any]] = None  # FIXME
+    args_parallel: Optional[dict[str, Any]] = None
+    args_non_parallel: Optional[dict[str, Any]] = None
     input_filters: Filters = Field(default_factory=Filters)
 
     is_legacy_task: bool = False
