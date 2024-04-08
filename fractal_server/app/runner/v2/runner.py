@@ -9,7 +9,7 @@ from typing import Optional
 from ....images import Filters
 from ....images import SingleImage
 from ....images.tools import filter_image_list
-from ....images.tools import find_image_by_path
+from ....images.tools import find_image_by_zarr_url
 from ....images.tools import match_filter
 from ..filenames import FILTERS_FILENAME
 from ..filenames import HISTORY_FILENAME
@@ -123,30 +123,32 @@ def execute_tasks_v2(
         # POST TASK EXECUTION
 
         # Update image list
-        current_task_output.check_paths_are_unique()
+        current_task_output.check_zarr_urls_are_unique()
         for image_obj in current_task_output.image_list_updates:
             image = image_obj.dict()
             # Edit existing image
-            if image["path"] in [_image["path"] for _image in tmp_images]:
+            if image["zarr_url"] in [
+                _image["zarr_url"] for _image in tmp_images
+            ]:
                 if (
                     image["origin"] is not None
-                    and image["origin"] != image["path"]
+                    and image["origin"] != image["zarr_url"]
                 ):
                     raise ValueError(
-                        f"Trying to edit an image with {image['path']=} "
+                        f"Trying to edit an image with {image['zarr_url']=} "
                         f"and {image['origin']=}."
                     )
-                image_search = find_image_by_path(
+                img_search = find_image_by_zarr_url(
                     images=tmp_images,
-                    path=image["path"],
+                    zarr_url=image["zarr_url"],
                 )
-                if image_search is None:
+                if img_search is None:
                     raise ValueError(
-                        f"Image with path {image['path']} not found, while "
-                        "updating image list."
+                        f"Image with zarr_url {image['zarr_url']} not found, "
+                        "while updating image list."
                     )
-                original_img = image_search["image"]
-                original_index = image_search["index"]
+                original_img = img_search["image"]
+                original_index = img_search["index"]
                 updated_attributes = copy(original_img["attributes"])
                 updated_types = copy(original_img["types"])
 
@@ -160,22 +162,22 @@ def execute_tasks_v2(
                 tmp_images[original_index]["types"] = updated_types
             # Add new image
             else:
-                # Check that image['path'] is relative to zarr_dir
-                if not image["path"].startswith(zarr_dir):
+                # Check that image['zarr_url'] is relative to zarr_dir
+                if not image["zarr_url"].startswith(zarr_dir):
                     raise ValueError(
                         f"{zarr_dir} is not a parent directory of "
-                        f"{image['path']}"
+                        f"{image['zarr_url']}"
                     )
                 # Propagate attributes and types from `origin` (if any)
                 updated_attributes = {}
                 updated_types = {}
                 if image["origin"] is not None:
-                    image_search = find_image_by_path(
+                    img_search = find_image_by_zarr_url(
                         images=tmp_images,
-                        path=image["origin"],
+                        zarr_url=image["origin"],
                     )
-                    if image_search is not None:
-                        original_img = image_search["image"]
+                    if img_search is not None:
+                        original_img = img_search["image"]
                         updated_attributes = copy(original_img["attributes"])
                         updated_types = copy(original_img["types"])
                 # Update image attributes/types with task output and manifest
@@ -183,7 +185,7 @@ def execute_tasks_v2(
                 updated_types.update(image["types"])
                 updated_types.update(task.output_types)
                 new_image = dict(
-                    path=image["path"],
+                    zarr_url=image["zarr_url"],
                     origin=image["origin"],
                     attributes=updated_attributes,
                     types=updated_types,
@@ -194,16 +196,16 @@ def execute_tasks_v2(
                 tmp_images.append(new_image)
 
         # Remove images from tmp_images
-        for image_path in current_task_output.image_list_removals:
-            image_search = find_image_by_path(
-                images=tmp_images, path=image_path
+        for img_zarr_url in current_task_output.image_list_removals:
+            img_search = find_image_by_zarr_url(
+                images=tmp_images, zarr_url=img_zarr_url
             )
-            if image_search is None:
+            if img_search is None:
                 raise ValueError(
-                    f"Cannot remove missing image with path {image_path=}"
+                    f"Cannot remove missing image with zarr_url {img_zarr_url}"
                 )
             else:
-                tmp_images.pop(image_search["index"])
+                tmp_images.pop(img_search["index"])
 
         # Update filters.attributes:
         # current + (task_output: not really, in current examples..)

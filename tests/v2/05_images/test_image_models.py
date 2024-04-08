@@ -10,16 +10,18 @@ def test_single_image():
     with pytest.raises(ValidationError):
         SingleImage()
 
-    assert SingleImage(path="/some/path").path == "/some/path"
+    assert SingleImage(zarr_url="/somewhere").zarr_url == "/somewhere"
 
-    assert SingleImage(path="/some/path", origin="foo").origin == "foo"
-    assert SingleImage(path="/some/path", origin=None).origin is None
-    assert SingleImage(path="/some/path", origin=3).origin == "3"
-    assert SingleImage(path="/some/path", origin=True).origin == "True"
+    assert SingleImage(zarr_url="/somewhere", origin="foo").origin == "foo"
+    assert SingleImage(zarr_url="/somewhere", origin=None).origin is None
+    assert SingleImage(zarr_url="/somewhere", origin=3).origin == "3"
+    assert SingleImage(zarr_url="/somewhere", origin=True).origin == "True"
 
     valid_attributes = dict(a="string", b=3, c=0.33, d=True)
     assert (
-        SingleImage(path="/some/path", attributes=valid_attributes).attributes
+        SingleImage(
+            zarr_url="/somewhere", attributes=valid_attributes
+        ).attributes
         == valid_attributes
     )
     invalid_attributes = [
@@ -29,16 +31,17 @@ def test_single_image():
     ]
     for attr in invalid_attributes:
         with pytest.raises(ValidationError):
-            SingleImage(path="/some/path", attributes=attr)
+            SingleImage(zarr_url="/somewhere", attributes=attr)
 
     valid_types = dict(a=True, b=False)
     assert (
-        SingleImage(path="/some/path", types=valid_types).types == valid_types
+        SingleImage(zarr_url="/somewhere", types=valid_types).types
+        == valid_types
     )
 
     invalid_types = dict(a="not a bool")
     with pytest.raises(ValidationError):
-        SingleImage(path="/some/path", types=invalid_types)
+        SingleImage(zarr_url="/somewhere", types=invalid_types)
 
 
 def test_filters():

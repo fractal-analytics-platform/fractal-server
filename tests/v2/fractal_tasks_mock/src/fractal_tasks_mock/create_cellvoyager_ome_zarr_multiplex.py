@@ -6,7 +6,7 @@ from pydantic.decorator import validate_arguments
 @validate_arguments
 def create_cellvoyager_ome_zarr_multiplex(
     *,
-    paths: list[str],
+    zarr_urls: list[str],
     zarr_dir: str,
     image_dir: str,
 ) -> dict:
@@ -15,15 +15,15 @@ def create_cellvoyager_ome_zarr_multiplex(
 
 
     Arguments:
-        paths: description
+        zarr_urls: description
         zarr_dir: description
         image_dir: Image where the raw images are
     """
 
-    if len(paths) > 0:
+    if len(zarr_urls) > 0:
         raise ValueError(
             "Error in create_cellvoyager_ome_zarr_multiplex, "
-            f"`paths` argument must be empty, but {paths=}."
+            f"`zarr_urls` argument must be empty, but {zarr_urls=}."
         )
 
     # Based on images in image_folder, create plate OME-Zarr
@@ -53,15 +53,15 @@ def create_cellvoyager_ome_zarr_multiplex(
     parallelization_list = []
     for ind, image_relative_path in enumerate(image_relative_paths):
         (Path(zarr_path) / image_relative_path).mkdir(parents=True)
-        path = f"{zarr_dir}/{plate_zarr_name}/{image_relative_path}"
-        raw_path = (
+        zarr_url = f"{zarr_dir}/{plate_zarr_name}/{image_relative_path}"
+        raw_zarr_url = (
             Path(image_dir) / image_relative_path.replace("/", "_")
         ).as_posix() + ".tif"
         parallelization_list.append(
             dict(
-                path=path,
+                zarr_url=zarr_url,
                 init_args=dict(
-                    raw_path=raw_path, acquisition=acquisitions[ind]
+                    raw_zarr_url=raw_zarr_url, acquisition=acquisitions[ind]
                 ),
             )
         )
