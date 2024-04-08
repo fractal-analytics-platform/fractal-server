@@ -345,36 +345,24 @@ async def import_workflow(
 
         for wf_task in workflow.task_list:
             if wf_task.is_legacy_task is True:
-                # Identify task_id
                 source = wf_task.task_legacy.source
                 task_id = source_to_id_legacy[source]
-                # Prepare new_wf_task
-                new_wf_task = WorkflowTaskCreateV1(
-                    **wf_task.dict(exclude_none=True)
-                )
-                # Insert task
-                await _workflow_insert_task(
-                    **new_wf_task.dict(),
-                    is_legacy_task=True,
-                    workflow_id=db_workflow.id,
-                    task_id=task_id,
-                    db=db,
-                )
             else:
-                # Identify task_id
                 source = wf_task.task.source
                 task_id = source_to_id[source]
-                # Prepare new_wf_task
-                new_wf_task = WorkflowTaskCreateV2(
-                    **wf_task.dict(exclude_none=True)
+
+            new_wf_task = WorkflowTaskCreateV2(
+                **wf_task.dict(
+                    exclude_none=True, exclude={"task", "task_legacy"}
                 )
-                # Insert task
-                await _workflow_insert_task(
-                    **new_wf_task.dict(),
-                    workflow_id=db_workflow.id,
-                    task_id=task_id,
-                    db=db,
-                )
+            )
+            # Insert task
+            await _workflow_insert_task(
+                **new_wf_task.dict(),
+                workflow_id=db_workflow.id,
+                task_id=task_id,
+                db=db,
+            )
 
     await db.close()
     return db_workflow
