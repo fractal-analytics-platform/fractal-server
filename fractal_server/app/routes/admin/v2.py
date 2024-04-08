@@ -27,6 +27,7 @@ from ...models.v2 import ProjectV2
 from ...runner.filenames import WORKFLOW_LOG_FILENAME
 from ...schemas.v2 import JobReadV2
 from ...schemas.v2 import JobUpdateV2
+from ...schemas.v2 import ProjectReadV2
 from ...security import current_active_superuser
 from ..aux._job import _write_shutdown_file
 from ..aux._job import _zip_folder_to_byte_stream
@@ -50,6 +51,35 @@ def _convert_to_db_timestamp(dt: datetime) -> datetime:
     if Inject(get_settings).DB_ENGINE == "sqlite":
         return _dt.replace(tzinfo=None)
     return _dt
+
+
+@router_admin_v2.get("/project/", response_model=list[ProjectReadV2])
+async def view_project(
+    id: Optional[int] = None,
+    user_id: Optional[int] = None,
+    user: User = Depends(current_active_superuser),
+    db: AsyncSession = Depends(get_async_db),
+) -> list[ProjectReadV2]:
+    """
+    Query `ProjectV2` table.
+
+    Args:
+        id: If not `None`, select a given `project.id`.
+        user_id: If not `None`, select a given `project.user_id`.
+    """
+
+    stm = select(ProjectV2)
+
+    if id is not None:
+        stm = stm.where(ProjectV2.id == id)
+    if user_id is not None:
+        stm = stm.where(ProjectV2.user_list.any(User.id == user_id))
+
+    res = await db.execute(stm)
+    project_list = res.scalars().all()
+    await db.close()
+
+    return project_list
 
 
 @router_admin_v2.get("/job/", response_model=list[JobReadV2])
