@@ -39,10 +39,10 @@ class WorkflowTaskStatusTypeV2(str, Enum):
 
 class WorkflowTaskCreateV2(BaseModel, extra=Extra.forbid):
 
-    meta_parallel: Optional[dict[str, Any]]
     meta_non_parallel: Optional[dict[str, Any]]
-    args_parallel: Optional[dict[str, Any]]
+    meta_parallel: Optional[dict[str, Any]]
     args_non_parallel: Optional[dict[str, Any]]
+    args_parallel: Optional[dict[str, Any]]
     order: Optional[int]
     input_filters: Filters = Field(default_factory=Filters)
 
@@ -53,7 +53,7 @@ class WorkflowTaskCreateV2(BaseModel, extra=Extra.forbid):
     _order = validator("order", allow_reuse=True)(valint("order", min_val=0))
 
     @root_validator
-    def validate_commands(cls, values):
+    def validate_legacy_task(cls, values):
         if values["is_legacy_task"] and (
             values.get("meta_non_parallel") is not None
             or values.get("args_non_parallel") is not None
@@ -71,8 +71,8 @@ class WorkflowTaskReadV2(BaseModel):
 
     workflow_id: int
     order: Optional[int]
-    meta_parallel: Optional[dict[str, Any]]
     meta_non_parallel: Optional[dict[str, Any]]
+    meta_parallel: Optional[dict[str, Any]]
 
     args_non_parallel: Optional[dict[str, Any]]
     args_parallel: Optional[dict[str, Any]]
@@ -89,8 +89,8 @@ class WorkflowTaskReadV2(BaseModel):
 
 class WorkflowTaskUpdateV2(BaseModel):
 
-    meta_parallel: Optional[dict[str, Any]]
     meta_non_parallel: Optional[dict[str, Any]]
+    meta_parallel: Optional[dict[str, Any]]
     args_non_parallel: Optional[dict[str, Any]]
     args_parallel: Optional[dict[str, Any]]
     input_filters: Optional[Filters]
@@ -108,10 +108,10 @@ class WorkflowTaskUpdateV2(BaseModel):
 
 class WorkflowTaskImportV2(BaseModel):
 
-    meta_parallel: Optional[dict[str, Any]] = None
     meta_non_parallel: Optional[dict[str, Any]] = None
-    args_parallel: Optional[dict[str, Any]] = None
+    meta_parallel: Optional[dict[str, Any]] = None
     args_non_parallel: Optional[dict[str, Any]] = None
+    args_parallel: Optional[dict[str, Any]] = None
 
     input_filters: Optional[Filters] = None
 
@@ -122,10 +122,10 @@ class WorkflowTaskImportV2(BaseModel):
 
 class WorkflowTaskExportV2(BaseModel):
 
-    meta_parallel: Optional[dict[str, Any]] = None
     meta_non_parallel: Optional[dict[str, Any]] = None
-    args_parallel: Optional[dict[str, Any]] = None
+    meta_parallel: Optional[dict[str, Any]] = None
     args_non_parallel: Optional[dict[str, Any]] = None
+    args_parallel: Optional[dict[str, Any]] = None
     input_filters: Filters = Field(default_factory=Filters)
 
     is_legacy_task: bool = False
