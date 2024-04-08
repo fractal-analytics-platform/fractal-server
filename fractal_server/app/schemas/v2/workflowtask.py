@@ -5,6 +5,7 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import Field
+from pydantic import root_validator
 from pydantic import validator
 
 from .._validators import valint
@@ -40,8 +41,8 @@ class WorkflowTaskCreateV2(BaseModel, extra=Extra.forbid):
 
     meta_parallel: Optional[dict[str, Any]]
     meta_non_parallel: Optional[dict[str, Any]]
-    args_non_parallel: Optional[dict[str, Any]]
     args_parallel: Optional[dict[str, Any]]
+    args_non_parallel: Optional[dict[str, Any]]
     order: Optional[int]
     input_filters: Filters = Field(default_factory=Filters)
 
@@ -50,7 +51,18 @@ class WorkflowTaskCreateV2(BaseModel, extra=Extra.forbid):
     # Validators
 
     _order = validator("order", allow_reuse=True)(valint("order", min_val=0))
-    # FIXME validate: if `is_legacy_task`, `args_non_parallel` must be None
+
+    @root_validator
+    def validate_commands(cls, values):
+        if values["is_legacy_task"] and (
+            values.get("meta_non_parallel") is not None
+            or values.get("args_non_parallel") is not None
+        ):
+            raise ValueError(
+                "If Task is legacy, 'args_non_parallel' and 'meta_non_parallel"
+                "must be None"
+            )
+        return values
 
 
 class WorkflowTaskReadV2(BaseModel):
