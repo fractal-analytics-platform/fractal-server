@@ -1,4 +1,3 @@
-README.md
 pyproject.toml
 src/fractal_tasks_mock/__FRACTAL_MANIFEST__.json
 src/fractal_tasks_mock/__init__.py

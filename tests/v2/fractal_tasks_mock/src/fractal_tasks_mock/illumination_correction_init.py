@@ -6,7 +6,7 @@ from pydantic.decorator import validate_arguments
 @validate_arguments
 def illumination_correction_init(
     *,
-    paths: list[str],
+    zarr_urls: list[str],
     overwrite_input: bool = False,
     zarr_dir: str,
 ) -> dict:
@@ -14,30 +14,30 @@ def illumination_correction_init(
     Dummy task description.
 
     Arguments:
-        paths: description
+        zarr_urls: description
         zarr_dir: description
         overwrite_input: Whether to overwrite the current image
     """
 
     prefix = "[illumination_correction_init]"
     print(f"{prefix} START")
-    print(f"{prefix} {paths=}")
+    print(f"{prefix} {zarr_urls=}")
     print(f"{prefix} {overwrite_input=}")
 
     parallelization_list = []
-    for path in paths:
+    for zarr_url in zarr_urls:
 
         # Create new zarr image if needed
         if not overwrite_input:
-            new_path = f"{path}_corr"
-            Path(new_path).mkdir()
-            with (Path(new_path) / "data").open("w") as f:
+            new_zarr_url = f"{zarr_url}_corr"
+            Path(new_zarr_url).mkdir()
+            with (Path(new_zarr_url) / "data").open("w") as f:
                 f.write(
                     f"{prefix} Creating current zarr "
                     f"({overwrite_input=})\n"
                 )
         else:
-            new_path = path
+            new_zarr_url = zarr_url
 
         # Find out number of channels, from Zarr
         # array shape or from NGFF metadata
@@ -45,9 +45,9 @@ def illumination_correction_init(
         for ind_channel in range(num_channels):
             parallelization_list.append(
                 dict(
-                    path=new_path,
+                    zarr_url=new_zarr_url,
                     init_args=dict(
-                        raw_path=path,
+                        raw_zarr_url=zarr_url,
                         subsets=dict(C_index=ind_channel),
                     ),
                 )

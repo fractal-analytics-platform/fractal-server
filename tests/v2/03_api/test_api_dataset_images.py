@@ -10,7 +10,7 @@ PREFIX = "api/v2"
 def n_images(n: int) -> list[SingleImage]:
     return [
         SingleImage(
-            path=f"/{i}",
+            zarr_url=f"/{i}",
             attributes={
                 str(i): i,
                 "string_attribute": str(i % 2),
@@ -118,10 +118,10 @@ async def test_query_images(
     assert len(res.json()["images"]) == N % page_size
     assert_expected_attributes_and_flags(res, N)
 
-    # use `query.path`
+    # use `query.zarr_url`
     res = await client.post(
         f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/query/",
-        json=dict(path=images[3]["path"]),
+        json=dict(zarr_url=images[3]["zarr_url"]),
     )
     assert res.status_code == 200
     assert res.json()["total_count"] == 1
@@ -218,7 +218,7 @@ async def test_delete_images(
     for i, image in enumerate(IMAGES):
         res = await client.delete(
             f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/"
-            f"?path={image['path']}",
+            f"?zarr_url={image['zarr_url']}",
         )
         assert res.status_code == 204
         res = await client.post(
@@ -237,11 +237,11 @@ async def test_post_new_image(
     images = n_images(N)
 
     new_image = SingleImage(
-        path="/new_path",
+        zarr_url="/new_zarr_url",
         attributes={"new_attribute": "xyz"},
         types={"new_type": True},
     ).dict()
-    invalid_new_image = SingleImage(path=images[-1]["path"]).dict()
+    invalid_new_image = SingleImage(zarr_url=images[-1]["zarr_url"]).dict()
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
 

@@ -11,12 +11,12 @@ from v2_mock_models import WorkflowTaskV2Mock
 
 from fractal_server.app.runner.v2.runner import execute_tasks_v2
 from fractal_server.images import SingleImage
-from fractal_server.images.tools import find_image_by_path
+from fractal_server.images.tools import find_image_by_zarr_url
 
 
 def _assert_image_data_exist(image_list: list[dict]):
     for image in image_list:
-        assert (Path(image["path"]) / "data").exists()
+        assert (Path(image["zarr_url"]) / "data").exists()
 
 
 def _task_names_from_history(history: list[dict[str, Any]]) -> list[str]:
@@ -30,10 +30,10 @@ def image_data_exist_on_disk(image_list: list[SingleImage]):
     prefix = "[image_data_exist_on_disk]"
     all_images_have_data = True
     for image in image_list:
-        if (Path(image["path"]) / "data").exists():
-            print(f"{prefix} {image['path']} contains data")
+        if (Path(image["zarr_url"]) / "data").exists():
+            print(f"{prefix} {image['zarr_url']} contains data")
         else:
-            print(f"{prefix} {image['path']} does *not* contain data")
+            print(f"{prefix} {image['zarr_url']} does *not* contain data")
             all_images_have_data = False
     return all_images_have_data
 
@@ -95,16 +95,17 @@ def test_fractal_demos_01(
     assert dataset_attrs["filters"]["types"] == {
         "illumination_correction": True,
     }
-    assert set(img["path"] for img in dataset_attrs["images"]) == {
+    assert set(img["zarr_url"] for img in dataset_attrs["images"]) == {
         f"{zarr_dir}/my_plate.zarr/A/01/0",
         f"{zarr_dir}/my_plate.zarr/A/02/0",
     }
 
-    img = find_image_by_path(
-        path=f"{zarr_dir}/my_plate.zarr/A/01/0", images=dataset_attrs["images"]
+    img = find_image_by_zarr_url(
+        zarr_url=f"{zarr_dir}/my_plate.zarr/A/01/0",
+        images=dataset_attrs["images"],
     )["image"]
     assert img == {
-        "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
+        "zarr_url": f"{zarr_dir}/my_plate.zarr/A/01/0",
         "attributes": {
             "well": "A01",
             "plate": "my_plate.zarr",
@@ -144,12 +145,12 @@ def test_fractal_demos_01(
         "illumination_correction": True,
         "3D": False,
     }
-    img = find_image_by_path(
-        path=f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
+    img = find_image_by_zarr_url(
+        zarr_url=f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
         images=dataset_attrs["images"],
     )["image"]
     assert img == {
-        "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
+        "zarr_url": f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
         "origin": f"{zarr_dir}/my_plate.zarr/A/01/0",
         "attributes": {
             "well": "A01",
@@ -212,7 +213,7 @@ def test_fractal_demos_01_no_overwrite(
         dataset=DatasetV2Mock(name="dataset", zarr_dir=zarr_dir),
         **execute_tasks_v2_args,
     )
-    assert [img["path"] for img in dataset_attrs["images"]] == [
+    assert [img["zarr_url"] for img in dataset_attrs["images"]] == [
         f"{zarr_dir}/my_plate.zarr/A/01/0",
         f"{zarr_dir}/my_plate.zarr/A/02/0",
     ]
@@ -241,14 +242,14 @@ def test_fractal_demos_01_no_overwrite(
     assert dataset_attrs["filters"]["types"] == {
         "illumination_correction": True,
     }
-    assert [img["path"] for img in dataset_attrs["images"]] == [
+    assert [img["zarr_url"] for img in dataset_attrs["images"]] == [
         f"{zarr_dir}/my_plate.zarr/A/01/0",
         f"{zarr_dir}/my_plate.zarr/A/02/0",
         f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
         f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
     ]
     assert dataset_attrs["images"][0] == {
-        "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
+        "zarr_url": f"{zarr_dir}/my_plate.zarr/A/01/0",
         "origin": None,
         "attributes": {
             "well": "A01",
@@ -259,7 +260,7 @@ def test_fractal_demos_01_no_overwrite(
         },
     }
     assert dataset_attrs["images"][1] == {
-        "path": f"{zarr_dir}/my_plate.zarr/A/02/0",
+        "zarr_url": f"{zarr_dir}/my_plate.zarr/A/02/0",
         "origin": None,
         "attributes": {
             "well": "A02",
@@ -270,7 +271,7 @@ def test_fractal_demos_01_no_overwrite(
         },
     }
     assert dataset_attrs["images"][2] == {
-        "path": f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
+        "zarr_url": f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
         "origin": f"{zarr_dir}/my_plate.zarr/A/01/0",
         "attributes": {
             "well": "A01",
@@ -282,7 +283,7 @@ def test_fractal_demos_01_no_overwrite(
         },
     }
     assert dataset_attrs["images"][3] == {
-        "path": f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
+        "zarr_url": f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
         "origin": f"{zarr_dir}/my_plate.zarr/A/02/0",
         "attributes": {
             "well": "A02",
@@ -318,7 +319,7 @@ def test_fractal_demos_01_no_overwrite(
         "3D": False,
         "illumination_correction": True,
     }
-    assert [img["path"] for img in dataset_attrs["images"]] == [
+    assert [img["zarr_url"] for img in dataset_attrs["images"]] == [
         f"{zarr_dir}/my_plate.zarr/A/01/0",
         f"{zarr_dir}/my_plate.zarr/A/02/0",
         f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
@@ -328,7 +329,7 @@ def test_fractal_demos_01_no_overwrite(
     ]
 
     assert dataset_attrs["images"][4] == {
-        "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0_corr",
+        "zarr_url": f"{zarr_dir}/my_plate_mip.zarr/A/01/0_corr",
         "origin": f"{zarr_dir}/my_plate.zarr/A/01/0_corr",
         "attributes": {
             "well": "A01",
@@ -340,7 +341,7 @@ def test_fractal_demos_01_no_overwrite(
         },
     }
     assert dataset_attrs["images"][5] == {
-        "path": f"{zarr_dir}/my_plate_mip.zarr/A/02/0_corr",
+        "zarr_url": f"{zarr_dir}/my_plate_mip.zarr/A/02/0_corr",
         "origin": f"{zarr_dir}/my_plate.zarr/A/02/0_corr",
         "attributes": {
             "well": "A02",
@@ -428,9 +429,11 @@ def test_registration_no_overwrite(
     # In all non-reference-cycle images, a certain table was updated
     for image in dataset_attrs["images"]:
         if image["attributes"]["acquisition"] == 0:
-            assert not os.path.isfile(f"{image['path']}/registration_table")
+            assert not os.path.isfile(
+                f"{image['zarr_url']}/registration_table"
+            )
         else:
-            assert os.path.isfile(f"{image['path']}/registration_table")
+            assert os.path.isfile(f"{image['zarr_url']}/registration_table")
 
     # Run find_registration_consensus
     dataset_attrs = execute_tasks_v2(
@@ -449,7 +452,7 @@ def test_registration_no_overwrite(
 
     # In all images, a certain (post-consensus) table was updated
     for image in dataset_attrs["images"]:
-        assert os.path.isfile(f"{image['path']}/registration_table_final")
+        assert os.path.isfile(f"{image['zarr_url']}/registration_table_final")
 
     # The image list still has the original six images only
     assert len(dataset_attrs["images"]) == 6
@@ -524,9 +527,11 @@ def test_registration_overwrite(
     # In all non-reference-cycle images, a certain table was updated
     for image in dataset_attrs["images"]:
         if image["attributes"]["acquisition"] == 0:
-            assert not os.path.isfile(f"{image['path']}/registration_table")
+            assert not os.path.isfile(
+                f"{image['zarr_url']}/registration_table"
+            )
         else:
-            assert os.path.isfile(f"{image['path']}/registration_table")
+            assert os.path.isfile(f"{image['zarr_url']}/registration_table")
 
     # Run find_registration_consensus
     dataset_attrs = execute_tasks_v2(
@@ -545,7 +550,7 @@ def test_registration_overwrite(
 
     # In all images, a certain (post-consensus) table was updated
     for image in dataset_attrs["images"]:
-        assert os.path.isfile(f"{image['path']}/registration_table_final")
+        assert os.path.isfile(f"{image['zarr_url']}/registration_table_final")
 
     # The image list still has the original six images only
     assert len(dataset_attrs["images"]) == 6
@@ -726,11 +731,12 @@ def test_fractal_demos_01_scaling(
     }
     assert len(dataset_attrs["images"]) == NUM_IMAGES
 
-    img = find_image_by_path(
-        path=f"{zarr_dir}/my_plate.zarr/A/01/0", images=dataset_attrs["images"]
+    img = find_image_by_zarr_url(
+        zarr_url=f"{zarr_dir}/my_plate.zarr/A/01/0",
+        images=dataset_attrs["images"],
     )["image"]
     assert img == {
-        "path": f"{zarr_dir}/my_plate.zarr/A/01/0",
+        "zarr_url": f"{zarr_dir}/my_plate.zarr/A/01/0",
         "attributes": {
             "well": "A01",
             "plate": "my_plate.zarr",
@@ -768,12 +774,12 @@ def test_fractal_demos_01_scaling(
         "3D": False,
     }
     assert len(dataset_attrs["images"]) == NUM_IMAGES * 2
-    img = find_image_by_path(
-        path=f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
+    img = find_image_by_zarr_url(
+        zarr_url=f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
         images=dataset_attrs["images"],
     )["image"]
     assert img == {
-        "path": f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
+        "zarr_url": f"{zarr_dir}/my_plate_mip.zarr/A/01/0",
         "origin": f"{zarr_dir}/my_plate.zarr/A/01/0",
         "attributes": {
             "well": "A01",
