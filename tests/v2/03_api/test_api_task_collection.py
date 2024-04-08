@@ -94,6 +94,12 @@ async def test_task_collection(
         state = res.json()
         data = state["data"]
         task_list = data["task_list"]
+        for i, task in enumerate(task_list):
+            if i == 0:
+                assert task["meta_non_parallel"] == {"key1": "value1"}
+                assert task["meta_parallel"] == {"key2": "value2"}
+            else:
+                assert task["meta_non_parallel"] == task["meta_parallel"] == {}
         task_names = (t["name"] for t in task_list)
         debug(task_names)
         if data["status"] != "OK":
