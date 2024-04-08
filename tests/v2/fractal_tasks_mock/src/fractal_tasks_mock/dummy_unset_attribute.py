@@ -4,7 +4,7 @@ from pydantic.decorator import validate_arguments
 @validate_arguments
 def dummy_unset_attribute(
     *,
-    paths: list[str],
+    zarr_urls: list[str],
     zarr_dir: str,
     attribute: str,
 ) -> dict:
@@ -12,7 +12,7 @@ def dummy_unset_attribute(
     Unset an attribute for several images
 
     Arguments:
-        paths: description
+        zarr_urls: description
         zarr_dir: description
         attribute: The attribute that should be unset for all input images.
     """
@@ -20,10 +20,10 @@ def dummy_unset_attribute(
     out = dict(
         image_list_updates=[
             {
-                "path": path,
+                "zarr_url": zarr_url,
                 "attributes": {attribute: None},
             }
-            for path in paths
+            for zarr_url in zarr_urls
         ]
     )
     print("[dummy_unset_images] END")

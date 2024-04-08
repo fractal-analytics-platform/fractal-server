@@ -7,7 +7,7 @@ from pydantic.decorator import validate_arguments
 @validate_arguments
 def generic_task(
     *,
-    paths: list[str],
+    zarr_urls: list[str],
     zarr_dir: str,
     sleep_time: int = 1,
     raise_error: bool = False,
@@ -16,7 +16,7 @@ def generic_task(
     Dummy task description.
 
     Arguments:
-        paths: description
+        zarr_urls: description
         zarr_dir: description
         sleep_time: Time to sleep, in seconds
         raise_error: If true, the task raises a ValueError

@@ -7,11 +7,11 @@ def convert_v2_args_into_v1(kwargs_v2: dict[str, Any]) -> dict[str, Any]:
 
     kwargs_v1 = deepcopy(kwargs_v2)
 
-    path = kwargs_v2.pop("path")
-    input_path = Path(path).parents[3].as_posix()
-    component = path.replace(input_path, "").lstrip("/")
+    zarr_url = kwargs_v1.pop("zarr_url")
+    input_path = Path(zarr_url).parents[3].as_posix()
+    component = zarr_url.replace(input_path, "").lstrip("/")
 
-    kwargs_v1 = dict(
+    kwargs_v1.update(
         input_paths=[input_path],
         output_path=input_path,
         metadata={},
