@@ -213,7 +213,6 @@ async def delete_workflow(
     jobs = res.scalars().all()
     for job in jobs:
         job.workflow_id = None
-    await db.commit()
 
     # Delete workflow
     await db.delete(workflow)
