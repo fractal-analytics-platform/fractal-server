@@ -8,6 +8,7 @@ from typing import Union
 
 from fastapi import HTTPException
 from fastapi import status
+from sqlalchemy.orm.attributes import flag_modified
 from sqlmodel import select
 from sqlmodel.sql.expression import SelectOfScalar
 
@@ -488,9 +489,9 @@ async def _workflow_insert_task(
         meta_non_parallel=final_meta_non_parallel,
         **input_filters_kwarg,
     )
-    db.add(wf_task)
     db_workflow.task_list.insert(order, wf_task)
     db_workflow.task_list.reorder()  # type: ignore
+    flag_modified(db_workflow, "task_list")
     await db.commit()
     await db.refresh(wf_task)
 
