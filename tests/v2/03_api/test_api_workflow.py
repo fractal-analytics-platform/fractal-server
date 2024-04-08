@@ -1,4 +1,5 @@
 import json
+import logging
 from datetime import datetime
 from datetime import timezone
 from typing import Literal
@@ -1180,7 +1181,65 @@ async def test_task_legacy_is_v2_compatible(
         assert res.status_code == 201
 
 
-# FIXME
-# Missing V2 for:
-# - test_export_workflow_log
-# - test_import_export_workflow_fail
+async def test_export_workflow_log(
+    client,
+    MockCurrentUser,
+    task_factory_v2,
+    project_factory_v2,
+    workflow_factory_v2,
+    caplog,
+):
+    """
+    WHEN exporting a workflow with custom tasks
+    THEN there must be a warning
+    """
+
+    # Create project and task
+    async with MockCurrentUser() as user:
+        TASK_OWNER = "someone"
+        task = await task_factory_v2(owner=TASK_OWNER, source="some-source")
+        prj = await project_factory_v2(user)
+        wf = await workflow_factory_v2(project_id=prj.id)
+
+    # Insert WorkflowTasks
+    res = await client.post(
+        (
+            f"api/v2/project/{prj.id}/workflow/{wf.id}/wftask/"
+            f"?task_id={task.id}"
+        ),
+        json={},
+    )
+    assert res.status_code == 201
+
+    # Export workflow
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+    res = await client.get(
+        f"/api/v2/project/{prj.id}/workflow/{wf.id}/export/"
+    )
+    assert res.status_code == 200
+    debug(caplog.text)
+    assert "not meant to be portable" in caplog.text
+
+
+async def test_import_export_workflow_fail(
+    client,
+    MockCurrentUser,
+    project_factory_v2,
+    task_factory,
+):
+    async with MockCurrentUser() as user:
+        prj = await project_factory_v2(user)
+
+    await task_factory(name="valid", source="test_source")
+    payload = {
+        "name": "MyWorkflow",
+        "task_list": [
+            {"order": 0, "task": {"name": "dummy", "source": "xyz"}}
+        ],
+    }
+    res = await client.post(
+        f"/api/v2/project/{prj.id}/workflow/import/", json=payload
+    )
+    assert res.status_code == 422
+    assert "Found 0 tasks with source" in res.json()["detail"]
