@@ -50,7 +50,10 @@ def test_check_zarr_urls_are_unique():
 
 def test_convert_v2_args_into_v1(tmp_path: Path):
     kwargs_v2 = dict(
-        zarr_url=(tmp_path / "input_path/plate.zarr/B/03/0").as_posix()
+        zarr_url=(tmp_path / "input_path/plate.zarr/B/03/0").as_posix(),
+        something="else",
+        metadata="this will be overwritten",
+        component="this will be overwritten",
     )
     kwargs_v1 = convert_v2_args_into_v1(kwargs_v2)
     debug(kwargs_v1)
@@ -60,4 +63,5 @@ def test_convert_v2_args_into_v1(tmp_path: Path):
         "output_path": PATH,
         "metadata": {},
         "component": "plate.zarr/B/03/0",
+        "something": "else",
     }
