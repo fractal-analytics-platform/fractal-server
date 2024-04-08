@@ -319,9 +319,9 @@ async def test_delete_dataset_cascade_jobs(
         )
         assert res.status_code == 204
         await db.refresh(j1)
-        assert j1.dataset_id == None
+        assert j1.dataset_id is None
         await db.refresh(j2)
-        assert j2.dataset_id == None
+        assert j2.dataset_id is None
 
         res = await client.delete(
             f"{PREFIX}/project/{project.id}/dataset/{ds_not_deletable.id}/"
