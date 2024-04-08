@@ -628,7 +628,6 @@ async def test_project_apply_slurm_account(
         assert res.status_code == 422
 
 
-@pytest.mark.skip(reason="FIXME: this fails too often")
 async def test_rate_limit(
     MockCurrentUser,
     project_factory,
@@ -639,8 +638,12 @@ async def test_rate_limit(
     client,
     db,
     override_settings_factory,
+    tmp_path,
 ):
-    override_settings_factory(FRACTAL_API_SUBMIT_RATE_LIMIT=1)
+    override_settings_factory(
+        FRACTAL_API_SUBMIT_RATE_LIMIT=1,
+        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp_path / "artifacts",
+    )
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
 
         project = await project_factory(user)
