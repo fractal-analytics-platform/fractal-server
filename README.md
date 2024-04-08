@@ -40,7 +40,7 @@
 | fractal\_server/app/routes/api/v2/\_\_init\_\_.py                         |       20 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/routes/api/v2/\_aux\_functions.py                     |      135 |        9 |       60 |        9 |     90% |270, 315, 319, 355, 416, 426, 437, 451-452, 453->456 |
 | fractal\_server/app/routes/api/v2/dataset.py                              |      130 |        0 |       42 |        7 |     96% |38->33, 63->59, 94->90, 118->114, 150->146, 199->198, 225->221 |
-| fractal\_server/app/routes/api/v2/images.py                               |       87 |        3 |       42 |        8 |     91% |46->42, 81->76, 105, 125->exit, 130, 180->176, 193->exit, 197 |
+| fractal\_server/app/routes/api/v2/images.py                               |       87 |        3 |       42 |        8 |     91% |46->42, 81->76, 105, 125->exit, 134, 184->180, 197->exit, 202 |
 | fractal\_server/app/routes/api/v2/job.py                                  |       79 |       31 |       24 |        8 |     54% |31->30, 39-51, 58->54, 67-73, 80->76, 101-105, 114->110, 123-137, 148->144, 166-167, 176->172, 187-200 |
 | fractal\_server/app/routes/api/v2/project.py                              |      106 |        6 |       26 |        5 |     92% |33->32, 52->51, 73-78, 87->86, 103->102, 129->128 |
 | fractal\_server/app/routes/api/v2/submit.py                               |       72 |        1 |       23 |        2 |     97% |43->38, 192 |
@@ -87,11 +87,11 @@
 | fractal\_server/app/runner/v2/deduplicate\_list.py                        |       13 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/app/runner/v2/handle\_failed\_job.py                      |       54 |        8 |       12 |        2 |     82% |77-93, 96->106 |
 | fractal\_server/app/runner/v2/merge\_outputs.py                           |       22 |        1 |        8 |        2 |     90% |23, 29->32 |
-| fractal\_server/app/runner/v2/runner.py                                   |      113 |        9 |       48 |       10 |     88% |68, 111-114, 135, 144, 177->182, 210->216, 217, 223, 228-229 |
+| fractal\_server/app/runner/v2/runner.py                                   |      113 |        9 |       48 |       10 |     88% |68, 111-114, 137, 146, 179->184, 212->218, 219, 225, 230-231 |
 | fractal\_server/app/runner/v2/runner\_functions.py                        |       99 |       18 |       22 |        3 |     81% |63-65, 74, 98-102, 243, 302-341 |
 | fractal\_server/app/runner/v2/runner\_functions\_low\_level.py            |       59 |        6 |       22 |        5 |     86% |44-45, 47->exit, 54, 76, 99, 133 |
-| fractal\_server/app/runner/v2/task\_interface.py                          |       29 |        5 |        4 |        1 |     76% |     22-28 |
-| fractal\_server/app/runner/v2/v1\_compat.py                               |       10 |        6 |        0 |        0 |     40% |      8-21 |
+| fractal\_server/app/runner/v2/task\_interface.py                          |       29 |        0 |        4 |        0 |    100% |           |
+| fractal\_server/app/runner/v2/v1\_compat.py                               |       10 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/\_\_init\_\_.py                               |        4 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/\_validators.py                               |       46 |        0 |       22 |        0 |    100% |           |
 | fractal\_server/app/schemas/state.py                                      |       13 |        0 |        0 |        0 |    100% |           |
@@ -133,7 +133,7 @@
 | fractal\_server/tasks/v2/background\_operations.py                        |      158 |        2 |       38 |        5 |     96% |90->exit, 121->exit, 143, 226, 245->250 |
 | fractal\_server/tasks/v2/get\_collection\_data.py                         |       11 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/utils.py                                                  |       22 |        0 |        2 |        0 |    100% |           |
-|                                                                 **TOTAL** | **7412** |  **422** | **2136** |  **332** | **91%** |           |
+|                                                                 **TOTAL** | **7412** |  **411** | **2136** |  **331** | **91%** |           |
 
 
 ## Setup coverage badge
