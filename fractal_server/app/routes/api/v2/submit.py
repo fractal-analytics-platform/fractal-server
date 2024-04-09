@@ -148,7 +148,7 @@ async def apply_workflow(
         if len(user.slurm_accounts) > 0:
             job_create.slurm_account = user.slurm_accounts[0]
 
-    # Add new ApplyWorkflow object to DB
+    # Add new Job object to DB
     job = JobV2(
         project_id=project_id,
         dataset_id=dataset_id,
