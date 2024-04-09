@@ -15,6 +15,7 @@ license = "BSD-3-Clause"
 exclude = [
 "fractal_server/.gitignore",
 "fractal_server/data_migrations/old",
+"fractal_server/json_schemas",
 ]
 
 [tool.poetry.urls]
@@ -106,7 +107,7 @@ fractalctl = "fractal_server.__main__:run"
 branch = true
 parallel = true
 relative_files = true
-omit = ["tests/*", "benchmarks/*"]
+omit = ["tests/*", "benchmarks/*", "fractal_server/json_schemas/*"]
 
 [[tool.mypy.overrides]]
 module = ["devtools", "uvicorn", "pytest", "asgi_lifespan", "asyncpg"]
