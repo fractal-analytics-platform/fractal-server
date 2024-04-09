@@ -91,19 +91,18 @@ async def create_workflowtask(
                 ),
             )
 
-    async with db:
-        workflow_task = await _workflow_insert_task(
-            workflow_id=workflow.id,
-            is_legacy_task=new_task.is_legacy_task,
-            task_id=task_id,
-            order=new_task.order,
-            meta_non_parallel=new_task.meta_non_parallel,
-            meta_parallel=new_task.meta_parallel,
-            args_non_parallel=new_task.args_non_parallel,
-            args_parallel=new_task.args_parallel,
-            input_filters=new_task.input_filters,
-            db=db,
-        )
+    workflow_task = await _workflow_insert_task(
+        workflow_id=workflow.id,
+        is_legacy_task=new_task.is_legacy_task,
+        task_id=task_id,
+        order=new_task.order,
+        meta_non_parallel=new_task.meta_non_parallel,
+        meta_parallel=new_task.meta_parallel,
+        args_non_parallel=new_task.args_non_parallel,
+        args_parallel=new_task.args_parallel,
+        input_filters=new_task.input_filters,
+        db=db,
+    )
 
     await db.close()
 
