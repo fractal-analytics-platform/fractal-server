@@ -16,17 +16,11 @@ require not much more effort than copying the reference `local` interface
 and swapping the `Executor` in the [public interface](#public-interface)
 coroutine.
 
-For this reason, both `local` and `SLURM` backends largely build up on the
-same set of common internal utilities and routines, c.f.,
-[public](../../reference/fractal_server/app/runner/common/) and
-[private](../../reference/fractal_server/app/runner/_common/) common backend
-APIs.
-
 ## Public interface
 
 The backends need to implement the following common public interface.
 
-::: fractal_server.app.runner._local
+::: fractal_server.app.runner.v2._local
     options:
         members:
             - process_workflow
