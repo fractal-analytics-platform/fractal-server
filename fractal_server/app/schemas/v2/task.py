@@ -9,6 +9,7 @@ from pydantic import HttpUrl
 from pydantic import root_validator
 from pydantic import validator
 
+from .._validators import valdictkeys
 from .._validators import valstr
 
 
@@ -55,6 +56,12 @@ class TaskCreateV2(BaseModel, extra=Extra.forbid):
     _version = validator("version", allow_reuse=True)(valstr("version"))
     _args_schema_version = validator("args_schema_version", allow_reuse=True)(
         valstr("args_schema_version")
+    )
+    _input_types = validator("input_types", allow_reuse=True)(
+        valdictkeys("input_types")
+    )
+    _output_types = validator("output_types", allow_reuse=True)(
+        valdictkeys("output_types")
     )
 
 
