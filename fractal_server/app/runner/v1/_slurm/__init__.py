@@ -66,7 +66,8 @@ def _process_workflow(
     workflow working dir and user to impersonate. It then schedules the
     workflow tasks and returns the output dataset metadata.
 
-    Cf. [process_workflow][fractal_server.app.runner._local.process_workflow]
+    Cf.
+    [process_workflow][fractal_server.app.runner.v1._local.process_workflow]
 
     Returns:
         output_dataset_metadata: Metadata of the output dataset
@@ -132,7 +133,8 @@ async def process_workflow(
     """
     Process workflow (SLURM backend public interface)
 
-    Cf. [process_workflow][fractal_server.app.runner._local.process_workflow]
+    Cf.
+    [process_workflow][fractal_server.app.runner.v1._local.process_workflow]
     """
 
     # Set values of first_task_index and last_task_index

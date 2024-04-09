@@ -12,7 +12,7 @@
 """
 Submodule to define _slurm_submit_setup, which is also the reference
 implementation of `submit_setup_call` in
-[fractal_server.app.runner._common][]).
+[fractal_server.app.runner.v1._common][]).
 """
 from pathlib import Path
 
@@ -38,7 +38,7 @@ def _slurm_submit_setup(
 
     For now, this is the reference implementation for the argument
     `submit_setup_call` of
-    [fractal_server.app.runner._common.execute_tasks][].
+    [fractal_server.app.runner.v1._common.execute_tasks][].
 
     Arguments:
         wftask:
