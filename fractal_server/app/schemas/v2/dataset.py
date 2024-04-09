@@ -82,7 +82,6 @@ class DatasetUpdateV2(BaseModel):
 
     name: Optional[str]
     read_only: Optional[bool]
-    zarr_dir: Optional[str]
     filters: Optional[Filters]
 
     # Validators
