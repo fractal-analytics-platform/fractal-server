@@ -11,8 +11,7 @@ def test_ManifestV1_jsonschema():
     with the one currently present in the repository.
     """
     json_schema_path = (
-        Path(v2.__file__).parent.parent.parent.parent
-        / "json_schemas/manifest_v2.json"
+        Path(v2.__file__).parents[3] / "json_schemas/manifest_v2.json"
     )
     with json_schema_path.open("r") as f:
         current_schema = json.load(f)
