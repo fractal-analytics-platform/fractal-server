@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 from datetime import timezone
+from typing import Any
 
 
 def valstr(attribute: str, accept_none: bool = False):
@@ -23,6 +24,26 @@ def valstr(attribute: str, accept_none: bool = False):
         if not s:
             raise ValueError(f"String attribute '{attribute}' cannot be empty")
         return s
+
+    return val
+
+
+def valdictkeys(attribute: str):
+    def val(d: dict[str, Any]):
+        """
+        Apply valstr to every key of the dictionary, and fail if there are
+        identical keys.
+        """
+        old_keys = [k for k in d.keys()]
+        new_keys = [valstr(f"{attribute}[{key}]")(key) for key in old_keys]
+        if len(new_keys) != len(set(new_keys)):
+            raise ValueError(
+                f"Dictionary contains multiple identical keys: {d}"
+            )
+        for old_key, new_key in zip(old_keys, new_keys):
+            if new_key != old_key:
+                d[new_key] = d.pop(old_key)
+        return d
 
     return val
 
