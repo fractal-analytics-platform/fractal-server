@@ -113,6 +113,12 @@ class TaskUpdateV2(BaseModel):
     _command_non_parallel = validator(
         "command_non_parallel", allow_reuse=True
     )(valstr("command_non_parallel"))
+    _input_types = validator("input_types", allow_reuse=True)(
+        valdictkeys("input_types")
+    )
+    _output_types = validator("output_types", allow_reuse=True)(
+        valdictkeys("output_types")
+    )
 
 
 class TaskImportV2(BaseModel):
