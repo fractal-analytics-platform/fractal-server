@@ -265,7 +265,7 @@ async def test_delete_dataset_cascade_jobs(
         )
         dataset = await dataset_factory_v2(project_id=project.id)
 
-        # Create a job in relationship with input_ds, output_ds and workflow
+        # Create a job in relationship with dataset and workflow
         job = await job_factory_v2(
             project_id=project.id,
             workflow_id=workflow.id,
@@ -299,12 +299,12 @@ async def test_delete_dataset_cascade_jobs(
             "workflow_id": workflow.id,
             "working_dir": (tmp_path / "some_working_dir").as_posix(),
         }
-        await job_factory_v2(
+        j1 = await job_factory_v2(
             dataset_id=ds_deletable.id,
             status=JobStatusTypeV2.DONE,
             **common_args,
         )
-        await job_factory_v2(
+        j2 = await job_factory_v2(
             dataset_id=ds_deletable.id,
             status=JobStatusTypeV2.FAILED,
             **common_args,
@@ -318,6 +318,11 @@ async def test_delete_dataset_cascade_jobs(
             f"{PREFIX}/project/{project.id}/dataset/{ds_deletable.id}/"
         )
         assert res.status_code == 204
+        await db.refresh(j1)
+        assert j1.dataset_id is None
+        await db.refresh(j2)
+        assert j2.dataset_id is None
+
         res = await client.delete(
             f"{PREFIX}/project/{project.id}/dataset/{ds_not_deletable.id}/"
         )
