@@ -3,13 +3,12 @@ from fractal_client import FractalClient
 from passlib.context import CryptContext
 
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.schemas.v1 import ApplyWorkflowCreateV1
-from fractal_server.app.schemas.v1 import DatasetCreateV1
-from fractal_server.app.schemas.v1 import ProjectCreateV1
-from fractal_server.app.schemas.v1 import ResourceCreateV1
-from fractal_server.app.schemas.v1 import UserCreate
-from fractal_server.app.schemas.v1 import WorkflowCreateV1
-from fractal_server.app.schemas.v1 import WorkflowTaskCreateV1
+from fractal_server.app.schemas import UserCreate
+from fractal_server.app.schemas.v2 import DatasetCreateV2
+from fractal_server.app.schemas.v2 import JobCreateV2
+from fractal_server.app.schemas.v2 import ProjectCreateV2
+from fractal_server.app.schemas.v2 import WorkflowCreateV2
+from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
 from fractal_server.app.security import UserOAuth
 
 
@@ -60,22 +59,15 @@ def _user_flow_vanilla(
     working_task_id: int,
 ):
     user = _create_user_client(admin, user_identifier="vanilla")
-    proj = user.add_project(ProjectCreateV1(name="MyProject_uv"))
+    proj = user.add_project(ProjectCreateV2(name="MyProject_uv"))
     ds = user.add_dataset(
-        proj.id, DatasetCreateV1(name="MyDataset", type="type")
+        proj.id, DatasetCreateV2(name="MyDataset", zarr_dir="/invalid/zarr")
     )
-    user.add_resource(
-        proj.id,
-        ds.id,
-        resource=ResourceCreateV1(path="/invalidpath"),
-    )
-    wf = user.add_workflow(proj.id, WorkflowCreateV1(name="MyWorkflow"))
+    wf = user.add_workflow(proj.id, WorkflowCreateV2(name="MyWorkflow"))
     user.add_workflowtask(
-        proj.id, wf.id, working_task_id, WorkflowTaskCreateV1()
+        proj.id, wf.id, working_task_id, WorkflowTaskCreateV2()
     )
-    user.apply_workflow(
-        proj.id, wf.id, ds.id, ds.id, applyworkflow=ApplyWorkflowCreateV1()
-    )
+    user.submit_job(proj.id, wf.id, ds.id, applyworkflow=JobCreateV2())
 
 
 # power user:
@@ -90,39 +82,34 @@ def _user_flow_power(
     failing_task_id: int,
 ):
     user = _create_user_client(admin, user_identifier="power")
-    proj = user.add_project(ProjectCreateV1(name="MyProject_upw"))
+    proj = user.add_project(ProjectCreateV2(name="MyProject_upw"))
 
     num_workflows = 20
     num_jobs_per_workflow = 20
     for ind_wf in range(num_workflows):
         wf = user.add_workflow(
-            proj.id, WorkflowCreateV1(name=f"MyWorkflow-{ind_wf}")
+            proj.id, WorkflowCreateV2(name=f"MyWorkflow-{ind_wf}")
         )
         user.add_workflowtask(
-            proj.id, wf.id, working_task_id, WorkflowTaskCreateV1()
+            proj.id, wf.id, working_task_id, WorkflowTaskCreateV2()
         )
         if ind_wf % 2 == 0:
             user.add_workflowtask(
-                proj.id, wf.id, working_task_id, WorkflowTaskCreateV1()
+                proj.id, wf.id, working_task_id, WorkflowTaskCreateV2()
             )
             user.add_workflowtask(
-                proj.id, wf.id, failing_task_id, WorkflowTaskCreateV1()
+                proj.id, wf.id, failing_task_id, WorkflowTaskCreateV2()
             )
         for ind_job in range(num_jobs_per_workflow):
             ds = user.add_dataset(
-                proj.id, DatasetCreateV1(name="MyDataset", type="type")
-            )
-            user.add_resource(
                 proj.id,
-                ds.id,
-                resource=ResourceCreateV1(path="/invalidpath"),
+                DatasetCreateV2(name="MyDataset", zarr_dir="/invalid/zarr"),
             )
-            user.apply_workflow(
+            user.submit_job(
                 proj.id,
                 wf.id,
                 ds.id,
-                ds.id,
-                applyworkflow=ApplyWorkflowCreateV1(),
+                applyworkflow=JobCreateV2(),
             )
 
 
@@ -136,35 +123,32 @@ def _user_flow_dataset(
     working_task_id: int,
 ):
     user = _create_user_client(admin, user_identifier="dataset")
-    proj = user.add_project(ProjectCreateV1(name="MyProject_us"))
+    proj = user.add_project(ProjectCreateV2(name="MyProject_us"))
     n_datasets = 20
     ds_list = []
     for i in range(n_datasets):
         ds = user.add_dataset(
-            proj.id, DatasetCreateV1(name=f"MyDataset_us-{i}", type="type")
-        )
-        user.add_resource(
             proj.id,
-            ds.id,
-            resource=ResourceCreateV1(path="/invalidpath"),
+            DatasetCreateV2(
+                name=f"MyDataset_us-{i}", zarr_dir="/invalid/zarr"
+            ),
         )
         ds_list.append(ds)
 
     num_workflows = 20
     for i in range(num_workflows):
         wf = user.add_workflow(
-            proj.id, WorkflowCreateV1(name=f"MyWorkflow_us-{i}")
+            proj.id, WorkflowCreateV2(name=f"MyWorkflow_us-{i}")
         )
         user.add_workflowtask(
-            proj.id, wf.id, working_task_id, WorkflowTaskCreateV1()
+            proj.id, wf.id, working_task_id, WorkflowTaskCreateV2()
         )
         for ds in ds_list:
-            user.apply_workflow(
+            user.submit_job(
                 proj.id,
                 wf.id,
                 ds.id,
-                ds.id,
-                applyworkflow=ApplyWorkflowCreateV1(),
+                applyworkflow=JobCreateV2(),
             )
 
 
@@ -181,36 +165,25 @@ def _user_flow_project(
     n_projects = 25
     num_jobs_per_workflow = 5
     for i in range(n_projects):
-        proj = user.add_project(ProjectCreateV1(name=f"MyProject_upj-{i}"))
-        ds1 = user.add_dataset(
-            proj.id, DatasetCreateV1(name=f"MyDataset_up1-{i}", type="type")
-        )
-        ds2 = user.add_dataset(
-            proj.id, DatasetCreateV1(name=f"MyDataset_up2-{i}", type="type")
-        )
-        user.add_resource(
+        proj = user.add_project(ProjectCreateV2(name=f"MyProject_upj-{i}"))
+        ds = user.add_dataset(
             proj.id,
-            ds1.id,
-            resource=ResourceCreateV1(path="/invalidpath"),
-        )
-        user.add_resource(
-            proj.id,
-            ds2.id,
-            resource=ResourceCreateV1(path="/invalidpath"),
+            DatasetCreateV2(
+                name=f"MyDataset_up-{i}", zarr_dir="/invalid/zarr"
+            ),
         )
         wf = user.add_workflow(
-            proj.id, WorkflowCreateV1(name=f"MyWorkflow_up-{i}")
+            proj.id, WorkflowCreateV2(name=f"MyWorkflow_up-{i}")
         )
         user.add_workflowtask(
-            proj.id, wf.id, working_task_id, WorkflowTaskCreateV1()
+            proj.id, wf.id, working_task_id, WorkflowTaskCreateV2()
         )
         for i in range(num_jobs_per_workflow):
-            user.apply_workflow(
+            user.submit_job(
                 proj.id,
                 wf.id,
-                ds1.id,
-                ds2.id,
-                applyworkflow=ApplyWorkflowCreateV1(),
+                ds.id,
+                applyworkflow=JobCreateV2(),
             )
 
 
@@ -224,24 +197,17 @@ def _user_flow_job(
     working_task_id: int,
 ):
     user = _create_user_client(admin, user_identifier="job")
-    proj = user.add_project(ProjectCreateV1(name="MyProject_uj"))
+    proj = user.add_project(ProjectCreateV2(name="MyProject_uj"))
     ds = user.add_dataset(
-        proj.id, DatasetCreateV1(name="MyDataset_uj", type="type")
+        proj.id, DatasetCreateV2(name="MyDataset_uj", zarr_dir="/invalid/zarr")
     )
-    user.add_resource(
-        proj.id,
-        ds.id,
-        resource=ResourceCreateV1(path="/invalidpath"),
-    )
-    wf = user.add_workflow(proj.id, WorkflowCreateV1(name="MyWorkflow_uj"))
+    wf = user.add_workflow(proj.id, WorkflowCreateV2(name="MyWorkflow_uj"))
     user.add_workflowtask(
-        proj.id, wf.id, working_task_id, WorkflowTaskCreateV1()
+        proj.id, wf.id, working_task_id, WorkflowTaskCreateV2()
     )
     num_jobs_per_workflow = 100
     for i in range(num_jobs_per_workflow):
-        user.apply_workflow(
-            proj.id, wf.id, ds.id, ds.id, applyworkflow=ApplyWorkflowCreateV1()
-        )
+        user.submit_job(proj.id, wf.id, ds.id, applyworkflow=JobCreateV2())
 
 
 if __name__ == "__main__":
