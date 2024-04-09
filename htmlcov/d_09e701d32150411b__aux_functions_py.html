@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="d_09e701d32150411b_dataset_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.4">coverage.py v7.4.4</a>,
-            created at 2024-04-09 08:42 +0000
+            created at 2024-04-09 09:20 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -466,8 +466,8 @@
     <p class="run"><span class="n"><a id="t382" href="#t382">382</a></span><span class="t"><span class="key">def</span> <span class="nam">_get_submitted_jobs_statement</span><span class="op">(</span><span class="op">)</span> <span class="op">-></span> <span class="nam">SelectOfScalar</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t383" href="#t383">383</a></span><span class="t">    <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t384" href="#t384">384</a></span><span class="t"><span class="str">    Returns:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t385" href="#t385">385</a></span><span class="t"><span class="str">        A sqlmodel statement that selects all `ApplyWorkflow`s with</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t386" href="#t386">386</a></span><span class="t"><span class="str">        `ApplyWorkflow.status` equal to `submitted`.</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t385" href="#t385">385</a></span><span class="t"><span class="str">        A sqlmodel statement that selects all `Job`s with</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t386" href="#t386">386</a></span><span class="t"><span class="str">        `Job.status` equal to `submitted`.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t387" href="#t387">387</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t388" href="#t388">388</a></span><span class="t">    <span class="nam">stm</span> <span class="op">=</span> <span class="nam">select</span><span class="op">(</span><span class="nam">JobV2</span><span class="op">)</span><span class="op">.</span><span class="nam">where</span><span class="op">(</span><span class="nam">JobV2</span><span class="op">.</span><span class="nam">status</span> <span class="op">==</span> <span class="nam">JobStatusTypeV1</span><span class="op">.</span><span class="nam">SUBMITTED</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t389" href="#t389">389</a></span><span class="t">    <span class="key">return</span> <span class="nam">stm</span>&nbsp;</span><span class="r"></span></p>
@@ -589,7 +589,7 @@
             <a id="nextFileLink" class="nav" href="d_09e701d32150411b_dataset_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.4">coverage.py v7.4.4</a>,
-            created at 2024-04-09 08:42 +0000
+            created at 2024-04-09 09:20 +0000
         </p>
     </div>
 </footer>

@@ -61,7 +61,7 @@
 | fractal\_server/app/runner/executors/slurm/\_executor\_wait\_thread.py    |       47 |        3 |       16 |        1 |     94% |93->exit, 124-127 |
 | fractal\_server/app/runner/executors/slurm/\_slurm\_config.py             |      155 |        9 |       54 |        6 |     93% |163-164, 181->185, 309, 327, 333, 348-355, 435-436 |
 | fractal\_server/app/runner/executors/slurm/\_subprocess\_run\_as\_user.py |       45 |        1 |       16 |        1 |     97% |        88 |
-| fractal\_server/app/runner/executors/slurm/executor.py                    |      413 |       32 |      141 |        9 |     92% |163, 175, 492, 585, 594, 601, 824-833, 849-853, 875-885, 900, 967, 1046-1053, 1114->1113, 1179-1185 |
+| fractal\_server/app/runner/executors/slurm/executor.py                    |      413 |       27 |      141 |       10 |     93% |163, 175, 492, 585, 594, 601, 831, 849-853, 875-885, 900, 967, 1046-1053, 1114->1113, 1179-1185 |
 | fractal\_server/app/runner/filenames.py                                   |        6 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/runner/set\_start\_and\_last\_task\_index.py          |       15 |        0 |       12 |        0 |    100% |           |
 | fractal\_server/app/runner/task\_files.py                                 |       35 |        1 |        4 |        1 |     95% |        75 |
@@ -133,7 +133,7 @@
 | fractal\_server/tasks/v2/background\_operations.py                        |      158 |        2 |       38 |        5 |     96% |90->exit, 121->exit, 143, 226, 245->250 |
 | fractal\_server/tasks/v2/get\_collection\_data.py                         |       11 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/utils.py                                                  |       22 |        0 |        2 |        0 |    100% |           |
-|                                                                 **TOTAL** | **7411** |  **355** | **2136** |  **332** | **92%** |           |
+|                                                                 **TOTAL** | **7411** |  **350** | **2136** |  **333** | **92%** |           |
 
 
 ## Setup coverage badge
