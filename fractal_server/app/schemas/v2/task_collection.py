@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from pydantic import Field
 from pydantic import validator
 
+from .._validators import valdictkeys
 from .._validators import valstr
 from .task import TaskReadV2
 
@@ -43,6 +44,9 @@ class TaskCollectPipV2(BaseModel):
     python_version: Optional[str] = None
     pinned_package_versions: Optional[dict[str, str]] = None
 
+    _pinned_package_versions = validator(
+        "pinned_package_versions", allow_reuse=True
+    )(valdictkeys("pinned_package_versions"))
     _package_extras = validator("package_extras", allow_reuse=True)(
         valstr("package_extras")
     )
