@@ -195,7 +195,7 @@ def _user_flow_job(
     user = _create_user_client(admin, user_identifier="job")
     proj = user.add_project(ProjectCreateV2(name="MyProject_uj"))
     ds = user.add_dataset(
-        proj.id, DatasetCreateV2(name="MyDataset_uj", type="type")
+        proj.id, DatasetCreateV2(name="MyDataset_uj", zarr_dir="/tmp/zarr")
     )
     wf = user.add_workflow(proj.id, WorkflowCreateV2(name="MyWorkflow_uj"))
     user.add_workflowtask(
