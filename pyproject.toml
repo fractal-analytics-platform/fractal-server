@@ -15,6 +15,7 @@ license = "BSD-3-Clause"
 exclude = [
 "fractal_server/.gitignore",
 "fractal_server/data_migrations/old",
+"fractal_server/json_schemas",
 ]
 
 [tool.poetry.urls]
