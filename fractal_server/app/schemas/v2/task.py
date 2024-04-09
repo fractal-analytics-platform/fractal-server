@@ -54,18 +54,19 @@ class TaskCreateV2(BaseModel, extra=Extra.forbid):
     )
     _source = validator("source", allow_reuse=True)(valstr("source"))
     _version = validator("version", allow_reuse=True)(valstr("version"))
+
     _meta_non_parallel = validator("meta_non_parallel", allow_reuse=True)(
         valdictkeys("meta_non_parallel")
     )
     _meta_parallel = validator("meta_parallel", allow_reuse=True)(
         valdictkeys("meta_parallel")
     )
-    _args_schema_non_parallel = validator(
-        "args_schema_non_parallel", allow_reuse=True
-    )(valdictkeys("args_schema_non_parallel"))
-    _args_schema_parallel = validator(
-        "args_schema_parallel", allow_reuse=True
-    )(valdictkeys("args_schema_parallel"))
+    # _args_schema_non_parallel = validator(
+    #     "args_schema_non_parallel", allow_reuse=True
+    # )(valdictkeys("args_schema_non_parallel"))
+    # _args_schema_parallel = validator(
+    #     "args_schema_parallel", allow_reuse=True
+    # )(valdictkeys("args_schema_parallel"))
     _args_schema_version = validator("args_schema_version", allow_reuse=True)(
         valstr("args_schema_version")
     )
