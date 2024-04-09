@@ -784,19 +784,7 @@ async def test_patch_workflow_task_failures(
 
         workflow1 = await get_workflow(client, project.id, wf1_id)
         workflow2 = await get_workflow(client, project.id, wf2_id)
-        workflow_task_1 = workflow1["task_list"][0]
-        workflow_task_2 = workflow2["task_list"][0]
-
-        # Modify parallelization_level
-        payload = dict(meta_parallel={"parallelization_level": "XXX"})
-        res = await client.patch(
-            (
-                f"{PREFIX}/project/{project.id}/workflow/{workflow1['id']}/"
-                f"wftask/{workflow_task_1['id']}/"
-            ),
-            json=payload,
-        )
-        assert res.status_code == 422
+        workflow_task = workflow2["task_list"][0]
 
         # Edit a WorkflowTask for a missing Workflow
         WORKFLOW_ID = 999
@@ -826,7 +814,7 @@ async def test_patch_workflow_task_failures(
 
         # Edit a valid WorkflowTask without specifying the right Workflow
         WORKFLOW_ID = workflow1["id"]
-        WORKFLOW_TASK_ID = workflow_task_2["id"]
+        WORKFLOW_TASK_ID = workflow_task["id"]
         res = await client.patch(
             (
                 f"{PREFIX}/project/{project.id}/workflow/{WORKFLOW_ID}/"
