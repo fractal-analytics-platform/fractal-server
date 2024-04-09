@@ -6,7 +6,6 @@ from devtools import debug
 from sqlmodel import select
 
 from fractal_server.app.models.v2 import DatasetV2
-from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.routes.api.v2._aux_functions import (
@@ -212,7 +211,7 @@ async def test_delete_project(
     job_factory_v2,
     task_factory_v2,
 ):
-    async with MockCurrentUser():
+    async with MockCurrentUser(user_kwargs={"is_superuser": True}):
         res = await client.get(f"{PREFIX}/project/")
         data = res.json()
         assert len(data) == 0
@@ -239,7 +238,6 @@ async def test_delete_project(
         await _workflow_insert_task(workflow_id=wf.id, task_id=t.id, db=db)
 
         # Add a job to the project
-
         await job_factory_v2(
             project_id=p["id"],
             workflow_id=wf.id,
@@ -249,13 +247,12 @@ async def test_delete_project(
         )
 
         # Check that a project-related job exists - via query
-        stm = select(JobV2).where(JobV2.project_id == p["id"])
-        res = (await db.execute(stm)).scalars().all()
-        assert len(res) == 1
-        job = res[0]
-        assert job.project_id == p["id"]
-        assert job.dataset_id == dataset_id
-        assert job.workflow_id == wf.id
+        res = await client.get(f"{PREFIX}/job/")
+        assert res.status_code == 200
+        job = res.json()[0]
+        assert job["project_id"] == p["id"]
+        assert job["dataset_id"] == dataset_id
+        assert job["workflow_id"] == wf.id
 
         # Delete the project
         res = await client.delete(f"{PREFIX}/project/{p['id']}/")
@@ -281,10 +278,13 @@ async def test_delete_project(
         assert len(workflows) == 0
 
         # Assert that total number of jobs is still 1, but without project_id
-        await db.refresh(job)
-        assert job.project_id is None
-        assert job.dataset_id is None
-        assert job.workflow_id is None
+        res = await client.get("/admin/v2/job/")
+        debug(res.json())
+        assert res.status_code == 200
+        job = res.json()[0]
+        assert job["project_id"] is None
+        assert job["dataset_id"] is None
+        assert job["workflow_id"] is None
 
 
 async def test_delete_project_ongoing_jobs(
