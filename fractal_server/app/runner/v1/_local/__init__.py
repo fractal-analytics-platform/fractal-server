@@ -49,7 +49,8 @@ def _process_workflow(
 
     Schedules the workflow using a `FractalThreadPoolExecutor`.
 
-    Cf. [process_workflow][fractal_server.app.runner._local.process_workflow]
+    Cf.
+    [process_workflow][fractal_server.app.runner.v1._local.process_workflow]
     for the call signature.
     """
 

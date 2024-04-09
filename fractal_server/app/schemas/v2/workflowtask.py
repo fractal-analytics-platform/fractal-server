@@ -8,6 +8,7 @@ from pydantic import Field
 from pydantic import root_validator
 from pydantic import validator
 
+from .._validators import valdictkeys
 from .._validators import valint
 from ..v1.task import TaskExportV1
 from ..v1.task import TaskImportV1
@@ -49,7 +50,18 @@ class WorkflowTaskCreateV2(BaseModel, extra=Extra.forbid):
     is_legacy_task: bool = False
 
     # Validators
-
+    _meta_non_parallel = validator("meta_non_parallel", allow_reuse=True)(
+        valdictkeys("meta_non_parallel")
+    )
+    _meta_parallel = validator("meta_parallel", allow_reuse=True)(
+        valdictkeys("meta_parallel")
+    )
+    _args_non_parallel = validator("args_non_parallel", allow_reuse=True)(
+        valdictkeys("args_non_parallel")
+    )
+    _args_parallel = validator("args_parallel", allow_reuse=True)(
+        valdictkeys("args_parallel")
+    )
     _order = validator("order", allow_reuse=True)(valint("order", min_val=0))
 
     @root_validator
@@ -96,6 +108,21 @@ class WorkflowTaskUpdateV2(BaseModel):
     input_filters: Optional[Filters]
 
 
+    # Validators
+    _meta_non_parallel = validator("meta_non_parallel", allow_reuse=True)(
+        valdictkeys("meta_non_parallel")
+    )
+    _meta_parallel = validator("meta_parallel", allow_reuse=True)(
+        valdictkeys("meta_parallel")
+    )
+    _args_non_parallel = validator("args_non_parallel", allow_reuse=True)(
+        valdictkeys("args_non_parallel")
+    )
+    _args_parallel = validator("args_parallel", allow_reuse=True)(
+        valdictkeys("args_parallel")
+    )
+
+
 class WorkflowTaskImportV2(BaseModel):
 
     meta_non_parallel: Optional[dict[str, Any]] = None
@@ -108,6 +135,19 @@ class WorkflowTaskImportV2(BaseModel):
     is_legacy_task: bool = False
     task: Optional[TaskImportV2] = None
     task_legacy: Optional[TaskImportV1] = None
+
+    _meta_non_parallel = validator("meta_non_parallel", allow_reuse=True)(
+        valdictkeys("meta_non_parallel")
+    )
+    _meta_parallel = validator("meta_parallel", allow_reuse=True)(
+        valdictkeys("meta_parallel")
+    )
+    _args_non_parallel = validator("args_non_parallel", allow_reuse=True)(
+        valdictkeys("args_non_parallel")
+    )
+    _args_parallel = validator("args_parallel", allow_reuse=True)(
+        valdictkeys("args_parallel")
+    )
 
 
 class WorkflowTaskExportV2(BaseModel):

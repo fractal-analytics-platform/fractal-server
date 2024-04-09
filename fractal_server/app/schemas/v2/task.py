@@ -9,6 +9,7 @@ from pydantic import HttpUrl
 from pydantic import root_validator
 from pydantic import validator
 
+from .._validators import valdictkeys
 from .._validators import valstr
 
 
@@ -20,8 +21,8 @@ class TaskCreateV2(BaseModel, extra=Extra.forbid):
     command_parallel: Optional[str]
     source: str
 
-    meta_parallel: Optional[dict[str, Any]]
     meta_non_parallel: Optional[dict[str, Any]]
+    meta_parallel: Optional[dict[str, Any]]
     version: Optional[str]
     args_schema_non_parallel: Optional[dict[str, Any]]
     args_schema_parallel: Optional[dict[str, Any]]
@@ -53,8 +54,27 @@ class TaskCreateV2(BaseModel, extra=Extra.forbid):
     )
     _source = validator("source", allow_reuse=True)(valstr("source"))
     _version = validator("version", allow_reuse=True)(valstr("version"))
+
+    _meta_non_parallel = validator("meta_non_parallel", allow_reuse=True)(
+        valdictkeys("meta_non_parallel")
+    )
+    _meta_parallel = validator("meta_parallel", allow_reuse=True)(
+        valdictkeys("meta_parallel")
+    )
+    _args_schema_non_parallel = validator(
+        "args_schema_non_parallel", allow_reuse=True
+    )(valdictkeys("args_schema_non_parallel"))
+    _args_schema_parallel = validator(
+        "args_schema_parallel", allow_reuse=True
+    )(valdictkeys("args_schema_parallel"))
     _args_schema_version = validator("args_schema_version", allow_reuse=True)(
         valstr("args_schema_version")
+    )
+    _input_types = validator("input_types", allow_reuse=True)(
+        valdictkeys("input_types")
+    )
+    _output_types = validator("output_types", allow_reuse=True)(
+        valdictkeys("output_types")
     )
 
 
@@ -106,6 +126,12 @@ class TaskUpdateV2(BaseModel):
     _command_non_parallel = validator(
         "command_non_parallel", allow_reuse=True
     )(valstr("command_non_parallel"))
+    _input_types = validator("input_types", allow_reuse=True)(
+        valdictkeys("input_types")
+    )
+    _output_types = validator("output_types", allow_reuse=True)(
+        valdictkeys("output_types")
+    )
 
 
 class TaskImportV2(BaseModel):

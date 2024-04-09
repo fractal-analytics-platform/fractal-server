@@ -32,7 +32,7 @@ def assemble_history_failed_job(
     job: JobV2,
     dataset: DatasetV2,
     workflow: WorkflowV2,
-    logger: logging.Logger,
+    logger_name: Optional[str] = None,
     failed_wftask: Optional[WorkflowTaskV2] = None,
 ) -> list[dict[str, Any]]:
     """
@@ -40,12 +40,12 @@ def assemble_history_failed_job(
 
     Args:
         job:
-            The failed `ApplyWorkflow` object.
-        output_dataset:
-            The `dataset` associated to `job`.
+            The failed `JobV2` object.
+        dataset:
+            The `DatasetV2` object associated to `job`.
         workflow:
-            The `workflow` associated to `job`.
-        logger: A logger instance.
+            The `WorkflowV2` object associated to `job`.
+        logger_name: A logger name.
         failed_wftask:
             If set, append it to `history` during step 3; if `None`, infer
             it by comparing the job task list and the one in
@@ -53,8 +53,10 @@ def assemble_history_failed_job(
 
     Returns:
         The new value of `history`, to be merged into
-        `output_dataset.meta`.
+        `dataset.meta`.
     """
+
+    logger = logging.getLogger(logger_name)
 
     # The final value of the history attribute should include up to three
     # parts, coming from: the database, the temporary file, the failed-task

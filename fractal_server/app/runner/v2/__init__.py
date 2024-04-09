@@ -248,7 +248,7 @@ async def submit_workflow(
             job,
             dataset,
             workflow,
-            logger,
+            logger_name=logger_name,
             failed_wftask=failed_wftask,
         )
         latest_filters = assemble_filters_failed_job(job)
@@ -283,7 +283,7 @@ async def submit_workflow(
             job,
             dataset,
             workflow,
-            logger,
+            logger_name=logger_name,
         )
         latest_filters = assemble_filters_failed_job(job)
         if latest_filters is not None:
@@ -313,7 +313,7 @@ async def submit_workflow(
             job,
             dataset,
             workflow,
-            logger,
+            logger_name=logger_name,
         )
         latest_filters = assemble_filters_failed_job(job)
         if latest_filters is not None:
