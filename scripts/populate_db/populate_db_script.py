@@ -61,7 +61,7 @@ def _user_flow_vanilla(
     user = _create_user_client(admin, user_identifier="vanilla")
     proj = user.add_project(ProjectCreateV2(name="MyProject_uv"))
     ds = user.add_dataset(
-        proj.id, DatasetCreateV2(name="MyDataset", zarr_dir="/tmp/zarr")
+        proj.id, DatasetCreateV2(name="MyDataset", zarr_dir="/invalid/zarr")
     )
     wf = user.add_workflow(proj.id, WorkflowCreateV2(name="MyWorkflow"))
     user.add_workflowtask(
@@ -103,7 +103,7 @@ def _user_flow_power(
         for ind_job in range(num_jobs_per_workflow):
             ds = user.add_dataset(
                 proj.id,
-                DatasetCreateV2(name="MyDataset", zarr_dir="/tmp/zarr"),
+                DatasetCreateV2(name="MyDataset", zarr_dir="/invalid/zarr"),
             )
             user.submit_job(
                 proj.id,
@@ -129,7 +129,9 @@ def _user_flow_dataset(
     for i in range(n_datasets):
         ds = user.add_dataset(
             proj.id,
-            DatasetCreateV2(name=f"MyDataset_us-{i}", zarr_dir="/tmp/zarr"),
+            DatasetCreateV2(
+                name=f"MyDataset_us-{i}", zarr_dir="/invalid/zarr"
+            ),
         )
         ds_list.append(ds)
 
@@ -166,7 +168,9 @@ def _user_flow_project(
         proj = user.add_project(ProjectCreateV2(name=f"MyProject_upj-{i}"))
         ds = user.add_dataset(
             proj.id,
-            DatasetCreateV2(name=f"MyDataset_up-{i}", zarr_dir="/tmp/zarr"),
+            DatasetCreateV2(
+                name=f"MyDataset_up-{i}", zarr_dir="/invalid/zarr"
+            ),
         )
         wf = user.add_workflow(
             proj.id, WorkflowCreateV2(name=f"MyWorkflow_up-{i}")
@@ -195,7 +199,7 @@ def _user_flow_job(
     user = _create_user_client(admin, user_identifier="job")
     proj = user.add_project(ProjectCreateV2(name="MyProject_uj"))
     ds = user.add_dataset(
-        proj.id, DatasetCreateV2(name="MyDataset_uj", zarr_dir="/tmp/zarr")
+        proj.id, DatasetCreateV2(name="MyDataset_uj", zarr_dir="/invalid/zarr")
     )
     wf = user.add_workflow(proj.id, WorkflowCreateV2(name="MyWorkflow_uj"))
     user.add_workflowtask(
