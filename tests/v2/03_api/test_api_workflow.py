@@ -1,4 +1,5 @@
 import json
+import logging
 from datetime import datetime
 from datetime import timezone
 from typing import Literal
@@ -1059,7 +1060,6 @@ async def test_read_workflowtask(MockCurrentUser, project_factory_v2, client):
         assert res.json()["task"] == t
 
 
-@pytest.mark.skip()
 async def test_import_export_workflow(
     client,
     MockCurrentUser,
@@ -1073,8 +1073,8 @@ async def test_import_export_workflow(
     with (testdata_path / "import_export/workflow-v2.json").open("r") as f:
         workflow_from_file = json.load(f)
 
-    await task_factory_v2(name="task", source="PKG_SOURCE:dummy")
-    await task_factory(name="task", source="PKG_SOURCE:dummy")
+    await task_factory_v2(name="task", source="PKG_SOURCE:dummy2")
+    await task_factory(name="task", source="PKG_SOURCE:dummy1")
 
     # Create project
     async with MockCurrentUser() as user:
@@ -1101,6 +1101,7 @@ async def test_import_export_workflow(
     debug(res.status_code)
     workflow_exported = res.json()
     debug(workflow_exported)
+
     assert "id" not in workflow_exported
     assert "project_id" not in workflow_exported
     for wftask in workflow_exported["task_list"]:
@@ -1122,16 +1123,15 @@ async def test_import_export_workflow(
     assert len(wf_old["task_list"]) == len(wf_new["task_list"])
     for task_old, task_new in zip(wf_old["task_list"], wf_new["task_list"]):
         assert task_old.keys() <= task_new.keys()
-        if "meta_parallel" in task_old:
-            # then "meta_parallel" is also in task_new
-            assert (
-                task_old["meta_parallel"].items()
-                <= task_new["meta_parallel"].items()
-            )
-            task_old.pop("meta_parallel")
-            task_new.pop("meta_parallel")
-        elif "meta_parallel" in task_new:  # but not in task_old
-            task_new.pop("meta_parallel")
+        for meta in ["meta_parallel", "meta_non_parallel"]:
+            if task_old.get(meta):
+                # then 'meta' is also in task_new
+                debug(meta)
+                assert task_old[meta].items() <= task_new[meta].items()
+                task_old.pop(meta)
+                task_new.pop(meta)
+            elif task_new.get(meta):  # but not in task_old
+                task_new.pop(meta)
         debug(task_old, task_new)
         assert task_old == task_new
 
@@ -1186,7 +1186,65 @@ async def test_task_legacy_is_v2_compatible(
         assert res.status_code == 201
 
 
-# FIXME
-# Missing V2 for:
-# - test_export_workflow_log
-# - test_import_export_workflow_fail
+async def test_export_workflow_log(
+    client,
+    MockCurrentUser,
+    task_factory_v2,
+    project_factory_v2,
+    workflow_factory_v2,
+    caplog,
+):
+    """
+    WHEN exporting a workflow with custom tasks
+    THEN there must be a warning
+    """
+
+    # Create project and task
+    async with MockCurrentUser() as user:
+        TASK_OWNER = "someone"
+        task = await task_factory_v2(owner=TASK_OWNER, source="some-source")
+        prj = await project_factory_v2(user)
+        wf = await workflow_factory_v2(project_id=prj.id)
+
+    # Insert WorkflowTasks
+    res = await client.post(
+        (
+            f"api/v2/project/{prj.id}/workflow/{wf.id}/wftask/"
+            f"?task_id={task.id}"
+        ),
+        json={},
+    )
+    assert res.status_code == 201
+
+    # Export workflow
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+    res = await client.get(
+        f"/api/v2/project/{prj.id}/workflow/{wf.id}/export/"
+    )
+    assert res.status_code == 200
+    debug(caplog.text)
+    assert "not meant to be portable" in caplog.text
+
+
+async def test_import_export_workflow_fail(
+    client,
+    MockCurrentUser,
+    project_factory_v2,
+    task_factory,
+):
+    async with MockCurrentUser() as user:
+        prj = await project_factory_v2(user)
+
+    await task_factory(name="valid", source="test_source")
+    payload = {
+        "name": "MyWorkflow",
+        "task_list": [
+            {"order": 0, "task": {"name": "dummy", "source": "xyz"}}
+        ],
+    }
+    res = await client.post(
+        f"/api/v2/project/{prj.id}/workflow/import/", json=payload
+    )
+    assert res.status_code == 422
+    assert "Found 0 tasks with source" in res.json()["detail"]

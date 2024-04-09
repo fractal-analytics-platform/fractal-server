@@ -66,7 +66,7 @@ def execute_tasks_v2(
         for image in filtered_images:
             if not match_filter(image, Filters(types=task.input_types)):
                 raise ValueError(
-                    f"Filtered images include {image.dict()}, which does "
+                    f"Filtered images include {image}, which does "
                     f"not comply with {task.input_types=}."
                 )
 
