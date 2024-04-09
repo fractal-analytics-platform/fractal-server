@@ -19,7 +19,7 @@ router_api_v2.include_router(dataset_router_v2, tags=["V2 Dataset"])
 router_api_v2.include_router(job_router_v2, tags=["V2 Job"])
 router_api_v2.include_router(images_routes_v2, tags=["V2 Images"])
 router_api_v2.include_router(project_router_v2, tags=["V2 Project"])
-router_api_v2.include_router(submit_job_router_v2, tags=["V2 Submit Job"])
+router_api_v2.include_router(submit_job_router_v2, tags=["V2 Job"])
 router_api_v2.include_router(task_router_v2, prefix="/task", tags=["V2 Task"])
 router_api_v2.include_router(
     task_collection_router_v2, prefix="/task", tags=["V2 Task Collection"]
