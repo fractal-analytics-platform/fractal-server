@@ -417,8 +417,6 @@ class FractalSlurmExecutor(SlurmExecutor):
                 A `TaskFiles` object; if `None`, use
                 `self.get_default_task_files()`.
 
-        Returns:
-            An iterator of results.
         """
 
         def _result_or_cancel(fut):

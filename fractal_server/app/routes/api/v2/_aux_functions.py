@@ -39,7 +39,6 @@ async def _get_project_check_owner(
         project_id:
         user_id:
         db:
-        version:
 
     Returns:
         The project object
@@ -406,11 +405,16 @@ async def _workflow_insert_task(
     Insert a new WorkflowTask into Workflow.task_list
 
     Args:
-        task_id: TBD
-        args: TBD
-        meta: TBD
-        order: TBD
-        db: TBD
+        workflow_id:
+        task_id:
+        is_legacy_task:
+        order:
+        meta_parallel:
+        meta_non_parallel:
+        args_non_parallel:
+        args_parallel:
+        input_filters:
+        db:
     """
     db_workflow = await db.get(WorkflowV2, workflow_id)
     if db_workflow is None:

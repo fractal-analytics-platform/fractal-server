@@ -45,7 +45,8 @@ def _process_workflow(
 
     Schedules the workflow using a `FractalThreadPoolExecutor`.
 
-    Cf. [process_workflow][fractal_server.app.runner._local.process_workflow]
+    Cf.
+    [process_workflow][fractal_server.app.runner.v2._local.process_workflow]
     for the call signature.
     """
 
@@ -91,21 +92,21 @@ async def process_workflow(
     Args:
         workflow:
             The workflow to be run
-        input_paths:
-            The paths to the input files to pass to the first task of the
-            workflow
-        output_path:
-            The destination path for the last task of the workflow
-        input_metadata:
-            Initial metadata, passed to the first task
-        logger_name:
-            Name of the logger to log information on the run to
+        dataset:
+            Initial dataset.
         workflow_dir:
             Working directory for this run.
         workflow_dir_user:
             Working directory for this run, on the user side. This argument is
             present for compatibility with the standard backend interface, but
             for the `local` backend it cannot be different from `workflow_dir`.
+        first_task_index:
+            Positional index of the first task to execute; if `None`, start
+            from `0`.
+        last_task_index:
+            Positional index of the last task to execute; if `None`, proceed
+            until the last task.
+        logger_name: Logger name
         slurm_user:
             Username to impersonate to run the workflow. This argument is
             present for compatibility with the standard backend interface, but
@@ -123,12 +124,6 @@ async def process_workflow(
             to the backend executor. This argument is present for compatibility
             with the standard backend interface, but is ignored in the `local`
             backend.
-        first_task_index:
-            Positional index of the first task to execute; if `None`, start
-            from `0`.
-        last_task_index:
-            Positional index of the last task to execute; if `None`, proceed
-            until the last task.
 
     Raises:
         TaskExecutionError: wrapper for errors raised during tasks' execution
