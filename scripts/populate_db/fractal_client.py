@@ -239,7 +239,7 @@ class FractalClient:
                 method="GET",
             )
             if res.status_code != 200:
-                raise
+                raise ValueError(f"Original error: {res.json()}")
             job_statuses = [job["status"] for job in res.json()]
             if "submitted" not in job_statuses:
                 print("No submitted job left.")
