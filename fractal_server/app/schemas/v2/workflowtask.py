@@ -95,16 +95,6 @@ class WorkflowTaskUpdateV2(BaseModel):
     args_parallel: Optional[dict[str, Any]]
     input_filters: Optional[Filters]
 
-    # Validators
-
-    @validator("meta_parallel", "meta_non_parallel")
-    def check_no_parallelisation_level(cls, m):
-        if "parallelization_level" in m:
-            raise ValueError(
-                "Overriding task parallelization level currently not allowed"
-            )
-        return m
-
 
 class WorkflowTaskImportV2(BaseModel):
 
