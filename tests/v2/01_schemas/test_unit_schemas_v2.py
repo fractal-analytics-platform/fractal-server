@@ -42,3 +42,14 @@ def test_extra_on_create_models():
     WorkflowTaskCreateV2()
     with pytest.raises(ValidationError):
         WorkflowTaskCreateV2(foo="bar")
+
+
+def test_validate_legacy_task():
+
+    WorkflowTaskCreateV2(meta_non_parallel={"a": "b"})
+    with pytest.raises(ValidationError):
+        WorkflowTaskCreateV2(is_legacy_task=True, meta_non_parallel={"a": "b"})
+
+    WorkflowTaskCreateV2(args_non_parallel={"a": "b"})
+    with pytest.raises(ValidationError):
+        WorkflowTaskCreateV2(is_legacy_task=True, args_non_parallel={"a": "b"})
