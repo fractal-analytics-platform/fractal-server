@@ -6,6 +6,8 @@ from pydantic import BaseModel
 from pydantic import Field
 from pydantic import validator
 
+from fractal_server.app.schemas._validators import valdictkeys
+
 
 class SingleImage(BaseModel):
 
@@ -14,6 +16,12 @@ class SingleImage(BaseModel):
 
     attributes: dict[str, Any] = Field(default_factory=dict)
     types: dict[str, bool] = Field(default_factory=dict)
+
+    # Validators
+    _attributes = validator("attributes", allow_reuse=True)(
+        valdictkeys("attributes")
+    )
+    _types = validator("types", allow_reuse=True)(valdictkeys("types"))
 
     @validator("attributes")
     def validate_attributes(
@@ -36,6 +44,11 @@ class Filters(BaseModel):
         extra = "forbid"
 
     # Validators
+    _attributes = validator("attributes", allow_reuse=True)(
+        valdictkeys("attributes")
+    )
+    _types = validator("types", allow_reuse=True)(valdictkeys("types"))
+
     @validator("attributes")
     def validate_attributes(
         cls, v: dict[str, Any]
