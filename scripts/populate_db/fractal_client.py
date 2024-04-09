@@ -4,23 +4,21 @@ import time
 import httpx
 from a2wsgi import ASGIMiddleware
 
-from fractal_server.app.schemas.v1 import ApplyWorkflowCreateV1
-from fractal_server.app.schemas.v1 import ApplyWorkflowReadV1
-from fractal_server.app.schemas.v1 import DatasetCreateV1
-from fractal_server.app.schemas.v1 import DatasetReadV1
-from fractal_server.app.schemas.v1 import ProjectCreateV1
-from fractal_server.app.schemas.v1 import ProjectReadV1
-from fractal_server.app.schemas.v1 import ResourceCreateV1
-from fractal_server.app.schemas.v1 import ResourceReadV1
-from fractal_server.app.schemas.v1 import TaskCreateV1
-from fractal_server.app.schemas.v1 import TaskReadV1
-from fractal_server.app.schemas.v1 import UserCreate
-from fractal_server.app.schemas.v1 import UserRead
-from fractal_server.app.schemas.v1 import UserUpdate
-from fractal_server.app.schemas.v1 import WorkflowCreateV1
-from fractal_server.app.schemas.v1 import WorkflowReadV1
-from fractal_server.app.schemas.v1 import WorkflowTaskCreateV1
-from fractal_server.app.schemas.v1 import WorkflowTaskReadV1
+from fractal_server.app.schemas import UserCreate
+from fractal_server.app.schemas import UserRead
+from fractal_server.app.schemas import UserUpdate
+from fractal_server.app.schemas.v2 import DatasetCreateV2
+from fractal_server.app.schemas.v2 import DatasetReadV2
+from fractal_server.app.schemas.v2 import JobCreateV2
+from fractal_server.app.schemas.v2 import JobReadV2
+from fractal_server.app.schemas.v2 import ProjectCreateV2
+from fractal_server.app.schemas.v2 import ProjectReadV2
+from fractal_server.app.schemas.v2 import TaskCreateV2
+from fractal_server.app.schemas.v2 import TaskReadV2
+from fractal_server.app.schemas.v2 import WorkflowCreateV2
+from fractal_server.app.schemas.v2 import WorkflowReadV2
+from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
+from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
 from fractal_server.main import app
 
 DEFAULT_CREDENTIALS = {}
@@ -102,104 +100,88 @@ class FractalClient:
 
         return UserRead(**res.json())
 
-    def add_project(self, project: ProjectCreateV1):
+    def add_project(self, project: ProjectCreateV2):
         res = self.make_request(
-            endpoint="api/v1/project/",
+            endpoint="api/v2/project/",
             method="POST",
             data=project.dict(),
         )
         self.detail(res.json())
-        return ProjectReadV1(**res.json())
+        return ProjectReadV2(**res.json())
 
-    def add_dataset(self, project_id, dataset: DatasetCreateV1):
+    def add_dataset(self, project_id, dataset: DatasetCreateV2):
         res = self.make_request(
-            endpoint=f"api/v1/project/{project_id}/dataset/",
+            endpoint=f"api/v2/project/{project_id}/dataset/",
             method="POST",
             data=dataset.dict(),
         )
         self.detail(res.json())
-        return DatasetReadV1(**res.json())
+        return DatasetReadV2(**res.json())
 
-    def add_resource(
-        self, project_id: int, dataset_id: int, resource: ResourceCreateV1
-    ):
+    def add_workflow(self, project_id, workflow: WorkflowCreateV2):
         res = self.make_request(
-            endpoint=f"api/v1/project/{project_id}/dataset/"
-            f"{dataset_id}/resource/",
-            method="POST",
-            data=resource.dict(),
-        )
-        self.detail(res.json())
-
-        return ResourceReadV1(**res.json())
-
-    def add_workflow(self, project_id, workflow: WorkflowCreateV1):
-        res = self.make_request(
-            endpoint=f"api/v1/project/{project_id}/workflow/",
+            endpoint=f"api/v2/project/{project_id}/workflow/",
             method="POST",
             data=workflow.dict(),
         )
         self.detail(res.json())
 
-        return WorkflowReadV1(**res.json())
+        return WorkflowReadV2(**res.json())
 
     def add_workflowtask(
         self,
         project_id: int,
         workflow_id: int,
         task_id: int,
-        wftask: WorkflowTaskCreateV1,
+        wftask: WorkflowTaskCreateV2,
     ):
         res = self.make_request(
-            endpoint=f"api/v1/project/{project_id}/workflow/"
+            endpoint=f"api/v2/project/{project_id}/workflow/"
             f"{workflow_id}/wftask/?{task_id=}",
             method="POST",
             data=wftask.dict(exclude_none=True),
         )
         self.detail(res.json())
 
-        return WorkflowTaskReadV1(**res.json())
+        return WorkflowTaskReadV2(**res.json())
 
     def add_working_task(self):
-        task = TaskCreateV1(
-            source="echo-task",
+        task = TaskCreateV2(
             name="Echo Task",
-            command="echo",
-            input_type="Any",
-            output_type="Any",
+            source="echo-task",
+            command_non_parallel="echo",
+            command_parallel="echo",
         )
         res = self.make_request(
-            endpoint="api/v1/task/",
+            endpoint="api/v2/task/",
             method="POST",
             data=task.dict(exclude_none=True),
         )
         self.detail(res.json())
-        return TaskReadV1(**res.json())
+        return TaskReadV2(**res.json())
 
     def add_failing_task(self):
-        task = TaskCreateV1(
+        task = TaskCreateV2(
             source="ls-task",
             name="Ls Task",
-            command="ls",
-            input_type="Any",
-            output_type="Any",
+            command_non_parallel="ls",
         )
         res = self.make_request(
-            endpoint="api/v1/task/",
+            endpoint="api/v2/task/",
             method="POST",
             data=task.dict(exclude_none=True),
         )
         self.detail(res.json())
-        return TaskReadV1(**res.json())
+        return TaskReadV2(**res.json())
 
-    def add_task(self, task: TaskCreateV1):
+    def add_task(self, task: TaskCreateV2):
         res = self.make_request(
-            endpoint="api/v1/task/",
+            endpoint="api/v2/task/",
             method="POST",
             data=task.dict(exclude_none=True),
         )
         self.detail(res.json())
-        return TaskReadV1(**res.json())
+        return TaskReadV2(**res.json())
 
     def whoami(self):
         res = self.make_request(
@@ -219,25 +201,24 @@ class FractalClient:
         self.detail(res.json())
         return UserRead(**res.json())
 
-    def apply_workflow(
+    def submit_job(
         self,
         project_id: int,
         workflow_id: int,
-        in_dataset_id: int,
-        out_dataset_id: int,
-        applyworkflow: ApplyWorkflowCreateV1,
+        dataset_id: int,
+        applyworkflow: JobCreateV2,
     ):
         res = self.make_request(
-            endpoint=f"api/v1/project/{project_id}/"
-            f"workflow/{workflow_id}/apply/"
-            f"?input_dataset_id={in_dataset_id}"
-            f"&output_dataset_id={out_dataset_id}",
+            endpoint=(
+                f"api/v2/project/{project_id}/job/submit/"
+                f"?dataset_id={dataset_id}&workflow_id={workflow_id}"
+            ),
             method="POST",
             data=applyworkflow.dict(exclude_none=True),
         )
         self.detail(res.json())
 
-        return ApplyWorkflowReadV1(**res.json())
+        return JobReadV2(**res.json())
 
     def wait_for_all_jobs(
         self,
@@ -248,11 +229,11 @@ class FractalClient:
         me = self.whoami()
         is_superuser = me.is_superuser
         if is_superuser:
-            endpoint = "admin/job/"
+            endpoint = "admin/v2/job/"
         else:
-            endpoint = "api/v1/job/"
+            endpoint = "api/v2/job/"
         # Make repeated calls
-        for ind_call in range(max_calls):
+        for _ in range(max_calls):
             res = self.make_request(
                 endpoint=endpoint,
                 method="GET",
