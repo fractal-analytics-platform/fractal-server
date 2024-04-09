@@ -382,8 +382,8 @@ async def _get_task_check_owner(
 def _get_submitted_jobs_statement() -> SelectOfScalar:
     """
     Returns:
-        A sqlmodel statement that selects all `ApplyWorkflow`s with
-        `ApplyWorkflow.status` equal to `submitted`.
+        A sqlmodel statement that selects all `Job`s with
+        `Job.status` equal to `submitted`.
     """
     stm = select(JobV2).where(JobV2.status == JobStatusTypeV1.SUBMITTED)
     return stm

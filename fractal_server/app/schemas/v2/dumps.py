@@ -5,7 +5,7 @@ Dump models differ from their Read counterpart in that:
 * They may only include a subset of the Read attributes.
 
 These models are used in at least two situations:
-1. In the "*_dump" attributes of ApplyWorkflow models;
+1. In the "*_dump" attributes of Job models;
 2. In the `_DatasetHistoryItem.workflowtask` model, to trim its size.
 """
 from typing import Optional
