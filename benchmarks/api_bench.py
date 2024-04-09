@@ -49,6 +49,7 @@ def get_clean_API_paths() -> list[str]:
             if "get" in path_data
         ]
         excluded_patterns = [
+            re.compile(r"/api/v1/"),
             re.compile(r"/api/v2/task/"),
             re.compile(r"/auth/"),
             re.compile(r"/admin/"),
