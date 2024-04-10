@@ -1,9 +1,10 @@
 from typing import TypeVar
 
 from ....images import SingleImage
+from ....images import SingleImageTaskOutput
 from .task_interface import InitArgsModel
 
-T = TypeVar("T", SingleImage, InitArgsModel)
+T = TypeVar("T", SingleImage, SingleImageTaskOutput, InitArgsModel)
 
 
 def deduplicate_list(
