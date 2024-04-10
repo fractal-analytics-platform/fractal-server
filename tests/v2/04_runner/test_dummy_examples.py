@@ -127,7 +127,6 @@ def test_dummy_remove_images(
     assert "Cannot remove missing image" in error_msg
 
 
-@pytest.mark.skip("Not yet implemented in the runner")
 def test_dummy_unset_attribute(
     tmp_path: Path, executor: Executor, fractal_tasks_mock_venv
 ):
@@ -146,11 +145,12 @@ def test_dummy_unset_attribute(
             dict(
                 zarr_url=Path(zarr_dir, "my-image").as_posix(),
                 attributes={"key1": "value1", "key2": "value2"},
+                types={},
             )
         ],
     )
 
-    # Unset an existing attribute
+    # Unset an existing attribute (starting from dataset_pre)
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
@@ -164,18 +164,53 @@ def test_dummy_unset_attribute(
         **execute_tasks_v2_args,
     )
     debug(dataset_attrs["images"])
+    assert "key2" not in dataset_attrs["images"][0]["attributes"].keys()
 
-    # Unset a missing attribute
+    # Unset a missing attribute (starting from dataset_pre)
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv["dummy_unset_attribute"],
                 args_non_parallel=dict(attribute="missing-attribute"),
-                id=0,
-                order=0,
+                id=1,
+                order=1,
             )
         ],
         dataset=dataset_pre,
         **execute_tasks_v2_args,
     )
     debug(dataset_attrs["images"])
+    assert dataset_attrs["images"][0]["attributes"] == {
+        "key1": "value1",
+        "key2": "value2",
+    }
+
+
+def test_dummy_insert_single_image_none_attribute(
+    tmp_path: Path, executor: Executor, fractal_tasks_mock_venv
+):
+    # Preliminary setup
+    execute_tasks_v2_args = dict(
+        executor=executor,
+        workflow_dir=tmp_path / "job_dir",
+        workflow_dir_user=tmp_path / "job_dir",
+    )
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+
+    # Run successfully on an empty dataset
+    dataset_attrs = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTaskV2Mock(
+                task=fractal_tasks_mock_venv["dummy_insert_single_image"],
+                args_non_parallel=dict(attributes={"attribute-name": None}),
+                id=0,
+                order=0,
+            )
+        ],
+        dataset=DatasetV2Mock(name="dataset", zarr_dir=zarr_dir),
+        **execute_tasks_v2_args,
+    )
+    debug(dataset_attrs["images"])
+    assert (
+        "attribute-name" not in dataset_attrs["images"][0]["attributes"].keys()
+    )

@@ -3,7 +3,7 @@ from typing import Any
 from pydantic import BaseModel
 from pydantic import Field
 
-from ....images import SingleImage
+from ....images import SingleImageTaskOutput
 from fractal_server.images import Filters
 
 
@@ -11,7 +11,9 @@ class TaskOutput(BaseModel):
     class Config:
         extra = "forbid"
 
-    image_list_updates: list[SingleImage] = Field(default_factory=list)
+    image_list_updates: list[SingleImageTaskOutput] = Field(
+        default_factory=list
+    )
     image_list_removals: list[str] = Field(default_factory=list)
     filters: Filters = Field(default_factory=Filters)
 
