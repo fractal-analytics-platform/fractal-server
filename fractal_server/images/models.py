@@ -10,7 +10,16 @@ from pydantic import validator
 from fractal_server.app.schemas._validators import valdictkeys
 
 
-class SingleImage(BaseModel):
+class SingleImageBase(BaseModel):
+    """
+    Base for SingleImage and SingleImageTaskOutput.
+
+    Attributes:
+        zarr_url:
+        origin:
+        attributes:
+        types:
+    """
 
     zarr_url: str
     origin: Optional[str] = None
@@ -23,6 +32,31 @@ class SingleImage(BaseModel):
         valdictkeys("attributes")
     )
     _types = validator("types", allow_reuse=True)(valdictkeys("types"))
+
+
+class SingleImageTaskOutput(SingleImageBase):
+    """
+    `SingleImageBase`, with scalar `attributes` values (`None` included).
+    """
+
+    @validator("attributes")
+    def validate_attributes(
+        cls, v: dict[str, Any]
+    ) -> dict[str, Union[int, float, str, bool, None]]:
+        for key, value in v.items():
+            if not isinstance(value, (int, float, str, bool, type(None))):
+                raise ValueError(
+                    f"SingleImageTaskOutput.attributes[{key}] must be a "
+                    "scalar (int, float, str or bool). "
+                    f"Given {value} ({type(value)})"
+                )
+        return v
+
+
+class SingleImage(SingleImageBase):
+    """
+    `SingleImageBase`, with scalar `attributes` values (`None` excluded).
+    """
 
     @validator("attributes")
     def validate_attributes(

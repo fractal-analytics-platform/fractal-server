@@ -609,6 +609,7 @@ def test_channel_parallelization_with_overwrite(
                     "illumination_correction_compound"
                 ],
                 args_non_parallel=dict(overwrite_input=True),
+                args_parallel=dict(another_argument="something"),
                 id=1,
                 order=1,
             ),
@@ -647,7 +648,7 @@ def test_channel_parallelization_no_overwrite(
         **execute_tasks_v2_args,
     )
 
-    # Run init_channel_parallelization
+    # Run illumination_correction_compound
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
@@ -655,6 +656,7 @@ def test_channel_parallelization_no_overwrite(
                     "illumination_correction_compound"
                 ],
                 args_non_parallel=dict(overwrite_input=False),
+                args_parallel=dict(another_argument="something"),
                 id=1,
                 order=1,
             ),
