@@ -57,8 +57,6 @@ async def post_new_image(
     )
     dataset = output["dataset"]
 
-    new_image.zarr_url = normpath(new_image.zarr_url)
-
     if not new_image.zarr_url.startswith(dataset.zarr_dir):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,

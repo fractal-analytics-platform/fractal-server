@@ -1,3 +1,4 @@
+from os.path import normpath
 from typing import Any
 from typing import Optional
 from typing import Union
@@ -34,6 +35,11 @@ class SingleImage(BaseModel):
                     f"(int, float, str or bool). Given {value} ({type(value)})"
                 )
         return v
+
+    @validator("zarr_url", "origin")
+    def normalize_path(cls, v: str):
+        if v is not None:
+            return normpath(v)
 
 
 class Filters(BaseModel):
