@@ -24,19 +24,19 @@ exclude = [
 
 [tool.poetry.dependencies]
 python = "^3.9"
-python-dotenv = "^0.21.0"
-fastapi = "^0.109.0"
-sqlmodel = "^0.0.14"
+python-dotenv = "^1.0.0"
+fastapi = "^0.110.0"
+sqlmodel = "^0.0.16"
 sqlalchemy = {extras = ["asyncio"], version = ">=2.0.23,<2.1"}
 aiosqlite = "^0.19.0"
 fastapi-users = {extras = ["oauth"], version = "^12.1.0"}
-alembic = "^1.9.1"
-uvicorn = "^0.27.0"
+alembic = "^1.13.1"
+uvicorn = "^0.29.0"
 pydantic = ">=1.10.8,<2"
 bcrypt = "4.0.1"
 packaging = "^23.2"
 clusterfutures = "^0.5"
-cloudpickle = ">=2.2.1,<2.3.0"
+cloudpickle = ">=3.0.0,<3.1.0"
 
 asyncpg = { version = "^0.29.0", optional = true }
 psycopg2 = { version = "^2.9.5", optional = true }
@@ -55,9 +55,9 @@ pytest-asyncio = "^0.21"
 bumpver = "^2022.1120"
 pre-commit = "^2.19"
 coverage = {extras = ["toml"], version = "^6.4.4"}
-mypy = "^0.982"
-pytest-subprocess = "^1.4"
 pytest-docker = {version = "^2.0"}
+mypy = "^1.9"
+pytest-subprocess = "^1.4"
 pyyaml="^6.0.1"
 a2wsgi = "^1.10.0"
 jinja2 = "^3.1.3"
