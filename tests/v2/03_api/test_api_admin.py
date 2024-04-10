@@ -503,7 +503,8 @@ async def test_flag_task_v2_compatible(
 
         for _ in range(2):
             res = await client.patch(
-                f"{PREFIX}/task-v1/{task.id}/?is_v2_compatible=true"
+                f"{PREFIX}/task-v1/{task.id}/",
+                json=dict(is_v2_compatible=True),
             )
             assert res.status_code == 200
             await db.refresh(task)
@@ -511,13 +512,15 @@ async def test_flag_task_v2_compatible(
 
         for _ in range(2):
             res = await client.patch(
-                f"{PREFIX}/task-v1/{task.id}/?is_v2_compatible=false"
+                f"{PREFIX}/task-v1/{task.id}/",
+                json=dict(is_v2_compatible=False),
             )
             assert res.status_code == 200
             await db.refresh(task)
             assert task.is_v2_compatible is False
 
         res = await client.patch(
-            f"{PREFIX}/task-v1/{task.id + 100}/?is_v2_compatible=true"
+            f"{PREFIX}/task-v1/{task.id + 100}/",
+            json=dict(is_v2_compatible=True),
         )
         assert res.status_code == 404

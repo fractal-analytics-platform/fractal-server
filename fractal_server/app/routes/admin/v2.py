@@ -12,6 +12,7 @@ from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 from sqlmodel import select
 
 from ....config import get_settings
@@ -279,13 +280,17 @@ async def download_job_logs(
     )
 
 
+class TaskCompatibility(BaseModel):
+    is_v2_compatible: bool
+
+
 @router_admin_v2.patch(
     "/task-v1/{task_id}/",
     status_code=status.HTTP_200_OK,
 )
 async def flag_task_v1_as_v2_compatible(
     task_id: int,
-    is_v2_compatible: bool,
+    compatibility: TaskCompatibility,
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
@@ -297,7 +302,7 @@ async def flag_task_v1_as_v2_compatible(
             detail=f"Task {task_id} not found",
         )
 
-    task.is_v2_compatible = is_v2_compatible
+    task.is_v2_compatible = compatibility.is_v2_compatible
     await db.commit()
     await db.close()
 
