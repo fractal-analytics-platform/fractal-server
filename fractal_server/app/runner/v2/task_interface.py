@@ -1,7 +1,9 @@
+from os.path import normpath
 from typing import Any
 
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import validator
 
 from ....images import SingleImage
 from fractal_server.images import Filters
@@ -32,6 +34,10 @@ class TaskOutput(BaseModel):
                 msg = f"{msg}\n{duplicate}"
             raise ValueError(msg)
 
+    @validator("image_list_removals")
+    def normalize_paths(cls, v: list[str]):
+        return [normpath(zarr_url) for zarr_url in v]
+
 
 class InitArgsModel(BaseModel):
     class Config:
@@ -39,6 +45,10 @@ class InitArgsModel(BaseModel):
 
     zarr_url: str
     init_args: dict[str, Any] = Field(default_factory=dict)
+
+    @validator("zarr_url")
+    def normalize_path(cls, v: str):
+        return normpath(v)
 
 
 class InitTaskOutput(BaseModel):
