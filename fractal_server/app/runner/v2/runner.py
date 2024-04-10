@@ -196,6 +196,11 @@ def execute_tasks_v2(
                         updated_types = copy(original_img["types"])
                 # Update image attributes/types with task output and manifest
                 updated_attributes.update(image["attributes"])
+                updated_attributes = {
+                    key: value
+                    for key, value in updated_attributes.items()
+                    if value is not None
+                }
                 updated_types.update(image["types"])
                 updated_types.update(task.output_types)
                 new_image = dict(

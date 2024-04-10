@@ -186,7 +186,6 @@ def test_dummy_unset_attribute(
     }
 
 
-@pytest.mark.xfail(reason="See issue 1320")
 def test_dummy_insert_single_image_none_attribute(
     tmp_path: Path, executor: Executor, fractal_tasks_mock_venv
 ):
@@ -212,3 +211,6 @@ def test_dummy_insert_single_image_none_attribute(
         **execute_tasks_v2_args,
     )
     debug(dataset_attrs["images"])
+    assert (
+        "attribute-name" not in dataset_attrs["images"][0]["attributes"].keys()
+    )
