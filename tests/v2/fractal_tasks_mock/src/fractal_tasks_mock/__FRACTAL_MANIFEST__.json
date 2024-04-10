@@ -627,6 +627,11 @@
       "args_schema_non_parallel": {
         "additionalProperties": false,
         "properties": {
+          "attributes": {
+            "description": "Missing description",
+            "title": "Attributes",
+            "type": "object"
+          },
           "fail": {
             "default": false,
             "description": "If `True`, make images invalid.",
