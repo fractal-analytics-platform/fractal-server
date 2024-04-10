@@ -16,7 +16,7 @@ async def test_new_dataset_v2(client, MockCurrentUser):
     async with MockCurrentUser():
 
         res = await client.post("api/v2/project/", json=dict(name="projectV2"))
-        debug(res.json())
+        debug(res.status_code)
         assert res.status_code == 201
         projectV2 = res.json()
         p2_id = projectV2["id"]
