@@ -9,6 +9,7 @@ def illumination_correction_compute(
     *,
     zarr_url: str,
     init_args: InitArgsIllumination,
+    another_argument: str,
 ) -> dict:
     """
     Dummy task description.
@@ -24,6 +25,7 @@ def illumination_correction_compute(
     print(f"[illumination_correction_compute] {zarr_url=}")
     print(f"[illumination_correction_compute] {raw_zarr_url=}")
     print(f"[illumination_correction_compute] {subsets=}")
+    print(f"[illumination_correction_compute] {another_argument=}")
 
     # Prepare output metadata
     if zarr_url == raw_zarr_url:

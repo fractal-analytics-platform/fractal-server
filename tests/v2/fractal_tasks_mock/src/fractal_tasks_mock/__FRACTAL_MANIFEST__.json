@@ -354,6 +354,11 @@
           }
         },
         "properties": {
+          "another_argument": {
+            "description": "Missing description",
+            "title": "Another Argument",
+            "type": "string"
+          },
           "init_args": {
             "$ref": "#/definitions/InitArgsIllumination",
             "description": "description",
@@ -367,7 +372,8 @@
         },
         "required": [
           "zarr_url",
-          "init_args"
+          "init_args",
+          "another_argument"
         ],
         "title": "IlluminationCorrectionCompute",
         "type": "object"
@@ -627,6 +633,11 @@
       "args_schema_non_parallel": {
         "additionalProperties": false,
         "properties": {
+          "attributes": {
+            "description": "Missing description",
+            "title": "Attributes",
+            "type": "object"
+          },
           "fail": {
             "default": false,
             "description": "If `True`, make images invalid.",

@@ -3,6 +3,7 @@ from pydantic import ValidationError
 
 from fractal_server.images import Filters
 from fractal_server.images import SingleImage
+from fractal_server.images import SingleImageTaskOutput
 
 
 def test_single_image():
@@ -42,6 +43,23 @@ def test_single_image():
     invalid_types = dict(a="not a bool")
     with pytest.raises(ValidationError):
         SingleImage(zarr_url="/somewhere", types=invalid_types)
+
+
+def test_single_image_task_output():
+    valid_attributes = dict(a="string", b=3, c=0.33, d=True, f=None)
+    assert (
+        SingleImageTaskOutput(
+            zarr_url="/somewhere", attributes=valid_attributes
+        ).attributes
+        == valid_attributes
+    )
+    invalid_attributes = [
+        dict(a=["l", "i", "s", "t"]),
+        dict(a={"d": "i", "c": "t"}),
+    ]
+    for attr in invalid_attributes:
+        with pytest.raises(ValidationError):
+            SingleImageTaskOutput(zarr_url="/somewhere", attributes=attr)
 
 
 def test_filters():
