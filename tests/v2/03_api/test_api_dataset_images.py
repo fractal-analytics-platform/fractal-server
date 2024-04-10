@@ -252,6 +252,9 @@ async def test_post_new_image(
         attributes={"new_attribute": "xyz"},
         types={"new_type": True},
     ).dict()
+    new_image_to_normalize = SingleImage(
+        zarr_url=f"/////{ZARR_DIR}/new_zarr_url_2"
+    ).dict()
     invalid_new_image_1 = SingleImage(zarr_url=images[-1]["zarr_url"]).dict()
     invalid_new_image_2 = SingleImage(zarr_url="/foo/bar").dict()
 
@@ -284,10 +287,19 @@ async def test_post_new_image(
     )
     assert res.status_code == 201
 
+    # add new image (to normalize)
+    res = await client.post(
+        f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/",
+        json=new_image_to_normalize,
+    )
+    assert res.status_code == 201
+
     # assert changes
     res = await client.post(
         f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/query/"
     )
-    assert res.json()["total_count"] == N + 1
+    assert res.json()["total_count"] == N + 2
     assert "new_attribute" in res.json()["attributes"].keys()
     assert "new_type" in res.json()["types"]
+    # assert zarr_url is normalized
+    assert res.json()["images"][-1]["zarr_url"] == f"{ZARR_DIR}/new_zarr_url_2"
