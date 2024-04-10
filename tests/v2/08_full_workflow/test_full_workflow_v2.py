@@ -488,6 +488,12 @@ async def test_failing_workflow_JobExecutionError(
         tmp_stderr.close()
 
 
+@pytest.mark.skip(
+    reason=(
+        "When running with slurm backend, it leads to "
+        "RuntimeError: This event loop is already running"
+    )
+)
 @pytest.mark.parametrize("backend", backends_available)
 async def test_non_executable_task_command(
     client,
