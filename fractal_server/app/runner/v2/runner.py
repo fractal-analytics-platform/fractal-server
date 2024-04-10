@@ -157,6 +157,20 @@ def execute_tasks_v2(
                 updated_types.update(image["types"])
                 updated_types.update(task.output_types)
 
+                # Unset attributes with None value
+                updated_attributes = {
+                    key: value
+                    for key, value in updated_attributes.items()
+                    if value is not None
+                }
+
+                # Validate new image
+                SingleImage(
+                    zarr_url=image["zarr_url"],
+                    types=updated_types,
+                    attributes=updated_attributes,
+                )
+
                 # Update image in the dataset image list
                 tmp_images[original_index]["attributes"] = updated_attributes
                 tmp_images[original_index]["types"] = updated_types
@@ -182,6 +196,11 @@ def execute_tasks_v2(
                         updated_types = copy(original_img["types"])
                 # Update image attributes/types with task output and manifest
                 updated_attributes.update(image["attributes"])
+                updated_attributes = {
+                    key: value
+                    for key, value in updated_attributes.items()
+                    if value is not None
+                }
                 updated_types.update(image["types"])
                 updated_types.update(task.output_types)
                 new_image = dict(
