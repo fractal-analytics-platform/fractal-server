@@ -490,33 +490,33 @@ async def test_failing_workflow_JobExecutionError(
 
 @pytest.mark.parametrize("backend", backends_available)
 async def test_non_executable_task_command(
-    db,
     client,
     MockCurrentUser,
     testdata_path,
     tmp777_path,
-    collect_packages,
     task_factory_v2,
     project_factory_v2,
     dataset_factory_v2,
     workflow_factory_v2,
     backend,
-    request,
     override_settings_factory,
-    tmp_path,
+    # fractal_tasks_mock,  # WHY IS THIS REQUIRED???
+    request,
 ):
     """
     Execute a workflow with a task which has an invalid `command` (i.e. it is
     not executable).
     """
-    override_settings_factory(
+
+    selected_new_settings = dict(
         FRACTAL_RUNNER_BACKEND=backend,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
     )
     if backend == "slurm":
-        override_settings_factory(
-            FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
+        selected_new_settings.update(
+            dict(FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json")
         )
+    override_settings_factory(**selected_new_settings)
 
     debug(f"Testing with {backend=}")
     user_kwargs = {"is_verified": True}
@@ -531,7 +531,8 @@ async def test_non_executable_task_command(
         task = await task_factory_v2(
             name="invalid-task-command",
             source="some_source",
-            command=str(testdata_path / "non_executable_task.sh"),
+            type="non_parallel",
+            command_non_parallel=str(testdata_path / "non_executable_task.sh"),
         )
         debug(task)
 
