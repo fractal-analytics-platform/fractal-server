@@ -1,3 +1,4 @@
+from os.path import normpath
 from typing import Any
 from typing import Optional
 
@@ -55,6 +56,8 @@ async def post_new_image(
         project_id=project_id, dataset_id=dataset_id, user_id=user.id, db=db
     )
     dataset = output["dataset"]
+
+    new_image.zarr_url = normpath(new_image.zarr_url)
 
     if not new_image.zarr_url.startswith(dataset.zarr_dir):
         raise HTTPException(
