@@ -122,6 +122,7 @@ class TaskReadV1(_TaskBaseV1):
     args_schema_version: Optional[str]
     docs_info: Optional[str]
     docs_link: Optional[HttpUrl]
+    is_v2_compatible: bool
 
 
 class TaskCreateV1(_TaskBaseV1):
