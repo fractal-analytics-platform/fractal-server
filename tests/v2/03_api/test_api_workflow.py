@@ -552,10 +552,13 @@ async def test_patch_workflow_task(
 
         assert workflow["task_list"][0]["args_parallel"] is None
         assert workflow["task_list"][0]["args_non_parallel"] is None
+        assert workflow["task_list"][0]["meta_non_parallel"] is None
+        assert workflow["task_list"][0]["meta_parallel"] is None
 
         payload = dict(
             args_non_parallel={"a": 111, "b": 222},
             args_parallel={"c": 333, "d": 444},
+            meta_non_parallel={"non": "parallel"},
             meta_parallel={"executor": "cpu-low"},
             input_filters={
                 "attributes": {"a": "b", "c": "d"},
@@ -578,6 +581,10 @@ async def test_patch_workflow_task(
             patched_workflow_task["args_parallel"] == payload["args_parallel"]
         )
         assert (
+            patched_workflow_task["meta_non_parallel"]
+            == payload["meta_non_parallel"]
+        )
+        assert (
             patched_workflow_task["meta_parallel"] == payload["meta_parallel"]
         )
         assert (
@@ -588,6 +595,8 @@ async def test_patch_workflow_task(
         payload_up = dict(
             args_non_parallel={"a": {"b": 43}, "c": 2},
             args_parallel={"x": "y"},
+            meta_non_parallel={"foo": "bar"},
+            meta_parallel={"oof": "arb"},
         )
         res = await client.patch(
             f"{PREFIX}/project/{project.id}/workflow/{workflow['id']}/"
@@ -602,6 +611,14 @@ async def test_patch_workflow_task(
         assert (
             patched_workflow_task_up["args_parallel"]
             == payload_up["args_parallel"]
+        )
+        assert (
+            patched_workflow_task_up["meta_non_parallel"]
+            == payload_up["meta_non_parallel"]
+        )
+        assert (
+            patched_workflow_task_up["meta_parallel"]
+            == payload_up["meta_parallel"]
         )
         assert res.status_code == 200
 
