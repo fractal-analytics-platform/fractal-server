@@ -1,4 +1,3 @@
-from os.path import normpath
 from typing import Any
 from typing import Optional
 
