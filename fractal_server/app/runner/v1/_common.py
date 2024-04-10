@@ -207,7 +207,7 @@ def call_single_task(
         with task_files.metadiff.open("r") as f_metadiff:
             diff_metadata = json.load(f_metadiff)
     except FileNotFoundError as e:
-        logger.error(
+        logger.info(
             f"Skip collection of updated metadata. Original error: {str(e)}"
         )
         diff_metadata = {}
