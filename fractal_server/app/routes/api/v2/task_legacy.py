@@ -29,7 +29,7 @@ async def get_list_task_legacy(
     """
     stm = select(TaskV1)
     if only_v2_compatible:
-        stm = stm.where(TaskV1.is_v2_compatible == True)  # noqa E712
+        stm = stm.where(TaskV1.is_v2_compatible)
     res = await db.execute(stm)
     task_list = res.scalars().all()
     await db.close()
