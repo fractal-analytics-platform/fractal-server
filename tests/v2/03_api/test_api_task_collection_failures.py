@@ -4,8 +4,6 @@ from pathlib import Path
 
 from devtools import debug  # noqa
 
-from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
-
 PREFIX = "api/v2/task"
 
 
