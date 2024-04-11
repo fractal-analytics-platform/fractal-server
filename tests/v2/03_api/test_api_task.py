@@ -515,7 +515,7 @@ async def test_get_legacy_task(
         await task_factory_v2(source="b")
         await task_factory_v2(source="c")
 
-        # assert
+        # Assert
         res = await client.get("/api/v1/task/")
         assert len(res.json()) == 0
         res = await client.get("/api/v2/task/")
@@ -530,7 +530,7 @@ async def test_get_legacy_task(
         await task_factory(source="e")
         await task_factory(source="f")
 
-        # assert
+        # Assert
         res = await client.get("/api/v1/task/")
         assert len(res.json()) == 3
         for task in res.json():
@@ -553,7 +553,7 @@ async def test_get_legacy_task(
             source="h", is_v2_compatible=True, args_schema={"args": "schema"}
         )
 
-        # assert
+        # Assert
         res = await client.get("/api/v1/task/")
         assert len(res.json()) == 5
         for task in res.json():
