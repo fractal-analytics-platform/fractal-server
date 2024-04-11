@@ -144,13 +144,6 @@ async def test_collection_validation_error(
     testdata_path: Path,
 ):
     override_settings_factory(FRACTAL_TASKS_DIR=tmp_path)
-
-    file_dir = tmp_path / ".fractal/fractal-tasks-mock0.0.1"
-    file_path = file_dir / "collection.json"
-    os.makedirs(file_dir, exist_ok=True)
-    with open(file_path, "w") as f:
-        json.dump(dict(foo="bar"), f)
-
     payload = dict(
         package=(
             testdata_path.parent
@@ -159,10 +152,29 @@ async def test_collection_validation_error(
         ).as_posix()
     )
 
+    file_dir = tmp_path / ".fractal/fractal-tasks-mock0.0.1"
+    os.makedirs(file_dir, exist_ok=True)
+
+    # Folder exists, but there is no collection.json file
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             json=payload,
         )
         assert res.status_code == 422
-        assert "old version" in res.json()["detail"]
+        assert "FileNotFoundError" in res.json()["detail"]
+
+    # Write an invalid collection.json file
+    file_path = file_dir / "collection.json"
+    with open(file_path, "w") as f:
+        json.dump(dict(foo="bar"), f)
+
+    # Folder exists and includes a collection.json file, but the file is
+    # invalid
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=payload,
+        )
+        assert res.status_code == 422
+        assert "ValidationError" in res.json()["detail"]
