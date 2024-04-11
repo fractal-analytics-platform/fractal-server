@@ -11,6 +11,7 @@ from pydantic import validator
 
 from .._validators import valdictkeys
 from .._validators import valstr
+from ..v1.task import TaskReadV1
 
 
 class TaskCreateV2(BaseModel, extra=Extra.forbid):
@@ -98,6 +99,10 @@ class TaskReadV2(BaseModel):
     docs_link: Optional[HttpUrl]
     input_types: dict[str, bool]
     output_types: dict[str, bool]
+
+
+class TaskLegacyReadV2(TaskReadV1):
+    is_v2_compatible: bool
 
 
 class TaskUpdateV2(BaseModel):
