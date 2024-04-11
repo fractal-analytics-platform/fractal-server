@@ -17,6 +17,7 @@ from .project import ProjectUpdateV2  # noqa F401
 from .task import TaskCreateV2  # noqa F401
 from .task import TaskExportV2  # noqa F401
 from .task import TaskImportV2  # noqa F401
+from .task import TaskLegacyReadV2  # noqa F401
 from .task import TaskReadV2  # noqa F401
 from .task import TaskUpdateV2  # noqa F401
 from .task_collection import TaskCollectPipV2  # noqa F401

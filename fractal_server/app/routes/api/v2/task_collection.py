@@ -137,7 +137,17 @@ async def collect_tasks_pip(
                 detail=(
                     "Cannot collect package. Possible reason: another "
                     "collection of the same package is in progress. "
-                    f"Original error: {e}"
+                    f"Original FileNotFoundError: {e}"
+                ),
+            )
+        except ValidationError as e:
+            await db.close()
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "Cannot collect package. Possible reason: an old version "
+                    "of the same package has already been collected. "
+                    f"Original ValidationError: {e}"
                 ),
             )
         task_collect_status.info = "Already installed"
