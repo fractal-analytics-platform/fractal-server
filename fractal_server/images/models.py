@@ -34,11 +34,11 @@ class SingleImageBase(BaseModel):
     _types = validator("types", allow_reuse=True)(valdictkeys("types"))
 
     @validator("zarr_url")
-    def normalize_path(cls, v: str) -> str:
+    def normalize_zarr_url(cls, v: str) -> str:
         return normpath(v)
 
     @validator("origin")
-    def normalize_path(cls, v: Optional[str]) -> Optional[str]:
+    def normalize_orig(cls, v: Optional[str]) -> Optional[str]:
         if v is not None:
             return normpath(v)
 
