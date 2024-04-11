@@ -26,7 +26,7 @@ router_api_v2.include_router(
 )
 router_api_v2.include_router(task_router_v2, prefix="/task", tags=["V2 Task"])
 router_api_v2.include_router(
-    task_legacy_router_v2, prefix="/task-legacy", tags=["V2 Tassk Legacy"]
+    task_legacy_router_v2, prefix="/task-legacy", tags=["V2 Task Legacy"]
 )
 router_api_v2.include_router(workflow_router_v2, tags=["V2 Workflow"])
 router_api_v2.include_router(workflowtask_router_v2, tags=["V2 WorkflowTask"])
