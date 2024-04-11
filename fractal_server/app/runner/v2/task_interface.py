@@ -37,7 +37,7 @@ class TaskOutput(BaseModel):
             raise ValueError(msg)
 
     @validator("image_list_removals")
-    def normalize_paths(cls, v: list[str]):
+    def normalize_paths(cls, v: list[str]) -> list[str]:
         return [normpath(zarr_url) for zarr_url in v]
 
 
@@ -49,7 +49,7 @@ class InitArgsModel(BaseModel):
     init_args: dict[str, Any] = Field(default_factory=dict)
 
     @validator("zarr_url")
-    def normalize_path(cls, v: str):
+    def normalize_path(cls, v: str) -> str:
         return normpath(v)
 
 

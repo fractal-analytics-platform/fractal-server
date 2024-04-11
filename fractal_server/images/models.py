@@ -33,6 +33,15 @@ class SingleImageBase(BaseModel):
     )
     _types = validator("types", allow_reuse=True)(valdictkeys("types"))
 
+    @validator("zarr_url")
+    def normalize_path(cls, v: str) -> str:
+        return normpath(v)
+
+    @validator("origin")
+    def normalize_path(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None:
+            return normpath(v)
+
 
 class SingleImageTaskOutput(SingleImageBase):
     """
@@ -69,11 +78,6 @@ class SingleImage(SingleImageBase):
                     f"(int, float, str or bool). Given {value} ({type(value)})"
                 )
         return v
-
-    @validator("zarr_url", "origin")
-    def normalize_path(cls, v: str):
-        if v is not None:
-            return normpath(v)
 
 
 class Filters(BaseModel):
