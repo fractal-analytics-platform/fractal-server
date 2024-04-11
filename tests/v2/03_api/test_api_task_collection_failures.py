@@ -1,7 +1,10 @@
+import json
+import os
 from pathlib import Path
 
 from devtools import debug  # noqa
 
+from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
 
 PREFIX = "api/v2/task"
 
@@ -133,3 +136,35 @@ async def test_missing_task_executable(
         assert data["status"] == "fail"
         assert data["log"]  # This is because of verbose=True
         assert "fail" in data["log"]
+
+
+async def test_collection_validation_error(
+    client,
+    MockCurrentUser,
+    override_settings_factory,
+    tmp_path: Path,
+    testdata_path: Path,
+):
+    override_settings_factory(FRACTAL_TASKS_DIR=tmp_path)
+
+    file_dir = tmp_path / ".fractal/fractal-tasks-mock0.0.1"
+    file_path = file_dir / "collection.json"
+    os.makedirs(file_dir, exist_ok=True)
+    with open(file_path, "w") as f:
+        json.dump(dict(foo="bar"), f)
+
+    payload = dict(
+        package=(
+            testdata_path.parent
+            / "v2/fractal_tasks_mock/dist"
+            / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
+        ).as_posix()
+    )
+
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=payload,
+        )
+        assert res.status_code == 422
+        assert "old version" in res.json()["detail"]
