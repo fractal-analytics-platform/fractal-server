@@ -510,10 +510,12 @@ async def test_get_legacy_task(
 ):
     async with MockCurrentUser():
 
+        # Add 3 task V2
         await task_factory_v2(source="a")
         await task_factory_v2(source="b")
         await task_factory_v2(source="c")
 
+        # assert
         res = await client.get("/api/v1/task/")
         assert len(res.json()) == 0
         res = await client.get("/api/v2/task/")
@@ -523,10 +525,12 @@ async def test_get_legacy_task(
         res = await client.get("/api/v2/task-legacy/?only_v2_available=True")
         assert len(res.json()) == 0
 
+        # Add 2 task V1, not v2-compatibles
         await task_factory(source="d")
         await task_factory(source="e")
         await task_factory(source="f")
 
+        # assert
         res = await client.get("/api/v1/task/")
         assert len(res.json()) == 3
         for task in res.json():
@@ -543,11 +547,13 @@ async def test_get_legacy_task(
         res = await client.get("/api/v2/task-legacy/?only_v2_compatible=True")
         assert len(res.json()) == 0
 
+        # Add 2 task V1 and v2-compatibles
         await task_factory(source="g", is_v2_compatible=True)
         await task_factory(
             source="h", is_v2_compatible=True, args_schema={"args": "schema"}
         )
 
+        # assert
         res = await client.get("/api/v1/task/")
         assert len(res.json()) == 5
         for task in res.json():
@@ -570,3 +576,6 @@ async def test_get_legacy_task(
             assert task["args_schema"] is None
             res = await client.get(f"/api/v2/task-legacy/{task['id']}/")
             assert res.json()["is_v2_compatible"] is True
+
+        res = await client.get(f"/api/v2/task-legacy/9999999/")
+        assert res.status_code == 404
