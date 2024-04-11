@@ -35,7 +35,7 @@ async def get_list_task_legacy(
     await db.close()
     if args_schema is False:
         for task in task_list:
-            setattr(task, "args_schema_parallel", None)
+            setattr(task, "args_schema", None)
 
     return task_list
 
