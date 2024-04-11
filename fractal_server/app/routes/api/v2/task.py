@@ -15,7 +15,6 @@ from ....models.v1 import Task as TaskV1
 from ....models.v2 import TaskV2
 from ....models.v2 import WorkflowTaskV2
 from ....schemas.v2 import TaskCreateV2
-from ....schemas.v2 import TaskLegacyReadV2
 from ....schemas.v2 import TaskReadV2
 from ....schemas.v2 import TaskUpdateV2
 from ....security import current_active_user
