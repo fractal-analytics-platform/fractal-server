@@ -503,3 +503,63 @@ async def test_post_same_source(client, MockCurrentUser):
         # POST v1_c OK
         res = await client.post(V1, json=task_v1_c.dict(exclude_unset=True))
         assert res.status_code == 201
+
+
+async def test_get_legacy_task(
+    task_factory, task_factory_v2, client, MockCurrentUser
+):
+    async with MockCurrentUser():
+
+        await task_factory_v2(source="a")
+        await task_factory_v2(source="b")
+        await task_factory_v2(source="c")
+
+        res = await client.get("/api/v1/task/")
+        assert len(res.json()) == 0
+        res = await client.get("/api/v2/task/")
+        assert len(res.json()) == 3
+        res = await client.get("/api/v2/task-legacy/")
+        assert len(res.json()) == 0
+        res = await client.get("/api/v2/task-legacy/?only_v2_available=True")
+        assert len(res.json()) == 0
+
+        await task_factory(source="d")
+        await task_factory(source="e")
+        await task_factory(source="f")
+
+        res = await client.get("/api/v1/task/")
+        assert len(res.json()) == 3
+        for task in res.json():
+            assert "is_v2_compatible" not in task
+
+        res = await client.get("/api/v2/task/")
+        assert len(res.json()) == 3
+
+        res = await client.get("/api/v2/task-legacy/")
+        assert len(res.json()) == 3
+        for task in res.json():
+            assert task["is_v2_compatible"] is False
+
+        res = await client.get("/api/v2/task-legacy/?only_v2_compatible=True")
+        assert len(res.json()) == 0
+
+        await task_factory(source="g", is_v2_compatible=True)
+        await task_factory(source="h", is_v2_compatible=True)
+
+        res = await client.get("/api/v1/task/")
+        assert len(res.json()) == 5
+        for task in res.json():
+            assert "is_v2_compatible" not in task
+
+        res = await client.get("/api/v2/task/")
+        assert len(res.json()) == 3
+
+        res = await client.get("/api/v2/task-legacy/")
+        assert len(res.json()) == 5
+        for task in res.json():
+            assert "is_v2_compatible" in task
+
+        res = await client.get("/api/v2/task-legacy/?only_v2_compatible=True")
+        assert len(res.json()) == 2
+        for task in res.json():
+            assert task["is_v2_compatible"] is True
