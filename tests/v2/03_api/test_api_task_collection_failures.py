@@ -1,7 +1,8 @@
+import json
+import os
 from pathlib import Path
 
 from devtools import debug  # noqa
-
 
 PREFIX = "api/v2/task"
 
@@ -133,3 +134,47 @@ async def test_missing_task_executable(
         assert data["status"] == "fail"
         assert data["log"]  # This is because of verbose=True
         assert "fail" in data["log"]
+
+
+async def test_collection_validation_error(
+    client,
+    MockCurrentUser,
+    override_settings_factory,
+    tmp_path: Path,
+    testdata_path: Path,
+):
+    override_settings_factory(FRACTAL_TASKS_DIR=tmp_path)
+    payload = dict(
+        package=(
+            testdata_path.parent
+            / "v2/fractal_tasks_mock/dist"
+            / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
+        ).as_posix()
+    )
+
+    file_dir = tmp_path / ".fractal/fractal-tasks-mock0.0.1"
+    os.makedirs(file_dir, exist_ok=True)
+
+    # Folder exists, but there is no collection.json file
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=payload,
+        )
+        assert res.status_code == 422
+        assert "FileNotFoundError" in res.json()["detail"]
+
+    # Write an invalid collection.json file
+    file_path = file_dir / "collection.json"
+    with open(file_path, "w") as f:
+        json.dump(dict(foo="bar"), f)
+
+    # Folder exists and includes a collection.json file, but the file is
+    # invalid
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=payload,
+        )
+        assert res.status_code == 422
+        assert "ValidationError" in res.json()["detail"]

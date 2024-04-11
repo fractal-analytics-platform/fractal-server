@@ -140,6 +140,16 @@ async def collect_tasks_pip(
                     f"Original error: {e}"
                 ),
             )
+        except ValidationError as e:
+            await db.close()
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "Cannot collect package. Possible reason: an old version "
+                    "of the same package has already been collected. "
+                    f"Original error: {e}"
+                ),
+            )
         task_collect_status.info = "Already installed"
         state = State(data=task_collect_status.sanitised_dict())
         response.status_code == status.HTTP_200_OK
