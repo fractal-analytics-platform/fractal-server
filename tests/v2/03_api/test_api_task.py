@@ -577,5 +577,5 @@ async def test_get_legacy_task(
             res = await client.get(f"/api/v2/task-legacy/{task['id']}/")
             assert res.json()["is_v2_compatible"] is True
 
-        res = await client.get(f"/api/v2/task-legacy/9999999/")
+        res = await client.get("/api/v2/task-legacy/9999999/")
         assert res.status_code == 404
