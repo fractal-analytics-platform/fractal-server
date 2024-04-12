@@ -45,7 +45,6 @@ class DatasetCreateV2(BaseModel, extra=Extra.forbid):
 
     name: str
 
-    read_only: bool = False
     zarr_dir: str
 
     filters: Filters = Field(default_factory=Filters)
@@ -63,7 +62,6 @@ class DatasetReadV2(BaseModel):
     project: ProjectReadV1
 
     history: list[_DatasetHistoryItemV2]
-    read_only: bool
 
     timestamp_created: datetime
 
@@ -81,7 +79,6 @@ class DatasetUpdateV2(BaseModel):
         extra = "forbid"
 
     name: Optional[str]
-    read_only: Optional[bool]
     zarr_dir: Optional[str]
     filters: Optional[Filters]
 

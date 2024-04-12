@@ -1,8 +1,8 @@
-"""v2
+"""V2
 
-Revision ID: d71e732236cd
+Revision ID: 80e12e1bc4fd
 Revises: 9fd26a2b0de4
-Create Date: 2024-04-05 11:09:17.639183
+Create Date: 2024-04-12 10:13:58.085788
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = "d71e732236cd"
+revision = "80e12e1bc4fd"
 down_revision = "9fd26a2b0de4"
 branch_labels = None
 depends_on = None
@@ -23,7 +23,6 @@ def upgrade() -> None:
         "projectv2",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("read_only", sa.Boolean(), nullable=False),
         sa.Column(
             "timestamp_created", sa.DateTime(timezone=True), nullable=False
         ),
@@ -81,7 +80,6 @@ def upgrade() -> None:
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("project_id", sa.Integer(), nullable=False),
         sa.Column("history", sa.JSON(), server_default="[]", nullable=False),
-        sa.Column("read_only", sa.Boolean(), nullable=False),
         sa.Column(
             "timestamp_created", sa.DateTime(timezone=True), nullable=False
         ),
@@ -219,7 +217,7 @@ def upgrade() -> None:
         sa.Column(
             "is_v2_compatible",
             sa.Boolean(),
-            server_default=sa.text("false"),
+            server_default=sa.text("0"),
             nullable=False,
         ),
     )
