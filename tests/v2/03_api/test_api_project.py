@@ -157,14 +157,10 @@ async def test_patch_project_name_constraint(app, client, MockCurrentUser, db):
 
 
 @pytest.mark.parametrize("new_name", (None, "new name"))
-@pytest.mark.parametrize("new_read_only", (None, True, False))
 async def test_patch_project(
     new_name,
-    new_read_only,
-    app,
     client,
     MockCurrentUser,
-    db,
 ):
     """
     Test that the project can be patched correctly, with any possible
@@ -174,7 +170,6 @@ async def test_patch_project(
         # Create project
         payload = dict(
             name="old name",
-            read_only=True,
         )
         res = await client.post(f"{PREFIX}/project/", json=payload)
         old_project = res.json()
@@ -185,8 +180,6 @@ async def test_patch_project(
         payload = {}
         if new_name:
             payload["name"] = new_name
-        if new_read_only:
-            payload["read_only"] = new_read_only
         debug(payload)
         res = await client.patch(
             f"{PREFIX}/project/{project_id}/", json=payload

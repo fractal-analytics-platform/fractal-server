@@ -22,7 +22,6 @@ class ProjectDumpV2(BaseModel, extra=Extra.forbid):
 
     id: int
     name: str
-    read_only: bool
     timestamp_created: str
 
 
@@ -80,7 +79,6 @@ class DatasetDumpV2(BaseModel):
     id: int
     name: str
     project_id: int
-    read_only: bool
     timestamp_created: str
 
     zarr_dir: str
