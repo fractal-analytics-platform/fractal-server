@@ -217,7 +217,7 @@ def upgrade() -> None:
         sa.Column(
             "is_v2_compatible",
             sa.Boolean(),
-            server_default=sa.text("0"),
+            server_default=sa.text("false"),
             nullable=False,
         ),
     )
