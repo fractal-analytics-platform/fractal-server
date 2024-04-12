@@ -8,8 +8,8 @@ from pydantic import validator
 
 from .._validators import valstr
 from .._validators import valutc
-from ..v1.project import ProjectReadV1
 from .dumps import WorkflowTaskDumpV2
+from .project import ProjectReadV2
 from .workflowtask import WorkflowTaskStatusTypeV2
 from fractal_server.images import Filters
 
@@ -45,7 +45,6 @@ class DatasetCreateV2(BaseModel, extra=Extra.forbid):
 
     name: str
 
-    read_only: bool = False
     zarr_dir: str
 
     filters: Filters = Field(default_factory=Filters)
@@ -60,10 +59,9 @@ class DatasetReadV2(BaseModel):
     name: str
 
     project_id: int
-    project: ProjectReadV1
+    project: ProjectReadV2
 
     history: list[_DatasetHistoryItemV2]
-    read_only: bool
 
     timestamp_created: datetime
 
@@ -81,7 +79,6 @@ class DatasetUpdateV2(BaseModel):
         extra = "forbid"
 
     name: Optional[str]
-    read_only: Optional[bool]
     zarr_dir: Optional[str]
     filters: Optional[Filters]
 

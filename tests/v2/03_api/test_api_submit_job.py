@@ -45,9 +45,6 @@ async def test_submit_job_failures(
         dataset = await dataset_factory_v2(
             project_id=project1.id, name="dataset"
         )
-        dataset_read_only = await dataset_factory_v2(
-            project_id=project1.id, name="dataset-read-only", read_only=True
-        )
 
         workflow1 = await workflow_factory_v2(project_id=project1.id)
         workflow2 = await workflow_factory_v2(project_id=project1.id)
@@ -85,17 +82,7 @@ async def test_submit_job_failures(
         debug(res.json())
         assert res.status_code == 404
 
-        # (D) Read-only dataset
-        res = await client.post(
-            f"{PREFIX}/project/{project1.id}/job/submit/"
-            f"?workflow_id={workflow1.id}&dataset_id={dataset_read_only.id}",
-            json={},
-        )
-        debug(res.json())
-        assert res.status_code == 422
-        assert "read_only" in res.json()["detail"]
-
-        # (E) Workflow without tasks
+        # (D) Workflow without tasks
         res = await client.post(
             f"{PREFIX}/project/{project1.id}/job/submit/"
             f"?workflow_id={workflow2.id}&dataset_id={dataset.id}",
