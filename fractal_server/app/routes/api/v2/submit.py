@@ -59,15 +59,6 @@ async def apply_workflow(
     project = output["project"]
     dataset = output["dataset"]
 
-    if dataset.read_only:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                "Cannot apply workflow because dataset "
-                f"({dataset_id=}) is read_only."
-            ),
-        )
-
     workflow = await _get_workflow_check_owner(
         project_id=project_id, workflow_id=workflow_id, user_id=user.id, db=db
     )

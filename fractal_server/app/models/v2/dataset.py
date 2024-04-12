@@ -28,7 +28,6 @@ class DatasetV2(SQLModel, table=True):
     history: list[dict[str, Any]] = Field(
         sa_column=Column(JSON, server_default="[]", nullable=False)
     )
-    read_only: bool = False
 
     timestamp_created: datetime = Field(
         default_factory=get_timestamp,
