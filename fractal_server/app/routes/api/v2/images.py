@@ -17,6 +17,7 @@ from fractal_server.app.security import current_active_user
 from fractal_server.app.security import User
 from fractal_server.images import Filters
 from fractal_server.images import SingleImage
+from fractal_server.images import SingleImageUpdate
 from fractal_server.images.tools import match_filter
 
 router = APIRouter()
@@ -213,3 +214,52 @@ async def delete_dataset_images(
     await db.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.patch(
+    "/project/{project_id}/dataset/{dataset_id}/image/",
+    response_model=SingleImage,
+    status_code=status.HTTP_200_OK,
+)
+async def patch_dataset_image(
+    project_id: int,
+    dataset_id: int,
+    image_update: SingleImageUpdate,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+):
+    output = await _get_dataset_check_owner(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        db=db,
+    )
+    db_dataset = output["dataset"]
+
+    image = next(
+        (
+            image
+            for image in db_dataset["images"]
+            if image["zarr_url"] == image_update.zarr_url
+        ),
+        None,
+    )
+    if image is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=(
+                f"No image with zarr_url '{image_update.zarr_url}' in "
+                f"DatasetV2 {dataset_id}."
+            ),
+        )
+
+    for key, value in image_update.dict(
+        exclude_none=True, exclude={"zarr_url"}
+    ).items():
+        setattr(image, key, value)
+    flag_modified(db_dataset, "images")
+
+    await db.commit()
+    await db.refresh(image)
+    await db.close()
+    return image
