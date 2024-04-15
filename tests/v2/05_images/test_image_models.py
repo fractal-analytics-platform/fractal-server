@@ -56,7 +56,7 @@ def test_url_normalization():
 
     with pytest.raises(ValidationError) as e:
         SingleImage(zarr_url="https://foo.bar")
-    assert "Generic URL" in e._excinfo[1].errors()[0]["msg"]
+    assert "URLs must begin" in e._excinfo[1].errors()[0]["msg"]
 
     # origin
     assert SingleImage(zarr_url="/valid/url", origin=None).origin is None
@@ -73,7 +73,7 @@ def test_url_normalization():
     assert "S3 handling" in e._excinfo[1].errors()[0]["msg"]
     with pytest.raises(ValidationError) as e:
         SingleImage(zarr_url="/valid/url", origin="http://foo.bar")
-    assert "Generic URL" in e._excinfo[1].errors()[0]["msg"]
+    assert "URLs must begin" in e._excinfo[1].errors()[0]["msg"]
 
 
 def test_single_image_task_output():
