@@ -218,7 +218,7 @@ async def delete_dataset_images(
 
 
 @router.patch(
-    "/project/{project_id}/dataset/{dataset_id}/image/",
+    "/project/{project_id}/dataset/{dataset_id}/images/",
     response_model=SingleImage,
     status_code=status.HTTP_200_OK,
 )
@@ -237,7 +237,9 @@ async def patch_dataset_image(
     )
     db_dataset = output["dataset"]
 
-    ret = find_image_by_zarr_url(db_dataset["images"], image_update.zarr_url)
+    ret = find_image_by_zarr_url(
+        images=db_dataset.images, zarr_url=image_update.zarr_url
+    )
     if ret is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -246,16 +248,16 @@ async def patch_dataset_image(
                 f"DatasetV2 {dataset_id}."
             ),
         )
-
-    image = db_dataset["images"][ret["index"]]
+    index = ret["index"]
 
     for key, value in image_update.dict(
         exclude_none=True, exclude={"zarr_url"}
     ).items():
-        setattr(image, key, value)
+        db_dataset.images[index][key] = value
+
     flag_modified(db_dataset, "images")
 
     await db.commit()
-    await db.refresh(image)
+    await db.refresh(db_dataset)
     await db.close()
-    return image
+    return db_dataset.images[index]
