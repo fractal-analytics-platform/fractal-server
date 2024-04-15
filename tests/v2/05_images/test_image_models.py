@@ -4,6 +4,7 @@ from pydantic import ValidationError
 from fractal_server.images import Filters
 from fractal_server.images import SingleImage
 from fractal_server.images import SingleImageTaskOutput
+from fractal_server.images.models import SingleImageBase
 
 
 def test_single_image():
@@ -76,20 +77,13 @@ def test_url_normalization():
 
 
 def test_single_image_task_output():
-    valid_attributes = dict(a="string", b=3, c=0.33, d=True, f=None)
-    assert (
-        SingleImageTaskOutput(
-            zarr_url="/somewhere", attributes=valid_attributes
-        ).attributes
-        == valid_attributes
-    )
-    invalid_attributes = [
-        dict(a=["l", "i", "s", "t"]),
-        dict(a={"d": "i", "c": "t"}),
-    ]
-    for attr in invalid_attributes:
-        with pytest.raises(ValidationError):
-            SingleImageTaskOutput(zarr_url="/somewhere", attributes=attr)
+    base = SingleImageBase(zarr_url="/zarr/url", attributes={"x": None})
+
+    # SingleImageTaskOutput accepts 'None' as value
+    SingleImageTaskOutput(**base.dict())
+    # SingleImage does not accept 'None' as value
+    with pytest.raises(ValidationError):
+        SingleImage(**base.dict())
 
 
 def test_filters():
