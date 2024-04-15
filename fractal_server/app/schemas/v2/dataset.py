@@ -88,4 +88,9 @@ class DatasetUpdateV2(BaseModel):
     filters: Optional[Filters]
 
     # Validators
+    @validator("zarr_dir")
+    def normalize_zarr_dir(cls, v: str) -> str:
+        if v is not None:
+            return normalize_url(v)
+
     _name = validator("name", allow_reuse=True)(valstr("name"))
