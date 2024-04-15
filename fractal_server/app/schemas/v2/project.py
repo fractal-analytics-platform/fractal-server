@@ -12,7 +12,6 @@ from .._validators import valutc
 class ProjectCreateV2(BaseModel, extra=Extra.forbid):
 
     name: str
-    read_only: bool = False
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))
 
@@ -21,7 +20,6 @@ class ProjectReadV2(BaseModel):
 
     id: int
     name: str
-    read_only: bool
     timestamp_created: datetime
     # Validators
     _timestamp_created = validator("timestamp_created", allow_reuse=True)(
@@ -32,6 +30,5 @@ class ProjectReadV2(BaseModel):
 class ProjectUpdateV2(BaseModel):
 
     name: Optional[str]
-    read_only: Optional[bool]
     # Validators
     _name = validator("name", allow_reuse=True)(valstr("name"))

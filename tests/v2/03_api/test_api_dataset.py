@@ -206,7 +206,6 @@ async def test_post_dataset(client, MockCurrentUser):
         assert res.status_code == 200
         for k, v in payload1.items():
             assert patched_dataset[k] == v
-        assert patched_dataset["read_only"] == dataset["read_only"]
 
 
 async def test_delete_dataset(
