@@ -134,6 +134,15 @@ async def update_dataset(
     )
     db_dataset = output["dataset"]
 
+    if (dataset_update.zarr_dir is not None) and (len(db_dataset.images) != 0):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Cannot modify Dataset.zarr_dir because Dataset.images is"
+                "non-empty."
+            ),
+        )
+
     for key, value in dataset_update.dict(exclude_unset=True).items():
         setattr(db_dataset, key, value)
 
