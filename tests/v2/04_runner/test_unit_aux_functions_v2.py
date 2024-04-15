@@ -31,17 +31,21 @@ def test_deduplicate_list_of_dicts():
 
 
 def test_check_zarr_urls_are_unique():
-    t = TaskOutput(image_list_updates=[dict(zarr_url="a"), dict(zarr_url="b")])
+    t = TaskOutput(
+        image_list_updates=[dict(zarr_url="/a"), dict(zarr_url="/b")]
+    )
     t.check_zarr_urls_are_unique()
 
-    t = TaskOutput(image_list_updates=[dict(zarr_url="a"), dict(zarr_url="a")])
+    t = TaskOutput(
+        image_list_updates=[dict(zarr_url="/a"), dict(zarr_url="/a")]
+    )
     with pytest.raises(ValueError) as e:
         t.check_zarr_urls_are_unique()
     debug(str(e.value))
 
     t = TaskOutput(
-        image_list_updates=[dict(zarr_url="a"), dict(zarr_url="b")],
-        image_list_removals=["a"],
+        image_list_updates=[dict(zarr_url="/a"), dict(zarr_url="/b")],
+        image_list_removals=["/a"],
     )
     with pytest.raises(ValueError) as e:
         t.check_zarr_urls_are_unique()

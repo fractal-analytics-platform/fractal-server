@@ -275,7 +275,7 @@ async def test_post_new_image(
         json=invalid_new_image_2,
     )
     assert res.status_code == 422
-    assert "not relative to" in res.json()["detail"][0]
+    assert "not relative to" in res.json()["detail"]
 
     # add new image
     res = await client.post(
