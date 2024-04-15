@@ -7,6 +7,7 @@ from pydantic import validator
 
 from ....images import SingleImageTaskOutput
 from fractal_server.images import Filters
+from fractal_server.urls import normalize_url
 
 
 class TaskOutput(BaseModel):
@@ -38,7 +39,7 @@ class TaskOutput(BaseModel):
 
     @validator("image_list_removals")
     def normalize_paths(cls, v: list[str]) -> list[str]:
-        return [normpath(zarr_url) for zarr_url in v]
+        return [normalize_url(zarr_url) for zarr_url in v]
 
 
 class InitArgsModel(BaseModel):
@@ -50,7 +51,7 @@ class InitArgsModel(BaseModel):
 
     @validator("zarr_url")
     def normalize_path(cls, v: str) -> str:
-        return normpath(v)
+        return normalize_url(v)
 
 
 class InitTaskOutput(BaseModel):
