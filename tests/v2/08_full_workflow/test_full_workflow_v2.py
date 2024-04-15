@@ -63,7 +63,8 @@ async def test_full_workflow(
         project = await project_factory_v2(user)
         project_id = project.id
         dataset = await dataset_factory_v2(
-            project_id=project_id, name="dataset", read_only=False
+            project_id=project_id,
+            name="dataset",
         )
         dataset_id = dataset.id
         workflow = await workflow_factory_v2(
@@ -239,7 +240,8 @@ async def test_full_workflow_TaskExecutionError(
         project = await project_factory_v2(user)
         project_id = project.id
         dataset = await dataset_factory_v2(
-            project_id=project_id, name="dataset", read_only=False
+            project_id=project_id,
+            name="dataset",
         )
         dataset_id = dataset.id
         workflow = await workflow_factory_v2(
@@ -383,7 +385,6 @@ async def test_failing_workflow_JobExecutionError(
         dataset = await dataset_factory_v2(
             project_id=project_id,
             name="dataset",
-            read_only=False,
         )
         dataset_id = dataset.id
 
@@ -632,7 +633,6 @@ async def test_non_executable_task_command(
 #         # Create datasets
 #         dataset = await dataset_factory(
 #             project_id=project_id, name="dataset", type="zarr",
-#             read_only=False
 #         )
 #         await resource_factory(path=str(tmp_path / "data"), dataset=dataset)
 
@@ -749,7 +749,6 @@ async def test_non_executable_task_command(
 #             project_id=project_id,
 #             name="dataset",
 #             type="zarr",
-#             read_only=False,
 #             meta=dict(index=["A", "B"]),
 #         )
 #         await resource_factory(path=str(tmp_path / "data"), dataset=dataset)
@@ -860,13 +859,11 @@ async def test_non_executable_task_command(
 #             project_id=project_id,
 #             name="Input Dataset",
 #             type="Any",
-#             read_only=False,
 #         )
 #         output_dataset = await dataset_factory(
 #             project_id=project_id,
 #             name="Output Dataset",
 #             type="Any",
-#             read_only=False,
 #         )
 #         await resource_factory(
 #             path=str(tmp777_path / "data_in"), dataset=input_dataset
