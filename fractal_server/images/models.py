@@ -8,6 +8,7 @@ from pydantic import Field
 from pydantic import validator
 
 from fractal_server.app.schemas._validators import valdictkeys
+from fractal_server.urls import normalize_url
 
 
 class SingleImageBase(BaseModel):
@@ -35,12 +36,12 @@ class SingleImageBase(BaseModel):
 
     @validator("zarr_url")
     def normalize_zarr_url(cls, v: str) -> str:
-        return normpath(v)
+        return normalize_url(v)
 
     @validator("origin")
     def normalize_orig(cls, v: Optional[str]) -> Optional[str]:
         if v is not None:
-            return normpath(v)
+            return normalize_url(v)
 
 
 class SingleImageTaskOutput(SingleImageBase):
