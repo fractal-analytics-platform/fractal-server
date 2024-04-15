@@ -34,8 +34,9 @@ async def test_schemas_dataset_v2(db):
     dataset_create = DatasetCreateV2(
         name="name",
         filters={"attributes": {"x": 10}},
-        zarr_dir="/tmp",
+        zarr_dir="/tmp/",
     )
+    assert dataset_create.zarr_dir == "/tmp"
     debug(dataset_create)
 
     dataset = DatasetV2(**dataset_create.dict(), project_id=project.id)
