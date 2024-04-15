@@ -138,8 +138,8 @@ async def update_dataset(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
-                "Cannot modify Dataset.zarr_dir because Dataset.images is"
-                "non-empty."
+                "Cannot modify `zarr_dir` because the dataset has a non-empty "
+                "image list."
             ),
         )
 
