@@ -10,4 +10,4 @@ def normalize_url(url: str) -> str:
         # ValueError, TypeError or AssertionError
         raise ValueError("S3 handling not implemented yet")
     else:
-        raise ValueError("Urls must begin with '/' or 's3'.")
+        raise ValueError("URLs must begin with '/' or 's3'.")
