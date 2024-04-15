@@ -43,6 +43,38 @@ def test_single_image():
         SingleImage(zarr_url="/somewhere", types=invalid_types)
 
 
+def test_url_normalization():
+
+    # zarr_url
+    assert SingleImage(zarr_url="/valid/url").zarr_url == "/valid/url"
+    assert SingleImage(zarr_url="/remove/slash/").zarr_url == "/remove/slash"
+
+    with pytest.raises(ValidationError) as e:
+        SingleImage(zarr_url="s3/foo")
+    assert "S3 handling" in e._excinfo[1].errors()[0]["msg"]
+
+    with pytest.raises(ValidationError) as e:
+        SingleImage(zarr_url="https://foo.bar")
+    assert "Generic URL" in e._excinfo[1].errors()[0]["msg"]
+
+    # origin
+    assert SingleImage(zarr_url="/valid/url", origin=None).origin is None
+    assert (
+        SingleImage(zarr_url="/valid/url", origin="/valid/origin").origin
+        == "/valid/origin"
+    )
+    assert (
+        SingleImage(zarr_url="/valid/url", origin="/remove/slash//").origin
+        == "/remove/slash"
+    )
+    with pytest.raises(ValidationError) as e:
+        SingleImage(zarr_url="/valid/url", origin="s3/foo")
+    assert "S3 handling" in e._excinfo[1].errors()[0]["msg"]
+    with pytest.raises(ValidationError) as e:
+        SingleImage(zarr_url="/valid/url", origin="http://foo.bar")
+    assert "Generic URL" in e._excinfo[1].errors()[0]["msg"]
+
+
 def test_single_image_task_output():
     valid_attributes = dict(a="string", b=3, c=0.33, d=True, f=None)
     assert (
