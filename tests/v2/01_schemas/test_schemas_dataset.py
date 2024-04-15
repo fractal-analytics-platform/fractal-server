@@ -56,7 +56,7 @@ async def test_schemas_dataset_v2(db):
     debug(dataset_read)
 
     # Update
-    dataset_update = DatasetUpdateV2(name="new name")
+    dataset_update = DatasetUpdateV2(name="new name", zarr_dir="/zarr/")
     debug(dataset_update)
 
     for key, value in dataset_update.dict(exclude_unset=True).items():
