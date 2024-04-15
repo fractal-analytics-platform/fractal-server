@@ -7,6 +7,7 @@ from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.schemas.v2 import DatasetCreateV2
 from fractal_server.app.schemas.v2 import DatasetReadV2
 from fractal_server.app.schemas.v2 import DatasetUpdateV2
+from fractal_server.urls import normalize_url
 
 
 async def test_schemas_dataset_v2(db):
@@ -36,7 +37,7 @@ async def test_schemas_dataset_v2(db):
         filters={"attributes": {"x": 10}},
         zarr_dir="/tmp/",
     )
-    assert dataset_create.zarr_dir == "/tmp"
+    assert dataset_create.zarr_dir == normalize_url(dataset_create.zarr_dir)
     debug(dataset_create)
 
     dataset = DatasetV2(**dataset_create.dict(), project_id=project.id)
