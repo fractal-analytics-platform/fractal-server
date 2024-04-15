@@ -360,3 +360,21 @@ async def test_patch_dataset(
         )
         debug(res.json())
         assert res.status_code == 422
+
+        # Check that zarr_dir can be modified only if Dataset.images is empty
+        NEW_ZARR_DIR = "/new_zarr_dir"
+        res = await client.patch(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
+            json=dict(zarr_dir=NEW_ZARR_DIR),
+        )
+        assert res.status_code == 200
+        assert res.json()["zarr_dir"] == NEW_ZARR_DIR
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/images/",
+            json=dict(zarr_url=f"{NEW_ZARR_DIR}/x.zarr"),
+        )
+        res = await client.patch(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/",
+            json=dict(zarr_dir="/new_zarr_dir_2"),
+        )
+        assert res.status_code == 422

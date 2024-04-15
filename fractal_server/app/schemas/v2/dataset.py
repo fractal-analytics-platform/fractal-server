@@ -81,6 +81,7 @@ class DatasetUpdateV2(BaseModel):
         extra = "forbid"
 
     name: Optional[str]
+    zarr_dir: Optional[str]
     read_only: Optional[bool]
     filters: Optional[Filters]
 
