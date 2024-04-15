@@ -70,6 +70,25 @@ class SingleImage(SingleImageBase):
         return v
 
 
+class SingleImageUpdate(SingleImage):
+    attributes: Optional[dict[str, Any]]
+    types: Optional[dict[str, bool]]
+
+    @validator("attributes")
+    def validate_attributes(
+        cls, v: dict[str, Any]
+    ) -> dict[str, Union[int, float, str, bool]]:
+        if v is not None:
+            for key, value in v.items():
+                if not isinstance(value, (int, float, str, bool)):
+                    raise ValueError(
+                        f"SingleImageUpdate.attributes[{key}] must be a scalar"
+                        " (int, float, str or bool). "
+                        f"Given {value} ({type(value)})"
+                    )
+        return v
+
+
 class Filters(BaseModel):
     attributes: dict[str, Any] = Field(default_factory=dict)
     types: dict[str, bool] = Field(default_factory=dict)
