@@ -13,10 +13,8 @@ def test_single_image():
 
     assert SingleImage(zarr_url="/somewhere").zarr_url == "/somewhere"
 
-    assert SingleImage(zarr_url="/somewhere", origin="foo").origin == "foo"
+    assert SingleImage(zarr_url="/somewhere", origin="/foo").origin == "/foo"
     assert SingleImage(zarr_url="/somewhere", origin=None).origin is None
-    assert SingleImage(zarr_url="/somewhere", origin=3).origin == "3"
-    assert SingleImage(zarr_url="/somewhere", origin=True).origin == "True"
 
     valid_attributes = dict(a="string", b=3, c=0.33, d=True)
     assert (
