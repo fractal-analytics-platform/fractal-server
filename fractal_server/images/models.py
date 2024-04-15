@@ -70,7 +70,7 @@ class SingleImage(SingleImageBase):
         return v
 
 
-class SingleImageUpdate(SingleImage):
+class SingleImageUpdate(SingleImageBase):
     attributes: Optional[dict[str, Any]]
     types: Optional[dict[str, bool]]
 

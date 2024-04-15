@@ -18,6 +18,7 @@ from fractal_server.app.security import User
 from fractal_server.images import Filters
 from fractal_server.images import SingleImage
 from fractal_server.images import SingleImageUpdate
+from fractal_server.images.tools import find_image_by_zarr_url
 from fractal_server.images.tools import match_filter
 
 router = APIRouter()
@@ -236,15 +237,8 @@ async def patch_dataset_image(
     )
     db_dataset = output["dataset"]
 
-    image = next(
-        (
-            image
-            for image in db_dataset["images"]
-            if image["zarr_url"] == image_update.zarr_url
-        ),
-        None,
-    )
-    if image is None:
+    ret = find_image_by_zarr_url(db_dataset["images"], image_update.zarr_url)
+    if ret is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=(
@@ -252,6 +246,8 @@ async def patch_dataset_image(
                 f"DatasetV2 {dataset_id}."
             ),
         )
+
+    image = db_dataset["images"][ret["index"]]
 
     for key, value in image_update.dict(
         exclude_none=True, exclude={"zarr_url"}
