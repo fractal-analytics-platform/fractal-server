@@ -284,9 +284,7 @@ async def test_post_new_image(
         json=invalid_new_image_3,
     )
     assert res.status_code == 422
-    assert res.json()["detail"] == (
-        "`SingleImage.zarr_url` cannot be equal to `Dataset.zarr_dir`."
-    )
+    assert "cannot be equal to `Dataset.zarr_dir`" in res.json()["detail"]
 
     # add new image
     res = await client.post(
