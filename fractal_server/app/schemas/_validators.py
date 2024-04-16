@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 from datetime import timezone
 from typing import Any
+from typing import Optional
 
 
 def valstr(attribute: str, accept_none: bool = False):
@@ -12,7 +13,7 @@ def valstr(attribute: str, accept_none: bool = False):
     If `accept_none`, the validator also accepts `None`.
     """
 
-    def val(string: str):
+    def val(string: Optional[str]) -> Optional[str]:
         if string is None:
             if accept_none:
                 return string
@@ -29,7 +30,7 @@ def valstr(attribute: str, accept_none: bool = False):
 
 
 def valdictkeys(attribute: str):
-    def val(d: dict[str, Any]):
+    def val(d: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
         """
         Apply valstr to every key of the dictionary, and fail if there are
         identical keys.
@@ -55,7 +56,7 @@ def valint(attribute: str, min_val: int = 1):
     database entry) is greater or equal to min_val.
     """
 
-    def val(integer: int):
+    def val(integer: Optional[int]) -> Optional[int]:
         if integer is None:
             raise ValueError(f"Integer attribute '{attribute}' cannot be None")
         if integer < min_val:
@@ -73,7 +74,7 @@ def val_absolute_path(attribute: str):
     Check that a string attribute is an absolute path
     """
 
-    def val(string: str):
+    def val(string: Optional[str]) -> str:
         if string is None:
             raise ValueError(f"String attribute '{attribute}' cannot be None")
         s = string.strip()
@@ -90,7 +91,7 @@ def val_absolute_path(attribute: str):
 
 
 def val_unique_list(attribute: str):
-    def val(must_be_unique: list):
+    def val(must_be_unique: Optional[list]) -> Optional[list]:
         if must_be_unique is not None:
             if len(set(must_be_unique)) != len(must_be_unique):
                 raise ValueError(f"`{attribute}` list has repetitions")
@@ -100,7 +101,7 @@ def val_unique_list(attribute: str):
 
 
 def valutc(attribute: str):
-    def val(timestamp: datetime):
+    def val(timestamp: Optional[datetime]) -> Optional[datetime]:
         """
         Replacing `tzinfo` with `timezone.utc` is just required by SQLite data.
         If using Postgres, this function leaves the datetime exactly as it is.

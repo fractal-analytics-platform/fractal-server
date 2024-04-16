@@ -1,5 +1,6 @@
 from fractal_server.images import Filters
 from fractal_server.images import SingleImage
+from fractal_server.images.tools import find_image_by_zarr_url
 from fractal_server.images.tools import match_filter
 
 PREFIX = "api/v2"
@@ -207,7 +208,7 @@ async def test_delete_images(
     project_factory_v2,
     dataset_factory_v2,
 ):
-    IMAGES = n_images(42)
+    IMAGES = n_images(10)
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
 
@@ -291,3 +292,41 @@ async def test_post_new_image(
     assert res.json()["total_count"] == N + 1
     assert "new_attribute" in res.json()["attributes"].keys()
     assert "new_type" in res.json()["types"]
+
+
+async def test_patch_images(
+    MockCurrentUser,
+    client,
+    project_factory_v2,
+    dataset_factory_v2,
+    db,
+):
+    IMAGES = n_images(1)
+    async with MockCurrentUser() as user:
+        project = await project_factory_v2(user)
+    dataset = await dataset_factory_v2(project_id=project.id, images=IMAGES)
+
+    res = await client.patch(
+        f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/",
+        json=dict(
+            zarr_url=IMAGES[0]["zarr_url"],
+            attributes={"a": "b"},
+            types={"c": True, "d": False},
+        ),
+    )
+    assert res.status_code == 200
+    assert res.json()["zarr_url"] == IMAGES[0]["zarr_url"]
+    assert res.json()["attributes"] == {"a": "b"}
+    assert res.json()["types"] == {"c": True, "d": False}
+
+    await db.refresh(dataset)
+    ret = find_image_by_zarr_url(
+        images=dataset.images, zarr_url=IMAGES[0]["zarr_url"]
+    )
+    assert ret["image"]["attributes"] == {"a": "b"}
+    assert ret["image"]["types"] == {"c": True, "d": False}
+    res = await client.patch(
+        f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/",
+        json=dict(zarr_url="/foo/bar"),
+    )
+    assert res.status_code == 404

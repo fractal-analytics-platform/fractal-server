@@ -4,6 +4,7 @@ from pydantic import ValidationError
 from fractal_server.images import Filters
 from fractal_server.images import SingleImage
 from fractal_server.images import SingleImageTaskOutput
+from fractal_server.images import SingleImageUpdate
 from fractal_server.images.models import SingleImageBase
 
 
@@ -107,3 +108,26 @@ def test_filters():
     invalid_types = dict(a="not a bool")
     with pytest.raises(ValidationError):
         Filters(types=invalid_types)
+
+
+def test_single_image_update():
+
+    with pytest.raises(ValidationError):
+        SingleImageUpdate()
+    SingleImageUpdate(zarr_url="/something")
+
+    # override SingleImageBase validation
+    args = dict(zarr_url="/something", attributes=None)
+    with pytest.raises(ValidationError):
+        SingleImageBase(**args)
+    SingleImageUpdate(**args)
+
+    args = dict(zarr_url="/something", types=None)
+    with pytest.raises(ValidationError):
+        SingleImageBase(**args)
+    SingleImageUpdate(**args)
+
+    with pytest.raises(ValidationError):
+        SingleImageUpdate(
+            zarr_url="/something", attributes={"invalid": ["l", "i", "s", "t"]}
+        )
