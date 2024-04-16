@@ -12,6 +12,7 @@ def dummy_insert_single_image(
     zarr_dir: str,
     attributes: Optional[dict[str, Any]] = None,
     fail: bool = False,
+    trailing_slash: bool = False,
 ) -> dict:
     """
     Remove images
@@ -19,12 +20,15 @@ def dummy_insert_single_image(
     Arguments:
         zarr_urls: description
         fail: If `True`, make images invalid.
+        trailing_slash: If `True`,  add 10 trailing slashes to zarr_urls
     """
     print("[dummy_insert_single_image] START")
     if fail:
-        new_zarr_url = "/invalid/my-new-image/"
+        new_zarr_url = "/invalid/my-new-image"
     else:
         new_zarr_url = Path(zarr_dir, "my-new-image").as_posix()
+    if trailing_slash:
+        new_zarr_url += "//////////"
     print(f"[dummy_insert_single_image] {new_zarr_url=}")
     new_image = dict(zarr_url=new_zarr_url)
     if attributes is not None:

@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 from devtools import debug
+from pydantic import ValidationError
 
 from fractal_server.app.runner.v2.deduplicate_list import deduplicate_list
 from fractal_server.app.runner.v2.task_interface import InitArgsModel
@@ -30,22 +31,35 @@ def test_deduplicate_list_of_dicts():
     assert len(new) == 2
 
 
-def test_check_zarr_urls_are_unique():
-    t = TaskOutput(image_list_updates=[dict(zarr_url="a"), dict(zarr_url="b")])
+def test_task_output():
+    # Test 'check_zarr_urls_are_unique'
+    t = TaskOutput(
+        image_list_updates=[dict(zarr_url="/a"), dict(zarr_url="/b")]
+    )
     t.check_zarr_urls_are_unique()
 
-    t = TaskOutput(image_list_updates=[dict(zarr_url="a"), dict(zarr_url="a")])
+    t = TaskOutput(
+        image_list_updates=[dict(zarr_url="/a"), dict(zarr_url="/a")]
+    )
     with pytest.raises(ValueError) as e:
         t.check_zarr_urls_are_unique()
     debug(str(e.value))
 
     t = TaskOutput(
-        image_list_updates=[dict(zarr_url="a"), dict(zarr_url="b")],
-        image_list_removals=["a"],
+        image_list_updates=[dict(zarr_url="/a"), dict(zarr_url="/b")],
+        image_list_removals=["/a"],
     )
     with pytest.raises(ValueError) as e:
         t.check_zarr_urls_are_unique()
     debug(str(e.value))
+    # Test 'normalize_paths'
+    assert TaskOutput(
+        image_list_removals=["/a/b/../c/", "/tmp//"]
+    ).image_list_removals == ["/a/c", "/tmp"]
+    with pytest.raises(ValidationError):
+        TaskOutput(image_list_removals=["s3://BUCKET"])
+    with pytest.raises(ValidationError):
+        TaskOutput(image_list_removals=["http://url.json"])
 
 
 def test_convert_v2_args_into_v1(tmp_path: Path):

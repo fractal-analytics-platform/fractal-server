@@ -12,6 +12,7 @@ from .dumps import WorkflowTaskDumpV2
 from .project import ProjectReadV2
 from .workflowtask import WorkflowTaskStatusTypeV2
 from fractal_server.images import Filters
+from fractal_server.urls import normalize_url
 
 
 class _DatasetHistoryItemV2(BaseModel):
@@ -50,6 +51,10 @@ class DatasetCreateV2(BaseModel, extra=Extra.forbid):
     filters: Filters = Field(default_factory=Filters)
 
     # Validators
+    @validator("zarr_dir")
+    def normalize_zarr_dir(cls, v: str) -> str:
+        return normalize_url(v)
+
     _name = validator("name", allow_reuse=True)(valstr("name"))
 
 
@@ -83,4 +88,10 @@ class DatasetUpdateV2(BaseModel):
     filters: Optional[Filters]
 
     # Validators
+    @validator("zarr_dir")
+    def normalize_zarr_dir(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None:
+            return normalize_url(v)
+        return v
+
     _name = validator("name", allow_reuse=True)(valstr("name"))
