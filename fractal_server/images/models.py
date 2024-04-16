@@ -94,6 +94,9 @@ class SingleImageUpdate(BaseModel):
         cls, v: dict[str, Any]
     ) -> dict[str, Union[int, float, str, bool]]:
         if v is not None:
+            # validate keys
+            valdictkeys("attributes")(v)
+            # validate values
             for key, value in v.items():
                 if not isinstance(value, (int, float, str, bool)):
                     raise ValueError(
