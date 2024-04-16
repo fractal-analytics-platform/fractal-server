@@ -15,10 +15,8 @@ def test_single_image():
 
     assert SingleImage(zarr_url="/somewhere").zarr_url == "/somewhere"
 
-    assert SingleImage(zarr_url="/somewhere", origin="foo").origin == "foo"
+    assert SingleImage(zarr_url="/somewhere", origin="/foo").origin == "/foo"
     assert SingleImage(zarr_url="/somewhere", origin=None).origin is None
-    assert SingleImage(zarr_url="/somewhere", origin=3).origin == "3"
-    assert SingleImage(zarr_url="/somewhere", origin=True).origin == "True"
 
     valid_attributes = dict(a="string", b=3, c=0.33, d=True)
     assert (
@@ -47,21 +45,46 @@ def test_single_image():
         SingleImage(zarr_url="/somewhere", types=invalid_types)
 
 
-def test_single_image_task_output():
-    valid_attributes = dict(a="string", b=3, c=0.33, d=True, f=None)
+def test_url_normalization():
+
+    # zarr_url
+    assert SingleImage(zarr_url="/valid/url").zarr_url == "/valid/url"
+    assert SingleImage(zarr_url="/remove/slash/").zarr_url == "/remove/slash"
+
+    with pytest.raises(ValidationError) as e:
+        SingleImage(zarr_url="s3/foo")
+    assert "S3 handling" in e._excinfo[1].errors()[0]["msg"]
+
+    with pytest.raises(ValidationError) as e:
+        SingleImage(zarr_url="https://foo.bar")
+    assert "URLs must begin" in e._excinfo[1].errors()[0]["msg"]
+
+    # origin
+    assert SingleImage(zarr_url="/valid/url", origin=None).origin is None
     assert (
-        SingleImageTaskOutput(
-            zarr_url="/somewhere", attributes=valid_attributes
-        ).attributes
-        == valid_attributes
+        SingleImage(zarr_url="/valid/url", origin="/valid/origin").origin
+        == "/valid/origin"
     )
-    invalid_attributes = [
-        dict(a=["l", "i", "s", "t"]),
-        dict(a={"d": "i", "c": "t"}),
-    ]
-    for attr in invalid_attributes:
-        with pytest.raises(ValidationError):
-            SingleImageTaskOutput(zarr_url="/somewhere", attributes=attr)
+    assert (
+        SingleImage(zarr_url="/valid/url", origin="/remove/slash//").origin
+        == "/remove/slash"
+    )
+    with pytest.raises(ValidationError) as e:
+        SingleImage(zarr_url="/valid/url", origin="s3/foo")
+    assert "S3 handling" in e._excinfo[1].errors()[0]["msg"]
+    with pytest.raises(ValidationError) as e:
+        SingleImage(zarr_url="/valid/url", origin="http://foo.bar")
+    assert "URLs must begin" in e._excinfo[1].errors()[0]["msg"]
+
+
+def test_single_image_task_output():
+    base = SingleImageBase(zarr_url="/zarr/url", attributes={"x": None})
+
+    # SingleImageTaskOutput accepts 'None' as value
+    SingleImageTaskOutput(**base.dict())
+    # SingleImage does not accept 'None' as value
+    with pytest.raises(ValidationError):
+        SingleImage(**base.dict())
 
 
 def test_filters():
@@ -91,20 +114,20 @@ def test_single_image_update():
 
     with pytest.raises(ValidationError):
         SingleImageUpdate()
-    SingleImageUpdate(zarr_url="something")
+    SingleImageUpdate(zarr_url="/something")
 
     # override SingleImageBase validation
-    args = dict(zarr_url="something", origin=None, attributes=None)
+    args = dict(zarr_url="/something", origin=None, attributes=None)
     with pytest.raises(ValidationError):
         SingleImageBase(**args)
     SingleImageUpdate(**args)
 
-    args = dict(zarr_url="something", origin=None, types=None)
+    args = dict(zarr_url="/something", origin=None, types=None)
     with pytest.raises(ValidationError):
         SingleImageBase(**args)
     SingleImageUpdate(**args)
 
     with pytest.raises(ValidationError):
         SingleImageUpdate(
-            zarr_url="something", attributes={"invalid": ["l", "i", "s", "t"]}
+            zarr_url="/something", attributes={"invalid": ["l", "i", "s", "t"]}
         )
