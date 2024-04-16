@@ -165,6 +165,4 @@ def fractal_tasks_mock_venv_legacy(testdata_path, tmp_path_factory) -> dict:
             command=f"{python_bin} {task_path}",
         )
         task_dict[t.name] = t
-
-    logging.critical(f"NOW RETURN, {task_dict=}")
     return task_dict
