@@ -108,3 +108,7 @@ def test_convert_v2_args_into_v1(tmp_path: Path):
         "component": "plate.zarr",
         "something": "else",
     }
+
+    # None
+    with pytest.raises(ValueError):
+        convert_v2_args_into_v1(kwargs_v2, parallelization_level=None)
