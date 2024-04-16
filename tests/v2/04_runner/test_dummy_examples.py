@@ -8,6 +8,7 @@ from v2_mock_models import DatasetV2Mock
 from v2_mock_models import WorkflowTaskV2Mock
 
 from fractal_server.app.runner.v2.runner import execute_tasks_v2
+from fractal_server.urls import normalize_url
 
 
 def test_dummy_insert_single_image(
@@ -214,3 +215,32 @@ def test_dummy_insert_single_image_none_attribute(
     assert (
         "attribute-name" not in dataset_attrs["images"][0]["attributes"].keys()
     )
+
+
+def test_dummy_insert_single_image_normalization(
+    tmp_path: Path, executor: Executor, fractal_tasks_mock_venv
+):
+    # Preliminary setup
+    execute_tasks_v2_args = dict(
+        executor=executor,
+        workflow_dir=tmp_path / "job_dir",
+        workflow_dir_user=tmp_path / "job_dir",
+    )
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+
+    # Run successfully with trailing slashes
+    dataset_attrs = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTaskV2Mock(
+                task=fractal_tasks_mock_venv["dummy_insert_single_image"],
+                id=0,
+                order=0,
+                args_non_parallel={"trailing_slash": True},
+            )
+        ],
+        dataset=DatasetV2Mock(name="dataset", zarr_dir=zarr_dir),
+        **execute_tasks_v2_args,
+    )
+    debug(dataset_attrs["images"])
+    for image in dataset_attrs["images"]:
+        assert normalize_url(image["zarr_url"]) == image["zarr_url"]

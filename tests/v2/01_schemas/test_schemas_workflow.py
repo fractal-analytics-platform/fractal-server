@@ -1,4 +1,5 @@
-from devtools import debug
+import pytest
+from pydantic import ValidationError
 
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import WorkflowV2
@@ -7,42 +8,36 @@ from fractal_server.app.schemas.v2 import WorkflowReadV2
 from fractal_server.app.schemas.v2 import WorkflowUpdateV2
 
 
-async def test_schemas_workflow_v2(db):
+async def test_schemas_workflow_v2():
 
-    project = ProjectV2(name="project")
-    debug(project)
-    db.add(project)
-    await db.commit()
+    project = ProjectV2(id=1, name="project")
 
     # Create
 
     workflow_create = WorkflowCreateV2(name="workflow")
-    debug(workflow_create)
 
-    workflow = WorkflowV2(**workflow_create.dict(), project_id=project.id)
-    debug(workflow)
-
-    db.add(workflow)
-    await db.commit()
+    workflow = WorkflowV2(
+        **workflow_create.dict(),
+        id=1,
+        project_id=project.id,
+    )
 
     # Read
 
-    await db.refresh(workflow)
-    workflow_read = WorkflowReadV2(
+    WorkflowReadV2(
         **workflow.model_dump(),
-        project=workflow.project,
+        project=project,
         task_list=workflow.task_list,
     )
-    debug(workflow_read)
 
     # Update
 
+    with pytest.raises(ValidationError):
+        WorkflowUpdateV2(name=None)
+
     workflow_update = WorkflowUpdateV2(name="new name")
-    debug(workflow_update)
 
     for key, value in workflow_update.dict(exclude_unset=True).items():
         setattr(workflow, key, value)
 
-    await db.commit()
     assert workflow.name == "new name"
-    debug(workflow)

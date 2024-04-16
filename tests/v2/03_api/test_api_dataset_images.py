@@ -1,16 +1,16 @@
-from devtools import debug
-
 from fractal_server.images import Filters
 from fractal_server.images import SingleImage
 from fractal_server.images.tools import match_filter
 
 PREFIX = "api/v2"
 
+ZARR_DIR = "/zarr_dir"
+
 
 def n_images(n: int) -> list[SingleImage]:
     return [
         SingleImage(
-            zarr_url=f"/{i}",
+            zarr_url=f"{ZARR_DIR}/{i}",
             attributes={
                 str(i): i,
                 "string_attribute": str(i % 2),
@@ -50,7 +50,9 @@ async def test_query_images(
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
 
-    dataset = await dataset_factory_v2(project_id=project.id, images=images)
+    dataset = await dataset_factory_v2(
+        project_id=project.id, zarr_dir=ZARR_DIR, images=images
+    )
 
     res = await client.get(
         f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/",
@@ -209,7 +211,9 @@ async def test_delete_images(
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
 
-    dataset = await dataset_factory_v2(project_id=project.id, images=IMAGES)
+    dataset = await dataset_factory_v2(
+        project_id=project.id, zarr_dir=ZARR_DIR, images=IMAGES
+    )
     res = await client.post(
         f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/query/"
     )
@@ -236,16 +240,20 @@ async def test_post_new_image(
     N = 10
     images = n_images(N)
 
-    new_image = SingleImage(
-        zarr_url="/new_zarr_url",
-        attributes={"new_attribute": "xyz"},
-        types={"new_type": True},
-    ).dict()
-    invalid_new_image = SingleImage(zarr_url=images[-1]["zarr_url"]).dict()
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
 
-    dataset = await dataset_factory_v2(project_id=project.id, images=images)
+    dataset = await dataset_factory_v2(
+        project_id=project.id, zarr_dir=ZARR_DIR, images=images
+    )
+
+    new_image = SingleImage(
+        zarr_url=f"{ZARR_DIR}/new_zarr_url",
+        attributes={"new_attribute": "xyz"},
+        types={"new_type": True},
+    ).dict()
+    invalid_new_image_1 = SingleImage(zarr_url=images[-1]["zarr_url"]).dict()
+    invalid_new_image_2 = SingleImage(zarr_url="/foo/bar").dict()
 
     res = await client.post(
         f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/query/"
@@ -254,13 +262,21 @@ async def test_post_new_image(
     assert "new_attribute" not in res.json()["attributes"].keys()
     assert "new_type" not in res.json()["types"]
 
-    # add ivalid new image
+    # add invalid new images
     res = await client.post(
         f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/",
-        json=invalid_new_image,
+        json=invalid_new_image_1,
     )
     assert res.status_code == 422
-    debug(res.json())
+    assert "already in" in res.json()["detail"][0]
+
+    res = await client.post(
+        f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/",
+        json=invalid_new_image_2,
+    )
+    assert res.status_code == 422
+    assert "not relative to" in res.json()["detail"]
+
     # add new image
     res = await client.post(
         f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/",
