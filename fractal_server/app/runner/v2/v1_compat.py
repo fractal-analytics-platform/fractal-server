@@ -18,6 +18,8 @@ def convert_v2_args_into_v1(
         component = str(Path(image_component).parent)
     elif parallelization_level == "plate":
         component = str(Path(image_component).parents[2])
+    else:
+        raise ValueError(f"Invalid {parallelization_level=}.")
 
     kwargs_v1.update(
         input_paths=[input_path],
