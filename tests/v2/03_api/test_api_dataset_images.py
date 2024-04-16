@@ -315,6 +315,10 @@ async def test_patch_images(
         ),
     )
     assert res.status_code == 200
+    assert res.json()["zarr_url"] == IMAGES[0]["zarr_url"]
+    assert res.json()["attributes"] == {"a": "b"}
+    assert res.json()["types"] == {"c": True, "d": False}
+
     await db.refresh(dataset)
     ret = find_image_by_zarr_url(
         images=dataset.images, zarr_url=IMAGES[0]["zarr_url"]
