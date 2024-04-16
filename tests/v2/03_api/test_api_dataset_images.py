@@ -255,6 +255,7 @@ async def test_post_new_image(
     ).dict()
     invalid_new_image_1 = SingleImage(zarr_url=images[-1]["zarr_url"]).dict()
     invalid_new_image_2 = SingleImage(zarr_url="/foo/bar").dict()
+    invalid_new_image_3 = SingleImage(zarr_url=dataset.zarr_dir).dict()
 
     res = await client.post(
         f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/query/"
@@ -277,6 +278,15 @@ async def test_post_new_image(
     )
     assert res.status_code == 422
     assert "not relative to" in res.json()["detail"]
+
+    res = await client.post(
+        f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/",
+        json=invalid_new_image_3,
+    )
+    assert res.status_code == 422
+    assert res.json()["detail"] == (
+        "`SingleImage.zarr_url` cannot be equal to `Dataset.zarr_dir`."
+    )
 
     # add new image
     res = await client.post(
