@@ -35,16 +35,12 @@ async def test_schemas_dataset_v2():
     assert dataset_create.zarr_dir == normalize_url(dataset_create.zarr_dir)
 
     dataset = DatasetV2(
-        **dataset_create.dict(),
-        id=1,
-        project_id=project.id,
-        project=project,
-        history=[]
+        **dataset_create.dict(), id=1, project_id=project.id, history=[]
     )
 
     # Read
 
-    DatasetReadV2(**dataset.model_dump(), project=dataset.project)
+    DatasetReadV2(**dataset.model_dump(), project=project)
 
     # Update
 
