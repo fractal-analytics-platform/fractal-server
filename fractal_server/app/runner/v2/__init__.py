@@ -212,6 +212,12 @@ async def submit_workflow(
             first_task_index=job.first_task_index,
             last_task_index=job.last_task_index,
         )
+        for image in new_dataset_attributes["images"]:
+            if image["zarr_url"] == dataset.zarr_dir:
+                raise ValueError(
+                    "SingleImage.zarr_url` cannot be equal to "
+                    f"`Dataset.zarr_dir`: {dataset.zarr_dir}."
+                )
 
         logger.info(
             f'End execution of workflow "{workflow.name}"; '
