@@ -182,6 +182,11 @@ def execute_tasks_v2(
                         f"{zarr_dir} is not a parent directory of "
                         f"{image['zarr_url']}"
                     )
+                # Check that image['zarr_url'] is not equal to zarr_dir
+                if image["zarr_url"] == zarr_dir:
+                    raise ValueError(
+                        "image['zarr_url'] cannot be equal to zarr_dir"
+                    )
                 # Propagate attributes and types from `origin` (if any)
                 updated_attributes = {}
                 updated_types = {}
