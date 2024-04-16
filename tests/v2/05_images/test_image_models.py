@@ -91,6 +91,7 @@ def test_single_image_update():
 
     with pytest.raises(ValidationError):
         SingleImageUpdate()
+    SingleImageUpdate(zarr_url="something")
 
     # override SingleImageBase validation
     args = dict(zarr_url="something", origin=None, attributes=None)
@@ -103,6 +104,7 @@ def test_single_image_update():
         SingleImageBase(**args)
     SingleImageUpdate(**args)
 
-    SingleImageUpdate(
-        zarr_url="something",
-    )
+    with pytest.raises(ValidationError):
+        SingleImageUpdate(
+            zarr_url="something", attributes={"invalid": ["l", "i", "s", "t"]}
+        )
