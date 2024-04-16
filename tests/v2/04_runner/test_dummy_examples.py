@@ -68,6 +68,23 @@ def test_dummy_insert_single_image(
     assert "is not a parent directory" in error_msg
     assert zarr_dir in error_msg
 
+    # Fail because new image's zarr_url is equal to zarr_dir
+    with pytest.raises(ValueError) as e:
+        execute_tasks_v2(
+            wf_task_list=[
+                WorkflowTaskV2Mock(
+                    task=fractal_tasks_mock_venv["dummy_insert_single_image"],
+                    args_non_parallel={"fail_2": True},
+                    id=3,
+                    order=3,
+                )
+            ],
+            dataset=DatasetV2Mock(name="dataset", zarr_dir=zarr_dir),
+            **execute_tasks_v2_args,
+        )
+    error_msg = str(e.value)
+    assert error_msg == "image['zarr_url'] cannot be equal to zarr_dir"
+
 
 def test_dummy_remove_images(
     tmp_path: Path, executor: Executor, fractal_tasks_mock_venv

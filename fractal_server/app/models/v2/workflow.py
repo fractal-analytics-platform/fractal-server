@@ -33,11 +33,3 @@ class WorkflowV2(SQLModel, table=True):
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
-
-    @property
-    def input_types(self):
-        return self.task_list[0].task.input_types
-
-    @property
-    def output_types(self):
-        return self.task_list[-1].task.output_types
