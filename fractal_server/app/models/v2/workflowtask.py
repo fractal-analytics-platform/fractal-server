@@ -51,14 +51,13 @@ class WorkflowTaskV2(SQLModel, table=True):
 
     @validator("args_non_parallel")
     def validate_args_non_parallel(cls, value):
-        """
-        FIXME V2 this requires an update
-        """
         if value is None:
             return
         forbidden_args_keys = {
-            "metadata",
-            "component",
+            "zarr_dir",
+            "zarr_url",
+            "zarr_urls",
+            "init_args",
         }
         args_keys = set(value.keys())
         intersect_keys = forbidden_args_keys.intersection(args_keys)
@@ -71,14 +70,13 @@ class WorkflowTaskV2(SQLModel, table=True):
 
     @validator("args_parallel")
     def validate_args_parallel(cls, value):
-        """
-        FIXME V2 this requires an update
-        """
         if value is None:
             return
         forbidden_args_keys = {
-            "metadata",
-            "component",
+            "zarr_dir",
+            "zarr_url",
+            "zarr_urls",
+            "init_args",
         }
         args_keys = set(value.keys())
         intersect_keys = forbidden_args_keys.intersection(args_keys)
