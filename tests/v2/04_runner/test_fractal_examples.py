@@ -7,6 +7,7 @@ import pytest
 from devtools import debug
 from fixtures_mocks import *  # noqa: F401,F403
 from v2_mock_models import DatasetV2Mock
+from v2_mock_models import TaskV2Mock
 from v2_mock_models import WorkflowTaskV2Mock
 
 from fractal_server.app.runner.v2.runner import execute_tasks_v2
@@ -813,6 +814,48 @@ def test_fractal_demos_01_scaling(
     ]
 
 
+def test_invalid_filtered_image_list(
+    tmp_path: Path,
+    executor: Executor,
+):
+    """
+    Validation of the filtered image list against task input_types fails.
+    """
+
+    execute_tasks_v2_args = dict(
+        executor=executor,
+        workflow_dir=tmp_path / "job_dir",
+        workflow_dir_user=tmp_path / "job_dir",
+    )
+
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+    zarr_url = Path(zarr_dir, "my_image").as_posix()
+    image = SingleImage(zarr_url=zarr_url, attributes={}, types={}).dict()
+
+    with pytest.raises(ValueError) as e:
+        execute_tasks_v2(
+            wf_task_list=[
+                WorkflowTaskV2Mock(
+                    task=TaskV2Mock(
+                        id=0,
+                        name="name",
+                        source="source",
+                        command_non_parallel="cmd",
+                        type="non_parallel",
+                        input_types=dict(invalid=True),
+                    ),
+                    id=0,
+                    order=0,
+                )
+            ],
+            dataset=DatasetV2Mock(
+                name="dataset", zarr_dir=zarr_dir, images=[image]
+            ),
+            **execute_tasks_v2_args,
+        )
+    assert "Filtered images include" in str(e.value)
+
+
 def test_legacy_task(
     tmp_path: Path,
     executor: Executor,
@@ -866,3 +909,5 @@ def test_legacy_task(
         **execute_tasks_v2_args,
     )
     debug(dataset_attrs)
+
+    # FIXME: assert something
