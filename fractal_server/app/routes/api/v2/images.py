@@ -66,6 +66,13 @@ async def post_new_image(
                 f"{dataset.zarr_dir}."
             ),
         )
+    elif new_image.zarr_url == dataset.zarr_dir:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "`SingleImage.zarr_url` cannot be equal to `Dataset.zarr_dir`."
+            ),
+        )
 
     if new_image.zarr_url in dataset.image_zarr_urls:
         raise HTTPException(
