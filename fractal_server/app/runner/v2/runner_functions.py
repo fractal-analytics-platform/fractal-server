@@ -313,10 +313,11 @@ def run_v1_task_parallel(
     for ind, image in enumerate(images):
         list_function_kwargs.append(
             convert_v2_args_into_v1(
-                dict(
+                kwargs_v2=dict(
                     zarr_url=image["zarr_url"],
                     **(wftask.args_parallel or {}),
-                )
+                ),
+                parallelization_level=task_legacy.parallelization_level,
             ),
         )
         list_function_kwargs[-1][_COMPONENT_KEY_] = _index_to_component(ind)
