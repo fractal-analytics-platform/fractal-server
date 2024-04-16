@@ -63,12 +63,13 @@ def execute_tasks_v2(
             filters=Filters(**pre_filters),
         )
         # Verify that filtered images comply with task input_types
-        for image in filtered_images:
-            if not match_filter(image, Filters(types=task.input_types)):
-                raise ValueError(
-                    f"Filtered images include {image}, which does "
-                    f"not comply with {task.input_types=}."
-                )
+        if not wftask.is_legacy_task:
+            for image in filtered_images:
+                if not match_filter(image, Filters(types=task.input_types)):
+                    raise ValueError(
+                        f"Filtered images include {image}, which does "
+                        f"not comply with {task.input_types=}."
+                    )
 
         # TASK EXECUTION (V2)
         if not wftask.is_legacy_task:
@@ -155,7 +156,8 @@ def execute_tasks_v2(
                 # Update image attributes/types with task output and manifest
                 updated_attributes.update(image["attributes"])
                 updated_types.update(image["types"])
-                updated_types.update(task.output_types)
+                if not wftask.is_legacy_task:
+                    updated_types.update(task.output_types)
 
                 # Unset attributes with None value
                 updated_attributes = {
@@ -202,7 +204,8 @@ def execute_tasks_v2(
                     if value is not None
                 }
                 updated_types.update(image["types"])
-                updated_types.update(task.output_types)
+                if not wftask.is_legacy_task:
+                    updated_types.update(task.output_types)
                 new_image = dict(
                     zarr_url=image["zarr_url"],
                     origin=image["origin"],
