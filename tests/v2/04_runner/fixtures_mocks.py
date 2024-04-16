@@ -155,6 +155,11 @@ def fractal_tasks_mock_venv_legacy(testdata_path, tmp_path_factory) -> dict:
         manifest = json.load(f)
     task_dict = {}
     for ind, task in enumerate(manifest["task_list"]):
+
+        more_attributes = {}
+        if task["name"] == "dummy parallel":
+            more_attributes["meta"] = {"parallelization_level": "image"}
+
         task_path = (src_dir / task["executable"]).as_posix()
         t = TaskV1Mock(
             id=ind,
@@ -163,6 +168,7 @@ def fractal_tasks_mock_venv_legacy(testdata_path, tmp_path_factory) -> dict:
             input_type="Any",
             output_type="Any",
             command=f"{python_bin} {task_path}",
+            **more_attributes,
         )
         task_dict[t.name] = t
     return task_dict
