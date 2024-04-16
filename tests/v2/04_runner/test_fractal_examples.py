@@ -811,3 +811,58 @@ def test_fractal_demos_01_scaling(
     assert _task_names_from_history(dataset_attrs["history"]) == [
         "cellpose_segmentation",
     ]
+
+
+def test_legacy_task(
+    tmp_path: Path,
+    executor: Executor,
+    fractal_tasks_mock_venv,
+    fractal_tasks_mock_venv_legacy,
+):
+    """
+    Run a workflow that includes V2 and V1 tasks.
+    """
+
+    execute_tasks_v2_args = dict(
+        executor=executor,
+        workflow_dir=tmp_path / "job_dir",
+        workflow_dir_user=tmp_path / "job_dir",
+    )
+
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+    dataset_attrs = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTaskV2Mock(
+                task=fractal_tasks_mock_venv["create_ome_zarr_compound"],
+                args_non_parallel=dict(image_dir="/tmp/input_images"),
+                id=0,
+                order=0,
+            )
+        ],
+        dataset=DatasetV2Mock(name="dataset", zarr_dir=zarr_dir),
+        **execute_tasks_v2_args,
+    )
+
+    assert _task_names_from_history(dataset_attrs["history"]) == [
+        "create_ome_zarr_compound"
+    ]
+    assert dataset_attrs["filters"]["attributes"] == {}
+    assert dataset_attrs["filters"]["types"] == {}
+    _assert_image_data_exist(dataset_attrs["images"])
+    assert len(dataset_attrs["images"]) == 2
+
+    dataset_attrs = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTaskV2Mock(
+                task_legacy=fractal_tasks_mock_venv_legacy["dummy parallel"],
+                is_legacy_task=True,
+                id=1,
+                order=1,
+            )
+        ],
+        dataset=DatasetV2Mock(
+            name="dataset", zarr_dir=zarr_dir, **dataset_attrs
+        ),
+        **execute_tasks_v2_args,
+    )
+    debug(dataset_attrs)
