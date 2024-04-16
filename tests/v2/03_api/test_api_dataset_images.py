@@ -306,3 +306,8 @@ async def test_patch_images(
         )
         assert ret["image"]["attributes"] == {"a": "b"}
         assert ret["image"]["types"] == {"c": True, "d": False}
+    res = await client.patch(
+        f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/",
+        json=dict(zarr_url="/foo/bar"),
+    )
+    assert res.status_code == 404
