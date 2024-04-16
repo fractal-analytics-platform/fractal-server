@@ -644,6 +644,12 @@
             "title": "Fail",
             "type": "boolean"
           },
+          "trailing_slash": {
+            "default": false,
+            "description": "If `True`, add 10 trailing slashes to zarr_urls",
+            "title": "Trailing Slash",
+            "type": "boolean"
+          },
           "zarr_dir": {
             "description": "Missing description",
             "title": "Zarr Dir",
