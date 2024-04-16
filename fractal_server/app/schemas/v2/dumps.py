@@ -45,6 +45,8 @@ class WorkflowTaskDumpV2(BaseModel):
     workflow_id: int
     order: Optional[int]
 
+    is_legacy_task: bool
+
     input_filters: Filters
 
     task_id: Optional[int]

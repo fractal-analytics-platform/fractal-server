@@ -69,8 +69,11 @@ def test_convert_v2_args_into_v1(tmp_path: Path):
         metadata="this will be overwritten",
         component="this will be overwritten",
     )
-    kwargs_v1 = convert_v2_args_into_v1(kwargs_v2)
-    debug(kwargs_v1)
+
+    # Image
+    kwargs_v1 = convert_v2_args_into_v1(
+        kwargs_v2, parallelization_level="image"
+    )
     PATH = (tmp_path / "input_path").as_posix()
     assert kwargs_v1 == {
         "input_paths": [PATH],
@@ -79,3 +82,33 @@ def test_convert_v2_args_into_v1(tmp_path: Path):
         "component": "plate.zarr/B/03/0",
         "something": "else",
     }
+
+    # Well
+    kwargs_v1 = convert_v2_args_into_v1(
+        kwargs_v2, parallelization_level="well"
+    )
+    PATH = (tmp_path / "input_path").as_posix()
+    assert kwargs_v1 == {
+        "input_paths": [PATH],
+        "output_path": PATH,
+        "metadata": {},
+        "component": "plate.zarr/B/03",
+        "something": "else",
+    }
+
+    # Plate
+    kwargs_v1 = convert_v2_args_into_v1(
+        kwargs_v2, parallelization_level="plate"
+    )
+    PATH = (tmp_path / "input_path").as_posix()
+    assert kwargs_v1 == {
+        "input_paths": [PATH],
+        "output_path": PATH,
+        "metadata": {},
+        "component": "plate.zarr",
+        "something": "else",
+    }
+
+    # None
+    with pytest.raises(ValueError):
+        convert_v2_args_into_v1(kwargs_v2, parallelization_level=None)

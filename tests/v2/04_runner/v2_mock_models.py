@@ -115,11 +115,11 @@ class WorkflowTaskV2Mock(BaseModel):
         task_legacy = values.get("task_legacy")
         if is_legacy_task:
             if task_legacy is None or task is not None:
-                raise ValueError(f"Invalud WorkflowTaskV2Mock with {values=}")
+                raise ValueError(f"Invalid WorkflowTaskV2Mock with {values=}")
             values["task_legacy_id"] = task_legacy.id
         else:
             if task is None or task_legacy is not None:
-                raise ValueError(f"Invalud WorkflowTaskV2Mock with {values=}")
+                raise ValueError(f"Invalid WorkflowTaskV2Mock with {values=}")
             values["task_id"] = task.id
         return values
 
