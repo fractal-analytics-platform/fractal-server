@@ -1,4 +1,5 @@
 import json
+import logging
 from concurrent.futures import ThreadPoolExecutor
 from copy import copy
 from copy import deepcopy
@@ -37,6 +38,8 @@ def execute_tasks_v2(
     submit_setup_call: Callable = no_op_submit_setup_call,
 ) -> DatasetV2:
 
+    logger = logging.getLogger(logger_name)
+
     if not workflow_dir.exists():  # FIXME: this should have already happened
         workflow_dir.mkdir()
 
@@ -48,6 +51,9 @@ def execute_tasks_v2(
 
     for wftask in wf_task_list:
         task = wftask.task
+        task_legacy = wftask.task_legacy
+        task_name = task_legacy.name if wftask.is_legacy_task else task.name
+        logger.debug(f'SUBMIT {wftask.order}-th task (name="{task_name}")')
 
         # PRE TASK EXECUTION
 
@@ -78,7 +84,7 @@ def execute_tasks_v2(
                     images=filtered_images,
                     zarr_dir=zarr_dir,
                     wftask=wftask,
-                    task=wftask.task,
+                    task=task,
                     workflow_dir=workflow_dir,
                     workflow_dir_user=workflow_dir_user,
                     executor=executor,
@@ -89,7 +95,7 @@ def execute_tasks_v2(
                 current_task_output = run_v2_task_parallel(
                     images=filtered_images,
                     wftask=wftask,
-                    task=wftask.task,
+                    task=task,
                     workflow_dir=workflow_dir,
                     workflow_dir_user=workflow_dir_user,
                     executor=executor,
@@ -101,7 +107,7 @@ def execute_tasks_v2(
                     images=filtered_images,
                     zarr_dir=zarr_dir,
                     wftask=wftask,
-                    task=wftask.task,
+                    task=task,
                     workflow_dir=workflow_dir,
                     workflow_dir_user=workflow_dir_user,
                     executor=executor,
@@ -115,7 +121,7 @@ def execute_tasks_v2(
             current_task_output = run_v1_task_parallel(
                 images=filtered_images,
                 wftask=wftask,
-                task_legacy=wftask.task_legacy,
+                task_legacy=task_legacy,
                 executor=executor,
                 logger_name=logger_name,
                 workflow_dir=workflow_dir,
@@ -281,6 +287,8 @@ def execute_tasks_v2(
             json.dump(tmp_filters, f, indent=2)
         with open(workflow_dir / IMAGES_FILENAME, "w") as f:
             json.dump(tmp_images, f, indent=2)
+
+        logger.debug(f'END    {wftask.order}-th task (name="{task_name}")')
 
     # NOTE: tmp_history only contains the newly-added history items (to be
     # appended to the original history), while tmp_filters and tmp_images

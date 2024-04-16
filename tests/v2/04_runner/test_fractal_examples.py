@@ -1,3 +1,4 @@
+import logging
 import os
 from concurrent.futures import Executor
 from pathlib import Path
@@ -13,6 +14,7 @@ from v2_mock_models import WorkflowTaskV2Mock
 from fractal_server.app.runner.v2.runner import execute_tasks_v2
 from fractal_server.images import SingleImage
 from fractal_server.images.tools import find_image_by_zarr_url
+from fractal_server.logger import set_logger
 
 
 def _assert_image_data_exist(image_list: list[dict]):
@@ -861,15 +863,26 @@ def test_legacy_task(
     executor: Executor,
     fractal_tasks_mock_venv,
     fractal_tasks_mock_venv_legacy,
+    override_settings_factory,
 ):
     """
     Run a workflow that includes V2 and V1 tasks.
     """
 
+    # Set up logger
+    override_settings_factory(FRACTAL_LOGGING_LEVEL=logging.INFO)
+    logger_name = "test_legacy_task"
+    log_file_path = (tmp_path / "log").as_posix()
+    set_logger(
+        logger_name=logger_name,
+        log_file_path=log_file_path,
+    )
+
     execute_tasks_v2_args = dict(
         executor=executor,
         workflow_dir=tmp_path / "job_dir",
         workflow_dir_user=tmp_path / "job_dir",
+        logger_name=logger_name,
     )
 
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
@@ -908,6 +921,13 @@ def test_legacy_task(
         ),
         **execute_tasks_v2_args,
     )
-    debug(dataset_attrs)
 
-    # FIXME: assert something
+    assert len(dataset_attrs["history"]) == 1
+    assert dataset_attrs["history"][0]["status"] == "done"
+    assert dataset_attrs["history"][0]["workflowtask"]["is_legacy_task"]
+
+    # Check logs
+    with open(log_file_path, "r") as f:
+        lines = f.read()
+    assert 'SUBMIT 1-th task (name="dummy parallel")' in lines
+    assert 'END    1-th task (name="dummy parallel")' in lines
