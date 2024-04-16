@@ -80,6 +80,35 @@ class SingleImage(SingleImageBase):
         return v
 
 
+class SingleImageUpdate(BaseModel):
+    zarr_url: str
+    attributes: Optional[dict[str, Any]]
+    types: Optional[dict[str, bool]]
+
+    @validator("zarr_url")
+    def normalize_zarr_url(cls, v: str) -> str:
+        return normalize_url(v)
+
+    @validator("attributes")
+    def validate_attributes(
+        cls, v: dict[str, Any]
+    ) -> dict[str, Union[int, float, str, bool]]:
+        if v is not None:
+            # validate keys
+            valdictkeys("attributes")(v)
+            # validate values
+            for key, value in v.items():
+                if not isinstance(value, (int, float, str, bool)):
+                    raise ValueError(
+                        f"SingleImageUpdate.attributes[{key}] must be a scalar"
+                        " (int, float, str or bool). "
+                        f"Given {value} ({type(value)})"
+                    )
+        return v
+
+    _types = validator("types", allow_reuse=True)(valdictkeys("types"))
+
+
 class Filters(BaseModel):
     attributes: dict[str, Any] = Field(default_factory=dict)
     types: dict[str, bool] = Field(default_factory=dict)
