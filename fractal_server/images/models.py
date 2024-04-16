@@ -80,9 +80,14 @@ class SingleImage(SingleImageBase):
         return v
 
 
-class SingleImageUpdate(SingleImageBase):
+class SingleImageUpdate(BaseModel):
+    zarr_url: str
     attributes: Optional[dict[str, Any]]
     types: Optional[dict[str, bool]]
+
+    @validator("zarr_url")
+    def normalize_zarr_url(cls, v: str) -> str:
+        return normalize_url(v)
 
     @validator("attributes")
     def validate_attributes(
@@ -97,6 +102,8 @@ class SingleImageUpdate(SingleImageBase):
                         f"Given {value} ({type(value)})"
                     )
         return v
+
+    _types = validator("types", allow_reuse=True)(valdictkeys("types"))
 
 
 class Filters(BaseModel):

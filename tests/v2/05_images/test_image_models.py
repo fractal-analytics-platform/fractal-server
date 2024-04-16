@@ -117,12 +117,12 @@ def test_single_image_update():
     SingleImageUpdate(zarr_url="/something")
 
     # override SingleImageBase validation
-    args = dict(zarr_url="/something", origin=None, attributes=None)
+    args = dict(zarr_url="/something", attributes=None)
     with pytest.raises(ValidationError):
         SingleImageBase(**args)
     SingleImageUpdate(**args)
 
-    args = dict(zarr_url="/something", origin=None, types=None)
+    args = dict(zarr_url="/something", types=None)
     with pytest.raises(ValidationError):
         SingleImageBase(**args)
     SingleImageUpdate(**args)

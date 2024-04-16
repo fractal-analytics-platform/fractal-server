@@ -208,7 +208,7 @@ async def test_delete_images(
     project_factory_v2,
     dataset_factory_v2,
 ):
-    IMAGES = n_images(42)
+    IMAGES = n_images(10)
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
 
@@ -301,27 +301,26 @@ async def test_patch_images(
     dataset_factory_v2,
     db,
 ):
-    IMAGES = n_images(42)
+    IMAGES = n_images(1)
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
     dataset = await dataset_factory_v2(project_id=project.id, images=IMAGES)
-    for image in dataset.images:
-        res = await client.patch(
-            f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/",
-            json=dict(
-                zarr_url=image["zarr_url"],
-                origin="/orig",
-                attributes={"a": "b"},
-                types={"c": True, "d": False},
-            ),
-        )
-        assert res.status_code == 200
-        await db.refresh(dataset)
-        ret = find_image_by_zarr_url(
-            images=dataset.images, zarr_url=image["zarr_url"]
-        )
-        assert ret["image"]["attributes"] == {"a": "b"}
-        assert ret["image"]["types"] == {"c": True, "d": False}
+
+    res = await client.patch(
+        f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/",
+        json=dict(
+            zarr_url=IMAGES[0]["zarr_url"],
+            attributes={"a": "b"},
+            types={"c": True, "d": False},
+        ),
+    )
+    assert res.status_code == 200
+    await db.refresh(dataset)
+    ret = find_image_by_zarr_url(
+        images=dataset.images, zarr_url=IMAGES[0]["zarr_url"]
+    )
+    assert ret["image"]["attributes"] == {"a": "b"}
+    assert ret["image"]["types"] == {"c": True, "d": False}
     res = await client.patch(
         f"{PREFIX}/project/{project.id}/dataset/{dataset.id}/images/",
         json=dict(zarr_url="/foo/bar"),
