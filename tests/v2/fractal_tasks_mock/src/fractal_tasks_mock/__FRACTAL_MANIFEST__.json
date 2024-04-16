@@ -640,8 +640,14 @@
           },
           "fail": {
             "default": false,
-            "description": "If `True`, make images invalid.",
+            "description": "If `True`, make new_zarr_url not relative to zarr_dir",
             "title": "Fail",
+            "type": "boolean"
+          },
+          "fail_2": {
+            "default": false,
+            "description": "If `True`, make new_zarr_url equal to zarr_dir",
+            "title": "Fail 2",
             "type": "boolean"
           },
           "trailing_slash": {
