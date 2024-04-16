@@ -1,5 +1,4 @@
 import pytest
-from devtools import debug
 from pydantic import ValidationError
 
 from fractal_server.app.models.v2 import DatasetV2
@@ -10,15 +9,11 @@ from fractal_server.app.schemas.v2 import DatasetUpdateV2
 from fractal_server.urls import normalize_url
 
 
-async def test_schemas_dataset_v2(db):
+async def test_schemas_dataset_v2():
 
-    project = ProjectV2(name="project")
-    debug(project)
-    db.add(project)
-    await db.commit()
+    project = ProjectV2(id=1, name="project")
 
     # Create
-
     with pytest.raises(ValidationError):
         # Non-scalar attribute
         DatasetCreateV2(
@@ -38,30 +33,30 @@ async def test_schemas_dataset_v2(db):
         zarr_dir="/tmp/",
     )
     assert dataset_create.zarr_dir == normalize_url(dataset_create.zarr_dir)
-    debug(dataset_create)
 
-    dataset = DatasetV2(**dataset_create.dict(), project_id=project.id)
-    debug(dataset)
-
-    db.add(dataset)
-    await db.commit()
+    dataset = DatasetV2(
+        **dataset_create.dict(),
+        id=1,
+        project_id=project.id,
+        project=project,
+        history=[]
+    )
 
     # Read
-    debug(dataset)
-    debug(dataset.project)
 
-    dataset_read = DatasetReadV2(
-        **dataset.model_dump(), project=dataset.project
-    )
-    debug(dataset_read)
+    DatasetReadV2(**dataset.model_dump(), project=dataset.project)
 
     # Update
+
+    # validation accepts `zarr_dir` and `filters` as None, but not `name`
+    DatasetUpdateV2(zarr_dir=None, filters=None)
+    with pytest.raises(ValidationError):
+        DatasetUpdateV2(name=None, zarr_dir=None, filters=None)
+
     dataset_update = DatasetUpdateV2(name="new name", zarr_dir="/zarr/")
-    debug(dataset_update)
+    assert not dataset_update.zarr_dir.endswith("/")
 
     for key, value in dataset_update.dict(exclude_unset=True).items():
         setattr(dataset, key, value)
 
-    await db.commit()
     assert dataset.name == "new name"
-    debug(dataset)
