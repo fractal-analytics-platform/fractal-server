@@ -358,7 +358,7 @@ async def import_workflow(
     dataset: DatasetImportV2,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[DatasetImportV2]:
+) -> Optional[DatasetReadV2]:
     """
     Import an existing workflow into a project
 
