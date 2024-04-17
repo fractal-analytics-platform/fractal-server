@@ -109,10 +109,13 @@ class DatasetImportV2(BaseModel):
         filters:
     """
 
+    class Config:
+        extra = "forbid"
+
     name: str
     zarr_dir: str
-    images: Optional[list[SingleImage]]
-    filters: Optional[Filters]
+    images: list[SingleImage] = Field(default_factory=[])
+    filters: Filters = Field(default_factory=Filters)
 
 
 class DatasetExportV2(BaseModel):

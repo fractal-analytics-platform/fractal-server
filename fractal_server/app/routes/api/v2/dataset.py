@@ -344,12 +344,7 @@ async def export_dataset(
     await db.close()
 
     dataset = dict_dataset_project["dataset"]
-    dataset = DatasetExportV2(
-        name=dataset.name,
-        zarr_dir=dataset.zarr_dir,
-        images=dataset.images,
-        filters=dataset.filters,
-    )
+
     return dataset
 
 

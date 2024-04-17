@@ -15,7 +15,7 @@ PREFIX = "api/v2"
 ZARR_DIR = "/zarr_dir"
 
 
-def n_images(n: int) -> list[SingleImage]:
+def n_images(n: int) -> list[dict]:
     return [
         SingleImage(
             zarr_url=f"{ZARR_DIR}/{i}",
@@ -436,7 +436,6 @@ async def test_dataset_import(
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
         dataset = dict(
-            project_id=project.id,
             name="Dataset",
             zarr_dir=ZARR_DIR,
             images=IMAGES,
