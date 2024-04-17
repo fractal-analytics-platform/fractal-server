@@ -333,7 +333,7 @@ async def export_dataset(
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[DatasetExportV2]:
     """
-    Export an existing dataset, after stripping all IDs
+    Export an existing dataset
     """
     dict_dataset_project = await _get_dataset_check_owner(
         project_id=project_id,
@@ -350,20 +350,18 @@ async def export_dataset(
 
 @router.post(
     "/project/{project_id}/dataset/import/",
-    response_model=DatasetImportV2,
+    response_model=DatasetReadV2,
     status_code=status.HTTP_201_CREATED,
 )
-async def import_workflow(
+async def import_dataset(
     project_id: int,
     dataset: DatasetImportV2,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[DatasetReadV2]:
     """
-    Import an existing workflow into a project
+    Import an existing dataset into a project
 
-    Also create all required objects (i.e. Workflow and WorkflowTask's) along
-    the way.
     """
 
     # Preliminary checks
@@ -372,9 +370,7 @@ async def import_workflow(
         user_id=user.id,
         db=db,
     )
-    from devtools import debug
 
-    debug(dataset)
     # Create new Dataset
     db_dataset = DatasetV2(
         project_id=project_id,
@@ -382,6 +378,7 @@ async def import_workflow(
     )
     db.add(db_dataset)
     await db.commit()
+    await db.refresh(db_dataset)
     await db.close()
 
     return db_dataset

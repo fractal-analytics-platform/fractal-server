@@ -450,10 +450,9 @@ async def test_dataset_import(
         )
         assert res.status_code == 201
         res_dataset = res.json()
-
+        debug(res_dataset)
         assert res_dataset["name"] == "Dataset"
         assert res_dataset["zarr_dir"] == ZARR_DIR
-        assert res_dataset["images"] == IMAGES
         assert res_dataset["filters"] == dict(
             attributes={},
             types={},
