@@ -17,6 +17,8 @@ from ....models.v2 import ProjectV2
 from ....schemas.v2 import DatasetCreateV2
 from ....schemas.v2 import DatasetReadV2
 from ....schemas.v2 import DatasetUpdateV2
+from ....schemas.v2.dataset import DatasetExportV2
+from ....schemas.v2.dataset import DatasetImportV2
 from ....schemas.v2.dataset import DatasetStatusReadV2
 from ....schemas.v2.dataset import WorkflowTaskStatusTypeV2
 from ....security import current_active_user
@@ -315,3 +317,67 @@ async def get_workflowtask_status(
 
     response_body = DatasetStatusReadV2(status=workflow_tasks_status_dict)
     return response_body
+
+
+# /api/v2/project/{project_id}/dataset/{dataset_id}/export/
+
+
+@router.get(
+    "/project/{project_id}/dataset/{dataset_id}/export/",
+    response_model=DatasetExportV2,
+)
+async def export_dataset(
+    project_id: int,
+    dataset_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> Optional[DatasetExportV2]:
+    """
+    Export an existing dataset
+    """
+    dict_dataset_project = await _get_dataset_check_owner(
+        project_id=project_id,
+        dataset_id=dataset_id,
+        user_id=user.id,
+        db=db,
+    )
+    await db.close()
+
+    dataset = dict_dataset_project["dataset"]
+
+    return dataset
+
+
+@router.post(
+    "/project/{project_id}/dataset/import/",
+    response_model=DatasetReadV2,
+    status_code=status.HTTP_201_CREATED,
+)
+async def import_dataset(
+    project_id: int,
+    dataset: DatasetImportV2,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> Optional[DatasetReadV2]:
+    """
+    Import an existing dataset into a project
+    """
+
+    # Preliminary checks
+    await _get_project_check_owner(
+        project_id=project_id,
+        user_id=user.id,
+        db=db,
+    )
+
+    # Create new Dataset
+    db_dataset = DatasetV2(
+        project_id=project_id,
+        **dataset.dict(exclude_none=True),
+    )
+    db.add(db_dataset)
+    await db.commit()
+    await db.refresh(db_dataset)
+    await db.close()
+
+    return db_dataset

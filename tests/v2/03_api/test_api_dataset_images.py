@@ -8,7 +8,7 @@ PREFIX = "api/v2"
 ZARR_DIR = "/zarr_dir"
 
 
-def n_images(n: int) -> list[SingleImage]:
+def n_images(n: int) -> list[dict]:
     return [
         SingleImage(
             zarr_url=f"{ZARR_DIR}/{i}",
