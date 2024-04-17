@@ -604,10 +604,16 @@ async def test_failing_workflow_UnknownError(
     request,
     override_settings_factory,
     monkeypatch,
+    fractal_tasks_mock,  # see test docstring
 ):
     """
     Submit a workflow that fails with some unrecognized exception (due
     to a monkey-patched function in the runner).
+
+    Note that the `fractal_tasks_mock` fixture is not needed here, but if we
+    remove we hit another event-loop-related issue
+    (https://github.com/fractal-analytics-platform/fractal-server/issues/1377).
+    For the moment, we stick with this redundant side-effect.
     """
     EXPECTED_STATUSES = {}
 
