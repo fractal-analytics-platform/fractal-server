@@ -116,7 +116,10 @@ def run_single_task(
     except TaskExecutionError as e:
         e.workflow_task_order = wftask.order
         e.workflow_task_id = wftask.id
-        e.task_name = wftask.task.name
+        if wftask.is_legacy_task:
+            e.task_name = wftask.task_legacy.name
+        else:
+            e.task_name = wftask.task.name
         raise e
 
     try:
