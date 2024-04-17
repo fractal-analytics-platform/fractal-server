@@ -120,7 +120,7 @@ class DatasetImportV2(BaseModel):
 
 class DatasetExportV2(BaseModel):
     """
-    Class for `Workflow` export.
+    Class for `Dataset` export.
 
     Attributes:
         name:
