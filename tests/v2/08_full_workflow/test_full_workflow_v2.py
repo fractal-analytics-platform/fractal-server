@@ -587,6 +587,126 @@ async def test_non_executable_task_command(
         assert "Hint: make sure that it is executable" in job["log"]
 
 
+@pytest.mark.parametrize("backend", backends_available)
+async def test_failing_workflow_UnknownError(
+    client,
+    MockCurrentUser,
+    testdata_path,
+    tmp777_path,
+    project_factory_v2,
+    dataset_factory_v2,
+    workflow_factory_v2,
+    backend,
+    request,
+    override_settings_factory,
+    fractal_tasks_mock,
+    tmp_path_factory,
+    monkeypatch,
+):
+    """
+    Submit a workflow that fails with some unrecognized exception (due
+    to a monkey-patched function in the runner).
+    """
+    EXPECTED_STATUSES = {}
+
+    # Use a session-scoped FRACTAL_TASKS_DIR folder
+    basetemp = tmp_path_factory.getbasetemp()
+    FRACTAL_TASKS_DIR = basetemp / "FRACTAL_TASKS_DIR"
+    selected_new_settings = dict(
+        FRACTAL_RUNNER_BACKEND=backend,
+        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
+        FRACTAL_TASKS_DIR=FRACTAL_TASKS_DIR,
+    )
+    if backend == "slurm":
+        selected_new_settings.update(
+            dict(FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json")
+        )
+    override_settings_factory(**selected_new_settings)
+
+    debug(f"Testing with {backend=}")
+    user_kwargs = {"is_verified": True}
+    if backend == "slurm":
+        request.getfixturevalue("monkey_slurm")
+        request.getfixturevalue("relink_python_interpreter_v2")
+        user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
+        user_kwargs["cache_dir"] = user_cache_dir
+
+    async with MockCurrentUser(user_kwargs=user_kwargs) as user:
+        project = await project_factory_v2(user)
+        project_id = project.id
+        dataset = await dataset_factory_v2(
+            project_id=project_id,
+            name="dataset",
+        )
+        dataset_id = dataset.id
+        workflow = await workflow_factory_v2(
+            project_id=project_id, name="workflow"
+        )
+        workflow_id = workflow.id
+
+        # Retrieve task list
+        res = await client.get(f"{PREFIX}/task/")
+        assert res.status_code == 200
+        task_list = res.json()
+
+        # Add "generic_task" task
+        task_id = _task_name_to_id("generic_task", task_list)
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
+            f"?task_id={task_id}",
+            json=dict(),
+        )
+        assert res.status_code == 201
+        workflow_task_id = res.json()["id"]
+        EXPECTED_STATUSES[str(workflow_task_id)] = "failed"
+
+        # Artificially introduce failure
+        import fractal_server.app.runner.v2.runner
+
+        ERROR_MSG = "This is the RuntimeError message."
+
+        def run_v2_task_non_parallel_patched(*args, **kwargs):
+            raise RuntimeError(ERROR_MSG)
+
+        monkeypatch.setattr(
+            fractal_server.app.runner.v2.runner,
+            "run_v2_task_non_parallel",
+            run_v2_task_non_parallel_patched,
+        )
+
+        # EXECUTE WORKFLOW
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/job/submit/"
+            f"?workflow_id={workflow_id}&dataset_id={dataset_id}",
+            json={},
+        )
+        job_data = res.json()
+        debug(job_data)
+        assert res.status_code == 202
+
+        # Check job
+        res = await client.get(
+            f"{PREFIX}/project/{project_id}/job/{job_data['id']}/"
+        )
+        assert res.status_code == 200
+        job_status_data = res.json()
+        debug(job_status_data)
+        debug(job_status_data["working_dir"])
+        assert job_status_data["log"]
+        assert job_status_data["status"] == "failed"
+        assert "UNKNOWN ERROR" in job_status_data["log"]
+        assert ERROR_MSG in job_status_data["log"]
+
+        # Test get_workflowtask_status endpoint
+        res = await client.get(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/status/"
+        )
+        assert res.status_code == 200
+        statuses = res.json()["status"]
+        debug(statuses)
+        assert statuses == EXPECTED_STATUSES
+
+
 # async def test_non_python_task(
 #     client,
 #     MockCurrentUser,
@@ -809,101 +929,3 @@ async def test_non_executable_task_command(
 #             logs = f.read()
 #         print(logs)
 #         assert "Skip collection of updated metadata" in logs
-
-
-# @pytest.mark.parametrize("backend", backends_available)
-# async def test_failing_workflow_UnknownError(
-#     client,
-#     MockCurrentUser,
-#     testdata_path,
-#     tmp777_path,
-#     collect_packages,
-#     project_factory,
-#     dataset_factory,
-#     workflow_factory,
-#     backend,
-#     request,
-#     override_settings_factory,
-#     resource_factory,
-# ):
-#     """
-#     Run a parallel task on a dataset which does not have the appropriate
-#     metadata (i.e. it lacks the corresponding parallelization_level component
-#     list), to trigger an unknown error.
-#     """
-
-#     override_settings_factory(
-#         FRACTAL_RUNNER_BACKEND=backend,
-#         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path
-#         / f"artifacts-{backend}-UnknownError",
-#     )
-#     if backend == "slurm":
-#         override_settings_factory(
-#             FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
-#         )
-
-#     debug(f"Testing with {backend=}")
-#     user_kwargs = {"is_verified": True}
-#     if backend == "slurm":
-#         request.getfixturevalue("monkey_slurm")
-#         request.getfixturevalue("relink_python_interpreter")
-#         user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
-#         user_kwargs["cache_dir"] = user_cache_dir
-
-#     async with MockCurrentUser(user_kwargs=user_kwargs) as user:
-#         # Create project, dataset, resource
-#         project = await project_factory(user)
-#         project_id = project.id
-#         input_dataset = await dataset_factory(
-#             project_id=project_id,
-#             name="Input Dataset",
-#             type="Any",
-#         )
-#         output_dataset = await dataset_factory(
-#             project_id=project_id,
-#             name="Output Dataset",
-#             type="Any",
-#         )
-#         await resource_factory(
-#             path=str(tmp777_path / "data_in"), dataset=input_dataset
-#         )
-#         await resource_factory(
-#             path=str(tmp777_path / "data_out"), dataset=output_dataset
-#         )
-
-#         # Create workflow
-#         workflow = await workflow_factory(
-#             name="test_wf", project_id=project_id
-#         )
-
-#         # Add a (parallel) dummy_parallel task
-#         res = await client.post(
-#             f"{PREFIX}/project/{project_id}/workflow/{workflow.id}/wftask/"
-#             f"?task_id={collect_packages[1].id}",
-#             json={},
-#         )
-#         debug(res.json())
-#         assert res.status_code == 201
-
-#         # Execute workflow
-#         res = await client.post(
-#             f"{PREFIX}/project/{project_id}/workflow/{workflow.id}/apply/"
-#             f"?input_dataset_id={input_dataset.id}"
-#             f"&output_dataset_id={output_dataset.id}",
-#             json={},
-#         )
-#         job_data = res.json()
-#         assert res.status_code == 202
-#         job_id = job_data["id"]
-#         res = await client.get(
-#             f"{PREFIX}/project/{project_id}/job/{job_id}/"
-#             )
-#         assert res.status_code == 200
-#         job_status_data = res.json()
-#         debug(job_status_data)
-#         assert job_status_data["status"] == "failed"
-#         assert job_status_data["end_timestamp"]
-#         assert "id: None" not in job_status_data["log"]
-#         assert "RuntimeError" in job_status_data["log"]
-#         assert "UNKNOWN ERROR" in job_status_data["log"]
-#         print(job_status_data["log"])
