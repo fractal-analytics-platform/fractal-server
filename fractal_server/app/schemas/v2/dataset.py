@@ -12,6 +12,7 @@ from .dumps import WorkflowTaskDumpV2
 from .project import ProjectReadV2
 from .workflowtask import WorkflowTaskStatusTypeV2
 from fractal_server.images import Filters
+from fractal_server.images import SingleImage
 from fractal_server.urls import normalize_url
 
 
@@ -95,3 +96,37 @@ class DatasetUpdateV2(BaseModel):
         return v
 
     _name = validator("name", allow_reuse=True)(valstr("name"))
+
+
+class DatasetImportV2(BaseModel):
+    """
+    Class for `Dataset` import.
+
+    Attributes:
+        name:
+        zarr_dir:
+        images:
+        filters:
+    """
+
+    name: str
+    zarr_dir: str
+    images: Optional[list[SingleImage]]
+    filters: Optional[Filters]
+
+
+class DatasetExportV2(BaseModel):
+    """
+    Class for `Workflow` export.
+
+    Attributes:
+        name:
+        zarr_dir:
+        images:
+        filters:
+    """
+
+    name: str
+    zarr_dir: str
+    images: list[SingleImage]
+    filters: Filters

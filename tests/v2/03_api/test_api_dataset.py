@@ -7,8 +7,30 @@ from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
+from fractal_server.images import SingleImage
 
 PREFIX = "api/v2"
+
+
+ZARR_DIR = "/zarr_dir"
+
+
+def n_images(n: int) -> list[SingleImage]:
+    return [
+        SingleImage(
+            zarr_url=f"{ZARR_DIR}/{i}",
+            attributes={
+                str(i): i,
+                "string_attribute": str(i % 2),
+                "int_attribute": i % 2,
+            },
+            types={
+                str(i): bool(i % 2),
+                "flag": bool(i % 2 + 1),
+            },
+        ).dict()
+        for i in range(n)
+    ]
 
 
 async def test_new_dataset_v2(client, MockCurrentUser):
@@ -377,3 +399,63 @@ async def test_patch_dataset(
             json=dict(zarr_dir="/new_zarr_dir_2"),
         )
         assert res.status_code == 422
+
+
+async def test_dataset_export(
+    app, client, MockCurrentUser, project_factory_v2, dataset_factory_v2
+):
+    IMAGES = n_images(1)
+    async with MockCurrentUser() as user:
+        project = await project_factory_v2(user)
+        dataset = await dataset_factory_v2(
+            project_id=project.id, zarr_dir=ZARR_DIR, images=IMAGES
+        )
+        project_id = project.id
+        dataset_id = dataset.id
+
+        res = await client.get(
+            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/export/",
+        )
+        assert res.status_code == 200
+
+        res_dataset = res.json()
+
+        assert res_dataset["name"] == "My Dataset"
+        assert res_dataset["zarr_dir"] == "/zarr_dir"
+        assert res_dataset["images"] == IMAGES
+        assert res_dataset["filters"] == dict(
+            attributes={},
+            types={},
+        )
+
+
+async def test_dataset_import(
+    app, client, MockCurrentUser, project_factory_v2, dataset_factory_v2
+):
+    IMAGES = n_images(1)
+    async with MockCurrentUser() as user:
+        project = await project_factory_v2(user)
+        dataset = dict(
+            project_id=project.id,
+            name="Dataset",
+            zarr_dir=ZARR_DIR,
+            images=IMAGES,
+            filters=dict(
+                attributes={},
+                types={},
+            ),
+        )
+
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/dataset/import/", json=dataset
+        )
+        assert res.status_code == 201
+        res_dataset = res.json()
+
+        assert res_dataset["name"] == "Dataset"
+        assert res_dataset["zarr_dir"] == ZARR_DIR
+        assert res_dataset["images"] == IMAGES
+        assert res_dataset["filters"] == dict(
+            attributes={},
+            types={},
+        )
