@@ -588,7 +588,10 @@ async def test_non_executable_task_command(
 
 
 @pytest.mark.parametrize("backend", backends_available)
+@pytest.mark.parametrize("legacy", [False, True])
 async def test_failing_workflow_UnknownError(
+    backend: str,
+    legacy: bool,
     client,
     MockCurrentUser,
     testdata_path,
@@ -596,11 +599,10 @@ async def test_failing_workflow_UnknownError(
     project_factory_v2,
     dataset_factory_v2,
     workflow_factory_v2,
-    backend,
+    task_factory_v2,
+    task_factory,
     request,
     override_settings_factory,
-    fractal_tasks_mock,
-    tmp_path_factory,
     monkeypatch,
 ):
     """
@@ -609,13 +611,9 @@ async def test_failing_workflow_UnknownError(
     """
     EXPECTED_STATUSES = {}
 
-    # Use a session-scoped FRACTAL_TASKS_DIR folder
-    basetemp = tmp_path_factory.getbasetemp()
-    FRACTAL_TASKS_DIR = basetemp / "FRACTAL_TASKS_DIR"
     selected_new_settings = dict(
         FRACTAL_RUNNER_BACKEND=backend,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
-        FRACTAL_TASKS_DIR=FRACTAL_TASKS_DIR,
     )
     if backend == "slurm":
         selected_new_settings.update(
@@ -644,17 +642,19 @@ async def test_failing_workflow_UnknownError(
         )
         workflow_id = workflow.id
 
-        # Retrieve task list
-        res = await client.get(f"{PREFIX}/task/")
-        assert res.status_code == 200
-        task_list = res.json()
+        # Create task
+        if legacy:
+            task = await task_factory(command="echo", is_v2_compatible=True)
+        else:
+            task = await task_factory_v2(
+                command_non_parallel="echo", type="non_parallel"
+            )
 
-        # Add "generic_task" task
-        task_id = _task_name_to_id("generic_task", task_list)
+        payload = dict(is_legacy_task=legacy)
         res = await client.post(
             f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
-            f"?task_id={task_id}",
-            json=dict(),
+            f"?task_id={task.id}",
+            json=payload,
         )
         assert res.status_code == 201
         workflow_task_id = res.json()["id"]
@@ -665,14 +665,21 @@ async def test_failing_workflow_UnknownError(
 
         ERROR_MSG = "This is the RuntimeError message."
 
-        def run_v2_task_non_parallel_patched(*args, **kwargs):
+        def _raise_RuntimeError(*args, **kwargs):
             raise RuntimeError(ERROR_MSG)
 
-        monkeypatch.setattr(
-            fractal_server.app.runner.v2.runner,
-            "run_v2_task_non_parallel",
-            run_v2_task_non_parallel_patched,
-        )
+        if legacy:
+            monkeypatch.setattr(
+                fractal_server.app.runner.v2.runner,
+                "run_v1_task_parallel",
+                _raise_RuntimeError,
+            )
+        else:
+            monkeypatch.setattr(
+                fractal_server.app.runner.v2.runner,
+                "run_v2_task_non_parallel",
+                _raise_RuntimeError,
+            )
 
         # EXECUTE WORKFLOW
         res = await client.post(
