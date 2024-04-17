@@ -489,12 +489,6 @@ async def test_failing_workflow_JobExecutionError(
         tmp_stderr.close()
 
 
-@pytest.mark.skip(
-    reason=(
-        "When running with slurm backend, it leads to "
-        "RuntimeError: This event loop is already running"
-    )
-)
 @pytest.mark.parametrize("backend", backends_available)
 async def test_non_executable_task_command(
     client,
@@ -507,12 +501,17 @@ async def test_non_executable_task_command(
     workflow_factory_v2,
     backend,
     override_settings_factory,
-    # fractal_tasks_mock,  # WHY IS THIS REQUIRED???
+    fractal_tasks_mock,  # see test docstring
     request,
 ):
     """
     Execute a workflow with a task which has an invalid `command` (i.e. it is
     not executable).
+
+    Note that the `fractal_tasks_mock` fixture is not needed here, but if we
+    remove we hit another event-loop-related issue
+    (https://github.com/fractal-analytics-platform/fractal-server/issues/1377).
+    For the moment, we stick with this redundant side-effect.
     """
 
     selected_new_settings = dict(
