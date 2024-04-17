@@ -125,7 +125,10 @@ def get_slurm_config(
         slurm_dict["mem_per_task_MB"] = mem_per_task_MB
 
     # Job name
-    job_name = wftask.task.name.replace(" ", "_")
+    if wftask.is_legacy_task:
+        job_name = wftask.task_legacy.name.replace(" ", "_")
+    else:
+        job_name = wftask.task.name.replace(" ", "_")
     slurm_dict["job_name"] = job_name
 
     # Optional SLURM arguments and extra lines
