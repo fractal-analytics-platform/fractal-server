@@ -540,7 +540,6 @@ async def test_patch_workflow_task(
         wf_id = res.json()["id"]
 
         t = await add_task(client, 0)
-        payload = {"task_id": t["id"]}
         res = await client.post(
             f"{PREFIX}/project/{project.id}/workflow/{wf_id}/wftask/"
             f"?task_id={t['id']}",
@@ -687,6 +686,73 @@ async def test_patch_workflow_task(
             )
             assert res.status_code == 422
             assert "Cannot patch" in res.json()["detail"]
+
+
+async def test_patch_workflow_task_legacy(
+    MockCurrentUser,
+    project_factory_v2,
+    workflow_factory_v2,
+    task_factory,
+    client,
+):
+    """
+    GIVEN a WorkflowTask pointing to a legacy task
+    WHEN the endpoint to PATCH a WorkflowTask is called
+    THEN the WorkflowTask is updated
+
+    In this test, we also include null non-parallel attributes in the PATCH
+    request body. They are not necessary or relevant, but we need to make
+    sure that the endpoint does not fail in this case.
+    """
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+        # Create task
+        legacy_task = await task_factory(is_v2_compatible=True)
+
+        # Create project and workflow
+        proj = await project_factory_v2(user)
+        wf = await workflow_factory_v2(project_id=proj.id)
+
+        # Add legacy task to workflow
+        res = await client.post(
+            f"{PREFIX}/project/{proj.id}/workflow/{wf.id}/wftask/"
+            f"?task_id={legacy_task.id}",
+            json={"is_legacy_task": True},
+        )
+        assert res.status_code == 201
+        wf_task_id = res.json()["id"]
+
+        workflow = await get_workflow(client, proj.id, wf.id)
+
+        assert workflow["task_list"][0]["args_parallel"] is None
+        assert workflow["task_list"][0]["args_non_parallel"] is None
+        assert workflow["task_list"][0]["meta_non_parallel"] is None
+        assert workflow["task_list"][0]["meta_parallel"] is None
+
+        ARGS = {"c": 333, "d": 444}
+        META = {"executor": "cpu-low"}
+        INPUT_FILTERS = {
+            "attributes": {"a": "b", "c": "d"},
+            "types": {"e": True, "f": False, "g": True},
+        }
+
+        patch_payload = dict(
+            args_non_parallel=None,
+            meta_non_parallel=None,
+            args_parallel=ARGS,
+            meta_parallel=META,
+            input_filters=INPUT_FILTERS,
+        )
+        res = await client.patch(
+            f"{PREFIX}/project/{proj.id}/workflow/{wf.id}/"
+            f"wftask/{wf_task_id}/",
+            json=patch_payload,
+        )
+        debug(res.json())
+        assert res.status_code == 200
+
+        assert res.json()["args_parallel"] == ARGS
+        assert res.json()["meta_parallel"] == META
+        assert res.json()["input_filters"] == INPUT_FILTERS
 
 
 async def test_patch_workflow_task_with_args_schema(
