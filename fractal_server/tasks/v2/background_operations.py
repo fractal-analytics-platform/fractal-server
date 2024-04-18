@@ -15,7 +15,7 @@ from ..utils import slugify_task_name
 from ._TaskCollectPip import _TaskCollectPip
 from fractal_server.app.db import DBSyncSession
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.models import State
+from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.schemas.v2 import TaskCollectStatusV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
@@ -313,7 +313,7 @@ async def background_collect_pip(
         logger.debug(f"{key}: {value}")
 
     with next(get_sync_db()) as db:
-        state: State = db.get(State, state_id)
+        state: CollectionStateV2 = db.get(CollectionStateV2, state_id)
         data = TaskCollectStatusV2(**state.data)
         data.info = None
 
