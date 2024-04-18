@@ -1,5 +1,6 @@
 import json
 
+import pytest
 from devtools import debug
 
 from fractal_server.app.routes.api.v2._aux_functions import (
@@ -96,8 +97,13 @@ async def test_get_workflowtask_status(
         for expected_status, IDs in RESULTS.items():
             for ID in IDs:
                 ID_str = str(ID)  # JSON-object keys can only be strings
-                debug(statuses)
-                assert statuses[ID_str] == expected_status
+                if ID_str in ["100", "101", "202"]:
+                    # because we remove from the respose body all the tasks
+                    # after the last failed.
+                    with pytest.raises(KeyError):
+                        statuses[ID_str] == expected_status
+                else:
+                    assert statuses[ID_str] == expected_status
 
 
 async def test_get_workflowtask_status_simple(
@@ -166,9 +172,16 @@ async def test_get_workflowtask_status_simple(
         statuses = res.json()["status"]
         debug(statuses)
         for expected_status, IDs in RESULTS.items():
+
             for ID in IDs:
                 ID_str = str(ID)  # JSON-object keys can only be strings
-                assert statuses[ID_str] == expected_status
+                if ID_str == "202":
+                    # because we remove from the respose body all the tasks
+                    # after the last failed.
+                    with pytest.raises(KeyError):
+                        statuses[ID_str] == expected_status
+                else:
+                    assert statuses[ID_str] == expected_status
 
 
 async def test_get_workflowtask_status_fail(
