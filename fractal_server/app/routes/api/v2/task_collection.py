@@ -17,7 +17,7 @@ from .....logger import set_logger
 from .....syringe import Inject
 from ....db import AsyncSession
 from ....db import get_async_db
-from ....models import StateV2
+from ....models import CollectionStateV2
 from ....models.v2 import TaskV2
 from ....schemas import StateRead
 from ....schemas.v2 import TaskCollectPipV2
@@ -151,7 +151,7 @@ async def collect_tasks_pip(
                 ),
             )
         task_collect_status.info = "Already installed"
-        state = StateV2(data=task_collect_status.sanitised_dict())
+        state = CollectionStateV2(data=task_collect_status.sanitised_dict())
         response.status_code == status.HTTP_200_OK
         await db.close()
         return state
@@ -181,7 +181,7 @@ async def collect_tasks_pip(
     # Create State object (after casting venv_path to string)
     collection_status_dict = collection_status.dict()
     collection_status_dict["venv_path"] = str(collection_status.venv_path)
-    state = StateV2(data=collection_status_dict)
+    state = CollectionStateV2(data=collection_status_dict)
     db.add(state)
     await db.commit()
     await db.refresh(state)
@@ -220,7 +220,7 @@ async def check_collection_status(
     """
     logger = set_logger(logger_name="check_collection_status")
     logger.debug(f"Querying state for state.id={state_id}")
-    state = await db.get(StateV2, state_id)
+    state = await db.get(CollectionStateV2, state_id)
     if not state:
         await db.close()
         raise HTTPException(
