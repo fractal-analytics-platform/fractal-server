@@ -46,6 +46,11 @@ async def create_workflowtask(
 
     if new_task.is_legacy_task is True:
         task = await db.get(Task, task_id)
+        if not task:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Task {task_id} not found.",
+            )
         if not task.is_v2_compatible:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -53,16 +58,11 @@ async def create_workflowtask(
             )
     else:
         task = await db.get(TaskV2, task_id)
-
-    if not task:
-        if new_task.is_legacy_task:
-            error = f"Task {task_id} not found."
-        else:
-            error = f"TaskV2 {task_id} not found."
-
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=error
-        )
+        if not task:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"TaskV2 {task_id} not found.",
+            )
 
     if new_task.is_legacy_task is True or task.type == "parallel":
         if (
