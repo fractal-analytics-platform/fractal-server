@@ -92,7 +92,7 @@
 | fractal\_server/app/runner/v2/handle\_failed\_job.py                      |       57 |        4 |       14 |        2 |     92% |86-93, 98->115 |
 | fractal\_server/app/runner/v2/merge\_outputs.py                           |       22 |        1 |        8 |        2 |     90% |23, 29->32 |
 | fractal\_server/app/runner/v2/runner.py                                   |      127 |        6 |       56 |        9 |     92% |118, 146, 155, 167->171, 208->213, 220->222, 247->253, 260, 265-266 |
-| fractal\_server/app/runner/v2/runner\_functions.py                        |       99 |        8 |       22 |        3 |     91% |63-65, 74, 98-102, 243 |
+| fractal\_server/app/runner/v2/runner\_functions.py                        |      103 |        7 |       26 |        2 |     93% |63-65, 74, 98-102 |
 | fractal\_server/app/runner/v2/runner\_functions\_low\_level.py            |       61 |        5 |       24 |        4 |     89% |44-45, 47->exit, 54, 76, 120 |
 | fractal\_server/app/runner/v2/task\_interface.py                          |       37 |        0 |        8 |        2 |     96% |40->39, 52->51 |
 | fractal\_server/app/runner/v2/v1\_compat.py                               |       17 |        0 |        6 |        0 |    100% |           |
@@ -140,7 +140,7 @@
 | fractal\_server/tasks/v2/get\_collection\_data.py                         |       11 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/urls.py                                                   |        7 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                  |       22 |        0 |        2 |        0 |    100% |           |
-|                                                                 **TOTAL** | **7621** |  **289** | **2224** |  **348** | **93%** |           |
+|                                                                 **TOTAL** | **7625** |  **288** | **2228** |  **347** | **93%** |           |
 
 
 ## Setup coverage badge
