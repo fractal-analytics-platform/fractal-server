@@ -303,7 +303,7 @@ async def get_workflowtask_status(
 
         # Highest priority: Read status updates coming from the running-job
         # temporary file. Note: this file only contains information on
-        # # WorkflowTask's that ran through successfully.
+        # WorkflowTask's that ran through successfully.
         tmp_file = Path(running_job.working_dir) / HISTORY_FILENAME
         try:
             with tmp_file.open("r") as f:
@@ -315,11 +315,21 @@ async def get_workflowtask_status(
             wftask_status = history_item["status"]
             workflow_tasks_status_dict[wftask_id] = wftask_status
 
-    response_body = DatasetStatusReadV2(status=workflow_tasks_status_dict)
+    clean_workflow_tasks_status_dict = {}
+    for key, value in workflow_tasks_status_dict.items():
+        if value == "failed":
+            clean_workflow_tasks_status_dict[key] = value
+            break
+        clean_workflow_tasks_status_dict[key] = value
+
+    response_body = DatasetStatusReadV2(
+        status=clean_workflow_tasks_status_dict
+    )
+
+    from devtools import debug
+
+    debug(response_body)
     return response_body
-
-
-# /api/v2/project/{project_id}/dataset/{dataset_id}/export/
 
 
 @router.get(
