@@ -39,3 +39,37 @@ def test_parallelize_on_no_images(tmp_path: Path, executor: Executor):
         dataset=DatasetV2Mock(name="dataset", zarr_dir=zarr_dir),
         **execute_tasks_v2_args,
     )
+
+
+def test_parallelize_on_no_images_compound(tmp_path: Path, executor: Executor):
+    """
+    Run a compound task with an empty parallelization list.
+    """
+    # Preliminary setup
+    execute_tasks_v2_args = dict(
+        executor=executor,
+        workflow_dir=tmp_path / "job_dir",
+        workflow_dir_user=tmp_path / "job_dir",
+    )
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+
+    # Run successfully on an empty dataset
+    execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTaskV2Mock(
+                task=TaskV2Mock(
+                    name="name",
+                    type="compound",
+                    # this produces an empty parallelization list
+                    command_non_parallel="echo",
+                    command_parallel="echo",
+                    id=0,
+                    source="source",
+                ),
+                id=0,
+                order=0,
+            )
+        ],
+        dataset=DatasetV2Mock(name="dataset", zarr_dir=zarr_dir),
+        **execute_tasks_v2_args,
+    )
