@@ -33,3 +33,13 @@ class State(_StateBase, SQLModel, table=True):
         default_factory=get_timestamp,
         sa_column=Column(DateTime(timezone=True)),
     )
+
+
+class StateV2(_StateBase, SQLModel, table=True):
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    data: dict[str, Any] = Field(sa_column=Column(JSON), default={})
+    timestamp: datetime = Field(
+        default_factory=get_timestamp,
+        sa_column=Column(DateTime(timezone=True)),
+    )
