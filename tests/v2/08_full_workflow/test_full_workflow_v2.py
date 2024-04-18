@@ -184,8 +184,12 @@ async def test_full_workflow(
 
         # Test get_workflowtask_status endpoint
         res = await client.get(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/status/"
+            (
+                f"{PREFIX}/project/{project_id}/status/?"
+                f"dataset_id={dataset_id}&workflow_id={workflow_id}"
+            )
         )
+
         debug(res.status_code)
         assert res.status_code == 200
         statuses = res.json()["status"]
@@ -337,7 +341,10 @@ async def test_full_workflow_TaskExecutionError(
 
         # Test get_workflowtask_status endpoint
         res = await client.get(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/status/"
+            (
+                f"{PREFIX}/project/{project_id}/status/?"
+                f"dataset_id={dataset_id}&workflow_id={workflow_id}"
+            )
         )
         assert res.status_code == 200
         statuses = res.json()["status"]
@@ -474,7 +481,10 @@ async def test_failing_workflow_JobExecutionError(
 
         # Test get_workflowtask_status endpoint
         res = await client.get(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset.id}/status/"
+            (
+                f"{PREFIX}/project/{project_id}/status/?"
+                f"dataset_id={dataset_id}&workflow_id={workflow_id}"
+            )
         )
         debug(res.status_code)
         assert res.status_code == 200
@@ -712,7 +722,10 @@ async def test_failing_workflow_UnknownError(
 
         # Test get_workflowtask_status endpoint
         res = await client.get(
-            f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/status/"
+            (
+                f"{PREFIX}/project/{project_id}/status/?"
+                f"dataset_id={dataset_id}&workflow_id={workflow_id}"
+            )
         )
         assert res.status_code == 200
         statuses = res.json()["status"]
