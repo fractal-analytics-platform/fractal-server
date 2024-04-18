@@ -358,14 +358,12 @@ async def background_collect_pip(
             # Write last logs to file
             logger.debug("Task-collection status: OK")
             logger.info("Background task collection completed successfully")
-            close_logger(logger)
-            db.close()
 
         except Exception as e:
+
             # Write last logs to file
             logger.debug("Task-collection status: fail")
             logger.info(f"Background collection failed. Original error: {e}")
-            close_logger(logger)
 
             # Update db
             data.status = "fail"
@@ -374,8 +372,13 @@ async def background_collect_pip(
             state.data = data.sanitised_dict()
             db.merge(state)
             db.commit()
-            db.close()
 
             # Delete corrupted package dir
             logger.info(f"Now deleting temporary folder {venv_path}")
             shell_rmtree(venv_path)
+            logger.info(f"Deleted temporary folder {venv_path}")
+
+        finally:
+
+            close_logger(logger)
+            db.close()
