@@ -5,6 +5,9 @@ from pathlib import Path
 
 from devtools import debug  # noqa
 
+from fractal_server.tasks.utils import COLLECTION_FILENAME
+from fractal_server.tasks.utils import COLLECTION_LOG_FILENAME
+
 PREFIX = "api/v2/task"
 
 
@@ -190,12 +193,12 @@ async def test_remove_directory(
     testdata_path: Path,
 ):
     override_settings_factory(
-        FRACTAL_TASKS_DIR=(tmp_path / "FRACTAL_TASKS_DIR"),
+        FRACTAL_TASKS_DIR=(tmp_path / "FRACTAL_TASKS_DIR_2"),
         FRACTAL_LOGGING_LEVEL=logging.CRITICAL,
     )
 
     DIRECTORY = (
-        tmp_path / "FRACTAL_TASKS_DIR" / ".fractal/fractal-tasks-mock0.0.1"
+        tmp_path / "FRACTAL_TASKS_DIR_2" / ".fractal/fractal-tasks-mock0.0.1"
     )
     assert os.path.isdir(DIRECTORY) is False
 
@@ -219,12 +222,13 @@ async def test_remove_directory(
         assert os.path.isdir(DIRECTORY) is False
 
         res = await client.get(f"{PREFIX}/collect/1/")
+        assert res.status_code == 200
+        assert res.json()["data"]["status"] == "fail"
         assert (
             "No matching distribution found for devtools==99.99.99"
             in res.json()["data"]["log"]
         )
         assert os.path.isdir(DIRECTORY) is False
-        debug(res.json()["data"]["log"])
 
         res = await client.post(
             f"{PREFIX}/collect/pip/",
@@ -233,4 +237,12 @@ async def test_remove_directory(
             ),
         )
         assert res.status_code == 201
+        assert os.path.isdir(DIRECTORY) is True
+        assert set(os.listdir(DIRECTORY)) == set(
+            [COLLECTION_FILENAME, COLLECTION_LOG_FILENAME, "venv"]
+        )
+
+        res = await client.get(f"{PREFIX}/collect/2/")
+        assert res.status_code == 200
+        assert res.json()["data"]["status"] == "OK"
         assert os.path.isdir(DIRECTORY) is True
