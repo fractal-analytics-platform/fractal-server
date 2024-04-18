@@ -10,8 +10,8 @@ from fastapi import status
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import JobV2
-from ....schemas.v2.dataset import DatasetStatusReadV2
 from ....schemas.v2.dataset import WorkflowTaskStatusTypeV2
+from ....schemas.v2.status import StatusReadV2
 from ....security import current_active_user
 from ....security import User
 from ._aux_functions import _get_dataset_check_owner
@@ -24,7 +24,7 @@ router = APIRouter()
 
 @router.get(
     "/project/{project_id}/status/",
-    response_model=DatasetStatusReadV2,
+    response_model=StatusReadV2,
 )
 async def get_workflowtask_status(
     project_id: int,
@@ -32,7 +32,7 @@ async def get_workflowtask_status(
     workflow_id: int,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> Optional[DatasetStatusReadV2]:
+) -> Optional[StatusReadV2]:
     """
     Extract the status of all `WorkflowTask`s that ran on a given `DatasetV2`.
     """
@@ -140,8 +140,6 @@ async def get_workflowtask_status(
         if wf_task.id == last_valid_wftask_id:
             break
 
-    response_body = DatasetStatusReadV2(
-        status=clean_workflow_tasks_status_dict
-    )
+    response_body = StatusReadV2(status=clean_workflow_tasks_status_dict)
 
     return response_body
