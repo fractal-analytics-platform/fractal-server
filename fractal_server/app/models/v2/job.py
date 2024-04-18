@@ -9,7 +9,7 @@ from sqlmodel import Field
 from sqlmodel import SQLModel
 
 from ....utils import get_timestamp
-from ...schemas.v1 import JobStatusTypeV1
+from ...schemas.v2 import JobStatusTypeV2
 
 
 class JobV2(SQLModel, table=True):
@@ -47,5 +47,5 @@ class JobV2(SQLModel, table=True):
     end_timestamp: Optional[datetime] = Field(
         default=None, sa_column=Column(DateTime(timezone=True))
     )
-    status: str = JobStatusTypeV1.SUBMITTED
+    status: str = JobStatusTypeV2.SUBMITTED
     log: Optional[str] = None
