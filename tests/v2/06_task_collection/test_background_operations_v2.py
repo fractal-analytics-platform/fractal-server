@@ -5,7 +5,7 @@ from typing import Optional
 import pytest
 from devtools import debug
 
-from fractal_server.app.models import StateV2
+from fractal_server.app.models import CollectionStateV2
 from fractal_server.app.routes.api.v2.task_collection import (
     TaskCollectStatusV2,
 )
@@ -254,7 +254,7 @@ async def test_logs_failed_collection(
     )
     # replacing with path because of non-serializable Path
     collection_status_dict = collection_status.sanitised_dict()
-    state = StateV2(data=collection_status_dict)
+    state = CollectionStateV2(data=collection_status_dict)
     db.add(state)
     await db.commit()
     await db.refresh(state)
