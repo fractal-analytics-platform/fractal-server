@@ -1,8 +1,8 @@
-"""V2
+"""v2
 
-Revision ID: 80e12e1bc4fd
+Revision ID: ec23d4c70adc
 Revises: 9fd26a2b0de4
-Create Date: 2024-04-12 10:13:58.085788
+Create Date: 2024-04-18 10:10:19.140985
 
 """
 import sqlalchemy as sa
@@ -11,7 +11,7 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = "80e12e1bc4fd"
+revision = "ec23d4c70adc"
 down_revision = "9fd26a2b0de4"
 branch_labels = None
 depends_on = None
@@ -26,6 +26,13 @@ def upgrade() -> None:
         sa.Column(
             "timestamp_created", sa.DateTime(timezone=True), nullable=False
         ),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_table(
+        "statev2",
+        sa.Column("data", sa.JSON(), nullable=True),
+        sa.Column("timestamp", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("id", sa.Integer(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
@@ -233,5 +240,6 @@ def downgrade() -> None:
     op.drop_table("linkuserprojectv2")
     op.drop_table("datasetv2")
     op.drop_table("taskv2")
+    op.drop_table("statev2")
     op.drop_table("projectv2")
     # ### end Alembic commands ###
