@@ -4,6 +4,7 @@ from pydantic import ValidationError
 from fractal_server.app.schemas.v2 import DatasetCreateV2
 from fractal_server.app.schemas.v2 import JobCreateV2
 from fractal_server.app.schemas.v2 import ProjectCreateV2
+from fractal_server.app.schemas.v2 import TaskCollectPipV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.app.schemas.v2 import WorkflowCreateV2
 from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
@@ -75,3 +76,18 @@ def test_dictionary_keys_validation():
 
     with pytest.raises(ValidationError):
         TaskCreateV2(**args, input_types={"a": True, "  a   ": False})
+
+
+def test_task_collect_pip():
+
+    TaskCollectPipV2(package="x")
+    TaskCollectPipV2(package="/tmp/x.whl")
+
+    with pytest.raises(ValidationError):
+        TaskCollectPipV2(package="/tmp/x.wh")
+
+    with pytest.raises(ValidationError):
+        TaskCollectPipV2(package="tmp/x.wh")
+
+    with pytest.raises(ValidationError):
+        TaskCollectPipV2(package="/tmp/x.whl", package_version="1")
