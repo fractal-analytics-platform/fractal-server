@@ -25,8 +25,8 @@ async def test_default_args_properties(task_factory_v2, caplog):
     bugged_task = await task_factory_v2(
         name="task2",
         source="source2",
-        args_schema_non_parallel=Foo().dict(),
-        args_schema_parallel=Foo().dict(),
+        args_schema_non_parallel={"foo": "bar"},
+        args_schema_parallel={"bar": "foo"},
     )
 
     # Test KeyErrors
