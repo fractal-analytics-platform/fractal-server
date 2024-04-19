@@ -341,8 +341,6 @@ async def background_collect_pip(
 
             # finalise
             logger.debug("Task-collection status: finalising")
-            close_logger(logger)
-
             collection_path = get_collection_path(venv_path)
             data.task_list = [
                 TaskReadV2(**task.model_dump()) for task in tasks
@@ -356,7 +354,10 @@ async def background_collect_pip(
             state.data = data.sanitised_dict()
             db.merge(state)
             db.commit()
-            db.close()
+
+            # Write last logs to file
+            logger.debug("Task-collection status: OK")
+            logger.info("Background task collection completed successfully")
 
         except Exception as e:
 
@@ -364,7 +365,6 @@ async def background_collect_pip(
             logger.debug("Task-collection status: fail")
             logger.info(f"Background collection failed. Original error: {e}")
 
-            close_logger(logger)
             # Update db
             data.status = "fail"
             data.info = f"Original error: {e}"
@@ -372,7 +372,13 @@ async def background_collect_pip(
             state.data = data.sanitised_dict()
             db.merge(state)
             db.commit()
-            db.close()
 
             # Delete corrupted package dir
+            logger.info(f"Now deleting temporary folder {venv_path}")
             shell_rmtree(venv_path)
+            logger.info(f"Deleted temporary folder {venv_path}")
+
+        finally:
+
+            close_logger(logger)
+            db.close()
