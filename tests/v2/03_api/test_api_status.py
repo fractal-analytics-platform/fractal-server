@@ -17,17 +17,18 @@ async def test_workflowtask_status_no_history_no_job(
     workflow_factory_v2,
     client,
 ):
-    history = []
+    """
+    Test the status endpoint when there is information in the DB and no running
+    job associated to a given dataset/workflow pair.
+    """
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
-        task = await task_factory_v2(name="task1", source="task1")
+        task = await task_factory_v2(name="task", source="task1")
         workflow = await workflow_factory_v2(project_id=project.id, name="WF")
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
-        dataset = await dataset_factory_v2(
-            project_id=project.id, history=history
-        )
+        dataset = await dataset_factory_v2(project_id=project.id, history=[])
         res = await client.get(
             (
                 f"api/v2/project/{project.id}/status/?"
@@ -47,27 +48,32 @@ async def test_workflowtask_status_history_no_job(
     workflow_factory_v2,
     client,
 ):
-    history = []
+    """
+    Test the status endpoint when there is a non-empty history in the DB but
+    no running job associated to a given dataset/workflow pair.
+    """
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
         task = await task_factory_v2(name="task1", source="task1")
         workflow = await workflow_factory_v2(project_id=project.id, name="WF")
 
-        # (1)
+        # CASE 1
+        # Prepare history
+        history = []
         for dummy_status in ["done", "failed", "done"]:
-            await _workflow_insert_task(
+            wftask = await _workflow_insert_task(
                 workflow_id=workflow.id, task_id=task.id, db=db
             )
             history.append(
                 dict(
-                    workflowtask=dict(id=workflow.task_list[-1].id),
+                    workflowtask=dict(id=wftask.id),
                     status=dummy_status,
                 )
             )
-
         dataset = await dataset_factory_v2(
             project_id=project.id, history=history
         )
+        # Test the endpoint
         res = await client.get(
             (
                 f"api/v2/project/{project.id}/status/?"
@@ -77,27 +83,13 @@ async def test_workflowtask_status_history_no_job(
         assert res.status_code == 200
         assert res.json() == {"status": {"1": "done", "2": "failed"}}
 
-        # (2)
-        wf_task_id = history[1]["workflowtask"]["id"]
-
-        res = await client.delete(
-            f"api/v2/project/{project.id}/workflow/{workflow.id}/wftask/"
-            f"{wf_task_id}/"
-        )
-        assert res.status_code == 204
-
-        res = await client.get(
-            (
-                f"api/v2/project/{project.id}/status/?"
-                f"dataset_id={dataset.id}&workflow_id={workflow.id}"
-            )
-        )
-        assert res.json() == {"status": {"1": "done", "3": "done"}}
-        # (3)
+        # CASE 2
+        # Delete an entry from the history
         history.pop(1)
         dataset = await dataset_factory_v2(
             project_id=project.id, history=history
         )
+        # Test the endpoint
         res = await client.get(
             (
                 f"api/v2/project/{project.id}/status/?"
@@ -107,13 +99,13 @@ async def test_workflowtask_status_history_no_job(
         assert res.status_code == 200
         assert res.json() == {"status": {"1": "done", "3": "done"}}
 
-        # (4)
-        history.append(
-            dict(workflowtask=dict(id=workflow.task_list[0].id), status="done")
-        )
+        # CASE 3
+        # Re-append the first item at the end of the history
+        history.append(history[0])
         dataset = await dataset_factory_v2(
             project_id=project.id, history=history
         )
+        # Test the endpoint
         res = await client.get(
             (
                 f"api/v2/project/{project.id}/status/?"
@@ -122,6 +114,23 @@ async def test_workflowtask_status_history_no_job(
         )
         assert res.status_code == 200
         assert res.json() == {"status": {"1": "done"}}
+
+        # CASE 4
+        # Delete a wftask from the workflow
+        wf_task_id = history[0]["workflowtask"]["id"]
+        res = await client.delete(
+            f"api/v2/project/{project.id}/workflow/{workflow.id}/wftask/"
+            f"{wf_task_id}/"
+        )
+        assert res.status_code == 204
+        # Test the endpoint
+        res = await client.get(
+            (
+                f"api/v2/project/{project.id}/status/?"
+                f"dataset_id={dataset.id}&workflow_id={workflow.id}"
+            )
+        )
+        assert res.json() == {"status": {"3": "done"}}
 
 
 async def test_workflowtask_status_history_job(
@@ -135,22 +144,23 @@ async def test_workflowtask_status_history_job(
     job_factory_v2,
     client,
 ):
+    """
+    Test the status endpoint when there is a empty history in the DB but
+    there is a running job associated to a given dataset/workflow pair.
+    """
     working_dir = tmp_path / "working_dir"
     history = []
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
+        dataset = await dataset_factory_v2(
+            project_id=project.id, history=history
+        )
         task = await task_factory_v2(name="task1", source="task1")
         workflow = await workflow_factory_v2(project_id=project.id, name="WF")
-
         for _ in range(3):
             await _workflow_insert_task(
                 workflow_id=workflow.id, task_id=task.id, db=db
             )
-
-        dataset = await dataset_factory_v2(
-            project_id=project.id, history=history
-        )
-
         await job_factory_v2(
             project_id=project.id,
             workflow_id=workflow.id,
@@ -160,6 +170,7 @@ async def test_workflowtask_status_history_job(
             last_task_index=1,
         )
 
+    # CASE 1: the job has no temporary history file
     res = await client.get(
         (
             f"api/v2/project/{project.id}/status/?"
@@ -169,11 +180,13 @@ async def test_workflowtask_status_history_job(
     assert res.status_code == 200
     assert res.json() == {"status": {"1": "submitted", "2": "submitted"}}
 
-    history = [dict(workflowtask=dict(id=1), status="done")]
+    # CASE 2: the job has a temporary history file
+    history = [
+        dict(workflowtask=dict(id=workflow.task_list[0].id), status="done")
+    ]
     working_dir.mkdir()
     with (working_dir / HISTORY_FILENAME).open("w") as f:
         json.dump(history, f)
-    debug(working_dir / HISTORY_FILENAME)
     res = await client.get(
         (
             f"api/v2/project/{project.id}/status/?"
@@ -195,6 +208,10 @@ async def test_workflowtask_status_two_jobs(
     job_factory_v2,
     client,
 ):
+    """
+    If there are more than one jobs associated to a given dataset/workflow pair
+    (which should never happen), the endpoin responds with 422.
+    """
     working_dir = tmp_path / "working_dir"
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
