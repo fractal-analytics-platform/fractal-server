@@ -1,7 +1,7 @@
 from devtools import debug
 
-from fractal_server.app.models import Project
 from fractal_server.app.models import UserOAuth as User
+from fractal_server.app.models.v1 import Project
 
 
 async def _create_user(email, this_db):
