@@ -1,6 +1,5 @@
-from typing import Optional
-
 from pydantic import BaseModel
+from pydantic import Field
 
 from .workflowtask import WorkflowTaskStatusTypeV2
 
@@ -11,9 +10,7 @@ class StatusReadV2(BaseModel):
     `/project/{project_id}/status/` endpoint
     """
 
-    status: Optional[
-        dict[
-            str,
-            WorkflowTaskStatusTypeV2,
-        ]
-    ] = None
+    status: dict[
+        str,
+        WorkflowTaskStatusTypeV2,
+    ] = Field(default_factory=dict)
