@@ -1,16 +1,21 @@
 import time
 
+import pytest
 from devtools import debug
 
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.routes.api.v2.submit import _encode_as_utc
+from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
+from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
+from fractal_server.app.runner.v2 import _backends
 from fractal_server.app.schemas.v2.dumps import DatasetDumpV2
 from fractal_server.app.schemas.v2.dumps import ProjectDumpV2
 from fractal_server.app.schemas.v2.dumps import WorkflowDumpV2
 
 PREFIX = "/api/v2"
+backends_available = list(_backends.keys())
 
 
 async def test_submit_job_failures_non_verified_user(
@@ -496,3 +501,150 @@ async def test_rate_limit(
             json={},
         )
         assert res.status_code == 202
+
+
+async def test_get_jobs(
+    db,
+    client,
+    project_factory_v2,
+    job_factory_v2,
+    workflow_factory_v2,
+    dataset_factory_v2,
+    task_factory_v2,
+    tmp_path,
+    MockCurrentUser,
+):
+    """
+    Test behavior for when another job with the same output_dataset_id already
+    exists.
+    """
+
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+        project = await project_factory_v2(user)
+        dataset = await dataset_factory_v2(
+            project_id=project.id, name="dataset1"
+        )
+        new_task = await task_factory_v2()
+        workflow1 = await workflow_factory_v2(project_id=project.id)
+        workflow2 = await workflow_factory_v2(project_id=project.id)
+        await _workflow_insert_task(
+            workflow_id=workflow1.id, task_id=new_task.id, db=db
+        )
+        await _workflow_insert_task(
+            workflow_id=workflow2.id, task_id=new_task.id, db=db
+        )
+
+        await job_factory_v2(
+            project_id=project.id,
+            dataset_id=dataset.id,
+            workflow_id=workflow1.id,
+            working_dir=tmp_path.as_posix(),
+            status="done",
+            log="hello world",
+        )
+        job2 = await job_factory_v2(
+            project_id=project.id,
+            dataset_id=dataset.id,
+            workflow_id=workflow2.id,
+            working_dir=tmp_path.as_posix(),
+            status="submitted",
+        )
+
+        # Test GET project/{project.id}/job/?log=false
+
+        res1 = await client.get(f"{PREFIX}/job/")
+        res2 = await client.get(f"{PREFIX}/job/?log=false")
+        assert len(res1.json()) == len(res2.json()) == 2
+        assert res1.json()[0]["log"] == "hello world"
+        assert res2.json()[0]["log"] is None
+
+        # Test GET project/{project.id}/workflow/{workflow.id}/job/
+
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow1.id}/job/"
+        )
+        assert len(res.json()) == 1
+
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow2.id}/job/"
+        )
+        assert len(res.json()) == 1
+
+        # Test GET project/{project.id}/job/{job_id}/?show_tmp_logs=true
+
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/job/{job2.id}/?show_tmp_logs=true"
+        )
+        assert res.json()["log"] is None
+
+        with open(f"{job2.working_dir}/{WORKFLOW_LOG_FILENAME}", "w") as f:
+            f.write("hello job")
+
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/job/{job2.id}/?show_tmp_logs=true"
+        )
+        assert res.json()["log"] == "hello job"
+
+        # Test GET /project/{project_id}/job/{job_id}/download/
+
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/job/{job2.id}/download/"
+        )
+        assert res.status_code == 200
+        assert res.headers["content-type"] == "application/x-zip-compressed"
+        assert "attachment;filename=" in res.headers["content-disposition"]
+
+        # Test GET /project/{project_id}/job/?log=false
+
+        res = await client.get(f"{PREFIX}/project/{project.id}/job/")
+        assert len(res.json()) == 2
+        assert res.json()[0]["log"] is not None
+        assert res.json()[1]["log"] is None
+        res = await client.get(f"{PREFIX}/project/{project.id}/job/?log=false")
+        assert len(res.json()) == 2
+        assert res.json()[0]["log"] is None
+        assert res.json()[1]["log"] is None
+
+
+@pytest.mark.parametrize("backend", backends_available)
+async def test_stop_job(
+    backend,
+    db,
+    client,
+    MockCurrentUser,
+    project_factory_v2,
+    job_factory_v2,
+    workflow_factory_v2,
+    dataset_factory_v2,
+    task_factory_v2,
+    tmp_path,
+    override_settings_factory,
+):
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=backend)
+
+    async with MockCurrentUser() as user:
+        project = await project_factory_v2(user)
+        wf = await workflow_factory_v2(project_id=project.id)
+        t = await task_factory_v2(name="task", source="source")
+        ds = await dataset_factory_v2(project_id=project.id)
+        await _workflow_insert_task(workflow_id=wf.id, task_id=t.id, db=db)
+        job = await job_factory_v2(
+            working_dir=tmp_path.as_posix(),
+            project_id=project.id,
+            dataset_id=ds.id,
+            workflow_id=wf.id,
+        )
+
+        debug(job)
+
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/job/{job.id}/stop/"
+        )
+        if backend == "slurm":
+            assert res.status_code == 202
+
+            shutdown_file = tmp_path / SHUTDOWN_FILENAME
+            debug(shutdown_file)
+            assert shutdown_file.exists()
+        else:
+            assert res.status_code == 422
