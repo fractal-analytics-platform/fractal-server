@@ -5,14 +5,14 @@ from devtools import debug
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
-from fractal_server.app.models import ApplyWorkflow
-from fractal_server.app.models import Dataset
-from fractal_server.app.models import Project
-from fractal_server.app.models import Resource
-from fractal_server.app.models import State
-from fractal_server.app.models import Task
-from fractal_server.app.models import Workflow
-from fractal_server.app.models import WorkflowTask
+from fractal_server.app.models.v1 import ApplyWorkflow
+from fractal_server.app.models.v1 import Dataset
+from fractal_server.app.models.v1 import Project
+from fractal_server.app.models.v1 import Resource
+from fractal_server.app.models.v1 import State
+from fractal_server.app.models.v1 import Task
+from fractal_server.app.models.v1 import Workflow
+from fractal_server.app.models.v1 import WorkflowTask
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
