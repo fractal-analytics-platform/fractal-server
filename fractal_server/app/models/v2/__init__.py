@@ -2,7 +2,7 @@
 v2 `models` module
 """
 from ..linkuserproject import LinkUserProjectV2
-from .colletion_state import CollectionStateV2
+from .collection_state import CollectionStateV2
 from .dataset import DatasetV2
 from .job import JobV2
 from .project import ProjectV2
