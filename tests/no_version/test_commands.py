@@ -131,12 +131,8 @@ def test_alembic_check(set_test_db):
 
 commands = [
     "fractalctl start",
-    "fractalctl start --reload",
-    "fractalctl start --port 8000",
-    "fractalctl start --host 0.0.0.0 --port 8000",
-    "gunicorn fractal_server.main:app --worker-class uvicorn.workers.UvicornWorker --bind localhost:8000",  # noqa
-    "gunicorn fractal_server.main:app --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000",  # noqa
-    "gunicorn fractal_server.main:app --worker-class uvicorn.workers.UvicornWorker --workers 8",  # noqa
+    "fractalctl start --reload --host 0.0.0.0 --port 8000",
+    "gunicorn fractal_server.main:app --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --workers 4",  # noqa
 ]
 
 
