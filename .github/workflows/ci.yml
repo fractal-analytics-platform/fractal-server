@@ -8,6 +8,68 @@ on:
 
 jobs:
 
+  tests_no_version:
+    name: "NoVersion - Python ${{ matrix.python-version }} - ${{ matrix.db }}"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10"]
+        db: ["sqlite", "postgres"]
+
+    services:
+      postgres:
+        # Disable postgres service when using sqlite, through the workaround
+        # described in https://github.com/actions/runner/issues/822
+        image: ${{ (matrix.db == 'postgres') && 'postgres' || '' }}
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: fractal_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install poetry
+        run: pipx install poetry==1.7.1
+
+      - name: Set up Python 3.9 (only needed to avoid issue \#498)
+        if: ${{ matrix.python-version != '3.9' }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+          cache: "poetry"
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "poetry"
+
+      - name: Install dependencies
+        run: |
+          if [[ ${{ matrix.db }} == "postgres" ]]; then
+            DB="-E postgres"
+          fi
+          poetry install --with dev --without docs --no-interaction -E gunicorn $DB
+
+      - name: Test with pytest
+        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest --ignore tests/v1 --ignore tests/v2
+
+      - name: Upload coverage data
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-data
+          path: ".coverage*"
+
+
   tests_v1:
     name: "V1 - Python ${{ matrix.python-version }} - ${{ matrix.db }}"
     runs-on: ubuntu-22.04
@@ -61,7 +123,7 @@ jobs:
           poetry install --with dev --without docs --no-interaction -E gunicorn $DB
 
       - name: Test with pytest
-        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest --ignore  tests/v2
+        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest --ignore tests/no_version --ignore tests/v2
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
@@ -123,7 +185,7 @@ jobs:
           poetry install --with dev --without docs --no-interaction -E gunicorn $DB
 
       - name: Test with pytest
-        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest tests/v2 --ignore tests/v1
+        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest tests/v2 --ignore tests/no_version --ignore tests/v1
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
@@ -135,7 +197,7 @@ jobs:
   coverage:
     name: Coverage
     runs-on: ubuntu-22.04
-    needs: [tests_v1, tests_v2]
+    needs: [tests_no_version, tests_v1, tests_v2]
 
     permissions:
       pull-requests: write
