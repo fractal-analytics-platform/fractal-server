@@ -199,7 +199,7 @@ async def collect_tasks_pip(
     close_logger(logger)
     info = (
         "Collecting tasks in the background. "
-        f"GET /task/collect/{state.id}/ to query collection status"
+        f"GET /task/collect/{state.id} to query collection status"
     )
     state.data["info"] = info
     response.status_code = status.HTTP_201_CREATED
