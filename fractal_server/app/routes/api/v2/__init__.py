@@ -7,6 +7,7 @@ from .dataset import router as dataset_router_v2
 from .images import router as images_routes_v2
 from .job import router as job_router_v2
 from .project import router as project_router_v2
+from .status import router as status_router_v2
 from .submit import router as submit_job_router_v2
 from .task import router as task_router_v2
 from .task_collection import router as task_collection_router_v2
@@ -30,3 +31,4 @@ router_api_v2.include_router(
 )
 router_api_v2.include_router(workflow_router_v2, tags=["V2 Workflow"])
 router_api_v2.include_router(workflowtask_router_v2, tags=["V2 WorkflowTask"])
+router_api_v2.include_router(status_router_v2, tags=["V2 Status"])
