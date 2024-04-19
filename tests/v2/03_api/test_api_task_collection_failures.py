@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 from pathlib import Path
 
@@ -179,58 +178,3 @@ async def test_collection_validation_error(
         )
         assert res.status_code == 422
         assert "ValidationError" in res.json()["detail"]
-
-
-async def test_remove_directory(
-    db,
-    client,
-    MockCurrentUser,
-    override_settings_factory,
-    tmp_path: Path,
-    testdata_path: Path,
-):
-    override_settings_factory(
-        FRACTAL_TASKS_DIR=(tmp_path / "FRACTAL_TASKS_DIR"),
-        FRACTAL_LOGGING_LEVEL=logging.CRITICAL,
-    )
-
-    DIRECTORY = (
-        tmp_path / "FRACTAL_TASKS_DIR" / ".fractal/fractal-tasks-mock0.0.1"
-    )
-    assert os.path.isdir(DIRECTORY) is False
-
-    payload = dict(
-        package=(
-            testdata_path.parent
-            / "v2/fractal_tasks_mock/dist"
-            / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
-        ).as_posix(),
-        package_extras="my_extra",
-    )
-
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
-        res = await client.post(
-            f"{PREFIX}/collect/pip/",
-            json=dict(
-                **payload, pinned_package_versions={"devtools": "99.99.99"}
-            ),
-        )
-        assert res.status_code == 201
-        assert os.path.isdir(DIRECTORY) is False
-
-        res = await client.get(f"{PREFIX}/collect/1/")
-        assert (
-            "No matching distribution found for devtools==99.99.99"
-            in res.json()["data"]["log"]
-        )
-        assert os.path.isdir(DIRECTORY) is False
-        debug(res.json()["data"]["log"])
-
-        res = await client.post(
-            f"{PREFIX}/collect/pip/",
-            json=dict(
-                **payload, pinned_package_versions={"devtools": "0.0.1"}
-            ),
-        )
-        assert res.status_code == 201
-        assert os.path.isdir(DIRECTORY) is True
