@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="d_dc3b34c4bcecf82d_get_collection_data_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.4">coverage.py v7.4.4</a>,
-            created at 2024-04-19 07:16 +0000
+            created at 2024-04-19 08:50 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -99,7 +99,7 @@
     <p class="run"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">_TaskCollectPip</span> <span class="key">import</span> <span class="nam">_TaskCollectPip</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t16" href="#t16">16</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">app</span><span class="op">.</span><span class="nam">db</span> <span class="key">import</span> <span class="nam">DBSyncSession</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">app</span><span class="op">.</span><span class="nam">db</span> <span class="key">import</span> <span class="nam">get_sync_db</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">app</span><span class="op">.</span><span class="nam">models</span> <span class="key">import</span> <span class="nam">State</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">app</span><span class="op">.</span><span class="nam">models</span><span class="op">.</span><span class="nam">v2</span> <span class="key">import</span> <span class="nam">CollectionStateV2</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">app</span><span class="op">.</span><span class="nam">models</span><span class="op">.</span><span class="nam">v2</span> <span class="key">import</span> <span class="nam">TaskV2</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">app</span><span class="op">.</span><span class="nam">schemas</span><span class="op">.</span><span class="nam">v2</span> <span class="key">import</span> <span class="nam">TaskCollectStatusV2</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t"><span class="key">from</span> <span class="nam">fractal_server</span><span class="op">.</span><span class="nam">app</span><span class="op">.</span><span class="nam">schemas</span><span class="op">.</span><span class="nam">v2</span> <span class="key">import</span> <span class="nam">TaskCreateV2</span>&nbsp;</span><span class="r"></span></p>
@@ -397,7 +397,7 @@
     <p class="run"><span class="n"><a id="t313" href="#t313">313</a></span><span class="t">        <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="fst">f"</span><span class="op">{</span><span class="nam">key</span><span class="op">}</span><span class="fst">: </span><span class="op">{</span><span class="nam">value</span><span class="op">}</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t314" href="#t314">314</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t315" href="#t315">315</a></span><span class="t">    <span class="key">with</span> <span class="nam">next</span><span class="op">(</span><span class="nam">get_sync_db</span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="key">as</span> <span class="nam">db</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t316" href="#t316">316</a></span><span class="t">        <span class="nam">state</span><span class="op">:</span> <span class="nam">State</span> <span class="op">=</span> <span class="nam">db</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="nam">State</span><span class="op">,</span> <span class="nam">state_id</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t316" href="#t316">316</a></span><span class="t">        <span class="nam">state</span><span class="op">:</span> <span class="nam">CollectionStateV2</span> <span class="op">=</span> <span class="nam">db</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="nam">CollectionStateV2</span><span class="op">,</span> <span class="nam">state_id</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t317" href="#t317">317</a></span><span class="t">        <span class="nam">data</span> <span class="op">=</span> <span class="nam">TaskCollectStatusV2</span><span class="op">(</span><span class="op">**</span><span class="nam">state</span><span class="op">.</span><span class="nam">data</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t318" href="#t318">318</a></span><span class="t">        <span class="nam">data</span><span class="op">.</span><span class="nam">info</span> <span class="op">=</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t319" href="#t319">319</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -472,7 +472,7 @@
             <a id="nextFileLink" class="nav" href="d_dc3b34c4bcecf82d_get_collection_data_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.4">coverage.py v7.4.4</a>,
-            created at 2024-04-19 07:16 +0000
+            created at 2024-04-19 08:50 +0000
         </p>
     </div>
 </footer>
