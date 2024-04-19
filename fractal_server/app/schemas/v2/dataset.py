@@ -26,20 +26,6 @@ class _DatasetHistoryItemV2(BaseModel):
     parallelization: Optional[dict]
 
 
-class DatasetStatusReadV2(BaseModel):
-    """
-    Response type for the
-    `/project/{project_id}/dataset/{dataset_id}/status/` endpoint
-    """
-
-    status: Optional[
-        dict[
-            str,
-            WorkflowTaskStatusTypeV2,
-        ]
-    ] = None
-
-
 # CRUD
 
 
