@@ -2,7 +2,7 @@ import pytest
 from devtools import debug
 
 from fractal_server.app.db import DB
-from tests.fixtures_server_v1 import DB_ENGINE
+from tests.fixtures_server import DB_ENGINE
 
 
 async def test_db_connection(db):

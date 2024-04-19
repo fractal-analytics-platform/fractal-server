@@ -60,6 +60,7 @@ def tmp777_path(tmp_path):
     yield tmp_path
 
 
+from .fixtures_server import *  # noqa F403
 from .fixtures_server_v1 import *  # noqa F403
 from .fixtures_server_v2 import *  # noqa F403
 from .fixtures_tasks_v1 import *  # noqa F403

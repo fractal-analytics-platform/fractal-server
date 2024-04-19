@@ -9,7 +9,7 @@ import pytest
 from devtools import debug
 
 import fractal_server
-from tests.fixtures_server_v1 import DB_ENGINE
+from tests.fixtures_server import DB_ENGINE
 
 
 FRACTAL_SERVER_DIR = Path(fractal_server.__file__).parent
