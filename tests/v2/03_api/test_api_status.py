@@ -160,6 +160,15 @@ async def test_workflowtask_status_history_job(
             last_task_index=1,
         )
 
+    res = await client.get(
+        (
+            f"api/v2/project/{project.id}/status/?"
+            f"dataset_id={dataset.id}&workflow_id={workflow.id}"
+        )
+    )
+    assert res.status_code == 200
+    assert res.json() == {"status": {"1": "submitted", "2": "submitted"}}
+
     history = [dict(workflowtask=dict(id=1), status="done")]
     working_dir.mkdir()
     with (working_dir / HISTORY_FILENAME).open("w") as f:
