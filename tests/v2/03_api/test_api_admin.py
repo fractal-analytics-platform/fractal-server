@@ -7,13 +7,13 @@ from zipfile import ZipFile
 import pytest
 from devtools import debug
 
-from fractal_server.app.models import JobStatusTypeV1
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
 from fractal_server.app.runner.v1 import _backends
+from fractal_server.app.schemas.v2 import JobStatusTypeV2
 
 backends_available = list(_backends.keys())
 
@@ -169,12 +169,12 @@ async def test_view_job(
 
         # get jobs by status
         res = await client.get(
-            f"{PREFIX}/job/?status={JobStatusTypeV1.FAILED}"
+            f"{PREFIX}/job/?status={JobStatusTypeV2.FAILED}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 0
         res = await client.get(
-            f"{PREFIX}/job/?status={JobStatusTypeV1.SUBMITTED}"
+            f"{PREFIX}/job/?status={JobStatusTypeV2.SUBMITTED}"
         )
         assert res.status_code == 200
         assert len(res.json()) == 2
@@ -298,8 +298,8 @@ async def test_patch_job(
     db,
     tmp_path,
 ):
-    ORIGINAL_STATUS = JobStatusTypeV1.SUBMITTED
-    NEW_STATUS = JobStatusTypeV1.FAILED
+    ORIGINAL_STATUS = JobStatusTypeV2.SUBMITTED
+    NEW_STATUS = JobStatusTypeV2.FAILED
 
     async with MockCurrentUser(user_kwargs={"id": 111111}) as user:
         project = await project_factory_v2(user)
@@ -403,7 +403,7 @@ async def test_stop_job(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow.id,
-            status=JobStatusTypeV1.SUBMITTED,
+            status=JobStatusTypeV2.SUBMITTED,
         )
 
     async with MockCurrentUser(user_kwargs={"id": 2222, "is_superuser": True}):

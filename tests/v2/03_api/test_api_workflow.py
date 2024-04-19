@@ -721,6 +721,13 @@ async def test_patch_workflow_task_legacy(
         assert res.status_code == 201
         wf_task_id = res.json()["id"]
 
+        res = await client.post(
+            f"{PREFIX}/project/{proj.id}/workflow/{wf.id}/wftask/"
+            "?task_id=123456789",
+            json={"is_legacy_task": True},
+        )
+        assert res.status_code == 404
+
         workflow = await get_workflow(client, proj.id, wf.id)
 
         assert workflow["task_list"][0]["args_parallel"] is None

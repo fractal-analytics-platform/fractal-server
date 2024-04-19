@@ -20,13 +20,13 @@ from ....syringe import Inject
 from ....utils import get_timestamp
 from ...db import AsyncSession
 from ...db import get_async_db
-from ...models import JobStatusTypeV1
 from ...models.security import UserOAuth as User
 from ...models.v1 import Task
 from ...models.v2 import JobV2
 from ...models.v2 import ProjectV2
 from ...runner.filenames import WORKFLOW_LOG_FILENAME
 from ...schemas.v2 import JobReadV2
+from ...schemas.v2 import JobStatusTypeV2
 from ...schemas.v2 import JobUpdateV2
 from ...schemas.v2 import ProjectReadV2
 from ...security import current_active_superuser
@@ -90,7 +90,7 @@ async def view_job(
     project_id: Optional[int] = None,
     dataset_id: Optional[int] = None,
     workflow_id: Optional[int] = None,
-    status: Optional[JobStatusTypeV1] = None,
+    status: Optional[JobStatusTypeV2] = None,
     start_timestamp_min: Optional[datetime] = None,
     start_timestamp_max: Optional[datetime] = None,
     end_timestamp_min: Optional[datetime] = None,
@@ -175,7 +175,7 @@ async def view_single_job(
         )
     await db.close()
 
-    if show_tmp_logs and (job.status == JobStatusTypeV1.SUBMITTED):
+    if show_tmp_logs and (job.status == JobStatusTypeV2.SUBMITTED):
         try:
             with open(f"{job.working_dir}/{WORKFLOW_LOG_FILENAME}", "r") as f:
                 job.log = f.read()
@@ -208,7 +208,7 @@ async def update_job(
             detail=f"Job {job_id} not found",
         )
 
-    if job_update.status != JobStatusTypeV1.FAILED:
+    if job_update.status != JobStatusTypeV2.FAILED:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Cannot set job status to {job_update.status}",
