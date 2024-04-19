@@ -9,7 +9,7 @@ on:
 jobs:
 
   tests_v1:
-    name: "V1 Core - Python ${{ matrix.python-version }} - ${{ matrix.db }}"
+    name: "V1 - Python ${{ matrix.python-version }} - ${{ matrix.db }}"
     runs-on: ubuntu-22.04
     timeout-minutes: 30
 
