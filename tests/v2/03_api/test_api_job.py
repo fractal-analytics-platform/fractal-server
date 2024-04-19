@@ -1,17 +1,21 @@
 import time
 
+import pytest
 from devtools import debug
 
 from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.routes.api.v2.submit import _encode_as_utc
+from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
+from fractal_server.app.runner.v2 import _backends
 from fractal_server.app.schemas.v2.dumps import DatasetDumpV2
 from fractal_server.app.schemas.v2.dumps import ProjectDumpV2
 from fractal_server.app.schemas.v2.dumps import WorkflowDumpV2
 
 PREFIX = "/api/v2"
+backends_available = list(_backends.keys())
 
 
 async def test_submit_job_failures_non_verified_user(
@@ -600,3 +604,47 @@ async def test_get_jobs(
         assert len(res.json()) == 2
         assert res.json()[0]["log"] is None
         assert res.json()[1]["log"] is None
+
+
+@pytest.mark.parametrize("backend", backends_available)
+async def test_stop_job(
+    backend,
+    db,
+    client,
+    MockCurrentUser,
+    project_factory_v2,
+    job_factory_v2,
+    workflow_factory_v2,
+    dataset_factory_v2,
+    task_factory_v2,
+    tmp_path,
+    override_settings_factory,
+):
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=backend)
+
+    async with MockCurrentUser() as user:
+        project = await project_factory_v2(user)
+        wf = await workflow_factory_v2(project_id=project.id)
+        t = await task_factory_v2(name="task", source="source")
+        ds = await dataset_factory_v2(project_id=project.id)
+        await _workflow_insert_task(workflow_id=wf.id, task_id=t.id, db=db)
+        job = await job_factory_v2(
+            working_dir=tmp_path.as_posix(),
+            project_id=project.id,
+            dataset_id=ds.id,
+            workflow_id=wf.id,
+        )
+
+        debug(job)
+
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/job/{job.id}/stop/"
+        )
+        if backend == "slurm":
+            assert res.status_code == 202
+
+            shutdown_file = tmp_path / SHUTDOWN_FILENAME
+            debug(shutdown_file)
+            assert shutdown_file.exists()
+        else:
+            assert res.status_code == 422
