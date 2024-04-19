@@ -57,12 +57,12 @@ async def get_workflowtask_status(
     else:
         last_valid_wftask_id = None
 
-    # Check whether there exists a job such that
-    # 1. `job.dataset_id == dataset_id`, and
-    # 2. `job.status` is submitted
-    # If one such job exists, it will be used later. If there are multiple
-    # jobs, raise an error.
-    stm = _get_submitted_jobs_statement().where(JobV2.dataset_id == dataset_id)
+    # Check whether there exists a submitted job associated to this
+    # workflow/dataset pair. If it does exist, it will be used later.
+    # If there are multiple jobs, raise an error.
+    stm = _get_submitted_jobs_statement()
+    stm = stm.where(JobV2.dataset_id == dataset_id)
+    stm = stm.where(JobV2.workflow_id == workflow_id)
     res = await db.execute(stm)
     running_jobs = res.scalars().all()
     if len(running_jobs) == 0:
