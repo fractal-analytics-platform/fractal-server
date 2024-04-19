@@ -146,6 +146,9 @@ def run_v2_task_parallel(
     submit_setup_call: Callable = no_op_submit_setup_call,
 ) -> TaskOutput:
 
+    if len(images) == 0:
+        return TaskOutput()
+
     _check_parallelization_list_size(images)
 
     executor_options = _get_executor_options(
@@ -248,6 +251,9 @@ def run_v2_task_compound(
 
     # 3/B: parallel part of a compound task
     _check_parallelization_list_size(parallelization_list)
+
+    if len(parallelization_list) == 0:
+        return TaskOutput()
 
     list_function_kwargs = []
     for ind, parallelization_item in enumerate(parallelization_list):
