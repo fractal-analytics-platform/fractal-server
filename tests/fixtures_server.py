@@ -153,7 +153,7 @@ def override_settings_factory():
 @pytest.fixture
 async def db_create_tables(override_settings):
     from fractal_server.app.db import DB
-    from fractal_server.app.models.v1 import SQLModel
+    from sqlmodel import SQLModel
 
     # Calling both set_sync_db and set_async_db guarantees that a new pair of
     # sync/async engines is created every time.
