@@ -21,8 +21,8 @@ from typing import Optional
 from ....config import get_settings
 from ....logger import get_logger
 from ....syringe import Inject
-from ...models import Task
-from ...models import WorkflowTask
+from ...models.v1 import Task
+from ...models.v1 import WorkflowTask
 from ...schemas.v1 import WorkflowTaskStatusTypeV1
 from ..exceptions import JobExecutionError
 from ..exceptions import TaskExecutionError
