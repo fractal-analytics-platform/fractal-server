@@ -20,12 +20,12 @@ from ....syringe import Inject
 from ....utils import get_timestamp
 from ...db import AsyncSession
 from ...db import get_async_db
-from ...models import ApplyWorkflow
-from ...models import Dataset
-from ...models import JobStatusTypeV1
-from ...models import Project
-from ...models import Workflow
 from ...models.security import UserOAuth as User
+from ...models.v1 import ApplyWorkflow
+from ...models.v1 import Dataset
+from ...models.v1 import JobStatusTypeV1
+from ...models.v1 import Project
+from ...models.v1 import Workflow
 from ...runner.filenames import WORKFLOW_LOG_FILENAME
 from ...schemas.v1 import ApplyWorkflowReadV1
 from ...schemas.v1 import ApplyWorkflowUpdateV1
