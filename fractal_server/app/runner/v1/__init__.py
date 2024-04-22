@@ -26,10 +26,10 @@ from ....logger import set_logger
 from ....syringe import Inject
 from ....utils import get_timestamp
 from ...db import DB
-from ...models import ApplyWorkflow
-from ...models import Dataset
-from ...models import Workflow
-from ...models import WorkflowTask
+from ...models.v1 import ApplyWorkflow
+from ...models.v1 import Dataset
+from ...models.v1 import Workflow
+from ...models.v1 import WorkflowTask
 from ...schemas.v1 import JobStatusTypeV1
 from ..exceptions import JobExecutionError
 from ..exceptions import TaskExecutionError
