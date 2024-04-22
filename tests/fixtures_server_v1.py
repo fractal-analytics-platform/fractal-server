@@ -115,7 +115,7 @@ async def job_factory(db: AsyncSession):
     from fractal_server.app.models import Project
     from fractal_server.app.models import ApplyWorkflow
     from fractal_server.app.models import Workflow
-    from fractal_server.app.runner.set_start_and_last_task_index import (
+    from fractal_server.app.runner.v1.set_start_and_last_task_index import (
         set_start_and_last_task_index,
     )
 
