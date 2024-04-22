@@ -12,7 +12,7 @@ from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import JobV2
 from ....models.v2 import ProjectV2
-from ....runner.filenames import WORKFLOW_LOG_FILENAME  # FIXME
+from ....runner.filenames import WORKFLOW_LOG_FILENAME
 from ....schemas.v2 import JobReadV2
 from ....schemas.v2 import JobStatusTypeV2
 from ....security import current_active_user
