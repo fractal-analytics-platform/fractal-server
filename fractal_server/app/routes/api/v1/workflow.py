@@ -23,10 +23,10 @@ from .....logger import close_logger
 from .....logger import set_logger
 from ....db import AsyncSession
 from ....db import get_async_db
-from ....models import ApplyWorkflow
-from ....models import Project
-from ....models import Task
-from ....models import Workflow
+from ....models.v1 import ApplyWorkflow
+from ....models.v1 import Project
+from ....models.v1 import Task
+from ....models.v1 import Workflow
 from ....schemas.v1 import WorkflowCreateV1
 from ....schemas.v1 import WorkflowExportV1
 from ....schemas.v1 import WorkflowImportV1
