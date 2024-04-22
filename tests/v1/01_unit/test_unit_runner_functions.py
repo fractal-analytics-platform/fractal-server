@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-from fractal_server.app.models import Task
+from fractal_server.app.models.v1 import Task
 from fractal_server.app.runner.v1._common import _task_needs_image_list
 from fractal_server.app.runner.v1._common import TaskParameters
 from fractal_server.app.runner.v1._common import trim_TaskParameters

@@ -18,11 +18,11 @@ from .....logger import set_logger
 from .....syringe import Inject
 from ....db import AsyncSession
 from ....db import get_async_db
-from ....models import ApplyWorkflow
-from ....models import Dataset
 from ....models import LinkUserProject
-from ....models import Project
-from ....models import Workflow
+from ....models.v1 import ApplyWorkflow
+from ....models.v1 import Dataset
+from ....models.v1 import Project
+from ....models.v1 import Workflow
 from ....runner.set_start_and_last_task_index import (
     set_start_and_last_task_index,
 )

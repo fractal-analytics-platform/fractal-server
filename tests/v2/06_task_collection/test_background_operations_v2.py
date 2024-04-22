@@ -5,7 +5,7 @@ from typing import Optional
 import pytest
 from devtools import debug
 
-from fractal_server.app.models import CollectionStateV2
+from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.routes.api.v2.task_collection import (
     TaskCollectStatusV2,
 )
