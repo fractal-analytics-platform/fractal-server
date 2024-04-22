@@ -933,14 +933,13 @@ def test_legacy_task(
     assert 'END    1-th task (name="dummy parallel")' in lines
 
 
-
 def test_scaling_workflow_execution(
     tmp_path: Path, executor: Executor, fractal_tasks_mock_venv
 ):
     """
     New mock of fractal-demos/examples/01.
     """
-    N=10
+    N = 10
     WORKING_DIR = tmp_path / "job_dir"
     zarr_dir = (tmp_path / "job_dir").as_posix().rstrip("/")
     execute_tasks_v2_args = dict(
@@ -949,7 +948,6 @@ def test_scaling_workflow_execution(
         workflow_dir_user=WORKING_DIR,
     )
 
-    
     dataset_attrs = execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
@@ -994,5 +992,5 @@ def test_scaling_workflow_execution(
         if os.path.isfile(WORKING_DIR / file):
             count += 1
             size += os.path.getsize(WORKING_DIR / file)
-    
+
     debug(f"In {WORKING_DIR =} there are\n{count} files\n{size} bytes")
