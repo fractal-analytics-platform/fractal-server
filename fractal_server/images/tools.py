@@ -33,7 +33,6 @@ def find_image_by_zarr_url(
     return dict(image=copy(images[ind]), index=ind)
 
 
-# FIXME: what is filters
 def match_filter(image: dict[str, Any], filters: Filters) -> bool:
     """
     Find whether an image matches a filter set.
