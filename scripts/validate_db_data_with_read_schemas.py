@@ -1,13 +1,13 @@
 from sqlalchemy import select
 
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models import UserOAuth
 from fractal_server.app.models.v1 import ApplyWorkflow
 from fractal_server.app.models.v1 import Dataset
 from fractal_server.app.models.v1 import Project
 from fractal_server.app.models.v1 import Resource
 from fractal_server.app.models.v1 import State
 from fractal_server.app.models.v1 import Task
-from fractal_server.app.models.v1 import UserOAuth
 from fractal_server.app.models.v1 import Workflow
 from fractal_server.app.schemas.v1 import ApplyWorkflowReadV1
 from fractal_server.app.schemas.v1 import DatasetReadV1
