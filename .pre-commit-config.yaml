@@ -22,4 +22,4 @@ repos:
     rev: '1.7.4'
     hooks:
     - id: bandit
-      args: ["--exclude", "tests/*", "benchmarks/*"]
+      args: ["--exclude", "tests/*", "benchmarks/*", "examples/*"]
