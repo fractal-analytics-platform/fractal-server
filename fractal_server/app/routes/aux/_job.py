@@ -3,7 +3,7 @@ from pathlib import Path
 from zipfile import ZIP_DEFLATED
 from zipfile import ZipFile
 
-from ...models import ApplyWorkflow
+from ...models.v1 import ApplyWorkflow
 from ...runner.filenames import SHUTDOWN_FILENAME
 
 

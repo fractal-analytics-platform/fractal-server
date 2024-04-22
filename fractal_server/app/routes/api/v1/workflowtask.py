@@ -22,7 +22,7 @@ from fastapi import status
 
 from ....db import AsyncSession
 from ....db import get_async_db
-from ....models import Task
+from ....models.v1 import Task
 from ....schemas.v1 import WorkflowTaskCreateV1
 from ....schemas.v1 import WorkflowTaskReadV1
 from ....schemas.v1 import WorkflowTaskUpdateV1
