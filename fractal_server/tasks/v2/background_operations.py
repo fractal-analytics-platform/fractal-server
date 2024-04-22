@@ -365,7 +365,6 @@ async def background_collect_pip(
             # Write last logs to file
             logger.debug("Task-collection status: fail")
             logger.info(f"Background collection failed. Original error: {e}")
-            close_logger(logger)
 
             # Update db
             data.status = "fail"
