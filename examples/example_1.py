@@ -1,10 +1,13 @@
-import os
+# Add `fractal_client.py` parent directory to `sys.path`
 import sys
 from pathlib import Path
+
+sys.path.append((Path(__file__).parents[1] / "scripts/populate_db").as_posix())
 
 from fractal_client import DEFAULT_CREDENTIALS
 from fractal_client import FractalClient
 from passlib.context import CryptContext
+import os
 
 from fractal_server.app.db import get_sync_db
 from fractal_server.app.schemas.v2 import DatasetCreateV2
@@ -13,9 +16,6 @@ from fractal_server.app.schemas.v2 import ProjectCreateV2
 from fractal_server.app.schemas.v2 import WorkflowCreateV2
 from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
 from fractal_server.app.security import UserOAuth
-
-# Add `fractal_client.py` parent directory to `sys.path`
-sys.path.append((Path(__file__).parents[1] / "scripts/populate_db").as_posix())
 
 
 def create_first_user() -> None:
