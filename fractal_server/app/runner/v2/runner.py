@@ -52,8 +52,15 @@ def execute_tasks_v2(
     for wftask in wf_task_list:
         task = wftask.task
         task_legacy = wftask.task_legacy
-        task_name = task_legacy.name if wftask.is_legacy_task else task.name
-        logger.debug(f'SUBMIT {wftask.order}-th task (name="{task_name}")')
+        if wftask.is_legacy_task:
+            task_name = task_legacy.name
+            logger.debug(
+                f"SUBMIT {wftask.order}-th task "
+                f'(legacy, name="{task_name}")'
+            )
+        else:
+            task_name = task.name
+            logger.debug(f'SUBMIT {wftask.order}-th task (name="{task_name}")')
 
         # PRE TASK EXECUTION
 
