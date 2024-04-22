@@ -76,19 +76,12 @@ def run_single_task(
         workflow_dir_user = workflow_dir
 
     component = args.pop(_COMPONENT_KEY_, None)
-    if component is None:
-        task_files = get_task_file_paths(
-            workflow_dir=workflow_dir,
-            workflow_dir_user=workflow_dir_user,
-            task_order=wftask.order,
-        )
-    else:
-        task_files = get_task_file_paths(
-            workflow_dir=workflow_dir,
-            workflow_dir_user=workflow_dir_user,
-            task_order=wftask.order,
-            component=component,
-        )
+    task_files = get_task_file_paths(
+        workflow_dir=workflow_dir,
+        workflow_dir_user=workflow_dir_user,
+        task_order=wftask.order,
+        component=component,
+    )
 
     # Write arguments to args.json file
     with task_files.args.open("w") as f:

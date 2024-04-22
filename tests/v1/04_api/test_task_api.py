@@ -2,7 +2,7 @@ import pytest
 from devtools import debug
 from sqlmodel import select
 
-from fractal_server.app.models import Task
+from fractal_server.app.models.v1 import Task
 from fractal_server.app.schemas.v1.task import TaskCreateV1
 from fractal_server.app.schemas.v1.task import TaskUpdateV1
 

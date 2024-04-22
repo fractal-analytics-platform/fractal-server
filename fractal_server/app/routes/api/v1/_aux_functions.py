@@ -12,13 +12,13 @@ from sqlmodel import select
 from sqlmodel.sql.expression import SelectOfScalar
 
 from ....db import AsyncSession
-from ....models import ApplyWorkflow
-from ....models import Dataset
 from ....models import LinkUserProject
-from ....models import Project
-from ....models import Task
-from ....models import Workflow
-from ....models import WorkflowTask
+from ....models.v1 import ApplyWorkflow
+from ....models.v1 import Dataset
+from ....models.v1 import Project
+from ....models.v1 import Task
+from ....models.v1 import Workflow
+from ....models.v1 import WorkflowTask
 from ....schemas.v1 import JobStatusTypeV1
 from ....security import User
 

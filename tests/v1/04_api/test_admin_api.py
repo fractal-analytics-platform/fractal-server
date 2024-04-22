@@ -7,7 +7,7 @@ from zipfile import ZipFile
 import pytest
 from devtools import debug
 
-from fractal_server.app.models import JobStatusTypeV1
+from fractal_server.app.models.v1 import JobStatusTypeV1
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
