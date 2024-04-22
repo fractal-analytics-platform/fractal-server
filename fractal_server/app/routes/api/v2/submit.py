@@ -17,7 +17,7 @@ from ....db import get_async_db
 from ....models.v2 import JobV2
 from ....runner.set_start_and_last_task_index import (
     set_start_and_last_task_index,
-)  # FIXME V2
+)
 from ....runner.v2 import submit_workflow
 from ....schemas.v2 import JobCreateV2
 from ....schemas.v2 import JobReadV2
