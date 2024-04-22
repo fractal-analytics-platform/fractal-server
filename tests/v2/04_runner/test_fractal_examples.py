@@ -929,5 +929,5 @@ def test_legacy_task(
     # Check logs
     with open(log_file_path, "r") as f:
         lines = f.read()
-    assert 'SUBMIT 1-th task (name="dummy parallel")' in lines
+    assert 'SUBMIT 1-th task (legacy, name="dummy parallel")' in lines
     assert 'END    1-th task (name="dummy parallel")' in lines

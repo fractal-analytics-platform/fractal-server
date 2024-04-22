@@ -12,7 +12,7 @@ async def project_factory(db):
     Factory that adds a project to the database
     """
 
-    from fractal_server.app.models import Project
+    from fractal_server.app.models.v1 import Project
 
     async def __project_factory(user, **kwargs):
         defaults = dict(name="project")
@@ -32,8 +32,8 @@ async def dataset_factory(db: AsyncSession):
     """
     Insert dataset in db
     """
-    from fractal_server.app.models import Dataset
-    from fractal_server.app.models import Project
+    from fractal_server.app.models.v1 import Dataset
+    from fractal_server.app.models.v1 import Project
 
     async def __dataset_factory(db: AsyncSession = db, **kwargs):
         defaults = dict(
@@ -63,7 +63,7 @@ async def dataset_factory(db: AsyncSession):
 
 @pytest.fixture
 async def resource_factory(db, testdata_path):
-    from fractal_server.app.models import Dataset, Resource
+    from fractal_server.app.models.v1 import Dataset, Resource
 
     async def __resource_factory(dataset: Dataset, **kwargs):
         """
@@ -85,7 +85,7 @@ async def task_factory(db: AsyncSession):
     """
     Insert task in db
     """
-    from fractal_server.app.models import Task
+    from fractal_server.app.models.v1 import Task
 
     async def __task_factory(db: AsyncSession = db, index: int = 0, **kwargs):
         defaults = dict(
@@ -111,10 +111,11 @@ async def job_factory(db: AsyncSession):
     """
     Insert job in db
     """
-    from fractal_server.app.models import Dataset
-    from fractal_server.app.models import Project
-    from fractal_server.app.models import ApplyWorkflow
-    from fractal_server.app.models import Workflow
+
+    from fractal_server.app.models.v1 import Dataset
+    from fractal_server.app.models.v1 import Project
+    from fractal_server.app.models.v1 import ApplyWorkflow
+    from fractal_server.app.models.v1 import Workflow
     from fractal_server.app.runner.v1.set_start_and_last_task_index import (
         set_start_and_last_task_index,
     )
@@ -228,8 +229,8 @@ async def workflow_factory(db: AsyncSession):
     """
     Insert workflow in db
     """
-    from fractal_server.app.models import Workflow
-    from fractal_server.app.models import Project
+    from fractal_server.app.models.v1 import Workflow
+    from fractal_server.app.models.v1 import Project
 
     async def __workflow_factory(db: AsyncSession = db, **kwargs):
         defaults = dict(
@@ -262,7 +263,7 @@ async def workflowtask_factory(db: AsyncSession):
     """
     Insert workflowtask in db
     """
-    from fractal_server.app.models import WorkflowTask
+    from fractal_server.app.models.v1 import WorkflowTask
 
     async def __workflowtask_factory(
         workflow_id: int, task_id: int, db: AsyncSession = db, **kwargs

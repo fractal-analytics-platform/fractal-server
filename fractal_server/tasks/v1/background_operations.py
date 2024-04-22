@@ -15,8 +15,8 @@ from ..utils import slugify_task_name
 from ._TaskCollectPip import _TaskCollectPip
 from fractal_server.app.db import DBSyncSession
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.models import State
-from fractal_server.app.models import Task
+from fractal_server.app.models.v1 import State
+from fractal_server.app.models.v1 import Task
 from fractal_server.app.schemas.v1 import TaskCollectStatusV1
 from fractal_server.app.schemas.v1 import TaskCreateV1
 from fractal_server.app.schemas.v1 import TaskReadV1

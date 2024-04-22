@@ -17,8 +17,8 @@ from .....logger import set_logger
 from .....syringe import Inject
 from ....db import AsyncSession
 from ....db import get_async_db
-from ....models import State
-from ....models import Task
+from ....models.v1 import State
+from ....models.v1 import Task
 from ....schemas.v1 import StateRead
 from ....schemas.v1 import TaskCollectPipV1
 from ....schemas.v1 import TaskCollectStatusV1
