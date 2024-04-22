@@ -1,5 +1,4 @@
 import json
-import re
 import sys
 import time
 from datetime import datetime
@@ -34,39 +33,46 @@ USERS = [
 
 N_REQUESTS = 25
 
+API_PATHS = [
+    "/api/alive/",
+    "/api/v2/dataset/",
+    "/api/v2/job/",
+    "/api/v2/project/",
+    "/api/v2/workflow/",
+]
 
-def get_clean_API_paths() -> list[str]:
-    """
-    Extract endpoint paths by filtering the OpenAPI ones.
-    """
-    swagger_url = f"{FRACTAL_SERVER_URL}/openapi.json"
-    response = httpx.get(swagger_url)
-    if response.status_code == 200:
-        swagger_data = response.json()
-        paths = [
-            path
-            for path, path_data in swagger_data.get("paths", {}).items()
-            if "get" in path_data
-        ]
-        excluded_patterns = [
-            re.compile(r"/api/v1/"),
-            re.compile(r"/api/v2/task/"),
-            re.compile(r"/api/v2/task-legacy/"),
-            re.compile(r"/auth/"),
-            re.compile(r"/admin/"),
-            re.compile(r"/status/"),
-            re.compile(r"/download/"),
-            re.compile(r"/export/"),
-            re.compile(r"/import/"),
-            re.compile(r"/export_history/"),
-            re.compile(r"\{.*?\}"),
-        ]
-        API_paths = [
-            path
-            for path in paths
-            if not any(pattern.search(path) for pattern in excluded_patterns)
-        ]
-    return API_paths
+# def get_clean_API_paths() -> list[str]:
+#     """
+#     Extract endpoint paths by filtering the OpenAPI ones.
+#     """
+#     swagger_url = f"{FRACTAL_SERVER_URL}/openapi.json"
+#     response = httpx.get(swagger_url)
+#     if response.status_code == 200:
+#         swagger_data = response.json()
+#         paths = [
+#             path
+#             for path, path_data in swagger_data.get("paths", {}).items()
+#             if "get" in path_data
+#         ]
+#         excluded_patterns = [
+#             re.compile(r"/api/v1/"),
+#             re.compile(r"/api/v2/task/"),
+#             re.compile(r"/api/v2/task-legacy/"),
+#             re.compile(r"/auth/"),
+#             re.compile(r"/admin/"),
+#             re.compile(r"/status/"),
+#             re.compile(r"/download/"),
+#             re.compile(r"/export/"),
+#             re.compile(r"/import/"),
+#             re.compile(r"/export_history/"),
+#             re.compile(r"\{.*?\}"),
+#         ]
+#         API_paths = [
+#             path
+#             for path in paths
+#             if not any(pattern.search(path) for pattern in excluded_patterns)
+#         ]
+#     return API_paths
 
 
 class Benchmark:
@@ -102,9 +108,9 @@ class Benchmark:
             if user.token is None:
                 sys.exit(f"Error while logging-in as user {user.name}")
 
-        print("Users:")
-        for _user in self.users:
-            print(_user)
+        # print("Users:")
+        # for _user in self.users:
+        #     print(_user)
 
     def aggregate_on_path(
         self, user_metrics: list[dict[str, Any]]
@@ -143,9 +149,6 @@ class Benchmark:
             loader=FileSystemLoader(searchpath="./templates"), autoescape=True
         )
         template = env.get_template("bench_diff_template.md")
-
-        print(f"{agg_values_curr=}")
-        print(f"{agg_values_main=}")
 
         rendered_html = template.render(
             zip=zip(agg_values_main.items(), agg_values_curr.items()),
@@ -232,7 +235,7 @@ if __name__ == "__main__":
 
     benchmark = Benchmark(
         method="GET",
-        cleaned_paths=get_clean_API_paths(),
+        cleaned_paths=API_PATHS,  # get_clean_API_paths(),
         users=USERS,
         current_branch=current_branch,
     )
