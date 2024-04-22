@@ -941,7 +941,7 @@ def test_scaling_workflow_execution(
     """
     N = 10
     WORKING_DIR = tmp_path / "job_dir"
-    zarr_dir = (tmp_path / "job_dir").as_posix().rstrip("/")
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     execute_tasks_v2_args = dict(
         executor=executor,
         workflow_dir=WORKING_DIR,
@@ -955,7 +955,6 @@ def test_scaling_workflow_execution(
                 args_non_parallel=dict(
                     image_dir="/tmp/input_images", num_images=N
                 ),
-                args_parallel={},
                 id=0,
                 order=0,
             ),
@@ -967,14 +966,11 @@ def test_scaling_workflow_execution(
             ),
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv["MIP_compound"],
-                args_non_parallel=dict(suffix="mip"),
-                args_parallel={},
                 id=2,
                 order=2,
             ),
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv["cellpose_segmentation"],
-                args_parallel={},
                 id=3,
                 order=3,
             ),
@@ -993,4 +989,4 @@ def test_scaling_workflow_execution(
             count += 1
             size += os.path.getsize(WORKING_DIR / file)
 
-    debug(f"In {WORKING_DIR =} there are\n{count} files\n{size} bytes")
+    print(f"In {WORKING_DIR =} there are\n{count} files\n{size} bytes")
