@@ -23,11 +23,11 @@ from pathlib import Path
 from typing import Any
 from typing import Optional
 
-from ....models import Workflow  # FIXME: this is v1 specific
+from ....models.v1 import Workflow
 from ...async_wrap import async_wrap
 from ...set_start_and_last_task_index import set_start_and_last_task_index
-from .._common import execute_tasks  # FIXME: this is v1 specific
-from ..common import TaskParameters  # FIXME: this is v1 specific
+from .._common import execute_tasks
+from ..common import TaskParameters
 from ._submit_setup import _local_submit_setup
 from .executor import FractalThreadPoolExecutor
 
