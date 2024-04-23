@@ -18,7 +18,7 @@ def create_image_list(n_images: int) -> list:
         images_list.append(
             {
                 "zarr_url": (
-                    f"/this/is/a/very/very/very/long/"
+                    f"/invalid/zarr/very/very/long/"
                     f"path/to/mimic/real/"
                     f"path/to/the/zarr/dir/{index:06d}"
                 ),
