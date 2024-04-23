@@ -20,6 +20,7 @@ from .runner_functions import run_v1_task_parallel
 from .runner_functions import run_v2_task_compound
 from .runner_functions import run_v2_task_non_parallel
 from .runner_functions import run_v2_task_parallel
+from .task_interface import TaskOutput
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.schemas.v2.dataset import _DatasetHistoryItemV2
@@ -137,6 +138,15 @@ def execute_tasks_v2(
             )
 
         # POST TASK EXECUTION
+
+        # If `current_task_output.imge_list_updates` is empty, then
+        # flag all the input images as modified. See fractal-server
+        # issue #1374.
+        if current_task_output.image_list_updates == []:
+            current_task_output = TaskOutput(
+                **current_task_output.dict(exclude={"image_list_updates"}),
+                image_list_updates=filtered_images,
+            )
 
         # Update image list
         current_task_output.check_zarr_urls_are_unique()
