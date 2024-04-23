@@ -17,7 +17,7 @@ from fractal_server.app.runner.v2.runner import execute_tasks_v2
 
 
 def _run_cmd(cmd: str) -> str:
-    res = subprocess.run(
+    res = subprocess.run(  # nosec
         shlex.split(cmd),
         capture_output=True,
         encoding="utf8",
