@@ -1,13 +1,15 @@
+import cProfile
 import json
 import os
+import pstats
 import shlex
 import shutil
 import subprocess  # nosec
 import sys
 import tempfile
 from pathlib import Path
-from time import perf_counter
 
+import benchmarks.runner
 import tests.v2.fractal_tasks_mock.dist as dist
 from benchmarks.runner.mocks import DatasetV2Mock
 from benchmarks.runner.mocks import TaskV2Mock
@@ -25,9 +27,6 @@ def _run_cmd(cmd: str) -> str:
     if not res.returncode == 0:
         raise ValueError(res)
     return res.stdout
-
-
-# executor: Executor, fractal_tasks_mock_venv,
 
 
 def mock_venv(tmp_path: str) -> dict:
@@ -80,15 +79,16 @@ def mock_venv(tmp_path: str) -> dict:
     return task_dict
 
 
+venv_dir = tempfile.mkdtemp()
+fractal_tasks_mock_venv = mock_venv(venv_dir)
+
+
 def benchmark(N: int):
 
     tmp_path = tempfile.mkdtemp()
     WORKING_DIR = Path(f"{tmp_path}/job_dir")
     ZARR_DIR = (WORKING_DIR / "zarr").as_posix().rstrip("/")
 
-    fractal_tasks_mock_venv = mock_venv(tmp_path)
-
-    start = perf_counter()
     execute_tasks_v2(
         wf_task_list=[
             WorkflowTaskV2Mock(
@@ -119,33 +119,40 @@ def benchmark(N: int):
         workflow_dir_user=WORKING_DIR,
         executor=FractalThreadPoolExecutor(),
     )
-    stop = perf_counter()
-
-    count = 0
-    size = 0
-    for file in os.listdir(WORKING_DIR):
-        if os.path.isfile(WORKING_DIR / file):
-            count += 1
-            size += os.path.getsize(WORKING_DIR / file)
 
     shutil.rmtree(tmp_path)
 
-    return dict(N=N, count=count, size=size, time=stop - start)
-
 
 if __name__ == "__main__":
-
     results = []
-    for N in [10, 100, 1000]:
-        results.append(benchmark(N))
 
-    keys = ["N", "count", "size", "time"]
+    for N in [100, 200, 300, 400, 500]:
+        x = cProfile.run(f"benchmark({N})", "profile_results")
+        stats = pstats.Stats("profile_results")
+        stats.sort_stats("tottime")
 
-    for key in keys:
-        print(f"{key}\t", end="")
-    print()
+        thread_time = stats.stats[
+            "~", 0, "<method 'acquire' of '_thread.lock' objects>"
+        ][2]
+        total_time = stats.total_tt
+        results.append(
+            dict(
+                N=N,
+                thread_time=thread_time,
+                total_time=total_time,
+            )
+        )
 
-    for result in results:
-        for key in keys:
-            print(f"{result[key]}\t", end="")
-        print()
+    runner = os.path.dirname(benchmarks.runner.__path__[0])
+    with open(f"{runner}/runner/runner_benchmark.txt", "w") as file:
+        # Write the header
+        file.write("\n\n\n|\tN\t|\tthread\t|\ttotal\t|\tthread/total\t|\n")
+        file.write("|\t---\t" * 4 + "\t|\n")
+        # Write the results
+        for result in results:
+            file.write(
+                f"|\t{result['N']}\t"
+                f"|\t{result['thread_time']:.4f}\t"
+                f"|\t{result['total_time']:.4f}\t"
+                f"|\t{result['thread_time']/result['total_time']:.4f} %\t|\n"
+            )
