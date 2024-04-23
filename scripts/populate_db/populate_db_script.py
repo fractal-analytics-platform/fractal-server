@@ -23,7 +23,7 @@ def create_image_list(n_images: int) -> list:
                     f"path/to/the/zarr/dir/{index:06d}"
                 ),
                 "origin": (
-                    f"/this/is/a/very/very/very/long/"
+                    f"/invalid/zarr/very/very/very/long/"
                     f"path/to/mimic/real/path/"
                     f"to/the/zarr/dir/origin-{index:06d}"
                 ),
