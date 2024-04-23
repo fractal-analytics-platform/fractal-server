@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 from fractal_tasks_mock.input_models import InitArgsIllumination
 from pydantic.decorator import validate_arguments
@@ -10,7 +11,7 @@ def illumination_correction_compute(
     zarr_url: str,
     init_args: InitArgsIllumination,
     another_argument: str,
-) -> dict:
+) -> Optional[dict]:
     """
     Dummy task description.
 
@@ -29,7 +30,7 @@ def illumination_correction_compute(
 
     # Prepare output metadata
     if zarr_url == raw_zarr_url:
-        out = dict(image_list_updates=[dict(zarr_url=zarr_url)])
+        out = None
     else:
         out = dict(
             image_list_updates=[dict(zarr_url=zarr_url, origin=raw_zarr_url)]
