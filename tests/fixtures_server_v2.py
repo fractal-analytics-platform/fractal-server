@@ -12,7 +12,7 @@ from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.routes.api.v2.submit import _encode_as_utc
 from fractal_server.app.runner.set_start_and_last_task_index import (
-    set_start_and_last_task_index,  # FIXME v2
+    set_start_and_last_task_index,
 )
 
 
