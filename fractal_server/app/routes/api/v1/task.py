@@ -11,8 +11,8 @@ from sqlmodel import select
 from .....logger import set_logger
 from ....db import AsyncSession
 from ....db import get_async_db
-from ....models import Task
-from ....models import WorkflowTask
+from ....models.v1 import Task
+from ....models.v1 import WorkflowTask
 from ....models.v2 import TaskV2
 from ....schemas.v1 import TaskCreateV1
 from ....schemas.v1 import TaskReadV1

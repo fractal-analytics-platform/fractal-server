@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fractal_server.app.db import DBSyncSession
 from fractal_server.app.db import get_async_db
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.models import State
+from fractal_server.app.models.v1 import State
 from fractal_server.app.routes.api import router_api
 from fractal_server.logger import set_logger
 

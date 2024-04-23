@@ -13,10 +13,10 @@ from sqlmodel import select
 
 from ....db import AsyncSession
 from ....db import get_async_db
-from ....models import ApplyWorkflow
-from ....models import Dataset
-from ....models import Project
-from ....models import Resource
+from ....models.v1 import ApplyWorkflow
+from ....models.v1 import Dataset
+from ....models.v1 import Project
+from ....models.v1 import Resource
 from ....runner.filenames import HISTORY_FILENAME
 from ....schemas.v1 import DatasetCreateV1
 from ....schemas.v1 import DatasetReadV1

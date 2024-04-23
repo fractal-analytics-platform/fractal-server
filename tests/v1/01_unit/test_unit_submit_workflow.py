@@ -6,7 +6,7 @@ import pytest
 from devtools import debug
 
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.models import ApplyWorkflow
+from fractal_server.app.models.v1 import ApplyWorkflow
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
