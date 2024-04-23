@@ -41,39 +41,6 @@ API_PATHS = [
     "/api/v2/workflow/",
 ]
 
-# def get_clean_API_paths() -> list[str]:
-#     """
-#     Extract endpoint paths by filtering the OpenAPI ones.
-#     """
-#     swagger_url = f"{FRACTAL_SERVER_URL}/openapi.json"
-#     response = httpx.get(swagger_url)
-#     if response.status_code == 200:
-#         swagger_data = response.json()
-#         paths = [
-#             path
-#             for path, path_data in swagger_data.get("paths", {}).items()
-#             if "get" in path_data
-#         ]
-#         excluded_patterns = [
-#             re.compile(r"/api/v1/"),
-#             re.compile(r"/api/v2/task/"),
-#             re.compile(r"/api/v2/task-legacy/"),
-#             re.compile(r"/auth/"),
-#             re.compile(r"/admin/"),
-#             re.compile(r"/status/"),
-#             re.compile(r"/download/"),
-#             re.compile(r"/export/"),
-#             re.compile(r"/import/"),
-#             re.compile(r"/export_history/"),
-#             re.compile(r"\{.*?\}"),
-#         ]
-#         API_paths = [
-#             path
-#             for path in paths
-#             if not any(pattern.search(path) for pattern in excluded_patterns)
-#         ]
-#     return API_paths
-
 
 class Benchmark:
     def __init__(
@@ -235,7 +202,7 @@ if __name__ == "__main__":
 
     benchmark = Benchmark(
         method="GET",
-        cleaned_paths=API_PATHS,  # get_clean_API_paths(),
+        cleaned_paths=API_PATHS,
         users=USERS,
         current_branch=current_branch,
     )
