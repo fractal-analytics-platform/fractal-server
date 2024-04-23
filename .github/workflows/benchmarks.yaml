@@ -55,6 +55,7 @@ jobs:
         export FRACTAL_RUNNER_WORKING_BASE_DIR=/tmp/artifacts
         export FRACTAL_TASKS_DIR=/tmp/FRACTAL_TASKS_DIR
         export JWT_SECRET_KEY=secret
+        export JWT_EXPIRE_SECONDS=84600
         export FRACTAL_API_SUBMIT_RATE_LIMIT=0
         cd benchmarks/
         poetry run fractalctl set-db
