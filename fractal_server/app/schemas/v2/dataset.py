@@ -105,10 +105,8 @@ class DatasetImportV2(BaseModel):
 
     # Validators
     @validator("zarr_dir")
-    def normalize_zarr_dir(cls, v: Optional[str]) -> Optional[str]:
-        if v is not None:
-            return normalize_url(v)
-        return v
+    def normalize_zarr_dir(cls, v: str) -> str:
+        return normalize_url(v)
 
 
 class DatasetExportV2(BaseModel):
