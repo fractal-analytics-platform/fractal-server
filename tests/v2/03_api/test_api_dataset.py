@@ -435,6 +435,24 @@ async def test_dataset_import(
     IMAGES = n_images(1)
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
+
+        # Fail due to image zarr_urls not being relative to ZARR_DIR
+        dataset = dict(
+            name="Dataset",
+            zarr_dir="/somewhere/invalid/",
+            images=IMAGES,
+            filters=dict(
+                attributes={},
+                types={},
+            ),
+        )
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/dataset/import/", json=dataset
+        )
+        assert res.status_code == 422
+        assert "is not relative to zarr_dir" in res.json()["detail"]
+
+        # Proceed successfully
         dataset = dict(
             name="Dataset",
             zarr_dir=ZARR_DIR,
@@ -444,7 +462,6 @@ async def test_dataset_import(
                 types={},
             ),
         )
-
         res = await client.post(
             f"{PREFIX}/project/{project.id}/dataset/import/", json=dataset
         )
