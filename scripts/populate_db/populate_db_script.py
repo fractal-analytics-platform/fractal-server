@@ -225,11 +225,6 @@ def _user_flow_project(
                 ds.id,
                 applyworkflow=JobCreateV2(),
             )
-    # we add dataset with images just to the last project
-    # image_list = create_image_list(n_images=10)
-    # ds = user.import_dataset(proj.id, DatasetImportV2(name="MyDataset",
-    #                                                   zarr_dir="/invalid/zarr",
-    #                                                  images=image_list))
 
 
 # job user:
