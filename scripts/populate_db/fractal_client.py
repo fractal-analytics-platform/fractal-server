@@ -7,6 +7,7 @@ from a2wsgi import ASGIMiddleware
 from fractal_server.app.schemas import UserCreate
 from fractal_server.app.schemas import UserRead
 from fractal_server.app.schemas import UserUpdate
+from fractal_server.app.schemas.v2 import DatasetCreateV2
 from fractal_server.app.schemas.v2 import DatasetImportV2
 from fractal_server.app.schemas.v2 import DatasetReadV2
 from fractal_server.app.schemas.v2 import JobCreateV2
@@ -108,6 +109,15 @@ class FractalClient:
         )
         self.detail(res.json())
         return ProjectReadV2(**res.json())
+
+    def add_dataset(self, project_id, dataset: DatasetCreateV2):
+        res = self.make_request(
+            endpoint=f"api/v2/project/{project_id}/dataset/",
+            method="POST",
+            data=dataset.dict(),
+        )
+        self.detail(res.json())
+        return DatasetReadV2(**res.json())
 
     def import_dataset(self, project_id, dataset: DatasetImportV2):
         res = self.make_request(

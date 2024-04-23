@@ -1,5 +1,3 @@
-from functools import lru_cache
-
 from fractal_client import DEFAULT_CREDENTIALS
 from fractal_client import FractalClient
 from passlib.context import CryptContext
@@ -14,9 +12,7 @@ from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
 from fractal_server.app.security import UserOAuth
 
 
-@lru_cache(maxsize=57)
 def create_image_list(n_images: int) -> list:
-
     images_list = []
     for index in range(n_images):
         images_list.append(
