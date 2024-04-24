@@ -29,8 +29,10 @@ class TaskOutput(BaseModel):
                 if zarr_urls.count(zarr_url) > 1
             ]
             msg = (
-                "TaskOutput image-list updates/removals has "
-                "non-unique zarr_urls:"
+                "TaskOutput "
+                f"({len(self.image_list_updates)} image_list_updates and "
+                f"{len(self.image_list_removals)} image_list_removals) "
+                "has non-unique zarr_urls:"
             )
             for duplicate in duplicates:
                 msg = f"{msg}\n{duplicate}"
