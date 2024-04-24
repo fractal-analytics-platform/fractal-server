@@ -150,7 +150,7 @@ class Benchmark:
     def _replace_path_params(self, headers: dict, path: str):
         """ """
 
-        pattern = r"\$(.*?)\$"  # nosec
+        pattern = r"\$(.*?)\$"
         matches = re.findall(pattern, path)
         if matches:
             project_id = self.client.get(
