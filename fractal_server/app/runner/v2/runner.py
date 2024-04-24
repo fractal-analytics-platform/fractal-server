@@ -126,7 +126,7 @@ def execute_tasks_v2(
                     submit_setup_call=submit_setup_call,
                 )
             else:
-                raise JobExecutionError(f"Invalid {task.type=}.")
+                raise ValueError(f"Unexpected error: Invalid {task.type=}.")
         # TASK EXECUTION (V1)
         else:
             current_task_output = run_v1_task_parallel(
