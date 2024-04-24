@@ -16,6 +16,7 @@ from ..v1.task import TaskReadV1
 from .task import TaskExportV2
 from .task import TaskImportV2
 from .task import TaskReadV2
+from fractal_server.app.runner.v2.runner import RESERVED_ARGUMENTS
 from fractal_server.images import Filters
 
 
@@ -56,13 +57,35 @@ class WorkflowTaskCreateV2(BaseModel, extra=Extra.forbid):
     _meta_parallel = validator("meta_parallel", allow_reuse=True)(
         valdictkeys("meta_parallel")
     )
-    _args_non_parallel = validator("args_non_parallel", allow_reuse=True)(
-        valdictkeys("args_non_parallel")
-    )
-    _args_parallel = validator("args_parallel", allow_reuse=True)(
-        valdictkeys("args_parallel")
-    )
     _order = validator("order", allow_reuse=True)(valint("order", min_val=0))
+
+    @validator("args_non_parallel")
+    def validate_args_non_parallel(cls, value):
+        if value is None:
+            return
+        valdictkeys("args_non_parallel")(value)
+        args_keys = set(value.keys())
+        intersect_keys = RESERVED_ARGUMENTS.intersection(args_keys)
+        if intersect_keys:
+            raise ValueError(
+                "`args` contains the following forbidden keys: "
+                f"{intersect_keys}"
+            )
+        return value
+
+    @validator("args_parallel")
+    def validate_args_parallel(cls, value):
+        if value is None:
+            return
+        valdictkeys("args_parallel")(value)
+        args_keys = set(value.keys())
+        intersect_keys = RESERVED_ARGUMENTS.intersection(args_keys)
+        if intersect_keys:
+            raise ValueError(
+                "`args` contains the following forbidden keys: "
+                f"{intersect_keys}"
+            )
+        return value
 
     @root_validator
     def validate_legacy_task(cls, values):
@@ -114,12 +137,34 @@ class WorkflowTaskUpdateV2(BaseModel):
     _meta_parallel = validator("meta_parallel", allow_reuse=True)(
         valdictkeys("meta_parallel")
     )
-    _args_non_parallel = validator("args_non_parallel", allow_reuse=True)(
-        valdictkeys("args_non_parallel")
-    )
-    _args_parallel = validator("args_parallel", allow_reuse=True)(
-        valdictkeys("args_parallel")
-    )
+
+    @validator("args_non_parallel")
+    def validate_args_non_parallel(cls, value):
+        if value is None:
+            return
+        valdictkeys("args_non_parallel")(value)
+        args_keys = set(value.keys())
+        intersect_keys = RESERVED_ARGUMENTS.intersection(args_keys)
+        if intersect_keys:
+            raise ValueError(
+                "`args` contains the following forbidden keys: "
+                f"{intersect_keys}"
+            )
+        return value
+
+    @validator("args_parallel")
+    def validate_args_parallel(cls, value):
+        if value is None:
+            return
+        valdictkeys("args_parallel")(value)
+        args_keys = set(value.keys())
+        intersect_keys = RESERVED_ARGUMENTS.intersection(args_keys)
+        if intersect_keys:
+            raise ValueError(
+                "`args` contains the following forbidden keys: "
+                f"{intersect_keys}"
+            )
+        return value
 
 
 class WorkflowTaskImportV2(BaseModel):
