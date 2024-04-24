@@ -9,13 +9,13 @@ from fractal_server.app.models.v1 import Resource
 from fractal_server.app.models.v1 import State
 from fractal_server.app.models.v1 import Task
 from fractal_server.app.models.v1 import Workflow
+from fractal_server.app.schemas.state import StateRead
+from fractal_server.app.schemas.user import UserRead
 from fractal_server.app.schemas.v1 import ApplyWorkflowReadV1
 from fractal_server.app.schemas.v1 import DatasetReadV1
 from fractal_server.app.schemas.v1 import ProjectReadV1
 from fractal_server.app.schemas.v1 import ResourceReadV1
-from fractal_server.app.schemas.v1 import StateRead
 from fractal_server.app.schemas.v1 import TaskReadV1
-from fractal_server.app.schemas.v1 import UserRead
 from fractal_server.app.schemas.v1 import WorkflowReadV1
 from fractal_server.app.schemas.v1 import WorkflowTaskReadV1
 
