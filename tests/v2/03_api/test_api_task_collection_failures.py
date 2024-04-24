@@ -204,14 +204,14 @@ async def test_remove_directory(
 
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
 
-        await client.post(
+        res = await client.post(
             f"{PREFIX}/collect/pip/",
             json=dict(
                 **payload, pinned_package_versions={"devtools": "99.99.99"}
             ),
         )
-        # assert res.status_code == 201
-        # assert os.path.isdir(DIRECTORY) is False
+        assert res.status_code == 201
+        assert os.path.isdir(DIRECTORY) is False
 
         # res = await client.get(f"{PREFIX}/collect/1/")
         # assert (
