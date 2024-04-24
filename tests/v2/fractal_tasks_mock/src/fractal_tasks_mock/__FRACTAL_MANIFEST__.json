@@ -717,6 +717,33 @@
       "docs_link": "https://example.org",
       "executable_non_parallel": "dummy_unset_attribute.py",
       "name": "dummy_unset_attribute"
+    },
+    {
+      "args_schema_parallel": {
+        "additionalProperties": false,
+        "properties": {
+          "zarr_url": {
+            "description": "Missing description",
+            "title": "Zarr Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "zarr_url"
+        ],
+        "title": "GenericTaskParallel",
+        "type": "object"
+      },
+      "docs_info": "This is task generic_task_parallel.",
+      "docs_link": "https://example.org",
+      "executable_parallel": "generic_task_parallel.py",
+      "input_types": {
+        "my_type": false
+      },
+      "name": "generic_task_parallel",
+      "output_types": {
+        "my_type": true
+      }
     }
   ]
 }

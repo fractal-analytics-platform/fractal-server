@@ -261,3 +261,43 @@ def test_dummy_insert_single_image_normalization(
     debug(dataset_attrs["images"])
     for image in dataset_attrs["images"]:
         assert normalize_url(image["zarr_url"]) == image["zarr_url"]
+
+
+def test_default_inclusion_of_images(
+    tmp_path: Path, executor: Executor, fractal_tasks_mock_venv
+):
+    """
+    Ref
+    https://github.com/fractal-analytics-platform/fractal-server/issues/1374
+    """
+    # Prepare dataset
+    zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
+    images = [
+        dict(
+            zarr_url=Path(zarr_dir, "my_image").as_posix(),
+            attributes={},
+            types={},
+        )
+    ]
+    dataset_pre = DatasetV2Mock(
+        name="dataset", zarr_dir=zarr_dir, images=images
+    )
+
+    # Run
+    dataset_attrs = execute_tasks_v2(
+        wf_task_list=[
+            WorkflowTaskV2Mock(
+                task=fractal_tasks_mock_venv["generic_task_parallel"],
+                id=0,
+                order=0,
+            )
+        ],
+        dataset=dataset_pre,
+        executor=executor,
+        workflow_dir=tmp_path / "job_dir",
+        workflow_dir_user=tmp_path / "job_dir",
+    )
+    image = dataset_attrs["images"][0]
+    debug(dataset_attrs)
+    debug(image)
+    assert image["types"] == dict(my_type=True)
