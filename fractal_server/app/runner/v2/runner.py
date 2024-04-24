@@ -142,16 +142,16 @@ def execute_tasks_v2(
         # If `current_task_output` includes no images (to be created, edited or
         # removed), then flag all the input images as modified. See
         # fractal-server issue #1374.
-        include_origin_check = True
         if (
             current_task_output.image_list_updates == []
             and current_task_output.image_list_removals == []
         ):
             current_task_output = TaskOutput(
                 **current_task_output.dict(exclude={"image_list_updates"}),
-                image_list_updates=filtered_images,
+                image_list_updates=[
+                    dict(zarr_url=img["zarr_url"]) for img in filtered_images
+                ],
             )
-            include_origin_check = False
 
         # Update image list
         current_task_output.check_zarr_urls_are_unique()
@@ -160,7 +160,7 @@ def execute_tasks_v2(
             # Edit existing image
             tmp_image_paths = [img["zarr_url"] for img in tmp_images]
             if image["zarr_url"] in tmp_image_paths:
-                if include_origin_check and (
+                if (
                     image["origin"] is not None
                     and image["origin"] != image["zarr_url"]
                 ):
