@@ -12,9 +12,9 @@ from .._validators import valdictkeys
 from .._validators import valint
 from ..v1.task import TaskExportV1
 from ..v1.task import TaskImportV1
-from ..v1.task import TaskReadV1
 from .task import TaskExportV2
 from .task import TaskImportV2
+from .task import TaskLegacyReadV2
 from .task import TaskReadV2
 from fractal_server.images import Filters
 
@@ -120,7 +120,7 @@ class WorkflowTaskReadV2(BaseModel):
     task_id: Optional[int]
     task: Optional[TaskReadV2]
     task_legacy_id: Optional[int]
-    task_legacy: Optional[TaskReadV1]
+    task_legacy: Optional[TaskLegacyReadV2]
 
 
 class WorkflowTaskUpdateV2(BaseModel):
