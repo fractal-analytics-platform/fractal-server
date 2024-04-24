@@ -25,7 +25,7 @@ from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.schemas.v2.dataset import _DatasetHistoryItemV2
 from fractal_server.app.schemas.v2.workflowtask import WorkflowTaskStatusTypeV2
 
-# FIXME: define RESERVED_ARGUMENTS = [", ...]
+RESERVED_ARGUMENTS = {"zarr_dir", "zarr_url", "zarr_urls", "init_args"}
 
 
 def execute_tasks_v2(
