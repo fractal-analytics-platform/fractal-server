@@ -4,6 +4,7 @@ from pydantic import ValidationError
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.schemas.v2 import DatasetCreateV2
+from fractal_server.app.schemas.v2 import DatasetImportV2
 from fractal_server.app.schemas.v2 import DatasetReadV2
 from fractal_server.app.schemas.v2 import DatasetUpdateV2
 from fractal_server.urls import normalize_url
@@ -33,6 +34,17 @@ async def test_schemas_dataset_v2():
         zarr_dir="/tmp/",
     )
     assert dataset_create.zarr_dir == normalize_url(dataset_create.zarr_dir)
+
+    dataset_import = DatasetImportV2(
+        name="name",
+        filters={"attributes": {"x": 10}},
+        zarr_dir="/tmp/",
+        images=[{"zarr_url": "/tmp/image/"}],
+    )
+    assert dataset_import.zarr_dir == normalize_url(dataset_import.zarr_dir)
+    assert dataset_import.images[0].zarr_url == normalize_url(
+        dataset_import.images[0].zarr_url
+    )
 
     dataset = DatasetV2(
         **dataset_create.dict(), id=1, project_id=project.id, history=[]

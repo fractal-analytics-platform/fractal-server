@@ -103,6 +103,11 @@ class DatasetImportV2(BaseModel):
     images: list[SingleImage] = Field(default_factory=[])
     filters: Filters = Field(default_factory=Filters)
 
+    # Validators
+    @validator("zarr_dir")
+    def normalize_zarr_dir(cls, v: str) -> str:
+        return normalize_url(v)
+
 
 class DatasetExportV2(BaseModel):
     """
