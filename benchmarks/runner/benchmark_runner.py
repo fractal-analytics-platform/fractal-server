@@ -83,9 +83,8 @@ venv_dir = tempfile.mkdtemp()
 fractal_tasks_mock_venv = mock_venv(venv_dir)
 
 
-def benchmark(N: int):
+def benchmark(N: int, tmp_path: str):
 
-    tmp_path = tempfile.mkdtemp()
     WORKING_DIR = Path(f"{tmp_path}/job_dir")
     ZARR_DIR = (WORKING_DIR / "zarr").as_posix().rstrip("/")
 
@@ -120,14 +119,14 @@ def benchmark(N: int):
         executor=FractalThreadPoolExecutor(),
     )
 
-    shutil.rmtree(tmp_path)
-
 
 if __name__ == "__main__":
     results = []
 
-    for N in [100, 200, 300, 400, 500]:
-        x = cProfile.run(f"benchmark({N})", "profile_results")
+    for N in range(100, 1001, 100):
+
+        tmp_path = tempfile.mkdtemp()
+        cProfile.run(f"benchmark({N}, '{tmp_path}')", "profile_results")
         stats = pstats.Stats("profile_results")
         stats.sort_stats("tottime")
 
@@ -135,24 +134,60 @@ if __name__ == "__main__":
             "~", 0, "<method 'acquire' of '_thread.lock' objects>"
         ][2]
         total_time = stats.total_tt
+
+        list_dirs = {}
+        for path, key in [
+            (tmp_path, "base"),
+            (f"{tmp_path}/job_dir", "job_dir"),
+            (f"{tmp_path}/job_dir/zarr", "zarr_dir"),
+        ]:
+            size = 0
+            count = 0
+            for file in os.listdir(path):
+                if os.path.isfile(f"{path}/{file}"):
+                    count += 1
+                    size += os.path.getsize(f"{path}/{file}")
+            list_dirs[key] = dict(count=count, size=f"{size/1024:.2f} KB")
+
+        shutil.rmtree(tmp_path)
+
         results.append(
             dict(
                 N=N,
                 thread_time=thread_time,
                 total_time=total_time,
+                list_dirs=list_dirs,
             )
         )
 
     runner = os.path.dirname(benchmarks.runner.__path__[0])
     with open(f"{runner}/runner/runner_benchmark.txt", "w") as file:
-        # Write the header
-        file.write("\n\n\n|\tN\t|\tthread\t|\ttotal\t|\tthread/total\t|\n")
-        file.write("|\t---\t" * 4 + "\t|\n")
-        # Write the results
+        # Headers
+        to_write = (
+            "\n\n\n"
+            "|\tN\t"
+            "|\tthread\t"
+            "|\ttotal\t"
+            "|\tthread/total\t"
+            "|\tbase_dir\t\t"
+            "|\tjob_dir\t\t\t"
+            "|\tzarr_dir\t\t"
+            "|\n"
+            "|\t---\t|\t---\t|\t---\t|\t---\t\t|\t---\t\t\t|"
+            "\t---\t\t\t|\t---\t\t\t|"
+            "\n"
+        )
+        # Results
         for result in results:
-            file.write(
+            to_write += (
                 f"|\t{result['N']}\t"
                 f"|\t{result['thread_time']:.4f}\t"
                 f"|\t{result['total_time']:.4f}\t"
-                f"|\t{result['thread_time']/result['total_time']:.4f} %\t|\n"
+                f"|\t{result['thread_time']/result['total_time']:.4f} %\t"
+                f"|\t{tuple(result['list_dirs']['base'].values())}\t\t"
+                f"|\t{tuple(result['list_dirs']['job_dir'].values())}\t"
+                f"|\t{tuple(result['list_dirs']['zarr_dir'].values())}\t\t|"
+                "\n"
             )
+        print(to_write)
+        file.write(to_write)
