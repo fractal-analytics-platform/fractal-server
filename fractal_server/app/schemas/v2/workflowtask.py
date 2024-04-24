@@ -16,8 +16,9 @@ from ..v1.task import TaskReadV1
 from .task import TaskExportV2
 from .task import TaskImportV2
 from .task import TaskReadV2
-from fractal_server.app.runner.v2.runner import RESERVED_ARGUMENTS
 from fractal_server.images import Filters
+
+RESERVED_ARGUMENTS = {"zarr_dir", "zarr_url", "zarr_urls", "init_args"}
 
 
 class WorkflowTaskStatusTypeV2(str, Enum):
