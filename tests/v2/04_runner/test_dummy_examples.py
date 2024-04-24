@@ -52,6 +52,33 @@ def test_dummy_insert_single_image(
     debug(dataset_attrs["images"])
 
     # Fail because new image is not relative to zarr_dir
+    IMAGES = [dict(zarr_url=Path(zarr_dir, "my-image").as_posix())]
+    with pytest.raises(JobExecutionError) as e:
+        execute_tasks_v2(
+            wf_task_list=[
+                WorkflowTaskV2Mock(
+                    task=fractal_tasks_mock_venv["dummy_insert_single_image"],
+                    args_non_parallel={
+                        "full_new_image": dict(
+                            zarr_url=IMAGES[0]["zarr_url"], origin="/somewhere"
+                        )
+                    },
+                    id=2,
+                    order=2,
+                )
+            ],
+            dataset=DatasetV2Mock(
+                name="dataset", zarr_dir=zarr_dir, images=IMAGES
+            ),
+            **execute_tasks_v2_args,
+        )
+    error_msg = str(e.value)
+    assert (
+        "Cannot edit an image with zarr_url different from origin."
+        in error_msg
+    )
+
+    # Fail because new image is not relative to zarr_dir
     with pytest.raises(JobExecutionError) as e:
         execute_tasks_v2(
             wf_task_list=[
