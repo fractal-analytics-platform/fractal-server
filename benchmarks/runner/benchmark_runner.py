@@ -87,26 +87,29 @@ def benchmark(N: int, tmp_path: str):
 
     WORKING_DIR = Path(f"{tmp_path}/job")
     ZARR_DIR = Path(f"{tmp_path}/zarr").as_posix().rstrip("/")
-
     execute_tasks_v2(
         wf_task_list=[
+            # compound
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv["create_ome_zarr_compound"],
                 args_non_parallel=dict(image_dir=ZARR_DIR, num_images=N),
                 id=0,
                 order=0,
             ),
+            # parallel
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv["illumination_correction"],
                 args_parallel=dict(overwrite_input=True),
                 id=1,
                 order=1,
             ),
+            # compound
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv["MIP_compound"],
                 id=2,
                 order=2,
             ),
+            # parallel
             WorkflowTaskV2Mock(
                 task=fractal_tasks_mock_venv["cellpose_segmentation"],
                 id=3,
@@ -164,6 +167,10 @@ if __name__ == "__main__":
         # Headers
         to_write = (
             "\n\n\n"
+            "Parallel Tasks: 2\n"
+            "Compound Tasks: 2\n"
+            "Images: N\n"
+            "\n"
             "|\tN\t"
             "|\tthread\t"
             "|\ttotal\t"
