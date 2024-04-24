@@ -7,6 +7,7 @@ from fixtures_mocks import *  # noqa: F401,F403
 from v2_mock_models import DatasetV2Mock
 from v2_mock_models import WorkflowTaskV2Mock
 
+from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.v2.runner import execute_tasks_v2
 from fractal_server.urls import normalize_url
 
@@ -51,7 +52,7 @@ def test_dummy_insert_single_image(
     debug(dataset_attrs["images"])
 
     # Fail because new image is not relative to zarr_dir
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(JobExecutionError) as e:
         execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
@@ -69,7 +70,7 @@ def test_dummy_insert_single_image(
     assert zarr_dir in error_msg
 
     # Fail because new image's zarr_url is equal to zarr_dir
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(JobExecutionError) as e:
         execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
@@ -83,7 +84,7 @@ def test_dummy_insert_single_image(
             **execute_tasks_v2_args,
         )
     error_msg = str(e.value)
-    assert error_msg == "image['zarr_url'] cannot be equal to zarr_dir"
+    assert "Cannot create image if zarr_url is equal to zarr_dir" in error_msg
 
 
 def test_dummy_remove_images(
@@ -124,7 +125,7 @@ def test_dummy_remove_images(
         name="dataset",
         zarr_dir=zarr_dir,
     )
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(JobExecutionError) as e:
         execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(

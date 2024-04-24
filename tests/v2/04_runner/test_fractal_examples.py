@@ -11,6 +11,7 @@ from v2_mock_models import DatasetV2Mock
 from v2_mock_models import TaskV2Mock
 from v2_mock_models import WorkflowTaskV2Mock
 
+from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.v2.runner import execute_tasks_v2
 from fractal_server.images import SingleImage
 from fractal_server.images.tools import find_image_by_zarr_url
@@ -834,7 +835,7 @@ def test_invalid_filtered_image_list(
     zarr_url = Path(zarr_dir, "my_image").as_posix()
     image = SingleImage(zarr_url=zarr_url, attributes={}, types={}).dict()
 
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(JobExecutionError) as e:
         execute_tasks_v2(
             wf_task_list=[
                 WorkflowTaskV2Mock(
@@ -855,7 +856,7 @@ def test_invalid_filtered_image_list(
             ),
             **execute_tasks_v2_args,
         )
-    assert "Filtered images include" in str(e.value)
+    assert "Invalid filtered image list" in str(e.value)
 
 
 def test_legacy_task(
