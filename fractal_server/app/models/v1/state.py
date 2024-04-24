@@ -9,7 +9,7 @@ from sqlmodel import Field
 from sqlmodel import SQLModel
 
 from ....utils import get_timestamp
-from ...schemas.v1 import _StateBase
+from ...schemas.state import _StateBase
 
 
 class State(_StateBase, SQLModel, table=True):
