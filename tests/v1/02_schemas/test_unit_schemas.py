@@ -5,7 +5,11 @@ import pytest
 from devtools import debug
 from pydantic.error_wrappers import ValidationError
 
-from fractal_server.app.schemas.v1 import _StateBase
+from fractal_server.app.schemas.state import _StateBase
+from fractal_server.app.schemas.state import StateRead
+from fractal_server.app.schemas.user import UserCreate
+from fractal_server.app.schemas.user import UserUpdate
+from fractal_server.app.schemas.user import UserUpdateStrict
 from fractal_server.app.schemas.v1 import ApplyWorkflowCreateV1
 from fractal_server.app.schemas.v1 import ApplyWorkflowReadV1
 from fractal_server.app.schemas.v1 import ApplyWorkflowUpdateV1
@@ -17,16 +21,12 @@ from fractal_server.app.schemas.v1 import ProjectCreateV1
 from fractal_server.app.schemas.v1 import ProjectReadV1
 from fractal_server.app.schemas.v1 import ResourceCreateV1
 from fractal_server.app.schemas.v1 import ResourceReadV1
-from fractal_server.app.schemas.v1 import StateRead
 from fractal_server.app.schemas.v1 import TaskCollectPipV1
 from fractal_server.app.schemas.v1 import TaskCreateV1
 from fractal_server.app.schemas.v1 import TaskImportV1
 from fractal_server.app.schemas.v1 import TaskManifestV1
 from fractal_server.app.schemas.v1 import TaskReadV1
 from fractal_server.app.schemas.v1 import TaskUpdateV1
-from fractal_server.app.schemas.v1 import UserCreate
-from fractal_server.app.schemas.v1 import UserUpdate
-from fractal_server.app.schemas.v1 import UserUpdateStrict
 from fractal_server.app.schemas.v1 import WorkflowCreateV1
 from fractal_server.app.schemas.v1 import WorkflowImportV1
 from fractal_server.app.schemas.v1 import WorkflowReadV1

@@ -4,7 +4,14 @@ import pytest
 from devtools import debug
 from pydantic import ValidationError
 
+from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.v2.deduplicate_list import deduplicate_list
+from fractal_server.app.runner.v2.runner_functions import (
+    _cast_and_validate_InitTaskOutput,
+)
+from fractal_server.app.runner.v2.runner_functions import (
+    _cast_and_validate_TaskOutput,
+)
 from fractal_server.app.runner.v2.task_interface import InitArgsModel
 from fractal_server.app.runner.v2.task_interface import TaskOutput
 from fractal_server.app.runner.v2.v1_compat import convert_v2_args_into_v1
@@ -112,3 +119,23 @@ def test_convert_v2_args_into_v1(tmp_path: Path):
     # None
     with pytest.raises(ValueError):
         convert_v2_args_into_v1(kwargs_v2, parallelization_level=None)
+
+
+def test_cast_and_validate_functions():
+
+    _cast_and_validate_TaskOutput(
+        dict(filters={}, image_list_updates=[dict(zarr_url="/some/image")])
+    )
+
+    with pytest.raises(JobExecutionError):
+        _cast_and_validate_TaskOutput(dict(invalid=True))
+
+    _cast_and_validate_InitTaskOutput(
+        dict(
+            parallelization_list=[
+                dict(zarr_url="/tmp", init_args=dict(key="value"))
+            ]
+        )
+    )
+    with pytest.raises(JobExecutionError):
+        _cast_and_validate_InitTaskOutput(dict(invalid=True))
