@@ -85,8 +85,8 @@ fractal_tasks_mock_venv = mock_venv(venv_dir)
 
 def benchmark(N: int, tmp_path: str):
 
-    WORKING_DIR = Path(f"{tmp_path}/job_dir")
-    ZARR_DIR = (WORKING_DIR / "zarr").as_posix().rstrip("/")
+    WORKING_DIR = Path(f"{tmp_path}/job")
+    ZARR_DIR = Path(f"{tmp_path}/zarr").as_posix().rstrip("/")
 
     execute_tasks_v2(
         wf_task_list=[
@@ -137,9 +137,8 @@ if __name__ == "__main__":
 
         list_dirs = {}
         for path, key in [
-            (tmp_path, "base"),
-            (f"{tmp_path}/job_dir", "job_dir"),
-            (f"{tmp_path}/job_dir/zarr", "zarr_dir"),
+            (f"{tmp_path}/job", "job_dir"),
+            (f"{tmp_path}/zarr", "zarr_dir"),
         ]:
             size = 0
             count = 0
@@ -168,13 +167,11 @@ if __name__ == "__main__":
             "|\tN\t"
             "|\tthread\t"
             "|\ttotal\t"
-            "|\tthread/total\t"
-            "|\tbase_dir\t\t"
+            "|\toverhead\t"
             "|\tjob_dir\t\t\t"
             "|\tzarr_dir\t\t"
             "|\n"
-            "|\t---\t|\t---\t|\t---\t|\t---\t\t|\t---\t\t\t|"
-            "\t---\t\t\t|\t---\t\t\t|"
+            "|\t---\t|\t---\t|\t---\t|\t---\t\t|\t---\t\t\t|\t---\t\t\t|"
             "\n"
         )
         # Results
@@ -183,8 +180,7 @@ if __name__ == "__main__":
                 f"|\t{result['N']}\t"
                 f"|\t{result['thread_time']:.4f}\t"
                 f"|\t{result['total_time']:.4f}\t"
-                f"|\t{result['thread_time']/result['total_time']:.4f} %\t"
-                f"|\t{tuple(result['list_dirs']['base'].values())}\t\t"
+                f"|\t{(result['total_time'] - result['thread_time']):.4f}\t\t"
                 f"|\t{tuple(result['list_dirs']['job_dir'].values())}\t"
                 f"|\t{tuple(result['list_dirs']['zarr_dir'].values())}\t\t|"
                 "\n"
