@@ -111,6 +111,7 @@ async def job_factory(db: AsyncSession):
     """
     Insert job in db
     """
+
     from fractal_server.app.models.v1 import Dataset
     from fractal_server.app.models.v1 import Project
     from fractal_server.app.models.v1 import ApplyWorkflow

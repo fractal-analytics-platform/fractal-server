@@ -15,13 +15,13 @@ from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowV2
+from fractal_server.app.schemas.state import StateRead
+from fractal_server.app.schemas.user import UserRead
 from fractal_server.app.schemas.v1 import ApplyWorkflowReadV1
 from fractal_server.app.schemas.v1 import DatasetReadV1
 from fractal_server.app.schemas.v1 import ProjectReadV1
 from fractal_server.app.schemas.v1 import ResourceReadV1
-from fractal_server.app.schemas.v1 import StateRead
 from fractal_server.app.schemas.v1 import TaskReadV1
-from fractal_server.app.schemas.v1 import UserRead
 from fractal_server.app.schemas.v1 import WorkflowReadV1
 from fractal_server.app.schemas.v1 import WorkflowTaskReadV1
 from fractal_server.app.schemas.v2 import DatasetReadV2
