@@ -20,6 +20,7 @@ from .runner_functions import run_v1_task_parallel
 from .runner_functions import run_v2_task_compound
 from .runner_functions import run_v2_task_non_parallel
 from .runner_functions import run_v2_task_parallel
+from .task_interface import TaskOutput
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.schemas.v2.dataset import _DatasetHistoryItemV2
@@ -138,14 +139,27 @@ def execute_tasks_v2(
 
         # POST TASK EXECUTION
 
+        # If `current_task_output` includes no images (to be created, edited or
+        # removed), then flag all the input images as modified. See
+        # fractal-server issue #1374.
+        if (
+            current_task_output.image_list_updates == []
+            and current_task_output.image_list_removals == []
+        ):
+            current_task_output = TaskOutput(
+                **current_task_output.dict(exclude={"image_list_updates"}),
+                image_list_updates=[
+                    dict(zarr_url=img["zarr_url"]) for img in filtered_images
+                ],
+            )
+
         # Update image list
         current_task_output.check_zarr_urls_are_unique()
         for image_obj in current_task_output.image_list_updates:
             image = image_obj.dict()
             # Edit existing image
-            if image["zarr_url"] in [
-                _image["zarr_url"] for _image in tmp_images
-            ]:
+            tmp_image_paths = [img["zarr_url"] for img in tmp_images]
+            if image["zarr_url"] in tmp_image_paths:
                 if (
                     image["origin"] is not None
                     and image["origin"] != image["zarr_url"]
