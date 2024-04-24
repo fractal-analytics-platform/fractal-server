@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 from pydantic.decorator import validate_arguments
 
@@ -8,7 +9,7 @@ def illumination_correction(
     *,
     zarr_url: str,
     overwrite_input: bool = False,
-) -> dict:
+) -> Optional[dict]:
     """
     Dummy task description.
     """
@@ -19,7 +20,7 @@ def illumination_correction(
 
     # Prepare output metadata and set actual_zarr_url
     if overwrite_input:
-        out = dict(image_list_updates=[dict(zarr_url=zarr_url)])
+        out = None
         actual_zarr_url = zarr_url
     else:
         new_zarr_url = f"{zarr_url}_corr"

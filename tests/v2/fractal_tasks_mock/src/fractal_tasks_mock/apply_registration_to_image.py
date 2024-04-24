@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 from pydantic.decorator import validate_arguments
 
@@ -8,7 +9,7 @@ def apply_registration_to_image(
     *,
     zarr_url: str,
     overwrite_input: bool = True,
-) -> dict:
+) -> Optional[dict]:
     """
     Dummy task description.
 
@@ -29,7 +30,7 @@ def apply_registration_to_image(
 
     # Handle the case of zarr_url=ref_zarr_url
     if overwrite_input:
-        out = dict(image_list_updates=[dict(zarr_url=zarr_url)])
+        out = None
         with (Path(zarr_url) / "data").open("a") as f:
             f.write("Applying registration\n")
     else:
