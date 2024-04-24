@@ -4,7 +4,7 @@ from typing import Union
 import pytest
 from devtools import debug
 
-from fractal_server.app.runner.v2.set_start_and_last_task_index import (
+from fractal_server.app.runner.set_start_and_last_task_index import (
     set_start_and_last_task_index,
 )
 

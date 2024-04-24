@@ -25,9 +25,9 @@ from typing import Optional
 
 from ....models.v1 import Workflow
 from ...async_wrap import async_wrap
+from ...set_start_and_last_task_index import set_start_and_last_task_index
 from .._common import execute_tasks
 from ..common import TaskParameters
-from ..set_start_and_last_task_index import set_start_and_last_task_index
 from ._submit_setup import _local_submit_setup
 from .executor import FractalThreadPoolExecutor
 

@@ -25,8 +25,8 @@ from ....models.v2 import DatasetV2
 from ....models.v2 import WorkflowV2
 from ...async_wrap import async_wrap
 from ...executors.slurm.executor import FractalSlurmExecutor
+from ...set_start_and_last_task_index import set_start_and_last_task_index
 from ..runner import execute_tasks_v2
-from ..set_start_and_last_task_index import set_start_and_last_task_index
 from ._submit_setup import _slurm_submit_setup
 
 # from .._common import execute_tasks

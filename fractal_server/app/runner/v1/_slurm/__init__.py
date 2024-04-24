@@ -23,9 +23,9 @@ from typing import Union
 
 from ...async_wrap import async_wrap
 from ...executors.slurm.executor import FractalSlurmExecutor
+from ...set_start_and_last_task_index import set_start_and_last_task_index
 from .._common import execute_tasks
 from ..common import TaskParameters
-from ..set_start_and_last_task_index import set_start_and_last_task_index
 from ._submit_setup import _slurm_submit_setup
 from fractal_server.app.models.v1 import Workflow
 from fractal_server.app.models.v1 import WorkflowTask
