@@ -358,8 +358,8 @@ async def background_collect_pip(
             # Write last logs to file
             logger.debug("Task-collection status: OK")
             logger.info("Background task collection completed successfully")
-            db.close()
             close_logger(logger)
+            db.close()
 
         except Exception as e:
             # Write last logs to file
