@@ -126,7 +126,7 @@ def benchmark(N: int, tmp_path: str):
 if __name__ == "__main__":
     results = []
 
-    for N in range(100, 1001, 100):
+    for N in [100, 200, 300]:
 
         tmp_path = tempfile.mkdtemp()
         cProfile.run(f"benchmark({N}, '{tmp_path}')", "profile_results")
@@ -172,13 +172,12 @@ if __name__ == "__main__":
             "Images: N\n"
             "\n"
             "|\tN\t"
-            "|\tthread\t"
+            "|\texecutor\t"
             "|\ttotal\t"
             "|\toverhead\t"
             "|\tjob_dir\t\t\t"
-            "|\tzarr_dir\t\t"
             "|\n"
-            "|\t---\t|\t---\t|\t---\t|\t---\t\t|\t---\t\t\t|\t---\t\t\t|"
+            "|\t---\t|\t---\t|\t---\t|\t---\t\t|\t---\t\t\t|"
             "\n"
         )
         # Results
@@ -189,7 +188,6 @@ if __name__ == "__main__":
                 f"|\t{result['total_time']:.4f}\t"
                 f"|\t{(result['total_time'] - result['thread_time']):.4f}\t\t"
                 f"|\t{tuple(result['list_dirs']['job_dir'].values())}\t"
-                f"|\t{tuple(result['list_dirs']['zarr_dir'].values())}\t\t|"
                 "\n"
             )
         print(to_write)

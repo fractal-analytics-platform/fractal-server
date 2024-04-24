@@ -84,6 +84,7 @@ jobs:
          file_pattern: 'benchmarks/bench.html benchmarks/bench.json'
 
   benchmark_runner:
+    if: false
     name: Benchmark Runner
     runs-on: ubuntu-22.04
 
