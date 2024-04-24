@@ -299,7 +299,8 @@ def execute_tasks_v2(
         if not set_types_from_manifest.isdisjoint(set_types_from_task):
             overlap = set_types_from_manifest.intersection(set_types_from_task)
             raise JobExecutionError(
-                f"For task '{task_name}', some types are being set twice.\n"
+                "Some type filters are being set twice, "
+                f"for task '{task_name}'.\n"
                 f"Types from task output: {types_from_task}\n"
                 f"Types from task maniest: {types_from_manifest}\n"
                 f"Overlapping keys: {overlap}"
