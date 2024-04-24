@@ -3,7 +3,7 @@
 Current branch: `{{currentbranch}}`
 
 {% for (path_main, users_main), (path_curr, users_curr) in zip %}
-### {{method}} {{ path_main }}
+### {{ path_main }}
 
 | User | Time _current_ (ms) | Time `main` (ms) | Ratio _current_/`main` | Size _current_ (Kb) | Size `main` (Kb) |
 | -- | -- | -- | -- | -- | -- |
