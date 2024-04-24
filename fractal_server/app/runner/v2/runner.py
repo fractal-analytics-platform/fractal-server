@@ -27,8 +27,6 @@ from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.schemas.v2.dataset import _DatasetHistoryItemV2
 from fractal_server.app.schemas.v2.workflowtask import WorkflowTaskStatusTypeV2
 
-# FIXME: define RESERVED_ARGUMENTS = [", ...]
-
 
 def execute_tasks_v2(
     wf_task_list: list[WorkflowTaskV2],
