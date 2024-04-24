@@ -5,6 +5,8 @@ from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.schemas.v2 import WorkflowCreateV2
 from fractal_server.app.schemas.v2 import WorkflowReadV2
+from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
+from fractal_server.app.schemas.v2 import WorkflowTaskUpdateV2
 from fractal_server.app.schemas.v2 import WorkflowUpdateV2
 
 
@@ -41,3 +43,15 @@ async def test_schemas_workflow_v2():
         setattr(workflow, key, value)
 
     assert workflow.name == "new name"
+
+
+async def test_schemas_workflow_task_v2():
+    for attribute in ("args_parallel", "args_non_parallel"):
+
+        with pytest.raises(ValidationError) as e:
+            WorkflowTaskUpdateV2(**{attribute: dict(zarr_url="/something")})
+        assert "contains the following forbidden keys" in str(e.value)
+
+        with pytest.raises(ValidationError) as e:
+            WorkflowTaskCreateV2(**{attribute: dict(zarr_url="/something")})
+        assert "contains the following forbidden keys" in str(e.value)
