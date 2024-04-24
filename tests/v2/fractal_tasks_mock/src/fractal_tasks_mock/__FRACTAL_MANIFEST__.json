@@ -650,11 +650,21 @@
             "title": "Fail 2",
             "type": "boolean"
           },
+          "full_new_image": {
+            "description": "If set, it takes priority",
+            "title": "Full New Image",
+            "type": "object"
+          },
           "trailing_slash": {
             "default": false,
             "description": "If `True`, add 10 trailing slashes to zarr_urls",
             "title": "Trailing Slash",
             "type": "boolean"
+          },
+          "types": {
+            "description": "Missing description",
+            "title": "Types",
+            "type": "object"
           },
           "zarr_dir": {
             "description": "Missing description",
@@ -717,6 +727,33 @@
       "docs_link": "https://example.org",
       "executable_non_parallel": "dummy_unset_attribute.py",
       "name": "dummy_unset_attribute"
+    },
+    {
+      "args_schema_parallel": {
+        "additionalProperties": false,
+        "properties": {
+          "zarr_url": {
+            "description": "Missing description",
+            "title": "Zarr Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "zarr_url"
+        ],
+        "title": "GenericTaskParallel",
+        "type": "object"
+      },
+      "docs_info": "This is task generic_task_parallel.",
+      "docs_link": "https://example.org",
+      "executable_parallel": "generic_task_parallel.py",
+      "input_types": {
+        "my_type": false
+      },
+      "name": "generic_task_parallel",
+      "output_types": {
+        "my_type": true
+      }
     }
   ]
 }
