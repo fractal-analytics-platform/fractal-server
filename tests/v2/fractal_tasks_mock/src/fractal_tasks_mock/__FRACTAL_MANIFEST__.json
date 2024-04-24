@@ -661,6 +661,11 @@
             "title": "Trailing Slash",
             "type": "boolean"
           },
+          "types": {
+            "description": "Missing description",
+            "title": "Types",
+            "type": "object"
+          },
           "zarr_dir": {
             "description": "Missing description",
             "title": "Zarr Dir",

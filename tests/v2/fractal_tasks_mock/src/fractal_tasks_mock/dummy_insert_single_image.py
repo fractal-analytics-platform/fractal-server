@@ -11,6 +11,7 @@ def dummy_insert_single_image(
     zarr_urls: list[str],
     zarr_dir: str,
     attributes: Optional[dict[str, Any]] = None,
+    types: Optional[dict[str, Any]] = None,
     fail: bool = False,
     fail_2: bool = False,
     trailing_slash: bool = False,
@@ -39,9 +40,13 @@ def dummy_insert_single_image(
     new_image = dict(zarr_url=new_zarr_url)
     if attributes is not None:
         new_image["attributes"] = attributes
+    if types is not None:
+        new_image["types"] = types
     if full_new_image is not None:
         new_image = full_new_image
     out = dict(image_list_updates=[new_image])
+    if types is not None:
+        out["filters"] = dict(types=types)
     print("[dummy_insert_single_image] END")
     return out
 
