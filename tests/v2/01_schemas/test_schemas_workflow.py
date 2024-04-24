@@ -52,6 +52,10 @@ async def test_schemas_workflow_task_v2():
 
         WorkflowTaskUpdateV2(**{attribute: dict(something="else")})
 
+        WorkflowTaskCreateV2(**{attribute: None})
+
+        WorkflowTaskUpdateV2(**{attribute: None})
+
         with pytest.raises(ValidationError) as e:
             WorkflowTaskUpdateV2(**{attribute: dict(zarr_url="/something")})
         assert "contains the following forbidden keys" in str(e.value)
