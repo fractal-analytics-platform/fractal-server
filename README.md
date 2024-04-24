@@ -93,10 +93,10 @@
 | fractal\_server/app/runner/v2/deduplicate\_list.py                        |       14 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/app/runner/v2/handle\_failed\_job.py                      |       57 |        4 |       14 |        2 |     92% |86-93, 98->115 |
 | fractal\_server/app/runner/v2/merge\_outputs.py                           |       22 |        1 |        8 |        2 |     90% |23, 29->32 |
-| fractal\_server/app/runner/v2/runner.py                                   |      130 |        6 |       58 |        9 |     92% |125, 153, 162, 174->178, 215->220, 227->229, 254->260, 267, 272-273 |
+| fractal\_server/app/runner/v2/runner.py                                   |      134 |        6 |       60 |        8 |     93% |126, 167, 176, 229->234, 241->243, 268->274, 281, 286-287 |
 | fractal\_server/app/runner/v2/runner\_functions.py                        |      103 |        7 |       26 |        2 |     93% |63-65, 74, 98-102 |
 | fractal\_server/app/runner/v2/runner\_functions\_low\_level.py            |       59 |        5 |       22 |        4 |     89% |44-45, 47->exit, 54, 76, 113 |
-| fractal\_server/app/runner/v2/task\_interface.py                          |       37 |        0 |        8 |        2 |     96% |40->39, 52->51 |
+| fractal\_server/app/runner/v2/task\_interface.py                          |       37 |        0 |        8 |        2 |     96% |42->41, 54->53 |
 | fractal\_server/app/runner/v2/v1\_compat.py                               |       17 |        0 |        6 |        0 |    100% |           |
 | fractal\_server/app/schemas/\_\_init\_\_.py                               |        1 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/\_validators.py                               |       60 |        0 |       30 |        0 |    100% |           |
@@ -143,7 +143,7 @@
 | fractal\_server/tasks/v2/get\_collection\_data.py                         |       11 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/urls.py                                                   |        7 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                  |       22 |        0 |        2 |        0 |    100% |           |
-|                                                                 **TOTAL** | **7668** |  **247** | **2244** |  **341** | **94%** |           |
+|                                                                 **TOTAL** | **7672** |  **247** | **2246** |  **340** | **94%** |           |
 
 
 ## Setup coverage badge
