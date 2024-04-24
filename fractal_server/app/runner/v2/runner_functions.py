@@ -8,6 +8,9 @@ from typing import Callable
 from typing import Literal
 from typing import Optional
 
+from pydantic import ValidationError
+
+from ..exceptions import JobExecutionError
 from .deduplicate_list import deduplicate_list
 from .merge_outputs import merge_outputs
 from .runner_functions_low_level import run_single_task
@@ -29,6 +32,34 @@ __all__ = [
 ]
 
 MAX_PARALLELIZATION_LIST_SIZE = 20_000
+
+
+def _cast_and_validate_TaskOutput(
+    task_output: dict[str, Any]
+) -> Optional[TaskOutput]:
+    try:
+        validated_task_output = TaskOutput(**task_output)
+        return validated_task_output
+    except ValidationError as e:
+        raise JobExecutionError(
+            "Validation of task output failed.\n"
+            f"Original error: {str(e)}\n"
+            f"Original data: {task_output}."
+        )
+
+
+def _cast_and_validate_InitTaskOutput(
+    init_task_output: dict[str, Any],
+) -> Optional[InitTaskOutput]:
+    try:
+        validated_init_task_output = InitTaskOutput(**init_task_output)
+        return validated_init_task_output
+    except ValidationError as e:
+        raise JobExecutionError(
+            "Validation of init-task output failed.\n"
+            f"Original error: {str(e)}\n"
+            f"Original data: {init_task_output}."
+        )
 
 
 def no_op_submit_setup_call(
@@ -71,7 +102,7 @@ def _get_executor_options(
 
 def _check_parallelization_list_size(my_list):
     if len(my_list) > MAX_PARALLELIZATION_LIST_SIZE:
-        raise ValueError(
+        raise JobExecutionError(
             "Too many parallelization items.\n"
             f"   {len(my_list)}\n"
             f"   {MAX_PARALLELIZATION_LIST_SIZE=}\n"
@@ -126,12 +157,10 @@ def run_v2_task_non_parallel(
         **executor_options,
     )
     output = future.result()
-    # FIXME V2: handle validation errors
     if output is None:
         return TaskOutput()
     else:
-        validated_output = TaskOutput(**output)
-        return validated_output
+        return _cast_and_validate_TaskOutput(output)
 
 
 def run_v2_task_parallel(
@@ -188,9 +217,7 @@ def run_v2_task_parallel(
         if output is None:
             outputs[ind] = TaskOutput()
         else:
-            # FIXME: improve handling of validation errors
-            validated_output = TaskOutput(**output)
-            outputs[ind] = validated_output
+            outputs[ind] = _cast_and_validate_TaskOutput(output)
 
     merged_output = merge_outputs(outputs)
     return merged_output
@@ -245,7 +272,7 @@ def run_v2_task_compound(
     if output is None:
         init_task_output = InitTaskOutput()
     else:
-        init_task_output = InitTaskOutput(**output)
+        init_task_output = _cast_and_validate_InitTaskOutput(output)
     parallelization_list = init_task_output.parallelization_list
     parallelization_list = deduplicate_list(parallelization_list)
 
@@ -285,8 +312,7 @@ def run_v2_task_compound(
         if output is None:
             outputs[ind] = TaskOutput()
         else:
-            # FIXME: improve handling of validation errors
-            validated_output = TaskOutput(**output)
+            validated_output = _cast_and_validate_TaskOutput(output)
             outputs[ind] = validated_output
 
     merged_output = merge_outputs(outputs)

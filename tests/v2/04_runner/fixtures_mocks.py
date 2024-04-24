@@ -102,6 +102,14 @@ def fractal_tasks_mock_venv(testdata_path, tmp_path_factory) -> dict:
                     output_types={"registration": True},
                 )
             )
+        elif task["name"] == "generic_task_parallel":
+            task_attributes.update(
+                dict(
+                    input_types={"my_type": False},
+                    output_types={"my_type": True},
+                )
+            )
+
         for step in ["non_parallel", "parallel"]:
             key = f"executable_{step}"
             if key in task.keys():

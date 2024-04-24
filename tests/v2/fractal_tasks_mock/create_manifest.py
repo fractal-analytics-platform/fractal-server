@@ -76,6 +76,12 @@ TASK_LIST = [
         name="dummy_unset_attribute",
         executable="dummy_unset_attribute.py",
     ),
+    ParallelTask(
+        name="generic_task_parallel",
+        executable="generic_task_parallel.py",
+        input_types=dict(my_type=False),
+        output_types=dict(my_type=True),
+    ),
 ]
 
 

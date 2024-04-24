@@ -2,7 +2,6 @@ from typing import Any
 from typing import Literal
 from typing import Optional
 
-from pydantic import validator
 from sqlalchemy import Column
 from sqlalchemy.types import JSON
 from sqlmodel import Field
@@ -48,41 +47,3 @@ class WorkflowTaskV2(SQLModel, table=True):
     task_legacy: Optional[Task] = Relationship(
         sa_relationship_kwargs=dict(lazy="selectin")
     )
-
-    @validator("args_non_parallel")
-    def validate_args_non_parallel(cls, value):
-        if value is None:
-            return
-        forbidden_args_keys = {
-            "zarr_dir",
-            "zarr_url",
-            "zarr_urls",
-            "init_args",
-        }
-        args_keys = set(value.keys())
-        intersect_keys = forbidden_args_keys.intersection(args_keys)
-        if intersect_keys:
-            raise ValueError(
-                "`args` contains the following forbidden keys: "
-                f"{intersect_keys}"
-            )
-        return value
-
-    @validator("args_parallel")
-    def validate_args_parallel(cls, value):
-        if value is None:
-            return
-        forbidden_args_keys = {
-            "zarr_dir",
-            "zarr_url",
-            "zarr_urls",
-            "init_args",
-        }
-        args_keys = set(value.keys())
-        intersect_keys = forbidden_args_keys.intersection(args_keys)
-        if intersect_keys:
-            raise ValueError(
-                "`args` contains the following forbidden keys: "
-                f"{intersect_keys}"
-            )
-        return value

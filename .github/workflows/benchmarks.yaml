@@ -83,3 +83,46 @@ jobs:
          push_options: '--force'
          skip_checkout: true
          file_pattern: 'benchmarks/bench.html benchmarks/bench.json'
+
+  benchmark_runner:
+    if: false
+    name: Benchmark Runner
+    runs-on: ubuntu-22.04
+
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: fractal_test
+          FRACTAL_API_SUBMIT_RATE_LIMIT: 0
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+
+     - uses: actions/checkout@v4
+       with:
+        fetch-depth: 1
+
+     - name: Install poetry
+       run: pipx install poetry==1.7.1
+
+     - name: Set up Python 3.10
+       uses: actions/setup-python@v5
+       with:
+        python-version: "3.10"
+        cache: "poetry"
+
+     - name: Install dependencies
+       run: poetry install --with dev --without docs --no-interaction -E gunicorn -E postgres
+
+     - name: Benchmark
+       run: |
+        cd benchmarks/runner/
+        poetry run python benchmark_runner.py
