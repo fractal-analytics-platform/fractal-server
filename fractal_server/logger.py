@@ -123,5 +123,4 @@ def close_logger(logger: logging.Logger) -> None:
     Arguments:
         logger: The actual logger
     """
-    for handle in logger.handlers:
-        handle.close()
+    logger.handlers.clear()
