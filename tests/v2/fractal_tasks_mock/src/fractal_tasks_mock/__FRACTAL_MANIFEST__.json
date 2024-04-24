@@ -650,6 +650,11 @@
             "title": "Fail 2",
             "type": "boolean"
           },
+          "full_new_image": {
+            "description": "If set, it takes priority",
+            "title": "Full New Image",
+            "type": "object"
+          },
           "trailing_slash": {
             "default": false,
             "description": "If `True`, add 10 trailing slashes to zarr_urls",
