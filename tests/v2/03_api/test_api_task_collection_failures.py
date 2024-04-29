@@ -185,6 +185,10 @@ async def test_remove_directory(
     tmp_path: Path,
     testdata_path: Path,
 ):
+    """
+    This test tries (without success) to reproduce this error
+    https://github.com/fractal-analytics-platform/fractal-server/issues/1234
+    """
     override_settings_factory(
         FRACTAL_TASKS_DIR=tmp_path,
         FRACTAL_LOGGING_LEVEL=logging.CRITICAL,
