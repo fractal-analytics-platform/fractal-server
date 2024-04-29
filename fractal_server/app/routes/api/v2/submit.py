@@ -146,7 +146,7 @@ async def apply_workflow(
         workflow_id=workflow_id,
         user_email=user.email,
         dataset_dump=dict(
-            **dataset.model_dump(exclude={"timestamp_created"}),
+            **dataset.model_dump(exclude={"images", "timestamp_created"}),
             timestamp_created=_encode_as_utc(dataset.timestamp_created),
         ),
         workflow_dump=dict(

@@ -1,4 +1,5 @@
 import json
+import re
 import sys
 import time
 from datetime import datetime
@@ -33,26 +34,29 @@ USERS = [
 
 N_REQUESTS = 25
 
-API_PATHS = [
-    "/api/alive/",
-    "/api/v2/dataset/",
-    "/api/v2/job/",
-    "/api/v2/project/",
-    "/api/v2/workflow/",
+ENDPOINTS = [
+    dict(verb="GET", path="/api/alive/", body=None),
+    dict(verb="GET", path="/api/v2/dataset/", body=None),
+    dict(verb="GET", path="/api/v2/job/", body=None),
+    dict(verb="GET", path="/api/v2/project/", body=None),
+    dict(verb="GET", path="/api/v2/workflow/", body=None),
+    dict(
+        verb="POST",
+        path="/api/v2/project/$project_id$/dataset/$dataset_id$/images/query/",
+        body=None,
+    ),
 ]
 
 
 class Benchmark:
     def __init__(
         self,
-        method: str,
-        cleaned_paths: list[str],
+        endpoints: list[dict[str, str]],
         users: list[UserBench],
         current_branch: str,
     ):
 
-        self.method = method
-        self.cleaned_paths = cleaned_paths
+        self.endpoints = endpoints
         self.users = users
         self.client = Client(base_url=FRACTAL_SERVER_URL)
         self.current_branch = current_branch
@@ -75,10 +79,6 @@ class Benchmark:
             if user.token is None:
                 sys.exit(f"Error while logging-in as user {user.name}")
 
-        # print("Users:")
-        # for _user in self.users:
-        #     print(_user)
-
     def aggregate_on_path(
         self, user_metrics: list[dict[str, Any]]
     ) -> dict[str, list]:
@@ -88,9 +88,11 @@ class Benchmark:
         aggregated_values = {}
         for bench in user_metrics:
             current_path = bench.pop("path")
-            if current_path not in aggregated_values.keys():
-                aggregated_values[current_path] = []
-            aggregated_values[current_path].append(bench)
+            current_verb = bench.pop("verb")
+            key = current_verb + " " + current_path
+            if key not in aggregated_values.keys():
+                aggregated_values[key] = []
+            aggregated_values[key].append(bench)
         return aggregated_values
 
     def to_html(self, aggregated_values: dict, n_requests: int):
@@ -102,7 +104,6 @@ class Benchmark:
 
         rendered_html = template.render(
             user_metrics=aggregated_values,
-            method=self.method,
             date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             requests=n_requests,
         )
@@ -117,17 +118,16 @@ class Benchmark:
         )
         template = env.get_template("bench_diff_template.md")
 
-        rendered_html = template.render(
+        rendered_md = template.render(
             zip=zip(agg_values_main.items(), agg_values_curr.items()),
-            method=self.method,
             currentbranch=self.current_branch,
             exceptions=self.exceptions,
         )
 
         with open("bench_diff.md", "w") as output_file:
-            output_file.write(rendered_html)
+            output_file.write(rendered_md)
 
-    def get_metrics(self, path: str, res: Response) -> dict:
+    def get_metrics(self, user, path: str, res: Response) -> dict:
         time_response: float = 0
         byte_size: float = 0
         if res.is_success:
@@ -136,14 +136,84 @@ class Benchmark:
         else:
             self.exceptions.append(
                 dict(
+                    user=user,
                     path=path,
                     status=res.status_code,
                     detail=res.json().get("detail"),
                     exception=res.reason_phrase,
                 )
             )
+            raise Exception(self.exceptions)
 
         return dict(time=time_response, size=byte_size)
+
+    def _replace_path_params(self, headers: dict, path: str):
+        """ """
+
+        pattern = r"\$(.*?)\$"
+        matches = re.findall(pattern, path)
+        if matches:
+            project_id = self.client.get(
+                "/api/v2/project/", headers=headers
+            ).json()[0]["id"]
+            dataset_id = self.client.get(
+                "/api/v2/dataset/", headers=headers
+            ).json()[0]["id"]
+            id_list = iter([str(project_id), str(dataset_id)])
+            updated_path = re.sub(pattern, lambda x: next(id_list), path)
+        else:
+            updated_path = path
+        return updated_path
+
+    def make_user_metrics(
+        self,
+        endpoint: dict[str, str],
+        headers: dict[str, str],
+        user: UserBench,
+        n_requests: int,
+        keys_to_sum: list[str],
+    ):
+
+        # list of dicts made by get_metrics()
+        verb = endpoint.get("verb")
+        path = endpoint.get("path")
+        if verb == "GET":
+            metrics_list = [
+                self.get_metrics(
+                    user,
+                    path,
+                    self.client.get(path, headers=headers),
+                )
+                for n in range(n_requests)
+            ]
+        elif verb == "POST":
+            path = self._replace_path_params(headers, path)
+            body = endpoint.get("body")
+            metrics_list = [
+                self.get_metrics(
+                    user,
+                    path,
+                    self.client.post(path, headers=headers, json=body),
+                )
+                for n in range(n_requests)
+            ]
+
+        # dicts with two keys -> key to sum (time, size)
+        avg_metrics_user = {
+            key: round(
+                sum(metric[key] for metric in metrics_list) / n_requests,
+                6,
+            )
+            for key in keys_to_sum
+        }
+        # final list of flatten dicts
+        return dict(
+            path=path,
+            verb=verb,
+            username=user.name.split("@")[0],  # remove domain
+            time=round(avg_metrics_user.get("time") * 1000, 1),  # millisecond
+            size=round(avg_metrics_user.get("size") / 1000, 1),  # kbyte
+        )
 
     def run_benchmark(self, n_requests: int) -> list:
 
@@ -151,41 +221,20 @@ class Benchmark:
         keys_to_sum = ["time", "size"]
         user_metrics: list[dict] = []
 
-        for path in self.cleaned_paths:
+        for endpoint in self.endpoints:
             for user in self.users:
                 headers = {"Authorization": f"Bearer {user.token}"}
-
-                # list of dicts made by get_metrics()
-                metrics_list = [
-                    self.get_metrics(
-                        path,
-                        self.client.get(path, headers=headers),
+                if (
+                    endpoint["verb"] == "POST"
+                    and user.name != "dataset@example.org"
+                ):
+                    pass
+                else:
+                    user_metrics.append(
+                        self.make_user_metrics(
+                            endpoint, headers, user, n_requests, keys_to_sum
+                        )
                     )
-                    for n in range(n_requests)
-                ]
-                # dicts with two keys -> key to sum (time, size)
-                avg_metrics_user = {
-                    key: round(
-                        sum(metric[key] for metric in metrics_list)
-                        / n_requests,
-                        6,
-                    )
-                    for key in keys_to_sum
-                }
-
-                # final list of flatten dicts
-                user_metrics.append(
-                    dict(
-                        path=path,
-                        username=user.name.split("@")[0],  # remove domain
-                        time=round(
-                            avg_metrics_user.get("time") * 1000, 1
-                        ),  # millisecond
-                        size=round(
-                            avg_metrics_user.get("size") / 1000, 1
-                        ),  # kbyte
-                    )
-                )
 
         with open("bench.json", "w") as f:
             json.dump(user_metrics, f)
@@ -195,21 +244,13 @@ class Benchmark:
 
 if __name__ == "__main__":
 
-    if len(sys.argv[1:]) == 1:
-        current_branch = sys.argv[1]
-    else:
-        current_branch = "current-branch"
-
     benchmark = Benchmark(
-        method="GET",
-        cleaned_paths=API_PATHS,
+        endpoints=ENDPOINTS,
         users=USERS,
-        current_branch=current_branch,
+        current_branch="current-branch",
     )
     user_metrics = benchmark.run_benchmark(N_REQUESTS)
-
     agg_values_curr = benchmark.aggregate_on_path(user_metrics)
-
     benchmark.to_html(agg_values_curr, N_REQUESTS)
 
     # get the bench_diff.json from the bechmark-api branch
@@ -218,6 +259,7 @@ if __name__ == "__main__":
         "fractal-server/benchmark-api/benchmarks/bench.json"
     )
     response = httpx.get(url)
+
     if response.is_error:
         raise ValueError(
             f"GET {url} returned status code {response.status_code}.\n"
@@ -231,5 +273,4 @@ if __name__ == "__main__":
             f"(which returned status code {response.status_code}).\n"
             "Does bench.json exist in the benchmark-api branch?"
         )
-
     benchmark.make_md_diff(agg_values_main, agg_values_curr)
