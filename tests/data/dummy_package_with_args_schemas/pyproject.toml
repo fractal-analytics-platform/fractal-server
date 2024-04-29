@@ -7,7 +7,7 @@ packages = [{include = "fractal_tasks_core_alpha"}]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-pydantic = "~1.10.2"
+pydantic = "~1.10.13"
 devtools = "*"
 docstring_parser = "*"
 
