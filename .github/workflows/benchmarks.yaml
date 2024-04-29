@@ -34,7 +34,7 @@ jobs:
         fetch-depth: 1
 
      - name: Install poetry
-       run: pipx install poetry==1.7.1
+       run: pipx install poetry==1.8.2
 
      - name: Set up Python 3.10
        uses: actions/setup-python@v5
@@ -111,7 +111,7 @@ jobs:
         fetch-depth: 1
 
      - name: Install poetry
-       run: pipx install poetry==1.7.1
+       run: pipx install poetry==1.8.2
 
      - name: Set up Python 3.10
        uses: actions/setup-python@v5
