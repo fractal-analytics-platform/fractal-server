@@ -7,7 +7,7 @@ from fastapi import Response
 from fastapi import status
 from sqlmodel import select
 
-from .....logger import close_logger
+from .....logger import reset_logger_handlers
 from .....logger import set_logger
 from ....db import AsyncSession
 from ....db import get_async_db
@@ -259,7 +259,7 @@ async def export_worfklow(
                     "portable; re-importing this workflow may not work as "
                     "expected."
                 )
-    close_logger(logger)
+    reset_logger_handlers(logger)
 
     await db.close()
     return workflow
