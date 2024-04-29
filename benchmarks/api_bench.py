@@ -273,4 +273,4 @@ if __name__ == "__main__":
             f"(which returned status code {response.status_code}).\n"
             "Does bench.json exist in the benchmark-api branch?"
         )
-    benchmark.make_md_diff(agg_values_curr, agg_values_curr)
+    benchmark.make_md_diff(agg_values_main, agg_values_curr)
