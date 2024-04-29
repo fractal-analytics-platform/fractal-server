@@ -16,7 +16,7 @@ operations; at least version 1.3 is recommended.
 
 A simple way to install `poetry` is
 ```console
-pipx install poetry==1.7.1`
+pipx install poetry==1.8.2`
 ```
 while other options are described
 [here](https://python-poetry.org/docs#installing-with-the-official-installer).
