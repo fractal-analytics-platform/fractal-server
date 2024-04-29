@@ -13,7 +13,7 @@ from typing import Optional
 from sqlalchemy.orm.attributes import flag_modified
 
 from ....config import get_settings
-from ....logger import close_logger
+from ....logger import reset_logger_handlers
 from ....logger import set_logger
 from ....syringe import Inject
 from ....utils import get_timestamp
@@ -332,5 +332,5 @@ async def submit_workflow(
         db_sync.merge(job)
         db_sync.commit()
     finally:
-        close_logger(logger)
+        reset_logger_handlers(logger)
         db_sync.close()
