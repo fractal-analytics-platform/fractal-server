@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_09e701d32150411b_task_legacy_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.5.0">coverage.py v7.5.0</a>,
-            created at 2024-04-29 10:34 +0000
+            created at 2024-04-29 14:04 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -96,7 +96,7 @@
     <p class="run"><span class="n"><a id="t12" href="#t12">12</a></span><span class="t"><span class="key">from</span> <span class="nam">sqlmodel</span> <span class="key">import</span> <span class="nam">select</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t13" href="#t13">13</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t14" href="#t14">14</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="op">.</span><span class="op">.</span><span class="nam">config</span> <span class="key">import</span> <span class="nam">get_settings</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="op">.</span><span class="op">.</span><span class="nam">logger</span> <span class="key">import</span> <span class="nam">close_logger</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="op">.</span><span class="op">.</span><span class="nam">logger</span> <span class="key">import</span> <span class="nam">reset_logger_handlers</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t16" href="#t16">16</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="op">.</span><span class="op">.</span><span class="nam">logger</span> <span class="key">import</span> <span class="nam">set_logger</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="op">.</span><span class="op">.</span><span class="nam">syringe</span> <span class="key">import</span> <span class="nam">Inject</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="op">.</span><span class="nam">db</span> <span class="key">import</span> <span class="nam">AsyncSession</span>&nbsp;</span><span class="r"></span></p>
@@ -280,7 +280,7 @@
     <p class="pln"><span class="n"><a id="t196" href="#t196">196</a></span><span class="t">        <span class="str">"Task-collection endpoint: start background collection "</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t197" href="#t197">197</a></span><span class="t">        <span class="str">"and return state"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t198" href="#t198">198</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t199" href="#t199">199</a></span><span class="t">    <span class="nam">close_logger</span><span class="op">(</span><span class="nam">logger</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t199" href="#t199">199</a></span><span class="t">    <span class="nam">reset_logger_handlers</span><span class="op">(</span><span class="nam">logger</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t200" href="#t200">200</a></span><span class="t">    <span class="nam">info</span> <span class="op">=</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t201" href="#t201">201</a></span><span class="t">        <span class="str">"Collecting tasks in the background. "</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t202" href="#t202">202</a></span><span class="t">        <span class="fst">f"</span><span class="fst">GET /task/collect/</span><span class="op">{</span><span class="nam">state</span><span class="op">.</span><span class="nam">id</span><span class="op">}</span><span class="fst"> to query collection status</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
@@ -318,7 +318,7 @@
     <p class="par run show_par"><span class="n"><a id="t234" href="#t234">234</a></span><span class="t">    <span class="key">if</span> <span class="nam">verbose</span> <span class="key">and</span> <span class="key">not</span> <span class="nam">data</span><span class="op">.</span><span class="nam">log</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">234&#x202F;&#x219B;&#x202F;235</span><span class="annotate long">line 234 didn't jump to line 235, because the condition on line 234 was never true</span></span></p>
     <p class="mis show_mis"><span class="n"><a id="t235" href="#t235">235</a></span><span class="t">        <span class="nam">data</span><span class="op">.</span><span class="nam">log</span> <span class="op">=</span> <span class="nam">get_collection_log</span><span class="op">(</span><span class="nam">data</span><span class="op">.</span><span class="nam">venv_path</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t236" href="#t236">236</a></span><span class="t">        <span class="nam">state</span><span class="op">.</span><span class="nam">data</span> <span class="op">=</span> <span class="nam">data</span><span class="op">.</span><span class="nam">sanitised_dict</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t237" href="#t237">237</a></span><span class="t">    <span class="nam">close_logger</span><span class="op">(</span><span class="nam">logger</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t237" href="#t237">237</a></span><span class="t">    <span class="nam">reset_logger_handlers</span><span class="op">(</span><span class="nam">logger</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t238" href="#t238">238</a></span><span class="t">    <span class="key">await</span> <span class="nam">db</span><span class="op">.</span><span class="nam">close</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t239" href="#t239">239</a></span><span class="t">    <span class="key">return</span> <span class="nam">state</span>&nbsp;</span><span class="r"></span></p>
 </main>
@@ -330,7 +330,7 @@
             <a class="nav" href="z_09e701d32150411b_task_legacy_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.5.0">coverage.py v7.5.0</a>,
-            created at 2024-04-29 10:34 +0000
+            created at 2024-04-29 14:04 +0000
         </p>
     </div>
 </footer>
