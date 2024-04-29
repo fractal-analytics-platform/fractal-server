@@ -1,15 +1,15 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased (2.0.1)
+# 2.0.1
 
-* Use `poetry` 1.8.2 in GitHub actions and documentation.
-* More robust rewriting of the function that closes the logger (\#1425).
-
+* Database/API:
+    * Do not include `dataset_dump.images` in `JobV2` table (\#1441).
+* Internal functions:
+    * Introduce more robust `reset_logger_handlers` function (\#1425).
 * Benchmarks:
-    * Add `POST /api/v2/project/project_id/dataset/dataset_id/images/query/` in bechmarks
-    to evaluate the impact of the number of images during the query. (\#1441)
-* API:
-    * Fix dataset_dump in JobV2 table, removing `images`. (\#1441)
+    * Add `POST /api/v2/project/project_id/dataset/dataset_id/images/query/` in bechmarks  to evaluate the impact of the number of images during the query (\#1441).
+* Development:
+    * Use `poetry` 1.8.2 in GitHub actions and documentation.
 
 # 2.0.0
 
