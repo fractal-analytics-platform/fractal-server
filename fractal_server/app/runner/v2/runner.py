@@ -12,6 +12,7 @@ from ....images import SingleImage
 from ....images.tools import filter_image_list
 from ....images.tools import find_image_by_zarr_url
 from ....images.tools import match_filter
+from ..exceptions import JobExecutionError
 from ..filenames import FILTERS_FILENAME
 from ..filenames import HISTORY_FILENAME
 from ..filenames import IMAGES_FILENAME
@@ -25,8 +26,6 @@ from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
 from fractal_server.app.schemas.v2.dataset import _DatasetHistoryItemV2
 from fractal_server.app.schemas.v2.workflowtask import WorkflowTaskStatusTypeV2
-
-# FIXME: define RESERVED_ARGUMENTS = [", ...]
 
 
 def execute_tasks_v2(
@@ -80,9 +79,11 @@ def execute_tasks_v2(
         if not wftask.is_legacy_task:
             for image in filtered_images:
                 if not match_filter(image, Filters(types=task.input_types)):
-                    raise ValueError(
-                        f"Filtered images include {image}, which does "
-                        f"not comply with {task.input_types=}."
+                    raise JobExecutionError(
+                        "Invalid filtered image list\n"
+                        f"Task input types: {task.input_types=}\n"
+                        f'Image zarr_url: {image["zarr_url"]}\n'
+                        f'Image types: {image["types"]}\n'
                     )
 
         # TASK EXECUTION (V2)
@@ -123,7 +124,7 @@ def execute_tasks_v2(
                     submit_setup_call=submit_setup_call,
                 )
             else:
-                raise ValueError(f"Invalid {task.type=}.")
+                raise ValueError(f"Unexpected error: Invalid {task.type=}.")
         # TASK EXECUTION (V1)
         else:
             current_task_output = run_v1_task_parallel(
@@ -164,9 +165,11 @@ def execute_tasks_v2(
                     image["origin"] is not None
                     and image["origin"] != image["zarr_url"]
                 ):
-                    raise ValueError(
-                        f"Trying to edit an image with {image['zarr_url']=} "
-                        f"and {image['origin']=}."
+                    raise JobExecutionError(
+                        "Cannot edit an image with zarr_url different from "
+                        "origin.\n"
+                        f"zarr_url={image['zarr_url']}\n"
+                        f"origin={image['origin']}"
                     )
                 img_search = find_image_by_zarr_url(
                     images=tmp_images,
@@ -174,6 +177,7 @@ def execute_tasks_v2(
                 )
                 if img_search is None:
                     raise ValueError(
+                        "Unexpected error: "
                         f"Image with zarr_url {image['zarr_url']} not found, "
                         "while updating image list."
                     )
@@ -209,14 +213,19 @@ def execute_tasks_v2(
             else:
                 # Check that image['zarr_url'] is relative to zarr_dir
                 if not image["zarr_url"].startswith(zarr_dir):
-                    raise ValueError(
-                        f"{zarr_dir} is not a parent directory of "
-                        f"{image['zarr_url']}"
+                    raise JobExecutionError(
+                        "Cannot create image if zarr_dir is not a parent "
+                        "directory of zarr_url.\n"
+                        f"zarr_dir: {zarr_dir}\n"
+                        f"zarr_url: {image['zarr_url']}"
                     )
                 # Check that image['zarr_url'] is not equal to zarr_dir
                 if image["zarr_url"] == zarr_dir:
-                    raise ValueError(
-                        "image['zarr_url'] cannot be equal to zarr_dir"
+                    raise JobExecutionError(
+                        "Cannot create image if zarr_url is equal to "
+                        "zarr_dir.\n"
+                        f"zarr_dir: {zarr_dir}\n"
+                        f"zarr_url: {image['zarr_url']}"
                     )
                 # Propagate attributes and types from `origin` (if any)
                 updated_attributes = {}
@@ -257,8 +266,8 @@ def execute_tasks_v2(
                 images=tmp_images, zarr_url=img_zarr_url
             )
             if img_search is None:
-                raise ValueError(
-                    f"Cannot remove missing image with zarr_url {img_zarr_url}"
+                raise JobExecutionError(
+                    f"Cannot remove missing image (zarr_url={img_zarr_url})."
                 )
             else:
                 tmp_images.pop(img_search["index"])
@@ -270,24 +279,31 @@ def execute_tasks_v2(
                 current_task_output.filters.attributes
             )
 
-        # Update filters.types: current + (task_output + task_manifest)
+        # Find manifest ouptut types
         if wftask.is_legacy_task:
             types_from_manifest = {}
         else:
             types_from_manifest = task.output_types
+
+        # Find task-output types
         if current_task_output.filters is not None:
             types_from_task = current_task_output.filters.types
         else:
             types_from_task = {}
+
         # Check that key sets are disjoint
         set_types_from_manifest = set(types_from_manifest.keys())
         set_types_from_task = set(types_from_task.keys())
         if not set_types_from_manifest.isdisjoint(set_types_from_task):
             overlap = set_types_from_manifest.intersection(set_types_from_task)
-            raise ValueError(
-                "Both task and task manifest did set the same"
-                f"output type. Overlapping keys: {overlap}."
+            raise JobExecutionError(
+                "Some type filters are being set twice, "
+                f"for task '{task_name}'.\n"
+                f"Types from task output: {types_from_task}\n"
+                f"Types from task maniest: {types_from_manifest}\n"
+                f"Overlapping keys: {overlap}"
             )
+
         # Update filters.types
         tmp_filters["types"].update(types_from_manifest)
         tmp_filters["types"].update(types_from_task)

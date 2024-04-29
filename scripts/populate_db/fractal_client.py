@@ -4,9 +4,9 @@ import time
 import httpx
 from a2wsgi import ASGIMiddleware
 
-from fractal_server.app.schemas import UserCreate
-from fractal_server.app.schemas import UserRead
-from fractal_server.app.schemas import UserUpdate
+from fractal_server.app.schemas.user import UserCreate
+from fractal_server.app.schemas.user import UserRead
+from fractal_server.app.schemas.user import UserUpdate
 from fractal_server.app.schemas.v2 import DatasetCreateV2
 from fractal_server.app.schemas.v2 import DatasetImportV2
 from fractal_server.app.schemas.v2 import DatasetReadV2

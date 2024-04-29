@@ -125,3 +125,14 @@ def close_logger(logger: logging.Logger) -> None:
     """
     for handle in logger.handlers:
         handle.close()
+
+
+def reset_logger_handlers(logger: logging.Logger) -> None:
+    """
+    Close and remove all handlers associated to a `logging.Logger` object
+
+    Arguments:
+        logger: The actual logger
+    """
+    close_logger(logger)
+    logger.handlers.clear()

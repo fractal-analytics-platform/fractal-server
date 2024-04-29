@@ -20,8 +20,8 @@ from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.schemas.v2 import TaskCollectStatusV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.app.schemas.v2 import TaskReadV2
-from fractal_server.logger import close_logger
 from fractal_server.logger import get_logger
+from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
 from fractal_server.utils import execute_command
 
@@ -358,14 +358,14 @@ async def background_collect_pip(
             # Write last logs to file
             logger.debug("Task-collection status: OK")
             logger.info("Background task collection completed successfully")
-            close_logger(logger)
+            reset_logger_handlers(logger)
+
             db.close()
 
         except Exception as e:
             # Write last logs to file
             logger.debug("Task-collection status: fail")
             logger.info(f"Background collection failed. Original error: {e}")
-            close_logger(logger)
 
             # Update db
             data.status = "fail"
@@ -379,3 +379,5 @@ async def background_collect_pip(
             # Delete corrupted package dir
             logger.info(f"Now deleting temporary folder {venv_path}")
             shell_rmtree(venv_path)
+            logger.info("Temporary folder deleted")
+            reset_logger_handlers(logger)
