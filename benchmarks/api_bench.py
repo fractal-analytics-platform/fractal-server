@@ -224,11 +224,17 @@ class Benchmark:
         for endpoint in self.endpoints:
             for user in self.users:
                 headers = {"Authorization": f"Bearer {user.token}"}
-                user_metrics.append(
-                    self.make_user_metrics(
-                        endpoint, headers, user, n_requests, keys_to_sum
+                if (
+                    endpoint["verb"] == "POST"
+                    and user.name != "dataset@example.org"
+                ):
+                    pass
+                else:
+                    user_metrics.append(
+                        self.make_user_metrics(
+                            endpoint, headers, user, n_requests, keys_to_sum
+                        )
                     )
-                )
 
         with open("bench.json", "w") as f:
             json.dump(user_metrics, f)
@@ -253,6 +259,7 @@ if __name__ == "__main__":
         "fractal-server/benchmark-api/benchmarks/bench.json"
     )
     response = httpx.get(url)
+
     if response.is_error:
         raise ValueError(
             f"GET {url} returned status code {response.status_code}.\n"
