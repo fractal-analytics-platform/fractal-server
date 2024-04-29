@@ -12,7 +12,7 @@ from pydantic.error_wrappers import ValidationError
 from sqlmodel import select
 
 from .....config import get_settings
-from .....logger import close_logger
+from .....logger import reset_logger_handlers
 from .....logger import set_logger
 from .....syringe import Inject
 from ....db import AsyncSession
@@ -196,7 +196,7 @@ async def collect_tasks_pip(
         "Task-collection endpoint: start background collection "
         "and return state"
     )
-    close_logger(logger)
+    reset_logger_handlers(logger)
     info = (
         "Collecting tasks in the background. "
         f"GET /task/collect/{state.id} to query collection status"
@@ -234,6 +234,6 @@ async def check_collection_status(
     if verbose and not data.log:
         data.log = get_collection_log(data.venv_path)
         state.data = data.sanitised_dict()
-    close_logger(logger)
+    reset_logger_handlers(logger)
     await db.close()
     return state
