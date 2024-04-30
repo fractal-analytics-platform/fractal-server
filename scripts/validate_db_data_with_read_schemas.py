@@ -32,6 +32,12 @@ from fractal_server.app.schemas.v2 import TaskReadV2
 from fractal_server.app.schemas.v2 import WorkflowReadV2
 from fractal_server.app.schemas.v2 import WorkflowTaskReadV2
 
+
+def _assert(stm):
+    if not stm:
+        raise AssertionError(stm)
+
+
 with next(get_sync_db()) as db:
 
     # USERS
@@ -115,14 +121,16 @@ with next(get_sync_db()) as db:
     stm = select(ProjectV2)
     projects = db.execute(stm).scalars().all()
     for project in sorted(projects, key=lambda x: x.id):
-        ProjectReadV2(**project.model_dump())
+        obj = ProjectReadV2(**project.model_dump())
+        _assert(project.model_dump() == obj.dict())
         print(f"V2 - Project {project.id} validated")
 
     # TASKS V2
     stm = select(TaskV2)
     tasks = db.execute(stm).scalars().all()
     for task in sorted(tasks, key=lambda x: x.id):
-        TaskReadV2(**task.model_dump())
+        obj = TaskReadV2(**task.model_dump())
+        _assert(task.model_dump() == obj.dict())
         print(f"V2 - Task {task.id} validated")
 
     # WORKFLOWS V2
@@ -149,33 +157,37 @@ with next(get_sync_db()) as db:
                     )
                 )
 
-        WorkflowReadV2(
+        obj = WorkflowReadV2(
             **workflow.model_dump(),
             project=ProjectReadV2(**workflow.project.model_dump()),
             task_list=task_list,
         )
+        _assert(workflow.model_dump() == obj.dict())
         print(f"V2 - Workflow {workflow.id} validated")
 
     # DATASETS V2
     stm = select(DatasetV2)
     datasets = db.execute(stm).scalars().all()
     for dataset in sorted(datasets, key=lambda x: x.id):
-        DatasetReadV2(
+        obj = DatasetReadV2(
             **dataset.model_dump(),
             project=ProjectReadV2(**dataset.project.model_dump()),
         )
+        _assert(dataset.model_dump() == obj.dict())
         print(f"V2 - Dataset {dataset.id} validated")
 
     # JOBS V2
     stm = select(JobV2)
     jobs = db.execute(stm).scalars().all()
     for job in sorted(jobs, key=lambda x: x.id):
-        JobReadV2(**job.model_dump())
+        obj = JobReadV2(**job.model_dump())
+        _assert(job.model_dump() == obj.dict())
         print(f"V2 - Job {job.id} validated")
 
     # COLLECTION STATES V2
     stm = select(CollectionStateV2)
     states = db.execute(stm).scalars().all()
     for collection_state in sorted(states, key=lambda x: x.id):
-        CollectionStateV2(**collection_state.model_dump())
+        obj = CollectionStateV2(**collection_state.model_dump())
+        _assert(collection_state.model_dump() == obj.model_dump())
         print(f"V2 - CollectionState {state.id} validated")

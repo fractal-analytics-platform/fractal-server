@@ -25,7 +25,7 @@ class ProjectDumpV2(BaseModel, extra=Extra.forbid):
     timestamp_created: str
 
 
-class TaskDumpV2(BaseModel):
+class TaskDumpV2(BaseModel, extra=Extra.forbid):
     id: int
     name: str
     type: str
@@ -40,7 +40,7 @@ class TaskDumpV2(BaseModel):
     output_types: dict[str, bool]
 
 
-class WorkflowTaskDumpV2(BaseModel):
+class WorkflowTaskDumpV2(BaseModel, extra=Extra.forbid):
     id: int
     workflow_id: int
     order: Optional[int]
@@ -70,14 +70,14 @@ class WorkflowTaskDumpV2(BaseModel):
         return values
 
 
-class WorkflowDumpV2(BaseModel):
+class WorkflowDumpV2(BaseModel, extra=Extra.forbid):
     id: int
     name: str
     project_id: int
     timestamp_created: str
 
 
-class DatasetDumpV2(BaseModel):
+class DatasetDumpV2(BaseModel, extra=Extra.forbid):
     id: int
     name: str
     project_id: int
