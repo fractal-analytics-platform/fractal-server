@@ -3,6 +3,8 @@
 # 2.0.2 (Unreleased)
 
 * API:
+    * Fix bug in status endpoint (\#1449).
+    * Improve handling of out-of-scope scenario in status endpoint (\#1449).
     * Forbid extra arguments in `DumpV2` schemas (\#1445).
 * Benchmarks:
     * Handle some more errors in benchmark flow (\#1445).
