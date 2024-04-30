@@ -4,6 +4,10 @@
 
 * API:
     * Forbid extra arguments in `DumpV2` schemas (\#1445).
+* Benchmarks:
+    * Handle some more errors in benchmark flow (\#1445).
+* Tests:
+    * Update testing database to version 2.0.1 (\#1445).
 
 # 2.0.1
 
