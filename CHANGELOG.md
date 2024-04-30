@@ -1,6 +1,8 @@
-**Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
+**Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# 2.0.2 (Unreleased)
+# Unreleased
+
+# 2.0.2
 
 * API:
     * Fix bug in status endpoint (\#1449).
