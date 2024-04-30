@@ -113,7 +113,7 @@ async def get_workflowtask_status(
 
         # The last workflow task that is included in the submitted job is also
         # the positional-last workflow task to be included in the response.
-        last_valid_wftask_id = workflow.task_list[end - 1]
+        last_valid_wftask_id = workflow.task_list[end - 1].id
 
         # Highest priority: Read status updates coming from the running-job
         # temporary file. Note: this file only contains information on
