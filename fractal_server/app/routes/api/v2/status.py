@@ -7,6 +7,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
 
+from .....logger import set_logger
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import JobV2
@@ -20,6 +21,8 @@ from ._aux_functions import _get_workflow_check_owner
 from fractal_server.app.runner.filenames import HISTORY_FILENAME
 
 router = APIRouter()
+
+logger = set_logger(__name__)
 
 
 @router.get(
@@ -113,7 +116,17 @@ async def get_workflowtask_status(
 
         # The last workflow task that is included in the submitted job is also
         # the positional-last workflow task to be included in the response.
-        last_valid_wftask_id = workflow.task_list[end - 1].id
+        try:
+            last_valid_wftask_id = workflow.task_list[end - 1].id
+        except IndexError as e:
+            logger.error(
+                "Internal error in `get_workflowtask_status`.\n"
+                f"{running_job.first_task_index=}\n"
+                f"{running_job.last_task_index=}\n"
+                f"{len(workflow.task_list)=}\n"
+                f"Original error: {str(e)}."
+            )
+            last_valid_wftask_id = None
 
         # Highest priority: Read status updates coming from the running-job
         # temporary file. Note: this file only contains information on
