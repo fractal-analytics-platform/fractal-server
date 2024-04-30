@@ -147,7 +147,8 @@ class Benchmark:
                     exception=res.reason_phrase,
                 )
             )
-            raise Exception(self.exceptions)
+            return {}
+            # raise Exception(self.exceptions)
 
         return dict(time=time_response, size=byte_size)
 
