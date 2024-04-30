@@ -1,5 +1,6 @@
 import logging
 import time
+from json import JSONDecodeError
 
 import httpx
 from a2wsgi import ASGIMiddleware
@@ -42,8 +43,14 @@ class FractalClient:
                 "/auth/token/login/",
                 data=credentials,
             )
-            print(response.json())
-            self.bearer_token = response.json().get("access_token")
+            try:
+                print(response.json())
+                self.bearer_token = response.json().get("access_token")
+            except JSONDecodeError as e:
+                logging.error("Could not parse response JSON.")
+                logging.error(f"Request body: {credentials}")
+                logging.error(f"API response: {response}")
+                raise e
 
     def make_request(self, endpoint, method="GET", data=None):
         headers = {"Authorization": f"Bearer {self.bearer_token}"}
