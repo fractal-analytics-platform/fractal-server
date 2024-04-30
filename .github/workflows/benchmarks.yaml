@@ -62,16 +62,17 @@ jobs:
         poetry run python ../scripts/populate_db/populate_db_script.py
         poetry run sh serve.sh
 
-     - name: Print logs stderr
-       run: cat fractal-server.err
-
-     - name: Print logs stdout
-       run: cat fractal-server.out
-
      - name: Benchmark
        run: |
         cd benchmarks/
         poetry run python api_bench.py
+
+     - name: Print logs stderr
+       run: cat benchmarks/fractal-server.err
+
+     - name: Print logs stdout
+       run: cat benchmarks/fractal-server.out
+
 
      - name: Add comment with preview
        uses: mshick/add-pr-comment@v2
