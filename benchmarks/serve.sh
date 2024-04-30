@@ -11,5 +11,3 @@ gunicorn "fractal_server.main:app" \
     --daemon \
     --access-logfile fractal-server.out \
     --error-logfile fractal-server.err
-
-sleep 2
