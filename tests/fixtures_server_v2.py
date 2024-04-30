@@ -141,7 +141,9 @@ async def job_factory_v2(db: AsyncSession):
             dataset_id=dataset_id,
             workflow_id=workflow_id,
             dataset_dump=dict(
-                dataset.model_dump(exclude={"timestamp_created"}),
+                dataset.model_dump(
+                    exclude={"timestamp_created", "history", "images"}
+                ),
                 timestamp_created=_encode_as_utc(dataset.timestamp_created),
             ),
             workflow_dump=dict(
