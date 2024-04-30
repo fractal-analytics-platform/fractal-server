@@ -62,6 +62,12 @@ jobs:
         poetry run python ../scripts/populate_db/populate_db_script.py
         poetry run sh serve.sh
 
+     - name: Print logs stderr
+       run: cat fractal-server.err
+
+     - name: Print logs stdout
+       run: cat fractal-server.out
+
      - name: Benchmark
        run: |
         cd benchmarks/
