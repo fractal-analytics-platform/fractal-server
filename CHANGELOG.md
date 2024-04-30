@@ -5,7 +5,7 @@
 * API:
     * Fix bug in status endpoint (\#1449).
     * Improve handling of out-of-scope scenario in status endpoint (\#1449).
-    * Do not include dataset `history` and `images` in `JobV2.dataset_dump` (\#1445).
+    * Do not include dataset `history` in `JobV2.dataset_dump` (\#1445).
     * Forbid extra arguments in `DumpV2` schemas (\#1445).
 * API V1:
     * Do not include dataset `history` in `ApplyWorkflow.{input,output}_dataset_dump` (\#1453).
