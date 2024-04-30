@@ -11,8 +11,3 @@ Current branch: `{{currentbranch}}`
 {%endfor%}
 
 {% endfor %}
-
-| Path | Status | Exception |
-| -- | -- | -- |
-{% for exception in exceptions %}| {{exception["path"]}} | {{exception["status"]}} | {{exception["exception"] ~ " " ~ exception["detail"] ~ string}} |
-{% endfor %}
