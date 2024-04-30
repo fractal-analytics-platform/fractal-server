@@ -65,7 +65,14 @@ jobs:
      - name: Benchmark
        run: |
         cd benchmarks/
-        poetry run python api_bench.py ${{ github.head_ref || github.ref_name }}
+        poetry run python api_bench.py
+
+     - name: Print logs stderr
+       run: cat benchmarks/fractal-server.err
+
+     - name: Print logs stdout
+       run: cat benchmarks/fractal-server.out
+
 
      - name: Add comment with preview
        uses: mshick/add-pr-comment@v2

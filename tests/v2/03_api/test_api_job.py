@@ -346,7 +346,9 @@ async def test_project_apply_workflow_subset(
             timestamp_created=_encode_as_utc(workflow.timestamp_created),
         ).dict()
         expected_dataset_dump = DatasetDumpV2(
-            **dataset1.model_dump(exclude={"timestamp_created"}),
+            **dataset1.model_dump(
+                exclude={"timestamp_created", "history", "images"}
+            ),
             timestamp_created=_encode_as_utc(dataset1.timestamp_created),
         ).dict()
         assert res.json()["project_dump"] == expected_project_dump
