@@ -157,15 +157,6 @@ async def test_workflowtask_status_history_job(
         )
         task = await task_factory_v2(name="task1", source="task1")
 
-        # Create a dummy workflow with a single WorkflowTask; this is done
-        # so that WorkflowTask IDs start from 2, in the actual workflow
-        # throwaway_workflow = await workflow_factory_v2(
-        #     project_id=project.id, name="WF-dummy"
-        # )
-        # await _workflow_insert_task(
-        #     workflow_id=throwaway_workflow.id, task_id=task.id, db=db,
-        # )
-
         workflow = await workflow_factory_v2(project_id=project.id, name="WF")
         for _ in range(3):
             await _workflow_insert_task(
