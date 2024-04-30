@@ -6,6 +6,7 @@
     * Fix bug in status endpoint (\#1449).
     * Improve handling of out-of-scope scenario in status endpoint (\#1449).
     * Forbid extra arguments in `DumpV2` schemas (\#1445).
+* Move settings logs to `check_settings` and use fractal-server `set_logger` (\#1452).
 * Benchmarks:
     * Handle some more errors in benchmark flow (\#1445).
 * Tests:
