@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#123) point to closed Pull Requests on the fractal-server repository.
 
+# 2.0.2 (Unreleased)
+
+* API:
+    * Forbid extra arguments in `DumpV2` schemas (\#1445).
+
 # 2.0.1
 
 * Database/API:
