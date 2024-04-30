@@ -25,7 +25,7 @@ class ProjectDumpV2(BaseModel, extra=Extra.forbid):
     timestamp_created: str
 
 
-class TaskDumpV2(BaseModel, extra=Extra.forbid):
+class TaskDumpV2(BaseModel):
     id: int
     name: str
     type: str
@@ -70,7 +70,7 @@ class WorkflowTaskDumpV2(BaseModel, extra=Extra.forbid):
         return values
 
 
-class WorkflowDumpV2(BaseModel, extra=Extra.forbid):
+class WorkflowDumpV2(BaseModel):
     id: int
     name: str
     project_id: int
