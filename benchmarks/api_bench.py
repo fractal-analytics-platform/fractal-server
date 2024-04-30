@@ -134,12 +134,16 @@ class Benchmark:
             time_response = res.elapsed.total_seconds()
             byte_size = len(res.content)
         else:
+            try:
+                detail = res.json().get("detail")
+            except json.JSONDecodeError:
+                detail = "Cannot parse response JSON"
             self.exceptions.append(
                 dict(
                     user=user,
                     path=path,
                     status=res.status_code,
-                    detail=res.json().get("detail"),
+                    detail=detail,
                     exception=res.reason_phrase,
                 )
             )

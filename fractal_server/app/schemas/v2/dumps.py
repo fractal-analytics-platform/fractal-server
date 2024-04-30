@@ -70,14 +70,14 @@ class WorkflowTaskDumpV2(BaseModel):
         return values
 
 
-class WorkflowDumpV2(BaseModel):
+class WorkflowDumpV2(BaseModel, extra=Extra.forbid):
     id: int
     name: str
     project_id: int
     timestamp_created: str
 
 
-class DatasetDumpV2(BaseModel):
+class DatasetDumpV2(BaseModel, extra=Extra.forbid):
     id: int
     name: str
     project_id: int
