@@ -1,4 +1,6 @@
 data
+fractal-server.out
+fractal-server.err
 artifacts
 LOG*
 logs
