@@ -145,17 +145,27 @@ async def test_workflowtask_status_history_job(
     client,
 ):
     """
-    Test the status endpoint when there is a empty history in the DB but
+    Test the status endpoint when there is a some history in the DB and
     there is a running job associated to a given dataset/workflow pair.
     """
     working_dir = tmp_path / "working_dir"
-    history = []
+    history = [dict(workflowtask=dict(id=4), status="done")]
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(
             project_id=project.id, history=history
         )
         task = await task_factory_v2(name="task1", source="task1")
+
+        # Create a dummy workflow with a single WorkflowTask; this is done
+        # so that WorkflowTask IDs start from 2, in the actual workflow
+        # throwaway_workflow = await workflow_factory_v2(
+        #     project_id=project.id, name="WF-dummy"
+        # )
+        # await _workflow_insert_task(
+        #     workflow_id=throwaway_workflow.id, task_id=task.id, db=db,
+        # )
+
         workflow = await workflow_factory_v2(project_id=project.id, name="WF")
         for _ in range(3):
             await _workflow_insert_task(
