@@ -19,6 +19,7 @@ from fastapi import FastAPI
 
 from .app.security import _create_first_user
 from .config import get_settings
+from .logger import set_logger
 from .syringe import Inject
 
 
@@ -61,6 +62,13 @@ def check_settings() -> None:
     """
     settings = Inject(get_settings)
     settings.check()
+
+    logger = set_logger("fractal_server_settings")
+    logger.debug("Fractal Settings:")
+    for key, value in settings.dict().items():
+        if any(s in key.upper() for s in ["PASSWORD", "SECRET"]):
+            value = "*****"
+        logger.debug(f"{key}: {value}")
 
 
 async def __on_startup() -> None:
