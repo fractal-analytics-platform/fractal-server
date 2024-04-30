@@ -40,7 +40,7 @@ class TaskDumpV2(BaseModel):
     output_types: dict[str, bool]
 
 
-class WorkflowTaskDumpV2(BaseModel, extra=Extra.forbid):
+class WorkflowTaskDumpV2(BaseModel):
     id: int
     workflow_id: int
     order: Optional[int]
@@ -70,7 +70,7 @@ class WorkflowTaskDumpV2(BaseModel, extra=Extra.forbid):
         return values
 
 
-class WorkflowDumpV2(BaseModel):
+class WorkflowDumpV2(BaseModel, extra=Extra.forbid):
     id: int
     name: str
     project_id: int
