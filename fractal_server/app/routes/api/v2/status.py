@@ -123,9 +123,12 @@ async def get_workflowtask_status(
                 f"Handled IndexError in `get_workflowtask_status` ({str(e)})."
             )
             logger.warning(
-                f"Additional information: {running_job.first_task_index=}; "
+                "Additional information: "
+                f"{running_job.first_task_index=}; "
                 f"{running_job.last_task_index=}; "
-                f"{len(workflow.task_list)=}."
+                f"{len(workflow.task_list)=}; "
+                f"{dataset_id=}; "
+                f"{workflow_id=}."
             )
             last_valid_wftask_id = None
             logger.warning(f"Now setting {last_valid_wftask_id=}.")
