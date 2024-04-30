@@ -69,7 +69,7 @@ def check_settings() -> None:
     for key, value in settings.dict().items():
         if any(s in key.upper() for s in ["PASSWORD", "SECRET"]):
             value = "*****"
-        logger.debug(f"{key}: {value}")
+        logger.debug(f"  {key}: {value}")
     reset_logger_handlers(logger)
 
 
