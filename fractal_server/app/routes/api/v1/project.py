@@ -398,7 +398,7 @@ async def apply_workflow(
         user_email=user.email,
         input_dataset_dump=dict(
             **input_dataset.model_dump(
-                exclude={"resource_list", "timestamp_created"}
+                exclude={"resource_list", "history", "timestamp_created"}
             ),
             timestamp_created=_encode_as_utc(input_dataset.timestamp_created),
             resource_list=[
@@ -408,7 +408,7 @@ async def apply_workflow(
         ),
         output_dataset_dump=dict(
             **output_dataset.model_dump(
-                exclude={"resource_list", "timestamp_created"}
+                exclude={"resource_list", "history", "timestamp_created"}
             ),
             timestamp_created=_encode_as_utc(output_dataset.timestamp_created),
             resource_list=[
