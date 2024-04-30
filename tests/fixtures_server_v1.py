@@ -168,7 +168,7 @@ async def job_factory(db: AsyncSession):
             workflow_id=workflow_id,
             input_dataset_dump=dict(
                 input_dataset.model_dump(
-                    exclude={"resource_list", "timestamp_created"}
+                    exclude={"resource_list", "timestamp_created", "history"}
                 ),
                 timestamp_created=_encode_as_utc(
                     input_dataset.timestamp_created
@@ -180,7 +180,7 @@ async def job_factory(db: AsyncSession):
             ),
             output_dataset_dump=dict(
                 output_dataset.model_dump(
-                    exclude={"resource_list", "timestamp_created"}
+                    exclude={"resource_list", "timestamp_created", "history"}
                 ),
                 timestamp_created=_encode_as_utc(
                     output_dataset.timestamp_created
