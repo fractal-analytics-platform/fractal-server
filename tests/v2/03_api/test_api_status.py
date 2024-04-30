@@ -149,7 +149,7 @@ async def test_workflowtask_status_history_job(
     there is a running job associated to a given dataset/workflow pair.
     """
     working_dir = tmp_path / "working_dir"
-    history = [dict(workflowtask=dict(id=4), status="done")]
+    history = [dict(workflowtask=dict(id=3), status="done")]
     async with MockCurrentUser() as user:
         project = await project_factory_v2(user)
         dataset = await dataset_factory_v2(
