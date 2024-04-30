@@ -238,3 +238,65 @@ async def test_workflowtask_status_two_jobs(
     )
     debug(res.json())
     assert res.status_code == 422
+
+
+async def test_workflowtask_status_modified_workflow(
+    db,
+    MockCurrentUser,
+    tmp_path,
+    project_factory_v2,
+    task_factory_v2,
+    dataset_factory_v2,
+    workflow_factory_v2,
+    job_factory_v2,
+    client,
+):
+    """
+    Test the status endpoint when there is a running job associated to a given
+    dataset/workflow pair, but the workflow is modified after the job was
+    created.
+    """
+    working_dir = tmp_path / "working_dir"
+    async with MockCurrentUser() as user:
+        project = await project_factory_v2(user)
+        dataset = await dataset_factory_v2(project_id=project.id, history=[])
+        task = await task_factory_v2(name="task1", source="task1")
+        workflow = await workflow_factory_v2(project_id=project.id, name="WF")
+        for _ in range(3):
+            await _workflow_insert_task(
+                workflow_id=workflow.id, task_id=task.id, db=db
+            )
+        await job_factory_v2(
+            project_id=project.id,
+            workflow_id=workflow.id,
+            dataset_id=dataset.id,
+            working_dir=str(working_dir),
+            first_task_index=0,
+            last_task_index=1,
+        )
+
+        # Delete second and third WorkflowTasks
+        res = await client.get(
+            f"api/v2/project/{project.id}/workflow/{workflow.id}/"
+        )
+        assert res.status_code == 200
+        wftask_list = res.json()["task_list"]
+        for wftask in wftask_list[1:]:
+            wftask_id = wftask["id"]
+            debug(f"Delete {wftask_id=}")
+            res = await client.delete(
+                f"api/v2/project/{project.id}/workflow/{workflow.id}/"
+                f"wftask/{wftask_id}/"
+            )
+            assert res.status_code == 204
+
+    # The endpoint response is OK, even if the running_job points to
+    # non-existing WorkflowTask's.
+    res = await client.get(
+        (
+            f"api/v2/project/{project.id}/status/?"
+            f"dataset_id={dataset.id}&workflow_id={workflow.id}"
+        )
+    )
+    assert res.status_code == 200
+    assert res.json() == {"status": {"1": "submitted"}}
