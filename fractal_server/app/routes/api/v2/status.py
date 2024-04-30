@@ -119,14 +119,16 @@ async def get_workflowtask_status(
         try:
             last_valid_wftask_id = workflow.task_list[end - 1].id
         except IndexError as e:
-            logger.error(
-                "Internal error in `get_workflowtask_status`.\n"
-                f"{running_job.first_task_index=}\n"
-                f"{running_job.last_task_index=}\n"
-                f"{len(workflow.task_list)=}\n"
-                f"Original error: {str(e)}."
+            logger.warning(
+                f"Handled IndexError in `get_workflowtask_status` ({str(e)})."
+            )
+            logger.warning(
+                f"Additional information: {running_job.first_task_index=}; "
+                f"{running_job.last_task_index=}; "
+                f"{len(workflow.task_list)=}."
             )
             last_valid_wftask_id = None
+            logger.warning(f"Now setting {last_valid_wftask_id=}.")
 
         # Highest priority: Read status updates coming from the running-job
         # temporary file. Note: this file only contains information on
