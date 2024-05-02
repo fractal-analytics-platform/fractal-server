@@ -20,8 +20,11 @@ async def full_workflow(
     project_factory_v2,
     workflow_factory_v2,
     dataset_factory_v2,
+    user_kwargs: dict = {},
 ):
-    async with MockCurrentUser(user_kwargs={"is_verified": True}) as user:
+    async with MockCurrentUser(
+        user_kwargs={"is_verified": True, **user_kwargs}
+    ) as user:
         project = await project_factory_v2(user)
         project_id = project.id
         dataset = await dataset_factory_v2(
@@ -165,10 +168,13 @@ async def full_workflow_TaskExecutionError(
     project_factory_v2,
     workflow_factory_v2,
     dataset_factory_v2,
+    user_kwargs: dict = {},
 ):
 
     EXPECTED_STATUSES = {}
-    async with MockCurrentUser(user_kwargs={"is_verified": True}) as user:
+    async with MockCurrentUser(
+        user_kwargs={"is_verified": True, **user_kwargs}
+    ) as user:
         project = await project_factory_v2(user)
         project_id = project.id
         dataset = await dataset_factory_v2(
@@ -288,8 +294,11 @@ async def non_executable_task_command_local(
     workflow_factory_v2,
     dataset_factory_v2,
     task_factory_v2,
+    user_kwargs: dict = {},
 ):
-    async with MockCurrentUser(user_kwargs={"is_verified": True}) as user:
+    async with MockCurrentUser(
+        user_kwargs={"is_verified": True, **user_kwargs}
+    ) as user:
         # Create task
         task = await task_factory_v2(
             name="invalid-task-command",
@@ -354,9 +363,12 @@ async def failing_workflow_UnknownError(
     workflow_factory_v2,
     task_factory,
     task_factory_v2,
+    user_kwargs: dict = {},
 ):
     EXPECTED_STATUSES = {}
-    async with MockCurrentUser(user_kwargs={"is_verified": True}) as user:
+    async with MockCurrentUser(
+        user_kwargs={"is_verified": True, **user_kwargs}
+    ) as user:
         project = await project_factory_v2(user)
         project_id = project.id
         dataset = await dataset_factory_v2(
