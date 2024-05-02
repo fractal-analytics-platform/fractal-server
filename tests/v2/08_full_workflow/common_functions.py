@@ -490,7 +490,9 @@ async def non_python_task(
     if user_kwargs is None:
         user_kwargs = {}
 
-    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+    async with MockCurrentUser(
+        user_kwargs={"is_verified": True, **user_kwargs}
+    ) as user:
         # Create project
         project = await project_factory_v2(user)
         project_id = project.id
