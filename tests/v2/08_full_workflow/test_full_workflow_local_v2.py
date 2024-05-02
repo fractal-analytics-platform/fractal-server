@@ -19,7 +19,7 @@ async def test_full_workflow_local(
     # Use a session-scoped FRACTAL_TASKS_DIR folder
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND="local",
-        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts-local",
+        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
         FRACTAL_TASKS_DIR=tmp_path_factory.getbasetemp() / "FRACTAL_TASKS_DIR",
     )
     await full_workflow(
@@ -50,7 +50,7 @@ async def test_full_workflow_TaskExecutionError(
     # Use a session-scoped FRACTAL_TASKS_DIR folder
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND="local",
-        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts-local",
+        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
         FRACTAL_TASKS_DIR=tmp_path_factory.getbasetemp() / "FRACTAL_TASKS_DIR",
     )
     await full_workflow_TaskExecutionError(
@@ -79,7 +79,7 @@ async def test_non_executable_task_command_local(
     """
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND="local",
-        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts-local",
+        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
     )
     await non_executable_task_command(
         MockCurrentUser=MockCurrentUser,
@@ -113,7 +113,7 @@ async def test_failing_workflow_UnknownError_local(
 
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND="local",
-        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts-local",
+        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
     )
     await failing_workflow_UnknownError(
         MockCurrentUser=MockCurrentUser,
