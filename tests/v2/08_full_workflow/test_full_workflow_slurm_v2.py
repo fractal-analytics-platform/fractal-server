@@ -51,7 +51,6 @@ async def test_full_workflow_TaskExecutionError_slurm(
     tmp_path_factory,
     monkey_slurm,
     relink_python_interpreter_v2,
-    fractal_tasks_mock,
 ):
     """ "
     Run a workflow made of three tasks, two successful tasks and one
@@ -83,7 +82,6 @@ async def test_failing_workflow_JobExecutionError(
     dataset_factory_v2,
     workflow_factory_v2,
     override_settings_factory,
-    fractal_tasks_mock,
     tmp_path_factory,
     monkey_slurm,
     monkey_slurm_user,
