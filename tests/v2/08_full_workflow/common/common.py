@@ -1,13 +1,10 @@
 import os
-import shlex
-import subprocess
 from pathlib import Path
 from typing import Any
 
-import pytest
 from devtools import debug
 
-from fractal_server.app.runner.v2 import _backends
+PREFIX = "/api/v2"
 
 
 def _task_name_to_id(task_name: str, task_list: list[dict[str, Any]]) -> int:
@@ -17,49 +14,14 @@ def _task_name_to_id(task_name: str, task_list: list[dict[str, Any]]) -> int:
     return task_id
 
 
-PREFIX = "/api/v2"
-
-backends_available = list(_backends.keys())
-
-
-@pytest.mark.parametrize("backend", backends_available)
-async def test_full_workflow(
-    client,
+async def full_workflow(
     MockCurrentUser,
-    testdata_path,
-    tmp777_path,
+    client,
     project_factory_v2,
-    dataset_factory_v2,
     workflow_factory_v2,
-    backend,
-    override_settings_factory,
-    tmp_path_factory,
-    fractal_tasks_mock,
-    request,
+    dataset_factory_v2,
 ):
-    # Use a session-scoped FRACTAL_TASKS_DIR folder
-    basetemp = tmp_path_factory.getbasetemp()
-    FRACTAL_TASKS_DIR = basetemp / "FRACTAL_TASKS_DIR"
-    selected_new_settings = dict(
-        FRACTAL_RUNNER_BACKEND=backend,
-        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
-        FRACTAL_TASKS_DIR=FRACTAL_TASKS_DIR,
-    )
-    if backend == "slurm":
-        selected_new_settings.update(
-            dict(FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json")
-        )
-    override_settings_factory(**selected_new_settings)
-
-    debug(f"Testing with {backend=}")
-    user_kwargs = {"is_verified": True}
-    if backend == "slurm":
-        request.getfixturevalue("monkey_slurm")
-        request.getfixturevalue("relink_python_interpreter_v2")
-        user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
-        user_kwargs["cache_dir"] = user_cache_dir
-
-    async with MockCurrentUser(user_kwargs=user_kwargs) as user:
+    async with MockCurrentUser(user_kwargs={"is_verified": True}) as user:
         project = await project_factory_v2(user)
         project_id = project.id
         dataset = await dataset_factory_v2(
@@ -197,50 +159,16 @@ async def test_full_workflow(
         assert set(statuses.values()) == {"done"}
 
 
-@pytest.mark.parametrize("backend", backends_available)
-async def test_full_workflow_TaskExecutionError(
-    client,
+async def full_workflow_TaskExecutionError(
     MockCurrentUser,
-    testdata_path,
-    tmp777_path,
+    client,
     project_factory_v2,
-    dataset_factory_v2,
     workflow_factory_v2,
-    backend,
-    request,
-    override_settings_factory,
-    fractal_tasks_mock,
-    tmp_path_factory,
+    dataset_factory_v2,
 ):
-    """ "
-    Run a workflow made of three tasks, two successful tasks and one
-    that raises an error.
-    """
+
     EXPECTED_STATUSES = {}
-
-    # Use a session-scoped FRACTAL_TASKS_DIR folder
-    basetemp = tmp_path_factory.getbasetemp()
-    FRACTAL_TASKS_DIR = basetemp / "FRACTAL_TASKS_DIR"
-    selected_new_settings = dict(
-        FRACTAL_RUNNER_BACKEND=backend,
-        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
-        FRACTAL_TASKS_DIR=FRACTAL_TASKS_DIR,
-    )
-    if backend == "slurm":
-        selected_new_settings.update(
-            dict(FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json")
-        )
-    override_settings_factory(**selected_new_settings)
-
-    debug(f"Testing with {backend=}")
-    user_kwargs = {"is_verified": True}
-    if backend == "slurm":
-        request.getfixturevalue("monkey_slurm")
-        request.getfixturevalue("relink_python_interpreter_v2")
-        user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
-        user_kwargs["cache_dir"] = user_cache_dir
-
-    async with MockCurrentUser(user_kwargs=user_kwargs) as user:
+    async with MockCurrentUser(user_kwargs={"is_verified": True}) as user:
         project = await project_factory_v2(user)
         project_id = project.id
         dataset = await dataset_factory_v2(
@@ -352,191 +280,16 @@ async def test_full_workflow_TaskExecutionError(
         assert statuses == EXPECTED_STATUSES
 
 
-@pytest.mark.parametrize("backend", ["slurm"])
-async def test_failing_workflow_JobExecutionError(
-    client,
+async def non_executable_task_command_local(
     MockCurrentUser,
+    client,
     testdata_path,
-    tmp777_path,
     project_factory_v2,
-    dataset_factory_v2,
     workflow_factory_v2,
-    backend,
-    override_settings_factory,
-    fractal_tasks_mock,
-    tmp_path_factory,
-    monkey_slurm,
-    monkey_slurm_user,
-    relink_python_interpreter_v2,
-    tmp_path,
-):
-    # Use a session-scoped FRACTAL_TASKS_DIR folder
-    basetemp = tmp_path_factory.getbasetemp()
-    FRACTAL_TASKS_DIR = basetemp / "FRACTAL_TASKS_DIR"
-    selected_new_settings = dict(
-        FRACTAL_RUNNER_BACKEND=backend,
-        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
-        FRACTAL_TASKS_DIR=FRACTAL_TASKS_DIR,
-    )
-    if backend == "slurm":
-        selected_new_settings.update(
-            dict(FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json")
-        )
-    override_settings_factory(**selected_new_settings)
-
-    user_cache_dir = str(tmp777_path / "user_cache_dir")
-    user_kwargs = dict(cache_dir=user_cache_dir, is_verified=True)
-    async with MockCurrentUser(user_kwargs=user_kwargs) as user:
-        project = await project_factory_v2(user)
-        project_id = project.id
-        dataset = await dataset_factory_v2(
-            project_id=project_id,
-            name="dataset",
-        )
-        dataset_id = dataset.id
-
-        # Create workflow
-        workflow = await workflow_factory_v2(
-            name="test_wf", project_id=project_id
-        )
-        workflow_id = workflow.id
-
-        # Retrieve relevant task ID
-        res = await client.get(f"{PREFIX}/task/")
-        assert res.status_code == 200
-        task_list = res.json()
-        task_id = _task_name_to_id(
-            task_name="generic_task", task_list=task_list
-        )
-
-        # Add a short task, which will be run successfully
-        res = await client.post(
-            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
-            f"?task_id={task_id}",
-            json=dict(args_non_parallel=dict(sleep_time=0.1)),
-        )
-        assert res.status_code == 201
-        wftask0_id = res.json()["id"]
-
-        # Add a long task, which will be stopped while running
-        res = await client.post(
-            f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
-            f"?task_id={task_id}",
-            json=dict(args_non_parallel=dict(sleep_time=200)),
-        )
-        assert res.status_code == 201
-        wftask1_id = res.json()["id"]
-
-        # NOTE: the client.post call below is blocking, due to the way we are
-        # running tests. For this reason, we call the scancel function from a
-        # from a subprocess.Popen, so that we can make it happen during the
-        # execution.
-        scancel_sleep_time = 10
-        slurm_user = monkey_slurm_user
-
-        tmp_script = (tmp_path / "script.sh").as_posix()
-        debug(tmp_script)
-        with open(tmp_script, "w") as f:
-            f.write(f"sleep {scancel_sleep_time}\n")
-            f.write(
-                (
-                    f"sudo --non-interactive -u {slurm_user} "
-                    f"scancel -u {slurm_user} -v"
-                    "\n"
-                )
-            )
-
-        tmp_stdout = open((tmp_path / "stdout").as_posix(), "w")
-        tmp_stderr = open((tmp_path / "stderr").as_posix(), "w")
-        subprocess.Popen(
-            shlex.split(f"bash {tmp_script}"),
-            stdout=tmp_stdout,
-            stderr=tmp_stderr,
-        )
-
-        # Submit the workflow
-        res = await client.post(
-            f"{PREFIX}/project/{project_id}/job/submit/"
-            f"?{workflow_id=}&{dataset_id=}",
-            json={},
-        )
-        job_data = res.json()
-        debug(job_data)
-        assert res.status_code == 202
-        job_id = job_data["id"]
-        debug(job_id)
-
-        # Query status of the job
-        rs = await client.get(f"{PREFIX}/project/{project_id}/job/{job_id}/")
-        assert rs.status_code == 200
-        job_status_data = rs.json()
-        debug(job_status_data)
-        print(job_status_data["log"])
-        assert job_status_data["status"] == "failed"
-        assert job_status_data["end_timestamp"]
-        assert "id: None" not in job_status_data["log"]
-        assert "JOB ERROR" in job_status_data["log"]
-        assert "CANCELLED" in job_status_data["log"]
-        assert "\\n" not in job_status_data["log"]
-
-        # Test get_workflowtask_status endpoint
-        res = await client.get(
-            (
-                f"{PREFIX}/project/{project_id}/status/?"
-                f"dataset_id={dataset_id}&workflow_id={workflow_id}"
-            )
-        )
-        debug(res.status_code)
-        assert res.status_code == 200
-        statuses = res.json()["status"]
-        debug(statuses)
-        assert statuses == {
-            str(wftask0_id): "done",
-            str(wftask1_id): "failed",
-        }
-
-        tmp_stdout.close()
-        tmp_stderr.close()
-
-
-@pytest.mark.parametrize("backend", backends_available)
-async def test_non_executable_task_command(
-    client,
-    MockCurrentUser,
-    testdata_path,
-    tmp777_path,
+    dataset_factory_v2,
     task_factory_v2,
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    backend,
-    override_settings_factory,
-    request,
 ):
-    """
-    Execute a workflow with a task which has an invalid `command` (i.e. it is
-    not executable).
-    """
-
-    selected_new_settings = dict(
-        FRACTAL_RUNNER_BACKEND=backend,
-        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
-    )
-    if backend == "slurm":
-        selected_new_settings.update(
-            dict(FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json")
-        )
-    override_settings_factory(**selected_new_settings)
-
-    debug(f"Testing with {backend=}")
-    user_kwargs = {"is_verified": True}
-    if backend == "slurm":
-        request.getfixturevalue("monkey_slurm")
-        request.getfixturevalue("relink_python_interpreter_v2")
-        user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
-        user_kwargs["cache_dir"] = user_cache_dir
-
-    async with MockCurrentUser(user_kwargs=user_kwargs) as user:
+    async with MockCurrentUser(user_kwargs={"is_verified": True}) as user:
         # Create task
         task = await task_factory_v2(
             name="invalid-task-command",
@@ -591,55 +344,19 @@ async def test_non_executable_task_command(
         assert "Hint: make sure that it is executable" in job["log"]
 
 
-@pytest.mark.parametrize("backend", backends_available)
-@pytest.mark.parametrize("legacy", [False, True])
-async def test_failing_workflow_UnknownError(
-    backend: str,
-    legacy: bool,
-    client,
+async def failing_workflow_UnknownError(
     MockCurrentUser,
-    testdata_path,
-    tmp777_path,
+    client,
+    monkeypatch,
+    legacy,
     project_factory_v2,
     dataset_factory_v2,
     workflow_factory_v2,
-    task_factory_v2,
     task_factory,
-    request,
-    override_settings_factory,
-    monkeypatch,
-    fractal_tasks_mock,  # see test docstring
+    task_factory_v2,
 ):
-    """
-    Submit a workflow that fails with some unrecognized exception (due
-    to a monkey-patched function in the runner).
-
-    Note that the `fractal_tasks_mock` fixture is not needed here, but if we
-    remove we hit another event-loop-related issue
-    (https://github.com/fractal-analytics-platform/fractal-server/issues/1377).
-    For the moment, we stick with this redundant side-effect.
-    """
     EXPECTED_STATUSES = {}
-
-    selected_new_settings = dict(
-        FRACTAL_RUNNER_BACKEND=backend,
-        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / f"artifacts-{backend}",
-    )
-    if backend == "slurm":
-        selected_new_settings.update(
-            dict(FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json")
-        )
-    override_settings_factory(**selected_new_settings)
-
-    debug(f"Testing with {backend=}")
-    user_kwargs = {"is_verified": True}
-    if backend == "slurm":
-        request.getfixturevalue("monkey_slurm")
-        request.getfixturevalue("relink_python_interpreter_v2")
-        user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
-        user_kwargs["cache_dir"] = user_cache_dir
-
-    async with MockCurrentUser(user_kwargs=user_kwargs) as user:
+    async with MockCurrentUser(user_kwargs={"is_verified": True}) as user:
         project = await project_factory_v2(user)
         project_id = project.id
         dataset = await dataset_factory_v2(
@@ -726,6 +443,8 @@ async def test_failing_workflow_UnknownError(
         debug(statuses)
         assert statuses == EXPECTED_STATUSES
 
+
+# SKIPPED TESTS
 
 # async def test_non_python_task(
 #     client,
@@ -878,8 +597,8 @@ async def test_failing_workflow_UnknownError(
 #         )
 #         for task in (task0, task1, task2, task3):
 #             res = await client.post(
-#                 f"{PREFIX}/project/{project_id}/workflow/{workflow.id}/wftask/"
-#                 f"?task_id={task.id}",
+#                 f"{PREFIX}/project/{project_id}/workflow/"
+#                 f"{workflow.id}/wftask/?task_id={task.id}",
 #                 json=dict(),
 #             )
 #             assert res.status_code == 201
