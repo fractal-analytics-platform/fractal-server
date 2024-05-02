@@ -2,15 +2,14 @@ import shlex
 import subprocess
 
 import pytest
+from common_functions import _task_name_to_id
+from common_functions import failing_workflow_UnknownError
+from common_functions import full_workflow
+from common_functions import full_workflow_TaskExecutionError
+from common_functions import non_executable_task_command
+from common_functions import non_python_task
+from common_functions import PREFIX
 from devtools import debug
-
-from .common import _task_name_to_id
-from .common import failing_workflow_UnknownError
-from .common import full_workflow
-from .common import full_workflow_TaskExecutionError
-from .common import non_executable_task_command
-from .common import non_python_task
-from .common import PREFIX
 
 
 FRACTAL_RUNNER_BACKEND = "slurm"
