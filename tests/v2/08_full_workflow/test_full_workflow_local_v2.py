@@ -1,9 +1,9 @@
 import pytest
-from common.common import failing_workflow_UnknownError
-from common.common import full_workflow
-from common.common import full_workflow_TaskExecutionError
-from common.common import non_executable_task_command
-from common.common import non_python_task
+from common import failing_workflow_UnknownError
+from common import full_workflow
+from common import full_workflow_TaskExecutionError
+from common import non_executable_task_command
+from common import non_python_task
 
 FRACTAL_RUNNER_BACKEND = "local"
 
