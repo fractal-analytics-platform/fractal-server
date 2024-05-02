@@ -1,9 +1,15 @@
 import os
+from glob import glob
 from pathlib import Path
 from typing import Any
 from typing import Optional
 
 from devtools import debug
+
+from fractal_server.app.runner.filenames import FILTERS_FILENAME
+from fractal_server.app.runner.filenames import HISTORY_FILENAME
+from fractal_server.app.runner.filenames import IMAGES_FILENAME
+from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
 
 PREFIX = "/api/v2"
 
@@ -469,227 +475,88 @@ async def failing_workflow_UnknownError(
         assert statuses == EXPECTED_STATUSES
 
 
-# SKIPPED TESTS
+async def non_python_task(
+    client,
+    MockCurrentUser,
+    project_factory_v2,
+    dataset_factory_v2,
+    workflow_factory_v2,
+    task_factory_v2,
+    testdata_path,
+    tmp_path,
+):
 
-# async def test_non_python_task(
-#     client,
-#     MockCurrentUser,
-#     project_factory,
-#     dataset_factory,
-#     workflow_factory,
-#     resource_factory,
-#     task_factory,
-#     testdata_path,
-#     tmp_path,
-# ):
-#     """
-#     Run a full workflow with a single bash task, which simply writes
-#     something to stderr and stdout
-#     """
-#     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
-#         # Create project
-#         project = await project_factory(user)
-#         project_id = project.id
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
+        # Create project
+        project = await project_factory_v2(user)
+        project_id = project.id
 
-#         # Create workflow
-#         workflow = await workflow_factory(
-#             name="test_wf", project_id=project_id
-#         )
+        # Create workflow
+        workflow = await workflow_factory_v2(
+            name="test_wf", project_id=project_id
+        )
 
-#         # Create task
-#         task = await task_factory(
-#             name="non-python",
-#             source="custom-task",
-#             command=f"bash {str(testdata_path)}/non_python_task_issue189.sh",
-#             input_type="zarr",
-#             output_type="zarr",
-#         )
+        # Create task
+        task = await task_factory_v2(
+            name="non-python",
+            source="custom-task",
+            type="non_parallel",
+            command_non_parallel=(
+                f"bash {str(testdata_path)}/non_python_task_issue1377.sh"
+            ),
+        )
 
-#         # Add task to workflow
-#         res = await client.post(
-#             f"{PREFIX}/project/{project_id}/workflow/{workflow.id}/wftask/"
-#             f"?task_id={task.id}",
-#             json=dict(),
-#         )
-#         assert res.status_code == 201
+        # Add task to workflow
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/workflow/{workflow.id}/wftask/"
+            f"?task_id={task.id}",
+            json=dict(),
+        )
+        assert res.status_code == 201
 
-#         # Create datasets
-#         dataset = await dataset_factory(
-#             project_id=project_id, name="dataset", type="zarr",
-#         )
-#         await resource_factory(path=str(tmp_path / "data"), dataset=dataset)
+        # Create datasets
+        dataset = await dataset_factory_v2(
+            project_id=project_id, name="dataset"
+        )
 
-#         # Submit workflow
-#         res = await client.post(
-#             f"{PREFIX}/project/{project_id}/workflow/{workflow.id}/apply/"
-#             f"?input_dataset_id={dataset.id}"
-#             f"&output_dataset_id={dataset.id}",
-#             json={},
-#         )
-#         job_data = res.json()
-#         debug(job_data)
-#         assert res.status_code == 202
+        # Submit workflow
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/job/submit/"
+            f"?workflow_id={workflow.id}&dataset_id={dataset.id}",
+            json={},
+        )
+        job_data = res.json()
+        debug(job_data)
+        assert res.status_code == 202
 
-#         # Check that the workflow execution is complete
-#         res = await client.get(
-#             f"{PREFIX}/project/{project_id}/job/{job_data['id']}/"
-#         )
-#         assert res.status_code == 200
-#         job_status_data = res.json()
-#         debug(job_status_data)
-#         assert job_status_data["status"] == "done"
-#         debug(job_status_data["end_timestamp"])
-#         assert job_status_data["end_timestamp"]
+        # Check that the workflow execution is complete
+        res = await client.get(
+            f"{PREFIX}/project/{project_id}/job/{job_data['id']}/"
+        )
+        assert res.status_code == 200
+        job_status_data = res.json()
+        debug(job_status_data)
+        assert job_status_data["status"] == "done"
+        debug(job_status_data["end_timestamp"])
+        assert job_status_data["end_timestamp"]
 
-#         # Check that the expected files are present
-#         working_dir = job_status_data["working_dir"]
-#         glob_list = [Path(x).name for x in glob.glob(f"{working_dir}/*")]
-#         must_exist = [
-#             "0.args.json",
-#             "0.err",
-#             "0.metadiff.json",
-#             "0.out",
-#             WORKFLOW_LOG_FILENAME,
-#         ]
-#         for f in must_exist:
-#             assert f in glob_list
+        # Check that the expected files are present
+        working_dir = job_status_data["working_dir"]
+        glob_list = [Path(x).name for x in glob(f"{working_dir}/*")]
+        must_exist = [
+            "0.log",
+            "0.args.json",
+            IMAGES_FILENAME,
+            HISTORY_FILENAME,
+            FILTERS_FILENAME,
+            WORKFLOW_LOG_FILENAME,
+        ]
 
-#         # Check that stderr and stdout are as expected
-#         with open(f"{working_dir}/0.out", "r") as f:
-#             out = f.read()
-#         assert "This goes to standard output" in out
-#         with open(f"{working_dir}/0.err", "r") as f:
-#             err = f.read()
-#         assert "This goes to standard error" in err
+        for f in must_exist:
+            assert f in glob_list
 
-
-# async def test_metadiff(
-#     client,
-#     MockCurrentUser,
-#     project_factory,
-#     dataset_factory,
-#     workflow_factory,
-#     resource_factory,
-#     task_factory,
-#     testdata_path,
-#     tmp_path,
-# ):
-#     """
-#     Run task with command which does not produce metadiff files, or which
-#     produces a single `null` value rather than a dictionary. See issues 854
-#     and 878.
-#     """
-#     task_file = str(testdata_path / "echo_sleep_task.sh")
-#     task_file2 = str(testdata_path / "non_python_task_issue878.sh")
-#     command = f"bash {task_file}"
-#     command_null = f"bash {task_file2}"
-#     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
-#         task0 = await task_factory(
-#             name="task0",
-#             source="task0",
-#             command=command,
-#             input_type="Any",
-#             output_type="Any",
-#         )
-#         task1 = await task_factory(
-#             name="task1",
-#             source="task1",
-#             command=command,
-#             input_type="Any",
-#             output_type="Any",
-#             meta=dict(parallelization_level="index"),
-#         )
-#         task2 = await task_factory(
-#             name="task2",
-#             source="task2",
-#             command=command_null,
-#             input_type="Any",
-#             output_type="Any",
-#         )
-#         task3 = await task_factory(
-#             name="task3",
-#             source="task3",
-#             command=command_null,
-#             input_type="Any",
-#             output_type="Any",
-#             meta=dict(parallelization_level="index"),
-#         )
-
-#         project = await project_factory(user)
-#         project_id = project.id
-#         workflow = await workflow_factory(
-#             name="test_wf", project_id=project_id
-#         )
-#         for task in (task0, task1, task2, task3):
-#             res = await client.post(
-#                 f"{PREFIX}/project/{project_id}/workflow/"
-#                 f"{workflow.id}/wftask/?task_id={task.id}",
-#                 json=dict(),
-#             )
-#             assert res.status_code == 201
-
-#         dataset = await dataset_factory(
-#             project_id=project_id,
-#             name="dataset",
-#             type="zarr",
-#             meta=dict(index=["A", "B"]),
-#         )
-#         await resource_factory(path=str(tmp_path / "data"), dataset=dataset)
-#         # Submit workflow
-#         res = await client.post(
-#             f"{PREFIX}/project/{project_id}/workflow/{workflow.id}/apply/"
-#             f"?input_dataset_id={dataset.id}"
-#             f"&output_dataset_id={dataset.id}",
-#             json={},
-#         )
-#         job_data = res.json()
-#         debug(job_data)
-#         assert res.status_code == 202
-
-#         # Check that the workflow execution is complete
-#         res = await client.get(
-#             f"{PREFIX}/project/{project_id}/job/{job_data['id']}/"
-#         )
-#         assert res.status_code == 200
-#         job_status_data = res.json()
-#         debug(job_status_data)
-#         assert job_status_data["status"] == "done"
-#         debug(job_status_data["end_timestamp"])
-#         assert job_status_data["end_timestamp"]
-
-#         # Check that the expected files are present
-#         working_dir = job_status_data["working_dir"]
-#         glob_list = [Path(x).name for x in glob.glob(f"{working_dir}/*")]
-#         debug(glob_list)
-#         must_exist = [
-#             "0.args.json",
-#             "0.err",
-#             "0.out",
-#             "1_par_A.args.json",
-#             "1_par_A.err",
-#             "1_par_A.out",
-#             "1_par_B.args.json",
-#             "1_par_B.err",
-#             "1_par_B.out",
-#             "2.args.json",
-#             "2.err",
-#             "2.out",
-#             "2.metadiff.json",
-#             "3_par_A.args.json",
-#             "3_par_A.err",
-#             "3_par_A.out",
-#             "3_par_B.args.json",
-#             "3_par_B.err",
-#             "3_par_B.out",
-#             "3_par_A.metadiff.json",
-#             "3_par_B.metadiff.json",
-#             WORKFLOW_LOG_FILENAME,
-#         ]
-#         for f in must_exist:
-#             assert f in glob_list
-
-#         # Check that workflow.log includes expected warnings
-#         with open(f"{working_dir}/{WORKFLOW_LOG_FILENAME}", "r") as f:
-#             logs = f.read()
-#         print(logs)
-#         assert "Skip collection of updated metadata" in logs
+        # Check that stderr and stdout are as expected
+        with open(f"{working_dir}/0.log", "r") as f:
+            log = f.read()
+        assert "This goes to standard output" in log
+        assert "This goes to standard error" in log
