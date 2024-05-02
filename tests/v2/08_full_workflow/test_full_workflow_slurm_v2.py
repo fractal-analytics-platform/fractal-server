@@ -298,7 +298,7 @@ async def test_failing_workflow_UnknownError_slurm(
     )
 
 
-async def test_non_python_task_local(
+async def test_non_python_task_slurm(
     client,
     MockCurrentUser,
     project_factory_v2,
