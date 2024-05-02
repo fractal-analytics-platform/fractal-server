@@ -91,8 +91,8 @@ async def test_failing_workflow_JobExecutionError(
     workflow_factory_v2,
     override_settings_factory,
     tmp_path_factory,
-    monkey_slurm,
     monkey_slurm_user,
+    monkey_slurm,
     relink_python_interpreter_v2,
     tmp_path,
 ):
@@ -310,6 +310,7 @@ async def test_non_python_task_slurm(
     override_settings_factory,
     tmp777_path,
     relink_python_interpreter_v2,
+    monkey_slurm,
 ):
     """
     Run a full workflow with a single bash task, which simply writes
