@@ -2,7 +2,7 @@ import pytest
 from common.common import failing_workflow_UnknownError
 from common.common import full_workflow
 from common.common import full_workflow_TaskExecutionError
-from common.common import non_executable_task_command_local
+from common.common import non_executable_task_command
 
 
 async def test_full_workflow_local(
@@ -81,7 +81,7 @@ async def test_non_executable_task_command_local(
         FRACTAL_RUNNER_BACKEND="local",
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts-local",
     )
-    await non_executable_task_command_local(
+    await non_executable_task_command(
         MockCurrentUser=MockCurrentUser,
         client=client,
         testdata_path=testdata_path,

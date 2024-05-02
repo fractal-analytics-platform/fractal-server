@@ -286,7 +286,7 @@ async def full_workflow_TaskExecutionError(
         assert statuses == EXPECTED_STATUSES
 
 
-async def non_executable_task_command_local(
+async def non_executable_task_command(
     MockCurrentUser,
     client,
     testdata_path,
