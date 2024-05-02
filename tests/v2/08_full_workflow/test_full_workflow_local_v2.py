@@ -4,6 +4,8 @@ from common.common import full_workflow
 from common.common import full_workflow_TaskExecutionError
 from common.common import non_executable_task_command
 
+FRACTAL_RUNNER_BACKEND = "local"
+
 
 async def test_full_workflow_local(
     client,
@@ -18,7 +20,7 @@ async def test_full_workflow_local(
 ):
     # Use a session-scoped FRACTAL_TASKS_DIR folder
     override_settings_factory(
-        FRACTAL_RUNNER_BACKEND="local",
+        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
         FRACTAL_TASKS_DIR=tmp_path_factory.getbasetemp() / "FRACTAL_TASKS_DIR",
     )
@@ -49,7 +51,7 @@ async def test_full_workflow_TaskExecutionError(
 
     # Use a session-scoped FRACTAL_TASKS_DIR folder
     override_settings_factory(
-        FRACTAL_RUNNER_BACKEND="local",
+        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
         FRACTAL_TASKS_DIR=tmp_path_factory.getbasetemp() / "FRACTAL_TASKS_DIR",
     )
@@ -78,7 +80,7 @@ async def test_non_executable_task_command_local(
     not executable).
     """
     override_settings_factory(
-        FRACTAL_RUNNER_BACKEND="local",
+        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
     )
     await non_executable_task_command(
@@ -112,7 +114,7 @@ async def test_failing_workflow_UnknownError_local(
     """
 
     override_settings_factory(
-        FRACTAL_RUNNER_BACKEND="local",
+        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
     )
     await failing_workflow_UnknownError(

@@ -10,6 +10,8 @@ from common.common import non_executable_task_command
 from common.common import PREFIX
 from devtools import debug
 
+FRACTAL_RUNNER_BACKEND = "slurm"
+
 
 async def test_full_workflow_slurm(
     client,
@@ -26,7 +28,7 @@ async def test_full_workflow_slurm(
 ):
     # Use a session-scoped FRACTAL_TASKS_DIR folder
     override_settings_factory(
-        FRACTAL_RUNNER_BACKEND="slurm",
+        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
         FRACTAL_TASKS_DIR=tmp_path_factory.getbasetemp() / "FRACTAL_TASKS_DIR",
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
@@ -61,7 +63,7 @@ async def test_full_workflow_TaskExecutionError_slurm(
     """
     # Use a session-scoped FRACTAL_TASKS_DIR folder
     override_settings_factory(
-        FRACTAL_RUNNER_BACKEND="slurm",
+        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
         FRACTAL_TASKS_DIR=tmp_path_factory.getbasetemp() / "FRACTAL_TASKS_DIR",
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
@@ -94,7 +96,7 @@ async def test_failing_workflow_JobExecutionError(
 ):
     # Use a session-scoped FRACTAL_TASKS_DIR folder
     override_settings_factory(
-        FRACTAL_RUNNER_BACKEND="slurm",
+        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
         FRACTAL_TASKS_DIR=tmp_path_factory.getbasetemp() / "FRACTAL_TASKS_DIR",
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
@@ -234,7 +236,7 @@ async def test_non_executable_task_command_slurm(
     """
 
     override_settings_factory(
-        FRACTAL_RUNNER_BACKEND="slurm",
+        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
     )
@@ -275,7 +277,7 @@ async def test_failing_workflow_UnknownError_slurm(
     """
 
     override_settings_factory(
-        FRACTAL_RUNNER_BACKEND="slurm",
+        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
     )
