@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from typing import Any
+from typing import Optional
 
 from devtools import debug
 
@@ -20,8 +21,11 @@ async def full_workflow(
     project_factory_v2,
     workflow_factory_v2,
     dataset_factory_v2,
-    user_kwargs: dict = {},
+    user_kwargs: Optional[dict] = None,
 ):
+    if user_kwargs is None:
+        user_kwargs = {}
+
     async with MockCurrentUser(
         user_kwargs={"is_verified": True, **user_kwargs}
     ) as user:
@@ -168,8 +172,11 @@ async def full_workflow_TaskExecutionError(
     project_factory_v2,
     workflow_factory_v2,
     dataset_factory_v2,
-    user_kwargs: dict = {},
+    user_kwargs: Optional[dict] = None,
 ):
+
+    if user_kwargs is None:
+        user_kwargs = {}
 
     EXPECTED_STATUSES = {}
     async with MockCurrentUser(
@@ -294,8 +301,11 @@ async def non_executable_task_command(
     workflow_factory_v2,
     dataset_factory_v2,
     task_factory_v2,
-    user_kwargs: dict = {},
+    user_kwargs: Optional[dict] = None,
 ):
+    if user_kwargs is None:
+        user_kwargs = {}
+
     async with MockCurrentUser(
         user_kwargs={"is_verified": True, **user_kwargs}
     ) as user:
@@ -363,8 +373,11 @@ async def failing_workflow_UnknownError(
     workflow_factory_v2,
     task_factory,
     task_factory_v2,
-    user_kwargs: dict = {},
+    user_kwargs: Optional[dict] = None,
 ):
+    if user_kwargs is None:
+        user_kwargs = {}
+
     EXPECTED_STATUSES = {}
     async with MockCurrentUser(
         user_kwargs={"is_verified": True, **user_kwargs}
