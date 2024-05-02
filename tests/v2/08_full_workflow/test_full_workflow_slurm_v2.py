@@ -1,9 +1,12 @@
 import shlex
 import subprocess
 
+import pytest
 from common.common import _task_name_to_id
+from common.common import failing_workflow_UnknownError
 from common.common import full_workflow
 from common.common import full_workflow_TaskExecutionError
+from common.common import non_executable_task_command
 from common.common import PREFIX
 from devtools import debug
 
@@ -73,6 +76,7 @@ async def test_full_workflow_TaskExecutionError_slurm(
     )
 
 
+# only slurm
 async def test_failing_workflow_JobExecutionError(
     client,
     MockCurrentUser,
@@ -209,3 +213,82 @@ async def test_failing_workflow_JobExecutionError(
 
         tmp_stdout.close()
         tmp_stderr.close()
+
+
+async def test_non_executable_task_command_slurm(
+    client,
+    MockCurrentUser,
+    testdata_path,
+    tmp777_path,
+    task_factory_v2,
+    project_factory_v2,
+    dataset_factory_v2,
+    workflow_factory_v2,
+    override_settings_factory,
+    relink_python_interpreter_v2,
+    monkey_slurm,
+):
+    """
+    Execute a workflow with a task which has an invalid `command` (i.e. it is
+    not executable).
+    """
+
+    override_settings_factory(
+        FRACTAL_RUNNER_BACKEND="slurm",
+        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts-slurm",
+        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
+    )
+
+    await non_executable_task_command(
+        MockCurrentUser=MockCurrentUser,
+        user_kwargs={"cache_dir": str(tmp777_path / "user_cache_dir-slurm")},
+        client=client,
+        testdata_path=testdata_path,
+        project_factory_v2=project_factory_v2,
+        workflow_factory_v2=workflow_factory_v2,
+        dataset_factory_v2=dataset_factory_v2,
+        task_factory_v2=task_factory_v2,
+    )
+
+
+@pytest.mark.parametrize("legacy", [False, True])
+async def test_failing_workflow_UnknownError_slurm(
+    legacy: bool,
+    client,
+    MockCurrentUser,
+    testdata_path,
+    tmp777_path,
+    project_factory_v2,
+    dataset_factory_v2,
+    workflow_factory_v2,
+    task_factory_v2,
+    task_factory,
+    request,
+    override_settings_factory,
+    monkeypatch,
+    monkey_slurm,
+    relink_python_interpreter_v2,
+):
+    """
+    Submit a workflow that fails with some unrecognized exception (due
+    to a monkey-patched function in the runner).
+    """
+
+    override_settings_factory(
+        FRACTAL_RUNNER_BACKEND="slurm",
+        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts-slurm",
+        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
+    )
+
+    await failing_workflow_UnknownError(
+        MockCurrentUser=MockCurrentUser,
+        user_kwargs={"cache_dir": str(tmp777_path / "user_cache_dir-slurm")},
+        client=client,
+        monkeypatch=monkeypatch,
+        legacy=legacy,
+        project_factory_v2=project_factory_v2,
+        dataset_factory_v2=dataset_factory_v2,
+        workflow_factory_v2=workflow_factory_v2,
+        task_factory=task_factory,
+        task_factory_v2=task_factory_v2,
+    )
