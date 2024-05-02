@@ -7,8 +7,10 @@ from common.common import failing_workflow_UnknownError
 from common.common import full_workflow
 from common.common import full_workflow_TaskExecutionError
 from common.common import non_executable_task_command
+from common.common import non_python_task
 from common.common import PREFIX
 from devtools import debug
+
 
 FRACTAL_RUNNER_BACKEND = "slurm"
 
@@ -293,4 +295,32 @@ async def test_failing_workflow_UnknownError_slurm(
         workflow_factory_v2=workflow_factory_v2,
         task_factory=task_factory,
         task_factory_v2=task_factory_v2,
+    )
+
+
+async def test_non_python_task_local(
+    client,
+    MockCurrentUser,
+    project_factory_v2,
+    dataset_factory_v2,
+    workflow_factory_v2,
+    task_factory_v2,
+    testdata_path,
+    tmp_path,
+    override_settings_factory,
+):
+    """
+    Run a full workflow with a single bash task, which simply writes
+    something to stderr and stdout
+    """
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
+    await non_python_task(
+        client=client,
+        MockCurrentUser=MockCurrentUser,
+        project_factory_v2=project_factory_v2,
+        dataset_factory_v2=dataset_factory_v2,
+        workflow_factory_v2=workflow_factory_v2,
+        task_factory_v2=task_factory_v2,
+        testdata_path=testdata_path,
+        tmp_path=tmp_path,
     )
