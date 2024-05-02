@@ -38,7 +38,7 @@ async def test_full_workflow_slurm(
 
     await full_workflow(
         MockCurrentUser=MockCurrentUser,
-        user_kwargs={"cache_dir": str(tmp777_path / "user_cache_dir-slurm")},
+        user_kwargs={"cache_dir": str(tmp777_path / "user_cache_dir")},
         project_factory_v2=project_factory_v2,
         dataset_factory_v2=dataset_factory_v2,
         workflow_factory_v2=workflow_factory_v2,
@@ -72,7 +72,7 @@ async def test_full_workflow_TaskExecutionError_slurm(
     )
     await full_workflow_TaskExecutionError(
         MockCurrentUser=MockCurrentUser,
-        user_kwargs={"cache_dir": str(tmp777_path / "user_cache_dir-slurm")},
+        user_kwargs={"cache_dir": str(tmp777_path / "user_cache_dir")},
         project_factory_v2=project_factory_v2,
         dataset_factory_v2=dataset_factory_v2,
         workflow_factory_v2=workflow_factory_v2,
@@ -245,7 +245,7 @@ async def test_non_executable_task_command_slurm(
 
     await non_executable_task_command(
         MockCurrentUser=MockCurrentUser,
-        user_kwargs={"cache_dir": str(tmp777_path / "user_cache_dir-slurm")},
+        user_kwargs={"cache_dir": str(tmp777_path / "user_cache_dir")},
         client=client,
         testdata_path=testdata_path,
         project_factory_v2=project_factory_v2,
@@ -286,7 +286,7 @@ async def test_failing_workflow_UnknownError_slurm(
 
     await failing_workflow_UnknownError(
         MockCurrentUser=MockCurrentUser,
-        user_kwargs={"cache_dir": str(tmp777_path / "user_cache_dir-slurm")},
+        user_kwargs={"cache_dir": str(tmp777_path / "user_cache_dir")},
         client=client,
         monkeypatch=monkeypatch,
         legacy=legacy,
@@ -308,6 +308,7 @@ async def test_non_python_task_local(
     testdata_path,
     tmp_path,
     override_settings_factory,
+    tmp777_path,
 ):
     """
     Run a full workflow with a single bash task, which simply writes
@@ -317,6 +318,7 @@ async def test_non_python_task_local(
     await non_python_task(
         client=client,
         MockCurrentUser=MockCurrentUser,
+        user_kwargs={"cache_dir": str(tmp777_path / "user_cache_dir")},
         project_factory_v2=project_factory_v2,
         dataset_factory_v2=dataset_factory_v2,
         workflow_factory_v2=workflow_factory_v2,
