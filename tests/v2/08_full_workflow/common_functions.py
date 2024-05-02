@@ -484,7 +484,11 @@ async def non_python_task(
     task_factory_v2,
     testdata_path,
     tmp_path,
+    user_kwargs: Optional[dict] = None,
 ):
+
+    if user_kwargs is None:
+        user_kwargs = {}
 
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
         # Create project
