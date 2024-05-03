@@ -43,7 +43,8 @@ def fix_db():
                     job_v1.input_dataset_dump.pop(KEY)
                 if KEY in job_v1.output_dataset_dump.keys():
                     job_v1.output_dataset_dump.pop(KEY)
-            flag_modified(job_v1)
+            flag_modified(job_v1, "input_dataset_dump")
+            flag_modified(job_v1, "output_dataset_dump")
             db.add(job_v1)
             db.commit()
             db.refresh(job_v1)
@@ -64,7 +65,7 @@ def fix_db():
                 )
                 if KEY in job_v2.dataset_dump.keys():
                     job_v2.dataset_dump.pop(KEY)
-            flag_modified(job_v2)
+            flag_modified(job_v2, "dataset_dump")
             db.add(job_v2)
             db.commit()
             db.refresh(job_v2)
