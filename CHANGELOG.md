@@ -8,6 +8,8 @@
 
 * Database:
     * Create fix-db script to remove `images` and `history` from dataset dumps in V1/V2 jobs (\#1456).
+* Tests:
+    * Split `test_full_workflow_v2.py` into local/slurm files (\#1454).
 
 
 # 2.0.2
