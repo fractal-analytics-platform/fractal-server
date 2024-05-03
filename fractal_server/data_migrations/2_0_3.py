@@ -17,7 +17,7 @@ def fix_db():
     logger.warning("START execution of fix_db function")
 
     # Check that this module matches with the current version
-    module_version = parse("2.0.2")
+    module_version = parse("2.0.3")
     current_version = parse(fractal_server.__VERSION__)
     if (
         current_version.major != module_version.major
