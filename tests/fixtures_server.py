@@ -11,6 +11,7 @@ import pytest
 from asgi_lifespan import LifespanManager
 from devtools import debug
 from fastapi import FastAPI
+from fastapi import Request
 from httpx import AsyncClient
 from sqlalchemy.exc import IntegrityError
 
@@ -18,6 +19,7 @@ from fractal_server.app.db import get_async_db
 from fractal_server.app.security import _create_first_user
 from fractal_server.config import get_settings
 from fractal_server.config import Settings
+from fractal_server.main import internal_server_error_middleware
 from fractal_server.syringe import Inject
 from tests.fixtures_slurm import HAS_LOCAL_SBATCH
 
@@ -195,6 +197,11 @@ async def db_sync(db_create_tables):
 @pytest.fixture
 async def app(override_settings) -> AsyncGenerator[FastAPI, Any]:
     app = FastAPI()
+
+    @app.middleware("http")
+    async def middleware_wrapper(request: Request, call_next):
+        return await internal_server_error_middleware(request, call_next)
+
     yield app
 
 

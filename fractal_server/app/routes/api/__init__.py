@@ -17,3 +17,8 @@ async def alive():
         alive=True,
         version=settings.PROJECT_VERSION,
     )
+
+
+@router_api.get("/bug/")
+async def bug():
+    raise Exception("BUG!")
