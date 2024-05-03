@@ -2,7 +2,19 @@
 
 # Unreleased
 
+# 2.0.3
+
+> WARNING: This update requires running a fix-db script, via `fractalctl update-db-data`.
+
+* Database:
+    * Create fix-db script to remove `images` and `history` from dataset dumps in V1/V2 jobs (\#1456).
+
+
 # 2.0.2
+
+> WARNING: Running this version on a pre-existing database (where the `jobsv2`
+> table has some entries) is broken. Running this version on a freshly-created
+> database works as expected.
 
 * API:
     * Fix bug in status endpoint (\#1449).
