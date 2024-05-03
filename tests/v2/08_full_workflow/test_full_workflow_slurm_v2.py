@@ -310,6 +310,7 @@ async def test_non_python_task_slurm(
     override_settings_factory,
     tmp777_path,
     tmp_path_factory,
+    monkey_slurm,
 ):
     """
     Run a full workflow with a single bash task, which simply writes
