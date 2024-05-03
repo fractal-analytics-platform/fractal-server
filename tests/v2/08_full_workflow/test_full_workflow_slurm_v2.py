@@ -309,14 +309,18 @@ async def test_non_python_task_slurm(
     tmp_path,
     override_settings_factory,
     tmp777_path,
-    relink_python_interpreter_v2,
-    monkey_slurm,
+    tmp_path_factory,
 ):
     """
     Run a full workflow with a single bash task, which simply writes
     something to stderr and stdout
     """
-    override_settings_factory(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
+    override_settings_factory(
+        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
+        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
+        FRACTAL_TASKS_DIR=tmp_path_factory.getbasetemp() / "FRACTAL_TASKS_DIR",
+        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
+    )
     await non_python_task(
         client=client,
         MockCurrentUser=MockCurrentUser,
