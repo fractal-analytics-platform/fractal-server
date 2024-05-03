@@ -7,7 +7,6 @@ from common_functions import failing_workflow_UnknownError
 from common_functions import full_workflow
 from common_functions import full_workflow_TaskExecutionError
 from common_functions import non_executable_task_command
-from common_functions import non_python_task
 from common_functions import PREFIX
 from devtools import debug
 
@@ -80,7 +79,7 @@ async def test_full_workflow_TaskExecutionError_slurm(
     )
 
 
-# only slurm
+# Tested with 'slurm' backend only.
 async def test_failing_workflow_JobExecutionError(
     client,
     MockCurrentUser,
@@ -295,42 +294,4 @@ async def test_failing_workflow_UnknownError_slurm(
         workflow_factory_v2=workflow_factory_v2,
         task_factory=task_factory,
         task_factory_v2=task_factory_v2,
-    )
-
-
-async def test_non_python_task_slurm(
-    client,
-    MockCurrentUser,
-    project_factory_v2,
-    dataset_factory_v2,
-    workflow_factory_v2,
-    task_factory_v2,
-    testdata_path,
-    tmp_path,
-    override_settings_factory,
-    tmp777_path,
-    tmp_path_factory,
-    monkey_slurm,
-    relink_python_interpreter_v2,
-):
-    """
-    Run a full workflow with a single bash task, which simply writes
-    something to stderr and stdout
-    """
-    override_settings_factory(
-        FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
-        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
-        FRACTAL_TASKS_DIR=tmp_path_factory.getbasetemp() / "FRACTAL_TASKS_DIR",
-        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
-    )
-    await non_python_task(
-        client=client,
-        MockCurrentUser=MockCurrentUser,
-        user_kwargs={"cache_dir": str(tmp777_path / "user_cache_dir-slurm")},
-        project_factory_v2=project_factory_v2,
-        dataset_factory_v2=dataset_factory_v2,
-        workflow_factory_v2=workflow_factory_v2,
-        task_factory_v2=task_factory_v2,
-        testdata_path=testdata_path,
-        tmp_path=tmp_path,
     )

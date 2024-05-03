@@ -9,7 +9,6 @@ on:
 jobs:
 
   tests_v1:
-    if: false
     name: "V1 - Python ${{ matrix.python-version }} - ${{ matrix.db }}"
     runs-on: ubuntu-22.04
     timeout-minutes: 30
@@ -124,7 +123,7 @@ jobs:
           poetry install --with dev --without docs --no-interaction -E gunicorn $DB
 
       - name: Test with pytest
-        run: poetry run  pytest tests/v2/08_full_workflow
+        run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest tests/v2 tests/no_version --ignore tests/v1
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
@@ -134,7 +133,6 @@ jobs:
 
 
   coverage:
-    if: false
     name: Coverage
     runs-on: ubuntu-22.04
     needs: [tests_v1, tests_v2]
