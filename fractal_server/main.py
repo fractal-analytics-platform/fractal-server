@@ -120,7 +120,7 @@ async def on_startup() -> None:
 
 
 @app.middleware("http")
-async def return_JSON_if_500(request: Request, call_next):
+async def internal_server_error_middleware(request: Request, call_next):
     try:
         response = await call_next(request)
     except Exception as e:
