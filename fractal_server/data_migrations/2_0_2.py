@@ -50,7 +50,8 @@ def fix_db():
             db.refresh(job_v1)
             db.expunge(job_v1)
             logger.warning(
-                f"Now validating obv2.id={job_v1.id} with ApplyWorkflowReadV1."
+                f"Now validating applyworkflow.id={job_v1.id} with "
+                "ApplyWorkflowReadV1."
             )
             ApplyWorkflowReadV1(**job_v1.model_dump())
 
@@ -71,7 +72,7 @@ def fix_db():
             db.refresh(job_v2)
             db.expunge(job_v2)
             logger.warning(
-                f"Now validating obv2.id={job_v2.id} with JobReadV2."
+                f"Now validating jobv2.id={job_v2.id} with JobReadV2."
             )
             JobReadV2(**job_v2.model_dump())
 
