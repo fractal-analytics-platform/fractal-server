@@ -311,6 +311,7 @@ async def test_non_python_task_slurm(
     tmp777_path,
     tmp_path_factory,
     monkey_slurm,
+    relink_python_interpreter_v2,
 ):
     """
     Run a full workflow with a single bash task, which simply writes
