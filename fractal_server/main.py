@@ -16,6 +16,8 @@
 This module sets up the FastAPI application that serves the Fractal Server.
 """
 from fastapi import FastAPI
+from fastapi import Request
+from fastapi.responses import JSONResponse
 
 from .app.security import _create_first_user
 from .config import get_settings
@@ -115,3 +117,18 @@ async def on_startup() -> None:
         is_verified=True,
     )
     await __on_startup()
+
+
+@app.middleware("http")
+async def return_JSON_if_500(request: Request, call_next):
+    try:
+        response = await call_next(request)
+    except Exception as e:
+        response = JSONResponse(
+            status_code=500,
+            content={
+                "detail": "Internal server error occurred",
+                "original_error": str(e),
+            },
+        )
+    return response
