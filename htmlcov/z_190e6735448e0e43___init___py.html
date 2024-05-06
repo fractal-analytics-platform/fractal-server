@@ -3,9 +3,9 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Coverage for fractal_server/app/runner/v2/__init__.py: 84%</title>
-    <link rel="icon" sizes="32x32" href="favicon_32.png">
-    <link rel="stylesheet" href="style.css" type="text/css">
-    <script src="coverage_html.js" defer></script>
+    <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
+    <link rel="stylesheet" href="style_cb_8e611ae1.css" type="text/css">
+    <script src="coverage_html_cb_da166b87.js" defer></script>
 </head>
 <body class="pyfile">
 <header>
@@ -17,7 +17,7 @@
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
             <label for="help_panel_state">
-                <img id="keyboard_icon" src="keybd_closed.png" alt="Show/hide keyboard shortcuts">
+                <img id="keyboard_icon" src="keybd_closed_cb_ce680311.png" alt="Show/hide keyboard shortcuts">
             </label>
             <div id="help_panel">
                 <p class="legend">Shortcuts on this page</p>
@@ -66,8 +66,8 @@
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_dcb5568bb609beb8___init___py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.0">coverage.py v7.5.0</a>,
-            created at 2024-05-03 08:46 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.1">coverage.py v7.5.1</a>,
+            created at 2024-05-06 12:59 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -162,7 +162,7 @@
     <p class="run"><span class="n"><a id="t78" href="#t78">78</a></span><span class="t">    <span class="nam">FRACTAL_RUNNER_BACKEND</span> <span class="op">=</span> <span class="nam">settings</span><span class="op">.</span><span class="nam">FRACTAL_RUNNER_BACKEND</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t79" href="#t79">79</a></span><span class="t">    <span class="key">if</span> <span class="nam">FRACTAL_RUNNER_BACKEND</span> <span class="op">==</span> <span class="str">"local"</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t80" href="#t80">80</a></span><span class="t">        <span class="nam">process_workflow</span> <span class="op">=</span> <span class="nam">local_process_workflow</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t81" href="#t81">81</a></span><span class="t">    <span class="key">elif</span> <span class="nam">FRACTAL_RUNNER_BACKEND</span> <span class="op">==</span> <span class="str">"slurm"</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">81&#x202F;&#x219B;&#x202F;84</span><span class="annotate long">line 81 didn't jump to line 84, because the condition on line 81 was never false</span></span></p>
+    <p class="par run show_par"><span class="n"><a id="t81" href="#t81">81</a></span><span class="t">    <span class="key">elif</span> <span class="nam">FRACTAL_RUNNER_BACKEND</span> <span class="op">==</span> <span class="str">"slurm"</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">81&#x202F;&#x219B;&#x202F;84</span><span class="annotate long">line 81 didn't jump to line 84, because the condition on line 81 was always true</span></span></p>
     <p class="run"><span class="n"><a id="t82" href="#t82">82</a></span><span class="t">        <span class="nam">process_workflow</span> <span class="op">=</span> <span class="nam">slurm_process_workflow</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t83" href="#t83">83</a></span><span class="t">    <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t84" href="#t84">84</a></span><span class="t">        <span class="key">raise</span> <span class="nam">RuntimeError</span><span class="op">(</span><span class="fst">f"</span><span class="fst">Invalid runner backend </span><span class="op">{</span><span class="nam">FRACTAL_RUNNER_BACKEND</span><span class="op">=</span><span class="op">}</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -213,7 +213,7 @@
     <p class="pln"><span class="n"><a id="t129" href="#t129">129</a></span><span class="t">        <span class="com"># Define and create user-side working folder, if needed</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t130" href="#t130">130</a></span><span class="t">        <span class="key">if</span> <span class="nam">FRACTAL_RUNNER_BACKEND</span> <span class="op">==</span> <span class="str">"local"</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t131" href="#t131">131</a></span><span class="t">            <span class="nam">WORKFLOW_DIR_USER</span> <span class="op">=</span> <span class="nam">WORKFLOW_DIR</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t132" href="#t132">132</a></span><span class="t">        <span class="key">elif</span> <span class="nam">FRACTAL_RUNNER_BACKEND</span> <span class="op">==</span> <span class="str">"slurm"</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">132&#x202F;&#x219B;&#x202F;143</span><span class="annotate long">line 132 didn't jump to line 143, because the condition on line 132 was never false</span></span></p>
+    <p class="par run show_par"><span class="n"><a id="t132" href="#t132">132</a></span><span class="t">        <span class="key">elif</span> <span class="nam">FRACTAL_RUNNER_BACKEND</span> <span class="op">==</span> <span class="str">"slurm"</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">132&#x202F;&#x219B;&#x202F;143</span><span class="annotate long">line 132 didn't jump to line 143, because the condition on line 132 was always true</span></span></p>
     <p class="pln"><span class="n"><a id="t133" href="#t133">133</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t134" href="#t134">134</a></span><span class="t">            <span class="key">from</span> <span class="op">.</span><span class="op">.</span><span class="nam">executors</span><span class="op">.</span><span class="nam">slurm</span><span class="op">.</span><span class="nam">_subprocess_run_as_user</span> <span class="key">import</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t135" href="#t135">135</a></span><span class="t">                <span class="nam">_mkdir_as_user</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -370,10 +370,10 @@
     <p class="pln"><span class="n"><a id="t286" href="#t286">286</a></span><span class="t">            <span class="nam">logger_name</span><span class="op">=</span><span class="nam">logger_name</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t287" href="#t287">287</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t288" href="#t288">288</a></span><span class="t">        <span class="nam">latest_filters</span> <span class="op">=</span> <span class="nam">assemble_filters_failed_job</span><span class="op">(</span><span class="nam">job</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t289" href="#t289">289</a></span><span class="t">        <span class="key">if</span> <span class="nam">latest_filters</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">289&#x202F;&#x219B;&#x202F;291</span><span class="annotate long">line 289 didn't jump to line 291, because the condition on line 289 was never false</span></span></p>
+    <p class="par run show_par"><span class="n"><a id="t289" href="#t289">289</a></span><span class="t">        <span class="key">if</span> <span class="nam">latest_filters</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">289&#x202F;&#x219B;&#x202F;291</span><span class="annotate long">line 289 didn't jump to line 291, because the condition on line 289 was always true</span></span></p>
     <p class="run"><span class="n"><a id="t290" href="#t290">290</a></span><span class="t">            <span class="nam">dataset</span><span class="op">.</span><span class="nam">filters</span> <span class="op">=</span> <span class="nam">latest_filters</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t291" href="#t291">291</a></span><span class="t">        <span class="nam">latest_images</span> <span class="op">=</span> <span class="nam">assemble_images_failed_job</span><span class="op">(</span><span class="nam">job</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t292" href="#t292">292</a></span><span class="t">        <span class="key">if</span> <span class="nam">latest_images</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">292&#x202F;&#x219B;&#x202F;294</span><span class="annotate long">line 292 didn't jump to line 294, because the condition on line 292 was never false</span></span></p>
+    <p class="par run show_par"><span class="n"><a id="t292" href="#t292">292</a></span><span class="t">        <span class="key">if</span> <span class="nam">latest_images</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">292&#x202F;&#x219B;&#x202F;294</span><span class="annotate long">line 292 didn't jump to line 294, because the condition on line 292 was always true</span></span></p>
     <p class="run"><span class="n"><a id="t293" href="#t293">293</a></span><span class="t">            <span class="nam">dataset</span><span class="op">.</span><span class="nam">images</span> <span class="op">=</span> <span class="nam">latest_images</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t294" href="#t294">294</a></span><span class="t">        <span class="nam">db_sync</span><span class="op">.</span><span class="nam">merge</span><span class="op">(</span><span class="nam">dataset</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t295" href="#t295">295</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -426,8 +426,8 @@
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_dcb5568bb609beb8___init___py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.0">coverage.py v7.5.0</a>,
-            created at 2024-05-03 08:46 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.1">coverage.py v7.5.1</a>,
+            created at 2024-05-06 12:59 +0000
         </p>
     </div>
 </footer>

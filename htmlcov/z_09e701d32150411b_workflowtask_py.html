@@ -3,9 +3,9 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Coverage for fractal_server/app/routes/api/v2/workflowtask.py: 94%</title>
-    <link rel="icon" sizes="32x32" href="favicon_32.png">
-    <link rel="stylesheet" href="style.css" type="text/css">
-    <script src="coverage_html.js" defer></script>
+    <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
+    <link rel="stylesheet" href="style_cb_8e611ae1.css" type="text/css">
+    <script src="coverage_html_cb_da166b87.js" defer></script>
 </head>
 <body class="pyfile">
 <header>
@@ -17,7 +17,7 @@
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
             <label for="help_panel_state">
-                <img id="keyboard_icon" src="keybd_closed.png" alt="Show/hide keyboard shortcuts">
+                <img id="keyboard_icon" src="keybd_closed_cb_ce680311.png" alt="Show/hide keyboard shortcuts">
             </label>
             <div id="help_panel">
                 <p class="legend">Shortcuts on this page</p>
@@ -66,8 +66,8 @@
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_88611d522220b68c_auth_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.0">coverage.py v7.5.0</a>,
-            created at 2024-05-03 08:46 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.1">coverage.py v7.5.1</a>,
+            created at 2024-05-06 12:59 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -276,7 +276,7 @@
     <p class="pln"><span class="n"><a id="t192" href="#t192">192</a></span><span class="t">                <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t193" href="#t193">193</a></span><span class="t">            <span class="com"># Override default_args with args value items</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t194" href="#t194">194</a></span><span class="t">            <span class="nam">actual_args</span> <span class="op">=</span> <span class="nam">deepcopy</span><span class="op">(</span><span class="nam">default_args</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t195" href="#t195">195</a></span><span class="t">            <span class="key">if</span> <span class="nam">value</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">195&#x202F;&#x219B;&#x202F;198</span><span class="annotate long">line 195 didn't jump to line 198, because the condition on line 195 was never false</span></span></p>
+    <p class="par run show_par"><span class="n"><a id="t195" href="#t195">195</a></span><span class="t">            <span class="key">if</span> <span class="nam">value</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">195&#x202F;&#x219B;&#x202F;198</span><span class="annotate long">line 195 didn't jump to line 198, because the condition on line 195 was always true</span></span></p>
     <p class="run"><span class="n"><a id="t196" href="#t196">196</a></span><span class="t">                <span class="key">for</span> <span class="nam">k</span><span class="op">,</span> <span class="nam">v</span> <span class="key">in</span> <span class="nam">value</span><span class="op">.</span><span class="nam">items</span><span class="op">(</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t197" href="#t197">197</a></span><span class="t">                    <span class="nam">actual_args</span><span class="op">[</span><span class="nam">k</span><span class="op">]</span> <span class="op">=</span> <span class="nam">v</span>&nbsp;</span><span class="r"></span></p>
     <p class="par run show_par"><span class="n"><a id="t198" href="#t198">198</a></span><span class="t">            <span class="key">if</span> <span class="key">not</span> <span class="nam">actual_args</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">198&#x202F;&#x219B;&#x202F;199</span><span class="annotate long">line 198 didn't jump to line 199, because the condition on line 198 was never true</span></span></p>
@@ -301,7 +301,7 @@
     <p class="run"><span class="n"><a id="t217" href="#t217">217</a></span><span class="t">            <span class="key">if</span> <span class="key">not</span> <span class="nam">actual_args</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t218" href="#t218">218</a></span><span class="t">                <span class="nam">actual_args</span> <span class="op">=</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t219" href="#t219">219</a></span><span class="t">            <span class="nam">setattr</span><span class="op">(</span><span class="nam">db_wf_task</span><span class="op">,</span> <span class="nam">key</span><span class="op">,</span> <span class="nam">actual_args</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t220" href="#t220">220</a></span><span class="t">        <span class="key">elif</span> <span class="nam">key</span> <span class="key">in</span> <span class="op">[</span><span class="str">"meta_parallel"</span><span class="op">,</span> <span class="str">"meta_non_parallel"</span><span class="op">,</span> <span class="str">"input_filters"</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">220&#x202F;&#x219B;&#x202F;223</span><span class="annotate long">line 220 didn't jump to line 223, because the condition on line 220 was never false</span></span></p>
+    <p class="par run show_par"><span class="n"><a id="t220" href="#t220">220</a></span><span class="t">        <span class="key">elif</span> <span class="nam">key</span> <span class="key">in</span> <span class="op">[</span><span class="str">"meta_parallel"</span><span class="op">,</span> <span class="str">"meta_non_parallel"</span><span class="op">,</span> <span class="str">"input_filters"</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">220&#x202F;&#x219B;&#x202F;223</span><span class="annotate long">line 220 didn't jump to line 223, because the condition on line 220 was always true</span></span></p>
     <p class="run"><span class="n"><a id="t221" href="#t221">221</a></span><span class="t">            <span class="nam">setattr</span><span class="op">(</span><span class="nam">db_wf_task</span><span class="op">,</span> <span class="nam">key</span><span class="op">,</span> <span class="nam">value</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t222" href="#t222">222</a></span><span class="t">        <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t223" href="#t223">223</a></span><span class="t">            <span class="key">raise</span> <span class="nam">HTTPException</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
@@ -355,8 +355,8 @@
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_88611d522220b68c_auth_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.0">coverage.py v7.5.0</a>,
-            created at 2024-05-03 08:46 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.1">coverage.py v7.5.1</a>,
+            created at 2024-05-06 12:59 +0000
         </p>
     </div>
 </footer>
