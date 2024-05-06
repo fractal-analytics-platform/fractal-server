@@ -331,12 +331,6 @@ class Settings(BaseSettings):
     [`clusterfutures`](https://github.com/sampsyo/clusterfutures/blob/master/cfut/__init__.py)).
     """
 
-    FRACTAL_SLURM_SBATCH_SLEEP: int = 0
-    """
-    Interval to wait (in seconds) between two subsequent `sbatch` calls, when
-    running a task that produces multiple SLURM jobs.
-    """
-
     FRACTAL_SLURM_ERROR_HANDLING_INTERVAL: int = 5
     """
     Interval to wait (in seconds) when the SLURM backend does not find an
