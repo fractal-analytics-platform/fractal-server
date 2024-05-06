@@ -2,6 +2,8 @@
 
 # Unreleased
 
+* Set `JobV2` folder attributes from within the submit-job endpoint (\#1464).
+
 # 2.0.3
 
 > WARNING: This update requires running a fix-db script, via `fractalctl update-db-data`.
