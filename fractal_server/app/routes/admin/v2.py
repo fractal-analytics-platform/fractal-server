@@ -364,10 +364,17 @@ async def query_tasks(
     version: Optional[str] = None,
     name: Optional[str] = None,
     owner: Optional[str] = None,
+    only_no_owner: bool = False,
     max_number_of_results: int = 25,
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskContext]:
+
+    if (owner is not None) and (only_no_owner is True):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Cannot query Tasks by owner if `only_no_owner` is True",
+        )
 
     stm = select(TaskV2)
 
@@ -378,9 +385,12 @@ async def query_tasks(
     if version is not None:
         stm = stm.where(TaskV2.version == version)
     if name is not None:
-        stm = stm.where(TaskV2.c.name.icontains(name))
+        stm = stm.where(TaskV2.name.icontains(name))
+
     if owner is not None:
         stm = stm.where(TaskV2.owner == owner)
+    elif only_no_owner is True:
+        stm = stm.where(TaskV2.owner == None)  # noqa E711
 
     res = await db.execute(stm)
     task_list = res.scalars().all()

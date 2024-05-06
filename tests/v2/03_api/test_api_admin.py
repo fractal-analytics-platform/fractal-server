@@ -541,9 +541,9 @@ async def test_task_query(
         workflow1 = await workflow_factory_v2(project_id=project.id)
         workflow2 = await workflow_factory_v2(project_id=project.id)
 
-        task1 = await task_factory_v2(index=1)
-        task2 = await task_factory_v2(index=2)
-        await task_factory_v2(index=3)
+        task1 = await task_factory_v2(name="Foo", source="x", owner="alice")
+        task2 = await task_factory_v2(name="abcdef", source="y", owner="bob")
+        task3 = await task_factory_v2(index=3)
 
         # task1 to workflow 1 and 2
         await _workflow_insert_task(
@@ -558,7 +558,97 @@ async def test_task_query(
         )
         # task3 is orphan
 
+        # Query ALL Tasks
+
         res = await client.get(f"{PREFIX}/task/")
         debug(res.json())
         assert res.status_code == 200
         assert len(res.json()) == 4
+
+        # Query by ID
+
+        res = await client.get(f"{PREFIX}/task/?id={task1.id}")
+        assert len(res.json()) == 2
+        for context in res.json():
+            assert context["task_v2_minimal"]["id"] == task1.id
+
+        res = await client.get(f"{PREFIX}/task/?id={task2.id}")
+        assert len(res.json()) == 1
+        assert res.json()[0]["task_v2_minimal"]["id"] == task2.id
+
+        res = await client.get(f"{PREFIX}/task/?id={task3.id}")
+        assert len(res.json()) == 1
+        assert res.json()[0]["task_v2_minimal"]["id"] == task3.id
+
+        res = await client.get(f"{PREFIX}/task/?id=1000")
+        assert len(res.json()) == 0
+
+        # Query by SOURCE
+
+        res = await client.get(f"{PREFIX}/task/?source={task1.source}")
+        assert len(res.json()) == 2
+
+        res = await client.get(f"{PREFIX}/task/?source={task2.source}")
+        assert len(res.json()) == 1
+
+        res = await client.get(f"{PREFIX}/task/?source={task3.source}")
+        assert len(res.json()) == 1
+
+        res = await client.get(f"{PREFIX}/task/?source=foo")
+        assert len(res.json()) == 0
+
+        # Query by VERSION
+
+        res = await client.get(f"{PREFIX}/task/?version=0")  # task 1 + 2
+        assert len(res.json()) == 3
+
+        res = await client.get(f"{PREFIX}/task/?version=3")  # task 3
+        assert len(res.json()) == 1
+
+        res = await client.get(f"{PREFIX}/task/?version=1.2")
+        assert len(res.json()) == 0
+
+        # Query by NAME
+
+        res = await client.get(f"{PREFIX}/task/?name={task1.name}")
+        assert len(res.json()) == 2
+
+        res = await client.get(f"{PREFIX}/task/?name={task2.name}")
+        assert len(res.json()) == 1
+
+        res = await client.get(f"{PREFIX}/task/?name={task3.name}")
+        assert len(res.json()) == 1
+
+        res = await client.get(f"{PREFIX}/task/?name=nonamelikethis")
+        assert len(res.json()) == 0
+
+        res = await client.get(f"{PREFIX}/task/?name=f")  # task 1 + 2
+        assert len(res.json()) == 3
+
+        res = await client.get(f"{PREFIX}/task/?name=F")  # task 1 + 2
+        assert len(res.json()) == 3
+
+        # Query by OWNER
+
+        res = await client.get(f"{PREFIX}/task/?owner={task1.owner}")
+        assert len(res.json()) == 2
+
+        res = await client.get(f"{PREFIX}/task/?owner={task2.owner}")
+        assert len(res.json()) == 1
+
+        assert task3.owner is None
+        res = await client.get(f"{PREFIX}/task/?only_no_owner=true")
+        assert len(res.json()) == 1
+
+        res = await client.get(f"{PREFIX}/task/?owner=foo&only_no_owner=true")
+        assert res.status_code == 422
+        assert "Cannot query Tasks by owner if" in res.json()["detail"]
+
+        for i in range(30):
+            task = await task_factory_v2(name=f"n{i}", source=f"s{i}")
+            await _workflow_insert_task(
+                workflow_id=workflow1.id, task_id=task.id, db=db
+            )
+        res = await client.get(f"{PREFIX}/task/")
+        assert res.status_code == 422
+        assert "Please add more query filters" in res.json()["detail"]
