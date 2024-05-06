@@ -98,18 +98,12 @@ async def apply_workflow(
         if not user.slurm_user:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    f"FRACTAL_RUNNER_BACKEND={FRACTAL_RUNNER_BACKEND}, "
-                    f"but {user.slurm_user=}."
-                ),
+                detail=f"{FRACTAL_RUNNER_BACKEND=}, but {user.slurm_user=}.",
             )
         if not user.cache_dir:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    f"FRACTAL_RUNNER_BACKEND={FRACTAL_RUNNER_BACKEND}, "
-                    f"but {user.cache_dir=}."
-                ),
+                detail=f"{FRACTAL_RUNNER_BACKEND=}, but {user.cache_dir=}.",
             )
 
     # Check that no other job with the same dataset_id is SUBMITTED
