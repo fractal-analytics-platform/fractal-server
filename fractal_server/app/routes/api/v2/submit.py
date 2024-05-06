@@ -204,7 +204,7 @@ async def apply_workflow(
     WORKFLOW_DIR = (
         settings.FRACTAL_RUNNER_WORKING_BASE_DIR
         / (
-            f"proj_{project_id:07d}_wf_{workflow_id:07d}_job_{job.id:07d}"
+            f"proj_v2_{project_id:07d}_wf_{workflow_id:07d}_job_{job.id:07d}"
             f"_{timestamp_string}"
         )
     ).resolve()
