@@ -4,6 +4,7 @@ Definition of `/admin` routes.
 from datetime import datetime
 from datetime import timezone
 from pathlib import Path
+from typing import Any
 from typing import Optional
 
 from fastapi import APIRouter
@@ -13,6 +14,9 @@ from fastapi import Response
 from fastapi import status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+from pydantic import EmailStr
+from pydantic import Field
+from pydantic import HttpUrl
 from sqlmodel import select
 
 from ....config import get_settings
@@ -24,6 +28,9 @@ from ...models.security import UserOAuth as User
 from ...models.v1 import Task
 from ...models.v2 import JobV2
 from ...models.v2 import ProjectV2
+from ...models.v2 import TaskV2
+from ...models.v2 import WorkflowTaskV2
+from ...models.v2 import WorkflowV2
 from ...runner.filenames import WORKFLOW_LOG_FILENAME
 from ...schemas.v2 import JobReadV2
 from ...schemas.v2 import JobStatusTypeV2
@@ -307,3 +314,116 @@ async def flag_task_v1_as_v2_compatible(
     await db.close()
 
     return Response(status_code=status.HTTP_200_OK)
+
+
+class TaskV2Minimal(BaseModel):
+
+    id: int
+    name: str
+
+    type: str
+    command_non_parallel: Optional[str] = None
+    command_parallel: Optional[str] = None
+
+    source: str
+
+    meta_non_parallel: dict[str, Any] = Field(default_factory=dict)
+    meta_parallel: dict[str, Any] = Field(default_factory=dict)
+
+    owner: Optional[str]
+    version: Optional[str]
+
+    docs_info: Optional[str] = None
+    docs_link: Optional[HttpUrl] = None
+
+    input_types: dict[str, bool] = Field(default_factory=dict)
+    output_types: dict[str, bool] = Field(default_factory=dict)
+
+
+class ProjectUser(BaseModel):
+    id: int
+    email: EmailStr
+
+
+class TaskContext(BaseModel):
+
+    task_v2_minimal: TaskV2Minimal
+
+    workflow_id: Optional[int]
+    workflow_name: Optional[str]
+    project_id: Optional[int]
+    project_name: Optional[str]
+
+    project_users: Optional[list[ProjectUser]]
+
+
+@router_admin_v2.get("/task/", response_model=list[TaskContext])
+async def query_tasks(
+    id: Optional[int] = None,
+    source: Optional[str] = None,
+    version: Optional[str] = None,
+    name: Optional[str] = None,
+    owner: Optional[str] = None,
+    max_number_of_results: int = 25,
+    user: User = Depends(current_active_superuser),
+    db: AsyncSession = Depends(get_async_db),
+) -> list[TaskContext]:
+
+    stm = select(TaskV2)
+
+    if id is not None:
+        stm = stm.where(TaskV2.id == id)
+    if source is not None:
+        stm = stm.where(TaskV2.source == source)
+    if version is not None:
+        stm = stm.where(TaskV2.version == version)
+    if name is not None:
+        stm = stm.where(TaskV2.c.name.icontains(name))
+    if owner is not None:
+        stm = stm.where(TaskV2.owner == owner)
+
+    res = await db.execute(stm)
+    task_list = res.scalars().all()
+    if len(task_list) > max_number_of_results:
+        await db.close()
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Too many Tasks ({len(task_list)} > {max_number_of_results})."
+                " Please add more query filters."
+            ),
+        )
+
+    contexts = []
+
+    for task in task_list:
+        stm = (
+            select(WorkflowV2)
+            .join(WorkflowTaskV2)
+            .where(WorkflowTaskV2.workflow_id == WorkflowV2.id)
+            .where(WorkflowTaskV2.task_id == task.id)
+        )
+        res = await db.execute(stm)
+        wf_list = res.scalars().all()
+
+        if wf_list:
+            for workflow in wf_list:
+                contexts.append(
+                    TaskContext(
+                        task_v2_minimal=TaskV2Minimal(**task.model_dump()),
+                        workflow_id=workflow.id,
+                        workflow_name=workflow.name,
+                        project_id=workflow.project.id,
+                        project_name=workflow.project.name,
+                        project_users=[
+                            ProjectUser(id=user.id, email=user.email)
+                            for user in workflow.project.user_list
+                        ],
+                    )
+                )
+        else:
+            contexts.append(
+                TaskContext(task_v2_minimal=TaskV2Minimal(**task.model_dump()))
+            )
+
+    return contexts

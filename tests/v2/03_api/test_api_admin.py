@@ -524,3 +524,41 @@ async def test_flag_task_v2_compatible(
             json=dict(is_v2_compatible=True),
         )
         assert res.status_code == 404
+
+
+async def test_task_query(
+    db,
+    client,
+    MockCurrentUser,
+    project_factory_v2,
+    workflow_factory_v2,
+    task_factory_v2,
+):
+    async with MockCurrentUser(user_kwargs={"is_superuser": True}) as user:
+
+        project = await project_factory_v2(user)
+
+        workflow1 = await workflow_factory_v2(project_id=project.id)
+        workflow2 = await workflow_factory_v2(project_id=project.id)
+
+        task1 = await task_factory_v2(index=1)
+        task2 = await task_factory_v2(index=2)
+        await task_factory_v2(index=3)
+
+        # task1 to workflow 1 and 2
+        await _workflow_insert_task(
+            workflow_id=workflow1.id, task_id=task1.id, db=db
+        )
+        await _workflow_insert_task(
+            workflow_id=workflow2.id, task_id=task1.id, db=db
+        )
+        # task2 to workflow2
+        await _workflow_insert_task(
+            workflow_id=workflow2.id, task_id=task2.id, db=db
+        )
+        # task3 is orphan
+
+        res = await client.get(f"{PREFIX}/task/")
+        debug(res.json())
+        assert res.status_code == 200
+        assert len(res.json()) == 4
