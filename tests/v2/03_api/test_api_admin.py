@@ -636,21 +636,14 @@ async def test_task_query(
         res = await client.get(f"{PREFIX}/task/?name=F")  # task 1 + 2
         assert len(res.json()) == 2
 
-        # Query by OWNER
+        # Query by KIND
 
-        res = await client.get(f"{PREFIX}/task/?owner={task1.owner}")
-        assert len(res.json()) == 1
-
-        res = await client.get(f"{PREFIX}/task/?owner={task2.owner}")
-        assert len(res.json()) == 1
+        res = await client.get(f"{PREFIX}/task/?kind=users")
+        assert len(res.json()) == 2
 
         assert task3.owner is None
-        res = await client.get(f"{PREFIX}/task/?only_no_owner=true")
+        res = await client.get(f"{PREFIX}/task/?kind=common")
         assert len(res.json()) == 1
-
-        res = await client.get(f"{PREFIX}/task/?owner=foo&only_no_owner=true")
-        assert res.status_code == 422
-        assert "Cannot query Tasks by owner if" in res.json()["detail"]
 
         for i in range(30):
             task = await task_factory_v2(name=f"n{i}", source=f"s{i}")
