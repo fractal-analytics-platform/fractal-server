@@ -489,6 +489,10 @@ class FractalSlurmExecutor(SlurmExecutor):
         if len(args_batches) != math.ceil(tot_tasks / tasks_per_job):
             raise RuntimeError("Something wrong here while batching tasks")
 
+        # Fetch configuration variable
+        settings = Inject(get_settings)
+        FRACTAL_SLURM_SBATCH_SLEEP = settings.FRACTAL_SLURM_SBATCH_SLEEP
+
         # Construct list of futures (one per SLURM job, i.e. one per batch)
         fs = []
         current_component_index = 0
@@ -508,6 +512,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                 )
             )
             current_component_index += batch_size
+            time.sleep(FRACTAL_SLURM_SBATCH_SLEEP)
 
         # Yield must be hidden in closure so that the futures are submitted
         # before the first iterator value is required.
