@@ -541,8 +541,8 @@ async def test_task_query(
         workflow1 = await workflow_factory_v2(project_id=project.id)
         workflow2 = await workflow_factory_v2(project_id=project.id)
 
-        task1 = await task_factory_v2(name="Foo", source="x", owner="alice")
-        task2 = await task_factory_v2(name="abcdef", source="y", owner="bob")
+        task1 = await task_factory_v2(name="Foo", source="xxx", owner="alice")
+        task2 = await task_factory_v2(name="abcdef", source="yyy", owner="bob")
         task3 = await task_factory_v2(index=3)
 
         # task1 to workflow 1 and 2
@@ -561,7 +561,6 @@ async def test_task_query(
         # Query ALL Tasks
 
         res = await client.get(f"{PREFIX}/task/")
-        debug(res.json())
         assert res.status_code == 200
         assert len(res.json()) == 3
 
@@ -569,8 +568,23 @@ async def test_task_query(
 
         res = await client.get(f"{PREFIX}/task/?id={task1.id}")
         assert len(res.json()) == 1
-        assert res.json()[0]["task"]["id"] == task1.id
+        assert res.json()[0]["task"].items() <= task1.dict().items()
         assert len(res.json()[0]["relationships"]) == 2
+        _common_args = dict(
+            project_id=project.id,
+            project_name=project.name,
+            project_users=[dict(id=user.id, email=user.email)],
+        )
+        assert res.json()[0]["relationships"][0] == dict(
+            workflow_id=workflow1.id,
+            workflow_name=workflow1.name,
+            **_common_args,
+        )
+        assert res.json()[0]["relationships"][1] == dict(
+            workflow_id=workflow2.id,
+            workflow_name=workflow2.name,
+            **_common_args,
+        )
 
         res = await client.get(f"{PREFIX}/task/?id={task2.id}")
         assert len(res.json()) == 1
@@ -588,6 +602,11 @@ async def test_task_query(
         # Query by SOURCE
 
         res = await client.get(f"{PREFIX}/task/?source={task1.source}")
+        assert len(res.json()) == 1
+        assert res.json()[0]["task"]["id"] == task1.id
+        assert len(res.json()[0]["relationships"]) == 2
+
+        res = await client.get(f"{PREFIX}/task/?source={task1.source[0]}")
         assert len(res.json()) == 1
         assert res.json()[0]["task"]["id"] == task1.id
         assert len(res.json()[0]["relationships"]) == 2
