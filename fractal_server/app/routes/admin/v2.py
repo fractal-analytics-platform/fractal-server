@@ -360,6 +360,21 @@ async def query_tasks(
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskV2Info]:
+    """
+    Query `TaskV2` table and get informations about related items
+    (WorkflowV2s and ProjectV2s)
+
+    Args:
+        id: If not `None`, query for matching `task.id`.
+        source: If not `None`, query for contained case insensitive
+            `task.source`.
+        version: If not `None`, query for matching `task.version`.
+        name: If not `None`, query for contained case insensitive `task.name`.
+        owner: If not `None`, query for matching `task.owner`.
+        kind: If not `None`, query for TaskV2s that have (`users`) or don't
+            have (`common`) a `task.owner`.
+        max_number_of_results: The maximum length of the response.
+    """
 
     stm = select(TaskV2)
 
