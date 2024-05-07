@@ -1,4 +1,5 @@
 import pytest
+from devtools import debug
 
 PREFIX = "/api/v2"
 
@@ -81,7 +82,11 @@ async def fractal_tasks_mock(
             res = await client.get(f"{PREFIX}/task/collect/{state_id}/")
             assert res.status_code == 200
             data = res.json()["data"]
-            assert data["status"] == "OK"
+            if data["status"] != "OK":
+                debug(data)
+                raise ValueError(
+                    "Task collection failed in fractal_tasks_mock."
+                )
         return "API_collection"
 
 
