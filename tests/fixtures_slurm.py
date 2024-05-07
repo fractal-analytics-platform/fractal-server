@@ -3,6 +3,7 @@ import os
 import shlex
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -52,6 +53,14 @@ def docker_compose_file(pytestconfig, testdata_path: Path):
         ]:
             f = CODE_ROOT / name
             tar.add(f, arcname=f.relative_to(CODE_ROOT.parent))
+
+    if sys.platform == "darwin":
+        # in macOS '/tmp' is a symlink to '/private/tmp'
+        # if we don't mount '/private', 'mkdir -p /private/...' fails with
+        # PermissionDenied
+        return str(
+            testdata_path / "slurm_docker_images/docker-compose-private.yml"
+        )
 
     return str(testdata_path / "slurm_docker_images/docker-compose.yml")
 
@@ -148,7 +157,6 @@ def monkey_slurm(
         def __init__(self, *args, **kwargs):
             cmd = args[0]
             assert isinstance(cmd, list)
-
             container_cmd = [" ".join(str(c) for c in cmd)]
             cmd = [
                 "docker",
