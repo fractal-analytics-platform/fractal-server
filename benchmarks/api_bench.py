@@ -53,13 +53,11 @@ class Benchmark:
         self,
         endpoints: list[dict[str, str]],
         users: list[UserBench],
-        current_branch: str,
     ):
 
         self.endpoints = endpoints
         self.users = users
         self.client = Client(base_url=FRACTAL_SERVER_URL)
-        self.current_branch = current_branch
         self.exceptions: list = []
 
         max_steps = 4
@@ -120,7 +118,6 @@ class Benchmark:
 
         rendered_md = template.render(
             zip=zip(agg_values_main.items(), agg_values_curr.items()),
-            currentbranch=self.current_branch,
             exceptions=self.exceptions,
         )
 
@@ -251,7 +248,6 @@ if __name__ == "__main__":
     benchmark = Benchmark(
         endpoints=ENDPOINTS,
         users=USERS,
-        current_branch="current-branch",
     )
     user_metrics = benchmark.run_benchmark(N_REQUESTS)
     agg_values_curr = benchmark.aggregate_on_path(user_metrics)

@@ -1,7 +1,5 @@
 ## Benchmark comparison
 
-Current branch: `{{currentbranch}}`
-
 {% for (path_main, users_main), (path_curr, users_curr) in zip %}
 ### {{ path_main }}
 
