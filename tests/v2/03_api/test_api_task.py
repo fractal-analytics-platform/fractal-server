@@ -446,21 +446,35 @@ async def test_delete_task(
     task_factory_v2,
     workflowtask_factory_v2,
 ):
-    async with MockCurrentUser(user_kwargs={"username": "bob"}) as user:
-        project = await project_factory_v2(user)
-        workflow = await workflow_factory_v2(project_id=project.id)
-        taskA = await task_factory_v2(source="A", owner=user.username)
-        taskB = await task_factory_v2(source="B", owner=user.username)
+    async with MockCurrentUser():
+        taskA = await task_factory_v2(source="aaa", owner="user2")
+        taskB = await task_factory_v2(source="bbb", owner="user2")
+
+    # User 1 imports taskA in one of their workflows
+    async with MockCurrentUser() as user1:
+        project = await project_factory_v2(user1)
+        workflow1 = await workflow_factory_v2(project_id=project.id)
         await workflowtask_factory_v2(
-            workflow_id=workflow.id, task_id=taskA.id
+            workflow_id=workflow1.id, task_id=taskA.id
         )
 
-        # test 422
+    async with MockCurrentUser(user_kwargs=dict(username="user2")) as user2:
+        project = await project_factory_v2(user2)
+        workflow2 = await workflow_factory_v2(project_id=project.id)
+        await workflowtask_factory_v2(
+            workflow_id=workflow2.id, task_id=taskA.id
+        )
+
+        # Test 422
         res = await client.delete(f"{PREFIX}/{taskA.id}/")
         assert res.status_code == 422
-        assert "Cannot remove Task" in res.json()["detail"][0]
+        detail = res.json()["detail"]
+        debug(res.json()["detail"])
+        assert "Cannot remove Task" in detail
+        assert "currently in use in 1 current-user workflows" in detail
+        assert "and in 1 other-users workflows" in detail
 
-        # test success
+        # Test success
         task_list = (await db.execute(select(TaskV2))).scalars().all()
         assert len(task_list) == 2
         res = await client.delete(f"{PREFIX}/{taskB.id}/")
