@@ -4,7 +4,6 @@ Definition of `/admin` routes.
 from datetime import datetime
 from datetime import timezone
 from pathlib import Path
-from typing import Any
 from typing import Optional
 
 from fastapi import APIRouter
@@ -16,7 +15,6 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from pydantic import EmailStr
 from pydantic import Field
-from pydantic import HttpUrl
 from sqlmodel import select
 
 from ....config import get_settings
@@ -320,38 +318,26 @@ class TaskV2Minimal(BaseModel):
 
     id: int
     name: str
-
     type: str
-    command_non_parallel: Optional[str] = None
-    command_parallel: Optional[str] = None
-
+    command_non_parallel: Optional[str]
+    command_parallel: Optional[str]
     source: str
-
-    meta_non_parallel: dict[str, Any] = Field(default_factory=dict)
-    meta_parallel: dict[str, Any] = Field(default_factory=dict)
-
     owner: Optional[str]
     version: Optional[str]
 
-    docs_info: Optional[str] = None
-    docs_link: Optional[HttpUrl] = None
-
-    input_types: dict[str, bool] = Field(default_factory=dict)
-    output_types: dict[str, bool] = Field(default_factory=dict)
-
 
 class ProjectUser(BaseModel):
+
     id: int
     email: EmailStr
 
 
 class TaskV2Relationship(BaseModel):
 
-    workflow_id: Optional[int]
-    workflow_name: Optional[str]
-    project_id: Optional[int]
-    project_name: Optional[str]
-
+    workflow_id: int
+    workflow_name: str
+    project_id: int
+    project_name: str
     project_users: list[ProjectUser] = Field(default_factory=list)
 
 
