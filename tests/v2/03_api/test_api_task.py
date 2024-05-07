@@ -460,18 +460,26 @@ async def test_delete_task(
 
     async with MockCurrentUser(user_kwargs=dict(username="user2")) as user2:
         project = await project_factory_v2(user2)
-        workflow2 = await workflow_factory_v2(project_id=project.id)
+        workflow2 = await workflow_factory_v2(
+            project_id=project.id, name="My Workflow Something"
+        )
         await workflowtask_factory_v2(
             workflow_id=workflow2.id, task_id=taskA.id
+        )
+        workflow3 = await workflow_factory_v2(
+            project_id=project.id, name="My Workflow Something Else"
+        )
+        await workflowtask_factory_v2(
+            workflow_id=workflow3.id, task_id=taskA.id
         )
 
         # Test 422
         res = await client.delete(f"{PREFIX}/{taskA.id}/")
         assert res.status_code == 422
         detail = res.json()["detail"]
-        debug(res.json()["detail"])
+        print(detail)
         assert "Cannot remove Task" in detail
-        assert "currently in use in 1 current-user workflows" in detail
+        assert "currently in use in 2 current-user workflows" in detail
         assert "and in 1 other-users workflows" in detail
 
         # Test success
