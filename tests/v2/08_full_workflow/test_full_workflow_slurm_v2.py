@@ -24,8 +24,8 @@ async def test_full_workflow_slurm(
     workflow_factory_v2,
     override_settings_factory,
     tmp_path_factory,
+    relink_python_interpreter_v2,  # before 'monkey_slurm' (#1462)
     monkey_slurm,
-    relink_python_interpreter_v2,
 ):
     # Use a session-scoped FRACTAL_TASKS_DIR folder
     override_settings_factory(
@@ -55,8 +55,8 @@ async def test_full_workflow_TaskExecutionError_slurm(
     workflow_factory_v2,
     override_settings_factory,
     tmp_path_factory,
+    relink_python_interpreter_v2,  # before 'monkey_slurm' (#1462)
     monkey_slurm,
-    relink_python_interpreter_v2,
 ):
     """ "
     Run a workflow made of three tasks, two successful tasks and one
@@ -91,8 +91,8 @@ async def test_failing_workflow_JobExecutionError(
     override_settings_factory,
     tmp_path_factory,
     monkey_slurm_user,
+    relink_python_interpreter_v2,  # before 'monkey_slurm' (#1462)
     monkey_slurm,
-    relink_python_interpreter_v2,
     tmp_path,
 ):
     # Use a session-scoped FRACTAL_TASKS_DIR folder
@@ -228,7 +228,7 @@ async def test_non_executable_task_command_slurm(
     dataset_factory_v2,
     workflow_factory_v2,
     override_settings_factory,
-    relink_python_interpreter_v2,
+    relink_python_interpreter_v2,  # before 'monkey_slurm' (#1462)
     monkey_slurm,
 ):
     """
@@ -269,8 +269,8 @@ async def test_failing_workflow_UnknownError_slurm(
     request,
     override_settings_factory,
     monkeypatch,
+    relink_python_interpreter_v2,  # before 'monkey_slurm' (#1462)
     monkey_slurm,
-    relink_python_interpreter_v2,
 ):
     """
     Submit a workflow that fails with some unrecognized exception (due
