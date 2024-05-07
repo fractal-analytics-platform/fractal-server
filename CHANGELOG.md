@@ -3,6 +3,8 @@
 # Unreleased
 
 * Set `JobV2` folder attributes from within the submit-job endpoint (\#1464).
+* API:
+    * Add `GET /admin/v2/task/` (\#1465).
 
 # 2.0.4
 
