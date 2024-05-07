@@ -344,7 +344,7 @@ class TaskV2Relationship(BaseModel):
 
 class TaskV2Info(BaseModel):
 
-    task_v2_minimal: TaskV2Minimal
+    task: TaskV2Minimal
     relationships: list[TaskV2Relationship]
 
 
@@ -354,6 +354,7 @@ async def query_tasks(
     source: Optional[str] = None,
     version: Optional[str] = None,
     name: Optional[str] = None,
+    owner: Optional[str] = None,
     kind: Optional[Literal["common", "users"]] = None,
     max_number_of_results: int = 25,
     user: User = Depends(current_active_superuser),
@@ -370,6 +371,8 @@ async def query_tasks(
         stm = stm.where(TaskV2.version == version)
     if name is not None:
         stm = stm.where(TaskV2.name.icontains(name))
+    if owner is not None:
+        stm = stm.where(TaskV2.owner == owner)
 
     if kind == "common":
         stm = stm.where(TaskV2.owner == None)  # noqa E711
@@ -388,7 +391,7 @@ async def query_tasks(
             ),
         )
 
-    contexts = []
+    task_info_list = []
 
     for task in task_list:
         stm = (
@@ -400,9 +403,9 @@ async def query_tasks(
         res = await db.execute(stm)
         wf_list = res.scalars().all()
 
-        contexts.append(
+        task_info_list.append(
             dict(
-                task_v2_minimal=task.model_dump(),
+                task=task.model_dump(),
                 relationships=[
                     dict(
                         workflow_id=workflow.id,
@@ -419,4 +422,4 @@ async def query_tasks(
             )
         )
 
-    return contexts
+    return task_info_list
