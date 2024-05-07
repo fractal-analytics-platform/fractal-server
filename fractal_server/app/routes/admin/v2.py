@@ -345,19 +345,23 @@ class ProjectUser(BaseModel):
     email: EmailStr
 
 
-class TaskContext(BaseModel):
-
-    task_v2_minimal: TaskV2Minimal
+class TaskV2Relationship(BaseModel):
 
     workflow_id: Optional[int]
     workflow_name: Optional[str]
     project_id: Optional[int]
     project_name: Optional[str]
 
-    project_users: Optional[list[ProjectUser]]
+    project_users: list[ProjectUser] = Field(default_factory=list)
 
 
-@router_admin_v2.get("/task/", response_model=list[TaskContext])
+class TaskV2Info(BaseModel):
+
+    task_v2_minimal: TaskV2Minimal
+    relationships: list[TaskV2Relationship]
+
+
+@router_admin_v2.get("/task/", response_model=list[TaskV2Info])
 async def query_tasks(
     id: Optional[int] = None,
     source: Optional[str] = None,
@@ -368,7 +372,7 @@ async def query_tasks(
     max_number_of_results: int = 25,
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
-) -> list[TaskContext]:
+) -> list[TaskV2Info]:
 
     if (owner is not None) and (only_no_owner is True):
         raise HTTPException(
@@ -416,24 +420,23 @@ async def query_tasks(
         res = await db.execute(stm)
         wf_list = res.scalars().all()
 
-        if wf_list:
-            for workflow in wf_list:
-                contexts.append(
-                    TaskContext(
-                        task_v2_minimal=TaskV2Minimal(**task.model_dump()),
+        contexts.append(
+            dict(
+                task_v2_minimal=task.model_dump(),
+                relationships=[
+                    dict(
                         workflow_id=workflow.id,
                         workflow_name=workflow.name,
                         project_id=workflow.project.id,
                         project_name=workflow.project.name,
                         project_users=[
-                            ProjectUser(id=user.id, email=user.email)
+                            dict(id=user.id, email=user.email)
                             for user in workflow.project.user_list
                         ],
                     )
-                )
-        else:
-            contexts.append(
-                TaskContext(task_v2_minimal=TaskV2Minimal(**task.model_dump()))
+                    for workflow in wf_list
+                ],
             )
+        )
 
     return contexts

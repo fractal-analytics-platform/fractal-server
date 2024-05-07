@@ -563,22 +563,24 @@ async def test_task_query(
         res = await client.get(f"{PREFIX}/task/")
         debug(res.json())
         assert res.status_code == 200
-        assert len(res.json()) == 4
+        assert len(res.json()) == 3
 
         # Query by ID
 
         res = await client.get(f"{PREFIX}/task/?id={task1.id}")
-        assert len(res.json()) == 2
-        for context in res.json():
-            assert context["task_v2_minimal"]["id"] == task1.id
+        assert len(res.json()) == 1
+        assert res.json()[0]["task_v2_minimal"]["id"] == task1.id
+        assert len(res.json()[0]["relationships"]) == 2
 
         res = await client.get(f"{PREFIX}/task/?id={task2.id}")
         assert len(res.json()) == 1
         assert res.json()[0]["task_v2_minimal"]["id"] == task2.id
+        assert len(res.json()[0]["relationships"]) == 1
 
         res = await client.get(f"{PREFIX}/task/?id={task3.id}")
         assert len(res.json()) == 1
         assert res.json()[0]["task_v2_minimal"]["id"] == task3.id
+        assert len(res.json()[0]["relationships"]) == 0
 
         res = await client.get(f"{PREFIX}/task/?id=1000")
         assert len(res.json()) == 0
@@ -586,13 +588,19 @@ async def test_task_query(
         # Query by SOURCE
 
         res = await client.get(f"{PREFIX}/task/?source={task1.source}")
-        assert len(res.json()) == 2
+        assert len(res.json()) == 1
+        assert res.json()[0]["task_v2_minimal"]["id"] == task1.id
+        assert len(res.json()[0]["relationships"]) == 2
 
         res = await client.get(f"{PREFIX}/task/?source={task2.source}")
         assert len(res.json()) == 1
+        assert res.json()[0]["task_v2_minimal"]["id"] == task2.id
+        assert len(res.json()[0]["relationships"]) == 1
 
         res = await client.get(f"{PREFIX}/task/?source={task3.source}")
         assert len(res.json()) == 1
+        assert res.json()[0]["task_v2_minimal"]["id"] == task3.id
+        assert len(res.json()[0]["relationships"]) == 0
 
         res = await client.get(f"{PREFIX}/task/?source=foo")
         assert len(res.json()) == 0
@@ -600,7 +608,7 @@ async def test_task_query(
         # Query by VERSION
 
         res = await client.get(f"{PREFIX}/task/?version=0")  # task 1 + 2
-        assert len(res.json()) == 3
+        assert len(res.json()) == 2
 
         res = await client.get(f"{PREFIX}/task/?version=3")  # task 3
         assert len(res.json()) == 1
@@ -611,7 +619,7 @@ async def test_task_query(
         # Query by NAME
 
         res = await client.get(f"{PREFIX}/task/?name={task1.name}")
-        assert len(res.json()) == 2
+        assert len(res.json()) == 1
 
         res = await client.get(f"{PREFIX}/task/?name={task2.name}")
         assert len(res.json()) == 1
@@ -623,15 +631,15 @@ async def test_task_query(
         assert len(res.json()) == 0
 
         res = await client.get(f"{PREFIX}/task/?name=f")  # task 1 + 2
-        assert len(res.json()) == 3
+        assert len(res.json()) == 2
 
         res = await client.get(f"{PREFIX}/task/?name=F")  # task 1 + 2
-        assert len(res.json()) == 3
+        assert len(res.json()) == 2
 
         # Query by OWNER
 
         res = await client.get(f"{PREFIX}/task/?owner={task1.owner}")
-        assert len(res.json()) == 2
+        assert len(res.json()) == 1
 
         res = await client.get(f"{PREFIX}/task/?owner={task2.owner}")
         assert len(res.json()) == 1
