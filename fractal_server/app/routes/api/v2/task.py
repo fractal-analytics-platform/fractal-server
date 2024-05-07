@@ -220,7 +220,11 @@ async def delete_task(
             wf for wf in workflows if user in wf.project.user_list
         ]
         if workflows_current_user:
-            current_user_msg = "Current-user workflows:\n" + "\n".join(
+            current_user_msg = (
+                "For the current-user workflows (listed below),"
+                " you can update the task or remove the workflows.\n"
+            )
+            current_user_msg += "\n".join(
                 [
                     f"* '{wf.name}' (id={wf.id})"
                     for wf in workflows_current_user
@@ -239,8 +243,6 @@ async def delete_task(
                 f"Cannot remove Task with id={task_id}: it is currently in "
                 f"use in {num_workflows_current_user} current-user workflows "
                 f"and in {num_workflows_other_users} other-users workflows.\n"
-                "For the current-user workflows (listed below),"
-                " you can update the task or remove the workflows.\n"
                 f"{current_user_msg}"
             ),
         )
