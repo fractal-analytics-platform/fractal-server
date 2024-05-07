@@ -1,0 +1,54 @@
+from devtools import debug
+
+from fractal_server.app.models.v2 import JobV2
+from fractal_server.app.routes.api.v2._aux_functions import (
+    _workflow_insert_task,
+)
+from fractal_server.app.runner.v2 import submit_workflow
+
+
+async def test_submit_workflow_failure(
+    tmp_path,
+    project_factory_v2,
+    workflow_factory_v2,
+    task_factory_v2,
+    dataset_factory_v2,
+    job_factory_v2,
+    MockCurrentUser,
+    db,
+):
+    """
+    WHEN calling `submit_workflow`
+    IF `working_dir` already exists
+    THEN the job entry in the db is updated
+    """
+
+    working_dir = tmp_path / "job_dir"
+    working_dir.mkdir()
+    assert working_dir.exists()
+
+    async with MockCurrentUser() as user:
+        task = await task_factory_v2()
+        project = await project_factory_v2(user=user)
+        workflow = await workflow_factory_v2(project_id=project.id)
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
+        dataset = await dataset_factory_v2(project_id=project.id)
+        job = await job_factory_v2(
+            project_id=project.id,
+            dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir=working_dir.as_posix(),
+            working_dir_user=working_dir.as_posix(),
+        )
+    db.expunge_all()
+
+    await submit_workflow(
+        workflow_id=workflow.id, dataset_id=dataset.id, job_id=job.id
+    )
+
+    job = await db.get(JobV2, job.id)
+    debug(job)
+    assert job.status == "failed"
+    assert "already exists" in job.log
