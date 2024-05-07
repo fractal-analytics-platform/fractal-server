@@ -563,6 +563,7 @@ async def test_task_query(
         res = await client.get(f"{PREFIX}/task/")
         assert res.status_code == 200
         assert len(res.json()) == 3
+        debug(res.json())
 
         # Query by ID
 
