@@ -4,6 +4,7 @@ Definition of `/admin` routes.
 from datetime import datetime
 from datetime import timezone
 from pathlib import Path
+from typing import Literal
 from typing import Optional
 
 from fastapi import APIRouter
@@ -353,34 +354,27 @@ async def query_tasks(
     source: Optional[str] = None,
     version: Optional[str] = None,
     name: Optional[str] = None,
-    owner: Optional[str] = None,
-    only_no_owner: bool = False,
+    kind: Optional[Literal["common", "users"]] = None,
     max_number_of_results: int = 25,
     user: User = Depends(current_active_superuser),
     db: AsyncSession = Depends(get_async_db),
 ) -> list[TaskV2Info]:
-
-    if (owner is not None) and (only_no_owner is True):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Cannot query Tasks by owner if `only_no_owner` is True",
-        )
 
     stm = select(TaskV2)
 
     if id is not None:
         stm = stm.where(TaskV2.id == id)
     if source is not None:
-        stm = stm.where(TaskV2.source == source)
+        stm = stm.where(TaskV2.source.icontains(source))
     if version is not None:
         stm = stm.where(TaskV2.version == version)
     if name is not None:
         stm = stm.where(TaskV2.name.icontains(name))
 
-    if owner is not None:
-        stm = stm.where(TaskV2.owner == owner)
-    elif only_no_owner is True:
+    if kind == "common":
         stm = stm.where(TaskV2.owner == None)  # noqa E711
+    elif kind == "users":
+        stm = stm.where(TaskV2.owner != None)  # noqa E711
 
     res = await db.execute(stm)
     task_list = res.scalars().all()
