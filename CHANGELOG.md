@@ -2,6 +2,8 @@
 
 # Unreleased
 
+# 2.0.5
+
 * API:
     * Add `GET /admin/v2/task/` (\#1465).
     * Improve error message in DELETE-task endpoint (\#1471).
