@@ -2,6 +2,8 @@
 
 # Unreleased
 
+# 2.0.4
+
 * Add `FRACTAL_SLURM_SBATCH_SLEEP` configuration variable (\#1467).
 
 # 2.0.3
