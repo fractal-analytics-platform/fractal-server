@@ -1,5 +1,6 @@
 # This file is identical to 'tests/data/slurm_docker_images/docker-compose.yml'
 # The only difference is '/private:/private:rw' in place of '/tmp:/tmp:rw'
+# See https://github.com/fractal-analytics-platform/fractal-server/issues/1475
 
 version: '3'
 
