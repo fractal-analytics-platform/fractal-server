@@ -108,18 +108,15 @@ async def submit_workflow(
             return
 
         # Define and create server-side working folder
-        project_id = workflow.project_id
-        timestamp_string = get_timestamp().strftime("%Y%m%d_%H%M%S")
-        WORKFLOW_DIR = (
-            settings.FRACTAL_RUNNER_WORKING_BASE_DIR
-            / (
-                f"proj_{project_id:07d}_wf_{workflow_id:07d}_job_{job_id:07d}"
-                f"_{timestamp_string}"
-            )
-        ).resolve()
-
+        WORKFLOW_DIR = Path(job.working_dir)
         if WORKFLOW_DIR.exists():
-            raise RuntimeError(f"Workflow dir {WORKFLOW_DIR} already exists.")
+            job.status = JobStatusTypeV2.FAILED
+            job.end_timestamp = get_timestamp()
+            job.log = f"Workflow dir {WORKFLOW_DIR} already exists."
+            db_sync.merge(job)
+            db_sync.commit()
+            db_sync.close()
+            return
 
         # Create WORKFLOW_DIR with 755 permissions
         original_umask = os.umask(0)
@@ -127,26 +124,13 @@ async def submit_workflow(
         os.umask(original_umask)
 
         # Define and create user-side working folder, if needed
-        if FRACTAL_RUNNER_BACKEND == "local":
-            WORKFLOW_DIR_USER = WORKFLOW_DIR
-        elif FRACTAL_RUNNER_BACKEND == "slurm":
-
+        WORKFLOW_DIR_USER = Path(job.working_dir_user)
+        if FRACTAL_RUNNER_BACKEND == "slurm":
             from ..executors.slurm._subprocess_run_as_user import (
                 _mkdir_as_user,
             )
 
-            WORKFLOW_DIR_USER = (
-                Path(user_cache_dir) / f"{WORKFLOW_DIR.name}"
-            ).resolve()
             _mkdir_as_user(folder=str(WORKFLOW_DIR_USER), user=slurm_user)
-        else:
-            raise ValueError(f"{FRACTAL_RUNNER_BACKEND=} not supported")
-
-        # Update db
-        job.working_dir = WORKFLOW_DIR.as_posix()
-        job.working_dir_user = WORKFLOW_DIR_USER.as_posix()
-        db_sync.merge(job)
-        db_sync.commit()
 
         # After Session.commit() is called, either explicitly or when using a
         # context manager, all objects associated with the Session are expired.

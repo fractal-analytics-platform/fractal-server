@@ -1,6 +1,7 @@
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
+from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter
@@ -12,6 +13,7 @@ from sqlmodel import select
 
 from .....config import get_settings
 from .....syringe import Inject
+from .....utils import get_timestamp
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import JobV2
@@ -91,23 +93,17 @@ async def apply_workflow(
 
     # If backend is SLURM, check that the user has required attributes
     settings = Inject(get_settings)
-    backend = settings.FRACTAL_RUNNER_BACKEND
-    if backend == "slurm":
+    FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
+    if FRACTAL_RUNNER_BACKEND == "slurm":
         if not user.slurm_user:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    f"FRACTAL_RUNNER_BACKEND={backend}, "
-                    f"but {user.slurm_user=}."
-                ),
+                detail=f"{FRACTAL_RUNNER_BACKEND=}, but {user.slurm_user=}.",
             )
         if not user.cache_dir:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    f"FRACTAL_RUNNER_BACKEND={backend}, "
-                    f"but {user.cache_dir=}."
-                ),
+                detail=f"{FRACTAL_RUNNER_BACKEND=}, but {user.cache_dir=}.",
             )
 
     # Check that no other job with the same dataset_id is SUBMITTED
@@ -197,6 +193,30 @@ async def apply_workflow(
     await db.commit()
     await db.refresh(job)
 
+    # Define server-side job directory
+    timestamp_string = get_timestamp().strftime("%Y%m%d_%H%M%S")
+    WORKFLOW_DIR = (
+        settings.FRACTAL_RUNNER_WORKING_BASE_DIR
+        / (
+            f"proj_v2_{project_id:07d}_wf_{workflow_id:07d}_job_{job.id:07d}"
+            f"_{timestamp_string}"
+        )
+    ).resolve()
+
+    # Define user-side job directory
+    if FRACTAL_RUNNER_BACKEND == "local":
+        WORKFLOW_DIR_USER = WORKFLOW_DIR
+    elif FRACTAL_RUNNER_BACKEND == "slurm":
+        WORKFLOW_DIR_USER = (
+            Path(user.cache_dir) / f"{WORKFLOW_DIR.name}"
+        ).resolve()
+
+    # Update job folders in the db
+    job.working_dir = WORKFLOW_DIR.as_posix()
+    job.working_dir_user = WORKFLOW_DIR_USER.as_posix()
+    await db.merge(job)
+    await db.commit()
+
     background_tasks.add_task(
         submit_workflow,
         workflow_id=workflow.id,
@@ -208,5 +228,4 @@ async def apply_workflow(
     )
 
     await db.close()
-
     return job

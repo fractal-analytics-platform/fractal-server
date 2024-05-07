@@ -2,6 +2,8 @@
 
 # Unreleased
 
+* Set `JobV2` folder attributes from within the submit-job endpoint (\#1464).
+
 # 2.0.4
 
 * Add `FRACTAL_SLURM_SBATCH_SLEEP` configuration variable (\#1467).
