@@ -2,6 +2,8 @@
 
 # Unreleased
 
+* Improve error message in DELETE-task endpoint (\#1471).
+
 # 2.0.4
 
 * Add `FRACTAL_SLURM_SBATCH_SLEEP` configuration variable (\#1467).
