@@ -43,14 +43,16 @@ def test_ssh(docker_services, docker_compose_project_name, docker_ip):
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            # capture_output=True,
             encoding="utf-8",
         )
         if stdin_content is not None:
-            # FIXME: THIS IS NOT WORKING
-            print(f"STDIN:{stdin_content}")
-            proc.stdin.write(stdin_content)
-        stdout, stderr = proc.communicate()
+            print(f"STDIN:\n{stdin_content}")
+            # proc.stdin.write(stdin_content)  # FIXME: not working
+            stdout, stderr = proc.communicate(
+                input=stdin_content
+            )  # FIXME not working
+        else:
+            stdout, stderr = proc.communicate()
         # proc.wait()
         print(f"RETURNCODE:\n{proc.returncode}")
         print(f"STDOUT:\n{stdout}")
@@ -66,5 +68,5 @@ def test_ssh(docker_services, docker_compose_project_name, docker_ip):
     )
     ip = stdout.strip()
     debug(ip)
-    password = "fractal\n"
-    _run(f"ssh fractal@{ip} hostname", stdin_content=password)
+    _run("less", stdin_content="yes\nfractal\n")
+    _run(f"ssh fractal@{ip} hostname", stdin_content="yes\nfractal\n")
