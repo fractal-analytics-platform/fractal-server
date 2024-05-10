@@ -1,5 +1,3 @@
-version: '3'
-
 services:
 
   slurm-docker-master:
@@ -10,7 +8,6 @@ services:
         user: admin
         volumes:
           - /tmp:/tmp:rw
-
         environment:
                 - SLURM_CPUS_ON_NODE=1
         ports:
