@@ -1551,8 +1551,6 @@ files = [
     {file = "psycopg2-2.9.9-cp310-cp310-win_amd64.whl", hash = "sha256:426f9f29bde126913a20a96ff8ce7d73fd8a216cfb323b1f04da402d452853c3"},
     {file = "psycopg2-2.9.9-cp311-cp311-win32.whl", hash = "sha256:ade01303ccf7ae12c356a5e10911c9e1c51136003a9a1d92f7aa9d010fb98372"},
     {file = "psycopg2-2.9.9-cp311-cp311-win_amd64.whl", hash = "sha256:121081ea2e76729acfb0673ff33755e8703d45e926e416cb59bae3a86c6a4981"},
-    {file = "psycopg2-2.9.9-cp312-cp312-win32.whl", hash = "sha256:d735786acc7dd25815e89cc4ad529a43af779db2e25aa7c626de864127e5a024"},
-    {file = "psycopg2-2.9.9-cp312-cp312-win_amd64.whl", hash = "sha256:a7653d00b732afb6fc597e29c50ad28087dcb4fbfb28e86092277a559ae4e693"},
     {file = "psycopg2-2.9.9-cp37-cp37m-win32.whl", hash = "sha256:5e0d98cade4f0e0304d7d6f25bbfbc5bd186e07b38eac65379309c4ca3193efa"},
     {file = "psycopg2-2.9.9-cp37-cp37m-win_amd64.whl", hash = "sha256:7e2dacf8b009a1c1e843b5213a87f7c544b2b042476ed7755be813eaf4e8347a"},
     {file = "psycopg2-2.9.9-cp38-cp38-win32.whl", hash = "sha256:ff432630e510709564c01dafdbe996cb552e0b9f3f065eb89bdce5bd31fabf4c"},
@@ -1719,22 +1717,22 @@ testing = ["coverage (>=6.2)", "flaky (>=3.5.0)", "hypothesis (>=5.7.1)", "mypy 
 
 [[package]]
 name = "pytest-docker"
-version = "2.2.0"
+version = "3.1.1"
 description = "Simple pytest fixtures for Docker and Docker Compose based tests"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.8"
 files = [
-    {file = "pytest-docker-2.2.0.tar.gz", hash = "sha256:b083fd2ae69212369390033c22228d3263555a5f3b4bef87b74160e07218f377"},
-    {file = "pytest_docker-2.2.0-py3-none-any.whl", hash = "sha256:8ee9c9742d58ac079c81c03635bb830881f7f4d529f0f53f4ba2c89ffc9c7137"},
+    {file = "pytest-docker-3.1.1.tar.gz", hash = "sha256:2371524804a752aaa766c79b9eee8e634534afddb82597f3b573da7c5d6ffb5f"},
+    {file = "pytest_docker-3.1.1-py3-none-any.whl", hash = "sha256:fd0d48d6feac41f62acbc758319215ec9bb805c2309622afb07c27fa5c5ae362"},
 ]
 
 [package.dependencies]
 attrs = ">=19.2.0"
-pytest = ">=4.0,<8.0"
+pytest = ">=4.0,<9.0"
 
 [package.extras]
 docker-compose-v1 = ["docker-compose (>=1.27.3,<2.0)"]
-tests = ["pytest-pycodestyle (>=2.0.0,<3.0)", "pytest-pylint (>=0.14.1,<1.0)", "requests (>=2.22.0,<3.0)"]
+tests = ["mypy (>=0.500,<2.000)", "pytest-mypy (>=0.10,<1.0)", "pytest-pycodestyle (>=2.0.0,<3.0)", "pytest-pylint (>=0.14.1,<1.0)", "requests (>=2.22.0,<3.0)", "types-requests (>=2.31,<3.0)", "types-setuptools (>=69.0,<70.0)"]
 
 [[package]]
 name = "pytest-subprocess"
@@ -1822,7 +1820,6 @@ files = [
     {file = "PyYAML-6.0.1-cp311-cp311-win_amd64.whl", hash = "sha256:bf07ee2fef7014951eeb99f56f39c9bb4af143d8aa3c21b1677805985307da34"},
     {file = "PyYAML-6.0.1-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:855fb52b0dc35af121542a76b9a84f8d1cd886ea97c84703eaa6d88e37a2ad28"},
     {file = "PyYAML-6.0.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:40df9b996c2b73138957fe23a16a4f0ba614f4c0efce1e9406a184b6d07fa3a9"},
-    {file = "PyYAML-6.0.1-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a08c6f0fe150303c1c6b71ebcd7213c2858041a7e01975da3a99aed1e7a378ef"},
     {file = "PyYAML-6.0.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6c22bec3fbe2524cde73d7ada88f6566758a8f7227bfbf93a408a9d86bcc12a0"},
     {file = "PyYAML-6.0.1-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:8d4e9c88387b0f5c7d5f281e55304de64cf7f9c0021a3525bd3b1c542da3b0e4"},
     {file = "PyYAML-6.0.1-cp312-cp312-win32.whl", hash = "sha256:d483d2cdf104e7c9fa60c544d92981f12ad66a457afae824d146093b8c294c54"},
@@ -2307,4 +2304,4 @@ postgres = ["asyncpg", "psycopg2"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "e899811dc26db54c9421b31a858a6f9a38a8157bbed4d3d4e3b017c9a2d77b9b"
+content-hash = "55a0a15d5153b8af60e261918e08a3a35f9ecef264ccf68edacdf232fc2598ec"
