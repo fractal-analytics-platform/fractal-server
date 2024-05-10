@@ -6,6 +6,12 @@ RUN sudo apt-get install python3-venv -y
 COPY slurm.conf /etc/slurm-llnl/
 ADD sudoers /etc/sudoers
 
+# SSH (similar to https://kinsta.com/blog/ssh-into-docker-container/)
+RUN apt-get update && apt-get install -y openssh-server
+RUN mkdir /var/run/sshd
+# RUN sudo /usr/sbin/sshd
+EXPOSE 22
+
 RUN useradd --uid 2000 -m fractal -s /usr/bin/bash -d /home/fractal && echo "fractal:fractal" | chpasswd
 RUN useradd --uid 2001 -m test01 -s /usr/bin/bash -d /home/test01 && echo "test01:test01" | chpasswd
 
