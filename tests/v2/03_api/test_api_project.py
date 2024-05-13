@@ -5,6 +5,10 @@ import pytest
 from devtools import debug
 from sqlmodel import select
 
+from fractal_server.app.models.linkuserproject import LinkUserProject
+from fractal_server.app.models.linkuserproject import LinkUserProjectV2
+from fractal_server.app.models.security import UserOAuth
+from fractal_server.app.models.v1 import Project
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import WorkflowV2
@@ -14,6 +18,26 @@ from fractal_server.app.routes.api.v2._aux_functions import (
 from fractal_server.app.schemas.v2 import JobStatusTypeV2
 
 PREFIX = "/api/v2"
+
+
+async def _project_list(user: UserOAuth, db):
+    stm = (
+        select(Project)
+        .join(LinkUserProject)
+        .where(LinkUserProject.user_id == user.id)
+    )
+    res = await db.execute(stm)
+    return res.scalars().unique().all()
+
+
+async def _project_list_v2(user: UserOAuth, db):
+    stm = (
+        select(ProjectV2)
+        .join(LinkUserProjectV2)
+        .where(LinkUserProjectV2.user_id == user.id)
+    )
+    res = await db.execute(stm)
+    return res.scalars().unique().all()
 
 
 async def test_post_and_get_project(client, db, MockCurrentUser):
@@ -32,47 +56,47 @@ async def test_post_and_get_project(client, db, MockCurrentUser):
             f"{PREFIX}/project/", json=dict(name="project")
         )
         assert res.status_code == 201
-        assert len(userA.project_list) == 0
-        assert len(userA.project_list_v2) == 1
+        assert len(await _project_list(userA, db)) == 0
+        assert len(await _project_list_v2(userA, db)) == 1
         other_project = res.json()
 
     async with MockCurrentUser(user_kwargs=dict(id=2)) as userB:
 
         res = await client.get(f"{PREFIX}/project/")
         assert res.status_code == 200
-        assert res.json() == userB.project_list_v2 == []
+        assert res.json() == await _project_list_v2(userB, db) == []
 
         res = await client.post(
             f"{PREFIX}/project/", json=dict(name="project")
         )
         assert res.status_code == 201
-        assert len(userB.project_list) == 0
-        assert len(userB.project_list_v2) == 1
+        assert len(await _project_list(userB, db)) == 0
+        assert len(await _project_list_v2(userB, db)) == 1
 
         # a user can't create two projectsV2 with the same name
         res = await client.post(
             f"{PREFIX}/project/", json=dict(name="project")
         )
         assert res.status_code == 422
-        assert len(userB.project_list_v2) == 1
+        assert len((await _project_list_v2(userB, db))) == 1
 
         # create two V1 Projects
         for i in range(2):
             res = await client.post(
                 "/api/v1/project/", json=dict(name=f"project_{i}_v1")
             )
-        assert len(userB.project_list) == 2
-        assert len(userB.project_list_v2) == 1
+        assert len(await _project_list(userB, db)) == 2
+        assert len(await _project_list_v2(userB, db)) == 1
 
         res = await client.get(f"{PREFIX}/project/")
         assert res.status_code == 200
         assert len(res.json()) == 1
-        assert res.json()[0]["id"] == userB.project_list_v2[0].id
+        assert res.json()[0]["id"] == (await _project_list_v2(userB, db))[0].id
 
         project_id = res.json()[0]["id"]
         res = await client.get(f"{PREFIX}/project/{project_id}/")
         assert res.status_code == 200
-        assert res.json()["id"] == userB.project_list_v2[0].id
+        assert res.json()["id"] == (await _project_list_v2(userB, db))[0].id
         assert (
             datetime.fromisoformat(res.json()["timestamp_created"]).tzinfo
             == timezone.utc
