@@ -23,7 +23,6 @@ class Project(_ProjectBaseV1, SQLModel, table=True):
 
     user_list: list[UserOAuth] = Relationship(
         link_model=LinkUserProject,
-        back_populates="project_list",
         sa_relationship_kwargs={
             "lazy": "selectin",
         },
