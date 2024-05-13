@@ -11,6 +11,11 @@ from common_functions import non_executable_task_command
 from common_functions import PREFIX
 from devtools import debug
 
+from fractal_server.app.runner.filenames import FILTERS_FILENAME
+from fractal_server.app.runner.filenames import HISTORY_FILENAME
+from fractal_server.app.runner.filenames import IMAGES_FILENAME
+from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
+
 
 FRACTAL_RUNNER_BACKEND = "slurm"
 
@@ -53,6 +58,10 @@ async def test_full_workflow_slurm(
         "0_par_0000001.log",
         "1_par_0000000.log",
         "1_par_0000001.log",
+        HISTORY_FILENAME,
+        FILTERS_FILENAME,
+        IMAGES_FILENAME,
+        WORKFLOW_LOG_FILENAME,
     ] in os.listdir(fractal_runner_working_base_dir / artifacts[0])
 
 
