@@ -5,6 +5,11 @@ from typing import Optional
 
 from devtools import debug
 
+from fractal_server.app.runner.filenames import FILTERS_FILENAME
+from fractal_server.app.runner.filenames import HISTORY_FILENAME
+from fractal_server.app.runner.filenames import IMAGES_FILENAME
+from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
+
 PREFIX = "/api/v2"
 
 
@@ -164,6 +169,19 @@ async def full_workflow(
         statuses = res.json()["status"]
         debug(statuses)
         assert set(statuses.values()) == {"done"}
+
+        assert set(
+            [
+                "0_par_0000000.log",
+                "0_par_0000001.log",
+                "1_par_0000000.log",
+                "1_par_0000001.log",
+                HISTORY_FILENAME,
+                FILTERS_FILENAME,
+                IMAGES_FILENAME,
+                WORKFLOW_LOG_FILENAME,
+            ]
+        ) < set(os.listdir(job_status_data["working_dir"]))
 
 
 async def full_workflow_TaskExecutionError(
