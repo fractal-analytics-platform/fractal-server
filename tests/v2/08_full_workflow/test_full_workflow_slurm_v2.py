@@ -50,7 +50,7 @@ async def test_full_workflow_slurm(
     artifacts = os.listdir(fractal_runner_working_base_dir)
     assert any(
         item.endswith(".log")
-        for item in os.listdir(tmp777_path / "artifacts" / artifacts[0])
+        for item in os.listdir(fractal_runner_working_base_dir / artifacts[0])
     )
 
 
