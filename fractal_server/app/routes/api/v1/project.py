@@ -18,7 +18,7 @@ from .....logger import set_logger
 from .....syringe import Inject
 from ....db import AsyncSession
 from ....db import get_async_db
-from ....models import LinkUserProject
+from ....models.linkuserproject import LinkUserProject
 from ....models.v1 import ApplyWorkflow
 from ....models.v1 import Dataset
 from ....models.v1 import Project
