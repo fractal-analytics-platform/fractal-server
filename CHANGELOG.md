@@ -3,7 +3,7 @@
 # Unreleased
 
 * Runner:
-    * Copy `.log` files into server folder for SLURM jobs (\#1479).
+    * Fix missing `.log` files in server folder for SLURM jobs (\#1479).
 
 # 2.0.5
 
