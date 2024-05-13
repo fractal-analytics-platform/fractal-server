@@ -141,7 +141,7 @@ def _glob_as_user_strict(
     new_output = []
     known_filenames = [
         f"{startswith}{suffix}"
-        for suffix in [".args.json", ".metadiff.json", ".err", ".out"]
+        for suffix in [".args.json", ".metadiff.json", ".err", ".out", ".log"]
     ]
     for filename in output:
         if filename in known_filenames:
