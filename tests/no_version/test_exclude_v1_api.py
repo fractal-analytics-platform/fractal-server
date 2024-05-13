@@ -39,7 +39,8 @@ async def test_exclude_v1_api(
         it = 0
         while it < max_iterations:
             try:
-                r = Client().get("http://localhost:8001/openapi.json")
+                with Client() as client:
+                    r = client.get("http://localhost:8001/openapi.json")
                 break
             except ConnectError:
                 time.sleep(0.2)
