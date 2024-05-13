@@ -2,6 +2,9 @@
 
 # Unreleased
 
+* Runner:
+    * Fix missing `.log` files in server folder for SLURM jobs (\#1479).
+
 # 2.0.5
 
 * API:
