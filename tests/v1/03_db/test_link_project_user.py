@@ -2,8 +2,8 @@ from devtools import debug
 from sqlmodel import select
 
 from fractal_server.app.models import UserOAuth as User
-from fractal_server.app.models.linkuserproject import LinkUserProject
 from fractal_server.app.models.security import UserOAuth
+from fractal_server.app.models.v1 import LinkUserProject
 from fractal_server.app.models.v1 import Project
 
 
