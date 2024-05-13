@@ -6,13 +6,13 @@ from sqlalchemy import select
 
 from fractal_server.app.db import DB
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.models import ApplyWorkflow
-from fractal_server.app.models import Dataset
-from fractal_server.app.models import Project
-from fractal_server.app.models import State
-from fractal_server.app.models import Task
-from fractal_server.app.models import UserOAuth
-from fractal_server.app.models import WorkflowTask
+from fractal_server.app.models.security import UserOAuth
+from fractal_server.app.models.v1 import ApplyWorkflow
+from fractal_server.app.models.v1 import Dataset
+from fractal_server.app.models.v1 import Project
+from fractal_server.app.models.v1 import State
+from fractal_server.app.models.v1 import Task
+from fractal_server.app.models.v1 import WorkflowTask
 
 
 sys.exit("WARNING: executing this script has non-reversible effects!")
