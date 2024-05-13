@@ -53,7 +53,7 @@ async def test_full_workflow_slurm(
 
     # https://github.com/fractal-analytics-platform/fractal-server/issues/1460
     artifacts = os.listdir(fractal_runner_working_base_dir)
-    assert [
+    for item in [
         "0_par_0000000.log",
         "0_par_0000001.log",
         "1_par_0000000.log",
@@ -62,7 +62,10 @@ async def test_full_workflow_slurm(
         FILTERS_FILENAME,
         IMAGES_FILENAME,
         WORKFLOW_LOG_FILENAME,
-    ] in os.listdir(fractal_runner_working_base_dir / artifacts[0])
+    ]:
+        assert item in os.listdir(
+            fractal_runner_working_base_dir / artifacts[0]
+        )
 
 
 async def test_full_workflow_TaskExecutionError_slurm(
