@@ -5,11 +5,11 @@ import pytest
 from devtools import debug
 from sqlmodel import select
 
-from fractal_server.app.models.linkuserproject import LinkUserProject
-from fractal_server.app.models.linkuserproject import LinkUserProjectV2
 from fractal_server.app.models.security import UserOAuth
+from fractal_server.app.models.v1 import LinkUserProject
 from fractal_server.app.models.v1 import Project
 from fractal_server.app.models.v2 import DatasetV2
+from fractal_server.app.models.v2 import LinkUserProjectV2
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import WorkflowV2
 from fractal_server.app.routes.api.v2._aux_functions import (
