@@ -1,3 +1,4 @@
+import os
 import shlex
 import subprocess
 
@@ -28,9 +29,10 @@ async def test_full_workflow_slurm(
     monkey_slurm,
 ):
     # Use a session-scoped FRACTAL_TASKS_DIR folder
+    fractal_runner_working_base_dir = tmp777_path / "artifacts"
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
-        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
+        FRACTAL_RUNNER_WORKING_BASE_DIR=fractal_runner_working_base_dir,
         FRACTAL_TASKS_DIR=tmp_path_factory.getbasetemp() / "FRACTAL_TASKS_DIR",
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
     )
@@ -42,6 +44,13 @@ async def test_full_workflow_slurm(
         dataset_factory_v2=dataset_factory_v2,
         workflow_factory_v2=workflow_factory_v2,
         client=client,
+    )
+
+    # https://github.com/fractal-analytics-platform/fractal-server/issues/1460
+    artifacts = os.listdir(fractal_runner_working_base_dir)
+    assert any(
+        item.endswith(".log")
+        for item in os.listdir(tmp777_path / "artifacts" / artifacts[0])
     )
 
 
