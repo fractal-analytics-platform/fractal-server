@@ -361,7 +361,7 @@ class Settings(BaseSettings):
     attribute in their input-arguments JSON file.
     """
 
-    FRACTAL_API_V1_ENABLED: bool = True
+    FRACTAL_API_V1_MODE: Literal["include", "exclude"] = "include"
     """
     Whether to include the v1 API.
     """
