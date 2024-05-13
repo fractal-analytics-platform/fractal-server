@@ -8,10 +8,10 @@ from sqlalchemy.exc import IntegrityError
 
 import fractal_server
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.models import ApplyWorkflow
-from fractal_server.app.models import Dataset
-from fractal_server.app.models import Project
-from fractal_server.app.models import Workflow
+from fractal_server.app.models.v1 import ApplyWorkflow
+from fractal_server.app.models.v1 import Dataset
+from fractal_server.app.models.v1 import Project
+from fractal_server.app.models.v1 import Workflow
 from fractal_server.app.schemas.v1 import ApplyWorkflowReadV1
 from fractal_server.app.schemas.v1 import WorkflowReadV1
 from fractal_server.app.schemas.v1.dataset import DatasetReadV1

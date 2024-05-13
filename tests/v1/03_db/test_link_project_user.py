@@ -1,8 +1,7 @@
 from devtools import debug
 from sqlmodel import select
 
-from fractal_server.app.models import UserOAuth as User
-from fractal_server.app.models.security import UserOAuth
+from fractal_server.app.models.security import UserOAuth as User
 from fractal_server.app.models.v1 import LinkUserProject
 from fractal_server.app.models.v1 import Project
 
@@ -16,7 +15,7 @@ async def _create_user(email, this_db):
     return user
 
 
-async def _project_list(user: UserOAuth, db):
+async def _project_list(user: User, db):
     stm = (
         select(Project)
         .join(LinkUserProject)
