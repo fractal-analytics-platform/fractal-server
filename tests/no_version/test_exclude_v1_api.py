@@ -5,7 +5,8 @@ import time
 from pathlib import Path
 
 import pytest
-import requests
+from httpx import Client
+from httpx import ConnectError
 
 import fractal_server
 
@@ -38,9 +39,9 @@ async def test_exclude_v1_api(
         it = 0
         while it < max_iterations:
             try:
-                r = requests.get("http://localhost:8001/openapi.json")
+                r = Client().get("http://localhost:8001/openapi.json")
                 break
-            except requests.exceptions.ConnectionError:
+            except ConnectError:
                 time.sleep(0.2)
                 it += 1
         if it == max_iterations:
