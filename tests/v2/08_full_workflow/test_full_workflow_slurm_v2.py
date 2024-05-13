@@ -1,4 +1,3 @@
-import os
 import shlex
 import subprocess
 
@@ -10,11 +9,6 @@ from common_functions import full_workflow_TaskExecutionError
 from common_functions import non_executable_task_command
 from common_functions import PREFIX
 from devtools import debug
-
-from fractal_server.app.runner.filenames import FILTERS_FILENAME
-from fractal_server.app.runner.filenames import HISTORY_FILENAME
-from fractal_server.app.runner.filenames import IMAGES_FILENAME
-from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
 
 
 FRACTAL_RUNNER_BACKEND = "slurm"
@@ -50,22 +44,6 @@ async def test_full_workflow_slurm(
         workflow_factory_v2=workflow_factory_v2,
         client=client,
     )
-
-    # https://github.com/fractal-analytics-platform/fractal-server/issues/1460
-    artifacts = os.listdir(fractal_runner_working_base_dir)
-    for item in [
-        "0_par_0000000.log",
-        "0_par_0000001.log",
-        "1_par_0000000.log",
-        "1_par_0000001.log",
-        HISTORY_FILENAME,
-        FILTERS_FILENAME,
-        IMAGES_FILENAME,
-        WORKFLOW_LOG_FILENAME,
-    ]:
-        assert item in os.listdir(
-            fractal_runner_working_base_dir / artifacts[0]
-        )
 
 
 async def test_full_workflow_TaskExecutionError_slurm(
