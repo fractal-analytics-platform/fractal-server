@@ -7,7 +7,9 @@
 * API:
     * Add `GET /admin/v2/task/` (\#1465).
     * Improve error message in DELETE-task endpoint (\#1471).
-* Set `JobV2` folder attributes from within the submit-job endpoint (\#1464).
+    * Set `JobV2` folder attributes from within the submit-job endpoint (\#1464).
+* Runner:
+    * Copy `.log` files into server folder for SLURM jobs (\#1479).
 * Tests:
     * Make SLURM CI work on MacOS (\#1476).
 
