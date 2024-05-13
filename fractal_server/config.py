@@ -361,6 +361,11 @@ class Settings(BaseSettings):
     attribute in their input-arguments JSON file.
     """
 
+    FRACTAL_API_V1_ENABLED: bool = True
+    """
+    Whether to include the v1 API.
+    """
+
     ###########################################################################
     # BUSINESS LOGIC
     ###########################################################################
