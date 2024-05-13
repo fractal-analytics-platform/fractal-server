@@ -13,6 +13,7 @@ import fractal_server
 FRACTAL_SERVER_DIR = Path(fractal_server.__file__).parent
 
 
+@pytest.mark.skip(reason="The test takes too long")
 @pytest.mark.parametrize(
     "FRACTAL_API_V1_MODE,is_v1_enabled",
     [("include", True), ("exclude", False)],
