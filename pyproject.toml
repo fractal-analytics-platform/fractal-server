@@ -55,7 +55,7 @@ devtools = "^0.12"
 pytest-asyncio = "^0.21"
 bumpver = "^2022.1120"
 pre-commit = "^2.19"
-coverage = {extras = ["toml"], version = "^6.4.4"}
+coverage = {extras = ["toml"], version = "7.5.*"}
 pytest-docker = {version = "3.1.*"}
 mypy = "^1.9"
 pytest-subprocess = "^1.4"
