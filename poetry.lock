@@ -2306,4 +2306,4 @@ postgres = ["asyncpg", "psycopg2"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "c9ac57c92db2a8413daecd269dc54c6509ed67f6012237356707ee1a73463592"
+content-hash = "ef98205084d5c289dc09b8bb5670f1b66567dd2635c8c21e8467c957da8de4cb"
