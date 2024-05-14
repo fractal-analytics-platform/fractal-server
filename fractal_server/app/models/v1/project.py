@@ -7,9 +7,9 @@ from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
+from . import LinkUserProject
 from ....utils import get_timestamp
 from ...schemas.v1.project import _ProjectBaseV1
-from ..linkuserproject import LinkUserProject
 from ..security import UserOAuth
 
 
@@ -23,7 +23,6 @@ class Project(_ProjectBaseV1, SQLModel, table=True):
 
     user_list: list[UserOAuth] = Relationship(
         link_model=LinkUserProject,
-        back_populates="project_list",
         sa_relationship_kwargs={
             "lazy": "selectin",
         },

@@ -1,7 +1,3 @@
-"""
-`models` module
-"""
-from .security import *  # noqa: F401, F403
 from .v1 import Project  # noqa: F401
 from .v2 import ProjectV2  # noqa: F401
 
