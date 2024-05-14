@@ -13,6 +13,8 @@
     * Bump `coverage` to `7.5.*` (#1486).
     * Bump `pytest-docker` to `3.1.*` (#1486).
     * Bump `pytest-subprocess` to `^1.5` (#1486).
+* Benchmarks:
+    * Move `populate_db` scripts into `benchmark` folder (\#1489).
 
 
 # 2.0.5
