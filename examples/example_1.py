@@ -2,7 +2,9 @@
 import sys
 from pathlib import Path
 
-sys.path.append((Path(__file__).parents[1] / "scripts/populate_db").as_posix())
+sys.path.append(
+    (Path(__file__).parents[1] / "benchmarks/populate_db").as_posix()
+)
 
 from scripts.client import DEFAULT_CREDENTIALS
 from scripts.client import FractalClient
