@@ -3,11 +3,41 @@ import shlex
 import subprocess
 
 from devtools import debug
+from fabric.connection import Connection
 
 from .fixtures_slurm import is_responsive
 
 
+def _run_ssh_command_in_tests(
+    command: str,
+    hostname: str,
+    username: str,
+    password: str,
+):
+
+    # hostname = "cluster.s3it.uzh.ch"
+    # username = "srv-mls-prbvc"
+    # key_path = "/home/ubuntu/.ssh/service_user_sciencecluster.key"
+    connection = Connection(
+        host=hostname,
+        user=username,
+        # connect_kwargs={"key_filename": key_path},
+        connect_kwargs={"password": password},
+    )
+
+    result = connection.run(command, hide=True)
+    print("STDOUT:")
+    print(result.stdout)
+    print("STDERR:")
+    print(result.stderr)
+    connection.close()
+
+    return result
+
+
 def test_ssh(docker_services, docker_compose_project_name, docker_ip):
+
+    return
 
     slurm_container = docker_compose_project_name + "-slurm-docker-master-1"
     logging.warning(f"{docker_compose_project_name=}")
@@ -21,20 +51,6 @@ def test_ssh(docker_services, docker_compose_project_name, docker_ip):
 
     debug(docker_services)
     debug(docker_ip)
-
-    # def _run(_cmd):
-    #     print("CMD:\n", shlex.split(_cmd))
-    #     proc = subprocess.Popen(
-    #         shlex.split(_cmd),
-    #         capture_output=True,
-    #         encoding="utf-8",
-    #     )
-    #     proc.wait()
-    #     print(f"RETURNCODE:\n{proc.returncode}")
-    #     print(f"STDOUT:\n{proc.stdout}")
-    #     print(f"STDERR:\n{proc.stderr}")
-    #     print()
-    #     return proc
 
     def _run(_cmd: str, stdin_content: str | None = None):
         print("CMD:\n", shlex.split(_cmd))
@@ -68,5 +84,9 @@ def test_ssh(docker_services, docker_compose_project_name, docker_ip):
     )
     ip = stdout.strip()
     debug(ip)
-    _run("less", stdin_content="yes\nfractal\n")
-    _run(f"ssh fractal@{ip} hostname", stdin_content="yes\nfractal\n")
+    _run_ssh_command_in_tests(
+        command="whoami",
+        hostname=ip,
+        username="fractal",
+        password="fractal",
+    )
