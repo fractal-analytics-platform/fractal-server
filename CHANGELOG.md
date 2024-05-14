@@ -5,6 +5,8 @@
 * Add `FRACTAL_API_V1_MODE` environment variable to include/exclude V1 API (\#1480).
 * Runner:
     * Fix missing `.log` files in server folder for SLURM jobs (\#1479).
+* Database:
+    * Remove `UserOAuth.project_list` and `UserOAuth.project_list_v2` relationships (\#1482).
 
 
 # 2.0.5
