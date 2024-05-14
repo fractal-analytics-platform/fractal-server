@@ -4,8 +4,8 @@ from pathlib import Path
 
 sys.path.append((Path(__file__).parents[1] / "scripts/populate_db").as_posix())
 
-from fractal_client import DEFAULT_CREDENTIALS
-from fractal_client import FractalClient
+from scripts.client import DEFAULT_CREDENTIALS
+from scripts.client import FractalClient
 from passlib.context import CryptContext
 import os
 
