@@ -1,5 +1,3 @@
-from fractal_client import DEFAULT_CREDENTIALS
-from fractal_client import FractalClient
 from passlib.context import CryptContext
 
 from fractal_server.app.db import get_sync_db
@@ -10,6 +8,8 @@ from fractal_server.app.schemas.v2 import ProjectCreateV2
 from fractal_server.app.schemas.v2 import WorkflowCreateV2
 from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
 from fractal_server.app.security import UserOAuth
+from scripts.client import DEFAULT_CREDENTIALS
+from scripts.client import FractalClient
 
 
 def create_image_list(n_images: int) -> list:
