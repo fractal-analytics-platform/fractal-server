@@ -1,7 +1,7 @@
 from sqlalchemy import select
 
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.models import UserOAuth
+from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.models.v1 import ApplyWorkflow
 from fractal_server.app.models.v1 import Dataset
 from fractal_server.app.models.v1 import Project

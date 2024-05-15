@@ -2,9 +2,27 @@
 
 # Unreleased
 
-* Add `FRACTAL_API_V1_MODE` environment variable to include/exclude V1 API (\#1480).
+> NOTE: This version changes log formats.
+> For `uvicorn` logs, this change requires no action.
+> For `gunicorn`, logs formats are only changed by adding the following
+> command-line option:
+> `gunicorn ... --logger-class fractal_server.logger.gunicorn_logger.FractalGunicornLogger`.
+
+* API:
+    * Add `FRACTAL_API_V1_MODE` environment variable to include/exclude V1 API (\#1480).
+    * Change format of uvicorn loggers (\#1491).
+    * Introduce `FractalGunicornLogger` class (\#1491).
 * Runner:
     * Fix missing `.log` files in server folder for SLURM jobs (\#1479).
+* Database:
+    * Remove `UserOAuth.project_list` and `UserOAuth.project_list_v2` relationships (\#1482).
+* Dev dependencies:
+    * Bump `pytest` to `8.1.*` (#1486).
+    * Bump `coverage` to `7.5.*` (#1486).
+    * Bump `pytest-docker` to `3.1.*` (#1486).
+    * Bump `pytest-subprocess` to `^1.5` (#1486).
+* Benchmarks:
+    * Move `populate_db` scripts into `benchmark` folder (\#1489).
 
 
 # 2.0.5
