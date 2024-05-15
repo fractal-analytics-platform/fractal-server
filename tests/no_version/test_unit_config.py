@@ -222,6 +222,20 @@ def test_make_FRACTAL_TASKS_DIR_absolute():
     assert settings.FRACTAL_TASKS_DIR.is_absolute()
 
 
+def test_make_FRACTAL_RUNNER_WORKING_BASE_DIR_absolute():
+    """
+    Test `Settings.make_FRACTAL_RUNNER_WORKING_BASE_DIR_absolute` validator.
+    """
+    settings = Settings(
+        JWT_SECRET_KEY="secret",
+        SQLITE_PATH="/tmp/test.db",
+        FRACTAL_RUNNER_WORKING_BASE_DIR="/relative-path",
+        FRACTAL_TASKS_DIR="/tmp",
+    )
+    debug(settings.FRACTAL_RUNNER_WORKING_BASE_DIR)
+    assert settings.FRACTAL_RUNNER_WORKING_BASE_DIR.is_absolute()
+
+
 def test_OAuthClientConfig():
 
     config = OAuthClientConfig(
