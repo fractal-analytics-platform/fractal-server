@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 from devtools import debug
 from fabric.connection import Connection
+from pytest_docker.plugin import containers_scope
 
 
 def is_responsive(container_name):
@@ -72,10 +73,20 @@ def _write_requirements_file(path: Path):
         f.write(f"clusterfutures=={cfut.__version__}\n")
 
 
+@pytest.fixture(scope=containers_scope)
+def docker_cleanup() -> str:
+    """
+    See
+    https://docs.docker.com/compose/faq/#why-do-my-services-take-10-seconds-to-recreate-or-stop.
+
+    docker compose down --help:
+       `-t, --timeout int      Specify a shutdown timeout in seconds`
+    """
+    return ["down -v -t 1"]
+
+
 @pytest.fixture(scope="session")
 def docker_compose_file(pytestconfig, testdata_path: Path):
-    logging.critical("docker_compose_file start")
-
     requirements_file_path = (
         testdata_path
         / "slurm_ssh_docker_images"
@@ -107,7 +118,6 @@ def docker_compose_file(pytestconfig, testdata_path: Path):
     if sys.platform == "darwin":
         raise NotImplementedError()
 
-    logging.critical("docker_compose_file end")
     return str(testdata_path / "slurm_ssh_docker_images/docker-compose.yml")
 
 
