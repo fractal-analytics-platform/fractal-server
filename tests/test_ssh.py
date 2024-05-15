@@ -1,11 +1,24 @@
 import logging
 import shlex
 import subprocess
+import sys
+from pathlib import Path
 
+import pytest
 from devtools import debug
 from fabric.connection import Connection
 
-from .fixtures_slurm import is_responsive
+
+def is_responsive(container_name):
+    try:
+        import subprocess
+
+        exec_cmd = ["docker", "ps", "-f", f"name={container_name}"]
+        out = subprocess.run(exec_cmd, check=True, capture_output=True)
+        if out.stdout.decode("utf-8") is not None:
+            return True
+    except ConnectionError:
+        return False
 
 
 def _run_ssh_command_in_tests(
@@ -35,9 +48,38 @@ def _run_ssh_command_in_tests(
     return result
 
 
-def test_ssh(docker_services, docker_compose_project_name, docker_ip):
+@pytest.fixture(scope="session")
+def docker_compose_file(pytestconfig, testdata_path: Path):
+    logging.critical("docker_compose_file start")
+    import fractal_server
+    import tarfile
 
-    return
+    # This same path is hardocded in the Dockerfile of the SLURM node.
+    CODE_ROOT = Path(fractal_server.__file__).parent.parent
+    TAR_FILE = (
+        testdata_path
+        / "slurm_ssh_docker_images/node/fractal_server_local.tar.gz"
+    )
+    TAR_ROOT = CODE_ROOT.name
+    with tarfile.open(TAR_FILE, "w:gz") as tar:
+        tar.add(CODE_ROOT, arcname=TAR_ROOT, recursive=False)
+        for name in [
+            "pyproject.toml",
+            "README.md",
+            "fractal_server",
+        ]:
+            f = CODE_ROOT / name
+            tar.add(f, arcname=f.relative_to(CODE_ROOT.parent))
+
+    if sys.platform == "darwin":
+        raise NotImplementedError()
+
+    logging.critical("docker_compose_file end")
+    return str(testdata_path / "slurm_ssh_docker_images/docker-compose.yml")
+
+
+def test_ssh(docker_services, docker_compose_project_name, docker_ip):
+    print(docker_services)
 
     slurm_container = docker_compose_project_name + "-slurm-docker-master-1"
     logging.warning(f"{docker_compose_project_name=}")
@@ -51,6 +93,8 @@ def test_ssh(docker_services, docker_compose_project_name, docker_ip):
 
     debug(docker_services)
     debug(docker_ip)
+
+    return
 
     def _run(_cmd: str, stdin_content: str | None = None):
         print("CMD:\n", shlex.split(_cmd))
