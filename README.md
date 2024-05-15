@@ -127,8 +127,8 @@
 | fractal\_server/images/\_\_init\_\_.py                                    |        4 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/images/models.py                                          |       65 |        1 |       34 |        8 |     91% |37->36, 41->40, 52->51, 57, 71->70, 89->88, 93->92, 126->125 |
 | fractal\_server/images/tools.py                                           |       29 |        0 |       12 |        0 |    100% |           |
-| fractal\_server/logger.py                                                 |       38 |        0 |        8 |        0 |    100% |           |
-| fractal\_server/main.py                                                   |       44 |        4 |        9 |        2 |     89% |45->50, 86, 106->105, 112-120 |
+| fractal\_server/logger/\_\_init\_\_.py                                    |       45 |        2 |       12 |        2 |     93% |  160, 164 |
+| fractal\_server/main.py                                                   |       46 |        5 |        9 |        2 |     87% |46->51, 87-88, 108->107, 114-122 |
 | fractal\_server/syringe.py                                                |       29 |        2 |        8 |        3 |     86% |66->65, 83->82, 93-94, 97->96 |
 | fractal\_server/tasks/\_\_init\_\_.py                                     |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/tasks/endpoint\_operations.py                             |       76 |        0 |       26 |        4 |     96% |38->exit, 113->exit, 118->exit, 123->exit |
@@ -143,7 +143,7 @@
 | fractal\_server/tasks/v2/get\_collection\_data.py                         |       11 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/urls.py                                                   |        7 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                  |       22 |        0 |        2 |        0 |    100% |           |
-|                                                                 **TOTAL** | **7793** |  **238** | **2286** |  **338** | **94%** |           |
+|                                                                 **TOTAL** | **7802** |  **241** | **2290** |  **340** | **94%** |           |
 
 
 ## Setup coverage badge
