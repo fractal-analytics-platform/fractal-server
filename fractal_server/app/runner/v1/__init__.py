@@ -159,9 +159,7 @@ async def submit_workflow(
                 _mkdir_as_user,
             )
 
-            WORKFLOW_DIR_USER = (
-                Path(user_cache_dir) / f"{WORKFLOW_DIR.name}"
-            ).resolve()
+            WORKFLOW_DIR_USER = Path(user_cache_dir) / f"{WORKFLOW_DIR.name}"
             _mkdir_as_user(folder=str(WORKFLOW_DIR_USER), user=slurm_user)
         else:
             raise ValueError(f"{FRACTAL_RUNNER_BACKEND=} not supported")
