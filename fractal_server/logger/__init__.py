@@ -17,8 +17,8 @@ from pathlib import Path
 from typing import Optional
 from typing import Union
 
-from .config import get_settings
-from .syringe import Inject
+from ..config import get_settings
+from ..syringe import Inject
 
 
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -136,3 +136,29 @@ def reset_logger_handlers(logger: logging.Logger) -> None:
     """
     close_logger(logger)
     logger.handlers.clear()
+
+
+def config_uvicorn_loggers():
+    """
+    Change the formatter for the uvicorn access/error loggers.
+
+    This is similar to https://stackoverflow.com/a/68864979/19085332. See also
+    https://github.com/tiangolo/fastapi/issues/1508.
+
+    This function is meant to work in two scenarios:
+
+    1. The most relevant case is for a `gunicorn` startup command, with
+       `--access-logfile` and `--error-logfile` options set.
+    2. The case of `fractalctl start` (directly calling `uvicorn`).
+
+    Because of the second use case, we need to check whether uvicorn loggers
+    already have a handler. If not, we skip the formatting.
+    """
+
+    access_logger = logging.getLogger("uvicorn.access")
+    if len(access_logger.handlers) > 0:
+        access_logger.handlers[0].setFormatter(LOG_FORMATTER)
+
+    error_logger = logging.getLogger("uvicorn.error")
+    if len(error_logger.handlers) > 0:
+        error_logger.handlers[0].setFormatter(LOG_FORMATTER)
