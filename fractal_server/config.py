@@ -289,6 +289,27 @@ class Settings(BaseSettings):
             )
         return FRACTAL_TASKS_DIR_path
 
+    @validator("FRACTAL_RUNNER_WORKING_BASE_DIR", always=True)
+    def make_FRACTAL_RUNNER_WORKING_BASE_DIR_absolute(cls, v):
+        """
+        (Copy of make_FRACTAL_TASKS_DIR_absolute)
+        If `FRACTAL_RUNNER_WORKING_BASE_DIR` is a non-absolute path,
+        make it absolute (based on the current working directory).
+        """
+        if v is None:
+            return None
+        FRACTAL_RUNNER_WORKING_BASE_DIR_path = Path(v)
+        if not FRACTAL_RUNNER_WORKING_BASE_DIR_path.is_absolute():
+            FRACTAL_RUNNER_WORKING_BASE_DIR_path = (
+                FRACTAL_RUNNER_WORKING_BASE_DIR_path.resolve()
+            )
+            logging.warning(
+                f'FRACTAL_RUNNER_WORKING_BASE_DIR="{v}" is not an absolute '
+                "path; converting it to "
+                f'"{str(FRACTAL_RUNNER_WORKING_BASE_DIR_path)}"'
+            )
+        return FRACTAL_RUNNER_WORKING_BASE_DIR_path
+
     FRACTAL_RUNNER_BACKEND: Literal["local", "slurm"] = "local"
     """
     Select which runner backend to use.

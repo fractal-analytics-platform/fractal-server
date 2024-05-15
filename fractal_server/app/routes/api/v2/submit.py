@@ -195,21 +195,16 @@ async def apply_workflow(
 
     # Define server-side job directory
     timestamp_string = get_timestamp().strftime("%Y%m%d_%H%M%S")
-    WORKFLOW_DIR = (
-        settings.FRACTAL_RUNNER_WORKING_BASE_DIR
-        / (
-            f"proj_v2_{project_id:07d}_wf_{workflow_id:07d}_job_{job.id:07d}"
-            f"_{timestamp_string}"
-        )
-    ).resolve()
+    WORKFLOW_DIR = settings.FRACTAL_RUNNER_WORKING_BASE_DIR / (
+        f"proj_v2_{project_id:07d}_wf_{workflow_id:07d}_job_{job.id:07d}"
+        f"_{timestamp_string}"
+    )
 
     # Define user-side job directory
     if FRACTAL_RUNNER_BACKEND == "local":
         WORKFLOW_DIR_USER = WORKFLOW_DIR
     elif FRACTAL_RUNNER_BACKEND == "slurm":
-        WORKFLOW_DIR_USER = (
-            Path(user.cache_dir) / f"{WORKFLOW_DIR.name}"
-        ).resolve()
+        WORKFLOW_DIR_USER = Path(user.cache_dir) / f"{WORKFLOW_DIR.name}"
 
     # Update job folders in the db
     job.working_dir = WORKFLOW_DIR.as_posix()
