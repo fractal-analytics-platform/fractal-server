@@ -2,8 +2,6 @@
 # The only difference is '/private:/private:rw' in place of '/tmp:/tmp:rw'
 # See https://github.com/fractal-analytics-platform/fractal-server/issues/1475
 
-version: '3'
-
 services:
 
   slurm-docker-master:
