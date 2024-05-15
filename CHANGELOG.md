@@ -2,7 +2,11 @@
 
 # Unreleased
 
-> NOTE: `uvicorn` log formats are automatically updated by updating `fractal-server`; `gunicorn` new log formats can be enabled by adding the following option to the `gunicorn` command: `--logger-class fractal_server.logger.gunicorn_logger.FractalGunicornLogger`.
+> NOTE: This version changes log formats.
+> For `uvicorn` logs, this change requires no action.
+> For `gunicorn`, logs formats are only changed by adding the following
+> command-line option:
+> `gunicorn ... --logger-class fractal_server.logger.gunicorn_logger.FractalGunicornLogger`.
 
 * API:
     * Add `FRACTAL_API_V1_MODE` environment variable to include/exclude V1 API (\#1480).
