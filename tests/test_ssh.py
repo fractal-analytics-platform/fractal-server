@@ -48,9 +48,42 @@ def _run_ssh_command_in_tests(
     return result
 
 
+def _write_requirements_file(path: Path):
+    """
+    This function creates a temporary requirements file, which is copied
+    into the node container and pip-installed from a separate statement.
+    For local tests, this improves performance because this layer can be
+    cached by Docker. The cache is invalidated whenever some version change.
+    """
+
+    import pydantic
+    import sqlalchemy
+    import fastapi
+    import cfut
+    import alembic
+    import fastapi_users
+
+    with path.open("w") as f:
+        f.write(f"pydantic=={pydantic.__version__}\n")
+        f.write(f"sqlalchemy=={sqlalchemy.__version__}\n")
+        f.write(f"alembic=={alembic.__version__}\n")
+        f.write(f"fastapi=={fastapi.__version__}\n")
+        f.write(f"fastapi-users=={fastapi_users.__version__}\n")
+        f.write(f"clusterfutures=={cfut.__version__}\n")
+
+
 @pytest.fixture(scope="session")
 def docker_compose_file(pytestconfig, testdata_path: Path):
     logging.critical("docker_compose_file start")
+
+    requirements_file_path = (
+        testdata_path
+        / "slurm_ssh_docker_images"
+        / "node"
+        / "tmp_requirements.txt"
+    )
+    _write_requirements_file(requirements_file_path)
+
     import fractal_server
     import tarfile
 

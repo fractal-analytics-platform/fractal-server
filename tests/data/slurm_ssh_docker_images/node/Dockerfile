@@ -11,9 +11,13 @@ RUN pip3 install --upgrade pip setuptools wheel devtools
 
 RUN useradd --uid 2001 -m test01 -s /usr/bin/bash -d /home/test01 && echo "test01:test01" | chpasswd
 
+COPY tmp_requirements.txt .
+RUN pip3 install -r tmp_requirements.txt
+
 ADD fractal_server_local.tar.gz .
 WORKDIR ./fractal-server
-RUN pip3 install -e .
 
+# These three lines cannot be cached
+RUN pip3 install -e .
 
 ENTRYPOINT ["/etc/slurm-llnl/docker-entrypoint.sh"]
