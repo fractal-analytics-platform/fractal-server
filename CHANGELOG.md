@@ -2,6 +2,11 @@
 
 # Unreleased
 
+* Testing:
+    * Improve dockerfiles for SLURM (\#1495).
+
+# 2.0.6
+
 > NOTE: This version changes log formats.
 > For `uvicorn` logs, this change requires no action.
 > For `gunicorn`, logs formats are only changed by adding the following
