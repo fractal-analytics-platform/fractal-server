@@ -3,7 +3,7 @@
 # Unreleased
 
 * Testing:
-    * Improve dockerfiles for SLURM (\#1495).
+    * Improve dockerfiles for SLURM (\#1495, \#1496).
 
 # 2.0.6
 
