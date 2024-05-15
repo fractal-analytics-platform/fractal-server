@@ -16,18 +16,18 @@ services:
                 - 6818:6818
                 - 6819:6819
 
-  slurmnode1:
-        depends_on:
-          - "slurm-docker-master"
-        build:
-          context: ./node
-          dockerfile: Dockerfile
-        hostname: slurmnode1
-        user: admin
-        volumes:
-          - /tmp:/tmp:rw
-        environment:
-                - SLURM_NODENAME=slurmnode1
-                - SLURM_CPUS_ON_NODE=1
-        links:
-                - slurm-docker-master
+  # slurmnode1:
+  #       depends_on:
+  #         - "slurm-docker-master"
+  #       build:
+  #         context: ./node
+  #         dockerfile: Dockerfile
+  #       hostname: slurmnode1
+  #       user: admin
+  #       volumes:
+  #         - /tmp:/tmp:rw
+  #       environment:
+  #               - SLURM_NODENAME=slurmnode1
+  #               - SLURM_CPUS_ON_NODE=1
+  #       links:
+  #               - slurm-docker-master
