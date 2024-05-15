@@ -2,6 +2,9 @@
 
 # Unreleased
 
+* Testing:
+    * Improve dockerfiles for SLURM (\#1495).
+
 # 2.0.6
 
 > NOTE: This version changes log formats.
