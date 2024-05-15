@@ -19,6 +19,7 @@ from fastapi import FastAPI
 
 from .app.security import _create_first_user
 from .config import get_settings
+from .logger import config_uvicorn_loggers
 from .logger import reset_logger_handlers
 from .logger import set_logger
 from .syringe import Inject
@@ -84,6 +85,7 @@ async def __on_startup() -> None:
     callable.
     """
     check_settings()
+    config_uvicorn_loggers()
 
 
 def start_application() -> FastAPI:
