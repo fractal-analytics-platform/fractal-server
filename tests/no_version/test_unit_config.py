@@ -229,7 +229,7 @@ def test_make_FRACTAL_RUNNER_WORKING_BASE_DIR_absolute():
     settings = Settings(
         JWT_SECRET_KEY="secret",
         SQLITE_PATH="/tmp/test.db",
-        FRACTAL_RUNNER_WORKING_BASE_DIR="/relative-path",
+        FRACTAL_RUNNER_WORKING_BASE_DIR="relative-path",
         FRACTAL_TASKS_DIR="/tmp",
     )
     debug(settings.FRACTAL_RUNNER_WORKING_BASE_DIR)
