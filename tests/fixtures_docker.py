@@ -13,12 +13,9 @@ HAS_LOCAL_SBATCH = bool(shutil.which("sbatch"))
 def docker_cleanup() -> str:
     """
     See
-    https://docs.docker.com/compose/faq/#why-do-my-services-take-10-seconds-to-recreate-or-stop.
-
-    docker compose down --help:
-       `-t, --timeout int      Specify a shutdown timeout in seconds`
+    https://github.com/fractal-analytics-platform/fractal-server/pull/1500#issuecomment-2114835978.
     """
-    return ["down -v -t 1"]
+    return ["down --volumes --timeout 1"]
 
 
 def is_responsive(container_name):
@@ -60,7 +57,7 @@ def _write_requirements_file(path: Path):
 @pytest.fixture(scope="session")
 def docker_compose_file(pytestconfig, testdata_path: Path):
     requirements_file_path = (
-        testdata_path / "slurm_docker_images" / "node" / "tmp_requirements.txt"
+        testdata_path / "slurm_docker_images/node/tmp_requirements.txt"
     )
     _write_requirements_file(requirements_file_path)
 
