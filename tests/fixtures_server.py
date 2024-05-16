@@ -194,7 +194,9 @@ async def db_sync(db_create_tables):
 
 @pytest.fixture
 async def app(override_settings) -> AsyncGenerator[FastAPI, Any]:
-    app = FastAPI()
+    from fractal_server.main import start_application
+
+    app = start_application()
     yield app
 
 
