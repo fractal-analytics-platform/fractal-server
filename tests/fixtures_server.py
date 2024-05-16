@@ -194,6 +194,12 @@ async def db_sync(db_create_tables):
 
 @pytest.fixture
 async def app(override_settings) -> AsyncGenerator[FastAPI, Any]:
+    app = FastAPI()
+    yield app
+
+
+@pytest.fixture
+async def app_with_lifespan(override_settings) -> AsyncGenerator[FastAPI, Any]:
     from fractal_server.main import lifespan
 
     app = FastAPI(lifespan=lifespan)
@@ -243,9 +249,8 @@ async def registered_client(
 async def registered_superuser_client(
     app: FastAPI, register_routers, db
 ) -> AsyncGenerator[AsyncClient, Any]:
-    settings = Inject(get_settings)
-    EMAIL = settings.FRACTAL_DEFAULT_ADMIN_EMAIL
-    PWD = settings.FRACTAL_DEFAULT_ADMIN_PASSWORD
+    EMAIL = "some-admin@fractal.xy"
+    PWD = "some-admin-password"
     await _create_first_user(email=EMAIL, password=PWD, is_superuser=True)
     async with AsyncClient(
         app=app, base_url="http://test"
