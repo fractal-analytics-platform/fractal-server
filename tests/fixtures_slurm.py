@@ -3,12 +3,10 @@ import os
 import shlex
 import shutil
 import subprocess
-import sys
 from pathlib import Path
 
 import pytest
 from devtools import debug
-from pytest_docker.plugin import containers_scope
 
 from fractal_server.app.runner.executors.slurm._subprocess_run_as_user import (
     _mkdir_as_user,
@@ -21,18 +19,6 @@ from fractal_server.app.runner.executors.slurm._subprocess_run_as_user import (
 HAS_LOCAL_SBATCH = bool(shutil.which("sbatch"))
 
 
-@pytest.fixture(scope=containers_scope)
-def docker_cleanup() -> str:
-    """
-    See
-    https://docs.docker.com/compose/faq/#why-do-my-services-take-10-seconds-to-recreate-or-stop.
-
-    docker compose down --help:
-       `-t, --timeout int      Specify a shutdown timeout in seconds`
-    """
-    return ["down -v -t 1"]
-
-
 def is_responsive(container_name):
     try:
         import subprocess
@@ -43,39 +29,6 @@ def is_responsive(container_name):
             return True
     except ConnectionError:
         return False
-
-
-@pytest.fixture(scope="session")
-def docker_compose_file(pytestconfig, testdata_path: Path):
-
-    import fractal_server
-    import tarfile
-
-    # This same path is hardocded in the Dockerfile of the SLURM node.
-    CODE_ROOT = Path(fractal_server.__file__).parent.parent
-    TAR_FILE = (
-        testdata_path / "slurm_docker_images/node/fractal_server_local.tar.gz"
-    )
-    TAR_ROOT = CODE_ROOT.name
-    with tarfile.open(TAR_FILE, "w:gz") as tar:
-        tar.add(CODE_ROOT, arcname=TAR_ROOT, recursive=False)
-        for name in [
-            "pyproject.toml",
-            "README.md",
-            "fractal_server",
-        ]:
-            f = CODE_ROOT / name
-            tar.add(f, arcname=f.relative_to(CODE_ROOT.parent))
-
-    if sys.platform == "darwin":
-        # in macOS '/tmp' is a symlink to '/private/tmp'
-        # if we don't mount '/private', 'mkdir -p /private/...' fails with
-        # PermissionDenied
-        return str(
-            testdata_path / "slurm_docker_images/docker-compose-private.yml"
-        )
-
-    return str(testdata_path / "slurm_docker_images/docker-compose.yml")
 
 
 @pytest.fixture
