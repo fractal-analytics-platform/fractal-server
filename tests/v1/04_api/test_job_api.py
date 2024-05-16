@@ -196,7 +196,7 @@ async def test_get_job(
     client,
     tmp_path,
 ):
-    async with MockCurrentUser(user_kwargs={"id": 1}) as user:
+    async with MockCurrentUser(user_kwargs={"id": 2}) as user:
         x_project = await project_factory(user)
         x_workflow = await workflow_factory(project_id=x_project.id)
         x_task = await task_factory(source="x")
@@ -212,7 +212,7 @@ async def test_get_job(
             working_dir=tmp_path,
         )
 
-    async with MockCurrentUser(user_kwargs={"id": 2}) as user:
+    async with MockCurrentUser(user_kwargs={"id": 3}) as user:
         y_project = await project_factory(user)
         y_workflow = await workflow_factory(project_id=y_project.id)
         y_task = await task_factory(source="y")
