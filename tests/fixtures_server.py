@@ -243,8 +243,9 @@ async def registered_client(
 async def registered_superuser_client(
     app: FastAPI, register_routers, db
 ) -> AsyncGenerator[AsyncClient, Any]:
-    EMAIL = "some-admin@fractal.xy"
-    PWD = "some-admin-password"
+    settings = Inject(get_settings)
+    EMAIL = settings.FRACTAL_DEFAULT_ADMIN_EMAIL
+    PWD = settings.FRACTAL_DEFAULT_ADMIN_PASSWORD
     await _create_first_user(email=EMAIL, password=PWD, is_superuser=True)
     async with AsyncClient(
         app=app, base_url="http://test"
