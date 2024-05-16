@@ -145,7 +145,7 @@ def monkey_slurm(
 
     OrigPopen = subprocess.Popen
 
-    slurm_container = docker_compose_project_name + "-slurmmaster"
+    slurm_container = docker_compose_project_name + "-slurmmaster-1"
     logging.warning(f"{docker_compose_project_name=}")
     logging.warning(f"{slurm_container=}")
 
