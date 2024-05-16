@@ -1,3 +1,4 @@
+import logging
 import shutil
 import sys
 from pathlib import Path
@@ -89,3 +90,17 @@ def docker_compose_file(pytestconfig, testdata_path: Path):
         )
 
     return str(testdata_path / "slurm_docker_images/docker-compose.yml")
+
+
+@pytest.fixture
+def slurmmaster_container(docker_compose_project_name, docker_services) -> str:
+    logging.warning(f"{docker_compose_project_name=}")
+
+    slurm_container = docker_compose_project_name + "-slurmmaster-1"
+    logging.warning(f"{slurm_container=}")
+    docker_services.wait_until_responsive(
+        timeout=15.0,
+        pause=0.5,
+        check=lambda: is_responsive(slurm_container),
+    )
+    return slurm_container

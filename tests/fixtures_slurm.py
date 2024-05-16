@@ -83,8 +83,7 @@ def monkey_slurm_user():
 @pytest.fixture
 def monkey_slurm(
     monkeypatch,
-    docker_compose_project_name,
-    docker_services,
+    slurmmaster_container,
     patched_run_squeue,
 ):
     """
@@ -97,16 +96,6 @@ def monkey_slurm(
     import subprocess
 
     OrigPopen = subprocess.Popen
-
-    slurm_container = docker_compose_project_name + "-slurmmaster-1"
-    logging.warning(f"{docker_compose_project_name=}")
-    logging.warning(f"{slurm_container=}")
-
-    docker_services.wait_until_responsive(
-        timeout=20.0,
-        pause=0.5,
-        check=lambda: is_responsive(slurm_container),
-    )
 
     class PopenLog:
         calls: list[OrigPopen] = []
@@ -129,7 +118,7 @@ def monkey_slurm(
                 "exec",
                 "--user",
                 "fractal",
-                slurm_container,
+                slurmmaster_container,
                 "bash",
                 "-c",
             ] + container_cmd
