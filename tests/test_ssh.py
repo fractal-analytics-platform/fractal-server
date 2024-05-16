@@ -22,33 +22,6 @@ def is_responsive(container_name):
         return False
 
 
-def _run_ssh_command_in_tests(
-    command: str,
-    hostname: str,
-    username: str,
-    password: str,
-):
-
-    # hostname = "cluster.s3it.uzh.ch"
-    # username = "srv-mls-prbvc"
-    # key_path = "/home/ubuntu/.ssh/service_user_sciencecluster.key"
-    connection = Connection(
-        host=hostname,
-        user=username,
-        # connect_kwargs={"key_filename": key_path},
-        connect_kwargs={"password": password},
-    )
-
-    result = connection.run(command, hide=True)
-    print("STDOUT:")
-    print(result.stdout)
-    print("STDERR:")
-    print(result.stderr)
-    connection.close()
-
-    return result
-
-
 def _write_requirements_file(path: Path):
     """
     This function creates a temporary requirements file, which is copied
@@ -82,7 +55,7 @@ def docker_cleanup() -> str:
     docker compose down --help:
        `-t, --timeout int      Specify a shutdown timeout in seconds`
     """
-    return ["down -v -t 1"]
+    return ["down -v --timeout 1"]
 
 
 @pytest.fixture(scope="session")
@@ -121,7 +94,46 @@ def docker_compose_file(pytestconfig, testdata_path: Path):
     return str(testdata_path / "slurm_ssh_docker_images/docker-compose.yml")
 
 
-def test_ssh(docker_services, docker_compose_project_name, docker_ip):
+########
+
+
+def _run_locally(_cmd: str, stdin_content: str | None = None):
+    print("CMD:\n", shlex.split(_cmd))
+    res = subprocess.run(
+        shlex.split(_cmd),
+        capture_output=True,
+        encoding="utf-8",
+        check=True,
+    )
+    print(f"RETURNCODE:\n{res.returncode}")
+    print(f"STDOUT:\n{res.stdout}")
+    print(f"STDERR:\n{res.stderr}")
+    print()
+    return res.stdout, res.stderr
+
+
+def _run_ssh_command_in_tests(
+    command: str,
+    hostname: str,
+    username: str,
+    password: str,
+):
+
+    print("CMD:\n", shlex.split(command))
+    with Connection(
+        host=hostname,
+        user=username,
+        connect_kwargs={"password": password},
+    ) as connection:
+
+        res = connection.run(command, hide=True)
+        print(f"STDOUT:\n{res.stdout}")
+        print(f"STDERR:\n{res.stderr}")
+
+    return res
+
+
+def test_ssh(docker_services, docker_compose_project_name):
     print(docker_services)
 
     slurm_container = docker_compose_project_name + "-slurm-docker-master-1"
@@ -133,47 +145,25 @@ def test_ssh(docker_services, docker_compose_project_name, docker_ip):
         pause=0.5,
         check=lambda: is_responsive(slurm_container),
     )
-
     debug(docker_services)
-    debug(docker_ip)
 
-    return
+    # Start ssh daemon
+    _run_locally(f"docker exec --user root {slurm_container} /usr/sbin/sshd")
 
-    def _run(_cmd: str, stdin_content: str | None = None):
-        print("CMD:\n", shlex.split(_cmd))
-        proc = subprocess.Popen(
-            shlex.split(_cmd),
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            encoding="utf-8",
-        )
-        if stdin_content is not None:
-            print(f"STDIN:\n{stdin_content}")
-            # proc.stdin.write(stdin_content)  # FIXME: not working
-            stdout, stderr = proc.communicate(
-                input=stdin_content
-            )  # FIXME not working
-        else:
-            stdout, stderr = proc.communicate()
-        # proc.wait()
-        print(f"RETURNCODE:\n{proc.returncode}")
-        print(f"STDOUT:\n{stdout}")
-        print(f"STDERR:\n{stderr}")
-        print()
-        return stdout, stderr
-
-    _run(f"docker exec --user root {slurm_container} /usr/sbin/sshd")
-    stdout, stderr = _run(
+    # Get IP
+    stdout, stderr = _run_locally(
         "docker inspect "
         "-f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "
         f"{slurm_container}"
     )
     ip = stdout.strip()
     debug(ip)
-    _run_ssh_command_in_tests(
-        command="whoami",
+
+    # Run hostname through ssh
+    stdout, stderr = _run_ssh_command_in_tests(
+        command="hostname",
         hostname=ip,
         username="fractal",
         password="fractal",
     )
+    assert stdout == "slurm-docker-master"
