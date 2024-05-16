@@ -83,7 +83,7 @@ def monkey_slurm_user():
 @pytest.fixture
 def monkey_slurm(
     monkeypatch,
-    slurmmaster_container,
+    slurmlogin_container,
     patched_run_squeue,
 ):
     """
@@ -118,7 +118,7 @@ def monkey_slurm(
                 "exec",
                 "--user",
                 "fractal",
-                slurmmaster_container,
+                slurmlogin_container,
                 "bash",
                 "-c",
             ] + container_cmd
