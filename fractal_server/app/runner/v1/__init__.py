@@ -137,13 +137,10 @@ async def submit_workflow(
         # Define and create server-side working folder
         project_id = workflow.project_id
         timestamp_string = get_timestamp().strftime("%Y%m%d_%H%M%S")
-        WORKFLOW_DIR = (
-            settings.FRACTAL_RUNNER_WORKING_BASE_DIR
-            / (
-                f"proj_{project_id:07d}_wf_{workflow_id:07d}_job_{job_id:07d}"
-                f"_{timestamp_string}"
-            )
-        ).resolve()
+        WORKFLOW_DIR = settings.FRACTAL_RUNNER_WORKING_BASE_DIR / (
+            f"proj_{project_id:07d}_wf_{workflow_id:07d}_job_{job_id:07d}"
+            f"_{timestamp_string}"
+        )
 
         if WORKFLOW_DIR.exists():
             raise RuntimeError(f"Workflow dir {WORKFLOW_DIR} already exists.")
@@ -162,9 +159,7 @@ async def submit_workflow(
                 _mkdir_as_user,
             )
 
-            WORKFLOW_DIR_USER = (
-                Path(user_cache_dir) / f"{WORKFLOW_DIR.name}"
-            ).resolve()
+            WORKFLOW_DIR_USER = Path(user_cache_dir) / f"{WORKFLOW_DIR.name}"
             _mkdir_as_user(folder=str(WORKFLOW_DIR_USER), user=slurm_user)
         else:
             raise ValueError(f"{FRACTAL_RUNNER_BACKEND=} not supported")
