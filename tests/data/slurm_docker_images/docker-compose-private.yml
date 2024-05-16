@@ -4,11 +4,11 @@
 
 services:
 
-  slurm-docker-master:
+  slurmmaster:
         build:
           context: ./master
           dockerfile: Dockerfile
-        hostname: slurm-docker-master
+        hostname: slurmmaster
         user: admin
         volumes:
           - /private:/private:rw
@@ -22,7 +22,7 @@ services:
 
   slurmnode1:
         depends_on:
-          - "slurm-docker-master"
+          - "slurmmaster"
         build:
           context: ./node
           dockerfile: Dockerfile
@@ -34,4 +34,4 @@ services:
                 - SLURM_NODENAME=slurmnode1
                 - SLURM_CPUS_ON_NODE=1
         links:
-                - slurm-docker-master
+                - slurmmaster
