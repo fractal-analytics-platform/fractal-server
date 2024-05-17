@@ -57,9 +57,8 @@ from sqlmodel import select
 from ...config import get_settings
 from ...syringe import Inject
 from ..db import get_async_db
-from ..models.security import OAuthAccount
-from ..models.security import UserOAuth as User
-from fractal_server.app.models.security import UserOAuth
+from fractal_server.app.models.security import OAuthAccount
+from fractal_server.app.models.security import UserOAuth as User
 from fractal_server.app.schemas.user import UserCreate
 from fractal_server.logger import get_logger
 
@@ -287,8 +286,8 @@ async def _create_first_user(
 
             if is_superuser is True:
                 # If a superuser already exists, exit
-                stm = select(UserOAuth).where(
-                    UserOAuth.is_superuser == True  # noqa: E712
+                stm = select(User).where(
+                    User.is_superuser == True  # noqa E712
                 )
                 res = await session.execute(stm)
                 existing_superuser = res.scalars().first()
