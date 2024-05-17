@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 from devtools import debug
+from pytest_docker.plugin import containers_scope
 
 from fractal_server.app.runner.executors.slurm._subprocess_run_as_user import (
     _mkdir_as_user,
@@ -18,6 +19,18 @@ from fractal_server.app.runner.executors.slurm._subprocess_run_as_user import (
 
 
 HAS_LOCAL_SBATCH = bool(shutil.which("sbatch"))
+
+
+@pytest.fixture(scope=containers_scope)
+def docker_cleanup() -> str:
+    """
+    See
+    https://docs.docker.com/compose/faq/#why-do-my-services-take-10-seconds-to-recreate-or-stop.
+
+    docker compose down --help:
+       `-t, --timeout int      Specify a shutdown timeout in seconds`
+    """
+    return ["down -v -t 1"]
 
 
 def is_responsive(container_name):
