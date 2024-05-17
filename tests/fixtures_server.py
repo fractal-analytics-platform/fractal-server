@@ -199,14 +199,6 @@ async def app(override_settings) -> AsyncGenerator[FastAPI, Any]:
 
 
 @pytest.fixture
-async def app_with_lifespan(override_settings) -> AsyncGenerator[FastAPI, Any]:
-    from fractal_server.main import lifespan
-
-    app = FastAPI(lifespan=lifespan)
-    yield app
-
-
-@pytest.fixture
 async def register_routers(app, override_settings):
     from fractal_server.main import collect_routers
 
