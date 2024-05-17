@@ -6,6 +6,7 @@
     * Remove `Path.resolve` from the submit-job endpoints and add validator for `Settings.FRACTAL_RUNNER_WORKING_BASE_DIR` (\#1497).
 * Testing:
     * Improve dockerfiles for SLURM (\#1495, \#1496).
+    * Set short timeout for `docker compose down` (\#1500).
 
 # 2.0.6
 
