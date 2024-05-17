@@ -5,7 +5,7 @@ from fractal_server.app.models.security import UserOAuth
 from fractal_server.main import lifespan
 
 
-async def test_app_with_lifespan(caplog, db):
+async def test_app_with_lifespan(db):
 
     app = FastAPI()
     res = await db.execute(select(UserOAuth))
