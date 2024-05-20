@@ -2,7 +2,13 @@
 
 # Unreleased
 
+# 2.1.0
+
+This releases fixes a serious bug where SLURM-executor auxiliary threads are
+not joined when a Fractal job ends.
+
 * App:
+    * Add missing join for `wait_thread` upon `FractalSlurmExecutor` exit (\#1511).
     * Replace `startup`/`shutdown` events with `lifespan` event (\#1501).
 * API:
     * Remove `Path.resolve` from the submit-job endpoints and add validator for `Settings.FRACTAL_RUNNER_WORKING_BASE_DIR` (\#1497).
