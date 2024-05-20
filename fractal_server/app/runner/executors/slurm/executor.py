@@ -1188,3 +1188,15 @@ class FractalSlurmExecutor(SlurmExecutor):
                 raise JobExecutionError(info=error_msg)
 
         logger.debug("Executor shutdown: end")
+
+    def __exit__(self, *args, **kwargs):
+        """
+        See
+        https://github.com/fractal-analytics-platform/fractal-server/issues/1508
+        """
+        logger.debug(
+            "[FractalSlurmExecutor.__exit__] Stop and join `wait_thread`"
+        )
+        self.wait_thread.stop()
+        self.wait_thread.join()
+        logger.debug("[FractalSlurmExecutor.__exit__] End")
