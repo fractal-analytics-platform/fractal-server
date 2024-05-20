@@ -4,7 +4,7 @@
 
 # 2.1.0
 
-This releases fixes a serious bug where SLURM-executor auxiliary threads are
+This release fixes a severe bug where SLURM-executor auxiliary threads are
 not joined when a Fractal job ends.
 
 * App:
