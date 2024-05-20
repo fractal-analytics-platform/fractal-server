@@ -1,13 +1,13 @@
 from passlib.context import CryptContext
 
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.schemas.user import UserCreate
 from fractal_server.app.schemas.v2 import DatasetImportV2
 from fractal_server.app.schemas.v2 import JobCreateV2
 from fractal_server.app.schemas.v2 import ProjectCreateV2
 from fractal_server.app.schemas.v2 import WorkflowCreateV2
 from fractal_server.app.schemas.v2 import WorkflowTaskCreateV2
-from fractal_server.app.security import UserOAuth
 from scripts.client import DEFAULT_CREDENTIALS
 from scripts.client import FractalClient
 

@@ -15,6 +15,8 @@
 
 This module sets up the FastAPI application that serves the Fractal Server.
 """
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 
 from .app.security import _create_first_user
@@ -77,15 +79,27 @@ def check_settings() -> None:
     reset_logger_handlers(logger)
 
 
-async def __on_startup() -> None:
-    """
-    Private wrapper for routines that need to be executed at server start-up.
-
-    It should only be called from a `@app.on_event("startup")`-decorated
-    callable.
-    """
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger = set_logger("fractal_server.lifespan")
+    logger.info("Start application startup")
     check_settings()
+    settings = Inject(get_settings)
+    await _create_first_user(
+        email=settings.FRACTAL_DEFAULT_ADMIN_EMAIL,
+        password=settings.FRACTAL_DEFAULT_ADMIN_PASSWORD,
+        username=settings.FRACTAL_DEFAULT_ADMIN_USERNAME,
+        is_superuser=True,
+        is_verified=True,
+    )
     config_uvicorn_loggers()
+    logger.info("End application startup")
+    reset_logger_handlers(logger)
+    yield
+    logger = set_logger("fractal_server.lifespan")
+    logger.info("Start application shutdown")
+    logger.info("End application shutdown")
+    reset_logger_handlers(logger)
 
 
 def start_application() -> FastAPI:
@@ -96,27 +110,9 @@ def start_application() -> FastAPI:
         app:
             The fully initialised application.
     """
-    app = FastAPI()
+    app = FastAPI(lifespan=lifespan)
     collect_routers(app)
     return app
 
 
 app = start_application()
-
-
-@app.on_event("startup")
-async def on_startup() -> None:
-    """
-    Register the starup calls
-
-    If the calls raise any error, the application startup is aborted.
-    """
-    settings = Inject(get_settings)
-    await _create_first_user(
-        email=settings.FRACTAL_DEFAULT_ADMIN_EMAIL,
-        password=settings.FRACTAL_DEFAULT_ADMIN_PASSWORD,
-        username=settings.FRACTAL_DEFAULT_ADMIN_USERNAME,
-        is_superuser=True,
-        is_verified=True,
-    )
-    await __on_startup()
