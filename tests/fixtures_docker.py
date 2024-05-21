@@ -96,7 +96,7 @@ def docker_compose_file(pytestconfig, testdata_path: Path):
 def slurmlogin_container(docker_compose_project_name, docker_services) -> str:
     logging.warning(f"{docker_compose_project_name=}")
 
-    slurm_container = docker_compose_project_name + "-slurm-docker-master-1"
+    slurm_container = docker_compose_project_name + "-slurmhead-1"
     logging.warning(f"{slurm_container=}")
     docker_services.wait_until_responsive(
         timeout=15.0,
