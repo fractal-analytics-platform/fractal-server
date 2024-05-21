@@ -5,6 +5,7 @@
 * Testing:
     * Extract `pytest-docker` fixtures into a dedicated module (\#1516).
     * Rename SLURM containers in CI (\#1516).
+    * Remove obsolete folders from `tests/data` (\#1517).
 
 # 2.1.0
 
