@@ -1,7 +1,9 @@
+import io
+
 from fabric.connection import Connection
 
 
-def test_unit_fabric_connection(slurmlogin_ip):
+def test_unit_fabric_connection(slurmlogin_ip, monkeypatch):
     """
     Test both the pytest-docker setup and the use of a `fabric` connection, by
     running the `hostname` over SSH.
@@ -10,6 +12,11 @@ def test_unit_fabric_connection(slurmlogin_ip):
 
     command = "hostname"
     print(f"Now run {command=} at {slurmlogin_ip=}")
+
+    # https://github.com/fabric/fabric/issues/1979
+    # https://github.com/fabric/fabric/issues/2005#issuecomment-525664468
+    monkeypatch.setattr("sys.stdin", io.StringIO(""))
+
     with Connection(
         host=slurmlogin_ip,
         user="fractal",
