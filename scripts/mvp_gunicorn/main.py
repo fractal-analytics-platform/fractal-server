@@ -1,6 +1,5 @@
 import json
 import os
-import signal
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -21,7 +20,7 @@ async def lifespan(app: FastAPI):
     with open(file_path, "r") as f:
         db = json.loads(f.read())
     for key in app.state.jobs.keys():
-        db.update({key: "FAILED"})
+        db.update({str(key): "FAILED"})
     with open(file_path, "w") as f:
         f.write(json.dumps(db))
 
@@ -54,10 +53,10 @@ async def post_status(id: int, request: Request):
     return {"jobs": app.state.jobs}
 
 
-# SIGABORT HANDLING
-def handle_timeout(signum, frame):
-    print(f"RECEIVERD SIGNAL {signum}")
-    os.kill(os.getpid(), signal.SIGTERM)
+# # SIGABORT HANDLING
+# def handle_timeout(signum, frame):
+#     print(f"RECEIVERD SIGNAL {signum}")
+#     os.kill(os.getpid(), signal.SIGTERM)
 
 
-signal.signal(signal.SIGABRT, handle_timeout)
+# signal.signal(signal.SIGABRT, handle_timeout)
