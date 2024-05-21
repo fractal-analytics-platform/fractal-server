@@ -1,10 +1,10 @@
 services:
 
-  slurm-docker-master:
+  slurmhead:
         build:
-          context: ./master
+          context: ./head
           dockerfile: Dockerfile
-        hostname: slurm-docker-master
+        hostname: slurmhead
         user: admin
         volumes:
           - /tmp:/tmp:rw
@@ -14,11 +14,10 @@ services:
         ports:
                 - 6817:6817
                 - 6818:6818
-                - 6819:6819
 
   slurmnode1:
         depends_on:
-          - "slurm-docker-master"
+          - "slurmhead"
         build:
           context: ./node
           dockerfile: Dockerfile
@@ -30,4 +29,4 @@ services:
                 - SLURM_NODENAME=slurmnode1
                 - SLURM_CPUS_ON_NODE=1
         links:
-                - slurm-docker-master
+                - slurmhead
