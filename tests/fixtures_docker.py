@@ -1,5 +1,7 @@
 import logging
+import shlex
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -104,3 +106,21 @@ def slurmlogin_container(docker_compose_project_name, docker_services) -> str:
         check=lambda: is_responsive(slurm_container),
     )
     return slurm_container
+
+
+@pytest.fixture
+def slurmlogin_ip(slurmlogin_container) -> str:
+    cmd = (
+        "docker inspect "
+        "-f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "
+        f"{slurmlogin_container}"
+    )
+    res = subprocess.run(
+        shlex.split(cmd),
+        capture_output=True,
+        encoding="utf-8",
+        check=True,
+    )
+    ip = res.stdout.strip()
+    logging.info(f"{slurmlogin_container=} has {ip=}")
+    return ip
