@@ -2,6 +2,10 @@
 
 # Unreleased
 
+* Testing:
+    * Extract `pytest-docker` fixtures into a dedicated module (\#1516).
+    * Rename SLURM containers in CI (\#1516).
+
 # 2.1.0
 
 This release fixes a severe bug where SLURM-executor auxiliary threads are
