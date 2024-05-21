@@ -68,4 +68,3 @@ from .fixtures_tasks_v2 import *  # noqa F403
 from .fixtures_docker import *  # noqa F403
 from .fixtures_slurm import *  # noqa F403
 from .fixtures_commands import *  # noqa F403
-from fabric.testing.fixtures import Connection  # noqa F401
