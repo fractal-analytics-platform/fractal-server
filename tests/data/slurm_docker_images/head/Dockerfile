@@ -14,5 +14,6 @@ RUN mkdir /var/run/sshd
 # Use custom version of docker-entrypoint.sh, which also starts sshd
 COPY docker-entrypoint.sh /etc/slurm-llnl/
 
+EXPOSE 22
 EXPOSE 50097
 ENTRYPOINT ["/etc/slurm-llnl/docker-entrypoint.sh"]
