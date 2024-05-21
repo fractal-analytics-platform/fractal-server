@@ -14,7 +14,6 @@ services:
         ports:
                 - 6817:6817
                 - 6818:6818
-                - 6819:6819
 
   slurmnode1:
         depends_on:
