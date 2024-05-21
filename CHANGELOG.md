@@ -3,9 +3,13 @@
 # Unreleased
 
 * Testing:
+    * Install and run SSH daemon in CI containers (\#1518).
+    * Add unit test of SSH connection via fabric/paramiko (\#1518).
     * Extract `pytest-docker` fixtures into a dedicated module (\#1516).
     * Rename SLURM containers in CI (\#1516).
     * Remove obsolete folders from `tests/data` (\#1517).
+* Dependencies
+    * Add `fabric` to `dev` dependencies (\#1518).
 
 # 2.1.0
 
