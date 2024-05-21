@@ -9,6 +9,7 @@ def test_unit_fabric_connection(slurmlogin_ip):
     print(f"{slurmlogin_ip=}")
 
     command = "hostname"
+    print(f"Now run {command=} at {slurmlogin_ip=}")
     with Connection(
         host=slurmlogin_ip,
         user="fractal",
