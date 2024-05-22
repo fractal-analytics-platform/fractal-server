@@ -3,6 +3,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -124,3 +125,29 @@ def slurmlogin_ip(slurmlogin_container) -> str:
     ip = res.stdout.strip()
     logging.info(f"{slurmlogin_container=} has {ip=}")
     return ip
+
+
+@pytest.fixture
+def ssh_alive(slurmlogin_ip, slurmlogin_container) -> None:
+    command = (
+        f"docker exec --user root {slurmlogin_container} " "service ssh status"
+    )
+    max_attempts = 10
+    interval = 0.5
+    logging.info(
+        f"Now run {command=} at most {max_attempts} times, "
+        f"with a sleep interval of {interval}."
+    )
+    for attempt in range(max_attempts):
+        res = subprocess.run(
+            shlex.split(command),
+            capture_output=True,
+            encoding="utf-8",
+        )
+        logging.info(f"[Attempt {attempt}/{max_attempts}] {res.stdout=}")
+        logging.info(f"[Attempt {attempt}/{max_attempts}] {res.stderr=}")
+        if "sshd is running" in res.stdout:
+            logging.info("SSH status seems OK, exit.")
+            return
+        time.sleep(interval)
+    raise RuntimeError(f"SSH not active on {slurmlogin_container}")
