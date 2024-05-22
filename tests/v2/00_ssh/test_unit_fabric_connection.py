@@ -22,22 +22,22 @@ def _run_locally(cmd):
     print("subprocess SSH - end")
 
 
-def test_unit_fabric_connection(slurmlogin_ip, monkeypatch):
+def test_unit_fabric_connection(
+    slurmlogin_ip, slurmlogin_container, monkeypatch
+):
     """
     Test both the pytest-docker setup and the use of a `fabric` connection, by
     running the `hostname` over SSH.
     """
     print(f"{slurmlogin_ip=}")
 
-    cmd = "docker exec --user root slurm_docker_images-slurmhead-1 ip a"
+    cmd = f"docker exec --user root {slurmlogin_container} ip a"
     _run_locally(cmd)
-    cmd = "docker exec --user root slurm_docker_images-slurmhead-1 service ssh status"
+    cmd = f"docker exec --user root {slurmlogin_container} service ssh status"
     _run_locally(cmd)
-    cmd = (
-        "docker exec --user root slurm_docker_images-slurmhead-1 lsof -i -n -P"
-    )
+    cmd = f"docker exec --user root {slurmlogin_container} lsof -i -n -P"
     _run_locally(cmd)
-    cmd = "docker exec --user root slurm_docker_images-slurmhead-1 grep Port /etc/ssh/sshd_config"
+    cmd = f"docker exec --user root {slurmlogin_container} grep Port /etc/ssh/sshd_config"
     _run_locally(cmd)
     cmd = f"ssh fractal@{slurmlogin_ip} -vvv"
     _run_locally(cmd)
