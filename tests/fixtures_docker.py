@@ -136,7 +136,7 @@ def ssh_alive(slurmlogin_ip, slurmlogin_container) -> None:
     interval = 0.5
     logging.info(
         f"Now run {command=} at most {max_attempts} times, "
-        f"with a sleep interval of {interval}."
+        f"with a sleep interval of {interval} seconds."
     )
     for attempt in range(max_attempts):
         res = subprocess.run(
@@ -144,10 +144,14 @@ def ssh_alive(slurmlogin_ip, slurmlogin_container) -> None:
             capture_output=True,
             encoding="utf-8",
         )
-        logging.info(f"[Attempt {attempt}/{max_attempts}] {res.stdout=}")
-        logging.info(f"[Attempt {attempt}/{max_attempts}] {res.stderr=}")
+        logging.info(
+            f"[ssh_alive] Attempt {attempt}/{max_attempts}, {res.stdout=}"
+        )
+        logging.info(
+            f"[ssh_alive] Attempt {attempt}/{max_attempts}, {res.stderr=}"
+        )
         if "sshd is running" in res.stdout:
-            logging.info("SSH status seems OK, exit.")
+            logging.info("[ssh_alive] SSH status seems OK, exit.")
             return
         time.sleep(interval)
-    raise RuntimeError(f"SSH not active on {slurmlogin_container}")
+    raise RuntimeError(f"[ssh_alive] SSH not active on {slurmlogin_container}")
