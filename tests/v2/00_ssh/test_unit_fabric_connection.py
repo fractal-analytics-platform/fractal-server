@@ -39,8 +39,6 @@ def test_unit_fabric_connection(
     _run_locally(cmd)
     cmd = f"docker exec --user root {slurmlogin_container} grep Port /etc/ssh/sshd_config"
     _run_locally(cmd)
-    cmd = f"ssh fractal@{slurmlogin_ip} -vvv"
-    _run_locally(cmd)
 
     command = "hostname"
     print(f"Now run {command=} at {slurmlogin_ip=}")
