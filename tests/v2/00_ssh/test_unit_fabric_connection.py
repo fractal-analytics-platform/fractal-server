@@ -10,12 +10,22 @@ def test_unit_fabric_connection(slurmlogin_ip, monkeypatch):
     """
     print(f"{slurmlogin_ip=}")
 
-    print("Telnet - start")
-    from telnetlib import Telnet
+    print("subprocess SSH - start")
+    import subprocess
+    import shlex
 
-    tn = Telnet(host=slurmlogin_ip, port=22)
-    tn.close()
-    print("Telnet - end")
+    res = subprocess.run(
+        shlex.split(f"ssh fractal@{slurmlogin_ip} -vvv"),
+        capture_output=True,
+        encoding="utf-8",
+    )
+    print("RETCODE:")
+    print(res.returncode)
+    print("STDOUT:")
+    print(res.stdout)
+    print("STDERR:")
+    print(res.stderr)
+    print("subprocess SSH - end")
 
     command = "hostname"
     print(f"Now run {command=} at {slurmlogin_ip=}")
