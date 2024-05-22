@@ -133,7 +133,7 @@ def ssh_alive(slurmlogin_ip, slurmlogin_container) -> None:
         f"docker exec --user root {slurmlogin_container} " "service ssh status"
     )
     max_attempts = 10
-    interval = 0.5
+    interval = 0.2
     logging.info(
         f"Now run {command=} at most {max_attempts} times, "
         f"with a sleep interval of {interval} seconds."
@@ -145,10 +145,10 @@ def ssh_alive(slurmlogin_ip, slurmlogin_container) -> None:
             encoding="utf-8",
         )
         logging.info(
-            f"[ssh_alive] Attempt {attempt}/{max_attempts}, {res.stdout=}"
+            f"[ssh_alive] Attempt {attempt+1}/{max_attempts}, {res.stdout=}"
         )
         logging.info(
-            f"[ssh_alive] Attempt {attempt}/{max_attempts}, {res.stderr=}"
+            f"[ssh_alive] Attempt {attempt+1}/{max_attempts}, {res.stderr=}"
         )
         if "sshd is running" in res.stdout:
             logging.info("[ssh_alive] SSH status seems OK, exit.")
