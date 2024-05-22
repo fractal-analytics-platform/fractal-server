@@ -10,6 +10,13 @@ def test_unit_fabric_connection(slurmlogin_ip, monkeypatch):
     """
     print(f"{slurmlogin_ip=}")
 
+    print("Telnet - start")
+    from telnetlib import Telnet
+
+    tn = Telnet(host=slurmlogin_ip, port=22)
+    tn.close()
+    print("Telnet - end")
+
     command = "hostname"
     print(f"Now run {command=} at {slurmlogin_ip=}")
 
