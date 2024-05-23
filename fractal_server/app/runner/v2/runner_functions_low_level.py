@@ -80,6 +80,7 @@ def run_single_task(
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
         task_order=wftask.order,
+        task_name=wftask.task.name,
         component=component,
     )
 

@@ -72,6 +72,7 @@ def _slurm_submit_setup(
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
         task_order=wftask.order,
+        task_name=wftask.task.name,
     )
 
     # Prepare and return output dictionary
