@@ -176,6 +176,7 @@ def call_single_task(
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
         task_order=wftask.order,
+        task_name=wftask.task.name,
     )
 
     # write args file (by assembling task_pars and wftask.args)
@@ -301,6 +302,7 @@ def call_single_parallel_task(
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
         task_order=wftask.order,
+        task_name=wftask.task.name,
         component=component,
     )
 

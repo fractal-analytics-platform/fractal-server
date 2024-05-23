@@ -26,6 +26,7 @@ from ...schemas.v2 import JobStatusTypeV2
 from ..exceptions import JobExecutionError
 from ..exceptions import TaskExecutionError
 from ..filenames import WORKFLOW_LOG_FILENAME
+from ..task_files import task_subfolder_name
 from ._local import process_workflow as local_process_workflow
 from ._slurm import process_workflow as slurm_process_workflow
 from .handle_failed_job import assemble_filters_failed_job
@@ -118,9 +119,15 @@ async def submit_workflow(
             db_sync.close()
             return
 
-        # Create WORKFLOW_DIR with 755 permissions
+        # Create WORKFLOW_DIR and subfolders with 755 permissions
         original_umask = os.umask(0)
         WORKFLOW_DIR.mkdir(parents=True, mode=0o755)
+        for order in range(job.first_task_index, job.last_task_index + 1):
+            subfolder = task_subfolder_name(
+                order=order,
+                task_name=workflow.task_list[order].task.name,
+            )
+            (WORKFLOW_DIR / subfolder).mkdir(mode=0o755)
         os.umask(original_umask)
 
         # Define and create user-side working folder, if needed
@@ -131,6 +138,14 @@ async def submit_workflow(
             )
 
             _mkdir_as_user(folder=str(WORKFLOW_DIR_USER), user=slurm_user)
+            for order in range(job.first_task_index, job.last_task_index + 1):
+                subfolder = task_subfolder_name(
+                    order=order,
+                    task_name=workflow.task_list[order].task.name,
+                )
+                _mkdir_as_user(
+                    folder=str(WORKFLOW_DIR_USER / subfolder), user=slurm_user
+                )
 
         # After Session.commit() is called, either explicitly or when using a
         # context manager, all objects associated with the Session are expired.
