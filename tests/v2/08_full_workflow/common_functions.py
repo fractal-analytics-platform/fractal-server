@@ -170,18 +170,26 @@ async def full_workflow(
         debug(statuses)
         assert set(statuses.values()) == {"done"}
 
-        assert set(
-            [
-                "0_par_0000000.log",
-                "0_par_0000001.log",
-                "1_par_0000000.log",
-                "1_par_0000001.log",
-                HISTORY_FILENAME,
-                FILTERS_FILENAME,
-                IMAGES_FILENAME,
-                WORKFLOW_LOG_FILENAME,
-            ]
-        ) < set(os.listdir(job_status_data["working_dir"]))
+        # Check files in root job folder
+        working_dir = job_status_data["working_dir"]
+        expected_files = [
+            HISTORY_FILENAME,
+            FILTERS_FILENAME,
+            IMAGES_FILENAME,
+            WORKFLOW_LOG_FILENAME,
+        ]
+        actual_files = os.listdir(working_dir)
+        assert set(expected_files) < set(actual_files)
+
+        # Check files in task-0 folder
+        expected_files = ["0_par_0000000.log", "0_par_0000001.log"]
+        actual_files = os.listdir(f"{working_dir}/0_create_ome_zarr_compound")
+        assert set(expected_files) < set(actual_files)
+
+        # Check files in task-1 folder
+        expected_files = ["1_par_0000000.log", "1_par_0000001.log"]
+        actual_files = os.listdir(f"{working_dir}/1_mip_compound")
+        assert set(expected_files) < set(actual_files)
 
 
 async def full_workflow_TaskExecutionError(
