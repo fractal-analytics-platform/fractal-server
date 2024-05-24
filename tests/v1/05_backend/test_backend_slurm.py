@@ -1,6 +1,10 @@
+import logging
+import os
 import shlex
+import sys
 import time
 from concurrent.futures import Executor
+from pathlib import Path
 from typing import Callable
 
 import pytest
@@ -8,40 +12,96 @@ from devtools import debug
 
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.exceptions import TaskExecutionError
+from fractal_server.app.runner.executors.slurm._subprocess_run_as_user import (
+    _mkdir_as_user,
+)
 from fractal_server.app.runner.executors.slurm.executor import (
     FractalSlurmExecutor,
 )  # noqa
 from tests.fixtures_slurm import run_squeue
 from tests.fixtures_slurm import scancel_all_jobs_of_a_slurm_user
+from tests.fixtures_slurm import SLURM_USER
+
+sys.path.append(Path(__file__).parent)
+
+
+class TestingFractalSlurmExecutor(FractalSlurmExecutor):
+    def __init__(self, *args, **kwargs):
+        """
+        When running from outside Fractal runner, task-specific subfolders
+        must be created by hand.
+        """
+        super().__init__(*args, **kwargs)
+        task_files = self.get_default_task_files()
+
+        # Server-side subfolder
+        server_side_subfolder = (
+            task_files.workflow_dir / task_files.subfolder_name
+        )
+        umask = os.umask(0)
+        logging.info(f"Now creating {server_side_subfolder.as_posix()}")
+        server_side_subfolder.mkdir()
+        os.umask(umask)
+
+        # User-side subfolder
+        if self.working_dir != self.working_dir_user:
+            logging.info(
+                f"Now creating {task_files.subfolder.as_posix()}, as user."
+            )
+            _mkdir_as_user(
+                folder=task_files.subfolder.as_posix(), user=self.slurm_user
+            )
+
+
+def test_slurm_executor_submit_missing_subfolder(
+    monkey_slurm,
+    tmp777_path,
+):
+    """
+    If the task-specific subfolder is missing, the executor should
+    raise a FileNotFoundError.
+
+    Note that in this test we don't use TestingFractalSlurmExecutor.
+    """
+    with pytest.raises(FileNotFoundError):
+        with FractalSlurmExecutor(
+            slurm_user=SLURM_USER,
+            working_dir=tmp777_path,
+            working_dir_user=tmp777_path,
+            slurm_poll_interval=2,
+            keep_pickle_files=True,
+        ) as executor:
+            executor.submit(lambda: 42)
 
 
 def test_slurm_executor_submit(
     monkey_slurm,
-    monkey_slurm_user,
     tmp777_path,
 ):
-    with FractalSlurmExecutor(
-        slurm_user=monkey_slurm_user,
+    with TestingFractalSlurmExecutor(
+        slurm_user=SLURM_USER,
         working_dir=tmp777_path,
         working_dir_user=tmp777_path,
         slurm_poll_interval=2,
         keep_pickle_files=True,
     ) as executor:
-        res = executor.submit(lambda: 42)
-        assert res.result() == 42
+
+        fut1 = executor.submit(lambda: 1)
+        fut2 = executor.submit(lambda: 2)
+        assert fut2.result() == 2
+        assert fut1.result() == 1
 
 
 def test_slurm_executor_submit_with_exception(
     monkey_slurm,
-    monkey_slurm_user,
     tmp777_path,
 ):
     def raise_ValueError():
         raise ValueError
 
     with pytest.raises(TaskExecutionError) as e:
-        with FractalSlurmExecutor(
-            slurm_user=monkey_slurm_user,
+        with TestingFractalSlurmExecutor(
+            slurm_user=SLURM_USER,
             working_dir=tmp777_path,
             working_dir_user=tmp777_path,
             slurm_poll_interval=2,
@@ -54,11 +114,10 @@ def test_slurm_executor_submit_with_exception(
 
 def test_slurm_executor_map(
     monkey_slurm,
-    monkey_slurm_user,
     tmp777_path,
 ):
-    with FractalSlurmExecutor(
-        slurm_user=monkey_slurm_user,
+    with TestingFractalSlurmExecutor(
+        slurm_user=SLURM_USER,
         working_dir=tmp777_path,
         working_dir_user=tmp777_path,
         slurm_poll_interval=2,
@@ -75,7 +134,6 @@ def test_slurm_executor_map(
 def test_slurm_executor_map_with_exception(
     early_late,
     monkey_slurm,
-    monkey_slurm_user,
     tmp777_path,
 ):
 
@@ -100,8 +158,8 @@ def test_slurm_executor_map_with_exception(
                 time.sleep(1.5)
             return n
 
-    with FractalSlurmExecutor(
-        slurm_user=monkey_slurm_user,
+    with TestingFractalSlurmExecutor(
+        slurm_user=SLURM_USER,
         working_dir=tmp777_path,
         working_dir_user=tmp777_path,
         slurm_poll_interval=1,
@@ -122,7 +180,6 @@ def test_slurm_executor_map_with_exception(
 
 def test_slurm_executor_submit_separate_folders(
     monkey_slurm,
-    monkey_slurm_user,
     tmp777_path,
     slurm_working_folders,
 ):
@@ -134,8 +191,8 @@ def test_slurm_executor_submit_separate_folders(
 
     server_working_dir, user_working_dir = slurm_working_folders
 
-    with FractalSlurmExecutor(
-        slurm_user=monkey_slurm_user,
+    with TestingFractalSlurmExecutor(
+        slurm_user=SLURM_USER,
         working_dir=server_working_dir,
         working_dir_user=user_working_dir,
         slurm_poll_interval=2,
@@ -147,7 +204,6 @@ def test_slurm_executor_submit_separate_folders(
 
 def test_slurm_executor_submit_and_scancel(
     monkey_slurm,
-    monkey_slurm_user,
     tmp777_path,
     slurm_working_folders,
 ):
@@ -167,8 +223,8 @@ def test_slurm_executor_submit_and_scancel(
     server_working_dir, user_working_dir = slurm_working_folders
 
     with pytest.raises(JobExecutionError) as e:
-        with FractalSlurmExecutor(
-            slurm_user=monkey_slurm_user,
+        with TestingFractalSlurmExecutor(
+            slurm_user=SLURM_USER,
             working_dir=server_working_dir,
             working_dir_user=user_working_dir,
             debug=True,
@@ -190,7 +246,7 @@ def test_slurm_executor_submit_and_scancel(
 
             # Scancel all jobs of the current SLURM user
             scancel_all_jobs_of_a_slurm_user(
-                slurm_user=monkey_slurm_user, show_squeue=True
+                slurm_user=SLURM_USER, show_squeue=True
             )
 
             # Calling result() forces waiting for the result, which in this
@@ -262,7 +318,7 @@ def test_submit_pre_command(fake_process, tmp_path):
 
     slurm_user = "some-fake-user"
 
-    with FractalSlurmExecutor(
+    with TestingFractalSlurmExecutor(
         slurm_user=slurm_user,
         working_dir=tmp_path,
         working_dir_user=tmp_path,
@@ -293,14 +349,14 @@ def test_slurm_account_in_submit_script(tmp_path):
     # Without slurm_account argument
     tmp_path1 = tmp_path / "1"
     tmp_path1.mkdir()
-    with FractalSlurmExecutor(
+    with TestingFractalSlurmExecutor(
         slurm_user=slurm_user,
         working_dir=tmp_path1,
         working_dir_user=tmp_path1,
     ) as executor:
         submit_and_ignore_exceptions(executor, lambda: None)
 
-    submission_script_files = list(tmp_path1.glob("*.sbatch"))
+    submission_script_files = list(tmp_path1.glob("**/*.sbatch"))
     assert len(submission_script_files) == 1
     submission_script_file = submission_script_files[0]
     with submission_script_file.open("r") as f:
@@ -317,7 +373,7 @@ def test_slurm_account_in_submit_script(tmp_path):
     # With slurm_account argument
     tmp_path2 = tmp_path / "2"
     tmp_path2.mkdir()
-    with FractalSlurmExecutor(
+    with TestingFractalSlurmExecutor(
         slurm_user=slurm_user,
         working_dir=tmp_path2,
         working_dir_user=tmp_path2,
@@ -325,7 +381,7 @@ def test_slurm_account_in_submit_script(tmp_path):
     ) as executor:
         submit_and_ignore_exceptions(executor, lambda: None)
 
-    submission_script_files = list(tmp_path2.glob("*.sbatch"))
+    submission_script_files = list(tmp_path2.glob("**/*.sbatch"))
     assert len(submission_script_files) == 1
     submission_script_file = submission_script_files[0]
     with submission_script_file.open("r") as f:
