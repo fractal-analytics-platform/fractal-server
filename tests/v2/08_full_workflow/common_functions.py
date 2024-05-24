@@ -11,6 +11,7 @@ from fractal_server.app.runner.filenames import IMAGES_FILENAME
 from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
 
 PREFIX = "/api/v2"
+NUM_IMAGES = 4
 
 
 def _task_name_to_id(task_name: str, task_list: list[dict[str, Any]]) -> int:
@@ -69,7 +70,11 @@ async def full_workflow(
         res = await client.post(
             f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
             f"?task_id={task_id_A}",
-            json=dict(args_non_parallel=dict(image_dir="/somewhere")),
+            json=dict(
+                args_non_parallel=dict(
+                    image_dir="/somewhere", num_images=NUM_IMAGES
+                )
+            ),
         )
         assert res.status_code == 201
         # Add "MIP_compound" task
@@ -138,7 +143,6 @@ async def full_workflow(
         debug(dataset)
         assert len(dataset["history"]) == 2
         assert dataset["filters"]["types"] == {"3D": False}
-        # assert dataset["filters"]["attributes"] == {}
         res = await client.post(
             f"{PREFIX}/project/{project_id}/dataset/{dataset_id}/"
             "images/query/",
@@ -147,14 +151,14 @@ async def full_workflow(
         assert res.status_code == 200
         image_page = res.json()
         debug(image_page)
-        # There should be two 3D images and two 2D images
-        assert image_page["total_count"] == 4
+        # There should be NUM_IMAGES 3D images and NUM_IMAGES 2D images
+        assert image_page["total_count"] == 2 * NUM_IMAGES
         images = image_page["images"]
         debug(images)
         images_3D = filter(lambda img: img["types"]["3D"], images)
         images_2D = filter(lambda img: not img["types"]["3D"], images)
-        assert len(list(images_2D)) == 2
-        assert len(list(images_3D)) == 2
+        assert len(list(images_2D)) == NUM_IMAGES
+        assert len(list(images_3D)) == NUM_IMAGES
 
         # Test get_workflowtask_status endpoint
         res = await client.get(
@@ -230,7 +234,11 @@ async def full_workflow_TaskExecutionError(
         res = await client.post(
             f"{PREFIX}/project/{project_id}/workflow/{workflow_id}/wftask/"
             f"?task_id={task_id}",
-            json=dict(args_non_parallel=dict(image_dir="/somewhere")),
+            json=dict(
+                args_non_parallel=dict(
+                    image_dir="/somewhere", num_images=NUM_IMAGES
+                )
+            ),
         )
         assert res.status_code == 201
         workflow_task_id = res.json()["id"]
@@ -304,7 +312,7 @@ async def full_workflow_TaskExecutionError(
         assert res.status_code == 200
         image_list = res.json()["images"]
         debug(image_list)
-        assert len(image_list) == 4
+        assert len(image_list) == 2 * NUM_IMAGES
 
         # Test get_workflowtask_status endpoint
         res = await client.get(
