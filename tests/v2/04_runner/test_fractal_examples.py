@@ -12,10 +12,33 @@ from v2_mock_models import TaskV2Mock
 from v2_mock_models import WorkflowTaskV2Mock
 
 from fractal_server.app.runner.exceptions import JobExecutionError
-from fractal_server.app.runner.v2.runner import execute_tasks_v2
 from fractal_server.images import SingleImage
 from fractal_server.images.tools import find_image_by_zarr_url
 from fractal_server.logger import set_logger
+
+
+def execute_tasks_v2(wf_task_list, workflow_dir, **kwargs):
+    from fractal_server.app.runner.task_files import task_subfolder_name
+    from fractal_server.app.runner.v2.runner import (
+        execute_tasks_v2 as raw_execute_tasks_v2,
+    )
+
+    for wftask in wf_task_list:
+        if wftask.task is not None:
+            subfolder = workflow_dir / task_subfolder_name(
+                order=wftask.order, task_name=wftask.task.name
+            )
+        else:
+            subfolder = workflow_dir / task_subfolder_name(
+                order=wftask.order, task_name=wftask.task_legacy.name
+            )
+        logging.info(f"Now creating {subfolder.as_posix()}")
+        subfolder.mkdir(parents=True)
+
+    out = raw_execute_tasks_v2(
+        wf_task_list=wf_task_list, workflow_dir=workflow_dir, **kwargs
+    )
+    return out
 
 
 def _assert_image_data_exist(image_list: list[dict]):
