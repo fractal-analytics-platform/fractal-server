@@ -833,7 +833,9 @@ async def test_metadiff(
 
         # Check that the expected files are present
         working_dir = job_status_data["working_dir"]
-        glob_list = [Path(x).name for x in glob.glob(f"{working_dir}/**/*")]
+        glob_list = [Path(x).name for x in glob.glob(f"{working_dir}/*")] + [
+            Path(x).name for x in glob.glob(f"{working_dir}/**/*")
+        ]
         debug(glob_list)
         must_exist = [
             "0.args.json",
