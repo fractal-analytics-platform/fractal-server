@@ -1,16 +1,18 @@
 import shlex
 import subprocess
+import sys
 import time
+from pathlib import Path
 
 import pytest
 from devtools import debug
 
 from fractal_server.app.runner.exceptions import JobExecutionError
-from fractal_server.app.runner.executors.slurm.executor import (
-    FractalSlurmExecutor,
-)
 from tests.fixtures_slurm import run_squeue
 from tests.fixtures_slurm import SLURM_USER
+
+sys.path.append(Path(__file__).parent)
+from test_backend_slurm import TestingFractalSlurmExecutor  # noqa: E402
 
 
 def test_direct_shutdown_during_submit(
@@ -21,7 +23,7 @@ def test_direct_shutdown_during_submit(
     Test the FractalSlurmExecutor.shutdown method directly
     """
 
-    executor = FractalSlurmExecutor(
+    executor = TestingFractalSlurmExecutor(
         slurm_user=SLURM_USER,
         working_dir=tmp777_path,
         working_dir_user=tmp777_path,
@@ -69,7 +71,7 @@ def test_indirect_shutdown_during_submit(
     """
     shutdown_file = tmp_path / "shutdown"
 
-    executor = FractalSlurmExecutor(
+    executor = TestingFractalSlurmExecutor(
         slurm_user=SLURM_USER,
         working_dir=tmp777_path,
         working_dir_user=tmp777_path,
@@ -140,7 +142,7 @@ def test_indirect_shutdown_during_map(
         stderr=tmp_stderr,
     )
 
-    with FractalSlurmExecutor(
+    with TestingFractalSlurmExecutor(
         slurm_user=SLURM_USER,
         working_dir=tmp777_path,
         working_dir_user=tmp777_path,
