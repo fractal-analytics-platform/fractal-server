@@ -215,7 +215,7 @@ async def test_full_workflow(
         # working_dir_user.
         workflow_path = Path(job_status_data["working_dir"])
         no_access = []
-        for f in workflow_path.glob("*"):
+        for f in workflow_path.glob("**/*"):
             has_access = os.access(f, os.R_OK | os.W_OK)
             if not has_access:
                 no_access.append(f)
@@ -714,7 +714,9 @@ async def test_non_python_task(
 
         # Check that the expected files are present
         working_dir = job_status_data["working_dir"]
-        glob_list = [Path(x).name for x in glob.glob(f"{working_dir}/*")]
+        glob_list = [Path(x).name for x in glob.glob(f"{working_dir}/*")] + [
+            Path(x).name for x in glob.glob(f"{working_dir}/**/*")
+        ]
         must_exist = [
             "0.args.json",
             "0.err",
@@ -726,10 +728,10 @@ async def test_non_python_task(
             assert f in glob_list
 
         # Check that stderr and stdout are as expected
-        with open(f"{working_dir}/0.out", "r") as f:
+        with open(f"{working_dir}/0_non-python/0.out", "r") as f:
             out = f.read()
         assert "This goes to standard output" in out
-        with open(f"{working_dir}/0.err", "r") as f:
+        with open(f"{working_dir}/0_non-python/0.err", "r") as f:
             err = f.read()
         assert "This goes to standard error" in err
 
@@ -831,7 +833,7 @@ async def test_metadiff(
 
         # Check that the expected files are present
         working_dir = job_status_data["working_dir"]
-        glob_list = [Path(x).name for x in glob.glob(f"{working_dir}/*")]
+        glob_list = [Path(x).name for x in glob.glob(f"{working_dir}/**/*")]
         debug(glob_list)
         must_exist = [
             "0.args.json",
