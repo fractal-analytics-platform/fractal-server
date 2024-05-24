@@ -13,13 +13,13 @@ Zurich.
 """
 import datetime
 import json
+import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
 from devtools import debug
 
-from fractal_server.app.runner.task_files import task_subfolder_name
 from fractal_server.app.runner.v1._common import _call_command_wrapper
 from fractal_server.app.runner.v1._common import call_parallel_task
 from fractal_server.app.runner.v1._common import call_single_task
@@ -39,19 +39,8 @@ from tests.data.tasks_dummy import dummy_parallel as dummy_parallel_module
 from tests.fixtures_tasks_v1 import MockTask
 from tests.fixtures_tasks_v1 import MockWorkflowTask
 
-
-def _create_task_subfolder(
-    *, wftask: MockWorkflowTask, workflow_dir: Path
-) -> Path:
-    """
-    This is an operation that takes place in higher-level Fractal-runner
-    functions, and thus must be called explicitly here.
-    """
-    subfolder = workflow_dir / task_subfolder_name(
-        order=wftask.order, task_name=wftask.task.name
-    )
-    subfolder.mkdir()
-    return subfolder
+sys.path.append(Path(__file__).parent)
+from aux_create_subfolder import _create_task_subfolder  # noqa: E402
 
 
 async def test_command_wrapper(tmp_path):
