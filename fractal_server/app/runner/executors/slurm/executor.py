@@ -677,6 +677,13 @@ class FractalSlurmExecutor(SlurmExecutor):
                 )
             job.wftask_subfolder_name = _subfolder_names[0]
 
+        # Check that server-side subfolder exists
+        subfolder_path = self.working_dir / job.wftask_subfolder_name
+        if not subfolder_path.exists():
+            raise FileNotFoundError(
+                f"Missing folder {subfolder_path.as_posix()}."
+            )
+
         # Define I/O pickle file names/paths
         job.input_pickle_files = tuple(
             self.get_input_pickle_file_path(
@@ -1202,13 +1209,11 @@ class FractalSlurmExecutor(SlurmExecutor):
         This will be called when self.submit or self.map are called from
         outside fractal-server, and then lack some optional arguments.
         """
-        import random
-
         task_files = TaskFiles(
             workflow_dir=self.working_dir,
             workflow_dir_user=self.working_dir_user,
-            task_order=random.randint(10000, 99999),  # nosec
-            task_name="task_name",
+            task_order=None,
+            task_name="name",
         )
         return task_files
 
