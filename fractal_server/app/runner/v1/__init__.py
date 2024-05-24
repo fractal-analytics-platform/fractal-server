@@ -34,6 +34,7 @@ from ...schemas.v1 import JobStatusTypeV1
 from ..exceptions import JobExecutionError
 from ..exceptions import TaskExecutionError
 from ..filenames import WORKFLOW_LOG_FILENAME
+from ..task_files import task_subfolder_name
 from ._local import process_workflow as local_process_workflow
 from ._slurm import process_workflow as slurm_process_workflow
 from .common import close_job_logger
@@ -148,6 +149,12 @@ async def submit_workflow(
         # Create WORKFLOW_DIR with 755 permissions
         original_umask = os.umask(0)
         WORKFLOW_DIR.mkdir(parents=True, mode=0o755)
+        for order in range(job.first_task_index, job.last_task_index + 1):
+            subfolder = task_subfolder_name(
+                order=order,
+                task_name=workflow.task_list[order].task.name,
+            )
+            (WORKFLOW_DIR / subfolder).mkdir(mode=0o755)
         os.umask(original_umask)
 
         # Define and create user-side working folder, if needed
@@ -161,6 +168,14 @@ async def submit_workflow(
 
             WORKFLOW_DIR_USER = Path(user_cache_dir) / f"{WORKFLOW_DIR.name}"
             _mkdir_as_user(folder=str(WORKFLOW_DIR_USER), user=slurm_user)
+            for order in range(job.first_task_index, job.last_task_index + 1):
+                subfolder = task_subfolder_name(
+                    order=order,
+                    task_name=workflow.task_list[order].task.name,
+                )
+                _mkdir_as_user(
+                    folder=str(WORKFLOW_DIR_USER / subfolder), user=slurm_user
+                )
         else:
             raise ValueError(f"{FRACTAL_RUNNER_BACKEND=} not supported")
 
