@@ -1,10 +1,8 @@
 import logging
 import os
 import shlex
-import sys
 import time
 from concurrent.futures import Executor
-from pathlib import Path
 from typing import Callable
 
 import pytest
@@ -21,8 +19,6 @@ from fractal_server.app.runner.executors.slurm.executor import (
 from tests.fixtures_slurm import run_squeue
 from tests.fixtures_slurm import scancel_all_jobs_of_a_slurm_user
 from tests.fixtures_slurm import SLURM_USER
-
-sys.path.append(Path(__file__).parent)
 
 
 class TestingFractalSlurmExecutor(FractalSlurmExecutor):
