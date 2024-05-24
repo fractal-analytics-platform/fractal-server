@@ -498,7 +498,6 @@ async def test_failing_workflow_TaskExecutionError(
 
 
 async def test_failing_workflow_JobExecutionError_slurm(
-    backend,
     client,
     MockCurrentUser,
     testdata_path,
@@ -517,11 +516,8 @@ async def test_failing_workflow_JobExecutionError_slurm(
     from tests.fixtures_slurm import SLURM_USER
 
     override_settings_factory(
-        FRACTAL_RUNNER_BACKEND=backend,
-        FRACTAL_RUNNER_WORKING_BASE_DIR=(
-            tmp777_path
-            / f"artifacts-{backend}-test_failing_workflow_JobExecutionError"
-        ),
+        FRACTAL_RUNNER_BACKEND="slurm",
+        FRACTAL_RUNNER_WORKING_BASE_DIR=(tmp777_path / "artifacts"),
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
     )
 
