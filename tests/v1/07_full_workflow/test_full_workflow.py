@@ -25,6 +25,7 @@ from devtools import debug
 from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
 from fractal_server.app.runner.v1 import _backends
 
+
 PREFIX = "/api/v1"
 
 
@@ -60,7 +61,10 @@ async def test_full_workflow(
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter_v1")
         user_cache_dir = str(tmp777_path / f"user_cache_dir-{backend}")
+        from tests.fixtures_slurm import SLURM_USER
+
         user_kwargs["cache_dir"] = user_cache_dir
+        user_kwargs["slurm_user"] = SLURM_USER
 
     async with MockCurrentUser(user_kwargs=user_kwargs) as user:
         debug(user)
@@ -493,8 +497,7 @@ async def test_failing_workflow_TaskExecutionError(
             assert "index" in list(output_dataset_json["meta"].keys())
 
 
-@pytest.mark.parametrize("backend", ["slurm"])
-async def test_failing_workflow_JobExecutionError(
+async def test_failing_workflow_JobExecutionError_slurm(
     backend,
     client,
     MockCurrentUser,
@@ -507,23 +510,25 @@ async def test_failing_workflow_JobExecutionError(
     request,
     override_settings_factory,
     monkey_slurm,
-    monkey_slurm_user,
     relink_python_interpreter_v1,
     resource_factory,
     tmp_path,
 ):
+    from tests.fixtures_slurm import SLURM_USER
+
     override_settings_factory(
         FRACTAL_RUNNER_BACKEND=backend,
-        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path
-        / f"artifacts-{backend}-test_failing_workflow_JobExecutionError",
+        FRACTAL_RUNNER_WORKING_BASE_DIR=(
+            tmp777_path
+            / f"artifacts-{backend}-test_failing_workflow_JobExecutionError"
+        ),
+        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
     )
-    if backend == "slurm":
-        override_settings_factory(
-            FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
-        )
 
     user_cache_dir = str(tmp777_path / "user_cache_dir")
-    user_kwargs = dict(cache_dir=user_cache_dir, is_verified=True)
+    user_kwargs = dict(
+        cache_dir=user_cache_dir, is_verified=True, slurm_user=SLURM_USER
+    )
     async with MockCurrentUser(user_kwargs=user_kwargs) as user:
         project = await project_factory(user)
         project_id = project.id
@@ -576,7 +581,7 @@ async def test_failing_workflow_JobExecutionError(
         # from a subprocess.Popen, so that we can make it happen during the
         # execution.
         scancel_sleep_time = 10
-        slurm_user = monkey_slurm_user
+        slurm_user = SLURM_USER
 
         tmp_script = (tmp_path / "script.sh").as_posix()
         debug(tmp_script)
