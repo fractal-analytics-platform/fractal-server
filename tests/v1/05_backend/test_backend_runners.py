@@ -29,6 +29,7 @@ from fractal_server.app.runner.executors.slurm._subprocess_run_as_user import (
 from fractal_server.app.runner.v1 import _backends
 from fractal_server.app.runner.v1.common import close_job_logger
 from fractal_server.logger import set_logger
+from tests.fixtures_slurm import SLURM_USER
 
 sys.path.append(Path(__file__).parent)
 from aux_create_subfolder import _create_task_subfolder  # noqa: E402
@@ -74,7 +75,6 @@ async def test_runner(
 
         request.getfixturevalue("monkey_slurm")
         request.getfixturevalue("relink_python_interpreter_v1")
-        monkey_slurm_user = request.getfixturevalue("monkey_slurm_user")
     if backend == "slurm":
         override_settings_factory(
             FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json"
@@ -137,7 +137,7 @@ async def test_runner(
         workflow_dir, workflow_dir_user = request.getfixturevalue(
             "slurm_working_folders"
         )  # noqa
-        user = request.getfixturevalue("monkey_slurm_user")
+        user = SLURM_USER
 
         umask = os.umask(0)
         for wftask in wf.task_list:
@@ -167,7 +167,7 @@ async def test_runner(
         workflow_dir_user=workflow_dir_user,
     )
     if backend == "slurm":
-        kwargs["slurm_user"] = monkey_slurm_user
+        kwargs["slurm_user"] = SLURM_USER
 
     # process workflow
     try:

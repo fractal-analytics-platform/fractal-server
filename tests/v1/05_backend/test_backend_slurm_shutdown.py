@@ -10,11 +10,11 @@ from fractal_server.app.runner.executors.slurm.executor import (
     FractalSlurmExecutor,
 )
 from tests.fixtures_slurm import run_squeue
+from tests.fixtures_slurm import SLURM_USER
 
 
 def test_direct_shutdown_during_submit(
     monkey_slurm,
-    monkey_slurm_user,
     tmp777_path,
 ):
     """
@@ -22,7 +22,7 @@ def test_direct_shutdown_during_submit(
     """
 
     executor = FractalSlurmExecutor(
-        slurm_user=monkey_slurm_user,
+        slurm_user=SLURM_USER,
         working_dir=tmp777_path,
         working_dir_user=tmp777_path,
         slurm_poll_interval=2,
@@ -60,7 +60,6 @@ def test_direct_shutdown_during_submit(
 
 def test_indirect_shutdown_during_submit(
     monkey_slurm,
-    monkey_slurm_user,
     tmp777_path,
     tmp_path,
 ):
@@ -71,7 +70,7 @@ def test_indirect_shutdown_during_submit(
     shutdown_file = tmp_path / "shutdown"
 
     executor = FractalSlurmExecutor(
-        slurm_user=monkey_slurm_user,
+        slurm_user=SLURM_USER,
         working_dir=tmp777_path,
         working_dir_user=tmp777_path,
         slurm_poll_interval=1,
@@ -114,7 +113,6 @@ def test_indirect_shutdown_during_submit(
 
 def test_indirect_shutdown_during_map(
     monkey_slurm,
-    monkey_slurm_user,
     tmp777_path,
     tmp_path,
 ):
@@ -143,7 +141,7 @@ def test_indirect_shutdown_during_map(
     )
 
     with FractalSlurmExecutor(
-        slurm_user=monkey_slurm_user,
+        slurm_user=SLURM_USER,
         working_dir=tmp777_path,
         working_dir_user=tmp777_path,
         slurm_poll_interval=2,
