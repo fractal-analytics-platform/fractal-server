@@ -31,6 +31,7 @@ async def test_default_args_properties(task_factory_v2, caplog):
 
     # Test KeyErrors
     caplog.set_level(logging.WARNING)
+    caplog.clear()
     assert caplog.text == ""
 
     assert bugged_task.default_args_non_parallel_from_args_schema == {}
