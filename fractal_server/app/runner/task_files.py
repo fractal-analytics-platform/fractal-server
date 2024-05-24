@@ -86,7 +86,7 @@ class TaskFiles:
         if self.task_order is not None:
             order = str(self.task_order)
         else:
-            order = "task"
+            order = "0"
         self.file_prefix = f"{order}{component_safe}"
         self.subfolder_name = task_subfolder_name(
             order=order, task_name=self.task_name
