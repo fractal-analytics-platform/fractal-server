@@ -23,14 +23,6 @@ def test_direct_shutdown_during_submit(
     Test the FractalSlurmExecutor.shutdown method directly
     """
 
-    executor = TestingFractalSlurmExecutor(
-        slurm_user=SLURM_USER,
-        working_dir=tmp777_path,
-        working_dir_user=tmp777_path,
-        slurm_poll_interval=2,
-        keep_pickle_files=True,
-    )
-
     # NOTE: this function has to be defined inside the test function, so that
     # this works correctly with cloudpickle. In principle one could make it
     # work with cloudpickle as well, via register_pickle_by_value (see
@@ -43,21 +35,42 @@ def test_direct_shutdown_during_submit(
         time.sleep(sleep_time)
         return 42
 
-    res = executor.submit(_sleep_and_return, 100)
-    debug(res)
-    debug(run_squeue())
-    executor.shutdown()
-    executor.wait_thread.shutdown = True
-    debug(res)
-    assert not run_squeue(header=False)
+    with TestingFractalSlurmExecutor(
+        slurm_user=SLURM_USER,
+        working_dir=tmp777_path,
+        working_dir_user=tmp777_path,
+        slurm_poll_interval=2,
+        keep_pickle_files=True,
+    ) as executor:
 
-    try:
-        _ = res.result()
-    except JobExecutionError as e:
-        debug(e)
-    except Exception as e:
-        debug(e)
-        raise e
+        fut = executor.submit(_sleep_and_return, 100)
+        debug(fut)
+        debug(run_squeue())
+
+        debug("Now send shutdown")
+        executor.shutdown()
+        # executor.wait_thread.shutdown = True
+        debug(fut)
+
+        res = subprocess.run(
+            shlex.split("squeue --noheader --states=PD,CF,R "),
+            capture_output=True,
+            encoding="utf-8",
+        )
+        debug(res.stderr)
+        debug(res.stdout)
+        if res.returncode != 0:
+            debug(res.stderr)
+        assert res.returncode == 0
+        assert res.stdout == ""
+
+        try:
+            _ = fut.result()
+        except JobExecutionError as e:
+            debug(e)
+        except Exception as e:
+            debug(e)
+            raise e
 
 
 def test_indirect_shutdown_during_submit(
