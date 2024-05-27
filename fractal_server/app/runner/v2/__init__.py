@@ -123,9 +123,15 @@ async def submit_workflow(
         original_umask = os.umask(0)
         WORKFLOW_DIR.mkdir(parents=True, mode=0o755)
         for order in range(job.first_task_index, job.last_task_index + 1):
+            this_wftask = workflow.task_list[order]
+            if this_wftask.is_legacy_task:
+                task_name = this_wftask.task_legacy.name
+            else:
+                task_name = this_wftask.task.name
+
             subfolder = task_subfolder_name(
                 order=order,
-                task_name=workflow.task_list[order].task.name,
+                task_name=task_name,
             )
             (WORKFLOW_DIR / subfolder).mkdir(mode=0o755)
         os.umask(original_umask)
@@ -139,9 +145,14 @@ async def submit_workflow(
 
             _mkdir_as_user(folder=str(WORKFLOW_DIR_USER), user=slurm_user)
             for order in range(job.first_task_index, job.last_task_index + 1):
+                this_wftask = workflow.task_list[order]
+                if this_wftask.is_legacy_task:
+                    task_name = this_wftask.task_legacy.name
+                else:
+                    task_name = this_wftask.task.name
                 subfolder = task_subfolder_name(
                     order=order,
-                    task_name=workflow.task_list[order].task.name,
+                    task_name=task_name,
                 )
                 _mkdir_as_user(
                     folder=str(WORKFLOW_DIR_USER / subfolder), user=slurm_user
