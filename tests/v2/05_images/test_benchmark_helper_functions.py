@@ -80,8 +80,8 @@ def test_filter_image_list_few_filters(
                 types=dict(a=True),
                 attributes=dict(b=1),
             )
-            for ind_time_slice in range(25)
-            for ind_image in range(400)
+            for ind_time_slice in range(10)
+            for ind_image in range(100)
         ],
         [
             SingleImage(
@@ -89,21 +89,25 @@ def test_filter_image_list_few_filters(
                 types=dict(a=True),
                 attributes=dict(b=1),
             )
-            for ind_image in range(10_000)
+            for ind_image in range(1_000)
         ],
         [
             InitArgsModel(zarr_url=f"/tmp_{ind_image}", init_args=dict(a=1))
-            for ind_time_slice in range(25)
-            for ind_image in range(400)
+            for ind_time_slice in range(10)
+            for ind_image in range(100)
         ],
         [
             InitArgsModel(zarr_url=f"/tmp_{ind_image}", init_args=dict(a=1))
-            for ind_image in range(10_000)
+            for ind_image in range(1_000)
         ],
     ],
 )
 @benchmark
 def test_deduplicate_list(this_list):
+    """
+    This test can be used as a benchmark, by making it run
+    on larger image lists.
+    """
     new_list = deduplicate_list(this_list=this_list)
 
     debug(len(this_list), len(new_list))
