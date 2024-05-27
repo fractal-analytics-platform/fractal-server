@@ -11,7 +11,7 @@
 * Dependencies
     * Add `fabric` to `dev` dependencies (\#1518).
 * Deployment
-    * Add custom uvicorn worker to handle SIGABRT signal
+    * Add custom uvicorn worker to handle SIGABRT signal (\#1526)
 
 # 2.1.0
 
