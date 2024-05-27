@@ -12,6 +12,7 @@ from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v1 import ApplyWorkflow
 from ....models.v1 import JobStatusTypeV1
+from ....models.v1 import LinkUserProject
 from ....models.v1 import Project
 from ....runner.filenames import WORKFLOW_LOG_FILENAME
 from ....schemas.v1 import ApplyWorkflowReadV1
@@ -36,8 +37,12 @@ async def get_user_jobs(
     """
     Returns all the jobs of the current user
     """
-    stm = select(ApplyWorkflow)
-    stm = stm.join(Project).where(Project.user_list.any(User.id == user.id))
+    stm = (
+        select(ApplyWorkflow)
+        .join(Project)
+        .join(LinkUserProject)
+        .where(LinkUserProject.user_id == user.id)
+    )
     res = await db.execute(stm)
     job_list = res.scalars().all()
     await db.close()

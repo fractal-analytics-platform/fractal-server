@@ -26,6 +26,7 @@ from ...db import get_async_db
 from ...models.security import UserOAuth as User
 from ...models.v1 import Task
 from ...models.v2 import JobV2
+from ...models.v2 import LinkUserProjectV2
 from ...models.v2 import ProjectV2
 from ...models.v2 import TaskV2
 from ...models.v2 import WorkflowTaskV2
@@ -80,7 +81,9 @@ async def view_project(
     if id is not None:
         stm = stm.where(ProjectV2.id == id)
     if user_id is not None:
-        stm = stm.where(ProjectV2.user_list.any(User.id == user_id))
+        stm = stm.join(LinkUserProjectV2).where(
+            LinkUserProjectV2.user_id == user_id
+        )
 
     res = await db.execute(stm)
     project_list = res.scalars().all()
@@ -131,8 +134,10 @@ async def view_job(
     if id is not None:
         stm = stm.where(JobV2.id == id)
     if user_id is not None:
-        stm = stm.join(ProjectV2).where(
-            ProjectV2.user_list.any(User.id == user_id)
+        stm = (
+            stm.join(ProjectV2)
+            .join(LinkUserProjectV2)
+            .where(LinkUserProjectV2.user_id == user_id)
         )
     if project_id is not None:
         stm = stm.where(JobV2.project_id == project_id)
@@ -408,6 +413,15 @@ async def query_tasks(
 
     task_info_list = []
 
+    async def get_project_user_list(project: ProjectV2, db):
+        stm = (
+            select(User)
+            .join(LinkUserProjectV2)
+            .where(LinkUserProjectV2.project_id == project.id)
+        )
+        res = await db.execute(stm)
+        return res.unique().scalars().all()
+
     for task in task_list:
         stm = (
             select(WorkflowV2)
@@ -429,7 +443,9 @@ async def query_tasks(
                         project_name=workflow.project.name,
                         project_users=[
                             dict(id=user.id, email=user.email)
-                            for user in workflow.project.user_list
+                            for user in await get_project_user_list(
+                                workflow.project, db
+                            )
                         ],
                     )
                     for workflow in wf_list

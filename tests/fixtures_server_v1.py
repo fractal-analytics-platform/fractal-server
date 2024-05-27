@@ -13,15 +13,22 @@ async def project_factory(db):
     """
 
     from fractal_server.app.models.v1 import Project
+    from fractal_server.app.models.v1 import LinkUserProject
 
     async def __project_factory(user, **kwargs):
         defaults = dict(name="project")
         defaults.update(kwargs)
         project = Project(**defaults)
-        project.user_list.append(user)
         db.add(project)
         await db.commit()
         await db.refresh(project)
+
+        link_user_project = LinkUserProject(
+            user_id=user.id, project_id=project.id
+        )
+        db.add(link_user_project)
+        await db.commit()
+
         return project
 
     return __project_factory
@@ -204,7 +211,7 @@ async def job_factory(db: AsyncSession):
                 ],
             ),
             project_dump=dict(
-                project.model_dump(exclude={"user_list", "timestamp_created"}),
+                project.model_dump(exclude={"timestamp_created"}),
                 timestamp_created=_encode_as_utc(project.timestamp_created),
             ),
             last_task_index=last_task_index,

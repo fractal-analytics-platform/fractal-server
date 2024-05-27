@@ -15,6 +15,7 @@ from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v1 import ApplyWorkflow
 from ....models.v1 import Dataset
+from ....models.v1 import LinkUserProject
 from ....models.v1 import Project
 from ....models.v1 import Resource
 from ....runner.filenames import HISTORY_FILENAME
@@ -536,8 +537,12 @@ async def get_user_datasets(
     """
     Returns all the datasets of the current user
     """
-    stm = select(Dataset)
-    stm = stm.join(Project).where(Project.user_list.any(User.id == user.id))
+    stm = (
+        select(Dataset)
+        .join(Project)
+        .join(LinkUserProject)
+        .where(LinkUserProject.user_id == user.id)
+    )
     res = await db.execute(stm)
     dataset_list = res.scalars().all()
     await db.close()

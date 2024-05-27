@@ -12,6 +12,8 @@ from .....logger import set_logger
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v1 import Task as TaskV1
+from ....models.v2 import LinkUserProjectV2
+from ....models.v2 import ProjectV2
 from ....models.v2 import TaskV2
 from ....models.v2 import WorkflowTaskV2
 from ....models.v2 import WorkflowV2
@@ -216,9 +218,15 @@ async def delete_task(
         workflows = res.scalars().all()
 
         # Find which workflows are associated to the current user
-        workflows_current_user = [
-            wf for wf in workflows if user in wf.project.user_list
-        ]
+        stm = (
+            select(WorkflowV2)
+            .where(WorkflowV2.id.in_(workflow_ids))
+            .join(ProjectV2)
+            .join(LinkUserProjectV2)
+            .where(LinkUserProjectV2.user_id == user.id)
+        )
+        res = await db.execute(stm)
+        workflows_current_user = res.scalars().all()
         if workflows_current_user:
             current_user_msg = (
                 "For the current-user workflows (listed below),"

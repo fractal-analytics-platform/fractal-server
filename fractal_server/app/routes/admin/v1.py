@@ -24,6 +24,7 @@ from ...models.security import UserOAuth as User
 from ...models.v1 import ApplyWorkflow
 from ...models.v1 import Dataset
 from ...models.v1 import JobStatusTypeV1
+from ...models.v1 import LinkUserProject
 from ...models.v1 import Project
 from ...models.v1 import Workflow
 from ...runner.filenames import WORKFLOW_LOG_FILENAME
@@ -78,9 +79,10 @@ async def view_project(
 
     if id is not None:
         stm = stm.where(Project.id == id)
-
     if user_id is not None:
-        stm = stm.where(Project.user_list.any(User.id == user_id))
+        stm = stm.join(LinkUserProject).where(
+            LinkUserProject.user_id == user_id
+        )
     if timestamp_created_min is not None:
         timestamp_created_min = _convert_to_db_timestamp(timestamp_created_min)
         stm = stm.where(Project.timestamp_created >= timestamp_created_min)
@@ -118,8 +120,10 @@ async def view_workflow(
     stm = select(Workflow)
 
     if user_id is not None:
-        stm = stm.join(Project).where(
-            Project.user_list.any(User.id == user_id)
+        stm = (
+            stm.join(Project)
+            .join(LinkUserProject)
+            .where(LinkUserProject.user_id == user_id)
         )
     if id is not None:
         stm = stm.where(Workflow.id == id)
@@ -169,8 +173,10 @@ async def view_dataset(
     stm = select(Dataset)
 
     if user_id is not None:
-        stm = stm.join(Project).where(
-            Project.user_list.any(User.id == user_id)
+        stm = (
+            stm.join(Project)
+            .join(LinkUserProject)
+            .where(LinkUserProject.user_id == user_id)
         )
     if id is not None:
         stm = stm.where(Dataset.id == id)
@@ -242,8 +248,10 @@ async def view_job(
     if id is not None:
         stm = stm.where(ApplyWorkflow.id == id)
     if user_id is not None:
-        stm = stm.join(Project).where(
-            Project.user_list.any(User.id == user_id)
+        stm = (
+            stm.join(Project)
+            .join(LinkUserProject)
+            .where(LinkUserProject.user_id == user_id)
         )
     if project_id is not None:
         stm = stm.where(ApplyWorkflow.project_id == project_id)

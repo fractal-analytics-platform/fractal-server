@@ -11,6 +11,7 @@ from sqlmodel import select
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import JobV2
+from ....models.v2 import LinkUserProjectV2
 from ....models.v2 import ProjectV2
 from ....runner.filenames import WORKFLOW_LOG_FILENAME
 from ....schemas.v2 import JobReadV2
@@ -39,7 +40,8 @@ async def get_user_jobs(
     stm = (
         select(JobV2)
         .join(ProjectV2)
-        .where(ProjectV2.user_list.any(User.id == user.id))
+        .join(LinkUserProjectV2)
+        .where(LinkUserProjectV2.user_id == user.id)
     )
     res = await db.execute(stm)
     job_list = res.scalars().all()

@@ -13,6 +13,7 @@ from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v1 import Task as TaskV1
 from ....models.v2 import JobV2
+from ....models.v2 import LinkUserProjectV2
 from ....models.v2 import ProjectV2
 from ....models.v2 import TaskV2
 from ....models.v2 import WorkflowV2
@@ -371,9 +372,11 @@ async def get_user_workflows(
     """
     Returns all the workflows of the current user
     """
-    stm = select(WorkflowV2)
-    stm = stm.join(ProjectV2).where(
-        ProjectV2.user_list.any(User.id == user.id)
+    stm = (
+        select(WorkflowV2)
+        .join(ProjectV2)
+        .join(LinkUserProjectV2)
+        .where(LinkUserProjectV2.user_id == user.id)
     )
     res = await db.execute(stm)
     workflow_list = res.scalars().all()
