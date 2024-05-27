@@ -85,12 +85,11 @@ async def create_project(
     )
 
     db_project = Project(**project.dict())
-    db_project.user_list.append(user)
+
     try:
         db.add(db_project)
         await db.commit()
         await db.refresh(db_project)
-        await db.close()
     except IntegrityError as e:
         await db.rollback()
         logger = set_logger("create_project")
@@ -100,6 +99,13 @@ async def create_project(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=str(e),
         )
+
+    link_user_project = LinkUserProject(
+        project_id=db_project.id, user_id=user.id
+    )
+    db.add(link_user_project)
+    await db.commit()
+    await db.close()
 
     return db_project
 

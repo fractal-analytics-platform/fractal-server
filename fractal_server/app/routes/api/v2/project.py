@@ -61,11 +61,16 @@ async def create_project(
     )
 
     db_project = ProjectV2(**project.dict())
-    db_project.user_list.append(user)
-
     db.add(db_project)
     await db.commit()
     await db.refresh(db_project)
+
+    link_user_project = LinkUserProjectV2(
+        user_id=user.id, project_id=db_project.id
+    )
+    db.add(link_user_project)
+    await db.commit()
+
     await db.close()
 
     return db_project

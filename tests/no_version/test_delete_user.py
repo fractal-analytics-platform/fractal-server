@@ -1,13 +1,32 @@
+from typing import Union
+
 from sqlmodel import delete
 from sqlmodel import select
 
 from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.models.v1 import LinkUserProject
+from fractal_server.app.models.v1 import Project
 from fractal_server.app.models.v2 import LinkUserProjectV2
+from fractal_server.app.models.v2 import ProjectV2
 
 
 async def user_list(db):
     stm = select(UserOAuth)
+    res = await db.execute(stm)
+    return res.scalars().unique().all()
+
+
+async def project_user_list(project: Union[Project, ProjectV2], db):
+    if isinstance(project, Project):
+        LinkModel = LinkUserProject
+    else:
+        LinkModel = LinkUserProjectV2
+    stm = (
+        select(UserOAuth)
+        .join(LinkModel)
+        .where(LinkModel.user_id == UserOAuth.id)
+        .where(LinkModel.project_id == project.id)
+    )
     res = await db.execute(stm)
     return res.scalars().unique().all()
 
@@ -30,10 +49,10 @@ async def test_delete_user(
         project_v2_2 = await project_factory_v2(user2)
 
     assert len(await user_list(db)) == 2
-    assert len(project_v1.user_list) == 1
-    assert len(project_v2.user_list) == 1
-    assert len(project_v1_2.user_list) == 1
-    assert len(project_v2_2.user_list) == 1
+    assert len(await project_user_list(project_v1, db)) == 1
+    assert len(await project_user_list(project_v2, db)) == 1
+    assert len(await project_user_list(project_v1_2, db)) == 1
+    assert len(await project_user_list(project_v2_2, db)) == 1
 
     await db.execute(
         delete(LinkUserProject).where(LinkUserProject.user_id == user.id)
@@ -50,7 +69,7 @@ async def test_delete_user(
     await db.refresh(project_v2_2)
 
     assert len(await user_list(db)) == 1
-    assert len(project_v1.user_list) == 0
-    assert len(project_v2.user_list) == 0
-    assert len(project_v1_2.user_list) == 1
-    assert len(project_v2_2.user_list) == 1
+    assert len(await project_user_list(project_v1, db)) == 0
+    assert len(await project_user_list(project_v2, db)) == 0
+    assert len(await project_user_list(project_v1_2, db)) == 1
+    assert len(await project_user_list(project_v2_2, db)) == 1
