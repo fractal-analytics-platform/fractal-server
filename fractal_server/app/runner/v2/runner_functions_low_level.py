@@ -75,12 +75,17 @@ def run_single_task(
     if not workflow_dir_user:
         workflow_dir_user = workflow_dir
 
+    if is_task_v1:
+        task_name = wftask.task_legacy.name
+    else:
+        task_name = wftask.task.name
+
     component = args.pop(_COMPONENT_KEY_, None)
     task_files = get_task_file_paths(
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
         task_order=wftask.order,
-        task_name=wftask.task.name,
+        task_name=task_name,
         component=component,
     )
 
