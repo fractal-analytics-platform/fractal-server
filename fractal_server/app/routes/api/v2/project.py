@@ -185,6 +185,13 @@ async def delete_project(
     for job in jobs:
         job.project_id = None
 
+    stm = select(LinkUserProjectV2).where(
+        LinkUserProjectV2.project_id == project_id
+    )
+    res = await db.execute(stm)
+    links = res.scalars().all()
+    for link in links:
+        await db.delete(link)
     await db.delete(project)
     await db.commit()
 
