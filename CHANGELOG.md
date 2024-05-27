@@ -7,6 +7,8 @@
 * Testing:
     * Improve dockerfiles for SLURM (\#1495, \#1496).
     * Set short timeout for `docker compose down` (\#1500).
+* Deployment:
+    * Add custom uvicorn worker to handle SIGABRT signal (\#1506)
 
 # 2.0.6
 
