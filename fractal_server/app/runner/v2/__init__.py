@@ -171,6 +171,8 @@ async def submit_workflow(
 
         db_sync.refresh(dataset)
         db_sync.refresh(workflow)
+        for wftask in workflow.task_list:
+            db_sync.refresh(wftask)
 
         # Write logs
         logger_name = f"WF{workflow_id}_job{job_id}"
