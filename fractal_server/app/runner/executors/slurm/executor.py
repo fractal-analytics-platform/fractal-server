@@ -737,7 +737,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                     f.write(funcser)
 
         # Submit job to SLURM, and get jobid
-        jobid, job = self._start(job)  # returns tuple[str, SlurmJob]
+        jobid, job = self._start(job)
 
         # Add the SLURM script/out/err paths to map_jobid_to_slurm_files (this
         # must be after self._start(job), so that "%j" has already been
