@@ -240,6 +240,13 @@ async def delete_project(
 
     await db.commit()
 
+    stm = select(LinkUserProject).where(
+        LinkUserProject.project_id == project_id
+    )
+    res = await db.execute(stm)
+    links = res.scalars().all()
+    for link in links:
+        await db.delete(link)
     await db.delete(project)
     await db.commit()
 
