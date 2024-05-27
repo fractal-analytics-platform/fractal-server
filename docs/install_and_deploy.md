@@ -133,6 +133,11 @@ If Fractal Server is installed with the [`gunicorn`](https://gunicorn.org) extra
 ```
 gunicorn fractal_server.main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8010 --access-logfile logs/fractal-server.out --error-logfile logs/fractal-server.err
 ```
+Fractal provides a dedicated worker to handle the SIGABRT signal send after a TIMEOUT. As long as Uvicorn does not propagate properly signals coming from Gunicorn [ref](https://github.com/encode/uvicorn/blob/22873a99188413332df98c04a351e061672cb523/uvicorn/workers.py#L77), we introduce a new Worker that convert a SIGABRT signal into a SIGTERM one. At the moment looks safe, but it is always a custom implementation, for this reason we keep both version in the docs.
+
+```
+gunicorn fractal_server.main:app --workers 2 --worker-class fractal_server.fractal_uvicorn_worker.FractalWorker --bind 0.0.0.0:8010 --access-logfile logs/fractal-server.out --error-logfile logs/fractal-server.err
+```
 
 ### Postgres setup
 
