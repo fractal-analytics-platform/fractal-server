@@ -9,12 +9,9 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import status
-from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
 from .....config import get_settings
-from .....logger import close_logger
-from .....logger import set_logger
 from .....syringe import Inject
 from ....db import AsyncSession
 from ....db import get_async_db
@@ -86,19 +83,10 @@ async def create_project(
 
     db_project = Project(**project.dict())
 
-    try:
-        db.add(db_project)
-        await db.commit()
-        await db.refresh(db_project)
-    except IntegrityError as e:
-        await db.rollback()
-        logger = set_logger("create_project")
-        logger.error(str(e))
-        close_logger(logger)
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=str(e),
-        )
+    db.add(db_project)
+    await db.commit()
+    await db.refresh(db_project)
+    await db.close()
 
     link_user_project = LinkUserProject(
         project_id=db_project.id, user_id=user.id

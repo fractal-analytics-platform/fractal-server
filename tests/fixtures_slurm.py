@@ -17,6 +17,7 @@ from fractal_server.app.runner.executors.slurm._subprocess_run_as_user import (
 
 
 HAS_LOCAL_SBATCH = bool(shutil.which("sbatch"))
+SLURM_USER = "test01"
 
 
 def is_responsive(container_name):
@@ -73,11 +74,6 @@ def patched_run_squeue(monkeypatch):
         "run_squeue",
         patched_run_squeue,
     )
-
-
-@pytest.fixture
-def monkey_slurm_user():
-    return "test01"
 
 
 @pytest.fixture
@@ -190,11 +186,10 @@ def scancel_all_jobs_of_a_slurm_user(
 @pytest.fixture
 def slurm_working_folders(
     tmp777_path: Path,
-    monkey_slurm_user: str,
 ):
 
     root_path = tmp777_path
-    user = monkey_slurm_user
+    user = SLURM_USER
 
     # Define working folders
     server_working_dir = root_path / "server"
