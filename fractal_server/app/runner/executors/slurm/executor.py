@@ -116,6 +116,8 @@ class SlurmJob:
             submitted for execution on the `FractalSlurmExecutor`; this is
             needed in the `_copy_files_from_user_to_server` method, and also to
             construct the names of per-task input/output pickle files.
+        wftask_subfolder_name:
+            Name of the per-task subfolder (e.g. `7_task_name`).
         slurm_script:
             Path of SLURM submission script.
         slurm_stdout:
@@ -664,17 +666,19 @@ class FractalSlurmExecutor(SlurmExecutor):
             job.wftask_file_prefixes = tuple(_prefixes)
 
             num_subfolders = len(set(_subfolder_names))
-            if not num_subfolders == 1:
-                # All components should refer to the same task, and then to
-                # the same subfolder
-                logger.error(
+            if num_subfolders != 1:
+                error_msg_short = (
                     f"[_submit_job] Subfolder list has {num_subfolders} "
-                    f"different values: {set(_subfolder_names)}."
+                    "different values, but it must have only one (since "
+                    "workflow tasks are executed one by one)."
                 )
-                raise ValueError(
-                    f"[_submit_job] Subfolder list has {num_subfolders} "
-                    "different values."
+                error_msg_detail = (
+                    "[_submit_job] Current unique subfolder names: "
+                    f"{set(_subfolder_names)}"
                 )
+                logger.error(error_msg_short)
+                logger.error(error_msg_detail)
+                raise ValueError(error_msg_short)
             job.wftask_subfolder_name = _subfolder_names[0]
 
         # Check that server-side subfolder exists
@@ -757,7 +761,6 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         with self.jobs_lock:
             self.jobs[jobid] = (fut, job)
-
         return fut
 
     def _prepare_JobExecutionError(
@@ -1007,14 +1010,14 @@ class FractalSlurmExecutor(SlurmExecutor):
             )
             return
 
-        subfolder = job.wftask_subfolder_name
+        subfolder_name = job.wftask_subfolder_name
         prefixes = set(
             [job.slurm_file_prefix] + list(job.wftask_file_prefixes)
         )
 
         logger.debug(
             "[_copy_files_from_user_to_server] "
-            f"WorkflowTask subfolder: {subfolder}"
+            f"WorkflowTask subfolder_name: {subfolder_name}"
         )
         logger.debug(f"[_copy_files_from_user_to_server] {prefixes=}")
         logger.debug(
@@ -1025,13 +1028,13 @@ class FractalSlurmExecutor(SlurmExecutor):
 
             if prefix == job.slurm_file_prefix:
                 files_to_copy = _glob_as_user(
-                    folder=str(self.working_dir_user / subfolder),
+                    folder=str(self.working_dir_user / subfolder_name),
                     user=self.slurm_user,
                     startswith=prefix,
                 )
             else:
                 files_to_copy = _glob_as_user_strict(
-                    folder=str(self.working_dir_user / subfolder),
+                    folder=str(self.working_dir_user / subfolder_name),
                     user=self.slurm_user,
                     startswith=prefix,
                 )
@@ -1048,7 +1051,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                         "contains whitespaces"
                     )
                 source_file_path = str(
-                    self.working_dir_user / subfolder / source_file_name
+                    self.working_dir_user / subfolder_name / source_file_name
                 )
 
                 # Read source_file_path (requires sudo)
@@ -1068,7 +1071,7 @@ class FractalSlurmExecutor(SlurmExecutor):
                     raise JobExecutionError(info)
                 # Write to dest_file_path (including empty files)
                 dest_file_path = str(
-                    self.working_dir / subfolder / source_file_name
+                    self.working_dir / subfolder_name / source_file_name
                 )
                 with open(dest_file_path, "wb") as f:
                     f.write(res.stdout)
