@@ -133,8 +133,8 @@ def call_single_task(
 
     If the executor then impersonates another user (as in the
     `FractalSlurmExecutor`), this function is run by that user.  For this
-    reason, it should not write any file to workflow_dir, or it may yield
-    permission errors.
+    reason, it should not write any file to `workflow_dir_local`, or it may
+    yield permission errors.
 
     Args:
         wftask:
@@ -164,7 +164,6 @@ def call_single_task(
                             information to the TaskExecutionError, such as task
                             order and name.
         JobExecutionError: If the wrapped task raises a job-related error.
-        RuntimeError: If the `workflow_dir` is falsy.
     """
 
     logger = get_logger(logger_name)
@@ -291,7 +290,7 @@ def call_single_parallel_task(
                             information to the TaskExecutionError, such as task
                             order and name.
         JobExecutionError: If the wrapped task raises a job-related error.
-        RuntimeError: If the `workflow_dir` is falsy.
+        RuntimeError: If the `workflow_dir_local` is falsy.
     """
     if not workflow_dir_local:
         raise RuntimeError
@@ -538,7 +537,7 @@ def execute_tasks(
         workflow_dir_remote:
             The user-side working directory for workflow execution (only
             relevant for multi-user executors). If `None`, it is set to be
-            equal to `workflow_dir`.
+            equal to `workflow_dir_local`.
         submit_setup_call:
             An optional function that computes configuration parameters for
             the executor.

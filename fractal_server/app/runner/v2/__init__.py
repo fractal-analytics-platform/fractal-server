@@ -125,7 +125,7 @@ async def submit_workflow(
         WORKFLOW_DIR_LOCAL.mkdir(parents=True, mode=0o755)
         os.umask(original_umask)
 
-        # Define and create WORKFLOW_DIR_USER
+        # Define and create WORKFLOW_DIR_REMOTE
         if FRACTAL_RUNNER_BACKEND == "local":
             WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
         elif FRACTAL_RUNNER_BACKEND == "slurm":

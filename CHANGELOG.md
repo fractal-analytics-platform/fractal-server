@@ -11,6 +11,7 @@
     * Add extensive logs to `DELETE /api/v2/project/{project_id}` (\#1532).
 * Runner:
     * Change structure of job folders, introducing per-task subfolders (\#1523).
+    * Rename internal `workflow_dir` and `workflow_dir_user` variables to local/remote (\#1534).
 * Deployment
     * Add custom gunicorn/uvicorn worker to handle SIGABRT signal (\#1526).
 * Dependencies
