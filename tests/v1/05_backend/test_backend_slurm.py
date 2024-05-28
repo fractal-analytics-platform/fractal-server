@@ -78,8 +78,8 @@ def test_slurm_executor_submit(
 ):
     with TestingFractalSlurmExecutor(
         slurm_user=SLURM_USER,
-        working_dir=tmp777_path,
-        working_dir_user=tmp777_path,
+        working_dir_local=tmp777_path,
+        working_dir_remote=tmp777_path,
         slurm_poll_interval=2,
         keep_pickle_files=True,
     ) as executor:
@@ -100,8 +100,8 @@ def test_slurm_executor_submit_with_exception(
     with pytest.raises(TaskExecutionError) as e:
         with TestingFractalSlurmExecutor(
             slurm_user=SLURM_USER,
-            working_dir=tmp777_path,
-            working_dir_user=tmp777_path,
+            working_dir_local=tmp777_path,
+            working_dir_remote=tmp777_path,
             slurm_poll_interval=2,
             keep_pickle_files=True,
         ) as executor:
@@ -116,8 +116,8 @@ def test_slurm_executor_map(
 ):
     with TestingFractalSlurmExecutor(
         slurm_user=SLURM_USER,
-        working_dir=tmp777_path,
-        working_dir_user=tmp777_path,
+        working_dir_local=tmp777_path,
+        working_dir_remote=tmp777_path,
         slurm_poll_interval=2,
         keep_pickle_files=True,
     ) as executor:
@@ -158,8 +158,8 @@ def test_slurm_executor_map_with_exception(
 
     with TestingFractalSlurmExecutor(
         slurm_user=SLURM_USER,
-        working_dir=tmp777_path,
-        working_dir_user=tmp777_path,
+        working_dir_local=tmp777_path,
+        working_dir_remote=tmp777_path,
         slurm_poll_interval=1,
         keep_pickle_files=True,
     ) as executor:
@@ -191,8 +191,8 @@ def test_slurm_executor_submit_separate_folders(
 
     with TestingFractalSlurmExecutor(
         slurm_user=SLURM_USER,
-        working_dir=server_working_dir,
-        working_dir_user=user_working_dir,
+        working_dir_local=server_working_dir,
+        working_dir_remote=user_working_dir,
         slurm_poll_interval=2,
         keep_pickle_files=True,
     ) as executor:
@@ -223,8 +223,8 @@ def test_slurm_executor_submit_and_scancel(
     with pytest.raises(JobExecutionError) as e:
         with TestingFractalSlurmExecutor(
             slurm_user=SLURM_USER,
-            working_dir=server_working_dir,
-            working_dir_user=user_working_dir,
+            working_dir_local=server_working_dir,
+            working_dir_remote=user_working_dir,
             debug=True,
             keep_pickle_files=True,
             slurm_poll_interval=2,
@@ -320,8 +320,8 @@ def test_submit_pre_command(fake_process, tmp_path):
 
     with TestingFractalSlurmExecutor(
         slurm_user=slurm_user,
-        working_dir=tmp_path,
-        working_dir_user=tmp_path,
+        working_dir_local=tmp_path,
+        working_dir_remote=tmp_path,
     ) as executor:
         submit_and_ignore_exceptions(executor, lambda: None)
 
@@ -351,8 +351,8 @@ def test_slurm_account_in_submit_script(tmp_path):
     tmp_path1.mkdir()
     with TestingFractalSlurmExecutor(
         slurm_user=slurm_user,
-        working_dir=tmp_path1,
-        working_dir_user=tmp_path1,
+        working_dir_local=tmp_path1,
+        working_dir_remote=tmp_path1,
     ) as executor:
         submit_and_ignore_exceptions(executor, lambda: None)
 
@@ -375,8 +375,8 @@ def test_slurm_account_in_submit_script(tmp_path):
     tmp_path2.mkdir()
     with TestingFractalSlurmExecutor(
         slurm_user=slurm_user,
-        working_dir=tmp_path2,
-        working_dir_user=tmp_path2,
+        working_dir_local=tmp_path2,
+        working_dir_remote=tmp_path2,
         slurm_account=SLURM_ACCOUNT,
     ) as executor:
         submit_and_ignore_exceptions(executor, lambda: None)
