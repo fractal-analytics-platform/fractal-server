@@ -117,8 +117,8 @@ def benchmark(N: int, tmp_path: str):
             ),
         ],
         dataset=DatasetV2Mock(name="dataset", zarr_dir=ZARR_DIR),
-        workflow_dir=WORKING_DIR,
-        workflow_dir_user=WORKING_DIR,
+        workflow_dir_local=WORKING_DIR,
+        workflow_dir_remote=WORKING_DIR,
         executor=FractalThreadPoolExecutor(),
     )
 

@@ -32,7 +32,7 @@ class TestingFractalSlurmExecutor(FractalSlurmExecutor):
 
         # Server-side subfolder
         server_side_subfolder = (
-            task_files.workflow_dir / task_files.subfolder_name
+            task_files.workflow_dir_local / task_files.subfolder_name
         )
         umask = os.umask(0)
         logging.info(f"Now creating {server_side_subfolder.as_posix()}")
@@ -40,7 +40,7 @@ class TestingFractalSlurmExecutor(FractalSlurmExecutor):
         os.umask(umask)
 
         # User-side subfolder
-        if self.working_dir != self.working_dir_user:
+        if self.working_dir_local != self.working_dir_remote:
             logging.info(
                 f"Now creating {task_files.remote_subfolder.as_posix()}, "
                 "as user."
@@ -64,8 +64,8 @@ def test_slurm_executor_submit_missing_subfolder(
     with pytest.raises(FileNotFoundError):
         with FractalSlurmExecutor(
             slurm_user=SLURM_USER,
-            working_dir=tmp777_path,
-            working_dir_user=tmp777_path,
+            working_dir_local=tmp777_path,
+            working_dir_remote=tmp777_path,
             slurm_poll_interval=2,
             keep_pickle_files=True,
         ) as executor:
@@ -266,11 +266,13 @@ def test_slurm_executor_submit_and_scancel(
 def test_missing_slurm_user(tmp_path, tmp777_path):
     with pytest.raises(TypeError):
         FractalSlurmExecutor(
-            working_dir=tmp_path, working_dir_user=tmp777_path
+            working_dir_local=tmp_path, working_dir_remote=tmp777_path
         )
     with pytest.raises(RuntimeError):
         FractalSlurmExecutor(
-            slurm_user=None, working_dir=tmp_path, working_dir_user=tmp777_path
+            slurm_user=None,
+            working_dir_local=tmp_path,
+            working_dir_remote=tmp777_path,
         )
 
 
@@ -278,8 +280,8 @@ def test_slurm_account_in_common_script_lines(tmp_path, tmp777_path):
     # No error
     FractalSlurmExecutor(
         slurm_user="slurm_user",
-        working_dir=tmp_path,
-        working_dir_user=tmp777_path,
+        working_dir_local=tmp_path,
+        working_dir_remote=tmp777_path,
         common_script_lines=["#SBATCH --partition=something"],
     )
 
@@ -287,8 +289,8 @@ def test_slurm_account_in_common_script_lines(tmp_path, tmp777_path):
     with pytest.raises(RuntimeError) as e:
         FractalSlurmExecutor(
             slurm_user="slurm_user",
-            working_dir=tmp_path,
-            working_dir_user=tmp777_path,
+            working_dir_local=tmp_path,
+            working_dir_remote=tmp777_path,
             common_script_lines=["#SBATCH --account=something"],
         )
     debug(str(e.value))

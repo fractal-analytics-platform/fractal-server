@@ -110,11 +110,11 @@ async def submit_workflow(
             return
 
         # Define and create server-side working folder
-        WORKFLOW_DIR = Path(job.working_dir)
-        if WORKFLOW_DIR.exists():
+        WORKFLOW_DIR_LOCAL = Path(job.working_dir)
+        if WORKFLOW_DIR_LOCAL.exists():
             job.status = JobStatusTypeV2.FAILED
             job.end_timestamp = get_timestamp()
-            job.log = f"Workflow dir {WORKFLOW_DIR} already exists."
+            job.log = f"Workflow dir {WORKFLOW_DIR_LOCAL} already exists."
             db_sync.merge(job)
             db_sync.commit()
             db_sync.close()
@@ -122,15 +122,17 @@ async def submit_workflow(
 
         # Create WORKFLOW_DIR
         original_umask = os.umask(0)
-        WORKFLOW_DIR.mkdir(parents=True, mode=0o755)
+        WORKFLOW_DIR_LOCAL.mkdir(parents=True, mode=0o755)
         os.umask(original_umask)
 
         # Define and create WORKFLOW_DIR_USER
         if FRACTAL_RUNNER_BACKEND == "local":
-            WORKFLOW_DIR_USER = WORKFLOW_DIR
+            WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
         elif FRACTAL_RUNNER_BACKEND == "slurm":
-            WORKFLOW_DIR_USER = Path(user_cache_dir) / WORKFLOW_DIR.name
-            _mkdir_as_user(folder=str(WORKFLOW_DIR_USER), user=slurm_user)
+            WORKFLOW_DIR_REMOTE = (
+                Path(user_cache_dir) / WORKFLOW_DIR_LOCAL.name
+            )
+            _mkdir_as_user(folder=str(WORKFLOW_DIR_REMOTE), user=slurm_user)
 
         # Create all tasks subfolders
         for order in range(job.first_task_index, job.last_task_index + 1):
@@ -144,11 +146,11 @@ async def submit_workflow(
                 task_name=task_name,
             )
             original_umask = os.umask(0)
-            (WORKFLOW_DIR / subfolder_name).mkdir(mode=0o755)
+            (WORKFLOW_DIR_LOCAL / subfolder_name).mkdir(mode=0o755)
             os.umask(original_umask)
             if FRACTAL_RUNNER_BACKEND == "slurm":
                 _mkdir_as_user(
-                    folder=str(WORKFLOW_DIR_USER / subfolder_name),
+                    folder=str(WORKFLOW_DIR_REMOTE / subfolder_name),
                     user=slurm_user,
                 )
 
@@ -170,7 +172,7 @@ async def submit_workflow(
 
         # Write logs
         logger_name = f"WF{workflow_id}_job{job_id}"
-        log_file_path = WORKFLOW_DIR / WORKFLOW_LOG_FILENAME
+        log_file_path = WORKFLOW_DIR_LOCAL / WORKFLOW_LOG_FILENAME
         logger = set_logger(
             logger_name=logger_name,
             log_file_path=log_file_path,
@@ -211,8 +213,8 @@ async def submit_workflow(
             slurm_user=slurm_user,
             slurm_account=job.slurm_account,
             user_cache_dir=user_cache_dir,
-            workflow_dir=WORKFLOW_DIR,
-            workflow_dir_user=WORKFLOW_DIR_USER,
+            workflow_dir_local=WORKFLOW_DIR_LOCAL,
+            workflow_dir_remote=WORKFLOW_DIR_REMOTE,
             logger_name=logger_name,
             worker_init=worker_init,
             first_task_index=job.first_task_index,

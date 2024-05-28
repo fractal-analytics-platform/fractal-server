@@ -50,8 +50,8 @@ def _process_workflow(
     input_metadata: dict[str, Any],
     input_history: list[dict[str, Any]],
     logger_name: str,
-    workflow_dir: Path,
-    workflow_dir_user: Path,
+    workflow_dir_local: Path,
+    workflow_dir_remote: Path,
     first_task_index: int,
     last_task_index: int,
     slurm_user: Optional[str] = None,
@@ -86,8 +86,8 @@ def _process_workflow(
         keep_logs=True,
         slurm_user=slurm_user,
         user_cache_dir=user_cache_dir,
-        working_dir=workflow_dir,
-        working_dir_user=workflow_dir_user,
+        working_dir_local=workflow_dir_local,
+        working_dir_remote=workflow_dir_remote,
         common_script_lines=worker_init,
         slurm_account=slurm_account,
     ) as executor:
@@ -102,8 +102,8 @@ def _process_workflow(
                 metadata=input_metadata,
                 history=input_history,
             ),
-            workflow_dir=workflow_dir,
-            workflow_dir_user=workflow_dir_user,
+            workflow_dir_local=workflow_dir_local,
+            workflow_dir_remote=workflow_dir_remote,
             submit_setup_call=_slurm_submit_setup,
             logger_name=logger_name,
         )
@@ -121,8 +121,8 @@ async def process_workflow(
     input_metadata: dict[str, Any],
     input_history: list[dict[str, Any]],
     logger_name: str,
-    workflow_dir: Path,
-    workflow_dir_user: Optional[Path] = None,
+    workflow_dir_local: Path,
+    workflow_dir_remote: Optional[Path] = None,
     user_cache_dir: Optional[str] = None,
     slurm_user: Optional[str] = None,
     slurm_account: Optional[str] = None,
@@ -152,8 +152,8 @@ async def process_workflow(
         input_metadata=input_metadata,
         input_history=input_history,
         logger_name=logger_name,
-        workflow_dir=workflow_dir,
-        workflow_dir_user=workflow_dir_user,
+        workflow_dir_local=workflow_dir_local,
+        workflow_dir_remote=workflow_dir_remote,
         slurm_user=slurm_user,
         slurm_account=slurm_account,
         user_cache_dir=user_cache_dir,
@@ -166,8 +166,8 @@ async def process_workflow(
 
 def get_slurm_config(
     wftask: WorkflowTask,
-    workflow_dir: Path,
-    workflow_dir_user: Path,
+    workflow_dir_local: Path,
+    workflow_dir_remote: Path,
     config_path: Optional[Path] = None,
 ) -> SlurmConfig:
     """
@@ -187,11 +187,11 @@ def get_slurm_config(
         wftask:
             WorkflowTask for which the SLURM configuration is is to be
             prepared.
-        workflow_dir:
+        workflow_dir_local:
             Server-owned directory to store all task-execution-related relevant
             files (inputs, outputs, errors, and all meta files related to the
             job execution). Note: users cannot write directly to this folder.
-        workflow_dir_user:
+        workflow_dir_remote:
             User-side directory with the same scope as `workflow_dir`, and
             where a user can write.
         config_path:

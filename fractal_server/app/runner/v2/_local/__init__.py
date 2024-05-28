@@ -36,7 +36,7 @@ def _process_workflow(
     workflow: WorkflowV2,
     dataset: DatasetV2,
     logger_name: str,
-    workflow_dir: Path,
+    workflow_dir_local: Path,
     first_task_index: int,
     last_task_index: int,
 ) -> dict:
@@ -57,8 +57,8 @@ def _process_workflow(
             ],  # noqa
             dataset=dataset,
             executor=executor,
-            workflow_dir=workflow_dir,
-            workflow_dir_user=workflow_dir,
+            workflow_dir_local=workflow_dir_local,
+            workflow_dir_remote=workflow_dir_local,
             logger_name=logger_name,
             submit_setup_call=_local_submit_setup,
         )
@@ -69,8 +69,8 @@ async def process_workflow(
     *,
     workflow: WorkflowV2,
     dataset: DatasetV2,
-    workflow_dir: Path,
-    workflow_dir_user: Optional[Path] = None,
+    workflow_dir_local: Path,
+    workflow_dir_remote: Optional[Path] = None,
     first_task_index: Optional[int] = None,
     last_task_index: Optional[int] = None,
     logger_name: str,
@@ -94,12 +94,13 @@ async def process_workflow(
             The workflow to be run
         dataset:
             Initial dataset.
-        workflow_dir:
+        workflow_dir_local:
             Working directory for this run.
-        workflow_dir_user:
+        workflow_dir_remote:
             Working directory for this run, on the user side. This argument is
             present for compatibility with the standard backend interface, but
-            for the `local` backend it cannot be different from `workflow_dir`.
+            for the `local` backend it cannot be different from
+            `workflow_dir_local`.
         first_task_index:
             Positional index of the first task to execute; if `None`, start
             from `0`.
@@ -137,10 +138,10 @@ async def process_workflow(
             of the workflow
     """
 
-    if workflow_dir_user and (workflow_dir_user != workflow_dir):
+    if workflow_dir_remote and (workflow_dir_remote != workflow_dir_local):
         raise NotImplementedError(
             "Local backend does not support different directories "
-            f"{workflow_dir=} and {workflow_dir_user=}"
+            f"{workflow_dir_local=} and {workflow_dir_remote=}"
         )
 
     # Set values of first_task_index and last_task_index
@@ -155,7 +156,7 @@ async def process_workflow(
         workflow=workflow,
         dataset=dataset,
         logger_name=logger_name,
-        workflow_dir=workflow_dir,
+        workflow_dir_local=workflow_dir_local,
         first_task_index=first_task_index,
         last_task_index=last_task_index,
     )

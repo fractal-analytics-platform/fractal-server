@@ -32,16 +32,18 @@ def execute_tasks_v2(
     wf_task_list: list[WorkflowTaskV2],
     dataset: DatasetV2,
     executor: ThreadPoolExecutor,
-    workflow_dir: Path,
-    workflow_dir_user: Optional[Path] = None,
+    workflow_dir_local: Path,
+    workflow_dir_remote: Optional[Path] = None,
     logger_name: Optional[str] = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
 ) -> DatasetV2:
 
     logger = logging.getLogger(logger_name)
 
-    if not workflow_dir.exists():  # FIXME: this should have already happened
-        workflow_dir.mkdir()
+    if (
+        not workflow_dir_local.exists()
+    ):  # FIXME: this should have already happened
+        workflow_dir_local.mkdir()
 
     # Initialize local dataset attributes
     zarr_dir = dataset.zarr_dir
@@ -94,8 +96,8 @@ def execute_tasks_v2(
                     zarr_dir=zarr_dir,
                     wftask=wftask,
                     task=task,
-                    workflow_dir=workflow_dir,
-                    workflow_dir_user=workflow_dir_user,
+                    workflow_dir_local=workflow_dir_local,
+                    workflow_dir_remote=workflow_dir_remote,
                     executor=executor,
                     logger_name=logger_name,
                     submit_setup_call=submit_setup_call,
@@ -105,8 +107,8 @@ def execute_tasks_v2(
                     images=filtered_images,
                     wftask=wftask,
                     task=task,
-                    workflow_dir=workflow_dir,
-                    workflow_dir_user=workflow_dir_user,
+                    workflow_dir_local=workflow_dir_local,
+                    workflow_dir_remote=workflow_dir_remote,
                     executor=executor,
                     logger_name=logger_name,
                     submit_setup_call=submit_setup_call,
@@ -117,8 +119,8 @@ def execute_tasks_v2(
                     zarr_dir=zarr_dir,
                     wftask=wftask,
                     task=task,
-                    workflow_dir=workflow_dir,
-                    workflow_dir_user=workflow_dir_user,
+                    workflow_dir_local=workflow_dir_local,
+                    workflow_dir_remote=workflow_dir_remote,
                     executor=executor,
                     logger_name=logger_name,
                     submit_setup_call=submit_setup_call,
@@ -133,8 +135,8 @@ def execute_tasks_v2(
                 task_legacy=task_legacy,
                 executor=executor,
                 logger_name=logger_name,
-                workflow_dir=workflow_dir,
-                workflow_dir_user=workflow_dir_user,
+                workflow_dir=workflow_dir_local,
+                workflow_dir_remote=workflow_dir_remote,
                 submit_setup_call=submit_setup_call,
             )
 
@@ -323,11 +325,11 @@ def execute_tasks_v2(
         # temporary files which can be used (1) to retrieve the latest state
         # when the job fails, (2) from within endpoints that need up-to-date
         # information
-        with open(workflow_dir / HISTORY_FILENAME, "w") as f:
+        with open(workflow_dir_local / HISTORY_FILENAME, "w") as f:
             json.dump(tmp_history, f, indent=2)
-        with open(workflow_dir / FILTERS_FILENAME, "w") as f:
+        with open(workflow_dir_local / FILTERS_FILENAME, "w") as f:
             json.dump(tmp_filters, f, indent=2)
-        with open(workflow_dir / IMAGES_FILENAME, "w") as f:
+        with open(workflow_dir_local / IMAGES_FILENAME, "w") as f:
             json.dump(tmp_images, f, indent=2)
 
         logger.debug(f'END    {wftask.order}-th task (name="{task_name}")')
