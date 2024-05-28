@@ -86,8 +86,8 @@ def _process_workflow(
         keep_logs=True,
         slurm_user=slurm_user,
         user_cache_dir=user_cache_dir,
-        working_dir_local=workflow_dir_local,
-        working_dir_remote=workflow_dir_remote,
+        workflow_dir_local=workflow_dir_local,
+        workflow_dir_remote=workflow_dir_remote,
         common_script_lines=worker_init,
         slurm_account=slurm_account,
     ) as executor:
