@@ -123,18 +123,18 @@ async def test_runner(
     # Create working folder(s)
     subfolder_names = []
     if backend == "local":
-        workflow_dir = tmp777_path / "server"  # OK 777 here
-        workflow_dir_user = workflow_dir
+        workflow_dir_local = tmp777_path / "server"  # OK 777 here
+        workflow_dir_remote = workflow_dir_local
         umask = os.umask(0)
-        workflow_dir.mkdir(parents=True, mode=0o700)
+        workflow_dir_local.mkdir(parents=True, mode=0o700)
         for wftask in wf.task_list:
             subfolder = _create_task_subfolder(
-                wftask=wftask, workflow_dir=workflow_dir
+                wftask=wftask, workflow_dir_local=workflow_dir_local
             )
             subfolder_names.append(subfolder.name)
         os.umask(umask)
     elif backend == "slurm":
-        workflow_dir, workflow_dir_user = request.getfixturevalue(
+        workflow_dir_local, workflow_dir_remote = request.getfixturevalue(
             "slurm_working_folders"
         )  # noqa
         user = SLURM_USER
@@ -142,11 +142,11 @@ async def test_runner(
         umask = os.umask(0)
         for wftask in wf.task_list:
             subfolder = _create_task_subfolder(
-                wftask=wftask, workflow_dir=workflow_dir
+                wftask=wftask, workflow_dir_local=workflow_dir_local
             )
             subfolder_names.append(subfolder.name)
             _mkdir_as_user(
-                folder=str(workflow_dir_user / subfolder.name), user=user
+                folder=str(workflow_dir_remote / subfolder.name), user=user
             )
         os.umask(umask)
 
@@ -154,17 +154,17 @@ async def test_runner(
     logger_name = f"job_logger_{backend}"
     logger = set_logger(
         logger_name=logger_name,
-        log_file_path=str(workflow_dir / "job.log"),
+        log_file_path=str(workflow_dir_local / "job.log"),
     )
     kwargs = dict(
         workflow=wf,
-        input_paths=[str(workflow_dir)],
+        input_paths=[str(workflow_dir_local)],
         output_path=str(tmp777_path),  # OK 777 here
         input_metadata={},
         input_history=[],
         logger_name=logger_name,
-        workflow_dir=workflow_dir,
-        workflow_dir_user=workflow_dir_user,
+        workflow_dir_local=workflow_dir_local,
+        workflow_dir_remote=workflow_dir_remote,
     )
     if backend == "slurm":
         kwargs["slurm_user"] = SLURM_USER
@@ -193,14 +193,14 @@ async def test_runner(
     assert metadata["test_parallel"] == [1, 1, 1]
     assert event2["parallelization"]["component_list"] == ["0", "1", "2"]
 
-    # Check that the correct files are present in workflow_dir
+    # Check that the correct files are present in workflow_dir_local
     files_server = [
         f.name
-        for f in workflow_dir.glob(
+        for f in workflow_dir_local.glob(
             "**/*",
         )
     ]
-    files_user = [f.name for f in workflow_dir_user.glob("**/*")]
+    files_user = [f.name for f in workflow_dir_remote.glob("**/*")]
     debug(sorted(files_server))
     debug(sorted(files_user))
 
@@ -213,10 +213,10 @@ async def test_runner(
     assert "2_par_0.err" in files_server
     assert "2_par_0.out" in files_server
     assert "2_par_0.metadiff.json" in files_server
-    with (workflow_dir_user / subfolder_names[0] / "0.args.json").open(
+    with (workflow_dir_remote / subfolder_names[0] / "0.args.json").open(
         "r"
     ) as f:
-        debug(workflow_dir_user / subfolder_names[0] / "0.args.json")
+        debug(workflow_dir_remote / subfolder_names[0] / "0.args.json")
         args = f.read()
         debug(args)
         assert "logger_name" not in args

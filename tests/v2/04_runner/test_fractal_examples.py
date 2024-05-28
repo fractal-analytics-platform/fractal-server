@@ -17,7 +17,7 @@ from fractal_server.images.tools import find_image_by_zarr_url
 from fractal_server.logger import set_logger
 
 
-def execute_tasks_v2(wf_task_list, workflow_dir, **kwargs):
+def execute_tasks_v2(wf_task_list, workflow_dir_local, **kwargs):
     from fractal_server.app.runner.task_files import task_subfolder_name
     from fractal_server.app.runner.v2.runner import (
         execute_tasks_v2 as raw_execute_tasks_v2,
@@ -25,18 +25,20 @@ def execute_tasks_v2(wf_task_list, workflow_dir, **kwargs):
 
     for wftask in wf_task_list:
         if wftask.task is not None:
-            subfolder = workflow_dir / task_subfolder_name(
+            subfolder = workflow_dir_local / task_subfolder_name(
                 order=wftask.order, task_name=wftask.task.name
             )
         else:
-            subfolder = workflow_dir / task_subfolder_name(
+            subfolder = workflow_dir_local / task_subfolder_name(
                 order=wftask.order, task_name=wftask.task_legacy.name
             )
         logging.info(f"Now creating {subfolder.as_posix()}")
         subfolder.mkdir(parents=True)
 
     out = raw_execute_tasks_v2(
-        wf_task_list=wf_task_list, workflow_dir_local=workflow_dir, **kwargs
+        wf_task_list=wf_task_list,
+        workflow_dir_local=workflow_dir_local,
+        **kwargs,
     )
     return out
 
@@ -74,8 +76,8 @@ def test_fractal_demos_01(
 
     execute_tasks_v2_args = dict(
         executor=executor,
-        workflow_dir=tmp_path / "job_dir",
-        workflow_dir_user=tmp_path / "job_dir",
+        workflow_dir_local=tmp_path / "job_dir",
+        workflow_dir_remote=tmp_path / "job_dir",
     )
 
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
@@ -224,8 +226,8 @@ def test_fractal_demos_01_no_overwrite(
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     execute_tasks_v2_args = dict(
         executor=executor,
-        workflow_dir=tmp_path / "job_dir",
-        workflow_dir_user=tmp_path / "job_dir",
+        workflow_dir_local=tmp_path / "job_dir",
+        workflow_dir_remote=tmp_path / "job_dir",
     )
 
     dataset_attrs = execute_tasks_v2(
@@ -416,8 +418,8 @@ def test_registration_no_overwrite(
 
     execute_tasks_v2_args = dict(
         executor=executor,
-        workflow_dir=tmp_path / "job_dir",
-        workflow_dir_user=tmp_path / "job_dir",
+        workflow_dir_local=tmp_path / "job_dir",
+        workflow_dir_remote=tmp_path / "job_dir",
     )
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
     dataset_attrs = execute_tasks_v2(
@@ -513,8 +515,8 @@ def test_registration_overwrite(
 
     execute_tasks_v2_args = dict(
         executor=executor,
-        workflow_dir=tmp_path / "job_dir",
-        workflow_dir_user=tmp_path / "job_dir",
+        workflow_dir_local=tmp_path / "job_dir",
+        workflow_dir_remote=tmp_path / "job_dir",
     )
 
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
@@ -611,8 +613,8 @@ def test_channel_parallelization_with_overwrite(
 
     execute_tasks_v2_args = dict(
         executor=executor,
-        workflow_dir=tmp_path / "job_dir",
-        workflow_dir_user=tmp_path / "job_dir",
+        workflow_dir_local=tmp_path / "job_dir",
+        workflow_dir_remote=tmp_path / "job_dir",
     )
     # Run create_ome_zarr+yokogawa_to_zarr
     dataset_attrs = execute_tasks_v2(
@@ -658,8 +660,8 @@ def test_channel_parallelization_no_overwrite(
 
     execute_tasks_v2_args = dict(
         executor=executor,
-        workflow_dir=tmp_path / "job_dir",
-        workflow_dir_user=tmp_path / "job_dir",
+        workflow_dir_local=tmp_path / "job_dir",
+        workflow_dir_remote=tmp_path / "job_dir",
     )
     # Run create_ome_zarr+yokogawa_to_zarr
     dataset_attrs = execute_tasks_v2(
@@ -708,8 +710,8 @@ def test_invalid_filtered_image_list(
 
     execute_tasks_v2_args = dict(
         executor=executor,
-        workflow_dir=tmp_path / "job_dir",
-        workflow_dir_user=tmp_path / "job_dir",
+        workflow_dir_local=tmp_path / "job_dir",
+        workflow_dir_remote=tmp_path / "job_dir",
     )
 
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
@@ -762,8 +764,8 @@ def test_legacy_task(
 
     execute_tasks_v2_args = dict(
         executor=executor,
-        workflow_dir=tmp_path / "job_dir",
-        workflow_dir_user=tmp_path / "job_dir",
+        workflow_dir_local=tmp_path / "job_dir",
+        workflow_dir_remote=tmp_path / "job_dir",
         logger_name=logger_name,
     )
 

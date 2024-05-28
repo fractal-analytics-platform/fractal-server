@@ -192,8 +192,8 @@ def get_slurm_config(
             files (inputs, outputs, errors, and all meta files related to the
             job execution). Note: users cannot write directly to this folder.
         workflow_dir_remote:
-            User-side directory with the same scope as `workflow_dir`, and
-            where a user can write.
+            User-side directory with the same scope as `workflow_dir_local`,
+            and where a user can write.
         config_path:
             Path of aFractal  SLURM configuration file; if `None`, use
             `FRACTAL_SLURM_CONFIG_FILE` variable from settings.
