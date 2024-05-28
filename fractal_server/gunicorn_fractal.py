@@ -2,19 +2,15 @@ import logging
 import os
 import signal
 
+from gunicorn.glogging import Logger as GunicornLogger
 from uvicorn.workers import UvicornWorker
 
 logger = logging.getLogger("uvicorn.error")
 
-try:
-    from gunicorn.glogging import Logger as GunicornLogger
 
-    class FractalGunicornLogger(GunicornLogger):
-        error_fmt = r"%(asctime)s   - gunicorn.error - %(levelname)s - [pid %(process)d] - %(message)s"  # noqa: E501
-        datefmt = r"%Y-%m-%d %H:%M:%S,%u"
-
-except (ModuleNotFoundError, ImportError):
-    pass
+class FractalGunicornLogger(GunicornLogger):
+    error_fmt = r"%(asctime)s   - gunicorn.error - %(levelname)s - [pid %(process)d] - %(message)s"  # noqa: E501
+    datefmt = r"%Y-%m-%d %H:%M:%S,%u"
 
 
 class FractalWorker(UvicornWorker):
