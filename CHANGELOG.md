@@ -8,6 +8,7 @@
 
 * API:
     * Remove catch of `IntegrityError` in `POST /api/v1/project` (\#1530).
+    * Add extensive logs to `DELETE /api/v2/project/{project_id}` (\#1532).
 * Runner:
     * Change structure of job folders, introducing per-task subfolders (\#1523).
 * Deployment
