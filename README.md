@@ -44,7 +44,7 @@
 | fractal\_server/app/routes/api/v2/dataset.py                              |      108 |        0 |       36 |        8 |     94% |34->29, 59->55, 90->86, 114->110, 155->151, 203->202, 229->225, 256->251 |
 | fractal\_server/app/routes/api/v2/images.py                               |      107 |        3 |       52 |        9 |     92% |48->44, 100->95, 124, 144->exit, 153, 203->199, 216->exit, 221, 242->237 |
 | fractal\_server/app/routes/api/v2/job.py                                  |       79 |        0 |       24 |        6 |     94% |31->30, 58->54, 80->76, 114->110, 148->144, 176->172 |
-| fractal\_server/app/routes/api/v2/project.py                              |       93 |        0 |       26 |        5 |     96% |30->29, 49->48, 75->74, 91->90, 117->116 |
+| fractal\_server/app/routes/api/v2/project.py                              |      111 |        0 |       26 |        5 |     96% |32->31, 51->50, 77->76, 93->92, 119->118 |
 | fractal\_server/app/routes/api/v2/status.py                               |       80 |        0 |       26 |        1 |     99% |    32->28 |
 | fractal\_server/app/routes/api/v2/submit.py                               |       82 |        0 |       25 |        2 |     98% |45->40, 206->210 |
 | fractal\_server/app/routes/api/v2/task.py                                 |      111 |        0 |       48 |        5 |     97% |32->31, 56->55, 74->73, 112->109, 194->193 |
@@ -143,7 +143,7 @@
 | fractal\_server/tasks/v2/get\_collection\_data.py                         |       11 |        0 |        2 |        0 |    100% |           |
 | fractal\_server/urls.py                                                   |        7 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                  |       21 |        0 |        2 |        0 |    100% |           |
-|                                                                 **TOTAL** | **7848** |  **232** | **2316** |  **346** | **94%** |           |
+|                                                                 **TOTAL** | **7866** |  **232** | **2316** |  **346** | **94%** |           |
 
 
 ## Setup coverage badge
