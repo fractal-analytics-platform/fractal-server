@@ -9,11 +9,21 @@ def sanitize_component(value: str) -> str:
     """
     Remove {" ", "/", "."} form a string, e.g. going from
     'plate.zarr/B/03/0' to 'plate_zarr_B_03_0'.
+
+    Args:
+        value: Input strig
     """
     return value.replace(" ", "_").replace("/", "_").replace(".", "_")
 
 
-def task_subfolder_name(order: Union[str, int], task_name: str) -> str:
+def task_subfolder_name(order: Union[int, str], task_name: str) -> str:
+    """
+    Get name of task-specific subfolder.
+
+    Args:
+        order:
+        task_name:
+    """
     task_name_slug = slugify_task_name(task_name)
     return f"{order}_{task_name_slug}"
 
@@ -25,16 +35,21 @@ class TaskFiles:
     Attributes:
         workflow_dir:
             Server-owned directory to store all task-execution-related relevant
-            files (inputs, outputs, errors, and all meta files related to the
-            job execution). Note: users cannot write directly to this folder.
+            files. Note: users cannot write directly to this folder.
         workflow_dir_user:
             User-side directory with the same scope as `workflow_dir`, and
             where a user can write.
+        subfolder_name:
+            Name of task-specific subfolder
+        remote_subfolder:
+            Path to user-side task-specific subfolder
+        task_name:
+            Name of the task
         task_order:
             Positional order of the task within a workflow.
         component:
-            Specific component to run the task for (relevant for tasks that
-            will be executed in parallel over many components).
+            Specific component to run the task for (relevant for tasks to be
+            executed in parallel over many components).
         file_prefix:
             Prefix for all task-related files.
         args:
@@ -49,7 +64,7 @@ class TaskFiles:
 
     workflow_dir: Path
     workflow_dir_user: Path
-    subfolder: Path
+    remote_subfolder: Path
     subfolder_name: str
     task_name: str
     task_order: Optional[int] = None
@@ -91,12 +106,14 @@ class TaskFiles:
         self.subfolder_name = task_subfolder_name(
             order=order, task_name=self.task_name
         )
-        self.subfolder = self.workflow_dir_user / self.subfolder_name
-        self.args = self.subfolder / f"{self.file_prefix}.args.json"
-        self.out = self.subfolder / f"{self.file_prefix}.out"
-        self.err = self.subfolder / f"{self.file_prefix}.err"
-        self.log = self.subfolder / f"{self.file_prefix}.log"
-        self.metadiff = self.subfolder / f"{self.file_prefix}.metadiff.json"
+        self.remote_subfolder = self.workflow_dir_user / self.subfolder_name
+        self.args = self.remote_subfolder / f"{self.file_prefix}.args.json"
+        self.out = self.remote_subfolder / f"{self.file_prefix}.out"
+        self.err = self.remote_subfolder / f"{self.file_prefix}.err"
+        self.log = self.remote_subfolder / f"{self.file_prefix}.log"
+        self.metadiff = (
+            self.remote_subfolder / f"{self.file_prefix}.metadiff.json"
+        )
 
 
 def get_task_file_paths(

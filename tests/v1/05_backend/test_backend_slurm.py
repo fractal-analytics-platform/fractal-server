@@ -42,10 +42,12 @@ class TestingFractalSlurmExecutor(FractalSlurmExecutor):
         # User-side subfolder
         if self.working_dir != self.working_dir_user:
             logging.info(
-                f"Now creating {task_files.subfolder.as_posix()}, as user."
+                f"Now creating {task_files.remote_subfolder.as_posix()}, "
+                "as user."
             )
             _mkdir_as_user(
-                folder=task_files.subfolder.as_posix(), user=self.slurm_user
+                folder=task_files.remote_subfolder.as_posix(),
+                user=self.slurm_user,
             )
 
 
