@@ -133,10 +133,13 @@ If Fractal Server is installed with the [`gunicorn`](https://gunicorn.org) extra
 ```
 gunicorn fractal_server.main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8010 --access-logfile logs/fractal-server.out --error-logfile logs/fractal-server.err
 ```
-Fractal provides a dedicated worker to handle the SIGABRT signal send after a TIMEOUT. As long as Uvicorn does not propagate properly signals coming from Gunicorn [ref](https://github.com/encode/uvicorn/blob/22873a99188413332df98c04a351e061672cb523/uvicorn/workers.py#L77), we introduce a new Worker that convert a SIGABRT signal into a SIGTERM one. At the moment looks safe, but it is always a custom implementation, for this reason we keep both version in the docs.
 
+#### Custom Fractal worker
+
+Fractal also provides a dedicated worker to handle the SIGABRT signal send after a TIMEOUT. Since Uvicorn does not propagate properly signals coming from Gunicorn [ref](https://github.com/encode/uvicorn/blob/22873a99188413332df98c04a351e061672cb523/uvicorn/workers.py#L77), we introduce a new worker that convert a SIGABRT signal into a SIGTERM one. Since this is a custom implementation, we keep both version in the docs.
+The command for using the new worker includes the `--worker-class` option, as in
 ```
-gunicorn fractal_server.main:app --workers 2 --worker-class fractal_server.fractal_uvicorn_worker.FractalWorker --bind 0.0.0.0:8010 --access-logfile logs/fractal-server.out --error-logfile logs/fractal-server.err
+gunicorn fractal_server.main:app --workers 2 --worker-class fractal_server.worker.FractalWorker --bind 0.0.0.0:8010 --access-logfile logs/fractal-server.out --error-logfile logs/fractal-server.err
 ```
 
 ### Postgres setup
