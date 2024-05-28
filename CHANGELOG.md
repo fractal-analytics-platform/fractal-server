@@ -8,10 +8,12 @@
 
 * API:
     * Remove catch of `IntegrityError` in `POST /api/v1/project` (\#1530).
-* Dependencies
-    * Add `fabric` to `dev` dependencies (\#1518).
+* Runner:
+    * Change structure of job folders, introducing per-task subfolders (\#1523).
 * Deployment
     * Add custom gunicorn/uvicorn worker to handle SIGABRT signal (\#1526).
+* Dependencies
+    * Add `fabric` to `dev` dependencies (\#1518).
 * Testing:
     * Install and run SSH daemon in CI containers (\#1518).
     * Add unit test of SSH connection via fabric/paramiko (\#1518).
