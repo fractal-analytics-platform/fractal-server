@@ -138,7 +138,7 @@ gunicorn fractal_server.main:app --workers 2 --worker-class uvicorn.workers.Uvic
 
 Fractal also provides a dedicated worker to handle the SIGABRT signal that gunicorn sends after a timeout (see [this discussion](https://github.com/fractal-analytics-platform/fractal-server/issues/1507)). Since Uvicorn does not propagate signals coming from Gunicorn [ref](https://github.com/encode/uvicorn/blob/22873a99188413332df98c04a351e061672cb523/uvicorn/workers.py#L77), we introduce a new worker that convert a SIGABRT signal into a SIGTERM one. This is a custom implementation, that can be optionally enabled by including the `--worker-class` option for the `gunicorn` command, as in
 ```
-gunicorn fractal_server.main:app --workers 2 --worker-class fractal_server.worker.FractalWorker --bind 0.0.0.0:8010 --access-logfile logs/fractal-server.out --error-logfile logs/fractal-server.err
+gunicorn fractal_server.main:app --workers 2 --worker-class fractal_server.gunicorn_fractal.FractalWorker --bind 0.0.0.0:8010 --access-logfile logs/fractal-server.out --error-logfile logs/fractal-server.err
 ```
 
 ### Postgres setup
