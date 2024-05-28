@@ -65,9 +65,9 @@ commands = [
         "gunicorn fractal_server.main:app "
         "--workers 2 "
         "--bind 0.0.0.0:8000 "
-        "--worker-class fractal_server.worker.FractalWorker "
+        "--worker-class fractal_server.gunicorn_fractal.FractalWorker "
         "--logger-class "
-        "fractal_server.logger.gunicorn_logger.FractalGunicornLogger "
+        "fractal_server.gunicorn_fractal.FractalGunicornLogger "
     ),
 ]
 
