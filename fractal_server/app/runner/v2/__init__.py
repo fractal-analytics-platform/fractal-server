@@ -25,7 +25,9 @@ from ...models.v2 import WorkflowV2
 from ...schemas.v2 import JobStatusTypeV2
 from ..exceptions import JobExecutionError
 from ..exceptions import TaskExecutionError
+from ..executors.slurm._subprocess_run_as_user import _mkdir_as_user
 from ..filenames import WORKFLOW_LOG_FILENAME
+from ..task_files import task_subfolder_name
 from ._local import process_workflow as local_process_workflow
 from ._slurm import process_workflow as slurm_process_workflow
 from .handle_failed_job import assemble_filters_failed_job
@@ -118,19 +120,37 @@ async def submit_workflow(
             db_sync.close()
             return
 
-        # Create WORKFLOW_DIR with 755 permissions
+        # Create WORKFLOW_DIR
         original_umask = os.umask(0)
         WORKFLOW_DIR.mkdir(parents=True, mode=0o755)
         os.umask(original_umask)
 
-        # Define and create user-side working folder, if needed
-        WORKFLOW_DIR_USER = Path(job.working_dir_user)
-        if FRACTAL_RUNNER_BACKEND == "slurm":
-            from ..executors.slurm._subprocess_run_as_user import (
-                _mkdir_as_user,
-            )
-
+        # Define and create WORKFLOW_DIR_USER
+        if FRACTAL_RUNNER_BACKEND == "local":
+            WORKFLOW_DIR_USER = WORKFLOW_DIR
+        elif FRACTAL_RUNNER_BACKEND == "slurm":
+            WORKFLOW_DIR_USER = Path(user_cache_dir) / WORKFLOW_DIR.name
             _mkdir_as_user(folder=str(WORKFLOW_DIR_USER), user=slurm_user)
+
+        # Create all tasks subfolders
+        for order in range(job.first_task_index, job.last_task_index + 1):
+            this_wftask = workflow.task_list[order]
+            if this_wftask.is_legacy_task:
+                task_name = this_wftask.task_legacy.name
+            else:
+                task_name = this_wftask.task.name
+            subfolder_name = task_subfolder_name(
+                order=order,
+                task_name=task_name,
+            )
+            original_umask = os.umask(0)
+            (WORKFLOW_DIR / subfolder_name).mkdir(mode=0o755)
+            os.umask(original_umask)
+            if FRACTAL_RUNNER_BACKEND == "slurm":
+                _mkdir_as_user(
+                    folder=str(WORKFLOW_DIR_USER / subfolder_name),
+                    user=slurm_user,
+                )
 
         # After Session.commit() is called, either explicitly or when using a
         # context manager, all objects associated with the Session are expired.
@@ -145,6 +165,8 @@ async def submit_workflow(
 
         db_sync.refresh(dataset)
         db_sync.refresh(workflow)
+        for wftask in workflow.task_list:
+            db_sync.refresh(wftask)
 
         # Write logs
         logger_name = f"WF{workflow_id}_job{job_id}"
