@@ -127,7 +127,7 @@
 | fractal\_server/images/\_\_init\_\_.py                                    |        4 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/images/models.py                                          |       65 |        1 |       34 |        8 |     91% |37->36, 41->40, 52->51, 57, 71->70, 89->88, 93->92, 126->125 |
 | fractal\_server/images/tools.py                                           |       29 |        0 |       12 |        0 |    100% |           |
-| fractal\_server/logger/\_\_init\_\_.py                                    |       44 |        2 |       12 |        2 |     93% |  160, 164 |
+| fractal\_server/logger.py                                                 |       44 |        2 |       12 |        2 |     93% |  160, 164 |
 | fractal\_server/main.py                                                   |       53 |        0 |        9 |        2 |     97% |48->53, 83->82 |
 | fractal\_server/syringe.py                                                |       28 |        2 |        8 |        3 |     86% |66->65, 83->82, 93-94, 97->96 |
 | fractal\_server/tasks/\_\_init\_\_.py                                     |        0 |        0 |        0 |        0 |    100% |           |
