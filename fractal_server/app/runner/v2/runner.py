@@ -135,7 +135,7 @@ def execute_tasks_v2(
                 task_legacy=task_legacy,
                 executor=executor,
                 logger_name=logger_name,
-                workflow_dir=workflow_dir_local,
+                workflow_dir_local=workflow_dir_local,
                 workflow_dir_remote=workflow_dir_remote,
                 submit_setup_call=submit_setup_call,
             )
