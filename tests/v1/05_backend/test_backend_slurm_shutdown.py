@@ -15,6 +15,20 @@ sys.path.append(Path(__file__).parent)
 from test_backend_slurm import TestingFractalSlurmExecutor  # noqa: E402
 
 
+def _check_no_running_jobs():
+    res = subprocess.run(
+        shlex.split("squeue --noheader --states=PD,CF,R "),
+        capture_output=True,
+        encoding="utf-8",
+    )
+    debug(res.stderr)
+    debug(res.stdout)
+    if res.returncode != 0:
+        debug(res.stderr)
+    assert res.returncode == 0
+    assert res.stdout == ""
+
+
 def test_direct_shutdown_during_submit(
     monkey_slurm,
     tmp777_path,
@@ -52,17 +66,7 @@ def test_direct_shutdown_during_submit(
         # executor.wait_thread.shutdown = True
         debug(fut)
 
-        res = subprocess.run(
-            shlex.split("squeue --noheader --states=PD,CF,R "),
-            capture_output=True,
-            encoding="utf-8",
-        )
-        debug(res.stderr)
-        debug(res.stdout)
-        if res.returncode != 0:
-            debug(res.stderr)
-        assert res.returncode == 0
-        assert res.stdout == ""
+        _check_no_running_jobs()
 
         try:
             _ = fut.result()
@@ -116,7 +120,8 @@ def test_indirect_shutdown_during_submit(
     debug(res)
     debug(run_squeue())
 
-    assert not run_squeue(header=False)
+    _check_no_running_jobs()
+
     try:
         _ = res.result()
     except JobExecutionError as e:
