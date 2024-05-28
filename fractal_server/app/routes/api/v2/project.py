@@ -7,6 +7,8 @@ from fastapi import Response
 from fastapi import status
 from sqlmodel import select
 
+from .....logger import reset_logger_handlers
+from .....logger import set_logger
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import DatasetV2
@@ -127,9 +129,11 @@ async def delete_project(
     """
     Delete project
     """
+
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user.id, db=db
     )
+    logger = set_logger(__name__)
 
     # Fail if there exist jobs that are submitted and in relation with the
     # current project.
@@ -152,6 +156,7 @@ async def delete_project(
     stm = select(WorkflowV2).where(WorkflowV2.project_id == project_id)
     res = await db.execute(stm)
     workflows = res.scalars().all()
+    logger.info("Start of cascade operations on Workflows.")
     for wf in workflows:
         # Cascade operations: set foreign-keys to null for jobs which are in
         # relationship with the current workflow
@@ -159,14 +164,18 @@ async def delete_project(
         res = await db.execute(stm)
         jobs = res.scalars().all()
         for job in jobs:
+            logger.info(f"Setting Job[{job.id}].workflow_id to None.")
             job.workflow_id = None
         # Delete workflow
+        logger.info(f"Adding Workflow[{wf.id}] to deletion.")
         await db.delete(wf)
+    logger.info("End of cascade operations on Workflows.")
 
     # Dataset
     stm = select(DatasetV2).where(DatasetV2.project_id == project_id)
     res = await db.execute(stm)
     datasets = res.scalars().all()
+    logger.info("Start of cascade operations on Datasets.")
     for ds in datasets:
         # Cascade operations: set foreign-keys to null for jobs which are in
         # relationship with the current dataset
@@ -174,25 +183,45 @@ async def delete_project(
         res = await db.execute(stm)
         jobs = res.scalars().all()
         for job in jobs:
+            logger.info(f"Setting Job[{job.id}].dataset_id to None.")
             job.dataset_id = None
         # Delete dataset
+        logger.info(f"Adding Dataset[{ds.id}] to deletion.")
         await db.delete(ds)
+    logger.info("End of cascade operations on Datasets.")
 
     # Job
+    logger.info("Start of cascade operations on Jobs.")
     stm = select(JobV2).where(JobV2.project_id == project_id)
     res = await db.execute(stm)
     jobs = res.scalars().all()
     for job in jobs:
+        logger.info(f"Setting Job[{job.id}].project_id to None.")
         job.project_id = None
+    logger.info("End of cascade operations on Jobs.")
 
+    # LinkUserProjct
+    logger.info("Start of cascade operations on LinkUserProjects.")
     stm = select(LinkUserProjectV2).where(
         LinkUserProjectV2.project_id == project_id
     )
     res = await db.execute(stm)
     links = res.scalars().all()
     for link in links:
+        logger.info(
+            "Adding LinkUserProject"
+            f"[user={link.user_id}, project={link.project_id}] to deletion."
+        )
         await db.delete(link)
+    logger.info("End of cascade operations on LinkUserProjects.")
+
+    logger.info(f"Adding Project[{project.id}] to deletion.")
     await db.delete(project)
+
+    logger.info("Committing changes to db...")
     await db.commit()
+
+    logger.info("Everything  has been deleted correctly.")
+    reset_logger_handlers(logger)
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)

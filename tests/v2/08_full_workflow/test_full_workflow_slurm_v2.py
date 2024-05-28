@@ -10,6 +10,8 @@ from common_functions import non_executable_task_command
 from common_functions import PREFIX
 from devtools import debug
 
+from tests.fixtures_slurm import SLURM_USER
+
 
 FRACTAL_RUNNER_BACKEND = "slurm"
 
@@ -90,7 +92,6 @@ async def test_failing_workflow_JobExecutionError(
     workflow_factory_v2,
     override_settings_factory,
     tmp_path_factory,
-    monkey_slurm_user,
     relink_python_interpreter_v2,  # before 'monkey_slurm' (#1462)
     monkey_slurm,
     tmp_path,
@@ -151,7 +152,7 @@ async def test_failing_workflow_JobExecutionError(
         # from a subprocess.Popen, so that we can make it happen during the
         # execution.
         scancel_sleep_time = 10
-        slurm_user = monkey_slurm_user
+        slurm_user = SLURM_USER
 
         tmp_script = (tmp_path / "script.sh").as_posix()
         debug(tmp_script)
