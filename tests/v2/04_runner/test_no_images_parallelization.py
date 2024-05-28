@@ -1,3 +1,4 @@
+import logging
 from concurrent.futures import Executor
 from pathlib import Path
 
@@ -6,7 +7,29 @@ from v2_mock_models import DatasetV2Mock
 from v2_mock_models import TaskV2Mock
 from v2_mock_models import WorkflowTaskV2Mock
 
-from fractal_server.app.runner.v2.runner import execute_tasks_v2
+
+def execute_tasks_v2(wf_task_list, workflow_dir, **kwargs):
+    from fractal_server.app.runner.task_files import task_subfolder_name
+    from fractal_server.app.runner.v2.runner import (
+        execute_tasks_v2 as raw_execute_tasks_v2,
+    )
+
+    for wftask in wf_task_list:
+        if wftask.task is not None:
+            subfolder = workflow_dir / task_subfolder_name(
+                order=wftask.order, task_name=wftask.task.name
+            )
+        else:
+            subfolder = workflow_dir / task_subfolder_name(
+                order=wftask.order, task_name=wftask.task_legacy.name
+            )
+        logging.info(f"Now creating {subfolder.as_posix()}")
+        subfolder.mkdir(parents=True)
+
+    out = raw_execute_tasks_v2(
+        wf_task_list=wf_task_list, workflow_dir=workflow_dir, **kwargs
+    )
+    return out
 
 
 def test_parallelize_on_no_images(tmp_path: Path, executor: Executor):

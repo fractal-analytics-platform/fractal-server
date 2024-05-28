@@ -13,7 +13,9 @@ Zurich.
 """
 import datetime
 import json
+import sys
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 
 import pytest
 from devtools import debug
@@ -37,6 +39,9 @@ from tests.data.tasks_dummy import dummy_parallel as dummy_parallel_module
 from tests.fixtures_tasks_v1 import MockTask
 from tests.fixtures_tasks_v1 import MockWorkflowTask
 
+sys.path.append(Path(__file__).parent)
+from aux_create_subfolder import _create_task_subfolder  # noqa: E402
+
 
 async def test_command_wrapper(tmp_path):
     OUT_PATH = tmp_path / "out"
@@ -56,7 +61,9 @@ async def test_command_wrapper(tmp_path):
 
 def test_call_single_task(tmp_path):
     wftask = MockWorkflowTask(
-        task=MockTask(name="task0", command=f"python {dummy_module.__file__}"),
+        task=MockTask(
+            name="task_name", command=f"python {dummy_module.__file__}"
+        ),
         args=dict(message="test"),
         order=0,
     )
@@ -73,6 +80,8 @@ def test_call_single_task(tmp_path):
     )
 
     debug(wftask)
+
+    _create_task_subfolder(wftask=wftask, workflow_dir=tmp_path)
 
     out = call_single_task(
         wftask=wftask, task_pars=task_pars, workflow_dir=tmp_path
@@ -111,6 +120,8 @@ def test_execute_single_task(tmp_path):
         metadata={},
         history=[],
     )
+
+    _create_task_subfolder(wftask=task_list[0], workflow_dir=tmp_path)
 
     with FractalThreadPoolExecutor() as executor:
         res = execute_tasks(
@@ -160,6 +171,8 @@ def test_execute_single_parallel_task(tmp_path):
 
     debug(task_list)
     debug(task_pars)
+
+    _create_task_subfolder(wftask=task_list[0], workflow_dir=tmp_path)
 
     with FractalThreadPoolExecutor() as executor:
         res = execute_tasks(
@@ -227,6 +240,9 @@ def test_execute_multiple_tasks(tmp_path):
         logger_name=logger_name,
         log_file_path=str(tmp_path / "job.log"),
     )
+
+    for wftask in task_list:
+        _create_task_subfolder(wftask=wftask, workflow_dir=tmp_path)
 
     # Construct pre-existing history. Note that the `.model_dump()` methods are
     # needed since history items are typed as `dict[str, Any]`, and also used
@@ -325,6 +341,10 @@ def test_call_parallel_task_max_tasks(
     )
     debug(task_pars)
 
+    subfolder_path = _create_task_subfolder(
+        wftask=wftask, workflow_dir=tmp_path
+    )
+
     # Execute task
     with FractalThreadPoolExecutor() as executor:
         out = call_parallel_task(
@@ -342,9 +362,9 @@ def test_call_parallel_task_max_tasks(
     # depending on FRACTAL_LOCAL_RUNNER_MAX_TASKS_PER_WORKFLOW. NOTE: the log
     # parsing and log-to-datetime conversion may easily break if we change the
     # logs format
-    with (tmp_path / "0_par_0.err").open("r") as f:
+    with (subfolder_path / "0_par_0.err").open("r") as f:
         first_log_task_0 = f.readlines()[0]
-    with (tmp_path / "0_par_1.err").open("r") as f:
+    with (subfolder_path / "0_par_1.err").open("r") as f:
         first_log_task_1 = f.readlines()[0]
     debug(first_log_task_0)
     debug(first_log_task_1)
@@ -402,6 +422,8 @@ def test_execute_tasks_with_wrong_submit_setup_call(parallel_task, tmp_path):
         ),
         history=[],
     )
+
+    _create_task_subfolder(wftask=task_list[0], workflow_dir=tmp_path)
 
     def _wrong_submit_setup_call(*args, **kwargs):
         """
