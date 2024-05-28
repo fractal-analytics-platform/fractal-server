@@ -3,9 +3,11 @@
 # Unreleased
 
 > NOTE: starting from this release, you can optionally use the new worker by
-> adding the `--worker-class fractal_server.worker.FractalWorker` option to
-> the `gunicorn` startup command.
+> adding the `--worker-class fractal_server.gunicorn_fractal.FractalWorker`
+> option to the `gunicorn` startup command.
 
+* App:
+    * Move `FractalGunicornLogger` and `FractalWorker` in `fractal_server/gunicorn_fractal.py` (\#1535).
 * API:
     * Remove catch of `IntegrityError` in `POST /api/v1/project` (\#1530).
     * Add extensive logs to `DELETE /api/v2/project/{project_id}` (\#1532).
