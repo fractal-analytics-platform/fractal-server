@@ -1,13 +1,31 @@
 from pathlib import Path
 from typing import Optional
+from typing import Union
+
+from fractal_server.tasks.utils import slugify_task_name
 
 
 def sanitize_component(value: str) -> str:
     """
     Remove {" ", "/", "."} form a string, e.g. going from
     'plate.zarr/B/03/0' to 'plate_zarr_B_03_0'.
+
+    Args:
+        value: Input strig
     """
     return value.replace(" ", "_").replace("/", "_").replace(".", "_")
+
+
+def task_subfolder_name(order: Union[int, str], task_name: str) -> str:
+    """
+    Get name of task-specific subfolder.
+
+    Args:
+        order:
+        task_name:
+    """
+    task_name_slug = slugify_task_name(task_name)
+    return f"{order}_{task_name_slug}"
 
 
 class TaskFiles:
@@ -17,16 +35,21 @@ class TaskFiles:
     Attributes:
         workflow_dir:
             Server-owned directory to store all task-execution-related relevant
-            files (inputs, outputs, errors, and all meta files related to the
-            job execution). Note: users cannot write directly to this folder.
+            files. Note: users cannot write directly to this folder.
         workflow_dir_user:
             User-side directory with the same scope as `workflow_dir`, and
             where a user can write.
+        subfolder_name:
+            Name of task-specific subfolder
+        remote_subfolder:
+            Path to user-side task-specific subfolder
+        task_name:
+            Name of the task
         task_order:
             Positional order of the task within a workflow.
         component:
-            Specific component to run the task for (relevant for tasks that
-            will be executed in parallel over many components).
+            Specific component to run the task for (relevant for tasks to be
+            executed in parallel over many components).
         file_prefix:
             Prefix for all task-related files.
         args:
@@ -41,10 +64,14 @@ class TaskFiles:
 
     workflow_dir: Path
     workflow_dir_user: Path
+    remote_subfolder: Path
+    subfolder_name: str
+    task_name: str
     task_order: Optional[int] = None
     component: Optional[str] = None
 
     file_prefix: str
+    file_prefix_with_subfolder: str
     args: Path
     out: Path
     err: Path
@@ -55,12 +82,14 @@ class TaskFiles:
         self,
         workflow_dir: Path,
         workflow_dir_user: Path,
+        task_name: str,
         task_order: Optional[int] = None,
         component: Optional[str] = None,
     ):
         self.workflow_dir = workflow_dir
         self.workflow_dir_user = workflow_dir_user
         self.task_order = task_order
+        self.task_name = task_name
         self.component = component
 
         if self.component is not None:
@@ -72,32 +101,35 @@ class TaskFiles:
         if self.task_order is not None:
             order = str(self.task_order)
         else:
-            order = "task"
+            order = "0"
         self.file_prefix = f"{order}{component_safe}"
-        self.args = self.workflow_dir_user / f"{self.file_prefix}.args.json"
-        self.out = self.workflow_dir_user / f"{self.file_prefix}.out"
-        self.err = self.workflow_dir_user / f"{self.file_prefix}.err"
-        self.log = self.workflow_dir_user / f"{self.file_prefix}.log"
+        self.subfolder_name = task_subfolder_name(
+            order=order, task_name=self.task_name
+        )
+        self.remote_subfolder = self.workflow_dir_user / self.subfolder_name
+        self.args = self.remote_subfolder / f"{self.file_prefix}.args.json"
+        self.out = self.remote_subfolder / f"{self.file_prefix}.out"
+        self.err = self.remote_subfolder / f"{self.file_prefix}.err"
+        self.log = self.remote_subfolder / f"{self.file_prefix}.log"
         self.metadiff = (
-            self.workflow_dir_user / f"{self.file_prefix}.metadiff.json"
+            self.remote_subfolder / f"{self.file_prefix}.metadiff.json"
         )
 
 
 def get_task_file_paths(
     workflow_dir: Path,
     workflow_dir_user: Path,
+    task_name: str,
     task_order: Optional[int] = None,
     component: Optional[str] = None,
 ) -> TaskFiles:
     """
     Return the corrisponding TaskFiles object
-
-    This function is mainly used as a cache to avoid instantiating needless
-    objects.
     """
     return TaskFiles(
         workflow_dir=workflow_dir,
         workflow_dir_user=workflow_dir_user,
+        task_name=task_name,
         task_order=task_order,
         component=component,
     )

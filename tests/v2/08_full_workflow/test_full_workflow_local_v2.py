@@ -213,7 +213,10 @@ async def test_non_python_task_local(
 
         # Check that the expected files are present
         working_dir = job_status_data["working_dir"]
-        glob_list = [Path(x).name for x in glob(f"{working_dir}/*")]
+        glob_list = [Path(x).name for x in glob(f"{working_dir}/*")] + [
+            Path(x).name for x in glob(f"{working_dir}/*/*")
+        ]
+
         must_exist = [
             "0.log",
             "0.args.json",
@@ -227,7 +230,7 @@ async def test_non_python_task_local(
             assert f in glob_list
 
         # Check that stderr and stdout are as expected
-        with open(f"{working_dir}/0.log", "r") as f:
+        with open(f"{working_dir}/0_non-python/0.log", "r") as f:
             log = f.read()
         assert "This goes to standard output" in log
         assert "This goes to standard error" in log
