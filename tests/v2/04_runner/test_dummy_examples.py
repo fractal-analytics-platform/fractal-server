@@ -27,7 +27,7 @@ def execute_tasks_v2(wf_task_list, workflow_dir, **kwargs):
         subfolder.mkdir(parents=True)
 
     out = raw_execute_tasks_v2(
-        wf_task_list=wf_task_list, workflow_dir=workflow_dir, **kwargs
+        wf_task_list=wf_task_list, workflow_dir_local=workflow_dir, **kwargs
     )
     return out
 
