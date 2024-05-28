@@ -5,7 +5,8 @@ from alembic import context
 from sqlalchemy.engine import Connection
 from sqlmodel import SQLModel
 
-from fractal_server.app import models  # noqa
+from fractal_server.app.models import v1  # noqa: F401
+from fractal_server.app.models import v2  # noqa: F401
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 
