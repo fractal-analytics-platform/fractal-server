@@ -2,6 +2,10 @@
 
 # Unreleased
 
+> NOTE: starting from this release, you can optionally use the new worker by
+> adding the `--worker-class fractal_server.worker.FractalWorker` option to
+> the `gunicorn` startup command.
+
 * Testing:
     * Install and run SSH daemon in CI containers (\#1518).
     * Add unit test of SSH connection via fabric/paramiko (\#1518).
@@ -10,6 +14,8 @@
     * Remove obsolete folders from `tests/data` (\#1517).
 * Dependencies
     * Add `fabric` to `dev` dependencies (\#1518).
+* Deployment
+    * Add custom gunicorn/uvicorn worker to handle SIGABRT signal (\#1526)
 
 # 2.1.0
 
