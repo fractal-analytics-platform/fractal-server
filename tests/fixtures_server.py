@@ -195,6 +195,7 @@ async def db_sync(db_create_tables):
 @pytest.fixture
 async def app(override_settings) -> AsyncGenerator[FastAPI, Any]:
     app = FastAPI()
+    app.state.jobs = []
     yield app
 
 
