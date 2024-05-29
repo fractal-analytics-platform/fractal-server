@@ -445,6 +445,8 @@ async def check_jobs_list_worker(
     result = await db.execute(stmt)
     db_jobs_list = result.scalars().all()
     submitted_job_ids = [
-        job.id for job in db_jobs_list if job.status == "submitted"
+        job.id
+        for job in db_jobs_list
+        if job.status == JobStatusTypeV1.SUBMITTED
     ]
     return submitted_job_ids
