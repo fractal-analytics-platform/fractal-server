@@ -62,9 +62,12 @@ async def apply_workflow(
     # a cleanup of the list, removing the jobs with
     # the status different from submitted
     settings = Inject(get_settings)
-    if len(request.app.state.jobs) > settings.FRACTAL_API_MAX_JOB_LIST_LENGTH:
+    if (
+        len(request.app.state.jobsV2)
+        > settings.FRACTAL_API_MAX_JOB_LIST_LENGTH
+    ):
         new_jobs_list = await check_jobs_list_worker(
-            db, request.app.state.jobs
+            db, request.app.state.jobsV2
         )
         request.app.state.jobs = new_jobs_list
 
