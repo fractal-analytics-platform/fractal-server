@@ -51,8 +51,8 @@ def test_direct_shutdown_during_submit(
 
     with TestingFractalSlurmExecutor(
         slurm_user=SLURM_USER,
-        working_dir_local=tmp777_path,
-        working_dir_remote=tmp777_path,
+        workflow_dir_local=tmp777_path,
+        workflow_dir_remote=tmp777_path,
         slurm_poll_interval=2,
         keep_pickle_files=True,
     ) as executor:
@@ -90,8 +90,8 @@ def test_indirect_shutdown_during_submit(
 
     executor = TestingFractalSlurmExecutor(
         slurm_user=SLURM_USER,
-        working_dir_local=tmp777_path,
-        working_dir_remote=tmp777_path,
+        workflow_dir_local=tmp777_path,
+        workflow_dir_remote=tmp777_path,
         slurm_poll_interval=1,
         keep_pickle_files=True,
         shutdown_file=str(shutdown_file),
@@ -162,8 +162,8 @@ def test_indirect_shutdown_during_map(
 
     with TestingFractalSlurmExecutor(
         slurm_user=SLURM_USER,
-        working_dir_local=tmp777_path,
-        working_dir_remote=tmp777_path,
+        workflow_dir_local=tmp777_path,
+        workflow_dir_remote=tmp777_path,
         slurm_poll_interval=2,
         keep_pickle_files=True,
         shutdown_file=str(shutdown_file),
