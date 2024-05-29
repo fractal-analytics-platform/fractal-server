@@ -775,10 +775,10 @@ class FractalSlurmExecutor(SlurmExecutor):
         Prepare the `JobExecutionError` for a given job
 
         This method creates a `JobExecutionError` object and sets its attribute
-        to the appropriate SLURM-related file names. Note that the method shoul
-        always be called after values in `self.map_jobid_to_slurm_files` have
-        been updated, so that they point to `self.workflow_dir` files which are
-        readable from `fractal-server`.
+        to the appropriate SLURM-related file names. Note that the method
+        should always be called after values in `self.map_jobid_to_slurm_files`
+        have been updated, so that they point to `self.workflow_dir_local`
+        files which are readable from `fractal-server`.
 
         Arguments:
             jobid:
