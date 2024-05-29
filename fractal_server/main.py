@@ -82,7 +82,8 @@ def check_settings() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.jobs = []
+    app.state.jobsV1 = []
+    app.state.jobsV2 = []
     logger = set_logger("fractal_server.lifespan")
     logger.info("Start application startup")
     check_settings()

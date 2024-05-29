@@ -333,7 +333,10 @@ class Settings(BaseSettings):
     """
     Path of JSON file with configuration for the local backend.
     """
-
+    FRACTAL_API_MAX_JOB_LIST_LENGTH: int = 50
+    """
+    Number of ids that can be stored inside app.state.jobs variable
+    """
     FRACTAL_SLURM_CONFIG_FILE: Optional[Path]
     """
     Path of JSON file with configuration for the SLURM backend.
