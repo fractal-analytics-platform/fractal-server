@@ -65,8 +65,8 @@ def _cast_and_validate_InitTaskOutput(
 def no_op_submit_setup_call(
     *,
     wftask: WorkflowTaskV2,
-    workflow_dir: Path,
-    workflow_dir_user: Path,
+    workflow_dir_local: Path,
+    workflow_dir_remote: Path,
     which_type: Literal["non_parallel", "parallel"],
 ) -> dict:
     """
@@ -79,16 +79,16 @@ def no_op_submit_setup_call(
 def _get_executor_options(
     *,
     wftask: WorkflowTaskV2,
-    workflow_dir: Path,
-    workflow_dir_user: Path,
+    workflow_dir_local: Path,
+    workflow_dir_remote: Path,
     submit_setup_call: Callable,
     which_type: Literal["non_parallel", "parallel"],
 ) -> dict:
     try:
         options = submit_setup_call(
             wftask=wftask,
-            workflow_dir=workflow_dir,
-            workflow_dir_user=workflow_dir_user,
+            workflow_dir_local=workflow_dir_local,
+            workflow_dir_remote=workflow_dir_remote,
             which_type=which_type,
         )
     except Exception as e:
@@ -115,8 +115,8 @@ def run_v2_task_non_parallel(
     zarr_dir: str,
     task: TaskV2,
     wftask: WorkflowTaskV2,
-    workflow_dir: Path,
-    workflow_dir_user: Optional[Path] = None,
+    workflow_dir_local: Path,
+    workflow_dir_remote: Optional[Path] = None,
     executor: Executor,
     logger_name: Optional[str] = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
@@ -125,17 +125,17 @@ def run_v2_task_non_parallel(
     This runs server-side (see `executor` argument)
     """
 
-    if workflow_dir_user is None:
-        workflow_dir_user = workflow_dir
+    if workflow_dir_remote is None:
+        workflow_dir_remote = workflow_dir_local
         logging.warning(
-            "In `run_single_task`, workflow_dir_user=None. Is this right?"
+            "In `run_single_task`, workflow_dir_remote=None. Is this right?"
         )
-        workflow_dir_user = workflow_dir
+        workflow_dir_remote = workflow_dir_local
 
     executor_options = _get_executor_options(
         wftask=wftask,
-        workflow_dir=workflow_dir,
-        workflow_dir_user=workflow_dir_user,
+        workflow_dir_local=workflow_dir_local,
+        workflow_dir_remote=workflow_dir_remote,
         submit_setup_call=submit_setup_call,
         which_type="non_parallel",
     )
@@ -150,8 +150,8 @@ def run_v2_task_non_parallel(
             run_single_task,
             wftask=wftask,
             command=task.command_non_parallel,
-            workflow_dir=workflow_dir,
-            workflow_dir_user=workflow_dir_user,
+            workflow_dir_local=workflow_dir_local,
+            workflow_dir_remote=workflow_dir_remote,
         ),
         function_kwargs,
         **executor_options,
@@ -169,8 +169,8 @@ def run_v2_task_parallel(
     task: TaskV2,
     wftask: WorkflowTaskV2,
     executor: Executor,
-    workflow_dir: Path,
-    workflow_dir_user: Optional[Path] = None,
+    workflow_dir_local: Path,
+    workflow_dir_remote: Optional[Path] = None,
     logger_name: Optional[str] = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
 ) -> TaskOutput:
@@ -182,8 +182,8 @@ def run_v2_task_parallel(
 
     executor_options = _get_executor_options(
         wftask=wftask,
-        workflow_dir=workflow_dir,
-        workflow_dir_user=workflow_dir_user,
+        workflow_dir_local=workflow_dir_local,
+        workflow_dir_remote=workflow_dir_remote,
         submit_setup_call=submit_setup_call,
         which_type="parallel",
     )
@@ -203,8 +203,8 @@ def run_v2_task_parallel(
             run_single_task,
             wftask=wftask,
             command=task.command_parallel,
-            workflow_dir=workflow_dir,
-            workflow_dir_user=workflow_dir_user,
+            workflow_dir_local=workflow_dir_local,
+            workflow_dir_remote=workflow_dir_remote,
         ),
         list_function_kwargs,
         **executor_options,
@@ -230,23 +230,23 @@ def run_v2_task_compound(
     task: TaskV2,
     wftask: WorkflowTaskV2,
     executor: Executor,
-    workflow_dir: Path,
-    workflow_dir_user: Optional[Path] = None,
+    workflow_dir_local: Path,
+    workflow_dir_remote: Optional[Path] = None,
     logger_name: Optional[str] = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
 ) -> TaskOutput:
 
     executor_options_init = _get_executor_options(
         wftask=wftask,
-        workflow_dir=workflow_dir,
-        workflow_dir_user=workflow_dir_user,
+        workflow_dir_local=workflow_dir_local,
+        workflow_dir_remote=workflow_dir_remote,
         submit_setup_call=submit_setup_call,
         which_type="non_parallel",
     )
     executor_options_compute = _get_executor_options(
         wftask=wftask,
-        workflow_dir=workflow_dir,
-        workflow_dir_user=workflow_dir_user,
+        workflow_dir_local=workflow_dir_local,
+        workflow_dir_remote=workflow_dir_remote,
         submit_setup_call=submit_setup_call,
         which_type="parallel",
     )
@@ -262,8 +262,8 @@ def run_v2_task_compound(
             run_single_task,
             wftask=wftask,
             command=task.command_non_parallel,
-            workflow_dir=workflow_dir,
-            workflow_dir_user=workflow_dir_user,
+            workflow_dir_local=workflow_dir_local,
+            workflow_dir_remote=workflow_dir_remote,
         ),
         function_kwargs,
         **executor_options_init,
@@ -298,8 +298,8 @@ def run_v2_task_compound(
             run_single_task,
             wftask=wftask,
             command=task.command_parallel,
-            workflow_dir=workflow_dir,
-            workflow_dir_user=workflow_dir_user,
+            workflow_dir_local=workflow_dir_local,
+            workflow_dir_remote=workflow_dir_remote,
         ),
         list_function_kwargs,
         **executor_options_compute,
@@ -325,8 +325,8 @@ def run_v1_task_parallel(
     task_legacy: TaskV1,
     wftask: WorkflowTaskV2,
     executor: Executor,
-    workflow_dir: Path,
-    workflow_dir_user: Optional[Path] = None,
+    workflow_dir_local: Path,
+    workflow_dir_remote: Optional[Path] = None,
     logger_name: Optional[str] = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
 ) -> TaskOutput:
@@ -335,8 +335,8 @@ def run_v1_task_parallel(
 
     executor_options = _get_executor_options(
         wftask=wftask,
-        workflow_dir=workflow_dir,
-        workflow_dir_user=workflow_dir_user,
+        workflow_dir_local=workflow_dir_local,
+        workflow_dir_remote=workflow_dir_remote,
         submit_setup_call=submit_setup_call,
         which_type="parallel",
     )
@@ -359,8 +359,8 @@ def run_v1_task_parallel(
             run_single_task,
             wftask=wftask,
             command=task_legacy.command,
-            workflow_dir=workflow_dir,
-            workflow_dir_user=workflow_dir_user,
+            workflow_dir_local=workflow_dir_local,
+            workflow_dir_remote=workflow_dir_remote,
             is_task_v1=True,
         ),
         list_function_kwargs,
