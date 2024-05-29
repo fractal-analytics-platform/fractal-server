@@ -33,12 +33,12 @@ class TaskFiles:
     Group all file paths pertaining to a task
 
     Attributes:
-        workflow_dir:
+        workflow_dir_local:
             Server-owned directory to store all task-execution-related relevant
             files. Note: users cannot write directly to this folder.
-        workflow_dir_user:
-            User-side directory with the same scope as `workflow_dir`, and
-            where a user can write.
+        workflow_dir_remote:
+            User-side directory with the same scope as `workflow_dir_local`,
+            and where a user can write.
         subfolder_name:
             Name of task-specific subfolder
         remote_subfolder:
@@ -62,8 +62,8 @@ class TaskFiles:
             Path for task-execution stderr.
     """
 
-    workflow_dir: Path
-    workflow_dir_user: Path
+    workflow_dir_local: Path
+    workflow_dir_remote: Path
     remote_subfolder: Path
     subfolder_name: str
     task_name: str
@@ -80,14 +80,14 @@ class TaskFiles:
 
     def __init__(
         self,
-        workflow_dir: Path,
-        workflow_dir_user: Path,
+        workflow_dir_local: Path,
+        workflow_dir_remote: Path,
         task_name: str,
         task_order: Optional[int] = None,
         component: Optional[str] = None,
     ):
-        self.workflow_dir = workflow_dir
-        self.workflow_dir_user = workflow_dir_user
+        self.workflow_dir_local = workflow_dir_local
+        self.workflow_dir_remote = workflow_dir_remote
         self.task_order = task_order
         self.task_name = task_name
         self.component = component
@@ -106,7 +106,7 @@ class TaskFiles:
         self.subfolder_name = task_subfolder_name(
             order=order, task_name=self.task_name
         )
-        self.remote_subfolder = self.workflow_dir_user / self.subfolder_name
+        self.remote_subfolder = self.workflow_dir_remote / self.subfolder_name
         self.args = self.remote_subfolder / f"{self.file_prefix}.args.json"
         self.out = self.remote_subfolder / f"{self.file_prefix}.out"
         self.err = self.remote_subfolder / f"{self.file_prefix}.err"
@@ -117,8 +117,8 @@ class TaskFiles:
 
 
 def get_task_file_paths(
-    workflow_dir: Path,
-    workflow_dir_user: Path,
+    workflow_dir_local: Path,
+    workflow_dir_remote: Path,
     task_name: str,
     task_order: Optional[int] = None,
     component: Optional[str] = None,
@@ -127,8 +127,8 @@ def get_task_file_paths(
     Return the corrisponding TaskFiles object
     """
     return TaskFiles(
-        workflow_dir=workflow_dir,
-        workflow_dir_user=workflow_dir_user,
+        workflow_dir_local=workflow_dir_local,
+        workflow_dir_remote=workflow_dir_remote,
         task_name=task_name,
         task_order=task_order,
         component=component,

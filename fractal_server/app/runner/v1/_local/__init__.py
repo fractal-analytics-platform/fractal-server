@@ -40,7 +40,7 @@ def _process_workflow(
     input_metadata: dict[str, Any],
     input_history: list[dict[str, Any]],
     logger_name: str,
-    workflow_dir: Path,
+    workflow_dir_local: Path,
     first_task_index: int,
     last_task_index: int,
 ) -> dict[str, Any]:
@@ -66,8 +66,8 @@ def _process_workflow(
                 metadata=input_metadata,
                 history=input_history,
             ),
-            workflow_dir=workflow_dir,
-            workflow_dir_user=workflow_dir,
+            workflow_dir_local=workflow_dir_local,
+            workflow_dir_remote=workflow_dir_local,
             logger_name=logger_name,
             submit_setup_call=_local_submit_setup,
         )
@@ -85,8 +85,8 @@ async def process_workflow(
     input_metadata: dict[str, Any],
     input_history: list[dict[str, Any]],
     logger_name: str,
-    workflow_dir: Path,
-    workflow_dir_user: Optional[Path] = None,
+    workflow_dir_local: Path,
+    workflow_dir_remote: Optional[Path] = None,
     slurm_user: Optional[str] = None,
     slurm_account: Optional[str] = None,
     user_cache_dir: Optional[str] = None,
@@ -115,12 +115,13 @@ async def process_workflow(
             Initial metadata, passed to the first task
         logger_name:
             Name of the logger to log information on the run to
-        workflow_dir:
+        workflow_dir_local:
             Working directory for this run.
-        workflow_dir_user:
+        workflow_dir_remote:
             Working directory for this run, on the user side. This argument is
             present for compatibility with the standard backend interface, but
-            for the `local` backend it cannot be different from `workflow_dir`.
+            for the `local` backend it cannot be different from
+            `workflow_dir_local`.
         slurm_user:
             Username to impersonate to run the workflow. This argument is
             present for compatibility with the standard backend interface, but
@@ -157,10 +158,10 @@ async def process_workflow(
             of the workflow
     """
 
-    if workflow_dir_user and (workflow_dir_user != workflow_dir):
+    if workflow_dir_remote and (workflow_dir_remote != workflow_dir_local):
         raise NotImplementedError(
             "Local backend does not support different directories "
-            f"{workflow_dir=} and {workflow_dir_user=}"
+            f"{workflow_dir_local=} and {workflow_dir_remote=}"
         )
 
     # Set values of first_task_index and last_task_index
@@ -178,7 +179,7 @@ async def process_workflow(
         input_metadata=input_metadata,
         input_history=input_history,
         logger_name=logger_name,
-        workflow_dir=workflow_dir,
+        workflow_dir_local=workflow_dir_local,
         first_task_index=first_task_index,
         last_task_index=last_task_index,
     )

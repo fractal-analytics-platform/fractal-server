@@ -8,7 +8,7 @@ from v2_mock_models import TaskV2Mock
 from v2_mock_models import WorkflowTaskV2Mock
 
 
-def execute_tasks_v2(wf_task_list, workflow_dir, **kwargs):
+def execute_tasks_v2(wf_task_list, workflow_dir_local, **kwargs):
     from fractal_server.app.runner.task_files import task_subfolder_name
     from fractal_server.app.runner.v2.runner import (
         execute_tasks_v2 as raw_execute_tasks_v2,
@@ -16,18 +16,20 @@ def execute_tasks_v2(wf_task_list, workflow_dir, **kwargs):
 
     for wftask in wf_task_list:
         if wftask.task is not None:
-            subfolder = workflow_dir / task_subfolder_name(
+            subfolder = workflow_dir_local / task_subfolder_name(
                 order=wftask.order, task_name=wftask.task.name
             )
         else:
-            subfolder = workflow_dir / task_subfolder_name(
+            subfolder = workflow_dir_local / task_subfolder_name(
                 order=wftask.order, task_name=wftask.task_legacy.name
             )
         logging.info(f"Now creating {subfolder.as_posix()}")
         subfolder.mkdir(parents=True)
 
     out = raw_execute_tasks_v2(
-        wf_task_list=wf_task_list, workflow_dir=workflow_dir, **kwargs
+        wf_task_list=wf_task_list,
+        workflow_dir_local=workflow_dir_local,
+        **kwargs,
     )
     return out
 
@@ -39,8 +41,8 @@ def test_parallelize_on_no_images(tmp_path: Path, executor: Executor):
     # Preliminary setup
     execute_tasks_v2_args = dict(
         executor=executor,
-        workflow_dir=tmp_path / "job_dir",
-        workflow_dir_user=tmp_path / "job_dir",
+        workflow_dir_local=tmp_path / "job_dir",
+        workflow_dir_remote=tmp_path / "job_dir",
     )
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
 
@@ -71,8 +73,8 @@ def test_parallelize_on_no_images_compound(tmp_path: Path, executor: Executor):
     # Preliminary setup
     execute_tasks_v2_args = dict(
         executor=executor,
-        workflow_dir=tmp_path / "job_dir",
-        workflow_dir_user=tmp_path / "job_dir",
+        workflow_dir_local=tmp_path / "job_dir",
+        workflow_dir_remote=tmp_path / "job_dir",
     )
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
 

@@ -10,4 +10,4 @@ poetry run gunicorn fractal_server.main:app \
     --bind 0.0.0.0:8000 \
     --access-logfile logs-fractal-server.access \
     --error-logfile logs-fractal-server.error \
-    --logger-class fractal_server.logger.gunicorn_logger.FractalGunicornLogger \
+    --logger-class fractal_server.gunicorn_fractal.FractalGunicornLogger \
