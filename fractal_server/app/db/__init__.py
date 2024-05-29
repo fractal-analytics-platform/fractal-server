@@ -122,7 +122,12 @@ class DB:
             cls.set_async_db()
             session_maker = cls._async_session_maker()
         async with session_maker as async_session:
-            yield async_session
+            try:
+                yield async_session
+                await async_session.commit()
+            except Exception as e:
+                await async_session.rollback()
+                raise e
 
     @classmethod
     def get_sync_db(cls) -> Generator[DBSyncSession, None, None]:
