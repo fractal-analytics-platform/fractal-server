@@ -18,8 +18,8 @@ from fractal_server.app.runner.executors.slurm._slurm_config import (
 
 def get_slurm_config(
     wftask: WorkflowTaskV2,
-    workflow_dir: Path,
-    workflow_dir_user: Path,
+    workflow_dir_local: Path,
+    workflow_dir_remote: Path,
     which_type: Literal["non_parallel", "parallel"],
     config_path: Optional[Path] = None,
 ) -> SlurmConfig:
@@ -43,13 +43,13 @@ def get_slurm_config(
         wftask:
             WorkflowTask for which the SLURM configuration is is to be
             prepared.
-        workflow_dir:
+        workflow_dir_local:
             Server-owned directory to store all task-execution-related relevant
             files (inputs, outputs, errors, and all meta files related to the
             job execution). Note: users cannot write directly to this folder.
-        workflow_dir_user:
-            User-side directory with the same scope as `workflow_dir`, and
-            where a user can write.
+        workflow_dir_remote:
+            User-side directory with the same scope as `workflow_dir_local`,
+            and where a user can write.
         config_path:
             Path of a Fractal SLURM configuration file; if `None`, use
             `FRACTAL_SLURM_CONFIG_FILE` variable from settings.

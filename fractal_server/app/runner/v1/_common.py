@@ -36,8 +36,8 @@ from fractal_server.app.runner.task_files import get_task_file_paths
 def no_op_submit_setup_call(
     *,
     wftask: WorkflowTask,
-    workflow_dir: Path,
-    workflow_dir_user: Path,
+    workflow_dir_local: Path,
+    workflow_dir_remote: Path,
 ) -> dict:
     """
     Default (no-operation) interface of submit_setup_call.
@@ -113,8 +113,8 @@ def call_single_task(
     *,
     wftask: WorkflowTask,
     task_pars: TaskParameters,
-    workflow_dir: Path,
-    workflow_dir_user: Optional[Path] = None,
+    workflow_dir_local: Path,
+    workflow_dir_remote: Optional[Path] = None,
     logger_name: Optional[str] = None,
 ) -> TaskParameters:
     """
@@ -133,8 +133,8 @@ def call_single_task(
 
     If the executor then impersonates another user (as in the
     `FractalSlurmExecutor`), this function is run by that user.  For this
-    reason, it should not write any file to workflow_dir, or it may yield
-    permission errors.
+    reason, it should not write any file to `workflow_dir_local`, or it may
+    yield permission errors.
 
     Args:
         wftask:
@@ -143,12 +143,12 @@ def call_single_task(
         task_pars:
             The parameters required to run the task which are not specific to
             the task, e.g., I/O paths.
-        workflow_dir:
+        workflow_dir_local:
             The server-side working directory for workflow execution.
-        workflow_dir_user:
+        workflow_dir_remote:
             The user-side working directory for workflow execution (only
             relevant for multi-user executors). If `None`, it is set to be
-            equal to `workflow_dir`.
+            equal to `workflow_dir_remote`.
         logger_name:
             Name of the logger
 
@@ -164,17 +164,16 @@ def call_single_task(
                             information to the TaskExecutionError, such as task
                             order and name.
         JobExecutionError: If the wrapped task raises a job-related error.
-        RuntimeError: If the `workflow_dir` is falsy.
     """
 
     logger = get_logger(logger_name)
 
-    if not workflow_dir_user:
-        workflow_dir_user = workflow_dir
+    if not workflow_dir_remote:
+        workflow_dir_remote = workflow_dir_local
 
     task_files = get_task_file_paths(
-        workflow_dir=workflow_dir,
-        workflow_dir_user=workflow_dir_user,
+        workflow_dir_local=workflow_dir_local,
+        workflow_dir_remote=workflow_dir_remote,
         task_order=wftask.order,
         task_name=wftask.task.name,
     )
@@ -249,8 +248,8 @@ def call_single_parallel_task(
     *,
     wftask: WorkflowTask,
     task_pars: TaskParameters,
-    workflow_dir: Path,
-    workflow_dir_user: Optional[Path] = None,
+    workflow_dir_local: Path,
+    workflow_dir_remote: Optional[Path] = None,
 ) -> Any:
     """
     Call a single instance of a parallel task
@@ -275,9 +274,9 @@ def call_single_parallel_task(
             The task to execute.
         task_pars:
             The parameters to pass on to the task.
-        workflow_dir:
+        workflow_dir_local:
             The server-side working directory for workflow execution.
-        workflow_dir_user:
+        workflow_dir_remote:
             The user-side working directory for workflow execution (only
             relevant for multi-user executors).
 
@@ -291,16 +290,16 @@ def call_single_parallel_task(
                             information to the TaskExecutionError, such as task
                             order and name.
         JobExecutionError: If the wrapped task raises a job-related error.
-        RuntimeError: If the `workflow_dir` is falsy.
+        RuntimeError: If the `workflow_dir_local` is falsy.
     """
-    if not workflow_dir:
+    if not workflow_dir_local:
         raise RuntimeError
-    if not workflow_dir_user:
-        workflow_dir_user = workflow_dir
+    if not workflow_dir_remote:
+        workflow_dir_remote = workflow_dir_local
 
     task_files = get_task_file_paths(
-        workflow_dir=workflow_dir,
-        workflow_dir_user=workflow_dir_user,
+        workflow_dir_local=workflow_dir_local,
+        workflow_dir_remote=workflow_dir_remote,
         task_order=wftask.order,
         task_name=wftask.task.name,
         component=component,
@@ -365,8 +364,8 @@ def call_parallel_task(
     executor: Executor,
     wftask: WorkflowTask,
     task_pars_depend: TaskParameters,
-    workflow_dir: Path,
-    workflow_dir_user: Optional[Path] = None,
+    workflow_dir_local: Path,
+    workflow_dir_remote: Optional[Path] = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
     logger_name: Optional[str] = None,
 ) -> TaskParameters:
@@ -389,9 +388,9 @@ def call_parallel_task(
             The parallel task to run.
         task_pars_depend:
             The task parameters to be passed on to the parallel task.
-        workflow_dir:
+        workflow_dir_local:
             The server-side working directory for workflow execution.
-        workflow_dir_user:
+        workflow_dir_remote:
             The user-side working directory for workflow execution (only
             relevant for multi-user executors).
         submit_setup_call:
@@ -407,8 +406,8 @@ def call_parallel_task(
     """
     logger = get_logger(logger_name)
 
-    if not workflow_dir_user:
-        workflow_dir_user = workflow_dir
+    if not workflow_dir_remote:
+        workflow_dir_remote = workflow_dir_local
 
     try:
         component_list = task_pars_depend.metadata[
@@ -426,8 +425,8 @@ def call_parallel_task(
     try:
         extra_setup = submit_setup_call(
             wftask=wftask,
-            workflow_dir=workflow_dir,
-            workflow_dir_user=workflow_dir_user,
+            workflow_dir_local=workflow_dir_local,
+            workflow_dir_remote=workflow_dir_remote,
         )
     except Exception as e:
         tb = "".join(traceback.format_tb(e.__traceback__))
@@ -445,8 +444,8 @@ def call_parallel_task(
         call_single_parallel_task,
         wftask=wftask,
         task_pars=actual_task_pars_depend,
-        workflow_dir=workflow_dir,
-        workflow_dir_user=workflow_dir_user,
+        workflow_dir_local=workflow_dir_local,
+        workflow_dir_remote=workflow_dir_remote,
     )
 
     # Submit tasks for execution. Note that `for _ in map_iter:
@@ -513,16 +512,17 @@ def execute_tasks(
     executor: Executor,
     task_list: list[WorkflowTask],
     task_pars: TaskParameters,
-    workflow_dir: Path,
-    workflow_dir_user: Optional[Path] = None,
+    workflow_dir_local: Path,
+    workflow_dir_remote: Optional[Path] = None,
     submit_setup_call: Callable = no_op_submit_setup_call,
     logger_name: str,
 ) -> TaskParameters:
     """
     Submit a list of WorkflowTasks for execution
 
-    **Note:** At the end of each task, write current metadata to `working_dir /
-    METADATA_FILENAME`, so that they can be read as part of the [`get_job`
+    **Note:** At the end of each task, write current metadata to
+    `workflow_dir_local / METADATA_FILENAME`, so that they can be read as part
+    of the [`get_job`
     endpoint](../../api/v1/job/#fractal_server.app.routes.api.v1.job.get_job).
 
     Arguments:
@@ -533,12 +533,12 @@ def execute_tasks(
             The list of wftasks to be run
         task_pars:
             The task parameters to be passed on to the first task of the list.
-        workflow_dir:
+        workflow_dir_local:
             The server-side working directory for workflow execution.
-        workflow_dir_user:
+        workflow_dir_remote:
             The user-side working directory for workflow execution (only
             relevant for multi-user executors). If `None`, it is set to be
-            equal to `workflow_dir`.
+            equal to `workflow_dir_local`.
         submit_setup_call:
             An optional function that computes configuration parameters for
             the executor.
@@ -550,8 +550,8 @@ def execute_tasks(
             A TaskParameters object which constitutes the output of the last
             task in the list.
     """
-    if not workflow_dir_user:
-        workflow_dir_user = workflow_dir
+    if not workflow_dir_remote:
+        workflow_dir_remote = workflow_dir_local
 
     logger = get_logger(logger_name)
 
@@ -567,8 +567,8 @@ def execute_tasks(
                 executor=executor,
                 wftask=this_wftask,
                 task_pars_depend=current_task_pars,
-                workflow_dir=workflow_dir,
-                workflow_dir_user=workflow_dir_user,
+                workflow_dir_local=workflow_dir_local,
+                workflow_dir_remote=workflow_dir_remote,
                 submit_setup_call=submit_setup_call,
                 logger_name=logger_name,
             )
@@ -577,8 +577,8 @@ def execute_tasks(
             try:
                 extra_setup = submit_setup_call(
                     wftask=this_wftask,
-                    workflow_dir=workflow_dir,
-                    workflow_dir_user=workflow_dir_user,
+                    workflow_dir_local=workflow_dir_local,
+                    workflow_dir_remote=workflow_dir_remote,
                 )
             except Exception as e:
                 tb = "".join(traceback.format_tb(e.__traceback__))
@@ -596,8 +596,8 @@ def execute_tasks(
                 call_single_task,
                 wftask=this_wftask,
                 task_pars=current_task_pars,
-                workflow_dir=workflow_dir,
-                workflow_dir_user=workflow_dir_user,
+                workflow_dir_local=workflow_dir_local,
+                workflow_dir_remote=workflow_dir_remote,
                 logger_name=logger_name,
                 **extra_setup,
             )
@@ -609,11 +609,11 @@ def execute_tasks(
         )
 
         # Write most recent metadata to METADATA_FILENAME
-        with open(workflow_dir / METADATA_FILENAME, "w") as f:
+        with open(workflow_dir_local / METADATA_FILENAME, "w") as f:
             json.dump(current_task_pars.metadata, f, indent=2)
 
         # Write most recent metadata to HISTORY_FILENAME
-        with open(workflow_dir / HISTORY_FILENAME, "w") as f:
+        with open(workflow_dir_local / HISTORY_FILENAME, "w") as f:
             json.dump(current_task_pars.history, f, indent=2)
 
     return current_task_pars
