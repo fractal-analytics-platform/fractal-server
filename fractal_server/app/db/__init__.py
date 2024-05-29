@@ -137,6 +137,7 @@ class DB:
             session_maker = cls._sync_session_maker()
         with session_maker as sync_session:
             yield sync_session
+            sync_session.commit()
 
 
 get_async_db = DB.get_async_db
