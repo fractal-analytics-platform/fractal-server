@@ -15,6 +15,7 @@
 
 This module sets up the FastAPI application that serves the Fractal Server.
 """
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -81,6 +82,7 @@ def check_settings() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    app.state.jobs = []
     logger = set_logger("fractal_server.lifespan")
     logger.info("Start application startup")
     check_settings()
@@ -97,6 +99,10 @@ async def lifespan(app: FastAPI):
     reset_logger_handlers(logger)
     yield
     logger = set_logger("fractal_server.lifespan")
+    logger.info(
+        f"Current worker with pid {os.getpid()} is shutting down. "
+        f"Following jobs will be set to failed: {app.state.jobs}"
+    )
     logger.info("Start application shutdown")
     logger.info("End application shutdown")
     reset_logger_handlers(logger)

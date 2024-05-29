@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
@@ -8,10 +9,12 @@ from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Request
 from fastapi import status
 from sqlmodel import select
 
 from .....config import get_settings
+from .....logger import set_logger
 from .....syringe import Inject
 from .....utils import get_timestamp
 from ....db import AsyncSession
@@ -28,6 +31,7 @@ from ....security import current_active_verified_user
 from ....security import User
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_workflow_check_owner
+from ._aux_functions import check_jobs_list_worker
 
 
 def _encode_as_utc(dt: datetime):
@@ -35,6 +39,8 @@ def _encode_as_utc(dt: datetime):
 
 
 router = APIRouter()
+logger = set_logger(__name__)
+LEN_WORKER_JOB_LIST = 50
 
 
 @router.post(
@@ -48,9 +54,19 @@ async def apply_workflow(
     dataset_id: int,
     job_create: JobCreateV2,
     background_tasks: BackgroundTasks,
+    request: Request,
     user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[JobReadV2]:
+
+    # when worker state.jobs hit N entries we make
+    # a cleanup of the list, removing the jobs with
+    # the status different from submitted
+    if len(request.app.state.jobs) > LEN_WORKER_JOB_LIST:
+        new_jobs_list = await check_jobs_list_worker(
+            db, request.app.state.jobs
+        )
+        request.app.state.jobs = new_jobs_list
 
     output = await _get_dataset_check_owner(
         project_id=project_id,
@@ -221,6 +237,11 @@ async def apply_workflow(
         slurm_user=user.slurm_user,
         user_cache_dir=user.cache_dir,
     )
-
+    request.app.state.jobs.append(job.id)
+    logger.info(
+        f"Current worker's pid is {os.getpid()}.\n"
+        f"Current status of worker job's list "
+        f"{request.app.state.jobs}"
+    )
     await db.close()
     return job
