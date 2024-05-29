@@ -66,8 +66,8 @@
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_190e6735448e0e43_task_interface_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.2">coverage.py v7.5.2</a>,
-            created at 2024-05-28 14:34 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.3">coverage.py v7.5.3</a>,
+            created at 2024-05-29 07:50 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -144,8 +144,8 @@
     <p class="pln"><span class="n"><a id="t60" href="#t60">60</a></span><span class="t">    <span class="nam">args</span><span class="op">:</span> <span class="nam">dict</span><span class="op">[</span><span class="nam">str</span><span class="op">,</span> <span class="nam">Any</span><span class="op">]</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t61" href="#t61">61</a></span><span class="t">    <span class="nam">command</span><span class="op">:</span> <span class="nam">str</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t62" href="#t62">62</a></span><span class="t">    <span class="nam">wftask</span><span class="op">:</span> <span class="nam">WorkflowTaskV2</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t63" href="#t63">63</a></span><span class="t">    <span class="nam">workflow_dir</span><span class="op">:</span> <span class="nam">Path</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t64" href="#t64">64</a></span><span class="t">    <span class="nam">workflow_dir_user</span><span class="op">:</span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">Path</span><span class="op">]</span> <span class="op">=</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t63" href="#t63">63</a></span><span class="t">    <span class="nam">workflow_dir_local</span><span class="op">:</span> <span class="nam">Path</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t64" href="#t64">64</a></span><span class="t">    <span class="nam">workflow_dir_remote</span><span class="op">:</span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">Path</span><span class="op">]</span> <span class="op">=</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t65" href="#t65">65</a></span><span class="t">    <span class="nam">logger_name</span><span class="op">:</span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span> <span class="op">=</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t66" href="#t66">66</a></span><span class="t">    <span class="nam">is_task_v1</span><span class="op">:</span> <span class="nam">bool</span> <span class="op">=</span> <span class="key">False</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t67" href="#t67">67</a></span><span class="t"><span class="op">)</span> <span class="op">-></span> <span class="nam">dict</span><span class="op">[</span><span class="nam">str</span><span class="op">,</span> <span class="nam">Any</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -156,8 +156,8 @@
     <p class="run"><span class="n"><a id="t72" href="#t72">72</a></span><span class="t">    <span class="nam">logger</span> <span class="op">=</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">getLogger</span><span class="op">(</span><span class="nam">logger_name</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t73" href="#t73">73</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="fst">f"</span><span class="fst">Now start running </span><span class="op">{</span><span class="nam">command</span><span class="op">=</span><span class="op">}</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t74" href="#t74">74</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t75" href="#t75">75</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">workflow_dir_user</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">75&#x202F;&#x219B;&#x202F;76</span><span class="annotate long">line 75 didn't jump to line 76, because the condition on line 75 was never true</span></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t76" href="#t76">76</a></span><span class="t">        <span class="nam">workflow_dir_user</span> <span class="op">=</span> <span class="nam">workflow_dir</span>&nbsp;</span><span class="r"></span></p>
+    <p class="par run show_par"><span class="n"><a id="t75" href="#t75">75</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">workflow_dir_remote</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">75&#x202F;&#x219B;&#x202F;76</span><span class="annotate long">line 75 didn't jump to line 76, because the condition on line 75 was never true</span></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t76" href="#t76">76</a></span><span class="t">        <span class="nam">workflow_dir_remote</span> <span class="op">=</span> <span class="nam">workflow_dir_local</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t77" href="#t77">77</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t78" href="#t78">78</a></span><span class="t">    <span class="key">if</span> <span class="nam">is_task_v1</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t79" href="#t79">79</a></span><span class="t">        <span class="nam">task_name</span> <span class="op">=</span> <span class="nam">wftask</span><span class="op">.</span><span class="nam">task_legacy</span><span class="op">.</span><span class="nam">name</span>&nbsp;</span><span class="r"></span></p>
@@ -166,8 +166,8 @@
     <p class="pln"><span class="n"><a id="t82" href="#t82">82</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t83" href="#t83">83</a></span><span class="t">    <span class="nam">component</span> <span class="op">=</span> <span class="nam">args</span><span class="op">.</span><span class="nam">pop</span><span class="op">(</span><span class="nam">_COMPONENT_KEY_</span><span class="op">,</span> <span class="key">None</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t84" href="#t84">84</a></span><span class="t">    <span class="nam">task_files</span> <span class="op">=</span> <span class="nam">get_task_file_paths</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t85" href="#t85">85</a></span><span class="t">        <span class="nam">workflow_dir</span><span class="op">=</span><span class="nam">workflow_dir</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t86" href="#t86">86</a></span><span class="t">        <span class="nam">workflow_dir_user</span><span class="op">=</span><span class="nam">workflow_dir_user</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t85" href="#t85">85</a></span><span class="t">        <span class="nam">workflow_dir_local</span><span class="op">=</span><span class="nam">workflow_dir_local</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t86" href="#t86">86</a></span><span class="t">        <span class="nam">workflow_dir_remote</span><span class="op">=</span><span class="nam">workflow_dir_remote</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t87" href="#t87">87</a></span><span class="t">        <span class="nam">task_order</span><span class="op">=</span><span class="nam">wftask</span><span class="op">.</span><span class="nam">order</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t88" href="#t88">88</a></span><span class="t">        <span class="nam">task_name</span><span class="op">=</span><span class="nam">task_name</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t89" href="#t89">89</a></span><span class="t">        <span class="nam">component</span><span class="op">=</span><span class="nam">component</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -226,8 +226,8 @@
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_190e6735448e0e43_task_interface_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.2">coverage.py v7.5.2</a>,
-            created at 2024-05-28 14:34 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.3">coverage.py v7.5.3</a>,
+            created at 2024-05-29 07:50 +0000
         </p>
     </div>
 </footer>
