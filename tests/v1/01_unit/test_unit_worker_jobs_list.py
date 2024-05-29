@@ -28,9 +28,7 @@ async def test_success_submit_workflows(
         )
         dataset_in = await dataset_factory(project_id=project.id, type="zarr")
         dataset_out = await dataset_factory(project_id=project.id, type="zarr")
-        from devtools import debug
 
-        debug(project.id)
         await resource_factory(
             dataset_in,
         )
@@ -43,7 +41,6 @@ async def test_success_submit_workflows(
             f"&output_dataset_id={dataset_out.id}",
             json={},
         )
-        debug(res.json())
         assert res.status_code == 202
 
         jobs_list = await check_jobs_list_worker(db, app.state.jobsV1)
