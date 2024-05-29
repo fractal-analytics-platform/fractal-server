@@ -49,6 +49,6 @@ async def test_check_jobs_list_worker(
         )
         assert res.status_code == 202
 
-        jobs_list = await check_jobs_list_worker(db, app.state.jobs)
+        jobs_list = await check_jobs_list_worker(db, app.state.jobsV2)
         # empty list because all jobs are failed
         assert jobs_list == []

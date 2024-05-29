@@ -56,6 +56,6 @@ async def test_success_submit_workflows(
         )
         await db.close()
 
-        jobs_list = await check_jobs_list_worker(db, app.state.jobs)
+        jobs_list = await check_jobs_list_worker(db, app.state.jobsV1)
         # empty list because all jobs are failed
         assert jobs_list == []
