@@ -40,7 +40,6 @@ def _encode_as_utc(dt: datetime):
 
 router = APIRouter()
 logger = set_logger(__name__)
-LEN_WORKER_JOB_LIST = 50
 
 
 @router.post(
@@ -62,7 +61,8 @@ async def apply_workflow(
     # when worker state.jobs hit N entries we make
     # a cleanup of the list, removing the jobs with
     # the status different from submitted
-    if len(request.app.state.jobs) > LEN_WORKER_JOB_LIST:
+    settings = Inject(get_settings)
+    if len(request.app.state.jobs) > settings.FRACTAL_API_MAX_JOB_LIST_LENGTH:
         new_jobs_list = await check_jobs_list_worker(
             db, request.app.state.jobs
         )
@@ -108,7 +108,6 @@ async def apply_workflow(
         )
 
     # If backend is SLURM, check that the user has required attributes
-    settings = Inject(get_settings)
     FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
     if FRACTAL_RUNNER_BACKEND == "slurm":
         if not user.slurm_user:
@@ -237,11 +236,11 @@ async def apply_workflow(
         slurm_user=user.slurm_user,
         user_cache_dir=user.cache_dir,
     )
-    request.app.state.jobs.append(job.id)
+    request.app.state.jobsV2.append(job.id)
     logger.info(
-        f"Current worker's pid is {os.getpid()}.\n"
+        f"Current worker's pid is {os.getpid()}. "
         f"Current status of worker job's list "
-        f"{request.app.state.jobs}"
+        f"{request.app.state.jobsV2}"
     )
     await db.close()
     return job
