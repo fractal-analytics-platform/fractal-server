@@ -436,3 +436,15 @@ async def _workflow_insert_task(
     await db.refresh(wf_task)
 
     return wf_task
+
+
+async def check_jobs_list_worker(
+    db: AsyncSession, jobs_list: list
+) -> list[int]:
+    stmt = select(ApplyWorkflow).where(ApplyWorkflow.id.in_(jobs_list))
+    result = await db.execute(stmt)
+    db_jobs_list = result.scalars().all()
+    submitted_job_ids = [
+        job.id for job in db_jobs_list if job.status == "submitted"
+    ]
+    return submitted_job_ids
