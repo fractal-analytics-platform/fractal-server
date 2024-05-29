@@ -828,12 +828,12 @@ class FractalSlurmExecutor(SlurmExecutor):
                     self.jobs_empty_cond.notify_all()
 
             # Copy all relevant files from self.workflow_dir_remote to
-            # self.workflow_dir
+            # self.workflow_dir_local
 
             self._copy_files_from_remote_to_local(job)
 
-            # Update the paths to use the files in self.workflow_dir (rather
-            # than the user's ones in self.workflow_dir_remote)
+            # Update the paths to use the files in self.workflow_dir_local
+            # (rather than the user's ones in self.workflow_dir_remote)
             with self.jobs_lock:
                 self.map_jobid_to_slurm_files[jobid]
                 (
@@ -991,7 +991,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         For all files in `self.workflow_dir_remote` that start with
         `job.file_prefix`, read them (with `sudo -u` impersonation) and write
-        them to `self.workflow_dir`.
+        them to `self.workflow_dir_local`.
 
         Files to copy:
         * Job-related files (SLURM stderr/stdout files); with prefix

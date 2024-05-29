@@ -183,16 +183,16 @@ def test_slurm_executor_submit_separate_folders(
 ):
     """
     Same as test_slurm_executor, but with two folders:
-    * server_workflow_dir is owned by the server user and has 755 permissions
-    * user_workflow_dir is owned the user and had default permissions
+    * workflow_dir_local is owned by the server user and has 755 permissions
+    * workflow_dir_remote is owned the user and had default permissions
     """
 
-    server_workflow_dir, user_workflow_dir = slurm_working_folders
+    workflow_dir_local, workflow_dir_remote = slurm_working_folders
 
     with TestingFractalSlurmExecutor(
         slurm_user=SLURM_USER,
-        workflow_dir_local=server_workflow_dir,
-        workflow_dir_remote=user_workflow_dir,
+        workflow_dir_local=workflow_dir_local,
+        workflow_dir_remote=workflow_dir_remote,
         slurm_poll_interval=2,
         keep_pickle_files=True,
     ) as executor:
@@ -218,13 +218,13 @@ def test_slurm_executor_submit_and_scancel(
         time.sleep(60)
         return 42
 
-    server_workflow_dir, user_workflow_dir = slurm_working_folders
+    workflow_dir_local, workflow_dir_remote = slurm_working_folders
 
     with pytest.raises(JobExecutionError) as e:
         with TestingFractalSlurmExecutor(
             slurm_user=SLURM_USER,
-            workflow_dir_local=server_workflow_dir,
-            workflow_dir_remote=user_workflow_dir,
+            workflow_dir_local=workflow_dir_local,
+            workflow_dir_remote=workflow_dir_remote,
             debug=True,
             keep_pickle_files=True,
             slurm_poll_interval=2,
