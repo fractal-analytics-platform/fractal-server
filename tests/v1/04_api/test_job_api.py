@@ -141,7 +141,7 @@ async def test_job_download_logs(
         await _workflow_insert_task(
             workflow_id=workflow.id, task_id=t.id, db=db
         )
-        working_dir = (tmp_path / "workflow_dir_for_zipping").as_posix()
+        working_dir = (tmp_path / "working_dir_for_zipping").as_posix()
         job = await job_factory(
             project_id=prj.id,
             workflow_id=workflow.id,

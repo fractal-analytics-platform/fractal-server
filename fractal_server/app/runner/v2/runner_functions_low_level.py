@@ -60,8 +60,8 @@ def run_single_task(
     args: dict[str, Any],
     command: str,
     wftask: WorkflowTaskV2,
-    workflow_dir: Path,
-    workflow_dir_user: Optional[Path] = None,
+    workflow_dir_local: Path,
+    workflow_dir_remote: Optional[Path] = None,
     logger_name: Optional[str] = None,
     is_task_v1: bool = False,
 ) -> dict[str, Any]:
@@ -72,8 +72,8 @@ def run_single_task(
     logger = logging.getLogger(logger_name)
     logger.debug(f"Now start running {command=}")
 
-    if not workflow_dir_user:
-        workflow_dir_user = workflow_dir
+    if not workflow_dir_remote:
+        workflow_dir_remote = workflow_dir_local
 
     if is_task_v1:
         task_name = wftask.task_legacy.name
@@ -82,8 +82,8 @@ def run_single_task(
 
     component = args.pop(_COMPONENT_KEY_, None)
     task_files = get_task_file_paths(
-        workflow_dir=workflow_dir,
-        workflow_dir_user=workflow_dir_user,
+        workflow_dir_local=workflow_dir_local,
+        workflow_dir_remote=workflow_dir_remote,
         task_order=wftask.order,
         task_name=task_name,
         component=component,
