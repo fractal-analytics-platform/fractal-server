@@ -102,7 +102,8 @@ async def lifespan(app: FastAPI):
     logger = set_logger("fractal_server.lifespan")
     logger.info(
         f"Current worker with pid {os.getpid()} is shutting down. "
-        f"Following jobs will be set to failed: {app.state.jobs}"
+        f"Following jobs will be set to failed: {app.state.jobsV1=}, "
+        f"{app.state.jobsV2=}"
     )
     logger.info("Start application shutdown")
     logger.info("End application shutdown")
