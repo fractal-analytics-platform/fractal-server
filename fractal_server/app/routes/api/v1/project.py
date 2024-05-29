@@ -7,6 +7,7 @@ from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Request
 from fastapi import Response
 from fastapi import status
 from sqlmodel import select
@@ -39,8 +40,10 @@ from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
+from ._aux_functions import check_jobs_list_worker
 
 router = APIRouter()
+LEN_WORKER_JOB_LIST = 50
 
 
 def _encode_as_utc(dt: datetime):
@@ -240,9 +243,19 @@ async def apply_workflow(
     background_tasks: BackgroundTasks,
     input_dataset_id: int,
     output_dataset_id: int,
+    request: Request,
     user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[ApplyWorkflowReadV1]:
+
+    # when worker state.jobs hit N entries we make
+    # a cleanup of the list, removing the jobs with
+    # the status different from submitted
+    if len(request.app.state.jobs) > LEN_WORKER_JOB_LIST:
+        new_jobs_list = await check_jobs_list_worker(
+            db, request.app.state.jobs
+        )
+        request.app.state.jobs = new_jobs_list
 
     output = await _get_dataset_check_owner(
         project_id=project_id,
