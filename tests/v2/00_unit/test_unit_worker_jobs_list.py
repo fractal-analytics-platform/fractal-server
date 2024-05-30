@@ -1,3 +1,4 @@
+import os
 import time
 
 from fractal_server.app.routes.api.v2._aux_functions import (
@@ -6,6 +7,8 @@ from fractal_server.app.routes.api.v2._aux_functions import (
 from fractal_server.app.routes.api.v2._aux_functions import (
     check_jobs_list_worker,
 )
+
+os.environ["FRACTAL_API_MAX_JOB_LIST_LENGTH"] = 1
 
 
 async def test_check_jobs_list_worker(
