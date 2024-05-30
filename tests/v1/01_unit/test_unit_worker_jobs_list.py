@@ -1,13 +1,9 @@
-import os
-
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.routes.api.v1._aux_functions import (
     clean_app_job_list_v1,
 )
-
-os.environ["FRACTAL_API_MAX_JOB_LIST_LENGTH"] = "1"
 
 
 async def test_success_submit_workflows(
@@ -20,6 +16,7 @@ async def test_success_submit_workflows(
     dataset_factory,
     resource_factory,
     task_factory,
+    override_settings,
 ):
     user_kwargs = {"is_verified": True}
 

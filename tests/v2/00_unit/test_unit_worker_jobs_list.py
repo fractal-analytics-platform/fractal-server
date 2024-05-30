@@ -1,4 +1,3 @@
-import os
 import time
 
 from fractal_server.app.routes.api.v2._aux_functions import (
@@ -7,8 +6,6 @@ from fractal_server.app.routes.api.v2._aux_functions import (
 from fractal_server.app.routes.api.v2._aux_functions import (
     clean_app_job_list_v2,
 )
-
-os.environ["FRACTAL_API_MAX_JOB_LIST_LENGTH"] = "1"
 
 
 async def test_check_jobs_list_worker(
@@ -22,6 +19,7 @@ async def test_check_jobs_list_worker(
     app,
     override_settings_factory,
     tmp_path,
+    override_settings,
 ):
     override_settings_factory(
         FRACTAL_API_SUBMIT_RATE_LIMIT=1,
