@@ -260,7 +260,7 @@ async def apply_workflow(
         new_jobs_list = await clean_app_job_list_v1(
             db, request.app.state.jobsV1
         )
-        request.app.state.jobs = new_jobs_list
+        request.app.state.jobsV1 = new_jobs_list
 
     output = await _get_dataset_check_owner(
         project_id=project_id,
