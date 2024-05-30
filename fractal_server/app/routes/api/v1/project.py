@@ -86,13 +86,18 @@ async def create_project(
     db.add(db_project)
     await db.commit()
     await db.refresh(db_project)
-    await db.close()
 
     link_user_project = LinkUserProject(
         project_id=db_project.id, user_id=user.id
     )
     db.add(link_user_project)
-    await db.commit()
+    try:
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        await db.delete(db_project)
+        await db.commit()
+
     await db.close()
 
     return db_project
