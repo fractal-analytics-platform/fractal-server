@@ -413,7 +413,10 @@ async def query_tasks(
 
     task_info_list = []
 
-    async def get_project_user_list(project: ProjectV2, db):
+    async def get_project_user_list(project: ProjectV2, db) -> list[User]:
+        """
+        Return the list of UserOAuth related to the given ProjectV2.
+        """
         stm = (
             select(User)
             .join(LinkUserProjectV2)
