@@ -5,7 +5,7 @@ from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.routes.api.v2._aux_functions import (
-    check_jobs_list_worker,
+    clean_app_job_list_v2,
 )
 
 os.environ["FRACTAL_API_MAX_JOB_LIST_LENGTH"] = "1"
@@ -52,6 +52,6 @@ async def test_check_jobs_list_worker(
         )
         assert res.status_code == 202
 
-        jobs_list = await check_jobs_list_worker(db, app.state.jobsV2)
+        jobs_list = await clean_app_job_list_v2(db, app.state.jobsV2)
         # empty list because all jobs are failed
         assert jobs_list == []
