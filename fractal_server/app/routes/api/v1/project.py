@@ -42,7 +42,7 @@ from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_submitted_jobs_statement
 from ._aux_functions import _get_workflow_check_owner
-from ._aux_functions import check_jobs_list_worker
+from ._aux_functions import clean_app_job_list_v1
 
 router = APIRouter()
 logger = set_logger(__name__)
@@ -250,15 +250,14 @@ async def apply_workflow(
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[ApplyWorkflowReadV1]:
 
-    # when worker state.jobs hit N entries we make
-    # a cleanup of the list, removing the jobs with
-    # the status different from submitted
+    # Remove non-submitted V1 jobs from the app state when the list grows
+    # beyond a threshold
     settings = Inject(get_settings)
     if (
         len(request.app.state.jobsV1)
         > settings.FRACTAL_API_MAX_JOB_LIST_LENGTH
     ):
-        new_jobs_list = await check_jobs_list_worker(
+        new_jobs_list = await clean_app_job_list_v1(
             db, request.app.state.jobsV1
         )
         request.app.state.jobs = new_jobs_list
