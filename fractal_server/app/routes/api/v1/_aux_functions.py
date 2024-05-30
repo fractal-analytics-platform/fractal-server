@@ -438,9 +438,19 @@ async def _workflow_insert_task(
     return wf_task
 
 
-async def check_jobs_list_worker(
-    db: AsyncSession, jobs_list: list
+async def clean_app_job_list_v1(
+    db: AsyncSession, jobs_list: list[int]
 ) -> list[int]:
+    """
+    Remove from a job list all jobs with status different from submitted.
+
+    Args:
+        db: Async database session
+        jobs_list: List of job IDs currently associated to the app.
+
+    Return:
+        List of IDs for submitted jobs.
+    """
     stmt = select(ApplyWorkflow).where(ApplyWorkflow.id.in_(jobs_list))
     result = await db.execute(stmt)
     db_jobs_list = result.scalars().all()
