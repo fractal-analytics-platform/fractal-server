@@ -88,6 +88,7 @@ def get_patched_settings(temp_path: Path):
     settings.FRACTAL_RUNNER_WORKING_BASE_DIR.mkdir(parents=True, exist_ok=True)
     settings.FRACTAL_RUNNER_WORKING_BASE_DIR.chmod(0o755)
     settings.FRACTAL_API_SUBMIT_RATE_LIMIT = 0
+    settings.FRACTAL_API_MAX_JOB_LIST_LENGTH = 1
 
     # NOTE:
     # This variable is set to work with the system interpreter within a docker
@@ -195,6 +196,8 @@ async def db_sync(db_create_tables):
 @pytest.fixture
 async def app(override_settings) -> AsyncGenerator[FastAPI, Any]:
     app = FastAPI()
+    app.state.jobsV1 = []
+    app.state.jobsV2 = []
     yield app
 
 
