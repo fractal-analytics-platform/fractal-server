@@ -17,13 +17,9 @@ async def test_clean_app_job_list_v2(
     db,
     app,
     override_settings_factory,
-    tmp_path,
 ):
-    override_settings_factory(
-        FRACTAL_API_SUBMIT_RATE_LIMIT=1,
-        FRACTAL_RUNNER_WORKING_BASE_DIR=tmp_path / "artifacts",
-        FRACTAL_API_MAX_JOB_LIST_LENGTH=0,
-    )
+    override_settings_factory(FRACTAL_API_MAX_JOB_LIST_LENGTH=0)
+
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
 
         task = await task_factory_v2(source="source")
