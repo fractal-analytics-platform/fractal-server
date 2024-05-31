@@ -1014,7 +1014,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                 "tar --verbose "
                 f"--directory {self.workflow_dir_remote.as_posix()} "
                 "--create "
-                f"--file {Path(tarfile_path_remote).name} "
+                f"--file {tarfile_path_remote} "
                 f"{subfolder_name}"
             )
             _run_command_over_ssh(cmd=tar_command, connection=conn)
@@ -1033,6 +1033,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             f"--file {tarfile_path_local} "
             f"--directory {self.workflow_dir_local.as_posix()}"
         )
+
         # FIXME: replace subprocess with tarfile library
         import subprocess
 
