@@ -17,8 +17,8 @@ from pathlib import Path
 from typing import Optional
 from typing import Union
 
-from ..config import get_settings
-from ..syringe import Inject
+from .config import get_settings
+from .syringe import Inject
 
 
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

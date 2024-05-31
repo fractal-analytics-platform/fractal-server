@@ -13,21 +13,23 @@ from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.urls import normalize_url
 
 
-def execute_tasks_v2(wf_task_list, workflow_dir, **kwargs):
+def execute_tasks_v2(wf_task_list, workflow_dir_local, **kwargs):
     from fractal_server.app.runner.task_files import task_subfolder_name
     from fractal_server.app.runner.v2.runner import (
         execute_tasks_v2 as raw_execute_tasks_v2,
     )
 
     for wftask in wf_task_list:
-        subfolder = workflow_dir / task_subfolder_name(
+        subfolder = workflow_dir_local / task_subfolder_name(
             order=wftask.order, task_name=wftask.task.name
         )
         logging.info(f"Now creating {subfolder.as_posix()}")
         subfolder.mkdir(parents=True)
 
     out = raw_execute_tasks_v2(
-        wf_task_list=wf_task_list, workflow_dir=workflow_dir, **kwargs
+        wf_task_list=wf_task_list,
+        workflow_dir_local=workflow_dir_local,
+        **kwargs,
     )
     return out
 
@@ -38,8 +40,8 @@ def test_dummy_insert_single_image(
     # Preliminary setup
     execute_tasks_v2_args = dict(
         executor=executor,
-        workflow_dir=tmp_path / "job_dir",
-        workflow_dir_user=tmp_path / "job_dir",
+        workflow_dir_local=tmp_path / "job_dir",
+        workflow_dir_remote=tmp_path / "job_dir",
     )
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
 
@@ -101,8 +103,8 @@ def test_dummy_insert_single_image(
     # Fail because types filters are set twice
     execute_tasks_v2_args = dict(
         executor=executor,
-        workflow_dir=tmp_path / "job_dir_2",
-        workflow_dir_user=tmp_path / "job_dir_2",
+        workflow_dir_local=tmp_path / "job_dir_2",
+        workflow_dir_remote=tmp_path / "job_dir_2",
     )
     PATCHED_TASK = deepcopy(
         fractal_tasks_mock_venv["dummy_insert_single_image"]
@@ -130,8 +132,8 @@ def test_dummy_insert_single_image(
     # Fail because new image is not relative to zarr_dir
     execute_tasks_v2_args = dict(
         executor=executor,
-        workflow_dir=tmp_path / "job_dir_3",
-        workflow_dir_user=tmp_path / "job_dir_3",
+        workflow_dir_local=tmp_path / "job_dir_3",
+        workflow_dir_remote=tmp_path / "job_dir_3",
     )
     with pytest.raises(JobExecutionError) as e:
         execute_tasks_v2(
@@ -174,8 +176,8 @@ def test_dummy_remove_images(
     # Preliminary setup
     execute_tasks_v2_args = dict(
         executor=executor,
-        workflow_dir=tmp_path / "job_dir",
-        workflow_dir_user=tmp_path / "job_dir",
+        workflow_dir_local=tmp_path / "job_dir",
+        workflow_dir_remote=tmp_path / "job_dir",
     )
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
 
@@ -233,8 +235,8 @@ def test_dummy_unset_attribute(
     # Preliminary setup
     execute_tasks_v2_args = dict(
         executor=executor,
-        workflow_dir=tmp_path / "job_dir",
-        workflow_dir_user=tmp_path / "job_dir",
+        workflow_dir_local=tmp_path / "job_dir",
+        workflow_dir_remote=tmp_path / "job_dir",
     )
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
 
@@ -292,8 +294,8 @@ def test_dummy_insert_single_image_none_attribute(
     # Preliminary setup
     execute_tasks_v2_args = dict(
         executor=executor,
-        workflow_dir=tmp_path / "job_dir",
-        workflow_dir_user=tmp_path / "job_dir",
+        workflow_dir_local=tmp_path / "job_dir",
+        workflow_dir_remote=tmp_path / "job_dir",
     )
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
 
@@ -322,8 +324,8 @@ def test_dummy_insert_single_image_normalization(
     # Preliminary setup
     execute_tasks_v2_args = dict(
         executor=executor,
-        workflow_dir=tmp_path / "job_dir",
-        workflow_dir_user=tmp_path / "job_dir",
+        workflow_dir_local=tmp_path / "job_dir",
+        workflow_dir_remote=tmp_path / "job_dir",
     )
     zarr_dir = (tmp_path / "zarr_dir").as_posix().rstrip("/")
 
@@ -376,8 +378,8 @@ def test_default_inclusion_of_images(
         ],
         dataset=dataset_pre,
         executor=executor,
-        workflow_dir=tmp_path / "job_dir",
-        workflow_dir_user=tmp_path / "job_dir",
+        workflow_dir_local=tmp_path / "job_dir",
+        workflow_dir_remote=tmp_path / "job_dir",
     )
     image = dataset_attrs["images"][0]
     debug(dataset_attrs)

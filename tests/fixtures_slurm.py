@@ -192,21 +192,21 @@ def slurm_working_folders(
     user = SLURM_USER
 
     # Define working folders
-    server_working_dir = root_path / "server"
-    user_working_dir = root_path / "user"
+    working_dir_local = root_path / "server"
+    working_dir_remote = root_path / "user"
 
     # Create server working folder
     umask = os.umask(0)
-    server_working_dir.mkdir(parents=True, mode=0o755)
+    working_dir_local.mkdir(parents=True, mode=0o755)
     os.umask(umask)
 
     # Create user working folder
-    _mkdir_as_user(folder=str(user_working_dir), user=user)
+    _mkdir_as_user(folder=str(working_dir_remote), user=user)
 
-    yield (server_working_dir, user_working_dir)
+    yield (working_dir_local, working_dir_remote)
 
     logging.warning("[slurm_working_folders] Start cleanup")
     _run_command_as_user(
-        cmd=f"chmod 777 {str(user_working_dir)}", user=user, check=True
+        cmd=f"chmod 777 {str(working_dir_remote)}", user=user, check=True
     )
     logging.warning("[slurm_working_folders] End cleanup")

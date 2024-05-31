@@ -112,8 +112,8 @@ def test_get_slurm_config(tmp_path, fail):
     try:
         slurm_config = get_slurm_config(
             wftask=mywftask,
-            workflow_dir=(tmp_path / "server"),
-            workflow_dir_user=(tmp_path / "user"),
+            workflow_dir_local=(tmp_path / "server"),
+            workflow_dir_remote=(tmp_path / "user"),
             config_path=config_path,
         )
         debug(slurm_config)
@@ -311,8 +311,8 @@ def test_get_slurm_config_wftask_meta_none(tmp_path):
     # Call get_slurm_config
     slurm_config = get_slurm_config(
         wftask=mywftask,
-        workflow_dir=(tmp_path / "server"),
-        workflow_dir_user=(tmp_path / "user"),
+        workflow_dir_local=(tmp_path / "server"),
+        workflow_dir_remote=(tmp_path / "user"),
         config_path=config_path,
     )
     debug(slurm_config)
@@ -351,8 +351,8 @@ def test_slurm_submit_setup(
     )
     slurm_config = _slurm_submit_setup(
         wftask=wftask,
-        workflow_dir=tmp_path,
-        workflow_dir_user=tmp_path,
+        workflow_dir_local=tmp_path,
+        workflow_dir_remote=tmp_path,
     )
     debug(slurm_config)
     assert slurm_config["slurm_config"].account is None
@@ -365,8 +365,8 @@ def test_slurm_submit_setup(
     with pytest.raises(SlurmConfigError) as e:
         _slurm_submit_setup(
             wftask=wftask,
-            workflow_dir=tmp_path,
-            workflow_dir_user=tmp_path,
+            workflow_dir_local=tmp_path,
+            workflow_dir_remote=tmp_path,
         )
     debug(e.value)
     assert "SLURM account" in str(e.value)
