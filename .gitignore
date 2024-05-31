@@ -24,7 +24,7 @@ fractal.log
 logs
 site/
 
-tests/data/slurm_docker_images/node/fractal_server_local.tar.gz
+tests/data/slurm_docker_images/*/fractal_server_local.tar.gz
 
 venv
 tmp_*

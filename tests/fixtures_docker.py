@@ -60,29 +60,33 @@ def _write_requirements_file(path: Path):
 
 @pytest.fixture(scope="session")
 def docker_compose_file(pytestconfig, testdata_path: Path):
-    requirements_file_path = (
-        testdata_path / "slurm_docker_images/node/tmp_requirements.txt"
-    )
-    _write_requirements_file(requirements_file_path)
 
     import fractal_server
     import tarfile
 
-    # This same path is hardocded in the Dockerfile of the SLURM node.
-    CODE_ROOT = Path(fractal_server.__file__).parent.parent
-    TAR_FILE = (
-        testdata_path / "slurm_docker_images/node/fractal_server_local.tar.gz"
-    )
-    TAR_ROOT = CODE_ROOT.name
-    with tarfile.open(TAR_FILE, "w:gz") as tar:
-        tar.add(CODE_ROOT, arcname=TAR_ROOT, recursive=False)
-        for name in [
-            "pyproject.toml",
-            "README.md",
-            "fractal_server",
-        ]:
-            f = CODE_ROOT / name
-            tar.add(f, arcname=f.relative_to(CODE_ROOT.parent))
+    for container in ["head", "node"]:
+        requirements_file_path = (
+            testdata_path
+            / f"slurm_docker_images/{container}/tmp_requirements.txt"
+        )
+        _write_requirements_file(requirements_file_path)
+
+        # This same path is hardocded in the Dockerfile of the SLURM node.
+        CODE_ROOT = Path(fractal_server.__file__).parent.parent
+        TAR_FILE = (
+            testdata_path
+            / f"slurm_docker_images/{container}/fractal_server_local.tar.gz"
+        )
+        TAR_ROOT = CODE_ROOT.name
+        with tarfile.open(TAR_FILE, "w:gz") as tar:
+            tar.add(CODE_ROOT, arcname=TAR_ROOT, recursive=False)
+            for name in [
+                "pyproject.toml",
+                "README.md",
+                "fractal_server",
+            ]:
+                f = CODE_ROOT / name
+                tar.add(f, arcname=f.relative_to(CODE_ROOT.parent))
 
     if sys.platform == "darwin":
         # in macOS '/tmp' is a symlink to '/private/tmp'
