@@ -810,32 +810,6 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
             self._copy_files_from_remote_to_local(job)
 
-            # Update the paths to use the files in self.workflow_dir_local
-            # (rather than the user's ones in self.workflow_dir_remote)
-            with self.jobs_lock:
-                self.map_jobid_to_slurm_files_remote[jobid]
-                (
-                    slurm_script_file,
-                    slurm_stdout_file,
-                    slurm_stderr_file,
-                ) = self.map_jobid_to_slurm_files_remote[jobid]
-            new_slurm_stdout_file = str(
-                self.workflow_dir_local
-                / job.wftask_subfolder_name
-                / Path(slurm_stdout_file).name
-            )
-            new_slurm_stderr_file = str(
-                self.workflow_dir_local
-                / job.wftask_subfolder_name
-                / Path(slurm_stderr_file).name
-            )
-            with self.jobs_lock:
-                self.map_jobid_to_slurm_files_remote[jobid] = (
-                    slurm_script_file,
-                    new_slurm_stdout_file,
-                    new_slurm_stderr_file,
-                )
-
             in_paths = job.input_pickle_files_local
             out_paths = tuple(
                 (self.workflow_dir_local / job.wftask_subfolder_name / f.name)
@@ -872,9 +846,12 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                         f"{settings.FRACTAL_SLURM_ERROR_HANDLING_INTERVAL} "
                         "seconds.\n"
                     )
+                    time.sleep(100000)
+                    raise ValueError(info)
                     job_exc = self._prepare_JobExecutionError(jobid, info=info)
                     try:
                         fut.set_exception(job_exc)
+                        raise job_exc
                         return
                     except InvalidStateError:
                         logger.warning(
