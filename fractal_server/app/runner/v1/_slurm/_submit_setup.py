@@ -24,8 +24,8 @@ from fractal_server.app.models.v1 import WorkflowTask
 def _slurm_submit_setup(
     *,
     wftask: WorkflowTask,
-    workflow_dir: Path,
-    workflow_dir_user: Path,
+    workflow_dir_local: Path,
+    workflow_dir_remote: Path,
 ) -> dict[str, object]:
     """
     Collect WorfklowTask-specific configuration parameters from different
@@ -43,13 +43,13 @@ def _slurm_submit_setup(
     Arguments:
         wftask:
             WorkflowTask for which the configuration is to be assembled
-        workflow_dir:
+        workflow_dir_local:
             Server-owned directory to store all task-execution-related relevant
             files (inputs, outputs, errors, and all meta files related to the
             job execution). Note: users cannot write directly to this folder.
-        workflow_dir_user:
-            User-side directory with the same scope as `workflow_dir`, and
-            where a user can write.
+        workflow_dir_remote:
+            User-side directory with the same scope as `workflow_dir_local`,
+            and where a user can write.
 
     Returns:
         submit_setup_dict:
@@ -61,14 +61,14 @@ def _slurm_submit_setup(
     # Get SlurmConfig object
     slurm_config = get_slurm_config(
         wftask=wftask,
-        workflow_dir=workflow_dir,
-        workflow_dir_user=workflow_dir_user,
+        workflow_dir_local=workflow_dir_local,
+        workflow_dir_remote=workflow_dir_remote,
     )
 
     # Get TaskFiles object
     task_files = get_task_file_paths(
-        workflow_dir=workflow_dir,
-        workflow_dir_user=workflow_dir_user,
+        workflow_dir_local=workflow_dir_local,
+        workflow_dir_remote=workflow_dir_remote,
         task_order=wftask.order,
         task_name=wftask.task.name,
     )

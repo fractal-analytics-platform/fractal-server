@@ -141,25 +141,29 @@ async def submit_workflow(
         # Define and create server-side working folder
         project_id = workflow.project_id
         timestamp_string = get_timestamp().strftime("%Y%m%d_%H%M%S")
-        WORKFLOW_DIR = settings.FRACTAL_RUNNER_WORKING_BASE_DIR / (
+        WORKFLOW_DIR_LOCAL = settings.FRACTAL_RUNNER_WORKING_BASE_DIR / (
             f"proj_{project_id:07d}_wf_{workflow_id:07d}_job_{job_id:07d}"
             f"_{timestamp_string}"
         )
 
-        if WORKFLOW_DIR.exists():
-            raise RuntimeError(f"Workflow dir {WORKFLOW_DIR} already exists.")
+        if WORKFLOW_DIR_LOCAL.exists():
+            raise RuntimeError(
+                f"Workflow dir {WORKFLOW_DIR_LOCAL} already exists."
+            )
 
         # Create WORKFLOW_DIR
         original_umask = os.umask(0)
-        WORKFLOW_DIR.mkdir(parents=True, mode=0o755)
+        WORKFLOW_DIR_LOCAL.mkdir(parents=True, mode=0o755)
         os.umask(original_umask)
 
-        # Define and create WORKFLOW_DIR_USER
+        # Define and create WORKFLOW_DIR_REMOTE
         if FRACTAL_RUNNER_BACKEND == "local":
-            WORKFLOW_DIR_USER = WORKFLOW_DIR
+            WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
         elif FRACTAL_RUNNER_BACKEND == "slurm":
-            WORKFLOW_DIR_USER = Path(user_cache_dir) / WORKFLOW_DIR.name
-            _mkdir_as_user(folder=str(WORKFLOW_DIR_USER), user=slurm_user)
+            WORKFLOW_DIR_REMOTE = (
+                Path(user_cache_dir) / WORKFLOW_DIR_LOCAL.name
+            )
+            _mkdir_as_user(folder=str(WORKFLOW_DIR_REMOTE), user=slurm_user)
 
         # Create all tasks subfolders
         for order in range(job.first_task_index, job.last_task_index + 1):
@@ -168,17 +172,17 @@ async def submit_workflow(
                 task_name=workflow.task_list[order].task.name,
             )
             original_umask = os.umask(0)
-            (WORKFLOW_DIR / subfolder_name).mkdir(mode=0o755)
+            (WORKFLOW_DIR_LOCAL / subfolder_name).mkdir(mode=0o755)
             os.umask(original_umask)
             if FRACTAL_RUNNER_BACKEND == "slurm":
                 _mkdir_as_user(
-                    folder=str(WORKFLOW_DIR_USER / subfolder_name),
+                    folder=str(WORKFLOW_DIR_REMOTE / subfolder_name),
                     user=slurm_user,
                 )
 
         # Update db
-        job.working_dir = WORKFLOW_DIR.as_posix()
-        job.working_dir_user = WORKFLOW_DIR_USER.as_posix()
+        job.working_dir = WORKFLOW_DIR_LOCAL.as_posix()
+        job.working_dir_user = WORKFLOW_DIR_REMOTE.as_posix()
         db_sync.merge(job)
         db_sync.commit()
 
@@ -199,7 +203,7 @@ async def submit_workflow(
 
         # Write logs
         logger_name = f"WF{workflow_id}_job{job_id}"
-        log_file_path = WORKFLOW_DIR / WORKFLOW_LOG_FILENAME
+        log_file_path = WORKFLOW_DIR_LOCAL / WORKFLOW_LOG_FILENAME
         logger = set_logger(
             logger_name=logger_name,
             log_file_path=log_file_path,
@@ -246,8 +250,8 @@ async def submit_workflow(
             slurm_user=slurm_user,
             slurm_account=job.slurm_account,
             user_cache_dir=user_cache_dir,
-            workflow_dir=WORKFLOW_DIR,
-            workflow_dir_user=WORKFLOW_DIR_USER,
+            workflow_dir_local=WORKFLOW_DIR_LOCAL,
+            workflow_dir_remote=WORKFLOW_DIR_REMOTE,
             logger_name=logger_name,
             worker_init=worker_init,
             first_task_index=job.first_task_index,

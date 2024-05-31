@@ -22,8 +22,8 @@ from ._local_config import get_local_backend_config
 def _local_submit_setup(
     *,
     wftask: WorkflowTaskV2,
-    workflow_dir: Optional[Path] = None,
-    workflow_dir_user: Optional[Path] = None,
+    workflow_dir_local: Optional[Path] = None,
+    workflow_dir_remote: Optional[Path] = None,
     which_type: Literal["non_parallel", "parallel"],
 ) -> dict[str, object]:
     """
@@ -33,9 +33,9 @@ def _local_submit_setup(
     Arguments:
         wftask:
             WorkflowTask for which the configuration is to be assembled
-        workflow_dir:
+        workflow_dir_local:
             Not used in this function.
-        workflow_dir_user:
+        workflow_dir_remote:
             Not used in this function.
 
     Returns:

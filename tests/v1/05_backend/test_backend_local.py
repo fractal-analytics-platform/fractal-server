@@ -81,10 +81,10 @@ def test_call_single_task(tmp_path):
 
     debug(wftask)
 
-    _create_task_subfolder(wftask=wftask, workflow_dir=tmp_path)
+    _create_task_subfolder(wftask=wftask, workflow_dir_local=tmp_path)
 
     out = call_single_task(
-        wftask=wftask, task_pars=task_pars, workflow_dir=tmp_path
+        wftask=wftask, task_pars=task_pars, workflow_dir_local=tmp_path
     )
     close_job_logger(job_logger)
     debug(out)
@@ -121,14 +121,14 @@ def test_execute_single_task(tmp_path):
         history=[],
     )
 
-    _create_task_subfolder(wftask=task_list[0], workflow_dir=tmp_path)
+    _create_task_subfolder(wftask=task_list[0], workflow_dir_local=tmp_path)
 
     with FractalThreadPoolExecutor() as executor:
         res = execute_tasks(
             executor=executor,
             task_list=task_list,
             task_pars=task_pars,
-            workflow_dir=tmp_path,
+            workflow_dir_local=tmp_path,
             logger_name=logger_name,
         )
         debug(res)
@@ -172,14 +172,14 @@ def test_execute_single_parallel_task(tmp_path):
     debug(task_list)
     debug(task_pars)
 
-    _create_task_subfolder(wftask=task_list[0], workflow_dir=tmp_path)
+    _create_task_subfolder(wftask=task_list[0], workflow_dir_local=tmp_path)
 
     with FractalThreadPoolExecutor() as executor:
         res = execute_tasks(
             executor=executor,
             task_list=task_list,
             task_pars=task_pars,
-            workflow_dir=tmp_path,
+            workflow_dir_local=tmp_path,
             logger_name=logger_name,
         )
         debug(res)
@@ -242,7 +242,7 @@ def test_execute_multiple_tasks(tmp_path):
     )
 
     for wftask in task_list:
-        _create_task_subfolder(wftask=wftask, workflow_dir=tmp_path)
+        _create_task_subfolder(wftask=wftask, workflow_dir_local=tmp_path)
 
     # Construct pre-existing history. Note that the `.model_dump()` methods are
     # needed since history items are typed as `dict[str, Any]`, and also used
@@ -276,7 +276,7 @@ def test_execute_multiple_tasks(tmp_path):
             executor=executor,
             task_list=task_list,
             task_pars=task_pars,
-            workflow_dir=tmp_path,
+            workflow_dir_local=tmp_path,
             logger_name=logger_name,
         )
     close_job_logger(job_logger)
@@ -342,7 +342,7 @@ def test_call_parallel_task_max_tasks(
     debug(task_pars)
 
     subfolder_path = _create_task_subfolder(
-        wftask=wftask, workflow_dir=tmp_path
+        wftask=wftask, workflow_dir_local=tmp_path
     )
 
     # Execute task
@@ -351,7 +351,7 @@ def test_call_parallel_task_max_tasks(
             executor=executor,
             wftask=wftask,
             task_pars_depend=task_pars,
-            workflow_dir=tmp_path,
+            workflow_dir_local=tmp_path,
             submit_setup_call=mock_submit_setup_call,
         )
     debug(tmp_path)
@@ -423,7 +423,7 @@ def test_execute_tasks_with_wrong_submit_setup_call(parallel_task, tmp_path):
         history=[],
     )
 
-    _create_task_subfolder(wftask=task_list[0], workflow_dir=tmp_path)
+    _create_task_subfolder(wftask=task_list[0], workflow_dir_local=tmp_path)
 
     def _wrong_submit_setup_call(*args, **kwargs):
         """
@@ -437,7 +437,7 @@ def test_execute_tasks_with_wrong_submit_setup_call(parallel_task, tmp_path):
                 executor=executor,
                 task_list=task_list,
                 task_pars=task_pars,
-                workflow_dir=tmp_path,
+                workflow_dir_local=tmp_path,
                 submit_setup_call=_wrong_submit_setup_call,
                 logger_name="logger",
             )
