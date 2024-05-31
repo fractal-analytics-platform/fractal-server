@@ -11,8 +11,6 @@
 # Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
 # University of Zurich
 import math
-import shlex
-import subprocess  # nosec
 import sys
 import tarfile
 import time
@@ -20,7 +18,6 @@ from concurrent.futures import Future
 from concurrent.futures import InvalidStateError
 from copy import copy
 from pathlib import Path
-from subprocess import CompletedProcess  # nosec
 from typing import Any
 from typing import Callable
 from typing import Optional
@@ -1016,12 +1013,32 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             tar_command = (
                 "tar --verbose "
                 f"--directory {self.workflow_dir_remote.as_posix()} "
-                f"-zf {Path(tarfile_path_remote).name} "
+                "--create "
+                f"--file {Path(tarfile_path_remote).name} "
                 f"{subfolder_name}"
             )
             _run_command_over_ssh(cmd=tar_command, connection=conn)
 
-        raise ValueError("XXXXXXXXXXX")
+            res = conn.get(
+                remote=tarfile_path_remote,
+                local=tarfile_path_local,
+            )
+            logger.info(
+                f"Subfolder archive transferred back to {tarfile_path_local}"
+            )
+            logger.info(f"{res=}")
+
+        tar_command = (
+            "tar --verbose --extract "
+            f"--file {tarfile_path_local} "
+            f"--directory {self.workflow_dir_local.as_posix()}"
+        )
+        # FIXME: replace subprocess with tarfile library
+        import subprocess
+
+        res = subprocess.run(
+            tar_command, capture_output=True, encoding="utf-8", check=True
+        )
 
         logger.debug("[_copy_files_from_remote_to_local] End")
 
@@ -1251,25 +1268,16 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         if slurm_jobs_to_scancel:
             scancel_string = " ".join(slurm_jobs_to_scancel)
             logger.warning(f"Now scancel-ing SLURM jobs {scancel_string}")
-            pre_command = f"sudo --non-interactive -u {self.slurm_user}"
-            submit_command = f"scancel {scancel_string}"
-            full_command = f"{pre_command} {submit_command}"
-            logger.debug(f"Now execute `{full_command}`")
-            try:
-                subprocess.run(  # nosec
-                    shlex.split(full_command),
-                    capture_output=True,
-                    check=True,
-                    encoding="utf-8",
+            scancel_command = f"scancel {scancel_string}"
+            with Connection(
+                host=self.ssh_host,
+                user=self.ssh_user,
+                connect_kwargs={"password": self.ssh_password},
+            ) as conn:
+                _run_command_over_ssh(
+                    cmd=scancel_command,
+                    connection=conn,
                 )
-            except subprocess.CalledProcessError as e:
-                error_msg = (
-                    f"Cancel command `{full_command}` failed. "
-                    f"Original error:\n{str(e)}"
-                )
-                logger.error(error_msg)
-                raise JobExecutionError(info=error_msg)
-
         logger.debug("Executor shutdown: end")
 
     def __exit__(self, *args, **kwargs):
