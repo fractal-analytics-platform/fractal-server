@@ -1047,10 +1047,11 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         )
 
         # FIXME: replace subprocess with tarfile library
-        import subprocess
+        import subprocess, shlex
 
         res = subprocess.run(
-            tar_command, capture_output=True, encoding="utf-8", check=True
+            shlex.split(tar_command),
+            capture_output=True, encoding="utf-8", check=True
         )
 
         logger.debug("[_copy_files_from_remote_to_local] End")
