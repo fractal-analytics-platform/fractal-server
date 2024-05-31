@@ -7,23 +7,23 @@
 > - `--logger-class fractal_server.gunicorn_fractal.FractalGunicornLogger`
 
 
-* App:
-    * Move `FractalGunicornLogger` and `FractalWorker` in `fractal_server/gunicorn_fractal.py` (\#1535).
 * API:
-    * Remove catch of `IntegrityError` in `POST /api/v1/project` (\#1530).
     * Add extensive logs to `DELETE /api/v2/project/{project_id}` (\#1532).
+    * Remove catch of `IntegrityError` in `POST /api/v1/project` (\#1530).
 * Runner:
     * Change structure of job folders, introducing per-task subfolders (\#1523).
     * Rename internal `workflow_dir` and `workflow_dir_user` variables to local/remote (\#1534).
-* Deployment
+* App and deployment:
     * Add custom gunicorn/uvicorn worker to handle SIGABRT signal (\#1526).
+    * Move `FractalGunicornLogger` and `FractalWorker` in `fractal_server/gunicorn_fractal.py` (\#1535).
+    * Store list of submitted jobs in app state (\#1538).
 * Dependencies
     * Add `fabric` to `dev` dependencies (\#1518).
 * Testing:
-    * Install and run SSH daemon in CI containers (\#1518).
-    * Add unit test of SSH connection via fabric/paramiko (\#1518).
     * Extract `pytest-docker` fixtures into a dedicated module (\#1516).
     * Rename SLURM containers in CI (\#1516).
+    * Install and run SSH daemon in CI containers (\#1518).
+    * Add unit test of SSH connection via fabric/paramiko (\#1518).
     * Remove obsolete folders from `tests/data` (\#1517).
 
 # 2.1.0
