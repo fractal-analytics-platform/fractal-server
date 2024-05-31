@@ -9,6 +9,7 @@
 
 * App:
     * Move `FractalGunicornLogger` and `FractalWorker` in `fractal_server/gunicorn_fractal.py` (\#1535).
+    * Store list of submitted jobs in app state (\#1538).
 * API:
     * Remove catch of `IntegrityError` in `POST /api/v1/project` (\#1530).
     * Add extensive logs to `DELETE /api/v2/project/{project_id}` (\#1532).
