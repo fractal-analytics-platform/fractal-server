@@ -999,6 +999,8 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         # Remove local tarfile
         Path(tarfile_path_local).unlink()
+        logger.warning(f"In principle I just removed {tarfile_path_local}")
+        logger.warning(f"{Path(tarfile_path_local).exists()=}")
 
         with Connection(
             host=self.ssh_host,
@@ -1010,6 +1012,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             rm_command = f"rm {tarfile_path_remote}"
             _run_command_over_ssh(cmd=rm_command, connection=conn)
 
+            # Create remote tarfile
             tar_command = (
                 "tar --verbose "
                 f"--directory {self.workflow_dir_remote.as_posix()} "
@@ -1019,6 +1022,11 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             )
             _run_command_over_ssh(cmd=tar_command, connection=conn)
 
+            # DEBUG
+            ls_command = f"ls {self.workflow_dir_remote.as_posix()}"
+            _run_command_over_ssh(cmd=ls_command, connection=conn)
+
+            # Fetch tarfile
             res = conn.get(
                 remote=tarfile_path_remote,
                 local=tarfile_path_local,
@@ -1028,6 +1036,10 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             )
             logger.info(f"{res=}")
 
+            globs = self.workflow_dir_local.glob("*")
+            logger.warning(f"{globs=}")
+
+        # Extract tarfile locally
         tar_command = (
             "tar --verbose --extract "
             f"--file {tarfile_path_local} "
