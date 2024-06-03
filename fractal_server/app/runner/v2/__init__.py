@@ -82,7 +82,7 @@ async def submit_workflow(
     FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
     if FRACTAL_RUNNER_BACKEND == "local":
         process_workflow = local_run_workflow
-    if FRACTAL_RUNNER_BACKEND == "local_processes":
+    elif FRACTAL_RUNNER_BACKEND == "local_processes":
         process_workflow = local_processes_run_workflow
     elif FRACTAL_RUNNER_BACKEND == "slurm":
         process_workflow = slurm_run_workflow
