@@ -30,6 +30,9 @@ venv
 tmp_*
 .*.swp
 
+ssh_config
+*ssh*key*
+
 
 *.db-shm
 *.db-wal
