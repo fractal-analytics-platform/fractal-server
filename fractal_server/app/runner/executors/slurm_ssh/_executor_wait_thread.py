@@ -12,7 +12,7 @@ from .....logger import set_logger
 logger = set_logger(__name__)
 
 
-class FractalFileWaitThread(FileWaitThread):
+class FractalSlurmWaitThread(FileWaitThread):
     """
     Overrides the original clusterfutures.FileWaitThread, so that:
 
@@ -22,8 +22,7 @@ class FractalFileWaitThread(FileWaitThread):
        would require `sudo -u user ls` calls), and we rather check for the
        existence of the shutdown file. All the logic to check whether a job is
        complete is deferred to the `cfut.slurm.jobs_finished` function.
-    3. There are additional attributes (`slurm_user`, `shutdown_file` and
-       `shutdown_callback`).
+    3. There are additional attributes (...).
 
     This class is copied from clusterfutures 0.5. Original Copyright: 2022
     Adrian Sampson, released under the MIT licence
@@ -33,13 +32,10 @@ class FractalFileWaitThread(FileWaitThread):
     `FractalSlurmWaitThread`.
     """
 
-    slurm_user: str
     shutdown_file: Optional[str] = None
     shutdown_callback: Callable
     jobs_finished_callback: Callable
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    slurm_poll_interval = 30
 
     def wait(
         self,
@@ -59,9 +55,18 @@ class FractalFileWaitThread(FileWaitThread):
         with self.lock:
             self.waiting[filenames] = jobid
 
-    def check(self, i):
+    def check_shutdown(self):
+        if self.shutdown_file and os.path.exists(self.shutdown_file):
+            logger.info(
+                f"Detected executor-shutdown file {str(self.shutdown_file)}"
+            )
+            self.shutdown = True
+
+    def check_jobs(self, i):
         """
         Do one shutdown-file-existence check.
+
+        FIXME
 
         Note: the `i` parameter allows subclasses like `SlurmWaitThread` to do
         something on every Nth check.
@@ -71,11 +76,23 @@ class FractalFileWaitThread(FileWaitThread):
           `cfut.slurm.jobs_finished`);
         * Check for the existence of shutdown-file.
         """
-        if self.shutdown_file and os.path.exists(self.shutdown_file):
-            logger.info(
-                f"Detected executor-shutdown file {str(self.shutdown_file)}"
-            )
-            self.shutdown = True
+        if i % (self.slurm_poll_interval // self.interval) == 0:
+            try:
+                finished_jobs = self.jobs_finished_callback(
+                    list(self.waiting.values())
+                )
+            except Exception:
+                # Don't abandon completion checking if jobs_finished errors
+                traceback.print_exc()
+                return
+
+            if not finished_jobs:
+                return
+
+            id_to_filenames = {v: k for (k, v) in self.waiting.items()}
+            for finished_id in finished_jobs:
+                self.callback(finished_id)
+                self.waiting.pop(id_to_filenames[finished_id])
 
     def run(self):
         """
@@ -91,47 +108,13 @@ class FractalFileWaitThread(FileWaitThread):
         fully clean up the `FractalFileWaitThread` object.
         """
         for i in count():
+
+            self.check_shutdown()
             if self.shutdown:
                 self.shutdown_callback()
                 return
+
             with self.lock:
-                self.check(i)
+                self.check_jobs(i)
+
             time.sleep(self.interval)
-
-
-class FractalSlurmWaitThread(FractalFileWaitThread):
-    """
-    Replaces the original clusterfutures.SlurmWaitThread, to inherit from
-    FractalFileWaitThread instead of FileWaitThread.
-
-    The function is copied from clusterfutures 0.5. Original Copyright: 2022
-    Adrian Sampson, released under the MIT licence
-
-    **Note**: if `self.interval != 1` then this should be modified, but for
-    `clusterfutures` v0.5 `self.interval` is indeed equal to `1`.
-
-    Changed from clusterfutures:
-    * Rename `id_to_filename` to `id_to_filenames`
-    """
-
-    slurm_poll_interval = 30
-
-    def check(self, i):
-        super().check(i)
-        if i % (self.slurm_poll_interval // self.interval) == 0:
-            try:
-                finished_jobs = self.jobs_finished_callback(
-                    self.waiting.values()
-                )
-            except Exception:
-                # Don't abandon completion checking if jobs_finished errors
-                traceback.print_exc()
-                return
-
-            if not finished_jobs:
-                return
-
-            id_to_filenames = {v: k for (k, v) in self.waiting.items()}
-            for finished_id in finished_jobs:
-                self.callback(finished_id)
-                self.waiting.pop(id_to_filenames[finished_id])

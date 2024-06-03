@@ -1180,7 +1180,7 @@ class FractalSlurmExecutor(SlurmExecutor):
 
         # Prepare SLURM preamble based on SlurmConfig object
         script_lines = slurm_config.to_sbatch_preamble(
-            user_cache_dir=self.user_cache_dir
+            remote_export_dir=self.user_cache_dir
         )
 
         # Extend SLURM preamble with variable which are not in SlurmConfig, and

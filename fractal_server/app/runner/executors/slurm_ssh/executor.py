@@ -10,9 +10,11 @@
 #
 # Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
 # University of Zurich
+import contextlib
 import math
 import sys
 import tarfile
+import threading
 import time
 from concurrent.futures import Future
 from concurrent.futures import InvalidStateError
@@ -52,21 +54,25 @@ def _run_command_over_ssh(
     *,
     cmd: str,
     connection: Connection,
-):
-    logger.info(f"START running '{cmd}' over SSH.")
+) -> str:
+    t_0 = time.perf_counter()
+    logger.debug(f"START running '{cmd}' over SSH.")
     try:
-        res = connection.run(cmd)
+        res = connection.run(cmd, hide=True)
     except UnexpectedExit as e:
         error_msg = (
-            f"Running command `{cmd}` over SSH failed. "
-            f"Original error: {str(e)}"
+            f"Running command `{cmd}` over SSH failed.\n"
+            f"Original error:\n{str(e)}."
         )
         logger.error(error_msg)
+        # FIXME switch to JobExecutionError
+        raise ValueError(error_msg)
         raise JobExecutionError(info=error_msg)
 
-    logger.info(f"END   running '{cmd}' over SSH.")
-    logger.info(f"STDOUT: {res.stdout}")
-    logger.info(f"STDERR: {res.stderr}")
+    t_1 = time.perf_counter()
+    logger.info(f"END   running '{cmd}' over SSH, elapsed {t_1-t_0:.3f}")
+    logger.debug(f"STDOUT: {res.stdout}")
+    logger.debug(f"STDERR: {res.stderr}")
     return res.stdout
 
 
@@ -75,8 +81,6 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
     FractalSlurmSSHExecutor (inherits from cfut.SlurmExecutor)
 
     Attributes:
-        slurm_user:
-            Shell username that runs the `sbatch` command.
         common_script_lines:
             Arbitrary script lines that will always be included in the
             sbatch script
@@ -89,10 +93,8 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
     """
 
     wait_thread_cls = FractalSlurmWaitThread
-    slurm_user: str
     shutdown_file: str
     common_script_lines: list[str]
-    user_cache_dir: str
     workflow_dir_local: Path
     workflow_dir_remote: Path
     map_jobid_to_slurm_files_remote: dict[str, tuple[str, str, str]]
@@ -101,42 +103,63 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
     jobs: dict[str, tuple[Future, SlurmJob]]
     ssh_host: str
     ssh_user: str
-    ssh_password: str
+    ssh_private_key_path: str
 
     def __init__(
         self,
+        *,
         ssh_host: str,
-        slurm_user: str,
         workflow_dir_local: Path,
         workflow_dir_remote: Path,
+        ssh_private_key_path: str,
         shutdown_file: Optional[str] = None,
-        user_cache_dir: Optional[str] = None,
         common_script_lines: Optional[list[str]] = None,
         slurm_poll_interval: Optional[int] = None,
         keep_pickle_files: bool = False,
         slurm_account: Optional[str] = None,
-        ssh_user: str = "test01",
-        ssh_password: str = "test01",
-        *args,
-        **kwargs,
+        ssh_user: str = "test01",  # FIXME
     ):
         """
         Init method for FractalSlurmSSHExecutor
+
+        FIXME: This takes over both the cfut.SlurmExecutor and
+        cfut.ClusterExecutor init methods
         """
+
+        self.workflow_dir_local = workflow_dir_local
+        self.workflow_dir_remote = workflow_dir_remote
+
+        # Relevant bits of cfut.ClusterExecutor.__init__,
+        # postponing the .start() call
+        self.jobs = {}
+        self.job_outfiles = {}
+        self.jobs_lock = threading.Lock()
+        self.jobs_empty_cond = threading.Condition(self.jobs_lock)
+        self.wait_thread = self.wait_thread_cls(self._completion)
+
+        # Set up attributes and methods for self.wait_thread
+        # cfut.SlurmWaitThread)
+        self.wait_thread.shutdown_callback = self.shutdown
+        self.wait_thread.jobs_finished_callback = self._jobs_finished
+        if not slurm_poll_interval:
+            settings = Inject(get_settings)
+            slurm_poll_interval = settings.FRACTAL_SLURM_POLL_INTERVAL
+        self.wait_thread.slurm_poll_interval = slurm_poll_interval
+        self.wait_thread.shutdown_file = (
+            shutdown_file
+            or (self.workflow_dir_local / SHUTDOWN_FILENAME).as_posix()
+        )
+
+        # Now start self.wait_thread
+        self.wait_thread.start()
+
+        ## Continue
 
         self.ssh_host = ssh_host
         self.ssh_user = ssh_user
-        self.ssh_password = ssh_password
-
-        if not slurm_user:
-            raise RuntimeError(
-                "Missing attribute FractalSlurmSSHExecutor.slurm_user"
-            )
-
-        super().__init__(*args, **kwargs)
+        self.ssh_private_key_path = ssh_private_key_path
 
         self.keep_pickle_files = keep_pickle_files
-        self.slurm_user = slurm_user
         self.slurm_account = slurm_account
 
         self.common_script_lines = common_script_lines or []
@@ -157,26 +180,9 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         except StopIteration:
             pass
 
-        self.workflow_dir_local = workflow_dir_local
-        self.user_cache_dir = user_cache_dir
-
-        self.workflow_dir_remote = workflow_dir_remote
         self.map_jobid_to_slurm_files_remote = {}
 
-        # Set the attribute slurm_poll_interval for self.wait_thread (see
-        # cfut.SlurmWaitThread)
-        if not slurm_poll_interval:
-            settings = Inject(get_settings)
-            slurm_poll_interval = settings.FRACTAL_SLURM_POLL_INTERVAL
-        self.wait_thread.slurm_poll_interval = slurm_poll_interval
-        self.wait_thread.slurm_user = self.slurm_user
-
-        self.wait_thread.shutdown_file = (
-            shutdown_file
-            or (self.workflow_dir_local / SHUTDOWN_FILENAME).as_posix()
-        )
-        self.wait_thread.shutdown_callback = self.shutdown
-        self.wait_thread.jobs_finished_callback = self._jobs_finished
+        self.ssh_handshake()
 
     def _cleanup(self, jobid: str) -> None:
         """
@@ -846,7 +852,6 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                         f"{settings.FRACTAL_SLURM_ERROR_HANDLING_INTERVAL} "
                         "seconds.\n"
                     )
-                    time.sleep(100000)
                     raise ValueError(info)
                     job_exc = self._prepare_JobExecutionError(jobid, info=info)
                     try:
@@ -962,9 +967,8 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         Raises:
             JobExecutionError: If a `cat` command fails.
         """
+        t_0 = time.perf_counter()
         logger.debug("[_copy_files_from_remote_to_local] Start")
-
-        debug(vars(job))
 
         subfolder_name = job.wftask_subfolder_name
         tarfile_path_local = (
@@ -982,39 +986,50 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         with Connection(
             host=self.ssh_host,
             user=self.ssh_user,
-            connect_kwargs={"password": self.ssh_password},
+            connect_kwargs={"key_filename": self.ssh_private_key_path},
         ) as conn:
+
+            # Remove remote tarfile
+            _run_command_over_ssh(cmd="whoami", connection=conn)
 
             # Remove remote tarfile
             rm_command = f"rm {tarfile_path_remote}"
             _run_command_over_ssh(cmd=rm_command, connection=conn)
 
+            # FIXME
+            debug("NOW RM IS OVER, DORMI NU'POCO")
+            time.sleep(4)
+            debug("AGG'DORMIT'BENE?")
+
             # Create remote tarfile
+            # FIXME: debug
+            # tar_command = (
+            #     "tar --verbose "
+            #     f"--directory {self.workflow_dir_remote.as_posix()} "
+            #     "--create "
+            #     f"--file {tarfile_path_remote} "
+            #     f"{subfolder_name}"
+            # )
+            settings = Inject(get_settings)
+            python = settings.FRACTAL_SLURM_WORKER_PYTHON
             tar_command = (
-                "tar --verbose "
-                f"--directory {self.workflow_dir_remote.as_posix()} "
-                "--create "
-                f"--file {tarfile_path_remote} "
-                f"{subfolder_name}"
+                f"{python} "
+                "-m fractal_server.app.runner.compress_folder "
+                f"{(self.workflow_dir_remote / subfolder_name).as_posix()}"
             )
             _run_command_over_ssh(cmd=tar_command, connection=conn)
 
-            # DEBUG
-            ls_command = f"ls {self.workflow_dir_remote.as_posix()}"
-            _run_command_over_ssh(cmd=ls_command, connection=conn)
-
             # Fetch tarfile
+            t_0_get = time.perf_counter()
             res = conn.get(
                 remote=tarfile_path_remote,
                 local=tarfile_path_local,
             )
+            t_1_get = time.perf_counter()
             logger.info(
                 f"Subfolder archive transferred back to {tarfile_path_local}"
+                f" - elapsed: {t_1_get - t_0_get:.3f} s"
             )
-            logger.info(f"{res=}")
-
-            globs = self.workflow_dir_local.glob("*")
-            logger.warning(f"{globs=}")
 
         # Extract tarfile locally
         tar_command = (
@@ -1028,10 +1043,16 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         res = subprocess.run(
             shlex.split(tar_command),
-            capture_output=True, encoding="utf-8", check=True
+            capture_output=True,
+            encoding="utf-8",
+            check=True,
         )
 
-        logger.debug("[_copy_files_from_remote_to_local] End")
+        t_1 = time.perf_counter()
+        logger.info(
+            "[_copy_files_from_remote_to_local] End - "
+            f"elapsed: {t_1-t_0:.3f} s"
+        )
 
     def _start(
         self,
@@ -1043,9 +1064,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         # Prepare commands to be included in SLURM submission script
         settings = Inject(get_settings)
-        python_worker_interpreter = (
-            settings.FRACTAL_SLURM_WORKER_PYTHON or sys.executable
-        )
+        python = settings.FRACTAL_SLURM_WORKER_PYTHON
 
         cmdlines = []
         for ind_task in range(job.num_tasks_tot):
@@ -1053,7 +1072,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             output_pickle_file = job.output_pickle_files_remote[ind_task]
             cmdlines.append(
                 (
-                    f"{python_worker_interpreter}"
+                    f"{python}"
                     " -m fractal_server.app.runner.executors.slurm.remote "
                     f"--input-file {input_pickle_file} "
                     f"--output-file {output_pickle_file}"
@@ -1087,7 +1106,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         with Connection(
             host=self.ssh_host,
             user=self.ssh_user,
-            connect_kwargs={"password": self.ssh_password},
+            connect_kwargs={"password": self.ssh_private_key_path},
         ) as conn:
 
             # FIXME: There is a logical issue here, we are sending a tar for
@@ -1095,18 +1114,20 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             # the archive should only include some specific files).
 
             # Transfer archive
-            res = conn.put(
+            t_0_put = time.perf_counter()
+            conn.put(
                 local=tarfile_path_local,
                 remote=tarfile_path_remote,
             )
+            t_1_put = time.perf_counter()
             logger.info(
                 f"Subfolder archive transferred to {tarfile_path_remote}"
+                f" - elapsed: {t_1_put - t_0_put:.3f} s"
             )
-            logger.info(f"{res=}")
 
             # DEBUG: see that the archive is where it should
-            ls_command = f"ls {Path(tarfile_path_remote).parent.as_posix()}"
-            stdout = _run_command_over_ssh(cmd=ls_command, connection=conn)
+            # ls_command = f"ls {Path(tarfile_path_remote).parent.as_posix()}"
+            # stdout = _run_command_over_ssh(cmd=ls_command, connection=conn)
 
             # Uncompress archive
             tar_command = (
@@ -1116,12 +1137,12 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             )
             stdout = _run_command_over_ssh(cmd=tar_command, connection=conn)
 
-            # DEBUG: Check that the archive was uncompressed
-            remote_subfolder = (
-                self.workflow_dir_remote / subfolder_name
-            ).as_posix()
-            ls_command = f"ls {remote_subfolder}"
-            stdout = _run_command_over_ssh(cmd=ls_command, connection=conn)
+            # # DEBUG: Check that the archive was uncompressed
+            # remote_subfolder = (
+            #     self.workflow_dir_remote / subfolder_name
+            # ).as_posix()
+            # ls_command = f"ls {remote_subfolder}"
+            # stdout = _run_command_over_ssh(cmd=ls_command, connection=conn)
 
             # Run sbatch
             sbatch_command = f"sbatch --parsable {job.slurm_script_remote}"
@@ -1182,7 +1203,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         # Prepare SLURM preamble based on SlurmConfig object
         script_lines = slurm_config.to_sbatch_preamble(
-            user_cache_dir=self.user_cache_dir
+            remote_export_dir=self.workflow_dir_remote.as_posix()
         )
 
         # Extend SLURM preamble with variable which are not in SlurmConfig, and
@@ -1263,7 +1284,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             with Connection(
                 host=self.ssh_host,
                 user=self.ssh_user,
-                connect_kwargs={"password": self.ssh_password},
+                connect_kwargs={"password": self.ssh_private_key_path},
             ) as conn:
                 _run_command_over_ssh(
                     cmd=scancel_command,
@@ -1296,7 +1317,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         with Connection(
             host=self.ssh_host,
             user=self.ssh_user,
-            connect_kwargs={"password": self.ssh_password},
+            connect_kwargs={"password": self.ssh_private_key_path},
         ) as conn:
             stdout = _run_command_over_ssh(
                 cmd=squeue_command,
@@ -1304,7 +1325,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             )
         return stdout
 
-    def _jobs_finished(self, job_ids) -> set[str]:
+    def _jobs_finished(self, job_ids: list[str]) -> set[str]:
         """
         Check which ones of the given Slurm jobs already finished
 
@@ -1316,10 +1337,16 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         from cfut.slurm import STATES_FINISHED
 
+        logger.debug(
+            f"[FractalSlurmSSHExecutor._jobs_finished] START ({job_ids=})"
+        )
+
         # If there is no Slurm job to check, return right away
         if not job_ids:
+            logger.debug(
+                "[FractalSlurmSSHExecutor._jobs_finished] No jobs provided, return."
+            )
             return set()
-        id_to_state = dict()
 
         try:
             stdout = self.run_squeue(job_ids)
@@ -1327,7 +1354,9 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                 out.split()[0]: out.split()[1] for out in stdout.splitlines()
             }
         except Exception:
+            id_to_state = {}
             raise NotImplementedError
+
             id_to_state = dict()
             for j in job_ids:
                 res = self.run_squeue([j])
@@ -1341,8 +1370,50 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         # Finished jobs only stay in squeue for a few mins (configurable). If
         # a job ID isn't there, we'll assume it's finished.
-        return {
-            j
-            for j in job_ids
-            if id_to_state.get(j, "COMPLETED") in STATES_FINISHED
+        output = {
+            _id
+            for _id in job_ids
+            if id_to_state.get(_id, "COMPLETED") in STATES_FINISHED
         }
+        logger.debug(f"[FractalSlurmSSHExecutor._jobs_finished] {output=}")
+
+        logger.debug("[FractalSlurmSSHExecutor._jobs_finished] END")
+        return output
+
+    @contextlib.contextmanager
+    def ConnectionWithParameters(self):
+        with Connection(
+            host=self.ssh_host,
+            user=self.ssh_user,
+            connect_kwargs={"key_filename": self.ssh_private_key_path},
+        ) as connection:
+            yield connection
+
+    def ssh_handshake(self) -> dict:
+        """
+        Healthcheck for SSH connection and for versions match.
+        """
+        settings = Inject(get_settings)
+        python = settings.FRACTAL_SLURM_WORKER_PYTHON
+
+        logger.info("[FractalSlurmSSHExecutor.ssh_handshake] START")
+        with self.ConnectionWithParameters() as conn:
+            # FIXME: switch to module
+            # cmd=f"{python} -m fractal_server.app.runner.versions"
+            cmd = (
+                f"{python} -c '"
+                "import sys;"
+                "import fractal_server;"
+                "print(sys.version_info[:3], fractal_server.__VERSION__);"
+                "'"
+            )
+            stdout = _run_command_over_ssh(cmd=cmd, connection=conn)
+        logger.info(f"[FractalSlurmSSHExecutor.ssh_handshake] END {stdout=}")
+
+        # FIXME: use versions dictionary
+        # import json
+        # versions = json.loads(stdout)
+
+        # FIXME: perform some compatibility check
+
+        return stdout
