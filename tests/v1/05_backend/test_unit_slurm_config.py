@@ -226,14 +226,14 @@ def test_to_sbatch_preamble_with_user_local_exports():
 
     # Test preamble (without trailing slash in user_cache_dir)
     CACHE = "/some/path"
-    preamble = slurm_config.to_sbatch_preamble(user_cache_dir=CACHE)
+    preamble = slurm_config.to_sbatch_preamble(remote_export_dir=CACHE)
     debug(preamble)
     assert expected_line_1 in preamble
     assert expected_line_2 in preamble
 
     # Test preamble (without trailing slash in user_cache_dir)
     CACHE = "/some/path/"
-    preamble = slurm_config.to_sbatch_preamble(user_cache_dir=CACHE)
+    preamble = slurm_config.to_sbatch_preamble(remote_export_dir=CACHE)
     debug(preamble)
     assert expected_line_1 in preamble
     assert expected_line_2 in preamble
