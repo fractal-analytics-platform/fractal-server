@@ -117,7 +117,7 @@ class FractalProcessPoolExecutor(ProcessPoolExecutor):
             while True:
                 try:
                     results.append(next(map_iter))
-                except BrokenProcessPool:
+                except (BrokenProcessPool, StopIteration):
                     break
 
         return iter(results)
