@@ -28,16 +28,18 @@ from ..exceptions import TaskExecutionError
 from ..executors.slurm._subprocess_run_as_user import _mkdir_as_user
 from ..filenames import WORKFLOW_LOG_FILENAME
 from ..task_files import task_subfolder_name
-from ._local import process_workflow as local_process_workflow
-from ._slurm import process_workflow as slurm_process_workflow
+from ._local import process_workflow as local_run_workflow
+from ._local_processes import process_workflow as local_processes_run_workflow
+from ._slurm import process_workflow as slurm_run_workflow
 from .handle_failed_job import assemble_filters_failed_job
 from .handle_failed_job import assemble_history_failed_job
 from .handle_failed_job import assemble_images_failed_job
 from fractal_server import __VERSION__
 
 _backends = {}
-_backends["local"] = local_process_workflow
-_backends["slurm"] = slurm_process_workflow
+_backends["local"] = local_run_workflow
+_backends["local_processes"] = local_processes_run_workflow
+_backends["slurm"] = slurm_run_workflow
 
 
 async def submit_workflow(
@@ -79,9 +81,11 @@ async def submit_workflow(
     settings = Inject(get_settings)
     FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
     if FRACTAL_RUNNER_BACKEND == "local":
-        process_workflow = local_process_workflow
+        process_workflow = local_run_workflow
+    if FRACTAL_RUNNER_BACKEND == "local_processes":
+        process_workflow = local_processes_run_workflow
     elif FRACTAL_RUNNER_BACKEND == "slurm":
-        process_workflow = slurm_process_workflow
+        process_workflow = slurm_run_workflow
     else:
         raise RuntimeError(f"Invalid runner backend {FRACTAL_RUNNER_BACKEND=}")
 
@@ -127,6 +131,8 @@ async def submit_workflow(
 
         # Define and create WORKFLOW_DIR_REMOTE
         if FRACTAL_RUNNER_BACKEND == "local":
+            WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
+        if FRACTAL_RUNNER_BACKEND == "local_processes":
             WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
         elif FRACTAL_RUNNER_BACKEND == "slurm":
             WORKFLOW_DIR_REMOTE = (
