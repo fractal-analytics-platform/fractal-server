@@ -7,6 +7,7 @@ import time
 from pathlib import Path
 
 import pytest
+from pytest import TempPathFactory
 from pytest_docker.plugin import containers_scope
 
 
@@ -59,19 +60,40 @@ def _write_requirements_file(path: Path):
 
 
 @pytest.fixture(scope="session")
-def docker_compose_file(pytestconfig, testdata_path: Path):
+def ssh_keys(tmp_path_factory: TempPathFactory) -> dict[str, str]:
+
+    folder = tmp_path_factory.mktemp(basename="ssh-keys")
+    private_key_path = folder / "testing-ssh-key"
+    public_key_path = folder / "testing-ssh-key.pub"
+
+    cmd = f"ssh-keygen -C testing-key -f {private_key_path.as_posix()}  -N ''"
+    subprocess.run(
+        shlex.split(cmd), capture_output=True, encoding="utf-8", check=True
+    )
+    key_paths = dict(
+        public=public_key_path.as_posix(),
+        private=private_key_path.as_posix(),
+    )
+    return key_paths
+
+
+@pytest.fixture(scope="session")
+def docker_compose_file(
+    pytestconfig, testdata_path: Path, ssh_keys: dict[str, str]
+):
 
     import fractal_server
     import tarfile
 
     for container in ["head", "node"]:
+        # Write requirements file
         requirements_file_path = (
             testdata_path
             / f"slurm_docker_images/{container}/tmp_requirements.txt"
         )
         _write_requirements_file(requirements_file_path)
 
-        # This same path is hardocded in the Dockerfile of the SLURM node.
+        # Provide a tar.gz archive with fractal-server package
         CODE_ROOT = Path(fractal_server.__file__).parent.parent
         TAR_FILE = (
             testdata_path
@@ -87,6 +109,10 @@ def docker_compose_file(pytestconfig, testdata_path: Path):
             ]:
                 f = CODE_ROOT / name
                 tar.add(f, arcname=f.relative_to(CODE_ROOT.parent))
+
+    # Provide a public SSH key
+    dest = testdata_path / "slurm_docker_images" / "head" / "public_ssh_key"
+    shutil.copy(ssh_keys["public"], dest)
 
     if sys.platform == "darwin":
         # in macOS '/tmp' is a symlink to '/private/tmp'
@@ -134,7 +160,7 @@ def slurmlogin_ip(slurmlogin_container) -> str:
 @pytest.fixture
 def ssh_alive(slurmlogin_ip, slurmlogin_container) -> None:
     command = (
-        f"docker exec --user root {slurmlogin_container} " "service ssh status"
+        f"docker exec --user root {slurmlogin_container} service ssh status"
     )
     max_attempts = 10
     interval = 0.2
