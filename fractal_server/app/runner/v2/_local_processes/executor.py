@@ -17,6 +17,7 @@ import signal
 import threading
 import time
 from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures.process import BrokenProcessPool
 from typing import Callable
 from typing import Iterable
 from typing import Optional
@@ -91,12 +92,10 @@ class FractalProcessPoolExecutor(ProcessPoolExecutor):
            local_backend_config: The backend configuration, needed to extract
                                  `parallel_tasks_per_job`.
         """
-
         # Preliminary check
         iterable_lengths = [len(it) for it in iterables]
         if not len(set(iterable_lengths)) == 1:
             raise ValueError("Iterables have different lengths.")
-
         # Set total number of arguments
         n_elements = len(iterables[0])
 
@@ -115,6 +114,10 @@ class FractalProcessPoolExecutor(ProcessPoolExecutor):
                 for it in iterables
             ]
             map_iter = super().map(fn, *chunk_iterables)
-            results.extend(list(map_iter))
+            while True:
+                try:
+                    results.append(next(map_iter))
+                except BrokenProcessPool:
+                    break
 
         return iter(results)

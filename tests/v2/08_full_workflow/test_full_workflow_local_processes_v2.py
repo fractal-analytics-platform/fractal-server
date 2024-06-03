@@ -1,3 +1,7 @@
+import shlex
+import subprocess
+import time
+from concurrent.futures.process import BrokenProcessPool
 from glob import glob
 from pathlib import Path
 
@@ -13,6 +17,9 @@ from fractal_server.app.runner.filenames import FILTERS_FILENAME
 from fractal_server.app.runner.filenames import HISTORY_FILENAME
 from fractal_server.app.runner.filenames import IMAGES_FILENAME
 from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
+from fractal_server.app.runner.v2._local_processes.executor import (
+    FractalProcessPoolExecutor,
+)
 
 FRACTAL_RUNNER_BACKEND = "local_processes"
 
@@ -140,10 +147,6 @@ async def test_failing_workflow_UnknownError_local(
     )
 
 
-# Tested with 'local' backend only.
-# With 'slurm' backend we get:
-#   TaskExecutionError: bash: /home/runner/work/fractal-server/fractal-server/
-#       tests/data/non_python_task_issue1377.sh: No such file or directory
 async def test_non_python_task_local(
     client,
     MockCurrentUser,
@@ -237,3 +240,67 @@ async def test_non_python_task_local(
             log = f.read()
         assert "This goes to standard output" in log
         assert "This goes to standard error" in log
+
+
+def _sleep_and_return(sleep_time):
+    time.sleep(sleep_time)
+    return 42
+
+
+def test_indirect_shutdown_during_submit(tmp_path):
+
+    shutdown_file = tmp_path / "shutdown"
+    executor = FractalProcessPoolExecutor(shutdown_file=str(shutdown_file))
+
+    res = executor.submit(_sleep_and_return, 100)
+
+    with shutdown_file.open("w"):
+        pass
+    assert shutdown_file.exists()
+
+    time.sleep(2)
+
+    isinstance(res.exception(), BrokenProcessPool)
+    try:
+        res.result()
+    except BrokenProcessPool:
+        pass
+
+
+def wait_one_sec(*args, **kwargs):
+    time.sleep(1)
+    return 42
+
+
+def test_indirect_shutdown_during_map(
+    tmp_path,
+):
+    shutdown_file = tmp_path / "shutdown"
+
+    # NOTE: the executor.map call below is blocking. For this reason, we write
+    # the shutdown file from a subprocess.Popen, so that we can make it happen
+    # during the execution.
+    shutdown_sleep_time = 5
+    tmp_script = (tmp_path / "script.sh").as_posix()
+    debug(tmp_script)
+    with open(tmp_script, "w") as f:
+        f.write(f"sleep {shutdown_sleep_time}\n")
+        f.write(f"cat NOTHING > {shutdown_file.as_posix()}\n")
+
+    tmp_stdout = open((tmp_path / "stdout").as_posix(), "w")
+    tmp_stderr = open((tmp_path / "stderr").as_posix(), "w")
+    subprocess.Popen(
+        shlex.split(f"bash {tmp_script}"),
+        stdout=tmp_stdout,
+        stderr=tmp_stderr,
+    )
+
+    with FractalProcessPoolExecutor(
+        shutdown_file=str(shutdown_file)
+    ) as executor:
+        res = executor.map(wait_one_sec, range(100))
+
+    assert len(list(res)) < 100
+
+    tmp_stdout.close()
+    tmp_stderr.close()
