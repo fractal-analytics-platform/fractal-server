@@ -162,7 +162,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         # cfut.SlurmWaitThread)
         self.wait_thread.shutdown_callback = self.shutdown
         self.wait_thread.jobs_finished_callback = self._jobs_finished
-        if not slurm_poll_interval:
+        if slurm_poll_interval is None:
             settings = Inject(get_settings)
             slurm_poll_interval = settings.FRACTAL_SLURM_POLL_INTERVAL
         self.wait_thread.slurm_poll_interval = slurm_poll_interval
