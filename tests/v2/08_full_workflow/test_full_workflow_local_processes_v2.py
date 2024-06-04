@@ -299,11 +299,11 @@ def test_indirect_shutdown_during_submit(tmp_path):
 
     time.sleep(2)
 
-    isinstance(res.exception(), BrokenProcessPool)
-    try:
+    assert isinstance(res.exception(), BrokenProcessPool)
+    with pytest.raises(BrokenProcessPool):
         res.result()
-    except BrokenProcessPool:
-        pass
+
+    executor.join_shutdown_thread()
 
 
 def wait_one_sec(*args, **kwargs):

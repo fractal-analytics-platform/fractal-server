@@ -31,17 +31,25 @@ class FractalProcessPoolExecutor(ProcessPoolExecutor):
     def __init__(self, *args, shutdown_file=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.shutdown_file = shutdown_file
-        if shutdown_file:
+        if self.shutdown_file is not None:
             self.shutdown_thread = threading.Thread(
                 target=self._check_file, daemon=True
             )
             self.shutdown_thread.start()
 
+    def __exit__(self, *args, **kwargs):
+        if self.shutdown_file is not None:
+            self.shutdown_thread.join()
+        return super().__exit__(*args, **kwargs)
+
+    def join_shutdown_thread(self) -> None:
+        if self.shutdown_file is not None:
+            self.shutdown_thread.join()
+
     def _check_file(self):
         while True:
             if os.path.exists(self.shutdown_file):
                 self._terminate_processes()
-                os.remove(self.shutdown_file)  # remove shutdown file
                 break
             time.sleep(1)
 
