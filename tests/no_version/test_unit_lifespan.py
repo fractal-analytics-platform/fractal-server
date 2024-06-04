@@ -20,7 +20,6 @@ async def test_app_with_lifespan(
     dataset_factory_v2,
     job_factory_v2,
 ):
-    override_settings_factory(FRACTAL_GRACEFUL_SHUTDOWN_TIME=0)
 
     app = FastAPI()
     res = await db.execute(select(UserOAuth))
