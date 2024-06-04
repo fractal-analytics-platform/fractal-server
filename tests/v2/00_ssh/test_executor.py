@@ -112,7 +112,11 @@ def test_slurm_ssh_executor(
     tmp_path,
     tmp777_path,
     ssh_keys: dict[str, str],
+    override_settings_factory,
 ):
+
+    override_settings_factory(FRACTAL_SLURM_WORKER_PYTHON="/usr/bin/python3.9")
+
     monkeypatch.setattr("sys.stdin", io.StringIO(""))
 
     with TestingFractalSSHSlurmExecutor(
