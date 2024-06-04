@@ -1,3 +1,4 @@
+import json
 import shlex
 import subprocess
 import time
@@ -6,6 +7,7 @@ from glob import glob
 from pathlib import Path
 
 import pytest
+from common_functions import _task_name_to_id
 from common_functions import failing_workflow_UnknownError
 from common_functions import full_workflow
 from common_functions import full_workflow_TaskExecutionError
@@ -40,7 +42,44 @@ async def test_full_workflow_local(
         FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND,
         FRACTAL_RUNNER_WORKING_BASE_DIR=tmp777_path / "artifacts",
         FRACTAL_TASKS_DIR=tmp_path_factory.getbasetemp() / "FRACTAL_TASKS_DIR",
+        FRACTAL_LOCAL_CONFIG_FILE=tmp777_path / "local_config.json",
     )
+
+    # Test invalid local config (LocalBackendConfigError)
+    with open(tmp777_path / "local_config.json", "w") as f:
+        json.dump(dict(foo=0), f)
+    async with MockCurrentUser(user_kwargs={"is_verified": True}) as user:
+        project = await project_factory_v2(user)
+        dataset = await dataset_factory_v2(
+            project_id=project.id,
+            name="dataset",
+        )
+        workflow = await workflow_factory_v2(
+            project_id=project.id, name="workflow"
+        )
+
+        res = await client.get(f"{PREFIX}/task/")
+        task_id = _task_name_to_id("create_ome_zarr_compound", res.json())
+        await client.post(
+            f"{PREFIX}/project/{project.id}/workflow/{workflow.id}/wftask/"
+            f"?task_id={task_id}",
+            json=dict(args_non_parallel=dict(image_dir="/foo", num_images=3)),
+        )
+
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/job/submit/"
+            f"?workflow_id={workflow.id}&dataset_id={dataset.id}",
+            json={},
+        )
+        res = await client.get(
+            f"{PREFIX}/project/{project.id}/job/{res.json()['id']}/"
+        )
+        assert res.json()["status"] == "failed"
+        assert "LocalBackendConfigError" in res.json()["log"]
+
+    # Test valid local config
+    with open(tmp777_path / "local_config.json", "w") as f:
+        json.dump(dict(parallel_tasks_per_job=10), f)
     await full_workflow(
         MockCurrentUser=MockCurrentUser,
         project_factory_v2=project_factory_v2,
@@ -289,22 +328,23 @@ def test_indirect_shutdown_during_map(
 
     tmp_stdout = open((tmp_path / "stdout").as_posix(), "w")
     tmp_stderr = open((tmp_path / "stderr").as_posix(), "w")
-    subprocess.Popen(
-        shlex.split(f"bash {tmp_script}"),
-        stdout=tmp_stdout,
-        stderr=tmp_stderr,
-    )
+    try:
+        subprocess.Popen(
+            shlex.split(f"bash {tmp_script}"),
+            stdout=tmp_stdout,
+            stderr=tmp_stderr,
+        )
 
-    with FractalProcessPoolExecutor(
-        shutdown_file=str(shutdown_file)
-    ) as executor:
-        res = executor.map(wait_one_sec, range(100))
+        with FractalProcessPoolExecutor(
+            shutdown_file=str(shutdown_file)
+        ) as executor:
+            res = executor.map(wait_one_sec, range(100))
 
-    assert len(list(res)) < 100
+        assert len(list(res)) < 100
 
-    with pytest.raises(ValueError):
-        with FractalProcessPoolExecutor() as executor:
-            res = executor.map(wait_one_sec, range(100), range(99))
-
-    tmp_stdout.close()
-    tmp_stderr.close()
+        with pytest.raises(ValueError):
+            with FractalProcessPoolExecutor() as executor:
+                res = executor.map(wait_one_sec, range(100), range(99))
+    finally:
+        tmp_stdout.close()
+        tmp_stderr.close()
