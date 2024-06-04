@@ -999,7 +999,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
             # Create remote tarfile
             tar_command = (
-                f"{self.remote_python} "
+                f"{self.python_remote} "
                 "-m fractal_server.app.runner.compress_folder "
                 f"{(self.workflow_dir_remote / subfolder_name).as_posix()}"
             )
