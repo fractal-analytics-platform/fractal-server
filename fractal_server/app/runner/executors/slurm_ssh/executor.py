@@ -394,7 +394,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         slurm_config.tasks_per_job = 1
         slurm_config.parallel_tasks_per_job = 1
 
-        fut = self._submit_job(
+        job = self._prepare_job(
             fun,
             slurm_config=slurm_config,
             slurm_file_prefix=slurm_file_prefix,
@@ -403,7 +403,9 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             args=fun_args,
             kwargs=fun_kwargs,
         )
-        return fut
+        self._put_subfolder(jobs=[job])
+        future = self._submit_job(job)
+        return future
 
     def map(
         self,
@@ -516,25 +518,31 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         settings = Inject(get_settings)
         FRACTAL_SLURM_SBATCH_SLEEP = settings.FRACTAL_SLURM_SBATCH_SLEEP
 
-        # Construct list of futures (one per SLURM job, i.e. one per batch)
-        fs = []
         current_component_index = 0
+        jobs_to_submit = []
         for ind_batch, batch in enumerate(args_batches):
             batch_size = len(batch)
             this_slurm_file_prefix = (
                 f"{general_slurm_file_prefix}_batch_{ind_batch:06d}"
             )
-            fs.append(
-                self._submit_job(
-                    fn,
-                    slurm_config=slurm_config,
-                    slurm_file_prefix=this_slurm_file_prefix,
-                    task_files=task_files,
-                    single_task_submission=False,
-                    components=batch,
-                )
+            jobs_to_submit = self._prepare_job(
+                fn,
+                slurm_config=slurm_config,
+                slurm_file_prefix=this_slurm_file_prefix,
+                task_files=task_files,
+                single_task_submission=False,
+                components=batch,
             )
+            jobs_to_submit.append(jobs_to_submit)
             current_component_index += batch_size
+
+        self._put_subfolder(jobs=jobs_to_submit)
+
+        # Construct list of futures (one per SLURM job, i.e. one per batch)
+        fs = []
+        for job in jobs_to_submit:
+            future = self._submit_job(job)
+            fs.append(future)
             time.sleep(FRACTAL_SLURM_SBATCH_SLEEP)
 
         # Yield must be hidden in closure so that the futures are submitted
@@ -562,7 +570,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         return result_iterator()
 
-    def _submit_job(
+    def _prepare_job(
         self,
         fun: Callable[..., Any],
         slurm_file_prefix: str,
@@ -572,8 +580,10 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         args: Optional[Sequence[Any]] = None,
         kwargs: Optional[dict] = None,
         components: Optional[list[Any]] = None,
-    ) -> Future:
+    ) -> SlurmJob:
         """
+        FIXME: Docstring
+
         Submit a multi-task job to the pool, where each task is handled via the
         pickle/remote logic
 
@@ -599,7 +609,6 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         Returns:
             Future representing the execution of the current SLURM job.
         """
-        fut: Future = Future()
 
         # Inject SLURM account (if set) into slurm_config
         if self.slurm_account:
@@ -757,28 +766,152 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                 ) as f:
                     f.write(funcser)
 
+        # Prepare commands to be included in SLURM submission script
+        cmdlines = []
+        for ind_task in range(job.num_tasks_tot):
+            input_pickle_file = job.input_pickle_files_remote[ind_task]
+            output_pickle_file = job.output_pickle_files_remote[ind_task]
+            cmdlines.append(
+                (
+                    f"{self.python_remote}"
+                    " -m fractal_server.app.runner.executors.slurm.remote "
+                    f"--input-file {input_pickle_file} "
+                    f"--output-file {output_pickle_file}"
+                )
+            )
+
+        # Prepare SLURM submission script
+        sbatch_script_content = self._prepare_sbatch_script(
+            slurm_config=job.slurm_config,
+            list_commands=cmdlines,
+            slurm_out_path=str(job.slurm_stdout_remote),
+            slurm_err_path=str(job.slurm_stderr_remote),
+        )
+        with job.slurm_script_local.open("w") as f:
+            f.write(sbatch_script_content)
+
+        return job
+
+    def _put_subfolder(self, jobs: list[SlurmJob]) -> None:
+        """
+        Transfer the jobs subfolder to the remote host.
+
+        Arguments:
+            jobs: The list of `SlurmJob` objects associated to a given
+                subfolder.
+        """
+
+        # Check that the subfolder is unique
+        subfolder_names = [job.wftask_subfolder_name for job in jobs]
+        if len(set(subfolder_names)) > 1:
+            raise ValueError(
+                "[_put_subfolder] Invalid list of jobs, "
+                f"{set(subfolder_names)=}."
+            )
+        subfolder_name = subfolder_names[0]
+
+        # Create compressed subfolder archive (locally)
+        local_subfolder = self.workflow_dir_local / subfolder_name
+        tarfile_name = f"{subfolder_name}.tar.gz"
+        tarfile_path_local = (
+            self.workflow_dir_local / tarfile_name
+        ).as_posix()
+        tarfile_path_remote = (
+            self.workflow_dir_remote / tarfile_name
+        ).as_posix()
+        with tarfile.open(tarfile_path_local, "w:gz") as tar:
+            tar.add(local_subfolder, arcname=subfolder_name, recursive=True)
+        logger.info(f"Subfolder archive created at {tarfile_path_local}")
+
+        with self.ConnectionWithParameters() as conn:
+            # Transfer archive
+            t_0_put = time.perf_counter()
+            conn.put(
+                local=tarfile_path_local,
+                remote=tarfile_path_remote,
+            )
+            t_1_put = time.perf_counter()
+            logger.info(
+                f"Subfolder archive transferred to {tarfile_path_remote}"
+                f" - elapsed: {t_1_put - t_0_put:.3f} s"
+            )
+            # Uncompress archive (remotely)
+            tar_command = (
+                f"{self.python_remote} -m "
+                "fractal_server.app.runner.extract_archive "
+                f"{tarfile_path_remote}"
+            )
+            _run_command_over_ssh(cmd=tar_command, connection=conn)
+
+        # Remove local version
+        t_0_rm = time.perf_counter()
+        Path(tarfile_path_local).unlink()
+        t_1_rm = time.perf_counter()
+        logger.info(
+            f"Local archive removed - elapsed: {t_1_rm - t_0_rm:.3f} s"
+        )
+
+    def _submit_job(self, job: SlurmJob) -> Future:
+        """
+        Submit a job to SLURM via SSH.
+
+        This method must always be called after `self._put_subfolder`.
+
+        Arguments:
+            job: The `SlurmJob` object to submit.
+        """
+
         # Submit job to SLURM, and get jobid
-        jobid, job = self._start(job)
+        with self.ConnectionWithParameters() as conn:
+            sbatch_command = f"sbatch --parsable {job.slurm_script_remote}"
+            sbatch_stdout = _run_command_over_ssh(
+                cmd=sbatch_command, connection=conn
+            )
+
+        # Extract SLURM job ID from stdout
+        try:
+            stdout = sbatch_stdout.strip("\n")
+            jobid = int(stdout)
+        except ValueError as e:
+            error_msg = (
+                f"Submit command `{sbatch_command}` returned "
+                f"`{stdout=}` which cannot be cast to an integer "
+                f"SLURM-job ID. Original error:\n{str(e)}"
+            )
+            logger.error(error_msg)
+            raise JobExecutionError(info=error_msg)
+        jobid_str = str(jobid)
+
+        # Plug job id in stdout/stderr SLURM file paths (local and remote)
+        def _replace_job_id(_old_path: Path) -> Path:
+            return Path(_old_path.as_posix().replace("%j", jobid_str))
+
+        job.slurm_stdout_local = _replace_job_id(job.slurm_stdout_local)
+        job.slurm_stdout_remote = _replace_job_id(job.slurm_stdout_remote)
+        job.slurm_stderr_local = _replace_job_id(job.slurm_stderr_local)
+        job.slurm_stderr_remote = _replace_job_id(job.slurm_stderr_remote)
 
         # Add the SLURM script/out/err paths to map_jobid_to_slurm_files (this
         # must be after self._start(job), so that "%j" has already been
         # replaced with the job ID)
         with self.jobs_lock:
-            self.map_jobid_to_slurm_files_local[jobid] = (
+            self.map_jobid_to_slurm_files_local[jobid_str] = (
                 job.slurm_script_local.as_posix(),
                 job.slurm_stdout_local.as_posix(),
                 job.slurm_stderr_local.as_posix(),
             )
 
-        # Thread will wait for it to finish.
+        # Start thread that will wait for job to finish.
         self.wait_thread.wait(
             filenames=job.get_clean_output_pickle_files(),
-            jobid=jobid,
+            jobid=jobid_str,
         )
 
+        # Create future
+        future = Future()
         with self.jobs_lock:
-            self.jobs[jobid] = (fut, job)
-        return fut
+            self.jobs[jobid_str] = (future, job)
+        return future
 
     def _prepare_JobExecutionError(
         self, jobid: str, info: str
@@ -840,7 +973,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             # Copy all relevant files from self.workflow_dir_remote to
             # self.workflow_dir_local
 
-            self._copy_files_from_remote_to_local(job)
+            self._get_subfolder(job)
 
             in_paths = job.input_pickle_files_local
             out_paths = tuple(
@@ -967,10 +1100,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                     " FractalSlurmSSHExecutor._completion."
                 )
 
-    def _copy_files_from_remote_to_local(
-        self,
-        job: SlurmJob,
-    ):
+    def _get_subfolder(self, job: SlurmJob):  # FIXME: jobs?!?!
         """
         FIXME: docstring
 
@@ -1028,117 +1158,6 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             "[_copy_files_from_remote_to_local] End - "
             f"elapsed: {t_1-t_0:.3f} s"
         )
-
-    def _start(self, job: SlurmJob) -> tuple[str, SlurmJob]:
-        """
-        Submit function for execution on a SLURM cluster
-        """
-
-        # Prepare commands to be included in SLURM submission script
-        cmdlines = []
-        for ind_task in range(job.num_tasks_tot):
-            input_pickle_file = job.input_pickle_files_remote[ind_task]
-            output_pickle_file = job.output_pickle_files_remote[ind_task]
-            cmdlines.append(
-                (
-                    f"{self.python_remote}"
-                    " -m fractal_server.app.runner.executors.slurm.remote "
-                    f"--input-file {input_pickle_file} "
-                    f"--output-file {output_pickle_file}"
-                )
-            )
-
-        # Prepare SLURM submission script
-        sbatch_script_content = self._prepare_sbatch_script(
-            slurm_config=job.slurm_config,
-            list_commands=cmdlines,
-            slurm_out_path=str(job.slurm_stdout_remote),
-            slurm_err_path=str(job.slurm_stderr_remote),
-        )
-        with job.slurm_script_local.open("w") as f:
-            f.write(sbatch_script_content)
-
-        # Create compressed subfolder archive
-        subfolder_name = job.wftask_subfolder_name
-        local_subfolder = self.workflow_dir_local / subfolder_name
-        tarfile_path_local = (
-            self.workflow_dir_local / f"{subfolder_name}.tar.gz"
-        ).as_posix()
-        tarfile_path_remote = (
-            self.workflow_dir_remote / f"{subfolder_name}.tar.gz"
-        ).as_posix()
-        with tarfile.open(tarfile_path_local, "w:gz") as tar:
-            tar.add(local_subfolder, arcname=subfolder_name, recursive=True)
-        logger.info(f"Subfolder archive created at {tarfile_path_local}")
-
-        with self.ConnectionWithParameters() as conn:
-
-            # FIXME: There is a logical issue here, we are sending a tar for
-            # each sbatch script, but we should only send one (or otherwise
-            # the archive should only include some specific files).
-
-            # Transfer archive
-            t_0_put = time.perf_counter()
-            conn.put(
-                local=tarfile_path_local,
-                remote=tarfile_path_remote,
-            )
-            t_1_put = time.perf_counter()
-            logger.info(
-                f"Subfolder archive transferred to {tarfile_path_remote}"
-                f" - elapsed: {t_1_put - t_0_put:.3f} s"
-            )
-
-            # Remove local version
-            t_0_rm = time.perf_counter()
-            Path(tarfile_path_local).unlink()
-            t_1_rm = time.perf_counter()
-            logger.info(
-                f"Local archive removed - elapsed: {t_1_rm - t_0_rm:.3f} s"
-            )
-
-            # Uncompress archive
-            tar_command = (
-                f"{self.python_remote} -m "
-                "fractal_server.app.runner.extract_archive "
-                f"{tarfile_path_remote}"
-            )
-            stdout = _run_command_over_ssh(cmd=tar_command, connection=conn)
-
-            # Run sbatch
-            sbatch_command = f"sbatch --parsable {job.slurm_script_remote}"
-            sbatch_stdout = _run_command_over_ssh(
-                cmd=sbatch_command, connection=conn
-            )
-
-        # Extract SLURM job ID from stdout
-        try:
-            stdout = sbatch_stdout.strip("\n")
-            jobid = int(stdout)
-        except ValueError as e:
-            error_msg = (
-                f"Submit command `{sbatch_command}` returned "
-                f"`{stdout=}` which cannot be cast to an integer "
-                f"SLURM-job ID. Original error:\n{str(e)}"
-            )
-            logger.error(error_msg)
-            raise JobExecutionError(info=error_msg)
-        jobid_str = str(jobid)
-
-        # Plug job id in stdout/stderr SLURM file paths (local and remote)
-        def _replace_slurm_job_id(_old_path: Path) -> Path:
-            return Path(_old_path.as_posix().replace("%j", jobid_str))
-
-        job.slurm_stdout_local = _replace_slurm_job_id(job.slurm_stdout_local)
-        job.slurm_stdout_remote = _replace_slurm_job_id(
-            job.slurm_stdout_remote
-        )
-        job.slurm_stderr_local = _replace_slurm_job_id(job.slurm_stderr_local)
-        job.slurm_stderr_remote = _replace_slurm_job_id(
-            job.slurm_stderr_remote
-        )
-
-        return jobid_str, job
 
     def _prepare_sbatch_script(
         self,
