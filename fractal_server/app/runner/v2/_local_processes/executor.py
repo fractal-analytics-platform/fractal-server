@@ -32,17 +32,21 @@ from fractal_server.app.runner.exceptions import JobExecutionError
 class FractalProcessPoolExecutor(ProcessPoolExecutor):
     def __init__(self, shutdown_file: Path, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._shutdown = False
         self.shutdown_file = shutdown_file
-        self.shutdown_thread = threading.Thread(
-            target=self._check_file, daemon=True
-        )
+        self.shutdown_thread = threading.Thread(target=self.run, daemon=True)
         self.shutdown_thread.start()
 
-    def _check_file(self):
+    def shutdown(self, *args, **kwargs) -> None:
+        self._shutdown = True
+        self.shutdown_thread.join()
+        return super().shutdown(*args, **kwargs)
+
+    def run(self):
         while True:
-            if os.path.exists(self.shutdown_file):
+            if os.path.exists(self.shutdown_file) or self._shutdown:
                 self._terminate_processes()
-                break
+                return
             time.sleep(1)
 
     def _terminate_processes(self):

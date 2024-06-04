@@ -351,9 +351,9 @@ def test_indirect_shutdown_during_map(
     tmp_stdout.close()
     tmp_stderr.close()
 
+
+def test_unit_map_iterables():
     with pytest.raises(ValueError) as error:
-        with FractalProcessPoolExecutor(
-            shutdown_file=str(shutdown_file)
-        ) as executor:
+        with FractalProcessPoolExecutor(shutdown_file="/") as executor:
             executor.map(wait_one_sec, range(100), range(99))
     assert "Iterables have different lengths." in error._excinfo[1].args[0]
