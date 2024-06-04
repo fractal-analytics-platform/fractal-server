@@ -290,21 +290,21 @@ def _sleep_and_return(sleep_time):
 def test_indirect_shutdown_during_submit(tmp_path):
 
     shutdown_file = tmp_path / "shutdown"
-    executor = FractalProcessPoolExecutor(shutdown_file=str(shutdown_file))
+    with FractalProcessPoolExecutor(
+        shutdown_file=str(shutdown_file)
+    ) as executor:
 
-    res = executor.submit(_sleep_and_return, 100)
+        res = executor.submit(_sleep_and_return, 100)
 
-    with shutdown_file.open("w"):
-        pass
-    assert shutdown_file.exists()
+        with shutdown_file.open("w"):
+            pass
+        assert shutdown_file.exists()
 
-    time.sleep(2)
+        time.sleep(2)
 
-    assert isinstance(res.exception(), BrokenProcessPool)
-    with pytest.raises(BrokenProcessPool):
-        res.result()
-
-    executor.shutdown_thread.join()
+        assert isinstance(res.exception(), BrokenProcessPool)
+        with pytest.raises(BrokenProcessPool):
+            res.result()
 
 
 def wait_one_sec(*args, **kwargs):
