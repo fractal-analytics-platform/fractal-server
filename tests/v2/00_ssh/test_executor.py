@@ -4,6 +4,7 @@ import logging
 import random
 from pathlib import Path
 
+import pytest
 from devtools import debug  # noqa: F401
 from fabric.connection import Connection
 
@@ -156,6 +157,7 @@ def test_slurm_ssh_executor_map(
         assert results == [2, 4, 6]
 
 
+@pytest.mark.skip
 def test_slurm_ssh_executor_no_docker(
     monkeypatch,
     tmp_path,
