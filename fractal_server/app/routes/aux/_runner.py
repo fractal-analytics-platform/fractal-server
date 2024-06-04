@@ -13,7 +13,7 @@ def _check_backend_is_slurm():
     """
     settings = Inject(get_settings)
     backend = settings.FRACTAL_RUNNER_BACKEND
-    if backend != "slurm":
+    if backend not in ["slurm", "local_processes"]:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
