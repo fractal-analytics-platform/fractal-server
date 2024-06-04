@@ -177,6 +177,8 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         # Define remote Python interpreter
         settings = Inject(get_settings)
         self.python_remote = settings.FRACTAL_SLURM_WORKER_PYTHON
+        if self.python_remote is None:
+            raise ValueError("FRACTAL_SLURM_WORKER_PYTHON is not set. Exit.")
 
         # Set SSH variables and perform handshake with remote (note: this
         # needs `self.python_remote`)
