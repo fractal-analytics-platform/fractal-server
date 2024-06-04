@@ -24,7 +24,6 @@ async def test_clean_app_job_list_v2(
     assert app.state.jobsV2 == []
 
     # Set this to 0 so that the endpoint also calls the clean-up function
-    override_settings_factory(FRACTAL_API_MAX_JOB_LIST_LENGTH=0)
 
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)) as user:
 
