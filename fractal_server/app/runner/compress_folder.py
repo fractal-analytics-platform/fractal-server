@@ -3,13 +3,15 @@ import tarfile
 from pathlib import Path
 
 if __name__ == "__main__":
+    help_msg = (
+        "Expected use:\n"
+        "python -m fractal_server.app.runner.compress_folder "
+        "path/to/folder"
+    )
+
     if len(sys.argv[1:]) != 1:
         raise ValueError(
-            "Invalid argumens provided. "
-            "Expected use is:\n"
-            "python -m fractal_server.app.runner.compress_folder "
-            "<subfolder_path>\n"
-            f"but {sys.argv=}"
+            f"Invalid argument.\n{help_msg}\nProvided: {sys.argv=}"
         )
 
     subfolder_path = Path(sys.argv[1])

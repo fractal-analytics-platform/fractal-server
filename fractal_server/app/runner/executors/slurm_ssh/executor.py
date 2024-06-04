@@ -987,14 +987,13 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             self.workflow_dir_remote / f"{subfolder_name}.tar.gz"
         ).as_posix()
 
-        # Remove local tarfile - FIXME: is this needed
-        Path(tarfile_path_local).unlink()
+        # Remove local tarfile - FIXME: is this needed?
         logger.warning(f"In principle I just removed {tarfile_path_local}")
         logger.warning(f"{Path(tarfile_path_local).exists()=}")
 
         with self.ConnectionWithParameters() as conn:
 
-            # Remove remote tarfile - FIXME: is this needed
+            # Remove remote tarfile - FIXME: is this needed?
             rm_command = f"rm {tarfile_path_remote}"
             _run_command_over_ssh(cmd=rm_command, connection=conn)
 
@@ -1088,24 +1087,21 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                 f" - elapsed: {t_1_put - t_0_put:.3f} s"
             )
 
-            # DEBUG: see that the archive is where it should
-            # ls_command = f"ls {Path(tarfile_path_remote).parent.as_posix()}"
-            # stdout = _run_command_over_ssh(cmd=ls_command, connection=conn)
+            # Remove local version
+            t_0_rm = time.perf_counter()
+            Path(tarfile_path_local).unlink()
+            t_1_rm = time.perf_counter()
+            logger.info(
+                f"Local archive removed - elapsed: {t_1_rm - t_0_rm:.3f} s"
+            )
 
             # Uncompress archive
             tar_command = (
-                "tar --verbose --extract "
-                f"--file {tarfile_path_remote} "
-                f"--directory {self.workflow_dir_remote.as_posix()}"
+                f"{self.python_remote} -m "
+                "fractal_server.app.runner.extract_archive "
+                f"{tarfile_path_remote}"
             )
             stdout = _run_command_over_ssh(cmd=tar_command, connection=conn)
-
-            # # DEBUG: Check that the archive was uncompressed
-            # remote_subfolder = (
-            #     self.workflow_dir_remote / subfolder_name
-            # ).as_posix()
-            # ls_command = f"ls {remote_subfolder}"
-            # stdout = _run_command_over_ssh(cmd=ls_command, connection=conn)
 
             # Run sbatch
             sbatch_command = f"sbatch --parsable {job.slurm_script_remote}"
@@ -1352,8 +1348,6 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         with self.ConnectionWithParameters() as conn:
             cmd = f"{self.python_remote} -m fractal_server.app.runner.versions"
             stdout = _run_command_over_ssh(cmd=cmd, connection=conn)
-        print(stdout)
-        debug(stdout)
         remote_versions = json.loads(stdout.strip("\n"))
 
         # Check compatibility with local versions
