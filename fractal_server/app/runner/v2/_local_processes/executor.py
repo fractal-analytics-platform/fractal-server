@@ -25,6 +25,7 @@ from typing import Sequence
 
 from ._local_config import get_default_local_backend_config
 from ._local_config import LocalBackendConfig
+from fractal_server.app.runner.exceptions import JobExecutionError
 
 
 class FractalProcessPoolExecutor(ProcessPoolExecutor):
@@ -122,10 +123,10 @@ class FractalProcessPoolExecutor(ProcessPoolExecutor):
                 for it in iterables
             ]
             map_iter = super().map(fn, *chunk_iterables)
-            while True:
-                try:
-                    results.append(next(map_iter))
-                except (BrokenProcessPool, StopIteration):
-                    break
+
+            try:
+                results.extend(list(map_iter))
+            except BrokenProcessPool as e:
+                raise JobExecutionError(e.args[0])
 
         return iter(results)

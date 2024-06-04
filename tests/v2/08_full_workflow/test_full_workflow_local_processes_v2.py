@@ -15,6 +15,7 @@ from common_functions import non_executable_task_command
 from common_functions import PREFIX
 from devtools import debug
 
+from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.filenames import FILTERS_FILENAME
 from fractal_server.app.runner.filenames import HISTORY_FILENAME
 from fractal_server.app.runner.filenames import IMAGES_FILENAME
@@ -328,7 +329,8 @@ def test_indirect_shutdown_during_map(
 
     tmp_stdout = open((tmp_path / "stdout").as_posix(), "w")
     tmp_stderr = open((tmp_path / "stderr").as_posix(), "w")
-    try:
+
+    with pytest.raises(JobExecutionError):
         subprocess.Popen(
             shlex.split(f"bash {tmp_script}"),
             stdout=tmp_stdout,
@@ -338,13 +340,12 @@ def test_indirect_shutdown_during_map(
         with FractalProcessPoolExecutor(
             shutdown_file=str(shutdown_file)
         ) as executor:
-            res = executor.map(wait_one_sec, range(100))
+            executor.map(wait_one_sec, range(100))
 
-        assert len(list(res)) < 100
+    tmp_stdout.close()
+    tmp_stderr.close()
 
-        with pytest.raises(ValueError):
-            with FractalProcessPoolExecutor() as executor:
-                res = executor.map(wait_one_sec, range(100), range(99))
-    finally:
-        tmp_stdout.close()
-        tmp_stderr.close()
+    with pytest.raises(ValueError) as e:
+        with FractalProcessPoolExecutor() as executor:
+            executor.map(wait_one_sec, range(100), range(99))
+    assert "Iterables have different lengths." in e._excinfo[1].args[0]
