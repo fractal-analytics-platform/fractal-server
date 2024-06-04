@@ -70,6 +70,8 @@ class FractalSlurmWaitThread(FileWaitThread):
         This method is executed on the waiting thread.
         """
         try:
+            if self.active_job_ids == []:
+                return
             finished_jobs = self.jobs_finished_callback(self.active_job_ids)
             if finished_jobs == set(self.active_job_ids):
                 self.callback(self.active_job_ids)
