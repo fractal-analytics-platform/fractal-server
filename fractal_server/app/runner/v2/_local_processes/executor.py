@@ -18,6 +18,7 @@ import threading
 import time
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures.process import BrokenProcessPool
+from pathlib import Path
 from typing import Callable
 from typing import Iterable
 from typing import Optional
@@ -29,19 +30,13 @@ from fractal_server.app.runner.exceptions import JobExecutionError
 
 
 class FractalProcessPoolExecutor(ProcessPoolExecutor):
-    def __init__(self, *args, shutdown_file=None, **kwargs):
+    def __init__(self, shutdown_file: Path, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.shutdown_file = shutdown_file
-        if self.shutdown_file is not None:
-            self.shutdown_thread = threading.Thread(
-                target=self._check_file, daemon=True
-            )
-            self.shutdown_thread.start()
-
-    def __exit__(self, *args, **kwargs):
-        if self.shutdown_file is not None:
-            self.shutdown_thread.join()
-        return super().__exit__(*args, **kwargs)
+        self.shutdown_thread = threading.Thread(
+            target=self._check_file, daemon=True
+        )
+        self.shutdown_thread.start()
 
     def _check_file(self):
         while True:

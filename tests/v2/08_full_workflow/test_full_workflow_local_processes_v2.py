@@ -320,7 +320,7 @@ def test_indirect_shutdown_during_map(
     # NOTE: the executor.map call below is blocking. For this reason, we write
     # the shutdown file from a subprocess.Popen, so that we can make it happen
     # during the execution.
-    shutdown_sleep_time = 5
+    shutdown_sleep_time = 2
     tmp_script = (tmp_path / "script.sh").as_posix()
     debug(tmp_script)
     with open(tmp_script, "w") as f:
@@ -345,7 +345,9 @@ def test_indirect_shutdown_during_map(
     tmp_stdout.close()
     tmp_stderr.close()
 
-    with pytest.raises(ValueError) as e:
-        with FractalProcessPoolExecutor() as executor:
+    with pytest.raises(ValueError) as error:
+        with FractalProcessPoolExecutor(
+            shutdown_file=str(shutdown_file)
+        ) as executor:
             executor.map(wait_one_sec, range(100), range(99))
-    assert "Iterables have different lengths." in e._excinfo[1].args[0]
+    assert "Iterables have different lengths." in error._excinfo[1].args[0]
