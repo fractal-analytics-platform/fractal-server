@@ -304,7 +304,7 @@ def test_indirect_shutdown_during_submit(tmp_path):
     with pytest.raises(BrokenProcessPool):
         res.result()
 
-    executor.join_shutdown_thread()
+    executor.shutdown_thread.join()
 
 
 def wait_one_sec(*args, **kwargs):

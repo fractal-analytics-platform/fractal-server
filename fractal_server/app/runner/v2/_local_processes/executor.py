@@ -43,10 +43,6 @@ class FractalProcessPoolExecutor(ProcessPoolExecutor):
             self.shutdown_thread.join()
         return super().__exit__(*args, **kwargs)
 
-    def join_shutdown_thread(self) -> None:
-        if self.shutdown_file is not None:
-            self.shutdown_thread.join()
-
     def _check_file(self):
         while True:
             if os.path.exists(self.shutdown_file):
