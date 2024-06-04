@@ -82,12 +82,19 @@ async def test_app_with_lifespan(
         )
         # append submitted job to jobsV2 status
         app.state.jobsV1.append(jobv1.id)
+        # we need to close the db session to get
+        # updated data from db
+        await db.close()
 
     # verify that the shutdown file was created during the lifespan cleanup
     assert os.path.exists(f"{jobv2.working_dir}/{SHUTDOWN_FILENAME}")
-    jobv2_after = (await db.execute(select(JobV2))).scalar_one_or_none()
+    jobv2_after = (
+        await db.execute(select(JobV2).where(JobV2.id == jobv2.id))
+    ).scalar_one_or_none()
     jobv1_after = (
-        await db.execute(select(ApplyWorkflow))
+        await db.execute(
+            select(ApplyWorkflow).where(ApplyWorkflow.id == jobv1.id)
+        )
     ).scalar_one_or_none()
     assert jobv2_after.status == "failed"
     assert jobv1_after.status == "failed"

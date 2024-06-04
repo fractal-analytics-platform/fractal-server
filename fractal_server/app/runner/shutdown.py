@@ -76,26 +76,14 @@ async def cleanup_after_shutdown(
                 )
             )
 
-            logger.info(jobsV2_db)
             for job in jobsV2_db:
-                print("A")
                 job.status = "failed"
                 if job.log is None:
                     job.log = "Job stopped due to app shutdown\n"
-                    print("B")
                 else:
                     job.log += "Job stopped due to app shutdown\n"
-                    print("C")
                 session.add(job)
-                print("D")
                 await session.commit()
-
-            # jobv2_after = (
-            #     await session.execute(select(JobV2))
-            # ).scalar_one_or_none()
-            #            jobv1_after = (await db.execute(select(ApplyWorkflow))
-            # ).scalar_one_or_none()
-            #            assert jobv1_after.status == "failed"
 
             for job in jobsV1_db:
                 job.status = "failed"
