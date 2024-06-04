@@ -272,6 +272,11 @@ class Settings(BaseSettings):
     or a path relative to current working directory).
     """
 
+    FRACTAL_GRACEFUL_SHUTDOWN_TIME: int = 30
+    """
+    Waiting time for the shutdown phase of executors
+    """
+
     @validator("FRACTAL_TASKS_DIR", always=True)
     def make_FRACTAL_TASKS_DIR_absolute(cls, v):
         """

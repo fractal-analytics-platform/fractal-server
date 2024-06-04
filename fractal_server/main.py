@@ -20,6 +20,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from .app.runner.shutdown import cleanup_after_shutdown
 from .app.security import _create_first_user
 from .config import get_settings
 from .logger import config_uvicorn_loggers
@@ -105,6 +106,7 @@ async def lifespan(app: FastAPI):
         f"Following jobs will be set to failed: {app.state.jobsV1=}, "
         f"{app.state.jobsV2=}"
     )
+    await cleanup_after_shutdown(app.state.jobsV1, app.state.jobsV2)
     logger.info("Start application shutdown")
     logger.info("End application shutdown")
     reset_logger_handlers(logger)
