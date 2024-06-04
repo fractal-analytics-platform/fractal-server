@@ -104,17 +104,15 @@ class TestingFractalSSHSlurmExecutor(FractalSlurmSSHExecutor):
         self._create_remote_folder_structure()
 
 
-def test_slurm_ssh_executor(
+def test_slurm_ssh_executor_submit(
     slurmlogin_ip,
     ssh_alive,
-    slurmlogin_container,
     monkeypatch,
-    tmp_path,
-    tmp777_path,
+    tmp_path: Path,
+    tmp777_path: Path,
     ssh_keys: dict[str, str],
     override_settings_factory,
 ):
-
     override_settings_factory(FRACTAL_SLURM_WORKER_PYTHON="/usr/bin/python3.9")
 
     monkeypatch.setattr("sys.stdin", io.StringIO(""))
@@ -130,6 +128,32 @@ def test_slurm_ssh_executor(
         fut = executor.submit(lambda: 1)
         debug(fut)
         debug(fut.result())
+
+
+def test_slurm_ssh_executor_map(
+    slurmlogin_ip,
+    ssh_alive,
+    monkeypatch,
+    tmp_path: Path,
+    tmp777_path: Path,
+    ssh_keys: dict[str, str],
+    override_settings_factory,
+):
+    override_settings_factory(FRACTAL_SLURM_WORKER_PYTHON="/usr/bin/python3.9")
+
+    monkeypatch.setattr("sys.stdin", io.StringIO(""))
+
+    with TestingFractalSSHSlurmExecutor(
+        workflow_dir_local=tmp_path / "job_dir",
+        workflow_dir_remote=(tmp777_path / "remote_job_dir"),
+        slurm_poll_interval=1,
+        ssh_host=slurmlogin_ip,
+        ssh_user="test01",
+        ssh_private_key_path=ssh_keys["private"],
+    ) as executor:
+        res = executor.map(lambda x: x * 2, [1, 2, 3])
+        results = list(res)
+        assert results == [2, 4, 6]
 
 
 def test_slurm_ssh_executor_no_docker(

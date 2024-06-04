@@ -218,8 +218,8 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
     def _cleanup(self, jobid: str) -> None:
         """
-        Given a job ID as returned by _start, perform any necessary
-        cleanup after the job has finished.
+        Given a job ID, perform any necessary cleanup after the job has
+        finished.
         """
         with self.jobs_lock:
             self.map_jobid_to_slurm_files_local.pop(jobid)
@@ -403,7 +403,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             args=fun_args,
             kwargs=fun_kwargs,
         )
-        self._put_subfolder(jobs=[job])
+        self._put_subfolder_sftp(jobs=[job])
         future = self._submit_job(job)
         return future
 
@@ -536,7 +536,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             jobs_to_submit.append(new_job_to_submit)
             current_component_index += batch_size
 
-        self._put_subfolder(jobs=jobs_to_submit)
+        self._put_subfolder_sftp(jobs=jobs_to_submit)
 
         # Construct list of futures (one per SLURM job, i.e. one per batch)
         fs = []
@@ -792,7 +792,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         return job
 
-    def _put_subfolder(self, jobs: list[SlurmJob]) -> None:
+    def _put_subfolder_sftp(self, jobs: list[SlurmJob]) -> None:
         """
         Transfer the jobs subfolder to the remote host.
 
@@ -880,11 +880,11 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             )
             logger.error(error_msg)
             raise JobExecutionError(info=error_msg)
-        jobid_str = str(jobid)
+        job_id_str = str(jobid)
 
         # Plug job id in stdout/stderr SLURM file paths (local and remote)
         def _replace_job_id(_old_path: Path) -> Path:
-            return Path(_old_path.as_posix().replace("%j", jobid_str))
+            return Path(_old_path.as_posix().replace("%j", job_id_str))
 
         job.slurm_stdout_local = _replace_job_id(job.slurm_stdout_local)
         job.slurm_stdout_remote = _replace_job_id(job.slurm_stdout_remote)
@@ -892,25 +892,22 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         job.slurm_stderr_remote = _replace_job_id(job.slurm_stderr_remote)
 
         # Add the SLURM script/out/err paths to map_jobid_to_slurm_files (this
-        # must be after self._start(job), so that "%j" has already been
+        # must be after the `sbatch` call, so that "%j" has already been
         # replaced with the job ID)
         with self.jobs_lock:
-            self.map_jobid_to_slurm_files_local[jobid_str] = (
+            self.map_jobid_to_slurm_files_local[job_id_str] = (
                 job.slurm_script_local.as_posix(),
                 job.slurm_stdout_local.as_posix(),
                 job.slurm_stderr_local.as_posix(),
             )
 
         # Start thread that will wait for job to finish.
-        self.wait_thread.wait(
-            filenames=job.get_clean_output_pickle_files(),
-            jobid=jobid_str,
-        )
+        self.wait_thread.wait(job_id=job_id_str)
 
         # Create future
         future = Future()
         with self.jobs_lock:
-            self.jobs[jobid_str] = (future, job)
+            self.jobs[job_id_str] = (future, job)
         return future
 
     def _prepare_JobExecutionError(
@@ -944,7 +941,53 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         )
         return job_exc
 
-    def _completion(self, jobid: str) -> None:
+    def _missing_pickle_error_msg(self, out_path: Path) -> str:
+        settings = Inject(get_settings)
+        info = (
+            "Output pickle file of the FractalSlurmSSHExecutor "
+            "job not found.\n"
+            f"Expected file path: {out_path.as_posix()}n"
+            "Here are some possible reasons:\n"
+            "1. The SLURM job was scancel-ed, either by the user "
+            "or due to an error (e.g. an out-of-memory or timeout "
+            "error). Note that if the scancel took place before "
+            "the job started running, the SLURM out/err files "
+            "will be empty.\n"
+            "2. Some error occurred upon writing the file to disk "
+            "(e.g. because there is not enough space on disk, or "
+            "due to an overloaded NFS filesystem). "
+            "Note that the server configuration has "
+            "FRACTAL_SLURM_ERROR_HANDLING_INTERVAL="
+            f"{settings.FRACTAL_SLURM_ERROR_HANDLING_INTERVAL} "
+            "seconds.\n"
+        )
+        return info
+
+    def _handle_remaining_jobs(
+        self,
+        remaining_futures: list[Future],
+        remaining_job_ids: list[str],
+        remaining_jobs: list[SlurmJob],
+    ) -> None:
+        """
+        Helper function used within _completion, when looping over a list of
+        several jobs/futures.
+        """
+        for future in remaining_futures:
+            try:
+                future.cancel()
+            except InvalidStateError:
+                pass
+        for job_id in remaining_job_ids:
+            self._cleanup(job_id)
+        if not self.keep_pickle_files:
+            for job in remaining_jobs:
+                for path in job.output_pickle_files_local:
+                    path.unlink()
+                for path in job.input_pickle_files_local:
+                    path.unlink()
+
+    def _completion(self, job_ids: list[str]) -> None:
         """
         Callback function to be executed whenever a job finishes.
 
@@ -958,149 +1001,169 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         Arguments:
             jobid: ID of the SLURM job
         """
-        # Handle all uncaught exceptions in this broad try/except block
-        try:
 
-            # Retrieve job
-            with self.jobs_lock:
-                try:
-                    fut, job = self.jobs.pop(jobid)
-                except KeyError:
-                    return
-                if not self.jobs:
-                    self.jobs_empty_cond.notify_all()
+        # Loop over all job_ids, and fetch future and job objects
+        futures: list[Future] = []
+        jobs: list[SlurmJob] = []
+        with self.jobs_lock:
+            for job_id in job_ids:
+                future, job = self.jobs.pop(job_id)
+                futures.append(future)
+                jobs.append(job)
+            if not self.jobs:
+                self.jobs_empty_cond.notify_all()
 
-            # Copy all relevant files from self.workflow_dir_remote to
-            # self.workflow_dir_local
+        # Fetch subfolder from remote host
+        self._get_subfolder_sftp(jobs=jobs)
 
-            self._get_subfolder(job)
-
-            in_paths = job.input_pickle_files_local
-            out_paths = tuple(
-                (self.workflow_dir_local / job.wftask_subfolder_name / f.name)
-                for f in job.output_pickle_files_local
+        # First round of checking whether all output files exist
+        missing_out_paths = []
+        for job in jobs:
+            for ind_out_path, out_path in enumerate(
+                job.output_pickle_files_local
+            ):
+                if not out_path.exists():
+                    missing_out_paths.append(out_path)
+        num_missing = len(missing_out_paths)
+        if num_missing > 0:
+            # Output pickle files may be missing e.g. because of some slow
+            # filesystem operation; wait some time before re-trying
+            settings = Inject(get_settings)
+            sleep_time = settings.FRACTAL_SLURM_ERROR_HANDLING_INTERVAL
+            logger.info(
+                f"{num_missing} output pickle files are missing; "
+                f"sleep {sleep_time} seconds."
             )
+            time.sleep(sleep_time)
 
-            outputs = []
-            for ind_out_path, out_path in enumerate(out_paths):
-                in_path = in_paths[ind_out_path]
+        # Handle all jobs
+        for ind_job, job_id in enumerate(job_ids):
+            try:
+                # Retrieve job and future objects
+                job = jobs[ind_job]
+                future = futures[ind_job]
+                remaining_job_ids = job_ids[ind_job + 1 :]  # noqa: E203
+                remaining_futures = futures[ind_job + 1 :]  # noqa: E203
 
-                # The output pickle file may be missing because of some slow
-                # filesystem operation; wait some time before considering it as
-                # missing
-                if not out_path.exists():
-                    settings = Inject(get_settings)
-                    time.sleep(settings.FRACTAL_SLURM_ERROR_HANDLING_INTERVAL)
-                if not out_path.exists():
-                    # Output pickle file is missing
-                    info = (
-                        "Output pickle file of the FractalSlurmSSHExecutor "
-                        "job not found.\n"
-                        f"Expected file path: {str(out_path)}.\n"
-                        "Here are some possible reasons:\n"
-                        "1. The SLURM job was scancel-ed, either by the user "
-                        "or due to an error (e.g. an out-of-memory or timeout "
-                        "error). Note that if the scancel took place before "
-                        "the job started running, the SLURM out/err files "
-                        "will be empty.\n"
-                        "2. Some error occurred upon writing the file to disk "
-                        "(e.g. because there is not enough space on disk, or "
-                        "due to an overloaded NFS filesystem). "
-                        "Note that the server configuration has "
-                        "FRACTAL_SLURM_ERROR_HANDLING_INTERVAL="
-                        f"{settings.FRACTAL_SLURM_ERROR_HANDLING_INTERVAL} "
-                        "seconds.\n"
-                    )
-                    job_exc = self._prepare_JobExecutionError(jobid, info=info)
+                outputs = []
+
+                for ind_out_path, out_path in enumerate(
+                    job.output_pickle_files_local
+                ):
+                    in_path = job.input_pickle_files_local[ind_out_path]
+                    if not out_path.exists():
+                        # Output pickle file is still missing
+                        info = self._missing_pickle_error_msg(out_path)
+                        job_exc = self._prepare_JobExecutionError(
+                            job_id, info=info
+                        )
+                        try:
+                            future.set_exception(job_exc)
+                            self._handle_remaining_jobs(
+                                remaining_futures=remaining_futures,
+                                remaining_job_ids=remaining_job_ids,
+                            )
+                            return
+                        except InvalidStateError:
+                            logger.warning(
+                                f"Future {future} (SLURM job ID: {job_id}) "
+                                "was already cancelled."
+                            )
+                            if not self.keep_pickle_files:
+                                in_path.unlink()
+                            self._cleanup(job_id)
+                            self._handle_remaining_jobs(
+                                remaining_futures=remaining_futures,
+                                remaining_job_ids=remaining_job_ids,
+                            )
+                            return
+
+                    # Read the task output
+                    with out_path.open("rb") as f:
+                        outdata = f.read()
+                    # Note: output can be either the task result (typically a
+                    # dictionary) or an ExceptionProxy object; in the latter
+                    # case, the ExceptionProxy definition is also part of the
+                    # pickle file (thanks to cloudpickle.dumps).
+                    success, output = cloudpickle.loads(outdata)
                     try:
-                        fut.set_exception(job_exc)
-                        return
+                        if success:
+                            outputs.append(output)
+                        else:
+                            proxy = output
+                            if proxy.exc_type_name == "JobExecutionError":
+                                job_exc = self._prepare_JobExecutionError(
+                                    job_id, info=proxy.kwargs.get("info", None)
+                                )
+                                future.set_exception(job_exc)
+                                self._handle_remaining_jobs(
+                                    remaining_futures=remaining_futures,
+                                    remaining_job_ids=remaining_job_ids,
+                                )
+                                return
+                            else:
+                                # This branch catches both TaskExecutionError's
+                                # (coming from the typical fractal-server
+                                # execution of tasks, and with additional
+                                # fractal-specific kwargs) or arbitrary
+                                # exceptions (coming from a direct use of
+                                # FractalSlurmSSHExecutor, possibly outside
+                                # fractal-server)
+                                kwargs = {}
+                                for key in [
+                                    "workflow_task_id",
+                                    "workflow_task_order",
+                                    "task_name",
+                                ]:
+                                    if key in proxy.kwargs.keys():
+                                        kwargs[key] = proxy.kwargs[key]
+                                exc = TaskExecutionError(proxy.tb, **kwargs)
+                                future.set_exception(exc)
+                                self._handle_remaining_jobs(
+                                    remaining_futures=remaining_futures,
+                                    remaining_job_ids=remaining_job_ids,
+                                )
+                                return
+                        if not self.keep_pickle_files:
+                            out_path.unlink()
                     except InvalidStateError:
                         logger.warning(
-                            f"Future {fut} (SLURM job ID: {jobid}) was already"
-                            " cancelled, exit from"
-                            " FractalSlurmSSHExecutor._completion."
+                            f"Future {future} (SLURM job ID: {job_id}) was "
+                            "already cancelled, exit from "
+                            "FractalSlurmSSHExecutor._completion."
                         )
                         if not self.keep_pickle_files:
+                            out_path.unlink()
                             in_path.unlink()
-                        self._cleanup(jobid)
+
+                        self._cleanup(job_id)
+                        self._handle_remaining_jobs(
+                            remaining_futures=remaining_futures,
+                            remaining_job_ids=remaining_job_ids,
+                        )
                         return
 
-                # Read the task output (note: we now know that out_path exists)
-                with out_path.open("rb") as f:
-                    outdata = f.read()
-                # Note: output can be either the task result (typically a
-                # dictionary) or an ExceptionProxy object; in the latter
-                # case, the ExceptionProxy definition is also part of the
-                # pickle file (thanks to cloudpickle.dumps).
-                success, output = cloudpickle.loads(outdata)
-                try:
-                    if success:
-                        outputs.append(output)
-                    else:
-                        proxy = output
-                        if proxy.exc_type_name == "JobExecutionError":
-                            job_exc = self._prepare_JobExecutionError(
-                                jobid, info=proxy.kwargs.get("info", None)
-                            )
-                            fut.set_exception(job_exc)
-                            return
-                        else:
-                            # This branch catches both TaskExecutionError's
-                            # (coming from the typical fractal-server
-                            # execution of tasks, and with additional
-                            # fractal-specific kwargs) or arbitrary
-                            # exceptions (coming from a direct use of
-                            # FractalSlurmSSHExecutor, possibly outside
-                            # fractal-server)
-                            kwargs = {}
-                            for key in [
-                                "workflow_task_id",
-                                "workflow_task_order",
-                                "task_name",
-                            ]:
-                                if key in proxy.kwargs.keys():
-                                    kwargs[key] = proxy.kwargs[key]
-                            exc = TaskExecutionError(proxy.tb, **kwargs)
-                            fut.set_exception(exc)
-                            return
+                    # Clean up input pickle file
                     if not self.keep_pickle_files:
-                        out_path.unlink()
+                        in_path.unlink()
+                self._cleanup(job_id)
+                if job.single_task_submission:
+                    future.set_result(outputs[0])
+                else:
+                    future.set_result(outputs)
+
+            except Exception as e:
+                try:
+                    future.set_exception(e)
+                    return
                 except InvalidStateError:
                     logger.warning(
-                        f"Future {fut} (SLURM job ID: {jobid}) was already"
+                        f"Future {future} (SLURM job ID: {job_id}) was already"
                         " cancelled, exit from"
                         " FractalSlurmSSHExecutor._completion."
                     )
-                    if not self.keep_pickle_files:
-                        out_path.unlink()
-                        in_path.unlink()
 
-                    self._cleanup(jobid)
-                    return
-
-                # Clean up input pickle file
-                if not self.keep_pickle_files:
-                    in_path.unlink()
-            self._cleanup(jobid)
-            if job.single_task_submission:
-                fut.set_result(outputs[0])
-            else:
-                fut.set_result(outputs)
-            return
-
-        except Exception as e:
-            try:
-                fut.set_exception(e)
-                return
-            except InvalidStateError:
-                logger.warning(
-                    f"Future {fut} (SLURM job ID: {jobid}) was already"
-                    " cancelled, exit from"
-                    " FractalSlurmSSHExecutor._completion."
-                )
-
-    def _get_subfolder(self, job: SlurmJob):  # FIXME: jobs?!?!
+    def _get_subfolder_sftp(self, jobs: list[SlurmJob]):
         """
         FIXME: docstring
 
@@ -1108,10 +1171,18 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             job:
                 `SlurmJob` object (needed for its prefixes-related attributes).
         """
+
+        # Check that the subfolder is unique
+        subfolder_names = [job.wftask_subfolder_name for job in jobs]
+        if len(set(subfolder_names)) > 1:
+            raise ValueError(
+                "[_put_subfolder] Invalid list of jobs, "
+                f"{set(subfolder_names)=}."
+            )
+        subfolder_name = subfolder_names[0]
+
         t_0 = time.perf_counter()
         logger.debug("[_copy_files_from_remote_to_local] Start")
-
-        subfolder_name = job.wftask_subfolder_name
         tarfile_path_local = (
             self.workflow_dir_local / f"{subfolder_name}.tar.gz"
         ).as_posix()

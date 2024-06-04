@@ -3,7 +3,6 @@ import time
 import traceback
 from itertools import count
 from typing import Callable
-from typing import Optional
 
 from cfut import FileWaitThread
 
@@ -24,97 +23,79 @@ class FractalSlurmWaitThread(FileWaitThread):
        complete is deferred to the `cfut.slurm.jobs_finished` function.
     3. There are additional attributes (...).
 
-    This class is copied from clusterfutures 0.5. Original Copyright: 2022
+    This class is based on clusterfutures 0.5. Original Copyright: 2022
     Adrian Sampson, released under the MIT licence
-
-    Note: in principle we could avoid the definition of
-    `FractalFileWaitThread`, and pack all this code in
-    `FractalSlurmWaitThread`.
     """
 
-    shutdown_file: Optional[str] = None
+    shutdown_file: str
     shutdown_callback: Callable
     jobs_finished_callback: Callable
     slurm_poll_interval = 30
+    active_job_ids: list[str]
 
-    def wait(
-        self,
-        *,
-        filenames: tuple[str, ...],
-        jobid: str,
-    ):
+    def __init__(self, *args, **kwargs):
+        """
+        Init method
+
+        This method is executed on the main thread.
+        """
+        super().__init__(*args, **kwargs)
+        self.active_job_ids = []
+
+    def wait(self, *, job_id: str):
         """
         Add a a new job to the set of jobs being waited for.
 
-        A job consists of a tuple of filenames and a callback value (i.e. a
-        SLURM job ID).
-
-        Note that (with respect to clusterfutures) we replaced `filename` with
-        `filenames`.
+        This method is executed on the main thread.
         """
         with self.lock:
-            self.waiting[filenames] = jobid
+            self.active_job_ids.append(job_id)
 
     def check_shutdown(self):
-        if self.shutdown_file and os.path.exists(self.shutdown_file):
+        """
+        Check whether the shutdown file exists
+
+        This method is executed on the waiting thread.
+        """
+        if os.path.exists(self.shutdown_file):
             logger.info(
-                f"Detected executor-shutdown file {str(self.shutdown_file)}"
+                f"Detected executor-shutdown file {self.shutdown_file}"
             )
             self.shutdown = True
 
-    def check_jobs(self, i):
+    def check_jobs(self):
         """
-        Do one shutdown-file-existence check.
+        Check whether some jobs are over, and call callback.
 
-        FIXME
-
-        Note: the `i` parameter allows subclasses like `SlurmWaitThread` to do
-        something on every Nth check.
-
-        Changed from clusterfutures:
-        * Do not check for output-pickle-file existence (we rather rely on
-          `cfut.slurm.jobs_finished`);
-        * Check for the existence of shutdown-file.
+        This method is executed on the waiting thread.
         """
-        if i % (self.slurm_poll_interval // self.interval) == 0:
-            try:
-                finished_jobs = self.jobs_finished_callback(
-                    list(self.waiting.values())
-                )
-            except Exception:
-                # Don't abandon completion checking if jobs_finished errors
-                traceback.print_exc()
-                return
+        try:
+            finished_jobs = self.jobs_finished_callback(self.active_job_ids)
+            if finished_jobs == set(self.active_job_ids):
+                self.callback(self.active_job_ids)
+                self.active_job_ids = []
 
-            if not finished_jobs:
-                return
-
-            id_to_filenames = {v: k for (k, v) in self.waiting.items()}
-            for finished_id in finished_jobs:
-                self.callback(finished_id)
-                self.waiting.pop(id_to_filenames[finished_id])
+        except Exception:
+            # If anything goes wrong, print an exception without re-raising
+            traceback.print_exc()
 
     def run(self):
         """
-        Overrides the original clusterfutures.FileWaitThread.run, adding a call
-        to self.shutdown_callback.
+        Run forever (until a shutdown takes place) and trigger callback
 
-        Changed from clusterfutures:
-        * We do not rely on output-file-existence checks to verify whether a
-          job is complete.
+        This method is executed on the waiting thread.
 
         Note that `shutdown_callback` only takes care of cleaning up the
         FractalSlurmExecutor variables, and then the `return` here is enough to
         fully clean up the `FractalFileWaitThread` object.
         """
-        for i in count():
-
+        skip = self.slurm_poll_interval // self.interval
+        for ind in count():
             self.check_shutdown()
             if self.shutdown:
                 self.shutdown_callback()
                 return
-
-            with self.lock:
-                self.check_jobs(i)
-
+            if ind % skip == 0:
+                with self.lock:
+                    self.check_jobs()
             time.sleep(self.interval)
