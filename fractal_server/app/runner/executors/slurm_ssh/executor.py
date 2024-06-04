@@ -205,7 +205,8 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                 if line.startswith("#SBATCH --account=")
             )
             raise RuntimeError(
-                "Invalid line in `FractalSlurmSSHExecutor.common_script_lines`: "
+                "Invalid line in `FractalSlurmSSHExecutor."
+                "common_script_lines`: "
                 f"'{invalid_line}'.\n"
                 "SLURM account must be set via the request body of the "
                 "apply-workflow endpoint, or by modifying the user properties."
@@ -858,8 +859,8 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                 if not out_path.exists():
                     # Output pickle file is missing
                     info = (
-                        "Output pickle file of the FractalSlurmSSHExecutor job "
-                        "not found.\n"
+                        "Output pickle file of the FractalSlurmSSHExecutor "
+                        "job not found.\n"
                         f"Expected file path: {str(out_path)}.\n"
                         "Here are some possible reasons:\n"
                         "1. The SLURM job was scancel-ed, either by the user "
@@ -1059,7 +1060,6 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         # Create compressed subfolder archive
         subfolder_name = job.wftask_subfolder_name
         local_subfolder = self.workflow_dir_local / subfolder_name
-        remote_subfolder = self.workflow_dir_remote / subfolder_name
         tarfile_path_local = (
             self.workflow_dir_local / f"{subfolder_name}.tar.gz"
         ).as_posix()
@@ -1127,7 +1127,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             raise JobExecutionError(info=error_msg)
         jobid_str = str(jobid)
 
-        # Plug SLURM job id in stdout/stderr SLURM file paths (local and remote)
+        # Plug job id in stdout/stderr SLURM file paths (local and remote)
         def _replace_slurm_job_id(_old_path: Path) -> Path:
             return Path(_old_path.as_posix().replace("%j", jobid_str))
 
@@ -1296,7 +1296,8 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         # If there is no Slurm job to check, return right away
         if not job_ids:
             logger.debug(
-                "[FractalSlurmSSHExecutor._jobs_finished] No jobs provided, return."
+                "[FractalSlurmSSHExecutor._jobs_finished] "
+                "No jobs provided, return."
             )
             return set()
 
@@ -1339,11 +1340,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             user=self.ssh_user,
             connect_kwargs={"key_filename": self.ssh_private_key_path},
         ) as connection:
-            logger.info(
-                f"[ConnectionWithParameters] START - {self.ssh_private_key_path}"
-            )
             yield connection
-            logger.warning("POST Connection")
 
     def handshake(self) -> dict:
         """
@@ -1367,8 +1364,10 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         if remote_fractal_server != local_fractal_server:
             error_msg = (
                 "Fractal-server version mismatch.\n"
-                f"Local interpreter ({sys.executable}): {local_versions}."
-                f"Remote interpreter ({self.python_remote}): {remote_versions}."
+                "Local interpreter: "
+                f"({sys.executable}): {local_versions}.\n"
+                "Remote interpreter: "
+                f"({self.python_remote}): {remote_versions}."
             )
             logger.error(error_msg)
             raise ValueError(error_msg)
