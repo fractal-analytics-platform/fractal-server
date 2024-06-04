@@ -134,13 +134,24 @@ def test_slurm_ssh_executor_no_docker(
     testdata_path,
     override_settings_factory,
 ):
+    """
+    This test requires a configuration file pointing to a SLURM cluster
+    that can be reached via SSH.
+    """
+
+    ssh_config_file = testdata_path / "ssh_config"
+    if not ssh_config_file.exists():
+        logging.warning(f"Missing {ssh_config_file} -- skip test.")
+        return
+
 
     random.seed(tmp_path.as_posix())
     label = str(random.randrange(0, 999999))
 
     monkeypatch.setattr("sys.stdin", io.StringIO(""))
 
-    with (testdata_path / "ssh_config").open("r") as f:
+
+    with ssh_config_file.open("r") as f:
         config = json.load(f)["uzh1"]
     debug(config)
 
