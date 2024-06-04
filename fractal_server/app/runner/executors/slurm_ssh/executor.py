@@ -404,7 +404,8 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             kwargs=fun_kwargs,
         )
         self._put_subfolder_sftp(jobs=[job])
-        future = self._submit_job(job)
+        future, job_id_str = self._submit_job(job)
+        self.wait_thread.wait(job_id=job_id_str)
         return future
 
     def map(
@@ -540,10 +541,14 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         # Construct list of futures (one per SLURM job, i.e. one per batch)
         fs = []
+        job_ids = []
         for job in jobs_to_submit:
-            future = self._submit_job(job)
+            future, job_id = self._submit_job(job)
+            job_ids.append(job_id)
             fs.append(future)
             time.sleep(FRACTAL_SLURM_SBATCH_SLEEP)
+        for job_id in job_ids:
+            self.wait_thread.wait(job_id=job_id)
 
         # Yield must be hidden in closure so that the futures are submitted
         # before the first iterator value is required.
@@ -851,7 +856,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             f"Local archive removed - elapsed: {t_1_rm - t_0_rm:.3f} s"
         )
 
-    def _submit_job(self, job: SlurmJob) -> Future:
+    def _submit_job(self, job: SlurmJob) -> tuple[Future, str]:
         """
         Submit a job to SLURM via SSH.
 
@@ -901,14 +906,11 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                 job.slurm_stderr_local.as_posix(),
             )
 
-        # Start thread that will wait for job to finish.
-        self.wait_thread.wait(job_id=job_id_str)
-
         # Create future
         future = Future()
         with self.jobs_lock:
             self.jobs[job_id_str] = (future, job)
-        return future
+        return future, job_id_str
 
     def _prepare_JobExecutionError(
         self, jobid: str, info: str

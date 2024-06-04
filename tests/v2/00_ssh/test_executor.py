@@ -146,7 +146,7 @@ def test_slurm_ssh_executor_map(
     with TestingFractalSSHSlurmExecutor(
         workflow_dir_local=tmp_path / "job_dir",
         workflow_dir_remote=(tmp777_path / "remote_job_dir"),
-        slurm_poll_interval=1,
+        slurm_poll_interval=0,
         ssh_host=slurmlogin_ip,
         ssh_user="test01",
         ssh_private_key_path=ssh_keys["private"],
