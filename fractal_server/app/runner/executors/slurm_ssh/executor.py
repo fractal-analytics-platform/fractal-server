@@ -525,7 +525,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             this_slurm_file_prefix = (
                 f"{general_slurm_file_prefix}_batch_{ind_batch:06d}"
             )
-            jobs_to_submit = self._prepare_job(
+            new_job_to_submit = self._prepare_job(
                 fn,
                 slurm_config=slurm_config,
                 slurm_file_prefix=this_slurm_file_prefix,
@@ -533,7 +533,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                 single_task_submission=False,
                 components=batch,
             )
-            jobs_to_submit.append(jobs_to_submit)
+            jobs_to_submit.append(new_job_to_submit)
             current_component_index += batch_size
 
         self._put_subfolder(jobs=jobs_to_submit)
