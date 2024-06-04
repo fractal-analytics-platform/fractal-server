@@ -272,11 +272,6 @@ class Settings(BaseSettings):
     or a path relative to current working directory).
     """
 
-    FRACTAL_GRACEFUL_SHUTDOWN_TIME: int = 30
-    """
-    Waiting time for the shutdown phase of executors
-    """
-
     @validator("FRACTAL_TASKS_DIR", always=True)
     def make_FRACTAL_TASKS_DIR_absolute(cls, v):
         """
@@ -338,11 +333,18 @@ class Settings(BaseSettings):
     """
     Path of JSON file with configuration for the local backend.
     """
+
     FRACTAL_API_MAX_JOB_LIST_LENGTH: int = 50
     """
     Number of ids that can be stored in the `jobsV1` and `jobsV2` attributes of
     `app.state`.
     """
+
+    FRACTAL_GRACEFUL_SHUTDOWN_TIME: int = 30
+    """
+    Waiting time for the shutdown phase of executors
+    """
+
     FRACTAL_SLURM_CONFIG_FILE: Optional[Path]
     """
     Path of JSON file with configuration for the SLURM backend.

@@ -20,8 +20,7 @@ async def test_app_with_lifespan(
     dataset_factory_v2,
     job_factory_v2,
 ):
-
-    override_settings_factory(FRACTAL_GRACEFUL_SHUTDOWN_TIME=1)
+    override_settings_factory(FRACTAL_GRACEFUL_SHUTDOWN_TIME=0)
 
     app = FastAPI()
     res = await db.execute(select(UserOAuth))
@@ -59,4 +58,4 @@ async def test_app_with_lifespan(
         # append submitted job to jobsV2 status
         app.state.jobsV2.append(job.id)
     # verify that the shutdown file was created during the lifespan cleanup
-    assert os.path.exists(f"/{job.working_dir}/{SHUTDOWN_FILENAME}")
+    assert os.path.exists(f"{job.working_dir}/{SHUTDOWN_FILENAME}")

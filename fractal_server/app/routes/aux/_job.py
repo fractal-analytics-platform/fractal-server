@@ -18,6 +18,7 @@ def _write_shutdown_file(*, job: ApplyWorkflow):
     attribute) here, since this will be done by the runner backend as soon as
     it detects the shutdown-trigerring file and performs the actual shutdown.
     """
+    print(f"WRITING {Path(job.working_dir) / SHUTDOWN_FILENAME}")
     shutdown_file = Path(job.working_dir) / SHUTDOWN_FILENAME
     with shutdown_file.open("w") as f:
         f.write(f"Trigger executor shutdown for {job.id=}.")

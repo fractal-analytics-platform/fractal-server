@@ -10,7 +10,6 @@ from fractal_server.app.security import get_async_session_context
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 
-settings = Inject(get_settings)
 
 # If backend is not SLURM, skip this part
 # Note that this would need to take place for both V1 and V2 jobs.
@@ -26,7 +25,7 @@ async def cleanup_after_shutdown(
                 (
                     await session.execute(
                         select(JobV2)
-                        .where(JobV2.id in jobsV2)
+                        .where(JobV2.id.in_(jobsV2))
                         .where(JobV2.status == "submitted")
                     )
                 )
@@ -38,32 +37,32 @@ async def cleanup_after_shutdown(
                 (
                     await session.execute(
                         select(ApplyWorkflow)
-                        .where(ApplyWorkflow.id in jobsV1)
+                        .where(ApplyWorkflow.id.in_(jobsV1))
                         .where(ApplyWorkflow.status == "submitted")
                     )
                 )
                 .scalars()
                 .all()
             )
-
             for job in jobsV2_db:
                 _write_shutdown_file(job=job)
 
             for job in jobsV1_db:
                 _write_shutdown_file(job=job)
 
+            settings = Inject(get_settings)
+
             t_start = time.perf_counter()
             while (
                 time.perf_counter() - t_start
-                < settings.FRACTAL_GRACEFUL_SHUTDOWN_TIME
-            ):  # this could be e.g. 30 seconds
+            ) < settings.FRACTAL_GRACEFUL_SHUTDOWN_TIME:  # 30 seconds
                 logger.info("Waiting 3 seconds before checking")
                 time.sleep(3)
                 jobsV2_db = (
                     (
                         await session.execute(
                             select(JobV2)
-                            .where(JobV2.id in jobsV2)
+                            .where(JobV2.id.in_(jobsV2))
                             .where(JobV2.status == "submitted")
                         )
                     )
@@ -75,7 +74,7 @@ async def cleanup_after_shutdown(
                     (
                         await session.execute(
                             select(ApplyWorkflow)
-                            .where(ApplyWorkflow.id in jobsV1)
+                            .where(ApplyWorkflow.id.in_(jobsV1))
                             .where(ApplyWorkflow.status == "submitted")
                         )
                     )
@@ -114,7 +113,7 @@ async def cleanup_after_shutdown(
                 (
                     await session.execute(
                         select(JobV2)
-                        .where(JobV2.id in jobsV2)
+                        .where(JobV2.id.in_(jobsV2))
                         .where(JobV2.status == "submitted")
                     )
                 )
@@ -126,7 +125,7 @@ async def cleanup_after_shutdown(
                 (
                     await session.execute(
                         select(ApplyWorkflow)
-                        .where(ApplyWorkflow.id in jobsV1)
+                        .where(ApplyWorkflow.id.in_(jobsV1))
                         .where(ApplyWorkflow.status == "submitted")
                     )
                 )
