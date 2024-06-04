@@ -3,12 +3,12 @@ from logging import Logger
 
 from sqlmodel import select
 
+from fractal_server.app.db import get_async_db
 from fractal_server.app.models.v1 import ApplyWorkflow
 from fractal_server.app.models.v1.job import JobStatusTypeV1
 from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2.job import JobStatusTypeV2
 from fractal_server.app.routes.aux._job import _write_shutdown_file
-from fractal_server.app.security import get_async_session_context
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 
@@ -33,7 +33,7 @@ async def cleanup_after_shutdown(
         .where(ApplyWorkflow.status == JobStatusTypeV1.SUBMITTED)
     )
     try:
-        async with get_async_session_context() as session:
+        async for session in get_async_db():
             jobsV2_db = (await session.execute(stm_v2)).scalars().all()
             jobsV1_db = (await session.execute(stm_v1)).scalars().all()
 
@@ -61,7 +61,7 @@ async def cleanup_after_shutdown(
                             "either done or failed. Exit."
                         )
                     )
-                    break
+                    return
                 else:
                     logger.info(
                         (
@@ -75,17 +75,27 @@ async def cleanup_after_shutdown(
                     "but some jobs are still submitted"
                 )
             )
-            jobsV2_db = (await session.execute(stm_v2)).scalars().all()
-            jobsV1_db = (await session.execute(stm_v1)).scalars().all()
 
+            logger.info(jobsV2_db)
             for job in jobsV2_db:
+                print("A")
                 job.status = "failed"
                 if job.log is None:
                     job.log = "Job stopped due to app shutdown\n"
+                    print("B")
                 else:
                     job.log += "Job stopped due to app shutdown\n"
+                    print("C")
                 session.add(job)
+                print("D")
                 await session.commit()
+
+            # jobv2_after = (
+            #     await session.execute(select(JobV2))
+            # ).scalar_one_or_none()
+            #            jobv1_after = (await db.execute(select(ApplyWorkflow))
+            # ).scalar_one_or_none()
+            #            assert jobv1_after.status == "failed"
 
             for job in jobsV1_db:
                 job.status = "failed"

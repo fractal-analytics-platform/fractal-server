@@ -4,6 +4,8 @@ from fastapi import FastAPI
 from sqlmodel import select
 
 from fractal_server.app.models.security import UserOAuth
+from fractal_server.app.models.v1.job import ApplyWorkflow
+from fractal_server.app.models.v2.job import JobV2
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task as _workflow_insert_task_v1,
 )
@@ -56,12 +58,10 @@ async def test_app_with_lifespan(
             workflow_id=workflow.id,
             dataset_id=dataset1.id,
             status="submitted",
-            working_dir="/tmp",
+            working_dir=tmp_path.as_posix(),
             last_task_index=0,
         )
-        db.add(jobv2)
-        await db.commit()
-        await db.refresh(jobv2)
+
         # append submitted job to jobsV2 status
         app.state.jobsV2.append(jobv2.id)
 
@@ -80,11 +80,14 @@ async def test_app_with_lifespan(
             output_dataset_id=datasetv1.id,
             workflow_id=workflow.id,
         )
-        db.add(jobv1)
-        await db.commit()
-        await db.refresh(jobv1)
         # append submitted job to jobsV2 status
         app.state.jobsV1.append(jobv1.id)
 
     # verify that the shutdown file was created during the lifespan cleanup
     assert os.path.exists(f"{jobv2.working_dir}/{SHUTDOWN_FILENAME}")
+    jobv2_after = (await db.execute(select(JobV2))).scalar_one_or_none()
+    jobv1_after = (
+        await db.execute(select(ApplyWorkflow))
+    ).scalar_one_or_none()
+    assert jobv2_after.status == "failed"
+    assert jobv1_after.status == "failed"
