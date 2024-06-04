@@ -1,6 +1,6 @@
 import time
+from logging import Logger
 
-from devtools import debug
 from sqlmodel import select
 
 from fractal_server.app.models.v1 import ApplyWorkflow
@@ -16,8 +16,10 @@ settings = Inject(get_settings)
 # Note that this would need to take place for both V1 and V2 jobs.
 
 
-async def cleanup_after_shutdown(jobsV1: list[int], jobsV2: list[int]):
-    debug("Cleanup function after shutdown")
+async def cleanup_after_shutdown(
+    jobsV1: list[int], jobsV2: list[int], logger: Logger
+):
+    logger.info("Cleanup function after shutdown")
     try:
         async with get_async_session_context() as session:
             jobsV2_db = (
@@ -55,7 +57,7 @@ async def cleanup_after_shutdown(jobsV1: list[int], jobsV2: list[int]):
                 time.perf_counter() - t_start
                 < settings.FRACTAL_GRACEFUL_SHUTDOWN_TIME
             ):  # this could be e.g. 30 seconds
-                debug("Waiting 3 seconds before checking")
+                logger.info("Waiting 3 seconds before checking")
                 time.sleep(3)
                 jobsV2_db = (
                     (
@@ -88,7 +90,7 @@ async def cleanup_after_shutdown(jobsV1: list[int], jobsV2: list[int]):
                     _write_shutdown_file(job=job)
 
                 if len(jobsV2_db) == 0 and len(jobsV1_db) == 0:
-                    print(
+                    logger.info(
                         (
                             "All jobs associated to this app are "
                             "either done or failed. Exit."
@@ -96,13 +98,13 @@ async def cleanup_after_shutdown(jobsV1: list[int], jobsV2: list[int]):
                     )
                     break
                 else:
-                    debug(
+                    logger.info(
                         (
                             f"Some jobs are still 'submitted' "
                             f"{jobsV1_db}, {jobsV2_db}"
                         )
                     )
-            debug(
+            logger.info(
                 (
                     "Graceful shutdown reached its maximum time, "
                     "but some jobs are still submitted"
@@ -155,6 +157,6 @@ async def cleanup_after_shutdown(jobsV1: list[int], jobsV2: list[int]):
                     job.log += "Job stopped due to app shutdown\n"
                 session.add(job)
                 await session.commit()
-            debug("Exit from shutdown logic")
+            logger.info("Exit from shutdown logic")
     except Exception:
         raise ("Connection failed")
