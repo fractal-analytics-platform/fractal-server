@@ -86,16 +86,25 @@ class FractalSlurmWaitThread(FileWaitThread):
         This method is executed on the waiting thread.
 
         Note that `shutdown_callback` only takes care of cleaning up the
-        FractalSlurmExecutor variables, and then the `return` here is enough to
-        fully clean up the `FractalFileWaitThread` object.
+        FractalSlurmExecutor variables, and then the `return` here is enough
+        to fully clean up the `FractalFileWaitThread` object.
         """
-        skip = self.slurm_poll_interval // self.interval
+
+        # FIXME: are those try/except below needed?
+
+        skip = max(self.slurm_poll_interval // self.interval, 1)
         for ind in count():
             self.check_shutdown()
             if self.shutdown:
-                self.shutdown_callback()
+                try:
+                    self.shutdown_callback()
+                except Exception:  # nosec
+                    pass
                 return
             if ind % skip == 0:
                 with self.lock:
-                    self.check_jobs()
+                    try:
+                        self.check_jobs()
+                    except Exception:  # nosec
+                        pass
             time.sleep(self.interval)

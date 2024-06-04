@@ -165,6 +165,8 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         if slurm_poll_interval is None:
             settings = Inject(get_settings)
             slurm_poll_interval = settings.FRACTAL_SLURM_POLL_INTERVAL
+        elif slurm_poll_interval <= 0:
+            raise ValueError(f"Invalid attribute {slurm_poll_interval=}")
         self.wait_thread.slurm_poll_interval = slurm_poll_interval
         self.wait_thread.shutdown_file = (
             self.workflow_dir_local / SHUTDOWN_FILENAME
@@ -519,6 +521,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         settings = Inject(get_settings)
         FRACTAL_SLURM_SBATCH_SLEEP = settings.FRACTAL_SLURM_SBATCH_SLEEP
 
+        logger.debug("[map] Job preparation - START")
         current_component_index = 0
         jobs_to_submit = []
         for ind_batch, batch in enumerate(args_batches):
@@ -536,10 +539,12 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             )
             jobs_to_submit.append(new_job_to_submit)
             current_component_index += batch_size
+        logger.debug("[map] Job preparation - END")
 
         self._put_subfolder_sftp(jobs=jobs_to_submit)
 
         # Construct list of futures (one per SLURM job, i.e. one per batch)
+        logger.debug("[map] Job submission - START")
         fs = []
         job_ids = []
         for job in jobs_to_submit:
@@ -549,6 +554,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             time.sleep(FRACTAL_SLURM_SBATCH_SLEEP)
         for job_id in job_ids:
             self.wait_thread.wait(job_id=job_id)
+        logger.debug("[map] Job submission - END")
 
         # Yield must be hidden in closure so that the futures are submitted
         # before the first iterator value is required.
@@ -1396,9 +1402,20 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             id_to_state = {
                 out.split()[0]: out.split()[1] for out in stdout.splitlines()
             }
+            # Finished jobs only stay in squeue for a few mins (configurable).
+            # If a job ID isn't there, we'll assume it's finished.
+            output = {
+                _id
+                for _id in job_ids
+                if id_to_state.get(_id, "COMPLETED") in STATES_FINISHED
+            }
+            logger.debug(
+                f"[FractalSlurmSSHExecutor._jobs_finished] END - {output=}"
+            )
+            return output
         except Exception:
-            id_to_state = {}
-            raise NotImplementedError
+            # If something goes wrong, proceed
+            return set()
 
             id_to_state = dict()
             for j in job_ids:
@@ -1410,18 +1427,6 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                     id_to_state.update(
                         {res.stdout.split()[0]: res.stdout.split()[1]}
                     )
-
-        # Finished jobs only stay in squeue for a few mins (configurable). If
-        # a job ID isn't there, we'll assume it's finished.
-        output = {
-            _id
-            for _id in job_ids
-            if id_to_state.get(_id, "COMPLETED") in STATES_FINISHED
-        }
-        logger.debug(f"[FractalSlurmSSHExecutor._jobs_finished] {output=}")
-
-        logger.debug("[FractalSlurmSSHExecutor._jobs_finished] END")
-        return output
 
     @contextlib.contextmanager
     def ConnectionWithParameters(self):
