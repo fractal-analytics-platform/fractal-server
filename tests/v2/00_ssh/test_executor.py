@@ -144,12 +144,10 @@ def test_slurm_ssh_executor_no_docker(
         logging.warning(f"Missing {ssh_config_file} -- skip test.")
         return
 
-
     random.seed(tmp_path.as_posix())
     label = str(random.randrange(0, 999999))
 
     monkeypatch.setattr("sys.stdin", io.StringIO(""))
-
 
     with ssh_config_file.open("r") as f:
         config = json.load(f)["uzh1"]
