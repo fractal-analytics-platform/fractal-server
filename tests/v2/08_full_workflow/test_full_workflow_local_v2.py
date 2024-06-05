@@ -1,18 +1,9 @@
-from glob import glob
-from pathlib import Path
-
 import pytest
 from common_functions import failing_workflow_UnknownError
 from common_functions import full_workflow
 from common_functions import full_workflow_TaskExecutionError
 from common_functions import non_executable_task_command
-from common_functions import PREFIX
-from devtools import debug
-
-from fractal_server.app.runner.filenames import FILTERS_FILENAME
-from fractal_server.app.runner.filenames import HISTORY_FILENAME
-from fractal_server.app.runner.filenames import IMAGES_FILENAME
-from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
+from common_functions import non_python_task_local
 
 FRACTAL_RUNNER_BACKEND = "local"
 
@@ -140,7 +131,7 @@ async def test_failing_workflow_UnknownError_local(
     )
 
 
-# Tested with 'local' backend only.
+# Tested with 'local' backends only.
 # With 'slurm' backend we get:
 #   TaskExecutionError: bash: /home/runner/work/fractal-server/fractal-server/
 #       tests/data/non_python_task_issue1377.sh: No such file or directory
@@ -157,80 +148,12 @@ async def test_non_python_task_local(
     Run a full workflow with a single bash task, which simply writes
     something to stderr and stdout
     """
-    async with MockCurrentUser(user_kwargs={"is_verified": True}) as user:
-        # Create project
-        project = await project_factory_v2(user)
-        project_id = project.id
-
-        # Create workflow
-        workflow = await workflow_factory_v2(
-            name="test_wf", project_id=project_id
-        )
-
-        # Create task
-        task = await task_factory_v2(
-            name="non-python",
-            source="custom-task",
-            type="non_parallel",
-            command_non_parallel=(
-                f"bash {str(testdata_path)}/non_python_task_issue1377.sh"
-            ),
-        )
-
-        # Add task to workflow
-        res = await client.post(
-            f"{PREFIX}/project/{project_id}/workflow/{workflow.id}/wftask/"
-            f"?task_id={task.id}",
-            json=dict(),
-        )
-        assert res.status_code == 201
-
-        # Create datasets
-        dataset = await dataset_factory_v2(
-            project_id=project_id, name="dataset"
-        )
-
-        # Submit workflow
-        res = await client.post(
-            f"{PREFIX}/project/{project.id}/job/submit/"
-            f"?workflow_id={workflow.id}&dataset_id={dataset.id}",
-            json={},
-        )
-        job_data = res.json()
-        debug(job_data)
-        assert res.status_code == 202
-
-        # Check that the workflow execution is complete
-        res = await client.get(
-            f"{PREFIX}/project/{project_id}/job/{job_data['id']}/"
-        )
-        assert res.status_code == 200
-        job_status_data = res.json()
-        debug(job_status_data)
-        assert job_status_data["status"] == "done"
-        debug(job_status_data["end_timestamp"])
-        assert job_status_data["end_timestamp"]
-
-        # Check that the expected files are present
-        working_dir = job_status_data["working_dir"]
-        glob_list = [Path(x).name for x in glob(f"{working_dir}/*")] + [
-            Path(x).name for x in glob(f"{working_dir}/*/*")
-        ]
-
-        must_exist = [
-            "0.log",
-            "0.args.json",
-            IMAGES_FILENAME,
-            HISTORY_FILENAME,
-            FILTERS_FILENAME,
-            WORKFLOW_LOG_FILENAME,
-        ]
-
-        for f in must_exist:
-            assert f in glob_list
-
-        # Check that stderr and stdout are as expected
-        with open(f"{working_dir}/0_non-python/0.log", "r") as f:
-            log = f.read()
-        assert "This goes to standard output" in log
-        assert "This goes to standard error" in log
+    await non_python_task_local(
+        client=client,
+        MockCurrentUser=MockCurrentUser,
+        project_factory_v2=project_factory_v2,
+        dataset_factory_v2=dataset_factory_v2,
+        workflow_factory_v2=workflow_factory_v2,
+        task_factory_v2=task_factory_v2,
+        testdata_path=testdata_path,
+    )
