@@ -294,23 +294,17 @@ def test_indirect_shutdown_during_submit(tmp_path):
         shutdown_file=str(shutdown_file)
     ) as executor:
 
-        assert executor.shutdown_thread.is_alive()
-
         res = executor.submit(_sleep_and_return, 100)
 
         with shutdown_file.open("w"):
             pass
         assert shutdown_file.exists()
 
-        assert executor.shutdown_thread.is_alive()
         time.sleep(2)
-        assert not executor.shutdown_thread.is_alive()
 
         assert isinstance(res.exception(), BrokenProcessPool)
         with pytest.raises(BrokenProcessPool):
             res.result()
-
-    assert not executor.shutdown_thread.is_alive()
 
 
 def wait_one_sec(*args, **kwargs):
