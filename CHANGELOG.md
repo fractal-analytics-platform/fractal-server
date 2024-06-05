@@ -14,6 +14,7 @@
     * Change structure of job folders, introducing per-task subfolders (\#1523).
     * Rename internal `workflow_dir` and `workflow_dir_user` variables to local/remote (\#1534).
 * App and deployment:
+    * Add logic for graceful shutdown for job slurm executors. (\#1547)
     * Add custom gunicorn/uvicorn worker to handle SIGABRT signal (\#1526).
     * Move `FractalGunicornLogger` and `FractalWorker` in `fractal_server/gunicorn_fractal.py` (\#1535).
     * Store list of submitted jobs in app state (\#1538).
