@@ -558,10 +558,6 @@ async def test_task_query(
         )
         # task3 is orphan
 
-        # This 'new_project' and
-        new_project = await project_factory_v2(user, name="new_project")
-        new_workflow = await workflow_factory_v2(project_id=new_project.id)
-
         # Query ALL Tasks
 
         res = await client.get(f"{PREFIX}/task/")
@@ -796,6 +792,11 @@ async def test_task_query(
         assert len(res.json()) == 1
 
         # Too many Tasks
+
+        await db.flush()
+        new_project = await project_factory_v2(user)
+        new_workflow = await workflow_factory_v2(project_id=new_project.id)
+
         for i in range(30):
             task = await task_factory_v2(name=f"n{i}", source=f"s{i}")
             await _workflow_insert_task(
