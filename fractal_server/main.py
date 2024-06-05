@@ -114,8 +114,8 @@ async def lifespan(app: FastAPI):
             )
         except Exception as e:
             logger.error(
-                f"Something went wrong during shutdown phase, "
-                f"some of running jobs are not shutdown properly. "
+                "Something went wrong during shutdown phase, "
+                "some of running jobs are not shutdown properly. "
                 f"Original error: {e}"
             )
 
