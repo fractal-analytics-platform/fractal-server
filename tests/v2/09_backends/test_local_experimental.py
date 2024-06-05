@@ -29,7 +29,7 @@ class MockWorkflowTask(BaseModel):
 
     @property
     def meta(self) -> dict:
-        return dict()
+        return self.meta_non_parallel or self.meta_parallel
 
 
 def _sleep_and_return(sleep_time):
@@ -42,7 +42,7 @@ def _wait_one_sec(*args, **kwargs):
     return 42
 
 
-async def test_LocalBackendConfigError(tmp_path):
+async def test_get_local_backend_config(tmp_path):
 
     config_file = tmp_path / "config.json"
     valid_config = dict(parallel_tasks_per_job=1)
@@ -63,6 +63,19 @@ async def test_LocalBackendConfigError(tmp_path):
         wftask=MockWorkflowTask(),
         which_type="parallel",
         config_path=config_file,
+    )
+
+    with pytest.raises(ValueError):
+        get_local_backend_config(
+            wftask=MockWorkflowTask(),
+            which_type="not a valid type",
+            config_path=config_file,
+        )
+
+    # test 'parallel_tasks_per_job' from wftask.meta
+    get_local_backend_config(
+        wftask=MockWorkflowTask(meta_parallel=dict(parallel_tasks_per_job=42)),
+        which_type="parallel",
     )
 
 
