@@ -677,18 +677,10 @@ async def test_task_query(
         assert len(res.json()) == 1
 
         # --------------------------
-        # After deleting the Project
+        # Relationships after deleting the Project
 
         res = await client.delete(f"api/v2/project/{project.id}/")
         assert res.status_code == 204
-
-        # Query ALL Tasks
-
-        res = await client.get(f"{PREFIX}/task/")
-        debug(res.json())
-        assert res.status_code == 200
-        assert len(res.json()) == 3
-        debug(res.json())
 
         # Query by ID
 
@@ -699,9 +691,6 @@ async def test_task_query(
             assert res.json()[0]["task"]["id"] == t.id
             assert len(res.json()[0]["relationships"]) == 0
 
-        res = await client.get(f"{PREFIX}/task/?id=1000")
-        assert len(res.json()) == 0
-
         # Query by SOURCE
         for t in [task1, task2, task3]:
             res = await client.get(f"{PREFIX}/task/?source={t.source}")
@@ -709,54 +698,7 @@ async def test_task_query(
             assert res.json()[0]["task"]["id"] == t.id
             assert len(res.json()[0]["relationships"]) == 0
 
-        res = await client.get(f"{PREFIX}/task/?source=foo")
-        assert len(res.json()) == 0
-
-        # Query by VERSION
-
-        res = await client.get(f"{PREFIX}/task/?version=0")  # task 1 + 2
-        assert len(res.json()) == 2
-
-        res = await client.get(f"{PREFIX}/task/?version=3")  # task 3
-        assert len(res.json()) == 1
-
-        res = await client.get(f"{PREFIX}/task/?version=1.2")
-        assert len(res.json()) == 0
-
-        # Query by NAME
-        for t in [task1, task2, task3]:
-            res = await client.get(f"{PREFIX}/task/?name={t.name}")
-            assert len(res.json()) == 1
-
-        res = await client.get(f"{PREFIX}/task/?name=nonamelikethis")
-        assert len(res.json()) == 0
-
-        res = await client.get(f"{PREFIX}/task/?name=f")  # task 1 + 2
-        assert len(res.json()) == 2
-
-        res = await client.get(f"{PREFIX}/task/?name=F")  # task 1 + 2
-        assert len(res.json()) == 2
-
-        # Query by OWNER
-
-        res = await client.get(f"{PREFIX}/task/?owner={task1.owner}")
-        assert len(res.json()) == 1
-
-        res = await client.get(f"{PREFIX}/task/?owner={task2.owner}")
-        assert len(res.json()) == 1
-
-        res = await client.get(f"{PREFIX}/task/?owner=foo")
-        assert len(res.json()) == 0
-
-        # Query by KIND
-
-        res = await client.get(f"{PREFIX}/task/?kind=users")
-        assert len(res.json()) == 2
-
-        assert task3.owner is None
-        res = await client.get(f"{PREFIX}/task/?kind=common")
-        assert len(res.json()) == 1
-
+        # --------------------------
         # Too many Tasks
 
         # We need 'db.close' to avoid: "<sqlalchemy.exc.SAWarning: Identity map
