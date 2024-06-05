@@ -704,7 +704,7 @@ async def test_task_query(
         # We need 'db.close' to avoid: "<sqlalchemy.exc.SAWarning: Identity map
         # already had an identity for (<class 'fractal_server.app.models.v2.*'>
         # ,(1,), None), replacing it with newly flushed object." where * is in
-        # [project.ProjectV1, workflow.WorkflowV2, workflowtask.WorkflowTaskV2]
+        # [project.ProjectV2, workflow.WorkflowV2, workflowtask.WorkflowTaskV2]
         await db.close()
 
         new_project = await project_factory_v2(user)
