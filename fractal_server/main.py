@@ -20,9 +20,11 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from .app.runner.shutdown import cleanup_after_shutdown
 from .app.security import _create_first_user
 from .config import get_settings
 from .logger import config_uvicorn_loggers
+from .logger import get_logger
 from .logger import reset_logger_handlers
 from .logger import set_logger
 from .syringe import Inject
@@ -99,13 +101,26 @@ async def lifespan(app: FastAPI):
     logger.info("End application startup")
     reset_logger_handlers(logger)
     yield
-    logger = set_logger("fractal_server.lifespan")
+    logger = get_logger("fractal_server.lifespan")
+    logger.info("Start application shutdown")
     logger.info(
         f"Current worker with pid {os.getpid()} is shutting down. "
-        f"Following jobs will be set to failed: {app.state.jobsV1=}, "
-        f"{app.state.jobsV2=}"
+        f"Current jobs: {app.state.jobsV1=}, {app.state.jobsV2=}"
     )
-    logger.info("Start application shutdown")
+    if settings.FRACTAL_RUNNER_BACKEND == "slurm":
+        try:
+            await cleanup_after_shutdown(
+                jobsV1=app.state.jobsV1,
+                jobsV2=app.state.jobsV2,
+                logger_name="fractal_server.lifespan",
+            )
+        except Exception as e:
+            logger.error(
+                "Something went wrong during shutdown phase, "
+                "some of running jobs are not shutdown properly. "
+                f"Original error: {e}"
+            )
+
     logger.info("End application shutdown")
     reset_logger_handlers(logger)
 
