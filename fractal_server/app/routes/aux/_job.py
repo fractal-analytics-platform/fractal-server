@@ -1,13 +1,15 @@
 from io import BytesIO
 from pathlib import Path
+from typing import Union
 from zipfile import ZIP_DEFLATED
 from zipfile import ZipFile
 
 from ...models.v1 import ApplyWorkflow
+from ...models.v2 import JobV2
 from ...runner.filenames import SHUTDOWN_FILENAME
 
 
-def _write_shutdown_file(*, job: ApplyWorkflow):
+def _write_shutdown_file(*, job: Union[ApplyWorkflow, JobV2]):
     """
     Write job's shutdown file.
 
@@ -18,7 +20,6 @@ def _write_shutdown_file(*, job: ApplyWorkflow):
     attribute) here, since this will be done by the runner backend as soon as
     it detects the shutdown-trigerring file and performs the actual shutdown.
     """
-    print(f"WRITING {Path(job.working_dir) / SHUTDOWN_FILENAME}")
     shutdown_file = Path(job.working_dir) / SHUTDOWN_FILENAME
     with shutdown_file.open("w") as f:
         f.write(f"Trigger executor shutdown for {job.id=}.")

@@ -9,7 +9,7 @@ from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2.job import JobStatusTypeV2
 from fractal_server.app.routes.aux._job import _write_shutdown_file
 from fractal_server.config import get_settings
-from fractal_server.logger import set_logger
+from fractal_server.logger import get_logger
 from fractal_server.syringe import Inject
 
 
@@ -20,8 +20,7 @@ from fractal_server.syringe import Inject
 async def cleanup_after_shutdown(
     jobsV1: list[int], jobsV2: list[int], logger_name: str
 ):
-    logger = set_logger(logger_name)
-    logger.propagate = True
+    logger = get_logger(logger_name)
     logger.info("Cleanup function after shutdown")
     stm_v2 = (
         select(JobV2)
@@ -68,7 +67,7 @@ async def cleanup_after_shutdown(
                     logger.info(
                         (
                             f"Some jobs are still 'submitted' "
-                            f"{jobsV1_db}, {jobsV2_db}"
+                            f"{jobsV1_db=}, {jobsV2_db=}"
                         )
                     )
             logger.info(
@@ -80,19 +79,25 @@ async def cleanup_after_shutdown(
 
             for job in jobsV2_db:
                 job.status = "failed"
-                job.log = (job.log or "") + "Job stopped due to app shutdown\n"
+                job.log = (
+                    job.log or ""
+                ) + "\nJob stopped due to app shutdown\n"
                 session.add(job)
-                await session.commit()
+            await session.commit()
 
             for job in jobsV1_db:
                 job.status = "failed"
-                job.log = (job.log or "") + "Job stopped due to app shutdown\n"
+                job.log = (
+                    job.log or ""
+                ) + "\nJob stopped due to app shutdown\n"
                 session.add(job)
-                await session.commit()
+            await session.commit()
+
             logger.info("Exit from shutdown logic")
 
-    except Exception:
-        raise BaseException(
-            "Something went wrong during shutdown phase, "
-            "some of running jobs are not shutdown properly."
+    except Exception as e:
+        logger.error(
+            f"Something went wrong during shutdown phase, "
+            f"some of running jobs are not shutdown properly. "
+            f"Original error: {e}"
         )

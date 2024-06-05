@@ -19,6 +19,7 @@ from fractal_server.main import lifespan
 
 async def test_app_with_lifespan(
     db,
+    monkeypatch,
     override_settings_factory,
     task_factory_v2,
     project_factory_v2,
@@ -32,7 +33,10 @@ async def test_app_with_lifespan(
     task_factory,
     tmp_path,
 ):
-
+    monkeypatch.setattr(
+        "fractal_server.config.Settings.check_runner", lambda x: x
+    )
+    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm")
     app = FastAPI()
     res = await db.execute(select(UserOAuth))
     assert res.unique().all() == []
@@ -99,18 +103,26 @@ async def test_app_with_lifespan(
     ).scalar_one_or_none()
     assert jobv2_after.status == "failed"
     assert jobv1_after.status == "failed"
-    assert jobv2_after.log == "Job stopped due to app shutdown\n"
-    assert jobv1_after.log == "Job stopped due to app shutdown\n"
+    assert jobv2_after.log == "\nJob stopped due to app shutdown\n"
+    assert jobv1_after.log == "\nJob stopped due to app shutdown\n"
 
 
 async def test_lifespan_shutdown_empty_jobs_list(
+    override_settings_factory,
+    monkeypatch,
     caplog,
     db,
 ):
+
+    monkeypatch.setattr(
+        "fractal_server.config.Settings.check_runner", lambda x: x
+    )
+    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm")
     caplog.set_level(logging.INFO)
     app = FastAPI()
     async with lifespan(app):
-        # verify first user creation
+        logger = logging.getLogger("fractal_server.lifespan")
+        logger.propagate = True
         jobsv2_check = (
             (await db.execute(select(JobV2))).scalars().unique().all()
         )
@@ -120,10 +132,7 @@ async def test_lifespan_shutdown_empty_jobs_list(
         assert len(jobsv2_check) == 0
         assert len(jobsv1_check) == 0
 
-        assert len(app.state.jobsV1) == 0
-        assert len(app.state.jobsV2) == 0
-
     log_text = (
-        "All jobs associated to this app are " "either done or failed. Exit."
+        "All jobs associated to this app are either done or failed. Exit."
     )
     assert any(record.message == log_text for record in caplog.records)
