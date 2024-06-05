@@ -791,8 +791,10 @@ async def test_task_query(
         res = await client.get(f"{PREFIX}/task/?kind=common")
         assert len(res.json()) == 1
 
+        await db.close()
+
         # Too many Tasks
-        project_final = await project_factory_v2(user)
+        project_final = await project_factory_v2(user, name="new_project")
         workflow_final = await workflow_factory_v2(project_id=project_final.id)
         for i in range(30):
             task = await task_factory_v2(name=f"n{i}", source=f"s{i}")
