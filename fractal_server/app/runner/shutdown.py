@@ -13,10 +13,6 @@ from fractal_server.logger import get_logger
 from fractal_server.syringe import Inject
 
 
-# If backend is not SLURM, skip this part
-# Note that this would need to take place for both V1 and V2 jobs.
-
-
 async def cleanup_after_shutdown(
     jobsV1: list[int], jobsV2: list[int], logger_name: str
 ):
