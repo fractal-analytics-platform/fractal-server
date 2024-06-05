@@ -38,7 +38,7 @@ from ...schemas.v2 import ProjectReadV2
 from ...security import current_active_superuser
 from ..aux._job import _write_shutdown_file
 from ..aux._job import _zip_folder_to_byte_stream
-from ..aux._runner import _check_backend_is_slurm
+from ..aux._runner import _is_shutdown_available
 
 router_admin_v2 = APIRouter()
 
@@ -240,7 +240,7 @@ async def stop_job(
     Only available for slurm backend.
     """
 
-    _check_backend_is_slurm()
+    _is_shutdown_available()
 
     job = await db.get(JobV2, job_id)
     if job is None:

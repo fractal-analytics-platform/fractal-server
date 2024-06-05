@@ -5,7 +5,7 @@ from ....config import get_settings
 from ....syringe import Inject
 
 
-def _check_backend_is_slurm():
+def _is_shutdown_available():
     """
     Raises:
         HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY):
