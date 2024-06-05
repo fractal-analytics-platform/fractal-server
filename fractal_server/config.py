@@ -311,7 +311,7 @@ class Settings(BaseSettings):
         return FRACTAL_RUNNER_WORKING_BASE_DIR_path
 
     FRACTAL_RUNNER_BACKEND: Literal[
-        "local", "local_processes", "slurm"
+        "local", "local_experimental", "slurm"
     ] = "local"
     """
     Select which runner backend to use.

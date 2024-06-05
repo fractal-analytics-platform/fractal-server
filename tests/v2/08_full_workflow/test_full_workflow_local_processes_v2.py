@@ -20,11 +20,11 @@ from fractal_server.app.runner.filenames import FILTERS_FILENAME
 from fractal_server.app.runner.filenames import HISTORY_FILENAME
 from fractal_server.app.runner.filenames import IMAGES_FILENAME
 from fractal_server.app.runner.filenames import WORKFLOW_LOG_FILENAME
-from fractal_server.app.runner.v2._local_processes.executor import (
+from fractal_server.app.runner.v2._local_experimental.executor import (
     FractalProcessPoolExecutor,
 )
 
-FRACTAL_RUNNER_BACKEND = "local_processes"
+FRACTAL_RUNNER_BACKEND = "local_experimental"
 
 
 async def test_full_workflow_local(
