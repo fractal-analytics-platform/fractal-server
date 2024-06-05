@@ -136,3 +136,39 @@ async def test_lifespan_shutdown_empty_jobs_list(
         "All jobs associated to this app are either done or failed. Exit."
     )
     assert any(record.message == log_text for record in caplog.records)
+
+
+async def test_lifespan_shutdown_raise_error(
+    override_settings_factory,
+    monkeypatch,
+    caplog,
+    db,
+):
+
+    monkeypatch.setattr(
+        "fractal_server.config.Settings.check_runner", lambda x: x
+    )
+
+    # mock function to trigger except
+
+    async def raise_error(a, b, c):
+        raise ValueError("ERROR")
+
+    monkeypatch.setattr(
+        "fractal_server.main.cleanup_after_shutdown", raise_error
+    )
+
+    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm")
+    caplog.set_level(logging.INFO)
+    app = FastAPI()
+    async with lifespan(app):
+        logger = logging.getLogger("fractal_server.lifespan")
+        logger.propagate = True
+
+    log_text = (
+        "Something went wrong during shutdown phase, "
+        "some of running jobs are not shutdown properly. "
+        "Original error: ERROR"
+    )
+
+    assert any(record.message == log_text for record in caplog.records)
