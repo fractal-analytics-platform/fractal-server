@@ -676,12 +676,128 @@ async def test_task_query(
         res = await client.get(f"{PREFIX}/task/?kind=common")
         assert len(res.json()) == 1
 
-        #
+        # --------------------------
+        # After deleting the Project
 
+        res = await client.delete(f"api/v2/project/{project.id}/")
+        assert res.status_code == 204
+
+        # Query ALL Tasks
+
+        res = await client.get(f"{PREFIX}/task/")
+        debug(res.json())
+        assert res.status_code == 200
+        assert len(res.json()) == 3
+        debug(res.json())
+
+        # Query by ID
+
+        res = await client.get(f"{PREFIX}/task/?id={task1.id}")
+        assert len(res.json()) == 1
+        assert res.json()[0]["task"].items() <= task1.dict().items()
+        assert len(res.json()[0]["relationships"]) == 0
+        _common_args = dict(
+            project_id=project.id,
+            project_name=project.name,
+            project_users=[dict(id=user.id, email=user.email)],
+        )
+
+        res = await client.get(f"{PREFIX}/task/?id={task2.id}")
+        assert len(res.json()) == 1
+        assert res.json()[0]["task"]["id"] == task2.id
+        assert len(res.json()[0]["relationships"]) == 0
+
+        res = await client.get(f"{PREFIX}/task/?id={task3.id}")
+        assert len(res.json()) == 1
+        assert res.json()[0]["task"]["id"] == task3.id
+        assert len(res.json()[0]["relationships"]) == 0
+
+        res = await client.get(f"{PREFIX}/task/?id=1000")
+        assert len(res.json()) == 0
+
+        # Query by SOURCE
+
+        res = await client.get(f"{PREFIX}/task/?source={task1.source}")
+        assert len(res.json()) == 1
+        assert res.json()[0]["task"]["id"] == task1.id
+        assert len(res.json()[0]["relationships"]) == 0
+
+        res = await client.get(f"{PREFIX}/task/?source={task1.source[0]}")
+        assert len(res.json()) == 1
+        assert res.json()[0]["task"]["id"] == task1.id
+        assert len(res.json()[0]["relationships"]) == 0
+
+        res = await client.get(f"{PREFIX}/task/?source={task2.source}")
+        assert len(res.json()) == 1
+        assert res.json()[0]["task"]["id"] == task2.id
+        assert len(res.json()[0]["relationships"]) == 0
+
+        res = await client.get(f"{PREFIX}/task/?source={task3.source}")
+        assert len(res.json()) == 1
+        assert res.json()[0]["task"]["id"] == task3.id
+        assert len(res.json()[0]["relationships"]) == 0
+
+        res = await client.get(f"{PREFIX}/task/?source=foo")
+        assert len(res.json()) == 0
+
+        # Query by VERSION
+
+        res = await client.get(f"{PREFIX}/task/?version=0")  # task 1 + 2
+        assert len(res.json()) == 2
+
+        res = await client.get(f"{PREFIX}/task/?version=3")  # task 3
+        assert len(res.json()) == 1
+
+        res = await client.get(f"{PREFIX}/task/?version=1.2")
+        assert len(res.json()) == 0
+
+        # Query by NAME
+
+        res = await client.get(f"{PREFIX}/task/?name={task1.name}")
+        assert len(res.json()) == 1
+
+        res = await client.get(f"{PREFIX}/task/?name={task2.name}")
+        assert len(res.json()) == 1
+
+        res = await client.get(f"{PREFIX}/task/?name={task3.name}")
+        assert len(res.json()) == 1
+
+        res = await client.get(f"{PREFIX}/task/?name=nonamelikethis")
+        assert len(res.json()) == 0
+
+        res = await client.get(f"{PREFIX}/task/?name=f")  # task 1 + 2
+        assert len(res.json()) == 2
+
+        res = await client.get(f"{PREFIX}/task/?name=F")  # task 1 + 2
+        assert len(res.json()) == 2
+
+        # Query by OWNER
+
+        res = await client.get(f"{PREFIX}/task/?owner={task1.owner}")
+        assert len(res.json()) == 1
+
+        res = await client.get(f"{PREFIX}/task/?owner={task2.owner}")
+        assert len(res.json()) == 1
+
+        res = await client.get(f"{PREFIX}/task/?owner=foo")
+        assert len(res.json()) == 0
+
+        # Query by KIND
+
+        res = await client.get(f"{PREFIX}/task/?kind=users")
+        assert len(res.json()) == 2
+
+        assert task3.owner is None
+        res = await client.get(f"{PREFIX}/task/?kind=common")
+        assert len(res.json()) == 1
+
+        # Too many Tasks
+        project_final = await project_factory_v2(user)
+        workflow_final = await workflow_factory_v2(project_id=project_final.id)
         for i in range(30):
             task = await task_factory_v2(name=f"n{i}", source=f"s{i}")
             await _workflow_insert_task(
-                workflow_id=workflow1.id, task_id=task.id, db=db
+                workflow_id=workflow_final.id, task_id=task.id, db=db
             )
         res = await client.get(f"{PREFIX}/task/")
         assert res.status_code == 422
