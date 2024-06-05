@@ -68,8 +68,8 @@ async def process_workflow(
     This function is responsible for running a workflow on some input data,
     saving the output and taking care of any exception raised during the run.
 
-    NOTE: This is the `local` backend's public interface, which also works as
-    a reference implementation for other backends.
+    NOTE: This is the `local_experimental` backend's public interface,
+    which also works as a reference implementation for other backends.
 
     Args:
         workflow:
@@ -122,7 +122,7 @@ async def process_workflow(
 
     if workflow_dir_remote and (workflow_dir_remote != workflow_dir_local):
         raise NotImplementedError(
-            "Local backend does not support different directories "
+            "LocalExperimental backend does not support different directories "
             f"{workflow_dir_local=} and {workflow_dir_remote=}"
         )
 

@@ -1,13 +1,3 @@
-# Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
-# University of Zurich
-#
-# Original authors:
-# Tommaso Comparin <tommaso.comparin@exact-lab.it>
-#
-# This file is part of Fractal and was originally developed by eXact lab S.r.l.
-# <exact-lab.it> under contract with Liberali Lab from the Friedrich Miescher
-# Institute for Biomedical Research and Pelkmans Lab from the University of
-# Zurich.
 """
 Custom version of Python
 [ProcessPoolExecutor](https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ProcessPoolExecutor)).
@@ -61,9 +51,9 @@ class FractalProcessPoolExecutor(ProcessPoolExecutor):
         **kwargs,
     ):
         """
-        Compared to the `ThreadPoolExecutor` method, here we accept an addition
-        keyword argument (`local_backend_config`), which is then simply
-        ignored.
+        Compared to the `ProcessPoolExecutor` method, here we accept an
+        additional keyword argument (`local_backend_config`), which is then
+        simply ignored.
         """
         return super().submit(*args, **kwargs)
 
