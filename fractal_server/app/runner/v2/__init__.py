@@ -134,7 +134,7 @@ async def submit_workflow(
         # Define and create WORKFLOW_DIR_REMOTE
         if FRACTAL_RUNNER_BACKEND == "local":
             WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
-        if FRACTAL_RUNNER_BACKEND == "local_experimental":
+        elif FRACTAL_RUNNER_BACKEND == "local_experimental":
             WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
         elif FRACTAL_RUNNER_BACKEND == "slurm":
             WORKFLOW_DIR_REMOTE = (

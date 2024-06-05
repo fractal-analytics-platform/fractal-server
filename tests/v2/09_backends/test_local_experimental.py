@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from pydantic import Field
 
 from fractal_server.app.runner.exceptions import JobExecutionError
+from fractal_server.app.runner.v2._local_experimental import process_workflow
 from fractal_server.app.runner.v2._local_experimental._local_config import (
     get_local_backend_config,
 )
@@ -40,6 +41,17 @@ def _sleep_and_return(sleep_time):
 def _wait_one_sec(*args, **kwargs):
     time.sleep(1)
     return 42
+
+
+async def test_unit_process_workflow():
+    with pytest.raises(NotImplementedError):
+        await process_workflow(
+            workflow=None,
+            dataset=None,
+            logger_name=None,
+            workflow_dir_local="/foo",
+            workflow_dir_remote="/bar",
+        )
 
 
 async def test_get_local_backend_config(tmp_path):
