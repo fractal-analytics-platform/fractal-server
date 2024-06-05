@@ -107,9 +107,7 @@ async def _get_workflow_check_owner(
             detail=(f"Invalid {project_id=} for {workflow_id=}."),
         )
 
-    # Refresh so that workflow.project relationship is loaded (see discussion
-    # in issue #1063)
-    await db.refresh(workflow)
+    workflow = await db.get(WorkflowV2, workflow_id, populate_existing=True)
 
     return workflow
 
@@ -272,9 +270,7 @@ async def _get_dataset_check_owner(
             detail=f"Invalid {project_id=} for {dataset_id=}",
         )
 
-    # Refresh so that dataset.project relationship is loaded (see discussion
-    # in issue #1063)
-    await db.refresh(dataset)
+    dataset = await db.get(DatasetV2, dataset.id, populate_existing=True)
 
     return dict(dataset=dataset, project=project)
 
@@ -497,7 +493,8 @@ async def _workflow_insert_task(
     db_workflow.task_list.reorder()  # type: ignore
     flag_modified(db_workflow, "task_list")
     await db.commit()
-    await db.refresh(wf_task)
+
+    wf_task = await db.get(WorkflowTaskV2, wf_task.id, populate_existing=True)
 
     return wf_task
 
