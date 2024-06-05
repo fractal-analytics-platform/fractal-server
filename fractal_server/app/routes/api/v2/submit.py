@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
@@ -8,10 +9,12 @@ from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Request
 from fastapi import status
 from sqlmodel import select
 
 from .....config import get_settings
+from .....logger import set_logger
 from .....syringe import Inject
 from .....utils import get_timestamp
 from ....db import AsyncSession
@@ -28,6 +31,7 @@ from ....security import current_active_verified_user
 from ....security import User
 from ._aux_functions import _get_dataset_check_owner
 from ._aux_functions import _get_workflow_check_owner
+from ._aux_functions import clean_app_job_list_v2
 
 
 def _encode_as_utc(dt: datetime):
@@ -35,6 +39,7 @@ def _encode_as_utc(dt: datetime):
 
 
 router = APIRouter()
+logger = set_logger(__name__)
 
 
 @router.post(
@@ -48,9 +53,22 @@ async def apply_workflow(
     dataset_id: int,
     job_create: JobCreateV2,
     background_tasks: BackgroundTasks,
+    request: Request,
     user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> Optional[JobReadV2]:
+
+    # Remove non-submitted V2 jobs from the app state when the list grows
+    # beyond a threshold
+    settings = Inject(get_settings)
+    if (
+        len(request.app.state.jobsV2)
+        > settings.FRACTAL_API_MAX_JOB_LIST_LENGTH
+    ):
+        new_jobs_list = await clean_app_job_list_v2(
+            db, request.app.state.jobsV2
+        )
+        request.app.state.jobsV2 = new_jobs_list
 
     output = await _get_dataset_check_owner(
         project_id=project_id,
@@ -92,7 +110,6 @@ async def apply_workflow(
         )
 
     # If backend is SLURM, check that the user has required attributes
-    settings = Inject(get_settings)
     FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
     if FRACTAL_RUNNER_BACKEND == "slurm":
         if not user.slurm_user:
@@ -223,6 +240,11 @@ async def apply_workflow(
         slurm_user=user.slurm_user,
         user_cache_dir=user.cache_dir,
     )
-
+    request.app.state.jobsV2.append(job.id)
+    logger.info(
+        f"Current worker's pid is {os.getpid()}. "
+        f"Current status of worker job's list "
+        f"{request.app.state.jobsV2}"
+    )
     await db.close()
     return job
