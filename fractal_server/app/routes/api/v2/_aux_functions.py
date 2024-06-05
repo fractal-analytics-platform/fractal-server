@@ -95,8 +95,11 @@ async def _get_workflow_check_owner(
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user_id, db=db
     )
+
     # Get workflow
-    workflow = await db.get(WorkflowV2, workflow_id)
+    # (See issue 1087 for 'populate_existing=True')
+    workflow = await db.get(WorkflowV2, workflow_id, populate_existing=True)
+
     if not workflow:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Workflow not found"
@@ -106,10 +109,6 @@ async def _get_workflow_check_owner(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(f"Invalid {project_id=} for {workflow_id=}."),
         )
-
-    # Refresh so that workflow.project relationship is loaded (see discussion
-    # in issue #1063)
-    await db.refresh(workflow)
 
     return workflow
 
@@ -255,13 +254,15 @@ async def _get_dataset_check_owner(
         HTTPException(status_code=422_UNPROCESSABLE_ENTITY):
             If the dataset is not associated to the project
     """
-
     # Access control for project
     project = await _get_project_check_owner(
         project_id=project_id, user_id=user_id, db=db
     )
+
     # Get dataset
-    dataset = await db.get(DatasetV2, dataset_id)
+    # (See issue 1087 for 'populate_existing=True')
+    dataset = await db.get(DatasetV2, dataset_id, populate_existing=True)
+
     if not dataset:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Dataset not found"
@@ -271,10 +272,6 @@ async def _get_dataset_check_owner(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Invalid {project_id=} for {dataset_id=}",
         )
-
-    # Refresh so that dataset.project relationship is loaded (see discussion
-    # in issue #1063)
-    await db.refresh(dataset)
 
     return dict(dataset=dataset, project=project)
 
@@ -497,7 +494,9 @@ async def _workflow_insert_task(
     db_workflow.task_list.reorder()  # type: ignore
     flag_modified(db_workflow, "task_list")
     await db.commit()
-    await db.refresh(wf_task)
+
+    # See issue 1087 for 'populate_existing=True'
+    wf_task = await db.get(WorkflowTaskV2, wf_task.id, populate_existing=True)
 
     return wf_task
 
