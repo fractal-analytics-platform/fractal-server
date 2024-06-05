@@ -14,7 +14,7 @@ from fractal_server.syringe import Inject
 
 
 async def cleanup_after_shutdown(
-    jobsV1: list[int], jobsV2: list[int], logger_name: str
+    *, jobsV1: list[int], jobsV2: list[int], logger_name: str
 ):
     logger = get_logger(logger_name)
     logger.info("Cleanup function after shutdown")

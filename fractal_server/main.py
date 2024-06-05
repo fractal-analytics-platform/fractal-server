@@ -110,7 +110,9 @@ async def lifespan(app: FastAPI):
     if settings.FRACTAL_RUNNER_BACKEND == "slurm":
         try:
             await cleanup_after_shutdown(
-                app.state.jobsV1, app.state.jobsV2, "fractal_server.lifespan"
+                jobsV1=app.state.jobsV1,
+                jobsV2=app.state.jobsV2,
+                logger_name="fractal_server.lifespan",
             )
         except Exception as e:
             logger.error(

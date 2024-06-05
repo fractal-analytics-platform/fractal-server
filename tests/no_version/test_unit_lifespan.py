@@ -151,7 +151,9 @@ async def test_lifespan_shutdown_raise_error(
 
     # mock function to trigger except
 
-    async def raise_error(a, b, c):
+    async def raise_error(
+        *, jobsV1: list[int], jobsV2: list[int], logger_name: str
+    ):
         raise ValueError("ERROR")
 
     monkeypatch.setattr(
@@ -170,5 +172,7 @@ async def test_lifespan_shutdown_raise_error(
         "some of running jobs are not shutdown properly. "
         "Original error: ERROR"
     )
+    from devtools import debug
 
+    debug(caplog.records)
     assert any(record.message == log_text for record in caplog.records)
