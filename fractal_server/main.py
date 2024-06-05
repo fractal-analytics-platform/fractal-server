@@ -106,7 +106,9 @@ async def lifespan(app: FastAPI):
         f"Following jobs will be set to failed: {app.state.jobsV1=}, "
         f"{app.state.jobsV2=}"
     )
-    await cleanup_after_shutdown(app.state.jobsV1, app.state.jobsV2, logger)
+    await cleanup_after_shutdown(
+        app.state.jobsV1, app.state.jobsV2, "fractal_server.lifespan"
+    )
     logger.info("Start application shutdown")
     logger.info("End application shutdown")
     reset_logger_handlers(logger)

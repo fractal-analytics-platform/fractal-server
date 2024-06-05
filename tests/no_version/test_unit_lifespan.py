@@ -1,3 +1,4 @@
+import logging
 import os
 
 from fastapi import FastAPI
@@ -98,3 +99,31 @@ async def test_app_with_lifespan(
     ).scalar_one_or_none()
     assert jobv2_after.status == "failed"
     assert jobv1_after.status == "failed"
+    assert jobv2_after.log == "Job stopped due to app shutdown\n"
+    assert jobv1_after.log == "Job stopped due to app shutdown\n"
+
+
+async def test_lifespan_shutdown_empty_jobs_list(
+    caplog,
+    db,
+):
+    caplog.set_level(logging.INFO)
+    app = FastAPI()
+    async with lifespan(app):
+        # verify first user creation
+        jobsv2_check = (
+            (await db.execute(select(JobV2))).scalars().unique().all()
+        )
+        jobsv1_check = (
+            (await db.execute(select(ApplyWorkflow))).scalars().unique().all()
+        )
+        assert len(jobsv2_check) == 0
+        assert len(jobsv1_check) == 0
+
+        assert len(app.state.jobsV1) == 0
+        assert len(app.state.jobsV2) == 0
+
+    log_text = (
+        "All jobs associated to this app are " "either done or failed. Exit."
+    )
+    assert any(record.message == log_text for record in caplog.records)

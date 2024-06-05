@@ -1,5 +1,4 @@
 import time
-from logging import Logger
 
 from sqlmodel import select
 
@@ -10,6 +9,7 @@ from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2.job import JobStatusTypeV2
 from fractal_server.app.routes.aux._job import _write_shutdown_file
 from fractal_server.config import get_settings
+from fractal_server.logger import set_logger
 from fractal_server.syringe import Inject
 
 
@@ -18,8 +18,10 @@ from fractal_server.syringe import Inject
 
 
 async def cleanup_after_shutdown(
-    jobsV1: list[int], jobsV2: list[int], logger: Logger
+    jobsV1: list[int], jobsV2: list[int], logger_name: str
 ):
+    logger = set_logger(logger_name)
+    logger.propagate = True
     logger.info("Cleanup function after shutdown")
     stm_v2 = (
         select(JobV2)
@@ -78,22 +80,19 @@ async def cleanup_after_shutdown(
 
             for job in jobsV2_db:
                 job.status = "failed"
-                if job.log is None:
-                    job.log = "Job stopped due to app shutdown\n"
-                else:
-                    job.log += "Job stopped due to app shutdown\n"
+                job.log = (job.log or "") + "Job stopped due to app shutdown\n"
                 session.add(job)
                 await session.commit()
 
             for job in jobsV1_db:
                 job.status = "failed"
-                if job.log is None:
-                    job.log = "Job stopped due to app shutdown\n"
-                else:
-                    job.log += "Job stopped due to app shutdown\n"
+                job.log = (job.log or "") + "Job stopped due to app shutdown\n"
                 session.add(job)
                 await session.commit()
             logger.info("Exit from shutdown logic")
 
     except Exception:
-        raise ("Connection failed")
+        raise BaseException(
+            "Something went wrong during shutdown phase, "
+            "some of running jobs are not shutdown properly."
+        )
