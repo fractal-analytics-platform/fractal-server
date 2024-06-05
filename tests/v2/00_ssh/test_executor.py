@@ -8,6 +8,7 @@ import pytest
 from devtools import debug  # noqa: F401
 from fabric.connection import Connection
 
+from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.slurm_ssh.executor import (
     FractalSlurmSSHExecutor,
 )  # noqa
@@ -157,7 +158,7 @@ def test_slurm_ssh_executor_map(
         assert results == [2, 4, 6]
 
 
-@pytest.mark.skip
+# @pytest.mark.skip
 def test_slurm_ssh_executor_no_docker(
     monkeypatch,
     tmp_path,
@@ -169,18 +170,27 @@ def test_slurm_ssh_executor_no_docker(
     that can be reached via SSH.
     """
 
-    ssh_config_file = testdata_path / "ssh_config"
+    # Define functions locally, to play well with cloudpickle
+
+    def compute_square(x):
+        return x**2
+
+    def raise_error_for_even_argument(x):
+        if x % 2 == 0:
+            raise ValueError(f"The argument {x} is even. Fail.")
+
+    ssh_config_file = testdata_path / "ssh_config.json"
     if not ssh_config_file.exists():
         logging.warning(f"Missing {ssh_config_file} -- skip test.")
         return
 
     random.seed(tmp_path.as_posix())
-    label = str(random.randrange(0, 999999))
+    random_id = random.randrange(0, 999999)
 
     monkeypatch.setattr("sys.stdin", io.StringIO(""))
 
     with ssh_config_file.open("r") as f:
-        config = json.load(f)["uzh1"]
+        config = json.load(f)["uzh2"]
     debug(config)
 
     remote_python = config.pop("remote_python")
@@ -198,12 +208,64 @@ def test_slurm_ssh_executor_no_docker(
 
     debug(slurm_config)
 
+    # submit method
+    label = f"{random_id}_0_submit"
     with TestingFractalSSHSlurmExecutor(
         workflow_dir_local=tmp_path / f"local_job_dir_{label}",
         workflow_dir_remote=root_dir_remote / f"remote_job_dir_{label}",
         slurm_poll_interval=1,
         **config,
     ) as executor:
-        fut = executor.submit(lambda: 1, slurm_config=slurm_config)
+        arg = 2
+        fut = executor.submit(compute_square, arg, slurm_config=slurm_config)
         debug(fut)
-        debug(fut.result())
+        assert fut.result() == compute_square(arg)
+
+    # map method (few values)
+    label = f"{random_id}_1_map_few"
+    with TestingFractalSSHSlurmExecutor(
+        workflow_dir_local=tmp_path / f"local_job_dir_{label}",
+        workflow_dir_remote=root_dir_remote / f"remote_job_dir_{label}",
+        slurm_poll_interval=1,
+        **config,
+    ) as executor:
+        inputs = list(range(3))
+        slurm_res = executor.map(compute_square, inputs)
+        assert list(slurm_res) == list(map(compute_square, inputs))
+
+    # map method (few values)
+    label = f"{random_id}_2_map_many"
+    with TestingFractalSSHSlurmExecutor(
+        workflow_dir_local=tmp_path / f"local_job_dir_{label}",
+        workflow_dir_remote=root_dir_remote / f"remote_job_dir_{label}",
+        slurm_poll_interval=1,
+        **config,
+    ) as executor:
+        inputs = list(range(200))
+        slurm_res = executor.map(compute_square, inputs)
+        assert list(slurm_res) == list(map(compute_square, inputs))
+
+    # submit method (fail)
+    label = f"{random_id}_3_submit_fail"
+    with TestingFractalSSHSlurmExecutor(
+        workflow_dir_local=tmp_path / f"local_job_dir_{label}",
+        workflow_dir_remote=root_dir_remote / f"remote_job_dir_{label}",
+        slurm_poll_interval=1,
+        **config,
+    ) as executor:
+        future = executor.submit(raise_error_for_even_argument, 2)
+        with pytest.raises(TaskExecutionError):
+            future.result()
+
+    # map method (fail)
+    label = f"{random_id}_4_map_fail"
+    with TestingFractalSSHSlurmExecutor(
+        workflow_dir_local=tmp_path / f"local_job_dir_{label}",
+        workflow_dir_remote=root_dir_remote / f"remote_job_dir_{label}",
+        slurm_poll_interval=1,
+        **config,
+    ) as executor:
+        inputs = [1, 3, 5, 6, 2, 7, 4]
+        slurm_res = executor.map(raise_error_for_even_argument, inputs)
+        with pytest.raises(TaskExecutionError):
+            list(slurm_res)
