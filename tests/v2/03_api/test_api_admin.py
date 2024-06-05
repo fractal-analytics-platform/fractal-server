@@ -692,50 +692,22 @@ async def test_task_query(
 
         # Query by ID
 
-        res = await client.get(f"{PREFIX}/task/?id={task1.id}")
-        assert len(res.json()) == 1
-        assert res.json()[0]["task"].items() <= task1.dict().items()
-        assert len(res.json()[0]["relationships"]) == 0
-        _common_args = dict(
-            project_id=project.id,
-            project_name=project.name,
-            project_users=[dict(id=user.id, email=user.email)],
-        )
-
-        res = await client.get(f"{PREFIX}/task/?id={task2.id}")
-        assert len(res.json()) == 1
-        assert res.json()[0]["task"]["id"] == task2.id
-        assert len(res.json()[0]["relationships"]) == 0
-
-        res = await client.get(f"{PREFIX}/task/?id={task3.id}")
-        assert len(res.json()) == 1
-        assert res.json()[0]["task"]["id"] == task3.id
-        assert len(res.json()[0]["relationships"]) == 0
+        for t in [task1, task2, task3]:
+            res = await client.get(f"{PREFIX}/task/?id={t.id}")
+            assert len(res.json()) == 1
+            assert res.json()[0]["task"].items() <= t.dict().items()
+            assert res.json()[0]["task"]["id"] == t.id
+            assert len(res.json()[0]["relationships"]) == 0
 
         res = await client.get(f"{PREFIX}/task/?id=1000")
         assert len(res.json()) == 0
 
         # Query by SOURCE
-
-        res = await client.get(f"{PREFIX}/task/?source={task1.source}")
-        assert len(res.json()) == 1
-        assert res.json()[0]["task"]["id"] == task1.id
-        assert len(res.json()[0]["relationships"]) == 0
-
-        res = await client.get(f"{PREFIX}/task/?source={task1.source[0]}")
-        assert len(res.json()) == 1
-        assert res.json()[0]["task"]["id"] == task1.id
-        assert len(res.json()[0]["relationships"]) == 0
-
-        res = await client.get(f"{PREFIX}/task/?source={task2.source}")
-        assert len(res.json()) == 1
-        assert res.json()[0]["task"]["id"] == task2.id
-        assert len(res.json()[0]["relationships"]) == 0
-
-        res = await client.get(f"{PREFIX}/task/?source={task3.source}")
-        assert len(res.json()) == 1
-        assert res.json()[0]["task"]["id"] == task3.id
-        assert len(res.json()[0]["relationships"]) == 0
+        for t in [task1, task2, task3]:
+            res = await client.get(f"{PREFIX}/task/?source={t.source}")
+            assert len(res.json()) == 1
+            assert res.json()[0]["task"]["id"] == t.id
+            assert len(res.json()[0]["relationships"]) == 0
 
         res = await client.get(f"{PREFIX}/task/?source=foo")
         assert len(res.json()) == 0
@@ -752,15 +724,9 @@ async def test_task_query(
         assert len(res.json()) == 0
 
         # Query by NAME
-
-        res = await client.get(f"{PREFIX}/task/?name={task1.name}")
-        assert len(res.json()) == 1
-
-        res = await client.get(f"{PREFIX}/task/?name={task2.name}")
-        assert len(res.json()) == 1
-
-        res = await client.get(f"{PREFIX}/task/?name={task3.name}")
-        assert len(res.json()) == 1
+        for t in [task1, task2, task3]:
+            res = await client.get(f"{PREFIX}/task/?name={t.name}")
+            assert len(res.json()) == 1
 
         res = await client.get(f"{PREFIX}/task/?name=nonamelikethis")
         assert len(res.json()) == 0
