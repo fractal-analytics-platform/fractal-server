@@ -56,6 +56,11 @@ async def process_workflow(
     first_task_index: Optional[int] = None,
     last_task_index: Optional[int] = None,
     logger_name: str,
+    # Slurm-specific
+    user_cache_dir: Optional[str] = None,
+    slurm_user: Optional[str] = None,
+    slurm_account: Optional[str] = None,
+    worker_init: Optional[str] = None,
 ) -> dict:
     """
     Run a workflow
