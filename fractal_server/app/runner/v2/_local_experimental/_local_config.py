@@ -40,7 +40,7 @@ class LocalBackendConfig(BaseModel, extra=Extra.forbid):
     Attributes:
         parallel_tasks_per_job:
             Maximum number of tasks to be run in parallel as part of a call to
-            `FractalThreadPoolExecutor.map`; if `None`, then all tasks will
+            `FractalProcessPoolExecutor.map`; if `None`, then all tasks will
             start at the same time.
     """
 

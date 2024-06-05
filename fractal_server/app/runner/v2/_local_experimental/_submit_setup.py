@@ -41,8 +41,8 @@ def _local_submit_setup(
     Returns:
         submit_setup_dict:
             A dictionary that will be passed on to
-            `FractalThreadPoolExecutor.submit` and
-            `FractalThreadPoolExecutor.map`, so as to set extra options.
+            `FractalProcessPoolExecutor.submit` and
+            `FractalProcessPoolExecutor.map`, so as to set extra options.
     """
 
     local_backend_config = get_local_backend_config(
