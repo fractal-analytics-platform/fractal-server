@@ -1,13 +1,15 @@
 from io import BytesIO
 from pathlib import Path
+from typing import Union
 from zipfile import ZIP_DEFLATED
 from zipfile import ZipFile
 
 from ...models.v1 import ApplyWorkflow
+from ...models.v2 import JobV2
 from ...runner.filenames import SHUTDOWN_FILENAME
 
 
-def _write_shutdown_file(*, job: ApplyWorkflow):
+def _write_shutdown_file(*, job: Union[ApplyWorkflow, JobV2]):
     """
     Write job's shutdown file.
 
