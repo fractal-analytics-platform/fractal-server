@@ -1190,7 +1190,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         subfolder_name = subfolder_names[0]
 
         t_0 = time.perf_counter()
-        logger.debug("[_copy_files_from_remote_to_local] Start")
+        logger.debug("[_get_subfolder_sftp] Start")
         tarfile_path_local = (
             self.workflow_dir_local / f"{subfolder_name}.tar.gz"
         ).as_posix()
@@ -1233,10 +1233,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             tar.extractall(path=self.workflow_dir_local)
 
         t_1 = time.perf_counter()
-        logger.info(
-            "[_copy_files_from_remote_to_local] End - "
-            f"elapsed: {t_1-t_0:.3f} s"
-        )
+        logger.info("[_get_subfolder_sftp] End - " f"elapsed: {t_1-t_0:.3f} s")
 
     def _prepare_sbatch_script(
         self,

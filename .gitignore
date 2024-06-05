@@ -31,6 +31,8 @@ tmp_*
 .*.swp
 
 ssh_config
+ssh_config*
+ssh_config.json
 *ssh*key*
 
 
