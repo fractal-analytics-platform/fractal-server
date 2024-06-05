@@ -676,12 +676,44 @@ async def test_task_query(
         res = await client.get(f"{PREFIX}/task/?kind=common")
         assert len(res.json()) == 1
 
-        #
+        # --------------------------
+        # Relationships after deleting the Project
+
+        res = await client.delete(f"api/v2/project/{project.id}/")
+        assert res.status_code == 204
+
+        # Query by ID
+
+        for t in [task1, task2, task3]:
+            res = await client.get(f"{PREFIX}/task/?id={t.id}")
+            assert len(res.json()) == 1
+            assert res.json()[0]["task"].items() <= t.dict().items()
+            assert res.json()[0]["task"]["id"] == t.id
+            assert len(res.json()[0]["relationships"]) == 0
+
+        # Query by SOURCE
+        for t in [task1, task2, task3]:
+            res = await client.get(f"{PREFIX}/task/?source={t.source}")
+            assert len(res.json()) == 1
+            assert res.json()[0]["task"]["id"] == t.id
+            assert len(res.json()[0]["relationships"]) == 0
+
+        # --------------------------
+        # Too many Tasks
+
+        # We need 'db.close' to avoid: "<sqlalchemy.exc.SAWarning: Identity map
+        # already had an identity for (<class 'fractal_server.app.models.v2.*'>
+        # ,(1,), None), replacing it with newly flushed object." where * is in
+        # [project.ProjectV2, workflow.WorkflowV2, workflowtask.WorkflowTaskV2]
+        await db.close()
+
+        new_project = await project_factory_v2(user)
+        new_workflow = await workflow_factory_v2(project_id=new_project.id)
 
         for i in range(30):
             task = await task_factory_v2(name=f"n{i}", source=f"s{i}")
             await _workflow_insert_task(
-                workflow_id=workflow1.id, task_id=task.id, db=db
+                workflow_id=new_workflow.id, task_id=task.id, db=db
             )
         res = await client.get(f"{PREFIX}/task/")
         assert res.status_code == 422
