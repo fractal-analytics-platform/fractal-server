@@ -1446,6 +1446,8 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             stdout = _run_command_over_ssh(cmd=cmd, connection=conn)
         remote_versions = json.loads(stdout.strip("\n"))
 
+        # FIXME: check existence of folders
+
         # Check compatibility with local versions
         local_versions = get_versions()
         remote_fractal_server = remote_versions["fractal_server"]

@@ -5,6 +5,7 @@ This module is the single entry point to the runner backend subsystem V2.
 Other subystems should only import this module and not its submodules or
 the individual backends.
 """
+import logging
 import os
 import traceback
 from pathlib import Path
@@ -29,7 +30,8 @@ from ..executors.slurm._subprocess_run_as_user import _mkdir_as_user
 from ..filenames import WORKFLOW_LOG_FILENAME
 from ..task_files import task_subfolder_name
 from ._local import process_workflow as local_process_workflow
-from ._slurm import process_workflow as slurm_process_workflow
+from ._slurm import process_workflow as slurm_sudo_process_workflow
+from ._slurm_ssh import process_workflow as slurm_ssh_process_workflow
 from .handle_failed_job import assemble_filters_failed_job
 from .handle_failed_job import assemble_history_failed_job
 from .handle_failed_job import assemble_images_failed_job
@@ -37,7 +39,8 @@ from fractal_server import __VERSION__
 
 _backends = {}
 _backends["local"] = local_process_workflow
-_backends["slurm"] = slurm_process_workflow
+_backends["slurm"] = slurm_sudo_process_workflow
+_backends["slurm_ssh"] = slurm_ssh_process_workflow
 
 
 async def submit_workflow(
@@ -78,12 +81,6 @@ async def submit_workflow(
     # Declare runner backend and set `process_workflow` function
     settings = Inject(get_settings)
     FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
-    if FRACTAL_RUNNER_BACKEND == "local":
-        process_workflow = local_process_workflow
-    elif FRACTAL_RUNNER_BACKEND == "slurm":
-        process_workflow = slurm_process_workflow
-    else:
-        raise RuntimeError(f"Invalid runner backend {FRACTAL_RUNNER_BACKEND=}")
 
     with next(DB.get_sync_db()) as db_sync:
 
@@ -133,6 +130,8 @@ async def submit_workflow(
                 Path(user_cache_dir) / WORKFLOW_DIR_LOCAL.name
             )
             _mkdir_as_user(folder=str(WORKFLOW_DIR_REMOTE), user=slurm_user)
+        else:
+            logging.info("Skip folder creation")  # FIXME
 
         # Create all tasks subfolders
         for order in range(job.first_task_index, job.last_task_index + 1):
@@ -153,6 +152,8 @@ async def submit_workflow(
                     folder=str(WORKFLOW_DIR_REMOTE / subfolder_name),
                     user=slurm_user,
                 )
+            else:
+                logging.info("Skip folder creation")  # FIXME
 
         # After Session.commit() is called, either explicitly or when using a
         # context manager, all objects associated with the Session are expired.
@@ -194,6 +195,28 @@ async def submit_workflow(
         logger.debug(f'START workflow "{workflow.name}"')
 
     try:
+
+        if FRACTAL_RUNNER_BACKEND == "local":
+            process_workflow = local_process_workflow
+            backend_specific_kwargs = {}
+        elif FRACTAL_RUNNER_BACKEND == "slurm":
+            process_workflow = slurm_sudo_process_workflow
+            backend_specific_kwargs = dict(
+                slurm_user=slurm_user,
+                slurm_account=job.slurm_account,
+                user_cache_dir=user_cache_dir,
+            )
+        elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+            process_workflow = slurm_ssh_process_workflow
+            backend_specific_kwargs = dict(
+                ssh_host=settings.FRACTAL_RUNNER_SSH_HOST,
+                ssh_user=settings.FRACTAL_RUNNER_SSH_USER,
+            )
+        else:
+            raise RuntimeError(
+                f"Invalid runner backend {FRACTAL_RUNNER_BACKEND=}"
+            )
+
         # "The Session.close() method does not prevent the Session from being
         # used again. The Session itself does not actually have a distinct
         # “closed” state; it merely means the Session will release all database
@@ -210,15 +233,13 @@ async def submit_workflow(
         new_dataset_attributes = await process_workflow(
             workflow=workflow,
             dataset=dataset,
-            slurm_user=slurm_user,
-            slurm_account=job.slurm_account,
-            user_cache_dir=user_cache_dir,
             workflow_dir_local=WORKFLOW_DIR_LOCAL,
             workflow_dir_remote=WORKFLOW_DIR_REMOTE,
             logger_name=logger_name,
             worker_init=worker_init,
             first_task_index=job.first_task_index,
             last_task_index=job.last_task_index,
+            **backend_specific_kwargs,
         )
 
         logger.info(

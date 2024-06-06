@@ -24,7 +24,7 @@ from typing import Union
 from ....models.v2 import DatasetV2
 from ....models.v2 import WorkflowV2
 from ...async_wrap import async_wrap
-from ...executors.slurm.executor import FractalSlurmExecutor
+from ...executors.slurm_ssh.executor import FractalSlurmSSHExecutor
 from ...set_start_and_last_task_index import set_start_and_last_task_index
 from ..runner import execute_tasks_v2
 from ._submit_setup import _slurm_submit_setup
@@ -39,9 +39,9 @@ def _process_workflow(
     workflow_dir_remote: Path,
     first_task_index: int,
     last_task_index: int,
-    slurm_user: Optional[str] = None,
-    slurm_account: Optional[str] = None,
-    user_cache_dir: str,
+    ssh_host: str,
+    ssh_user: str,
+    ssh_private_key_path: str,
     worker_init: Optional[Union[str, list[str]]] = None,
 ) -> dict[str, Any]:
     """
@@ -58,23 +58,18 @@ def _process_workflow(
         new_dataset_attributes:
     """
 
-    if not slurm_user:
-        raise RuntimeError(
-            "slurm_user argument is required, for slurm backend"
-        )
-
     if isinstance(worker_init, str):
         worker_init = worker_init.split("\n")
 
-    with FractalSlurmExecutor(
+    with FractalSlurmSSHExecutor(
         debug=True,
         keep_logs=True,
-        slurm_user=slurm_user,
-        user_cache_dir=user_cache_dir,
+        ssh_host=ssh_host,
+        ssh_user=ssh_user,
+        ssh_private_key_path=ssh_private_key_path,
         workflow_dir_local=workflow_dir_local,
         workflow_dir_remote=workflow_dir_remote,
         common_script_lines=worker_init,
-        slurm_account=slurm_account,
     ) as executor:
         new_dataset_attributes = execute_tasks_v2(
             wf_task_list=workflow.task_list[
@@ -99,7 +94,11 @@ async def process_workflow(
     first_task_index: Optional[int] = None,
     last_task_index: Optional[int] = None,
     logger_name: str,
-    # Slurm-specific
+    # Slurm-SSH specific
+    ssh_host: str,
+    ssh_user: str,
+    ssh_private_key_path: str,
+    # Not used
     user_cache_dir: Optional[str] = None,
     slurm_user: Optional[str] = None,
     slurm_account: Optional[str] = None,
@@ -128,9 +127,9 @@ async def process_workflow(
         workflow_dir_remote=workflow_dir_remote,
         first_task_index=first_task_index,
         last_task_index=last_task_index,
-        user_cache_dir=user_cache_dir,
-        slurm_user=slurm_user,
-        slurm_account=slurm_account,
+        ssh_host=ssh_host,
+        ssh_user=ssh_user,
+        ssh_private_key_path=ssh_private_key_path,
         worker_init=worker_init,
     )
     return new_dataset_attributes
