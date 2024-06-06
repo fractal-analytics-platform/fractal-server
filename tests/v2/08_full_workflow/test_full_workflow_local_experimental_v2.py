@@ -143,6 +143,7 @@ async def test_non_python_task_local(
     workflow_factory_v2,
     task_factory_v2,
     testdata_path,
+    tmp777_path,
     override_settings_factory,
 ):
     """
@@ -159,4 +160,5 @@ async def test_non_python_task_local(
         dataset_factory_v2=dataset_factory_v2,
         workflow_factory_v2=workflow_factory_v2,
         task_factory_v2=task_factory_v2,
+        tmp777_path=tmp777_path,
     )

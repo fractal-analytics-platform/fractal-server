@@ -143,6 +143,7 @@ async def test_non_python_task_local(
     workflow_factory_v2,
     task_factory_v2,
     testdata_path,
+    tmp777_path,
 ):
     """
     Run a full workflow with a single bash task, which simply writes
@@ -156,4 +157,5 @@ async def test_non_python_task_local(
         workflow_factory_v2=workflow_factory_v2,
         task_factory_v2=task_factory_v2,
         testdata_path=testdata_path,
+        tmp777_path=tmp777_path,
     )
