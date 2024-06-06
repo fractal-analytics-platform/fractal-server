@@ -210,7 +210,6 @@ async def submit_workflow(
         logger.debug(f'START workflow "{workflow.name}"')
 
     try:
-
         if FRACTAL_RUNNER_BACKEND == "local":
             process_workflow = local_process_workflow
             backend_specific_kwargs = {}

@@ -395,6 +395,11 @@ class Settings(BaseSettings):
     """
     FIXME docstring
     """
+    FRACTAL_SLURM_SSH_WORKING_BASE_DIR: Optional[str] = None
+    """
+    FIXME docstring
+    """
+
     FRACTAL_API_SUBMIT_RATE_LIMIT: int = 2
     """
     Interval to wait (in seconds) to be allowed to call again
@@ -488,6 +493,10 @@ class Settings(BaseSettings):
             if self.FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH is None:
                 raise FractalConfigurationError(
                     f"Must set FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH when {info}"
+                )
+            if self.FRACTAL_SLURM_SSH_WORKING_BASE_DIR is None:
+                raise FractalConfigurationError(
+                    f"Must set FRACTAL_SLURM_SSH_WORKING_BASE_DIR when {info}"
                 )
 
             from fractal_server.app.runner.executors.slurm_ssh._slurm_config import (  # noqa: E501
