@@ -29,6 +29,9 @@ from ..executors.slurm._subprocess_run_as_user import _mkdir_as_user
 from ..filenames import WORKFLOW_LOG_FILENAME
 from ..task_files import task_subfolder_name
 from ._local import process_workflow as local_process_workflow
+from ._local_experimental import (
+    process_workflow as local_experimental_process_workflow,
+)
 from ._slurm import process_workflow as slurm_process_workflow
 from .handle_failed_job import assemble_filters_failed_job
 from .handle_failed_job import assemble_history_failed_job
@@ -37,6 +40,7 @@ from fractal_server import __VERSION__
 
 _backends = {}
 _backends["local"] = local_process_workflow
+_backends["local_experimental"] = local_experimental_process_workflow
 _backends["slurm"] = slurm_process_workflow
 
 
@@ -80,6 +84,8 @@ async def submit_workflow(
     FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
     if FRACTAL_RUNNER_BACKEND == "local":
         process_workflow = local_process_workflow
+    elif FRACTAL_RUNNER_BACKEND == "local_experimental":
+        process_workflow = local_experimental_process_workflow
     elif FRACTAL_RUNNER_BACKEND == "slurm":
         process_workflow = slurm_process_workflow
     else:
@@ -127,6 +133,8 @@ async def submit_workflow(
 
         # Define and create WORKFLOW_DIR_REMOTE
         if FRACTAL_RUNNER_BACKEND == "local":
+            WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
+        elif FRACTAL_RUNNER_BACKEND == "local_experimental":
             WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
         elif FRACTAL_RUNNER_BACKEND == "slurm":
             WORKFLOW_DIR_REMOTE = (

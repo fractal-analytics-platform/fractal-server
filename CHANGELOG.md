@@ -2,9 +2,14 @@
 
 # Unreleased
 
-> NOTE: you can enable custom gunicorn worker/logger by adding the following options to the `gunicorn` startup command:
+> NOTE: you can enable custom gunicorn worker/logger by adding the following
+> options to the `gunicorn` startup command:
 > - `--worker-class fractal_server.gunicorn_fractal.FractalWorker`
 > - `--logger-class fractal_server.gunicorn_fractal.FractalGunicornLogger`
+
+> NOTE 2: A new experimental local runner is available, which uses processes
+> instead of threads. You can try it out with the configuration variable
+> `FRACTAL_BACKEND_RUNNER=local_experimental`
 
 
 * API:
@@ -13,6 +18,7 @@
 * Runner:
     * Change structure of job folders, introducing per-task subfolders (\#1523).
     * Rename internal `workflow_dir` and `workflow_dir_user` variables to local/remote (\#1534).
+    * Add new `local_experimental` runner, based on `ProcessPoolExecutor` (\#1544).
 * App and deployment:
     * Add logic for graceful shutdown for job slurm executors. (\#1547)
     * Add custom gunicorn/uvicorn worker to handle SIGABRT signal (\#1526).

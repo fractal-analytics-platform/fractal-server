@@ -1,4 +1,5 @@
 import os
+from glob import glob
 from pathlib import Path
 from typing import Any
 from typing import Optional
@@ -22,6 +23,7 @@ def _task_name_to_id(task_name: str, task_list: list[dict[str, Any]]) -> int:
 
 
 async def full_workflow(
+    *,
     MockCurrentUser,
     client,
     project_factory_v2,
@@ -197,6 +199,7 @@ async def full_workflow(
 
 
 async def full_workflow_TaskExecutionError(
+    *,
     MockCurrentUser,
     client,
     project_factory_v2,
@@ -328,6 +331,7 @@ async def full_workflow_TaskExecutionError(
 
 
 async def non_executable_task_command(
+    *,
     MockCurrentUser,
     client,
     testdata_path,
@@ -398,6 +402,7 @@ async def non_executable_task_command(
 
 
 async def failing_workflow_UnknownError(
+    *,
     MockCurrentUser,
     client,
     monkeypatch,
@@ -501,3 +506,93 @@ async def failing_workflow_UnknownError(
         statuses = res.json()["status"]
         debug(statuses)
         assert statuses == EXPECTED_STATUSES
+
+
+async def non_python_task_local(
+    *,
+    MockCurrentUser,
+    client,
+    testdata_path,
+    project_factory_v2,
+    dataset_factory_v2,
+    workflow_factory_v2,
+    task_factory_v2,
+):
+
+    async with MockCurrentUser(user_kwargs={"is_verified": True}) as user:
+        # Create project
+        project = await project_factory_v2(user)
+        project_id = project.id
+
+        # Create workflow
+        workflow = await workflow_factory_v2(
+            name="test_wf", project_id=project_id
+        )
+
+        # Create task
+        task = await task_factory_v2(
+            name="non-python",
+            source="custom-task",
+            type="non_parallel",
+            command_non_parallel=(
+                f"bash {str(testdata_path)}/non_python_task_issue1377.sh"
+            ),
+        )
+
+        # Add task to workflow
+        res = await client.post(
+            f"{PREFIX}/project/{project_id}/workflow/{workflow.id}/wftask/"
+            f"?task_id={task.id}",
+            json=dict(),
+        )
+        assert res.status_code == 201
+
+        # Create datasets
+        dataset = await dataset_factory_v2(
+            project_id=project_id, name="dataset"
+        )
+
+        # Submit workflow
+        res = await client.post(
+            f"{PREFIX}/project/{project.id}/job/submit/"
+            f"?workflow_id={workflow.id}&dataset_id={dataset.id}",
+            json={},
+        )
+        job_data = res.json()
+        debug(job_data)
+        assert res.status_code == 202
+
+        # Check that the workflow execution is complete
+        res = await client.get(
+            f"{PREFIX}/project/{project_id}/job/{job_data['id']}/"
+        )
+        assert res.status_code == 200
+        job_status_data = res.json()
+        debug(job_status_data)
+        assert job_status_data["status"] == "done"
+        debug(job_status_data["end_timestamp"])
+        assert job_status_data["end_timestamp"]
+
+        # Check that the expected files are present
+        working_dir = job_status_data["working_dir"]
+        glob_list = [Path(x).name for x in glob(f"{working_dir}/*")] + [
+            Path(x).name for x in glob(f"{working_dir}/*/*")
+        ]
+
+        must_exist = [
+            "0.log",
+            "0.args.json",
+            IMAGES_FILENAME,
+            HISTORY_FILENAME,
+            FILTERS_FILENAME,
+            WORKFLOW_LOG_FILENAME,
+        ]
+
+        for f in must_exist:
+            assert f in glob_list
+
+        # Check that stderr and stdout are as expected
+        with open(f"{working_dir}/0_non-python/0.log", "r") as f:
+            log = f.read()
+        assert "This goes to standard output" in log
+        assert "This goes to standard error" in log
