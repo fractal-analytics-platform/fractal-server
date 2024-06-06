@@ -515,13 +515,9 @@ class Settings(BaseSettings):
                     )
 
                 load_slurm_config_file(self.FRACTAL_SLURM_CONFIG_FILE)
-                if not shutil.which("sbatch"):
+                if not shutil.which("ssh"):
                     raise FractalConfigurationError(
-                        f"{info} but `sbatch` command not found."
-                    )
-                if not shutil.which("squeue"):
-                    raise FractalConfigurationError(
-                        f"{info} but `squeue` command not found."
+                        f"{info} but `ssh` command not found."
                     )
         else:  # i.e. self.FRACTAL_RUNNER_BACKEND == "local"
             if self.FRACTAL_LOCAL_CONFIG_FILE:
