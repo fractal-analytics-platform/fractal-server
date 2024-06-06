@@ -226,6 +226,12 @@ async def apply_workflow(
         WORKFLOW_DIR_REMOTE = (
             Path(user.cache_dir) / f"{WORKFLOW_DIR_LOCAL.name}"
         )
+    elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+        # FIXME: for slurm_ssh, we should not use a user-specific cache
+        # directory - but a configuration variable
+        WORKFLOW_DIR_REMOTE = (
+            Path(user.cache_dir) / f"{WORKFLOW_DIR_LOCAL.name}"  # FIXME
+        )
 
     # Update job folders in the db
     job.working_dir = WORKFLOW_DIR_LOCAL.as_posix()
