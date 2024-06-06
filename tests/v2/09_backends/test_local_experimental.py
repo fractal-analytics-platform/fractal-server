@@ -26,10 +26,6 @@ class MockWorkflowTask(BaseModel):
     meta_non_parallel: dict = Field(default_factory=dict)
     meta_parallel: dict = Field(default_factory=dict)
 
-    @property
-    def meta(self) -> dict:
-        return self.meta_non_parallel or self.meta_parallel
-
 
 def _sleep_and_return(sleep_time):
     time.sleep(sleep_time)
@@ -86,7 +82,7 @@ async def test_get_local_backend_config(tmp_path):
             config_path=config_file,
         )
 
-    # test 'parallel_tasks_per_job' from wftask.meta
+    # test 'parallel_tasks_per_job' from wftask.meta_parallel
     get_local_backend_config(
         wftask=MockWorkflowTask(meta_parallel=dict(parallel_tasks_per_job=42)),
         which_type="parallel",

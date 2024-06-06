@@ -86,7 +86,7 @@ def get_local_backend_config(
         )
 
     if wftask_meta and key in wftask_meta:
-        parallel_tasks_per_job = wftask.meta[key]
+        parallel_tasks_per_job = wftask_meta[key]
     else:
         if not config_path:
             settings = Inject(get_settings)

@@ -26,24 +26,46 @@ logger = get_logger("FractalProcessPoolExecutor")
 class FractalProcessPoolExecutor(ProcessPoolExecutor):
 
     shutdown_file: Path
+    interval: float
     _shutdown: bool
-    shutdown_thread: threading.Thread
+    _shutdown_file_thread: threading.Thread
 
-    def __init__(self, shutdown_file: Path, *args, **kwargs):
+    def __init__(
+        self, shutdown_file: Path, interval: float = 1.0, *args, **kwargs
+    ):
         super().__init__(*args, **kwargs)
-        self.shutdown_file = shutdown_file
+        self.shutdown_file = Path(shutdown_file)
+        self.interval = float(interval)
+        logger.debug(
+            f"Start monitoring {shutdown_file} every {interval} seconds"
+        )
         self._shutdown = False
-        self.shutdown_thread = threading.Thread(target=self._run, daemon=True)
-        self.shutdown_thread.start()
+        self._shutdown_file_thread = threading.Thread(
+            target=self._run, daemon=True
+        )
+        self._shutdown_file_thread.start()
 
     def _run(self):
+        """
+        Running on '_shutdown_file_thread'.
+        """
         while True:
-            if os.path.exists(self.shutdown_file) or self._shutdown:
-                self._terminate_processes()
-                return
-            time.sleep(1)
+            if self.shutdown_file.exists() or self._shutdown:
+                try:
+                    self._terminate_processes()
+                except Exception as e:
+                    logger.error(
+                        "Terminate processes failed. "
+                        f"Original error: {str(e)}."
+                    )
+                finally:
+                    return
+            time.sleep(self.interval)
 
     def _terminate_processes(self):
+        """
+        Running on '_shutdown_file_thread'.
+        """
         logger.info("Start terminating FractalProcessPoolExecutor processes.")
         if self._processes is not None:
             for pid in self._processes.keys():
@@ -54,7 +76,7 @@ class FractalProcessPoolExecutor(ProcessPoolExecutor):
 
     def shutdown(self, *args, **kwargs) -> None:
         self._shutdown = True
-        self.shutdown_thread.join()
+        self._shutdown_file_thread.join()
         return super().shutdown(*args, **kwargs)
 
     def submit(
