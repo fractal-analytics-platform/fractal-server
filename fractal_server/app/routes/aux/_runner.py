@@ -13,7 +13,7 @@ def _is_shutdown_available():
     """
     settings = Inject(get_settings)
     backend = settings.FRACTAL_RUNNER_BACKEND
-    if backend not in ["slurm", "local_experimental"]:
+    if backend not in ["slurm", "slurm_ssh", "local_experimental"]:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
