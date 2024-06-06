@@ -94,6 +94,7 @@ async def test_mkdir_error(
         job = await db.get(JobV2, job.id)
 
         assert job.status == "failed"
-        assert (
-            "An error occurred while creating job folder and subfolders."
-        ) in job.log
+        assert job.log == (
+            "An error occurred while creating job folder and subfolders.\n"
+            "Original error: user=None not allowed in _mkdir_as_user"
+        )
