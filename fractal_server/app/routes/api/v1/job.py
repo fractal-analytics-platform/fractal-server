@@ -177,10 +177,9 @@ async def stop_job(
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """
-    Stop execution of a workflow job (only available for slurm backend)
+    Stop execution of a workflow job.
     """
 
-    # This endpoint is only implemented for SLURM backend
     _is_shutdown_available()
 
     # Get job from DB

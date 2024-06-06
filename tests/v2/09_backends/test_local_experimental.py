@@ -21,8 +21,6 @@ from fractal_server.app.runner.v2._local_experimental.executor import (
     FractalProcessPoolExecutor,
 )
 
-FRACTAL_RUNNER_BACKEND = "local_experimental"
-
 
 class MockWorkflowTask(BaseModel):
     meta_non_parallel: dict = Field(default_factory=dict)
@@ -41,6 +39,10 @@ def _sleep_and_return(sleep_time):
 def _wait_one_sec(*args, **kwargs):
     time.sleep(1)
     return 42
+
+
+def two_args(a, b):
+    return
 
 
 async def test_unit_process_workflow():
@@ -148,5 +150,5 @@ def test_indirect_shutdown_during_map(
 def test_unit_map_iterables():
     with pytest.raises(ValueError) as error:
         with FractalProcessPoolExecutor(shutdown_file="/") as executor:
-            executor.map(_wait_one_sec, range(100), range(99))
+            executor.map(two_args, range(100), range(99))
     assert "Iterables have different lengths." in error._excinfo[1].args[0]

@@ -349,8 +349,6 @@ async def stop_job(
 ) -> Response:
     """
     Stop execution of a workflow job.
-
-    Only available for slurm backend.
     """
 
     _is_shutdown_available()

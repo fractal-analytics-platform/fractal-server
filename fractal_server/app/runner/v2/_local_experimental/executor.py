@@ -17,22 +17,26 @@ from typing import Sequence
 from ._local_config import get_default_local_backend_config
 from ._local_config import LocalBackendConfig
 from fractal_server.app.runner.exceptions import JobExecutionError
+from fractal_server.logger import get_logger
+
+
+logger = get_logger("FractalProcessPoolExecutor")
 
 
 class FractalProcessPoolExecutor(ProcessPoolExecutor):
+
+    shutdown_file: Path
+    _shutdown: bool
+    shutdown_thread: threading.Thread
+
     def __init__(self, shutdown_file: Path, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._shutdown = False
         self.shutdown_file = shutdown_file
-        self.shutdown_thread = threading.Thread(target=self.run, daemon=True)
+        self._shutdown = False
+        self.shutdown_thread = threading.Thread(target=self._run, daemon=True)
         self.shutdown_thread.start()
 
-    def shutdown(self, *args, **kwargs) -> None:
-        self._shutdown = True
-        self.shutdown_thread.join()
-        return super().shutdown(*args, **kwargs)
-
-    def run(self):
+    def _run(self):
         while True:
             if os.path.exists(self.shutdown_file) or self._shutdown:
                 self._terminate_processes()
@@ -40,9 +44,18 @@ class FractalProcessPoolExecutor(ProcessPoolExecutor):
             time.sleep(1)
 
     def _terminate_processes(self):
+        logger.info("Start terminating FractalProcessPoolExecutor processes.")
         if self._processes is not None:
             for pid in self._processes.keys():
+                logger.debug(f"Sending SIGTERM to process {pid}")
                 os.kill(pid, signal.SIGTERM)
+                logger.debug(f"Process {pid} terminated.")
+        logger.info("FractalProcessPoolExecutor processes terminated.")
+
+    def shutdown(self, *args, **kwargs) -> None:
+        self._shutdown = True
+        self.shutdown_thread.join()
+        return super().shutdown(*args, **kwargs)
 
     def submit(
         self,
@@ -112,6 +125,6 @@ class FractalProcessPoolExecutor(ProcessPoolExecutor):
             try:
                 results.extend(list(map_iter))
             except BrokenProcessPool as e:
-                raise JobExecutionError(e.args[0])
+                raise JobExecutionError(info=e.args[0])
 
         return iter(results)

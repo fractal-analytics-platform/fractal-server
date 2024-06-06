@@ -9,7 +9,7 @@ def _is_shutdown_available():
     """
     Raises:
         HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY):
-            If FRACTAL_RUNNER_BACKEND is not 'slurm'
+            If FRACTAL_RUNNER_BACKEND is the thread-based 'local' backend.
     """
     settings = Inject(get_settings)
     backend = settings.FRACTAL_RUNNER_BACKEND
