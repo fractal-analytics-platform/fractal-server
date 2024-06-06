@@ -62,8 +62,6 @@ def _process_workflow(
         worker_init = worker_init.split("\n")
 
     with FractalSlurmSSHExecutor(
-        debug=True,
-        keep_logs=True,
         ssh_host=ssh_host,
         ssh_user=ssh_user,
         ssh_private_key_path=ssh_private_key_path,
