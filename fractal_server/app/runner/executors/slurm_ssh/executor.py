@@ -28,7 +28,6 @@ from typing import Sequence
 
 import cloudpickle
 from cfut import SlurmExecutor
-from devtools import debug  # noqa : F401
 from fabric.connection import Connection
 from invoke.exceptions import UnexpectedExit
 
