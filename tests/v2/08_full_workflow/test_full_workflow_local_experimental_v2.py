@@ -5,7 +5,7 @@ from common_functions import full_workflow_TaskExecutionError
 from common_functions import non_executable_task_command
 from common_functions import non_python_task_local
 
-FRACTAL_RUNNER_BACKEND = "local"
+FRACTAL_RUNNER_BACKEND = "local_experimental"
 
 
 async def test_full_workflow_local(
@@ -143,17 +143,20 @@ async def test_non_python_task_local(
     workflow_factory_v2,
     task_factory_v2,
     testdata_path,
+    override_settings_factory,
 ):
     """
     Run a full workflow with a single bash task, which simply writes
     something to stderr and stdout
     """
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
+
     await non_python_task_local(
-        client=client,
         MockCurrentUser=MockCurrentUser,
+        client=client,
+        testdata_path=testdata_path,
         project_factory_v2=project_factory_v2,
         dataset_factory_v2=dataset_factory_v2,
         workflow_factory_v2=workflow_factory_v2,
         task_factory_v2=task_factory_v2,
-        testdata_path=testdata_path,
     )
