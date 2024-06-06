@@ -481,7 +481,10 @@ class Settings(BaseSettings):
                         f"{info} but `squeue` command not found."
                     )
         elif self.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-
+            if self.FRACTAL_SLURM_WORKER_PYTHON is None:
+                raise FractalConfigurationError(
+                    f"Must set FRACTAL_SLURM_WORKER_PYTHON when {info}"
+                )
             if self.FRACTAL_SLURM_SSH_USER is None:
                 raise FractalConfigurationError(
                     f"Must set FRACTAL_SLURM_SSH_USER when {info}"
