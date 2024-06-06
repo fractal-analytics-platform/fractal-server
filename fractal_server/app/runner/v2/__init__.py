@@ -27,6 +27,7 @@ from ...schemas.v2 import JobStatusTypeV2
 from ..exceptions import JobExecutionError
 from ..exceptions import TaskExecutionError
 from ..executors.slurm._subprocess_run_as_user import _mkdir_as_user
+from ..executors.slurm_ssh._run_through_ssh import _mkdir_over_ssh
 from ..filenames import WORKFLOW_LOG_FILENAME
 from ..task_files import task_subfolder_name
 from ._local import process_workflow as local_process_workflow
@@ -127,17 +128,20 @@ async def submit_workflow(
         os.umask(original_umask)
 
         # Define and create WORKFLOW_DIR_REMOTE
-        if FRACTAL_RUNNER_BACKEND == "local":
-            WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
-        elif FRACTAL_RUNNER_BACKEND == "local_experimental":
-            WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
-        elif FRACTAL_RUNNER_BACKEND == "slurm":
-            WORKFLOW_DIR_REMOTE = (
-                Path(user_cache_dir) / WORKFLOW_DIR_LOCAL.name
-            )
+        WORKFLOW_DIR_REMOTE = Path(job.working_dir_user)
+        if FRACTAL_RUNNER_BACKEND == "slurm":
             _mkdir_as_user(folder=str(WORKFLOW_DIR_REMOTE), user=slurm_user)
+            logging.info(f"Created {str(WORKFLOW_DIR_REMOTE)} via sudo.")
+
+        elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+            # FIXME: move mkdir to executor, typically within handshake
+            _mkdir_over_ssh(folder=str(WORKFLOW_DIR_REMOTE))
+            logging.info(f"Created {str(WORKFLOW_DIR_REMOTE)} via SSH.")
         else:
-            logging.info("Skip folder creation")  # FIXME
+            logging.error(
+                "Invalid FRACTAL_RUNNER_BACKEND="
+                f"{settings.FRACTAL_RUNNER_BACKEND}."
+            )
 
         # Create all tasks subfolders
         for order in range(job.first_task_index, job.last_task_index + 1):
