@@ -52,3 +52,48 @@ async def test_submit_workflow_failure(
     debug(job)
     assert job.status == "failed"
     assert "already exists" in job.log
+
+
+async def test_mkdir_error(
+    project_factory_v2,
+    dataset_factory_v2,
+    workflow_factory_v2,
+    task_factory_v2,
+    job_factory_v2,
+    db,
+    tmp_path,
+    MockCurrentUser,
+    override_settings_factory,
+):
+    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm")
+    async with MockCurrentUser(user_kwargs={"is_verified": True}) as user:
+
+        project = await project_factory_v2(user)
+        dataset = await dataset_factory_v2(project_id=project.id, name="ds")
+        workflow = await workflow_factory_v2(project_id=project.id, name="wf")
+        task = await task_factory_v2()
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
+        job = await job_factory_v2(
+            project_id=project.id,
+            dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir=(tmp_path / "abc").as_posix(),
+            status="submitted",
+        )
+
+        await submit_workflow(
+            workflow_id=workflow.id,
+            dataset_id=dataset.id,
+            job_id=job.id,
+            user_cache_dir=(tmp_path / "xxx").as_posix(),
+        )
+
+        await db.close()
+        job = await db.get(JobV2, job.id)
+
+        assert job.status == "failed"
+        assert (
+            "An error occurred while creating job folder and subfolders."
+        ) in job.log

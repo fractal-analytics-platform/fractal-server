@@ -126,41 +126,57 @@ async def submit_workflow(
             db_sync.close()
             return
 
-        # Create WORKFLOW_DIR
-        original_umask = os.umask(0)
-        WORKFLOW_DIR_LOCAL.mkdir(parents=True, mode=0o755)
-        os.umask(original_umask)
+        try:
 
-        # Define and create WORKFLOW_DIR_REMOTE
-        if FRACTAL_RUNNER_BACKEND == "local":
-            WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
-        elif FRACTAL_RUNNER_BACKEND == "local_experimental":
-            WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
-        elif FRACTAL_RUNNER_BACKEND == "slurm":
-            WORKFLOW_DIR_REMOTE = (
-                Path(user_cache_dir) / WORKFLOW_DIR_LOCAL.name
-            )
-            _mkdir_as_user(folder=str(WORKFLOW_DIR_REMOTE), user=slurm_user)
-
-        # Create all tasks subfolders
-        for order in range(job.first_task_index, job.last_task_index + 1):
-            this_wftask = workflow.task_list[order]
-            if this_wftask.is_legacy_task:
-                task_name = this_wftask.task_legacy.name
-            else:
-                task_name = this_wftask.task.name
-            subfolder_name = task_subfolder_name(
-                order=order,
-                task_name=task_name,
-            )
+            # Create WORKFLOW_DIR
             original_umask = os.umask(0)
-            (WORKFLOW_DIR_LOCAL / subfolder_name).mkdir(mode=0o755)
+            WORKFLOW_DIR_LOCAL.mkdir(parents=True, mode=0o755)
+
             os.umask(original_umask)
-            if FRACTAL_RUNNER_BACKEND == "slurm":
-                _mkdir_as_user(
-                    folder=str(WORKFLOW_DIR_REMOTE / subfolder_name),
-                    user=slurm_user,
+
+            # Define and create WORKFLOW_DIR_REMOTE
+            if FRACTAL_RUNNER_BACKEND == "local":
+                WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
+            elif FRACTAL_RUNNER_BACKEND == "local_experimental":
+                WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
+            elif FRACTAL_RUNNER_BACKEND == "slurm":
+                WORKFLOW_DIR_REMOTE = (
+                    Path(user_cache_dir) / WORKFLOW_DIR_LOCAL.name
                 )
+                _mkdir_as_user(
+                    folder=str(WORKFLOW_DIR_REMOTE), user=slurm_user
+                )
+
+            # Create all tasks subfolders
+            for order in range(job.first_task_index, job.last_task_index + 1):
+                this_wftask = workflow.task_list[order]
+                if this_wftask.is_legacy_task:
+                    task_name = this_wftask.task_legacy.name
+                else:
+                    task_name = this_wftask.task.name
+                subfolder_name = task_subfolder_name(
+                    order=order,
+                    task_name=task_name,
+                )
+                original_umask = os.umask(0)
+                (WORKFLOW_DIR_LOCAL / subfolder_name).mkdir(mode=0o755)
+                os.umask(original_umask)
+                if FRACTAL_RUNNER_BACKEND == "slurm":
+                    _mkdir_as_user(
+                        folder=str(WORKFLOW_DIR_REMOTE / subfolder_name),
+                        user=slurm_user,
+                    )
+        except Exception as e:
+            job.status = JobStatusTypeV2.FAILED
+            job.end_timestamp = get_timestamp()
+            job.log = (
+                "An error occurred while creating job folder and subfolders.\n"
+                f"Original error: {str(e)}"
+            )
+            db_sync.merge(job)
+            db_sync.commit()
+            db_sync.close()
+            return
 
         # After Session.commit() is called, either explicitly or when using a
         # context manager, all objects associated with the Session are expired.
