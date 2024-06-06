@@ -311,7 +311,10 @@ class Settings(BaseSettings):
         return FRACTAL_RUNNER_WORKING_BASE_DIR_path
 
     FRACTAL_RUNNER_BACKEND: Literal[
-        "local", "local_experimental", "slurm"
+        "local",
+        "local_experimental",
+        "slurm",
+        "slurm_ssh",
     ] = "local"
     """
     Select which runner backend to use.
@@ -380,6 +383,18 @@ class Settings(BaseSettings):
     `JobExecutionError`.
     """
 
+    FRACTAL_SLURM_SSH_HOST: Optional[str] = None
+    """
+    FIXME docstring
+    """
+    FRACTAL_SLURM_SSH_USER: Optional[str] = None
+    """
+    FIXME docstring
+    """
+    FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH: Optional[str] = None
+    """
+    FIXME docstring
+    """
     FRACTAL_API_SUBMIT_RATE_LIMIT: int = 2
     """
     Interval to wait (in seconds) to be allowed to call again
@@ -437,6 +452,45 @@ class Settings(BaseSettings):
         if self.FRACTAL_RUNNER_BACKEND == "slurm":
 
             from fractal_server.app.runner.executors.slurm._slurm_config import (  # noqa: E501
+                load_slurm_config_file,
+            )
+
+            if not self.FRACTAL_SLURM_CONFIG_FILE:
+                raise FractalConfigurationError(
+                    f"Must set FRACTAL_SLURM_CONFIG_FILE when {info}"
+                )
+            else:
+                if not self.FRACTAL_SLURM_CONFIG_FILE.exists():
+                    raise FractalConfigurationError(
+                        f"{info} but FRACTAL_SLURM_CONFIG_FILE="
+                        f"{self.FRACTAL_SLURM_CONFIG_FILE} not found."
+                    )
+
+                load_slurm_config_file(self.FRACTAL_SLURM_CONFIG_FILE)
+                if not shutil.which("sbatch"):
+                    raise FractalConfigurationError(
+                        f"{info} but `sbatch` command not found."
+                    )
+                if not shutil.which("squeue"):
+                    raise FractalConfigurationError(
+                        f"{info} but `squeue` command not found."
+                    )
+        elif self.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+
+            if self.FRACTAL_SLURM_SSH_USER is None:
+                raise FractalConfigurationError(
+                    f"Must set FRACTAL_SLURM_SSH_USER when {info}"
+                )
+            if self.FRACTAL_SLURM_SSH_HOST is None:
+                raise FractalConfigurationError(
+                    f"Must set FRACTAL_SLURM_SSH_HOST when {info}"
+                )
+            if self.FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH is None:
+                raise FractalConfigurationError(
+                    f"Must set FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH when {info}"
+                )
+
+            from fractal_server.app.runner.executors.slurm_ssh._slurm_config import (  # noqa: E501
                 load_slurm_config_file,
             )
 
