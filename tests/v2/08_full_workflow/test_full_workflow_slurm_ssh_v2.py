@@ -29,6 +29,9 @@ async def test_xxx(
         FRACTAL_SLURM_SSH_HOST=slurmlogin_ip,
         FRACTAL_SLURM_SSH_USER=SLURM_USER,
         FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH=ssh_keys["private"],
+        FRACTAL_SLURM_SSH_WORKING_BASE_DIR=(
+            tmp777_path / "artifacts"
+        ).as_posix(),
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
     )
 
@@ -43,7 +46,4 @@ async def test_xxx(
         workflow_factory_v2=workflow_factory_v2,
         task_factory_v2=task_factory_v2,
         tmp777_path=tmp777_path,
-        additional_user_kwargs=dict(
-            cache_dir=(tmp777_path / "cache_dir").as_posix()
-        ),
     )
