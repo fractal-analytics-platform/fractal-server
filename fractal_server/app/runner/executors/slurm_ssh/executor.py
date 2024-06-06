@@ -29,7 +29,6 @@ from typing import Sequence
 import cloudpickle
 from cfut import SlurmExecutor
 from fabric.connection import Connection
-from invoke.exceptions import UnexpectedExit
 
 from .....config import get_settings
 from .....logger import set_logger
@@ -42,48 +41,13 @@ from ...task_files import TaskFiles
 from ...versions import get_versions
 from ._batching import heuristics
 from ._executor_wait_thread import FractalSlurmWaitThread
+from ._run_through_ssh import _run_command_over_ssh
 from ._slurm_config import get_default_slurm_config
 from ._slurm_config import SlurmConfig
 from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.executors.slurm_ssh._slurm_job import SlurmJob
 
 logger = set_logger(__name__)
-
-
-def _run_command_over_ssh(
-    *,
-    cmd: str,
-    connection: Connection,
-) -> str:
-    """
-    Run a command within an open SSH connection.
-
-    Args:
-        cmd: Command to be run
-        connection: Fabric connection object
-
-    Returns:
-        Standard output of the command, if successful.
-    """
-    t_0 = time.perf_counter()
-    logger.debug(f"START running '{cmd}' over SSH.")
-    try:
-        res = connection.run(cmd, hide=True)
-    except UnexpectedExit as e:
-        error_msg = (
-            f"Running command `{cmd}` over SSH failed.\n"
-            f"Original error:\n{str(e)}."
-        )
-        logger.error(error_msg)
-        # FIXME switch to JobExecutionError
-        raise ValueError(error_msg)
-        raise JobExecutionError(info=error_msg)
-
-    t_1 = time.perf_counter()
-    logger.info(f"END   running '{cmd}' over SSH, elapsed {t_1-t_0:.3f}")
-    logger.debug(f"STDOUT: {res.stdout}")
-    logger.debug(f"STDERR: {res.stderr}")
-    return res.stdout
 
 
 class FractalSlurmSSHExecutor(SlurmExecutor):
@@ -139,6 +103,8 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         # SLURM submission script options
         common_script_lines: Optional[list[str]] = None,
         slurm_account: Optional[str] = None,
+        # Other kwargs are ignored
+        **kwargs,
     ):
         """
         Init method for FractalSlurmSSHExecutor
@@ -146,11 +112,16 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         FIXME: Docstring
         """
 
+        if kwargs != {}:
+            raise ValueError(
+                f"FractalSlurmSSHExecutor received unexpected {kwargs=}"
+            )
+
         self.workflow_dir_local = workflow_dir_local
         self.workflow_dir_remote = workflow_dir_remote
 
-        # Relevant bits of cfut.ClusterExecutor.__init__,
-        # postponing the .start() call
+        # Relevant bits of cfut.ClusterExecutor.__init__ are copied here,
+        # postponing the .start() call to when the callbacks are defined
         self.jobs = {}
         self.job_outfiles = {}
         self.jobs_lock = threading.Lock()
