@@ -194,9 +194,14 @@ async def submit_workflow(
         )
         logger.debug(f"fractal_server.__VERSION__: {__VERSION__}")
         logger.debug(f"FRACTAL_RUNNER_BACKEND: {FRACTAL_RUNNER_BACKEND}")
-        logger.debug(f"slurm_user: {slurm_user}")
-        logger.debug(f"slurm_account: {job.slurm_account}")
-        logger.debug(f"worker_init: {worker_init}")
+        if FRACTAL_RUNNER_BACKEND == "slurm":
+            logger.debug(f"slurm_user: {slurm_user}")
+            logger.debug(f"slurm_account: {job.slurm_account}")
+            logger.debug(f"worker_init: {worker_init}")
+        elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+            logger.debug(f"ssh_host: {settings.FRACTAL_SLURM_SSH_HOST}")
+            logger.debug(f"ssh_user: {settings.FRACTAL_SLURM_SSH_USER}")
+            logger.debug(f"worker_init: {worker_init}")
         logger.debug(f"job.id: {job.id}")
         logger.debug(f"job.working_dir: {job.working_dir}")
         logger.debug(f"job.working_dir_user: {job.working_dir_user}")
