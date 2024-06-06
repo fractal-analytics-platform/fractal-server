@@ -1426,22 +1426,28 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                     )
 
     @contextlib.contextmanager
-    def ConnectionWithParameters(self):
+    def ConnectionWithParameters(self, **kwargs):
         with Connection(
             host=self.ssh_host,
             user=self.ssh_user,
             connect_kwargs={"key_filename": self.ssh_private_key_path},
+            **kwargs,
         ) as connection:
             yield connection
 
     def handshake(self) -> dict:
         """
         Healthcheck for SSH connection and for versions match.
+
+        Note that we set a timeout for the SSH connection, to avoid a hanging
+        connection in case e.g. of unreachable host.
         """
+        timeout = 5
+
         t_start_handshake = time.perf_counter()
 
         logger.info("[FractalSlurmSSHExecutor.ssh_handshake] START")
-        with self.ConnectionWithParameters() as conn:
+        with self.ConnectionWithParameters(connect_timeout=timeout) as conn:
             cmd = f"{self.python_remote} -m fractal_server.app.runner.versions"
             stdout = _run_command_over_ssh(cmd=cmd, connection=conn)
         remote_versions = json.loads(stdout.strip("\n"))
@@ -1452,7 +1458,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         local_versions = get_versions()
         remote_fractal_server = remote_versions["fractal_server"]
         local_fractal_server = local_versions["fractal_server"]
-        # TODO: add more compatibility checks - if needed
+        # TODO: add more version compatibility checks - if needed
         if remote_fractal_server != local_fractal_server:
             error_msg = (
                 "Fractal-server version mismatch.\n"
