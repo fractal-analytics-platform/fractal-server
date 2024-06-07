@@ -1,8 +1,8 @@
-import asyncio
 from os import environ
 from pathlib import Path
 
 import pytest
+from pytest_asyncio import is_async_test
 
 
 environ["PYTHONASYNCIODEBUG"] = "1"
@@ -21,12 +21,11 @@ def check_basetemp(tpath: Path):
         )
 
 
-@pytest.fixture(scope="session")
-def event_loop():
-    _event_loop = asyncio.new_event_loop()
-    _event_loop.set_debug(False)
-    yield _event_loop
-    _event_loop.close()
+def pytest_collection_modifyitems(items):
+    pytest_asyncio_tests = (item for item in items if is_async_test(item))
+    session_scope_marker = pytest.mark.asyncio(scope="session")
+    for async_test in pytest_asyncio_tests:
+        async_test.add_marker(session_scope_marker, append=False)
 
 
 @pytest.fixture(scope="session")
