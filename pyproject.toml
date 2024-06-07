@@ -52,7 +52,7 @@ asgi-lifespan = "^2"
 pytest = "8.1.*"
 httpx = "^0.23"
 devtools = "^0.12"
-pytest-asyncio = "^0.21"
+pytest-asyncio = "^0.23"
 bumpver = "^2022.1120"
 pre-commit = "^2.19"
 coverage = {extras = ["toml"], version = "7.5.*"}
