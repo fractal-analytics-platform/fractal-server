@@ -2,11 +2,13 @@ import time
 
 from fabric.connection import Connection
 from invoke import UnexpectedExit
+from paramiko.ssh_exception import NoValidConnectionsError
 
 from .....logger import set_logger
 from .....syringe import Inject
 from ...exceptions import JobExecutionError
 from fractal_server.config import get_settings
+
 
 logger = set_logger(__name__)
 
@@ -34,6 +36,17 @@ def _run_command_over_ssh(
         error_msg = (
             f"Running command `{cmd}` over SSH failed.\n"
             f"Original error:\n{str(e)}."
+        )
+        logger.error(error_msg)
+        # FIXME switch to JobExecutionError
+        raise ValueError(error_msg)
+        raise JobExecutionError(info=error_msg)
+
+    except NoValidConnectionsError as e:
+        error_msg = (
+            f"Running command `{cmd}` over SSH failed.\n"
+            f"Original NoValidConnectionError:\n{str(e)}.\n"
+            f"{e.errors=}\n"
         )
         logger.error(error_msg)
         # FIXME switch to JobExecutionError
@@ -70,4 +83,4 @@ def _mkdir_over_ssh(*, folder: str, parents: bool = True) -> None:
         },
         connect_timeout=timeout,
     ) as connection:
-        connection.run(cmd, hide=True)
+        _run_command_over_ssh(cmd=cmd, connection=connection)

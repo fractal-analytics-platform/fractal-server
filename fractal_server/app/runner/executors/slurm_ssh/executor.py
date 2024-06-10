@@ -29,6 +29,7 @@ from typing import Sequence
 import cloudpickle
 from cfut import SlurmExecutor
 from fabric.connection import Connection
+from paramiko.ssh_exception import NoValidConnectionsError
 
 from .....config import get_settings
 from .....logger import set_logger
@@ -375,7 +376,13 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             args=fun_args,
             kwargs=fun_kwargs,
         )
-        self._put_subfolder_sftp(jobs=[job])
+        try:
+            self._put_subfolder_sftp(jobs=[job])
+        except NoValidConnectionsError as e:
+            logger.error("NoValidConnectionError")
+            logger.error(f"{str(e)=}")
+            logger.error(f"{e.errors=}")
+            raise e
         future, job_id_str = self._submit_job(job)
         self.wait_thread.wait(job_id=job_id_str)
         return future
@@ -511,7 +518,13 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             current_component_index += batch_size
         logger.debug("[map] Job preparation - END")
 
-        self._put_subfolder_sftp(jobs=jobs_to_submit)
+        try:
+            self._put_subfolder_sftp(jobs=jobs_to_submit)
+        except NoValidConnectionsError as e:
+            logger.error("NoValidConnectionError")
+            logger.error(f"{str(e)=}")
+            logger.error(f"{e.errors=}")
+            raise e
 
         # Construct list of futures (one per SLURM job, i.e. one per batch)
         logger.debug("[map] Job submission - START")
@@ -992,7 +1005,13 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                 self.jobs_empty_cond.notify_all()
 
         # Fetch subfolder from remote host
-        self._get_subfolder_sftp(jobs=jobs)
+        try:
+            self._get_subfolder_sftp(jobs=jobs)
+        except NoValidConnectionsError as e:
+            logger.error("NoValidConnectionError")
+            logger.error(f"{str(e)=}")
+            logger.error(f"{e.errors=}")
+            raise e
 
         # First round of checking whether all output files exist
         missing_out_paths = []
@@ -1380,9 +1399,16 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                 f"[FractalSlurmSSHExecutor._jobs_finished] END - {output=}"
             )
             return output
-        except Exception:
-            # If something goes wrong, proceed
-            return set()
+        except Exception as e:
+            # If something goes wrong, proceed anyway
+            logger.error(
+                f"Something wrong in _jobs_finished. Original error: {str(e)}"
+            )
+            output = set()
+            logger.debug(
+                f"[FractalSlurmSSHExecutor._jobs_finished] END - {output=}"
+            )
+            return output
 
             id_to_state = dict()
             for j in job_ids:
