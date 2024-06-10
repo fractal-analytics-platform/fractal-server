@@ -160,7 +160,8 @@ async def submit_workflow(
                 )
             elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
                 WORKFLOW_DIR_REMOTE = (
-                    Path(user_cache_dir) / WORKFLOW_DIR_LOCAL.name
+                    Path(settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR)
+                    / WORKFLOW_DIR_LOCAL.name
                 )
 
             # Create all tasks subfolders
@@ -185,13 +186,13 @@ async def submit_workflow(
                 else:
                     logging.info("Skip remote-subfolder creation")
         except Exception as e:
+            job.status = JobStatusTypeV2.FAILED
+            job.end_timestamp = get_timestamp()
             error_msg = (
                 "An error occurred while creating job folder and subfolders.\n"
                 f"Original error: {str(e)}"
             )
             logging.error(error_msg)
-            job.status = JobStatusTypeV2.FAILED
-            job.end_timestamp = get_timestamp()
             job.log = error_msg
             db_sync.merge(job)
             db_sync.commit()
@@ -234,6 +235,9 @@ async def submit_workflow(
         elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
             logger.debug(f"ssh_host: {settings.FRACTAL_SLURM_SSH_HOST}")
             logger.debug(f"ssh_user: {settings.FRACTAL_SLURM_SSH_USER}")
+            logger.debug(
+                f"base dir: {settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR}"
+            )
             logger.debug(f"worker_init: {worker_init}")
         logger.debug(f"job.id: {job.id}")
         logger.debug(f"job.working_dir: {job.working_dir}")
