@@ -124,7 +124,7 @@ async def submit_workflow(
 
         try:
 
-            # Create WORKFLOW_DIR
+            # Create WORKFLOW_DIR_LOCAL
             original_umask = os.umask(0)
             WORKFLOW_DIR_LOCAL.mkdir(parents=True, mode=0o755)
             os.umask(original_umask)
@@ -136,15 +136,31 @@ async def submit_workflow(
                     folder=str(WORKFLOW_DIR_REMOTE), user=slurm_user
                 )
                 logging.info(f"Created {str(WORKFLOW_DIR_REMOTE)} via sudo.")
-
             elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-                # FIXME: move mkdir to executor, typically within handshake
+                # FIXME: move this mkdir to executor, likely within handshake
                 _mkdir_over_ssh(folder=str(WORKFLOW_DIR_REMOTE))
                 logging.info(f"Created {str(WORKFLOW_DIR_REMOTE)} via SSH.")
             else:
                 logging.error(
                     "Invalid FRACTAL_RUNNER_BACKEND="
                     f"{settings.FRACTAL_RUNNER_BACKEND}."
+                )
+
+            # Define and create WORKFLOW_DIR_REMOTE
+            if FRACTAL_RUNNER_BACKEND == "local":
+                WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
+            elif FRACTAL_RUNNER_BACKEND == "local_experimental":
+                WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
+            elif FRACTAL_RUNNER_BACKEND == "slurm":
+                WORKFLOW_DIR_REMOTE = (
+                    Path(user_cache_dir) / WORKFLOW_DIR_LOCAL.name
+                )
+                _mkdir_as_user(
+                    folder=str(WORKFLOW_DIR_REMOTE), user=slurm_user
+                )
+            elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+                WORKFLOW_DIR_REMOTE = (
+                    Path(user_cache_dir) / WORKFLOW_DIR_LOCAL.name
                 )
 
             # Create all tasks subfolders
@@ -167,7 +183,7 @@ async def submit_workflow(
                         user=slurm_user,
                     )
                 else:
-                    logging.info("Skip folder creation")  # FIXME
+                    logging.info("Skip remote-subfolder creation")
         except Exception as e:
             error_msg = (
                 "An error occurred while creating job folder and subfolders.\n"
