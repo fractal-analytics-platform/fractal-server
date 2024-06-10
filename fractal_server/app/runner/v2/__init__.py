@@ -122,48 +122,65 @@ async def submit_workflow(
             db_sync.close()
             return
 
-        # Create WORKFLOW_DIR
-        original_umask = os.umask(0)
-        WORKFLOW_DIR_LOCAL.mkdir(parents=True, mode=0o755)
-        os.umask(original_umask)
+        try:
 
-        # Define and create WORKFLOW_DIR_REMOTE
-        WORKFLOW_DIR_REMOTE = Path(job.working_dir_user)
-        if FRACTAL_RUNNER_BACKEND == "slurm":
-            _mkdir_as_user(folder=str(WORKFLOW_DIR_REMOTE), user=slurm_user)
-            logging.info(f"Created {str(WORKFLOW_DIR_REMOTE)} via sudo.")
-
-        elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-            # FIXME: move mkdir to executor, typically within handshake
-            _mkdir_over_ssh(folder=str(WORKFLOW_DIR_REMOTE))
-            logging.info(f"Created {str(WORKFLOW_DIR_REMOTE)} via SSH.")
-        else:
-            logging.error(
-                "Invalid FRACTAL_RUNNER_BACKEND="
-                f"{settings.FRACTAL_RUNNER_BACKEND}."
-            )
-
-        # Create all tasks subfolders
-        for order in range(job.first_task_index, job.last_task_index + 1):
-            this_wftask = workflow.task_list[order]
-            if this_wftask.is_legacy_task:
-                task_name = this_wftask.task_legacy.name
-            else:
-                task_name = this_wftask.task.name
-            subfolder_name = task_subfolder_name(
-                order=order,
-                task_name=task_name,
-            )
+            # Create WORKFLOW_DIR
             original_umask = os.umask(0)
-            (WORKFLOW_DIR_LOCAL / subfolder_name).mkdir(mode=0o755)
+            WORKFLOW_DIR_LOCAL.mkdir(parents=True, mode=0o755)
             os.umask(original_umask)
+
+            # Define and create WORKFLOW_DIR_REMOTE
+            WORKFLOW_DIR_REMOTE = Path(job.working_dir_user)
             if FRACTAL_RUNNER_BACKEND == "slurm":
                 _mkdir_as_user(
-                    folder=str(WORKFLOW_DIR_REMOTE / subfolder_name),
-                    user=slurm_user,
+                    folder=str(WORKFLOW_DIR_REMOTE), user=slurm_user
                 )
+                logging.info(f"Created {str(WORKFLOW_DIR_REMOTE)} via sudo.")
+
+            elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+                # FIXME: move mkdir to executor, typically within handshake
+                _mkdir_over_ssh(folder=str(WORKFLOW_DIR_REMOTE))
+                logging.info(f"Created {str(WORKFLOW_DIR_REMOTE)} via SSH.")
             else:
-                logging.info("Skip folder creation")  # FIXME
+                logging.error(
+                    "Invalid FRACTAL_RUNNER_BACKEND="
+                    f"{settings.FRACTAL_RUNNER_BACKEND}."
+                )
+
+            # Create all tasks subfolders
+            for order in range(job.first_task_index, job.last_task_index + 1):
+                this_wftask = workflow.task_list[order]
+                if this_wftask.is_legacy_task:
+                    task_name = this_wftask.task_legacy.name
+                else:
+                    task_name = this_wftask.task.name
+                subfolder_name = task_subfolder_name(
+                    order=order,
+                    task_name=task_name,
+                )
+                original_umask = os.umask(0)
+                (WORKFLOW_DIR_LOCAL / subfolder_name).mkdir(mode=0o755)
+                os.umask(original_umask)
+                if FRACTAL_RUNNER_BACKEND == "slurm":
+                    _mkdir_as_user(
+                        folder=str(WORKFLOW_DIR_REMOTE / subfolder_name),
+                        user=slurm_user,
+                    )
+                else:
+                    logging.info("Skip folder creation")  # FIXME
+        except Exception as e:
+            error_msg = (
+                "An error occurred while creating job folder and subfolders.\n"
+                f"Original error: {str(e)}"
+            )
+            logging.error(error_msg)
+            job.status = JobStatusTypeV2.FAILED
+            job.end_timestamp = get_timestamp()
+            job.log = error_msg
+            db_sync.merge(job)
+            db_sync.commit()
+            db_sync.close()
+            return
 
         # After Session.commit() is called, either explicitly or when using a
         # context manager, all objects associated with the Session are expired.
