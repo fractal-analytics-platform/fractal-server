@@ -11,7 +11,7 @@ import traceback
 from pathlib import Path
 from typing import Optional
 
-from fabric import Connection
+from fabric import Connection  # FIXME: try/except import
 from sqlalchemy.orm.attributes import flag_modified
 
 from ....config import get_settings
