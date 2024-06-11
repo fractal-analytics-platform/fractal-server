@@ -11,6 +11,7 @@ import traceback
 from pathlib import Path
 from typing import Optional
 
+from fabric import Connection
 from sqlalchemy.orm.attributes import flag_modified
 
 from ....config import get_settings
@@ -56,6 +57,7 @@ async def submit_workflow(
     worker_init: Optional[str] = None,
     slurm_user: Optional[str] = None,
     user_cache_dir: Optional[str] = None,
+    connection: Optional[Connection] = None,
 ) -> None:
     """
     Prepares a workflow and applies it to a dataset
@@ -266,6 +268,7 @@ async def submit_workflow(
                 ssh_host=settings.FRACTAL_SLURM_SSH_HOST,
                 ssh_user=settings.FRACTAL_SLURM_SSH_USER,
                 ssh_private_key_path=settings.FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH,  # noqa: E501
+                connection=connection,
             )
         else:
             raise RuntimeError(
