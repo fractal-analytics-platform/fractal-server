@@ -29,7 +29,7 @@ def _run_command_over_ssh(
         Standard output of the command, if successful.
     """
     t_0 = time.perf_counter()
-    logger.debug(f"START running '{cmd}' over SSH.")
+    logger.info(f"START running '{cmd}' over SSH.")
     try:
         res = connection.run(cmd, hide=True)
     except UnexpectedExit as e:
@@ -67,6 +67,8 @@ def _mkdir_over_ssh(*, folder: str, parents: bool = True) -> None:
     Args:
         folder:
     """
+
+    # FIXME: paramiko SFTPClient has a mkdir method
 
     if parents:
         cmd = f"mkdir -p {folder}"

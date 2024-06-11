@@ -10,7 +10,6 @@
 #
 # Copyright 2022 (C) Friedrich Miescher Institute for Biomedical Research and
 # University of Zurich
-import contextlib
 import json
 import math
 import sys
@@ -73,6 +72,8 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
     ssh_user: str
     ssh_private_key_path: str
 
+    connection: Connection
+
     workflow_dir_local: Path
     workflow_dir_remote: Path
     shutdown_file: str
@@ -94,6 +95,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         ssh_host: str,
         ssh_user: str,
         ssh_private_key_path: str,
+        connection: Connection,
         # Folders and files
         workflow_dir_local: Path,
         workflow_dir_remote: Path,
@@ -158,6 +160,17 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         self.ssh_host = ssh_host
         self.ssh_user = ssh_user
         self.ssh_private_key_path = ssh_private_key_path
+
+        # Initialize connection
+        self.connection = connection
+        logger.warning(self.connection)
+        # self.connection = Connection(
+        #     host=self.ssh_host,
+        #     user=self.ssh_user,
+        #     connect_kwargs={"key_filename": self.ssh_private_key_path},
+        # )
+        # self.connection.open()
+
         self.handshake()
 
         # Set/validate parameters for SLURM submission scripts
@@ -382,6 +395,8 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             logger.error("NoValidConnectionError")
             logger.error(f"{str(e)=}")
             logger.error(f"{e.errors=}")
+            for err in e.errors:
+                logger.error(f"{str(err)}")
             raise e
         future, job_id_str = self._submit_job(job)
         self.wait_thread.wait(job_id=job_id_str)
@@ -524,6 +539,9 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             logger.error("NoValidConnectionError")
             logger.error(f"{str(e)=}")
             logger.error(f"{e.errors=}")
+            for err in e.errors:
+                logger.error(f"{str(err)}")
+
             raise e
 
         # Construct list of futures (one per SLURM job, i.e. one per batch)
@@ -817,25 +835,24 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             tar.add(local_subfolder, arcname=subfolder_name, recursive=True)
         logger.info(f"Subfolder archive created at {tarfile_path_local}")
 
-        with self.ConnectionWithParameters() as conn:
-            # Transfer archive
-            t_0_put = time.perf_counter()
-            conn.put(
-                local=tarfile_path_local,
-                remote=tarfile_path_remote,
-            )
-            t_1_put = time.perf_counter()
-            logger.info(
-                f"Subfolder archive transferred to {tarfile_path_remote}"
-                f" - elapsed: {t_1_put - t_0_put:.3f} s"
-            )
-            # Uncompress archive (remotely)
-            tar_command = (
-                f"{self.python_remote} -m "
-                "fractal_server.app.runner.extract_archive "
-                f"{tarfile_path_remote}"
-            )
-            _run_command_over_ssh(cmd=tar_command, connection=conn)
+        # Transfer archive
+        t_0_put = time.perf_counter()
+        self.connection.put(
+            local=tarfile_path_local,
+            remote=tarfile_path_remote,
+        )
+        t_1_put = time.perf_counter()
+        logger.info(
+            f"Subfolder archive transferred to {tarfile_path_remote}"
+            f" - elapsed: {t_1_put - t_0_put:.3f} s"
+        )
+        # Uncompress archive (remotely)
+        tar_command = (
+            f"{self.python_remote} -m "
+            "fractal_server.app.runner.extract_archive "
+            f"{tarfile_path_remote}"
+        )
+        _run_command_over_ssh(cmd=tar_command, connection=self.connection)
 
         # Remove local version
         t_0_rm = time.perf_counter()
@@ -856,11 +873,11 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         """
 
         # Submit job to SLURM, and get jobid
-        with self.ConnectionWithParameters() as conn:
-            sbatch_command = f"sbatch --parsable {job.slurm_script_remote}"
-            sbatch_stdout = _run_command_over_ssh(
-                cmd=sbatch_command, connection=conn
-            )
+        sbatch_command = f"sbatch --parsable {job.slurm_script_remote}"
+        sbatch_stdout = _run_command_over_ssh(
+            cmd=sbatch_command,
+            connection=self.connection,
+        )
 
         # Extract SLURM job ID from stdout
         try:
@@ -1011,6 +1028,9 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             logger.error("NoValidConnectionError")
             logger.error(f"{str(e)=}")
             logger.error(f"{e.errors=}")
+            for err in e.errors:
+                logger.error(f"{str(err)}")
+
             raise e
 
         # First round of checking whether all output files exist
@@ -1191,31 +1211,35 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         logger.warning(f"In principle I just removed {tarfile_path_local}")
         logger.warning(f"{Path(tarfile_path_local).exists()=}")
 
-        with self.ConnectionWithParameters() as conn:
+        # Remove remote tarfile - FIXME: is this needed?
+        # rm_command = f"rm {tarfile_path_remote}"
+        # _run_command_over_ssh(cmd=rm_command, connection=self.connection)
+        logger.warning(f"Unlink {tarfile_path_remote=} - START")
+        self.connection.sftp().unlink(tarfile_path_remote)
+        logger.warning(f"Unlink {tarfile_path_remote=} - STOP")
 
-            # Remove remote tarfile - FIXME: is this needed?
-            rm_command = f"rm {tarfile_path_remote}"
-            _run_command_over_ssh(cmd=rm_command, connection=conn)
+        # Create remote tarfile
+        tar_command = (
+            f"{self.python_remote} "
+            "-m fractal_server.app.runner.compress_folder "
+            f"{(self.workflow_dir_remote / subfolder_name).as_posix()}"
+        )
+        stdout = _run_command_over_ssh(
+            cmd=tar_command, connection=self.connection
+        )
+        print(stdout)
 
-            # Create remote tarfile
-            tar_command = (
-                f"{self.python_remote} "
-                "-m fractal_server.app.runner.compress_folder "
-                f"{(self.workflow_dir_remote / subfolder_name).as_posix()}"
-            )
-            _run_command_over_ssh(cmd=tar_command, connection=conn)
-
-            # Fetch tarfile
-            t_0_get = time.perf_counter()
-            conn.get(
-                remote=tarfile_path_remote,
-                local=tarfile_path_local,
-            )
-            t_1_get = time.perf_counter()
-            logger.info(
-                f"Subfolder archive transferred back to {tarfile_path_local}"
-                f" - elapsed: {t_1_get - t_0_get:.3f} s"
-            )
+        # Fetch tarfile
+        t_0_get = time.perf_counter()
+        self.connection.get(
+            remote=tarfile_path_remote,
+            local=tarfile_path_local,
+        )
+        t_1_get = time.perf_counter()
+        logger.info(
+            f"Subfolder archive transferred back to {tarfile_path_local}"
+            f" - elapsed: {t_1_get - t_0_get:.3f} s"
+        )
 
         # Extract tarfile locally
         with tarfile.open(tarfile_path_local) as tar:
@@ -1304,6 +1328,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         """
 
         logger.debug("Executor shutdown: start")
+        # self.connection.close()
 
         # Handle all job futures
         slurm_jobs_to_scancel = []
@@ -1326,8 +1351,9 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             scancel_string = " ".join(slurm_jobs_to_scancel)
             logger.warning(f"Now scancel-ing SLURM jobs {scancel_string}")
             scancel_command = f"scancel {scancel_string}"
-            with self.ConnectionWithParameters() as conn:
-                _run_command_over_ssh(cmd=scancel_command, connection=conn)
+            _run_command_over_ssh(
+                cmd=scancel_command, connection=self.connection
+            )
         logger.debug("Executor shutdown: end")
 
     def __exit__(self, *args, **kwargs):
@@ -1352,11 +1378,10 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         )
         job_ids = ",".join([str(j) for j in job_ids])
         squeue_command = squeue_command.replace("__JOBS__", job_ids)
-        with self.ConnectionWithParameters() as conn:
-            stdout = _run_command_over_ssh(
-                cmd=squeue_command,
-                connection=conn,
-            )
+        stdout = _run_command_over_ssh(
+            cmd=squeue_command,
+            connection=self.connection,
+        )
         return stdout
 
     def _jobs_finished(self, job_ids: list[str]) -> set[str]:
@@ -1421,16 +1446,6 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                         {res.stdout.split()[0]: res.stdout.split()[1]}
                     )
 
-    @contextlib.contextmanager
-    def ConnectionWithParameters(self, **kwargs):
-        with Connection(
-            host=self.ssh_host,
-            user=self.ssh_user,
-            connect_kwargs={"key_filename": self.ssh_private_key_path},
-            **kwargs,
-        ) as connection:
-            yield connection
-
     def handshake(self) -> dict:
         """
         Healthcheck for SSH connection and for versions match.
@@ -1438,14 +1453,13 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         Note that we set a timeout for the SSH connection, to avoid a hanging
         connection in case e.g. of unreachable host.
         """
-        timeout = 5
+        # timeout = 5  # FIXME
 
         t_start_handshake = time.perf_counter()
 
         logger.info("[FractalSlurmSSHExecutor.ssh_handshake] START")
-        with self.ConnectionWithParameters(connect_timeout=timeout) as conn:
-            cmd = f"{self.python_remote} -m fractal_server.app.runner.versions"
-            stdout = _run_command_over_ssh(cmd=cmd, connection=conn)
+        cmd = f"{self.python_remote} -m fractal_server.app.runner.versions"
+        stdout = _run_command_over_ssh(cmd=cmd, connection=self.connection)
         remote_versions = json.loads(stdout.strip("\n"))
 
         # FIXME: check existence of folders
