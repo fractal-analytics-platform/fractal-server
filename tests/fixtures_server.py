@@ -78,7 +78,7 @@ def get_patched_settings(temp_path: Path):
     settings.DB_ENGINE = DB_ENGINE
     if DB_ENGINE == "sqlite":
         settings.SQLITE_PATH = f"{temp_path.as_posix()}/_test.db"
-    elif DB_ENGINE == "postgres":
+    elif DB_ENGINE in ["postgres", "postgres-psycopg"]:
         settings.DB_ENGINE = "postgres"
         settings.POSTGRES_USER = "postgres"
         settings.POSTGRES_PASSWORD = "postgres"
