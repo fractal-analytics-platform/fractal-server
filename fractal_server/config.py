@@ -202,7 +202,7 @@ class Settings(BaseSettings):
 
     @property
     def DATABASE_URL(self) -> URL:
-        if "postgres":
+        if self.DB_ENGINE == "postgres":
             url = URL.create(
                 drivername="postgresql+asyncpg",
                 username=self.POSTGRES_USER,
@@ -211,7 +211,7 @@ class Settings(BaseSettings):
                 port=self.POSTGRES_PORT,
                 database=self.POSTGRES_DB,
             )
-        elif "postgres-psycopg":
+        elif self.DB_ENGINE == "postgres-psycopg":
             url = URL.create(
                 drivername="postgresql",
                 username=self.POSTGRES_USER,
