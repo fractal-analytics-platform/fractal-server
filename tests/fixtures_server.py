@@ -22,14 +22,14 @@ from fractal_server.syringe import Inject
 from tests.fixtures_slurm import HAS_LOCAL_SBATCH
 
 try:
-    import asyncpg  # noqa: F401
+    import psycopg  # noqa: F401
 
-    DB_ENGINE = "postgres"
+    DB_ENGINE = "postgres-psycopg"
 except ModuleNotFoundError:
     try:
-        import psycopg  # noqa: F401
+        import asyncpg  # noqa: F401
 
-        DB_ENGINE = "postgres-psycopg"
+        DB_ENGINE = "postgres"
     except ModuleNotFoundError:
         DB_ENGINE = "sqlite"
 
