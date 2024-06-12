@@ -202,7 +202,25 @@ class Settings(BaseSettings):
 
     @property
     def DATABASE_URL(self) -> URL:
-        if self.DB_ENGINE == "sqlite":
+        if "postgres":
+            url = URL.create(
+                drivername="postgresql+asyncpg",
+                username=self.POSTGRES_USER,
+                password=self.POSTGRES_PASSWORD,
+                host=self.POSTGRES_HOST,
+                port=self.POSTGRES_PORT,
+                database=self.POSTGRES_DB,
+            )
+        elif "postgres-psycopg":
+            url = URL.create(
+                drivername="postgresql",
+                username=self.POSTGRES_USER,
+                password=self.POSTGRES_PASSWORD,
+                host=self.POSTGRES_HOST,
+                port=self.POSTGRES_PORT,
+                database=self.POSTGRES_DB,
+            )
+        else:
             if not self.SQLITE_PATH:
                 raise FractalConfigurationError(
                     "SQLITE_PATH path cannot be None"
@@ -212,28 +230,20 @@ class Settings(BaseSettings):
                 drivername="sqlite+aiosqlite",
                 database=sqlite_path,
             )
-            return url
-        elif "postgres":
-            url = URL.create(
-                drivername="postgresql+asyncpg",
-                username=self.POSTGRES_USER,
-                password=self.POSTGRES_PASSWORD,
-                host=self.POSTGRES_HOST,
-                port=self.POSTGRES_PORT,
-                database=self.POSTGRES_DB,
-            )
-            return url
+        return url
 
     @property
     def DATABASE_SYNC_URL(self):
-        if self.DB_ENGINE == "sqlite":
+        if self.DB_ENGINE == "postgres":
+            return self.DATABASE_URL.set(drivername="postgresql+psycopg2")
+        elif self.DB_ENGINE == "postgres-psycopg":
+            return self.DATABASE_URL.set(drivername="postgresql+psycopg")
+        else:
             if not self.SQLITE_PATH:
                 raise FractalConfigurationError(
                     "SQLITE_PATH path cannot be None"
                 )
             return self.DATABASE_URL.set(drivername="sqlite")
-        elif self.DB_ENGINE == "postgres":
-            return self.DATABASE_URL.set(drivername="postgresql+psycopg2")
 
     ###########################################################################
     # FRACTAL SPECIFIC
