@@ -166,7 +166,7 @@ class Settings(BaseSettings):
     ###########################################################################
     # DATABASE
     ###########################################################################
-    DB_ENGINE: Literal["sqlite", "postgres"] = "sqlite"
+    DB_ENGINE: Literal["sqlite", "postgres", "postgres-psycopg"] = "sqlite"
     """
     Select which database engine to use (supported: `sqlite` and `postgres`).
     """
@@ -419,6 +419,14 @@ class Settings(BaseSettings):
                 raise FractalConfigurationError(
                     "DB engine is `postgres` but `psycopg2` or `asyncpg` "
                     "are not available"
+                )
+        elif self.DB_ENGINE == "postgres-psycopg":
+            try:
+                import psycopg  # noqa: F401
+            except ModuleNotFoundError:
+                raise FractalConfigurationError(
+                    "DB engine is `postgres-psycopg` but `psycopg` is not "
+                    "available"
                 )
         else:
             if not self.SQLITE_PATH:
