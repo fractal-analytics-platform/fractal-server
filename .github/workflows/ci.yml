@@ -57,7 +57,7 @@ jobs:
         run: |
           if [[ ${{ matrix.db }} == "postgres" ]]; then
             DB="-E postgres"
-          if [[ ${{ matrix.db }} == "postgres-psycopg" ]]; then
+          elif [[ ${{ matrix.db }} == "postgres-psycopg" ]]; then
             DB="-E pgbinary"
           fi
           poetry install --with dev --without docs --no-interaction -E gunicorn $DB
@@ -80,7 +80,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.9", "3.10"]
-        db: ["sqlite", "postgres"]
+        db: ["sqlite", "postgres", "postgres-psycopg"]
 
     services:
       postgres:
@@ -121,6 +121,8 @@ jobs:
         run: |
           if [[ ${{ matrix.db }} == "postgres" ]]; then
             DB="-E postgres"
+          elif [[ ${{ matrix.db }} == "postgres-psycopg" ]]; then
+            DB="-E pgbinary"
           fi
           poetry install --with dev --without docs --no-interaction -E gunicorn $DB
 
