@@ -26,7 +26,12 @@ try:
 
     DB_ENGINE = "postgres"
 except ModuleNotFoundError:
-    DB_ENGINE = "sqlite"
+    try:
+        import psycopg  # noqa: F401
+
+        DB_ENGINE = "postgres-psycopg"
+    except ModuleNotFoundError:
+        DB_ENGINE = "sqlite"
 
 
 def check_python_has_venv(python_path: str, temp_path: Path):
