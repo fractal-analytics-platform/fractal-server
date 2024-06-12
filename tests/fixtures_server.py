@@ -21,6 +21,7 @@ from fractal_server.config import Settings
 from fractal_server.syringe import Inject
 from tests.fixtures_slurm import HAS_LOCAL_SBATCH
 
+
 try:
     import psycopg  # noqa: F401
 
@@ -79,7 +80,6 @@ def get_patched_settings(temp_path: Path):
     if DB_ENGINE == "sqlite":
         settings.SQLITE_PATH = f"{temp_path.as_posix()}/_test.db"
     elif DB_ENGINE in ["postgres", "postgres-psycopg"]:
-        settings.DB_ENGINE = "postgres"
         settings.POSTGRES_USER = "postgres"
         settings.POSTGRES_PASSWORD = "postgres"
         settings.POSTGRES_DB = "fractal_test"
