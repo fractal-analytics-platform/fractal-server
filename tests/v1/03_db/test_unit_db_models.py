@@ -1,5 +1,4 @@
 import datetime
-from zoneinfo import ZoneInfo
 
 import pytest
 from devtools import debug
@@ -940,7 +939,8 @@ async def test_timestamp(db):
     """
     SQLite encodes datetime objects as strings; therefore when extracting a
     timestamp from the db, it is not timezone-aware by default.
-    Postgres, on the other hand, saves timestamps together with their timezone.
+    Regarding Postgres:
+    https://www.psycopg.org/psycopg3/docs/basic/adapt.html#date-time-types-adaptation
     This test asserts this behaviour.
     """
     p = Project(name="project")
@@ -961,9 +961,9 @@ async def test_timestamp(db):
     if DB_ENGINE == "sqlite":
         assert project.timestamp_created.tzinfo is None
         assert project.timestamp_created.tzname() is None
-    elif DB_ENGINE == "postgres":
-        assert project.timestamp_created.tzinfo == datetime.timezone.utc
-        assert project.timestamp_created.tzname() == "UTC"
-    elif DB_ENGINE == "postgres-psycopg":
-        assert project.timestamp_created.tzinfo == ZoneInfo(key="Etc/UTC")
-        assert project.timestamp_created.tzname() == "UTC"
+    elif DB_ENGINE in ["postgres", "postgres-psycopg"]:
+        assert project.timestamp_created.tzinfo is not None
+        assert (
+            project.timestamp_created.astimezone(tz=datetime.timezone.utc)
+            == p.timestamp_created
+        )
