@@ -197,7 +197,7 @@ def test_settings_check(
     # raises when `settings` point to postgres but actual DB_ENGINE is sqlite
     # (psycopg2 and asyncpg are not installed)
     if DB_ENGINE == "sqlite":
-        if settings.DB_ENGINE == "postgres":
+        if settings.DB_ENGINE in ["postgres", "postgres-psycopg"]:
             raises = True
 
     # Run Settings.check method
