@@ -63,7 +63,7 @@ class DB:
             }
 
         cls._engine_async = create_async_engine(
-            settings.DATABASE_URL,
+            settings.DATABASE_ASYNC_URL,
             echo=settings.DB_ECHO,
             future=True,
             **engine_kwargs_async,

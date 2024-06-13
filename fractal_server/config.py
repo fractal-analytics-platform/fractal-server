@@ -166,7 +166,7 @@ class Settings(BaseSettings):
     ###########################################################################
     # DATABASE
     ###########################################################################
-    DB_ENGINE: Literal["sqlite", "postgres"] = "sqlite"
+    DB_ENGINE: Literal["sqlite", "postgres", "postgres-psycopg"] = "sqlite"
     """
     Select which database engine to use (supported: `sqlite` and `postgres`).
     """
@@ -201,8 +201,26 @@ class Settings(BaseSettings):
     """
 
     @property
-    def DATABASE_URL(self) -> URL:
-        if self.DB_ENGINE == "sqlite":
+    def DATABASE_ASYNC_URL(self) -> URL:
+        if self.DB_ENGINE == "postgres":
+            url = URL.create(
+                drivername="postgresql+asyncpg",
+                username=self.POSTGRES_USER,
+                password=self.POSTGRES_PASSWORD,
+                host=self.POSTGRES_HOST,
+                port=self.POSTGRES_PORT,
+                database=self.POSTGRES_DB,
+            )
+        elif self.DB_ENGINE == "postgres-psycopg":
+            url = URL.create(
+                drivername="postgresql+psycopg",
+                username=self.POSTGRES_USER,
+                password=self.POSTGRES_PASSWORD,
+                host=self.POSTGRES_HOST,
+                port=self.POSTGRES_PORT,
+                database=self.POSTGRES_DB,
+            )
+        else:
             if not self.SQLITE_PATH:
                 raise FractalConfigurationError(
                     "SQLITE_PATH path cannot be None"
@@ -212,28 +230,22 @@ class Settings(BaseSettings):
                 drivername="sqlite+aiosqlite",
                 database=sqlite_path,
             )
-            return url
-        elif "postgres":
-            url = URL.create(
-                drivername="postgresql+asyncpg",
-                username=self.POSTGRES_USER,
-                password=self.POSTGRES_PASSWORD,
-                host=self.POSTGRES_HOST,
-                port=self.POSTGRES_PORT,
-                database=self.POSTGRES_DB,
-            )
-            return url
+        return url
 
     @property
     def DATABASE_SYNC_URL(self):
-        if self.DB_ENGINE == "sqlite":
+        if self.DB_ENGINE == "postgres":
+            return self.DATABASE_ASYNC_URL.set(
+                drivername="postgresql+psycopg2"
+            )
+        elif self.DB_ENGINE == "postgres-psycopg":
+            return self.DATABASE_ASYNC_URL.set(drivername="postgresql+psycopg")
+        else:
             if not self.SQLITE_PATH:
                 raise FractalConfigurationError(
                     "SQLITE_PATH path cannot be None"
                 )
-            return self.DATABASE_URL.set(drivername="sqlite")
-        elif self.DB_ENGINE == "postgres":
-            return self.DATABASE_URL.set(drivername="postgresql+psycopg2")
+            return self.DATABASE_ASYNC_URL.set(drivername="sqlite")
 
     ###########################################################################
     # FRACTAL SPECIFIC
@@ -419,6 +431,14 @@ class Settings(BaseSettings):
                 raise FractalConfigurationError(
                     "DB engine is `postgres` but `psycopg2` or `asyncpg` "
                     "are not available"
+                )
+        elif self.DB_ENGINE == "postgres-psycopg":
+            try:
+                import psycopg  # noqa: F401
+            except ModuleNotFoundError:
+                raise FractalConfigurationError(
+                    "DB engine is `postgres-psycopg` but `psycopg` is not "
+                    "available"
                 )
         else:
             if not self.SQLITE_PATH:
