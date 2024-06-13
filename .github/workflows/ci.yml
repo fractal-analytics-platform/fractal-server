@@ -58,7 +58,7 @@ jobs:
           if [[ ${{ matrix.db }} == "postgres" ]]; then
             DB="-E postgres"
           elif [[ ${{ matrix.db }} == "postgres-psycopg" ]]; then
-            DB="-E postgres-pyscopg-binary"
+            DB="-E postgres-psycopg-binary"
           fi
           poetry install --with dev --without docs --no-interaction -E gunicorn $DB
 
@@ -122,7 +122,7 @@ jobs:
           if [[ ${{ matrix.db }} == "postgres" ]]; then
             DB="-E postgres"
           elif [[ ${{ matrix.db }} == "postgres-psycopg" ]]; then
-            DB="-E postgres-pyscopg-binary"
+            DB="-E postgres-psycopg-binary"
           fi
           poetry install --with dev --without docs --no-interaction -E gunicorn $DB
 
