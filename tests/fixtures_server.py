@@ -37,11 +37,6 @@ except ModuleNotFoundError:
         DB_ENGINE = "sqlite"
 
 
-logging.warning(
-    f"------ Inside FIXTURES_SERVER.py ---- DB_ENGINE = {DB_ENGINE}"
-)
-
-
 def check_python_has_venv(python_path: str, temp_path: Path):
     """
     This function checks that we can safely use a certain python interpreter,
@@ -118,10 +113,7 @@ def get_patched_settings(temp_path: Path):
     settings.FRACTAL_SLURM_ERROR_HANDLING_INTERVAL = 1
 
     settings.FRACTAL_LOGGING_LEVEL = logging.DEBUG
-    logging.warning(
-        "------ Inside FIXTURES_SERVER.py::get_patched_settings ---- "
-        f"settings = {settings}"
-    )
+
     return settings
 
 
