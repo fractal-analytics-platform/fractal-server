@@ -2603,11 +2603,11 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 
 [extras]
 gunicorn = ["gunicorn"]
-pgbinary = ["psycopg", "psycopg-binary"]
-pgc = ["psycopg", "psycopg-c"]
 postgres = ["asyncpg", "psycopg2"]
+postgres-pyscopg-binary = ["psycopg", "psycopg-binary"]
+postgres-pyscopg-c = ["psycopg", "psycopg-c"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "b9238e97d5919a0f57be2862760f8c5c4c97636acaf9e07a0880af912c432b2b"
+content-hash = "7a8df8f194228ab4475f080474ae91d240863e715ad31ceb301c693320a5dbdf"

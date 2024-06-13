@@ -49,8 +49,8 @@ psycopg2 = { version = "^2.9.5", optional = true }
 [tool.poetry.extras]
 postgres = ["asyncpg", "psycopg2"]
 gunicorn = ["gunicorn"]
-pgbinary = ["psycopg", "psycopg-binary"]
-pgc = ["psycopg", "psycopg-c"]
+postgres-pyscopg-binary = ["psycopg", "psycopg-binary"]
+postgres-pyscopg-c = ["psycopg", "psycopg-c"]
 
 [tool.poetry.group.dev.dependencies]
 asgi-lifespan = "^2"

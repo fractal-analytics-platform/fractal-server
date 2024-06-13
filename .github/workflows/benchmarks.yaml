@@ -43,7 +43,7 @@ jobs:
         cache: "poetry"
 
      - name: Install dependencies
-       run: poetry install --with dev --without docs --no-interaction -E gunicorn -E pgbinary
+       run: poetry install --with dev --without docs --no-interaction -E gunicorn -E postgres-pyscopg-binary
 
      - name: Run Fractal with Gunicorn
        run: |
@@ -127,7 +127,7 @@ jobs:
         cache: "poetry"
 
      - name: Install dependencies
-       run: poetry install --with dev --without docs --no-interaction -E gunicorn -E pgbinary
+       run: poetry install --with dev --without docs --no-interaction -E gunicorn -E postgres-pyscopg-binary
 
      - name: Benchmark
        run: |
