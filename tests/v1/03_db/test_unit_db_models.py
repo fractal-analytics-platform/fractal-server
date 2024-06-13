@@ -1,4 +1,5 @@
 import datetime
+from zoneinfo import ZoneInfo
 
 import pytest
 from devtools import debug
@@ -960,6 +961,9 @@ async def test_timestamp(db):
     if DB_ENGINE == "sqlite":
         assert project.timestamp_created.tzinfo is None
         assert project.timestamp_created.tzname() is None
-    else:  # postgres
+    elif DB_ENGINE == "postgres":
         assert project.timestamp_created.tzinfo == datetime.timezone.utc
         assert project.timestamp_created.tzname() == "UTC"
+    elif DB_ENGINE == "postgres-psycopg":
+        assert project.timestamp_created.tzinfo == ZoneInfo(key="Etc/UTC")
+        assert project.timestamp_created.tzname() == "Etc/UTC"
