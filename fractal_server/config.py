@@ -201,7 +201,7 @@ class Settings(BaseSettings):
     """
 
     @property
-    def DATABASE_URL(self) -> URL:
+    def DATABASE_ASYNC_URL(self) -> URL:
         if self.DB_ENGINE == "postgres":
             url = URL.create(
                 drivername="postgresql+asyncpg",
@@ -235,15 +235,17 @@ class Settings(BaseSettings):
     @property
     def DATABASE_SYNC_URL(self):
         if self.DB_ENGINE == "postgres":
-            return self.DATABASE_URL.set(drivername="postgresql+psycopg2")
+            return self.DATABASE_ASYNC_URL.set(
+                drivername="postgresql+psycopg2"
+            )
         elif self.DB_ENGINE == "postgres-psycopg":
-            return self.DATABASE_URL.set(drivername="postgresql+psycopg")
+            return self.DATABASE_ASYNC_URL.set(drivername="postgresql+psycopg")
         else:
             if not self.SQLITE_PATH:
                 raise FractalConfigurationError(
                     "SQLITE_PATH path cannot be None"
                 )
-            return self.DATABASE_URL.set(drivername="sqlite")
+            return self.DATABASE_ASYNC_URL.set(drivername="sqlite")
 
     ###########################################################################
     # FRACTAL SPECIFIC
