@@ -35,6 +35,17 @@ def test_settings_injection(override_settings):
             ),
             False,
         ),
+        (
+            dict(
+                JWT_SECRET_KEY="secret",
+                FRACTAL_TASKS_DIR="/tmp",
+                DB_ENGINE="postgres-psycopg",
+                POSTGRES_DB="test",
+                FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
+                FRACTAL_RUNNER_BACKEND="local",
+            ),
+            False,
+        ),
         # Missing JWT_SECRET_KEY
         (
             dict(
