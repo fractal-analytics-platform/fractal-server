@@ -25,8 +25,11 @@
     * Add custom gunicorn/uvicorn worker to handle SIGABRT signal (\#1526).
     * Move `FractalGunicornLogger` and `FractalWorker` in `fractal_server/gunicorn_fractal.py` (\#1535).
     * Store list of submitted jobs in app state (\#1538).
+* Database:
+    * Add new Postgres adapter `psycopg` (\#1562).
 * Dependencies
     * Add `fabric` to `dev` dependencies (\#1518).
+    * Add new `postgres-psycopg-binary` extra (\#1562).
 * Testing:
     * Extract `pytest-docker` fixtures into a dedicated module (\#1516).
     * Rename SLURM containers in CI (\#1516).
