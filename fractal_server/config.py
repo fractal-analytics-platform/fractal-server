@@ -213,7 +213,7 @@ class Settings(BaseSettings):
             )
         elif self.DB_ENGINE == "postgres-psycopg":
             url = URL.create(
-                drivername="postgresql",
+                drivername="postgresql+psycopg",
                 username=self.POSTGRES_USER,
                 password=self.POSTGRES_PASSWORD,
                 host=self.POSTGRES_HOST,
