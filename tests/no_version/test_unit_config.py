@@ -194,7 +194,9 @@ def test_settings_check(
     # Create a Settings instance
     settings = Settings(**settings_dict)
 
-    if DB_ENGINE != settings.DB_ENGINE:
+    if settings.DB_ENGINE in ["postgres", "postgres-psycopg"] and (
+        DB_ENGINE != settings.DB_ENGINE
+    ):
         raises = True
 
     # Run Settings.check method
