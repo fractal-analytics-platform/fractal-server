@@ -966,4 +966,4 @@ async def test_timestamp(db):
         assert project.timestamp_created.tzname() == "UTC"
     elif DB_ENGINE == "postgres-psycopg":
         assert project.timestamp_created.tzinfo == ZoneInfo(key="Etc/UTC")
-        assert project.timestamp_created.tzname() == "Etc/UTC"
+        assert project.timestamp_created.tzname() == "UTC"
