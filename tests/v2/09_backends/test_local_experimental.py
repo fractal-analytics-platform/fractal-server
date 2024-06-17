@@ -9,7 +9,12 @@ from devtools import debug
 from pydantic import BaseModel
 from pydantic import Field
 
+from fractal_server.app.routes.api.v2._aux_functions import (
+    _workflow_insert_task,
+)
 from fractal_server.app.runner.exceptions import JobExecutionError
+from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
+from fractal_server.app.runner.v2._local_experimental import _process_workflow
 from fractal_server.app.runner.v2._local_experimental import process_workflow
 from fractal_server.app.runner.v2._local_experimental._local_config import (
     get_local_backend_config,
@@ -69,6 +74,7 @@ async def test_get_local_backend_config(tmp_path):
 
     with config_file.open("w") as f:
         json.dump(valid_config, f)
+
     get_local_backend_config(
         wftask=MockWorkflowTask(),
         which_type="parallel",
@@ -148,3 +154,64 @@ def test_unit_map_iterables():
         with FractalProcessPoolExecutor(shutdown_file="/") as executor:
             executor.map(two_args, range(100), range(99))
     assert "Iterables have different lengths." in error._excinfo[1].args[0]
+
+
+async def test_indirect_shutdown_during_process_workflow(
+    MockCurrentUser,
+    tmp_path,
+    project_factory_v2,
+    workflow_factory_v2,
+    dataset_factory_v2,
+    task_factory_v2,
+    db,
+):
+
+    async with MockCurrentUser(user_kwargs={"is_verified": True}) as user:
+
+        project = await project_factory_v2(user)
+        dataset = await dataset_factory_v2(project_id=project.id)
+        workflow = await workflow_factory_v2(
+            name="test_wf", project_id=project.id
+        )
+        with open(tmp_path / "foo.sh", "w") as f:
+            f.write("sleep 4")
+        import os
+
+        os.mkdir(tmp_path / "0_task0")
+        with open(tmp_path / "0_task0/0.args.json", "w") as f:
+            pass
+
+        task = await task_factory_v2(
+            type="non_parallel",
+            command_non_parallel=f"bash {tmp_path / 'foo.sh'}",
+        )
+        await _workflow_insert_task(
+            db=db, workflow_id=workflow.id, task_id=task.id
+        )
+
+        shutdown_file = tmp_path / SHUTDOWN_FILENAME
+
+        tmp_script = (tmp_path / "script.sh").as_posix()
+        with open(tmp_script, "w") as f:
+            f.write("sleep 1\n")
+            f.write(f"touch {shutdown_file.as_posix()}")
+
+        tmp_stdout = open((tmp_path / "stdout").as_posix(), "w")
+        tmp_stderr = open((tmp_path / "stderr").as_posix(), "w")
+
+        with pytest.raises(JobExecutionError):
+            subprocess.Popen(
+                shlex.split(f"bash {tmp_script}"),
+                stdout=tmp_stdout,
+                stderr=tmp_stderr,
+            )
+            _process_workflow(
+                workflow=workflow,
+                dataset=dataset,
+                logger_name="logger",
+                workflow_dir_local=tmp_path,
+                first_task_index=0,
+                last_task_index=0,
+            )
+        tmp_stdout.close()
+        tmp_stderr.close()
