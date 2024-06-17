@@ -109,7 +109,6 @@ async def lifespan(app: FastAPI):
                 "key_filename": settings.FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH
             },
         )
-        app.state.connection.open()
         logger.info(
             f"Opened SSH connection "
             f"(current: {app.state.connection.is_connected=})."
