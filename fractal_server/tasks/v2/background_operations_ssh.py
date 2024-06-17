@@ -241,7 +241,7 @@ async def background_collect_pip_ssh(
                 # Transfer script to remote host
                 script_path_remote = os.path.join(
                     settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR,
-                    f"script_{hash(tmpdir)}{script_filename}",
+                    f"script_{abs(hash(tmpdir))}{script_filename}",
                 )
                 connection.put(
                     local=script_path_local,
