@@ -35,6 +35,17 @@ def test_settings_injection(override_settings):
             ),
             False,
         ),
+        (
+            dict(
+                JWT_SECRET_KEY="secret",
+                FRACTAL_TASKS_DIR="/tmp",
+                DB_ENGINE="postgres-psycopg",
+                POSTGRES_DB="test",
+                FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
+                FRACTAL_RUNNER_BACKEND="local",
+            ),
+            False,
+        ),
         # Missing JWT_SECRET_KEY
         (
             dict(
@@ -194,11 +205,10 @@ def test_settings_check(
     # Create a Settings instance
     settings = Settings(**settings_dict)
 
-    # raises when `settings` point to postgres but actual DB_ENGINE is sqlite
-    # (psycopg2 and asyncpg are not installed)
-    if DB_ENGINE == "sqlite":
-        if settings.DB_ENGINE == "postgres":
-            raises = True
+    if settings.DB_ENGINE in ["postgres", "postgres-psycopg"] and (
+        DB_ENGINE != settings.DB_ENGINE
+    ):
+        raises = True
 
     # Run Settings.check method
     if raises:

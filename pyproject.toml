@@ -41,12 +41,14 @@ cloudpickle = ">=3.0.0,<3.1.0"
 fabric = "^3.2.2"
 
 asyncpg = { version = "^0.29.0", optional = true }
-psycopg2 = { version = "^2.9.5", optional = true }
 gunicorn = { version = ">=21.2,<23.0", optional = true }
+psycopg = { version = "^3.1.0", extras=["binary"], optional=true }
+psycopg2 = { version = "^2.9.5", optional = true }
 
 [tool.poetry.extras]
 postgres = ["asyncpg", "psycopg2"]
 gunicorn = ["gunicorn"]
+postgres-psycopg-binary = ["psycopg"]
 
 [tool.poetry.group.dev.dependencies]
 asgi-lifespan = "^2"
