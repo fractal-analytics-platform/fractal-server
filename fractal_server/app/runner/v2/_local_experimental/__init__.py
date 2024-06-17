@@ -38,7 +38,7 @@ def _process_workflow(
             new_dataset_attributes = execute_tasks_v2(
                 wf_task_list=workflow.task_list[
                     first_task_index : (last_task_index + 1)  # noqa
-                ],  # noqa
+                ],
                 dataset=dataset,
                 executor=executor,
                 workflow_dir_local=workflow_dir_local,
@@ -47,7 +47,12 @@ def _process_workflow(
                 submit_setup_call=_local_submit_setup,
             )
         except BrokenProcessPool as e:
-            raise JobExecutionError(info=e.args[0])
+            raise JobExecutionError(
+                info=(
+                    "Job failed with BrokenProcessPool error, likely due to "
+                    f"an executor shutdown.\nOriginal error:\n{e.args[0]}"
+                )
+            )
 
     return new_dataset_attributes
 

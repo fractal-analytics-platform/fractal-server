@@ -66,6 +66,7 @@ class FractalProcessPoolExecutor(ProcessPoolExecutor):
         Running on '_shutdown_file_thread'.
         """
         logger.info("Start terminating FractalProcessPoolExecutor processes.")
+        # We use 'psutil' in order to easily access the PIDs of the children.
         if self._processes is not None:
             for pid in self._processes.keys():
                 parent = psutil.Process(pid)
