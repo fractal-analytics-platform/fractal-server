@@ -110,8 +110,8 @@ async def lifespan(app: FastAPI):
             },
         )
         logger.info(
-            f"Opened SSH connection "
-            f"(current: {app.state.connection.is_connected=})."
+            f"Created SSH connection "
+            f"({app.state.connection.is_connected=})."
         )
     else:
         app.state.connection = None
