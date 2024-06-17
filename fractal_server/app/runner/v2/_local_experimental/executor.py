@@ -2,8 +2,6 @@
 Custom version of Python
 [ProcessPoolExecutor](https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ProcessPoolExecutor)).
 """
-import os
-import signal
 import threading
 import time
 from concurrent.futures import ProcessPoolExecutor
@@ -14,11 +12,12 @@ from typing import Iterable
 from typing import Optional
 from typing import Sequence
 
+import psutil
+
 from ._local_config import get_default_local_backend_config
 from ._local_config import LocalBackendConfig
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.logger import get_logger
-
 
 logger = get_logger("FractalProcessPoolExecutor")
 
@@ -69,9 +68,12 @@ class FractalProcessPoolExecutor(ProcessPoolExecutor):
         logger.info("Start terminating FractalProcessPoolExecutor processes.")
         if self._processes is not None:
             for pid in self._processes.keys():
-                logger.debug(f"Sending SIGTERM to process {pid}")
-                os.kill(pid, signal.SIGTERM)
-                logger.debug(f"Process {pid} terminated.")
+                parent = psutil.Process(pid)
+                children = parent.children(recursive=True)
+                for child in children:
+                    child.kill()
+                parent.kill()
+                logger.debug(f"Process {pid} and its children terminated.")
         logger.info("FractalProcessPoolExecutor processes terminated.")
 
     def shutdown(self, *args, **kwargs) -> None:
