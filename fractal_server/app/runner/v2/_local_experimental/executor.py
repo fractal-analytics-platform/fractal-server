@@ -17,9 +17,9 @@ import psutil
 from ._local_config import get_default_local_backend_config
 from ._local_config import LocalBackendConfig
 from fractal_server.app.runner.exceptions import JobExecutionError
-from fractal_server.logger import get_logger
+from fractal_server.logger import set_logger
 
-logger = get_logger("FractalProcessPoolExecutor")
+logger = set_logger("FractalProcessPoolExecutor")
 
 
 class FractalProcessPoolExecutor(ProcessPoolExecutor):
@@ -65,6 +65,7 @@ class FractalProcessPoolExecutor(ProcessPoolExecutor):
         """
         Running on '_shutdown_file_thread'.
         """
+
         logger.info("Start terminating FractalProcessPoolExecutor processes.")
         # We use 'psutil' in order to easily access the PIDs of the children.
         if self._processes is not None:
@@ -74,7 +75,7 @@ class FractalProcessPoolExecutor(ProcessPoolExecutor):
                 for child in children:
                     child.kill()
                 parent.kill()
-                logger.debug(f"Process {pid} and its children terminated.")
+                logger.info(f"Process {pid} and its children terminated.")
         logger.info("FractalProcessPoolExecutor processes terminated.")
 
     def shutdown(self, *args, **kwargs) -> None:
