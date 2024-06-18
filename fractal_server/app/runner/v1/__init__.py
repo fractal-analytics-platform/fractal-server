@@ -91,21 +91,28 @@ async def submit_workflow(
             slurm backend.
     """
 
-    # Declare runner backend and set `process_workflow` function
     settings = Inject(get_settings)
     FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
-    if FRACTAL_RUNNER_BACKEND == "local":
-        process_workflow = local_process_workflow
-    elif FRACTAL_RUNNER_BACKEND == "slurm":
-        process_workflow = slurm_process_workflow
-    else:
-        raise RuntimeError(f"Invalid runner backend {FRACTAL_RUNNER_BACKEND=}")
 
     with next(DB.get_sync_db()) as db_sync:
 
         job: ApplyWorkflow = db_sync.get(ApplyWorkflow, job_id)
         if not job:
             raise ValueError(f"Cannot fetch job {job_id} from database")
+
+        # Declare runner backend and set `process_workflow` function
+        if FRACTAL_RUNNER_BACKEND == "local":
+            process_workflow = local_process_workflow
+        elif FRACTAL_RUNNER_BACKEND == "slurm":
+            process_workflow = slurm_process_workflow
+        else:
+            job.status = JobStatusTypeV1.FAILED
+            job.end_timestamp = get_timestamp()
+            job.log = f"Invalid {FRACTAL_RUNNER_BACKEND=}"
+            db_sync.merge(job)
+            db_sync.commit()
+            db_sync.close()
+            return
 
         input_dataset: Dataset = db_sync.get(Dataset, input_dataset_id)
         output_dataset: Dataset = db_sync.get(Dataset, output_dataset_id)
@@ -147,9 +154,13 @@ async def submit_workflow(
         )
 
         if WORKFLOW_DIR_LOCAL.exists():
-            raise RuntimeError(
-                f"Workflow dir {WORKFLOW_DIR_LOCAL} already exists."
-            )
+            job.status = JobStatusTypeV1.FAILED
+            job.end_timestamp = get_timestamp()
+            job.log = f"Workflow dir {WORKFLOW_DIR_LOCAL} already exists."
+            db_sync.merge(job)
+            db_sync.commit()
+            db_sync.close()
+            return
 
         # Create WORKFLOW_DIR
         original_umask = os.umask(0)
