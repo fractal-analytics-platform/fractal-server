@@ -1,4 +1,5 @@
 import json
+import os
 import shlex
 import subprocess
 import time
@@ -175,7 +176,6 @@ async def test_indirect_shutdown_during_process_workflow(
         )
         with open(tmp_path / "foo.sh", "w") as f:
             f.write("sleep 4")
-        import os
 
         os.mkdir(tmp_path / "0_task0")
         with open(tmp_path / "0_task0/0.args.json", "w") as f:
