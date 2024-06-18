@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fractal-server"
-version = "2.2.0a0"
+version = "2.2.0a1"
 description = "Server component of the Fractal analytics platform"
 authors = [
     "Tommaso Comparin <tommaso.comparin@exact-lab.it>",
@@ -40,12 +40,14 @@ clusterfutures = "^0.5"
 cloudpickle = ">=3.0.0,<3.1.0"
 
 asyncpg = { version = "^0.29.0", optional = true }
-psycopg2 = { version = "^2.9.5", optional = true }
 gunicorn = { version = ">=21.2,<23.0", optional = true }
+psycopg = { version = "^3.1.0", extras=["binary"], optional=true }
+psycopg2 = { version = "^2.9.5", optional = true }
 
 [tool.poetry.extras]
 postgres = ["asyncpg", "psycopg2"]
 gunicorn = ["gunicorn"]
+postgres-psycopg-binary = ["psycopg"]
 
 [tool.poetry.group.dev.dependencies]
 asgi-lifespan = "^2"
@@ -88,7 +90,7 @@ filterwarnings = [
 ]
 
 [tool.bumpver]
-current_version = "2.2.0a0"
+current_version = "2.2.0a1"
 version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true

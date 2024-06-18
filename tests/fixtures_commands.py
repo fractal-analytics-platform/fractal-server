@@ -30,7 +30,7 @@ async def set_test_db(tmp_path):
     ]
 
     # DB_ENGINE-specific config
-    if DB_ENGINE == "postgres":
+    if DB_ENGINE in ["postgres", "postgres-psycopg"]:
         config_lines.extend(
             [
                 "POSTGRES_USER=postgres",

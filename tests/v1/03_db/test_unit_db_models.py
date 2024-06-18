@@ -155,7 +155,7 @@ async def test_project_and_workflows(db):
     await db.delete(db_project)
 
     DB_ENGINE = Inject(get_settings).DB_ENGINE
-    if DB_ENGINE == "postgres":
+    if DB_ENGINE in ["postgres", "postgres-psycopg"]:
         with pytest.raises(IntegrityError):
             # Workflow.project_id violates fk-contraint in Postgres
             await db.commit()
@@ -310,7 +310,7 @@ async def test_project_and_datasets(db):
     await db.delete(db_project)
 
     DB_ENGINE = Inject(get_settings).DB_ENGINE
-    if DB_ENGINE == "postgres":
+    if DB_ENGINE in ["postgres", "postgres-psycopg"]:
         with pytest.raises(IntegrityError):
             # Dataset.project_id violates fk-contraint in Postgres
             await db.commit()
@@ -939,7 +939,8 @@ async def test_timestamp(db):
     """
     SQLite encodes datetime objects as strings; therefore when extracting a
     timestamp from the db, it is not timezone-aware by default.
-    Postgres, on the other hand, saves timestamps together with their timezone.
+    Regarding Postgres:
+    https://www.psycopg.org/psycopg3/docs/basic/adapt.html#date-time-types-adaptation
     This test asserts this behaviour.
     """
     p = Project(name="project")
@@ -960,6 +961,9 @@ async def test_timestamp(db):
     if DB_ENGINE == "sqlite":
         assert project.timestamp_created.tzinfo is None
         assert project.timestamp_created.tzname() is None
-    else:  # postgres
-        assert project.timestamp_created.tzinfo == datetime.timezone.utc
-        assert project.timestamp_created.tzname() == "UTC"
+    elif DB_ENGINE in ["postgres", "postgres-psycopg"]:
+        assert project.timestamp_created.tzinfo is not None
+        assert (
+            project.timestamp_created.astimezone(tz=datetime.timezone.utc)
+            == p.timestamp_created
+        )

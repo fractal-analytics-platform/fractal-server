@@ -21,12 +21,20 @@ from fractal_server.config import Settings
 from fractal_server.syringe import Inject
 from tests.fixtures_slurm import HAS_LOCAL_SBATCH
 
-try:
-    import asyncpg  # noqa: F401
 
-    DB_ENGINE = "postgres"
+try:
+    import psycopg  # noqa: F401
+
+    DB_ENGINE = "postgres-psycopg"
+
 except ModuleNotFoundError:
-    DB_ENGINE = "sqlite"
+    try:
+        import psycopg2  # noqa: F401
+        import asyncpg  # noqa: F401
+
+        DB_ENGINE = "postgres"
+    except ModuleNotFoundError:
+        DB_ENGINE = "sqlite"
 
 
 def check_python_has_venv(python_path: str, temp_path: Path):
@@ -73,8 +81,7 @@ def get_patched_settings(temp_path: Path):
     settings.DB_ENGINE = DB_ENGINE
     if DB_ENGINE == "sqlite":
         settings.SQLITE_PATH = f"{temp_path.as_posix()}/_test.db"
-    elif DB_ENGINE == "postgres":
-        settings.DB_ENGINE = "postgres"
+    elif DB_ENGINE in ["postgres", "postgres-psycopg"]:
         settings.POSTGRES_USER = "postgres"
         settings.POSTGRES_PASSWORD = "postgres"
         settings.POSTGRES_DB = "fractal_test"
@@ -106,6 +113,7 @@ def get_patched_settings(temp_path: Path):
     settings.FRACTAL_SLURM_ERROR_HANDLING_INTERVAL = 1
 
     settings.FRACTAL_LOGGING_LEVEL = logging.DEBUG
+
     return settings
 
 
