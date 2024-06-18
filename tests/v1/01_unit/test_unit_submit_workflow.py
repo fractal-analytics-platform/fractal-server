@@ -123,13 +123,15 @@ async def test_fail_submit_workflows_at_same_time(
             output_dataset_id=dataset.id,
             job_id=job.id,
         )
-        with pytest.raises(RuntimeError):
-            await submit_workflow(
-                workflow_id=workflow.id,
-                input_dataset_id=dataset.id,
-                output_dataset_id=dataset.id,
-                job_id=job.id,
-            )
+
+        await submit_workflow(
+            workflow_id=workflow.id,
+            input_dataset_id=dataset.id,
+            output_dataset_id=dataset.id,
+            job_id=job.id,
+        )
+        await db.refresh(job)
+        assert "already exists" in job.log
 
 
 async def test_fail_submit_workflows_wrong_IDs(
