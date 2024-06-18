@@ -99,7 +99,7 @@ async def submit_workflow(
         if not job:
             raise ValueError(f"Cannot fetch job {job_id} from database")
 
-        if FRACTAL_RUNNER_BACKEND == "local":
+        if FRACTAL_RUNNER_BACKEND in ["local", "local_experimental"]:
             process_workflow = local_process_workflow
         elif FRACTAL_RUNNER_BACKEND == "slurm":
             process_workflow = slurm_process_workflow
@@ -169,7 +169,7 @@ async def submit_workflow(
         os.umask(original_umask)
 
         # Define and create WORKFLOW_DIR_REMOTE
-        if FRACTAL_RUNNER_BACKEND == "local":
+        if FRACTAL_RUNNER_BACKEND in ["local", "local_experimental"]:
             WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
         elif FRACTAL_RUNNER_BACKEND == "slurm":
             WORKFLOW_DIR_REMOTE = (
