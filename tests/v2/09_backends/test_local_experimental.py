@@ -166,6 +166,10 @@ async def test_indirect_shutdown_during_process_workflow(
     task_factory_v2,
     db,
 ):
+    """
+    We test the try/except inside
+    `fractal_server.app.runner.v2._local_experimental.py::_process_workflow`
+    """
 
     async with MockCurrentUser(user_kwargs={"is_verified": True}) as user:
 
@@ -176,10 +180,7 @@ async def test_indirect_shutdown_during_process_workflow(
         )
         with open(tmp_path / "foo.sh", "w") as f:
             f.write("sleep 4")
-
         os.mkdir(tmp_path / "0_task0")
-        with open(tmp_path / "0_task0/0.args.json", "w") as f:
-            pass
 
         task = await task_factory_v2(
             type="non_parallel",
