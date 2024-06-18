@@ -101,17 +101,8 @@ async def submit_workflow(
 
         if FRACTAL_RUNNER_BACKEND in ["local", "local_experimental"]:
             process_workflow = local_process_workflow
-        elif FRACTAL_RUNNER_BACKEND == "slurm":
+        else:  # FRACTAL_RUNNER_BACKEND == "slurm"
             process_workflow = slurm_process_workflow
-        else:
-            job: ApplyWorkflow = db_sync.get(ApplyWorkflow, job_id)
-            job.status = JobStatusTypeV1.FAILED
-            job.end_timestamp = get_timestamp()
-            job.log = f"Invalid {FRACTAL_RUNNER_BACKEND=}"
-            db_sync.merge(job)
-            db_sync.commit()
-            db_sync.close()
-            return
 
         # Declare runner backend and set `process_workflow` function
 
