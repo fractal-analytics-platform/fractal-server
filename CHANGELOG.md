@@ -30,6 +30,8 @@
 * Dependencies
     * Add `fabric` to `dev` dependencies (\#1518).
     * Add new `postgres-psycopg-binary` extra (\#1562).
+* Runner
+    * Correctly terminate child processes in `FractalProcessPoolExecutor._terminate_processes` (\#1566).
 * Testing:
     * Extract `pytest-docker` fixtures into a dedicated module (\#1516).
     * Rename SLURM containers in CI (\#1516).
