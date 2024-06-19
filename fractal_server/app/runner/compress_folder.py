@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Optional
 
 
-COMPRESS_FOLDER_MODALITY = "python"
+# COMPRESS_FOLDER_MODALITY = "python"
 COMPRESS_FOLDER_MODALITY = "tar"
 
 
