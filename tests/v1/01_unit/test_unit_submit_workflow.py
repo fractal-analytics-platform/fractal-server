@@ -76,11 +76,7 @@ async def test_success_submit_workflows(
         folder2 = Path(job2.working_dir).name
 
         debug(folder1, folder2)
-        if settings.FRACTAL_RUNNER_BACKEND != "local_experimental":
-            assert folder1 != folder2
-        else:
-            # second submission has done nothing
-            assert folder1 == folder2
+        assert folder1 != folder2
 
 
 async def test_fail_submit_workflows_at_same_time(
