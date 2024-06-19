@@ -22,6 +22,10 @@ import traceback
 from pathlib import Path
 from typing import Optional
 
+from sqlalchemy.orm import Session as DBSyncSession
+
+from ....logger import get_logger
+from ....logger import reset_logger_handlers
 from ....logger import set_logger
 from ....syringe import Inject
 from ....utils import get_timestamp
@@ -53,16 +57,24 @@ _backends["local"] = local_process_workflow
 _backends["slurm"] = slurm_process_workflow
 
 
-def fail_job(*, db, job: ApplyWorkflow, log: str, logger_name: str) -> None:
-    logger = set_logger(logger_name=logger_name)
-    logger.error(log)
+def fail_job(
+    *,
+    db: DBSyncSession,
+    job: ApplyWorkflow,
+    log_msg: str,
+    logger_name: str,
+    emit_log: bool = False,
+) -> None:
+    logger = get_logger(logger_name=logger_name)
+    if emit_log:
+        logger.error(log_msg)
+    reset_logger_handlers(logger)
     job.status = JobStatusTypeV1.FAILED
     job.end_timestamp = get_timestamp()
-    job.log = log
+    job.log = log_msg
     db.merge(job)
     db.commit()
     db.close()
-    close_job_logger(logger)
     return
 
 
@@ -123,11 +135,19 @@ async def submit_workflow(
         else:
 
             if FRACTAL_RUNNER_BACKEND == "local_experimental":
-                log = "local_experimental runner is not available for v1 jobs."
+                log_msg = (
+                    "local_experimental runner is not available for v1 jobs."
+                )
             else:
-                log = f"Invalid {FRACTAL_RUNNER_BACKEND=}"
+                log_msg = f"Invalid {FRACTAL_RUNNER_BACKEND=}"
 
-            fail_job(job=job, db=db_sync, log=log, logger_name=logger_name)
+            fail_job(
+                job=job,
+                db=db_sync,
+                log_msg=log_msg,
+                logger_name=logger_name,
+                emit_log=True,
+            )
             return
 
         # Declare runner backend and set `process_workflow` function
@@ -151,7 +171,9 @@ async def submit_workflow(
                 log_msg += (
                     f"Cannot fetch workflow {workflow_id} from database\n"
                 )
-            fail_job(db=db_sync, job=job, log=log_msg, logger_name=logger_name)
+            fail_job(
+                db=db_sync, job=job, log_msg=log_msg, logger_name=logger_name
+            )
             return
 
         # Prepare some of process_workflow arguments
@@ -170,7 +192,7 @@ async def submit_workflow(
             fail_job(
                 db=db_sync,
                 job=job,
-                log=f"Workflow dir {WORKFLOW_DIR_LOCAL} already exists.",
+                log_msg=f"Workflow dir {WORKFLOW_DIR_LOCAL} already exists.",
                 logger_name=logger_name,
             )
             return
@@ -332,7 +354,7 @@ async def submit_workflow(
             f"position in Workflow: {e.workflow_task_order}\n"
             f"TRACEBACK:\n{exception_args_string}"
         )
-        fail_job(db=db_sync, job=job, log=log_msg, logger_name=logger_name)
+        fail_job(db=db_sync, job=job, log_msg=log_msg, logger_name=logger_name)
         return
 
     except JobExecutionError as e:
@@ -357,7 +379,7 @@ async def submit_workflow(
         fail_job(
             db=db_sync,
             job=job,
-            log=f"JOB ERROR in Fractal job {job.id}:\nTRACEBACK:\n{error}",
+            log_msg=f"JOB ERROR in Fractal job {job.id}:\nTRACEBACK:\n{error}",
             logger_name=logger_name,
         )
         return
@@ -387,7 +409,7 @@ async def submit_workflow(
             f"UNKNOWN ERROR in Fractal job {job.id}\n"
             f"TRACEBACK:\n{current_traceback}"
         )
-        fail_job(db=db_sync, job=job, log=log_msg, logger_name=logger_name)
+        fail_job(db=db_sync, job=job, log_msg=log_msg, logger_name=logger_name)
         return
 
     finally:
