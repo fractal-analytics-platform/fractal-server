@@ -10,12 +10,12 @@ from devtools import debug
 
 from fractal_server.app.runner.exceptions import JobExecutionError
 from fractal_server.app.runner.exceptions import TaskExecutionError
-from fractal_server.app.runner.executors.slurm._subprocess_run_as_user import (
+from fractal_server.app.runner.executors.slurm_sudo._subprocess_run_as_user import (  # noqa: E501
     _mkdir_as_user,
 )
-from fractal_server.app.runner.executors.slurm.executor import (
+from fractal_server.app.runner.executors.slurm_sudo.executor import (
     FractalSlurmExecutor,
-)  # noqa
+)  # noqa: E501
 from tests.fixtures_slurm import run_squeue
 from tests.fixtures_slurm import scancel_all_jobs_of_a_slurm_user
 from tests.fixtures_slurm import SLURM_USER

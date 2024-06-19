@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 from devtools import debug
 
-from fractal_server.app.runner.executors.slurm._batching import heuristics
-from fractal_server.app.runner.executors.slurm._batching import (
+from fractal_server.app.runner.executors.slurm_sudo._batching import heuristics
+from fractal_server.app.runner.executors.slurm_sudo._batching import (
     SlurmHeuristicsError,
 )
 

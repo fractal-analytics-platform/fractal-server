@@ -1,7 +1,7 @@
-from fractal_server.app.runner.executors.slurm._check_jobs_status import (
+from fractal_server.app.runner.executors.slurm_sudo._check_jobs_status import (
     _jobs_finished,
 )
-from fractal_server.app.runner.executors.slurm._check_jobs_status import (
+from fractal_server.app.runner.executors.slurm_sudo._check_jobs_status import (
     run_squeue,
 )
 
