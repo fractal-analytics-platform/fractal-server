@@ -2,6 +2,7 @@ import datetime
 import time
 from pathlib import Path
 
+import pytest
 from devtools import debug
 
 from fractal_server.app.db import get_sync_db
@@ -218,3 +219,53 @@ async def test_fail_submit_workflows_wrong_IDs(
             assert job.log == (
                 "local_experimental runner is not available for v1 jobs."
             )
+
+
+@pytest.mark.parametrize("invalid_backend", ("local_experimental", "foo"))
+async def test_fail_submit_workflows_wrong_backend(
+    MockCurrentUser,
+    project_factory,
+    workflow_factory,
+    dataset_factory,
+    job_factory,
+    resource_factory,
+    task_factory,
+    tmp_path,
+    db,
+    invalid_backend,
+    override_settings_factory,
+):
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=invalid_backend)
+
+    async with MockCurrentUser() as user:
+
+        project = await project_factory(user)
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(name="task", source="task_source")
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
+        )
+        dataset = await dataset_factory(project_id=project.id)
+        job = await job_factory(
+            working_dir=tmp_path.as_posix(),
+            project_id=project.id,
+            input_dataset_id=dataset.id,
+            output_dataset_id=dataset.id,
+            workflow_id=workflow.id,
+        )
+        await resource_factory(dataset)
+
+        # Submitting an invalid job ID won't fail but will log an error
+        await submit_workflow(
+            workflow_id=workflow.id,
+            input_dataset_id=dataset.id,
+            output_dataset_id=dataset.id,
+            job_id=job.id,
+        )
+        await db.refresh(job)
+        if invalid_backend == "local_experimental":
+            assert job.log == (
+                "local_experimental runner is not available for v1 jobs."
+            )
+        else:
+            assert "Invalid FRACTAL_RUNNER_BACKEND" in job.log
