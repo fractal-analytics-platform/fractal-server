@@ -16,18 +16,13 @@ def _filter(info: tarfile.TarInfo) -> Optional[tarfile.TarInfo]:
         filename = info.name.split("/")[-1]
         parts = filename.split("_")
         if len(parts) == 3 and parts[1] == "in":
-            print(f"SKIP {info.name=}")
             return None
         elif len(parts) == 5 and parts[3] == "in":
-            print(f"SKIP {info.name=}")
             return None
     elif info.name.endswith(".args.json"):
-        print(f"SKIP {info.name=}")
         return None
     elif info.name.endswith("slurm_submit.sbatch"):
-        print(f"SKIP {info.name=}")
         return None
-    print(f"OK {info.name=}")
     return info
 
 
@@ -63,22 +58,43 @@ if __name__ == "__main__":
                 filter=_filter,
             )
     elif COMPRESS_FOLDER_MODALITY == "tar":
-        cmd = (
-            "tar czf "
+        cmd_ls = f"ls {subfolder_path.as_posix()}/"
+        cmd_tar = (
+            "tar czfv "
             f"{tarfile_path} "
             "--exclude *sbatch --exclude *.args.json --exclude *_in_*.pickle "
-            f"{subfolder_path.as_posix()}"
+            f"--directory={job_folder.as_posix()} "
+            f"{subfolder_name}"
         )
+
+        print(f"[compress_folder.py] cmd ls:\n{cmd_ls}")
         res = subprocess.run(  # nosec
-            shlex.split(cmd),
+            shlex.split(cmd_ls),
             capture_output=True,
             encoding="utf-8",
         )
+        print(f"[compress_folder.py] ls stdout:\n{res.stdout}")
+        print(f"[compress_folder.py] ls stderr:\n{res.stderr}")
         if res.returncode != 0:
-            print("[compress_folder.py] ERROR")
-            print(f"[compress_folder.py] cmd:\n{cmd}")
-            print(f"[compress_folder.py] stdout:\n{res.stdout}")
-            print(f"[compress_folder.py] stderr:\n{res.stderr}")
+            print("[compress_folder.py] ERROR in ls")
+            t_1 = time.perf_counter()
+            print(f"[compress_folder] END - elapsed {t_1 - t_0:.3f} seconds")
+            sys.exit(1)
+
+        sleeptime = 5
+        print(f"[compress_folder.py] NOW SLEEP {sleeptime}")
+        time.sleep(sleeptime)
+
+        print(f"[compress_folder.py] cmd tar:\n{cmd_tar}")
+        res = subprocess.run(  # nosec
+            shlex.split(cmd_tar),
+            capture_output=True,
+            encoding="utf-8",
+        )
+        print(f"[compress_folder.py] tar stdout:\n{res.stdout}")
+        print(f"[compress_folder.py] tar stderr:\n{res.stderr}")
+        if res.returncode != 0:
+            print("[compress_folder.py] ERROR in tar")
             t_1 = time.perf_counter()
             print(f"[compress_folder] END - elapsed {t_1 - t_0:.3f} seconds")
             sys.exit(1)
