@@ -151,6 +151,7 @@ async def submit_workflow(
                 job=job,
                 log_msg=f"Workflow dir {WORKFLOW_DIR_LOCAL} already exists.",
                 logger_name=logger_name,
+                emit_log=True,
             )
             return
 
@@ -203,6 +204,7 @@ async def submit_workflow(
                     f"subfolders.\nOriginal error: {str(e)}"
                 ),
                 logger_name=logger_name,
+                emit_log=True,
             )
             return
 
