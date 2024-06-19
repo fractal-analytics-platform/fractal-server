@@ -255,7 +255,6 @@ async def test_fail_submit_workflows_wrong_backend(
         )
         await resource_factory(dataset)
 
-        # Submitting an invalid job ID won't fail but will log an error
         await submit_workflow(
             workflow_id=workflow.id,
             input_dataset_id=dataset.id,
