@@ -75,25 +75,6 @@ if __name__ == "__main__":
             "."
         )
 
-        # cmd_ls = f"ls {subfolder_path.as_posix()}/"
-        # print(f"[compress_folder.py] cmd ls:\n{cmd_ls}")
-        # res = subprocess.run(  # nosec
-        #     shlex.split(cmd_ls),
-        #     capture_output=True,
-        #     encoding="utf-8",
-        # )
-        # print(f"[compress_folder.py] ls stdout:\n{res.stdout}")
-        # print(f"[compress_folder.py] ls stderr:\n{res.stderr}")
-        # if res.returncode != 0:
-        #     print("[compress_folder.py] ERROR in ls")
-        #     t_1 = time.perf_counter()
-        #     print(f"[compress_folder] END - elapsed {t_1 - t_0:.3f} seconds")
-        #     sys.exit(1)
-
-        # sleeptime = 5
-        # print(f"[compress_folder.py] NOW SLEEP {sleeptime}")
-        # time.sleep(sleeptime)
-
         print(f"[compress_folder.py] cmd tar:\n{cmd_tar}")
         res = subprocess.run(  # nosec
             shlex.split(cmd_tar),
