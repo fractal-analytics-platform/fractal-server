@@ -78,24 +78,34 @@ async def submit_workflow(
             The username to impersonate for the workflow execution, for the
             slurm backend.
     """
-
-    # Declare runner backend and set `process_workflow` function
-    settings = Inject(get_settings)
-    FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
-    if FRACTAL_RUNNER_BACKEND == "local":
-        process_workflow = local_process_workflow
-    elif FRACTAL_RUNNER_BACKEND == "local_experimental":
-        process_workflow = local_experimental_process_workflow
-    elif FRACTAL_RUNNER_BACKEND == "slurm":
-        process_workflow = slurm_process_workflow
-    else:
-        raise RuntimeError(f"Invalid runner backend {FRACTAL_RUNNER_BACKEND=}")
+    logger_name = f"WF{workflow_id}_job{job_id}"
+    logger = set_logger(logger_name=logger_name)
 
     with next(DB.get_sync_db()) as db_sync:
 
         job: JobV2 = db_sync.get(JobV2, job_id)
         if not job:
-            raise ValueError(f"Cannot fetch job {job_id} from database")
+            logger.error(f"JobV2 {job_id} does not exist")
+            return
+
+        # Declare runner backend and set `process_workflow` function
+        settings = Inject(get_settings)
+        FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
+        if FRACTAL_RUNNER_BACKEND == "local":
+            process_workflow = local_process_workflow
+        elif FRACTAL_RUNNER_BACKEND == "local_experimental":
+            process_workflow = local_experimental_process_workflow
+        elif FRACTAL_RUNNER_BACKEND == "slurm":
+            process_workflow = slurm_process_workflow
+        else:
+            logger.error(f"Invalid {FRACTAL_RUNNER_BACKEND=}")
+            job.status = JobStatusTypeV2.FAILED
+            job.end_timestamp = get_timestamp()
+            job.log = f"Invalid {FRACTAL_RUNNER_BACKEND=}"
+            db_sync.merge(job)
+            db_sync.commit()
+            db_sync.close()
+            return
 
         dataset: DatasetV2 = db_sync.get(DatasetV2, dataset_id)
         workflow: WorkflowV2 = db_sync.get(WorkflowV2, workflow_id)
@@ -195,7 +205,6 @@ async def submit_workflow(
             db_sync.refresh(wftask)
 
         # Write logs
-        logger_name = f"WF{workflow_id}_job{job_id}"
         log_file_path = WORKFLOW_DIR_LOCAL / WORKFLOW_LOG_FILENAME
         logger = set_logger(
             logger_name=logger_name,

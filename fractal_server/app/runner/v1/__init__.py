@@ -91,18 +91,39 @@ async def submit_workflow(
             slurm backend.
     """
 
-    settings = Inject(get_settings)
-    FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
+    logger_name = f"WF{workflow_id}_job{job_id}"
+    logger = set_logger(logger_name=logger_name)
+
     with next(DB.get_sync_db()) as db_sync:
 
         job: ApplyWorkflow = db_sync.get(ApplyWorkflow, job_id)
         if not job:
-            raise ValueError(f"Cannot fetch job {job_id} from database")
+            logger.error(f"ApplyWorkflow {job_id} does not exist")
+            return
 
-        if FRACTAL_RUNNER_BACKEND in ["local", "local_experimental"]:
+        settings = Inject(get_settings)
+        FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
+        if FRACTAL_RUNNER_BACKEND == "local":
             process_workflow = local_process_workflow
-        else:  # FRACTAL_RUNNER_BACKEND == "slurm"
+        elif FRACTAL_RUNNER_BACKEND == "slurm":
             process_workflow = slurm_process_workflow
+        else:
+
+            if FRACTAL_RUNNER_BACKEND == "local_experimental":
+                message = (
+                    "local_experimental runner is not available for v1 jobs."
+                )
+            else:
+                message = f"Invalid {FRACTAL_RUNNER_BACKEND=}"
+
+            logger.error(message)
+            job.status = JobStatusTypeV1.FAILED
+            job.end_timestamp = get_timestamp()
+            job.log = message
+            db_sync.merge(job)
+            db_sync.commit()
+            db_sync.close()
+            return
 
         # Declare runner backend and set `process_workflow` function
 
@@ -160,7 +181,7 @@ async def submit_workflow(
         os.umask(original_umask)
 
         # Define and create WORKFLOW_DIR_REMOTE
-        if FRACTAL_RUNNER_BACKEND in ["local", "local_experimental"]:
+        if FRACTAL_RUNNER_BACKEND == "local":
             WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
         elif FRACTAL_RUNNER_BACKEND == "slurm":
             WORKFLOW_DIR_REMOTE = (
@@ -205,7 +226,6 @@ async def submit_workflow(
         db_sync.refresh(workflow)
 
         # Write logs
-        logger_name = f"WF{workflow_id}_job{job_id}"
         log_file_path = WORKFLOW_DIR_LOCAL / WORKFLOW_LOG_FILENAME
         logger = set_logger(
             logger_name=logger_name,

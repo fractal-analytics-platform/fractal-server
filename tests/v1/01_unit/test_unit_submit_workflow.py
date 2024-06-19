@@ -2,7 +2,6 @@ import datetime
 import time
 from pathlib import Path
 
-import pytest
 from devtools import debug
 
 from fractal_server.app.db import get_sync_db
@@ -12,6 +11,10 @@ from fractal_server.app.routes.api.v1._aux_functions import (
 )
 from fractal_server.app.runner.v1 import submit_workflow
 from fractal_server.app.schemas.v1 import JobStatusTypeV1
+from fractal_server.config import get_settings
+from fractal_server.syringe import Inject
+
+settings = Inject(get_settings)
 
 
 async def test_success_submit_workflows(
@@ -72,7 +75,11 @@ async def test_success_submit_workflows(
         folder2 = Path(job2.working_dir).name
 
         debug(folder1, folder2)
-        assert folder1 != folder2
+        if settings.FRACTAL_RUNNER_BACKEND != "local_experimental":
+            assert folder1 != folder2
+        else:
+            # second submission has done nothing
+            assert folder1 == folder2
 
 
 async def test_fail_submit_workflows_at_same_time(
@@ -131,7 +138,13 @@ async def test_fail_submit_workflows_at_same_time(
             job_id=job.id,
         )
         await db.refresh(job)
-        assert "already exists" in job.log
+
+        if settings.FRACTAL_RUNNER_BACKEND != "local_experimental":
+            assert "already exists" in job.log
+        else:
+            assert job.log == (
+                "local_experimental runner is not available for v1 jobs."
+            )
 
 
 async def test_fail_submit_workflows_wrong_IDs(
@@ -164,15 +177,13 @@ async def test_fail_submit_workflows_wrong_IDs(
         )
         await resource_factory(dataset)
 
-        # Fail for invalid DB IDs
-
-        with pytest.raises(ValueError):
-            await submit_workflow(
-                workflow_id=workflow.id,
-                input_dataset_id=dataset.id,
-                output_dataset_id=dataset.id,
-                job_id=9999999,
-            )
+        # Submitting an invalid job ID won't fail but will log an error
+        await submit_workflow(
+            workflow_id=workflow.id,
+            input_dataset_id=dataset.id,
+            output_dataset_id=dataset.id,
+            job_id=9999999,
+        )
 
         await submit_workflow(
             workflow_id=1234,
@@ -182,7 +193,12 @@ async def test_fail_submit_workflows_wrong_IDs(
         )
         await db.refresh(job)
         assert job.status == JobStatusTypeV1.FAILED
-        assert job.log == "Cannot fetch workflow 1234 from database\n"
+        if settings.FRACTAL_RUNNER_BACKEND != "local_experimental":
+            assert job.log == "Cannot fetch workflow 1234 from database\n"
+        else:
+            assert job.log == (
+                "local_experimental runner is not available for v1 jobs."
+            )
 
         await submit_workflow(
             workflow_id=workflow.id,
@@ -193,7 +209,12 @@ async def test_fail_submit_workflows_wrong_IDs(
         await db.refresh(job)
         debug(job)
         assert job.status == JobStatusTypeV1.FAILED
-        assert job.log == (
-            "Cannot fetch input_dataset 1111 from database\n"
-            "Cannot fetch output_dataset 2222 from database\n"
-        )
+        if settings.FRACTAL_RUNNER_BACKEND != "local_experimental":
+            assert job.log == (
+                "Cannot fetch input_dataset 1111 from database\n"
+                "Cannot fetch output_dataset 2222 from database\n"
+            )
+        else:
+            assert job.log == (
+                "local_experimental runner is not available for v1 jobs."
+            )
