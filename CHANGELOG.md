@@ -21,7 +21,7 @@
     * Add new `local_experimental` runner, based on `ProcessPoolExecutor` (\#1544).
     * Handle errors with `_mkdir_as_user` in background tasks (\#1556).
 * App and deployment:
-    * Add logic for graceful shutdown for job slurm executors. (\#1547)
+    * Add logic for graceful shutdown for job slurm executors. (\#1547, \#1569)
     * Add custom gunicorn/uvicorn worker to handle SIGABRT signal (\#1526).
     * Move `FractalGunicornLogger` and `FractalWorker` in `fractal_server/gunicorn_fractal.py` (\#1535).
     * Store list of submitted jobs in app state (\#1538).
