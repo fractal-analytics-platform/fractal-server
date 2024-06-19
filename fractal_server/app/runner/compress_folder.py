@@ -50,40 +50,49 @@ if __name__ == "__main__":
     print(f"[compress_folder.py] {tarfile_path=}")
 
     if COMPRESS_FOLDER_MODALITY == "python":
+        raise NotImplementedError()
         with tarfile.open(tarfile_path, "w:gz") as tar:
             tar.add(
                 subfolder_path,
-                arcname=subfolder_name,
+                arcname=".",  # ????
                 recursive=True,
                 filter=_filter,
             )
     elif COMPRESS_FOLDER_MODALITY == "tar":
-        cmd_ls = f"ls {subfolder_path.as_posix()}/"
+
+        import shutil
+
+        subfolder_path_tmp_copy = (
+            subfolder_path.parent / f"{subfolder_path.name}_copy"
+        )
+        shutil.copytree(subfolder_path, subfolder_path_tmp_copy)
+
         cmd_tar = (
-            "tar czfv "
+            "tar czfvvv "
             f"{tarfile_path} "
             "--exclude *sbatch --exclude *.args.json --exclude *_in_*.pickle "
-            f"--directory={job_folder.as_posix()} "
-            f"{subfolder_name}"
+            f"--directory={subfolder_path_tmp_copy.as_posix()} "
+            "."
         )
 
-        print(f"[compress_folder.py] cmd ls:\n{cmd_ls}")
-        res = subprocess.run(  # nosec
-            shlex.split(cmd_ls),
-            capture_output=True,
-            encoding="utf-8",
-        )
-        print(f"[compress_folder.py] ls stdout:\n{res.stdout}")
-        print(f"[compress_folder.py] ls stderr:\n{res.stderr}")
-        if res.returncode != 0:
-            print("[compress_folder.py] ERROR in ls")
-            t_1 = time.perf_counter()
-            print(f"[compress_folder] END - elapsed {t_1 - t_0:.3f} seconds")
-            sys.exit(1)
+        # cmd_ls = f"ls {subfolder_path.as_posix()}/"
+        # print(f"[compress_folder.py] cmd ls:\n{cmd_ls}")
+        # res = subprocess.run(  # nosec
+        #     shlex.split(cmd_ls),
+        #     capture_output=True,
+        #     encoding="utf-8",
+        # )
+        # print(f"[compress_folder.py] ls stdout:\n{res.stdout}")
+        # print(f"[compress_folder.py] ls stderr:\n{res.stderr}")
+        # if res.returncode != 0:
+        #     print("[compress_folder.py] ERROR in ls")
+        #     t_1 = time.perf_counter()
+        #     print(f"[compress_folder] END - elapsed {t_1 - t_0:.3f} seconds")
+        #     sys.exit(1)
 
-        sleeptime = 5
-        print(f"[compress_folder.py] NOW SLEEP {sleeptime}")
-        time.sleep(sleeptime)
+        # sleeptime = 5
+        # print(f"[compress_folder.py] NOW SLEEP {sleeptime}")
+        # time.sleep(sleeptime)
 
         print(f"[compress_folder.py] cmd tar:\n{cmd_tar}")
         res = subprocess.run(  # nosec
@@ -97,6 +106,10 @@ if __name__ == "__main__":
             print("[compress_folder.py] ERROR in tar")
             t_1 = time.perf_counter()
             print(f"[compress_folder] END - elapsed {t_1 - t_0:.3f} seconds")
+            shutil.rmtree(subfolder_path_tmp_copy)
             sys.exit(1)
+
+        shutil.rmtree(subfolder_path_tmp_copy)
+
     t_1 = time.perf_counter()
     print(f"[compress_folder] END - elapsed {t_1 - t_0:.3f} seconds")

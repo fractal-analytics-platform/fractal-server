@@ -23,7 +23,8 @@ if __name__ == "__main__":
     print(f"[extract_archive.py] {tarfile_path=}")
 
     job_folder = tarfile_path.parent
+    subfolder_name = tarfile_path.name.rstrip(".tar.gz")
     with tarfile.open(tarfile_path) as tar:
-        tar.extractall(path=job_folder)
+        tar.extractall(path=Path(job_folder, subfolder_name).as_posix())
 
     print(f"[extract_archive.py] {tarfile_path=}")

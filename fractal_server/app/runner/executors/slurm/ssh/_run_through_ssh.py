@@ -13,14 +13,14 @@ from fractal_server.config import get_settings
 
 logger = set_logger(__name__)
 
-MAX_ATTEMPTS = 4
+MAX_ATTEMPTS = 5
 
 
 def _run_command_over_ssh(
     *,
     cmd: str,
     connection: Connection,
-    max_attempts: int = 1,
+    max_attempts: int = MAX_ATTEMPTS,
     base_interval: float = 3.0,
 ) -> str:
     """
@@ -77,7 +77,10 @@ def _run_command_over_ssh(
             raise ValueError(error_msg)  # FIXME switch to JobExecutionError
             # raise JobExecutionError(info=error_msg)
 
-    raise ValueError(f"Reached last attempt for running '{cmd}'")  # FIXME
+    # FIMXE: Use JobExecutionError
+    raise ValueError(
+        f"Reached last attempt ({max_attempts=}) for running '{cmd}'"
+    )
     # raise JobExecutionError(info=error_msg)
 
 

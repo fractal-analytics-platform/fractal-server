@@ -832,7 +832,8 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             self.workflow_dir_remote / tarfile_name
         ).as_posix()
         with tarfile.open(tarfile_path_local, "w:gz") as tar:
-            tar.add(local_subfolder, arcname=subfolder_name, recursive=True)
+            for this_file in local_subfolder.glob("*"):
+                tar.add(this_file, arcname=this_file.name)
         logger.info(f"Subfolder archive created at {tarfile_path_local}")
 
         # Transfer archive
@@ -1245,7 +1246,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         # Extract tarfile locally
         with tarfile.open(tarfile_path_local) as tar:
-            tar.extractall(path=self.workflow_dir_local)
+            tar.extractall(path=(self.workflow_dir_local / subfolder_name))
 
         t_1 = time.perf_counter()
         logger.info("[_get_subfolder_sftp] End - " f"elapsed: {t_1-t_0:.3f} s")
