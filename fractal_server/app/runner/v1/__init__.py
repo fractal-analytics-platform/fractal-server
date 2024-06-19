@@ -136,7 +136,7 @@ async def submit_workflow(
 
             if FRACTAL_RUNNER_BACKEND == "local_experimental":
                 log_msg = (
-                    "local_experimental runner is not available for v1 jobs."
+                    f"{FRACTAL_RUNNER_BACKEND=} is not available for v1 jobs."
                 )
             else:
                 log_msg = f"Invalid {FRACTAL_RUNNER_BACKEND=}"
