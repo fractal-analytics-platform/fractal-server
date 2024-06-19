@@ -198,7 +198,7 @@ def test_slurm_ssh_executor_no_docker(
     override_settings_factory(
         FRACTAL_SLURM_WORKER_PYTHON=remote_python,
     )
-    from fractal_server.app.runner.executors.slurm._slurm_config import (
+    from fractal_server.app.runner.executors._slurm_config import (
         get_default_slurm_config,
     )
 

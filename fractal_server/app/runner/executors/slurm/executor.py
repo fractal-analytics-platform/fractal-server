@@ -37,10 +37,10 @@ from ...exceptions import TaskExecutionError
 from ...filenames import SHUTDOWN_FILENAME
 from ...task_files import get_task_file_paths
 from ...task_files import TaskFiles
+from .._slurm_config import get_default_slurm_config
+from .._slurm_config import SlurmConfig
 from ._batching import heuristics
 from ._executor_wait_thread import FractalSlurmWaitThread
-from ._slurm_config import get_default_slurm_config
-from ._slurm_config import SlurmConfig
 from ._subprocess_run_as_user import _glob_as_user
 from ._subprocess_run_as_user import _glob_as_user_strict
 from ._subprocess_run_as_user import _path_exists_as_user
