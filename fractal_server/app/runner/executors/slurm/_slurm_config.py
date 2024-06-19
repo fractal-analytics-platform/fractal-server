@@ -22,9 +22,9 @@ from pydantic import Extra
 from pydantic import Field
 from pydantic.error_wrappers import ValidationError
 
-from ....config import get_settings
-from ....logger import set_logger
-from ....syringe import Inject
+from .....config import get_settings
+from .....logger import set_logger
+from .....syringe import Inject
 
 logger = set_logger(__name__)
 

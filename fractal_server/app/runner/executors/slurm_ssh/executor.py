@@ -39,8 +39,8 @@ from ...filenames import SHUTDOWN_FILENAME
 from ...task_files import get_task_file_paths
 from ...task_files import TaskFiles
 from ...versions import get_versions
-from .._slurm_config import get_default_slurm_config
-from .._slurm_config import SlurmConfig
+from ..slurm._slurm_config import get_default_slurm_config
+from ..slurm._slurm_config import SlurmConfig
 from ._batching import heuristics
 from ._executor_wait_thread import FractalSlurmWaitThread
 from ._run_through_ssh import _run_command_over_ssh

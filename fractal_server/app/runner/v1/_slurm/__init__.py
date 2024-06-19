@@ -29,15 +29,15 @@ from ..common import TaskParameters
 from ._submit_setup import _slurm_submit_setup
 from fractal_server.app.models.v1 import Workflow
 from fractal_server.app.models.v1 import WorkflowTask
-from fractal_server.app.runner.executors._slurm_config import (
+from fractal_server.app.runner.executors.slurm._slurm_config import (
     _parse_mem_value,
 )
-from fractal_server.app.runner.executors._slurm_config import (
+from fractal_server.app.runner.executors.slurm._slurm_config import (
     load_slurm_config_file,
 )
-from fractal_server.app.runner.executors._slurm_config import logger
-from fractal_server.app.runner.executors._slurm_config import SlurmConfig
-from fractal_server.app.runner.executors._slurm_config import (
+from fractal_server.app.runner.executors.slurm._slurm_config import logger
+from fractal_server.app.runner.executors.slurm._slurm_config import SlurmConfig
+from fractal_server.app.runner.executors.slurm._slurm_config import (
     SlurmConfigError,
 )
 
