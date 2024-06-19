@@ -26,7 +26,7 @@ from fabric import Connection
 from ....models.v2 import DatasetV2
 from ....models.v2 import WorkflowV2
 from ...async_wrap import async_wrap
-from ...executors.slurm_ssh.executor import FractalSlurmSSHExecutor
+from ...executors.slurm.ssh.executor import FractalSlurmSSHExecutor
 from ...set_start_and_last_task_index import set_start_and_last_task_index
 from ..runner import execute_tasks_v2
 from ._submit_setup import _slurm_submit_setup

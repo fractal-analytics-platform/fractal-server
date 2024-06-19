@@ -9,7 +9,7 @@ from devtools import debug  # noqa: F401
 from fabric.connection import Connection
 
 from fractal_server.app.runner.exceptions import TaskExecutionError
-from fractal_server.app.runner.executors.slurm_ssh.executor import (
+from fractal_server.app.runner.executors.slurm.ssh.executor import (
     FractalSlurmSSHExecutor,
 )  # noqa
 
