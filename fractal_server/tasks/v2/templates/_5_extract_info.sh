@@ -11,6 +11,7 @@ PYTHON=__PYTHON__
 FRACTAL_TASKS_DIR=__FRACTAL_TASKS_DIR__
 USER=fractal
 PACKAGE=__PACKAGE__
+PACKAGE_NAME=__PACKAGE_NAME__
 # VERSION can be either an empty string or something like "==1.2.3"
 VERSION="__VERSION__"
 # EXTRAS can be either an empty string or something like "[myextra1,myextra2]"
@@ -20,7 +21,7 @@ EXTRAS="__EXTRAS__"
 TIME_START=$(date +%s)
 
 # Create main folder
-PKG_ENV_DIR=$FRACTAL_TASKS_DIR/.${USER}/${PACKAGE}${VERSION}
+PKG_ENV_DIR=$FRACTAL_TASKS_DIR/.${USER}/${PACKAGE_NAME}${VERSION}
 VENVPYTHON=${PKG_ENV_DIR}/bin/python
 write_log "Python interpreter: $VENVPYTHON"
 echo
@@ -28,19 +29,19 @@ echo
 # Extract information about paths
 # WARNING: this block will fail for paths which inlcude whitespace characters
 write_log "START pip show"
-$VENVPYTHON -m pip show ${PACKAGE}
+$VENVPYTHON -m pip show ${PACKAGE_NAME}
 write_log "END   pip show"
 echo
-PACKAGE_NAME=$($VENVPYTHON -m pip show ${PACKAGE} | grep "Name:" | cut -d ":" -f 2 | tr -d "[:space:]")
+PACKAGE_NAME=$($VENVPYTHON -m pip show ${PACKAGE_NAME} | grep "Name:" | cut -d ":" -f 2 | tr -d "[:space:]")
 write_log "Package name: $PACKAGE_NAME"
 echo
-PACKAGE_VERSION=$($VENVPYTHON -m pip show ${PACKAGE} | grep "Version:" | cut -d ":" -f 2 | tr -d "[:space:]")
+PACKAGE_VERSION=$($VENVPYTHON -m pip show ${PACKAGE_NAME} | grep "Version:" | cut -d ":" -f 2 | tr -d "[:space:]")
 write_log "Package version: $PACKAGE_VERSION"
 echo
-PACKAGE_PARENT_FOLDER=$($VENVPYTHON -m pip show ${PACKAGE} | grep "Location:" | cut -d ":" -f 2 | tr -d "[:space:]")
+PACKAGE_PARENT_FOLDER=$($VENVPYTHON -m pip show ${PACKAGE_NAME} | grep "Location:" | cut -d ":" -f 2 | tr -d "[:space:]")
 write_log "Package parent folder: $PACKAGE_PARENT_FOLDER"
 echo
-MANIFEST_RELATIVE_PATH=$($VENVPYTHON -m pip show ${PACKAGE} --files | grep "__FRACTAL_MANIFEST__.json" | tr -d "[:space:]")
+MANIFEST_RELATIVE_PATH=$($VENVPYTHON -m pip show ${PACKAGE_NAME} --files | grep "__FRACTAL_MANIFEST__.json" | tr -d "[:space:]")
 write_log "Manifest relative path: $MANIFEST_RELATIVE_PATH"
 echo
 MANIFEST_ABSOLUTE_PATH="${PACKAGE_PARENT_FOLDER}/${MANIFEST_RELATIVE_PATH}"

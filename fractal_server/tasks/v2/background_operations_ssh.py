@@ -89,7 +89,7 @@ async def _add_tasks_to_db(
     # task_pkg.check()  # FIXME: would this work? To be verified.
 
     package_root = Path(
-        package_parent_folder_remote, task_pkg.package.replace("-", "_")
+        package_parent_folder_remote, task_pkg.package_name.replace("-", "_")
     )
 
     try:
@@ -195,10 +195,19 @@ async def background_collect_pip_ssh(
         f"=={task_pkg.package_version}" if task_pkg.package_version else ""
     )
     extras = f"[{task_pkg.package_extras}]" if task_pkg.package_extras else ""
+
+    if task_pkg.package.startswith("/"):
+        package_name = Path(task_pkg.package).name.split("-")[
+            0
+        ]  # FIXME: this is just a workaround
+    else:
+        package_name = task_pkg.package
+
     replacements = [
         ("__PYTHON__", settings.FRACTAL_SLURM_WORKER_PYTHON),
         ("__FRACTAL_TASKS_DIR__", settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR),
         ("__PACKAGE__", task_pkg.package),
+        ("__PACKAGE_NAME__", package_name),
         ("__VERSION__", version_string),
         ("__EXTRAS__", extras),
     ]

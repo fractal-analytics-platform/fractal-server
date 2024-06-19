@@ -11,6 +11,7 @@ PYTHON=__PYTHON__
 FRACTAL_TASKS_DIR=__FRACTAL_TASKS_DIR__
 USER=fractal
 PACKAGE=__PACKAGE__
+PACKAGE_NAME=__PACKAGE_NAME__
 # VERSION can be either an empty string or something like "==1.2.3"
 VERSION="__VERSION__"
 # EXTRAS can be either an empty string or something like "[myextra1,myextra2]"
@@ -19,7 +20,7 @@ EXTRAS="__EXTRAS__"
 
 TIME_START=$(date +%s)
 
-PKG_ENV_DIR=$FRACTAL_TASKS_DIR/.${USER}/${PACKAGE}${VERSION}
+PKG_ENV_DIR=$FRACTAL_TASKS_DIR/.${USER}/${PACKAGE_NAME}${VERSION}
 VENVPYTHON=${PKG_ENV_DIR}/bin/python
 
 # Install package
