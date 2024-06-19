@@ -7,7 +7,7 @@ from typing import Optional
 
 from cfut import FileWaitThread
 
-from .....logger import set_logger
+from ......logger import set_logger
 from ._check_jobs_status import _jobs_finished
 
 logger = set_logger(__name__)

@@ -4,9 +4,9 @@ from fabric.connection import Connection
 from invoke import UnexpectedExit
 from paramiko.ssh_exception import NoValidConnectionsError
 
-from .....logger import set_logger
-from .....syringe import Inject
-from ...exceptions import JobExecutionError
+from ......logger import set_logger
+from ......syringe import Inject
+from ....exceptions import JobExecutionError
 from fractal_server.config import get_settings
 
 

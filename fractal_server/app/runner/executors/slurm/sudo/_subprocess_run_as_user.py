@@ -19,7 +19,7 @@ import shlex
 import subprocess  # nosec
 from typing import Optional
 
-from .....logger import set_logger
+from ......logger import set_logger
 
 logger = set_logger(__name__)
 
