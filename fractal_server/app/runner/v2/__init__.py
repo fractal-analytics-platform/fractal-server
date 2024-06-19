@@ -132,23 +132,6 @@ async def submit_workflow(
             os.umask(original_umask)
 
             # Define and create WORKFLOW_DIR_REMOTE
-            WORKFLOW_DIR_REMOTE = Path(job.working_dir_user)
-            if FRACTAL_RUNNER_BACKEND == "slurm":
-                _mkdir_as_user(
-                    folder=str(WORKFLOW_DIR_REMOTE), user=slurm_user
-                )
-                logging.info(f"Created {str(WORKFLOW_DIR_REMOTE)} via sudo.")
-            elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-                # FIXME: move this mkdir to executor, likely within handshake
-                _mkdir_over_ssh(folder=str(WORKFLOW_DIR_REMOTE))
-                logging.info(f"Created {str(WORKFLOW_DIR_REMOTE)} via SSH.")
-            else:
-                logging.error(
-                    "Invalid FRACTAL_RUNNER_BACKEND="
-                    f"{settings.FRACTAL_RUNNER_BACKEND}."
-                )
-
-            # Define and create WORKFLOW_DIR_REMOTE
             if FRACTAL_RUNNER_BACKEND == "local":
                 WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
             elif FRACTAL_RUNNER_BACKEND == "local_experimental":
@@ -164,6 +147,14 @@ async def submit_workflow(
                 WORKFLOW_DIR_REMOTE = (
                     Path(settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR)
                     / WORKFLOW_DIR_LOCAL.name
+                )
+                # FIXME: move this mkdir to executor, likely within handshake
+                _mkdir_over_ssh(folder=str(WORKFLOW_DIR_REMOTE))
+                logging.info(f"Created {str(WORKFLOW_DIR_REMOTE)} via SSH.")
+            else:
+                logging.error(
+                    "Invalid FRACTAL_RUNNER_BACKEND="
+                    f"{settings.FRACTAL_RUNNER_BACKEND}."
                 )
 
             # Create all tasks subfolders
