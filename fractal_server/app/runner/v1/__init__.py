@@ -22,6 +22,10 @@ import traceback
 from pathlib import Path
 from typing import Optional
 
+from sqlalchemy.orm import Session as DBSyncSession
+
+from ....logger import get_logger
+from ....logger import reset_logger_handlers
 from ....logger import set_logger
 from ....syringe import Inject
 from ....utils import get_timestamp
@@ -51,6 +55,27 @@ from fractal_server.config import get_settings
 _backends = {}
 _backends["local"] = local_process_workflow
 _backends["slurm"] = slurm_process_workflow
+
+
+def fail_job(
+    *,
+    db: DBSyncSession,
+    job: ApplyWorkflow,
+    log_msg: str,
+    logger_name: str,
+    emit_log: bool = False,
+) -> None:
+    logger = get_logger(logger_name=logger_name)
+    if emit_log:
+        logger.error(log_msg)
+    reset_logger_handlers(logger)
+    job.status = JobStatusTypeV1.FAILED
+    job.end_timestamp = get_timestamp()
+    job.log = log_msg
+    db.merge(job)
+    db.commit()
+    db.close()
+    return
 
 
 async def submit_workflow(
@@ -91,21 +116,41 @@ async def submit_workflow(
             slurm backend.
     """
 
-    # Declare runner backend and set `process_workflow` function
-    settings = Inject(get_settings)
-    FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
-    if FRACTAL_RUNNER_BACKEND == "local":
-        process_workflow = local_process_workflow
-    elif FRACTAL_RUNNER_BACKEND == "slurm":
-        process_workflow = slurm_process_workflow
-    else:
-        raise RuntimeError(f"Invalid runner backend {FRACTAL_RUNNER_BACKEND=}")
+    logger_name = f"WF{workflow_id}_job{job_id}"
+    logger = set_logger(logger_name=logger_name)
 
     with next(DB.get_sync_db()) as db_sync:
 
         job: ApplyWorkflow = db_sync.get(ApplyWorkflow, job_id)
         if not job:
-            raise ValueError(f"Cannot fetch job {job_id} from database")
+            logger.error(f"ApplyWorkflow {job_id} does not exist")
+            return
+
+        settings = Inject(get_settings)
+        FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
+        if FRACTAL_RUNNER_BACKEND == "local":
+            process_workflow = local_process_workflow
+        elif FRACTAL_RUNNER_BACKEND == "slurm":
+            process_workflow = slurm_process_workflow
+        else:
+
+            if FRACTAL_RUNNER_BACKEND == "local_experimental":
+                log_msg = (
+                    f"{FRACTAL_RUNNER_BACKEND=} is not available for v1 jobs."
+                )
+            else:
+                log_msg = f"Invalid {FRACTAL_RUNNER_BACKEND=}"
+
+            fail_job(
+                job=job,
+                db=db_sync,
+                log_msg=log_msg,
+                logger_name=logger_name,
+                emit_log=True,
+            )
+            return
+
+        # Declare runner backend and set `process_workflow` function
 
         input_dataset: Dataset = db_sync.get(Dataset, input_dataset_id)
         output_dataset: Dataset = db_sync.get(Dataset, output_dataset_id)
@@ -126,12 +171,9 @@ async def submit_workflow(
                 log_msg += (
                     f"Cannot fetch workflow {workflow_id} from database\n"
                 )
-            job.status = JobStatusTypeV1.FAILED
-            job.end_timestamp = get_timestamp()
-            job.log = log_msg
-            db_sync.merge(job)
-            db_sync.commit()
-            db_sync.close()
+            fail_job(
+                db=db_sync, job=job, log_msg=log_msg, logger_name=logger_name
+            )
             return
 
         # Prepare some of process_workflow arguments
@@ -147,9 +189,14 @@ async def submit_workflow(
         )
 
         if WORKFLOW_DIR_LOCAL.exists():
-            raise RuntimeError(
-                f"Workflow dir {WORKFLOW_DIR_LOCAL} already exists."
+            fail_job(
+                db=db_sync,
+                job=job,
+                log_msg=f"Workflow dir {WORKFLOW_DIR_LOCAL} already exists.",
+                logger_name=logger_name,
+                emit_log=True,
             )
+            return
 
         # Create WORKFLOW_DIR
         original_umask = os.umask(0)
@@ -202,7 +249,6 @@ async def submit_workflow(
         db_sync.refresh(workflow)
 
         # Write logs
-        logger_name = f"WF{workflow_id}_job{job_id}"
         log_file_path = WORKFLOW_DIR_LOCAL / WORKFLOW_LOG_FILENAME
         logger = set_logger(
             logger_name=logger_name,
@@ -302,19 +348,14 @@ async def submit_workflow(
 
         db_sync.merge(output_dataset)
 
-        job.status = JobStatusTypeV1.FAILED
-        job.end_timestamp = get_timestamp()
-
         exception_args_string = "\n".join(e.args)
-        job.log = (
+        log_msg = (
             f"TASK ERROR: "
             f"Task name: {e.task_name}, "
             f"position in Workflow: {e.workflow_task_order}\n"
             f"TRACEBACK:\n{exception_args_string}"
         )
-        db_sync.merge(job)
-        close_job_logger(logger)
-        db_sync.commit()
+        fail_job(db=db_sync, job=job, log_msg=log_msg, logger_name=logger_name)
 
     except JobExecutionError as e:
 
@@ -334,14 +375,13 @@ async def submit_workflow(
         )
 
         db_sync.merge(output_dataset)
-
-        job.status = JobStatusTypeV1.FAILED
-        job.end_timestamp = get_timestamp()
         error = e.assemble_error()
-        job.log = f"JOB ERROR in Fractal job {job.id}:\nTRACEBACK:\n{error}"
-        db_sync.merge(job)
-        close_job_logger(logger)
-        db_sync.commit()
+        fail_job(
+            db=db_sync,
+            job=job,
+            log_msg=f"JOB ERROR in Fractal job {job.id}:\nTRACEBACK:\n{error}",
+            logger_name=logger_name,
+        )
 
     except Exception:
 
@@ -364,14 +404,12 @@ async def submit_workflow(
 
         db_sync.merge(output_dataset)
 
-        job.status = JobStatusTypeV1.FAILED
-        job.end_timestamp = get_timestamp()
-        job.log = (
+        log_msg = (
             f"UNKNOWN ERROR in Fractal job {job.id}\n"
             f"TRACEBACK:\n{current_traceback}"
         )
-        db_sync.merge(job)
-        close_job_logger(logger)
-        db_sync.commit()
+        fail_job(db=db_sync, job=job, log_msg=log_msg, logger_name=logger_name)
+
     finally:
         db_sync.close()
+        reset_logger_handlers(logger)

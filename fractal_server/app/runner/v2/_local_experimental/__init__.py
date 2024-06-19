@@ -1,9 +1,11 @@
+from concurrent.futures.process import BrokenProcessPool
 from pathlib import Path
 from typing import Optional
 
 from ....models.v2 import DatasetV2
 from ....models.v2 import WorkflowV2
 from ...async_wrap import async_wrap
+from ...exceptions import JobExecutionError
 from ...filenames import SHUTDOWN_FILENAME
 from ...set_start_and_last_task_index import set_start_and_last_task_index
 from ..runner import execute_tasks_v2
@@ -29,21 +31,29 @@ def _process_workflow(
     [process_workflow][fractal_server.app.runner.v2._local_experimental.process_workflow]
     for the call signature.
     """
-
     with FractalProcessPoolExecutor(
         shutdown_file=workflow_dir_local / SHUTDOWN_FILENAME
     ) as executor:
-        new_dataset_attributes = execute_tasks_v2(
-            wf_task_list=workflow.task_list[
-                first_task_index : (last_task_index + 1)  # noqa
-            ],  # noqa
-            dataset=dataset,
-            executor=executor,
-            workflow_dir_local=workflow_dir_local,
-            workflow_dir_remote=workflow_dir_local,
-            logger_name=logger_name,
-            submit_setup_call=_local_submit_setup,
-        )
+        try:
+            new_dataset_attributes = execute_tasks_v2(
+                wf_task_list=workflow.task_list[
+                    first_task_index : (last_task_index + 1)  # noqa
+                ],
+                dataset=dataset,
+                executor=executor,
+                workflow_dir_local=workflow_dir_local,
+                workflow_dir_remote=workflow_dir_local,
+                logger_name=logger_name,
+                submit_setup_call=_local_submit_setup,
+            )
+        except BrokenProcessPool as e:
+            raise JobExecutionError(
+                info=(
+                    "Job failed with BrokenProcessPool error, likely due to "
+                    f"an executor shutdown.\nOriginal error:\n{e.args[0]}"
+                )
+            )
+
     return new_dataset_attributes
 
 

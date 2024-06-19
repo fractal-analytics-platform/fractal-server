@@ -18,8 +18,9 @@
 * Runner:
     * Change structure of job folders, introducing per-task subfolders (\#1523).
     * Rename internal `workflow_dir` and `workflow_dir_user` variables to local/remote (\#1534).
-    * Add new `local_experimental` runner, based on `ProcessPoolExecutor` (\#1544).
+    * Add new `local_experimental` runner, based on `ProcessPoolExecutor` (\#1544, \#1566).
     * Handle errors with `_mkdir_as_user` in background tasks (\#1556).
+    * Improve handling of errors in `submit_workflow` (\#1566).
 * App and deployment:
     * Add logic for graceful shutdown for job slurm executors. (\#1547)
     * Add custom gunicorn/uvicorn worker to handle SIGABRT signal (\#1526).
