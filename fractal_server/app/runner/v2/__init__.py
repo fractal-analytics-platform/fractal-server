@@ -328,7 +328,6 @@ async def submit_workflow(
             f"TRACEBACK:\n{exception_args_string}"
         )
         fail_job(db=db_sync, job=job, log_msg=log_msg, logger_name=logger_name)
-        return
 
     except JobExecutionError as e:
 
@@ -360,7 +359,6 @@ async def submit_workflow(
             ),
             logger_name=logger_name,
         )
-        return
 
     except Exception:
 
@@ -393,7 +391,6 @@ async def submit_workflow(
             ),
             logger_name=logger_name,
         )
-        return
 
     finally:
         reset_logger_handlers(logger)

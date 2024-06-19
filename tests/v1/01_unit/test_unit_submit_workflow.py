@@ -139,9 +139,7 @@ async def test_fail_submit_workflows_at_same_time(
         if settings.FRACTAL_RUNNER_BACKEND != "local_experimental":
             assert "already exists" in job.log
         else:
-            assert job.log == (
-                "local_experimental runner is not available for v1 jobs."
-            )
+            assert "is not available for v1 jobs" in job.log
 
 
 async def test_fail_submit_workflows_wrong_IDs(
@@ -193,9 +191,7 @@ async def test_fail_submit_workflows_wrong_IDs(
         if settings.FRACTAL_RUNNER_BACKEND != "local_experimental":
             assert job.log == "Cannot fetch workflow 1234 from database\n"
         else:
-            assert job.log == (
-                "local_experimental runner is not available for v1 jobs."
-            )
+            assert "is not available for v1 jobs" in job.log
 
         await submit_workflow(
             workflow_id=workflow.id,
@@ -212,9 +208,7 @@ async def test_fail_submit_workflows_wrong_IDs(
                 "Cannot fetch output_dataset 2222 from database\n"
             )
         else:
-            assert job.log == (
-                "local_experimental runner is not available for v1 jobs."
-            )
+            assert "is not available for v1 jobs" in job.log
 
 
 @pytest.mark.parametrize("invalid_backend", ("local_experimental", "foo"))
@@ -259,8 +253,6 @@ async def test_fail_submit_workflows_wrong_backend(
         )
         await db.refresh(job)
         if invalid_backend == "local_experimental":
-            assert job.log == (
-                "local_experimental runner is not available for v1 jobs."
-            )
+            assert "is not available for v1 jobs" in job.log
         else:
             assert "Invalid FRACTAL_RUNNER_BACKEND" in job.log

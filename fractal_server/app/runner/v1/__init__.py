@@ -356,7 +356,6 @@ async def submit_workflow(
             f"TRACEBACK:\n{exception_args_string}"
         )
         fail_job(db=db_sync, job=job, log_msg=log_msg, logger_name=logger_name)
-        return
 
     except JobExecutionError as e:
 
@@ -383,7 +382,6 @@ async def submit_workflow(
             log_msg=f"JOB ERROR in Fractal job {job.id}:\nTRACEBACK:\n{error}",
             logger_name=logger_name,
         )
-        return
 
     except Exception:
 
@@ -411,7 +409,7 @@ async def submit_workflow(
             f"TRACEBACK:\n{current_traceback}"
         )
         fail_job(db=db_sync, job=job, log_msg=log_msg, logger_name=logger_name)
-        return
 
     finally:
         db_sync.close()
+        reset_logger_handlers(logger)
