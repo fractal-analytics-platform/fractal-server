@@ -345,14 +345,12 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
             if value is not None:
                 # Handle the `time` parameter
                 if key == "time" and self.parallel_tasks_per_job > 1:
+                    # FIXME: this must be handled in some better way
                     logger.warning(
-                        "Ignore `#SBATCH --time=...` line (given: "
-                        f"{self.time=}) for parallel_tasks_per_job>1"
-                        f" (given: {self.parallel_tasks_per_job}), "
-                        "since scaling of time with number of tasks is "
-                        "not implemented."
+                        f"`time` SLURM parameter is set to {self.time}, "
+                        "but this does not take into accoutn the number of "
+                        f"SLURM tasks ({self.parallel_tasks_per_job})."
                     )
-                    continue
                 option = key.replace("_", "-")
                 lines.append(f"{self.prefix} --{option}={value}")
 
