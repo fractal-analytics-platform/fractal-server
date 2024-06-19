@@ -53,6 +53,19 @@ _backends["local"] = local_process_workflow
 _backends["slurm"] = slurm_process_workflow
 
 
+def fail_job(*, db, job: ApplyWorkflow, log: str, logger_name: str) -> None:
+    logger = set_logger(logger_name=logger_name)
+    logger.error(log)
+    job.status = JobStatusTypeV1.FAILED
+    job.end_timestamp = get_timestamp()
+    job.log = log
+    db.merge(job)
+    db.commit()
+    db.close()
+    close_job_logger(logger)
+    return
+
+
 async def submit_workflow(
     *,
     workflow_id: int,
@@ -110,19 +123,11 @@ async def submit_workflow(
         else:
 
             if FRACTAL_RUNNER_BACKEND == "local_experimental":
-                message = (
-                    "local_experimental runner is not available for v1 jobs."
-                )
+                log = "local_experimental runner is not available for v1 jobs."
             else:
-                message = f"Invalid {FRACTAL_RUNNER_BACKEND=}"
+                log = f"Invalid {FRACTAL_RUNNER_BACKEND=}"
 
-            logger.error(message)
-            job.status = JobStatusTypeV1.FAILED
-            job.end_timestamp = get_timestamp()
-            job.log = message
-            db_sync.merge(job)
-            db_sync.commit()
-            db_sync.close()
+            fail_job(job=job, db=db_sync, log=log, logger_name=logger_name)
             return
 
         # Declare runner backend and set `process_workflow` function
@@ -146,12 +151,7 @@ async def submit_workflow(
                 log_msg += (
                     f"Cannot fetch workflow {workflow_id} from database\n"
                 )
-            job.status = JobStatusTypeV1.FAILED
-            job.end_timestamp = get_timestamp()
-            job.log = log_msg
-            db_sync.merge(job)
-            db_sync.commit()
-            db_sync.close()
+            fail_job(db=db_sync, job=job, log=log_msg, logger_name=logger_name)
             return
 
         # Prepare some of process_workflow arguments
@@ -167,12 +167,12 @@ async def submit_workflow(
         )
 
         if WORKFLOW_DIR_LOCAL.exists():
-            job.status = JobStatusTypeV1.FAILED
-            job.end_timestamp = get_timestamp()
-            job.log = f"Workflow dir {WORKFLOW_DIR_LOCAL} already exists."
-            db_sync.merge(job)
-            db_sync.commit()
-            db_sync.close()
+            fail_job(
+                db=db_sync,
+                job=job,
+                log=f"Workflow dir {WORKFLOW_DIR_LOCAL} already exists.",
+                logger_name=logger_name,
+            )
             return
 
         # Create WORKFLOW_DIR
@@ -325,19 +325,15 @@ async def submit_workflow(
 
         db_sync.merge(output_dataset)
 
-        job.status = JobStatusTypeV1.FAILED
-        job.end_timestamp = get_timestamp()
-
         exception_args_string = "\n".join(e.args)
-        job.log = (
+        log_msg = (
             f"TASK ERROR: "
             f"Task name: {e.task_name}, "
             f"position in Workflow: {e.workflow_task_order}\n"
             f"TRACEBACK:\n{exception_args_string}"
         )
-        db_sync.merge(job)
-        close_job_logger(logger)
-        db_sync.commit()
+        fail_job(db=db_sync, job=job, log=log_msg, logger_name=logger_name)
+        return
 
     except JobExecutionError as e:
 
@@ -357,14 +353,14 @@ async def submit_workflow(
         )
 
         db_sync.merge(output_dataset)
-
-        job.status = JobStatusTypeV1.FAILED
-        job.end_timestamp = get_timestamp()
         error = e.assemble_error()
-        job.log = f"JOB ERROR in Fractal job {job.id}:\nTRACEBACK:\n{error}"
-        db_sync.merge(job)
-        close_job_logger(logger)
-        db_sync.commit()
+        fail_job(
+            db=db_sync,
+            job=job,
+            log=f"JOB ERROR in Fractal job {job.id}:\nTRACEBACK:\n{error}",
+            logger_name=logger_name,
+        )
+        return
 
     except Exception:
 
@@ -387,14 +383,12 @@ async def submit_workflow(
 
         db_sync.merge(output_dataset)
 
-        job.status = JobStatusTypeV1.FAILED
-        job.end_timestamp = get_timestamp()
-        job.log = (
+        log_msg = (
             f"UNKNOWN ERROR in Fractal job {job.id}\n"
             f"TRACEBACK:\n{current_traceback}"
         )
-        db_sync.merge(job)
-        close_job_logger(logger)
-        db_sync.commit()
+        fail_job(db=db_sync, job=job, log=log_msg, logger_name=logger_name)
+        return
+
     finally:
         db_sync.close()
