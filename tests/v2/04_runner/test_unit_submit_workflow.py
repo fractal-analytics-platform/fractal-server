@@ -24,32 +24,27 @@ async def test_fail_submit_workflows_wrong_IDs(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
         dataset = await dataset_factory_v2(project_id=project.id)
+
+        await submit_workflow(
+            workflow_id=workflow.id,
+            dataset_id=dataset.id,
+            job_id=9999999,
+        )
+
         job = await job_factory_v2(
             project_id=project.id,
             dataset_id=dataset.id,
             workflow_id=workflow.id,
             working_dir=tmp_path.as_posix(),
         )
-
-        # Submitting invalid IDs won't raise an error (but job fails)
-        await submit_workflow(
-            workflow_id=workflow.id,
-            dataset_id=dataset.id,
-            job_id=9999999,
-        )
+        assert job.status == JobStatusTypeV2.SUBMITTED
         await submit_workflow(
             workflow_id=9999999,
-            dataset_id=dataset.id,
-            job_id=job.id,
-        )
-        await submit_workflow(
-            workflow_id=workflow.id,
             dataset_id=9999999,
             job_id=job.id,
         )
-
         await db.refresh(job)
-        job.status = JobStatusTypeV2.FAILED
+        assert job.status == JobStatusTypeV2.FAILED
 
 
 async def test_fail_submit_workflows_wrong_backend(
