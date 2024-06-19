@@ -220,12 +220,13 @@ async def submit_workflow(
                 else:
                     logging.info("Skip remote-subfolder creation")
         except Exception as e:
+            error_type = type(e).__name
             fail_job(
                 db=db_sync,
                 job=job,
                 log_msg=(
-                    "An error occurred while creating job folder and "
-                    f"subfolders.\nOriginal error: {str(e)}"
+                    f"{error_type} error occurred while creating job folder "
+                    f"and subfolders.\nOriginal error: {str(e)}"
                 ),
                 logger_name=logger_name,
                 emit_log=True,
