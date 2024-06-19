@@ -522,7 +522,7 @@ class Settings(BaseSettings):
                     f"Must set FRACTAL_SLURM_SSH_WORKING_BASE_DIR when {info}"
                 )
 
-            from fractal_server.app.runner.executors.slurm_ssh._slurm_config import (  # noqa: E501
+            from fractal_server.app.runner.executors._slurm_config import (  # noqa: E501
                 load_slurm_config_file,
             )
 

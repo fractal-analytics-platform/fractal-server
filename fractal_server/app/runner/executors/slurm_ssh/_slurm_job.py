@@ -3,7 +3,7 @@ from typing import Optional
 
 from cfut.util import random_string
 
-from fractal_server.app.runner.executors.slurm_ssh._slurm_config import (
+from fractal_server.app.runner.executors._slurm_config import (
     SlurmConfig,
 )
 
