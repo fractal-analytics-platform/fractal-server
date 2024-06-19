@@ -33,7 +33,7 @@ from ...models.v1 import WorkflowTask
 from ...schemas.v1 import JobStatusTypeV1
 from ..exceptions import JobExecutionError
 from ..exceptions import TaskExecutionError
-from ..executors.slurm_sudo._subprocess_run_as_user import (
+from ..executors.slurm.sudo._subprocess_run_as_user import (
     _mkdir_as_user,
 )
 from ..filenames import WORKFLOW_LOG_FILENAME

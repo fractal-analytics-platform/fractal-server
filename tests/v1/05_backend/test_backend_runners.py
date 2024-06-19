@@ -23,7 +23,7 @@ from fractal_server.app.models.v1 import Workflow
 from fractal_server.app.routes.api.v1._aux_functions import (
     _workflow_insert_task,
 )
-from fractal_server.app.runner.executors.slurm_sudo._subprocess_run_as_user import (  # noqa: E501
+from fractal_server.app.runner.executors.slurm.sudo._subprocess_run_as_user import (  # noqa: E501
     _mkdir_as_user,
 )
 from fractal_server.app.runner.v1 import _backends
