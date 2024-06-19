@@ -68,7 +68,7 @@ if __name__ == "__main__":
         shutil.copytree(subfolder_path, subfolder_path_tmp_copy)
 
         cmd_tar = (
-            "tar czfvvv "
+            "tar czf "
             f"{tarfile_path} "
             "--exclude *sbatch --exclude *.args.json --exclude *_in_*.pickle "
             f"--directory={subfolder_path_tmp_copy.as_posix()} "
