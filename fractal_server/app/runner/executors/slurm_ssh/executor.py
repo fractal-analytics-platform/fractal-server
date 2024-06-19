@@ -1051,6 +1051,8 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                 f"{num_missing} output pickle files are missing; "
                 f"sleep {sleep_time} seconds."
             )
+            for missing_file in missing_out_paths:
+                logger.debug(f"Missing output pickle file: {missing_file}")
             time.sleep(sleep_time)
 
         # Handle all jobs
