@@ -24,7 +24,6 @@ from .app.runner.shutdown import cleanup_after_shutdown
 from .app.security import _create_first_user
 from .config import get_settings
 from .logger import config_uvicorn_loggers
-from .logger import get_logger
 from .logger import reset_logger_handlers
 from .logger import set_logger
 from .syringe import Inject
@@ -86,7 +85,7 @@ def check_settings() -> None:
 async def lifespan(app: FastAPI):
     app.state.jobsV1 = []
     app.state.jobsV2 = []
-    logger = set_logger("fractal_server.lifespan")
+    logger = set_logger("fractal_server.lifespan.pre")
     logger.info("Start application startup")
     check_settings()
     settings = Inject(get_settings)
@@ -101,7 +100,7 @@ async def lifespan(app: FastAPI):
     logger.info("End application startup")
     reset_logger_handlers(logger)
     yield
-    logger = get_logger("fractal_server.lifespan")
+    logger = set_logger("fractal_server.lifespan.post")
     logger.info("Start application shutdown")
     logger.info(
         f"Current worker with pid {os.getpid()} is shutting down. "
