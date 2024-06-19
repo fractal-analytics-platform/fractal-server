@@ -140,7 +140,9 @@ async def submit_workflow(
                 log_msg += (
                     f"Cannot fetch workflow {workflow_id} from database\n"
                 )
-            fail_job(db=db_sync, job=job, log_msg=log_msg)
+            fail_job(
+                db=db_sync, job=job, log_msg=log_msg, logger_name=logger_name
+            )
             return
 
         # Define and create server-side working folder

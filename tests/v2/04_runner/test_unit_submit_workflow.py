@@ -2,6 +2,7 @@ from fractal_server.app.routes.api.v2._aux_functions import (
     _workflow_insert_task,
 )
 from fractal_server.app.runner.v2 import submit_workflow
+from fractal_server.app.schemas.v2 import JobStatusTypeV2
 
 
 async def test_fail_submit_workflows_wrong_IDs(
@@ -10,6 +11,8 @@ async def test_fail_submit_workflows_wrong_IDs(
     workflow_factory_v2,
     dataset_factory_v2,
     task_factory_v2,
+    job_factory_v2,
+    tmp_path,
     db,
 ):
     async with MockCurrentUser() as user:
@@ -21,13 +24,32 @@ async def test_fail_submit_workflows_wrong_IDs(
             workflow_id=workflow.id, task_id=task.id, db=db
         )
         dataset = await dataset_factory_v2(project_id=project.id)
+        job = await job_factory_v2(
+            project_id=project.id,
+            dataset_id=dataset.id,
+            workflow_id=workflow.id,
+            working_dir=tmp_path.as_posix(),
+        )
 
-        # Submitting an invalid job ID won't fail but will log an error
+        # Submitting invalid IDs won't raise an error (but job fails)
         await submit_workflow(
             workflow_id=workflow.id,
             dataset_id=dataset.id,
             job_id=9999999,
         )
+        await submit_workflow(
+            workflow_id=9999999,
+            dataset_id=dataset.id,
+            job_id=job.id,
+        )
+        await submit_workflow(
+            workflow_id=workflow.id,
+            dataset_id=9999999,
+            job_id=job.id,
+        )
+
+        await db.refresh(job)
+        job.status = JobStatusTypeV2.FAILED
 
 
 async def test_fail_submit_workflows_wrong_backend(
