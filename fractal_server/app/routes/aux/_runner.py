@@ -21,7 +21,7 @@ def _check_shutdown_is_supported():
     settings = Inject(get_settings)
     backend = settings.FRACTAL_RUNNER_BACKEND
 
-    if _backend_supports_shutdown(backend):
+    if not _backend_supports_shutdown(backend):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
