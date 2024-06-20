@@ -2,6 +2,7 @@ import io
 
 from common_functions import workflow_with_non_python_task
 
+from fractal_server.main import _get_ssh_connection
 from tests.fixtures_slurm import SLURM_USER
 
 
@@ -10,6 +11,7 @@ FRACTAL_RUNNER_BACKEND = "slurm_ssh"
 
 async def test_xxx(
     client,
+    app,
     MockCurrentUser,
     testdata_path,
     tmp777_path,
@@ -34,6 +36,8 @@ async def test_xxx(
         ).as_posix(),
         FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
     )
+
+    app.state.connection = _get_ssh_connection()
 
     monkeypatch.setattr("sys.stdin", io.StringIO(""))
 
