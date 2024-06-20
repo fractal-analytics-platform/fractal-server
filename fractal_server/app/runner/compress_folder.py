@@ -75,7 +75,7 @@ if __name__ == "__main__":
         cmd_tar = (
             "tar czf "
             f"{tarfile_path} "
-            "--exclude *sbatch --exclude --exclude *_in_*.pickle "
+            "--exclude *sbatch --exclude *_in_*.pickle "
             f"--directory={subfolder_path_tmp_copy.as_posix()} "
             "."
         )
