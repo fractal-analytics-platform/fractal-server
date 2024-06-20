@@ -29,7 +29,6 @@ from ...models.v2 import WorkflowV2
 from ...schemas.v2 import JobStatusTypeV2
 from ..exceptions import JobExecutionError
 from ..exceptions import TaskExecutionError
-from ..executors.slurm.ssh._run_through_ssh import _mkdir_over_ssh
 from ..executors.slurm.sudo._subprocess_run_as_user import _mkdir_as_user
 from ..filenames import WORKFLOW_LOG_FILENAME
 from ..task_files import task_subfolder_name
@@ -190,6 +189,8 @@ async def submit_workflow(
                     / WORKFLOW_DIR_LOCAL.name
                 )
                 # FIXME: move this mkdir to executor, likely within handshake
+                from ....ssh._fabric import _mkdir_over_ssh
+
                 _mkdir_over_ssh(folder=str(WORKFLOW_DIR_REMOTE))
                 logging.info(f"Created {str(WORKFLOW_DIR_REMOTE)} via SSH.")
             else:

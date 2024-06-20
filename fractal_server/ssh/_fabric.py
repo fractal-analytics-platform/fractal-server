@@ -1,22 +1,46 @@
 import time
+from typing import Optional
 
-from fabric.connection import Connection
+from fabric import Connection
 from invoke import UnexpectedExit
 from paramiko.ssh_exception import NoValidConnectionsError
 
-from ......logger import set_logger
-from ......syringe import Inject
+from ..logger import set_logger
 from fractal_server.config import get_settings
-
-# from ....exceptions import JobExecutionError
-
+from fractal_server.syringe import Inject
 
 logger = set_logger(__name__)
 
 MAX_ATTEMPTS = 5
 
 
-def _run_command_over_ssh(
+def get_ssh_connection(
+    *,
+    host: Optional[str] = None,
+    user: Optional[str] = None,
+    key_filename: Optional[str] = None,
+) -> Connection:
+    """
+    Create a fabric Connection object based on settings or explicit arguments.
+    """
+    settings = Inject(get_settings)
+    if host is None:
+        host = settings.FRACTAL_SLURM_SSH_HOST
+    if user is None:
+        user = settings.FRACTAL_SLURM_SSH_USER
+    if key_filename is None:
+        key_filename = settings.FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH
+
+    connection = Connection(
+        host=host,
+        user=user,
+        connect_kwargs={"key_filename": key_filename},
+    )
+    logger.debug(f"Now created {connection=}.")
+    return connection
+
+
+def run_command_over_ssh(
     *,
     cmd: str,
     connection: Connection,
@@ -81,7 +105,6 @@ def _run_command_over_ssh(
     raise ValueError(
         f"Reached last attempt ({max_attempts=}) for running '{cmd}'"
     )
-    # raise JobExecutionError(info=error_msg)
 
 
 def _mkdir_over_ssh(*, folder: str, parents: bool = True) -> None:
@@ -109,4 +132,4 @@ def _mkdir_over_ssh(*, folder: str, parents: bool = True) -> None:
         },
         connect_timeout=timeout,
     ) as connection:
-        _run_command_over_ssh(cmd=cmd, connection=connection)
+        run_command_over_ssh(cmd=cmd, connection=connection)

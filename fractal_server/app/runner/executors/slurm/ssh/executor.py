@@ -32,6 +32,7 @@ from paramiko.ssh_exception import NoValidConnectionsError
 
 from ......config import get_settings
 from ......logger import set_logger
+from ......ssh._fabric import run_command_over_ssh
 from ......syringe import Inject
 from ....exceptions import JobExecutionError
 from ....exceptions import TaskExecutionError
@@ -43,7 +44,6 @@ from ...slurm._slurm_config import get_default_slurm_config
 from ...slurm._slurm_config import SlurmConfig
 from .._batching import heuristics
 from ._executor_wait_thread import FractalSlurmWaitThread
-from ._run_through_ssh import _run_command_over_ssh
 from fractal_server.app.runner.components import _COMPONENT_KEY_
 from fractal_server.app.runner.executors.slurm.ssh._slurm_job import SlurmJob
 
@@ -853,7 +853,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             "fractal_server.app.runner.extract_archive "
             f"{tarfile_path_remote}"
         )
-        _run_command_over_ssh(cmd=tar_command, connection=self.connection)
+        run_command_over_ssh(cmd=tar_command, connection=self.connection)
 
         # Remove local version
         t_0_rm = time.perf_counter()
@@ -875,7 +875,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         # Submit job to SLURM, and get jobid
         sbatch_command = f"sbatch --parsable {job.slurm_script_remote}"
-        sbatch_stdout = _run_command_over_ssh(
+        sbatch_stdout = run_command_over_ssh(
             cmd=sbatch_command,
             connection=self.connection,
         )
@@ -1227,7 +1227,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             "-m fractal_server.app.runner.compress_folder "
             f"{(self.workflow_dir_remote / subfolder_name).as_posix()}"
         )
-        stdout = _run_command_over_ssh(
+        stdout = run_command_over_ssh(
             cmd=tar_command, connection=self.connection
         )
         print(stdout)
@@ -1354,7 +1354,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             scancel_string = " ".join(slurm_jobs_to_scancel)
             logger.warning(f"Now scancel-ing SLURM jobs {scancel_string}")
             scancel_command = f"scancel {scancel_string}"
-            _run_command_over_ssh(
+            run_command_over_ssh(
                 cmd=scancel_command, connection=self.connection
             )
         logger.debug("Executor shutdown: end")
@@ -1381,7 +1381,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         )
         job_ids = ",".join([str(j) for j in job_ids])
         squeue_command = squeue_command.replace("__JOBS__", job_ids)
-        stdout = _run_command_over_ssh(
+        stdout = run_command_over_ssh(
             cmd=squeue_command,
             connection=self.connection,
         )
@@ -1462,7 +1462,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         logger.info("[FractalSlurmSSHExecutor.ssh_handshake] START")
         cmd = f"{self.python_remote} -m fractal_server.app.runner.versions"
-        stdout = _run_command_over_ssh(cmd=cmd, connection=self.connection)
+        stdout = run_command_over_ssh(cmd=cmd, connection=self.connection)
         remote_versions = json.loads(stdout.strip("\n"))
 
         # FIXME: check existence of folders
