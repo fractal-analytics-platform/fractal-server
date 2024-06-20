@@ -142,6 +142,12 @@ jobs:
         with:
           key: docker-${{ runner.os }}-${{ hashFiles('tests/data/slurm_docker_images/docker-compose.yml') }}
 
+      - name: Pull slurm-master Docker image
+        run: docker pull rancavil/slurm-master:19.05.5-1
+
+      - name: Pull slurm-node Docker image
+        run: docker pull rancavil/slurm-node:19.05.5-1
+
       - name: Test with pytest
         run: poetry run coverage run --concurrency=thread,greenlet,multiprocessing -m pytest tests/v2 tests/no_version --ignore tests/v1
 
