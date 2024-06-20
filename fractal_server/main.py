@@ -83,6 +83,22 @@ def check_settings() -> None:
     reset_logger_handlers(logger)
 
 
+def _get_ssh_connection():
+    # FIXME: Move into dedicated module, in the right subfolder
+    from fabric import Connection
+
+    check_settings()
+    settings = Inject(get_settings)
+    connection = Connection(
+        host=settings.FRACTAL_SLURM_SSH_HOST,
+        user=settings.FRACTAL_SLURM_SSH_USER,
+        connect_kwargs={
+            "key_filename": settings.FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH
+        },
+    )
+    return connection
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.jobsV1 = []
@@ -100,15 +116,8 @@ async def lifespan(app: FastAPI):
     )
 
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-        from fabric import Connection
 
-        app.state.connection = Connection(
-            host=settings.FRACTAL_SLURM_SSH_HOST,
-            user=settings.FRACTAL_SLURM_SSH_USER,
-            connect_kwargs={
-                "key_filename": settings.FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH
-            },
-        )
+        app.state.connection = _get_ssh_connection()
         logger.info(
             f"Created SSH connection "
             f"({app.state.connection.is_connected=})."
