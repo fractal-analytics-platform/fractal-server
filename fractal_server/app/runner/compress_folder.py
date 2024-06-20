@@ -8,7 +8,7 @@ from typing import Optional
 
 
 # COMPRESS_FOLDER_MODALITY = "python"
-COMPRESS_FOLDER_MODALITY = "tar"
+COMPRESS_FOLDER_MODALITY = "cp-tar-rmtree"
 
 
 def _filter(info: tarfile.TarInfo) -> Optional[tarfile.TarInfo]:
@@ -56,7 +56,7 @@ if __name__ == "__main__":
                 recursive=True,
                 filter=_filter,
             )
-    elif COMPRESS_FOLDER_MODALITY == "tar":
+    elif COMPRESS_FOLDER_MODALITY == "cp-tar-rmtree":
         import shutil
         import time
 
@@ -65,12 +65,20 @@ if __name__ == "__main__":
         )
 
         t0 = time.perf_counter()
-        shutil.copytree(subfolder_path, subfolder_path_tmp_copy)
-        t1 = time.perf_counter()
-        print(
-            "[compress_folder.py] shutil.copytree END - "
-            f"elapsed: {t1-t0:.3f} s"
+        # shutil.copytree(subfolder_path, subfolder_path_tmp_copy)
+        cmd_cp = (
+            "cp -r "
+            f"{subfolder_path.as_posix()} "
+            f"{subfolder_path_tmp_copy.as_posix()}"
         )
+        res = subprocess.run(  # nosec
+            shlex.split(cmd_cp),
+            check=True,
+            capture_output=True,
+            encoding="utf-8",
+        )
+        t1 = time.perf_counter()
+        print("[compress_folder.py] `cp -r` END - " f"elapsed: {t1-t0:.3f} s")
 
         cmd_tar = (
             "tar czf "
