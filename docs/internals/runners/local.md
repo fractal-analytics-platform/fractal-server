@@ -1,12 +1,12 @@
 # Local backend
 
-(refer to the [local](../../../reference/fractal_server/app/runner/_local) module for more details)
+(refer to the [local](../../../reference/fractal_server/app/runner/executors/local) module for more details)
 
 ## Configuration
 
 The logic for setting up the local-backend configuration of a given `WorkflowTask` is
 implemented in the
-[local.\_local_config](../../../reference/fractal_server/app/runner/_local/_local_config)
+[local.\_local_config](../../../reference/fractal_server/app/runner/executors/local/_local_config)
 submodule.
 
 For the moment, this configuration includes a single (optional) parameter,
@@ -28,7 +28,7 @@ The different sources for `parallel_tasks_per_job` are:
    `WorkflowTask.task.meta`;
 3. Next priority goes to the configuration in `FRACTAL_LOCAL_CONFIG_FILE`, a
    JSON file that may contain a definition of a
-   [`LocalBackendConfig`](../../../reference/fractal_server/app/runner/_local/_local_config/#fractal_server.app.runner._local._local_config.LocalBackendConfig)
+   [`LocalBackendConfig`](../../../reference/fractal_server/app/runner/executors/local/_local_config/#fractal_server.app.runner.executors.local._local_config.LocalBackendConfig)
    object like
 ```JSON
 {
