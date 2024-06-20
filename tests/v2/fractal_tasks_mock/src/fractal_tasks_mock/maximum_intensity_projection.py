@@ -1,3 +1,4 @@
+import logging
 import shutil
 
 from fractal_tasks_mock.input_models import InitArgsMIP
@@ -23,10 +24,10 @@ def maximum_intensity_projection(
 
     shutil.copytree(zarr_url, new_zarr_url)
 
-    print("[maximum_intensity_projection] START")
-    print(f"[maximum_intensity_projection] {zarr_url=}")
-    print(f"[maximum_intensity_projection] {new_zarr_url=}")
-    print("[maximum_intensity_projection] END")
+    logging.info("[maximum_intensity_projection] START")
+    logging.info(f"[maximum_intensity_projection] {zarr_url=}")
+    logging.info(f"[maximum_intensity_projection] {new_zarr_url=}")
+    logging.info("[maximum_intensity_projection] END")
 
     out = dict(
         image_list_updates=[

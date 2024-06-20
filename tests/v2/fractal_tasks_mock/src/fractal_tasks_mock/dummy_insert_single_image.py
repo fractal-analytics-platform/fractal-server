@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import Any
 from typing import Optional
@@ -27,7 +28,7 @@ def dummy_insert_single_image(
         trailing_slash: If `True`, add 10 trailing slashes to zarr_urls
         full_new_image: If set, it takes priority
     """
-    print("[dummy_insert_single_image] START")
+    logging.info("[dummy_insert_single_image] START")
     if fail:
         new_zarr_url = "/invalid/my-new-image"
     elif fail_2:
@@ -36,7 +37,7 @@ def dummy_insert_single_image(
         new_zarr_url = Path(zarr_dir, "my-new-image").as_posix()
     if trailing_slash:
         new_zarr_url += "//////////"
-    print(f"[dummy_insert_single_image] {new_zarr_url=}")
+    logging.info(f"[dummy_insert_single_image] {new_zarr_url=}")
     new_image = dict(zarr_url=new_zarr_url)
     if attributes is not None:
         new_image["attributes"] = attributes
@@ -47,7 +48,7 @@ def dummy_insert_single_image(
     out = dict(image_list_updates=[new_image])
     if types is not None:
         out["filters"] = dict(types=types)
-    print("[dummy_insert_single_image] END")
+    logging.info("[dummy_insert_single_image] END")
     return out
 
 

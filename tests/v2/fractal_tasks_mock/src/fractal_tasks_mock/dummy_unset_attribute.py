@@ -1,3 +1,5 @@
+import logging
+
 from pydantic.decorator import validate_arguments
 
 
@@ -16,7 +18,7 @@ def dummy_unset_attribute(
         zarr_dir: description
         attribute: The attribute that should be unset for all input images.
     """
-    print("[dummy_unset_images] START")
+    logging.info("[dummy_unset_images] START")
     out = dict(
         image_list_updates=[
             {
@@ -26,7 +28,7 @@ def dummy_unset_attribute(
             for zarr_url in zarr_urls
         ]
     )
-    print("[dummy_unset_images] END")
+    logging.info("[dummy_unset_images] END")
     return out
 
 

@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import Optional
 
@@ -19,12 +20,12 @@ def apply_registration_to_image(
     """
 
     prefix = "[apply_registration_to_image]"
-    print(f"{prefix} START")
-    print(f"{prefix} {zarr_url=}")
-    print(f"{prefix} {overwrite_input=}")
+    logging.info(f"{prefix} START")
+    logging.info(f"{prefix} {zarr_url=}")
+    logging.info(f"{prefix} {overwrite_input=}")
 
     table_path = Path(zarr_url) / "registration_table_final"
-    print(f" Reading information from {table_path.as_posix()}")
+    logging.info(f" Reading information from {table_path.as_posix()}")
     with table_path.open("r") as f:
         f.read()
 
@@ -35,15 +36,15 @@ def apply_registration_to_image(
             f.write("Applying registration\n")
     else:
         new_zarr_url = f"{zarr_url}_r"
-        print(f"{prefix} {new_zarr_url=}")
+        logging.info(f"{prefix} {new_zarr_url=}")
         out = dict(
             image_list_updates=[dict(zarr_url=new_zarr_url, origin=zarr_url)]
         )
         Path(new_zarr_url).mkdir()
         with (Path(new_zarr_url) / "data").open("a") as f:
             f.write("Applying registration\n")
-    print(f"{prefix} {out=}")
-    print(f"{prefix} END")
+    logging.info(f"{prefix} {out=}")
+    logging.info(f"{prefix} END")
     return out
 
 
