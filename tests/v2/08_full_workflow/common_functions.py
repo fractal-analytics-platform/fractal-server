@@ -603,7 +603,8 @@ async def workflow_with_non_python_task(
         ]
 
         for f in must_exist:
-            assert f in glob_list
+            if f not in glob_list:
+                raise ValueError(f"{f} must exist, but {glob_list=}")
 
         # Check that stderr and stdout are as expected
         with open(f"{working_dir}/0_non-python/0.log", "r") as f:
