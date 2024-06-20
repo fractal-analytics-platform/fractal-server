@@ -39,7 +39,7 @@ from ....task_files import get_task_file_paths
 from ....task_files import TaskFiles
 from ...slurm._slurm_config import get_default_slurm_config
 from ...slurm._slurm_config import SlurmConfig
-from ._batching import heuristics
+from .._batching import heuristics
 from ._executor_wait_thread import FractalSlurmWaitThread
 from ._subprocess_run_as_user import _glob_as_user
 from ._subprocess_run_as_user import _glob_as_user_strict
