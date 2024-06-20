@@ -68,9 +68,9 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             Dictionary with paths of slurm-related files for active jobs
     """
 
-    ssh_host: str
-    ssh_user: str
-    ssh_private_key_path: str
+    # ssh_host: str
+    # ssh_user: str
+    # ssh_private_key_path: str
 
     connection: Connection
 
@@ -92,9 +92,9 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         self,
         *,
         # SSH configuration
-        ssh_host: str,
-        ssh_user: str,
-        ssh_private_key_path: str,
+        # ssh_host: str,
+        # ssh_user: str,
+        # ssh_private_key_path: str,
         connection: Connection,
         # Folders and files
         workflow_dir_local: Path,
@@ -157,9 +157,9 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
 
         # Set SSH variables and perform handshake with remote (note: this
         # needs `self.python_remote`)
-        self.ssh_host = ssh_host
-        self.ssh_user = ssh_user
-        self.ssh_private_key_path = ssh_private_key_path
+        # self.ssh_host = ssh_host
+        # self.ssh_user = ssh_user
+        # self.ssh_private_key_path = ssh_private_key_path
 
         # Initialize connection
         self.connection = connection
