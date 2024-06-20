@@ -59,13 +59,20 @@ if __name__ == "__main__":
                 filter=_filter,
             )
     elif COMPRESS_FOLDER_MODALITY == "tar":
-
         import shutil
+        import time
 
         subfolder_path_tmp_copy = (
             subfolder_path.parent / f"{subfolder_path.name}_copy"
         )
+
+        t0 = time.perf_counter()
         shutil.copytree(subfolder_path, subfolder_path_tmp_copy)
+        t1 = time.perf_counter()
+        print(
+            "[compress_folder.py] shutil.copytree END - "
+            f"elapsed: {t1-t0:.3f} s"
+        )
 
         cmd_tar = (
             "tar czf "
@@ -76,21 +83,32 @@ if __name__ == "__main__":
         )
 
         print(f"[compress_folder.py] cmd tar:\n{cmd_tar}")
+        t0 = time.perf_counter()
         res = subprocess.run(  # nosec
             shlex.split(cmd_tar),
             capture_output=True,
             encoding="utf-8",
         )
-        print(f"[compress_folder.py] tar stdout:\n{res.stdout}")
-        print(f"[compress_folder.py] tar stderr:\n{res.stderr}")
+        t1 = time.perf_counter()
+        t_1 = time.perf_counter()
+        print(f"[compress_folder.py] tar END - elapsed: {t1-t0:.3f} s")
+
+        print(f"[compress_folder] END - elapsed {t_1 - t_0:.3f} seconds")
+
         if res.returncode != 0:
             print("[compress_folder.py] ERROR in tar")
-            t_1 = time.perf_counter()
-            print(f"[compress_folder] END - elapsed {t_1 - t_0:.3f} seconds")
+            print(f"[compress_folder.py] tar stdout:\n{res.stdout}")
+            print(f"[compress_folder.py] tar stderr:\n{res.stderr}")
+
             shutil.rmtree(subfolder_path_tmp_copy)
             sys.exit(1)
 
+        t0 = time.perf_counter()
         shutil.rmtree(subfolder_path_tmp_copy)
+        t1 = time.perf_counter()
+        print(
+            f"[compress_folder.py] shutil.rmtree END - elapsed: {t1-t0:.3f} s"
+        )
 
     t_1 = time.perf_counter()
     print(f"[compress_folder] END - elapsed {t_1 - t_0:.3f} seconds")
