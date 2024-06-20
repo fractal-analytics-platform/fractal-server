@@ -140,7 +140,7 @@ jobs:
       - name: Docker Cache
         uses: ScribeMD/docker-cache@0.5.0
         with:
-          key: docker-${{ runner.os }}-${{ hashFiles('tests/data/slurm_docker_images/docker-compose.yml') }}
+          key: docker-${{ runner.os }}-${{ hashFiles('tests/data/slurm_docker_images/base_images.txt') }}
 
       - name: Pull slurm-master Docker image
         run: docker pull rancavil/slurm-master:19.05.5-1

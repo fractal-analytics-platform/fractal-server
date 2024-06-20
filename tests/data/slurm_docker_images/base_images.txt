@@ -1,0 +1,2 @@
+rancavil/slurm-master:19.05.5-1
+rancavil/slurm-node:19.05.5-1
