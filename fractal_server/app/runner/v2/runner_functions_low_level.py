@@ -34,17 +34,15 @@ def _call_command_wrapper(cmd: str, log_path: Path) -> None:
         )
         raise TaskExecutionError(msg)
 
-    fp_log = open(log_path, "w")
-    try:
-        result = subprocess.run(  # nosec
-            shlex_split(cmd),
-            stderr=fp_log,
-            stdout=fp_log,
-        )
-    except Exception as e:
-        raise e
-    finally:
-        fp_log.close()
+    with open(log_path, "w") as fp_log:
+        try:
+            result = subprocess.run(  # nosec
+                shlex_split(cmd),
+                stderr=fp_log,
+                stdout=fp_log,
+            )
+        except Exception as e:
+            raise e
 
     if result.returncode > 0:
         with log_path.open("r") as fp_stderr:
