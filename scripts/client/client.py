@@ -86,9 +86,16 @@ class FractalClient:
             print(f"Request failed: {e}")
             return None
 
-    def detail(self, res):
-        if res.get("detail"):
-            raise ValueError(f"Attention: {res.get('detail')}")
+    def detail(self, res: httpx.Response):
+        try:
+            res_json = res.json()
+        except JSONDecodeError as e:
+            raise ValueError(
+                f"Error while parsing JSON body of response {res}.\n"
+                f"Original error:\n{str(e)}"
+            )
+        if res_json.get("detail"):
+            raise ValueError(f"WARNING: {res_json.get('detail')}")
 
     def add_user(self, user: UserCreate):
         # Register new user
@@ -97,7 +104,7 @@ class FractalClient:
             method="POST",
             data=user.dict(exclude_none=True),
         )
-        self.detail(res.json())
+        self.detail(res)
         new_user_id = res.json()["id"]
         # Make new user verified
         patch_user = UserUpdate(is_verified=True)
@@ -106,7 +113,7 @@ class FractalClient:
             method="PATCH",
             data=patch_user.dict(exclude_none=True),
         )
-        self.detail(res.json())
+        self.detail(res)
 
         return UserRead(**res.json())
 
@@ -116,7 +123,7 @@ class FractalClient:
             method="POST",
             data=project.dict(),
         )
-        self.detail(res.json())
+        self.detail(res)
         return ProjectReadV2(**res.json())
 
     def add_dataset(self, project_id, dataset: DatasetCreateV2):
@@ -125,7 +132,7 @@ class FractalClient:
             method="POST",
             data=dataset.dict(),
         )
-        self.detail(res.json())
+        self.detail(res)
         return DatasetReadV2(**res.json())
 
     def import_dataset(self, project_id, dataset: DatasetImportV2):
@@ -134,7 +141,7 @@ class FractalClient:
             method="POST",
             data=dataset.dict(),
         )
-        self.detail(res.json())
+        self.detail(res)
         return DatasetReadV2(**res.json())
 
     def add_workflow(self, project_id, workflow: WorkflowCreateV2):
@@ -143,7 +150,7 @@ class FractalClient:
             method="POST",
             data=workflow.dict(),
         )
-        self.detail(res.json())
+        self.detail(res)
 
         return WorkflowReadV2(**res.json())
 
@@ -160,7 +167,7 @@ class FractalClient:
             method="POST",
             data=wftask.dict(exclude_none=True),
         )
-        self.detail(res.json())
+        self.detail(res)
 
         return WorkflowTaskReadV2(**res.json())
 
@@ -176,7 +183,7 @@ class FractalClient:
             method="POST",
             data=task.dict(exclude_none=True),
         )
-        self.detail(res.json())
+        self.detail(res)
         return TaskReadV2(**res.json())
 
     def add_failing_task(self):
@@ -190,7 +197,7 @@ class FractalClient:
             method="POST",
             data=task.dict(exclude_none=True),
         )
-        self.detail(res.json())
+        self.detail(res)
         return TaskReadV2(**res.json())
 
     def add_task(self, task: TaskCreateV2):
@@ -199,7 +206,7 @@ class FractalClient:
             method="POST",
             data=task.dict(exclude_none=True),
         )
-        self.detail(res.json())
+        self.detail(res)
         return TaskReadV2(**res.json())
 
     def whoami(self):
@@ -207,7 +214,7 @@ class FractalClient:
             endpoint="auth/current-user/",
             method="GET",
         )
-        self.detail(res.json())
+        self.detail(res)
         return UserRead(**res.json())
 
     def patch_current_superuser(self, user: UserUpdate):
@@ -217,7 +224,7 @@ class FractalClient:
             method="PATCH",
             data=user.dict(exclude_none=True),
         )
-        self.detail(res.json())
+        self.detail(res)
         return UserRead(**res.json())
 
     def submit_job(
@@ -235,7 +242,7 @@ class FractalClient:
             method="POST",
             data=applyworkflow.dict(exclude_none=True),
         )
-        self.detail(res.json())
+        self.detail(res)
 
         return JobReadV2(**res.json())
 
