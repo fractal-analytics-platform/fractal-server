@@ -92,7 +92,8 @@ class FractalClient:
         except JSONDecodeError as e:
             raise ValueError(
                 f"Error while parsing JSON body of response {res}.\n"
-                f"Original error:\n{str(e)}"
+                f"Original error:\n{str(e)}\n"
+                f"Reponse text\n:{res.text}"
             )
         if res_json.get("detail"):
             raise ValueError(f"WARNING: {res_json.get('detail')}")
