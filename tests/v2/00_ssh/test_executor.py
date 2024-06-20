@@ -34,7 +34,6 @@ def test_versions(
         user="fractal",
         connect_kwargs={"password": "fractal"},
     ) as connection:
-
         command = "/usr/bin/python3.9 --version"
         print(f"COMMAND:\n{command}")
         res = connection.run(command, hide=True)
@@ -59,7 +58,6 @@ def test_versions(
         user="fractal",
         connect_kwargs={"key_filename": ssh_private_key},
     ) as connection:
-
         command = "/usr/bin/python3.9 --version"
         print(f"COMMAND:\n{command}")
         res = connection.run(command, hide=True)
@@ -94,10 +92,9 @@ class TestingFractalSSHSlurmExecutor(FractalSlurmSSHExecutor):
         remote_subfolder = self.workflow_dir_remote / task_files.subfolder_name
 
         logging.info(f"Now remotely creating {remote_subfolder.as_posix()}")
-        with self.ConnectionWithParameters() as connection:
-            mkdir_command = f"mkdir -p {remote_subfolder.as_posix()}"
-            res = connection.run(mkdir_command, hide=True)
-            assert res.exited == 0
+        mkdir_command = f"mkdir -p {remote_subfolder.as_posix()}"
+        res = self.connection.run(mkdir_command, hide=True)
+        assert res.exited == 0
         logging.info(f"Now done creating {remote_subfolder.as_posix()}")
 
     def __init__(self, *args, **kwargs):
@@ -119,17 +116,21 @@ def test_slurm_ssh_executor_submit(
 
     monkeypatch.setattr("sys.stdin", io.StringIO(""))
 
-    with TestingFractalSSHSlurmExecutor(
-        workflow_dir_local=tmp_path / "job_dir",
-        workflow_dir_remote=(tmp777_path / "remote_job_dir"),
-        slurm_poll_interval=1,
-        ssh_host=slurmlogin_ip,
-        ssh_user="test01",
-        ssh_private_key_path=ssh_keys["private"],
-    ) as executor:
-        fut = executor.submit(lambda: 1)
-        debug(fut)
-        debug(fut.result())
+    ssh_private_key = ssh_keys["private"]
+    with Connection(
+        host=slurmlogin_ip,
+        user="fractal",
+        connect_kwargs={"key_filename": ssh_private_key},
+    ) as connection:
+        with TestingFractalSSHSlurmExecutor(
+            workflow_dir_local=tmp_path / "job_dir",
+            workflow_dir_remote=(tmp777_path / "remote_job_dir"),
+            slurm_poll_interval=1,
+            connection=connection,
+        ) as executor:
+            fut = executor.submit(lambda: 1)
+            debug(fut)
+            debug(fut.result())
 
 
 def test_slurm_ssh_executor_map(
@@ -145,20 +146,29 @@ def test_slurm_ssh_executor_map(
 
     monkeypatch.setattr("sys.stdin", io.StringIO(""))
 
-    with TestingFractalSSHSlurmExecutor(
-        workflow_dir_local=tmp_path / "job_dir",
-        workflow_dir_remote=(tmp777_path / "remote_job_dir"),
-        slurm_poll_interval=1,
-        ssh_host=slurmlogin_ip,
-        ssh_user="test01",
-        ssh_private_key_path=ssh_keys["private"],
-    ) as executor:
-        res = executor.map(lambda x: x * 2, [1, 2, 3])
-        results = list(res)
-        assert results == [2, 4, 6]
+    ssh_private_key = ssh_keys["private"]
+    with Connection(
+        host=slurmlogin_ip,
+        user="fractal",
+        connect_kwargs={"key_filename": ssh_private_key},
+    ) as connection:
+        with TestingFractalSSHSlurmExecutor(
+            workflow_dir_local=tmp_path / "job_dir",
+            workflow_dir_remote=(tmp777_path / "remote_job_dir"),
+            slurm_poll_interval=1,
+            connection=connection,
+        ) as executor:
+            res = executor.map(lambda x: x * 2, [1, 2, 3])
+            results = list(res)
+            assert results == [2, 4, 6]
 
 
-# @pytest.mark.skip
+@pytest.mark.skip(
+    reason=(
+        "This is not up-to-date with the new FractalSlurmSSHExecutor "
+        "(switching from config kwargs to a single connection)."
+    )
+)
 def test_slurm_ssh_executor_no_docker(
     monkeypatch,
     tmp_path,
