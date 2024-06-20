@@ -1,31 +1,38 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.2.0
 
-> NOTE: you can enable custom gunicorn worker/logger by adding the following
+This version comes with streamlined options for the Gunicorn startup command
+options, and with two new experimental features.
+
+> NOTE 1: you can now enable custom Gunicorn worker/logger by adding the following
 > options to the `gunicorn` startup command:
 > - `--worker-class fractal_server.gunicorn_fractal.FractalWorker`
 > - `--logger-class fractal_server.gunicorn_fractal.FractalGunicornLogger`
 
 > NOTE 2: A new experimental local runner is available, which uses processes
-> instead of threads. You can try it out with the configuration variable
-> `FRACTAL_BACKEND_RUNNER=local_experimental`
+> instead of threads and support shutdown. You can try it out with the
+> configuration variable `FRACTAL_BACKEND_RUNNER=local_experimental`
+
+> NOTE 3: A new PostgreSQL database adapter is available, fully based on
+> `psycopg3` (rather than `pyscopg2`+`asyncpg`). You can try it out with the
+> configuration variable `DB_ENGINE=postgres-psycopg` (note that this requires
+> the `pip install` extra `postgres-psycopg-binary`).
 
 
 * API:
     * Add extensive logs to `DELETE /api/v2/project/{project_id}` (\#1532).
     * Remove catch of `IntegrityError` in `POST /api/v1/project` (\#1530).
+* App and deployment:
+    * Move `FractalGunicornLogger` and `FractalWorker` into `fractal_server/gunicorn_fractal.py` (\#1535).
+    * Add custom gunicorn/uvicorn worker to handle SIGABRT signal (\#1526).
+    * Store list of submitted jobs in app state (\#1538).
+    * Add logic for graceful shutdown for job slurm executors. (\#1547)
 * Runner:
     * Change structure of job folders, introducing per-task subfolders (\#1523).
     * Rename internal `workflow_dir` and `workflow_dir_user` variables to local/remote (\#1534).
+    * Improve handling of errors in `submit_workflow` background task (\#1556, \#1566).
     * Add new `local_experimental` runner, based on `ProcessPoolExecutor` (\#1544, \#1566).
-    * Handle errors with `_mkdir_as_user` in background tasks (\#1556).
-    * Improve handling of errors in `submit_workflow` (\#1566).
-* App and deployment:
-    * Add logic for graceful shutdown for job slurm executors. (\#1547)
-    * Add custom gunicorn/uvicorn worker to handle SIGABRT signal (\#1526).
-    * Move `FractalGunicornLogger` and `FractalWorker` in `fractal_server/gunicorn_fractal.py` (\#1535).
-    * Store list of submitted jobs in app state (\#1538).
 * Database:
     * Add new Postgres adapter `psycopg` (\#1562).
 * Dependencies
