@@ -62,6 +62,9 @@ jobs:
           fi
           poetry install --with dev --without docs --no-interaction -E gunicorn $DB
 
+      - name: Build tar.gz
+        run: poetry build -o tests/data/slurm_docker_images/node
+
       - name: Docker Cache
         uses: ScribeMD/docker-cache@0.5.0
         with:
