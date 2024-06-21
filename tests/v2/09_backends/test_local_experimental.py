@@ -1,9 +1,13 @@
 import json
 import os
+import re
 import shlex
 import subprocess
+import threading
 import time
+from concurrent.futures.process import _ExecutorManagerThread
 from concurrent.futures.process import BrokenProcessPool
+from concurrent.futures.process import ProcessPoolExecutor
 
 import pytest
 from devtools import debug
@@ -134,13 +138,13 @@ def test_indirect_shutdown_during_map(
     tmp_stdout = open((tmp_path / "stdout").as_posix(), "w")
     tmp_stderr = open((tmp_path / "stderr").as_posix(), "w")
 
-    with pytest.raises(JobExecutionError):
-        subprocess.Popen(
-            shlex.split(f"bash {tmp_script}"),
-            stdout=tmp_stdout,
-            stderr=tmp_stderr,
-        )
+    subprocess.Popen(
+        shlex.split(f"bash {tmp_script}"),
+        stdout=tmp_stdout,
+        stderr=tmp_stderr,
+    )
 
+    with pytest.raises(JobExecutionError):
         with FractalProcessPoolExecutor(
             shutdown_file=str(shutdown_file)
         ) as executor:
@@ -216,3 +220,106 @@ async def test_indirect_shutdown_during_process_workflow(
             )
         tmp_stdout.close()
         tmp_stderr.close()
+
+
+def test_threads_count_and_names(tmp_path):
+
+    shutdown_file = tmp_path / "shutdown"
+
+    initial_threads = threading.enumerate()
+    # `len(initial_threads)` == 1 when the test is run on its own
+    # `len(initial_threads)` == 2 when the test is run on its own
+    assert len(initial_threads) in [1, 2]
+    assert initial_threads[0].name == "MainThread"
+    if len(initial_threads) == 2:
+        assert initial_threads[1].name == "asyncio_0"
+
+    # our `FractalProcessPoolExecutor`
+    with FractalProcessPoolExecutor(
+        shutdown_file=str(shutdown_file)
+    ) as executor:
+
+        threads = threading.enumerate()
+        assert len(threads) == len(initial_threads) + 1
+        assert threads[:-1] == initial_threads
+
+        thread_1 = threads[-1]
+
+        # Names are assigned sequentially to threads, so the names of our
+        # threads depend on how many tests we are running.
+        N = int(re.match(r"^Thread-(\d+) \(_run\)$", thread_1.name).group(1))
+        assert thread_1.name == f"Thread-{N} (_run)"
+        assert not isinstance(thread_1, _ExecutorManagerThread)
+        assert thread_1.daemon is True
+        assert thread_1.is_alive() is True
+
+        executor.submit(_sleep_and_return, 5)
+
+        threads = threading.enumerate()
+        assert len(threads) == len(initial_threads) + 3
+        assert threads[:-2] == initial_threads + [thread_1]
+
+        thread_2 = threads[-2]
+        assert thread_2.name == f"Thread-{N+1}"
+        assert isinstance(thread_2, _ExecutorManagerThread)
+        assert thread_2.daemon is False
+        assert thread_2.is_alive() is True
+
+        thread_3 = threads[-1]
+        assert thread_3.name == "QueueFeederThread"
+        assert not isinstance(thread_3, _ExecutorManagerThread)
+        assert thread_3.daemon is True
+        assert thread_3.is_alive() is True
+
+        executor.submit(_sleep_and_return, 5)
+        threads = threading.enumerate()
+        assert threads == initial_threads + [thread_1, thread_2, thread_3]
+
+        with shutdown_file.open("w"):
+            pass
+        assert shutdown_file.exists()
+        time.sleep(2)
+
+        threads = threading.enumerate()
+        assert threads == initial_threads
+
+        assert thread_1.is_alive() is False
+        assert thread_2.is_alive() is False
+        assert thread_3.is_alive() is False
+
+    threads = threading.enumerate()
+    assert threads == initial_threads
+
+    # `concurrent.futures.process.ProcessPoolExecutor`
+    with ProcessPoolExecutor() as executor:
+        threads = threading.enumerate()
+        # there is no no " (_run)" thread here
+        assert threads == initial_threads
+
+        executor.submit(_sleep_and_return, 5)
+
+        threads = threading.enumerate()
+        assert len(threads) == len(initial_threads) + 2
+        assert threads[:-2] == initial_threads
+
+        thread_4 = threads[-2]
+        assert thread_4.name == f"Thread-{N+2}"
+        assert isinstance(thread_4, _ExecutorManagerThread)
+        assert thread_4.daemon is False
+        assert thread_4.is_alive() is True
+
+        thread_5 = threads[-1]
+        assert thread_5.name == "QueueFeederThread"
+        assert not isinstance(thread_5, _ExecutorManagerThread)
+        assert thread_5.daemon is True
+        assert thread_5.is_alive() is True
+
+        executor.submit(_sleep_and_return, 5)
+
+        threads = threading.enumerate()
+        assert threads == initial_threads + [thread_4, thread_5]
+
+    threads = threading.enumerate()
+    assert threads == initial_threads
+    assert thread_4.is_alive() is False
+    assert thread_5.is_alive() is False
