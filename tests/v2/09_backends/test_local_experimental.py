@@ -272,6 +272,7 @@ def test_threads_count_and_names(tmp_path):
         assert thread_3.is_alive() is True
 
         executor.submit(_sleep_and_return, 5)
+
         threads = threading.enumerate()
         assert threads == initial_threads + [thread_1, thread_2, thread_3]
 
@@ -293,7 +294,7 @@ def test_threads_count_and_names(tmp_path):
     # `concurrent.futures.process.ProcessPoolExecutor`
     with ProcessPoolExecutor() as executor:
         threads = threading.enumerate()
-        # there is no no " (_run)" thread here
+        # there is no " (_run)" thread here
         assert threads == initial_threads
 
         executor.submit(_sleep_and_return, 5)
