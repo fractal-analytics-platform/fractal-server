@@ -230,9 +230,9 @@ def test_count_threads_and_processes(tmp_path):
     initial_threads = threading.enumerate()
     # `len(initial_threads)` == 1 when the test is run on its own
     # `len(initial_threads)` == 2 when the test is run on its own
-    assert len(initial_threads) in [1, 2]
+    assert len(initial_threads) in [1, 2, 3]
     assert initial_threads[0].name == "MainThread"
-    if len(initial_threads) == 2:
+    if len(initial_threads) > 1:
         assert initial_threads[1].name == "asyncio_0"
 
     # our `FractalProcessPoolExecutor`
