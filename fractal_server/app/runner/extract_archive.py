@@ -2,6 +2,14 @@ import sys
 import tarfile
 from pathlib import Path
 
+
+def _remove_suffix(*, string: str, suffix: str) -> str:
+    if string.endswith(suffix):
+        return string[: -len(suffix)]
+    else:
+        raise ValueError(f"Cannot remove {suffix=} from {string=}.")
+
+
 if __name__ == "__main__":
     help_msg = (
         "Expected use:\n"
@@ -23,7 +31,7 @@ if __name__ == "__main__":
     print(f"[extract_archive.py] {tarfile_path=}")
 
     job_folder = tarfile_path.parent
-    subfolder_name = tarfile_path.name.rstrip(".tar.gz")
+    subfolder_name = _remove_suffix(string=tarfile_path.name, suffix=".tar.gz")
     with tarfile.open(tarfile_path) as tar:
         tar.extractall(path=Path(job_folder, subfolder_name).as_posix())
 
