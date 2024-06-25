@@ -41,7 +41,7 @@ class TaskCollectPipV2(BaseModel):
     package: str
     package_version: Optional[str] = None
     package_extras: Optional[str] = None
-    python_version: Optional[str] = None
+    python_version: Optional[Literal["3.9", "3.10", "3.11"]] = None
     pinned_package_versions: Optional[dict[str, str]] = None
 
     _pinned_package_versions = validator(
