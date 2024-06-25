@@ -66,8 +66,8 @@
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_dcb5568bb609beb8__submit_setup_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.3">coverage.py v7.5.3</a>,
-            created at 2024-06-20 08:05 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.4">coverage.py v7.5.4</a>,
+            created at 2024-06-25 09:44 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -171,7 +171,7 @@
     <p class="pln"><span class="n"><a id="t87" href="#t87">87</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t88" href="#t88">88</a></span><span class="t">    <span class="key">if</span> <span class="nam">which_type</span> <span class="op">==</span> <span class="str">"non_parallel"</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t89" href="#t89">89</a></span><span class="t">        <span class="nam">wftask_meta</span> <span class="op">=</span> <span class="nam">wftask</span><span class="op">.</span><span class="nam">meta_non_parallel</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t90" href="#t90">90</a></span><span class="t">    <span class="key">elif</span> <span class="nam">which_type</span> <span class="op">==</span> <span class="str">"parallel"</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">90&#x202F;&#x219B;&#x202F;93</span><span class="annotate long">line 90 didn't jump to line 93, because the condition on line 90 was always true</span></span></p>
+    <p class="par run show_par"><span class="n"><a id="t90" href="#t90">90</a></span><span class="t">    <span class="key">elif</span> <span class="nam">which_type</span> <span class="op">==</span> <span class="str">"parallel"</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">90&#x202F;&#x219B;&#x202F;93</span><span class="annotate long">line 90 didn't jump to line 93 because the condition on line 90 was always true</span></span></p>
     <p class="run"><span class="n"><a id="t91" href="#t91">91</a></span><span class="t">        <span class="nam">wftask_meta</span> <span class="op">=</span> <span class="nam">wftask</span><span class="op">.</span><span class="nam">meta_parallel</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t92" href="#t92">92</a></span><span class="t">    <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t93" href="#t93">93</a></span><span class="t">        <span class="key">raise</span> <span class="nam">ValueError</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
@@ -179,13 +179,13 @@
     <p class="pln"><span class="n"><a id="t95" href="#t95">95</a></span><span class="t">            <span class="fst">f"</span><span class="fst"> </span><span class="op">{</span><span class="nam">which_type</span><span class="op">=</span><span class="op">}</span><span class="fst">.</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t96" href="#t96">96</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t97" href="#t97">97</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t98" href="#t98">98</a></span><span class="t">    <span class="key">if</span> <span class="nam">wftask_meta</span> <span class="key">and</span> <span class="nam">key</span> <span class="key">in</span> <span class="nam">wftask_meta</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">98&#x202F;&#x219B;&#x202F;99</span><span class="annotate long">line 98 didn't jump to line 99, because the condition on line 98 was never true</span></span></p>
+    <p class="par run show_par"><span class="n"><a id="t98" href="#t98">98</a></span><span class="t">    <span class="key">if</span> <span class="nam">wftask_meta</span> <span class="key">and</span> <span class="nam">key</span> <span class="key">in</span> <span class="nam">wftask_meta</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">98&#x202F;&#x219B;&#x202F;99</span><span class="annotate long">line 98 didn't jump to line 99 because the condition on line 98 was never true</span></span></p>
     <p class="mis show_mis"><span class="n"><a id="t99" href="#t99">99</a></span><span class="t">        <span class="nam">parallel_tasks_per_job</span> <span class="op">=</span> <span class="nam">wftask_meta</span><span class="op">[</span><span class="nam">key</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t100" href="#t100">100</a></span><span class="t">    <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t101" href="#t101">101</a></span><span class="t">        <span class="key">if</span> <span class="key">not</span> <span class="nam">config_path</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">101&#x202F;&#x219B;&#x202F;104</span><span class="annotate long">line 101 didn't jump to line 104, because the condition on line 101 was always true</span></span></p>
+    <p class="par run show_par"><span class="n"><a id="t101" href="#t101">101</a></span><span class="t">        <span class="key">if</span> <span class="key">not</span> <span class="nam">config_path</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">101&#x202F;&#x219B;&#x202F;104</span><span class="annotate long">line 101 didn't jump to line 104 because the condition on line 101 was always true</span></span></p>
     <p class="run"><span class="n"><a id="t102" href="#t102">102</a></span><span class="t">            <span class="nam">settings</span> <span class="op">=</span> <span class="nam">Inject</span><span class="op">(</span><span class="nam">get_settings</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t103" href="#t103">103</a></span><span class="t">            <span class="nam">config_path</span> <span class="op">=</span> <span class="nam">settings</span><span class="op">.</span><span class="nam">FRACTAL_LOCAL_CONFIG_FILE</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t104" href="#t104">104</a></span><span class="t">        <span class="key">if</span> <span class="nam">config_path</span> <span class="key">is</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">104&#x202F;&#x219B;&#x202F;107</span><span class="annotate long">line 104 didn't jump to line 107, because the condition on line 104 was always true</span></span></p>
+    <p class="par run show_par"><span class="n"><a id="t104" href="#t104">104</a></span><span class="t">        <span class="key">if</span> <span class="nam">config_path</span> <span class="key">is</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">104&#x202F;&#x219B;&#x202F;107</span><span class="annotate long">line 104 didn't jump to line 107 because the condition on line 104 was always true</span></span></p>
     <p class="run"><span class="n"><a id="t105" href="#t105">105</a></span><span class="t">            <span class="nam">parallel_tasks_per_job</span> <span class="op">=</span> <span class="nam">default_value</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t106" href="#t106">106</a></span><span class="t">        <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t107" href="#t107">107</a></span><span class="t">            <span class="key">with</span> <span class="nam">config_path</span><span class="op">.</span><span class="nam">open</span><span class="op">(</span><span class="str">"r"</span><span class="op">)</span> <span class="key">as</span> <span class="nam">f</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -208,8 +208,8 @@
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_dcb5568bb609beb8__submit_setup_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.3">coverage.py v7.5.3</a>,
-            created at 2024-06-20 08:05 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.4">coverage.py v7.5.4</a>,
+            created at 2024-06-25 09:44 +0000
         </p>
     </div>
 </footer>

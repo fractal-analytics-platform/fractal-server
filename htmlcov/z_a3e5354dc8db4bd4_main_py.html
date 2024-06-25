@@ -66,8 +66,8 @@
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_a3e5354dc8db4bd4_syringe_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.3">coverage.py v7.5.3</a>,
-            created at 2024-06-20 08:05 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.4">coverage.py v7.5.4</a>,
+            created at 2024-06-25 09:44 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -132,7 +132,7 @@
     <p class="run"><span class="n"><a id="t48" href="#t48">48</a></span><span class="t">    <span class="nam">settings</span> <span class="op">=</span> <span class="nam">Inject</span><span class="op">(</span><span class="nam">get_settings</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t49" href="#t49">49</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t50" href="#t50">50</a></span><span class="t">    <span class="nam">app</span><span class="op">.</span><span class="nam">include_router</span><span class="op">(</span><span class="nam">router_api</span><span class="op">,</span> <span class="nam">prefix</span><span class="op">=</span><span class="str">"/api"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t51" href="#t51">51</a></span><span class="t">    <span class="key">if</span> <span class="nam">settings</span><span class="op">.</span><span class="nam">FRACTAL_API_V1_MODE</span> <span class="op">==</span> <span class="str">"include"</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">51&#x202F;&#x219B;&#x202F;56</span><span class="annotate long">line 51 didn't jump to line 56, because the condition on line 51 was always true</span></span></p>
+    <p class="par run show_par"><span class="n"><a id="t51" href="#t51">51</a></span><span class="t">    <span class="key">if</span> <span class="nam">settings</span><span class="op">.</span><span class="nam">FRACTAL_API_V1_MODE</span> <span class="op">==</span> <span class="str">"include"</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">51&#x202F;&#x219B;&#x202F;56</span><span class="annotate long">line 51 didn't jump to line 56 because the condition on line 51 was always true</span></span></p>
     <p class="run"><span class="n"><a id="t52" href="#t52">52</a></span><span class="t">        <span class="nam">app</span><span class="op">.</span><span class="nam">include_router</span><span class="op">(</span><span class="nam">router_api_v1</span><span class="op">,</span> <span class="nam">prefix</span><span class="op">=</span><span class="str">"/api/v1"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t53" href="#t53">53</a></span><span class="t">        <span class="nam">app</span><span class="op">.</span><span class="nam">include_router</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t54" href="#t54">54</a></span><span class="t">            <span class="nam">router_admin_v1</span><span class="op">,</span> <span class="nam">prefix</span><span class="op">=</span><span class="str">"/admin/v1"</span><span class="op">,</span> <span class="nam">tags</span><span class="op">=</span><span class="op">[</span><span class="str">"V1 Admin area"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
@@ -191,7 +191,7 @@
     <p class="pln"><span class="n"><a id="t107" href="#t107">107</a></span><span class="t">        <span class="fst">f"</span><span class="fst">Current worker with pid </span><span class="op">{</span><span class="nam">os</span><span class="op">.</span><span class="nam">getpid</span><span class="op">(</span><span class="op">)</span><span class="op">}</span><span class="fst"> is shutting down. </span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t108" href="#t108">108</a></span><span class="t">        <span class="fst">f"</span><span class="fst">Current jobs: </span><span class="op">{</span><span class="nam">app</span><span class="op">.</span><span class="nam">state</span><span class="op">.</span><span class="nam">jobsV1</span><span class="op">=</span><span class="op">}</span><span class="fst">, </span><span class="op">{</span><span class="nam">app</span><span class="op">.</span><span class="nam">state</span><span class="op">.</span><span class="nam">jobsV2</span><span class="op">=</span><span class="op">}</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t109" href="#t109">109</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t110" href="#t110">110</a></span><span class="t">    <span class="key">if</span> <span class="nam">settings</span><span class="op">.</span><span class="nam">FRACTAL_RUNNER_BACKEND</span> <span class="op">==</span> <span class="str">"slurm"</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">110&#x202F;&#x219B;&#x202F;124</span><span class="annotate long">line 110 didn't jump to line 124, because the condition on line 110 was always true</span></span></p>
+    <p class="par run show_par"><span class="n"><a id="t110" href="#t110">110</a></span><span class="t">    <span class="key">if</span> <span class="nam">settings</span><span class="op">.</span><span class="nam">FRACTAL_RUNNER_BACKEND</span> <span class="op">==</span> <span class="str">"slurm"</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">110&#x202F;&#x219B;&#x202F;124</span><span class="annotate long">line 110 didn't jump to line 124 because the condition on line 110 was always true</span></span></p>
     <p class="run"><span class="n"><a id="t111" href="#t111">111</a></span><span class="t">        <span class="key">try</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t112" href="#t112">112</a></span><span class="t">            <span class="key">await</span> <span class="nam">cleanup_after_shutdown</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t113" href="#t113">113</a></span><span class="t">                <span class="nam">jobsV1</span><span class="op">=</span><span class="nam">app</span><span class="op">.</span><span class="nam">state</span><span class="op">.</span><span class="nam">jobsV1</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -231,8 +231,8 @@
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_a3e5354dc8db4bd4_syringe_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.3">coverage.py v7.5.3</a>,
-            created at 2024-06-20 08:05 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.4">coverage.py v7.5.4</a>,
+            created at 2024-06-25 09:44 +0000
         </p>
     </div>
 </footer>

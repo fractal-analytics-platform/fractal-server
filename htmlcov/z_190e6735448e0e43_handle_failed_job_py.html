@@ -66,8 +66,8 @@
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_190e6735448e0e43_merge_outputs_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.3">coverage.py v7.5.3</a>,
-            created at 2024-06-20 08:05 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.4">coverage.py v7.5.4</a>,
+            created at 2024-06-25 09:44 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -166,7 +166,7 @@
     <p class="run"><span class="n"><a id="t82" href="#t82">82</a></span><span class="t">        <span class="nam">tmp_file_wftasks</span> <span class="op">=</span> <span class="op">[</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t83" href="#t83">83</a></span><span class="t">            <span class="nam">history_item</span><span class="op">[</span><span class="str">"workflowtask"</span><span class="op">]</span> <span class="key">for</span> <span class="nam">history_item</span> <span class="key">in</span> <span class="nam">tmp_file_history</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t84" href="#t84">84</a></span><span class="t">        <span class="op">]</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t85" href="#t85">85</a></span><span class="t">        <span class="key">if</span> <span class="nam">len</span><span class="op">(</span><span class="nam">job_wftasks</span><span class="op">)</span> <span class="op">&lt;=</span> <span class="nam">len</span><span class="op">(</span><span class="nam">tmp_file_wftasks</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">85&#x202F;&#x219B;&#x202F;86</span><span class="annotate long">line 85 didn't jump to line 86, because the condition on line 85 was never true</span></span></p>
+    <p class="par run show_par"><span class="n"><a id="t85" href="#t85">85</a></span><span class="t">        <span class="key">if</span> <span class="nam">len</span><span class="op">(</span><span class="nam">job_wftasks</span><span class="op">)</span> <span class="op">&lt;=</span> <span class="nam">len</span><span class="op">(</span><span class="nam">tmp_file_wftasks</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">85&#x202F;&#x219B;&#x202F;86</span><span class="annotate long">line 85 didn't jump to line 86 because the condition on line 85 was never true</span></span></p>
     <p class="mis show_mis"><span class="n"><a id="t86" href="#t86">86</a></span><span class="t">            <span class="nam">n_tasks_job</span> <span class="op">=</span> <span class="nam">len</span><span class="op">(</span><span class="nam">job_wftasks</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t87" href="#t87">87</a></span><span class="t">            <span class="nam">n_tasks_tmp</span> <span class="op">=</span> <span class="nam">len</span><span class="op">(</span><span class="nam">tmp_file_wftasks</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t88" href="#t88">88</a></span><span class="t">            <span class="nam">logger</span><span class="op">.</span><span class="nam">error</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
@@ -179,7 +179,7 @@
     <p class="run"><span class="n"><a id="t95" href="#t95">95</a></span><span class="t">            <span class="nam">failed_wftask</span> <span class="op">=</span> <span class="nam">job_wftasks</span><span class="op">[</span><span class="nam">len</span><span class="op">(</span><span class="nam">tmp_file_wftasks</span><span class="op">)</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t96" href="#t96">96</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t97" href="#t97">97</a></span><span class="t">    <span class="com"># Part 3/B: Append failed task to history</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t98" href="#t98">98</a></span><span class="t">    <span class="key">if</span> <span class="nam">failed_wftask</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">98&#x202F;&#x219B;&#x202F;115</span><span class="annotate long">line 98 didn't jump to line 115, because the condition on line 98 was always true</span></span></p>
+    <p class="par run show_par"><span class="n"><a id="t98" href="#t98">98</a></span><span class="t">    <span class="key">if</span> <span class="nam">failed_wftask</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">98&#x202F;&#x219B;&#x202F;115</span><span class="annotate long">line 98 didn't jump to line 115 because the condition on line 98 was always true</span></span></p>
     <p class="run"><span class="n"><a id="t99" href="#t99">99</a></span><span class="t">        <span class="nam">failed_wftask_dump</span> <span class="op">=</span> <span class="nam">failed_wftask</span><span class="op">.</span><span class="nam">model_dump</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t100" href="#t100">100</a></span><span class="t">            <span class="nam">exclude</span><span class="op">=</span><span class="op">{</span><span class="str">"task"</span><span class="op">,</span> <span class="str">"task_legacy"</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t101" href="#t101">101</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -255,8 +255,8 @@
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_190e6735448e0e43_merge_outputs_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.3">coverage.py v7.5.3</a>,
-            created at 2024-06-20 08:05 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.4">coverage.py v7.5.4</a>,
+            created at 2024-06-25 09:44 +0000
         </p>
     </div>
 </footer>

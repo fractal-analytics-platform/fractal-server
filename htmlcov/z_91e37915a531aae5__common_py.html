@@ -66,8 +66,8 @@
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_d27c350548cc67e0___init___py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.3">coverage.py v7.5.3</a>,
-            created at 2024-06-20 08:05 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.4">coverage.py v7.5.4</a>,
+            created at 2024-06-25 09:44 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -181,13 +181,13 @@
     <p class="mis show_mis"><span class="n"><a id="t97" href="#t97">97</a></span><span class="t">        <span class="key">raise</span> <span class="nam">e</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t98" href="#t98">98</a></span><span class="t">    <span class="key">finally</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t99" href="#t99">99</a></span><span class="t">        <span class="nam">fp_stdout</span><span class="op">.</span><span class="nam">close</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t100" href="#t100">100</a></span><span class="t">        <span class="nam">fp_stderr</span><span class="op">.</span><span class="nam">close</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"><span class="annotate short">100&#x202F;&#x219B;&#x202F;exit</span><span class="annotate long">line 100 didn't except from function '_call_command_wrapper', because the raise on line 97 wasn't executed</span></span></p>
+    <p class="par run show_par"><span class="n"><a id="t100" href="#t100">100</a></span><span class="t">        <span class="nam">fp_stderr</span><span class="op">.</span><span class="nam">close</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"><span class="annotate short">100&#x202F;&#x219B;&#x202F;exit</span><span class="annotate long">line 100 didn't except from function '_call_command_wrapper' because the raise on line 97 wasn't executed</span></span></p>
     <p class="pln"><span class="n"><a id="t101" href="#t101">101</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t102" href="#t102">102</a></span><span class="t">    <span class="key">if</span> <span class="nam">result</span><span class="op">.</span><span class="nam">returncode</span> <span class="op">></span> <span class="num">0</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t103" href="#t103">103</a></span><span class="t">        <span class="key">with</span> <span class="nam">stderr</span><span class="op">.</span><span class="nam">open</span><span class="op">(</span><span class="str">"r"</span><span class="op">)</span> <span class="key">as</span> <span class="nam">fp_stderr</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t104" href="#t104">104</a></span><span class="t">            <span class="nam">err</span> <span class="op">=</span> <span class="nam">fp_stderr</span><span class="op">.</span><span class="nam">read</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t105" href="#t105">105</a></span><span class="t">        <span class="key">raise</span> <span class="nam">TaskExecutionError</span><span class="op">(</span><span class="nam">err</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t106" href="#t106">106</a></span><span class="t">    <span class="key">elif</span> <span class="nam">result</span><span class="op">.</span><span class="nam">returncode</span> <span class="op">&lt;</span> <span class="num">0</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">106&#x202F;&#x219B;&#x202F;107</span><span class="annotate long">line 106 didn't jump to line 107, because the condition on line 106 was never true</span></span></p>
+    <p class="par run show_par"><span class="n"><a id="t106" href="#t106">106</a></span><span class="t">    <span class="key">elif</span> <span class="nam">result</span><span class="op">.</span><span class="nam">returncode</span> <span class="op">&lt;</span> <span class="num">0</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">106&#x202F;&#x219B;&#x202F;107</span><span class="annotate long">line 106 didn't jump to line 107 because the condition on line 106 was never true</span></span></p>
     <p class="mis show_mis"><span class="n"><a id="t107" href="#t107">107</a></span><span class="t">        <span class="key">raise</span> <span class="nam">JobExecutionError</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t108" href="#t108">108</a></span><span class="t">            <span class="nam">info</span><span class="op">=</span><span class="fst">f"</span><span class="fst">Task failed with returncode=</span><span class="op">{</span><span class="nam">result</span><span class="op">.</span><span class="nam">returncode</span><span class="op">}</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t109" href="#t109">109</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -376,9 +376,9 @@
     <p class="pln"><span class="n"><a id="t292" href="#t292">292</a></span><span class="t"><span class="str">        JobExecutionError: If the wrapped task raises a job-related error.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t293" href="#t293">293</a></span><span class="t"><span class="str">        RuntimeError: If the `workflow_dir_local` is falsy.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t294" href="#t294">294</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t295" href="#t295">295</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">workflow_dir_local</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">295&#x202F;&#x219B;&#x202F;296</span><span class="annotate long">line 295 didn't jump to line 296, because the condition on line 295 was never true</span></span></p>
+    <p class="par run show_par"><span class="n"><a id="t295" href="#t295">295</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">workflow_dir_local</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">295&#x202F;&#x219B;&#x202F;296</span><span class="annotate long">line 295 didn't jump to line 296 because the condition on line 295 was never true</span></span></p>
     <p class="mis show_mis"><span class="n"><a id="t296" href="#t296">296</a></span><span class="t">        <span class="key">raise</span> <span class="nam">RuntimeError</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t297" href="#t297">297</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">workflow_dir_remote</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">297&#x202F;&#x219B;&#x202F;298</span><span class="annotate long">line 297 didn't jump to line 298, because the condition on line 297 was never true</span></span></p>
+    <p class="par run show_par"><span class="n"><a id="t297" href="#t297">297</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">workflow_dir_remote</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">297&#x202F;&#x219B;&#x202F;298</span><span class="annotate long">line 297 didn't jump to line 298 because the condition on line 297 was never true</span></span></p>
     <p class="mis show_mis"><span class="n"><a id="t298" href="#t298">298</a></span><span class="t">        <span class="nam">workflow_dir_remote</span> <span class="op">=</span> <span class="nam">workflow_dir_local</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t299" href="#t299">299</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t300" href="#t300">300</a></span><span class="t">    <span class="nam">task_files</span> <span class="op">=</span> <span class="nam">get_task_file_paths</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
@@ -709,8 +709,8 @@
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_d27c350548cc67e0___init___py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.3">coverage.py v7.5.3</a>,
-            created at 2024-06-20 08:05 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.4">coverage.py v7.5.4</a>,
+            created at 2024-06-25 09:44 +0000
         </p>
     </div>
 </footer>
