@@ -1,6 +1,5 @@
 import json
 import os
-import re
 import shlex
 import subprocess
 import threading
@@ -228,13 +227,16 @@ def test_count_threads_and_processes(tmp_path):
 
     # --- Threads
     initial_threads = threading.enumerate()
-    # `len(initial_threads)` == 1 when the test is run on its own
-    # `len(initial_threads)` == 2 when the test is run on its own
-    # `len(initial_threads)` == 2 when the test is run on GitHub
     assert len(initial_threads) in [1, 2, 3]
-    assert initial_threads[0].name == "MainThread"
-    if len(initial_threads) > 1:
-        assert initial_threads[1].name == "asyncio_0"
+    # `len(initial_threads)` == 1 when the test is run on its own:
+    #   - MainThread
+    # `len(initial_threads)` == 2 when the test is run on a suite of tests:
+    #   - MainThread
+    #   - asyncio_0
+    # `len(initial_threads)` == 3 when the test is run on GitHub CI:
+    #   - MainThread
+    #   - asyncio_0
+    #   - Thread-{N}
 
     # our `FractalProcessPoolExecutor`
     MAX_WORKERS = 3
@@ -245,18 +247,12 @@ def test_count_threads_and_processes(tmp_path):
         # --- Threads
         threads = threading.enumerate()
         assert len(threads) == len(initial_threads) + 1
-        assert threads[:-1] == initial_threads
 
-        thread_1 = threads[-1]
-
-        # Names are assigned sequentially to threads, so the names of our
-        # threads depend on how many tests we are running.
-        T = int(re.match(r"^Thread-(\d+) \(_run\)$", thread_1.name).group(1))
-        assert thread_1.name == f"Thread-{T} (_run)"
-
-        assert not isinstance(thread_1, _ExecutorManagerThread)
-        assert thread_1.daemon is True
-        assert thread_1.is_alive() is True
+        assert threads[-1].name.startswith("Thread-")
+        assert threads[-1].name.endswith(" (_run)")
+        assert not isinstance(threads[-1], _ExecutorManagerThread)
+        assert threads[-1].daemon is True
+        assert threads[-1].is_alive() is True
 
         # --- Processes
         assert executor._processes == dict()
@@ -267,49 +263,35 @@ def test_count_threads_and_processes(tmp_path):
         # --- Threads
         threads = threading.enumerate()
         assert len(threads) == len(initial_threads) + 3
-        assert threads[:-2] == initial_threads + [thread_1]
 
-        thread_2 = threads[-2]
-        assert thread_2.name == f"Thread-{T+1}"
-        assert isinstance(thread_2, _ExecutorManagerThread)
-        assert thread_2.daemon is False
-        assert thread_2.is_alive() is True
+        assert threads[-2].name.startswith("Thread-")
+        assert not threads[-2].name.endswith(" (_run)")
+        assert isinstance(threads[-2], _ExecutorManagerThread)
+        assert threads[-2].daemon is False
+        assert threads[-2].is_alive() is True
 
-        thread_3 = threads[-1]
-        assert thread_3.name == "QueueFeederThread"
-        assert not isinstance(thread_3, _ExecutorManagerThread)
-        assert thread_3.daemon is True
+        assert threads[-1].name == "QueueFeederThread"
+        assert not isinstance(threads[-1], _ExecutorManagerThread)
+        assert threads[-1].daemon is True
 
         # --- Processes
         assert len(executor._processes) == 1
-        process_1 = next(iter(executor._processes.values()))
-        # Same as threads
-        P = int(re.match(r"^SpawnProcess-(\d+)$", process_1.name).group(1))
-        assert process_1.name == f"SpawnProcess-{P}"
-        assert process_1.is_alive() is True
-        assert process_1.daemon is False
+        for process in executor._processes.values():
+            assert process.is_alive() is True
+            assert process.daemon is False
 
         # +++ SECOND SUBMIT
         executor.submit(_sleep_and_return, 5)
 
         # --- Threads
         threads = threading.enumerate()
-        assert threads == initial_threads + [thread_1, thread_2, thread_3]
+        assert len(threads) == len(initial_threads) + 3
 
         # --- Processes
         assert len(executor._processes) == 2
-        assert executor._processes[process_1.pid] == process_1
-
-        process_2 = executor._processes[
-            next(
-                pid
-                for pid in executor._processes.keys()
-                if pid not in [process_1.pid]
-            )
-        ]
-        assert process_2.name == f"SpawnProcess-{P+1}"
-        assert process_2.is_alive() is True
-        assert process_2.daemon is False
+        for process in executor._processes.values():
+            assert process.is_alive() is True
+            assert process.daemon is False
 
         for _ in range(MAX_WORKERS + 5):
             # There is a limit on number of processes
@@ -326,14 +308,11 @@ def test_count_threads_and_processes(tmp_path):
         threads = threading.enumerate()
         assert threads == initial_threads
 
-        assert thread_1.is_alive() is False
-        assert thread_2.is_alive() is False
-        assert thread_3.is_alive() is False
-
         # --- Processes
         assert len(executor._processes) == MAX_WORKERS
         for process in executor._processes.values():
             assert process.is_alive() is False
+            assert process.daemon is False
 
     # --- Threads
     threads = threading.enumerate()
@@ -357,58 +336,41 @@ def test_count_threads_and_processes(tmp_path):
         # --- Threads
         threads = threading.enumerate()
         assert len(threads) == len(initial_threads) + 2
-        assert threads[:-2] == initial_threads
+        assert threads[-2].name.startswith("Thread-")
+        assert isinstance(threads[-2], _ExecutorManagerThread)
+        assert threads[-2].daemon is False
+        assert threads[-2].is_alive() is True
 
-        thread_4 = threads[-2]
-        assert thread_4.name == f"Thread-{T+2}"
-        assert isinstance(thread_4, _ExecutorManagerThread)
-        assert thread_4.daemon is False
-        assert thread_4.is_alive() is True
-
-        thread_5 = threads[-1]
-        assert thread_5.name == "QueueFeederThread"
-        assert not isinstance(thread_5, _ExecutorManagerThread)
-        assert thread_5.daemon is True
+        assert threads[-1].name == "QueueFeederThread"
+        assert not isinstance(threads[-1], _ExecutorManagerThread)
+        assert threads[-1].daemon is True
 
         # --- Processes
         assert len(executor._processes) == 1
-        process_3 = next(iter(executor._processes.values()))
-        # `process_3` name is not `SpawnProcess-{P+2}`
-        # It means that somewhere the `SpawnProcess-{P+2}` has been run
-        assert process_3.name == f"SpawnProcess-{P+3}"
-        assert process_3.is_alive() is True
-        assert process_3.daemon is False
+        for process in executor._processes.values():
+            assert process.is_alive() is True
+            assert process.daemon is False
 
         # +++ SECOND SUBMIT
         executor.submit(_sleep_and_return, 2)
 
         # --- Threads
         threads = threading.enumerate()
-        assert threads == initial_threads + [thread_4, thread_5]
+        assert len(threads) == len(initial_threads) + 2
 
         # --- Processes
         assert len(executor._processes) == 2
-        assert executor._processes[process_3.pid] == process_3
-
-        process_4 = executor._processes[
-            next(
-                pid
-                for pid in executor._processes.keys()
-                if pid not in [process_3.pid]
-            )
-        ]
-        assert process_4.name == f"SpawnProcess-{P+4}"
-        assert process_4.is_alive() is True
-        assert process_4.daemon is False
+        for process in executor._processes.values():
+            assert process.is_alive() is True
+            assert process.daemon is False
 
         for _ in range(MAX_WORKERS + 5):
             # There is a limit on number of processes
             executor.submit(_sleep_and_return, 1)
         assert len(executor._processes) == MAX_WORKERS
 
+    # --- Threads
     threads = threading.enumerate()
     assert threads == initial_threads
-    assert thread_4.is_alive() is False
-    assert thread_5.is_alive() is False
-
+    # --- Processes
     assert executor._processes is None
