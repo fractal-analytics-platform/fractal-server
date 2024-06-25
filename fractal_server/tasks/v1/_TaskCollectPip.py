@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import Optional
 
@@ -50,7 +51,7 @@ class _TaskCollectPip(TaskCollectPipV1):
                     *_,
                 ) = package_path.name.split("-")
             else:
-                raise ValueError(f"Package {package_path} does not exist.")
+                logging.error(f"Package {package_path} does not exist.")
         return values
 
     @property
