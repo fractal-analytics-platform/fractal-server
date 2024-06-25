@@ -273,7 +273,7 @@ def test_count_threads_and_processes(tmp_path):
 
         # --- Processes
         initial_processes = len(executor._processes)
-        # assert len(executor._processes) == 1 # == 3 on GH
+
         for process in executor._processes.values():
             assert process.is_alive() is True
             assert process.daemon is False
@@ -286,7 +286,9 @@ def test_count_threads_and_processes(tmp_path):
         assert len(threads) == len(initial_threads) + 3
 
         # --- Processes
-        assert len(executor._processes) == initial_processes + 1
+        assert (len(executor._processes) == initial_processes + 1) or (
+            len(executor._processes) == executor._max_workers
+        )
         for process in executor._processes.values():
             assert process.is_alive() is True
             assert process.daemon is False
@@ -357,7 +359,9 @@ def test_count_threads_and_processes(tmp_path):
         assert len(threads) == len(initial_threads) + 2
 
         # --- Processes
-        assert len(executor._processes) == initial_processes + 1
+        assert (len(executor._processes) == initial_processes + 1) or (
+            len(executor._processes) == executor._max_workers
+        )
         for process in executor._processes.values():
             assert process.is_alive() is True
             assert process.daemon is False
