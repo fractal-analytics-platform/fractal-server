@@ -309,7 +309,7 @@ def test_count_threads_and_processes(tmp_path):
         # On GitHub CI there is one last thread
         # <Connection(Thread-N, stopped daemon)>
         assert (threads == initial_threads) or (
-            threads[:-1] == initial_threads
+            threads == initial_threads[:-1]
         )
 
         # --- Processes
@@ -322,7 +322,7 @@ def test_count_threads_and_processes(tmp_path):
     threads = threading.enumerate()
     # On GitHub CI there is one last thread
     # <Connection(Thread-N, stopped daemon)>
-    assert (threads == initial_threads) or (threads[:-1] == initial_threads)
+    assert (threads == initial_threads) or (threads == initial_threads[:-1])
     # --- Processes
     assert executor._processes is None
 
