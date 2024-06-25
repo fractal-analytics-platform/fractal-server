@@ -259,7 +259,7 @@ async def test_logs_failed_collection(
     await db.commit()
     await db.refresh(state)
 
-    task_pkg.package = "__NO_PACKAGE"
+    task_pkg.package = "INVALIDPACKAGE"
     task_pkg.package_path = None
 
     await background_collect_pip(
