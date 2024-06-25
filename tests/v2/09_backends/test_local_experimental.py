@@ -305,8 +305,10 @@ def test_count_threads_and_processes(tmp_path):
         time.sleep(2)
 
         # --- Threads
-        # threads = threading.enumerate()  # FIXME
-        # assert threads == initial_threads  # FIXME
+        threads = threading.enumerate()
+        # On GitHub CI there is one last thread
+        # <Connection(Thread-N, stopped daemon)>
+        assert threads == initial_threads or threads[:-1] == initial_threads
 
         # --- Processes
         assert len(executor._processes) == executor._max_workers
@@ -316,7 +318,9 @@ def test_count_threads_and_processes(tmp_path):
 
     # --- Threads
     threads = threading.enumerate()
-    assert threads == initial_threads
+    # On GitHub CI there is one last thread
+    # <Connection(Thread-N, stopped daemon)>
+    assert threads == initial_threads or threads[:-1] == initial_threads
     # --- Processes
     assert executor._processes is None
 
