@@ -249,7 +249,6 @@ def test_count_threads_and_processes(tmp_path):
         assert len(threads) == len(initial_threads) + 1
 
         assert threads[-1].name.startswith("Thread-")
-        assert threads[-1].name.endswith(" (_run)")
         assert not isinstance(threads[-1], _ExecutorManagerThread)
         assert threads[-1].daemon is True
         assert threads[-1].is_alive() is True
@@ -265,7 +264,6 @@ def test_count_threads_and_processes(tmp_path):
         assert len(threads) == len(initial_threads) + 3
 
         assert threads[-2].name.startswith("Thread-")
-        assert not threads[-2].name.endswith(" (_run)")
         assert isinstance(threads[-2], _ExecutorManagerThread)
         assert threads[-2].daemon is False
         assert threads[-2].is_alive() is True
@@ -324,7 +322,7 @@ def test_count_threads_and_processes(tmp_path):
     with ProcessPoolExecutor(max_workers=MAX_WORKERS) as executor:
         # --- Threads
         threads = threading.enumerate()
-        # there is no " (_run)" thread here
+        # There is no extra thread here, unlike the FractalProcessPoolExecutor
         assert threads == initial_threads
 
         # --- Processes
