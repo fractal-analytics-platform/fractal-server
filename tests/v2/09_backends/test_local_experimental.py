@@ -239,9 +239,8 @@ def test_count_threads_and_processes(tmp_path):
     #   - Thread-{N}
 
     # our `FractalProcessPoolExecutor`
-    MAX_WORKERS = 3
     with FractalProcessPoolExecutor(
-        shutdown_file=str(shutdown_file), max_workers=MAX_WORKERS
+        shutdown_file=str(shutdown_file)
     ) as executor:
 
         # --- Threads
@@ -292,10 +291,10 @@ def test_count_threads_and_processes(tmp_path):
             assert process.is_alive() is True
             assert process.daemon is False
 
-        for _ in range(MAX_WORKERS + 5):
+        for _ in range(executor._max_workers + 5):
             # There is a limit on number of processes
             executor.submit(_sleep_and_return, 5)
-        assert len(executor._processes) == MAX_WORKERS
+        assert len(executor._processes) == executor._max_workers
 
         # +++ SHUTDOWN
         with shutdown_file.open("w"):
@@ -308,7 +307,7 @@ def test_count_threads_and_processes(tmp_path):
         assert threads == initial_threads
 
         # --- Processes
-        assert len(executor._processes) == MAX_WORKERS
+        assert len(executor._processes) == executor._max_workers
         for process in executor._processes.values():
             assert process.is_alive() is False
             assert process.daemon is False
@@ -320,7 +319,7 @@ def test_count_threads_and_processes(tmp_path):
     assert executor._processes is None
 
     # `concurrent.futures.process.ProcessPoolExecutor`
-    with ProcessPoolExecutor(max_workers=MAX_WORKERS) as executor:
+    with ProcessPoolExecutor() as executor:
         # --- Threads
         threads = threading.enumerate()
         # There is no extra thread here, unlike the FractalProcessPoolExecutor
@@ -363,10 +362,10 @@ def test_count_threads_and_processes(tmp_path):
             assert process.is_alive() is True
             assert process.daemon is False
 
-        for _ in range(MAX_WORKERS + 5):
+        for _ in range(executor._max_workers + 5):
             # There is a limit on number of processes
             executor.submit(_sleep_and_return, 1)
-        assert len(executor._processes) == MAX_WORKERS
+        assert len(executor._processes) == executor._max_workers
 
     # --- Threads
     threads = threading.enumerate()
