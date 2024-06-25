@@ -1,3 +1,5 @@
+import shutil
+import sys
 from pathlib import Path
 
 import pytest
@@ -323,3 +325,35 @@ def test_collect_oauth_clients(monkeypatch):
         assert len(settings.OAUTH_CLIENTS_CONFIG) == 2
         names = set(c.CLIENT_NAME for c in settings.OAUTH_CLIENTS_CONFIG)
         assert names == {"GITHUB", "MYCLIENT"}
+
+
+def test_python_interpreters():
+    common_attributes = dict(
+        JWT_SECRET_KEY="something",
+        SQLITE_PATH="/something",
+        FRACTAL_RUNNER_WORKING_BASE_DIR="/something",
+        FRACTAL_TASKS_DIR="/something",
+    )
+
+    # Verify that the FRACTAL_TASKS_PYTHON_3_X variable corresponding to
+    # the current Python version is set correctly
+    _version_dot = f"{sys.version_info.major}.{sys.version_info.minor}"
+    _version_underscore = _version_dot.replace(".", "_")
+    settings = Settings(**common_attributes)
+    assert getattr(
+        settings, f"FRACTAL_TASKS_PYTHON_{_version_underscore}"
+    ) == shutil.which(f"python{_version_dot}")
+
+    # Non-absolute paths
+    with pytest.raises(FractalConfigurationError) as e:
+        Settings(FRACTAL_SLURM_WORKER_PYTHON="python3.10", **common_attributes)
+    assert "Non-absolute value for FRACTAL_SLURM_WORKER_PYTHON" in str(e.value)
+    with pytest.raises(FractalConfigurationError) as e:
+        Settings(FRACTAL_TASKS_PYTHON_3_9="python3.9", **common_attributes)
+    assert "Non-absolute value for FRACTAL_TASKS_PYTHON_3_9" in str(e.value)
+    with pytest.raises(FractalConfigurationError) as e:
+        Settings(FRACTAL_TASKS_PYTHON_3_10="python3.10", **common_attributes)
+    assert "Non-absolute value for FRACTAL_TASKS_PYTHON_3_10" in str(e.value)
+    with pytest.raises(FractalConfigurationError) as e:
+        Settings(FRACTAL_TASKS_PYTHON_3_11="python3.11", **common_attributes)
+    assert "Non-absolute value for FRACTAL_TASKS_PYTHON_3_11" in str(e.value)

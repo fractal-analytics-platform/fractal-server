@@ -366,11 +366,26 @@ class Settings(BaseSettings):
 
     FRACTAL_SLURM_WORKER_PYTHON: Optional[str] = None
     """
-    Path to Python interpreter that will run the jobs on the SLURM nodes. If
-    not specified, the same interpreter that runs the server is used.
+    Absolute path to Python interpreter that will run the jobs on the SLURM
+    nodes. If not specified, the same interpreter that runs the server is used.
     """
 
-    FRACTAL_PYTHON_TASKS_3_9: Optional[str] = None
+    @validator("FRACTAL_SLURM_WORKER_PYTHON", always=True)
+    def absolute_FRACTAL_SLURM_WORKER_PYTHON(cls, v):
+        """
+        If `FRACTAL_TASKS_PYTHON_3_9` is missing, try to replace it with
+        `shutil.which("python3.9")`.
+        """
+        if v is None:
+            return None
+        elif not Path(v).is_absolute():
+            raise FractalConfigurationError(
+                f"Non-absolute value for FRACTAL_SLURM_WORKER_PYTHON={v}"
+            )
+        else:
+            return v
+
+    FRACTAL_TASKS_PYTHON_3_9: Optional[str] = None
     """
     Absolute path to the Python 3.9 interpreter that serves as base for virtual
     environments tasks. Note that this interpreter must have the `venv` module
@@ -380,57 +395,57 @@ class Settings(BaseSettings):
     that `shutil.which` is run from within the fractal-server environment.
     """
 
-    FRACTAL_PYTHON_TASKS_3_10: Optional[str] = None
+    FRACTAL_TASKS_PYTHON_3_10: Optional[str] = None
     """
-    Same as `FRACTAL_PYTHON_TASKS_3_9`, for Python 3.10.
-    """
-
-    FRACTAL_PYTHON_TASKS_3_11: Optional[str] = None
-    """
-    Same as `FRACTAL_PYTHON_TASKS_3_9`, for Python 3.11.
+    Same as `FRACTAL_TASKS_PYTHON_3_9`, for Python 3.10.
     """
 
-    @validator("FRACTAL_PYTHON_TASKS_3_9", always=True)
-    def set_FRACTAL_PYTHON_TASKS_3_9(cls, v):
+    FRACTAL_TASKS_PYTHON_3_11: Optional[str] = None
+    """
+    Same as `FRACTAL_TASKS_PYTHON_3_9`, for Python 3.11.
+    """
+
+    @validator("FRACTAL_TASKS_PYTHON_3_9", always=True)
+    def set_FRACTAL_TASKS_PYTHON_3_9(cls, v):
         """
-        If `FRACTAL_PYTHON_TASKS_3_9` is missing, try to replace it with
+        If `FRACTAL_TASKS_PYTHON_3_9` is missing, try to replace it with
         `shutil.which("python3.9")`.
         """
         if v is None:
             return shutil.which("python3.9")
         elif not Path(v).is_absolute():
             raise FractalConfigurationError(
-                f"Non-absolute value for FRACTAL_PYTHON_TASKS_3_9={v}"
+                f"Non-absolute value for FRACTAL_TASKS_PYTHON_3_9={v}"
             )
         else:
             return v
 
-    @validator("FRACTAL_PYTHON_TASKS_3_10", always=True)
-    def set_FRACTAL_PYTHON_TASKS_3_10(cls, v):
+    @validator("FRACTAL_TASKS_PYTHON_3_10", always=True)
+    def set_FRACTAL_TASKS_PYTHON_3_10(cls, v):
         """
-        If `FRACTAL_PYTHON_TASKS_3_10` is missing, try to replace it with
+        If `FRACTAL_TASKS_PYTHON_3_10` is missing, try to replace it with
         `shutil.which("python3.10")`.
         """
         if v is None:
             return shutil.which("python3.10")
         elif not Path(v).is_absolute():
             raise FractalConfigurationError(
-                f"Non-absolute value for FRACTAL_PYTHON_TASKS_3_10={v}"
+                f"Non-absolute value for FRACTAL_TASKS_PYTHON_3_10={v}"
             )
         else:
             return v
 
-    @validator("FRACTAL_PYTHON_TASKS_3_11", always=True)
-    def set_FRACTAL_PYTHON_TASKS_3_11(cls, v):
+    @validator("FRACTAL_TASKS_PYTHON_3_11", always=True)
+    def set_FRACTAL_TASKS_PYTHON_3_11(cls, v):
         """
-        If `FRACTAL_PYTHON_TASKS_3_11` is missing, try to replace it with
+        If `FRACTAL_TASKS_PYTHON_3_11` is missing, try to replace it with
         `shutil.which("python3.11")`.
         """
         if v is None:
             return shutil.which("python3.11")
         elif not Path(v).is_absolute():
             raise FractalConfigurationError(
-                f"Non-absolute value for FRACTAL_PYTHON_TASKS_3_11={v}"
+                f"Non-absolute value for FRACTAL_TASKS_PYTHON_3_11={v}"
             )
         else:
             return v
