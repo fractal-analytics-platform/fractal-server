@@ -331,7 +331,11 @@ def test_count_threads_and_processes(tmp_path):
         # --- Threads
         threads = threading.enumerate()
         # There is no extra thread here, unlike the FractalProcessPoolExecutor
-        assert threads == initial_threads
+        # On GitHub CI there is one last thread
+        # <Connection(Thread-N, stopped daemon)>
+        assert (threads == initial_threads) or (
+            threads == initial_threads[:-1]
+        )
 
         # --- Processes
         assert executor._processes == dict()
@@ -379,6 +383,8 @@ def test_count_threads_and_processes(tmp_path):
 
     # --- Threads
     threads = threading.enumerate()
-    assert threads == initial_threads
+    # On GitHub CI there is one last thread
+    # <Connection(Thread-N, stopped daemon)>
+    assert (threads == initial_threads) or (threads == initial_threads[:-1])
     # --- Processes
     assert executor._processes is None
