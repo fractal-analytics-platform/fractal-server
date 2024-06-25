@@ -1,5 +1,4 @@
 import re
-import shutil
 import sys
 from pathlib import Path
 from typing import Optional
@@ -27,15 +26,32 @@ def get_python_interpreter(version: Optional[str] = None) -> str:
     Returns:
         interpreter: string representing the python executable or its path
     """
-    if version:
-        interpreter = shutil.which(f"python{version}")
-        if not interpreter:
+    settings = Inject(get_settings)
+    if version is None:
+        interpreter = sys.executable
+    elif version == "3.9":
+        interpreter = settings.FRACTAL_PYTHON_TASKS_3_9
+        if interpreter is None:
             raise ValueError(
-                f"Python version {version} not available on host."
+                f"Requested {version=}, but "
+                f"{settings.FRACTAL_PYTHON_TASKS_3_9=}"
+            )
+    elif version == "3.10":
+        interpreter = settings.FRACTAL_PYTHON_TASKS_3_10
+        if interpreter is None:
+            raise ValueError(
+                f"Requested {version=}, but "
+                f"{settings.FRACTAL_PYTHON_TASKS_3_10=}"
+            )
+    elif version == "3.11":
+        interpreter = settings.FRACTAL_PYTHON_TASKS_3_11
+        if interpreter is None:
+            raise ValueError(
+                f"Requested {version=}, but "
+                f"{settings.FRACTAL_PYTHON_TASKS_3_11=}"
             )
     else:
-        interpreter = sys.executable
-
+        raise ValueError(f"Requested invalid Python version {version}.")
     return interpreter
 
 

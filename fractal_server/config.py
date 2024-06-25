@@ -370,6 +370,71 @@ class Settings(BaseSettings):
     not specified, the same interpreter that runs the server is used.
     """
 
+    FRACTAL_PYTHON_TASKS_3_9: Optional[str] = None
+    """
+    Absolute path to the Python 3.9 interpreter that serves as base for virtual
+    environments tasks. Note that this interpreter must have the `venv` module
+    installed.
+    The default value is the output of `shutil.which("python3.9")`; note that
+    this default can be `None` (if `python3.9` is not available), and also note
+    that `shutil.which` is run from within the fractal-server environment.
+    """
+
+    FRACTAL_PYTHON_TASKS_3_10: Optional[str] = None
+    """
+    Same as `FRACTAL_PYTHON_TASKS_3_9`, for Python 3.10.
+    """
+
+    FRACTAL_PYTHON_TASKS_3_11: Optional[str] = None
+    """
+    Same as `FRACTAL_PYTHON_TASKS_3_9`, for Python 3.11.
+    """
+
+    @validator("FRACTAL_PYTHON_TASKS_3_9", always=True)
+    def set_FRACTAL_PYTHON_TASKS_3_9(cls, v):
+        """
+        If `FRACTAL_PYTHON_TASKS_3_9` is missing, try to replace it with
+        `shutil.which("python3.9")`.
+        """
+        if v is None:
+            return shutil.which("python3.9")
+        elif not Path(v).is_absolute():
+            raise FractalConfigurationError(
+                f"Non-absolute value for FRACTAL_PYTHON_TASKS_3_9={v}"
+            )
+        else:
+            return v
+
+    @validator("FRACTAL_PYTHON_TASKS_3_10", always=True)
+    def set_FRACTAL_PYTHON_TASKS_3_10(cls, v):
+        """
+        If `FRACTAL_PYTHON_TASKS_3_10` is missing, try to replace it with
+        `shutil.which("python3.10")`.
+        """
+        if v is None:
+            return shutil.which("python3.10")
+        elif not Path(v).is_absolute():
+            raise FractalConfigurationError(
+                f"Non-absolute value for FRACTAL_PYTHON_TASKS_3_10={v}"
+            )
+        else:
+            return v
+
+    @validator("FRACTAL_PYTHON_TASKS_3_11", always=True)
+    def set_FRACTAL_PYTHON_TASKS_3_11(cls, v):
+        """
+        If `FRACTAL_PYTHON_TASKS_3_11` is missing, try to replace it with
+        `shutil.which("python3.11")`.
+        """
+        if v is None:
+            return shutil.which("python3.11")
+        elif not Path(v).is_absolute():
+            raise FractalConfigurationError(
+                f"Non-absolute value for FRACTAL_PYTHON_TASKS_3_11={v}"
+            )
+        else:
+            return v
+
     FRACTAL_SLURM_POLL_INTERVAL: int = 5
     """
     Interval to wait (in seconds) before checking whether unfinished job are
