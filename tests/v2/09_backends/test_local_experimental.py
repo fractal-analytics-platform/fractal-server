@@ -291,7 +291,7 @@ def test_count_threads_and_processes(tmp_path):
             assert process.is_alive() is True
             assert process.daemon is False
 
-        for _ in range(executor._max_workers + 5):
+        for _ in range(1000):
             # There is a limit on number of processes
             executor.submit(_sleep_and_return, 5)
         assert len(executor._processes) == executor._max_workers
@@ -377,7 +377,7 @@ def test_count_threads_and_processes(tmp_path):
             assert process.is_alive() is True
             assert process.daemon is False
 
-        for _ in range(executor._max_workers + 5):
+        for _ in range(1000):
             # There is a limit on number of processes
             executor.submit(_sleep_and_return, 1)
         assert len(executor._processes) == executor._max_workers
