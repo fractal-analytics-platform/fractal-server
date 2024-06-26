@@ -24,6 +24,7 @@ class _TaskCollectPip(TaskCollectPipV2):
     package_name: Optional[str] = None
     package_path: Optional[Path] = None
     package_manifest: Optional[ManifestV2] = None
+    python_version: str
 
     @property
     def is_local_package(self) -> bool:
@@ -74,10 +75,7 @@ class _TaskCollectPip(TaskCollectPipV2):
             collection_type = "pip_remote"
 
         package_extras = self.package_extras or ""
-        if self.python_version:
-            python_version = f"py{self.python_version}"
-        else:
-            python_version = ""  # FIXME: can we allow this?
+        python_version = f"py{self.python_version}"
 
         source = ":".join(
             (
