@@ -16,7 +16,7 @@ from fractal_server.tasks.endpoint_operations import download_package
 from fractal_server.tasks.endpoint_operations import inspect_package
 from fractal_server.tasks.utils import _init_venv
 from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
-from fractal_server.tasks.v2.background_operations import _pip_install
+from fractal_server.tasks.v2._venv_pip import _pip_install
 from fractal_server.tasks.v2.background_operations import (
     background_collect_pip,
 )

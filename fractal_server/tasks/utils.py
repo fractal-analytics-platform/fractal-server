@@ -10,6 +10,7 @@ from fractal_server.utils import execute_command
 
 COLLECTION_FILENAME = "collection.json"
 COLLECTION_LOG_FILENAME = "collection.log"
+COLLECTION_FREEZE_FILENAME = "collection_freeze.txt"
 
 
 def get_python_interpreter(version: Optional[str] = None) -> str:
@@ -80,7 +81,18 @@ def get_log_path(base: Path) -> Path:
     return base / COLLECTION_LOG_FILENAME
 
 
+def get_freeze_path(base: Path) -> Path:
+    return base / COLLECTION_FREEZE_FILENAME
+
+
 def get_collection_log(venv_path: Path) -> str:
+    package_path = get_absolute_venv_path(venv_path)
+    log_path = get_log_path(package_path)
+    log = log_path.open().read()
+    return log
+
+
+def get_collection_freeze(venv_path: Path) -> str:
     package_path = get_absolute_venv_path(venv_path)
     log_path = get_log_path(package_path)
     log = log_path.open().read()
