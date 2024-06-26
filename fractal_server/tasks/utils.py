@@ -1,6 +1,6 @@
 import re
-import sys
 from pathlib import Path
+from typing import Literal
 from typing import Optional
 
 from fractal_server.config import get_settings
@@ -13,7 +13,9 @@ COLLECTION_LOG_FILENAME = "collection.log"
 COLLECTION_FREEZE_FILENAME = "collection_freeze.txt"
 
 
-def get_python_interpreter(version: Optional[str] = None) -> str:
+def get_python_interpreter(
+    version: Literal["3.9", "3.10", "3.11", "3.12"]
+) -> str:
     """
     Return the path to the python interpreter
 
@@ -27,34 +29,17 @@ def get_python_interpreter(version: Optional[str] = None) -> str:
     Returns:
         interpreter: string representing the python executable or its path
     """
-    settings = Inject(get_settings)
+
     if version is None:
-        # FIXME: remove this `if` branch, and make version required all the way
-        interpreter = sys.executable
-    elif version == "3.9":
-        interpreter = settings.FRACTAL_TASKS_PYTHON_3_9
-        if interpreter is None:
-            raise ValueError(
-                f"Requested {version=}, but "
-                f"{settings.FRACTAL_TASKS_PYTHON_3_9=}"
-            )
-    elif version == "3.10":
-        interpreter = settings.FRACTAL_TASKS_PYTHON_3_10
-        if interpreter is None:
-            raise ValueError(
-                f"Requested {version=}, but "
-                f"{settings.FRACTAL_TASKS_PYTHON_3_10=}"
-            )
-    elif version == "3.11":
-        interpreter = settings.FRACTAL_TASKS_PYTHON_3_11
-        if interpreter is None:
-            raise ValueError(
-                f"Requested {version=}, but "
-                f"{settings.FRACTAL_TASKS_PYTHON_3_11=}"
-            )
-    else:
-        raise ValueError(f"Requested invalid Python version {version}.")
-    return interpreter
+        raise ValueError("version is None")
+
+    settings = Inject(get_settings)
+    version_underscore = version.replace(".", "_")
+    key = f"FRACTAL_TASKS_PYTHON_{version_underscore}"
+    value = getattr(settings, key)
+    if value is None:
+        raise ValueError(f"Requested {version=}, but {key}={value}.")
+    return value
 
 
 def slugify_task_name(task_name: str) -> str:
