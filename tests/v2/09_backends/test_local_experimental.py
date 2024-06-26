@@ -2,8 +2,11 @@ import json
 import os
 import shlex
 import subprocess
+import threading
 import time
+from concurrent.futures.process import _ExecutorManagerThread
 from concurrent.futures.process import BrokenProcessPool
+from concurrent.futures.process import ProcessPoolExecutor
 
 import pytest
 from devtools import debug
@@ -134,13 +137,13 @@ def test_indirect_shutdown_during_map(
     tmp_stdout = open((tmp_path / "stdout").as_posix(), "w")
     tmp_stderr = open((tmp_path / "stderr").as_posix(), "w")
 
-    with pytest.raises(JobExecutionError):
-        subprocess.Popen(
-            shlex.split(f"bash {tmp_script}"),
-            stdout=tmp_stdout,
-            stderr=tmp_stderr,
-        )
+    subprocess.Popen(
+        shlex.split(f"bash {tmp_script}"),
+        stdout=tmp_stdout,
+        stderr=tmp_stderr,
+    )
 
+    with pytest.raises(JobExecutionError):
         with FractalProcessPoolExecutor(
             shutdown_file=str(shutdown_file)
         ) as executor:
@@ -216,3 +219,117 @@ async def test_indirect_shutdown_during_process_workflow(
             )
         tmp_stdout.close()
         tmp_stderr.close()
+
+
+def test_count_threads_and_processes(tmp_path):
+
+    shutdown_file = tmp_path / "shutdown"
+
+    # --- Threads
+    initial_threads = threading.enumerate()
+    assert len(initial_threads) in [1, 2, 3]
+    # `len(initial_threads)` == 1 when the test is run on its own:
+    #   - MainThread
+    # `len(initial_threads)` == 2 when the test is run on a suite of tests:
+    #   - MainThread
+    #   - asyncio_0
+    # `len(initial_threads)` == 3 when the test is run on GitHub CI:
+    #   - MainThread
+    #   - asyncio_0
+    #   - Thread-{N}
+    #
+    # NOTE: In the third case, it is confusing that Thread-{N} sometimes goes
+    # from started to stopped and we don't know why
+
+    # our `FractalProcessPoolExecutor`
+    with FractalProcessPoolExecutor(
+        shutdown_file=str(shutdown_file)
+    ) as executor:
+
+        # --- Threads
+        threads = threading.enumerate()
+        # This is our `_shutdown_file_thread`
+        assert len(threads) == len(initial_threads) + 1
+        assert not isinstance(threads[-1], _ExecutorManagerThread)
+
+        # --- Processes
+        assert executor._processes == dict()
+
+        # +++ SUBMITS
+        for _ in range(executor._max_workers + 10):
+            executor.submit(_sleep_and_return, 5)
+
+        # --- Threads
+        threads = threading.enumerate()
+        assert len(threads) == len(initial_threads) + 3
+        executor_threads = threads[-3:]
+
+        assert threads[-2].name.startswith("Thread-")
+        assert isinstance(threads[-2], _ExecutorManagerThread)
+
+        assert threads[-1].name == "QueueFeederThread"
+        assert not isinstance(threads[-1], _ExecutorManagerThread)
+
+        # --- Processes
+        assert len(executor._processes) == executor._max_workers
+        for process in executor._processes.values():
+            assert process.is_alive() is True
+
+        # +++ SHUTDOWN
+        with shutdown_file.open("w"):
+            pass
+        assert shutdown_file.exists()
+        time.sleep(2)
+
+        # --- Threads
+        current_threads = threading.enumerate()
+        for thread in executor_threads:
+            assert thread not in current_threads
+
+        # --- Processes
+        assert len(executor._processes) == executor._max_workers
+        for process in executor._processes.values():
+            assert process.is_alive() is False
+
+    # --- Threads
+    new_initial_threads = threading.enumerate()
+    for thread in executor_threads:
+        assert thread not in new_initial_threads
+
+    # --- Processes
+    assert executor._processes is None
+
+    # `concurrent.futures.process.ProcessPoolExecutor`
+    with ProcessPoolExecutor() as executor:
+        # --- Threads
+        threads = threading.enumerate()
+        assert threads == new_initial_threads
+
+        # --- Processes
+        assert executor._processes == dict()
+
+        # +++ SUBMITS
+        for _ in range(executor._max_workers + 10):
+            # There is a limit on number of processes
+            executor.submit(_sleep_and_return, 0.2)
+
+        # --- Threads
+        threads = threading.enumerate()
+        assert len(threads) == len(new_initial_threads) + 2
+
+        assert threads[-2].name.startswith("Thread-")
+        assert isinstance(threads[-2], _ExecutorManagerThread)
+
+        assert threads[-1].name == "QueueFeederThread"
+        assert not isinstance(threads[-1], _ExecutorManagerThread)
+
+        # --- Processes
+        assert len(executor._processes) == executor._max_workers
+        for process in executor._processes.values():
+            assert process.is_alive() is True
+
+    # --- Threads
+    threads = threading.enumerate()
+    assert threads == new_initial_threads
+    # --- Processes
+    assert executor._processes is None
