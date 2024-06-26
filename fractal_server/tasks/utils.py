@@ -38,18 +38,18 @@ def get_python_interpreter(version: Optional[str] = None) -> str:
                 f"{settings.FRACTAL_TASKS_PYTHON_3_9=}"
             )
     elif version == "3.10":
-        interpreter = settings.FRACTAL_PYTHON_TASKS_3_10
+        interpreter = settings.FRACTAL_TASKS_PYTHON_3_10
         if interpreter is None:
             raise ValueError(
                 f"Requested {version=}, but "
-                f"{settings.FRACTAL_PYTHON_TASKS_3_10=}"
+                f"{settings.FRACTAL_TASKS_PYTHON_3_10=}"
             )
     elif version == "3.11":
-        interpreter = settings.FRACTAL_PYTHON_TASKS_3_11
+        interpreter = settings.FRACTAL_TASKS_PYTHON_3_11
         if interpreter is None:
             raise ValueError(
                 f"Requested {version=}, but "
-                f"{settings.FRACTAL_PYTHON_TASKS_3_11=}"
+                f"{settings.FRACTAL_TASKS_PYTHON_3_11=}"
             )
     else:
         raise ValueError(f"Requested invalid Python version {version}.")
