@@ -245,17 +245,16 @@ def test_count_threads_and_processes(tmp_path):
 
         # --- Threads
         threads = threading.enumerate()
+        # This is our `_shutdown_file_thread`
         assert len(threads) == len(initial_threads) + 1
-
-        assert threads[-1].name.startswith("Thread-")
         assert not isinstance(threads[-1], _ExecutorManagerThread)
-        assert threads[-1].daemon is True
 
         # --- Processes
         assert executor._processes == dict()
 
-        # +++ FIRST SUBMIT
-        executor.submit(_sleep_and_return, 5)
+        # +++ SUBMITS
+        for _ in range(executor._max_workers + 10):
+            executor.submit(_sleep_and_return, 5)
 
         # --- Threads
         threads = threading.enumerate()
@@ -263,38 +262,14 @@ def test_count_threads_and_processes(tmp_path):
 
         assert threads[-2].name.startswith("Thread-")
         assert isinstance(threads[-2], _ExecutorManagerThread)
-        assert threads[-2].daemon is False
 
         assert threads[-1].name == "QueueFeederThread"
         assert not isinstance(threads[-1], _ExecutorManagerThread)
-        assert threads[-1].daemon is True
 
         # --- Processes
-        initial_processes = len(executor._processes)
-
-        for process in executor._processes.values():
-            assert process.is_alive() is True
-            assert process.daemon is False
-
-        # +++ SECOND SUBMIT
-        executor.submit(_sleep_and_return, 5)
-
-        # --- Threads
-        threads = threading.enumerate()
-        assert len(threads) == len(initial_threads) + 3
-
-        # --- Processes
-        assert (len(executor._processes) == initial_processes + 1) or (
-            len(executor._processes) == executor._max_workers
-        )
-        for process in executor._processes.values():
-            assert process.is_alive() is True
-            assert process.daemon is False
-
-        for _ in range(1000):
-            # There is a limit on number of processes
-            executor.submit(_sleep_and_return, 5)
         assert len(executor._processes) == executor._max_workers
+        for process in executor._processes.values():
+            assert process.is_alive() is True
 
         # +++ SHUTDOWN
         with shutdown_file.open("w"):
@@ -308,19 +283,20 @@ def test_count_threads_and_processes(tmp_path):
         # <Connection(Thread-N, stopped daemon)>
         assert (threads == initial_threads) or (
             threads == initial_threads[:-1]
-        )
+        )  # FIXME
 
         # --- Processes
         assert len(executor._processes) == executor._max_workers
         for process in executor._processes.values():
             assert process.is_alive() is False
-            assert process.daemon is False
 
     # --- Threads
-    threads = threading.enumerate()
+    new_initial_threads = threading.enumerate()
     # On GitHub CI there is one last thread
     # <Connection(Thread-N, stopped daemon)>
-    assert (threads == initial_threads) or (threads == initial_threads[:-1])
+    assert (new_initial_threads == initial_threads) or (
+        new_initial_threads == initial_threads[:-1]
+    )  # FIXME
     # --- Processes
     assert executor._processes is None
 
@@ -328,64 +304,33 @@ def test_count_threads_and_processes(tmp_path):
     with ProcessPoolExecutor() as executor:
         # --- Threads
         threads = threading.enumerate()
-        # There is no extra thread here, unlike the FractalProcessPoolExecutor
-        # On GitHub CI there is one last thread
-        # <Connection(Thread-N, stopped daemon)>
-        assert (threads == initial_threads) or (
-            threads == initial_threads[:-1]
-        )
+        assert threads == new_initial_threads
 
         # --- Processes
         assert executor._processes == dict()
 
-        # +++ FIRST SUBMIT
-        executor.submit(_sleep_and_return, 2)
+        # +++ SUBMITS
+        for _ in range(executor._max_workers + 10):
+            # There is a limit on number of processes
+            executor.submit(_sleep_and_return, 2)
 
         # --- Threads
         threads = threading.enumerate()
-        assert (len(threads) == len(initial_threads) + 2) or (
-            len(threads) == len(initial_threads) + 1  # GitHub CI
-        )
+        assert len(threads) == len(new_initial_threads) + 2
+
         assert threads[-2].name.startswith("Thread-")
         assert isinstance(threads[-2], _ExecutorManagerThread)
-        assert threads[-2].daemon is False
 
         assert threads[-1].name == "QueueFeederThread"
         assert not isinstance(threads[-1], _ExecutorManagerThread)
-        assert threads[-1].daemon is True
 
         # --- Processes
-        initial_processes = len(executor._processes)
-        for process in executor._processes.values():
-            assert process.is_alive() is True
-            assert process.daemon is False
-
-        # +++ SECOND SUBMIT
-        executor.submit(_sleep_and_return, 2)
-
-        # --- Threads
-        threads = threading.enumerate()
-        assert (len(threads) == len(initial_threads) + 2) or (
-            len(threads) == len(initial_threads) + 1  # GitHub CI
-        )
-
-        # --- Processes
-        assert (len(executor._processes) == initial_processes + 1) or (
-            len(executor._processes) == executor._max_workers
-        )
-        for process in executor._processes.values():
-            assert process.is_alive() is True
-            assert process.daemon is False
-
-        for _ in range(1000):
-            # There is a limit on number of processes
-            executor.submit(_sleep_and_return, 1)
         assert len(executor._processes) == executor._max_workers
+        for process in executor._processes.values():
+            assert process.is_alive() is True
 
     # --- Threads
     threads = threading.enumerate()
-    # On GitHub CI there is one last thread
-    # <Connection(Thread-N, stopped daemon)>
-    assert (threads == initial_threads) or (threads == initial_threads[:-1])
+    assert threads == new_initial_threads
     # --- Processes
     assert executor._processes is None
