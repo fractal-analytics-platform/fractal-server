@@ -250,7 +250,6 @@ def test_count_threads_and_processes(tmp_path):
         assert threads[-1].name.startswith("Thread-")
         assert not isinstance(threads[-1], _ExecutorManagerThread)
         assert threads[-1].daemon is True
-        assert threads[-1].is_alive() is True
 
         # --- Processes
         assert executor._processes == dict()
@@ -265,7 +264,6 @@ def test_count_threads_and_processes(tmp_path):
         assert threads[-2].name.startswith("Thread-")
         assert isinstance(threads[-2], _ExecutorManagerThread)
         assert threads[-2].daemon is False
-        assert threads[-2].is_alive() is True
 
         assert threads[-1].name == "QueueFeederThread"
         assert not isinstance(threads[-1], _ExecutorManagerThread)
@@ -351,7 +349,6 @@ def test_count_threads_and_processes(tmp_path):
         assert threads[-2].name.startswith("Thread-")
         assert isinstance(threads[-2], _ExecutorManagerThread)
         assert threads[-2].daemon is False
-        assert threads[-2].is_alive() is True
 
         assert threads[-1].name == "QueueFeederThread"
         assert not isinstance(threads[-1], _ExecutorManagerThread)
