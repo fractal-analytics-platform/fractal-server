@@ -28,6 +28,7 @@ def get_python_interpreter(version: Optional[str] = None) -> str:
     """
     settings = Inject(get_settings)
     if version is None:
+        # FIXME: remove this `if` branch, and make version required all the way
         interpreter = sys.executable
     elif version == "3.9":
         interpreter = settings.FRACTAL_TASKS_PYTHON_3_9
