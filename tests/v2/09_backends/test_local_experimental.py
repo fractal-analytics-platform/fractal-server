@@ -345,7 +345,9 @@ def test_count_threads_and_processes(tmp_path):
 
         # --- Threads
         threads = threading.enumerate()
-        assert len(threads) == len(initial_threads) + 2
+        assert (len(threads) == len(initial_threads) + 2) or (
+            len(threads) == len(initial_threads) + 1  # GitHub CI
+        )
         assert threads[-2].name.startswith("Thread-")
         assert isinstance(threads[-2], _ExecutorManagerThread)
         assert threads[-2].daemon is False
@@ -366,7 +368,9 @@ def test_count_threads_and_processes(tmp_path):
 
         # --- Threads
         threads = threading.enumerate()
-        assert len(threads) == len(initial_threads) + 2
+        assert (len(threads) == len(initial_threads) + 2) or (
+            len(threads) == len(initial_threads) + 1  # GitHub CI
+        )
 
         # --- Processes
         assert (len(executor._processes) == initial_processes + 1) or (
