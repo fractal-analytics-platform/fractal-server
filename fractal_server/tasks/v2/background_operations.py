@@ -59,15 +59,13 @@ async def _insert_tasks(
 def _set_collection_state_data_status(
     *,
     state_id: int,
-    new_status: Literal[
-        "installing", "collecting", "finalising", "OK", "fail"
-    ],
+    new_status: Literal["installing", "collecting", "OK", "fail"],
     logger_name: str,
     db: DBSyncSession,
 ):
     logger = get_logger(logger_name)
     logger.debug(
-        f"Task collection {state_id=} - set state/date/status to {new_status}"
+        f"Task collection {state_id=} - set state/data/status to {new_status}"
     )
     collection_state = db.get(CollectionStateV2, state_id)
     collection_state.data["status"] = new_status
@@ -325,17 +323,11 @@ async def background_collect_pip(
         # * FIXME docstring
         try:
             logger.debug("Task collection - finalising - START")
-            _set_collection_state_data_status(
-                state_id=state_id,
-                new_status="finalising",
-                logger_name=logger_name,
-                db=db,
-            )
             collection_path = get_collection_path(venv_path)
             with next(get_sync_db()) as db:
                 collection_state = db.get(CollectionStateV2, state_id)
                 task_read_list = [
-                    TaskReadV2(**task.model_dump()) for task in tasks
+                    TaskReadV2(**task.model_dump()).dict() for task in tasks
                 ]
                 collection_state.data["task_list"] = task_read_list
                 collection_state.data["log"] = get_collection_log(venv_path)
@@ -343,10 +335,9 @@ async def background_collect_pip(
                     venv_path
                 )
                 with collection_path.open("w") as f:
-                    json.dump(
-                        collection_state.data.sanitised_dict(), f, indent=2
-                    )
-                db.merge(collection_state)
+                    json.dump(collection_state.data, f, indent=2)
+
+                flag_modified(collection_state, "data")
                 db.commit()
             logger.debug("Task collection - finalising - END")
         except Exception as e:
