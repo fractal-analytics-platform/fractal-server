@@ -5,6 +5,9 @@ from pathlib import Path
 
 from devtools import debug  # noqa
 
+from fractal_server.config import get_settings
+from fractal_server.syringe import Inject
+
 PREFIX = "api/v2/task"
 
 
@@ -35,8 +38,13 @@ async def test_failed_API_calls(
 
     # Task collection fails if a task with the same source already exists
     # (see issue 866)
+    settings = Inject(get_settings)
+    default_version = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
     await task_factory_v2(
-        source="pip_local:fractal_tasks_mock:0.0.1:::create_ome_zarr_compound"
+        source=(
+            f"pip_local:fractal_tasks_mock:0.0.1::"
+            f"py{default_version}:create_ome_zarr_compound"
+        )
     )
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
         wheel_path = (

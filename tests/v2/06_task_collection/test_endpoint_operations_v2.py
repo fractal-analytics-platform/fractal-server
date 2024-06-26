@@ -35,19 +35,19 @@ async def test_inspect_package_fail(tmp_path):
 
 
 @pytest.mark.parametrize(
-    ("task_pkg", "expected_path"),
+    ("task_pkg_dict", "expected_path"),
     [
         (
-            _TaskCollectPip(package="my-package"),
+            dict(package="my-package"),
             Path(".fractal/my-package"),
         ),
         (
-            _TaskCollectPip(package="my-package", package_version="1.2.3"),
+            dict(package="my-package", package_version="1.2.3"),
             Path(".fractal/my-package1.2.3"),
         ),
     ],
 )
-def test_create_package_dir_pip(task_pkg, expected_path):
+def test_create_package_dir_pip(task_pkg_dict, expected_path):
     """
     GIVEN a taks package
     WHEN the directory for installation is created
@@ -56,6 +56,15 @@ def test_create_package_dir_pip(task_pkg, expected_path):
     NOTE:
         expected_path relative to FRACTAL_TASKS_DIR
     """
+
+    if "python_version" not in task_pkg_dict.keys():
+        settings = Inject(get_settings)
+        task_pkg_dict[
+            "python_version"
+        ] = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+
+    task_pkg = _TaskCollectPip(**task_pkg_dict)
+
     settings = Inject(get_settings)
     check = settings.FRACTAL_TASKS_DIR / expected_path
     if task_pkg.package_version is None:

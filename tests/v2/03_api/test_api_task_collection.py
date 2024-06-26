@@ -58,14 +58,16 @@ async def test_task_collection(
     # Prepare and validate payload
     payload = dict(package=wheel_path.as_posix(), package_extras="my_extra")
 
+    # Set python_version, if missing
+    if python_version is None:
+        settings = Inject(get_settings)
+        python_version = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+    payload["python_version"] = python_version
+
     # Prepare expected source
-    if python_version:
-        payload["python_version"] = python_version
-        EXPECTED_SOURCE = (
-            f"pip_local:fractal_tasks_mock:0.0.1:my_extra:py{python_version}"
-        )
-    else:
-        EXPECTED_SOURCE = "pip_local:fractal_tasks_mock:0.0.1:my_extra::"
+    EXPECTED_SOURCE = (
+        f"pip_local:fractal_tasks_mock:0.0.1:my_extra:py{python_version}"
+    )
     debug(EXPECTED_SOURCE)
 
     # Validate payload
