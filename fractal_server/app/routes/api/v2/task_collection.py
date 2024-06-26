@@ -74,6 +74,13 @@ async def collect_tasks_pip(
 
     logger = set_logger(logger_name="collect_tasks_pip")
 
+    # Set default python version
+    if task_collect.python_version is None:
+        settings = Inject(get_settings)
+        task_collect.python_version = (
+            settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+        )
+
     # Validate payload as _TaskCollectPip, which has more strict checks than
     # TaskCollectPip
     try:
