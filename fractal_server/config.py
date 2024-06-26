@@ -374,8 +374,7 @@ class Settings(BaseSettings):
     @validator("FRACTAL_SLURM_WORKER_PYTHON", always=True)
     def absolute_FRACTAL_SLURM_WORKER_PYTHON(cls, v):
         """
-        If `FRACTAL_TASKS_PYTHON_3_9` is missing, try to replace it with
-        `shutil.which("python3.9")`.
+        If `FRACTAL_SLURM_WORKER_PYTHON` is a relative path, fail.
         """
         if v is None:
             return None
