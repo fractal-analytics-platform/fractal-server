@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# Unreleased
+
+* Dependencies:
+    * Update `sqlmodel` to `^0.0.19` (\#1584).
+
 # 2.2.0
 
 This version comes with streamlined options for the Gunicorn startup command

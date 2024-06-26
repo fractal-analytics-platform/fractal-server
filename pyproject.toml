@@ -27,7 +27,7 @@ exclude = [
 python = "^3.9"
 python-dotenv = "^1.0.0"
 fastapi = "^0.110.0"
-sqlmodel = "^0.0.16"
+sqlmodel = "^0.0.19"
 sqlalchemy = {extras = ["asyncio"], version = ">=2.0.23,<2.1"}
 aiosqlite = "^0.19.0"
 fastapi-users = {extras = ["oauth"], version = "^12.1.0"}
