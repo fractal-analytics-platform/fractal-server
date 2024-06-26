@@ -389,19 +389,17 @@ class Settings(BaseSettings):
         "3.9", "3.10", "3.11", "3.12"
     ] = "3.10"
     """
-    Default Python version to be used for task collection.
-    Requires the corresponding variable `FRACTAL_TASKS_PYTHON_3_10`
-    to be set.
+    Default Python version to be used for task collection. Requires the
+    corresponding variable (e.g `FRACTAL_TASKS_PYTHON_3_10`) to be set.
     """
 
     FRACTAL_TASKS_PYTHON_3_9: Optional[str] = None
     """
     Absolute path to the Python 3.9 interpreter that serves as base for virtual
     environments tasks. Note that this interpreter must have the `venv` module
-    installed.
-    The default value is the output of `shutil.which("python3.9")`; note that
-    this default can be `None` (if `python3.9` is not available), and also note
-    that `shutil.which` is run from within the fractal-server environment.
+    installed. If set, this must be an absolute path. If the version specified
+    in `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION` is `"3.9"` and this attribute is
+    unset, `sys.executable` is used as a default.
     """
 
     FRACTAL_TASKS_PYTHON_3_10: Optional[str] = None
