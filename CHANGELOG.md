@@ -2,6 +2,8 @@
 
 # Unreleased
 
+* Dependencies:
+    * Update `sqlmodel` to `^0.0.19` (\#1584).
 * Testing:
     * Tests the way `FractalProcessPoolExecutor` spawns processes and threads (\#1579).
 
