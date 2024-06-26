@@ -4,6 +4,8 @@
 
 * Dependencies:
     * Update `sqlmodel` to `^0.0.19` (\#1584).
+* Testing:
+    * Tests the way `FractalProcessPoolExecutor` spawns processes and threads (\#1579).
 
 # 2.2.0
 
@@ -32,7 +34,7 @@ options, and with two new experimental features.
     * Move `FractalGunicornLogger` and `FractalWorker` into `fractal_server/gunicorn_fractal.py` (\#1535).
     * Add custom gunicorn/uvicorn worker to handle SIGABRT signal (\#1526).
     * Store list of submitted jobs in app state (\#1538).
-    * Add logic for graceful shutdown for job slurm executors. (\#1547)
+    * Add logic for graceful shutdown for job slurm executors (\#1547).
 * Runner:
     * Change structure of job folders, introducing per-task subfolders (\#1523).
     * Rename internal `workflow_dir` and `workflow_dir_user` variables to local/remote (\#1534).
