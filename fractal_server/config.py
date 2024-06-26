@@ -13,6 +13,7 @@
 # Zurich.
 import logging
 import shutil
+import sys
 from os import environ
 from os import getenv
 from os.path import abspath
@@ -385,6 +386,15 @@ class Settings(BaseSettings):
         else:
             return v
 
+    FRACTAL_TASKS_PYTHON_DEFAULT_VERSION: Literal[
+        "3.9", "3.10", "3.11", "3.12"
+    ] = "3.10"
+    """
+    Default Python version to be used for task collection.
+    Requires the corresponding variable `FRACTAL_TASKS_PYTHON_3_10`
+    to be set.
+    """
+
     FRACTAL_TASKS_PYTHON_3_9: Optional[str] = None
     """
     Absolute path to the Python 3.9 interpreter that serves as base for virtual
@@ -405,50 +415,47 @@ class Settings(BaseSettings):
     Same as `FRACTAL_TASKS_PYTHON_3_9`, for Python 3.11.
     """
 
-    @validator("FRACTAL_TASKS_PYTHON_3_9", always=True)
-    def set_FRACTAL_TASKS_PYTHON_3_9(cls, v):
+    FRACTAL_TASKS_PYTHON_3_12: Optional[str] = None
+    """
+    Same as `FRACTAL_TASKS_PYTHON_3_9`, for Python 3.12.
+    """
+
+    @root_validator()
+    def check_tasks_python(cls, values):
         """
         If `FRACTAL_TASKS_PYTHON_3_9` is missing, try to replace it with
         `shutil.which("python3.9")`.
         """
-        if v is None:
-            return shutil.which("python3.9")
-        elif not Path(v).is_absolute():
-            raise FractalConfigurationError(
-                f"Non-absolute value for FRACTAL_TASKS_PYTHON_3_9={v}"
-            )
-        else:
-            return v
 
-    @validator("FRACTAL_TASKS_PYTHON_3_10", always=True)
-    def set_FRACTAL_TASKS_PYTHON_3_10(cls, v):
-        """
-        If `FRACTAL_TASKS_PYTHON_3_10` is missing, try to replace it with
-        `shutil.which("python3.10")`.
-        """
-        if v is None:
-            return shutil.which("python3.10")
-        elif not Path(v).is_absolute():
-            raise FractalConfigurationError(
-                f"Non-absolute value for FRACTAL_TASKS_PYTHON_3_10={v}"
-            )
-        else:
-            return v
+        for version in ["3_9", "3_10", "3_11", "3_12"]:
+            key = f"FRACTAL_TASKS_PYTHON_{version}"
+            value = values.get(key)
+            if value is not None and not Path(value).is_absolute():
+                raise FractalConfigurationError(
+                    f"Non-absolute value {key}={value}"
+                )
+        default_version = values.get("FRACTAL_TASKS_PYTHON_DEFAULT_VERSION")
+        default_version_undescore = default_version.replace(".", "_")
 
-    @validator("FRACTAL_TASKS_PYTHON_3_11", always=True)
-    def set_FRACTAL_TASKS_PYTHON_3_11(cls, v):
-        """
-        If `FRACTAL_TASKS_PYTHON_3_11` is missing, try to replace it with
-        `shutil.which("python3.11")`.
-        """
-        if v is None:
-            return shutil.which("python3.11")
-        elif not Path(v).is_absolute():
-            raise FractalConfigurationError(
-                f"Non-absolute value for FRACTAL_TASKS_PYTHON_3_11={v}"
+        key = f"FRACTAL_TASKS_PYTHON_{default_version_undescore}"
+        value = values.get(key)
+        if value is None:
+            msg = (
+                f"FRACTAL_TASKS_PYTHON_DEFAULT_VERSION={default_version} "
+                f"but {key}={value}."
             )
-        else:
-            return v
+            current_version = (
+                f"{sys.version_info.major}_{sys.version_info.minor}"
+            )
+            if current_version == default_version_undescore:
+                values[key] = sys.executable
+                logging.warning(msg)
+                logging.warning(f"Setting {key}={sys.executable}")
+            else:
+                logging.error(msg)
+                raise FractalConfigurationError(msg)
+
+        return values
 
     FRACTAL_SLURM_POLL_INTERVAL: int = 5
     """

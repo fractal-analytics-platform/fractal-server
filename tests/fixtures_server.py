@@ -1,5 +1,6 @@
 import logging
 import random
+import shutil
 from dataclasses import dataclass
 from dataclasses import field
 from pathlib import Path
@@ -97,6 +98,11 @@ def get_patched_settings(temp_path: Path):
     settings.FRACTAL_API_SUBMIT_RATE_LIMIT = 0
     settings.FRACTAL_API_MAX_JOB_LIST_LENGTH = 1
     settings.FRACTAL_GRACEFUL_SHUTDOWN_TIME = 1
+
+    settings.FRACTAL_TASKS_PYTHON_3_9 = shutil.which("python3.9")
+    settings.FRACTAL_TASKS_PYTHON_3_10 = shutil.which("python3.10")
+    settings.FRACTAL_TASKS_PYTHON_3_11 = shutil.which("python3.11")
+    settings.FRACTAL_TASKS_PYTHON_3_12 = shutil.which("python3.12")
 
     # NOTE:
     # This variable is set to work with the system interpreter within a docker

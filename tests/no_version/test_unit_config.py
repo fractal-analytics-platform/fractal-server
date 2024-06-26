@@ -1,5 +1,3 @@
-import shutil
-import sys
 from pathlib import Path
 
 import pytest
@@ -336,24 +334,21 @@ def test_python_interpreters():
     )
 
     # Verify that the FRACTAL_TASKS_PYTHON_3_X variable corresponding to
-    # the current Python version is set correctly
-    _version_dot = f"{sys.version_info.major}.{sys.version_info.minor}"
-    _version_underscore = _version_dot.replace(".", "_")
+    # the default Python version is set correctly
     settings = Settings(**common_attributes)
-    assert getattr(
-        settings, f"FRACTAL_TASKS_PYTHON_{_version_underscore}"
-    ) == shutil.which(f"python{_version_dot}")
+    version = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+    version = version.replace(".", "_")
+    assert getattr(settings, f"FRACTAL_TASKS_PYTHON_{version}") is not None
 
     # Non-absolute paths
     with pytest.raises(FractalConfigurationError) as e:
         Settings(FRACTAL_SLURM_WORKER_PYTHON="python3.10", **common_attributes)
     assert "Non-absolute value for FRACTAL_SLURM_WORKER_PYTHON" in str(e.value)
-    with pytest.raises(FractalConfigurationError) as e:
-        Settings(FRACTAL_TASKS_PYTHON_3_9="python3.9", **common_attributes)
-    assert "Non-absolute value for FRACTAL_TASKS_PYTHON_3_9" in str(e.value)
-    with pytest.raises(FractalConfigurationError) as e:
-        Settings(FRACTAL_TASKS_PYTHON_3_10="python3.10", **common_attributes)
-    assert "Non-absolute value for FRACTAL_TASKS_PYTHON_3_10" in str(e.value)
-    with pytest.raises(FractalConfigurationError) as e:
-        Settings(FRACTAL_TASKS_PYTHON_3_11="python3.11", **common_attributes)
-    assert "Non-absolute value for FRACTAL_TASKS_PYTHON_3_11" in str(e.value)
+    for version in ["3_9", "3_10", "3_11", "3_12"]:
+        key = f"FRACTAL_TASKS_PYTHON_{version}"
+        version_dot = version.replace("_", ".")
+        attrs = common_attributes.copy()
+        attrs[key] = f"python{version_dot}"
+        with pytest.raises(FractalConfigurationError) as e:
+            Settings(**attrs)
+        assert f"Non-absolute value {key}=" in str(e.value)
