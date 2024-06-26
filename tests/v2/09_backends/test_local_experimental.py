@@ -237,6 +237,9 @@ def test_count_threads_and_processes(tmp_path):
     #   - MainThread
     #   - asyncio_0
     #   - Thread-{N}
+    #
+    # NOTE: In the third case, it is confusing that Thread-{N} sometimes goes
+    # from started to stopped and we don't know why
 
     # our `FractalProcessPoolExecutor`
     with FractalProcessPoolExecutor(
@@ -259,6 +262,7 @@ def test_count_threads_and_processes(tmp_path):
         # --- Threads
         threads = threading.enumerate()
         assert len(threads) == len(initial_threads) + 3
+        executor_threads = threads[-3:]
 
         assert threads[-2].name.startswith("Thread-")
         assert isinstance(threads[-2], _ExecutorManagerThread)
@@ -278,12 +282,9 @@ def test_count_threads_and_processes(tmp_path):
         time.sleep(2)
 
         # --- Threads
-        threads = threading.enumerate()
-        # On GitHub CI there is one last thread
-        # <Connection(Thread-N, stopped daemon)>
-        assert (threads == initial_threads) or (
-            threads == initial_threads[:-1]
-        )  # FIXME
+        current_threads = threading.enumerate()
+        for thread in executor_threads:
+            assert thread not in current_threads
 
         # --- Processes
         assert len(executor._processes) == executor._max_workers
@@ -292,11 +293,9 @@ def test_count_threads_and_processes(tmp_path):
 
     # --- Threads
     new_initial_threads = threading.enumerate()
-    # On GitHub CI there is one last thread
-    # <Connection(Thread-N, stopped daemon)>
-    assert (new_initial_threads == initial_threads) or (
-        new_initial_threads == initial_threads[:-1]
-    )  # FIXME
+    for thread in executor_threads:
+        assert thread not in new_initial_threads
+
     # --- Processes
     assert executor._processes is None
 
@@ -312,7 +311,7 @@ def test_count_threads_and_processes(tmp_path):
         # +++ SUBMITS
         for _ in range(executor._max_workers + 10):
             # There is a limit on number of processes
-            executor.submit(_sleep_and_return, 2)
+            executor.submit(_sleep_and_return, 0.2)
 
         # --- Threads
         threads = threading.enumerate()
