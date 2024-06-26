@@ -104,7 +104,11 @@ async def test_collection(
     override_settings_factory(FRACTAL_TASKS_DIR=(tmp_path / "test_collection"))
 
     # Prepare and validate payload
-    task_pkg_dict = dict(package=str(dummy_task_package))
+    settings = Inject(get_settings)
+    default_python_version = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+    task_pkg_dict = dict(
+        package=str(dummy_task_package), python_version=default_python_version
+    )
     debug(task_pkg_dict)
     _TaskCollectPip(**task_pkg_dict)
 

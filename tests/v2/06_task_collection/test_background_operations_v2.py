@@ -9,6 +9,8 @@ from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.routes.api.v2.task_collection import (
     TaskCollectStatusV2,
 )
+from fractal_server.config import get_settings
+from fractal_server.syringe import Inject
 from fractal_server.tasks.endpoint_operations import (
     create_package_dir_pip,
 )
@@ -66,11 +68,20 @@ async def test_pip_install(tmp_path):
     venv_path = tmp_path / "fractal_test" / f"{PACKAGE}{VERSION}"
     venv_path.mkdir(exist_ok=True, parents=True)
     logger_name = "fractal"
+    settings = Inject(get_settings)
+    settings.check_tasks_python()
+    python_version = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
 
-    await _init_venv(path=venv_path, logger_name=logger_name)
+    await _init_venv(
+        path=venv_path, python_version=python_version, logger_name=logger_name
+    )
     location = await _pip_install(
         venv_path=venv_path,
-        task_pkg=_TaskCollectPip(package=PACKAGE, package_version=VERSION),
+        task_pkg=_TaskCollectPip(
+            package=PACKAGE,
+            package_version=VERSION,
+            python_version=python_version,
+        ),
         logger_name=logger_name,
     )
     debug(location)
