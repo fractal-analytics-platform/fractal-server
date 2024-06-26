@@ -420,43 +420,6 @@ class Settings(BaseSettings):
     Same as `FRACTAL_TASKS_PYTHON_3_9`, for Python 3.12.
     """
 
-    @root_validator()
-    def check_tasks_python(cls, values):
-        """
-        If `FRACTAL_TASKS_PYTHON_3_9` is missing, try to replace it with
-        `shutil.which("python3.9")`.
-        """
-
-        for version in ["3_9", "3_10", "3_11", "3_12"]:
-            key = f"FRACTAL_TASKS_PYTHON_{version}"
-            value = values.get(key)
-            if value is not None and not Path(value).is_absolute():
-                raise FractalConfigurationError(
-                    f"Non-absolute value {key}={value}"
-                )
-        default_version = values.get("FRACTAL_TASKS_PYTHON_DEFAULT_VERSION")
-        default_version_undescore = default_version.replace(".", "_")
-
-        key = f"FRACTAL_TASKS_PYTHON_{default_version_undescore}"
-        value = values.get(key)
-        if value is None:
-            msg = (
-                f"FRACTAL_TASKS_PYTHON_DEFAULT_VERSION={default_version} "
-                f"but {key}={value}."
-            )
-            current_version = (
-                f"{sys.version_info.major}_{sys.version_info.minor}"
-            )
-            if current_version == default_version_undescore:
-                values[key] = sys.executable
-                logging.warning(msg)
-                logging.warning(f"Setting {key}={sys.executable}")
-            else:
-                logging.error(msg)
-                raise FractalConfigurationError(msg)
-
-        return values
-
     FRACTAL_SLURM_POLL_INTERVAL: int = 5
     """
     Interval to wait (in seconds) before checking whether unfinished job are
@@ -575,6 +538,39 @@ class Settings(BaseSettings):
                         f"{self.FRACTAL_LOCAL_CONFIG_FILE} not found."
                     )
 
+    def check_tasks_python(self) -> None:
+        """
+        FIXME: docstring
+        """
+
+        for version in ["3_9", "3_10", "3_11", "3_12"]:
+            key = f"FRACTAL_TASKS_PYTHON_{version}"
+            value = getattr(self, key)
+            if value is not None and not Path(value).is_absolute():
+                raise FractalConfigurationError(
+                    f"Non-absolute value {key}={value}"
+                )
+        default_version = self.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+        default_version_undescore = default_version.replace(".", "_")
+
+        key = f"FRACTAL_TASKS_PYTHON_{default_version_undescore}"
+        value = getattr(self, key)
+        if value is None:
+            msg = (
+                f"FRACTAL_TASKS_PYTHON_DEFAULT_VERSION={default_version} "
+                f"but {key}={value}."
+            )
+            current_version = (
+                f"{sys.version_info.major}_{sys.version_info.minor}"
+            )
+            if current_version == default_version_undescore:
+                setattr(self, key, sys.executable)
+                logging.warning(msg)
+                logging.warning(f"Setting {key}={sys.executable}")
+            else:
+                logging.error(msg)
+                raise FractalConfigurationError(msg)
+
     def check(self):
         """
         Make sure that required variables are set
@@ -590,6 +586,7 @@ class Settings(BaseSettings):
 
         self.check_db()
         self.check_runner()
+        self.check_tasks_python()
 
 
 def get_settings(settings=Settings()) -> Settings:
