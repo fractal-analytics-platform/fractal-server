@@ -384,13 +384,16 @@ async def background_collect_pip(
     task_pkg: _TaskCollectPip,
 ) -> None:
     """
-    Install package and collect tasks
+    Setup venv, install package, collect tasks.
 
-    Install a python package and collect the tasks it provides according to
-    the manifest.
-
-    In case of error, copy the log into the state and delete the package
-    directory.
+    This function (executed as background task), includes the several steps
+    associated to automated collection of a Python task package.
+    1. Preliminary checks
+    2. Create venv and run `pip install`
+    3. Collect tasks into db
+    4. Finalize things.
+    5. Handle failures by copying the log into the state and deleting the
+       package directory.
     """
     logger_name = task_pkg.package.replace("/", "_")
     logger = set_logger(
