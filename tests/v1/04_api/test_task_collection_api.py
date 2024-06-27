@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 import shutil
@@ -533,26 +532,17 @@ async def test_collect_validation_error(
     tmp_path: Path,
     testdata_path: Path,
 ):
+    """
+    When collecting a V2 task package via the V1 API, an error is raised.
+    """
     override_settings_factory(FRACTAL_TASKS_DIR=tmp_path)
-
-    file_dir = tmp_path / ".fractal/fractal-tasks-mock0.0.1"
-    file_path = file_dir / "collection.json"
-    os.makedirs(file_dir, exist_ok=True)
-    with open(file_path, "w") as f:
-        json.dump(dict(foo="bar"), f)
-
-    payload = dict(
-        package=(
-            testdata_path.parent
-            / "v2/fractal_tasks_mock/dist"
-            / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
-        ).as_posix()
-    )
-
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
         res = await client.post(
             f"{PREFIX}/collect/pip/",
-            json=payload,
+            json=dict(package="fractal-tasks-core", package_version="1.0.0"),
         )
         assert res.status_code == 422
-        assert "old version" in res.json()["detail"]
+        assert (
+            "Manifest version manifest_version='2' not supported"
+            in res.json()["detail"]
+        )
