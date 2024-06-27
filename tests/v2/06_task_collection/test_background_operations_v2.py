@@ -92,6 +92,9 @@ async def test_pip_install_pinned(tmp_path, caplog):
 
     caplog.set_level(logging.DEBUG)
 
+    settings = Inject(get_settings)
+    PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+
     LOG = "fractal_pinned_version"
     PACKAGE = "devtools"
     VERSION = "0.8.0"
@@ -99,7 +102,9 @@ async def test_pip_install_pinned(tmp_path, caplog):
     venv_path = tmp_path / "fractal_test"
     venv_path.mkdir(exist_ok=True, parents=True)
     pip = venv_path / "venv/bin/pip"
-    await _init_venv_v2(path=venv_path, logger_name=LOG)
+    await _init_venv_v2(
+        path=venv_path, logger_name=LOG, python_version=PYTHON_VERSION
+    )
 
     async def _aux(*, pin: Optional[dict[str, str]] = None) -> str:
         """pip install with pin and return version for EXTRA package"""
@@ -110,6 +115,7 @@ async def test_pip_install_pinned(tmp_path, caplog):
                 package_version=VERSION,
                 package_extras=EXTRA,
                 pinned_package_versions=pin,
+                python_version=PYTHON_VERSION,
             ),
             logger_name=LOG,
         )
@@ -172,41 +178,28 @@ async def test_download(tmp_path):
     WHEN download_package is called
     THEN the package's wheel is download in the destination directory
     """
+
+    settings = Inject(get_settings)
+    PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+
     PACKAGE = "fractal-tasks-core"
-    task_pkg = _TaskCollectPip(package=PACKAGE)
+    task_pkg = _TaskCollectPip(package=PACKAGE, python_version=PYTHON_VERSION)
     pkg = await download_package(task_pkg=task_pkg, dest=tmp_path)
     debug(pkg)
     assert pkg.exists()
     assert "whl" in pkg.as_posix()
 
 
-@pytest.mark.parametrize(
-    "relative_wheel_path",
-    (
-        "dummy_pkg_1/dist/dummy_pkg_1-0.0.1-py3-none-any.whl",
-        "dummy_pkg_2/dist/dummy_PKG_2-0.0.1-py3-none-any.whl",
-    ),
-)
 async def test_unit_create_venv_install_package(
     testdata_path: Path,
     tmp_path: Path,
-    override_settings_factory: callable,
-    relative_wheel_path: str,
 ):
     """
-    This unit test for `_create_venv_install_package` collects tasks from two
-    local wheel files.
-
-    ``console
-    $ pwd
-    /.../fractal-server/tests/data/more_dummy_task_packages
-    $ grep name dummy_pkg_*/pyproject.toml | grep -v email
-    dummy_pkg_1/pyproject.toml:name = "dummy_pkg_1"
-    dummy_pkg_2/pyproject.toml:name = "dummy-PKG-2"
-    ```
+    This unit test for `_create_venv_install_package` collects tasks from a
+    local wheel file.
     """
-    from fractal_server.tasks.v1.background_operations import (
-        _create_venv_install_package,
+    from fractal_server.tasks.v2._venv_pip import (
+        _create_venv_install_package_pip,
     )
     from fractal_server.logger import set_logger
 
@@ -214,9 +207,16 @@ async def test_unit_create_venv_install_package(
     set_logger(LOGGER_NAME, log_file_path=(tmp_path / "logs"))
 
     task_package = (
-        testdata_path / "more_dummy_task_packages" / relative_wheel_path
+        testdata_path
+        / "../v2/fractal_tasks_mock/dist"
+        / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
     )
-    task_pkg = _TaskCollectPip(package=task_package.as_posix())
+
+    settings = Inject(get_settings)
+    PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+    task_pkg = _TaskCollectPip(
+        package=task_package.as_posix(), python_version=PYTHON_VERSION
+    )
 
     # Extract info form the wheel package (this is part of the endpoint)
     pkg_info = inspect_package(task_pkg.package_path)
@@ -227,7 +227,7 @@ async def test_unit_create_venv_install_package(
     debug(task_pkg)
 
     # Collect task package
-    python_bin, package_root = await _create_venv_install_package(
+    python_bin, package_root = await _create_venv_install_package_pip(
         task_pkg=task_pkg, path=tmp_path, logger_name=LOGGER_NAME
     )
     debug(python_bin)
@@ -235,7 +235,11 @@ async def test_unit_create_venv_install_package(
 
 
 async def test_logs_failed_collection(
-    db, dummy_task_package, override_settings_factory, tmp_path: Path
+    db,
+    dummy_task_package,
+    override_settings_factory,
+    tmp_path: Path,
+    testdata_path: Path,
 ):
     """
     GIVEN a package and its installation environment
@@ -245,11 +249,21 @@ async def test_logs_failed_collection(
         * the installation directory is removed
     """
 
+    settings = Inject(get_settings)
+    PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+
     override_settings_factory(
         FRACTAL_TASKS_DIR=(tmp_path / "test_logs_failed_collection")
     )
 
-    task_pkg = _TaskCollectPip(package=dummy_task_package.as_posix())
+    task_package = (
+        testdata_path
+        / "../v2/fractal_tasks_mock/dist"
+        / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
+    )
+    task_pkg = _TaskCollectPip(
+        package=task_package.as_posix(), python_version=PYTHON_VERSION
+    )
 
     # Extract info form the wheel package (this is part of the endpoint)
     pkg_info = inspect_package(task_pkg.package_path)
