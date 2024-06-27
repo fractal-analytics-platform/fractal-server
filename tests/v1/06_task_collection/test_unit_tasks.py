@@ -7,7 +7,7 @@ from pydantic.error_wrappers import ValidationError
 from fractal_server.app.schemas.v1 import ManifestV1
 from fractal_server.tasks.utils import _normalize_package_name
 from fractal_server.tasks.utils import get_absolute_venv_path
-from fractal_server.tasks.utils import get_python_interpreter
+from fractal_server.tasks.utils import get_python_interpreter_v1
 from fractal_server.tasks.v1._TaskCollectPip import _TaskCollectPip
 
 
@@ -33,7 +33,7 @@ def test_get_absolute_venv_path(tmp_path, override_settings_factory):
 
 def test_get_python_interpreter():
     with pytest.raises(ValueError):
-        get_python_interpreter(version="1.1")
+        get_python_interpreter_v1(version="1.1")
 
 
 def test_normalize_package_name():
