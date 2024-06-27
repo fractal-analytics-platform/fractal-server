@@ -6,11 +6,11 @@ from devtools import debug
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
-from fractal_server.tasks.v2.endpoint_operations_v2 import (
+from fractal_server.tasks.v2.endpoint_operations import (
     create_package_dir_pip,
 )
-from fractal_server.tasks.v2.endpoint_operations_v2 import download_package
-from fractal_server.tasks.v2.endpoint_operations_v2 import inspect_package
+from fractal_server.tasks.v2.endpoint_operations import download_package
+from fractal_server.tasks.v2.endpoint_operations import inspect_package
 
 
 async def test_inspect_package(tmp_path):
