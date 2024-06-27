@@ -220,7 +220,7 @@ async def delete_task(
             wf
             for wf in workflows
             if user.model_dump()
-            in [u.model_dump() for u in wf.project.user_list]
+            in (u.model_dump() for u in wf.project.user_list)
         ]
         if workflows_current_user:
             current_user_msg = (
