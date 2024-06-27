@@ -21,7 +21,7 @@ from tests.fixtures_slurm import scancel_all_jobs_of_a_slurm_user
 from tests.fixtures_slurm import SLURM_USER
 
 
-class TestingFractalSlurmExecutor(FractalSlurmExecutor):
+class MockFractalSlurmExecutor(FractalSlurmExecutor):
     def __init__(self, *args, **kwargs):
         """
         When running from outside Fractal runner, task-specific subfolders
@@ -59,7 +59,7 @@ def test_slurm_executor_submit_missing_subfolder(
     If the task-specific subfolder is missing, the executor should
     raise a FileNotFoundError.
 
-    Note that in this test we don't use TestingFractalSlurmExecutor.
+    Note that in this test we don't use MockFractalSlurmExecutor.
     """
     with pytest.raises(FileNotFoundError):
         with FractalSlurmExecutor(
@@ -76,7 +76,7 @@ def test_slurm_executor_submit(
     monkey_slurm,
     tmp777_path,
 ):
-    with TestingFractalSlurmExecutor(
+    with MockFractalSlurmExecutor(
         slurm_user=SLURM_USER,
         workflow_dir_local=tmp777_path,
         workflow_dir_remote=tmp777_path,
@@ -98,7 +98,7 @@ def test_slurm_executor_submit_with_exception(
         raise ValueError
 
     with pytest.raises(TaskExecutionError) as e:
-        with TestingFractalSlurmExecutor(
+        with MockFractalSlurmExecutor(
             slurm_user=SLURM_USER,
             workflow_dir_local=tmp777_path,
             workflow_dir_remote=tmp777_path,
@@ -114,7 +114,7 @@ def test_slurm_executor_map(
     monkey_slurm,
     tmp777_path,
 ):
-    with TestingFractalSlurmExecutor(
+    with MockFractalSlurmExecutor(
         slurm_user=SLURM_USER,
         workflow_dir_local=tmp777_path,
         workflow_dir_remote=tmp777_path,
@@ -156,7 +156,7 @@ def test_slurm_executor_map_with_exception(
                 time.sleep(1.5)
             return n
 
-    with TestingFractalSlurmExecutor(
+    with MockFractalSlurmExecutor(
         slurm_user=SLURM_USER,
         workflow_dir_local=tmp777_path,
         workflow_dir_remote=tmp777_path,
@@ -189,7 +189,7 @@ def test_slurm_executor_submit_separate_folders(
 
     workflow_dir_local, workflow_dir_remote = slurm_working_folders
 
-    with TestingFractalSlurmExecutor(
+    with MockFractalSlurmExecutor(
         slurm_user=SLURM_USER,
         workflow_dir_local=workflow_dir_local,
         workflow_dir_remote=workflow_dir_remote,
@@ -221,7 +221,7 @@ def test_slurm_executor_submit_and_scancel(
     workflow_dir_local, workflow_dir_remote = slurm_working_folders
 
     with pytest.raises(JobExecutionError) as e:
-        with TestingFractalSlurmExecutor(
+        with MockFractalSlurmExecutor(
             slurm_user=SLURM_USER,
             workflow_dir_local=workflow_dir_local,
             workflow_dir_remote=workflow_dir_remote,
@@ -318,7 +318,7 @@ def test_submit_pre_command(fake_process, tmp_path):
 
     slurm_user = "some-fake-user"
 
-    with TestingFractalSlurmExecutor(
+    with MockFractalSlurmExecutor(
         slurm_user=slurm_user,
         workflow_dir_local=tmp_path,
         workflow_dir_remote=tmp_path,
@@ -349,7 +349,7 @@ def test_slurm_account_in_submit_script(tmp_path):
     # Without slurm_account argument
     tmp_path1 = tmp_path / "1"
     tmp_path1.mkdir()
-    with TestingFractalSlurmExecutor(
+    with MockFractalSlurmExecutor(
         slurm_user=slurm_user,
         workflow_dir_local=tmp_path1,
         workflow_dir_remote=tmp_path1,
@@ -373,7 +373,7 @@ def test_slurm_account_in_submit_script(tmp_path):
     # With slurm_account argument
     tmp_path2 = tmp_path / "2"
     tmp_path2.mkdir()
-    with TestingFractalSlurmExecutor(
+    with MockFractalSlurmExecutor(
         slurm_user=slurm_user,
         workflow_dir_local=tmp_path2,
         workflow_dir_remote=tmp_path2,
