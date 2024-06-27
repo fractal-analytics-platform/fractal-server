@@ -12,7 +12,7 @@ from tests.fixtures_slurm import run_squeue
 from tests.fixtures_slurm import SLURM_USER
 
 sys.path.append(Path(__file__).parent)
-from test_backend_slurm import TestingFractalSlurmExecutor  # noqa: E402
+from test_backend_slurm import MockFractalSlurmExecutor  # noqa: E402
 
 
 def _check_no_running_jobs():
@@ -49,7 +49,7 @@ def test_direct_shutdown_during_submit(
         time.sleep(sleep_time)
         return 42
 
-    with TestingFractalSlurmExecutor(
+    with MockFractalSlurmExecutor(
         slurm_user=SLURM_USER,
         workflow_dir_local=tmp777_path,
         workflow_dir_remote=tmp777_path,
@@ -88,7 +88,7 @@ def test_indirect_shutdown_during_submit(
     """
     shutdown_file = tmp_path / "shutdown"
 
-    executor = TestingFractalSlurmExecutor(
+    executor = MockFractalSlurmExecutor(
         slurm_user=SLURM_USER,
         workflow_dir_local=tmp777_path,
         workflow_dir_remote=tmp777_path,
@@ -160,7 +160,7 @@ def test_indirect_shutdown_during_map(
         stderr=tmp_stderr,
     )
 
-    with TestingFractalSlurmExecutor(
+    with MockFractalSlurmExecutor(
         slurm_user=SLURM_USER,
         workflow_dir_local=tmp777_path,
         workflow_dir_remote=tmp777_path,
