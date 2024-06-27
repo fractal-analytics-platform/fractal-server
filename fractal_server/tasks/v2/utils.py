@@ -25,8 +25,8 @@ def get_python_interpreter_v2(
         interpreter: string representing the python executable or its path
     """
 
-    if version is None:
-        raise ValueError("[get_python_interpreter_v2] version is None")
+    if version not in ["3.9", "3.10", "3.11", "3.12"]:
+        raise ValueError(f"Invalid {version=}.")
 
     settings = Inject(get_settings)
     version_underscore = version.replace(".", "_")
