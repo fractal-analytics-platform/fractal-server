@@ -8,6 +8,17 @@ from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.app.schemas.v2 import TaskCollectPipV2
 
 
+def _parse_wheel_filename(wheel_filename: str) -> dict[str, str]:
+    """
+    Note that the first part of a wheel filename is `{distribution}-{version}`
+    (see
+    https://packaging.python.org/en/latest/specifications/binary-distribution-format
+    ).
+    """
+    parts = wheel_filename.split("-")
+    return dict(distribution=parts[0], version=parts[1])
+
+
 class _TaskCollectPip(TaskCollectPipV2, extra=Extra.forbid):
     """
     Internal TaskCollectPip schema
@@ -46,11 +57,9 @@ class _TaskCollectPip(TaskCollectPipV2, extra=Extra.forbid):
                 raise ValueError("Package path must be absolute")
             if package_path.exists():
                 values["package_path"] = package_path
-                (
-                    values["package"],
-                    values["package_version"],
-                    *_,
-                ) = package_path.name.split("-")
+                wheel_metadata = _parse_wheel_filename(package_path.name)
+                values["package_name"] = wheel_metadata["distribution"]
+                values["package_version"] = wheel_metadata["version"]
             else:
                 raise ValueError(f"Package {package_path} does not exist.")
         return values
