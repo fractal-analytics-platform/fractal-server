@@ -7,9 +7,9 @@ from fractal_server.app.schemas.v1 import ManifestV1
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 from fractal_server.tasks.v1._TaskCollectPip import _TaskCollectPip
-from fractal_server.tasks.v2.endpoint_operations import create_package_dir_pip
-from fractal_server.tasks.v2.endpoint_operations import download_package
-from fractal_server.tasks.v2.endpoint_operations import inspect_package
+from fractal_server.tasks.v1.endpoint_operations import create_package_dir_pip
+from fractal_server.tasks.v1.endpoint_operations import download_package
+from fractal_server.tasks.v1.endpoint_operations import inspect_package
 
 
 async def test_inspect_package(tmp_path):
