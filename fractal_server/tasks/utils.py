@@ -13,7 +13,36 @@ COLLECTION_LOG_FILENAME = "collection.log"
 COLLECTION_FREEZE_FILENAME = "collection_freeze.txt"
 
 
-def get_python_interpreter(
+def get_python_interpreter_v1(version: Optional[str] = None) -> str:
+    """
+    Return the path to the python interpreter
+
+    Args:
+        version: Python version
+
+    Raises:
+        ValueError: If the python version requested is not available on the
+                    host.
+
+    Returns:
+        interpreter: string representing the python executable or its path
+    """
+    import shutil
+    import sys
+
+    if version:
+        interpreter = shutil.which(f"python{version}")
+        if not interpreter:
+            raise ValueError(
+                f"Python version {version} not available on host."
+            )
+    else:
+        interpreter = sys.executable
+
+    return interpreter
+
+
+def get_python_interpreter_v2(
     version: Literal["3.9", "3.10", "3.11", "3.12"]
 ) -> str:
     """
@@ -123,7 +152,7 @@ async def _init_venv(
     """
     logger = get_logger(logger_name)
     logger.debug(f"[_init_venv] {path=}")
-    interpreter = get_python_interpreter(version=python_version)
+    interpreter = get_python_interpreter_v2(version=python_version)
     logger.debug(f"[_init_venv] {interpreter=}")
     await execute_command(
         cwd=path,
