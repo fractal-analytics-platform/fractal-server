@@ -19,14 +19,21 @@ async def test_inspect_package(tmp_path):
     WHEN the inspect package is called on the path of the wheel
     THEN the name, version and manifest of the package are loaded
     """
-    PACKAGE = "fractal-tasks-core==0.14.3"
-    task_pkg = _TaskCollectPip(package=PACKAGE)
+    PACKAGE_NAME = "fractal-tasks-core"
+    PACKAGE_VERSION = "1.0.1"
+    settings = Inject(get_settings)
+    PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+    task_pkg = _TaskCollectPip(
+        package=PACKAGE_NAME,
+        package_version=PACKAGE_VERSION,
+        python_version=PYTHON_VERSION,
+    )
     pkg_wheel = await download_package(task_pkg=task_pkg, dest=tmp_path)
     debug(pkg_wheel)
     info = inspect_package(pkg_wheel)
     debug(info)
-    assert info["pkg_name"] == "fractal-tasks-core"
-    assert info["pkg_version"] == "0.14.3"
+    assert info["pkg_name"] == PACKAGE_NAME
+    assert info["pkg_version"] == PACKAGE_VERSION
     assert info["pkg_manifest"] is not None
 
 
