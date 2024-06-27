@@ -48,7 +48,7 @@ class _TaskCollectPip(TaskCollectPipV2, extra=Extra.forbid):
                 values["package_path"] = package_path
                 (
                     values["package"],
-                    values["version"],
+                    values["package_version"],
                     *_,
                 ) = package_path.name.split("-")
             else:
