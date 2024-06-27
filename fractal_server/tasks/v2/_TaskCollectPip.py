@@ -1,13 +1,14 @@
 from pathlib import Path
 from typing import Optional
 
+from pydantic import Extra
 from pydantic import root_validator
 
 from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.app.schemas.v2 import TaskCollectPipV2
 
 
-class _TaskCollectPip(TaskCollectPipV2):
+class _TaskCollectPip(TaskCollectPipV2, extra=Extra.forbid):
     """
     Internal TaskCollectPip schema
 
