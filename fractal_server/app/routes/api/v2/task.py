@@ -217,7 +217,10 @@ async def delete_task(
 
         # Find which workflows are associated to the current user
         workflows_current_user = [
-            wf for wf in workflows if user in wf.project.user_list
+            wf
+            for wf in workflows
+            if user.model_dump()
+            in [u.model_dump() for u in wf.project.user_list]
         ]
         if workflows_current_user:
             current_user_msg = (
