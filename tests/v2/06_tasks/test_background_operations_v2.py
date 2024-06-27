@@ -35,50 +35,6 @@ def test_get_task_type():
     assert _get_task_type(task) == "compound"
 
 
-async def test_create_venv_install_package_pip(
-    testdata_path: Path,
-    tmp_path: Path,
-):
-    """
-    This unit test for `_create_venv_install_package` collects tasks from a
-    local wheel file.
-    """
-    from fractal_server.tasks.v2._venv_pip import (
-        _create_venv_install_package_pip,
-    )
-    from fractal_server.logger import set_logger
-
-    LOGGER_NAME = "LOGGER"
-    set_logger(LOGGER_NAME, log_file_path=(tmp_path / "logs"))
-
-    task_package = (
-        testdata_path
-        / "../v2/fractal_tasks_mock/dist"
-        / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
-    )
-
-    settings = Inject(get_settings)
-    PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
-    task_pkg = _TaskCollectPip(
-        package=task_package.as_posix(), python_version=PYTHON_VERSION
-    )
-
-    # Extract info form the wheel package (this is part of the endpoint)
-    pkg_info = inspect_package(task_pkg.package_path)
-    task_pkg.package_name = pkg_info["pkg_name"]
-    task_pkg.package_version = pkg_info["pkg_version"]
-    task_pkg.package_manifest = pkg_info["pkg_manifest"]
-    task_pkg.check()
-    debug(task_pkg)
-
-    # Collect task package
-    python_bin, package_root = await _create_venv_install_package_pip(
-        task_pkg=task_pkg, path=tmp_path, logger_name=LOGGER_NAME
-    )
-    debug(python_bin)
-    debug(package_root)
-
-
 async def test_logs_failed_collection(
     db,
     dummy_task_package,

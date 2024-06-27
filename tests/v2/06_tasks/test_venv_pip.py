@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from typing import Optional
 
 import pytest
@@ -7,8 +8,12 @@ from devtools import debug
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
+from fractal_server.tasks.v2._venv_pip import (
+    _create_venv_install_package_pip,
+)
 from fractal_server.tasks.v2._venv_pip import _init_venv_v2
 from fractal_server.tasks.v2._venv_pip import _pip_install
+from fractal_server.tasks.v2.endpoint_operations import inspect_package
 from tests.execute_command import execute_command
 
 
@@ -157,3 +162,45 @@ async def test_init_venv(tmp_path, python_version):
     if python_version:
         version = await execute_command(f"{python_bin} --version")
         assert python_version in version
+
+
+async def test_create_venv_install_package_pip(
+    testdata_path: Path,
+    tmp_path: Path,
+):
+    """
+    This unit test for `_create_venv_install_package` collects tasks from a
+    local wheel file.
+    """
+
+    from fractal_server.logger import set_logger
+
+    LOGGER_NAME = "LOGGER"
+    set_logger(LOGGER_NAME, log_file_path=(tmp_path / "logs"))
+
+    task_package = (
+        testdata_path
+        / "../v2/fractal_tasks_mock/dist"
+        / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
+    )
+
+    settings = Inject(get_settings)
+    PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+    task_pkg = _TaskCollectPip(
+        package=task_package.as_posix(), python_version=PYTHON_VERSION
+    )
+
+    # Extract info form the wheel package (this is part of the endpoint)
+    pkg_info = inspect_package(task_pkg.package_path)
+    task_pkg.package_name = pkg_info["pkg_name"]
+    task_pkg.package_version = pkg_info["pkg_version"]
+    task_pkg.package_manifest = pkg_info["pkg_manifest"]
+    task_pkg.check()
+    debug(task_pkg)
+
+    # Collect task package
+    python_bin, package_root = await _create_venv_install_package_pip(
+        task_pkg=task_pkg, path=tmp_path, logger_name=LOGGER_NAME
+    )
+    debug(python_bin)
+    debug(package_root)
