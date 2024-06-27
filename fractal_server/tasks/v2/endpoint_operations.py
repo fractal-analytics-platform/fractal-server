@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import Literal
 from typing import Optional
 from typing import Union
 from zipfile import ZipFile
@@ -23,14 +24,14 @@ async def download_package(
     dest: Union[str, Path],
 ) -> Path:
     """
-    Download package to destination
+    Download package to destination and return wheel-file path.
     """
     interpreter = get_python_interpreter_v2(version=task_pkg.python_version)
     pip = f"{interpreter} -m pip"
-    version = (
-        f"=={task_pkg.package_version}" if task_pkg.package_version else ""
-    )
-    package_and_version = f"{task_pkg.package}{version}"
+    if task_pkg.package_version is None:
+        package_and_version = f"{task_pkg.package}"
+    else:
+        package_and_version = f"{task_pkg.package}=={task_pkg.package_version}"
     cmd = f"{pip} download --no-deps {package_and_version} -d {dest}"
     stdout = await execute_command(command=cmd, cwd=Path("."))
     pkg_file = next(
@@ -64,7 +65,9 @@ def _load_manifest_from_wheel(
         raise ValueError(msg)
 
 
-def inspect_package(path: Path, logger_name: Optional[str] = None) -> dict:
+def inspect_package(
+    path: Path, logger_name: Optional[str] = None
+) -> dict[Literal["pkg_name", "pkg_version", "pkg_manifest"], str]:
     """
     Inspect task package to extract version, name and manifest
 
@@ -72,16 +75,13 @@ def inspect_package(path: Path, logger_name: Optional[str] = None) -> dict:
     dist-info section. If we need to generalize to to tar.gz archives, we would
     need to go and look for `PKG-INFO`.
 
-    Note: package name is normalized via `_normalize_package_name`.
+    Note: the package name is normalized via `_normalize_package_name`.
 
     Args:
-        path: Path
-            the path in which the package is saved
+        path: Path of the package wheel file.
 
     Returns:
-        version_manifest: A dictionary containing `version`, the version of the
-        pacakge, and `manifest`, the Fractal manifest object relative to the
-        tasks.
+        A dictionary with keys `pkg_name`, `pkg_version` and `pkg_manifest`.
     """
 
     logger = get_logger(logger_name)
