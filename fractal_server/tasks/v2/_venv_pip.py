@@ -1,10 +1,11 @@
 from pathlib import Path
+from typing import Optional
 
 from ..utils import COLLECTION_FREEZE_FILENAME
 from fractal_server.logger import get_logger
 from fractal_server.tasks.utils import _normalize_package_name
 from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
-from fractal_server.tasks.v2.utils import _init_venv_v2
+from fractal_server.tasks.v2.utils import get_python_interpreter_v2
 from fractal_server.utils import execute_command
 
 
@@ -135,6 +136,39 @@ async def _pip_install(
         f.write(stdout_freeze)
 
     return package_root
+
+
+async def _init_venv_v2(
+    *,
+    path: Path,
+    python_version: Optional[str] = None,
+    logger_name: str,
+) -> Path:
+    """
+    Set a virtual environment at `path/venv`
+
+    Args:
+        path : Path
+            path to directory in which to set up the virtual environment
+        python_version : default=None
+            Python version the virtual environment will be based upon
+
+    Returns:
+        python_bin : Path
+            path to python interpreter
+    """
+    logger = get_logger(logger_name)
+    logger.debug(f"[_init_venv] {path=}")
+    interpreter = get_python_interpreter_v2(version=python_version)
+    logger.debug(f"[_init_venv] {interpreter=}")
+    await execute_command(
+        cwd=path,
+        command=f"{interpreter} -m venv venv",
+        logger_name=logger_name,
+    )
+    python_bin = path / "venv/bin/python"
+    logger.debug(f"[_init_venv] {python_bin=}")
+    return python_bin
 
 
 async def _create_venv_install_package_pip(
