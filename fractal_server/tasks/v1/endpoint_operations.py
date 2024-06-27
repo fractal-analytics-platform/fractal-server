@@ -5,8 +5,8 @@ from typing import Union
 from zipfile import ZipFile
 
 from ..utils import _normalize_package_name
-from ..utils import get_python_interpreter_v1
 from ._TaskCollectPip import _TaskCollectPip as _TaskCollectPipV1
+from .utils import get_python_interpreter_v1
 from fractal_server.app.schemas.v1 import ManifestV1
 from fractal_server.config import get_settings
 from fractal_server.logger import get_logger

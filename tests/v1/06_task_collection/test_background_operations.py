@@ -9,7 +9,6 @@ from fractal_server.app.models.v1 import State
 from fractal_server.app.routes.api.v1.task_collection import (
     TaskCollectStatusV1,
 )
-from fractal_server.tasks.utils import _init_venv_v2
 from fractal_server.tasks.v1._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.v1.background_operations import _pip_install
 from fractal_server.tasks.v1.background_operations import (
@@ -20,6 +19,7 @@ from fractal_server.tasks.v1.endpoint_operations import (
 )
 from fractal_server.tasks.v1.endpoint_operations import download_package
 from fractal_server.tasks.v1.endpoint_operations import inspect_package
+from fractal_server.tasks.v2.utils import _init_venv_v2
 from tests.execute_command import execute_command
 
 

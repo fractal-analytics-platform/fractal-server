@@ -2,9 +2,9 @@ from pathlib import Path
 
 from ..utils import COLLECTION_FREEZE_FILENAME
 from fractal_server.logger import get_logger
-from fractal_server.tasks.utils import _init_venv_v2
 from fractal_server.tasks.utils import _normalize_package_name
 from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
+from fractal_server.tasks.v2.utils import _init_venv_v2
 from fractal_server.utils import execute_command
 
 

@@ -11,7 +11,6 @@ from fractal_server.app.routes.api.v2.task_collection import (
 )
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
-from fractal_server.tasks.utils import _init_venv_v2
 from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.v2._venv_pip import _pip_install
 from fractal_server.tasks.v2.background_operations import (
@@ -22,6 +21,7 @@ from fractal_server.tasks.v2.endpoint_operations import (
 )
 from fractal_server.tasks.v2.endpoint_operations import download_package
 from fractal_server.tasks.v2.endpoint_operations import inspect_package
+from fractal_server.tasks.v2.utils import _init_venv_v2
 from tests.execute_command import execute_command
 
 

@@ -7,8 +7,8 @@ from pydantic.error_wrappers import ValidationError
 from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.tasks.utils import _normalize_package_name
 from fractal_server.tasks.utils import get_absolute_venv_path
-from fractal_server.tasks.utils import get_python_interpreter_v2
 from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
+from fractal_server.tasks.v2.utils import get_python_interpreter_v2
 
 
 def test_unit_TaskCollectPip(tmp_path):
