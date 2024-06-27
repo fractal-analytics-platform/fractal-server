@@ -2,7 +2,7 @@ from pathlib import Path
 
 from ..utils import COLLECTION_FREEZE_FILENAME
 from fractal_server.logger import get_logger
-from fractal_server.tasks.utils import _init_venv
+from fractal_server.tasks.utils import _init_venv_v2
 from fractal_server.tasks.utils import _normalize_package_name
 from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
 from fractal_server.utils import execute_command
@@ -160,7 +160,7 @@ async def _create_venv_install_package_pip(
     task_pkg.package_name = _normalize_package_name(task_pkg.package_name)
     task_pkg.package = _normalize_package_name(task_pkg.package)
 
-    python_bin = await _init_venv(
+    python_bin = await _init_venv_v2(
         path=path,
         python_version=task_pkg.python_version,
         logger_name=logger_name,

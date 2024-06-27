@@ -11,7 +11,7 @@ from fractal_server.app.routes.api.v2.task_collection import (
 )
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
-from fractal_server.tasks.utils import _init_venv
+from fractal_server.tasks.utils import _init_venv_v2
 from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.v2._venv_pip import _pip_install
 from fractal_server.tasks.v2.background_operations import (
@@ -37,7 +37,7 @@ async def test_init_venv(tmp_path, python_version):
     logger_name = "fractal"
 
     try:
-        python_bin = await _init_venv(
+        python_bin = await _init_venv_v2(
             path=venv_path,
             logger_name=logger_name,
             python_version=python_version,
@@ -72,7 +72,7 @@ async def test_pip_install(tmp_path):
     settings.check_tasks_python()
     python_version = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
 
-    await _init_venv(
+    await _init_venv_v2(
         path=venv_path, python_version=python_version, logger_name=logger_name
     )
     location = await _pip_install(
@@ -99,7 +99,7 @@ async def test_pip_install_pinned(tmp_path, caplog):
     venv_path = tmp_path / "fractal_test"
     venv_path.mkdir(exist_ok=True, parents=True)
     pip = venv_path / "venv/bin/pip"
-    await _init_venv(path=venv_path, logger_name=LOG)
+    await _init_venv_v2(path=venv_path, logger_name=LOG)
 
     async def _aux(*, pin: Optional[dict[str, str]] = None) -> str:
         """pip install with pin and return version for EXTRA package"""

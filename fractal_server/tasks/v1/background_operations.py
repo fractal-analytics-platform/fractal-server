@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from shutil import rmtree as shell_rmtree
 
-from ..utils import _init_venv
+from ..utils import _init_venv_v1
 from ..utils import _normalize_package_name
 from ..utils import get_collection_log
 from ..utils import get_collection_path
@@ -168,7 +168,7 @@ async def _create_venv_install_package(
     task_pkg.package_name = _normalize_package_name(task_pkg.package_name)
     task_pkg.package = _normalize_package_name(task_pkg.package)
 
-    python_bin = await _init_venv(
+    python_bin = await _init_venv_v1(
         path=path,
         python_version=task_pkg.python_version,
         logger_name=logger_name,
