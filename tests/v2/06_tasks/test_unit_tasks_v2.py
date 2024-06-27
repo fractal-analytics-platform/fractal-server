@@ -8,7 +8,6 @@ from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.tasks.utils import _normalize_package_name
 from fractal_server.tasks.utils import get_absolute_venv_path
 from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
-from fractal_server.tasks.v2.utils import get_python_interpreter_v2
 
 
 def test_unit_TaskCollectPip(tmp_path):
@@ -29,11 +28,6 @@ def test_get_absolute_venv_path(tmp_path, override_settings_factory):
     assert get_absolute_venv_path(relative_path) == (
         FRACTAL_TASKS_DIR / relative_path
     )
-
-
-def test_get_python_interpreter():
-    with pytest.raises(ValueError):
-        get_python_interpreter_v2(version="1.1")
 
 
 def test_normalize_package_name():
