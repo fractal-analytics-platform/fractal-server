@@ -5,8 +5,8 @@ from typing import Optional
 from typing import Union
 from zipfile import ZipFile
 
-from ..utils import _normalize_package_name
-from ._TaskCollectPip import _TaskCollectPip as _TaskCollectPipV2
+from ._TaskCollectPip import _TaskCollectPip
+from .utils import _parse_wheel_filename
 from .utils import get_python_interpreter_v2
 from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.config import get_settings
@@ -20,7 +20,7 @@ FRACTAL_PUBLIC_TASK_SUBDIR = ".fractal"
 
 async def download_package(
     *,
-    task_pkg: _TaskCollectPipV2,
+    task_pkg: _TaskCollectPip,
     dest: Union[str, Path],
 ) -> Path:
     """
@@ -91,42 +91,19 @@ def inspect_package(
             f"Only wheel packages are supported, given {path.as_posix()}."
         )
 
-    with ZipFile(path) as wheel:
-        namelist = wheel.namelist()
+    # Extract package name and version from wheel filename
+    _info = _parse_wheel_filename(wheel_filename=path.name)
+    pkg_version = _info["version"]
 
-        # Read and validate task manifest
-        logger.debug(f"Now reading manifest for {path.as_posix()}")
+    # Read and validate task manifest
+    logger.debug(f"Now reading manifest for {path.as_posix()}")
+    with ZipFile(path) as wheel:
         pkg_manifest = _load_manifest_from_wheel(
             path, wheel, logger_name=logger_name
         )
-        logger.debug("Manifest read correctly.")
-
-        # Read package name and version from *.dist-info/METADATA
-        logger.debug(
-            f"Now reading package name and version for {path.as_posix()}"
-        )
-        metadata = next(
-            name for name in namelist if "dist-info/METADATA" in name
-        )
-        with wheel.open(metadata) as metadata_fd:
-            meta = metadata_fd.read().decode("utf-8")
-            pkg_name = next(
-                line.split()[-1]
-                for line in meta.splitlines()
-                if line.startswith("Name")
-            )
-            pkg_version = next(
-                line.split()[-1]
-                for line in meta.splitlines()
-                if line.startswith("Version")
-            )
-        logger.debug("Package name and version read correctly.")
-
-    # Normalize package name:
-    pkg_name = _normalize_package_name(pkg_name)
+    logger.debug("Manifest read correctly.")
 
     info = dict(
-        pkg_name=pkg_name,
         pkg_version=pkg_version,
         pkg_manifest=pkg_manifest,
     )
@@ -135,7 +112,7 @@ def inspect_package(
 
 def create_package_dir_pip(
     *,
-    task_pkg: _TaskCollectPipV2,
+    task_pkg: _TaskCollectPip,
     create: bool = True,
 ) -> Path:
     """
@@ -148,8 +125,7 @@ def create_package_dir_pip(
             f"Cannot create venv folder for package `{task_pkg.package}` "
             "with `version=None`."
         )
-    normalized_package = _normalize_package_name(task_pkg.package)
-    package_dir = f"{normalized_package}{task_pkg.package_version}"
+    package_dir = f"{task_pkg.package_name}{task_pkg.package_version}"
     venv_path = settings.FRACTAL_TASKS_DIR / user / package_dir
     if create:
         venv_path.mkdir(exist_ok=False, parents=True)

@@ -3,7 +3,6 @@ from typing import Optional
 
 from ..utils import COLLECTION_FREEZE_FILENAME
 from fractal_server.logger import get_logger
-from fractal_server.tasks.utils import _normalize_package_name
 from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.v2.utils import get_python_interpreter_v2
 from fractal_server.utils import execute_command
@@ -38,7 +37,7 @@ async def _pip_install(
         version_string = (
             f"=={task_pkg.package_version}" if task_pkg.package_version else ""
         )
-        pip_install_str = f"{task_pkg.package}{extras}{version_string}"
+        pip_install_str = f"{task_pkg.package_name}{extras}{version_string}"
 
     await execute_command(
         cwd=venv_path,
@@ -98,7 +97,7 @@ async def _pip_install(
     # Extract package installation path from `pip show`
     stdout_show = await execute_command(
         cwd=venv_path,
-        command=f"{pip} show {task_pkg.package}",
+        command=f"{pip} show {task_pkg.package_name}",
         logger_name=logger_name,
     )
 
@@ -119,9 +118,9 @@ async def _pip_install(
     # characters with underscore (_) characters, so the .dist-info directory
     # always has exactly one dash (-) character in its stem, separating the
     # name and version fields.
-    package_root = location / (task_pkg.package.replace("-", "_"))
+    package_root = location / (task_pkg.package_name.replace("-", "_"))
     logger.debug(f"[_pip install] {location=}")
-    logger.debug(f"[_pip install] {task_pkg.package=}")
+    logger.debug(f"[_pip install] {task_pkg.package_name=}")
     logger.debug(f"[_pip install] {package_root=}")
     if not package_root.exists():
         raise RuntimeError(
@@ -132,7 +131,7 @@ async def _pip_install(
     stdout_freeze = await execute_command(
         cwd=venv_path, command=f"{pip} freeze --all", logger_name=logger_name
     )
-    with (package_root / COLLECTION_FREEZE_FILENAME).open("w") as f:
+    with (venv_path / COLLECTION_FREEZE_FILENAME).open("w") as f:
         f.write(stdout_freeze)
 
     return package_root
@@ -189,11 +188,6 @@ async def _create_venv_install_package_pip(
         python_bin: path to venv's python interpreter
         package_root: the location of the package manifest
     """
-
-    # Normalize package name
-    task_pkg.package_name = _normalize_package_name(task_pkg.package_name)
-    task_pkg.package = _normalize_package_name(task_pkg.package)
-
     python_bin = await _init_venv_v2(
         path=path,
         python_version=task_pkg.python_version,

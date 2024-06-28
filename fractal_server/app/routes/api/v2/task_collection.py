@@ -102,9 +102,9 @@ async def collect_tasks_pip(
                     task_pkg=task_pkg, dest=tmpdir
                 )
             # Read package info from wheel file, and override the ones coming
-            # from the request body
+            # from the request body. Note that `package_name` was already set
+            # (and normalized) as part of `_TaskCollectPip` initialization.
             pkg_info = inspect_package(pkg_path)
-            task_pkg.package_name = pkg_info["pkg_name"]
             task_pkg.package_version = pkg_info["pkg_version"]
             task_pkg.package_manifest = pkg_info["pkg_manifest"]
             task_pkg.check()

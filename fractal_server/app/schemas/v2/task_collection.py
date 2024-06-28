@@ -70,9 +70,7 @@ class TaskCollectPipV2(BaseModel):
 
     @validator("package_version")
     def package_version_validator(cls, v, values):
-
-        valstr("package_version")(v)
-
+        v = valstr("package_version")(v)
         if values["package"].endswith(".whl"):
             raise ValueError(
                 "Cannot provide version when package is a Wheel file."

@@ -31,3 +31,14 @@ def get_python_interpreter_v2(
     if value is None:
         raise ValueError(f"Requested {version=}, but {key}={value}.")
     return value
+
+
+def _parse_wheel_filename(wheel_filename: str) -> dict[str, str]:
+    """
+    Note that the first part of a wheel filename is `{distribution}-{version}`
+    (see
+    https://packaging.python.org/en/latest/specifications/binary-distribution-format
+    ).
+    """
+    parts = wheel_filename.split("-")
+    return dict(distribution=parts[0], version=parts[1])

@@ -10,7 +10,6 @@ from typing import Literal
 from sqlalchemy.orm import Session as DBSyncSession
 from sqlalchemy.orm.attributes import flag_modified
 
-from ..utils import _normalize_package_name
 from ..utils import get_collection_freeze
 from ..utils import get_collection_log
 from ..utils import get_collection_path
@@ -176,12 +175,7 @@ async def background_collect_pip(
         # * state_id
         # * task_pkg
         try:
-            # Normalize package name
-            task_pkg.package_name = _normalize_package_name(
-                task_pkg.package_name
-            )
-            task_pkg.package = _normalize_package_name(task_pkg.package)
-            # Only proceed if package, version and manifest attributes are set
+            # Only proceed if version and manifest attributes are set
             task_pkg.check()
         except Exception as e:
             _handle_failure(
