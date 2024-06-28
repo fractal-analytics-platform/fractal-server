@@ -68,7 +68,6 @@ async def test_logs_failed_collection(
 
     # Extract info form the wheel package (this is part of the endpoint)
     pkg_info = inspect_package(task_pkg.package_path)
-    task_pkg.package_name = pkg_info["pkg_name"]
     task_pkg.package_version = pkg_info["pkg_version"]
     task_pkg.package_manifest = pkg_info["pkg_manifest"]
     task_pkg.check()

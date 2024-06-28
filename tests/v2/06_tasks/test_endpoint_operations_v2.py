@@ -82,7 +82,6 @@ async def test_inspect_package(tmp_path: Path):
     task_pkg = _get_task_pkg(package=PKG_NAME, package_version=PKG_VERSION)
     wheel_path = await download_package(task_pkg=task_pkg, dest=tmp_path)
     info = inspect_package(path=wheel_path)
-    assert info["pkg_name"] == PKG_NAME
     assert info["pkg_version"] == PKG_VERSION
     assert isinstance(info["pkg_manifest"], ManifestV2)
 

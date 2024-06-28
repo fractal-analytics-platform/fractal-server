@@ -7,6 +7,7 @@ from devtools import debug
 
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
+from fractal_server.tasks.utils import COLLECTION_FREEZE_FILENAME
 from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.v2._venv_pip import (
     _create_venv_install_package_pip,
@@ -17,36 +18,72 @@ from fractal_server.tasks.v2.endpoint_operations import inspect_package
 from tests.execute_command import execute_command
 
 
-async def test_pip_install(tmp_path):
-    """
-    GIVEN a package name and version and a path with a venv
-    WHEN _pip_install() is called
-    THEN the package is installed in the venv and the package installation
-         location is returned
-    """
-    PACKAGE = "devtools"
-    VERSION = "0.8.0"
-    venv_path = tmp_path / "fractal_test" / f"{PACKAGE}{VERSION}"
-    venv_path.mkdir(exist_ok=True, parents=True)
-    logger_name = "fractal"
+LOGGER_NAME = "__logger__"
+
+
+def _get_task_pkg(
+    *,
+    package: str,
+    package_version: Optional[str] = None,
+    python_version: Optional[str] = None,
+) -> _TaskCollectPip:
+    if python_version is None:
+        settings = Inject(get_settings)
+        python_version = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+    attributes = dict(package=package, python_version=python_version)
+    if package_version is not None:
+        attributes["package_version"] = package_version
+    return _TaskCollectPip(**attributes)
+
+
+@pytest.mark.parametrize("local_or_remote", ("local", "remote"))
+async def test_pip_install(local_or_remote, tmp_path, testdata_path):
     settings = Inject(get_settings)
     settings.check_tasks_python()
-    python_version = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+    PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
 
-    await _init_venv_v2(
-        path=venv_path, python_version=python_version, logger_name=logger_name
-    )
-    location = await _pip_install(
-        venv_path=venv_path,
-        task_pkg=_TaskCollectPip(
+    # Prepare package
+    if local_or_remote == "local":
+        PACKAGE = (
+            testdata_path
+            / "../v2/fractal_tasks_mock/dist"
+            / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
+        ).as_posix()
+        task_pkg = _get_task_pkg(
+            package=PACKAGE,
+            python_version=PYTHON_VERSION,
+        )
+    else:
+        PACKAGE = "devtools"
+        VERSION = "0.8.0"
+        task_pkg = _get_task_pkg(
             package=PACKAGE,
             package_version=VERSION,
-            python_version=python_version,
-        ),
-        logger_name=logger_name,
+            python_version=PYTHON_VERSION,
+        )
+
+    # Prepare venv
+    venv_path = tmp_path / "pkg_folder"
+    venv_path.mkdir(exist_ok=True, parents=True)
+    await _init_venv_v2(
+        path=venv_path, python_version=PYTHON_VERSION, logger_name=LOGGER_NAME
     )
-    debug(location)
-    assert PACKAGE in location.as_posix()
+
+    # Pip install
+    debug(task_pkg)
+    location = await _pip_install(
+        venv_path=venv_path,
+        task_pkg=task_pkg,
+        logger_name=LOGGER_NAME,
+    )
+    assert location.exists()
+
+    # Check freeze file
+    freeze_file = venv_path / COLLECTION_FREEZE_FILENAME
+    assert freeze_file.exists()
+    with freeze_file.open("r") as f:
+        freeze_data = f.read()
+    assert task_pkg.package_name in freeze_data
 
 
 async def test_pip_install_pinned(tmp_path, caplog):
@@ -69,6 +106,9 @@ async def test_pip_install_pinned(tmp_path, caplog):
 
     async def _aux(*, pin: Optional[dict[str, str]] = None) -> str:
         """pip install with pin and return version for EXTRA package"""
+        # Pip install
+        if pin is None:
+            pin = {}
         await _pip_install(
             venv_path=venv_path,
             task_pkg=_TaskCollectPip(
@@ -80,23 +120,23 @@ async def test_pip_install_pinned(tmp_path, caplog):
             ),
             logger_name=LOG,
         )
-        stdout_inspect = await execute_command(f"{pip} show {EXTRA}")
+        # Find version of EXTRA in pip-freeze output
+        with (venv_path / COLLECTION_FREEZE_FILENAME).open("r") as f:
+            freeze_data = f.read().splitlines()
         extra_version = next(
-            line.split()[-1]
-            for line in stdout_inspect.split("\n")
-            if line.startswith("Version:")
+            line.split("==")[1]
+            for line in freeze_data
+            if line.lower().startswith(EXTRA.lower())
         )
+        debug(extra_version)
+        # Clean up
         await execute_command(f"{pip} uninstall {PACKAGE} {EXTRA} -y")
         return extra_version
 
     # Case 0:
-    #   get default EXTRA version and check that it differs from pin version
-    #   then try to pin with DEFAULT_VERSION
+    #   get default version of EXTRA, and then use it as a pin
     DEFAULT_VERSION = await _aux()
-    PIN_VERSION = "2.0"
-    assert PIN_VERSION != DEFAULT_VERSION
     caplog.clear()
-
     pin = {EXTRA: DEFAULT_VERSION}
     new_version = await _aux(pin=pin)
     assert new_version == DEFAULT_VERSION
@@ -104,7 +144,9 @@ async def test_pip_install_pinned(tmp_path, caplog):
     assert "already matches the pinned version" in caplog.text
     caplog.clear()
 
-    # Case 1: good pin
+    # Case 1: pin EXTRA to a specific (non-default) version
+    PIN_VERSION = "2.0"
+    assert PIN_VERSION != DEFAULT_VERSION
     pin = {EXTRA: PIN_VERSION}
     new_version = await _aux(pin=pin)
     assert new_version == PIN_VERSION
@@ -112,19 +154,19 @@ async def test_pip_install_pinned(tmp_path, caplog):
     assert f"pip install {EXTRA}" in caplog.text
     caplog.clear()
 
-    # Case 2: bad pin with unexisting EXTRA version
-    UNEXISTING_EXTRA = "123456789"
-    pin = {EXTRA: UNEXISTING_EXTRA}
+    # Case 2: bad pin with invalid EXTRA version
+    INVALID_EXTRA_VERSION = "123456789"
+    pin = {EXTRA: INVALID_EXTRA_VERSION}
     with pytest.raises(RuntimeError) as error_info:
         await _aux(pin=pin)
-    assert f"pip install {EXTRA}=={UNEXISTING_EXTRA}" in caplog.text
+    assert f"pip install {EXTRA}=={INVALID_EXTRA_VERSION}" in caplog.text
     assert (
         "Could not find a version that satisfies the requirement "
-        f"{EXTRA}=={UNEXISTING_EXTRA}"
+        f"{EXTRA}=={INVALID_EXTRA_VERSION}"
     ) in str(error_info.value)
     caplog.clear()
 
-    # Case 3: bad pin with not already installed package
+    # Case 3: bad pin with package which was not already installed
     pin = {"pydantic": "1.0.0"}
     with pytest.raises(RuntimeError) as error_info:
         await _aux(pin=pin)
@@ -192,7 +234,6 @@ async def test_create_venv_install_package_pip(
 
     # Extract info form the wheel package (this is part of the endpoint)
     pkg_info = inspect_package(task_pkg.package_path)
-    task_pkg.package_name = pkg_info["pkg_name"]
     task_pkg.package_version = pkg_info["pkg_version"]
     task_pkg.package_manifest = pkg_info["pkg_manifest"]
     task_pkg.check()
