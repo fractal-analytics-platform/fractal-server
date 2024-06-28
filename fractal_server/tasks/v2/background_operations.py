@@ -167,29 +167,19 @@ async def background_collect_pip(
 
     with next(get_sync_db()) as db:
 
-        # Block 1: preliminary checks
-        # Required:
-        # * state_id
-        # * task_pkg
         try:
+            # Block 1: preliminary checks
+            # Required:
+            # * state_id
+            # * task_pkg
             # Only proceed if version and manifest attributes are set
             task_pkg.check()
-        except Exception as e:
-            _handle_failure(
-                state_id=state_id,
-                venv_path=venv_path,
-                logger_name=logger_name,
-                exception=e,
-                db=db,
-            )
-            return
 
-        # Block 2: create venv and run pip install
-        # Required:
-        # * state_id
-        # * venv_path
-        # * task_pkg
-        try:
+            # Block 2: create venv and run pip install
+            # Required:
+            # * state_id
+            # * venv_path
+            # * task_pkg
             logger.debug("Task collection - installing - START")
             _set_collection_state_data_status(
                 state_id=state_id,
@@ -202,25 +192,14 @@ async def background_collect_pip(
                 task_pkg=task_pkg,
                 logger_name=logger_name,
             )
-            # FIXME: add `pip freeze` somewhere here
             logger.debug("Task collection - installing - END")
-        except Exception as e:
-            _handle_failure(
-                state_id=state_id,
-                venv_path=venv_path,
-                logger_name=logger_name,
-                exception=e,
-                db=db,
-            )
-            return
 
-        # Block 3: create task metadata and create database entries
-        # Required:
-        # * state_id
-        # * python_bin
-        # * package_root
-        # * task_pkg
-        try:
+            # Block 3: create task metadata and create database entries
+            # Required:
+            # * state_id
+            # * python_bin
+            # * package_root
+            # * task_pkg
             logger.debug("Task collection - collecting - START")
             _set_collection_state_data_status(
                 state_id=state_id,
@@ -298,18 +277,7 @@ async def background_collect_pip(
                 "- END"
             )
 
-        except Exception as e:
-            _handle_failure(
-                state_id=state_id,
-                venv_path=venv_path,
-                logger_name=logger_name,
-                exception=e,
-                db=db,
-            )
-            return
-
-        # Block 4: finalize (write collection files, write metadata to DB)
-        try:
+            # Block 4: finalize (write collection files, write metadata to DB)
             logger.debug("Task collection - finalising - START")
             collection_path = get_collection_path(venv_path)
             collection_state = db.get(CollectionStateV2, state_id)
@@ -325,6 +293,7 @@ async def background_collect_pip(
             flag_modified(collection_state, "data")
             db.commit()
             logger.debug("Task collection - finalising - END")
+
         except Exception as e:
             _handle_failure(
                 state_id=state_id,
@@ -333,6 +302,7 @@ async def background_collect_pip(
                 exception=e,
                 db=db,
             )
+            return
 
         logger.debug("Task-collection status: OK")
         logger.info("Background task collection completed successfully")
