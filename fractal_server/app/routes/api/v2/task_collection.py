@@ -96,18 +96,17 @@ async def collect_tasks_pip(
             # Copy or download the package wheel file to tmpdir
             if task_pkg.is_local_package:
                 shell_copy(task_pkg.package_path.as_posix(), tmpdir)
-                pkg_path = Path(tmpdir) / task_pkg.package_path.name
+                wheel_path = Path(tmpdir) / task_pkg.package_path.name
             else:
-                pkg_path = await download_package(
+                wheel_path = await download_package(
                     task_pkg=task_pkg, dest=tmpdir
                 )
             # Read package info from wheel file, and override the ones coming
             # from the request body. Note that `package_name` was already set
             # (and normalized) as part of `_TaskCollectPip` initialization.
-            pkg_info = inspect_package(pkg_path)
+            pkg_info = inspect_package(wheel_path)
             task_pkg.package_version = pkg_info["pkg_version"]
             task_pkg.package_manifest = pkg_info["pkg_manifest"]
-            task_pkg.check()
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
