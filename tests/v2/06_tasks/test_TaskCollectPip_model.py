@@ -42,6 +42,11 @@ def test_TaskCollectPip_model(tmp_path, dummy_task_package):
         )
     assert "must be absolute" in str(e.value)
 
+    # failure for package name ending in .whl
+    with pytest.raises(ValidationError) as e:
+        _TaskCollectPip(package="x.whl", python_version=PYTHON_VERSION)
+    assert "is not the absolute path to a wheel file" in str(e.value)
+
     # fail when local wheelfile is provided and package_version is not None
     wheel_path = tmp_path / "abc-0.0.1-py3-none-any.whl"
     wheel_path.touch()

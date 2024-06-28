@@ -79,6 +79,12 @@ class _TaskCollectPip(BaseModel, extra=Extra.forbid):
             values["package_version"] = wheel_metadata["version"]
         else:
             # Remote package: use `package` as `package_name`
+            _package = values["package"]
+            if _package.endswith(".whl"):
+                raise ValueError(
+                    f"ERROR: package={_package} ends with '.whl' "
+                    "but it is not the absolute path to a wheel file."
+                )
             values["package_name"] = _normalize_package_name(values["package"])
         return values
 
