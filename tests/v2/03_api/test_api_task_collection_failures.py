@@ -36,6 +36,17 @@ async def test_failed_API_calls(
         assert res.status_code == 422
         assert "does not exist" in str(res.json())
 
+    # Invalid wheel file
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=dict(package=str("something.whl")),
+        )
+        assert res.status_code == 422
+        debug(res.json())
+        assert "ends with '.whl'" in str(res.json())
+        assert "is not the absolute path to a wheel file." in str(res.json())
+
     # Task collection fails if a task with the same source already exists
     # (see issue 866)
     settings = Inject(get_settings)
