@@ -207,7 +207,9 @@ def test_settings_check(
         )
 
     # Create a Settings instance
-    settings = Settings(**settings_dict)
+    settings = Settings(
+        FRACTAL_TASKS_PYTHON_DEFAULT_VERSION=CURRENT_PYTHON, **settings_dict
+    )
 
     if settings.DB_ENGINE in ["postgres", "postgres-psycopg"] and (
         DB_ENGINE != settings.DB_ENGINE
