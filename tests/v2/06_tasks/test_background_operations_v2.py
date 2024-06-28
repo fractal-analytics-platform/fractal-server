@@ -37,8 +37,6 @@ def test_get_task_type():
 
 async def test_logs_failed_collection(
     db,
-    dummy_task_package,
-    override_settings_factory,
     tmp_path: Path,
     testdata_path: Path,
 ):
@@ -52,50 +50,73 @@ async def test_logs_failed_collection(
 
     settings = Inject(get_settings)
     PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
-
-    override_settings_factory(
-        FRACTAL_TASKS_DIR=(tmp_path / "test_logs_failed_collection")
-    )
-
     task_package = (
         testdata_path
         / "../v2/fractal_tasks_mock/dist"
         / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
     )
+
+    # FAILURE 1: corrupted `package_path`
+
+    # Preliminary steps
     task_pkg = _TaskCollectPip(
         package=task_package.as_posix(), python_version=PYTHON_VERSION
     )
-
-    # Extract info form the wheel package (this is part of the endpoint)
     pkg_info = inspect_package(task_pkg.package_path)
     task_pkg.package_version = pkg_info["pkg_version"]
     task_pkg.package_manifest = pkg_info["pkg_manifest"]
-    task_pkg.check()
-    debug(task_pkg)
-
     venv_path = create_package_dir_pip(task_pkg=task_pkg)
     collection_status = TaskCollectStatusV2(
         status="pending", venv_path=venv_path, package=task_pkg.package
     )
-    # replacing with path because of non-serializable Path
-    collection_status_dict = collection_status.sanitised_dict()
-    state = CollectionStateV2(data=collection_status_dict)
+    state = CollectionStateV2(data=collection_status.sanitised_dict())
     db.add(state)
     await db.commit()
     await db.refresh(state)
-
-    task_pkg.package = "INVALIDPACKAGE"
-    task_pkg.package_path = None
-
+    # Introduce failure (corrupt package_path)
+    task_pkg.package_path = tmp_path / "something-wrong.whl"
+    # Run background collection and check that failure was recorded
     await background_collect_pip(
         state_id=state.id,
         venv_path=venv_path,
         task_pkg=task_pkg,
     )
-
     await db.refresh(state)
-    debug(state)
+    debug(state.data["status"])
     assert state.data["log"]
     assert state.data["status"] == "fail"
     assert state.data["info"].startswith("Original error")
     assert not venv_path.exists()
+    assert "is not a valid wheel filename" in state.data["log"]
+
+    # FAILURE 2: corrupted `package_version` and failure of `check()`
+
+    # Preliminary steps
+    task_pkg = _TaskCollectPip(
+        package=task_package.as_posix(), python_version=PYTHON_VERSION
+    )
+    task_pkg.package_version = pkg_info["pkg_version"]
+    task_pkg.package_manifest = pkg_info["pkg_manifest"]
+    venv_path = create_package_dir_pip(task_pkg=task_pkg)
+    collection_status = TaskCollectStatusV2(
+        status="pending", venv_path=venv_path, package=task_pkg.package
+    )
+    state = CollectionStateV2(data=collection_status.sanitised_dict())
+    db.add(state)
+    await db.commit()
+    await db.refresh(state)
+    # Introduce failure (corrupt package_path)
+    task_pkg.package_version = None
+    # Run background collection and check that failure was recorded
+    await background_collect_pip(
+        state_id=state.id,
+        venv_path=venv_path,
+        task_pkg=task_pkg,
+    )
+    await db.refresh(state)
+    debug(state.data["status"])
+    assert state.data["log"]
+    assert state.data["status"] == "fail"
+    assert state.data["info"].startswith("Original error")
+    assert not venv_path.exists()
+    assert "`package_version` attribute is not set" in state.data["log"]
