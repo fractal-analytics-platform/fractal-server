@@ -39,6 +39,7 @@ async def test_logs_failed_collection(
     db,
     tmp_path: Path,
     testdata_path: Path,
+    override_settings_factory: callable,
 ):
     """
     GIVEN a package and its installation environment
@@ -48,6 +49,8 @@ async def test_logs_failed_collection(
         * the installation directory is removed
     """
 
+    # Use temporary tasks folder to avoid conflicts with other tests
+    override_settings_factory(FRACTAL_TASKS_DIR=(tmp_path / "TASKS"))
     settings = Inject(get_settings)
     PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
     task_package = (
