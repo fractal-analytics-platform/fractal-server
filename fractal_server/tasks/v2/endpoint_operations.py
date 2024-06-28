@@ -29,9 +29,11 @@ async def download_package(
     interpreter = get_python_interpreter_v2(version=task_pkg.python_version)
     pip = f"{interpreter} -m pip"
     if task_pkg.package_version is None:
-        package_and_version = f"{task_pkg.package}"
+        package_and_version = f"{task_pkg.package_name}"
     else:
-        package_and_version = f"{task_pkg.package}=={task_pkg.package_version}"
+        package_and_version = (
+            f"{task_pkg.package_name}=={task_pkg.package_version}"
+        )
     cmd = f"{pip} download --no-deps {package_and_version} -d {dest}"
     stdout = await execute_command(command=cmd, cwd=Path("."))
     pkg_file = next(
