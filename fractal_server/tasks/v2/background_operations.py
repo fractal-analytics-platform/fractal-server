@@ -81,9 +81,6 @@ def _set_collection_state_data_log(
 ):
     logger = get_logger(logger_name)
     logger.debug(f"Task collection {state_id=} - set state/data/log")
-    from devtools import debug
-
-    debug(new_log)
     collection_state = db.get(CollectionStateV2, state_id)
     collection_state.data["log"] = new_log
     flag_modified(collection_state, "data")
