@@ -67,21 +67,20 @@ def _load_manifest_from_wheel(
 
 def inspect_package(
     path: Path, logger_name: Optional[str] = None
-) -> dict[Literal["pkg_name", "pkg_version", "pkg_manifest"], str]:
+) -> dict[Literal["pkg_version", "pkg_manifest"], str]:
     """
-    Inspect task package to extract version, name and manifest
+    Inspect task package to extract version and manifest
 
     Note that this only works with wheel files, which have a well-defined
     dist-info section. If we need to generalize to to tar.gz archives, we would
     need to go and look for `PKG-INFO`.
 
-    Note: the package name is normalized via `_normalize_package_name`.
-
     Args:
         path: Path of the package wheel file.
+        logger_name:
 
     Returns:
-        A dictionary with keys `pkg_name`, `pkg_version` and `pkg_manifest`.
+        A dictionary with keys `pkg_version` and `pkg_manifest`.
     """
 
     logger = get_logger(logger_name)
