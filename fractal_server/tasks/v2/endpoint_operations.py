@@ -89,7 +89,8 @@ def inspect_package(
 
     if not path.as_posix().endswith(".whl"):
         raise ValueError(
-            f"Only wheel packages are supported, given {path.as_posix()}."
+            "Only wheel packages are supported in Fractal "
+            f"(given {path.name})."
         )
 
     # Extract package name and version from wheel filename
