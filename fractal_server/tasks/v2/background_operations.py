@@ -168,18 +168,13 @@ async def background_collect_pip(
     with next(get_sync_db()) as db:
 
         try:
-            # Block 1: preliminary checks
-            # Required:
-            # * state_id
-            # * task_pkg
-            # Only proceed if version and manifest attributes are set
+            # Block 1: preliminary checks (only proceed if version and
+            # manifest attributes are set).
+            # Required: task_pkg
             task_pkg.check()
 
             # Block 2: create venv and run pip install
-            # Required:
-            # * state_id
-            # * venv_path
-            # * task_pkg
+            # Required: state_id, venv_path, task_pkg
             logger.debug("Task collection - installing - START")
             _set_collection_state_data_status(
                 state_id=state_id,
@@ -195,11 +190,7 @@ async def background_collect_pip(
             logger.debug("Task collection - installing - END")
 
             # Block 3: create task metadata and create database entries
-            # Required:
-            # * state_id
-            # * python_bin
-            # * package_root
-            # * task_pkg
+            # Required: state_id, python_bin, package_root, task_pkg
             logger.debug("Task collection - collecting - START")
             _set_collection_state_data_status(
                 state_id=state_id,
@@ -207,8 +198,6 @@ async def background_collect_pip(
                 logger_name=logger_name,
                 db=db,
             )
-
-            # Prepare task_list with appropriate metadata
             logger.debug(
                 "Task collection - collecting - create task list - START"
             )
@@ -265,7 +254,6 @@ async def background_collect_pip(
             logger.debug(
                 "Task collection - collecting - create task list - START"
             )
-
             # Insert tasks into DB
             logger.debug(
                 "Task collection - collecting - insert tasks into database "
