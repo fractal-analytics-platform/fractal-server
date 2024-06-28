@@ -98,6 +98,7 @@ async def collect_tasks_pip(
                 shell_copy(task_pkg.package_path.as_posix(), tmpdir)
                 wheel_path = Path(tmpdir) / task_pkg.package_path.name
             else:
+                logger.info(f"Now download {task_pkg}")
                 wheel_path = await download_package(
                     task_pkg=task_pkg, dest=tmpdir
                 )
