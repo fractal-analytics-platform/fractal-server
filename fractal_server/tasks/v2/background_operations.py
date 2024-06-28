@@ -292,8 +292,7 @@ async def background_collect_pip(
                 "Task collection - collecting - insert tasks into database "
                 "- START"
             )
-            with next(get_sync_db()) as db:
-                tasks = await _insert_tasks(task_list=task_list, db=db)
+            tasks = await _insert_tasks(task_list=task_list, db=db)
             logger.debug(
                 "Task collection - collecting - insert tasks into database "
                 "- END"
@@ -309,27 +308,22 @@ async def background_collect_pip(
             )
             return
 
-        # Block 4: finalize (write collection files, and write metadata to DB)
-        # Required:
-        # * FIXME docstring
+        # Block 4: finalize (write collection files, write metadata to DB)
         try:
             logger.debug("Task collection - finalising - START")
             collection_path = get_collection_path(venv_path)
-            with next(get_sync_db()) as db:
-                collection_state = db.get(CollectionStateV2, state_id)
-                task_read_list = [
-                    TaskReadV2(**task.model_dump()).dict() for task in tasks
-                ]
-                collection_state.data["task_list"] = task_read_list
-                collection_state.data["log"] = get_collection_log(venv_path)
-                collection_state.data["freeze"] = get_collection_freeze(
-                    venv_path
-                )
-                with collection_path.open("w") as f:
-                    json.dump(collection_state.data, f, indent=2)
+            collection_state = db.get(CollectionStateV2, state_id)
+            task_read_list = [
+                TaskReadV2(**task.model_dump()).dict() for task in tasks
+            ]
+            collection_state.data["task_list"] = task_read_list
+            collection_state.data["log"] = get_collection_log(venv_path)
+            collection_state.data["freeze"] = get_collection_freeze(venv_path)
+            with collection_path.open("w") as f:
+                json.dump(collection_state.data, f, indent=2)
 
-                flag_modified(collection_state, "data")
-                db.commit()
+            flag_modified(collection_state, "data")
+            db.commit()
             logger.debug("Task collection - finalising - END")
         except Exception as e:
             _handle_failure(
