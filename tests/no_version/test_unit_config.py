@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 import pytest
@@ -8,6 +9,9 @@ from fractal_server.config import OAuthClientConfig
 from fractal_server.config import Settings
 from fractal_server.syringe import Inject
 from tests.fixtures_server import DB_ENGINE
+
+INFO = sys.version_info
+CURRENT_PYTHON = f"{INFO.major}.{INFO.minor}"
 
 
 def test_settings_injection(override_settings):
@@ -331,6 +335,7 @@ def test_python_interpreters():
         SQLITE_PATH="/something",
         FRACTAL_RUNNER_WORKING_BASE_DIR="/something",
         FRACTAL_TASKS_DIR="/something",
+        FRACTAL_TASKS_PYTHON_DEFAULT_VERSION=CURRENT_PYTHON,
     )
 
     # Verify that the FRACTAL_TASKS_PYTHON_3_X variable corresponding to
