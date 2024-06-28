@@ -45,7 +45,7 @@ async def test_failed_API_calls(
         assert res.status_code == 422
         debug(res.json())
         assert "ends with '.whl'" in str(res.json())
-        assert "is not the absolute path to a wheel file." in str(res.json())
+        assert "is not the absolute path to a wheel file" in str(res.json())
 
     # Task collection fails if a task with the same source already exists
     # (see issue 866)
