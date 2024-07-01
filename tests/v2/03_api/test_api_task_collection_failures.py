@@ -159,7 +159,7 @@ async def test_missing_task_executable(
         res = await client.get(f"{PREFIX}/collect/{state_id}/?verbose=True")
         assert res.status_code == 200
         data = res.json()["data"]
-        assert "Cannot find executable" in data["info"]
+        assert "missing file" in data["info"]
         assert data["status"] == "fail"
         assert data["log"]  # This is because of verbose=True
         assert "fail" in data["log"]
