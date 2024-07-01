@@ -39,7 +39,6 @@ def _get_task_pkg(
 @pytest.mark.parametrize("local_or_remote", ("local", "remote"))
 async def test_pip_install(local_or_remote, tmp_path, testdata_path):
     settings = Inject(get_settings)
-    settings.check_tasks_python()
     PYTHON_VERSION = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
 
     # Prepare package
