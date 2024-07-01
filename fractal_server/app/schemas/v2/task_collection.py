@@ -42,7 +42,7 @@ class TaskCollectPipV2(BaseModel):
     package: str
     package_version: Optional[str] = None
     package_extras: Optional[str] = None
-    python_version: Optional[str] = None
+    python_version: Optional[Literal["3.9", "3.10", "3.11", "3.12"]] = None
     pinned_package_versions: Optional[dict[str, str]] = None
 
     _pinned_package_versions = validator(
@@ -71,9 +71,7 @@ class TaskCollectPipV2(BaseModel):
 
     @validator("package_version")
     def package_version_validator(cls, v, values):
-
-        valstr("package_version")(v)
-
+        v = valstr("package_version")(v)
         if values["package"].endswith(".whl"):
             logging.warning(
                 "Cannot provide version when package is a Wheel file."

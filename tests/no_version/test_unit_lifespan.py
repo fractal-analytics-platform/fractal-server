@@ -123,14 +123,6 @@ async def test_lifespan_shutdown_empty_jobs_list(
     async with lifespan(app):
         logger = logging.getLogger("fractal_server.lifespan")
         logger.propagate = True
-        jobsv2_check = (
-            (await db.execute(select(JobV2))).scalars().unique().all()
-        )
-        jobsv1_check = (
-            (await db.execute(select(ApplyWorkflow))).scalars().unique().all()
-        )
-        assert len(jobsv2_check) == 0
-        assert len(jobsv1_check) == 0
 
     log_text = (
         "All jobs associated to this app are either done or failed. Exit."

@@ -1,9 +1,38 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.3.0
+
+This release includes a major update to task-collection configuration variables and logic. We now support two main use cases:
+
+1. When running a production instance (including on a SLURM cluster), you
+   should set e.g. `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION=3.10`, and make sure
+   that `FRACTAL_TASKS_PYTHON_3_10=/some/python` is an absolute path. Optionally,
+   you can define other variables like `FRACTAL_TASKS_PYTHON_3_9`,
+   `FRACTAL_TASKS_PYTHON_3_11` or `FRACTAL_TASKS_PYTHON_3_12`.
+
+2. If you leave `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION` unset, then only the
+   Python interpreter that is currently running `fractal-server` can be used
+   for task collection.
+
+> WARNING: If you don't set `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION`, then you
+> will only have a single Python interpreter available for tasks (namely the
+> one running `fractal-server`).
+
+* Task collection:
+    * Introduce task-collection Python-related configuration variables (\#1587).
+    * Always set Python version for task collection, and only use `FRACTAL_TASKS_PYTHON_X_Y` variables (\#1587)
+    * Refactor internal task-collection functions and models (\#1587).
+* Dependencies:
+    * Update `sqlmodel` to `^0.0.19` (\#1584).
+    * Update `pytest-asyncio` to `^0.23` (\#1558).
+* Testing:
+    * Test the way `FractalProcessPoolExecutor` spawns processes and threads (\#1579).
+    * Remove `event_loop` fixture: every test will run on its own event loop (\#1558).
+
 # 2.2.0
 
-This version comes with streamlined options for the Gunicorn startup command
-options, and with two new experimental features.
+This release streamlines options for the Gunicorn startup command, and includes
+two new experimental features.
 
 > NOTE 1: you can now enable custom Gunicorn worker/logger by adding the following
 > options to the `gunicorn` startup command:
@@ -27,7 +56,7 @@ options, and with two new experimental features.
     * Move `FractalGunicornLogger` and `FractalWorker` into `fractal_server/gunicorn_fractal.py` (\#1535).
     * Add custom gunicorn/uvicorn worker to handle SIGABRT signal (\#1526).
     * Store list of submitted jobs in app state (\#1538).
-    * Add logic for graceful shutdown for job slurm executors. (\#1547)
+    * Add logic for graceful shutdown for job slurm executors (\#1547).
 * Runner:
     * Change structure of job folders, introducing per-task subfolders (\#1523).
     * Rename internal `workflow_dir` and `workflow_dir_user` variables to local/remote (\#1534).

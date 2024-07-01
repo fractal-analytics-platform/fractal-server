@@ -5,6 +5,9 @@ from pathlib import Path
 
 from devtools import debug  # noqa
 
+from fractal_server.config import get_settings
+from fractal_server.syringe import Inject
+
 PREFIX = "api/v2/task"
 
 
@@ -33,10 +36,39 @@ async def test_failed_API_calls(
         assert res.status_code == 422
         assert "does not exist" in str(res.json())
 
+    # Invalid wheel file
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=dict(package=str("something.whl")),
+        )
+        assert res.status_code == 422
+        debug(res.json())
+        assert "ends with '.whl'" in str(res.json())
+        assert "is not the absolute path to a wheel file" in str(res.json())
+
+    # Package `asd` exists, but it has no wheel file
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=dict(package="asd", package_version="1.3.2"),
+        )
+        assert res.status_code == 422
+        debug(res.json())
+        assert "Only wheel packages are supported in Fractal" in str(
+            res.json()
+        )
+        assert "tar.gz" in str(res.json())
+
     # Task collection fails if a task with the same source already exists
     # (see issue 866)
+    settings = Inject(get_settings)
+    default_version = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
     await task_factory_v2(
-        source="pip_local:fractal_tasks_mock:0.0.1:::create_ome_zarr_compound"
+        source=(
+            f"pip_local:fractal_tasks_mock:0.0.1::"
+            f"py{default_version}:create_ome_zarr_compound"
+        )
     )
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
         wheel_path = (
@@ -127,7 +159,7 @@ async def test_missing_task_executable(
         res = await client.get(f"{PREFIX}/collect/{state_id}/?verbose=True")
         assert res.status_code == 200
         data = res.json()["data"]
-        assert "Cannot find executable" in data["info"]
+        assert "missing file" in data["info"]
         assert data["status"] == "fail"
         assert data["log"]  # This is because of verbose=True
         assert "fail" in data["log"]

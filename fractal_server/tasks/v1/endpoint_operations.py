@@ -4,12 +4,10 @@ from typing import Optional
 from typing import Union
 from zipfile import ZipFile
 
-from .utils import _normalize_package_name
-from .utils import get_python_interpreter
-from .v1._TaskCollectPip import _TaskCollectPip as _TaskCollectPipV1
-from .v2._TaskCollectPip import _TaskCollectPip as _TaskCollectPipV2
+from ..utils import _normalize_package_name
+from ._TaskCollectPip import _TaskCollectPip as _TaskCollectPipV1
+from .utils import get_python_interpreter_v1
 from fractal_server.app.schemas.v1 import ManifestV1
-from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
 from fractal_server.syringe import Inject
@@ -21,13 +19,13 @@ FRACTAL_PUBLIC_TASK_SUBDIR = ".fractal"
 
 async def download_package(
     *,
-    task_pkg: Union[_TaskCollectPipV1, _TaskCollectPipV2],
+    task_pkg: _TaskCollectPipV1,
     dest: Union[str, Path],
 ) -> Path:
     """
     Download package to destination
     """
-    interpreter = get_python_interpreter(version=task_pkg.python_version)
+    interpreter = get_python_interpreter_v1(version=task_pkg.python_version)
     pip = f"{interpreter} -m pip"
     version = (
         f"=={task_pkg.package_version}" if task_pkg.package_version else ""
@@ -43,7 +41,7 @@ async def download_package(
 
 def _load_manifest_from_wheel(
     path: Path, wheel: ZipFile, logger_name: Optional[str] = None
-) -> Union[ManifestV1, ManifestV2]:
+) -> ManifestV1:
     logger = get_logger(logger_name)
     namelist = wheel.namelist()
     try:
@@ -59,9 +57,6 @@ def _load_manifest_from_wheel(
     manifest_version = str(manifest_dict["manifest_version"])
     if manifest_version == "1":
         pkg_manifest = ManifestV1(**manifest_dict)
-        return pkg_manifest
-    elif manifest_version == "2":
-        pkg_manifest = ManifestV2(**manifest_dict)
         return pkg_manifest
     else:
         msg = f"Manifest version {manifest_version=} not supported"
@@ -140,7 +135,7 @@ def inspect_package(path: Path, logger_name: Optional[str] = None) -> dict:
 
 def create_package_dir_pip(
     *,
-    task_pkg: Union[_TaskCollectPipV1, _TaskCollectPipV2],
+    task_pkg: _TaskCollectPipV1,
     create: bool = True,
 ) -> Path:
     """

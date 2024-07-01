@@ -1,42 +1,12 @@
 import re
-import shutil
-import sys
 from pathlib import Path
-from typing import Optional
 
 from fractal_server.config import get_settings
-from fractal_server.logger import get_logger
 from fractal_server.syringe import Inject
-from fractal_server.utils import execute_command
 
 COLLECTION_FILENAME = "collection.json"
 COLLECTION_LOG_FILENAME = "collection.log"
-
-
-def get_python_interpreter(version: Optional[str] = None) -> str:
-    """
-    Return the path to the python interpreter
-
-    Args:
-        version: Python version
-
-    Raises:
-        ValueError: If the python version requested is not available on the
-                    host.
-
-    Returns:
-        interpreter: string representing the python executable or its path
-    """
-    if version:
-        interpreter = shutil.which(f"python{version}")
-        if not interpreter:
-            raise ValueError(
-                f"Python version {version} not available on host."
-            )
-    else:
-        interpreter = sys.executable
-
-    return interpreter
+COLLECTION_FREEZE_FILENAME = "collection_freeze.txt"
 
 
 def slugify_task_name(task_name: str) -> str:
@@ -63,11 +33,22 @@ def get_log_path(base: Path) -> Path:
     return base / COLLECTION_LOG_FILENAME
 
 
+def get_freeze_path(base: Path) -> Path:
+    return base / COLLECTION_FREEZE_FILENAME
+
+
 def get_collection_log(venv_path: Path) -> str:
     package_path = get_absolute_venv_path(venv_path)
     log_path = get_log_path(package_path)
     log = log_path.open().read()
     return log
+
+
+def get_collection_freeze(venv_path: Path) -> str:
+    package_path = get_absolute_venv_path(venv_path)
+    freeze_path = get_freeze_path(package_path)
+    freeze = freeze_path.open().read()
+    return freeze
 
 
 def _normalize_package_name(name: str) -> str:
@@ -86,36 +67,3 @@ def _normalize_package_name(name: str) -> str:
         The normalized package name.
     """
     return re.sub(r"[-_.]+", "-", name).lower()
-
-
-async def _init_venv(
-    *,
-    path: Path,
-    python_version: Optional[str] = None,
-    logger_name: str,
-) -> Path:
-    """
-    Set a virtual environment at `path/venv`
-
-    Args:
-        path : Path
-            path to directory in which to set up the virtual environment
-        python_version : default=None
-            Python version the virtual environment will be based upon
-
-    Returns:
-        python_bin : Path
-            path to python interpreter
-    """
-    logger = get_logger(logger_name)
-    logger.debug(f"[_init_venv] {path=}")
-    interpreter = get_python_interpreter(version=python_version)
-    logger.debug(f"[_init_venv] {interpreter=}")
-    await execute_command(
-        cwd=path,
-        command=f"{interpreter} -m venv venv",
-        logger_name=logger_name,
-    )
-    python_bin = path / "venv/bin/python"
-    logger.debug(f"[_init_venv] {python_bin=}")
-    return python_bin

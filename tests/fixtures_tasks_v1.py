@@ -9,8 +9,8 @@ from pydantic import BaseModel
 from pydantic import validator
 
 from .fixtures_slurm import HAS_LOCAL_SBATCH
-from fractal_server.tasks.endpoint_operations import create_package_dir_pip
-from fractal_server.tasks.endpoint_operations import inspect_package
+from fractal_server.tasks.v1.endpoint_operations import create_package_dir_pip
+from fractal_server.tasks.v1.endpoint_operations import inspect_package
 from tests.execute_command import execute_command
 
 
