@@ -1,161 +1,26 @@
 import json
 import os
-import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from fabric import Connection
-from invoke import UnexpectedExit
-from paramiko.ssh_exception import NoValidConnectionsError
 from sqlalchemy.orm.attributes import flag_modified
 
 from ...app.models.v2 import CollectionStateV2
-from ..utils import _normalize_package_name
-from ..utils import slugify_task_name
 from ._TaskCollectPip import _TaskCollectPip
+from .background_operations import _handle_failure
 from .background_operations import _insert_tasks
+from .background_operations import _prepare_tasks_metadata
+from .background_operations import _set_collection_state_data_status
 from fractal_server.app.db import get_sync_db
-from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.config import get_settings
+from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
+from fractal_server.ssh._fabric import run_command_over_ssh
 from fractal_server.syringe import Inject
+from fractal_server.tasks.v2.utils import get_python_interpreter_v2
 
-logger = set_logger(__name__)
-
-
-def _run_command_over_ssh(
-    *,
-    cmd: str,
-    connection: Connection,
-) -> str:
-    """
-    Run a command within an open SSH connection.
-
-    FIXME: this is duplicated from other parts of the codebase.
-
-    Args:
-        cmd: Command to be run
-        connection: Fabric connection object
-
-    Returns:
-        Standard output of the command, if successful.
-    """
-    t_0 = time.perf_counter()
-    logger.info(f"START running '{cmd}' over SSH.")
-    try:
-        res = connection.run(cmd, hide=True)
-    except UnexpectedExit as e:
-        error_msg = (
-            f"Running command `{cmd}` over SSH failed.\n"
-            f"Original error:\n{str(e)}."
-        )
-        logger.error(error_msg)
-        raise ValueError(error_msg)
-    except NoValidConnectionsError as e:
-        error_msg = (
-            f"Running command `{cmd}` over SSH failed.\n"
-            f"Original NoValidConnectionError:\n{str(e)}.\n"
-            f"{e.errors=}\n"
-        )
-        logger.error(error_msg)
-        raise ValueError(error_msg)
-
-    t_1 = time.perf_counter()
-    logger.info(f"END   running '{cmd}' over SSH, elapsed {t_1-t_0:.3f}")
-    if res.stdout:
-        logger.info(f"STDOUT:\n{res.stdout}")
-    if res.stderr:
-        logger.info(f"STDERR:\n{res.stderr}")
-    return res.stdout
-
-
-async def _add_tasks_to_db(
-    *,
-    task_pkg: _TaskCollectPip,
-    python_bin: str,
-    package_parent_folder_remote: str,
-    connection: Connection,
-) -> list[TaskCreateV2]:
-    """
-    Based on a _TaskCollectPip object some additional parameters, create a
-    list of tasks to be added to the DB.
-    """
-
-    # Normalize package name
-    task_pkg.package_name = _normalize_package_name(task_pkg.package_name)
-    task_pkg.package = _normalize_package_name(task_pkg.package)
-
-    # Only proceed if package, version and manifest attributes are set
-    # task_pkg.check()  # FIXME: would this work? To be verified.
-
-    package_root = Path(
-        package_parent_folder_remote, task_pkg.package_name.replace("-", "_")
-    )
-
-    try:
-        logger.debug("[create_task_list] START")
-        task_list = []
-        for t in task_pkg.package_manifest.task_list:
-            logger.debug(f"[create_task_list] Now handling task '{t.name}'")
-
-            # Fill in attributes for TaskCreate
-            task_attributes = {}
-            task_attributes["version"] = task_pkg.package_version
-            task_name_slug = slugify_task_name(t.name)
-            task_attributes[
-                "source"
-            ] = f"{task_pkg.package_source}:{task_name_slug}"
-            # Executables
-            for ind, executable in enumerate(
-                [t.executable_non_parallel, t.executable_parallel]
-            ):
-                if executable is None:
-                    continue
-
-                full_path = (package_root / executable).as_posix()
-                try:
-                    connection.sftp().stat(full_path)
-                except Exception as e:
-                    error_msg = (
-                        f"An error occurred for excutable `{full_path}` "
-                        f"(task `{t.name}`)."
-                        f"Original error: {str(e)}"
-                    )
-                    raise ValueError(error_msg)
-
-                if ind == 0:
-                    task_attributes[
-                        "command_non_parallel"
-                    ] = f"{python_bin} {full_path}"
-                else:
-                    task_attributes[
-                        "command_parallel"
-                    ] = f"{python_bin} {full_path}"
-
-            manifest = task_pkg.package_manifest
-            if manifest.has_args_schemas:
-                task_attributes[
-                    "args_schema_version"
-                ] = manifest.args_schema_version
-
-            this_task = TaskCreateV2(
-                **t.dict(
-                    exclude={"executable_non_parallel", "executable_parallel"}
-                ),
-                **task_attributes,
-            )
-            task_list.append(this_task)
-        logger.debug("[create_task_list] END")
-    except Exception as e:
-        logger.debug(f"[create_task_list] ERROR. Original error:\n{str(e)}")
-        raise e
-
-    logger.debug("[add_tasks_to_db] START")
-    with next(get_sync_db()) as db_sync:
-        await _insert_tasks(task_list=task_list, db=db_sync)
-    logger.debug("[add_tasks_to_db] END")
-
-    return task_list
+TEMPLATES_DIR = Path(__file__).parent / "templates"
 
 
 def _parse_script_5_stdout(stdout: str) -> dict[str, str]:
@@ -168,8 +33,7 @@ def _parse_script_5_stdout(stdout: str) -> dict[str, str]:
     ]
     stdout_lines = stdout.splitlines()
     attributes = dict()
-    for (search, attribute_name) in searches:
-
+    for search, attribute_name in searches:
         matching_lines = [_line for _line in stdout_lines if search in _line]
         if len(matching_lines) == 0:
             raise ValueError(f"String '{search}' not found in stdout.")
@@ -185,148 +49,188 @@ def _parse_script_5_stdout(stdout: str) -> dict[str, str]:
     return attributes
 
 
+def _customize_and_run_template(
+    script_filename: str,
+    templates_folder: Path,
+    replacements: list[tuple[str, str]],
+    tmpdir: str,
+    logger_name: str,
+    connection: Connection,
+) -> str:
+    """
+    FIXME
+    """
+    logger = get_logger(logger_name)
+    logger.info(f"Handling {script_filename} - START")
+    settings = Inject(get_settings)
+
+    # Read template
+    template_path = templates_folder / script_filename
+    with template_path.open("r") as f:
+        script_contents = f.read()
+    # Customize template
+    for old_new in replacements:
+        script_contents = script_contents.replace(old_new[0], old_new[1])
+    # Write script locally
+    script_path_local = Path(tmpdir) / script_filename
+    with script_path_local.open("w") as f:
+        f.write(script_contents)
+    # Transfer script to remote host
+    script_path_remote = os.path.join(
+        settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR,
+        f"script_{abs(hash(tmpdir))}{script_filename}",
+    )
+    connection.put(
+        local=script_path_local,
+        remote=script_path_remote,
+    )
+    # Execute script remotely
+    stdout = run_command_over_ssh(
+        cmd=f"bash {script_path_remote}", connection=connection
+    )
+    logger.info(stdout)
+    logger.info(f"Handling {script_filename} - END")
+
+    return stdout
+
+
 async def background_collect_pip_ssh(
-    task_pkg: _TaskCollectPip, state_id: int, connection: Connection
+    state_id: int,
+    task_pkg: _TaskCollectPip,
+    connection: Connection,
 ) -> None:
 
     # Prepare replacements for task-collection scripts
     settings = Inject(get_settings)
+    python_bin = (get_python_interpreter_v2(version=task_pkg.python_version),)
     version_string = (
         f"=={task_pkg.package_version}" if task_pkg.package_version else ""
     )
     extras = f"[{task_pkg.package_extras}]" if task_pkg.package_extras else ""
-
-    if task_pkg.package.startswith("/"):
-        package_name = Path(task_pkg.package).name.split("-")[
-            0
-        ]  # FIXME: this is just a workaround
-    else:
-        package_name = task_pkg.package
-
     replacements = [
-        ("__PYTHON__", settings.FRACTAL_SLURM_WORKER_PYTHON),
+        ("__PYTHON__", python_bin),
         ("__FRACTAL_TASKS_DIR__", settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR),
         ("__PACKAGE__", task_pkg.package),
-        ("__PACKAGE_NAME__", package_name),
+        ("__PACKAGE_NAME__", task_pkg.package_name),
         ("__VERSION__", version_string),
         ("__EXTRAS__", extras),
     ]
 
-    # Load templates
-    templates_folder = Path(__file__).parent / "templates"
-    list_script_filenames = [
-        "_1_create_main_folder.sh",
-        "_2_create_venv.sh",
-        "_3_upgrade_pip.sh",
-        "_4_install_package.sh",
-        "_5_extract_info.sh",
-    ]
-
     with TemporaryDirectory() as tmpdir:
+        with next(get_sync_db()) as db:
+            LOGGER_NAME = "task_collection_ssh"
+            log_file_path = Path(tmpdir) / "log"
+            logger = set_logger(
+                logger_name=LOGGER_NAME,
+                log_file_path=log_file_path,
+            )
 
-        with next(get_sync_db()) as db_sync:
-            state = db_sync.get(CollectionStateV2, state_id)
-            state.data["status"] = "installing"
-            flag_modified(state, "data")
-            db_sync.add(state)
-            db_sync.commit()
-            db_sync.refresh(state)
+            try:
 
-            for ind, script_filename in enumerate(list_script_filenames):
-                logger.info(f"Handling {script_filename} - START")
-                # Read template
-                template_path = templates_folder / script_filename
-                with template_path.open("r") as f:
-                    script_contents = f.read()
-                # Customize template
-                for old_new in replacements:
-                    script_contents = script_contents.replace(
-                        old_new[0], old_new[1]
-                    )
-                # Write script locally
-                script_path_local = Path(tmpdir) / f"script_{ind}.sh"
-                with script_path_local.open("w") as f:
-                    f.write(script_contents)
-                # Transfer script to remote host
-                script_path_remote = os.path.join(
-                    settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR,
-                    f"script_{abs(hash(tmpdir))}{script_filename}",
+                common_args = dict(
+                    templates_folder=TEMPLATES_DIR,
+                    replacements=replacements,
+                    tmpdir=tmpdir,
+                    logger_name=LOGGER_NAME,
+                    connection=connection,
                 )
-                connection.put(
-                    local=script_path_local,
-                    remote=script_path_remote,
+
+                logger.debug("Task collection - installing - START")
+                _set_collection_state_data_status(
+                    state_id=state_id,
+                    new_status="installing",
+                    logger_name=LOGGER_NAME,
+                    db=db,
                 )
-                # Execute script remotely
-                try:
-                    stdout = _run_command_over_ssh(
-                        cmd=f"bash {script_path_remote}", connection=connection
-                    )
-                except Exception as e:
-                    error_msg = (
-                        f"ERROR while running {script_path_remote}.\n"
-                        f"Original error: {str(e)}"
-                    )
-                    logger.error(error_msg)
-                    old_log = state.data.get("log", None) or ""
-                    new_log = f"{old_log}\n{error_msg}"
-                    state.data["log"] = new_log
-                    state.data["status"] = "fail"
-                    flag_modified(state, "data")
-                    db_sync.add(state)
-                    db_sync.commit()
-                    return
+                stdout = _customize_and_run_template(
+                    script_filename="_1_create_main_folder.sh",
+                    **common_args,
+                )
+                stdout = _customize_and_run_template(
+                    script_filename="_2_create_venv.sh",
+                    **common_args,
+                )
+                stdout = _customize_and_run_template(
+                    script_filename="_3_upgrade_pip.sh",
+                    **common_args,
+                )
+                stdout = _customize_and_run_template(
+                    script_filename="_4_install_package.sh",
+                    **common_args,
+                )
+                stdout_pip_freeze = _customize_and_run_template(
+                    script_filename="_5_pip_freeze.sh",
+                    **common_args,
+                )
+                logger.debug("Task collection - installing - END")
 
-                old_log = state.data.get("log", None) or ""
-                new_log = f"{old_log}\n{stdout}\n"
-                state.data["log"] = new_log
-                flag_modified(state, "data")
-                db_sync.add(state)
-                db_sync.commit()
-                db_sync.refresh(state)
-                logger.info(f"Handling {script_filename} - END")
+                logger.debug("Task collection - collecting - START")
+                _set_collection_state_data_status(
+                    state_id=state_id,
+                    new_status="collecting",
+                    logger_name=LOGGER_NAME,
+                    db=db,
+                )
+                stdout = _customize_and_run_template(
+                    script_filename="_6_extract_info.sh",
+                    **common_args,
+                )
 
-    pkg_attrs = _parse_script_5_stdout(stdout)
-    python_bin = pkg_attrs.pop("python_bin")
-    package_parent_folder_remote = pkg_attrs.pop(
-        "package_parent_folder_remote"
-    )
-    manifest_absolute_path_remote = pkg_attrs.pop(
-        "manifest_absolute_path_remote"
-    )
+                pkg_attrs = _parse_script_5_stdout(stdout)
+                python_bin = pkg_attrs.pop("python_bin")
+                package_parent_folder_remote = pkg_attrs.pop(
+                    "package_parent_folder_remote"
+                )
+                manifest_absolute_path_remote = pkg_attrs.pop(
+                    "manifest_absolute_path_remote"
+                )
 
-    # Read remote manifest file
-    with connection.sftp().open(manifest_absolute_path_remote, "r") as f:
-        manifest = json.load(f)
-    logger.info(f"I loaded the manifest from {manifest_absolute_path_remote}")
+                # Read remote manifest file
+                with connection.sftp().open(
+                    manifest_absolute_path_remote, "r"
+                ) as f:
+                    manifest = json.load(f)
+                logger.info(
+                    "Manifest loaded remotely from "
+                    f"{manifest_absolute_path_remote}"
+                )
 
-    # Create new _TaskCollectPip object
-    new_pkg = _TaskCollectPip(
-        **task_pkg.dict(
-            exclude={"package_version", "python_version"},
-            exclude_unset=True,
-            exclude_none=True,
-        ),
-        package_manifest=manifest,
-        python_version="N/A",
-        **pkg_attrs,
-    )
+                # Create new _TaskCollectPip object
+                new_pkg = _TaskCollectPip(
+                    **task_pkg.dict(
+                        exclude={"package_version"},
+                        exclude_unset=True,
+                        exclude_none=True,
+                    ),
+                    package_manifest=manifest,
+                    **pkg_attrs,
+                )
 
-    # Create list of TaskCreateV2 objects and insert them into the database
-    task_list = await _add_tasks_to_db(
-        task_pkg=new_pkg,
-        python_bin=python_bin,
-        package_parent_folder_remote=package_parent_folder_remote,
-        connection=connection,
-    )
-    task_list
+                task_list = _prepare_tasks_metadata(
+                    package_manifest=new_pkg.package_manifest,
+                    package_version=new_pkg.package_version,
+                    package_source=new_pkg.package_source,
+                    package_root=package_parent_folder_remote,
+                    python_bin=python_bin,
+                )
+                _insert_tasks(task_list=task_list, db=db)
+                logger.debug("Task collection - collecting - END")
 
-    # TODO: add here logic to handle the state
-    with next(get_sync_db()) as db_sync:
-        state = db_sync.get(CollectionStateV2, state_id)
-        old_log = state.data.get("log", None) or ""
-        new_log = f"{old_log}\n{stdout}\n"
-        state.data["log"] = new_log
-        state.data["status"] = "OK"
-        flag_modified(state, "data")
-        db_sync.add(state)
-        db_sync.commit()
+                # Finalize (write metadata to DB)
+                logger.debug("Task collection - finalising - START")
+                collection_state = db.get(CollectionStateV2, state_id)
+                collection_state.data["log"] = log_file_path.open("r").read()
+                collection_state.data["freeze"] = stdout_pip_freeze
+                flag_modified(collection_state, "data")
+                db.commit()
+                logger.debug("Task collection - finalising - END")
+
+            except Exception as e:
+                _handle_failure(
+                    state_id=state_id,
+                    log_file_path=log_file_path,
+                    logger_name=LOGGER_NAME,
+                    exception=e,
+                    db=db,
+                )
+                return
