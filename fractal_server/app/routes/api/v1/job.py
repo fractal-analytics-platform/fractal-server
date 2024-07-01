@@ -20,7 +20,7 @@ from ....security import current_active_user
 from ....security import User
 from ...aux._job import _write_shutdown_file
 from ...aux._job import _zip_folder_to_byte_stream
-from ...aux._runner import _check_backend_is_slurm
+from ...aux._runner import _is_shutdown_available
 from ._aux_functions import _get_job_check_owner
 from ._aux_functions import _get_project_check_owner
 from ._aux_functions import _get_workflow_check_owner
@@ -182,11 +182,10 @@ async def stop_job(
     db: AsyncSession = Depends(get_async_db),
 ) -> Response:
     """
-    Stop execution of a workflow job (only available for slurm backend)
+    Stop execution of a workflow job.
     """
 
-    # This endpoint is only implemented for SLURM backend
-    _check_backend_is_slurm()
+    _is_shutdown_available()
 
     # Get job from DB
     output = await _get_job_check_owner(

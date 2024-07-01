@@ -9,17 +9,17 @@ from fractal_server.app.models.v1 import State
 from fractal_server.app.routes.api.v1.task_collection import (
     TaskCollectStatusV1,
 )
-from fractal_server.tasks.endpoint_operations import (
-    create_package_dir_pip,
-)
-from fractal_server.tasks.endpoint_operations import download_package
-from fractal_server.tasks.endpoint_operations import inspect_package
-from fractal_server.tasks.utils import _init_venv
 from fractal_server.tasks.v1._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.v1.background_operations import _pip_install
 from fractal_server.tasks.v1.background_operations import (
     background_collect_pip,
 )
+from fractal_server.tasks.v1.endpoint_operations import (
+    create_package_dir_pip,
+)
+from fractal_server.tasks.v1.endpoint_operations import download_package
+from fractal_server.tasks.v1.endpoint_operations import inspect_package
+from fractal_server.tasks.v1.utils import _init_venv_v1
 from tests.execute_command import execute_command
 
 
@@ -35,7 +35,7 @@ async def test_init_venv(tmp_path, python_version):
     logger_name = "fractal"
 
     try:
-        python_bin = await _init_venv(
+        python_bin = await _init_venv_v1(
             path=venv_path,
             logger_name=logger_name,
             python_version=python_version,
@@ -67,7 +67,7 @@ async def test_pip_install(tmp_path):
     venv_path.mkdir(exist_ok=True, parents=True)
     logger_name = "fractal"
 
-    await _init_venv(path=venv_path, logger_name=logger_name)
+    await _init_venv_v1(path=venv_path, logger_name=logger_name)
     location = await _pip_install(
         venv_path=venv_path,
         task_pkg=_TaskCollectPip(package=PACKAGE, package_version=VERSION),
@@ -88,7 +88,7 @@ async def test_pip_install_pinned(tmp_path, caplog):
     venv_path = tmp_path / "fractal_test"
     venv_path.mkdir(exist_ok=True, parents=True)
     pip = venv_path / "venv/bin/pip"
-    await _init_venv(path=venv_path, logger_name=LOG)
+    await _init_venv_v1(path=venv_path, logger_name=LOG)
 
     async def _aux(*, pin: Optional[dict[str, str]] = None) -> str:
         """pip install with pin and return version for EXTRA package"""

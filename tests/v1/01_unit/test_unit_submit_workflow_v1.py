@@ -12,6 +12,10 @@ from fractal_server.app.routes.api.v1._aux_functions import (
 )
 from fractal_server.app.runner.v1 import submit_workflow
 from fractal_server.app.schemas.v1 import JobStatusTypeV1
+from fractal_server.config import get_settings
+from fractal_server.syringe import Inject
+
+settings = Inject(get_settings)
 
 
 async def test_success_submit_workflows(
@@ -123,13 +127,19 @@ async def test_fail_submit_workflows_at_same_time(
             output_dataset_id=dataset.id,
             job_id=job.id,
         )
-        with pytest.raises(RuntimeError):
-            await submit_workflow(
-                workflow_id=workflow.id,
-                input_dataset_id=dataset.id,
-                output_dataset_id=dataset.id,
-                job_id=job.id,
-            )
+
+        await submit_workflow(
+            workflow_id=workflow.id,
+            input_dataset_id=dataset.id,
+            output_dataset_id=dataset.id,
+            job_id=job.id,
+        )
+        await db.refresh(job)
+
+        if settings.FRACTAL_RUNNER_BACKEND != "local_experimental":
+            assert "already exists" in job.log
+        else:
+            assert "is not available for v1 jobs" in job.log
 
 
 async def test_fail_submit_workflows_wrong_IDs(
@@ -162,15 +172,13 @@ async def test_fail_submit_workflows_wrong_IDs(
         )
         await resource_factory(dataset)
 
-        # Fail for invalid DB IDs
-
-        with pytest.raises(ValueError):
-            await submit_workflow(
-                workflow_id=workflow.id,
-                input_dataset_id=dataset.id,
-                output_dataset_id=dataset.id,
-                job_id=9999999,
-            )
+        # Submitting an invalid job ID won't fail but will log an error
+        await submit_workflow(
+            workflow_id=workflow.id,
+            input_dataset_id=dataset.id,
+            output_dataset_id=dataset.id,
+            job_id=9999999,
+        )
 
         await submit_workflow(
             workflow_id=1234,
@@ -180,7 +188,10 @@ async def test_fail_submit_workflows_wrong_IDs(
         )
         await db.refresh(job)
         assert job.status == JobStatusTypeV1.FAILED
-        assert job.log == "Cannot fetch workflow 1234 from database\n"
+        if settings.FRACTAL_RUNNER_BACKEND != "local_experimental":
+            assert job.log == "Cannot fetch workflow 1234 from database\n"
+        else:
+            assert "is not available for v1 jobs" in job.log
 
         await submit_workflow(
             workflow_id=workflow.id,
@@ -191,7 +202,57 @@ async def test_fail_submit_workflows_wrong_IDs(
         await db.refresh(job)
         debug(job)
         assert job.status == JobStatusTypeV1.FAILED
-        assert job.log == (
-            "Cannot fetch input_dataset 1111 from database\n"
-            "Cannot fetch output_dataset 2222 from database\n"
+        if settings.FRACTAL_RUNNER_BACKEND != "local_experimental":
+            assert job.log == (
+                "Cannot fetch input_dataset 1111 from database\n"
+                "Cannot fetch output_dataset 2222 from database\n"
+            )
+        else:
+            assert "is not available for v1 jobs" in job.log
+
+
+@pytest.mark.parametrize("invalid_backend", ("local_experimental", "foo"))
+async def test_fail_submit_workflows_wrong_backend(
+    MockCurrentUser,
+    project_factory,
+    workflow_factory,
+    dataset_factory,
+    job_factory,
+    resource_factory,
+    task_factory,
+    tmp_path,
+    db,
+    invalid_backend,
+    override_settings_factory,
+):
+    override_settings_factory(FRACTAL_RUNNER_BACKEND=invalid_backend)
+
+    async with MockCurrentUser() as user:
+
+        project = await project_factory(user)
+        workflow = await workflow_factory(project_id=project.id)
+        task = await task_factory(name="task", source="task_source")
+        await _workflow_insert_task(
+            workflow_id=workflow.id, task_id=task.id, db=db
         )
+        dataset = await dataset_factory(project_id=project.id)
+        job = await job_factory(
+            working_dir=tmp_path.as_posix(),
+            project_id=project.id,
+            input_dataset_id=dataset.id,
+            output_dataset_id=dataset.id,
+            workflow_id=workflow.id,
+        )
+        await resource_factory(dataset)
+
+        await submit_workflow(
+            workflow_id=workflow.id,
+            input_dataset_id=dataset.id,
+            output_dataset_id=dataset.id,
+            job_id=job.id,
+        )
+        await db.refresh(job)
+        if invalid_backend == "local_experimental":
+            assert "is not available for v1 jobs" in job.log
+        else:
+            assert "Invalid FRACTAL_RUNNER_BACKEND" in job.log

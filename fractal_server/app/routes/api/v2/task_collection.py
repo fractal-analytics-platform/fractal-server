@@ -25,15 +25,15 @@ from ....schemas.v2 import TaskCollectStatusV2
 from ....security import current_active_user
 from ....security import current_active_verified_user
 from ....security import User
-from fractal_server.tasks.endpoint_operations import create_package_dir_pip
-from fractal_server.tasks.endpoint_operations import download_package
-from fractal_server.tasks.endpoint_operations import inspect_package
 from fractal_server.tasks.utils import get_collection_log
 from fractal_server.tasks.utils import slugify_task_name
 from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.v2.background_operations import (
     background_collect_pip,
 )
+from fractal_server.tasks.v2.endpoint_operations import create_package_dir_pip
+from fractal_server.tasks.v2.endpoint_operations import download_package
+from fractal_server.tasks.v2.endpoint_operations import inspect_package
 from fractal_server.tasks.v2.get_collection_data import get_collection_data
 
 router = APIRouter()
@@ -74,6 +74,13 @@ async def collect_tasks_pip(
 
     logger = set_logger(logger_name="collect_tasks_pip")
 
+    # Set default python version
+    if task_collect.python_version is None:
+        settings = Inject(get_settings)
+        task_collect.python_version = (
+            settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+        )
+
     # Validate payload as _TaskCollectPip, which has more strict checks than
     # TaskCollectPip
     try:
@@ -89,18 +96,18 @@ async def collect_tasks_pip(
             # Copy or download the package wheel file to tmpdir
             if task_pkg.is_local_package:
                 shell_copy(task_pkg.package_path.as_posix(), tmpdir)
-                pkg_path = Path(tmpdir) / task_pkg.package_path.name
+                wheel_path = Path(tmpdir) / task_pkg.package_path.name
             else:
-                pkg_path = await download_package(
+                logger.info(f"Now download {task_pkg}")
+                wheel_path = await download_package(
                     task_pkg=task_pkg, dest=tmpdir
                 )
             # Read package info from wheel file, and override the ones coming
-            # from the request body
-            pkg_info = inspect_package(pkg_path)
-            task_pkg.package_name = pkg_info["pkg_name"]
+            # from the request body. Note that `package_name` was already set
+            # (and normalized) as part of `_TaskCollectPip` initialization.
+            pkg_info = inspect_package(wheel_path)
             task_pkg.package_version = pkg_info["pkg_version"]
             task_pkg.package_manifest = pkg_info["pkg_manifest"]
-            task_pkg.check()
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,

@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 import pytest
@@ -8,6 +9,9 @@ from fractal_server.config import OAuthClientConfig
 from fractal_server.config import Settings
 from fractal_server.syringe import Inject
 from tests.fixtures_server import DB_ENGINE
+
+INFO = sys.version_info
+CURRENT_PYTHON = f"{INFO.major}.{INFO.minor}"
 
 
 def test_settings_injection(override_settings):
@@ -32,6 +36,17 @@ def test_settings_injection(override_settings):
                 FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
                 FRACTAL_RUNNER_BACKEND="local",
                 SQLITE_PATH="/tmp/db.db",
+            ),
+            False,
+        ),
+        (
+            dict(
+                JWT_SECRET_KEY="secret",
+                FRACTAL_TASKS_DIR="/tmp",
+                DB_ENGINE="postgres-psycopg",
+                POSTGRES_DB="test",
+                FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
+                FRACTAL_RUNNER_BACKEND="local",
             ),
             False,
         ),
@@ -194,11 +209,10 @@ def test_settings_check(
     # Create a Settings instance
     settings = Settings(**settings_dict)
 
-    # raises when `settings` point to postgres but actual DB_ENGINE is sqlite
-    # (psycopg2 and asyncpg are not installed)
-    if DB_ENGINE == "sqlite":
-        if settings.DB_ENGINE == "postgres":
-            raises = True
+    if settings.DB_ENGINE in ["postgres", "postgres-psycopg"] and (
+        DB_ENGINE != settings.DB_ENGINE
+    ):
+        raises = True
 
     # Run Settings.check method
     if raises:
@@ -206,6 +220,26 @@ def test_settings_check(
             settings.check()
     else:
         settings.check()
+
+
+def test_settings_check_wrong_python():
+
+    # Create a Settings instance
+    with pytest.raises(FractalConfigurationError) as e:
+        Settings(
+            JWT_SECRET_KEY="secret",
+            FRACTAL_TASKS_DIR="/tmp",
+            FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
+            FRACTAL_RUNNER_BACKEND="local",
+            SQLITE_PATH="/tmp/db.db",
+            FRACTAL_TASKS_PYTHON_3_12=None,
+            FRACTAL_TASKS_PYTHON_DEFAULT_VERSION="3.12",
+        )
+    expected_msg = (
+        "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION=3.12 "
+        "but FRACTAL_TASKS_PYTHON_3_12=None."
+    )
+    assert expected_msg in str(e.value)
 
 
 def test_make_FRACTAL_TASKS_DIR_absolute():
@@ -313,3 +347,58 @@ def test_collect_oauth_clients(monkeypatch):
         assert len(settings.OAUTH_CLIENTS_CONFIG) == 2
         names = set(c.CLIENT_NAME for c in settings.OAUTH_CLIENTS_CONFIG)
         assert names == {"GITHUB", "MYCLIENT"}
+
+
+def test_python_interpreters():
+    common_attributes = dict(
+        JWT_SECRET_KEY="something",
+        SQLITE_PATH="/something",
+        FRACTAL_RUNNER_WORKING_BASE_DIR="/something",
+        FRACTAL_TASKS_DIR="/something",
+    )
+
+    # Successful branch 1: default version unset, and only one Python is set
+    settings = Settings(
+        FRACTAL_TASKS_PYTHON_3_9="/some/python3.9",
+        FRACTAL_TASKS_PYTHON_3_10="/some/python3.10",
+        FRACTAL_TASKS_PYTHON_3_11="/some/python3.11",
+        FRACTAL_TASKS_PYTHON_3_12="/some/python3.12",
+        **common_attributes,
+    )
+    version = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+    assert version is not None
+    version = version.replace(".", "_")
+    actual_python = getattr(settings, f"FRACTAL_TASKS_PYTHON_{version}")
+    assert actual_python == sys.executable
+    for other_version in ["3_9", "3_10", "3_11", "3_12"]:
+        if other_version != version:
+            key = f"FRACTAL_TASKS_PYTHON_{other_version}"
+            assert getattr(settings, key) is None
+
+    # Successful branch 2: full configuration given
+    settings = Settings(
+        FRACTAL_TASKS_PYTHON_DEFAULT_VERSION="3.11",
+        FRACTAL_TASKS_PYTHON_3_11="/some/python3.11",
+        FRACTAL_TASKS_PYTHON_3_12="/some/python3.12",
+        **common_attributes,
+    )
+    assert settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION is not None
+    assert settings.FRACTAL_TASKS_PYTHON_3_9 is None
+    assert settings.FRACTAL_TASKS_PYTHON_3_10 is None
+    assert settings.FRACTAL_TASKS_PYTHON_3_11 == "/some/python3.11"
+    assert settings.FRACTAL_TASKS_PYTHON_3_12 == "/some/python3.12"
+
+    # Non-absolute paths
+    with pytest.raises(FractalConfigurationError) as e:
+        Settings(FRACTAL_SLURM_WORKER_PYTHON="python3.10", **common_attributes)
+    assert "Non-absolute value for FRACTAL_SLURM_WORKER_PYTHON" in str(e.value)
+
+    for version in ["3_9", "3_10", "3_11", "3_12"]:
+        key = f"FRACTAL_TASKS_PYTHON_{version}"
+        version_dot = version.replace("_", ".")
+        attrs = common_attributes.copy()
+        attrs[key] = f"python{version_dot}"
+        debug(attrs)
+        with pytest.raises(FractalConfigurationError) as e:
+            settings = Settings(**attrs)
+        assert f"Non-absolute value {key}=" in str(e.value)

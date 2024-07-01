@@ -13,6 +13,7 @@
 # Zurich.
 import logging
 import shutil
+import sys
 from os import environ
 from os import getenv
 from os.path import abspath
@@ -166,7 +167,7 @@ class Settings(BaseSettings):
     ###########################################################################
     # DATABASE
     ###########################################################################
-    DB_ENGINE: Literal["sqlite", "postgres"] = "sqlite"
+    DB_ENGINE: Literal["sqlite", "postgres", "postgres-psycopg"] = "sqlite"
     """
     Select which database engine to use (supported: `sqlite` and `postgres`).
     """
@@ -201,8 +202,26 @@ class Settings(BaseSettings):
     """
 
     @property
-    def DATABASE_URL(self) -> URL:
-        if self.DB_ENGINE == "sqlite":
+    def DATABASE_ASYNC_URL(self) -> URL:
+        if self.DB_ENGINE == "postgres":
+            url = URL.create(
+                drivername="postgresql+asyncpg",
+                username=self.POSTGRES_USER,
+                password=self.POSTGRES_PASSWORD,
+                host=self.POSTGRES_HOST,
+                port=self.POSTGRES_PORT,
+                database=self.POSTGRES_DB,
+            )
+        elif self.DB_ENGINE == "postgres-psycopg":
+            url = URL.create(
+                drivername="postgresql+psycopg",
+                username=self.POSTGRES_USER,
+                password=self.POSTGRES_PASSWORD,
+                host=self.POSTGRES_HOST,
+                port=self.POSTGRES_PORT,
+                database=self.POSTGRES_DB,
+            )
+        else:
             if not self.SQLITE_PATH:
                 raise FractalConfigurationError(
                     "SQLITE_PATH path cannot be None"
@@ -212,28 +231,22 @@ class Settings(BaseSettings):
                 drivername="sqlite+aiosqlite",
                 database=sqlite_path,
             )
-            return url
-        elif "postgres":
-            url = URL.create(
-                drivername="postgresql+asyncpg",
-                username=self.POSTGRES_USER,
-                password=self.POSTGRES_PASSWORD,
-                host=self.POSTGRES_HOST,
-                port=self.POSTGRES_PORT,
-                database=self.POSTGRES_DB,
-            )
-            return url
+        return url
 
     @property
     def DATABASE_SYNC_URL(self):
-        if self.DB_ENGINE == "sqlite":
+        if self.DB_ENGINE == "postgres":
+            return self.DATABASE_ASYNC_URL.set(
+                drivername="postgresql+psycopg2"
+            )
+        elif self.DB_ENGINE == "postgres-psycopg":
+            return self.DATABASE_ASYNC_URL.set(drivername="postgresql+psycopg")
+        else:
             if not self.SQLITE_PATH:
                 raise FractalConfigurationError(
                     "SQLITE_PATH path cannot be None"
                 )
-            return self.DATABASE_URL.set(drivername="sqlite")
-        elif self.DB_ENGINE == "postgres":
-            return self.DATABASE_URL.set(drivername="postgresql+psycopg2")
+            return self.DATABASE_ASYNC_URL.set(drivername="sqlite")
 
     ###########################################################################
     # FRACTAL SPECIFIC
@@ -310,7 +323,9 @@ class Settings(BaseSettings):
             )
         return FRACTAL_RUNNER_WORKING_BASE_DIR_path
 
-    FRACTAL_RUNNER_BACKEND: Literal["local", "slurm"] = "local"
+    FRACTAL_RUNNER_BACKEND: Literal[
+        "local", "local_experimental", "slurm"
+    ] = "local"
     """
     Select which runner backend to use.
     """
@@ -352,9 +367,125 @@ class Settings(BaseSettings):
 
     FRACTAL_SLURM_WORKER_PYTHON: Optional[str] = None
     """
-    Path to Python interpreter that will run the jobs on the SLURM nodes. If
-    not specified, the same interpreter that runs the server is used.
+    Absolute path to Python interpreter that will run the jobs on the SLURM
+    nodes. If not specified, the same interpreter that runs the server is used.
     """
+
+    @validator("FRACTAL_SLURM_WORKER_PYTHON", always=True)
+    def absolute_FRACTAL_SLURM_WORKER_PYTHON(cls, v):
+        """
+        If `FRACTAL_SLURM_WORKER_PYTHON` is a relative path, fail.
+        """
+        if v is None:
+            return None
+        elif not Path(v).is_absolute():
+            raise FractalConfigurationError(
+                f"Non-absolute value for FRACTAL_SLURM_WORKER_PYTHON={v}"
+            )
+        else:
+            return v
+
+    FRACTAL_TASKS_PYTHON_DEFAULT_VERSION: Optional[
+        Literal["3.9", "3.10", "3.11", "3.12"]
+    ] = None
+    """
+    Default Python version to be used for task collection. Defaults to the
+    current version. Requires the corresponding variable (e.g
+    `FRACTAL_TASKS_PYTHON_3_10`) to be set.
+    """
+
+    FRACTAL_TASKS_PYTHON_3_9: Optional[str] = None
+    """
+    Absolute path to the Python 3.9 interpreter that serves as base for virtual
+    environments tasks. Note that this interpreter must have the `venv` module
+    installed. If set, this must be an absolute path. If the version specified
+    in `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION` is `"3.9"` and this attribute is
+    unset, `sys.executable` is used as a default.
+    """
+
+    FRACTAL_TASKS_PYTHON_3_10: Optional[str] = None
+    """
+    Same as `FRACTAL_TASKS_PYTHON_3_9`, for Python 3.10.
+    """
+
+    FRACTAL_TASKS_PYTHON_3_11: Optional[str] = None
+    """
+    Same as `FRACTAL_TASKS_PYTHON_3_9`, for Python 3.11.
+    """
+
+    FRACTAL_TASKS_PYTHON_3_12: Optional[str] = None
+    """
+    Same as `FRACTAL_TASKS_PYTHON_3_9`, for Python 3.12.
+    """
+
+    @root_validator(pre=True)
+    def check_tasks_python(cls, values) -> None:
+        """
+        Perform multiple checks of the Python-intepreter variables.
+
+        1. Each `FRACTAL_TASKS_PYTHON_X_Y` variable must be an absolute path,
+            if set.
+        2. If `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION` is unset, use
+            `sys.executable` and set the corresponding
+            `FRACTAL_TASKS_PYTHON_X_Y` (and unset all others).
+        """
+
+        # `FRACTAL_TASKS_PYTHON_X_Y` variables can only be absolute paths
+        for version in ["3_9", "3_10", "3_11", "3_12"]:
+            key = f"FRACTAL_TASKS_PYTHON_{version}"
+            value = values.get(key)
+            if value is not None and not Path(value).is_absolute():
+                raise FractalConfigurationError(
+                    f"Non-absolute value {key}={value}"
+                )
+
+        default_version = values.get("FRACTAL_TASKS_PYTHON_DEFAULT_VERSION")
+
+        if default_version is not None:
+            # "production/slurm" branch
+            # If a default version is set, then the corresponding interpreter
+            # must also be set
+            default_version_undescore = default_version.replace(".", "_")
+            key = f"FRACTAL_TASKS_PYTHON_{default_version_undescore}"
+            value = values.get(key)
+            if value is None:
+                msg = (
+                    f"FRACTAL_TASKS_PYTHON_DEFAULT_VERSION={default_version} "
+                    f"but {key}={value}."
+                )
+                logging.error(msg)
+                raise FractalConfigurationError(msg)
+
+        else:
+            # If no default version is set, then only `sys.executable` is made
+            # available
+            _info = sys.version_info
+            current_version = f"{_info.major}_{_info.minor}"
+            current_version_dot = f"{_info.major}.{_info.minor}"
+            values[
+                "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION"
+            ] = current_version_dot
+            logging.warning(
+                "Setting FRACTAL_TASKS_PYTHON_DEFAULT_VERSION to "
+                f"{current_version_dot}"
+            )
+
+            # Unset all existing intepreters variable
+            for _version in ["3_9", "3_10", "3_11", "3_12"]:
+                key = f"FRACTAL_TASKS_PYTHON_{_version}"
+                if _version == current_version:
+                    values[key] = sys.executable
+                    logging.warning(f"Setting {key} to {sys.executable}.")
+                else:
+                    value = values.get(key)
+                    if value is not None:
+                        logging.warning(
+                            f"Setting {key} to None (given: {value}), "
+                            "because FRACTAL_TASKS_PYTHON_DEFAULT_VERSION was "
+                            "not set."
+                        )
+                    values[key] = None
+        return values
 
     FRACTAL_SLURM_POLL_INTERVAL: int = 5
     """
@@ -417,6 +548,14 @@ class Settings(BaseSettings):
                 raise FractalConfigurationError(
                     "DB engine is `postgres` but `psycopg2` or `asyncpg` "
                     "are not available"
+                )
+        elif self.DB_ENGINE == "postgres-psycopg":
+            try:
+                import psycopg  # noqa: F401
+            except ModuleNotFoundError:
+                raise FractalConfigurationError(
+                    "DB engine is `postgres-psycopg` but `psycopg` is not "
+                    "available"
                 )
         else:
             if not self.SQLITE_PATH:

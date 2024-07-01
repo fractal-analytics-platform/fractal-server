@@ -1,25 +1,72 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
-# Unreleased
+# 2.3.0
 
-> NOTE: you can enable custom gunicorn worker/logger by adding the following options to the `gunicorn` startup command:
+This release includes a major update to task-collection configuration variables and logic. We now support two main use cases:
+
+1. When running a production instance (including on a SLURM cluster), you
+   should set e.g. `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION=3.10`, and make sure
+   that `FRACTAL_TASKS_PYTHON_3_10=/some/python` is an absolute path. Optionally,
+   you can define other variables like `FRACTAL_TASKS_PYTHON_3_9`,
+   `FRACTAL_TASKS_PYTHON_3_11` or `FRACTAL_TASKS_PYTHON_3_12`.
+
+2. If you leave `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION` unset, then only the
+   Python interpreter that is currently running `fractal-server` can be used
+   for task collection.
+
+> WARNING: If you don't set `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION`, then you
+> will only have a single Python interpreter available for tasks (namely the
+> one running `fractal-server`).
+
+* Task collection:
+    * Introduce task-collection Python-related configuration variables (\#1587).
+    * Always set Python version for task collection, and only use `FRACTAL_TASKS_PYTHON_X_Y` variables (\#1587)
+    * Refactor internal task-collection functions and models (\#1587).
+* Dependencies:
+    * Update `sqlmodel` to `^0.0.19` (\#1584).
+    * Update `pytest-asyncio` to `^0.23` (\#1558).
+* Testing:
+    * Test the way `FractalProcessPoolExecutor` spawns processes and threads (\#1579).
+    * Remove `event_loop` fixture: every test will run on its own event loop (\#1558).
+
+# 2.2.0
+
+This release streamlines options for the Gunicorn startup command, and includes
+two new experimental features.
+
+> NOTE 1: you can now enable custom Gunicorn worker/logger by adding the following
+> options to the `gunicorn` startup command:
 > - `--worker-class fractal_server.gunicorn_fractal.FractalWorker`
 > - `--logger-class fractal_server.gunicorn_fractal.FractalGunicornLogger`
+
+> NOTE 2: A new experimental local runner is available, which uses processes
+> instead of threads and support shutdown. You can try it out with the
+> configuration variable `FRACTAL_BACKEND_RUNNER=local_experimental`
+
+> NOTE 3: A new PostgreSQL database adapter is available, fully based on
+> `psycopg3` (rather than `pyscopg2`+`asyncpg`). You can try it out with the
+> configuration variable `DB_ENGINE=postgres-psycopg` (note that this requires
+> the `pip install` extra `postgres-psycopg-binary`).
 
 
 * API:
     * Add extensive logs to `DELETE /api/v2/project/{project_id}` (\#1532).
     * Remove catch of `IntegrityError` in `POST /api/v1/project` (\#1530).
+* App and deployment:
+    * Move `FractalGunicornLogger` and `FractalWorker` into `fractal_server/gunicorn_fractal.py` (\#1535).
+    * Add custom gunicorn/uvicorn worker to handle SIGABRT signal (\#1526).
+    * Store list of submitted jobs in app state (\#1538).
+    * Add logic for graceful shutdown for job slurm executors (\#1547).
 * Runner:
     * Change structure of job folders, introducing per-task subfolders (\#1523).
     * Rename internal `workflow_dir` and `workflow_dir_user` variables to local/remote (\#1534).
-* App and deployment:
-    * Add logic for graceful shutdown for job slurm executors. (\#1547)
-    * Add custom gunicorn/uvicorn worker to handle SIGABRT signal (\#1526).
-    * Move `FractalGunicornLogger` and `FractalWorker` in `fractal_server/gunicorn_fractal.py` (\#1535).
-    * Store list of submitted jobs in app state (\#1538).
+    * Improve handling of errors in `submit_workflow` background task (\#1556, \#1566).
+    * Add new `local_experimental` runner, based on `ProcessPoolExecutor` (\#1544, \#1566).
+* Database:
+    * Add new Postgres adapter `psycopg` (\#1562).
 * Dependencies
     * Add `fabric` to `dev` dependencies (\#1518).
+    * Add new `postgres-psycopg-binary` extra (\#1562).
 * Testing:
     * Extract `pytest-docker` fixtures into a dedicated module (\#1516).
     * Rename SLURM containers in CI (\#1516).

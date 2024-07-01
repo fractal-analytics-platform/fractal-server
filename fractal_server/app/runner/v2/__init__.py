@@ -10,9 +10,11 @@ import traceback
 from pathlib import Path
 from typing import Optional
 
+from sqlalchemy.orm import Session as DBSyncSession
 from sqlalchemy.orm.attributes import flag_modified
 
 from ....config import get_settings
+from ....logger import get_logger
 from ....logger import reset_logger_handlers
 from ....logger import set_logger
 from ....syringe import Inject
@@ -29,6 +31,9 @@ from ..executors.slurm._subprocess_run_as_user import _mkdir_as_user
 from ..filenames import WORKFLOW_LOG_FILENAME
 from ..task_files import task_subfolder_name
 from ._local import process_workflow as local_process_workflow
+from ._local_experimental import (
+    process_workflow as local_experimental_process_workflow,
+)
 from ._slurm import process_workflow as slurm_process_workflow
 from .handle_failed_job import assemble_filters_failed_job
 from .handle_failed_job import assemble_history_failed_job
@@ -37,7 +42,29 @@ from fractal_server import __VERSION__
 
 _backends = {}
 _backends["local"] = local_process_workflow
+_backends["local_experimental"] = local_experimental_process_workflow
 _backends["slurm"] = slurm_process_workflow
+
+
+def fail_job(
+    *,
+    db: DBSyncSession,
+    job: JobV2,
+    log_msg: str,
+    logger_name: str,
+    emit_log: bool = False,
+) -> None:
+    logger = get_logger(logger_name=logger_name)
+    if emit_log:
+        logger.error(log_msg)
+    reset_logger_handlers(logger)
+    job.status = JobStatusTypeV2.FAILED
+    job.end_timestamp = get_timestamp()
+    job.log = log_msg
+    db.merge(job)
+    db.commit()
+    db.close()
+    return
 
 
 async def submit_workflow(
@@ -74,22 +101,34 @@ async def submit_workflow(
             The username to impersonate for the workflow execution, for the
             slurm backend.
     """
-
-    # Declare runner backend and set `process_workflow` function
-    settings = Inject(get_settings)
-    FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
-    if FRACTAL_RUNNER_BACKEND == "local":
-        process_workflow = local_process_workflow
-    elif FRACTAL_RUNNER_BACKEND == "slurm":
-        process_workflow = slurm_process_workflow
-    else:
-        raise RuntimeError(f"Invalid runner backend {FRACTAL_RUNNER_BACKEND=}")
+    logger_name = f"WF{workflow_id}_job{job_id}"
+    logger = set_logger(logger_name=logger_name)
 
     with next(DB.get_sync_db()) as db_sync:
 
         job: JobV2 = db_sync.get(JobV2, job_id)
         if not job:
-            raise ValueError(f"Cannot fetch job {job_id} from database")
+            logger.error(f"JobV2 {job_id} does not exist")
+            return
+
+        # Declare runner backend and set `process_workflow` function
+        settings = Inject(get_settings)
+        FRACTAL_RUNNER_BACKEND = settings.FRACTAL_RUNNER_BACKEND
+        if FRACTAL_RUNNER_BACKEND == "local":
+            process_workflow = local_process_workflow
+        elif FRACTAL_RUNNER_BACKEND == "local_experimental":
+            process_workflow = local_experimental_process_workflow
+        elif FRACTAL_RUNNER_BACKEND == "slurm":
+            process_workflow = slurm_process_workflow
+        else:
+            fail_job(
+                db=db_sync,
+                job=job,
+                log_msg=f"Invalid {FRACTAL_RUNNER_BACKEND=}",
+                logger_name=logger_name,
+                emit_log=True,
+            )
+            return
 
         dataset: DatasetV2 = db_sync.get(DatasetV2, dataset_id)
         workflow: WorkflowV2 = db_sync.get(WorkflowV2, workflow_id)
@@ -101,58 +140,75 @@ async def submit_workflow(
                 log_msg += (
                     f"Cannot fetch workflow {workflow_id} from database\n"
                 )
-            job.status = JobStatusTypeV2.FAILED
-            job.end_timestamp = get_timestamp()
-            job.log = log_msg
-            db_sync.merge(job)
-            db_sync.commit()
-            db_sync.close()
+            fail_job(
+                db=db_sync, job=job, log_msg=log_msg, logger_name=logger_name
+            )
             return
 
         # Define and create server-side working folder
         WORKFLOW_DIR_LOCAL = Path(job.working_dir)
         if WORKFLOW_DIR_LOCAL.exists():
-            job.status = JobStatusTypeV2.FAILED
-            job.end_timestamp = get_timestamp()
-            job.log = f"Workflow dir {WORKFLOW_DIR_LOCAL} already exists."
-            db_sync.merge(job)
-            db_sync.commit()
-            db_sync.close()
+            fail_job(
+                db=db_sync,
+                job=job,
+                log_msg=f"Workflow dir {WORKFLOW_DIR_LOCAL} already exists.",
+                logger_name=logger_name,
+                emit_log=True,
+            )
             return
 
-        # Create WORKFLOW_DIR
-        original_umask = os.umask(0)
-        WORKFLOW_DIR_LOCAL.mkdir(parents=True, mode=0o755)
-        os.umask(original_umask)
+        try:
 
-        # Define and create WORKFLOW_DIR_REMOTE
-        if FRACTAL_RUNNER_BACKEND == "local":
-            WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
-        elif FRACTAL_RUNNER_BACKEND == "slurm":
-            WORKFLOW_DIR_REMOTE = (
-                Path(user_cache_dir) / WORKFLOW_DIR_LOCAL.name
-            )
-            _mkdir_as_user(folder=str(WORKFLOW_DIR_REMOTE), user=slurm_user)
-
-        # Create all tasks subfolders
-        for order in range(job.first_task_index, job.last_task_index + 1):
-            this_wftask = workflow.task_list[order]
-            if this_wftask.is_legacy_task:
-                task_name = this_wftask.task_legacy.name
-            else:
-                task_name = this_wftask.task.name
-            subfolder_name = task_subfolder_name(
-                order=order,
-                task_name=task_name,
-            )
+            # Create WORKFLOW_DIR
             original_umask = os.umask(0)
-            (WORKFLOW_DIR_LOCAL / subfolder_name).mkdir(mode=0o755)
+            WORKFLOW_DIR_LOCAL.mkdir(parents=True, mode=0o755)
+
             os.umask(original_umask)
-            if FRACTAL_RUNNER_BACKEND == "slurm":
-                _mkdir_as_user(
-                    folder=str(WORKFLOW_DIR_REMOTE / subfolder_name),
-                    user=slurm_user,
+
+            # Define and create WORKFLOW_DIR_REMOTE
+            if FRACTAL_RUNNER_BACKEND == "local":
+                WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
+            elif FRACTAL_RUNNER_BACKEND == "local_experimental":
+                WORKFLOW_DIR_REMOTE = WORKFLOW_DIR_LOCAL
+            elif FRACTAL_RUNNER_BACKEND == "slurm":
+                WORKFLOW_DIR_REMOTE = (
+                    Path(user_cache_dir) / WORKFLOW_DIR_LOCAL.name
                 )
+                _mkdir_as_user(
+                    folder=str(WORKFLOW_DIR_REMOTE), user=slurm_user
+                )
+
+            # Create all tasks subfolders
+            for order in range(job.first_task_index, job.last_task_index + 1):
+                this_wftask = workflow.task_list[order]
+                if this_wftask.is_legacy_task:
+                    task_name = this_wftask.task_legacy.name
+                else:
+                    task_name = this_wftask.task.name
+                subfolder_name = task_subfolder_name(
+                    order=order,
+                    task_name=task_name,
+                )
+                original_umask = os.umask(0)
+                (WORKFLOW_DIR_LOCAL / subfolder_name).mkdir(mode=0o755)
+                os.umask(original_umask)
+                if FRACTAL_RUNNER_BACKEND == "slurm":
+                    _mkdir_as_user(
+                        folder=str(WORKFLOW_DIR_REMOTE / subfolder_name),
+                        user=slurm_user,
+                    )
+        except Exception as e:
+            fail_job(
+                db=db_sync,
+                job=job,
+                log_msg=(
+                    "An error occurred while creating job folder and "
+                    f"subfolders.\nOriginal error: {str(e)}"
+                ),
+                logger_name=logger_name,
+                emit_log=True,
+            )
+            return
 
         # After Session.commit() is called, either explicitly or when using a
         # context manager, all objects associated with the Session are expired.
@@ -171,7 +227,6 @@ async def submit_workflow(
             db_sync.refresh(wftask)
 
         # Write logs
-        logger_name = f"WF{workflow_id}_job{job_id}"
         log_file_path = WORKFLOW_DIR_LOCAL / WORKFLOW_LOG_FILENAME
         logger = set_logger(
             logger_name=logger_name,
@@ -267,18 +322,14 @@ async def submit_workflow(
             dataset.images = latest_images
         db_sync.merge(dataset)
 
-        job.status = JobStatusTypeV2.FAILED
-        job.end_timestamp = get_timestamp()
-
         exception_args_string = "\n".join(e.args)
-        job.log = (
+        log_msg = (
             f"TASK ERROR: "
             f"Task name: {e.task_name}, "
             f"position in Workflow: {e.workflow_task_order}\n"
             f"TRACEBACK:\n{exception_args_string}"
         )
-        db_sync.merge(job)
-        db_sync.commit()
+        fail_job(db=db_sync, job=job, log_msg=log_msg, logger_name=logger_name)
 
     except JobExecutionError as e:
 
@@ -301,12 +352,15 @@ async def submit_workflow(
             dataset.images = latest_images
         db_sync.merge(dataset)
 
-        job.status = JobStatusTypeV2.FAILED
-        job.end_timestamp = get_timestamp()
-        error = e.assemble_error()
-        job.log = f"JOB ERROR in Fractal job {job.id}:\nTRACEBACK:\n{error}"
-        db_sync.merge(job)
-        db_sync.commit()
+        fail_job(
+            db=db_sync,
+            job=job,
+            log_msg=(
+                f"JOB ERROR in Fractal job {job.id}:\n"
+                f"TRACEBACK:\n{e.assemble_error()}"
+            ),
+            logger_name=logger_name,
+        )
 
     except Exception:
 
@@ -330,15 +384,16 @@ async def submit_workflow(
         if latest_images is not None:
             dataset.images = latest_images
         db_sync.merge(dataset)
-
-        job.status = JobStatusTypeV2.FAILED
-        job.end_timestamp = get_timestamp()
-        job.log = (
-            f"UNKNOWN ERROR in Fractal job {job.id}\n"
-            f"TRACEBACK:\n{current_traceback}"
+        fail_job(
+            db=db_sync,
+            job=job,
+            log_msg=(
+                f"UNKNOWN ERROR in Fractal job {job.id}\n"
+                f"TRACEBACK:\n{current_traceback}"
+            ),
+            logger_name=logger_name,
         )
-        db_sync.merge(job)
-        db_sync.commit()
+
     finally:
         reset_logger_handlers(logger)
         db_sync.close()

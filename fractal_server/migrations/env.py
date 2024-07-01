@@ -55,7 +55,7 @@ def run_migrations_offline() -> None:
     settings = Inject(get_settings)
     settings.check_db()
     context.configure(
-        url=settings.DATABASE_URL,
+        url=settings.DATABASE_ASYNC_URL,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
