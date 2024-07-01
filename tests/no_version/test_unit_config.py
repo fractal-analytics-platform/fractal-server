@@ -225,18 +225,16 @@ def test_settings_check(
 def test_settings_check_wrong_python():
 
     # Create a Settings instance
-    settings = Settings(
-        JWT_SECRET_KEY="secret",
-        FRACTAL_TASKS_DIR="/tmp",
-        FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
-        FRACTAL_RUNNER_BACKEND="local",
-        SQLITE_PATH="/tmp/db.db",
-        FRACTAL_TASKS_PYTHON_3_12=None,
-        FRACTAL_TASKS_PYTHON_DEFAULT_VERSION="3.12",
-    )
-
     with pytest.raises(FractalConfigurationError) as e:
-        settings.check()
+        Settings(
+            JWT_SECRET_KEY="secret",
+            FRACTAL_TASKS_DIR="/tmp",
+            FRACTAL_RUNNER_WORKING_BASE_DIR="/tmp",
+            FRACTAL_RUNNER_BACKEND="local",
+            SQLITE_PATH="/tmp/db.db",
+            FRACTAL_TASKS_PYTHON_3_12=None,
+            FRACTAL_TASKS_PYTHON_DEFAULT_VERSION="3.12",
+        )
     expected_msg = (
         "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION=3.12 "
         "but FRACTAL_TASKS_PYTHON_3_12=None."
