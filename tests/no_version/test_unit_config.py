@@ -367,7 +367,6 @@ def test_python_interpreters():
         FRACTAL_TASKS_PYTHON_3_12="/some/python3.12",
         **common_attributes,
     )
-    settings.check_tasks_python()
     version = settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
     assert version is not None
     version = version.replace(".", "_")
@@ -385,7 +384,6 @@ def test_python_interpreters():
         FRACTAL_TASKS_PYTHON_3_12="/some/python3.12",
         **common_attributes,
     )
-    settings.check_tasks_python()
     assert settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION is not None
     assert settings.FRACTAL_TASKS_PYTHON_3_9 is None
     assert settings.FRACTAL_TASKS_PYTHON_3_10 is None
@@ -405,5 +403,4 @@ def test_python_interpreters():
         debug(attrs)
         with pytest.raises(FractalConfigurationError) as e:
             settings = Settings(**attrs)
-            settings.check_tasks_python()
         assert f"Non-absolute value {key}=" in str(e.value)

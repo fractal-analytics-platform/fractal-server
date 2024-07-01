@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 from devtools import debug
 
@@ -65,6 +67,7 @@ async def fractal_tasks_mock(
         # If tasks were never collected within this session, perform
         # a full API-based task collection
         logging.warning("Actual task collection")
+        CURRENT_PYTHON = f"{sys.version_info.major}.{sys.version_info.minor}"
 
         async with MockCurrentUser(user_kwargs={"is_verified": True}):
             res = await client.post(
@@ -75,7 +78,7 @@ async def fractal_tasks_mock(
                         / "v2/fractal_tasks_mock/dist"
                         / "fractal_tasks_mock-0.0.1-py3-none-any.whl"
                     ).as_posix(),
-                    python_version="3.9",
+                    python_version=CURRENT_PYTHON,
                 ),
             )
             state_id = res.json()["id"]
