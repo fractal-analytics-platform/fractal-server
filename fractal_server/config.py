@@ -418,6 +418,75 @@ class Settings(BaseSettings):
     Same as `FRACTAL_TASKS_PYTHON_3_9`, for Python 3.12.
     """
 
+    @root_validator(pre=True)
+    def check_tasks_python(cls, values) -> None:
+        """
+        Perform multiple checks of the Python-intepreter variables.
+
+        1. Each `FRACTAL_TASKS_PYTHON_X_Y` variable must be an absolute path,
+            if set.
+        2. If `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION` is unset, use
+            `sys.executable` and set the corresponding
+            `FRACTAL_TASKS_PYTHON_X_Y` (and unset all others).
+        """
+
+        # `FRACTAL_TASKS_PYTHON_X_Y` variables can only be absolute paths
+        for version in ["3_9", "3_10", "3_11", "3_12"]:
+            key = f"FRACTAL_TASKS_PYTHON_{version}"
+            value = values.get(key)
+            if value is not None and not Path(value).is_absolute():
+                raise FractalConfigurationError(
+                    f"Non-absolute value {key}={value}"
+                )
+
+        default_version = values.get("FRACTAL_TASKS_PYTHON_DEFAULT_VERSION")
+
+        if default_version is not None:
+            # "production/slurm" branch
+            # If a default version is set, then the corresponding interpreter
+            # must also be set
+            default_version_undescore = default_version.replace(".", "_")
+            key = f"FRACTAL_TASKS_PYTHON_{default_version_undescore}"
+            value = values.get(key)
+            if value is None:
+                msg = (
+                    f"FRACTAL_TASKS_PYTHON_DEFAULT_VERSION={default_version} "
+                    f"but {key}={value}."
+                )
+                logging.error(msg)
+                raise FractalConfigurationError(msg)
+
+        else:
+            # If no default version is set, then only `sys.executable` is made
+            # available
+            _info = sys.version_info
+            current_version = f"{_info.major}_{_info.minor}"
+            current_version_dot = f"{_info.major}.{_info.minor}"
+            values[
+                "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION"
+            ] = current_version_dot
+            logging.warning(
+                "Setting FRACTAL_TASKS_PYTHON_DEFAULT_VERSION to "
+                f"{current_version_dot}"
+            )
+
+            # Unset all existing intepreters variable
+            for _version in ["3_9", "3_10", "3_11", "3_12"]:
+                key = f"FRACTAL_TASKS_PYTHON_{_version}"
+                if _version == current_version:
+                    values[key] = sys.executable
+                    logging.warning(f"Setting {key} to {sys.executable}.")
+                else:
+                    value = values.get(key)
+                    if value is not None:
+                        logging.warning(
+                            f"Setting {key} to None (given: {value}), "
+                            "because FRACTAL_TASKS_PYTHON_DEFAULT_VERSION was "
+                            "not set."
+                        )
+                    values[key] = None
+        return values
+
     FRACTAL_SLURM_POLL_INTERVAL: int = 5
     """
     Interval to wait (in seconds) before checking whether unfinished job are
@@ -536,71 +605,6 @@ class Settings(BaseSettings):
                         f"{self.FRACTAL_LOCAL_CONFIG_FILE} not found."
                     )
 
-    def check_tasks_python(self) -> None:
-        """
-        Perform multiple checks of the Python-intepreter variables.
-
-        1. Each `FRACTAL_TASKS_PYTHON_X_Y` variable must be an absolute path,
-            if set.
-        2. If `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION` is unset, use
-            `sys.executable` and set the corresponding
-            `FRACTAL_TASKS_PYTHON_X_Y` (and unset all others).
-        """
-
-        # `FRACTAL_TASKS_PYTHON_X_Y` variables can only be absolute paths
-        for version in ["3_9", "3_10", "3_11", "3_12"]:
-            key = f"FRACTAL_TASKS_PYTHON_{version}"
-            value = getattr(self, key)
-            if value is not None and not Path(value).is_absolute():
-                raise FractalConfigurationError(
-                    f"Non-absolute value {key}={value}"
-                )
-
-        default_version = self.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
-
-        if default_version is not None:
-            # "production/slurm" branch
-            # If a default version is set, then the corresponding interpreter
-            # must also be set
-            default_version_undescore = default_version.replace(".", "_")
-            key = f"FRACTAL_TASKS_PYTHON_{default_version_undescore}"
-            value = getattr(self, key)
-            if value is None:
-                msg = (
-                    f"FRACTAL_TASKS_PYTHON_DEFAULT_VERSION={default_version} "
-                    f"but {key}={value}."
-                )
-                logging.error(msg)
-                raise FractalConfigurationError(msg)
-
-        else:
-            # If no default version is set, then only `sys.executable` is made
-            # available
-            _info = sys.version_info
-            current_version = f"{_info.major}_{_info.minor}"
-            current_version_dot = f"{_info.major}.{_info.minor}"
-            self.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION = current_version
-            logging.warning(
-                "Setting FRACTAL_TASKS_PYTHON_DEFAULT_VERSION to "
-                f"{current_version_dot}"
-            )
-
-            # Unset all existing intepreters variable
-            for _version in ["3_9", "3_10", "3_11", "3_12"]:
-                key = f"FRACTAL_TASKS_PYTHON_{_version}"
-                if _version == current_version:
-                    setattr(self, key, sys.executable)
-                    logging.warning(f"Setting {key} to {sys.executable}.")
-                else:
-                    value = getattr(self, key)
-                    if value is not None:
-                        logging.warning(
-                            f"Setting {key} to None (given: {value}), "
-                            "because FRACTAL_TASKS_PYTHON_DEFAULT_VERSION was "
-                            "not set."
-                        )
-                    setattr(self, key, None)
-
     def check(self):
         """
         Make sure that required variables are set
@@ -616,7 +620,6 @@ class Settings(BaseSettings):
 
         self.check_db()
         self.check_runner()
-        self.check_tasks_python()
 
 
 def get_settings(settings=Settings()) -> Settings:
