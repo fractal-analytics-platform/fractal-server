@@ -468,7 +468,7 @@ class Settings(BaseSettings):
             values[
                 "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION"
             ] = current_version_dot
-            logging.warning(
+            logging.info(
                 "Setting FRACTAL_TASKS_PYTHON_DEFAULT_VERSION to "
                 f"{current_version_dot}"
             )
@@ -478,11 +478,11 @@ class Settings(BaseSettings):
                 key = f"FRACTAL_TASKS_PYTHON_{_version}"
                 if _version == current_version:
                     values[key] = sys.executable
-                    logging.warning(f"Setting {key} to {sys.executable}.")
+                    logging.info(f"Setting {key} to {sys.executable}.")
                 else:
                     value = values.get(key)
                     if value is not None:
-                        logging.warning(
+                        logging.info(
                             f"Setting {key} to None (given: {value}), "
                             "because FRACTAL_TASKS_PYTHON_DEFAULT_VERSION was "
                             "not set."
