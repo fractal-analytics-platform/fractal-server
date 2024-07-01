@@ -31,10 +31,12 @@ async def test_failed_API_calls(
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
         res = await client.post(
             f"{PREFIX}/collect/pip/",
-            json=dict(package=str(tmp_path / "missing_file.whl")),
+            json=dict(
+                package=str(tmp_path / "missing-1.2.3-py3-none-any.whl")
+            ),
         )
         assert res.status_code == 422
-        assert "does not exist" in str(res.json())
+        assert "No such file or directory" in str(res.json())
 
     # Invalid wheel file
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
