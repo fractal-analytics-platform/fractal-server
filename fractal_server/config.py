@@ -385,12 +385,13 @@ class Settings(BaseSettings):
         else:
             return v
 
-    FRACTAL_TASKS_PYTHON_DEFAULT_VERSION: Literal[
-        "3.9", "3.10", "3.11", "3.12"
-    ] = "3.10"
+    FRACTAL_TASKS_PYTHON_DEFAULT_VERSION: Optional[
+        Literal["3.9", "3.10", "3.11", "3.12"]
+    ] = None
     """
-    Default Python version to be used for task collection. Requires the
-    corresponding variable (e.g `FRACTAL_TASKS_PYTHON_3_10`) to be set.
+    Default Python version to be used for task collection. Defaults to the
+    current version. Requires the corresponding variable (e.g
+    `FRACTAL_TASKS_PYTHON_3_10`) to be set.
     """
 
     FRACTAL_TASKS_PYTHON_3_9: Optional[str] = None
@@ -541,10 +542,9 @@ class Settings(BaseSettings):
 
         1. Each `FRACTAL_TASKS_PYTHON_X_Y` variable must be an absolute path,
             if set.
-        2. If the Python version in `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION` is
-            unset, try to use `sys.executable` - if versions match.
-        3. If the Python version in `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION` is
-            still unset, fail.
+        2. If `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION` is unset, use
+            `sys.executable` and set the corresponding
+            `FRACTAL_TASKS_PYTHON_X_Y` (and unset all others).
         """
 
         # `FRACTAL_TASKS_PYTHON_X_Y` variables can only be absolute paths
@@ -556,27 +556,38 @@ class Settings(BaseSettings):
                     f"Non-absolute value {key}={value}"
                 )
 
-        # The `FRACTAL_TASKS_PYTHON_X_Y` variable corresponding to the default
-        # must be set, or it must match with `sys.executable` version
         default_version = self.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
-        default_version_undescore = default_version.replace(".", "_")
-        key = f"FRACTAL_TASKS_PYTHON_{default_version_undescore}"
-        value = getattr(self, key)
-        if value is None:
-            msg = (
-                f"FRACTAL_TASKS_PYTHON_DEFAULT_VERSION={default_version} "
-                f"but {key}={value}."
-            )
-            current_version = (
-                f"{sys.version_info.major}_{sys.version_info.minor}"
-            )
-            if current_version == default_version_undescore:
-                setattr(self, key, sys.executable)
-                logging.warning(msg)
-                logging.warning(f"Setting {key}={sys.executable}")
-            else:
+
+        if default_version is not None:
+            # "production/slurm" branch
+            # If a default version is set, then the corresponding interpreter
+            # must also be set
+            default_version_undescore = default_version.replace(".", "_")
+            key = f"FRACTAL_TASKS_PYTHON_{default_version_undescore}"
+            value = getattr(self, key)
+            if value is None:
+                msg = (
+                    f"FRACTAL_TASKS_PYTHON_DEFAULT_VERSION={default_version} "
+                    f"but {key}={value}."
+                )
                 logging.error(msg)
                 raise FractalConfigurationError(msg)
+
+        else:
+            # If no default version is set, then only `sys.executable` is made
+            # available
+            _info = sys.version_info
+            current_version = f"{_info.major}_{_info.minor}"
+
+            # Unset all existing intepreters variable
+            for _version in ["3_9", "3_10", "3_11", "3_12"]:
+                key = f"FRACTAL_TASKS_PYTHON_{_version}"
+                setattr(self, key, None)
+
+            # Only set the appropriate variable to sys.executable
+            self.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION = current_version
+            key = f"FRACTAL_TASKS_PYTHON_{current_version}"
+            setattr(self, key, sys.executable)
 
     def check(self):
         """
