@@ -3,7 +3,7 @@
 # 2.3.0
 
 This release includes a major update to task-collection configuration variables and logic. We now support two main use cases:
-1. When running a production instance (including on a SLURM cluster), you should set e.g. `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION=3.10`, and make sure that `FRACTAL_TASKS_PYTHON_3_10=/some/python`. Optionally, you can define other variables like `FRACTAL_TASKS_PYTHON_3_9`, `FRACTAL_TASKS_PYTHON_3_11` or `FRACTAL_TASKS_PYTHON_3_12`.
+1. When running a production instance (including on a SLURM cluster), you should set e.g. `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION=3.10`, and make sure that `FRACTAL_TASKS_PYTHON_3_10=/some/python` is an absolute path. Optionally, you can define other variables like `FRACTAL_TASKS_PYTHON_3_9`, `FRACTAL_TASKS_PYTHON_3_11` or `FRACTAL_TASKS_PYTHON_3_12`.
 2. If you leave `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION` unset, then only the current Python interpreter that is currently running `fractal-server` can be used for task collection.
 
 * Task collection:
