@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 import pytest
@@ -5,6 +6,8 @@ import pytest
 from fractal_server.tasks.utils import _normalize_package_name
 from fractal_server.tasks.utils import get_absolute_venv_path
 from fractal_server.tasks.v2.utils import get_python_interpreter_v2
+
+CURRENT_PYTHON = f"{sys.version_info.major}.{sys.version_info.minor}"
 
 
 async def test_get_python_interpreter_v2(

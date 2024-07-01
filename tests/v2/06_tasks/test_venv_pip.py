@@ -1,4 +1,5 @@
 import logging
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -17,7 +18,7 @@ from fractal_server.tasks.v2._venv_pip import _pip_install
 from fractal_server.tasks.v2.endpoint_operations import inspect_package
 from tests.execute_command import execute_command
 
-
+CURRENT_PYTHON = f"{sys.version_info.major}.{sys.version_info.minor}"
 LOGGER_NAME = "__logger__"
 
 
@@ -174,7 +175,7 @@ async def test_pip_install_pinned(tmp_path, caplog):
     caplog.clear()
 
 
-@pytest.mark.parametrize("python_version", [None, "3.10"])
+@pytest.mark.parametrize("python_version", [None, CURRENT_PYTHON])
 async def test_init_venv(tmp_path, python_version):
     """
     GIVEN a path and a python version

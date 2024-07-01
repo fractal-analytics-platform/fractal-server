@@ -19,7 +19,7 @@ INFO = sys.version_info
 CURRENT_PYTHON = f"{INFO.major}.{INFO.minor}"
 
 
-@pytest.mark.parametrize("payload_python_version", ["3.10", None])
+@pytest.mark.parametrize("payload_python_version", [CURRENT_PYTHON, None])
 async def test_task_collection_from_wheel(
     db,
     client,
