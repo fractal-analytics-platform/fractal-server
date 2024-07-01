@@ -80,6 +80,10 @@ def _customize_and_run_template(
         settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR,
         f"script_{abs(hash(tmpdir))}{script_filename}",
     )
+    from devtools import debug
+
+    debug(script_path_local)
+    debug(script_path_remote)
     connection.put(
         local=script_path_local,
         remote=script_path_remote,
@@ -102,7 +106,7 @@ async def background_collect_pip_ssh(
 
     # Prepare replacements for task-collection scripts
     settings = Inject(get_settings)
-    python_bin = (get_python_interpreter_v2(version=task_pkg.python_version),)
+    python_bin = get_python_interpreter_v2(version=task_pkg.python_version)
     version_string = (
         f"=={task_pkg.package_version}" if task_pkg.package_version else ""
     )
@@ -186,6 +190,7 @@ async def background_collect_pip_ssh(
                 )
 
                 # Read remote manifest file
+                # FIXME: wrap in try/except
                 with connection.sftp().open(
                     manifest_absolute_path_remote, "r"
                 ) as f:
@@ -226,6 +231,11 @@ async def background_collect_pip_ssh(
                 logger.debug("Task collection - finalising - END")
 
             except Exception as e:
+                from devtools import debug
+
+                log = log_file_path.open("r").read()
+                debug(log)
+
                 _handle_failure(
                     state_id=state_id,
                     log_file_path=log_file_path,
