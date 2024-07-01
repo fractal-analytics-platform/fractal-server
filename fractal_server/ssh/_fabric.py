@@ -107,29 +107,21 @@ def run_command_over_ssh(
     )
 
 
-def _mkdir_over_ssh(*, folder: str, parents: bool = True) -> None:
+def _mkdir_over_ssh(
+    *, folder: str, connection: Connection, parents: bool = True
+) -> None:
     """
     Create a folder remotely via SSH.
 
     Args:
         folder:
+        connection:
+        parents:
     """
 
     # FIXME: paramiko SFTPClient has a mkdir method
-
     if parents:
         cmd = f"mkdir -p {folder}"
     else:
         cmd = f"mkdir {folder}"
-
-    settings = Inject(get_settings)
-    timeout = 3
-    with Connection(
-        host=settings.FRACTAL_SLURM_SSH_HOST,
-        user=settings.FRACTAL_SLURM_SSH_USER,
-        connect_kwargs={
-            "key_filename": settings.FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH
-        },
-        connect_timeout=timeout,
-    ) as connection:
-        run_command_over_ssh(cmd=cmd, connection=connection)
+    run_command_over_ssh(cmd=cmd, connection=connection)

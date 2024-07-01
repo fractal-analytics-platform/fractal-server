@@ -191,7 +191,9 @@ async def submit_workflow(
                 # FIXME: move this mkdir to executor, likely within handshake
                 from ....ssh._fabric import _mkdir_over_ssh
 
-                _mkdir_over_ssh(folder=str(WORKFLOW_DIR_REMOTE))
+                _mkdir_over_ssh(
+                    folder=str(WORKFLOW_DIR_REMOTE), connection=connection
+                )
                 logging.info(f"Created {str(WORKFLOW_DIR_REMOTE)} via SSH.")
             else:
                 logging.error(
