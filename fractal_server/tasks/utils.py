@@ -33,6 +33,10 @@ def get_log_path(base: Path) -> Path:
     return base / COLLECTION_LOG_FILENAME
 
 
+def get_freeze_path(base: Path) -> Path:
+    return base / COLLECTION_FREEZE_FILENAME
+
+
 def get_collection_log(venv_path: Path) -> str:
     package_path = get_absolute_venv_path(venv_path)
     log_path = get_log_path(package_path)
@@ -42,7 +46,7 @@ def get_collection_log(venv_path: Path) -> str:
 
 def get_collection_freeze(venv_path: Path) -> str:
     package_path = get_absolute_venv_path(venv_path)
-    log_path = get_log_path(package_path)
+    log_path = get_freeze_path(package_path)
     log = log_path.open().read()
     return log
 
