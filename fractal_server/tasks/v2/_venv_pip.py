@@ -122,11 +122,6 @@ async def _pip_install(
     logger.debug(f"[_pip install] {location=}")
     logger.debug(f"[_pip install] {task_pkg.package_name=}")
     logger.debug(f"[_pip install] {package_root=}")
-    if not package_root.exists():
-        raise RuntimeError(
-            "Could not determine package installation location "
-            f"(non-existing {package_root=})."
-        )
 
     # Run `pip freeze --all` and store its output
     stdout_freeze = await execute_command(
