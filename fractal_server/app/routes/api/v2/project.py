@@ -63,11 +63,21 @@ async def create_project(
     )
 
     db_project = ProjectV2(**project.dict())
-    db_project.user_list.append(user)
-
     db.add(db_project)
     await db.commit()
     await db.refresh(db_project)
+
+    link_user_project = LinkUserProjectV2(
+        user_id=user.id, project_id=db_project.id
+    )
+    db.add(link_user_project)
+    try:
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        await db.delete(db_project)
+        await db.commit()
+
     await db.close()
 
     return db_project
@@ -194,6 +204,21 @@ async def delete_project(
         logger.info(f"Setting Job[{job.id}].project_id to None.")
         job.project_id = None
     logger.info("End of cascade operations on Jobs.")
+
+    # LinkUserProjct
+    logger.info("Start of cascade operations on LinkUserProjects.")
+    stm = select(LinkUserProjectV2).where(
+        LinkUserProjectV2.project_id == project_id
+    )
+    res = await db.execute(stm)
+    links = res.scalars().all()
+    for link in links:
+        logger.info(
+            "Adding LinkUserProject"
+            f"[user={link.user_id}, project={link.project_id}] to deletion."
+        )
+        await db.delete(link)
+    logger.info("End of cascade operations on LinkUserProjects.")
 
     logger.info(f"Adding Project[{project.id}] to deletion.")
     await db.delete(project)

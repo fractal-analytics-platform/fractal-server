@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from fractal_server.app.models.v2 import DatasetV2
 from fractal_server.app.models.v2 import JobV2
+from fractal_server.app.models.v2 import LinkUserProjectV2
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowTaskV2
@@ -26,10 +27,16 @@ async def project_factory_v2(db):
         defaults = dict(name="project")
         defaults.update(kwargs)
         project = ProjectV2(**defaults)
-        project.user_list.append(user)
         db.add(project)
         await db.commit()
         await db.refresh(project)
+
+        link_user_project = LinkUserProjectV2(
+            user_id=user.id, project_id=project.id
+        )
+        db.add(link_user_project)
+        await db.commit()
+
         return project
 
     return __project_factory
@@ -153,7 +160,7 @@ async def job_factory_v2(db: AsyncSession):
                 timestamp_created=_encode_as_utc(workflow.timestamp_created),
             ),
             project_dump=dict(
-                project.model_dump(exclude={"user_list", "timestamp_created"}),
+                project.model_dump(exclude={"timestamp_created"}),
                 timestamp_created=_encode_as_utc(project.timestamp_created),
             ),
             last_task_index=last_task_index,

@@ -87,11 +87,22 @@ async def create_project(
     )
 
     db_project = Project(**project.dict())
-    db_project.user_list.append(user)
 
     db.add(db_project)
     await db.commit()
     await db.refresh(db_project)
+
+    link_user_project = LinkUserProject(
+        project_id=db_project.id, user_id=user.id
+    )
+    db.add(link_user_project)
+    try:
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        await db.delete(db_project)
+        await db.commit()
+
     await db.close()
 
     return db_project
@@ -227,6 +238,13 @@ async def delete_project(
 
     await db.commit()
 
+    stm = select(LinkUserProject).where(
+        LinkUserProject.project_id == project_id
+    )
+    res = await db.execute(stm)
+    links = res.scalars().all()
+    for link in links:
+        await db.delete(link)
     await db.delete(project)
     await db.commit()
 

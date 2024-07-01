@@ -5,8 +5,10 @@ from devtools import debug
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
+from fractal_server.app.models.security import UserOAuth
 from fractal_server.app.models.v1 import ApplyWorkflow
 from fractal_server.app.models.v1 import Dataset
+from fractal_server.app.models.v1 import LinkUserProject
 from fractal_server.app.models.v1 import Project
 from fractal_server.app.models.v1 import Resource
 from fractal_server.app.models.v1 import State
@@ -36,7 +38,12 @@ async def test_projects(db):
     assert len(project_list) == 2
     # test defaults
     for project in project_list:
-        assert project.user_list == []
+        res = await db.execute(
+            select(UserOAuth)
+            .join(LinkUserProject)
+            .where(LinkUserProject.project_id == project.id)
+        )
+        assert res.scalars().all() == []
         # delete
         await db.delete(project)
 

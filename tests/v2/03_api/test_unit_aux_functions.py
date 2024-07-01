@@ -78,14 +78,13 @@ async def test_get_workflow_check_owner(
         workflow = await workflow_factory_v2(project_id=project.id)
 
         # Test success
-        await _get_workflow_check_owner(
+        workflow = await _get_workflow_check_owner(
             project_id=project.id,
             workflow_id=workflow.id,
             user_id=user.id,
             db=db,
         )
         assert workflow.project is not None
-        assert len(workflow.project.user_list) > 0
 
         # Test fail 1
         with pytest.raises(HTTPException) as err:
@@ -226,7 +225,6 @@ async def test_get_dataset_check_owner(
         )
         dataset = res["dataset"]
         assert dataset.project is not None
-        assert len(dataset.project.user_list) > 0
 
         # Test fail 1
         with pytest.raises(HTTPException) as err:
