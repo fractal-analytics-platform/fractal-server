@@ -158,7 +158,6 @@ def _prepare_tasks_metadata(
     """
     task_list = []
     for _task in package_manifest.task_list:
-        # for t in task_pkg.package_manifest.task_list:
         # Set non-command attributes
         task_attributes = {}
         task_attributes["version"] = package_version
