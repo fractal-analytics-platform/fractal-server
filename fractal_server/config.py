@@ -13,6 +13,7 @@
 # Zurich.
 import logging
 import shutil
+import sys
 from os import environ
 from os import getenv
 from os.path import abspath
@@ -366,9 +367,125 @@ class Settings(BaseSettings):
 
     FRACTAL_SLURM_WORKER_PYTHON: Optional[str] = None
     """
-    Path to Python interpreter that will run the jobs on the SLURM nodes. If
-    not specified, the same interpreter that runs the server is used.
+    Absolute path to Python interpreter that will run the jobs on the SLURM
+    nodes. If not specified, the same interpreter that runs the server is used.
     """
+
+    @validator("FRACTAL_SLURM_WORKER_PYTHON", always=True)
+    def absolute_FRACTAL_SLURM_WORKER_PYTHON(cls, v):
+        """
+        If `FRACTAL_SLURM_WORKER_PYTHON` is a relative path, fail.
+        """
+        if v is None:
+            return None
+        elif not Path(v).is_absolute():
+            raise FractalConfigurationError(
+                f"Non-absolute value for FRACTAL_SLURM_WORKER_PYTHON={v}"
+            )
+        else:
+            return v
+
+    FRACTAL_TASKS_PYTHON_DEFAULT_VERSION: Optional[
+        Literal["3.9", "3.10", "3.11", "3.12"]
+    ] = None
+    """
+    Default Python version to be used for task collection. Defaults to the
+    current version. Requires the corresponding variable (e.g
+    `FRACTAL_TASKS_PYTHON_3_10`) to be set.
+    """
+
+    FRACTAL_TASKS_PYTHON_3_9: Optional[str] = None
+    """
+    Absolute path to the Python 3.9 interpreter that serves as base for virtual
+    environments tasks. Note that this interpreter must have the `venv` module
+    installed. If set, this must be an absolute path. If the version specified
+    in `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION` is `"3.9"` and this attribute is
+    unset, `sys.executable` is used as a default.
+    """
+
+    FRACTAL_TASKS_PYTHON_3_10: Optional[str] = None
+    """
+    Same as `FRACTAL_TASKS_PYTHON_3_9`, for Python 3.10.
+    """
+
+    FRACTAL_TASKS_PYTHON_3_11: Optional[str] = None
+    """
+    Same as `FRACTAL_TASKS_PYTHON_3_9`, for Python 3.11.
+    """
+
+    FRACTAL_TASKS_PYTHON_3_12: Optional[str] = None
+    """
+    Same as `FRACTAL_TASKS_PYTHON_3_9`, for Python 3.12.
+    """
+
+    @root_validator(pre=True)
+    def check_tasks_python(cls, values) -> None:
+        """
+        Perform multiple checks of the Python-intepreter variables.
+
+        1. Each `FRACTAL_TASKS_PYTHON_X_Y` variable must be an absolute path,
+            if set.
+        2. If `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION` is unset, use
+            `sys.executable` and set the corresponding
+            `FRACTAL_TASKS_PYTHON_X_Y` (and unset all others).
+        """
+
+        # `FRACTAL_TASKS_PYTHON_X_Y` variables can only be absolute paths
+        for version in ["3_9", "3_10", "3_11", "3_12"]:
+            key = f"FRACTAL_TASKS_PYTHON_{version}"
+            value = values.get(key)
+            if value is not None and not Path(value).is_absolute():
+                raise FractalConfigurationError(
+                    f"Non-absolute value {key}={value}"
+                )
+
+        default_version = values.get("FRACTAL_TASKS_PYTHON_DEFAULT_VERSION")
+
+        if default_version is not None:
+            # "production/slurm" branch
+            # If a default version is set, then the corresponding interpreter
+            # must also be set
+            default_version_undescore = default_version.replace(".", "_")
+            key = f"FRACTAL_TASKS_PYTHON_{default_version_undescore}"
+            value = values.get(key)
+            if value is None:
+                msg = (
+                    f"FRACTAL_TASKS_PYTHON_DEFAULT_VERSION={default_version} "
+                    f"but {key}={value}."
+                )
+                logging.error(msg)
+                raise FractalConfigurationError(msg)
+
+        else:
+            # If no default version is set, then only `sys.executable` is made
+            # available
+            _info = sys.version_info
+            current_version = f"{_info.major}_{_info.minor}"
+            current_version_dot = f"{_info.major}.{_info.minor}"
+            values[
+                "FRACTAL_TASKS_PYTHON_DEFAULT_VERSION"
+            ] = current_version_dot
+            logging.warning(
+                "Setting FRACTAL_TASKS_PYTHON_DEFAULT_VERSION to "
+                f"{current_version_dot}"
+            )
+
+            # Unset all existing intepreters variable
+            for _version in ["3_9", "3_10", "3_11", "3_12"]:
+                key = f"FRACTAL_TASKS_PYTHON_{_version}"
+                if _version == current_version:
+                    values[key] = sys.executable
+                    logging.warning(f"Setting {key} to {sys.executable}.")
+                else:
+                    value = values.get(key)
+                    if value is not None:
+                        logging.warning(
+                            f"Setting {key} to None (given: {value}), "
+                            "because FRACTAL_TASKS_PYTHON_DEFAULT_VERSION was "
+                            "not set."
+                        )
+                    values[key] = None
+        return values
 
     FRACTAL_SLURM_POLL_INTERVAL: int = 5
     """
