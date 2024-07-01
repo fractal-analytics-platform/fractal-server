@@ -537,9 +537,17 @@ class Settings(BaseSettings):
 
     def check_tasks_python(self) -> None:
         """
-        FIXME: docstring
+        Perform multiple checks of the Python-intepreter variables.
+
+        1. Each `FRACTAL_TASKS_PYTHON_X_Y` variable must be an absolute path,
+            if set.
+        2. If the Python version in `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION` is
+            unset, try to use `sys.executable` - if versions match.
+        3. If the Python version in `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION` is
+            still unset, fail.
         """
 
+        # `FRACTAL_TASKS_PYTHON_X_Y` variables can only be absolute paths
         for version in ["3_9", "3_10", "3_11", "3_12"]:
             key = f"FRACTAL_TASKS_PYTHON_{version}"
             value = getattr(self, key)
@@ -547,9 +555,11 @@ class Settings(BaseSettings):
                 raise FractalConfigurationError(
                     f"Non-absolute value {key}={value}"
                 )
+
+        # The `FRACTAL_TASKS_PYTHON_X_Y` variable corresponding to the default
+        # must be set, or it must match with `sys.executable` version
         default_version = self.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
         default_version_undescore = default_version.replace(".", "_")
-
         key = f"FRACTAL_TASKS_PYTHON_{default_version_undescore}"
         value = getattr(self, key)
         if value is None:
