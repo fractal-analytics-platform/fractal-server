@@ -578,16 +578,28 @@ class Settings(BaseSettings):
             # available
             _info = sys.version_info
             current_version = f"{_info.major}_{_info.minor}"
+            current_version_dot = f"{_info.major}.{_info.minor}"
+            self.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION = current_version
+            logging.warning(
+                "Setting FRACTAL_TASKS_PYTHON_DEFAULT_VERSION to "
+                f"{current_version_dot}"
+            )
 
             # Unset all existing intepreters variable
             for _version in ["3_9", "3_10", "3_11", "3_12"]:
                 key = f"FRACTAL_TASKS_PYTHON_{_version}"
-                setattr(self, key, None)
-
-            # Only set the appropriate variable to sys.executable
-            self.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION = current_version
-            key = f"FRACTAL_TASKS_PYTHON_{current_version}"
-            setattr(self, key, sys.executable)
+                if _version == current_version:
+                    setattr(self, key, sys.executable)
+                    logging.warning(f"Setting {key} to {sys.executable}.")
+                else:
+                    value = getattr(self, key)
+                    if value is not None:
+                        logging.warning(
+                            f"Setting {key} to None (given: {value}), "
+                            "because FRACTAL_TASKS_PYTHON_DEFAULT_VERSION was "
+                            "not set."
+                        )
+                    setattr(self, key, None)
 
     def check(self):
         """
