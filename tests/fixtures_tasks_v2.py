@@ -46,7 +46,7 @@ async def fractal_tasks_mock(
         with collection_json.open("r") as f:
             collection_data = json.load(f)
         task_collection = TaskCollectStatusV2(**collection_data)
-        await _insert_tasks(
+        _insert_tasks(
             task_list=[
                 TaskCreateV2(
                     **task.dict(
