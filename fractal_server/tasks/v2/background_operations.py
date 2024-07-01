@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 from shutil import rmtree as shell_rmtree
 from typing import Literal
+from typing import Optional
 
 from sqlalchemy.orm import Session as DBSyncSession
 from sqlalchemy.orm.attributes import flag_modified
@@ -21,6 +22,7 @@ from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.schemas.v2 import TaskCreateV2
 from fractal_server.app.schemas.v2 import TaskReadV2
+from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.logger import get_logger
 from fractal_server.logger import reset_logger_handlers
 from fractal_server.logger import set_logger
@@ -36,14 +38,13 @@ def _get_task_type(task: TaskCreateV2) -> str:
         return "compound"
 
 
-async def _insert_tasks(
+def _insert_tasks(
     task_list: list[TaskCreateV2],
     db: DBSyncSession,
 ) -> list[TaskV2]:
     """
     Insert tasks into database
     """
-
     task_db_list = [
         TaskV2(**t.dict(), type=_get_task_type(t)) for t in task_list
     ]
@@ -137,6 +138,84 @@ def _handle_failure(
     return
 
 
+def _prepare_tasks_metadata(
+    *,
+    package_manifest: ManifestV2,
+    package_source: str,
+    python_bin: Path,
+    package_root: Path,
+    package_version: Optional[str] = None,
+) -> list[TaskCreateV2]:
+    """
+    Based on the package manifest and additional info, prepare the task list.
+
+    Args:
+        package_manifest:
+        package_source:
+        python_bin:
+        package_root:
+        package_version:
+    """
+    task_list = []
+    for _task in package_manifest.task_list:
+        # for t in task_pkg.package_manifest.task_list:
+        # Set non-command attributes
+        task_attributes = {}
+        task_attributes["version"] = package_version
+        task_name_slug = slugify_task_name(_task.name)
+        task_attributes["source"] = f"{package_source}:{task_name_slug}"
+        if package_manifest.has_args_schemas:
+            task_attributes[
+                "args_schema_version"
+            ] = package_manifest.args_schema_version
+        # Set command attributes
+        if _task.executable_non_parallel is not None:
+            non_parallel_path = package_root / _task.executable_non_parallel
+            task_attributes["command_non_parallel"] = (
+                f"{python_bin.as_posix()} " f"{non_parallel_path.as_posix()}"
+            )
+        if _task.executable_parallel is not None:
+            parallel_path = package_root / _task.executable_parallel
+            task_attributes[
+                "command_parallel"
+            ] = f"{python_bin.as_posix()} {parallel_path.as_posix()}"
+        # Create object
+        task_obj = TaskCreateV2(
+            **_task.dict(
+                exclude={
+                    "executable_non_parallel",
+                    "executable_parallel",
+                }
+            ),
+            **task_attributes,
+        )
+        task_list.append(task_obj)
+    return task_list
+
+
+def _check_task_files_exist(task_list: list[TaskCreateV2]) -> None:
+    """
+    Check that the modules listed in task commands point to existing files.
+
+    Args: task_list
+    """
+    for _task in task_list:
+        if _task.command_non_parallel is not None:
+            _task_path = _task.command_non_parallel.split()[1]
+            if not Path(_task_path).exists():
+                raise FileNotFoundError(
+                    f"Task `{_task.name}` has `command_non_parallel` "
+                    f"pointing to missing file `{_task_path}`."
+                )
+        if _task.command_parallel is not None:
+            _task_path = _task.command_parallel.split()[1]
+            if not Path(_task_path).exists():
+                raise FileNotFoundError(
+                    f"Task `{_task.name}` has `command_parallel` "
+                    f"pointing to missing file `{_task_path}`."
+                )
+
+
 async def background_collect_pip(
     state_id: int,
     venv_path: Path,
@@ -199,71 +278,23 @@ async def background_collect_pip(
                 db=db,
             )
             logger.debug(
-                "Task collection - collecting - create task list - START"
-            )
-            task_list = []
-            for t in task_pkg.package_manifest.task_list:
-                # Fill in attributes for TaskCreate
-                task_attributes = {}
-                task_attributes["version"] = task_pkg.package_version
-                task_name_slug = slugify_task_name(t.name)
-                task_attributes[
-                    "source"
-                ] = f"{task_pkg.package_source}:{task_name_slug}"
-                # Executables
-                if t.executable_non_parallel is not None:
-                    non_parallel_path = (
-                        package_root / t.executable_non_parallel
-                    )
-                    if not non_parallel_path.exists():
-                        raise FileNotFoundError(
-                            f"Cannot find executable `{non_parallel_path}` "
-                            f"for task `{t.name}`"
-                        )
-                    task_attributes["command_non_parallel"] = (
-                        f"{python_bin.as_posix()} "
-                        f"{non_parallel_path.as_posix()}"
-                    )
-                if t.executable_parallel is not None:
-                    parallel_path = package_root / t.executable_parallel
-                    if not parallel_path.exists():
-                        raise FileNotFoundError(
-                            f"Cannot find executable `{parallel_path}` "
-                            f"for task `{t.name}`"
-                        )
-                    task_attributes[
-                        "command_parallel"
-                    ] = f"{python_bin.as_posix()} {parallel_path.as_posix()}"
-
-                manifest = task_pkg.package_manifest
-                if manifest.has_args_schemas:
-                    task_attributes[
-                        "args_schema_version"
-                    ] = manifest.args_schema_version
-
-                this_task = TaskCreateV2(
-                    **t.dict(
-                        exclude={
-                            "executable_non_parallel",
-                            "executable_parallel",
-                        }
-                    ),
-                    **task_attributes,
-                )
-                task_list.append(this_task)
-            logger.debug(
-                "Task collection - collecting - create task list - START"
-            )
-            # Insert tasks into DB
-            logger.debug(
-                "Task collection - collecting - insert tasks into database "
+                "Task collection - collecting - prepare tasks and update db "
                 "- START"
             )
-            tasks = await _insert_tasks(task_list=task_list, db=db)
+            task_list = _prepare_tasks_metadata(
+                package_manifest=task_pkg.package_manifest,
+                package_version=task_pkg.package_version,
+                package_source=task_pkg.package_source,
+                package_root=package_root,
+                python_bin=python_bin,
+            )
+            _check_task_files_exist(task_list=task_list)
+            tasks = _insert_tasks(task_list=task_list, db=db)
             logger.debug(
-                "Task collection - collecting - insert tasks into database "
+                "Task collection - collecting -  prepare tasks and update db "
                 "- END"
             )
+            logger.debug("Task collection - collecting - END")
 
             # Block 4: finalize (write collection files, write metadata to DB)
             logger.debug("Task collection - finalising - START")
