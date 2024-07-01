@@ -46,9 +46,9 @@ def get_collection_log(venv_path: Path) -> str:
 
 def get_collection_freeze(venv_path: Path) -> str:
     package_path = get_absolute_venv_path(venv_path)
-    log_path = get_freeze_path(package_path)
-    log = log_path.open().read()
-    return log
+    freeze_path = get_freeze_path(package_path)
+    freeze = freeze_path.open().read()
+    return freeze
 
 
 def _normalize_package_name(name: str) -> str:
