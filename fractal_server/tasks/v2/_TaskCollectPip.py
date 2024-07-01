@@ -67,7 +67,9 @@ class _TaskCollectPip(BaseModel, extra=Extra.forbid):
             if not package_path.is_absolute():
                 raise ValueError("Package path must be absolute")
             if not package_path.exists():
-                logging.warning(f"Package {package_path} does not exist.")
+                logging.warning(
+                    f"Package {package_path} does not exist locally."
+                )
             if values.get("package_version") is not None:
                 raise ValueError(
                     "Cannot provide version when package is a wheel file."
