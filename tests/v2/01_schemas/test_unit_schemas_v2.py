@@ -78,7 +78,7 @@ def test_dictionary_keys_validation():
         TaskCreateV2(**args, input_types={"a": True, "  a   ": False})
 
 
-def test_task_collect_pip():
+def test_task_collect_pip(caplog):
 
     TaskCollectPipV2(package="x")
     TaskCollectPipV2(package="/tmp/x.whl")
@@ -89,5 +89,6 @@ def test_task_collect_pip():
     with pytest.raises(ValidationError):
         TaskCollectPipV2(package="tmp/x.wh")
 
-    with pytest.raises(ValidationError):
-        TaskCollectPipV2(package="/tmp/x.whl", package_version="1")
+    caplog.clear()
+    TaskCollectPipV2(package="/tmp/x.whl", package_version="1")
+    assert "Cannot provide version when package is a Wheel file" in caplog.text

@@ -2629,4 +2629,4 @@ postgres-psycopg-binary = ["psycopg"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "3a89ddca72e0d7726dd20087f4a5e442a2790ac0a8a0058acc681143815468f4"
+content-hash = "eda95e83b5cea2d678969f3ca024a165faa018c2b129c30a5f393528c6f0d70a"

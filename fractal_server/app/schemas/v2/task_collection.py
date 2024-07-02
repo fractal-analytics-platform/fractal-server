@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import Literal
 from typing import Optional
@@ -72,7 +73,7 @@ class TaskCollectPipV2(BaseModel):
     def package_version_validator(cls, v, values):
         v = valstr("package_version")(v)
         if values["package"].endswith(".whl"):
-            raise ValueError(
+            logging.warning(
                 "Cannot provide version when package is a Wheel file."
             )
         return v

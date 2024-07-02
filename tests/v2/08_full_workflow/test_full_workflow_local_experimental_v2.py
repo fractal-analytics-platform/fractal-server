@@ -3,7 +3,7 @@ from common_functions import failing_workflow_UnknownError
 from common_functions import full_workflow
 from common_functions import full_workflow_TaskExecutionError
 from common_functions import non_executable_task_command
-from common_functions import non_python_task_local
+from common_functions import workflow_with_non_python_task
 
 FRACTAL_RUNNER_BACKEND = "local_experimental"
 
@@ -143,6 +143,7 @@ async def test_non_python_task_local(
     workflow_factory_v2,
     task_factory_v2,
     testdata_path,
+    tmp777_path,
     override_settings_factory,
 ):
     """
@@ -151,7 +152,7 @@ async def test_non_python_task_local(
     """
     override_settings_factory(FRACTAL_RUNNER_BACKEND=FRACTAL_RUNNER_BACKEND)
 
-    await non_python_task_local(
+    await workflow_with_non_python_task(
         MockCurrentUser=MockCurrentUser,
         client=client,
         testdata_path=testdata_path,
@@ -159,4 +160,5 @@ async def test_non_python_task_local(
         dataset_factory_v2=dataset_factory_v2,
         workflow_factory_v2=workflow_factory_v2,
         task_factory_v2=task_factory_v2,
+        tmp777_path=tmp777_path,
     )

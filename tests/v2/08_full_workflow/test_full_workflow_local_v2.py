@@ -3,7 +3,7 @@ from common_functions import failing_workflow_UnknownError
 from common_functions import full_workflow
 from common_functions import full_workflow_TaskExecutionError
 from common_functions import non_executable_task_command
-from common_functions import non_python_task_local
+from common_functions import workflow_with_non_python_task
 
 FRACTAL_RUNNER_BACKEND = "local"
 
@@ -143,12 +143,13 @@ async def test_non_python_task_local(
     workflow_factory_v2,
     task_factory_v2,
     testdata_path,
+    tmp777_path,
 ):
     """
     Run a full workflow with a single bash task, which simply writes
     something to stderr and stdout
     """
-    await non_python_task_local(
+    await workflow_with_non_python_task(
         client=client,
         MockCurrentUser=MockCurrentUser,
         project_factory_v2=project_factory_v2,
@@ -156,4 +157,5 @@ async def test_non_python_task_local(
         workflow_factory_v2=workflow_factory_v2,
         task_factory_v2=task_factory_v2,
         testdata_path=testdata_path,
+        tmp777_path=tmp777_path,
     )

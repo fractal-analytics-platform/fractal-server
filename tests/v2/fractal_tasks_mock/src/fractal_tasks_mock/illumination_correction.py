@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import Optional
 
@@ -14,9 +15,9 @@ def illumination_correction(
     Dummy task description.
     """
 
-    print("[illumination_correction] START")
-    print(f"[illumination_correction] {zarr_url=}")
-    print(f"[illumination_correction] {overwrite_input=}")
+    logging.info("[illumination_correction] START")
+    logging.info(f"[illumination_correction] {zarr_url=}")
+    logging.info(f"[illumination_correction] {overwrite_input=}")
 
     # Prepare output metadata and set actual_zarr_url
     if overwrite_input:
@@ -29,12 +30,12 @@ def illumination_correction(
             image_list_updates=[dict(zarr_url=new_zarr_url, origin=zarr_url)]
         )
         actual_zarr_url = new_zarr_url
-        print(f"[illumination_correction] {new_zarr_url=}")
+        logging.info(f"[illumination_correction] {new_zarr_url=}")
 
     with (Path(actual_zarr_url) / "data").open("a") as f:
         f.write(f"[illumination_correction] ({overwrite_input=})\n")
 
-    print("[illumination_correction] END")
+    logging.info("[illumination_correction] END")
     return out
 
 

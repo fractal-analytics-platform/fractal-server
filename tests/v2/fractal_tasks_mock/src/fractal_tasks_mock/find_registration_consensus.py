@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 from fractal_tasks_mock.utils import _group_zarr_urls_by_well
@@ -18,37 +19,39 @@ def find_registration_consensus(
         zarr_dir: description
     """
 
-    print("[find_registration_consensus] START")
+    logging.info("[find_registration_consensus] START")
     well_to_zarr_urls = _group_zarr_urls_by_well(zarr_urls)
     for well, well_zarr_urls in well_to_zarr_urls.items():
-        print(f"[find_registration_consensus] {well=}")
+        logging.info(f"[find_registration_consensus] {well=}")
         for zarr_url in well_zarr_urls:
 
             table_path = Path(zarr_url) / "registration_table"
             try:
                 with table_path.open("r") as f:
                     f.read()
-                print(
+                logging.info(
                     f"[find_registration_consensus]  "
                     f"Read {table_path.as_posix()}"
                 )
             except FileNotFoundError:
-                print(
+                logging.info(
                     f"[find_registration_consensus]  "
                     f"FAIL Reading {table_path.as_posix()}"
                 )
 
-        print(f"[find_registration_consensus] Find consensus for {well=}")
+        logging.info(
+            f"[find_registration_consensus] Find consensus for {well=}"
+        )
         for zarr_url in well_zarr_urls:
             table_path = Path(zarr_url) / "registration_table_final"
-            print(
+            logging.info(
                 "[find_registration_consensus]"
                 f"   Write {table_path.as_posix()}"
             )
             with table_path.open("w") as f:
                 f.write("This is the consensus-based new table.\n")
 
-    print("[find_registration_consensus] END")
+    logging.info("[find_registration_consensus] END")
 
 
 if __name__ == "__main__":

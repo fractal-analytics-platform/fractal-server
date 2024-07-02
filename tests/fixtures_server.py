@@ -207,6 +207,7 @@ async def app(override_settings) -> AsyncGenerator[FastAPI, Any]:
     app = FastAPI()
     app.state.jobsV1 = []
     app.state.jobsV2 = []
+    app.state.connection = None
     yield app
 
 

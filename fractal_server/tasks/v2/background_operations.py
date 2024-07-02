@@ -11,6 +11,7 @@ from typing import Optional
 from sqlalchemy.orm import Session as DBSyncSession
 from sqlalchemy.orm.attributes import flag_modified
 
+from ..utils import get_absolute_venv_path
 from ..utils import get_collection_freeze
 from ..utils import get_collection_log
 from ..utils import get_collection_path
@@ -105,11 +106,16 @@ def _set_collection_state_data_info(
 
 def _handle_failure(
     state_id: int,
-    venv_path: Path,
+    log_file_path: Path,
     logger_name: str,
     exception: Exception,
     db: DBSyncSession,
+    venv_path: Optional[Path] = None,
 ):
+    """
+    Note: `venv_path` is only required to trigger the folder deletion.
+    """
+
     logger = get_logger(logger_name)
     logger.debug("Task collection - ERROR")
     logger.info(f"Task collection failed. Original error: {exception}")
@@ -117,9 +123,11 @@ def _handle_failure(
     _set_collection_state_data_status(
         state_id=state_id, new_status="fail", logger_name=logger_name, db=db
     )
+
+    new_log = log_file_path.open().read()
     _set_collection_state_data_log(
         state_id=state_id,
-        new_log=get_collection_log(venv_path),
+        new_log=new_log,
         logger_name=logger_name,
         db=db,
     )
@@ -131,9 +139,10 @@ def _handle_failure(
         db=db,
     )
     # Delete corrupted package dir
-    logger.info(f"Now delete temporary folder {venv_path}")
-    shell_rmtree(venv_path)
-    logger.info("Temporary folder deleted")
+    if venv_path is not None:
+        logger.info(f"Now delete temporary folder {venv_path}")
+        shell_rmtree(venv_path)
+        logger.info("Temporary folder deleted")
     reset_logger_handlers(logger)
     return
 
@@ -313,12 +322,14 @@ async def background_collect_pip(
             logger.debug("Task collection - finalising - END")
 
         except Exception as e:
+            logfile_path = get_log_path(get_absolute_venv_path(venv_path))
             _handle_failure(
                 state_id=state_id,
-                venv_path=venv_path,
+                log_file_path=logfile_path,
                 logger_name=logger_name,
                 exception=e,
                 db=db,
+                venv_path=venv_path,
             )
             return
 

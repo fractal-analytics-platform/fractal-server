@@ -24,15 +24,10 @@ from typing import Union
 from ....models.v2 import DatasetV2
 from ....models.v2 import WorkflowV2
 from ...async_wrap import async_wrap
-from ...executors.slurm.executor import FractalSlurmExecutor
+from ...executors.slurm.sudo.executor import FractalSlurmExecutor
 from ...set_start_and_last_task_index import set_start_and_last_task_index
 from ..runner import execute_tasks_v2
 from ._submit_setup import _slurm_submit_setup
-
-# from .._common import execute_tasks
-# from ..common import async_wrap
-# from ..common import set_start_and_last_task_index
-# from ..common import TaskParameters
 
 
 def _process_workflow(
