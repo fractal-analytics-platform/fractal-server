@@ -9,7 +9,7 @@ from tests.fixtures_slurm import SLURM_USER
 FRACTAL_RUNNER_BACKEND = "slurm_ssh"
 
 
-async def test_xxx(
+async def test_workflow_with_non_python_task_slurm_ssh(
     client,
     app,
     MockCurrentUser,
