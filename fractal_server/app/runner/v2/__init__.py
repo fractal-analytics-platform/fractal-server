@@ -11,7 +11,7 @@ import traceback
 from pathlib import Path
 from typing import Optional
 
-from fabric import Connection  # FIXME: try/except import
+from fabric import Connection  # FIXME SSH: try/except import
 from sqlalchemy.orm import Session as DBSyncSession
 from sqlalchemy.orm.attributes import flag_modified
 
@@ -188,7 +188,8 @@ async def submit_workflow(
                     Path(settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR)
                     / WORKFLOW_DIR_LOCAL.name
                 )
-                # FIXME: move this mkdir to executor, likely within handshake
+                # FIXME SSH: move mkdir to executor, likely within handshake
+
                 from ....ssh._fabric import _mkdir_over_ssh
 
                 _mkdir_over_ssh(
