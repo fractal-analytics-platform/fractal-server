@@ -7,24 +7,20 @@ write_log(){
 
 
 # Variables to be filled within fractal-server
-PYTHON=__PYTHON__
-FRACTAL_TASKS_DIR=__FRACTAL_TASKS_DIR__
-USER=fractal
-PACKAGE=__PACKAGE__
+PACKAGE_ENV_DIR=__PACKAGE_ENV_DIR__
 PACKAGE_NAME=__PACKAGE_NAME__
-# VERSION can be either an empty string or something like "==1.2.3"
-VERSION="__VERSION__"
-# EXTRAS can be either an empty string or something like "[myextra1,myextra2]"
-EXTRAS="__EXTRAS__"
+PACKAGE=__PACKAGE__
+PYTHON=__PYTHON__
+INSTALL_STRING=__INSTAL_STRING__
 
 
 TIME_START=$(date +%s)
 
-# Create main folder
-PKG_ENV_DIR=$FRACTAL_TASKS_DIR/.${USER}/${PACKAGE_NAME}${VERSION}
-VENVPYTHON=${PKG_ENV_DIR}/bin/python
+VENVPYTHON=${PACKAGE_ENV_DIR}/bin/python
 write_log "Python interpreter: $VENVPYTHON"
 echo
+
+# FIXME: only run pip-show once!
 
 # Extract information about paths
 # WARNING: this block will fail for paths which inlcude whitespace characters
