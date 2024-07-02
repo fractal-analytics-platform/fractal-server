@@ -6,7 +6,7 @@ RUN apt-get update
 # Relink python3 (from 3.8 to 3.9)
 RUN sudo rm -f /usr/bin/python3
 RUN sudo ln -s /usr/bin/python3.9 /usr/bin/python3
-RUN sudo apt-get install -y python3-pip
+RUN sudo apt-get install -y python3-pip python3.9-venv
 
 COPY slurm.conf /etc/slurm-llnl/
 ADD sudoers /etc/sudoers
