@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Depends
@@ -15,7 +13,6 @@ from ....db import get_async_db
 from ....models.v2 import CollectionStateV2
 from ....schemas.state import StateRead
 from ....schemas.v2 import TaskCollectPipV2
-from ....schemas.v2 import TaskCollectStatusV2
 from ....security import current_active_user
 from ....security import current_active_verified_user
 from ....security import User
@@ -54,21 +51,12 @@ async def collect_tasks_pip(
     db: AsyncSession = Depends(get_async_db),
 ) -> StateRead:
     """
-    Task collection endpoint
-
-    Trigger the creation of a dedicated virtual environment, the installation
-    of a package and the collection of tasks as advertised in the manifest.
+    Task collection endpoint (SSH version)
     """
-
-    # Create State object (after casting venv_path to string)
-    collection_status = TaskCollectStatusV2(
-        status="pending",
-        package=task_collect.package,
-        venv_path=Path("/dummy"),  # FIXME: this is spurious
+    # Note: we don't use TaskCollectStatusV2 here for the JSON column `data`
+    state = CollectionStateV2(
+        data=dict(status="pending", package=task_collect.package)
     )
-    collection_status_dict = collection_status.dict()
-    collection_status_dict["venv_path"] = str(collection_status.venv_path)
-    state = CollectionStateV2(data=collection_status.sanitised_dict())
     db.add(state)
     await db.commit()
 
@@ -83,7 +71,8 @@ async def collect_tasks_pip(
     return state
 
 
-# FIXME: check_collection_status code is duplicated
+# FIXME SSH: check_collection_status code is almost identical to the
+# one in task_collection.py
 @router.get("/collect/{state_id}/", response_model=StateRead)
 async def check_collection_status(
     state_id: int,
@@ -103,12 +92,9 @@ async def check_collection_status(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No task collection info with id={state_id}",
         )
-    data = TaskCollectStatusV2(**state.data)
 
-    # In some cases (i.e. a successful or ongoing task collection), data.log is
-    # not set; if so, we collect the current logs
-    if verbose and not data.log:
-        state.data = data.sanitised_dict()
+    # FIXME SSH: add logic for when data.state["log"] is empty
+
     reset_logger_handlers(logger)
     await db.close()
     return state
