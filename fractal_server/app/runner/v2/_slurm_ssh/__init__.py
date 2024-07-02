@@ -41,9 +41,6 @@ def _process_workflow(
     workflow_dir_remote: Path,
     first_task_index: int,
     last_task_index: int,
-    # ssh_host: str,
-    # ssh_user: str,
-    # ssh_private_key_path: str,
     connection: Connection,
     worker_init: Optional[Union[str, list[str]]] = None,
 ) -> dict[str, Any]:
@@ -66,9 +63,6 @@ def _process_workflow(
 
     with FractalSlurmSSHExecutor(
         connection=connection,
-        # ssh_host=ssh_host,
-        # ssh_user=ssh_user,
-        # ssh_private_key_path=ssh_private_key_path,
         workflow_dir_local=workflow_dir_local,
         workflow_dir_remote=workflow_dir_remote,
         common_script_lines=worker_init,
@@ -96,10 +90,6 @@ async def process_workflow(
     first_task_index: Optional[int] = None,
     last_task_index: Optional[int] = None,
     logger_name: str,
-    # Slurm-SSH specific
-    ssh_host: str,
-    ssh_user: str,
-    ssh_private_key_path: str,
     # Not used
     connection: Connection,
     user_cache_dir: Optional[str] = None,
@@ -130,9 +120,6 @@ async def process_workflow(
         workflow_dir_remote=workflow_dir_remote,
         first_task_index=first_task_index,
         last_task_index=last_task_index,
-        # ssh_host=ssh_host,
-        # ssh_user=ssh_user,
-        # ssh_private_key_path=ssh_private_key_path,
         worker_init=worker_init,
         connection=connection,
     )

@@ -299,12 +299,7 @@ async def submit_workflow(
             )
         elif FRACTAL_RUNNER_BACKEND == "slurm_ssh":
             process_workflow = slurm_ssh_process_workflow
-            backend_specific_kwargs = dict(
-                ssh_host=settings.FRACTAL_SLURM_SSH_HOST,
-                ssh_user=settings.FRACTAL_SLURM_SSH_USER,
-                ssh_private_key_path=settings.FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH,  # noqa: E501
-                connection=connection,
-            )
+            backend_specific_kwargs = dict(connection=connection)
         else:
             raise RuntimeError(
                 f"Invalid runner backend {FRACTAL_RUNNER_BACKEND=}"
