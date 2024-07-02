@@ -13,6 +13,7 @@ from .background_operations import _insert_tasks
 from .background_operations import _prepare_tasks_metadata
 from .background_operations import _set_collection_state_data_status
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
@@ -28,8 +29,8 @@ def _parse_script_5_stdout(stdout: str) -> dict[str, str]:
         ("Python interpreter:", "python_bin"),
         ("Package name:", "package_name"),
         ("Package version:", "package_version"),
-        ("Package parent folder:", "package_parent_folder_remote"),
-        ("Manifest absolute path:", "manifest_absolute_path_remote"),
+        ("Package parent folder:", "package_root_remote"),
+        ("Manifest absolute path:", "manifest_path_remote"),
     ]
     stdout_lines = stdout.splitlines()
     attributes = dict()
@@ -76,22 +77,20 @@ def _customize_and_run_template(
     with script_path_local.open("w") as f:
         f.write(script_contents)
     # Transfer script to remote host
+
     script_path_remote = os.path.join(
         settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR,
         f"script_{abs(hash(tmpdir))}{script_filename}",
     )
-    from devtools import debug
-
-    debug(script_path_local)
-    debug(script_path_remote)
+    logger.info(f"Now transfer {script_path_local=} to {script_path_remote=}")
     connection.put(
         local=script_path_local,
         remote=script_path_remote,
     )
     # Execute script remotely
-    stdout = run_command_over_ssh(
-        cmd=f"bash {script_path_remote}", connection=connection
-    )
+    cmd = f"bash {script_path_remote}"
+    logger.info(f"Now run {cmd=}")
+    stdout = run_command_over_ssh(cmd=cmd, connection=connection)
     logger.info(stdout)
     logger.info(f"Handling {script_filename} - END")
 
@@ -107,17 +106,25 @@ async def background_collect_pip_ssh(
     # Prepare replacements for task-collection scripts
     settings = Inject(get_settings)
     python_bin = get_python_interpreter_v2(version=task_pkg.python_version)
-    version_string = (
-        f"=={task_pkg.package_version}" if task_pkg.package_version else ""
-    )
-    extras = f"[{task_pkg.package_extras}]" if task_pkg.package_extras else ""
+    package_version = "" if task_pkg.package_version is None else ""
+
+    install_string = task_pkg.package
+    if task_pkg.package_extras is not None:
+        install_string = f"{install_string}[{task_pkg.package_extras}]"
+    if task_pkg.package_version is not None:
+        install_string = f"{install_string}=={task_pkg.package_version}"
+    package_env_dir = (
+        Path(settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR)
+        / ".fractal"
+        / f"{task_pkg.package_name}{package_version}"
+    ).as_posix()
+
     replacements = [
-        ("__PYTHON__", python_bin),
-        ("__FRACTAL_TASKS_DIR__", settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR),
-        ("__PACKAGE__", task_pkg.package),
         ("__PACKAGE_NAME__", task_pkg.package_name),
-        ("__VERSION__", version_string),
-        ("__EXTRAS__", extras),
+        ("__PACKAGE_ENV_DIR__", package_env_dir),
+        ("__PACKAGE__", task_pkg.package),
+        ("__PYTHON__", python_bin),
+        ("__INSTALL_STRING__", install_string),
     ]
 
     with TemporaryDirectory() as tmpdir:
@@ -147,23 +154,19 @@ async def background_collect_pip_ssh(
                     db=db,
                 )
                 stdout = _customize_and_run_template(
-                    script_filename="_1_create_main_folder.sh",
+                    script_filename="_1_create_venv.sh",
                     **common_args,
                 )
                 stdout = _customize_and_run_template(
-                    script_filename="_2_create_venv.sh",
+                    script_filename="_2_upgrade_pip.sh",
                     **common_args,
                 )
                 stdout = _customize_and_run_template(
-                    script_filename="_3_upgrade_pip.sh",
-                    **common_args,
-                )
-                stdout = _customize_and_run_template(
-                    script_filename="_4_install_package.sh",
+                    script_filename="_3_pip_install.sh",
                     **common_args,
                 )
                 stdout_pip_freeze = _customize_and_run_template(
-                    script_filename="_5_pip_freeze.sh",
+                    script_filename="_4_pip_freeze.sh",
                     **common_args,
                 )
                 logger.debug("Task collection - installing - END")
@@ -176,34 +179,40 @@ async def background_collect_pip_ssh(
                     db=db,
                 )
                 stdout = _customize_and_run_template(
-                    script_filename="_6_extract_info.sh",
+                    script_filename="_5_pip_show.sh",
                     **common_args,
                 )
 
                 pkg_attrs = _parse_script_5_stdout(stdout)
+                for key, value in pkg_attrs.items():
+                    logger.debug(f"Parsed pip-show output: {key}={value}")
+                # Check package_name match
+                # FIXME: This may fail for non-canonical package names?
+                package_name_pip_show = pkg_attrs.get("package_name")
+                package_name_task_pkg = task_pkg.package_name
+                if package_name_pip_show != package_name_task_pkg:
+                    raise ValueError(
+                        f"`package_name` mismatch: "
+                        f"{package_name_task_pkg=} but "
+                        f"{package_name_pip_show=}"
+                    )
+                # Extract/drop parsed attributes
+                pkg_attrs.pop("package_name")
                 python_bin = pkg_attrs.pop("python_bin")
-                package_parent_folder_remote = pkg_attrs.pop(
-                    "package_parent_folder_remote"
-                )
-                manifest_absolute_path_remote = pkg_attrs.pop(
-                    "manifest_absolute_path_remote"
-                )
+                package_root_remote = pkg_attrs.pop("package_root_remote")
+                manifest_path_remote = pkg_attrs.pop("manifest_path_remote")
 
-                # Read remote manifest file
-                # FIXME: wrap in try/except
-                with connection.sftp().open(
-                    manifest_absolute_path_remote, "r"
-                ) as f:
+                # Read and validate remote manifest file
+                with connection.sftp().open(manifest_path_remote, "r") as f:
                     manifest = json.load(f)
-                logger.info(
-                    "Manifest loaded remotely from "
-                    f"{manifest_absolute_path_remote}"
-                )
+                logger.info(f"Manifest loaded from {manifest_path_remote=}")
+                ManifestV2(**manifest)
+                logger.info("Manifest is valid ManifestV2 object.")
 
                 # Create new _TaskCollectPip object
                 new_pkg = _TaskCollectPip(
                     **task_pkg.dict(
-                        exclude={"package_version"},
+                        exclude={"package_version", "package_name"},
                         exclude_unset=True,
                         exclude_none=True,
                     ),
@@ -215,8 +224,8 @@ async def background_collect_pip_ssh(
                     package_manifest=new_pkg.package_manifest,
                     package_version=new_pkg.package_version,
                     package_source=new_pkg.package_source,
-                    package_root=package_parent_folder_remote,
-                    python_bin=python_bin,
+                    package_root=Path(package_root_remote),
+                    python_bin=Path(python_bin),
                 )
                 _insert_tasks(task_list=task_list, db=db)
                 logger.debug("Task collection - collecting - END")
@@ -231,11 +240,6 @@ async def background_collect_pip_ssh(
                 logger.debug("Task collection - finalising - END")
 
             except Exception as e:
-                from devtools import debug
-
-                log = log_file_path.open("r").read()
-                debug(log)
-
                 _handle_failure(
                     state_id=state_id,
                     log_file_path=log_file_path,
