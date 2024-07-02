@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for fractal_server/app/runner/executors/slurm/executor.py: 92%</title>
+    <title>Coverage for fractal_server/app/runner/executors/slurm/sudo/executor.py: 92%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
     <link rel="stylesheet" href="style_cb_8e611ae1.css" type="text/css">
     <script src="coverage_html_cb_6fb7b396.js" defer></script>
@@ -11,7 +11,7 @@
 <header>
     <div class="content">
         <h1>
-            <span class="text">Coverage for </span><b>fractal_server/app/runner/executors/slurm/executor.py</b>:
+            <span class="text">Coverage for </span><b>fractal_server/app/runner/executors/slurm/sudo/executor.py</b>:
             <span class="pc_cov">92%</span>
         </h1>
         <aside id="help_panel_wrapper">
@@ -56,18 +56,18 @@
         </aside>
         <h2>
             <span class="text">441 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">411<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">30<span class="text"> missing</span></button>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">406<span class="text"> run</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">35<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
             <button type="button" class="par run show_par button_toggle_par" value="par" data-shortcut="p" title="Toggle lines partially run">14<span class="text"> partial</span></button>
         </h2>
         <p class="text">
-            <a id="prevFileLink" class="nav" href="z_cbf78191baac1645__subprocess_run_as_user_py.html">&#xab; prev</a> &nbsp; &nbsp;
+            <a id="prevFileLink" class="nav" href="z_07e87e41810c798d__subprocess_run_as_user_py.html">&#xab; prev</a> &nbsp; &nbsp;
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_58bd1dbe3caee099_filenames_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.5.4">coverage.py v7.5.4</a>,
-            created at 2024-07-02 10:34 +0000
+            created at 2024-07-02 15:09 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -113,18 +113,18 @@
     <p class="run"><span class="n"><a id="t29" href="#t29">29</a></span><span class="t"><span class="key">from</span> <span class="nam">cfut</span> <span class="key">import</span> <span class="nam">SlurmExecutor</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t"><span class="key">from</span> <span class="nam">cfut</span><span class="op">.</span><span class="nam">util</span> <span class="key">import</span> <span class="nam">random_string</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="op">.</span><span class="op">.</span><span class="nam">config</span> <span class="key">import</span> <span class="nam">get_settings</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="op">.</span><span class="op">.</span><span class="nam">logger</span> <span class="key">import</span> <span class="nam">set_logger</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="op">.</span><span class="op">.</span><span class="nam">syringe</span> <span class="key">import</span> <span class="nam">Inject</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="nam">exceptions</span> <span class="key">import</span> <span class="nam">JobExecutionError</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="nam">exceptions</span> <span class="key">import</span> <span class="nam">TaskExecutionError</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="nam">filenames</span> <span class="key">import</span> <span class="nam">SHUTDOWN_FILENAME</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="nam">task_files</span> <span class="key">import</span> <span class="nam">get_task_file_paths</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="nam">task_files</span> <span class="key">import</span> <span class="nam">TaskFiles</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t40" href="#t40">40</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">_batching</span> <span class="key">import</span> <span class="nam">heuristics</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t41" href="#t41">41</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">_executor_wait_thread</span> <span class="key">import</span> <span class="nam">FractalSlurmWaitThread</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t42" href="#t42">42</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">_slurm_config</span> <span class="key">import</span> <span class="nam">get_default_slurm_config</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t43" href="#t43">43</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">_slurm_config</span> <span class="key">import</span> <span class="nam">SlurmConfig</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="op">...</span><span class="nam">config</span> <span class="key">import</span> <span class="nam">get_settings</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="op">...</span><span class="nam">logger</span> <span class="key">import</span> <span class="nam">set_logger</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="op">...</span><span class="nam">syringe</span> <span class="key">import</span> <span class="nam">Inject</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="op">.</span><span class="nam">exceptions</span> <span class="key">import</span> <span class="nam">JobExecutionError</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="op">.</span><span class="nam">exceptions</span> <span class="key">import</span> <span class="nam">TaskExecutionError</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="op">.</span><span class="nam">filenames</span> <span class="key">import</span> <span class="nam">SHUTDOWN_FILENAME</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="op">.</span><span class="nam">task_files</span> <span class="key">import</span> <span class="nam">get_task_file_paths</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="op">.</span><span class="nam">task_files</span> <span class="key">import</span> <span class="nam">TaskFiles</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t40" href="#t40">40</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="nam">slurm</span><span class="op">.</span><span class="nam">_slurm_config</span> <span class="key">import</span> <span class="nam">get_default_slurm_config</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t41" href="#t41">41</a></span><span class="t"><span class="key">from</span> <span class="op">...</span><span class="nam">slurm</span><span class="op">.</span><span class="nam">_slurm_config</span> <span class="key">import</span> <span class="nam">SlurmConfig</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t42" href="#t42">42</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="op">.</span><span class="nam">_batching</span> <span class="key">import</span> <span class="nam">heuristics</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t43" href="#t43">43</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">_executor_wait_thread</span> <span class="key">import</span> <span class="nam">FractalSlurmWaitThread</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t44" href="#t44">44</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">_subprocess_run_as_user</span> <span class="key">import</span> <span class="nam">_glob_as_user</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t45" href="#t45">45</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">_subprocess_run_as_user</span> <span class="key">import</span> <span class="nam">_glob_as_user_strict</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t46" href="#t46">46</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">_subprocess_run_as_user</span> <span class="key">import</span> <span class="nam">_path_exists_as_user</span>&nbsp;</span><span class="r"></span></p>
@@ -1055,12 +1055,12 @@
     <p class="run"><span class="n"><a id="t971" href="#t971">971</a></span><span class="t">                <span class="nam">fut</span><span class="op">.</span><span class="nam">set_result</span><span class="op">(</span><span class="nam">outputs</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t972" href="#t972">972</a></span><span class="t">            <span class="key">return</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t973" href="#t973">973</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t974" href="#t974">974</a></span><span class="t">        <span class="key">except</span> <span class="nam">Exception</span> <span class="key">as</span> <span class="nam">e</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t975" href="#t975">975</a></span><span class="t">            <span class="key">try</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t976" href="#t976">976</a></span><span class="t">                <span class="nam">fut</span><span class="op">.</span><span class="nam">set_exception</span><span class="op">(</span><span class="nam">e</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t974" href="#t974">974</a></span><span class="t">        <span class="key">except</span> <span class="nam">Exception</span> <span class="key">as</span> <span class="nam">e</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t975" href="#t975">975</a></span><span class="t">            <span class="key">try</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t976" href="#t976">976</a></span><span class="t">                <span class="nam">fut</span><span class="op">.</span><span class="nam">set_exception</span><span class="op">(</span><span class="nam">e</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t977" href="#t977">977</a></span><span class="t">                <span class="key">return</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t978" href="#t978">978</a></span><span class="t">            <span class="key">except</span> <span class="nam">InvalidStateError</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t979" href="#t979">979</a></span><span class="t">                <span class="nam">logger</span><span class="op">.</span><span class="nam">warning</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t978" href="#t978">978</a></span><span class="t">            <span class="key">except</span> <span class="nam">InvalidStateError</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t979" href="#t979">979</a></span><span class="t">                <span class="nam">logger</span><span class="op">.</span><span class="nam">warning</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t980" href="#t980">980</a></span><span class="t">                    <span class="fst">f"</span><span class="fst">Future </span><span class="op">{</span><span class="nam">fut</span><span class="op">}</span><span class="fst"> (SLURM job ID: </span><span class="op">{</span><span class="nam">jobid</span><span class="op">}</span><span class="fst">) was already</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t981" href="#t981">981</a></span><span class="t">                    <span class="str">" cancelled, exit from"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t982" href="#t982">982</a></span><span class="t">                    <span class="str">" FractalSlurmExecutor._completion."</span>&nbsp;</span><span class="r"></span></p>
@@ -1264,7 +1264,7 @@
     <p class="pln"><span class="n"><a id="t1180" href="#t1180">1180</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1181" href="#t1181">1181</a></span><span class="t">        <span class="com"># Prepare SLURM preamble based on SlurmConfig object</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t1182" href="#t1182">1182</a></span><span class="t">        <span class="nam">script_lines</span> <span class="op">=</span> <span class="nam">slurm_config</span><span class="op">.</span><span class="nam">to_sbatch_preamble</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t1183" href="#t1183">1183</a></span><span class="t">            <span class="nam">user_cache_dir</span><span class="op">=</span><span class="nam">self</span><span class="op">.</span><span class="nam">user_cache_dir</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t1183" href="#t1183">1183</a></span><span class="t">            <span class="nam">remote_export_dir</span><span class="op">=</span><span class="nam">self</span><span class="op">.</span><span class="nam">user_cache_dir</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1184" href="#t1184">1184</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1185" href="#t1185">1185</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1186" href="#t1186">1186</a></span><span class="t">        <span class="com"># Extend SLURM preamble with variable which are not in SlurmConfig, and</span>&nbsp;</span><span class="r"></span></p>
@@ -1377,12 +1377,12 @@
 <footer>
     <div class="content">
         <p>
-            <a class="nav" href="z_cbf78191baac1645__subprocess_run_as_user_py.html">&#xab; prev</a> &nbsp; &nbsp;
+            <a class="nav" href="z_07e87e41810c798d__subprocess_run_as_user_py.html">&#xab; prev</a> &nbsp; &nbsp;
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_58bd1dbe3caee099_filenames_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.5.4">coverage.py v7.5.4</a>,
-            created at 2024-07-02 10:34 +0000
+            created at 2024-07-02 15:09 +0000
         </p>
     </div>
 </footer>

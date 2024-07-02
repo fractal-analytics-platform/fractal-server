@@ -11,7 +11,7 @@
 <header>
     <div class="content">
         <h1>Coverage report:
-            <span class="pc_cov">95%</span>
+            <span class="pc_cov">92%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -56,7 +56,7 @@
         </h2>
         <p class="text">
             <a class="nav" href="https://coverage.readthedocs.io/en/7.5.4">coverage.py v7.5.4</a>,
-            created at 2024-07-02 10:34 +0000
+            created at 2024-07-02 15:09 +0000
         </p>
     </div>
 </header>
@@ -364,12 +364,12 @@
             </tr>
             <tr class="region">
                 <td class="name left"><a href="z_09e701d32150411b___init___py.html">fractal_server/app/routes/api/v2/__init__.py</a></td>
-                <td>24</td>
+                <td>30</td>
+                <td>1</td>
                 <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td class="right" data-ratio="24 24">100%</td>
+                <td>2</td>
+                <td>1</td>
+                <td class="right" data-ratio="30 32">94%</td>
             </tr>
             <tr class="region">
                 <td class="name left"><a href="z_09e701d32150411b__aux_functions_py.html">fractal_server/app/routes/api/v2/_aux_functions.py</a></td>
@@ -427,12 +427,12 @@
             </tr>
             <tr class="region">
                 <td class="name left"><a href="z_09e701d32150411b_submit_py.html">fractal_server/app/routes/api/v2/submit.py</a></td>
-                <td>94</td>
+                <td>96</td>
                 <td>0</td>
                 <td>0</td>
-                <td>29</td>
+                <td>31</td>
                 <td>2</td>
-                <td class="right" data-ratio="121 123">98%</td>
+                <td class="right" data-ratio="125 127">98%</td>
             </tr>
             <tr class="region">
                 <td class="name left"><a href="z_09e701d32150411b_task_py.html">fractal_server/app/routes/api/v2/task.py</a></td>
@@ -451,6 +451,15 @@
                 <td>24</td>
                 <td>3</td>
                 <td class="right" data-ratio="137 142">96%</td>
+            </tr>
+            <tr class="region">
+                <td class="name left"><a href="z_09e701d32150411b_task_collection_ssh_py.html">fractal_server/app/routes/api/v2/task_collection_ssh.py</a></td>
+                <td>39</td>
+                <td>15</td>
+                <td>0</td>
+                <td>6</td>
+                <td>2</td>
+                <td class="right" data-ratio="26 45">58%</td>
             </tr>
             <tr class="region">
                 <td class="name left"><a href="z_09e701d32150411b_task_legacy_py.html">fractal_server/app/routes/api/v2/task_legacy.py</a></td>
@@ -499,12 +508,12 @@
             </tr>
             <tr class="region">
                 <td class="name left"><a href="z_7571860ffc6ddefd__runner_py.html">fractal_server/app/routes/aux/_runner.py</a></td>
-                <td>9</td>
+                <td>13</td>
                 <td>0</td>
                 <td>0</td>
-                <td>2</td>
+                <td>4</td>
                 <td>0</td>
-                <td class="right" data-ratio="11 11">100%</td>
+                <td class="right" data-ratio="17 17">100%</td>
             </tr>
             <tr class="region">
                 <td class="name left"><a href="z_58bd1dbe3caee099_async_wrap_py.html">fractal_server/app/runner/async_wrap.py</a></td>
@@ -534,15 +543,6 @@
                 <td class="right" data-ratio="53 66">80%</td>
             </tr>
             <tr class="region">
-                <td class="name left"><a href="z_cbf78191baac1645___init___py.html">fractal_server/app/runner/executors/slurm/__init__.py</a></td>
-                <td>2</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td class="right" data-ratio="2 2">100%</td>
-            </tr>
-            <tr class="region">
                 <td class="name left"><a href="z_cbf78191baac1645__batching_py.html">fractal_server/app/runner/executors/slurm/_batching.py</a></td>
                 <td>68</td>
                 <td>2</td>
@@ -552,7 +552,61 @@
                 <td class="right" data-ratio="93 96">97%</td>
             </tr>
             <tr class="region">
-                <td class="name left"><a href="z_cbf78191baac1645__check_jobs_status_py.html">fractal_server/app/runner/executors/slurm/_check_jobs_status.py</a></td>
+                <td class="name left"><a href="z_cbf78191baac1645__slurm_config_py.html">fractal_server/app/runner/executors/slurm/_slurm_config.py</a></td>
+                <td>153</td>
+                <td>8</td>
+                <td>0</td>
+                <td>54</td>
+                <td>6</td>
+                <td class="right" data-ratio="193 207">93%</td>
+            </tr>
+            <tr class="region">
+                <td class="name left"><a href="z_626964de5ff053e0___init___py.html">fractal_server/app/runner/executors/slurm/ssh/__init__.py</a></td>
+                <td>2</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td class="right" data-ratio="2 2">100%</td>
+            </tr>
+            <tr class="region">
+                <td class="name left"><a href="z_626964de5ff053e0__executor_wait_thread_py.html">fractal_server/app/runner/executors/slurm/ssh/_executor_wait_thread.py</a></td>
+                <td>51</td>
+                <td>8</td>
+                <td>0</td>
+                <td>16</td>
+                <td>3</td>
+                <td class="right" data-ratio="56 67">84%</td>
+            </tr>
+            <tr class="region">
+                <td class="name left"><a href="z_626964de5ff053e0__slurm_job_py.html">fractal_server/app/runner/executors/slurm/ssh/_slurm_job.py</a></td>
+                <td>35</td>
+                <td>3</td>
+                <td>0</td>
+                <td>10</td>
+                <td>2</td>
+                <td class="right" data-ratio="38 45">84%</td>
+            </tr>
+            <tr class="region">
+                <td class="name left"><a href="z_626964de5ff053e0_executor_py.html">fractal_server/app/runner/executors/slurm/ssh/executor.py</a></td>
+                <td>559</td>
+                <td>133</td>
+                <td>0</td>
+                <td>168</td>
+                <td>29</td>
+                <td class="right" data-ratio="531 727">73%</td>
+            </tr>
+            <tr class="region">
+                <td class="name left"><a href="z_07e87e41810c798d___init___py.html">fractal_server/app/runner/executors/slurm/sudo/__init__.py</a></td>
+                <td>2</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td class="right" data-ratio="2 2">100%</td>
+            </tr>
+            <tr class="region">
+                <td class="name left"><a href="z_07e87e41810c798d__check_jobs_status_py.html">fractal_server/app/runner/executors/slurm/sudo/_check_jobs_status.py</a></td>
                 <td>24</td>
                 <td>1</td>
                 <td>0</td>
@@ -561,7 +615,7 @@
                 <td class="right" data-ratio="31 34">91%</td>
             </tr>
             <tr class="region">
-                <td class="name left"><a href="z_cbf78191baac1645__executor_wait_thread_py.html">fractal_server/app/runner/executors/slurm/_executor_wait_thread.py</a></td>
+                <td class="name left"><a href="z_07e87e41810c798d__executor_wait_thread_py.html">fractal_server/app/runner/executors/slurm/sudo/_executor_wait_thread.py</a></td>
                 <td>47</td>
                 <td>3</td>
                 <td>0</td>
@@ -570,16 +624,7 @@
                 <td class="right" data-ratio="59 63">94%</td>
             </tr>
             <tr class="region">
-                <td class="name left"><a href="z_cbf78191baac1645__slurm_config_py.html">fractal_server/app/runner/executors/slurm/_slurm_config.py</a></td>
-                <td>154</td>
-                <td>9</td>
-                <td>0</td>
-                <td>54</td>
-                <td>6</td>
-                <td class="right" data-ratio="193 208">93%</td>
-            </tr>
-            <tr class="region">
-                <td class="name left"><a href="z_cbf78191baac1645__subprocess_run_as_user_py.html">fractal_server/app/runner/executors/slurm/_subprocess_run_as_user.py</a></td>
+                <td class="name left"><a href="z_07e87e41810c798d__subprocess_run_as_user_py.html">fractal_server/app/runner/executors/slurm/sudo/_subprocess_run_as_user.py</a></td>
                 <td>44</td>
                 <td>0</td>
                 <td>0</td>
@@ -588,13 +633,13 @@
                 <td class="right" data-ratio="60 60">100%</td>
             </tr>
             <tr class="region">
-                <td class="name left"><a href="z_cbf78191baac1645_executor_py.html">fractal_server/app/runner/executors/slurm/executor.py</a></td>
+                <td class="name left"><a href="z_07e87e41810c798d_executor_py.html">fractal_server/app/runner/executors/slurm/sudo/executor.py</a></td>
                 <td>441</td>
-                <td>30</td>
+                <td>35</td>
                 <td>0</td>
                 <td>145</td>
                 <td>14</td>
-                <td class="right" data-ratio="542 586">92%</td>
+                <td class="right" data-ratio="537 586">92%</td>
             </tr>
             <tr class="region">
                 <td class="name left"><a href="z_58bd1dbe3caee099_filenames_py.html">fractal_server/app/runner/filenames.py</a></td>
@@ -733,12 +778,12 @@
             </tr>
             <tr class="region">
                 <td class="name left"><a href="z_190e6735448e0e43___init___py.html">fractal_server/app/runner/v2/__init__.py</a></td>
-                <td>182</td>
-                <td>2</td>
+                <td>212</td>
+                <td>4</td>
                 <td>0</td>
-                <td>55</td>
-                <td>7</td>
-                <td class="right" data-ratio="228 237">96%</td>
+                <td>63</td>
+                <td>8</td>
+                <td class="right" data-ratio="263 275">96%</td>
             </tr>
             <tr class="region">
                 <td class="name left"><a href="z_dcb5568bb609beb8___init___py.html">fractal_server/app/runner/v2/_local/__init__.py</a></td>
@@ -840,6 +885,33 @@
                 <td class="right" data-ratio="78 108">72%</td>
             </tr>
             <tr class="region">
+                <td class="name left"><a href="z_ca46a8f183eddabc___init___py.html">fractal_server/app/runner/v2/_slurm_ssh/__init__.py</a></td>
+                <td>23</td>
+                <td>1</td>
+                <td>0</td>
+                <td>4</td>
+                <td>1</td>
+                <td class="right" data-ratio="25 27">93%</td>
+            </tr>
+            <tr class="region">
+                <td class="name left"><a href="z_ca46a8f183eddabc__submit_setup_py.html">fractal_server/app/runner/v2/_slurm_ssh/_submit_setup.py</a></td>
+                <td>10</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td class="right" data-ratio="10 10">100%</td>
+            </tr>
+            <tr class="region">
+                <td class="name left"><a href="z_ca46a8f183eddabc_get_slurm_config_py.html">fractal_server/app/runner/v2/_slurm_ssh/get_slurm_config.py</a></td>
+                <td>72</td>
+                <td>28</td>
+                <td>0</td>
+                <td>36</td>
+                <td>11</td>
+                <td class="right" data-ratio="57 108">53%</td>
+            </tr>
+            <tr class="region">
                 <td class="name left"><a href="z_190e6735448e0e43_deduplicate_list_py.html">fractal_server/app/runner/v2/deduplicate_list.py</a></td>
                 <td>14</td>
                 <td>0</td>
@@ -886,12 +958,12 @@
             </tr>
             <tr class="region">
                 <td class="name left"><a href="z_190e6735448e0e43_runner_functions_low_level_py.html">fractal_server/app/runner/v2/runner_functions_low_level.py</a></td>
-                <td>62</td>
+                <td>61</td>
                 <td>5</td>
                 <td>0</td>
                 <td>24</td>
-                <td>4</td>
-                <td class="right" data-ratio="77 86">90%</td>
+                <td>3</td>
+                <td class="right" data-ratio="77 85">91%</td>
             </tr>
             <tr class="region">
                 <td class="name left"><a href="z_190e6735448e0e43_task_interface_py.html">fractal_server/app/runner/v2/task_interface.py</a></td>
@@ -910,6 +982,15 @@
                 <td>6</td>
                 <td>0</td>
                 <td class="right" data-ratio="23 23">100%</td>
+            </tr>
+            <tr class="region">
+                <td class="name left"><a href="z_58bd1dbe3caee099_versions_py.html">fractal_server/app/runner/versions.py</a></td>
+                <td>11</td>
+                <td>2</td>
+                <td>0</td>
+                <td>2</td>
+                <td>1</td>
+                <td class="right" data-ratio="10 13">77%</td>
             </tr>
             <tr class="region">
                 <td class="name left"><a href="z_0fcc758c89a98fc8___init___py.html">fractal_server/app/schemas/__init__.py</a></td>
@@ -1102,12 +1183,12 @@
             </tr>
             <tr class="region">
                 <td class="name left"><a href="z_9b05266560b1245c_task_collection_py.html">fractal_server/app/schemas/v2/task_collection.py</a></td>
-                <td>43</td>
+                <td>44</td>
                 <td>1</td>
                 <td>0</td>
                 <td>12</td>
                 <td>3</td>
-                <td class="right" data-ratio="51 55">93%</td>
+                <td class="right" data-ratio="52 56">93%</td>
             </tr>
             <tr class="region">
                 <td class="name left"><a href="z_9b05266560b1245c_workflow_py.html">fractal_server/app/schemas/v2/workflow.py</a></td>
@@ -1138,12 +1219,12 @@
             </tr>
             <tr class="region">
                 <td class="name left"><a href="z_a3e5354dc8db4bd4_config_py.html">fractal_server/config.py</a></td>
-                <td>237</td>
-                <td>4</td>
+                <td>264</td>
+                <td>22</td>
                 <td>0</td>
-                <td>88</td>
-                <td>12</td>
-                <td class="right" data-ratio="307 325">94%</td>
+                <td>106</td>
+                <td>13</td>
+                <td class="right" data-ratio="317 370">86%</td>
             </tr>
             <tr class="region">
                 <td class="name left"><a href="z_bd7ca8f9681269cc___init___py.html">fractal_server/images/__init__.py</a></td>
@@ -1183,12 +1264,21 @@
             </tr>
             <tr class="region">
                 <td class="name left"><a href="z_a3e5354dc8db4bd4_main_py.html">fractal_server/main.py</a></td>
-                <td>64</td>
+                <td>74</td>
+                <td>6</td>
                 <td>0</td>
+                <td>15</td>
+                <td>5</td>
+                <td class="right" data-ratio="78 89">88%</td>
+            </tr>
+            <tr class="region">
+                <td class="name left"><a href="z_61615b735cd42a88__fabric_py.html">fractal_server/ssh/_fabric.py</a></td>
+                <td>54</td>
+                <td>15</td>
                 <td>0</td>
-                <td>11</td>
-                <td>3</td>
-                <td class="right" data-ratio="72 75">96%</td>
+                <td>14</td>
+                <td>5</td>
+                <td class="right" data-ratio="44 68">65%</td>
             </tr>
             <tr class="region">
                 <td class="name left"><a href="z_a3e5354dc8db4bd4_syringe_py.html">fractal_server/syringe.py</a></td>
@@ -1255,12 +1345,12 @@
             </tr>
             <tr class="region">
                 <td class="name left"><a href="z_dc3b34c4bcecf82d__TaskCollectPip_py.html">fractal_server/tasks/v2/_TaskCollectPip.py</a></td>
-                <td>62</td>
+                <td>63</td>
                 <td>0</td>
                 <td>0</td>
                 <td>24</td>
                 <td>3</td>
-                <td class="right" data-ratio="83 86">97%</td>
+                <td class="right" data-ratio="84 87">97%</td>
             </tr>
             <tr class="region">
                 <td class="name left"><a href="z_dc3b34c4bcecf82d__venv_pip_py.html">fractal_server/tasks/v2/_venv_pip.py</a></td>
@@ -1273,12 +1363,21 @@
             </tr>
             <tr class="region">
                 <td class="name left"><a href="z_dc3b34c4bcecf82d_background_operations_py.html">fractal_server/tasks/v2/background_operations.py</a></td>
-                <td>138</td>
+                <td>142</td>
                 <td>0</td>
                 <td>0</td>
-                <td>30</td>
+                <td>32</td>
+                <td>1</td>
+                <td class="right" data-ratio="173 174">99%</td>
+            </tr>
+            <tr class="region">
+                <td class="name left"><a href="z_dc3b34c4bcecf82d_background_operations_ssh_py.html">fractal_server/tasks/v2/background_operations_ssh.py</a></td>
+                <td>114</td>
+                <td>7</td>
                 <td>0</td>
-                <td class="right" data-ratio="168 168">100%</td>
+                <td>26</td>
+                <td>5</td>
+                <td class="right" data-ratio="128 140">91%</td>
             </tr>
             <tr class="region">
                 <td class="name left"><a href="z_dc3b34c4bcecf82d_endpoint_operations_py.html">fractal_server/tasks/v2/endpoint_operations.py</a></td>
@@ -1329,25 +1428,25 @@
         <tfoot>
             <tr class="total">
                 <td class="name left">Total</td>
-                <td>8307</td>
-                <td>210</td>
+                <td>9360</td>
+                <td>453</td>
                 <td>0</td>
-                <td>2432</td>
-                <td>338</td>
-                <td class="right" data-ratio="10165 10739">95%</td>
+                <td>2752</td>
+                <td>402</td>
+                <td class="right" data-ratio="11161 12112">92%</td>
             </tr>
         </tfoot>
     </table>
     <p id="no_rows">
         No items found using the specified filter.
     </p>
-        <p>9 empty files skipped.</p>
+        <p>11 empty files skipped.</p>
 </main>
 <footer>
     <div class="content">
         <p>
             <a class="nav" href="https://coverage.readthedocs.io/en/7.5.4">coverage.py v7.5.4</a>,
-            created at 2024-07-02 10:34 +0000
+            created at 2024-07-02 15:09 +0000
         </p>
     </div>
     <aside class="hidden">
