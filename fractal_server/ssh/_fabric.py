@@ -82,7 +82,9 @@ def run_command_over_ssh(
                 f"{e.errors=}\n"
             )
             if ind_attempt < max_attempts:
-                sleeptime = base_interval**ind_attempt  # FIXME add jitter
+                sleeptime = (
+                    base_interval**ind_attempt
+                )  # FIXME SSH: add jitter?
                 logger.warning(
                     f"{prefix} Now sleep {sleeptime:.3f} seconds and continue."
                 )
@@ -98,10 +100,8 @@ def run_command_over_ssh(
                 f"Original error:\n{str(e)}."
             )
             logger.error(error_msg)
-            raise ValueError(error_msg)  # FIXME switch to JobExecutionError
-            # raise JobExecutionError(info=error_msg)
+            raise ValueError(error_msg)
 
-    # FIMXE: Use JobExecutionError
     raise ValueError(
         f"Reached last attempt ({max_attempts=}) for running '{cmd}'"
     )
@@ -119,7 +119,7 @@ def _mkdir_over_ssh(
         parents:
     """
 
-    # FIXME: paramiko SFTPClient has a mkdir method
+    # FIXME SSH: try using `mkdir` method of `paramiko.SFTPClient`
     if parents:
         cmd = f"mkdir -p {folder}"
     else:

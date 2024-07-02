@@ -59,7 +59,16 @@ def _customize_and_run_template(
     connection: Connection,
 ) -> str:
     """
-    FIXME
+    Customize one of the template bash scripts, transfer it to the remote host
+    via SFTP and then run it via SSH.
+
+    Args:
+        script_filename:
+        templates_folder:
+        replacements:
+        tmpdir:
+        logger_name:
+        connection:
     """
     logger = get_logger(logger_name)
     logger.info(f"Handling {script_filename} - START")
@@ -187,7 +196,7 @@ async def background_collect_pip_ssh(
                 for key, value in pkg_attrs.items():
                     logger.debug(f"Parsed pip-show output: {key}={value}")
                 # Check package_name match
-                # FIXME: This may fail for non-canonical package names?
+                # FIXME SSH: Does this work for non-canonical `package_name`?
                 package_name_pip_show = pkg_attrs.get("package_name")
                 package_name_task_pkg = task_pkg.package_name
                 if package_name_pip_show != package_name_task_pkg:

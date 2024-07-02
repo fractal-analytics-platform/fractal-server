@@ -514,19 +514,21 @@ class Settings(BaseSettings):
 
     FRACTAL_SLURM_SSH_HOST: Optional[str] = None
     """
-    FIXME docstring
+    SSH-reachable host where a SLURM client is available.
     """
     FRACTAL_SLURM_SSH_USER: Optional[str] = None
     """
-    FIXME docstring
+    User on `FRACTAL_SLURM_SSH_HOST`.
     """
     FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH: Optional[str] = None
     """
-    FIXME docstring
+    Private key for connecting to `FRACTAL_SLURM_SSH_HOST` as
+    `FRACTAL_SLURM_SSH_USER`.
     """
+    # FIXME SSH: Split this into two folders (for tasks and for jobs)
     FRACTAL_SLURM_SSH_WORKING_BASE_DIR: Optional[str] = None
     """
-    FIXME docstring
+    Remote folder on `FRACTAL_SLURM_SSH_HOST`.
     """
 
     FRACTAL_API_SUBMIT_RATE_LIMIT: int = 2
