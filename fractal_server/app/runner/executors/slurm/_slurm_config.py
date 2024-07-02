@@ -345,7 +345,7 @@ class SlurmConfig(BaseModel, extra=Extra.forbid):
             if value is not None:
                 # Handle the `time` parameter
                 if key == "time" and self.parallel_tasks_per_job > 1:
-                    # FIXME: this must be handled in some better way
+                    # FIXME SSH: this must be handled in some better way
                     logger.warning(
                         f"`time` SLURM parameter is set to {self.time}, "
                         "but this does not take into accoutn the number of "

@@ -92,7 +92,7 @@ class FractalSlurmWaitThread(FileWaitThread):
         to fully clean up the `FractalFileWaitThread` object.
         """
 
-        # FIXME: are those try/except below needed?
+        # FIXME SSH: are those try/except below needed?
 
         skip = max(self.slurm_poll_interval // self.interval, 1)
         for ind in count():

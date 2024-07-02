@@ -57,20 +57,23 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
     FIXME: docstring
 
     Attributes:
-        common_script_lines:
-            Arbitrary script lines that will always be included in the
-            sbatch script
+        connection: SSH connection
+        shutdown_file:
+        python_remote: Equal to `settings.FRACTAL_SLURM_WORKER_PYTHON`
+        wait_thread_cls: Class for waiting thread
+        keep_pickle_files:
         workflow_dir_local:
             Directory for both the cfut/SLURM and fractal-server files and logs
         workflow_dir_remote:
             Directory for both the cfut/SLURM and fractal-server files and logs
+        common_script_lines:
+            Arbitrary script lines that will always be included in the
+            sbatch script
+        slurm_account:
+        jobs:
         map_jobid_to_slurm_files:
             Dictionary with paths of slurm-related files for active jobs
     """
-
-    # ssh_host: str
-    # ssh_user: str
-    # ssh_private_key_path: str
 
     connection: Connection
 
@@ -91,10 +94,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
     def __init__(
         self,
         *,
-        # SSH configuration
-        # ssh_host: str,
-        # ssh_user: str,
-        # ssh_private_key_path: str,
+        # SSH connection
         connection: Connection,
         # Folders and files
         workflow_dir_local: Path,
@@ -112,7 +112,17 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         """
         Init method for FractalSlurmSSHExecutor
 
-        FIXME: Docstring
+        Note: since we are not using `super().__init__`, we duplicate some
+        relevant bits of `cfut.ClusterExecutor.__init__`.
+
+        Args:
+            connection:
+            workflow_dir_local:
+            workflow_dir_remote:
+            keep_pickle_files:
+            slurm_poll_interval:
+            common_script_lines:
+            slurm_account:
         """
 
         if kwargs != {}:
@@ -155,22 +165,9 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         if self.python_remote is None:
             raise ValueError("FRACTAL_SLURM_WORKER_PYTHON is not set. Exit.")
 
-        # Set SSH variables and perform handshake with remote (note: this
-        # needs `self.python_remote`)
-        # self.ssh_host = ssh_host
-        # self.ssh_user = ssh_user
-        # self.ssh_private_key_path = ssh_private_key_path
-
-        # Initialize connection
+        # Initialize connection and perform handshake
         self.connection = connection
         logger.warning(self.connection)
-        # self.connection = Connection(
-        #     host=self.ssh_host,
-        #     user=self.ssh_user,
-        #     connect_kwargs={"key_filename": self.ssh_private_key_path},
-        # )
-        # self.connection.open()
-
         self.handshake()
 
         # Set/validate parameters for SLURM submission scripts
@@ -545,6 +542,8 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             raise e
 
         # Construct list of futures (one per SLURM job, i.e. one per batch)
+        # FIXME SSH: we may create a single `_submit_many_jobs` method to
+        # reduce the number of commands run over SSH
         logger.debug("[map] Job submission - START")
         fs = []
         job_ids = []
@@ -594,10 +593,10 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         components: Optional[list[Any]] = None,
     ) -> SlurmJob:
         """
-        FIXME: Docstring
+        Prepare a SLURM job locally, without submitting it
 
-        Submit a multi-task job to the pool, where each task is handled via the
-        pickle/remote logic
+        This function prepares and writes the local submission script, but it
+        does not transfer it to the SLURM cluster.
 
         NOTE: this method has different behaviors when it is called from the
         `self.submit` or `self.map` methods (which is also encoded in
@@ -619,7 +618,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             components:
 
         Returns:
-            Future representing the execution of the current SLURM job.
+            SlurmJob object
         """
 
         # Inject SLURM account (if set) into slurm_config
@@ -662,7 +661,6 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             _subfolder_names = []
             for component in components:
                 if isinstance(component, dict):
-                    # This is needed for V2
                     actual_component = component.get(_COMPONENT_KEY_, None)
                 else:
                     actual_component = component
@@ -677,6 +675,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                 _subfolder_names.append(_task_file_paths.subfolder_name)
             job.wftask_file_prefixes = tuple(_prefixes)
 
+            # Check that all components share the same subfolder
             num_subfolders = len(set(_subfolder_names))
             if num_subfolders != 1:
                 error_msg_short = (
@@ -700,7 +699,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                 f"Missing folder {subfolder_path.as_posix()}."
             )
 
-        # Define I/O pickle file names/paths
+        # Define I/O pickle file local/remote paths
         job.input_pickle_files_local = tuple(
             self.get_input_pickle_file_path_local(
                 arg=job.workerids[ind],
@@ -734,7 +733,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             for ind in range(job.num_tasks_tot)
         )
 
-        # Define SLURM-job file names/paths
+        # Define SLURM-job file local/remote paths
         job.slurm_script_local = self.get_slurm_script_file_path_local(
             subfolder_name=job.wftask_subfolder_name,
             prefix=job.slurm_file_prefix,
@@ -760,7 +759,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             prefix=job.slurm_file_prefix,
         )
 
-        # Dump serialized versions+function+args+kwargs to pickle file
+        # Dump serialized versions+function+args+kwargs to pickle file(s)
         versions = get_versions()
         if job.single_task_submission:
             _args = args or []
@@ -1183,9 +1182,9 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
                         " FractalSlurmSSHExecutor._completion."
                     )
 
-    def _get_subfolder_sftp(self, jobs: list[SlurmJob]):
+    def _get_subfolder_sftp(self, jobs: list[SlurmJob]) -> None:
         """
-        FIXME: docstring
+        Fetch a remote folder via tar+sftp+tar
 
         Arguments:
             job:
@@ -1210,11 +1209,11 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             self.workflow_dir_remote / f"{subfolder_name}.tar.gz"
         ).as_posix()
 
-        # Remove local tarfile - FIXME: is this needed?
+        # Remove local tarfile - FIXME SSH: is this needed?
         logger.warning(f"In principle I just removed {tarfile_path_local}")
         logger.warning(f"{Path(tarfile_path_local).exists()=}")
 
-        # Remove remote tarfile - FIXME: is this needed?
+        # Remove remote tarfile - FIXME SSH: is this needed?
         # rm_command = f"rm {tarfile_path_remote}"
         # _run_command_over_ssh(cmd=rm_command, connection=self.connection)
         logger.warning(f"Unlink {tarfile_path_remote=} - START")
@@ -1453,11 +1452,10 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         """
         Healthcheck for SSH connection and for versions match.
 
-        Note that we set a timeout for the SSH connection, to avoid a hanging
-        connection in case e.g. of unreachable host.
+        FIXME SSH: We should add a timeout here
+        FIXME SSH: We could include checks on the existence of folders
+        FIXME SSH: We could include further checks on version matches
         """
-        # timeout = 5  # FIXME
-
         t_start_handshake = time.perf_counter()
 
         logger.info("[FractalSlurmSSHExecutor.ssh_handshake] START")
@@ -1465,13 +1463,10 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         stdout = run_command_over_ssh(cmd=cmd, connection=self.connection)
         remote_versions = json.loads(stdout.strip("\n"))
 
-        # FIXME: check existence of folders
-
         # Check compatibility with local versions
         local_versions = get_versions()
         remote_fractal_server = remote_versions["fractal_server"]
         local_fractal_server = local_versions["fractal_server"]
-        # TODO: add more version compatibility checks - if needed
         if remote_fractal_server != local_fractal_server:
             error_msg = (
                 "Fractal-server version mismatch.\n"
