@@ -30,12 +30,6 @@ from cfut import SlurmExecutor
 from fabric.connection import Connection
 from paramiko.ssh_exception import NoValidConnectionsError
 
-from ......config import get_settings
-from ......logger import set_logger
-from ......ssh._fabric import run_command_over_ssh
-from ......syringe import Inject
-from ....exceptions import JobExecutionError
-from ....exceptions import TaskExecutionError
 from ....filenames import SHUTDOWN_FILENAME
 from ....task_files import get_task_file_paths
 from ....task_files import TaskFiles
@@ -45,7 +39,14 @@ from ...slurm._slurm_config import SlurmConfig
 from .._batching import heuristics
 from ._executor_wait_thread import FractalSlurmWaitThread
 from fractal_server.app.runner.components import _COMPONENT_KEY_
+from fractal_server.app.runner.exceptions import JobExecutionError
+from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.slurm.ssh._slurm_job import SlurmJob
+from fractal_server.config import get_settings
+from fractal_server.logger import set_logger
+from fractal_server.ssh._fabric import check_connection
+from fractal_server.ssh._fabric import run_command_over_ssh
+from fractal_server.syringe import Inject
 
 logger = set_logger(__name__)
 
@@ -1456,6 +1457,9 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         FIXME SSH: We could include checks on the existence of folders
         FIXME SSH: We could include further checks on version matches
         """
+
+        check_connection(self.connection)
+
         t_start_handshake = time.perf_counter()
 
         logger.info("[FractalSlurmSSHExecutor.ssh_handshake] START")

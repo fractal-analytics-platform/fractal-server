@@ -17,6 +17,8 @@ from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
+from fractal_server.ssh._fabric import check_connection
+from fractal_server.ssh._fabric import put_over_ssh
 from fractal_server.ssh._fabric import run_command_over_ssh
 from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.utils import get_python_interpreter_v2
@@ -71,7 +73,7 @@ def _customize_and_run_template(
         connection:
     """
     logger = get_logger(logger_name)
-    logger.info(f"Handling {script_filename} - START")
+    logger.debug(f"_customize_and_run_template {script_filename} - START")
     settings = Inject(get_settings)
 
     # Read template
@@ -82,27 +84,30 @@ def _customize_and_run_template(
     for old_new in replacements:
         script_contents = script_contents.replace(old_new[0], old_new[1])
     # Write script locally
-    script_path_local = Path(tmpdir) / script_filename
-    with script_path_local.open("w") as f:
+    script_path_local = (Path(tmpdir) / script_filename).as_posix()
+    with open(script_path_local, "w") as f:
         f.write(script_contents)
-    # Transfer script to remote host
 
+    # Transfer script to remote host
     script_path_remote = os.path.join(
         settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR,
         f"script_{abs(hash(tmpdir))}{script_filename}",
     )
-    logger.info(f"Now transfer {script_path_local=} to {script_path_remote=}")
-    connection.put(
+    logger.debug(f"Now transfer {script_path_local=} over SSH.")
+    put_over_ssh(
         local=script_path_local,
         remote=script_path_remote,
+        connection=connection,
+        logger_name=logger_name,
     )
+
     # Execute script remotely
     cmd = f"bash {script_path_remote}"
-    logger.info(f"Now run {cmd=}")
+    logger.debug(f"Now run '{cmd}' over SSH.")
     stdout = run_command_over_ssh(cmd=cmd, connection=connection)
-    logger.info(stdout)
-    logger.info(f"Handling {script_filename} - END")
+    logger.debug(f"Standard output of '{cmd}':\n{stdout}")
 
+    logger.debug(f"_customize_and_run_template {script_filename} - END")
     return stdout
 
 
@@ -111,41 +116,61 @@ async def background_collect_pip_ssh(
     task_pkg: _TaskCollectPip,
     connection: Connection,
 ) -> None:
+    """
+    Collect a task package over SSH
 
-    # Prepare replacements for task-collection scripts
-    settings = Inject(get_settings)
-    python_bin = get_python_interpreter_v2(version=task_pkg.python_version)
-    package_version = "" if task_pkg.package_version is None else ""
-
-    install_string = task_pkg.package
-    if task_pkg.package_extras is not None:
-        install_string = f"{install_string}[{task_pkg.package_extras}]"
-    if task_pkg.package_version is not None:
-        install_string = f"{install_string}=={task_pkg.package_version}"
-    package_env_dir = (
-        Path(settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR)
-        / ".fractal"
-        / f"{task_pkg.package_name}{package_version}"
-    ).as_posix()
-
-    replacements = [
-        ("__PACKAGE_NAME__", task_pkg.package_name),
-        ("__PACKAGE_ENV_DIR__", package_env_dir),
-        ("__PACKAGE__", task_pkg.package),
-        ("__PYTHON__", python_bin),
-        ("__INSTALL_STRING__", install_string),
-    ]
-
+    This function is run as a background task, therefore exceptions must be
+    handled.
+    """
+    # Work within a temporary folder, where also logs will be placed
     with TemporaryDirectory() as tmpdir:
-        with next(get_sync_db()) as db:
-            LOGGER_NAME = "task_collection_ssh"
-            log_file_path = Path(tmpdir) / "log"
-            logger = set_logger(
-                logger_name=LOGGER_NAME,
-                log_file_path=log_file_path,
-            )
+        LOGGER_NAME = "task_collection_ssh"
+        log_file_path = Path(tmpdir) / "log"
+        logger = set_logger(
+            logger_name=LOGGER_NAME,
+            log_file_path=log_file_path,
+        )
 
+        logger.debug("START")
+        for key, value in task_pkg.dict(exclude={"package_manifest"}).items():
+            logger.debug(f"task_pkg.{key}: {value}")
+
+        # Open a DB session soon, since it is needed for updating `state`
+        with next(get_sync_db()) as db:
             try:
+                # Prepare replacements for task-collection scripts
+                settings = Inject(get_settings)
+                python_bin = get_python_interpreter_v2(
+                    python_version=task_pkg.python_version
+                )
+                package_version = (
+                    ""
+                    if task_pkg.package_version is None
+                    else task_pkg.package_version
+                )
+
+                install_string = task_pkg.package
+                if task_pkg.package_extras is not None:
+                    install_string = (
+                        f"{install_string}[{task_pkg.package_extras}]"
+                    )
+                if task_pkg.package_version is not None:
+                    install_string = (
+                        f"{install_string}=={task_pkg.package_version}"
+                    )
+                package_env_dir = (
+                    Path(settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR)
+                    / ".fractal"
+                    / f"{task_pkg.package_name}{package_version}"
+                ).as_posix()
+
+                replacements = [
+                    ("__PACKAGE_NAME__", task_pkg.package_name),
+                    ("__PACKAGE_ENV_DIR__", package_env_dir),
+                    ("__PACKAGE__", task_pkg.package),
+                    ("__PYTHON__", python_bin),
+                    ("__INSTALL_STRING__", install_string),
+                ]
 
                 common_args = dict(
                     templates_folder=TEMPLATES_DIR,
@@ -155,13 +180,19 @@ async def background_collect_pip_ssh(
                     connection=connection,
                 )
 
-                logger.debug("Task collection - installing - START")
+                check_connection(connection)
+
+                logger.debug("installing - START")
                 _set_collection_state_data_status(
                     state_id=state_id,
                     new_status="installing",
                     logger_name=LOGGER_NAME,
                     db=db,
                 )
+                # Avoid keeping the db session open as we start some possibly
+                # long operations that do not use the db
+                db.close()
+
                 stdout = _customize_and_run_template(
                     script_filename="_1_create_venv.sh",
                     **common_args,
@@ -178,15 +209,19 @@ async def background_collect_pip_ssh(
                     script_filename="_4_pip_freeze.sh",
                     **common_args,
                 )
-                logger.debug("Task collection - installing - END")
+                logger.debug("installing - END")
 
-                logger.debug("Task collection - collecting - START")
+                logger.debug("collecting - START")
                 _set_collection_state_data_status(
                     state_id=state_id,
                     new_status="collecting",
                     logger_name=LOGGER_NAME,
                     db=db,
                 )
+                # Avoid keeping the db session open as we start some possibly
+                # long operations that do not use the db
+                db.close()
+
                 stdout = _customize_and_run_template(
                     script_filename="_5_pip_show.sh",
                     **common_args,
@@ -194,17 +229,21 @@ async def background_collect_pip_ssh(
 
                 pkg_attrs = _parse_script_5_stdout(stdout)
                 for key, value in pkg_attrs.items():
-                    logger.debug(f"Parsed pip-show output: {key}={value}")
+                    logger.debug(
+                        f"collecting - parsed from pip-show: {key}={value}"
+                    )
                 # Check package_name match
                 # FIXME SSH: Does this work for non-canonical `package_name`?
                 package_name_pip_show = pkg_attrs.get("package_name")
                 package_name_task_pkg = task_pkg.package_name
                 if package_name_pip_show != package_name_task_pkg:
-                    raise ValueError(
+                    error_msg = (
                         f"`package_name` mismatch: "
                         f"{package_name_task_pkg=} but "
                         f"{package_name_pip_show=}"
                     )
+                    logger.error(error_msg)
+                    raise ValueError(error_msg)
                 # Extract/drop parsed attributes
                 pkg_attrs.pop("package_name")
                 python_bin = pkg_attrs.pop("python_bin")
@@ -214,9 +253,9 @@ async def background_collect_pip_ssh(
                 # Read and validate remote manifest file
                 with connection.sftp().open(manifest_path_remote, "r") as f:
                     manifest = json.load(f)
-                logger.info(f"Manifest loaded from {manifest_path_remote=}")
+                logger.info(f"collecting - loaded {manifest_path_remote=}")
                 ManifestV2(**manifest)
-                logger.info("Manifest is valid ManifestV2 object.")
+                logger.info("collecting - manifest is a valid ManifestV2")
 
                 # Create new _TaskCollectPip object
                 new_pkg = _TaskCollectPip(
@@ -237,16 +276,17 @@ async def background_collect_pip_ssh(
                     python_bin=Path(python_bin),
                 )
                 _insert_tasks(task_list=task_list, db=db)
-                logger.debug("Task collection - collecting - END")
+                logger.debug("collecting - END")
 
                 # Finalize (write metadata to DB)
-                logger.debug("Task collection - finalising - START")
+                logger.debug("finalising - START")
                 collection_state = db.get(CollectionStateV2, state_id)
                 collection_state.data["log"] = log_file_path.open("r").read()
                 collection_state.data["freeze"] = stdout_pip_freeze
                 flag_modified(collection_state, "data")
                 db.commit()
-                logger.debug("Task collection - finalising - END")
+                logger.debug("finalising - END")
+                logger.debug("END")
 
             except Exception as e:
                 _handle_failure(

@@ -154,7 +154,7 @@ async def _init_venv_v2(
     """
     logger = get_logger(logger_name)
     logger.debug(f"[_init_venv] {path=}")
-    interpreter = get_python_interpreter_v2(version=python_version)
+    interpreter = get_python_interpreter_v2(python_version=python_version)
     logger.debug(f"[_init_venv] {interpreter=}")
     await execute_command(
         cwd=path,
