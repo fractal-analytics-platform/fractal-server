@@ -41,6 +41,22 @@ def get_ssh_connection(
     return connection
 
 
+def open_connection(connection: Connection) -> None:
+    """
+    Open the SSH connection.
+
+    This function is called at the beginning of other SSH functions, so that
+    we can provide a meaningful error.
+    """
+    if not connection.is_connected:
+        try:
+            connection.open()
+        except Exception as e:
+            raise RuntimeError(
+                f"Cannot open SSH connection. Original error: {str(e)}"
+            )
+
+
 def run_command_over_ssh(
     *,
     cmd: str,
@@ -58,6 +74,7 @@ def run_command_over_ssh(
     Returns:
         Standard output of the command, if successful.
     """
+    open_connection(connection)
     t_0 = time.perf_counter()
     ind_attempt = 0
     while ind_attempt <= max_attempts:
@@ -121,6 +138,7 @@ def put_over_ssh(
     connection: Connection,
     logger_name: Optional[str] = None,
 ) -> None:
+    open_connection(connection)
     try:
         connection.put(local=local, remote=remote)
     except Exception as e:
@@ -143,6 +161,7 @@ def _mkdir_over_ssh(
         connection:
         parents:
     """
+    open_connection(connection)
 
     # FIXME SSH: try using `mkdir` method of `paramiko.SFTPClient`
     if parents:
