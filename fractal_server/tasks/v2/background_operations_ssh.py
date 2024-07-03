@@ -83,8 +83,8 @@ def _customize_and_run_template(
     for old_new in replacements:
         script_contents = script_contents.replace(old_new[0], old_new[1])
     # Write script locally
-    script_path_local = Path(tmpdir) / script_filename
-    with script_path_local.open("w") as f:
+    script_path_local = (Path(tmpdir) / script_filename).as_posix()
+    with open(script_path_local, "w") as f:
         f.write(script_contents)
 
     # Transfer script to remote host
@@ -97,7 +97,9 @@ def _customize_and_run_template(
         local=script_path_local,
         remote=script_path_remote,
         connection=connection,
+        logger_name=logger_name,
     )
+
     # Execute script remotely
     cmd = f"bash {script_path_remote}"
     logger.info(f"Now run {cmd=}")
@@ -162,7 +164,7 @@ async def background_collect_pip_ssh(
                     connection=connection,
                 )
 
-                logger.debug("Task collection - installing - START")
+                logger.debug("installing - START")
                 _set_collection_state_data_status(
                     state_id=state_id,
                     new_status="installing",
@@ -185,9 +187,9 @@ async def background_collect_pip_ssh(
                     script_filename="_4_pip_freeze.sh",
                     **common_args,
                 )
-                logger.debug("Task collection - installing - END")
+                logger.debug("installing - END")
 
-                logger.debug("Task collection - collecting - START")
+                logger.debug("collecting - START")
                 _set_collection_state_data_status(
                     state_id=state_id,
                     new_status="collecting",
@@ -201,17 +203,21 @@ async def background_collect_pip_ssh(
 
                 pkg_attrs = _parse_script_5_stdout(stdout)
                 for key, value in pkg_attrs.items():
-                    logger.debug(f"Parsed pip-show output: {key}={value}")
+                    logger.debug(
+                        f"collecting - parsed from pip-show: {key}={value}"
+                    )
                 # Check package_name match
                 # FIXME SSH: Does this work for non-canonical `package_name`?
                 package_name_pip_show = pkg_attrs.get("package_name")
                 package_name_task_pkg = task_pkg.package_name
                 if package_name_pip_show != package_name_task_pkg:
-                    raise ValueError(
+                    error_msg = (
                         f"`package_name` mismatch: "
                         f"{package_name_task_pkg=} but "
                         f"{package_name_pip_show=}"
                     )
+                    logger.error(error_msg)
+                    raise ValueError(error_msg)
                 # Extract/drop parsed attributes
                 pkg_attrs.pop("package_name")
                 python_bin = pkg_attrs.pop("python_bin")
@@ -221,9 +227,9 @@ async def background_collect_pip_ssh(
                 # Read and validate remote manifest file
                 with connection.sftp().open(manifest_path_remote, "r") as f:
                     manifest = json.load(f)
-                logger.info(f"Manifest loaded from {manifest_path_remote=}")
+                logger.info(f"collecting - loaded {manifest_path_remote=}")
                 ManifestV2(**manifest)
-                logger.info("Manifest is valid ManifestV2 object.")
+                logger.info("collecting - manifest is a valid ManifestV2")
 
                 # Create new _TaskCollectPip object
                 new_pkg = _TaskCollectPip(
@@ -244,16 +250,16 @@ async def background_collect_pip_ssh(
                     python_bin=Path(python_bin),
                 )
                 _insert_tasks(task_list=task_list, db=db)
-                logger.debug("Task collection - collecting - END")
+                logger.debug("collecting - END")
 
                 # Finalize (write metadata to DB)
-                logger.debug("Task collection - finalising - START")
+                logger.debug("finalising - START")
                 collection_state = db.get(CollectionStateV2, state_id)
                 collection_state.data["log"] = log_file_path.open("r").read()
                 collection_state.data["freeze"] = stdout_pip_freeze
                 flag_modified(collection_state, "data")
                 db.commit()
-                logger.debug("Task collection - finalising - END")
+                logger.debug("finalising - END")
 
             except Exception as e:
                 _handle_failure(
