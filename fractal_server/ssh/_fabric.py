@@ -101,6 +101,12 @@ def run_command_over_ssh(
             )
             logger.error(error_msg)
             raise ValueError(error_msg)
+        except Exception as e:
+            logger.error(
+                f"Running command `{cmd}` over SSH failed.\n"
+                f"Original Error:\n{str(e)}."
+            )
+            raise e
 
     raise ValueError(
         f"Reached last attempt ({max_attempts=}) for running '{cmd}'"
