@@ -6,8 +6,10 @@ from fastapi import Request
 from fastapi import Response
 from fastapi import status
 
+from .....config import get_settings
 from .....logger import reset_logger_handlers
 from .....logger import set_logger
+from .....syringe import Inject
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import CollectionStateV2
@@ -53,6 +55,14 @@ async def collect_tasks_pip(
     """
     Task collection endpoint (SSH version)
     """
+
+    # Set default python version
+    if task_collect.python_version is None:
+        settings = Inject(get_settings)
+        task_collect.python_version = (
+            settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
+        )
+
     # Note: we don't use TaskCollectStatusV2 here for the JSON column `data`
     state = CollectionStateV2(
         data=dict(status="pending", package=task_collect.package)
