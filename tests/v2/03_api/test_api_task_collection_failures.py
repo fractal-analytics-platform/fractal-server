@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 from pathlib import Path
@@ -193,6 +194,21 @@ async def test_collection_validation_error(
         )
         assert res.status_code == 422
         assert "FileNotFoundError" in res.json()["detail"]
+
+    # Write an invalid collection.json file
+    file_path = file_dir / "collection.json"
+    with open(file_path, "w") as f:
+        json.dump(dict(foo="bar"), f)
+
+    # Folder exists and includes a collection.json file, but the file is
+    # invalid
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=payload,
+        )
+        assert res.status_code == 422
+        assert "ValidationError" in res.json()["detail"]
 
 
 async def test_remove_directory(
