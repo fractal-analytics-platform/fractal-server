@@ -17,6 +17,7 @@ from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
+from fractal_server.ssh._fabric import check_connection
 from fractal_server.ssh._fabric import put_over_ssh
 from fractal_server.ssh._fabric import run_command_over_ssh
 from fractal_server.syringe import Inject
@@ -178,6 +179,8 @@ async def background_collect_pip_ssh(
                     logger_name=LOGGER_NAME,
                     connection=connection,
                 )
+
+                check_connection(connection)
 
                 logger.debug("installing - START")
                 _set_collection_state_data_status(
