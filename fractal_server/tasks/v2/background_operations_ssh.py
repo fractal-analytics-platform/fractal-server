@@ -115,7 +115,13 @@ async def background_collect_pip_ssh(
     task_pkg: _TaskCollectPip,
     connection: Connection,
 ) -> None:
+    """
+    Collect a task package over SSH
 
+    Since this function is run as a background task, exceptions must be
+    handled.
+    """
+    # Work within a temporary folder, where also logs will be placed
     with TemporaryDirectory() as tmpdir:
         LOGGER_NAME = "task_collection_ssh"
         log_file_path = Path(tmpdir) / "log"
@@ -124,37 +130,46 @@ async def background_collect_pip_ssh(
             log_file_path=log_file_path,
         )
 
-        # Prepare replacements for task-collection scripts
-        settings = Inject(get_settings)
-        python_bin = get_python_interpreter_v2(version=task_pkg.python_version)
-        package_version = (
-            ""
-            if task_pkg.package_version is None
-            else task_pkg.package_version
-        )
+        logger.debug("START")
+        for key, value in task_pkg.dict(exclude={"package_manifest"}).items():
+            logger.debug(f"task_pkg.{key}: {value}")
 
-        install_string = task_pkg.package
-        if task_pkg.package_extras is not None:
-            install_string = f"{install_string}[{task_pkg.package_extras}]"
-        if task_pkg.package_version is not None:
-            install_string = f"{install_string}=={task_pkg.package_version}"
-        package_env_dir = (
-            Path(settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR)
-            / ".fractal"
-            / f"{task_pkg.package_name}{package_version}"
-        ).as_posix()
-
-        replacements = [
-            ("__PACKAGE_NAME__", task_pkg.package_name),
-            ("__PACKAGE_ENV_DIR__", package_env_dir),
-            ("__PACKAGE__", task_pkg.package),
-            ("__PYTHON__", python_bin),
-            ("__INSTALL_STRING__", install_string),
-        ]
-
+        # Open a DB session soon, since it is needed for updating `state`
         with next(get_sync_db()) as db:
-
             try:
+                # Prepare replacements for task-collection scripts
+                settings = Inject(get_settings)
+                python_bin = get_python_interpreter_v2(
+                    version=task_pkg.python_version
+                )
+                package_version = (
+                    ""
+                    if task_pkg.package_version is None
+                    else task_pkg.package_version
+                )
+
+                install_string = task_pkg.package
+                if task_pkg.package_extras is not None:
+                    install_string = (
+                        f"{install_string}[{task_pkg.package_extras}]"
+                    )
+                if task_pkg.package_version is not None:
+                    install_string = (
+                        f"{install_string}=={task_pkg.package_version}"
+                    )
+                package_env_dir = (
+                    Path(settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR)
+                    / ".fractal"
+                    / f"{task_pkg.package_name}{package_version}"
+                ).as_posix()
+
+                replacements = [
+                    ("__PACKAGE_NAME__", task_pkg.package_name),
+                    ("__PACKAGE_ENV_DIR__", package_env_dir),
+                    ("__PACKAGE__", task_pkg.package),
+                    ("__PYTHON__", python_bin),
+                    ("__INSTALL_STRING__", install_string),
+                ]
 
                 common_args = dict(
                     templates_folder=TEMPLATES_DIR,
@@ -171,6 +186,10 @@ async def background_collect_pip_ssh(
                     logger_name=LOGGER_NAME,
                     db=db,
                 )
+                # Avoid keeping the db session open as we start some possibly
+                # long operations that do not use the db
+                db.close()
+
                 stdout = _customize_and_run_template(
                     script_filename="_1_create_venv.sh",
                     **common_args,
@@ -196,6 +215,10 @@ async def background_collect_pip_ssh(
                     logger_name=LOGGER_NAME,
                     db=db,
                 )
+                # Avoid keeping the db session open as we start some possibly
+                # long operations that do not use the db
+                db.close()
+
                 stdout = _customize_and_run_template(
                     script_filename="_5_pip_show.sh",
                     **common_args,
@@ -260,6 +283,7 @@ async def background_collect_pip_ssh(
                 flag_modified(collection_state, "data")
                 db.commit()
                 logger.debug("finalising - END")
+                logger.debug("END")
 
             except Exception as e:
                 _handle_failure(
