@@ -5,6 +5,7 @@ from fabric import Connection
 from invoke import UnexpectedExit
 from paramiko.ssh_exception import NoValidConnectionsError
 
+from ..logger import get_logger
 from ..logger import set_logger
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
@@ -118,10 +119,12 @@ def put_over_ssh(
     local: str,
     remote: str,
     connection: Connection,
+    logger_name: Optional[str] = None,
 ) -> None:
     try:
         connection.put(local=local, remote=remote)
     except Exception as e:
+        logger = get_logger(logger_name=logger_name)
         logger.error(
             f"Transferring {local=} to {remote=} over SSH failed.\n"
             f"Original Error:\n{str(e)}."
