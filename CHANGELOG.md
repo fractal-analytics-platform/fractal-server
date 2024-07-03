@@ -24,14 +24,15 @@ Re: task-collection configuration, we now support two main use cases:
 
 * Task collection:
     * Introduce task-collection Python-related configuration variables (\#1587).
-    * Always set Python version for task collection, and only use `FRACTAL_TASKS_PYTHON_X_Y` variables (\#1587)
+    * Always set Python version for task collection, and only use `FRACTAL_TASKS_PYTHON_X_Y` variables (\#1587).
     * Refactor internal task-collection functions and models (\#1587).
 SSH features:
+    * Introduce `fractal_server/ssh` subpackage (\#1545, \#1599).
     * Introduce SSH executor and runner (\#1545).
+    * Introduce SSH task collection (\#1545, \#1599).
     * Introduce SSH-related configuration variables (\#1545).
     * Modify app lifespan to handle SSH connection (\#1545).
     * Split `app/runner/executor/slurm` into `sudo` and `ssh` subfolders (\#1545).
-    * Introduce `fractal_server/ssh` subpackage (\#1545).
 * Dependencies:A
     * Update `sqlmodel` to `^0.0.19` (\#1584).
     * Update `pytest-asyncio` to `^0.23` (\#1558).

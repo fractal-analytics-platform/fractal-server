@@ -65,9 +65,7 @@ def _set_collection_state_data_status(
     db: DBSyncSession,
 ):
     logger = get_logger(logger_name)
-    logger.debug(
-        f"Task collection {state_id=} - set state/data/status to {new_status}"
-    )
+    logger.debug(f"{state_id=} - set state.data['status'] to {new_status}")
     collection_state = db.get(CollectionStateV2, state_id)
     collection_state.data["status"] = new_status
     flag_modified(collection_state, "data")
@@ -82,7 +80,7 @@ def _set_collection_state_data_log(
     db: DBSyncSession,
 ):
     logger = get_logger(logger_name)
-    logger.debug(f"Task collection {state_id=} - set state/data/log")
+    logger.debug(f"{state_id=} - set state.data['log']")
     collection_state = db.get(CollectionStateV2, state_id)
     collection_state.data["log"] = new_log
     flag_modified(collection_state, "data")
@@ -97,7 +95,7 @@ def _set_collection_state_data_info(
     db: DBSyncSession,
 ):
     logger = get_logger(logger_name)
-    logger.debug(f"Task collection {state_id=} - set state/data/info")
+    logger.debug(f"{state_id=} - set state.data['info']")
     collection_state = db.get(CollectionStateV2, state_id)
     collection_state.data["info"] = new_info
     flag_modified(collection_state, "data")
@@ -117,8 +115,7 @@ def _handle_failure(
     """
 
     logger = get_logger(logger_name)
-    logger.debug("Task collection - ERROR")
-    logger.info(f"Task collection failed. Original error: {exception}")
+    logger.error(f"Task collection failed. Original error: {str(exception)}")
 
     _set_collection_state_data_status(
         state_id=state_id, new_status="fail", logger_name=logger_name, db=db
@@ -143,6 +140,7 @@ def _handle_failure(
         logger.info(f"Now delete temporary folder {venv_path}")
         shell_rmtree(venv_path)
         logger.info("Temporary folder deleted")
+
     reset_logger_handlers(logger)
     return
 
@@ -248,7 +246,7 @@ async def background_collect_pip(
     )
 
     # Start
-    logger.debug("Task collection - START")
+    logger.debug("START")
     for key, value in task_pkg.dict(exclude={"package_manifest"}).items():
         logger.debug(f"task_pkg.{key}: {value}")
 
@@ -262,7 +260,7 @@ async def background_collect_pip(
 
             # Block 2: create venv and run pip install
             # Required: state_id, venv_path, task_pkg
-            logger.debug("Task collection - installing - START")
+            logger.debug("installing - START")
             _set_collection_state_data_status(
                 state_id=state_id,
                 new_status="installing",
@@ -274,21 +272,18 @@ async def background_collect_pip(
                 task_pkg=task_pkg,
                 logger_name=logger_name,
             )
-            logger.debug("Task collection - installing - END")
+            logger.debug("installing - END")
 
             # Block 3: create task metadata and create database entries
             # Required: state_id, python_bin, package_root, task_pkg
-            logger.debug("Task collection - collecting - START")
+            logger.debug("collecting - START")
             _set_collection_state_data_status(
                 state_id=state_id,
                 new_status="collecting",
                 logger_name=logger_name,
                 db=db,
             )
-            logger.debug(
-                "Task collection - collecting - prepare tasks and update db "
-                "- START"
-            )
+            logger.debug("collecting - prepare tasks and update db " "- START")
             task_list = _prepare_tasks_metadata(
                 package_manifest=task_pkg.package_manifest,
                 package_version=task_pkg.package_version,
@@ -298,14 +293,11 @@ async def background_collect_pip(
             )
             _check_task_files_exist(task_list=task_list)
             tasks = _insert_tasks(task_list=task_list, db=db)
-            logger.debug(
-                "Task collection - collecting -  prepare tasks and update db "
-                "- END"
-            )
-            logger.debug("Task collection - collecting - END")
+            logger.debug("collecting -  prepare tasks and update db " "- END")
+            logger.debug("collecting - END")
 
             # Block 4: finalize (write collection files, write metadata to DB)
-            logger.debug("Task collection - finalising - START")
+            logger.debug("finalising - START")
             collection_path = get_collection_path(venv_path)
             collection_state = db.get(CollectionStateV2, state_id)
             task_read_list = [
@@ -319,7 +311,7 @@ async def background_collect_pip(
 
             flag_modified(collection_state, "data")
             db.commit()
-            logger.debug("Task collection - finalising - END")
+            logger.debug("finalising - END")
 
         except Exception as e:
             logfile_path = get_log_path(get_absolute_venv_path(venv_path))
