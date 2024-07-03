@@ -264,7 +264,7 @@ async def check_collection_status(
     # In some cases (i.e. a successful or ongoing task collection),
     # state.data.log is not set; if so, we collect the current logs.
     if verbose and not state.data.get("log"):
-        state.data["log"] = get_collection_log(state.data["venv_path"])
+        state.data["log"] = get_collection_log(Path(state.data["venv_path"]))
         state.data["venv_path"] = str(state.data["venv_path"])
     reset_logger_handlers(logger)
     await db.close()
