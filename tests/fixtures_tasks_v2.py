@@ -3,6 +3,8 @@ import shutil
 import pytest
 from devtools import debug
 
+from fractal_server.app.schemas.v2 import TaskReadV2
+
 PREFIX = "/api/v2"
 
 
@@ -24,9 +26,6 @@ async def fractal_tasks_mock(
 
     import logging
     import json
-    from fractal_server.app.schemas.v2.task_collection import (
-        TaskCollectStatusV2,
-    )
     from fractal_server.app.schemas.v2.task import TaskCreateV2
     from fractal_server.tasks.v2.background_operations import _insert_tasks
     from fractal_server.tasks.utils import COLLECTION_FILENAME
@@ -50,7 +49,9 @@ async def fractal_tasks_mock(
         collection_json = FRACTAL_TASKS_MOCK_DIR / COLLECTION_FILENAME
         with collection_json.open("r") as f:
             collection_data = json.load(f)
-        task_collection = TaskCollectStatusV2(**collection_data)
+        collection_data["task_list"] = [
+            TaskReadV2(**task) for task in collection_data["task_list"]
+        ]
         _insert_tasks(
             task_list=[
                 TaskCreateV2(
@@ -60,7 +61,7 @@ async def fractal_tasks_mock(
                         exclude_unset=True,
                     )
                 )
-                for task in task_collection.task_list
+                for task in collection_data["task_list"]
             ],
             db=db_sync,
         )
@@ -105,9 +106,6 @@ def relink_python_interpreter_v2(
     import os
     import json
     from pathlib import Path
-    from fractal_server.app.schemas.v2.task_collection import (
-        TaskCollectStatusV2,
-    )
 
     import logging
     from fractal_server.tasks.utils import COLLECTION_FILENAME
@@ -127,9 +125,8 @@ def relink_python_interpreter_v2(
         collection_json = FRACTAL_TASKS_MOCK_DIR / COLLECTION_FILENAME
         with collection_json.open("r") as f:
             collection_data = json.load(f)
-        task_collection = TaskCollectStatusV2(**collection_data)
         task_python = Path(
-            task_collection.task_list[0].command_non_parallel.split()[0]
+            collection_data["task_list"][0]["command_non_parallel"].split()[0]
         )
         logger.warning(f"Original tasks Python: {task_python.as_posix()}")
 

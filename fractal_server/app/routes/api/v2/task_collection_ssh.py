@@ -53,7 +53,6 @@ async def collect_tasks_pip(
     """
     Task collection endpoint (SSH version)
     """
-    # Note: we don't use TaskCollectStatusV2 here for the JSON column `data`
     state = CollectionStateV2(
         data=dict(status="pending", package=task_collect.package)
     )

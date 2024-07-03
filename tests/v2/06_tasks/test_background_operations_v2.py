@@ -6,9 +6,6 @@ from devtools import debug
 from pydantic import BaseModel
 
 from fractal_server.app.models.v2 import CollectionStateV2
-from fractal_server.app.routes.api.v2.task_collection import (
-    TaskCollectStatusV2,
-)
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
@@ -105,10 +102,10 @@ async def test_logs_failed_collection(
     task_pkg.package_version = pkg_info["pkg_version"]
     task_pkg.package_manifest = pkg_info["pkg_manifest"]
     venv_path = create_package_dir_pip(task_pkg=task_pkg)
-    collection_status = TaskCollectStatusV2(
-        status="pending", venv_path=venv_path, package=task_pkg.package
+    collection_status = dict(
+        status="pending", venv_path=str(venv_path), package=task_pkg.package
     )
-    state = CollectionStateV2(data=collection_status.sanitised_dict())
+    state = CollectionStateV2(data=collection_status)
     db.add(state)
     await db.commit()
     await db.refresh(state)
@@ -137,10 +134,10 @@ async def test_logs_failed_collection(
     task_pkg.package_version = pkg_info["pkg_version"]
     task_pkg.package_manifest = pkg_info["pkg_manifest"]
     venv_path = create_package_dir_pip(task_pkg=task_pkg)
-    collection_status = TaskCollectStatusV2(
-        status="pending", venv_path=venv_path, package=task_pkg.package
+    collection_status = dict(
+        status="pending", venv_path=str(venv_path), package=task_pkg.package
     )
-    state = CollectionStateV2(data=collection_status.sanitised_dict())
+    state = CollectionStateV2(data=collection_status)
     db.add(state)
     await db.commit()
     await db.refresh(state)

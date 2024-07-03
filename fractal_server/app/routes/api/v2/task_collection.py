@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from shutil import copy as shell_copy
 from tempfile import TemporaryDirectory
@@ -21,11 +22,13 @@ from ....models.v2 import CollectionStateV2
 from ....models.v2 import TaskV2
 from ....schemas.v2 import CollectionStateReadV2
 from ....schemas.v2 import TaskCollectPipV2
-from ....schemas.v2 import TaskCollectStatusV2
+from ....schemas.v2 import TaskReadV2
 from ....security import current_active_user
 from ....security import current_active_verified_user
 from ....security import User
+from fractal_server.tasks.utils import get_absolute_venv_path
 from fractal_server.tasks.utils import get_collection_log
+from fractal_server.tasks.utils import get_collection_path
 from fractal_server.tasks.utils import slugify_task_name
 from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.v2.background_operations import (
@@ -34,7 +37,6 @@ from fractal_server.tasks.v2.background_operations import (
 from fractal_server.tasks.v2.endpoint_operations import create_package_dir_pip
 from fractal_server.tasks.v2.endpoint_operations import download_package
 from fractal_server.tasks.v2.endpoint_operations import inspect_package
-from fractal_server.tasks.v2.get_collection_data import get_collection_data
 
 router = APIRouter()
 
@@ -119,8 +121,13 @@ async def collect_tasks_pip(
     except FileExistsError:
         venv_path = create_package_dir_pip(task_pkg=task_pkg, create=False)
         try:
-            task_collect_status = get_collection_data(venv_path)
-            for task in task_collect_status.task_list:
+            package_path = get_absolute_venv_path(venv_path)
+            collection_path = get_collection_path(package_path)
+            with collection_path.open() as f:
+                task_collect_status = json.load(f)
+            for task in [
+                TaskReadV2(**task) for task in task_collect_status["task_list"]
+            ]:
                 db_task = await db.get(TaskV2, task.id)
                 if (
                     (not db_task)
@@ -180,15 +187,12 @@ async def collect_tasks_pip(
             )
 
     # All checks are OK, proceed with task collection
-    full_venv_path = venv_path.relative_to(settings.FRACTAL_TASKS_DIR)
-    collection_status = TaskCollectStatusV2(
-        status="pending", venv_path=full_venv_path, package=task_pkg.package
+    collection_status = dict(
+        status="pending",
+        venv_path=str(venv_path.relative_to(settings.FRACTAL_TASKS_DIR)),
+        package=task_pkg.package,
     )
-
-    # Create State object (after casting venv_path to string)
-    collection_status_dict = collection_status.dict()
-    collection_status_dict["venv_path"] = str(collection_status.venv_path)
-    state = CollectionStateV2(data=collection_status_dict)
+    state = CollectionStateV2(data=collection_status)
     db.add(state)
     await db.commit()
     await db.refresh(state)
@@ -234,13 +238,12 @@ async def check_collection_status(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No task collection info with id={state_id}",
         )
-    data = TaskCollectStatusV2(**state.data)
 
-    # In some cases (i.e. a successful or ongoing task collection), data.log is
-    # not set; if so, we collect the current logs
-    if verbose and not data.log:
-        data.log = get_collection_log(data.venv_path)
-        state.data = data.sanitised_dict()
+    # In some cases (i.e. a successful or ongoing task collection),
+    # state.data.log is not set; if so, we collect the current logs.
+    if verbose and not state.data.get("log"):
+        state.data["log"] = get_collection_log(state.data["venv_path"])
+        state.data["venv_path"] = str(state.data["venv_path"])
     reset_logger_handlers(logger)
     await db.close()
     return state
