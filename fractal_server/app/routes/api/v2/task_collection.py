@@ -164,8 +164,8 @@ async def collect_tasks_pip(
                     f"Original ValidationError: {e}"
                 ),
             )
-        task_collect_status.info = "Already installed"
-        state = CollectionStateV2(data=task_collect_status.sanitised_dict())
+        task_collect_status["info"] = "Already installed"
+        state = CollectionStateV2(data=task_collect_status)
         response.status_code == status.HTTP_200_OK
         await db.close()
         return state
