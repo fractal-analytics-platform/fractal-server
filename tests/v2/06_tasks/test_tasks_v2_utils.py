@@ -27,18 +27,18 @@ async def test_get_python_interpreter_v2(
 
     # Failures for invalid versions
     with pytest.raises(ValueError) as e:
-        get_python_interpreter_v2(version=None)
+        get_python_interpreter_v2(python_version=None)
     assert "Invalid version=None" in str(e.value)
     with pytest.raises(ValueError) as e:
-        get_python_interpreter_v2(version=123)
+        get_python_interpreter_v2(python_version=123)
     assert "Invalid version=" in str(e.value)
 
     # Failures for requiring missing Python version
     with pytest.raises(ValueError) as e:
-        get_python_interpreter_v2(version="3.10")
+        get_python_interpreter_v2(python_version="3.10")
     assert "but FRACTAL_TASKS_PYTHON_3_10=None" in str(e.value)
     with pytest.raises(ValueError) as e:
-        get_python_interpreter_v2(version="3.11")
+        get_python_interpreter_v2(python_version="3.11")
     assert "but FRACTAL_TASKS_PYTHON_3_11=None" in str(e.value)
 
     # Success

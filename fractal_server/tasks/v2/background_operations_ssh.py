@@ -140,7 +140,7 @@ async def background_collect_pip_ssh(
                 # Prepare replacements for task-collection scripts
                 settings = Inject(get_settings)
                 python_bin = get_python_interpreter_v2(
-                    version=task_pkg.python_version
+                    python_version=task_pkg.python_version
                 )
                 package_version = (
                     ""

@@ -5,7 +5,7 @@ from fractal_server.syringe import Inject
 
 
 def get_python_interpreter_v2(
-    version: Literal["3.9", "3.10", "3.11", "3.12"]
+    python_version: Literal["3.9", "3.10", "3.11", "3.12"]
 ) -> str:
     """
     Return the path to the python interpreter
@@ -21,15 +21,15 @@ def get_python_interpreter_v2(
         interpreter: string representing the python executable or its path
     """
 
-    if version not in ["3.9", "3.10", "3.11", "3.12"]:
-        raise ValueError(f"Invalid {version=}.")
+    if python_version not in ["3.9", "3.10", "3.11", "3.12"]:
+        raise ValueError(f"Invalid {python_version=}.")
 
     settings = Inject(get_settings)
-    version_underscore = version.replace(".", "_")
+    version_underscore = python_version.replace(".", "_")
     key = f"FRACTAL_TASKS_PYTHON_{version_underscore}"
     value = getattr(settings, key)
     if value is None:
-        raise ValueError(f"Requested {version=}, but {key}={value}.")
+        raise ValueError(f"Requested {python_version=}, but {key}={value}.")
     return value
 
 
