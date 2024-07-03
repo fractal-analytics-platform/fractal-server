@@ -2,7 +2,11 @@
 
 # 2.3.0
 
-This release includes a major update to task-collection configuration variables and logic. We now support two main use cases:
+This release includes two important updates:
+1. An Update update to task-collection configuration variables and logic.
+2. The first released version of the **experimental** SSH features.
+
+Re: task-collection configuration, we now support two main use cases:
 
 1. When running a production instance (including on a SLURM cluster), you
    should set e.g. `FRACTAL_TASKS_PYTHON_DEFAULT_VERSION=3.10`, and make sure
@@ -22,7 +26,13 @@ This release includes a major update to task-collection configuration variables 
     * Introduce task-collection Python-related configuration variables (\#1587).
     * Always set Python version for task collection, and only use `FRACTAL_TASKS_PYTHON_X_Y` variables (\#1587)
     * Refactor internal task-collection functions and models (\#1587).
-* Dependencies:
+SSH features:
+    * Introduce SSH executor and runner (\#1545).
+    * Introduce SSH-related configuration variables (\#1545).
+    * Modify app lifespan to handle SSH connection (\#1545).
+    * Split `app/runner/executor/slurm` into `sudo` and `ssh` subfolders (\#1545).
+    * Introduce `fractal_server/ssh` subpackage (\#1545).
+* Dependencies:A
     * Update `sqlmodel` to `^0.0.19` (\#1584).
     * Update `pytest-asyncio` to `^0.23` (\#1558).
 * Testing:
