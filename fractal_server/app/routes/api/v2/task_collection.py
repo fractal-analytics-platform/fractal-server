@@ -127,16 +127,28 @@ async def collect_tasks_pip(
                 task_collect_data = json.load(f)
 
             if not isinstance(task_collect_data, dict):
-                raise ValidationError(
-                    f"{collection_path=} is not a Python dictionary."
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=(
+                        f"Collection '{str(collection_path)}' is not a Python "
+                        "dictionary."
+                    ),
                 )
             if "task_list" not in task_collect_data:
-                raise ValidationError(
-                    f"{collection_path=} has no key 'task_list'."
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=(
+                        f"Collection '{str(collection_path)}' has no key "
+                        "'task_list'."
+                    ),
                 )
             if not isinstance(task_collect_data["task_list"], list):
-                raise ValidationError(
-                    f"{collection_path=}.task_list is not a Python list."
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=(
+                        f"Collection '{str(collection_path)} -> task_list' "
+                        "is not a Python list."
+                    ),
                 )
 
             for task in task_collect_data["task_list"]:

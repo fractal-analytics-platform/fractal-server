@@ -197,18 +197,36 @@ async def test_collection_validation_error(
 
     # Write an invalid collection.json file
     file_path = file_dir / "collection.json"
+    # case 1
     with open(file_path, "w") as f:
-        json.dump(dict(foo="bar"), f)
-
-    # Folder exists and includes a collection.json file, but the file is
-    # invalid
+        json.dump([1, 2, 3], f)
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
         res = await client.post(
             f"{PREFIX}/collect/pip/",
             json=payload,
         )
         assert res.status_code == 422
-        assert "ValidationError" in res.json()["detail"]
+        assert "not a Python dictionary" in res.json()["detail"]
+    # case 2
+    with open(file_path, "w") as f:
+        json.dump(dict(foo="bar"), f)
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=payload,
+        )
+        assert res.status_code == 422
+        assert "has no key 'task_list'" in res.json()["detail"]
+    # case 3
+    with open(file_path, "w") as f:
+        json.dump(dict(task_list="foo"), f)
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=payload,
+        )
+        assert res.status_code == 422
+        assert "not a Python list" in res.json()["detail"]
 
 
 async def test_remove_directory(
