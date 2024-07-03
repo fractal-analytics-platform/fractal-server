@@ -66,7 +66,7 @@ async def collect_tasks_pip(
     response: Response,
     user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
-) -> CollectionStateReadV2:  # State[TaskCollectStatus]
+) -> CollectionStateReadV2:
     """
     Task collection endpoint
 
@@ -124,10 +124,24 @@ async def collect_tasks_pip(
             package_path = get_absolute_venv_path(venv_path)
             collection_path = get_collection_path(package_path)
             with collection_path.open() as f:
-                task_collect_status = json.load(f)
-            for task in [
-                TaskReadV2(**task) for task in task_collect_status["task_list"]
-            ]:
+                task_collect_data = json.load(f)
+
+            if not isinstance(task_collect_data, dict):
+                raise ValidationError(
+                    f"{collection_path=} is not a Python dictionary."
+                )
+            if "task_list" not in task_collect_data:
+                raise ValidationError(
+                    f"{collection_path=} has no key 'task_list'."
+                )
+            if not isinstance(task_collect_data["task_list"], list):
+                raise ValidationError(
+                    f"{collection_path=}.task_list is not a Python list."
+                )
+
+            for task in task_collect_data["task_list"]:
+
+                task = TaskReadV2(**task)
                 db_task = await db.get(TaskV2, task.id)
                 if (
                     (not db_task)
@@ -164,8 +178,8 @@ async def collect_tasks_pip(
                     f"Original ValidationError: {e}"
                 ),
             )
-        task_collect_status["info"] = "Already installed"
-        state = CollectionStateV2(data=task_collect_status)
+        task_collect_data["info"] = "Already installed"
+        state = CollectionStateV2(data=task_collect_data)
         response.status_code == status.HTTP_200_OK
         await db.close()
         return state
