@@ -109,8 +109,24 @@ def run_command_over_ssh(
             raise e
 
     raise ValueError(
-        f"Reached last attempt ({max_attempts=}) for running '{cmd}'"
+        f"Reached last attempt ({max_attempts=}) for running '{cmd}' over SSH"
     )
+
+
+def put_over_ssh(
+    *,
+    local: str,
+    remote: str,
+    connection: Connection,
+) -> None:
+    try:
+        connection.put(local=local, remote=remote)
+    except Exception as e:
+        logger.error(
+            f"Transferring {local=} to {remote=} over SSH failed.\n"
+            f"Original Error:\n{str(e)}."
+        )
+        raise e
 
 
 def _mkdir_over_ssh(

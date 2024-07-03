@@ -17,6 +17,7 @@ from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
+from fractal_server.ssh._fabric import put_over_ssh
 from fractal_server.ssh._fabric import run_command_over_ssh
 from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.utils import get_python_interpreter_v2
@@ -85,16 +86,17 @@ def _customize_and_run_template(
     script_path_local = Path(tmpdir) / script_filename
     with script_path_local.open("w") as f:
         f.write(script_contents)
-    # Transfer script to remote host
 
+    # Transfer script to remote host
     script_path_remote = os.path.join(
         settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR,
         f"script_{abs(hash(tmpdir))}{script_filename}",
     )
     logger.info(f"Now transfer {script_path_local=} to {script_path_remote=}")
-    connection.put(
+    put_over_ssh(
         local=script_path_local,
         remote=script_path_remote,
+        connection=connection,
     )
     # Execute script remotely
     cmd = f"bash {script_path_remote}"
