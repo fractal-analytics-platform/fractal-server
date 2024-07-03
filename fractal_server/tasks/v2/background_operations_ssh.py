@@ -112,38 +112,43 @@ async def background_collect_pip_ssh(
     connection: Connection,
 ) -> None:
 
-    # Prepare replacements for task-collection scripts
-    settings = Inject(get_settings)
-    python_bin = get_python_interpreter_v2(version=task_pkg.python_version)
-    package_version = "" if task_pkg.package_version is None else ""
-
-    install_string = task_pkg.package
-    if task_pkg.package_extras is not None:
-        install_string = f"{install_string}[{task_pkg.package_extras}]"
-    if task_pkg.package_version is not None:
-        install_string = f"{install_string}=={task_pkg.package_version}"
-    package_env_dir = (
-        Path(settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR)
-        / ".fractal"
-        / f"{task_pkg.package_name}{package_version}"
-    ).as_posix()
-
-    replacements = [
-        ("__PACKAGE_NAME__", task_pkg.package_name),
-        ("__PACKAGE_ENV_DIR__", package_env_dir),
-        ("__PACKAGE__", task_pkg.package),
-        ("__PYTHON__", python_bin),
-        ("__INSTALL_STRING__", install_string),
-    ]
-
     with TemporaryDirectory() as tmpdir:
+        LOGGER_NAME = "task_collection_ssh"
+        log_file_path = Path(tmpdir) / "log"
+        logger = set_logger(
+            logger_name=LOGGER_NAME,
+            log_file_path=log_file_path,
+        )
+
+        # Prepare replacements for task-collection scripts
+        settings = Inject(get_settings)
+        python_bin = get_python_interpreter_v2(version=task_pkg.python_version)
+        package_version = (
+            ""
+            if task_pkg.package_version is None
+            else task_pkg.package_version
+        )
+
+        install_string = task_pkg.package
+        if task_pkg.package_extras is not None:
+            install_string = f"{install_string}[{task_pkg.package_extras}]"
+        if task_pkg.package_version is not None:
+            install_string = f"{install_string}=={task_pkg.package_version}"
+        package_env_dir = (
+            Path(settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR)
+            / ".fractal"
+            / f"{task_pkg.package_name}{package_version}"
+        ).as_posix()
+
+        replacements = [
+            ("__PACKAGE_NAME__", task_pkg.package_name),
+            ("__PACKAGE_ENV_DIR__", package_env_dir),
+            ("__PACKAGE__", task_pkg.package),
+            ("__PYTHON__", python_bin),
+            ("__INSTALL_STRING__", install_string),
+        ]
+
         with next(get_sync_db()) as db:
-            LOGGER_NAME = "task_collection_ssh"
-            log_file_path = Path(tmpdir) / "log"
-            logger = set_logger(
-                logger_name=LOGGER_NAME,
-                log_file_path=log_file_path,
-            )
 
             try:
 
