@@ -26,7 +26,9 @@ async def download_package(
     """
     Download package to destination and return wheel-file path.
     """
-    interpreter = get_python_interpreter_v2(version=task_pkg.python_version)
+    interpreter = get_python_interpreter_v2(
+        python_version=task_pkg.python_version
+    )
     pip = f"{interpreter} -m pip"
     if task_pkg.package_version is None:
         package_and_version = f"{task_pkg.package_name}"
