@@ -19,7 +19,7 @@ from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import CollectionStateV2
 from ....models.v2 import TaskV2
-from ....schemas.state import StateRead
+from ....schemas.v2 import CollectionStateReadV2
 from ....schemas.v2 import TaskCollectPipV2
 from ....schemas.v2 import TaskCollectStatusV2
 from ....security import current_active_user
@@ -43,7 +43,7 @@ logger = set_logger(__name__)
 
 @router.post(
     "/collect/pip/",
-    response_model=StateRead,
+    response_model=CollectionStateReadV2,
     responses={
         201: dict(
             description=(
@@ -64,7 +64,7 @@ async def collect_tasks_pip(
     response: Response,
     user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
-) -> StateRead:  # State[TaskCollectStatus]
+) -> CollectionStateReadV2:  # State[TaskCollectStatus]
     """
     Task collection endpoint
 
@@ -215,13 +215,13 @@ async def collect_tasks_pip(
     return state
 
 
-@router.get("/collect/{state_id}/", response_model=StateRead)
+@router.get("/collect/{state_id}/", response_model=CollectionStateReadV2)
 async def check_collection_status(
     state_id: int,
     user: User = Depends(current_active_user),
     verbose: bool = False,
     db: AsyncSession = Depends(get_async_db),
-) -> StateRead:  # State[TaskCollectStatus]
+) -> CollectionStateReadV2:  # State[TaskCollectStatus]
     """
     Check status of background task collection
     """

@@ -11,7 +11,7 @@ from .....logger import set_logger
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import CollectionStateV2
-from ....schemas.state import StateRead
+from ....schemas.v2 import CollectionStateReadV2
 from ....schemas.v2 import TaskCollectPipV2
 from ....security import current_active_user
 from ....security import current_active_verified_user
@@ -27,7 +27,7 @@ logger = set_logger(__name__)
 
 @router.post(
     "/collect/pip/",
-    response_model=StateRead,
+    response_model=CollectionStateReadV2,
     responses={
         201: dict(
             description=(
@@ -49,7 +49,7 @@ async def collect_tasks_pip(
     request: Request,
     user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
-) -> StateRead:
+) -> CollectionStateReadV2:
     """
     Task collection endpoint (SSH version)
     """
@@ -73,13 +73,13 @@ async def collect_tasks_pip(
 
 # FIXME SSH: check_collection_status code is almost identical to the
 # one in task_collection.py
-@router.get("/collect/{state_id}/", response_model=StateRead)
+@router.get("/collect/{state_id}/", response_model=CollectionStateReadV2)
 async def check_collection_status(
     state_id: int,
     verbose: bool = False,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> StateRead:  # State[TaskCollectStatus]
+) -> CollectionStateReadV2:  # State[TaskCollectStatus]
     """
     Check status of background task collection
     """

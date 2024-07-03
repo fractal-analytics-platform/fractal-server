@@ -17,6 +17,7 @@ from .manifest import TaskManifestV1  # noqa: F401
 from .project import ProjectCreateV1  # noqa: F401
 from .project import ProjectReadV1  # noqa: F401
 from .project import ProjectUpdateV1  # noqa: F401
+from .state import StateRead  # noqa: F401
 from .task import TaskCreateV1  # noqa: F401
 from .task import TaskImportV1  # noqa: F401
 from .task import TaskReadV1  # noqa: F401
