@@ -22,7 +22,16 @@ def get_ssh_connection(
     key_filename: Optional[str] = None,
 ) -> Connection:
     """
-    Create a fabric Connection object based on settings or explicit arguments.
+    Create a `fabric.Connection` object based on fractal-server settings
+    or explicit arguments.
+
+    Args:
+        host:
+        user:
+        key_filename:
+
+    Returns:
+        Fabric connection object
     """
     settings = Inject(get_settings)
     if host is None:
@@ -41,19 +50,23 @@ def get_ssh_connection(
     return connection
 
 
-def open_connection(connection: Connection) -> None:
+def check_connection(connection: Connection) -> None:
     """
-    Open the SSH connection.
+    Open the SSH connection and handle exceptions.
 
-    This function is called at the beginning of other SSH functions, so that
-    we can provide a meaningful error.
+    This function can be called from within other functions that use
+    `connection`, so that we can provide a meaningful error in case the
+    SSH connection cannot be opened.
+
+    Args:
+        connection: Fabric connection object
     """
     if not connection.is_connected:
         try:
             connection.open()
         except Exception as e:
             raise RuntimeError(
-                f"Cannot open SSH connection. Original error: {str(e)}"
+                f"Cannot open SSH connection (original error: '{str(e)}')."
             )
 
 
@@ -74,7 +87,6 @@ def run_command_over_ssh(
     Returns:
         Standard output of the command, if successful.
     """
-    open_connection(connection)
     t_0 = time.perf_counter()
     ind_attempt = 0
     while ind_attempt <= max_attempts:
@@ -138,7 +150,16 @@ def put_over_ssh(
     connection: Connection,
     logger_name: Optional[str] = None,
 ) -> None:
-    open_connection(connection)
+    """
+    Transfer a file via SSH
+
+    Args:
+        local: Local path to file
+        remote: Target path on remote host
+        connection: Fabric connection object
+        logger_name: Name of the logger
+
+    """
     try:
         connection.put(local=local, remote=remote)
     except Exception as e:
@@ -161,8 +182,6 @@ def _mkdir_over_ssh(
         connection:
         parents:
     """
-    open_connection(connection)
-
     # FIXME SSH: try using `mkdir` method of `paramiko.SFTPClient`
     if parents:
         cmd = f"mkdir -p {folder}"
