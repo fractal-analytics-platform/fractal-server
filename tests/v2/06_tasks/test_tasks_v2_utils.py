@@ -28,10 +28,10 @@ async def test_get_python_interpreter_v2(
     # Failures for invalid versions
     with pytest.raises(ValueError) as e:
         get_python_interpreter_v2(python_version=None)
-    assert "Invalid version=None" in str(e.value)
+    assert "Invalid python_version=None" in str(e.value)
     with pytest.raises(ValueError) as e:
         get_python_interpreter_v2(python_version=123)
-    assert "Invalid version=" in str(e.value)
+    assert "Invalid python_version=" in str(e.value)
 
     # Failures for requiring missing Python version
     with pytest.raises(ValueError) as e:
