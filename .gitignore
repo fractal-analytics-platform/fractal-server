@@ -42,3 +42,4 @@ ssh_config.json
 tests/data/slurm_docker_images/head/fractal_server_local.tar.gz
 tests/data/slurm_docker_images/head/public_ssh_key
 tests/data/ssh_config.json
+.egg-info
