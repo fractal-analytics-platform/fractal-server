@@ -5,11 +5,13 @@ from fastapi import HTTPException
 from fastapi import Request
 from fastapi import Response
 from fastapi import status
+from pydantic.error_wrappers import ValidationError
 
 from .....config import get_settings
 from .....logger import reset_logger_handlers
 from .....logger import set_logger
 from .....syringe import Inject
+from .....tasks.v2._TaskCollectPip import _TaskCollectPip
 from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import CollectionStateV2
@@ -63,6 +65,16 @@ async def collect_tasks_pip(
             settings.FRACTAL_TASKS_PYTHON_DEFAULT_VERSION
         )
 
+    # Validate payload as _TaskCollectPip, which has more strict checks than
+    # TaskCollectPip
+    try:
+        task_pkg = _TaskCollectPip(**task_collect.dict(exclude_unset=True))
+    except ValidationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid task-collection object. Original error: {e}",
+        )
+
     # Note: we don't use TaskCollectStatusV2 here for the JSON column `data`
     state = CollectionStateV2(
         data=dict(status="pending", package=task_collect.package)
@@ -73,7 +85,7 @@ async def collect_tasks_pip(
     background_tasks.add_task(
         background_collect_pip_ssh,
         state.id,
-        task_collect,
+        task_pkg,
         request.app.state.connection,
     )
 
