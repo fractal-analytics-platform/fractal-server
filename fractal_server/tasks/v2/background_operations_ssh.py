@@ -72,7 +72,7 @@ def _customize_and_run_template(
         connection:
     """
     logger = get_logger(logger_name)
-    logger.info(f"Handling {script_filename} - START")
+    logger.debug(f"_customize_and_run_template {script_filename} - START")
     settings = Inject(get_settings)
 
     # Read template
@@ -92,7 +92,7 @@ def _customize_and_run_template(
         settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR,
         f"script_{abs(hash(tmpdir))}{script_filename}",
     )
-    logger.info(f"Now transfer {script_path_local=} to {script_path_remote=}")
+    logger.debug(f"Now transfer {script_path_local=} over SSH.")
     put_over_ssh(
         local=script_path_local,
         remote=script_path_remote,
@@ -102,11 +102,11 @@ def _customize_and_run_template(
 
     # Execute script remotely
     cmd = f"bash {script_path_remote}"
-    logger.info(f"Now run {cmd=}")
+    logger.debug(f"Now run '{cmd}' over SSH.")
     stdout = run_command_over_ssh(cmd=cmd, connection=connection)
-    logger.info(stdout)
-    logger.info(f"Handling {script_filename} - END")
+    logger.debug(f"Standard output of '{cmd}':\n{stdout}")
 
+    logger.debug(f"_customize_and_run_template {script_filename} - END")
     return stdout
 
 
@@ -118,7 +118,7 @@ async def background_collect_pip_ssh(
     """
     Collect a task package over SSH
 
-    Since this function is run as a background task, exceptions must be
+    This function is run as a background task, therefore exceptions must be
     handled.
     """
     # Work within a temporary folder, where also logs will be placed
