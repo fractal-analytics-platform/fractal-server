@@ -206,7 +206,7 @@ async def test_collection_validation_error(
             json=payload,
         )
         assert res.status_code == 422
-        assert "not a Python dictionary" in res.json()["detail"]
+        assert "it's not a Python dictionary" in res.json()["detail"]
     # case 2
     with open(file_path, "w") as f:
         json.dump(dict(foo="bar"), f)
@@ -216,7 +216,7 @@ async def test_collection_validation_error(
             json=payload,
         )
         assert res.status_code == 422
-        assert "has no key 'task_list'" in res.json()["detail"]
+        assert "it has no key 'task_list'" in res.json()["detail"]
     # case 3
     with open(file_path, "w") as f:
         json.dump(dict(task_list="foo"), f)
@@ -226,7 +226,7 @@ async def test_collection_validation_error(
             json=payload,
         )
         assert res.status_code == 422
-        assert "not a Python list" in res.json()["detail"]
+        assert "'task_list' is not a Python list" in res.json()["detail"]
 
 
 async def test_remove_directory(

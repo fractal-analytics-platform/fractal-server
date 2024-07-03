@@ -52,17 +52,11 @@ async def fractal_tasks_mock(
             collection_data = json.load(f)
 
         if not isinstance(collection_data, dict):
-            raise ValidationError(
-                f"{collection_data=} is not a Python dictionary."
-            )
+            raise ValidationError
         if "task_list" not in collection_data:
-            raise ValidationError(
-                f"{collection_data=} has no key 'task_list'."
-            )
+            raise ValidationError
         if not isinstance(collection_data["task_list"], list):
-            raise ValidationError(
-                f"{collection_data=}.task_list is not a Python list."
-            )
+            raise ValidationError
 
         collection_data["task_list"] = [
             TaskReadV2(**task) for task in collection_data["task_list"]

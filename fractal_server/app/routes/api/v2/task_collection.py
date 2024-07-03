@@ -123,37 +123,33 @@ async def collect_tasks_pip(
         try:
             package_path = get_absolute_venv_path(venv_path)
             collection_path = get_collection_path(package_path)
-            with collection_path.open() as f:
+            with collection_path.open("r") as f:
                 task_collect_data = json.load(f)
 
+            err_msg = (
+                "Cannot collect package, possible reason: an old version of "
+                "the same package has already been collected.\n"
+                f"{str(collection_path)} has invalid content: "
+            )
             if not isinstance(task_collect_data, dict):
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=(
-                        f"Collection '{str(collection_path)}' is not a Python "
-                        "dictionary."
-                    ),
+                    detail=f"{err_msg} it's not a Python dictionary.",
                 )
-            if "task_list" not in task_collect_data:
+            if "task_list" not in task_collect_data.keys():
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=(
-                        f"Collection '{str(collection_path)}' has no key "
-                        "'task_list'."
-                    ),
+                    detail=f"{err_msg} it has no key 'task_list'.",
                 )
             if not isinstance(task_collect_data["task_list"], list):
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=(
-                        f"Collection '{str(collection_path)} -> task_list' "
-                        "is not a Python list."
-                    ),
+                    detail=f"{err_msg} 'task_list' is not a Python list.",
                 )
 
-            for task in task_collect_data["task_list"]:
+            for task_dict in task_collect_data["task_list"]:
 
-                task = TaskReadV2(**task)
+                task = TaskReadV2(**task_dict)
                 db_task = await db.get(TaskV2, task.id)
                 if (
                     (not db_task)
@@ -215,7 +211,7 @@ async def collect_tasks_pip(
     # All checks are OK, proceed with task collection
     collection_status = dict(
         status="pending",
-        venv_path=str(venv_path.relative_to(settings.FRACTAL_TASKS_DIR)),
+        venv_path=venv_path.relative_to(settings.FRACTAL_TASKS_DIR).as_posix(),
         package=task_pkg.package,
     )
     state = CollectionStateV2(data=collection_status)
