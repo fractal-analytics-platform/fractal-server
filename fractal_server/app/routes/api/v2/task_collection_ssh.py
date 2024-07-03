@@ -62,8 +62,8 @@ async def collect_tasks_pip(
 
     background_tasks.add_task(
         background_collect_pip_ssh,
-        task_collect,
         state.id,
+        task_collect,
         request.app.state.connection,
     )
 
