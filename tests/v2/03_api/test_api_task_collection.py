@@ -153,6 +153,83 @@ async def test_task_collection_from_wheel(
         assert res.status_code == 422
 
 
+async def test_task_collection_from_wheel_non_canonical(
+    db,
+    client,
+    MockCurrentUser,
+    override_settings_factory,
+    tmp_path: Path,
+    testdata_path: Path,
+):
+    """
+    Same as test_task_collection_from_wheel, but package has a
+    non-canonical name.
+    """
+
+    # Note 1: Use function-scoped `FRACTAL_TASKS_DIR` to avoid sharing state.
+    # Note 2: Set logging level to CRITICAL, and then make sure that
+    # task-collection logs are included
+    override_settings_factory(
+        FRACTAL_TASKS_DIR=(tmp_path / "FRACTAL_TASKS_DIR"),
+        FRACTAL_LOGGING_LEVEL=logging.CRITICAL,
+        FRACTAL_TASKS_PYTHON_DEFAULT_VERSION=CURRENT_PYTHON,
+    )
+    # settings = Inject(get_settings)
+
+    # Prepare absolute path to wheel file
+    wheel_path = (
+        testdata_path.parent
+        / "v2/fractal_tasks_non_canonical/dist"
+        / "FrAcTaL_TaSkS_NoN_CaNoNiCaL-0.0.1-py3-none-any.whl"
+    )
+    payload_package = wheel_path.as_posix()
+
+    # Prepare and validate payload
+    payload = dict(package=payload_package, package_extras="my_extra")
+    payload["python_version"] = CURRENT_PYTHON
+    debug(payload)
+
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        # Trigger task collection
+        res = await client.post(
+            f"{PREFIX}/collect/pip/",
+            json=payload,
+        )
+        assert res.status_code == 201
+        assert res.json()["data"]["status"] == "pending"
+        state = res.json()
+        state_id = state["id"]
+        venv_path = state["data"]["venv_path"]
+        assert "fractal-tasks-non-canonical" in venv_path
+
+        # Get collection info
+        res = await client.get(f"{PREFIX}/collect/{state_id}/")
+        assert res.status_code == 200
+        state = res.json()
+        data = state["data"]
+        task_list = data["task_list"]
+
+        # Verify how package name is used in source and folders
+        assert "fractal_tasks_non_canonical" in task_list[0]["source"]
+        python_path, task_path = task_list[0]["command_non_parallel"].split()
+        assert (
+            "FRACTAL_TASKS_DIR/.fractal/fractal-tasks-non-canonical0.0.1"
+            in python_path
+        )
+        assert (
+            "FRACTAL_TASKS_DIR/.fractal/fractal-tasks-non-canonical0.0.1"
+            in task_path
+        )
+        assert "fractal_tasks_non_canonical" in task_path
+
+        # Check that log were written, even with CRITICAL logging level
+        log = data["log"]
+        assert log is not None
+        # Check that my_extra was included, in a local-package collection
+        assert ".whl[my_extra]" in log
+        assert data["status"] == "OK"
+
+
 async def test_task_collection_from_pypi(
     db,
     client,

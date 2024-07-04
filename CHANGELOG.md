@@ -41,6 +41,7 @@ SSH features:
 * Testing:
     * Test the way `FractalProcessPoolExecutor` spawns processes and threads (\#1579).
     * Remove `event_loop` fixture: every test will run on its own event loop (\#1558).
+    * Test task collection with non-canonical package name (\#1602).
 
 # 2.2.0
 
