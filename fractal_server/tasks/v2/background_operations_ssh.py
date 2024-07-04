@@ -155,7 +155,10 @@ async def background_collect_pip_ssh(
                     install_string = (
                         f"{install_string}[{task_pkg.package_extras}]"
                     )
-                if task_pkg.package_version is not None:
+                if (
+                    task_pkg.package_version is not None
+                    and not task_pkg.is_local_package
+                ):
                     install_string = (
                         f"{install_string}=={task_pkg.package_version}"
                     )
