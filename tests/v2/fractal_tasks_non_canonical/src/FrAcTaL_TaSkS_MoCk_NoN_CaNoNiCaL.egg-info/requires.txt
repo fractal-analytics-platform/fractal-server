@@ -1,8 +1,0 @@
-pydantic<2
-
-[dev]
-fractal-tasks-core
-build
-
-[my_extra]
-devtools
