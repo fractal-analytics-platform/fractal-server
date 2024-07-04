@@ -148,15 +148,6 @@ async def collect_tasks_pip(
                     detail=f"{err_msg} 'task_list' is not a Python list.",
                 )
 
-            if "status" not in task_collect_data.keys():
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=f"{err_msg} it has no key 'status'.",
-                )
-            else:
-                # Validate 'status'
-                CollectionStatusV2(task_collect_data["status"])
-
             for task_dict in task_collect_data["task_list"]:
 
                 task = TaskReadV2(**task_dict)
@@ -274,6 +265,12 @@ async def check_collection_status(
     # In some cases (i.e. a successful or ongoing task collection),
     # state.data.log is not set; if so, we collect the current logs.
     if verbose and not state.data.get("log"):
+        if "venv_path" not in state.data.keys():
+            await db.close()
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"No 'venv_path' in CollectionStateV2[{state_id}].data",
+            )
         state.data["log"] = get_collection_log(Path(state.data["venv_path"]))
         state.data["venv_path"] = str(state.data["venv_path"])
     reset_logger_handlers(logger)

@@ -1,6 +1,8 @@
 import logging
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
+from typing import Any
 from typing import Literal
 from typing import Optional
 
@@ -9,6 +11,7 @@ from pydantic import validator
 
 from .._validators import valdictkeys
 from .._validators import valstr
+from fractal_server.app.schemas._validators import valutc
 
 
 class CollectionStatusV2(str, Enum):
@@ -84,3 +87,12 @@ class TaskCollectPipV2(BaseModel):
                 "Cannot provide version when package is a Wheel file."
             )
         return v
+
+
+class CollectionStateReadV2(BaseModel):
+
+    id: Optional[int]
+    data: dict[str, Any]
+    timestamp: datetime
+
+    _timestamp = validator("timestamp", allow_reuse=True)(valutc("timestamp"))
