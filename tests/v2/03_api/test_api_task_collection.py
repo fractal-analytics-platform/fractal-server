@@ -279,3 +279,14 @@ async def test_read_log_from_file(db, tmp_path, MockCurrentUser, client):
         res = await client.get(f"{PREFIX}/collect/{state.id}/?verbose=true")
 
     assert res.json()["data"]["log"] == LOG
+
+    state2 = CollectionStateV2()
+    db.add(state2)
+    await db.commit()
+    await db.refresh(state2)
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        res = await client.get(f"{PREFIX}/collect/{state2.id}/?verbose=true")
+    assert res.status_code == 422
+    assert res.json()["detail"] == (
+        f"No 'venv_path' in CollectionStateV2[{state2.id}].data"
+    )
