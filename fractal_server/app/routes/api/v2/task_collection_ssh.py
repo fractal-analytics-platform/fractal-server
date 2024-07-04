@@ -104,7 +104,7 @@ async def check_collection_status(
     verbose: bool = False,
     user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_async_db),
-) -> CollectionStateReadV2:  # State[TaskCollectStatus]
+) -> CollectionStateReadV2:
     """
     Check status of background task collection
     """
