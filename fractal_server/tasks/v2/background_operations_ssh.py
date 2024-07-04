@@ -284,6 +284,7 @@ async def background_collect_pip_ssh(
                 collection_state = db.get(CollectionStateV2, state_id)
                 collection_state.data["log"] = log_file_path.open("r").read()
                 collection_state.data["freeze"] = stdout_pip_freeze
+                collection_state.data["status"] = CollectionStatusV2.OK
                 flag_modified(collection_state, "data")
                 db.commit()
                 logger.debug("finalising - END")
