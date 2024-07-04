@@ -1,5 +1,5 @@
 import json
-import shlex  # nosec
+import shlex
 import subprocess  # nosec
 from pathlib import Path
 from shutil import copy as shell_copy
@@ -257,14 +257,30 @@ async def collect_task_custom(
     db: AsyncSession = Depends(get_async_db),
 ) -> CollectionStateReadV2:
 
+    settings = Inject(get_settings)
+
     if task_collect.package_root is None:
+        if task_collect.package_name is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "Must provide at least one of 'package_root' "
+                    "and 'package_name'."
+                ),
+            )
+        if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Cannot infer 'package_root' with 'slurm_ssh' backend.",
+            )
         res = subprocess.run(  # nosec
-            shlex.split(  # nosec
-                f"{task_collect.python_interpreter} -m pip show ???"  # nosec
-            ),  # nosec
-            capture_output=True,  # nosec
-            encoding="utf8",  # nosec
-        )  # nosec
+            shlex.split(
+                f"{task_collect.python_interpreter} "
+                f"-m pip show {task_collect.package_name}"
+            ),
+            capture_output=True,
+            encoding="utf8",
+        )
         package_root = next(
             it.split()[1]
             for it in res.stdout.split("\n")
@@ -281,17 +297,6 @@ async def collect_task_custom(
         package_version=task_collect.version,
     )
     _insert_tasks(task_list=task_list, db=db)
-
-    collection_status = dict(
-        status=CollectionStatusV2.OK,
-        venv_path=...,
-        package=...,
-    )
-    state = CollectionStateV2(data=collection_status)
-    db.add(state)
-    await db.commit()
-    await db.refresh(state)
-    return state
 
 
 @router.get("/collect/{state_id}/", response_model=CollectionStateReadV2)

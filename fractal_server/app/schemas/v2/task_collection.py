@@ -95,7 +95,18 @@ class TaskCollectCustomV2(BaseModel):
     python_interpreter: str
     source: str
     package_root: Optional[str]
+    package_name: Optional[str]
     version: Optional[str]
+
+    _package_name = validator("package_name", allow_reuse=True)(
+        valstr("package_name", accept_none=True)
+    )
+
+    @validator("package_name")
+    def package_name_prevent_injection(cls, value):
+        if (value is not None) and (";" in value):
+            raise ValueError(f"Invalid package_name: {value}")
+        return value
 
     @validator("python_interpreter")
     def package_validator(cls, value):
