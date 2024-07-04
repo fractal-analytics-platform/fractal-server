@@ -250,11 +250,9 @@ async def collect_tasks_pip(
     return state
 
 
-@router.post("/collect/custom/")
+@router.post("/collect/custom/", status_code=201)
 async def collect_task_custom(
     task_collect: TaskCollectCustomV2,
-    background_tasks: BackgroundTasks,
-    response: Response,
     user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
 ) -> CollectionStateReadV2:
