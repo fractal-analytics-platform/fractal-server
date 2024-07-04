@@ -12,6 +12,7 @@ from pydantic import validator
 from .._validators import valdictkeys
 from .._validators import valstr
 from fractal_server.app.schemas._validators import valutc
+from fractal_server.app.schemas.v2 import ManifestV2
 
 
 class CollectionStatusV2(str, Enum):
@@ -87,6 +88,22 @@ class TaskCollectPipV2(BaseModel):
                 "Cannot provide version when package is a Wheel file."
             )
         return v
+
+
+class TaskCollectCustomV2(BaseModel):
+    manifest: ManifestV2
+    python_interpreter: str
+    source: str
+    package_root: Optional[str]
+    version: Optional[str]
+
+    @validator("python_interpreter")
+    def package_validator(cls, value):
+        if not Path(value).is_absolute():
+            raise ValueError(
+                f"Python interpreter path must be absolute: (given {value})."
+            )
+        return value
 
 
 class CollectionStateReadV2(BaseModel):

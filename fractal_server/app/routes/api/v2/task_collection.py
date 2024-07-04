@@ -1,4 +1,6 @@
 import json
+import shlex  # nosec
+import subprocess  # nosec
 from pathlib import Path
 from shutil import copy as shell_copy
 from tempfile import TemporaryDirectory
@@ -22,6 +24,7 @@ from ....models.v2 import CollectionStateV2
 from ....models.v2 import TaskV2
 from ....schemas.v2 import CollectionStateReadV2
 from ....schemas.v2 import CollectionStatusV2
+from ....schemas.v2 import TaskCollectCustomV2
 from ....schemas.v2 import TaskCollectPipV2
 from ....schemas.v2 import TaskReadV2
 from ....security import current_active_user
@@ -32,12 +35,17 @@ from fractal_server.tasks.utils import get_collection_log
 from fractal_server.tasks.utils import get_collection_path
 from fractal_server.tasks.utils import slugify_task_name
 from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
+from fractal_server.tasks.v2.background_operations import _insert_tasks
+from fractal_server.tasks.v2.background_operations import (
+    _prepare_tasks_metadata,
+)
 from fractal_server.tasks.v2.background_operations import (
     background_collect_pip,
 )
 from fractal_server.tasks.v2.endpoint_operations import create_package_dir_pip
 from fractal_server.tasks.v2.endpoint_operations import download_package
 from fractal_server.tasks.v2.endpoint_operations import inspect_package
+
 
 router = APIRouter()
 
@@ -239,6 +247,52 @@ async def collect_tasks_pip(
     response.status_code = status.HTTP_201_CREATED
     await db.close()
 
+    return state
+
+
+@router.post("/collect/custom/")
+async def collect_task_custom(
+    task_collect: TaskCollectCustomV2,
+    background_tasks: BackgroundTasks,
+    response: Response,
+    user: User = Depends(current_active_verified_user),
+    db: AsyncSession = Depends(get_async_db),
+) -> CollectionStateReadV2:
+
+    if task_collect.package_root is None:
+        res = subprocess.run(  # nosec
+            shlex.split(  # nosec
+                f"{task_collect.python_interpreter} -m pip show ???"  # nosec
+            ),  # nosec
+            capture_output=True,  # nosec
+            encoding="utf8",  # nosec
+        )  # nosec
+        package_root = next(
+            it.split()[1]
+            for it in res.stdout.split("\n")
+            if it.startswith("Location")
+        )
+    else:
+        package_root = task_collect.package_root
+
+    task_list = _prepare_tasks_metadata(
+        package_manifest=task_collect.manifest,
+        package_source=task_collect.source,
+        python_bin=task_collect.python_interpreter,
+        package_root=package_root,
+        package_version=task_collect.version,
+    )
+    _insert_tasks(task_list=task_list, db=db)
+
+    collection_status = dict(
+        status=CollectionStatusV2.OK,
+        venv_path=...,
+        package=...,
+    )
+    state = CollectionStateV2(data=collection_status)
+    db.add(state)
+    await db.commit()
+    await db.refresh(state)
     return state
 
 
