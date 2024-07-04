@@ -21,6 +21,7 @@ from ....db import get_async_db
 from ....models.v2 import CollectionStateV2
 from ....models.v2 import TaskV2
 from ....schemas.v2 import CollectionStateReadV2
+from ....schemas.v2 import CollectionStatusV2
 from ....schemas.v2 import TaskCollectPipV2
 from ....schemas.v2 import TaskReadV2
 from ....security import current_active_user
@@ -147,6 +148,15 @@ async def collect_tasks_pip(
                     detail=f"{err_msg} 'task_list' is not a Python list.",
                 )
 
+            if "status" not in task_collect_data.keys():
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"{err_msg} it has no key 'status'.",
+                )
+            else:
+                # Validate 'status'
+                CollectionStatusV2(task_collect_data["status"])
+
             for task_dict in task_collect_data["task_list"]:
 
                 task = TaskReadV2(**task_dict)
@@ -210,7 +220,7 @@ async def collect_tasks_pip(
 
     # All checks are OK, proceed with task collection
     collection_status = dict(
-        status="pending",
+        status=CollectionStatusV2.PENDING,
         venv_path=venv_path.relative_to(settings.FRACTAL_TASKS_DIR).as_posix(),
         package=task_pkg.package,
     )

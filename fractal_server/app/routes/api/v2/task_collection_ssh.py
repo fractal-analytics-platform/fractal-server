@@ -16,6 +16,7 @@ from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import CollectionStateV2
 from ....schemas.v2 import CollectionStateReadV2
+from ....schemas.v2 import CollectionStatusV2
 from ....schemas.v2 import TaskCollectPipV2
 from ....security import current_active_user
 from ....security import current_active_verified_user
@@ -77,7 +78,9 @@ async def collect_tasks_pip(
 
     # Note: we don't use TaskCollectStatusV2 here for the JSON column `data`
     state = CollectionStateV2(
-        data=dict(status="pending", package=task_collect.package)
+        data=dict(
+            status=CollectionStatusV2.PENDING, package=task_collect.package
+        )
     )
     db.add(state)
     await db.commit()

@@ -8,6 +8,7 @@ from devtools import debug  # noqa
 
 from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import TaskV2
+from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 from fractal_server.tasks.utils import COLLECTION_LOG_FILENAME
@@ -65,7 +66,7 @@ async def test_task_collection_from_wheel(
             json=payload,
         )
         assert res.status_code == 201
-        assert res.json()["data"]["status"] == "pending"
+        assert res.json()["data"]["status"] == CollectionStatusV2.PENDING
         state = res.json()
         state_id = state["id"]
         venv_path = state["data"]["venv_path"]
@@ -186,7 +187,7 @@ async def test_task_collection_from_pypi(
             json=payload,
         )
         assert res.status_code == 201
-        assert res.json()["data"]["status"] == "pending"
+        assert res.json()["data"]["status"] == CollectionStatusV2.PENDING
         state = res.json()
         state_id = state["id"]
         venv_path = state["data"]["venv_path"]

@@ -1,4 +1,5 @@
 import logging
+from enum import Enum
 from pathlib import Path
 from typing import Literal
 from typing import Optional
@@ -8,6 +9,14 @@ from pydantic import validator
 
 from .._validators import valdictkeys
 from .._validators import valstr
+
+
+class CollectionStatusV2(str, Enum):
+    PENDING = "pending"
+    INSTALLING = "installing"
+    COLLECTING = "collecting"
+    FAIL = "fail"
+    OK = "OK"
 
 
 class TaskCollectPipV2(BaseModel):

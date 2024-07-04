@@ -5,6 +5,7 @@ from pathlib import Path
 
 from devtools import debug  # noqa
 
+from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 
@@ -155,7 +156,7 @@ async def test_missing_task_executable(
             f"{PREFIX}/collect/pip/", json=dict(package=wheel_path.as_posix())
         )
         assert res.status_code == 201
-        assert res.json()["data"]["status"] == "pending"
+        assert res.json()["data"]["status"] == CollectionStatusV2.PENDING
         state_id = res.json()["id"]
         # Inspect collection outcome
         res = await client.get(f"{PREFIX}/collect/{state_id}/?verbose=True")

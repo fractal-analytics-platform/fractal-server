@@ -6,6 +6,7 @@ from devtools import debug
 from pydantic import BaseModel
 
 from fractal_server.app.models.v2 import CollectionStateV2
+from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
@@ -103,7 +104,9 @@ async def test_logs_failed_collection(
     task_pkg.package_manifest = pkg_info["pkg_manifest"]
     venv_path = create_package_dir_pip(task_pkg=task_pkg)
     collection_status = dict(
-        status="pending", venv_path=str(venv_path), package=task_pkg.package
+        status=CollectionStatusV2.PENDING,
+        venv_path=str(venv_path),
+        package=task_pkg.package,
     )
     state = CollectionStateV2(data=collection_status)
     db.add(state)
@@ -135,7 +138,9 @@ async def test_logs_failed_collection(
     task_pkg.package_manifest = pkg_info["pkg_manifest"]
     venv_path = create_package_dir_pip(task_pkg=task_pkg)
     collection_status = dict(
-        status="pending", venv_path=str(venv_path), package=task_pkg.package
+        status=CollectionStatusV2.PENDING,
+        venv_path=str(venv_path),
+        package=task_pkg.package,
     )
     state = CollectionStateV2(data=collection_status)
     db.add(state)

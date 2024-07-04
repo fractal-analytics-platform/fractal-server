@@ -23,6 +23,7 @@ from .task import TaskImportV2  # noqa F401
 from .task import TaskLegacyReadV2  # noqa F401
 from .task import TaskReadV2  # noqa F401
 from .task import TaskUpdateV2  # noqa F401
+from .task_collection import CollectionStatusV2  # noqa F401
 from .task_collection import TaskCollectPipV2  # noqa F401
 from .workflow import WorkflowCreateV2  # noqa F401
 from .workflow import WorkflowExportV2  # noqa F401
