@@ -19,7 +19,10 @@ from .....logger import reset_logger_handlers
 from .....logger import set_logger
 from .....syringe import Inject
 from ....db import AsyncSession
+from ....db import DBSyncSession
 from ....db import get_async_db
+from ....db import get_sync_db
+from ....models.v1 import Task as TaskV1
 from ....models.v2 import CollectionStateV2
 from ....models.v2 import TaskV2
 from ....schemas.v2 import CollectionStateReadV2
@@ -254,7 +257,7 @@ async def collect_tasks_pip(
 async def collect_task_custom(
     task_collect: TaskCollectCustomV2,
     user: User = Depends(current_active_verified_user),
-    db: AsyncSession = Depends(get_async_db),
+    db: DBSyncSession = Depends(get_sync_db),
 ) -> CollectionStateReadV2:
 
     settings = Inject(get_settings)
@@ -296,6 +299,24 @@ async def collect_task_custom(
         package_root=package_root,
         package_version=task_collect.version,
     )
+    # Verify that source is not already in use (note: this check is only useful
+    # to provide a user-friendly error message, but `task.source` uniqueness is
+    # already guaranteed by a constraint in the table definition).
+    for task in task_list:
+        stm = select(TaskV2).where(TaskV2.source == task.source)
+        res = await db.execute(stm)
+        if res.scalars().all():
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Source '{task.source}' already used by some TaskV2",
+            )
+        stm = select(TaskV1).where(TaskV1.source == task.source)
+        res = await db.execute(stm)
+        if res.scalars().all():
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Source '{task.source}' already used by some TaskV1",
+            )
     _insert_tasks(task_list=task_list, db=db)
 
 
