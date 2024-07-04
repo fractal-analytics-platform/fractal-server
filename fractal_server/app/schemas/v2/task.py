@@ -54,7 +54,9 @@ class TaskCreateV2(BaseModel, extra=Extra.forbid):
         valstr("command_parallel")
     )
     _source = validator("source", allow_reuse=True)(valstr("source"))
-    _version = validator("version", allow_reuse=True)(valstr("version"))
+    _version = validator("version", allow_reuse=True)(
+        valstr("version", accept_none=True)
+    )
 
     _meta_non_parallel = validator("meta_non_parallel", allow_reuse=True)(
         valdictkeys("meta_non_parallel")

@@ -258,7 +258,7 @@ async def collect_task_custom(
     task_collect: TaskCollectCustomV2,
     user: User = Depends(current_active_verified_user),
     db: DBSyncSession = Depends(get_sync_db),
-) -> CollectionStateReadV2:
+):
 
     settings = Inject(get_settings)
 
@@ -285,18 +285,29 @@ async def collect_task_custom(
             encoding="utf8",
         )
         package_root_dir = next(
-            it.split()[1]
-            for it in res.stdout.split("\n")
-            if it.startswith("Location")
+            (
+                it.split()[1]
+                for it in res.stdout.split("\n")
+                if it.startswith("Location")
+            ),
+            None,
         )
-        package_root = f"{package_root_dir}/{task_collect.package_name}"
+        if package_root_dir is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    f"Package '{task_collect.package_name}' not installed at "
+                    f"{task_collect.python_interpreter}."
+                ),
+            )
+        package_root = Path(f"{package_root_dir}/{task_collect.package_name}")
     else:
-        package_root = task_collect.package_root
+        package_root = Path(task_collect.package_root)
 
     task_list = _prepare_tasks_metadata(
         package_manifest=task_collect.manifest,
         package_source=task_collect.source,
-        python_bin=task_collect.python_interpreter,
+        python_bin=Path(task_collect.python_interpreter),
         package_root=package_root,
         package_version=task_collect.version,
     )
@@ -305,14 +316,14 @@ async def collect_task_custom(
     # already guaranteed by a constraint in the table definition).
     for task in task_list:
         stm = select(TaskV2).where(TaskV2.source == task.source)
-        res = await db.execute(stm)
+        res = db.execute(stm)
         if res.scalars().all():
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=f"Source '{task.source}' already used by some TaskV2",
             )
         stm = select(TaskV1).where(TaskV1.source == task.source)
-        res = await db.execute(stm)
+        res = db.execute(stm)
         if res.scalars().all():
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
