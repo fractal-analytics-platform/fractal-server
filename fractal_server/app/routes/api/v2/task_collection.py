@@ -284,11 +284,12 @@ async def collect_task_custom(
             capture_output=True,
             encoding="utf8",
         )
-        package_root = next(
+        package_root_dir = next(
             it.split()[1]
             for it in res.stdout.split("\n")
             if it.startswith("Location")
         )
+        package_root = f"{package_root_dir}/{task_collect.package_name}"
     else:
         package_root = task_collect.package_root
 
