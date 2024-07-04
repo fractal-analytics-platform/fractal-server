@@ -1,15 +1,25 @@
 import logging
+from datetime import datetime
+from enum import Enum
 from pathlib import Path
+from typing import Any
 from typing import Literal
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import Field
 from pydantic import validator
 
 from .._validators import valdictkeys
 from .._validators import valstr
-from .task import TaskReadV2
+from fractal_server.app.schemas._validators import valutc
+
+
+class CollectionStatusV2(str, Enum):
+    PENDING = "pending"
+    INSTALLING = "installing"
+    COLLECTING = "collecting"
+    FAIL = "fail"
+    OK = "OK"
 
 
 class TaskCollectPipV2(BaseModel):
@@ -79,30 +89,10 @@ class TaskCollectPipV2(BaseModel):
         return v
 
 
-class TaskCollectStatusV2(BaseModel):
-    """
-    TaskCollectStatus class
+class CollectionStateReadV2(BaseModel):
 
-    Attributes:
-        status:
-        package:
-        venv_path:
-        task_list:
-        log:
-        info:
-    """
+    id: Optional[int]
+    data: dict[str, Any]
+    timestamp: datetime
 
-    status: Literal["pending", "installing", "collecting", "fail", "OK"]
-    package: str
-    venv_path: Path
-    task_list: Optional[list[TaskReadV2]] = Field(default=[])
-    log: Optional[str]
-    info: Optional[str]
-
-    def sanitised_dict(self):
-        """
-        Return `self.dict()` after casting `self.venv_path` to a string
-        """
-        d = self.dict()
-        d["venv_path"] = str(self.venv_path)
-        return d
+    _timestamp = validator("timestamp", allow_reuse=True)(valutc("timestamp"))

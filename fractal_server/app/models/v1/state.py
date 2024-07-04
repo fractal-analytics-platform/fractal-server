@@ -9,10 +9,9 @@ from sqlmodel import Field
 from sqlmodel import SQLModel
 
 from ....utils import get_timestamp
-from ...schemas.state import _StateBase
 
 
-class State(_StateBase, SQLModel, table=True):
+class State(SQLModel, table=True):
     """
     Store arbitrary data in the database
 

@@ -19,7 +19,7 @@ from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v1 import State
 from ....models.v1 import Task
-from ....schemas.state import StateRead
+from ....schemas.v1 import StateRead
 from ....schemas.v1 import TaskCollectPipV1
 from ....schemas.v1 import TaskCollectStatusV1
 from ....security import current_active_user

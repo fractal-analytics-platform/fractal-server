@@ -6,9 +6,12 @@ from typing import Optional
 import pytest
 from devtools import debug  # noqa
 
+from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import TaskV2
+from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
+from fractal_server.tasks.utils import COLLECTION_LOG_FILENAME
 from fractal_server.tasks.utils import get_collection_path
 from fractal_server.tasks.utils import get_log_path
 from tests.execute_command import execute_command
@@ -63,7 +66,7 @@ async def test_task_collection_from_wheel(
             json=payload,
         )
         assert res.status_code == 201
-        assert res.json()["data"]["status"] == "pending"
+        assert res.json()["data"]["status"] == CollectionStatusV2.PENDING
         state = res.json()
         state_id = state["id"]
         venv_path = state["data"]["venv_path"]
@@ -261,7 +264,7 @@ async def test_task_collection_from_pypi(
             json=payload,
         )
         assert res.status_code == 201
-        assert res.json()["data"]["status"] == "pending"
+        assert res.json()["data"]["status"] == CollectionStatusV2.PENDING
         state = res.json()
         state_id = state["id"]
         venv_path = state["data"]["venv_path"]
@@ -337,3 +340,30 @@ async def test_task_collection_from_pypi(
         res = await client.post(f"{PREFIX}/collect/pip/", json=payload)
         debug(res.json())
         assert res.status_code == 422
+
+
+async def test_read_log_from_file(db, tmp_path, MockCurrentUser, client):
+
+    LOG = "fractal is awesome"
+    with open(tmp_path / COLLECTION_LOG_FILENAME, "w") as f:
+        f.write(LOG)
+    state = CollectionStateV2(data=dict(venv_path=tmp_path.as_posix()))
+    db.add(state)
+    await db.commit()
+    await db.refresh(state)
+
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        res = await client.get(f"{PREFIX}/collect/{state.id}/?verbose=true")
+
+    assert res.json()["data"]["log"] == LOG
+
+    state2 = CollectionStateV2()
+    db.add(state2)
+    await db.commit()
+    await db.refresh(state2)
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        res = await client.get(f"{PREFIX}/collect/{state2.id}/?verbose=true")
+    assert res.status_code == 422
+    assert res.json()["detail"] == (
+        f"No 'venv_path' in CollectionStateV2[{state2.id}].data"
+    )

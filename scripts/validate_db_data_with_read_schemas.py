@@ -15,15 +15,16 @@ from fractal_server.app.models.v2 import JobV2
 from fractal_server.app.models.v2 import ProjectV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.models.v2 import WorkflowV2
-from fractal_server.app.schemas.state import StateRead
 from fractal_server.app.schemas.user import UserRead
 from fractal_server.app.schemas.v1 import ApplyWorkflowReadV1
 from fractal_server.app.schemas.v1 import DatasetReadV1
 from fractal_server.app.schemas.v1 import ProjectReadV1
 from fractal_server.app.schemas.v1 import ResourceReadV1
+from fractal_server.app.schemas.v1 import StateRead
 from fractal_server.app.schemas.v1 import TaskReadV1
 from fractal_server.app.schemas.v1 import WorkflowReadV1
 from fractal_server.app.schemas.v1 import WorkflowTaskReadV1
+from fractal_server.app.schemas.v2 import CollectionStateReadV2
 from fractal_server.app.schemas.v2 import DatasetReadV2
 from fractal_server.app.schemas.v2 import JobReadV2
 from fractal_server.app.schemas.v2 import ProjectReadV2
@@ -177,5 +178,5 @@ with next(get_sync_db()) as db:
     stm = select(CollectionStateV2)
     states = db.execute(stm).scalars().all()
     for collection_state in sorted(states, key=lambda x: x.id):
-        CollectionStateV2(**collection_state.model_dump())
+        CollectionStateReadV2(**collection_state.model_dump())
         print(f"V2 - CollectionState {state.id} validated")

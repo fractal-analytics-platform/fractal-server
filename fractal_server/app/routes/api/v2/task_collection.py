@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from shutil import copy as shell_copy
 from tempfile import TemporaryDirectory
@@ -19,13 +20,16 @@ from ....db import AsyncSession
 from ....db import get_async_db
 from ....models.v2 import CollectionStateV2
 from ....models.v2 import TaskV2
-from ....schemas.state import StateRead
+from ....schemas.v2 import CollectionStateReadV2
+from ....schemas.v2 import CollectionStatusV2
 from ....schemas.v2 import TaskCollectPipV2
-from ....schemas.v2 import TaskCollectStatusV2
+from ....schemas.v2 import TaskReadV2
 from ....security import current_active_user
 from ....security import current_active_verified_user
 from ....security import User
+from fractal_server.tasks.utils import get_absolute_venv_path
 from fractal_server.tasks.utils import get_collection_log
+from fractal_server.tasks.utils import get_collection_path
 from fractal_server.tasks.utils import slugify_task_name
 from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.v2.background_operations import (
@@ -34,7 +38,6 @@ from fractal_server.tasks.v2.background_operations import (
 from fractal_server.tasks.v2.endpoint_operations import create_package_dir_pip
 from fractal_server.tasks.v2.endpoint_operations import download_package
 from fractal_server.tasks.v2.endpoint_operations import inspect_package
-from fractal_server.tasks.v2.get_collection_data import get_collection_data
 
 router = APIRouter()
 
@@ -43,7 +46,7 @@ logger = set_logger(__name__)
 
 @router.post(
     "/collect/pip/",
-    response_model=StateRead,
+    response_model=CollectionStateReadV2,
     responses={
         201: dict(
             description=(
@@ -64,7 +67,7 @@ async def collect_tasks_pip(
     response: Response,
     user: User = Depends(current_active_verified_user),
     db: AsyncSession = Depends(get_async_db),
-) -> StateRead:  # State[TaskCollectStatus]
+) -> CollectionStateReadV2:
     """
     Task collection endpoint
 
@@ -119,8 +122,35 @@ async def collect_tasks_pip(
     except FileExistsError:
         venv_path = create_package_dir_pip(task_pkg=task_pkg, create=False)
         try:
-            task_collect_status = get_collection_data(venv_path)
-            for task in task_collect_status.task_list:
+            package_path = get_absolute_venv_path(venv_path)
+            collection_path = get_collection_path(package_path)
+            with collection_path.open("r") as f:
+                task_collect_data = json.load(f)
+
+            err_msg = (
+                "Cannot collect package, possible reason: an old version of "
+                "the same package has already been collected.\n"
+                f"{str(collection_path)} has invalid content: "
+            )
+            if not isinstance(task_collect_data, dict):
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"{err_msg} it's not a Python dictionary.",
+                )
+            if "task_list" not in task_collect_data.keys():
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"{err_msg} it has no key 'task_list'.",
+                )
+            if not isinstance(task_collect_data["task_list"], list):
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"{err_msg} 'task_list' is not a Python list.",
+                )
+
+            for task_dict in task_collect_data["task_list"]:
+
+                task = TaskReadV2(**task_dict)
                 db_task = await db.get(TaskV2, task.id)
                 if (
                     (not db_task)
@@ -157,8 +187,8 @@ async def collect_tasks_pip(
                     f"Original ValidationError: {e}"
                 ),
             )
-        task_collect_status.info = "Already installed"
-        state = CollectionStateV2(data=task_collect_status.sanitised_dict())
+        task_collect_data["info"] = "Already installed"
+        state = CollectionStateV2(data=task_collect_data)
         response.status_code == status.HTTP_200_OK
         await db.close()
         return state
@@ -180,15 +210,12 @@ async def collect_tasks_pip(
             )
 
     # All checks are OK, proceed with task collection
-    full_venv_path = venv_path.relative_to(settings.FRACTAL_TASKS_DIR)
-    collection_status = TaskCollectStatusV2(
-        status="pending", venv_path=full_venv_path, package=task_pkg.package
+    collection_status = dict(
+        status=CollectionStatusV2.PENDING,
+        venv_path=venv_path.relative_to(settings.FRACTAL_TASKS_DIR).as_posix(),
+        package=task_pkg.package,
     )
-
-    # Create State object (after casting venv_path to string)
-    collection_status_dict = collection_status.dict()
-    collection_status_dict["venv_path"] = str(collection_status.venv_path)
-    state = CollectionStateV2(data=collection_status_dict)
+    state = CollectionStateV2(data=collection_status)
     db.add(state)
     await db.commit()
     await db.refresh(state)
@@ -215,13 +242,13 @@ async def collect_tasks_pip(
     return state
 
 
-@router.get("/collect/{state_id}/", response_model=StateRead)
+@router.get("/collect/{state_id}/", response_model=CollectionStateReadV2)
 async def check_collection_status(
     state_id: int,
     user: User = Depends(current_active_user),
     verbose: bool = False,
     db: AsyncSession = Depends(get_async_db),
-) -> StateRead:  # State[TaskCollectStatus]
+) -> CollectionStateReadV2:  # State[TaskCollectStatus]
     """
     Check status of background task collection
     """
@@ -234,13 +261,18 @@ async def check_collection_status(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No task collection info with id={state_id}",
         )
-    data = TaskCollectStatusV2(**state.data)
 
-    # In some cases (i.e. a successful or ongoing task collection), data.log is
-    # not set; if so, we collect the current logs
-    if verbose and not data.log:
-        data.log = get_collection_log(data.venv_path)
-        state.data = data.sanitised_dict()
+    # In some cases (i.e. a successful or ongoing task collection),
+    # state.data.log is not set; if so, we collect the current logs.
+    if verbose and not state.data.get("log"):
+        if "venv_path" not in state.data.keys():
+            await db.close()
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"No 'venv_path' in CollectionStateV2[{state_id}].data",
+            )
+        state.data["log"] = get_collection_log(Path(state.data["venv_path"]))
+        state.data["venv_path"] = str(state.data["venv_path"])
     reset_logger_handlers(logger)
     await db.close()
     return state

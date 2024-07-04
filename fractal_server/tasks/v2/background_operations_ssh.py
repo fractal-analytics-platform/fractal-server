@@ -13,6 +13,7 @@ from .background_operations import _insert_tasks
 from .background_operations import _prepare_tasks_metadata
 from .background_operations import _set_collection_state_data_status
 from fractal_server.app.db import get_sync_db
+from fractal_server.app.schemas.v2 import CollectionStatusV2
 from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
@@ -185,7 +186,7 @@ async def background_collect_pip_ssh(
                 logger.debug("installing - START")
                 _set_collection_state_data_status(
                     state_id=state_id,
-                    new_status="installing",
+                    new_status=CollectionStatusV2.INSTALLING,
                     logger_name=LOGGER_NAME,
                     db=db,
                 )
@@ -214,7 +215,7 @@ async def background_collect_pip_ssh(
                 logger.debug("collecting - START")
                 _set_collection_state_data_status(
                     state_id=state_id,
-                    new_status="collecting",
+                    new_status=CollectionStatusV2.COLLECTING,
                     logger_name=LOGGER_NAME,
                     db=db,
                 )
@@ -283,6 +284,7 @@ async def background_collect_pip_ssh(
                 collection_state = db.get(CollectionStateV2, state_id)
                 collection_state.data["log"] = log_file_path.open("r").read()
                 collection_state.data["freeze"] = stdout_pip_freeze
+                collection_state.data["status"] = CollectionStatusV2.OK
                 flag_modified(collection_state, "data")
                 db.commit()
                 logger.debug("finalising - END")
