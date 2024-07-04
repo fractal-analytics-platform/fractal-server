@@ -1,7 +1,7 @@
 [project]
-name = "FrAcTaL-TaSkS-MoCk-NoN-CaNoNiCaL"
+name = "FrAcTaL-TaSkS-NoN-CaNoNiCaL"
 version = "0.0.1"
-description = "Fake tasks package"
+description = "Fake tasks package with non-canonical project name"
 readme = "README.md"
 license = { text = "BSD-3-Clause" }
 authors = [
@@ -20,7 +20,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["fractal_tasks_mock"]
+include = ["fractal_tasks_non_canonical"]
 
 # Always include the __FRACTAL_MANIFEST__.json file in the package
 [tool.setuptools.package-data]

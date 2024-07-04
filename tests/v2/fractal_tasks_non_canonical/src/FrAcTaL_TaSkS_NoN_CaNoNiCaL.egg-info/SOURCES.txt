@@ -1,0 +1,11 @@
+pyproject.toml
+src/FrAcTaL_TaSkS_NoN_CaNoNiCaL.egg-info/PKG-INFO
+src/FrAcTaL_TaSkS_NoN_CaNoNiCaL.egg-info/SOURCES.txt
+src/FrAcTaL_TaSkS_NoN_CaNoNiCaL.egg-info/dependency_links.txt
+src/FrAcTaL_TaSkS_NoN_CaNoNiCaL.egg-info/requires.txt
+src/FrAcTaL_TaSkS_NoN_CaNoNiCaL.egg-info/top_level.txt
+src/fractal_tasks_non_canonical/__FRACTAL_MANIFEST__.json
+src/fractal_tasks_non_canonical/__init__.py
+src/fractal_tasks_non_canonical/generic_task.py
+src/fractal_tasks_non_canonical/generic_task_parallel.py
+src/fractal_tasks_non_canonical/utils.py

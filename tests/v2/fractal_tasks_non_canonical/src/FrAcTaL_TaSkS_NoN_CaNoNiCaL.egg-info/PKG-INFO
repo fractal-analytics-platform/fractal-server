@@ -1,0 +1,14 @@
+Metadata-Version: 2.1
+Name: FrAcTaL-TaSkS-NoN-CaNoNiCaL
+Version: 0.0.1
+Summary: Fake tasks package with non-canonical project name
+Author-email: Your Name <first.last@example.com>
+License: BSD-3-Clause
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Requires-Dist: pydantic<2
+Provides-Extra: dev
+Requires-Dist: fractal-tasks-core; extra == "dev"
+Requires-Dist: build; extra == "dev"
+Provides-Extra: my-extra
+Requires-Dist: devtools; extra == "my-extra"
