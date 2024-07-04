@@ -26,7 +26,8 @@ Re: task-collection configuration, we now support two main use cases:
     * Introduce task-collection Python-related configuration variables (\#1587).
     * Always set Python version for task collection, and only use `FRACTAL_TASKS_PYTHON_X_Y` variables (\#1587).
     * Refactor internal task-collection functions and models (\#1587).
-    * Refactor task-collection state related schemas (\#1598).
+    * Remove `TaskCollectStatusV2` and `get_collection_data` internal schema/function (\#1598).
+    * Introduce `CollectionStatusV2` enum for task-collection status (\#1598).
 SSH features:
     * Introduce `fractal_server/ssh` subpackage (\#1545, \#1599).
     * Introduce SSH executor and runner (\#1545).
