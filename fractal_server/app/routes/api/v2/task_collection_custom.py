@@ -16,6 +16,8 @@ from ....db import get_sync_db
 from ....models.v1 import Task as TaskV1
 from ....models.v2 import TaskV2
 from ....schemas.v2 import TaskCollectCustomV2
+from ....schemas.v2 import TaskCreateV2
+from ....schemas.v2 import TaskReadV2
 from ....security import current_active_verified_user
 from ....security import User
 from fractal_server.tasks.v2.background_operations import _insert_tasks
@@ -29,12 +31,14 @@ router = APIRouter()
 logger = set_logger(__name__)
 
 
-@router.post("/collect/custom/", status_code=201)
+@router.post(
+    "/collect/custom/", status_code=201, response_model=list[TaskReadV2]
+)
 async def collect_task_custom(
     task_collect: TaskCollectCustomV2,
     user: User = Depends(current_active_verified_user),
     db: DBSyncSession = Depends(get_sync_db),
-):
+) -> list[TaskReadV2]:
 
     settings = Inject(get_settings)
 
@@ -92,10 +96,11 @@ async def collect_task_custom(
                 "have `username` or `slurm_user` attributes."
             ),
         )
+    source = f"{owner}:{task_collect.source}"
 
-    task_list = _prepare_tasks_metadata(
+    task_list: list[TaskCreateV2] = _prepare_tasks_metadata(
         package_manifest=task_collect.manifest,
-        package_source=f"{owner}:{task_collect.source}",
+        package_source=source,
         python_bin=Path(task_collect.python_interpreter),
         package_root=package_root,
         package_version=task_collect.version,
@@ -124,4 +129,12 @@ async def collect_task_custom(
                 f"{res.scalars().all()}"
             ),
         )
-    _insert_tasks(task_list=task_list, db=db)
+
+    task_list_db: list[TaskV2] = _insert_tasks(task_list=task_list, db=db)
+
+    logger.debug(
+        f"Custom-environment task collection by user {user.email} completed, "
+        f"for package with {source=}"
+    )
+
+    return task_list_db

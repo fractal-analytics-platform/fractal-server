@@ -375,10 +375,8 @@ async def test_read_log_from_file(db, tmp_path, MockCurrentUser, client):
 
 
 async def test_task_collection_custom(
-    db,
     client,
     MockCurrentUser,
-    override_settings_factory,
     tmp_path: Path,
     testdata_path,
     task_factory,

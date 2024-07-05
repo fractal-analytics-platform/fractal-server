@@ -121,6 +121,7 @@ class TaskCollectCustomV2(BaseModel):
             raise ValueError(
                 "Both 'package_root' and 'package_name' cannot be None."
             )
+        return values
 
     _package_name = validator("package_name", allow_reuse=True)(
         valstr("package_name", accept_none=True)
@@ -134,7 +135,7 @@ class TaskCollectCustomV2(BaseModel):
 
     @validator("package_root")
     def package_root_validator(cls, value):
-        if not Path(value).is_absolute():
+        if (value is not None) and (not Path(value).is_absolute()):
             raise ValueError(
                 f"'package_root' must be an absolute path: (given {value})."
             )
