@@ -7,6 +7,7 @@ from typing import Literal
 from typing import Optional
 
 from pydantic import BaseModel
+from pydantic import root_validator
 from pydantic import validator
 
 from .._validators import valdictkeys
@@ -97,6 +98,13 @@ class TaskCollectCustomV2(BaseModel):
     package_root: Optional[str]
     package_name: Optional[str]
     version: Optional[str]
+
+    @root_validator(pre=True)
+    def al_least_one_of_package_root_or_name(cls, values):
+        if values["package_root"] is None and values["package_name"] is None:
+            raise ValueError(
+                "Both 'package_root' and 'package_name' cannot be None."
+            )
 
     _package_name = validator("package_name", allow_reuse=True)(
         valstr("package_name", accept_none=True)
