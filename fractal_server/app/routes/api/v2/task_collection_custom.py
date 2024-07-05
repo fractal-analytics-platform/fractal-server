@@ -131,7 +131,9 @@ async def collect_task_custom(
             ),
         )
 
-    task_list_db: list[TaskV2] = _insert_tasks(task_list=task_list, db=db)
+    task_list_db: list[TaskV2] = _insert_tasks(
+        task_list=task_list, owner=owner, db=db
+    )
 
     logger.debug(
         f"Custom-environment task collection by user {user.email} completed, "
