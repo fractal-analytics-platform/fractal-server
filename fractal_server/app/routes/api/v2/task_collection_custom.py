@@ -60,6 +60,14 @@ async def collect_task_custom(
             capture_output=True,
             encoding="utf8",
         )
+        if res.returncode != 0:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    f"Package '{task_collect.package_name}' not installed at "
+                    f"{task_collect.python_interpreter}."
+                ),
+            )
         package_root_dir = next(
             (
                 it.split()[1]
@@ -72,8 +80,9 @@ async def collect_task_custom(
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
-                    f"Package '{task_collect.package_name}' not installed at "
-                    f"{task_collect.python_interpreter}."
+                    "Command 'pip show' gave an unexpected response:\n"
+                    "the output should contain 'Location /path/to/package', "
+                    f"instead returned: {res.stdout}"
                 ),
             )
         package_root = Path(f"{package_root_dir}/{task_collect.package_name}")
