@@ -99,19 +99,25 @@ async def collect_task_custom(
     # Verify that source is not already in use (note: this check is only useful
     # to provide a user-friendly error message, but `task.source` uniqueness is
     # already guaranteed by a constraint in the table definition).
-    for task in task_list:
-        stm = select(TaskV2).where(TaskV2.source == task.source)
-        res = db.execute(stm)
-        if res.scalars().all():
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Source '{task.source}' already used by some TaskV2",
-            )
-        stm = select(TaskV1).where(TaskV1.source == task.source)
-        res = db.execute(stm)
-        if res.scalars().all():
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Source '{task.source}' already used by some TaskV1",
-            )
+    sources = [task.source for task in task_list]
+    stm = select(TaskV2).where(TaskV2.source.in_(sources))
+    res = db.execute(stm)
+    if res.scalars().all():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Some sources already used by some TaskV2: "
+                f"{res.scalars().all()}"
+            ),
+        )
+    stm = select(TaskV1).where(TaskV1.source.in_(sources))
+    res = db.execute(stm)
+    if res.scalars().all():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Some sources already used by some TaskV1: "
+                f"{res.scalars().all()}"
+            ),
+        )
     _insert_tasks(task_list=task_list, db=db)
