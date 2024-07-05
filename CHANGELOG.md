@@ -28,6 +28,7 @@ Re: task-collection configuration, we now support two main use cases:
     * Refactor internal task-collection functions and models (\#1587).
     * Remove `TaskCollectStatusV2` and `get_collection_data` internal schema/function (\#1598).
     * Introduce `CollectionStatusV2` enum for task-collection status (\#1598).
+    * Reject task-collection request if it includes a wheel file and a version (\#1608).
 SSH features:
     * Introduce `fractal_server/ssh` subpackage (\#1545, \#1599).
     * Introduce SSH executor and runner (\#1545).
