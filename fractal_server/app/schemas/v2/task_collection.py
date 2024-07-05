@@ -92,6 +92,22 @@ class TaskCollectPipV2(BaseModel):
 
 
 class TaskCollectCustomV2(BaseModel):
+    """
+    Attributes:
+        manifest: Manifest of a Fractal task package (this is typically the
+            content of `__FRACTAL_MANIFEST__.json`).
+        python_interpreter: Absolute path to the Python interpreter to be used
+            for running tasks.
+        source: A common label identifying this package.
+        package_root: The folder where the package is installed.
+            If not provided, it will be extracted via `pip show`
+            (requires `package_name` to be set).
+        package_name: Name of the package, as used for `import <package_name>`;
+            this is then used to extract the package directory (`package_root`)
+            via `pip show <package_name>`.
+        version: Optional version of tasks to be collected.
+    """
+
     manifest: ManifestV2
     python_interpreter: str
     source: str
