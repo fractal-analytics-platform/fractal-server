@@ -61,8 +61,9 @@ async def collect_task_custom(
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
-                    f"Package '{task_collect.package_name}' not installed at "
-                    f"{task_collect.python_interpreter}."
+                    "Cannot determine 'package_root'.\n"
+                    f"Original output: {res.stdout}\n"
+                    f"Original error: {res.stderr}"
                 ),
             )
         package_root_dir = next(
