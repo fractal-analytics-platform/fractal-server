@@ -11,6 +11,7 @@ from .status import router as status_router_v2
 from .submit import router as submit_job_router_v2
 from .task import router as task_router_v2
 from .task_collection import router as task_collection_router_v2
+from .task_collection_custom import router as task_collection_router_v2_custom
 from .task_collection_ssh import router as task_collection_router_v2_ssh
 from .task_legacy import router as task_legacy_router_v2
 from .workflow import router as workflow_router_v2
@@ -38,6 +39,11 @@ if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
 else:
     router_api_v2.include_router(
         task_collection_router_v2, prefix="/task", tags=["V2 Task Collection"]
+    )
+    router_api_v2.include_router(
+        task_collection_router_v2_custom,
+        prefix="/task",
+        tags=["V2 Task Collection"],
     )
 router_api_v2.include_router(task_router_v2, prefix="/task", tags=["V2 Task"])
 router_api_v2.include_router(

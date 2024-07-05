@@ -1,6 +1,4 @@
 import json
-import shlex
-import subprocess  # nosec
 from pathlib import Path
 from shutil import copy as shell_copy
 from tempfile import TemporaryDirectory
@@ -19,15 +17,11 @@ from .....logger import reset_logger_handlers
 from .....logger import set_logger
 from .....syringe import Inject
 from ....db import AsyncSession
-from ....db import DBSyncSession
 from ....db import get_async_db
-from ....db import get_sync_db
-from ....models.v1 import Task as TaskV1
 from ....models.v2 import CollectionStateV2
 from ....models.v2 import TaskV2
 from ....schemas.v2 import CollectionStateReadV2
 from ....schemas.v2 import CollectionStatusV2
-from ....schemas.v2 import TaskCollectCustomV2
 from ....schemas.v2 import TaskCollectPipV2
 from ....schemas.v2 import TaskReadV2
 from ....security import current_active_user
@@ -38,10 +32,6 @@ from fractal_server.tasks.utils import get_collection_log
 from fractal_server.tasks.utils import get_collection_path
 from fractal_server.tasks.utils import slugify_task_name
 from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
-from fractal_server.tasks.v2.background_operations import _insert_tasks
-from fractal_server.tasks.v2.background_operations import (
-    _prepare_tasks_metadata,
-)
 from fractal_server.tasks.v2.background_operations import (
     background_collect_pip,
 )
@@ -251,85 +241,6 @@ async def collect_tasks_pip(
     await db.close()
 
     return state
-
-
-@router.post("/collect/custom/", status_code=201)
-async def collect_task_custom(
-    task_collect: TaskCollectCustomV2,
-    user: User = Depends(current_active_verified_user),
-    db: DBSyncSession = Depends(get_sync_db),
-):
-
-    settings = Inject(get_settings)
-
-    if task_collect.package_root is None:
-        if task_collect.package_name is None:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    "Must provide at least one of 'package_root' "
-                    "and 'package_name'."
-                ),
-            )
-        if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="Cannot infer 'package_root' with 'slurm_ssh' backend.",
-            )
-        res = subprocess.run(  # nosec
-            shlex.split(
-                f"{task_collect.python_interpreter} "
-                f"-m pip show {task_collect.package_name}"
-            ),
-            capture_output=True,
-            encoding="utf8",
-        )
-        package_root_dir = next(
-            (
-                it.split()[1]
-                for it in res.stdout.split("\n")
-                if it.startswith("Location")
-            ),
-            None,
-        )
-        if package_root_dir is None:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    f"Package '{task_collect.package_name}' not installed at "
-                    f"{task_collect.python_interpreter}."
-                ),
-            )
-        package_root = Path(f"{package_root_dir}/{task_collect.package_name}")
-    else:
-        package_root = Path(task_collect.package_root)
-
-    task_list = _prepare_tasks_metadata(
-        package_manifest=task_collect.manifest,
-        package_source=task_collect.source,
-        python_bin=Path(task_collect.python_interpreter),
-        package_root=package_root,
-        package_version=task_collect.version,
-    )
-    # Verify that source is not already in use (note: this check is only useful
-    # to provide a user-friendly error message, but `task.source` uniqueness is
-    # already guaranteed by a constraint in the table definition).
-    for task in task_list:
-        stm = select(TaskV2).where(TaskV2.source == task.source)
-        res = db.execute(stm)
-        if res.scalars().all():
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Source '{task.source}' already used by some TaskV2",
-            )
-        stm = select(TaskV1).where(TaskV1.source == task.source)
-        res = db.execute(stm)
-        if res.scalars().all():
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Source '{task.source}' already used by some TaskV1",
-            )
-    _insert_tasks(task_list=task_list, db=db)
 
 
 @router.get("/collect/{state_id}/", response_model=CollectionStateReadV2)
