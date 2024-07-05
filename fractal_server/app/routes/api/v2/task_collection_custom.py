@@ -89,9 +89,20 @@ async def collect_task_custom(
     else:
         package_root = Path(task_collect.package_root)
 
+    # Set task.owner attribute
+    owner = user.username or user.slurm_user
+    if owner is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Cannot add a new task because current user does not "
+                "have `username` or `slurm_user` attributes."
+            ),
+        )
+
     task_list = _prepare_tasks_metadata(
         package_manifest=task_collect.manifest,
-        package_source=task_collect.source,
+        package_source=f"{owner}:{task_collect.source}",
         python_bin=Path(task_collect.python_interpreter),
         package_root=package_root,
         package_version=task_collect.version,
