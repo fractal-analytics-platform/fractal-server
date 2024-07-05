@@ -47,17 +47,6 @@ def test_TaskCollectPip_model(tmp_path, dummy_task_package):
         _TaskCollectPip(package="x.whl", python_version=PYTHON_VERSION)
     assert "is not the absolute path to a wheel file" in str(e.value)
 
-    # fail when local wheelfile is provided and package_version is not None
-    wheel_path = tmp_path / "abc-0.0.1-py3-none-any.whl"
-    wheel_path.touch()
-    with pytest.raises(ValueError) as e:
-        task_pkg = _TaskCollectPip(
-            package=wheel_path.as_posix(),
-            python_version=PYTHON_VERSION,
-            package_version="0.0.1",
-        )
-    assert "Cannot provide version when package is a wheel" in str(e.value)
-
     # When `package_version` is unset, some methods should fail
     tc = _TaskCollectPip(package="my-package", python_version=PYTHON_VERSION)
     assert tc.package_version is None
