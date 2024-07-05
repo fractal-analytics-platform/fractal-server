@@ -70,10 +70,6 @@ class _TaskCollectPip(BaseModel, extra=Extra.forbid):
                 logging.warning(
                     f"Package {package_path} does not exist locally."
                 )
-            if values.get("package_version") is not None:
-                raise ValueError(
-                    "Cannot provide version when package is a wheel file."
-                )
             values["package_path"] = package_path
             wheel_metadata = _parse_wheel_filename(package_path.name)
             values["package_name"] = _normalize_package_name(
