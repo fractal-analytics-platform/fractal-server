@@ -132,8 +132,16 @@ class TaskCollectCustomV2(BaseModel):
             raise ValueError(f"Invalid package_name: {value}")
         return value
 
+    @validator("package_root")
+    def package_root_validator(cls, value):
+        if not Path(value).is_absolute():
+            raise ValueError(
+                f"'package_root' must be an absolute path: (given {value})."
+            )
+        return value
+
     @validator("python_interpreter")
-    def package_validator(cls, value):
+    def python_interpreter_validator(cls, value):
         if not Path(value).is_absolute():
             raise ValueError(
                 f"Python interpreter path must be absolute: (given {value})."
