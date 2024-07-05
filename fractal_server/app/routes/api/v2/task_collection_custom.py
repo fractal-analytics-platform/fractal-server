@@ -83,7 +83,7 @@ async def collect_task_custom(
                     f"instead returned: {res.stdout}"
                 ),
             )
-        package_root = Path(f"{package_root_dir}/{task_collect.package_name}")
+        package_root = Path(package_root_dir) / task_collect.package_name
     else:
         package_root = Path(task_collect.package_root)
 
