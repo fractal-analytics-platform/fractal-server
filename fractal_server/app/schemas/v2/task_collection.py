@@ -115,22 +115,23 @@ class TaskCollectCustomV2(BaseModel):
     version: Optional[str]
 
     @root_validator(pre=True)
-    def al_least_one_of_package_root_or_name(cls, values):
-        if values["package_root"] is None and values["package_name"] is None:
+    def one_of_package_root_or_name(cls, values):
+        package_root = values["package_root"]
+        package_name = values["package_name"]
+        if (package_root is None and package_name is None) or (
+            package_root is not None and package_name is not None
+        ):
             raise ValueError(
-                "Both 'package_root' and 'package_name' cannot be None."
+                "One and only one must be set between "
+                "'package_root' and 'package_name'"
             )
         return values
 
-    _package_name = validator("package_name", allow_reuse=True)(
-        valstr("package_name", accept_none=True)
-    )
-
     @validator("package_name")
-    def package_name_prevent_injection(cls, value):
+    def package_name_prevent_injection(cls, value: str):
         if (value is not None) and (";" in value):
             raise ValueError(f"Invalid package_name: {value}")
-        return value
+        return value.replace(" ", "")
 
     @validator("package_root")
     def package_root_validator(cls, value):
@@ -147,6 +148,21 @@ class TaskCollectCustomV2(BaseModel):
                 f"Python interpreter path must be absolute: (given {value})."
             )
         return value
+
+    # Valstr
+    _python_interpreter = validator("python_interpreter", allow_reuse=True)(
+        valstr("python_interpreter")
+    )
+    _source = validator("source", allow_reuse=True)(valstr("source"))
+    _package_root = validator("package_root", allow_reuse=True)(
+        valstr("package_root", accept_none=True)
+    )
+    _package_name = validator("package_name", allow_reuse=True)(
+        valstr("package_name", accept_none=True)
+    )
+    _version = validator("version", allow_reuse=True)(
+        valstr("version", accept_none=True)
+    )
 
 
 class CollectionStateReadV2(BaseModel):
