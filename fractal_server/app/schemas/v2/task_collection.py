@@ -1,4 +1,3 @@
-import logging
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
@@ -83,8 +82,8 @@ class TaskCollectPipV2(BaseModel):
     def package_version_validator(cls, v, values):
         v = valstr("package_version")(v)
         if values["package"].endswith(".whl"):
-            logging.warning(
-                "Cannot provide version when package is a Wheel file."
+            raise ValueError(
+                "Cannot provide package version when package is a wheel file."
             )
         return v
 
