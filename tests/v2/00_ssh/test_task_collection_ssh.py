@@ -61,7 +61,7 @@ async def test_task_collection_ssh(
         python_version="3.9",
     )
 
-    await background_collect_pip_ssh(
+    background_collect_pip_ssh(
         state_id=state.id,
         task_pkg=task_pkg,
         connection=ssh_connection,
