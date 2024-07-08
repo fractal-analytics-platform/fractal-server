@@ -419,9 +419,7 @@ async def test_task_collection_custom(
             json=payload_name.dict(),
         )
         assert res.status_code == 422
-        assert res.json()["detail"] == (
-            f"Package 'fractal_tasks_mock' not installed at {python_bin}."
-        )
+        assert "Cannot determine 'package_root'" in res.json()["detail"]
 
         # Install
 
@@ -441,39 +439,9 @@ async def test_task_collection_custom(
         )
         assert res.status_code == 201
 
-        # Fail because neither 'package_root' nor 'package_name'
-
-        invalid_payload = TaskCollectCustomV2(
-            manifest=manifest,
-            python_interpreter=python_bin,
-            source="source",
-            package_root=None,
-            package_name=None,
-            version=None,
-        )
-        res = await client.post(
-            f"{PREFIX}/collect/custom/", json=invalid_payload.dict()
-        )
-        assert res.status_code == 422
-        assert res.json()["detail"] == (
-            "Must provide at least one of 'package_root' and 'package_name'."
-        )
-
         # Success with 'package_root'
 
-        res = subprocess.run(  # nosec
-            shlex.split(f"{python_bin} -m pip show fractal_tasks_mock"),
-            capture_output=True,
-            encoding="utf8",
-        )
-        package_root_dir = next(
-            (
-                it.split()[1]
-                for it in res.stdout.split("\n")
-                if it.startswith("Location")
-            ),
-            None,
-        )
+        package_root_dir = (tmp_path / "package_root").as_posix()
         payload_root = TaskCollectCustomV2(
             manifest=manifest,
             python_interpreter=python_bin,
@@ -497,7 +465,7 @@ async def test_task_collection_custom(
         assert "already used by some TaskV2" in res.json()["detail"]
         # V1
         payload_root.source = "source3"
-        await task_factory(source="source3:create_ome_zarr_compound")
+        await task_factory(source="test01:source3:create_ome_zarr_compound")
         res = await client.post(
             f"{PREFIX}/collect/custom/", json=payload_root.dict()
         )
