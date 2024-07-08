@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_9b05266560b1245c_workflow_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.5.4">coverage.py v7.5.4</a>,
-            created at 2024-07-08 11:10 +0000
+            created at 2024-07-08 11:20 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -200,8 +200,8 @@
     <p class="pln"><span class="n"><a id="t116" href="#t116">116</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t117" href="#t117">117</a></span><span class="t">    <span class="op">@</span><span class="nam">root_validator</span><span class="op">(</span><span class="nam">pre</span><span class="op">=</span><span class="key">True</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="par run show_par"><span class="n"><a id="t118" href="#t118">118</a></span><span class="t">    <span class="key">def</span> <span class="nam">one_of_package_root_or_name</span><span class="op">(</span><span class="nam">cls</span><span class="op">,</span> <span class="nam">values</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">118&#x202F;&#x219B;&#x202F;117</span><span class="annotate long">line 118 didn't jump to line 117</span></span></p>
-    <p class="run"><span class="n"><a id="t119" href="#t119">119</a></span><span class="t">        <span class="nam">package_root</span> <span class="op">=</span> <span class="nam">values</span><span class="op">[</span><span class="str">"package_root"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t120" href="#t120">120</a></span><span class="t">        <span class="nam">package_name</span> <span class="op">=</span> <span class="nam">values</span><span class="op">[</span><span class="str">"package_name"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t119" href="#t119">119</a></span><span class="t">        <span class="nam">package_root</span> <span class="op">=</span> <span class="nam">values</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"package_root"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t120" href="#t120">120</a></span><span class="t">        <span class="nam">package_name</span> <span class="op">=</span> <span class="nam">values</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"package_name"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t121" href="#t121">121</a></span><span class="t">        <span class="key">if</span> <span class="op">(</span><span class="nam">package_root</span> <span class="key">is</span> <span class="key">None</span> <span class="key">and</span> <span class="nam">package_name</span> <span class="key">is</span> <span class="key">None</span><span class="op">)</span> <span class="key">or</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t122" href="#t122">122</a></span><span class="t">            <span class="nam">package_root</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span> <span class="key">and</span> <span class="nam">package_name</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t123" href="#t123">123</a></span><span class="t">        <span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -270,7 +270,7 @@
             <a class="nav" href="z_9b05266560b1245c_workflow_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.5.4">coverage.py v7.5.4</a>,
-            created at 2024-07-08 11:10 +0000
+            created at 2024-07-08 11:20 +0000
         </p>
     </div>
 </footer>
