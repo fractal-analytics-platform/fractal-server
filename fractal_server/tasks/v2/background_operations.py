@@ -175,7 +175,8 @@ def _prepare_tasks_metadata(
     for _task in package_manifest.task_list:
         # Set non-command attributes
         task_attributes = {}
-        task_attributes["version"] = package_version
+        if package_version is not None:
+            task_attributes["version"] = package_version
         task_name_slug = slugify_task_name(_task.name)
         task_attributes["source"] = f"{package_source}:{task_name_slug}"
         if package_manifest.has_args_schemas:
