@@ -41,6 +41,17 @@ async def test_task_collect_custom(testdata_path):
         in e._excinfo[1].errors()[0]["msg"]
     )
 
+    
+    with pytest.raises(ValidationError) as e:
+        TaskCollectCustomV2(
+            manifest=ManifestV2(**manifest_dict),
+            python_interpreter="/a",
+            source="b",
+            package_root="non_absolute_path",
+            package_name=None,
+        )
+    assert "'package_root' must be an absolute path" in str(e.value)
+
     # Fail because neither 'package_root' nor 'package_name'
     with pytest.raises(ValidationError) as e:
         TaskCollectCustomV2(
