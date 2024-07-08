@@ -42,12 +42,17 @@ def _get_task_type(task: TaskCreateV2) -> str:
 def _insert_tasks(
     task_list: list[TaskCreateV2],
     db: DBSyncSession,
+    owner: Optional[str] = None,
 ) -> list[TaskV2]:
     """
     Insert tasks into database
     """
+
+    owner_dict = dict(owner=owner) if owner is not None else dict()
+
     task_db_list = [
-        TaskV2(**t.dict(), type=_get_task_type(t)) for t in task_list
+        TaskV2(**t.dict(), **owner_dict, type=_get_task_type(t))
+        for t in task_list
     ]
     db.add_all(task_db_list)
     db.commit()
@@ -170,7 +175,8 @@ def _prepare_tasks_metadata(
     for _task in package_manifest.task_list:
         # Set non-command attributes
         task_attributes = {}
-        task_attributes["version"] = package_version
+        if package_version is not None:
+            task_attributes["version"] = package_version
         task_name_slug = slugify_task_name(_task.name)
         task_attributes["source"] = f"{package_source}:{task_name_slug}"
         if package_manifest.has_args_schemas:

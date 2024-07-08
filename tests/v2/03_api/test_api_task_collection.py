@@ -1,4 +1,7 @@
+import json
 import logging
+import shlex
+import subprocess  # nosec
 import sys
 from pathlib import Path
 from typing import Optional
@@ -9,6 +12,8 @@ from devtools import debug  # noqa
 from fractal_server.app.models.v2 import CollectionStateV2
 from fractal_server.app.models.v2 import TaskV2
 from fractal_server.app.schemas.v2 import CollectionStatusV2
+from fractal_server.app.schemas.v2 import ManifestV2
+from fractal_server.app.schemas.v2 import TaskCollectCustomV2
 from fractal_server.config import get_settings
 from fractal_server.syringe import Inject
 from fractal_server.tasks.utils import COLLECTION_LOG_FILENAME
@@ -367,3 +372,135 @@ async def test_read_log_from_file(db, tmp_path, MockCurrentUser, client):
     assert res.json()["detail"] == (
         f"No 'venv_path' in CollectionStateV2[{state2.id}].data"
     )
+
+
+async def test_task_collection_custom(
+    client,
+    MockCurrentUser,
+    tmp_path: Path,
+    testdata_path,
+    task_factory,
+):
+    venv_name = "venv_fractal_tasks_mock"
+    venv_path = (tmp_path / venv_name).as_posix()
+
+    subprocess.run(shlex.split(f"{sys.executable} -m venv {venv_path}"))
+
+    python_bin = (tmp_path / venv_name / "bin/python").as_posix()
+
+    # ---
+
+    manifest_file = (
+        testdata_path.parent
+        / "v2/fractal_tasks_mock"
+        / "src/fractal_tasks_mock/__FRACTAL_MANIFEST__.json"
+    ).as_posix()
+
+    with open(manifest_file, "r") as f:
+        manifest_dict = json.load(f)
+
+    manifest = ManifestV2(**manifest_dict)
+
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+
+        payload_name = TaskCollectCustomV2(
+            manifest=manifest,
+            python_interpreter=python_bin,
+            source="source1",
+            package_root=None,
+            package_name="fractal_tasks_mock",
+            version=None,
+        )
+
+        # Fail because no package is installed
+
+        res = await client.post(
+            f"{PREFIX}/collect/custom/",
+            json=payload_name.dict(),
+        )
+        assert res.status_code == 422
+        assert "Cannot determine 'package_root'" in res.json()["detail"]
+
+        # Install
+
+        wheel_file = (
+            testdata_path.parent
+            / "v2/fractal_tasks_mock"
+            / "dist/fractal_tasks_mock-0.0.1-py3-none-any.whl"
+        ).as_posix()
+        subprocess.run(
+            shlex.split(f"{python_bin} -m pip install {wheel_file}")
+        )
+
+        # Success with 'package_name'
+
+        res = await client.post(
+            f"{PREFIX}/collect/custom/", json=payload_name.dict()
+        )
+        assert res.status_code == 201
+
+        # Success with (arbitrary) 'package_root'
+
+        package_root_dir = (tmp_path / "package_root").as_posix()
+        payload_root = TaskCollectCustomV2(
+            manifest=manifest,
+            python_interpreter=python_bin,
+            source="source2",
+            package_root=f"{package_root_dir}/fractal_tasks_mock",
+            package_name=None,
+            version=None,
+        )
+        res = await client.post(
+            f"{PREFIX}/collect/custom/", json=payload_root.dict()
+        )
+        assert res.status_code == 201
+
+        # Fail because same 'source'
+
+        # V2
+        res = await client.post(
+            f"{PREFIX}/collect/custom/", json=payload_root.dict()
+        )
+        assert res.status_code == 422
+        assert "already used by some TaskV2" in res.json()["detail"]
+        # V1
+        payload_root.source = "source3"
+        await task_factory(source="test01:source3:create_ome_zarr_compound")
+        res = await client.post(
+            f"{PREFIX}/collect/custom/", json=payload_root.dict()
+        )
+        assert res.status_code == 422
+        assert "already used by some TaskV1" in res.json()["detail"]
+
+
+async def test_task_collection_custom_fail_with_ssh(
+    client,
+    MockCurrentUser,
+    override_settings_factory,
+    testdata_path,
+):
+    override_settings_factory(FRACTAL_RUNNER_BACKEND="slurm_ssh")
+    manifest_file = (
+        testdata_path.parent
+        / "v2/fractal_tasks_mock"
+        / "src/fractal_tasks_mock/__FRACTAL_MANIFEST__.json"
+    ).as_posix()
+
+    with open(manifest_file, "r") as f:
+        manifest_dict = json.load(f)
+
+    async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
+        res = await client.post(
+            f"{PREFIX}/collect/custom/",
+            json=TaskCollectCustomV2(
+                manifest=ManifestV2(**manifest_dict),
+                python_interpreter="/a",
+                source="b",
+                package_root=None,
+                package_name="c",
+            ).dict(),
+        )
+        assert res.status_code == 422
+        assert res.json()["detail"] == (
+            "Cannot infer 'package_root' with 'slurm_ssh' backend."
+        )
