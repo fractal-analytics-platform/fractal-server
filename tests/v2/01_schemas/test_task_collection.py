@@ -40,7 +40,6 @@ async def test_task_collect_custom(testdata_path):
         "Python interpreter path must be absolute"
         in e._excinfo[1].errors()[0]["msg"]
     )
-
     
     with pytest.raises(ValidationError) as e:
         TaskCollectCustomV2(
