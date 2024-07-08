@@ -129,9 +129,14 @@ class TaskCollectCustomV2(BaseModel):
 
     @validator("package_name")
     def package_name_prevent_injection(cls, value: str):
-        if (value is not None) and (";" in value):
-            raise ValueError(f"Invalid package_name: {value}")
-        return value.replace(" ", "")
+        """
+        Remove all whitespace characters, and reject values containing `;`.
+        """
+        if value is not None:
+            if ";" in value:
+                raise ValueError(f"Invalid package_name: {value}")
+            value = value.replace(" ", "")
+        return value
 
     @validator("package_root")
     def package_root_validator(cls, value):
