@@ -40,3 +40,15 @@ async def test_task_collect_custom(testdata_path):
         "Python interpreter path must be absolute"
         in e._excinfo[1].errors()[0]["msg"]
     )
+
+    # Fail because neither 'package_root' nor 'package_name'
+    with pytest.raises(ValidationError) as e:
+        TaskCollectCustomV2(
+            manifest=ManifestV2(**manifest_dict),
+            python_interpreter="/a",
+            source="source",
+            package_root=None,
+            package_name=None,
+            version=None,
+        )
+    assert "One and only one must be set" in str(e.value)
