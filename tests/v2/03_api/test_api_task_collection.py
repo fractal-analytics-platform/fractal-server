@@ -439,7 +439,7 @@ async def test_task_collection_custom(
         )
         assert res.status_code == 201
 
-        # Success with 'package_root'
+        # Success with (arbitrary) 'package_root'
 
         package_root_dir = (tmp_path / "package_root").as_posix()
         payload_root = TaskCollectCustomV2(
