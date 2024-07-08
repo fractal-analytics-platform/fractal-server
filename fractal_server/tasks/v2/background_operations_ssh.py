@@ -112,7 +112,7 @@ def _customize_and_run_template(
     return stdout
 
 
-async def background_collect_pip_ssh(
+def background_collect_pip_ssh(
     state_id: int,
     task_pkg: _TaskCollectPip,
     connection: Connection,
@@ -122,6 +122,10 @@ async def background_collect_pip_ssh(
 
     This function is run as a background task, therefore exceptions must be
     handled.
+
+    NOTE: by making this function sync, it will run within a thread - due to
+    starlette/fastapi handling of background tasks (see
+    https://github.com/encode/starlette/blob/master/starlette/background.py).
     """
     # Work within a temporary folder, where also logs will be placed
     with TemporaryDirectory() as tmpdir:
