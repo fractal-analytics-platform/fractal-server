@@ -116,8 +116,8 @@ class TaskCollectCustomV2(BaseModel):
 
     @root_validator(pre=True)
     def one_of_package_root_or_name(cls, values):
-        package_root = values["package_root"]
-        package_name = values["package_name"]
+        package_root = values.get("package_root")
+        package_name = values.get("package_name")
         if (package_root is None and package_name is None) or (
             package_root is not None and package_name is not None
         ):
