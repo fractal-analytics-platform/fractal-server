@@ -32,7 +32,7 @@ Re: task-collection configuration, we now support two main use cases:
     * Introduce `CollectionStatusV2` enum for task-collection status (\#1598).
     * Reject task-collection request if it includes a wheel file and a version (\#1608).
 SSH features:
-    * Introduce `fractal_server/ssh` subpackage (\#1545, \#1599).
+    * Introduce `fractal_server/ssh` subpackage (\#1545, \#1599, \#1611).
     * Introduce SSH executor and runner (\#1545).
     * Introduce SSH task collection (\#1545, \#1599).
     * Introduce SSH-related configuration variables (\#1545).
