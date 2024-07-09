@@ -1,5 +1,6 @@
 import io
 
+import pytest
 from fabric.connection import Connection
 
 from fractal_server.ssh._fabric import FractalSSH
@@ -34,7 +35,12 @@ def test_unit_fabric_connection(
 
         # Test also FractalSSH
         fractal_conn = FractalSSH(connection=connection)
-        assert fractal_conn.is_connected
+        assert fractal_conn.is_connected()
         fractal_conn.check_connection()
         res = fractal_conn.run(command, hide=True)
         assert res.stdout.strip("\n") == "slurmhead"
+
+    # raise error if there is not a connection available
+    fractal_conn = FractalSSH(connection=connection)
+    with pytest.raises(RuntimeError):
+        fractal_conn.check_connection()
