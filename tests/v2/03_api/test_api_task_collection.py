@@ -516,7 +516,7 @@ async def test_task_collection_custom_fail_with_ssh(
             f"{PREFIX}/collect/custom/",
             json=TaskCollectCustomV2(
                 manifest=ManifestV2(**manifest_dict),
-                python_interpreter="/a",
+                python_interpreter="/may/not/exist",
                 source="b",
                 package_root=None,
                 package_name="c",
