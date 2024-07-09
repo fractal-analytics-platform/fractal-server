@@ -70,7 +70,12 @@ async def collect_task_custom(
             capture_output=True,
             encoding="utf8",
         )
-        if res.returncode != 0:
+
+        if (
+            res.returncode != 0
+            or res.stdout is None
+            or ("\n" in res.stdout.strip("\n"))
+        ):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
@@ -79,23 +84,7 @@ async def collect_task_custom(
                     f"Original error: {res.stderr}"
                 ),
             )
-        try:
-            package_root_dir = next(
-                it.split()[1]
-                for it in res.stdout.split("\n")
-                if it.startswith("Location")
-            )
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    "Command 'pip show' gave an unexpected response:\n"
-                    "the output should contain 'Location /path/to/package', "
-                    f"instead returned: {res.stdout}.\n"
-                    f"Original error: {str(e)}"
-                ),
-            )
-        package_root = Path(package_root_dir) / task_collect.package_name
+        package_root = Path(res.stdout.strip("\n"))
     else:
         package_root = Path(task_collect.package_root)
 
