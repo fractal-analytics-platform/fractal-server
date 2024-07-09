@@ -49,10 +49,23 @@ async def collect_task_custom(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="Cannot infer 'package_root' with 'slurm_ssh' backend.",
             )
+        package_name_underscore = task_collect.package_name.replace("-", "_")
+        # Note that python_command is then used as part of a subprocess.run
+        # statement: be careful with mixing `'` and `"`.
+        python_command = (
+            "import importlib.util; "
+            "from pathlib import Path; "
+            "init_path=importlib.util.find_spec"
+            f'("{package_name_underscore}").origin; '
+            "print(Path(init_path).parent.as_posix())"
+        )
+        logger.debug(
+            f"Now running {python_command=} through "
+            "{task_collect.python_interpreter}."
+        )
         res = subprocess.run(  # nosec
             shlex.split(
-                f"{task_collect.python_interpreter} "
-                f"-m pip show {task_collect.package_name}"
+                f"{task_collect.python_interpreter} " f"-c '{python_command}'"
             ),
             capture_output=True,
             encoding="utf8",
