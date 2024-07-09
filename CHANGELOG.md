@@ -34,7 +34,7 @@ Re: task-collection configuration, we now support two main use cases:
 SSH features:
     * Introduce `fractal_server/ssh` subpackage (\#1545, \#1599, \#1611).
     * Introduce SSH executor and runner (\#1545).
-    * Introduce SSH task collection (\#1545, \#1599).
+    * Introduce SSH task collection (\#1545, \#1599, \#1626).
     * Introduce SSH-related configuration variables (\#1545).
     * Modify app lifespan to handle SSH connection (\#1545).
     * Split `app/runner/executor/slurm` into `sudo` and `ssh` subfolders (\#1545).
