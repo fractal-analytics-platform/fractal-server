@@ -115,6 +115,21 @@ class TaskCollectCustomV2(BaseModel):
     package_name: Optional[str]
     version: Optional[str]
 
+    # Valstr
+    _python_interpreter = validator("python_interpreter", allow_reuse=True)(
+        valstr("python_interpreter")
+    )
+    _source = validator("source", allow_reuse=True)(valstr("source"))
+    _package_root = validator("package_root", allow_reuse=True)(
+        valstr("package_root", accept_none=True)
+    )
+    _package_name = validator("package_name", allow_reuse=True)(
+        valstr("package_name", accept_none=True)
+    )
+    _version = validator("version", allow_reuse=True)(
+        valstr("version", accept_none=True)
+    )
+
     @root_validator(pre=True)
     def one_of_package_root_or_name(cls, values):
         package_root = values.get("package_root")
@@ -154,21 +169,6 @@ class TaskCollectCustomV2(BaseModel):
                 f"Python interpreter path must be absolute: (given {value})."
             )
         return value
-
-    # Valstr
-    _python_interpreter = validator("python_interpreter", allow_reuse=True)(
-        valstr("python_interpreter")
-    )
-    _source = validator("source", allow_reuse=True)(valstr("source"))
-    _package_root = validator("package_root", allow_reuse=True)(
-        valstr("package_root", accept_none=True)
-    )
-    _package_name = validator("package_name", allow_reuse=True)(
-        valstr("package_name", accept_none=True)
-    )
-    _version = validator("version", allow_reuse=True)(
-        valstr("version", accept_none=True)
-    )
 
 
 class CollectionStateReadV2(BaseModel):
