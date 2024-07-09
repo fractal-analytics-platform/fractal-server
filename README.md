@@ -160,12 +160,12 @@
 | fractal\_server/tasks/v2/\_\_init\_\_.py                                       |        0 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/tasks/v2/\_venv\_pip.py                                        |       50 |        0 |       14 |        2 |     97% |71->exit, 104->exit |
 | fractal\_server/tasks/v2/background\_operations.py                             |      143 |        0 |       34 |        1 |     99% |  147->152 |
-| fractal\_server/tasks/v2/background\_operations\_ssh.py                        |      127 |        9 |       28 |        5 |     91% |43, 45, 159, 162->169, 248-254, 300-308 |
+| fractal\_server/tasks/v2/background\_operations\_ssh.py                        |      129 |        9 |       28 |        5 |     91% |43, 45, 159, 162->169, 248-254, 310-318 |
 | fractal\_server/tasks/v2/endpoint\_operations.py                               |       65 |        0 |       18 |        1 |     99% |  41->exit |
 | fractal\_server/tasks/v2/utils.py                                              |       19 |        2 |        4 |        0 |     91% |     51-52 |
 | fractal\_server/urls.py                                                        |        7 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                       |       21 |        0 |        2 |        0 |    100% |           |
-|                                                                      **TOTAL** | **9510** |  **469** | **2800** |  **407** | **92%** |           |
+|                                                                      **TOTAL** | **9512** |  **469** | **2800** |  **407** | **92%** |           |
 
 
 ## Setup coverage badge
