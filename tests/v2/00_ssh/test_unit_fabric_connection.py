@@ -2,6 +2,8 @@ import io
 
 from fabric.connection import Connection
 
+from fractal_server.ssh._fabric import FractalSSH
+
 
 def test_unit_fabric_connection(
     slurmlogin_ip, ssh_alive, slurmlogin_container, monkeypatch
@@ -28,4 +30,11 @@ def test_unit_fabric_connection(
         res = connection.run(command, hide=True)
         print(f"STDOUT:\n{res.stdout}")
         print(f"STDERR:\n{res.stderr}")
+        assert res.stdout.strip("\n") == "slurmhead"
+
+        # Test also FractalSSH
+        fractal_conn = FractalSSH(connection=connection)
+        assert fractal_conn.is_connected
+        fractal_conn.check_connection()
+        res = fractal_conn.run(command, hide=True)
         assert res.stdout.strip("\n") == "slurmhead"
