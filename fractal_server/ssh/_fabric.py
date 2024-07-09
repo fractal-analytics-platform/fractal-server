@@ -59,10 +59,19 @@ class FractalSSH(object):
 
     def check_connection(self) -> None:
         """
-        Check if SSH connection is open.
+        Open the SSH connection and handle exceptions.
+
+        This function can be called from within other functions that use
+        `connection`, so that we can provide a meaningful error in case the
+        SSH connection cannot be opened.
         """
         if not self.conn.is_connected:
-            raise RuntimeError("Cannot open SSH connection.")
+            try:
+                self.conn.open()
+            except Exception as e:
+                raise RuntimeError(
+                    f"Cannot open SSH connection (original error: '{str(e)}')."
+                )
 
 
 def get_ssh_connection(
