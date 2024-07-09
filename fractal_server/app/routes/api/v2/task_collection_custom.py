@@ -65,7 +65,7 @@ async def collect_task_custom(
         )
         res = subprocess.run(  # nosec
             shlex.split(
-                f"{task_collect.python_interpreter} " f"-c '{python_command}'"
+                f"{task_collect.python_interpreter} -c '{python_command}'"
             ),
             capture_output=True,
             encoding="utf8",
