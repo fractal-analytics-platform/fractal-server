@@ -46,7 +46,7 @@ def test_versions(
         command = f"/usr/bin/python3.9 -c '{python_command}'"
 
         print(f"COMMAND:\n{command}")
-        res = connection.run(command, hide=True)
+        res = fractal_conn.run(command, hide=True)
         print(f"STDOUT:\n{res.stdout}")
         print(f"STDERR:\n{res.stderr}")
 
@@ -71,7 +71,7 @@ def test_versions(
         command = f"/usr/bin/python3.9 -c '{python_command}'"
 
         print(f"COMMAND:\n{command}")
-        res = connection.run(command, hide=True)
+        res = fractal_conn.run(command, hide=True)
         print(f"STDOUT:\n{res.stdout}")
         print(f"STDERR:\n{res.stderr}")
 
@@ -156,11 +156,12 @@ def test_slurm_ssh_executor_map(
         user="fractal",
         connect_kwargs={"key_filename": ssh_private_key},
     ) as connection:
+        fractal_conn = FractalSSH(connection=connection)
         with TestingFractalSSHSlurmExecutor(
             workflow_dir_local=tmp_path / "job_dir",
             workflow_dir_remote=(tmp777_path / "remote_job_dir"),
             slurm_poll_interval=1,
-            connection=connection,
+            connection=fractal_conn,
         ) as executor:
             res = executor.map(lambda x: x * 2, [1, 2, 3])
             results = list(res)

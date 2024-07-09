@@ -7,6 +7,7 @@ from fabric.connection import Connection
 
 from fractal_server.app.models.v2.collection_state import CollectionStateV2
 from fractal_server.ssh._fabric import _mkdir_over_ssh
+from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.tasks.v2._TaskCollectPip import _TaskCollectPip
 from fractal_server.tasks.v2.background_operations_ssh import (
     background_collect_pip_ssh,
@@ -27,7 +28,8 @@ def ssh_connection(
         user="fractal",
         connect_kwargs={"key_filename": ssh_private_key},
     ) as connection:
-        yield connection
+        fractal_conn = FractalSSH(connection=connection)
+        yield fractal_conn
 
 
 async def test_task_collection_ssh(
