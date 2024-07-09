@@ -61,7 +61,7 @@ class FractalSSH(object):
         """
         Check if SSH connection is open.
         """
-        if not self.conn.is_connected:
+        if not self.conn.is_connected():
             raise RuntimeError("Cannot open SSH connection.")
 
 
