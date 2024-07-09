@@ -49,7 +49,7 @@
 | fractal\_server/app/routes/api/v2/submit.py                                    |       96 |        0 |       31 |        2 |     98% |50->45, 229->236 |
 | fractal\_server/app/routes/api/v2/task.py                                      |      111 |        0 |       48 |        5 |     97% |32->31, 56->55, 74->73, 112->109, 194->193 |
 | fractal\_server/app/routes/api/v2/task\_collection.py                          |      131 |        2 |       34 |        2 |     98% |65->48, 182-183, 247->246 |
-| fractal\_server/app/routes/api/v2/task\_collection\_custom.py                  |       58 |        3 |       16 |        3 |     92% |37->34, 70->exit, 75-76, 92 |
+| fractal\_server/app/routes/api/v2/task\_collection\_custom.py                  |       59 |        1 |       14 |        2 |     96% |37->34, 94 |
 | fractal\_server/app/routes/api/v2/task\_collection\_ssh.py                     |       51 |       22 |        8 |        2 |     53% |50->33, 63-96, 102->101, 111-125 |
 | fractal\_server/app/routes/api/v2/task\_legacy.py                              |       33 |        0 |       12 |        2 |     96% |21->20, 44->43 |
 | fractal\_server/app/routes/api/v2/workflow.py                                  |      142 |        2 |       54 |       12 |     93% |41->37, 67->62, 95->91, 119->115, 174->170, 227->223, 247, 273->268, 305->301, 309, 319->301, 367->366 |
@@ -135,7 +135,7 @@
 | fractal\_server/app/schemas/v2/project.py                                      |       18 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/v2/status.py                                       |        5 |        0 |        0 |        0 |    100% |           |
 | fractal\_server/app/schemas/v2/task.py                                         |       90 |        2 |        8 |        4 |     94% |39->38, 43, 119->118, 121 |
-| fractal\_server/app/schemas/v2/task\_collection.py                             |       83 |        1 |       30 |        7 |     93% |70->69, 78, 84->83, 118->117, 131->130, 142->141, 150->149 |
+| fractal\_server/app/schemas/v2/task\_collection.py                             |       84 |        1 |       30 |        7 |     93% |71->70, 79, 85->84, 134->133, 147->146, 158->157, 166->165 |
 | fractal\_server/app/schemas/v2/workflow.py                                     |       40 |        1 |        7 |        2 |     94% |47->46, 49 |
 | fractal\_server/app/schemas/v2/workflowtask.py                                 |      123 |        0 |       28 |        5 |     97% |64->63, 78->77, 92->91, 143->142, 157->156 |
 | fractal\_server/app/security/\_\_init\_\_.py                                   |      142 |       28 |       32 |        3 |     76% |113-126, 145-146, 151-160, 165-173, 187, 191, 315 |
@@ -165,7 +165,7 @@
 | fractal\_server/tasks/v2/utils.py                                              |       19 |        2 |        4 |        0 |     91% |     51-52 |
 | fractal\_server/urls.py                                                        |        7 |        0 |        4 |        0 |    100% |           |
 | fractal\_server/utils.py                                                       |       21 |        0 |        2 |        0 |    100% |           |
-|                                                                      **TOTAL** | **9508** |  **471** | **2802** |  **408** | **92%** |           |
+|                                                                      **TOTAL** | **9510** |  **469** | **2800** |  **407** | **92%** |           |
 
 
 ## Setup coverage badge
