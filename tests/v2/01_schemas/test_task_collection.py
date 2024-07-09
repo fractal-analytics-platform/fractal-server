@@ -80,8 +80,9 @@ async def test_TaskCollectCustomV2(testdata_path):
         manifest=ManifestV2(**manifest_dict),
         python_interpreter="  /some/python                  ",
         source="b",
-        package_root=None,
-        package_name="something",
+        package_root="  /somewhere  ",
+        package_name=None,
     )
     # Check that trailing whitespace characters were removed
     assert collection.python_interpreter == "/some/python"
+    assert collection.package_root == "/somewhere"
