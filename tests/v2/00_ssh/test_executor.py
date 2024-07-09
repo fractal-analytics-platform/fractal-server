@@ -12,6 +12,7 @@ from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.slurm.ssh.executor import (
     FractalSlurmSSHExecutor,
 )  # noqa
+from fractal_server.ssh._fabric import FractalSSH
 
 
 def test_versions(
@@ -34,9 +35,10 @@ def test_versions(
         user="fractal",
         connect_kwargs={"password": "fractal"},
     ) as connection:
+        fractal_conn = FractalSSH(connection=connection)
         command = "/usr/bin/python3.9 --version"
         print(f"COMMAND:\n{command}")
-        res = connection.run(command, hide=True)
+        res = fractal_conn.run(command, hide=True)
         print(f"STDOUT:\n{res.stdout}")
         print(f"STDERR:\n{res.stderr}")
 
@@ -58,9 +60,10 @@ def test_versions(
         user="fractal",
         connect_kwargs={"key_filename": ssh_private_key},
     ) as connection:
+        fractal_conn = FractalSSH(connection=connection)
         command = "/usr/bin/python3.9 --version"
         print(f"COMMAND:\n{command}")
-        res = connection.run(command, hide=True)
+        res = fractal_conn.run(command, hide=True)
         print(f"STDOUT:\n{res.stdout}")
         print(f"STDERR:\n{res.stderr}")
 
@@ -122,11 +125,12 @@ def test_slurm_ssh_executor_submit(
         user="fractal",
         connect_kwargs={"key_filename": ssh_private_key},
     ) as connection:
+        fractal_conn = FractalSSH(connection=connection)
         with TestingFractalSSHSlurmExecutor(
             workflow_dir_local=tmp_path / "job_dir",
             workflow_dir_remote=(tmp777_path / "remote_job_dir"),
             slurm_poll_interval=1,
-            connection=connection,
+            connection=fractal_conn,
         ) as executor:
             fut = executor.submit(lambda: 1)
             debug(fut)
