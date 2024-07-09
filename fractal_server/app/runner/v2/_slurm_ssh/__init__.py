@@ -19,9 +19,11 @@ Executor objects.
 from pathlib import Path
 from typing import Any
 from typing import Optional
+from typing import TYPE_CHECKING
 from typing import Union
 
-from fabric import Connection
+if TYPE_CHECKING:
+    from fabric import Connection
 
 from ....models.v2 import DatasetV2
 from ....models.v2 import WorkflowV2
