@@ -381,23 +381,19 @@ async def test_task_collection_custom(
     testdata_path,
     task_factory,
 ):
-    venv_name = "venv_fractal_tasks_mock"
+    package_name = "fractal_tasks_mock"
+    venv_name = f"venv_{package_name}"
     venv_path = (tmp_path / venv_name).as_posix()
     subprocess.run(shlex.split(f"{sys.executable} -m venv {venv_path}"))
     python_bin = (tmp_path / venv_name / "bin/python").as_posix()
 
     manifest_file = (
         testdata_path.parent
-        / "v2/fractal_tasks_mock"
-        / "src/fractal_tasks_mock/__FRACTAL_MANIFEST__.json"
+        / f"v2/{package_name}/src/{package_name}/__FRACTAL_MANIFEST__.json"
     ).as_posix()
     with open(manifest_file, "r") as f:
         manifest_dict = json.load(f)
     manifest = ManifestV2(**manifest_dict)
-
-    package_root = (
-        f"{venv_path}/lib/python3.10/site-packages/fractal_tasks_mock"
-    )
 
     # ---
 
@@ -408,7 +404,7 @@ async def test_task_collection_custom(
             python_interpreter=python_bin,
             source="source1",
             package_root=None,
-            package_name="fractal_tasks_mock",
+            package_name=package_name,
             version=None,
         )
 
@@ -424,8 +420,7 @@ async def test_task_collection_custom(
         # Install
         wheel_file = (
             testdata_path.parent
-            / "v2/fractal_tasks_mock"
-            / "dist/fractal_tasks_mock-0.0.1-py3-none-any.whl"
+            / f"v2/{package_name}/dist/{package_name}-0.0.1-py3-none-any.whl"
         ).as_posix()
         subprocess.run(
             shlex.split(f"{python_bin} -m pip install {wheel_file}")
@@ -445,7 +440,22 @@ async def test_task_collection_custom(
         )
         assert res.status_code == 201
 
-        # Fail with (arbitrary) 'package_root'
+        # Success with package_root
+        package_name_underscore = package_name.replace("-", "_")
+        python_command = (
+            "import importlib.util; "
+            "from pathlib import Path; "
+            "init_path=importlib.util.find_spec"
+            f'("{package_name_underscore}").origin; '
+            "print(Path(init_path).parent.as_posix())"
+        )
+        res = subprocess.run(  # nosec
+            shlex.split(f"{python_bin} -c '{python_command}'"),
+            capture_output=True,
+            encoding="utf8",
+        )
+        package_root = Path(res.stdout.strip("\n")).as_posix()
+
         payload_root = TaskCollectCustomV2(
             manifest=manifest,
             python_interpreter=python_bin,
