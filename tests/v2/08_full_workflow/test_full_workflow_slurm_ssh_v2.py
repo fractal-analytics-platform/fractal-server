@@ -2,6 +2,7 @@ import io
 
 from common_functions import workflow_with_non_python_task
 
+from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import get_ssh_connection
 from tests.fixtures_slurm import SLURM_USER
 
@@ -38,6 +39,7 @@ async def test_workflow_with_non_python_task_slurm_ssh(
     )
 
     app.state.connection = get_ssh_connection()
+    app.state.fractal_ssh = FractalSSH(connection=app.state.connection)
 
     monkeypatch.setattr("sys.stdin", io.StringIO(""))
 
