@@ -10,8 +10,10 @@ import os
 import traceback
 from pathlib import Path
 from typing import Optional
+from typing import TYPE_CHECKING
 
-from fabric import Connection  # FIXME SSH: try/except import
+if TYPE_CHECKING:
+    from fabric import Connection
 from sqlalchemy.orm import Session as DBSyncSession
 from sqlalchemy.orm.attributes import flag_modified
 
