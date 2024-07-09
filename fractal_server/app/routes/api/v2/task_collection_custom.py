@@ -42,6 +42,27 @@ async def collect_task_custom(
 
     settings = Inject(get_settings)
 
+    if settings.FRACTAL_RUNNER_BACKEND != "slurm_ssh":
+        if not Path(task_collect.python_interpreter).is_file():
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    f"{task_collect.python_interpreter=} "
+                    "doesn't exist or is not a file."
+                ),
+            )
+        if (
+            task_collect.package_root is not None
+            and not Path(task_collect.package_root).is_dir()
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    f"{task_collect.package_root=} "
+                    "doesn't exist or is not a directory."
+                ),
+            )
+
     if task_collect.package_root is None:
 
         if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
@@ -49,6 +70,7 @@ async def collect_task_custom(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="Cannot infer 'package_root' with 'slurm_ssh' backend.",
             )
+
         package_name_underscore = task_collect.package_name.replace("-", "_")
         # Note that python_command is then used as part of a subprocess.run
         # statement: be careful with mixing `'` and `"`.
@@ -61,7 +83,7 @@ async def collect_task_custom(
         )
         logger.debug(
             f"Now running {python_command=} through "
-            "{task_collect.python_interpreter}."
+            f"{task_collect.python_interpreter}."
         )
         res = subprocess.run(  # nosec
             shlex.split(

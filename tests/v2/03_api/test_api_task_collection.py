@@ -383,23 +383,23 @@ async def test_task_collection_custom(
 ):
     venv_name = "venv_fractal_tasks_mock"
     venv_path = (tmp_path / venv_name).as_posix()
-
     subprocess.run(shlex.split(f"{sys.executable} -m venv {venv_path}"))
-
     python_bin = (tmp_path / venv_name / "bin/python").as_posix()
-
-    # ---
 
     manifest_file = (
         testdata_path.parent
         / "v2/fractal_tasks_mock"
         / "src/fractal_tasks_mock/__FRACTAL_MANIFEST__.json"
     ).as_posix()
-
     with open(manifest_file, "r") as f:
         manifest_dict = json.load(f)
-
     manifest = ManifestV2(**manifest_dict)
+
+    package_root = (
+        f"{venv_path}/lib/python3.10/site-packages/fractal_tasks_mock"
+    )
+
+    # ---
 
     async with MockCurrentUser(user_kwargs=dict(is_verified=True)):
 
@@ -422,7 +422,6 @@ async def test_task_collection_custom(
         assert "Cannot determine 'package_root'" in res.json()["detail"]
 
         # Install
-
         wheel_file = (
             testdata_path.parent
             / "v2/fractal_tasks_mock"
@@ -440,20 +439,18 @@ async def test_task_collection_custom(
 
         # Success with package_name with hypens instead of underscore
         payload_name.package_name = "fractal-tasks-mock"
-        payload_name.source = "newsource"
+        payload_name.source = "source2"
         res = await client.post(
             f"{PREFIX}/collect/custom/", json=payload_name.dict()
         )
         assert res.status_code == 201
 
-        # Success with (arbitrary) 'package_root'
-
-        package_root_dir = (tmp_path / "package_root").as_posix()
+        # Fail with (arbitrary) 'package_root'
         payload_root = TaskCollectCustomV2(
             manifest=manifest,
             python_interpreter=python_bin,
-            source="source2",
-            package_root=f"{package_root_dir}/fractal_tasks_mock",
+            source="source3",
+            package_root=package_root,
             package_name=None,
             version=None,
         )
@@ -463,7 +460,6 @@ async def test_task_collection_custom(
         assert res.status_code == 201
 
         # Fail because same 'source'
-
         # V2
         res = await client.post(
             f"{PREFIX}/collect/custom/", json=payload_root.dict()
@@ -472,14 +468,31 @@ async def test_task_collection_custom(
         assert "TaskV2" in res.json()["detail"]
         assert "already has source" in res.json()["detail"]
         # V1
-        payload_root.source = "source3"
-        await task_factory(source="test01:source3:create_ome_zarr_compound")
+        payload_root.source = "source4"
+        await task_factory(source="test01:source4:create_ome_zarr_compound")
         res = await client.post(
             f"{PREFIX}/collect/custom/", json=payload_root.dict()
         )
         assert res.status_code == 422
         assert "TaskV1" in res.json()["detail"]
         assert "already has source" in res.json()["detail"]
+
+        # Fail because python_interpreter does not exist
+        payload_root.python_interpreter = "/foo/bar"
+        res = await client.post(
+            f"{PREFIX}/collect/custom/", json=payload_root.dict()
+        )
+        assert res.status_code == 422
+        assert "doesn't exist or is not a file" in res.json()["detail"]
+
+        # Fail because package_root does not exist
+        payload_root.python_interpreter = sys.executable
+        payload_root.package_root = "/foo/bar"
+        res = await client.post(
+            f"{PREFIX}/collect/custom/", json=payload_root.dict()
+        )
+        assert res.status_code == 422
+        assert "doesn't exist or is not a directory" in res.json()["detail"]
 
 
 async def test_task_collection_custom_fail_with_ssh(
