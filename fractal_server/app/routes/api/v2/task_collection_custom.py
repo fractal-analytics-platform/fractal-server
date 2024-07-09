@@ -49,15 +49,33 @@ async def collect_task_custom(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="Cannot infer 'package_root' with 'slurm_ssh' backend.",
             )
+        package_name_underscore = task_collect.package_name.replace("-", "_")
+        # Note that python_command is then used as part of a subprocess.run
+        # statement: be careful with mixing `'` and `"`.
+        python_command = (
+            "import importlib.util; "
+            "from pathlib import Path; "
+            "init_path=importlib.util.find_spec"
+            f'("{package_name_underscore}").origin; '
+            "print(Path(init_path).parent.as_posix())"
+        )
+        logger.debug(
+            f"Now running {python_command=} through "
+            "{task_collect.python_interpreter}."
+        )
         res = subprocess.run(  # nosec
             shlex.split(
-                f"{task_collect.python_interpreter} "
-                f"-m pip show {task_collect.package_name}"
+                f"{task_collect.python_interpreter} -c '{python_command}'"
             ),
             capture_output=True,
             encoding="utf8",
         )
-        if res.returncode != 0:
+
+        if (
+            res.returncode != 0
+            or res.stdout is None
+            or ("\n" in res.stdout.strip("\n"))
+        ):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
@@ -66,23 +84,7 @@ async def collect_task_custom(
                     f"Original error: {res.stderr}"
                 ),
             )
-        try:
-            package_root_dir = next(
-                it.split()[1]
-                for it in res.stdout.split("\n")
-                if it.startswith("Location")
-            )
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    "Command 'pip show' gave an unexpected response:\n"
-                    "the output should contain 'Location /path/to/package', "
-                    f"instead returned: {res.stdout}.\n"
-                    f"Original error: {str(e)}"
-                ),
-            )
-        package_root = Path(package_root_dir) / task_collect.package_name
+        package_root = Path(res.stdout.strip("\n"))
     else:
         package_root = Path(task_collect.package_root)
 
@@ -113,23 +115,25 @@ async def collect_task_custom(
     res = db.execute(stm)
     overlapping_sources_v2 = res.scalars().all()
     if overlapping_sources_v2:
+        overlapping_tasks_v2_source_and_id = [
+            f"TaskV2 with ID {task.id} already has source='{task.source}'"
+            for task in overlapping_sources_v2
+        ]
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                "Some sources already used by some TaskV2: "
-                f"{overlapping_sources_v2}"
-            ),
+            detail="\n".join(overlapping_tasks_v2_source_and_id),
         )
     stm = select(TaskV1).where(TaskV1.source.in_(sources))
     res = db.execute(stm)
     overlapping_sources_v1 = res.scalars().all()
     if overlapping_sources_v1:
+        overlapping_tasks_v1_source_and_id = [
+            f"TaskV1 with ID {task.id} already has source='{task.source}'\n"
+            for task in overlapping_sources_v1
+        ]
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                "Some sources already used by some TaskV1: "
-                f"{overlapping_sources_v1}"
-            ),
+            detail="\n".join(overlapping_tasks_v1_source_and_id),
         )
 
     task_list_db: list[TaskV2] = _insert_tasks(
