@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fractal-server"
-version = "2.3.0a1"
+version = "2.3.0a2"
 description = "Server component of the Fractal analytics platform"
 authors = [
     "Tommaso Comparin <tommaso.comparin@exact-lab.it>",
@@ -91,7 +91,7 @@ filterwarnings = [
 ]
 
 [tool.bumpver]
-current_version = "2.3.0a1"
+current_version = "2.3.0a2"
 version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true
