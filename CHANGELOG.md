@@ -41,6 +41,7 @@ SSH features:
 * Dependencies:
     * Update `sqlmodel` to `^0.0.19` (\#1584).
     * Update `pytest-asyncio` to `^0.23` (\#1558).
+    * Add `ssh` installation extra, with `fabric` dependency (\#1628).
 * Testing:
     * Test the way `FractalProcessPoolExecutor` spawns processes and threads (\#1579).
     * Remove `event_loop` fixture: every test will run on its own event loop (\#1558).
