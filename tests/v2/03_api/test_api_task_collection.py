@@ -433,7 +433,14 @@ async def test_task_collection_custom(
         )
 
         # Success with 'package_name'
+        res = await client.post(
+            f"{PREFIX}/collect/custom/", json=payload_name.dict()
+        )
+        assert res.status_code == 201
 
+        # Success with package_name with hypens instead of underscore
+        payload_name.package_name = "fractal-tasks-mock"
+        payload_name.source = "newsource"
         res = await client.post(
             f"{PREFIX}/collect/custom/", json=payload_name.dict()
         )
@@ -462,7 +469,8 @@ async def test_task_collection_custom(
             f"{PREFIX}/collect/custom/", json=payload_root.dict()
         )
         assert res.status_code == 422
-        assert "already used by some TaskV2" in res.json()["detail"]
+        assert "TaskV2" in res.json()["detail"]
+        assert "already has source" in res.json()["detail"]
         # V1
         payload_root.source = "source3"
         await task_factory(source="test01:source3:create_ome_zarr_compound")
@@ -470,7 +478,8 @@ async def test_task_collection_custom(
             f"{PREFIX}/collect/custom/", json=payload_root.dict()
         )
         assert res.status_code == 422
-        assert "already used by some TaskV1" in res.json()["detail"]
+        assert "TaskV1" in res.json()["detail"]
+        assert "already has source" in res.json()["detail"]
 
 
 async def test_task_collection_custom_fail_with_ssh(

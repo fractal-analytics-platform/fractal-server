@@ -5,9 +5,21 @@ from pydantic import ValidationError
 
 from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.app.schemas.v2 import TaskCollectCustomV2
+from fractal_server.app.schemas.v2 import TaskCollectPipV2
 
 
-async def test_task_collect_custom(testdata_path):
+def test_TaskCollectPipV2():
+    """
+    Check that leading/trailing whitespace characters were removed
+    """
+    collection = TaskCollectPipV2(
+        package="  package  ", package_version="  1.2.3  "
+    )
+    assert collection.package == "package"
+    assert collection.package_version == "1.2.3"
+
+
+async def test_TaskCollectCustomV2(testdata_path):
 
     manifest_file = (
         testdata_path.parent
@@ -62,3 +74,15 @@ async def test_task_collect_custom(testdata_path):
             version=None,
         )
     assert "One and only one must be set" in str(e.value)
+
+    # Successful
+    collection = TaskCollectCustomV2(
+        manifest=ManifestV2(**manifest_dict),
+        python_interpreter="  /some/python                  ",
+        source="b",
+        package_root="  /somewhere  ",
+        package_name=None,
+    )
+    # Check that trailing whitespace characters were removed
+    assert collection.python_interpreter == "/some/python"
+    assert collection.package_root == "/somewhere"
