@@ -1,4 +1,6 @@
 import time
+from contextlib import contextmanager
+from threading import Lock
 from typing import Optional
 
 from fabric import Connection
@@ -13,6 +15,39 @@ from fractal_server.syringe import Inject
 logger = set_logger(__name__)
 
 MAX_ATTEMPTS = 5
+
+
+@contextmanager
+def acquire_timeout(lock, timeout):
+    result = lock.acquire(timeout=timeout)
+    try:
+        print("Trying to acquire lock")
+        yield result
+    finally:
+        if result:
+            lock.release()
+            print("Lock was acquired, and now released")
+
+
+class FractalSSH(object):
+    lock: Lock
+    connection: Connection
+
+    def __init__(self, connection: Connection):
+        self.lock = Lock()
+        self.conn = connection
+
+    def put(self, *args, **kwargs):
+        with acquire_timeout(self.lock, timeout=100):
+            return self.conn.put(*args, **kwargs)
+
+    def get(self, *args, **kwargs):
+        with acquire_timeout(self.lock, timeout=100):
+            return self.conn.get(*args, **kwargs)
+
+    def run(self, *args, **kwargs):
+        with acquire_timeout(self.lock, timeout=100):
+            return self.conn.run(*args, **kwargs)
 
 
 def get_ssh_connection(
@@ -147,7 +182,7 @@ def put_over_ssh(
     *,
     local: str,
     remote: str,
-    connection: Connection,
+    connection: FractalSSH,
     logger_name: Optional[str] = None,
 ) -> None:
     """

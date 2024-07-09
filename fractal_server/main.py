@@ -101,8 +101,12 @@ async def lifespan(app: FastAPI):
 
     if settings.FRACTAL_RUNNER_BACKEND == "slurm_ssh":
         from fractal_server.ssh._fabric import get_ssh_connection
+        from fractal_server.ssh._fabric import check_connection
+        from fractal_server.ssh._fabric import FractalSSH
 
         app.state.connection = get_ssh_connection()
+        check_connection(app.state.connection)
+        app.state.fractal_ssh = FractalSSH(connection=app.state.connection)
         logger.info(
             f"Created SSH connection "
             f"({app.state.connection.is_connected=})."

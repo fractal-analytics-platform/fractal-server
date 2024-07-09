@@ -246,7 +246,7 @@ async def apply_workflow(
         worker_init=job.worker_init,
         slurm_user=user.slurm_user,
         user_cache_dir=user.cache_dir,
-        connection=request.app.state.connection,
+        connection=request.app.state.fractal_ssh,
     )
     request.app.state.jobsV2.append(job.id)
     logger.info(

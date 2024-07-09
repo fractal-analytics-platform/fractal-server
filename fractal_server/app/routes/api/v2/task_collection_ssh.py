@@ -89,7 +89,7 @@ async def collect_tasks_pip(
         background_collect_pip_ssh,
         state.id,
         task_pkg,
-        request.app.state.connection,
+        request.app.state.fractal_ssh,
     )
 
     response.status_code = status.HTTP_201_CREATED
