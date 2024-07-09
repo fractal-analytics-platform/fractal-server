@@ -1,9 +1,11 @@
 import logging
 import time
 from json import JSONDecodeError
+from typing import Any
 
 import httpx
 from a2wsgi import ASGIMiddleware
+from fastapi import Response
 
 from fractal_server.app.schemas.user import UserCreate
 from fractal_server.app.schemas.user import UserRead
@@ -33,6 +35,17 @@ wsgi_app.app.state.jobsV1 = []
 wsgi_app.app.state.jobsV2 = []
 wsgi_app.app.state.connection = None
 wsgi_app.app.state.fractal_ssh = None
+
+
+def response_json(res: Response) -> dict[str, Any]:
+    try:
+        return res.json()
+    except JSONDecodeError as e:
+        raise ValueError(
+            f"Error while parsing JSON body of response {res}.\n"
+            f"Original error:\n{str(e)}\n"
+            f"Reponse text\n:{res.text}"
+        )
 
 
 class FractalClient:
@@ -89,14 +102,7 @@ class FractalClient:
             return None
 
     def detail(self, res: httpx.Response):
-        try:
-            res_json = res.json()
-        except JSONDecodeError as e:
-            raise ValueError(
-                f"Error while parsing JSON body of response {res}.\n"
-                f"Original error:\n{str(e)}\n"
-                f"Reponse text\n:{res.text}"
-            )
+        res_json = response_json(res)
         if res_json.get("detail"):
             raise ValueError(f"WARNING: {res_json.get('detail')}")
 
@@ -108,7 +114,7 @@ class FractalClient:
             data=user.dict(exclude_none=True),
         )
         self.detail(res)
-        new_user_id = res.json()["id"]
+        new_user_id = response_json(res)["id"]
         # Make new user verified
         patch_user = UserUpdate(is_verified=True)
         res = self.make_request(
@@ -118,7 +124,7 @@ class FractalClient:
         )
         self.detail(res)
 
-        return UserRead(**res.json())
+        return UserRead(**response_json(res))
 
     def add_project(self, project: ProjectCreateV2):
         res = self.make_request(
@@ -127,7 +133,7 @@ class FractalClient:
             data=project.dict(),
         )
         self.detail(res)
-        return ProjectReadV2(**res.json())
+        return ProjectReadV2(**response_json(res))
 
     def add_dataset(self, project_id, dataset: DatasetCreateV2):
         res = self.make_request(
@@ -136,7 +142,7 @@ class FractalClient:
             data=dataset.dict(),
         )
         self.detail(res)
-        return DatasetReadV2(**res.json())
+        return DatasetReadV2(**response_json(res))
 
     def import_dataset(self, project_id, dataset: DatasetImportV2):
         res = self.make_request(
@@ -145,7 +151,7 @@ class FractalClient:
             data=dataset.dict(),
         )
         self.detail(res)
-        return DatasetReadV2(**res.json())
+        return DatasetReadV2(**response_json(res))
 
     def add_workflow(self, project_id, workflow: WorkflowCreateV2):
         res = self.make_request(
@@ -155,7 +161,7 @@ class FractalClient:
         )
         self.detail(res)
 
-        return WorkflowReadV2(**res.json())
+        return WorkflowReadV2(**response_json(res))
 
     def add_workflowtask(
         self,
@@ -172,7 +178,7 @@ class FractalClient:
         )
         self.detail(res)
 
-        return WorkflowTaskReadV2(**res.json())
+        return WorkflowTaskReadV2(**response_json(res))
 
     def add_working_task(self):
         task = TaskCreateV2(
@@ -187,7 +193,7 @@ class FractalClient:
             data=task.dict(exclude_none=True),
         )
         self.detail(res)
-        return TaskReadV2(**res.json())
+        return TaskReadV2(**response_json(res))
 
     def add_failing_task(self):
         task = TaskCreateV2(
@@ -201,7 +207,7 @@ class FractalClient:
             data=task.dict(exclude_none=True),
         )
         self.detail(res)
-        return TaskReadV2(**res.json())
+        return TaskReadV2(**response_json(res))
 
     def add_task(self, task: TaskCreateV2):
         res = self.make_request(
@@ -210,7 +216,7 @@ class FractalClient:
             data=task.dict(exclude_none=True),
         )
         self.detail(res)
-        return TaskReadV2(**res.json())
+        return TaskReadV2(**response_json(res))
 
     def whoami(self):
         res = self.make_request(
@@ -218,7 +224,7 @@ class FractalClient:
             method="GET",
         )
         self.detail(res)
-        return UserRead(**res.json())
+        return UserRead(**response_json(res))
 
     def patch_current_superuser(self, user: UserUpdate):
         me = self.whoami()
@@ -228,7 +234,7 @@ class FractalClient:
             data=user.dict(exclude_none=True),
         )
         self.detail(res)
-        return UserRead(**res.json())
+        return UserRead(**response_json(res))
 
     def submit_job(
         self,
@@ -247,7 +253,7 @@ class FractalClient:
         )
         self.detail(res)
 
-        return JobReadV2(**res.json())
+        return JobReadV2(**response_json(res))
 
     def wait_for_all_jobs(
         self,
@@ -268,8 +274,8 @@ class FractalClient:
                 method="GET",
             )
             if res.status_code != 200:
-                raise ValueError(f"Original error: {res.json()}")
-            job_statuses = [job["status"] for job in res.json()]
+                raise ValueError(f"Original error: {response_json(res)}")
+            job_statuses = [job["status"] for job in response_json(res)]
             if "submitted" not in job_statuses:
                 print("No submitted job left.")
                 return None
