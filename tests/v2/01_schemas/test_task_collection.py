@@ -19,7 +19,7 @@ def test_TaskCollectPipV2():
     assert collection.package_version == "1.2.3"
 
 
-async def test_task_collect_custom(testdata_path):
+async def test_TaskCollectCustomV2(testdata_path):
 
     manifest_file = (
         testdata_path.parent
@@ -74,3 +74,14 @@ async def test_task_collect_custom(testdata_path):
             version=None,
         )
     assert "One and only one must be set" in str(e.value)
+
+    # Successful
+    collection = TaskCollectCustomV2(
+        manifest=ManifestV2(**manifest_dict),
+        python_interpreter="  /some/python                  ",
+        source="b",
+        package_root=None,
+        package_name="something",
+    )
+    # Check that trailing whitespace characters were removed
+    assert collection.python_interpreter == "/some/python"
