@@ -5,6 +5,18 @@ from pydantic import ValidationError
 
 from fractal_server.app.schemas.v2 import ManifestV2
 from fractal_server.app.schemas.v2 import TaskCollectCustomV2
+from fractal_server.app.schemas.v2 import TaskCollectPipV2
+
+
+def test_TaskCollectPipV2():
+    """
+    Check that leading/trailing whitespace characters were removed
+    """
+    collection = TaskCollectPipV2(
+        package="  package  ", package_version="  1.2.3  "
+    )
+    assert collection.package == "package"
+    assert collection.package_version == "1.2.3"
 
 
 async def test_task_collect_custom(testdata_path):

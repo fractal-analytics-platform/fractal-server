@@ -56,14 +56,15 @@ class TaskCollectPipV2(BaseModel):
     python_version: Optional[Literal["3.9", "3.10", "3.11", "3.12"]] = None
     pinned_package_versions: Optional[dict[str, str]] = None
 
+    _package = validator("package", allow_reuse=True)(valstr("package"))
+    _package_version = validator("package_version", allow_reuse=True)(
+        valstr("package_version")
+    )
     _pinned_package_versions = validator(
         "pinned_package_versions", allow_reuse=True
     )(valdictkeys("pinned_package_versions"))
     _package_extras = validator("package_extras", allow_reuse=True)(
         valstr("package_extras")
-    )
-    _python_version = validator("python_version", allow_reuse=True)(
-        valstr("python_version")
     )
 
     @validator("package")
