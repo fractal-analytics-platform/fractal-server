@@ -32,6 +32,7 @@ wsgi_app = ASGIMiddleware(app)
 wsgi_app.app.state.jobsV1 = []
 wsgi_app.app.state.jobsV2 = []
 wsgi_app.app.state.connection = None
+wsgi_app.app.state.fractal_ssh = None
 
 
 class FractalClient:
