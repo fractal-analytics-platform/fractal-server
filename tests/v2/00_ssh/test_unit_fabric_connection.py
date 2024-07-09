@@ -41,7 +41,7 @@ def test_unit_fabric_connection(
         assert res.stdout.strip("\n") == "slurmhead"
 
     with Connection(
-        host="http://invalid",
+        host="1.2.3.4",
         user="x",
         connect_kwargs={"password": "x"},
     ) as connection:
