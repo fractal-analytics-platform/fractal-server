@@ -27,7 +27,6 @@ from typing import Sequence
 
 import cloudpickle
 from cfut import SlurmExecutor
-from fabric.connection import Connection
 from paramiko.ssh_exception import NoValidConnectionsError
 
 from ....filenames import SHUTDOWN_FILENAME
@@ -44,7 +43,7 @@ from fractal_server.app.runner.exceptions import TaskExecutionError
 from fractal_server.app.runner.executors.slurm.ssh._slurm_job import SlurmJob
 from fractal_server.config import get_settings
 from fractal_server.logger import set_logger
-from fractal_server.ssh._fabric import check_connection
+from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import run_command_over_ssh
 from fractal_server.syringe import Inject
 
@@ -76,7 +75,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
             Dictionary with paths of slurm-related files for active jobs
     """
 
-    connection: Connection
+    connection: FractalSSH
 
     workflow_dir_local: Path
     workflow_dir_remote: Path
@@ -96,7 +95,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         self,
         *,
         # SSH connection
-        connection: Connection,
+        connection: FractalSSH,
         # Folders and files
         workflow_dir_local: Path,
         workflow_dir_remote: Path,
@@ -1458,7 +1457,7 @@ class FractalSlurmSSHExecutor(SlurmExecutor):
         FIXME SSH: We could include further checks on version matches
         """
 
-        check_connection(self.connection)
+        self.connection.check_connection()
 
         t_start_handshake = time.perf_counter()
 

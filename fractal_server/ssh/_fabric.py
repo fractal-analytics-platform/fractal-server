@@ -1,9 +1,11 @@
 import time
 from contextlib import contextmanager
 from threading import Lock
+from typing import Any
 from typing import Optional
 
 from fabric import Connection
+from fabric import Result
 from invoke import UnexpectedExit
 from paramiko.ssh_exception import NoValidConnectionsError
 
@@ -37,17 +39,30 @@ class FractalSSH(object):
         self.lock = Lock()
         self.conn = connection
 
-    def put(self, *args, **kwargs):
+    def put(self, *args, **kwargs) -> Result:
         with acquire_timeout(self.lock, timeout=100):
             return self.conn.put(*args, **kwargs)
 
-    def get(self, *args, **kwargs):
+    def get(self, *args, **kwargs) -> Result:
         with acquire_timeout(self.lock, timeout=100):
             return self.conn.get(*args, **kwargs)
 
-    def run(self, *args, **kwargs):
+    def run(self, *args, **kwargs) -> Any:
         with acquire_timeout(self.lock, timeout=100):
             return self.conn.run(*args, **kwargs)
+
+    def sftp(self):
+        return self.conn.sftp()
+
+    def is_connected(self) -> bool:
+        return self.conn.is_connected
+
+    def check_connection(self) -> None:
+        """
+        Check if SSH connection is open.
+        """
+        if not self.conn.is_connected:
+            raise RuntimeError("Cannot open SSH connection.")
 
 
 def get_ssh_connection(
@@ -85,30 +100,10 @@ def get_ssh_connection(
     return connection
 
 
-def check_connection(connection: Connection) -> None:
-    """
-    Open the SSH connection and handle exceptions.
-
-    This function can be called from within other functions that use
-    `connection`, so that we can provide a meaningful error in case the
-    SSH connection cannot be opened.
-
-    Args:
-        connection: Fabric connection object
-    """
-    if not connection.is_connected:
-        try:
-            connection.open()
-        except Exception as e:
-            raise RuntimeError(
-                f"Cannot open SSH connection (original error: '{str(e)}')."
-            )
-
-
 def run_command_over_ssh(
     *,
     cmd: str,
-    connection: Connection,
+    connection: FractalSSH,
     max_attempts: int = MAX_ATTEMPTS,
     base_interval: float = 3.0,
 ) -> str:
@@ -147,9 +142,7 @@ def run_command_over_ssh(
                 f"{e.errors=}\n"
             )
             if ind_attempt < max_attempts:
-                sleeptime = (
-                    base_interval**ind_attempt
-                )  # FIXME SSH: add jitter?
+                sleeptime = base_interval**ind_attempt
                 logger.warning(
                     f"{prefix} Now sleep {sleeptime:.3f} seconds and continue."
                 )
@@ -207,7 +200,7 @@ def put_over_ssh(
 
 
 def _mkdir_over_ssh(
-    *, folder: str, connection: Connection, parents: bool = True
+    *, folder: str, connection: FractalSSH, parents: bool = True
 ) -> None:
     """
     Create a folder remotely via SSH.

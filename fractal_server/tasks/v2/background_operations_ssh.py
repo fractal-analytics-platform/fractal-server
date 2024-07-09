@@ -3,7 +3,6 @@ import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from fabric import Connection
 from sqlalchemy.orm.attributes import flag_modified
 
 from ...app.models.v2 import CollectionStateV2
@@ -18,7 +17,7 @@ from fractal_server.app.schemas.v2.manifest import ManifestV2
 from fractal_server.config import get_settings
 from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
-from fractal_server.ssh._fabric import check_connection
+from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import put_over_ssh
 from fractal_server.ssh._fabric import run_command_over_ssh
 from fractal_server.syringe import Inject
@@ -59,7 +58,7 @@ def _customize_and_run_template(
     replacements: list[tuple[str, str]],
     tmpdir: str,
     logger_name: str,
-    connection: Connection,
+    connection: FractalSSH,
 ) -> str:
     """
     Customize one of the template bash scripts, transfer it to the remote host
@@ -115,7 +114,7 @@ def _customize_and_run_template(
 def background_collect_pip_ssh(
     state_id: int,
     task_pkg: _TaskCollectPip,
-    connection: Connection,
+    connection: FractalSSH,
 ) -> None:
     """
     Collect a task package over SSH
@@ -188,7 +187,7 @@ def background_collect_pip_ssh(
                     connection=connection,
                 )
 
-                check_connection(connection)
+                connection.check_connection()
 
                 logger.debug("installing - START")
                 _set_collection_state_data_status(
