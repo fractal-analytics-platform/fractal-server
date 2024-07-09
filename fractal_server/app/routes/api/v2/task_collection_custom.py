@@ -126,23 +126,25 @@ async def collect_task_custom(
     res = db.execute(stm)
     overlapping_sources_v2 = res.scalars().all()
     if overlapping_sources_v2:
+        overlapping_tasks_v2_source_and_id = [
+            f"TaskV2 with ID {task.id} already has source='{task.source}'"
+            for task in overlapping_sources_v2
+        ]
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                "Some sources already used by some TaskV2: "
-                f"{overlapping_sources_v2}"
-            ),
+            detail="\n".join(overlapping_tasks_v2_source_and_id),
         )
     stm = select(TaskV1).where(TaskV1.source.in_(sources))
     res = db.execute(stm)
     overlapping_sources_v1 = res.scalars().all()
     if overlapping_sources_v1:
+        overlapping_tasks_v1_source_and_id = [
+            f"TaskV1 with ID {task.id} already has source='{task.source}'\n"
+            for task in overlapping_sources_v1
+        ]
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                "Some sources already used by some TaskV1: "
-                f"{overlapping_sources_v1}"
-            ),
+            detail="\n".join(overlapping_tasks_v1_source_and_id),
         )
 
     task_list_db: list[TaskV2] = _insert_tasks(
