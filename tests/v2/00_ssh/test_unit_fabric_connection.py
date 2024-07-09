@@ -41,6 +41,5 @@ def test_unit_fabric_connection(
         assert res.stdout.strip("\n") == "slurmhead"
 
     # raise error if there is not a connection available
-    fractal_conn = FractalSSH(connection=connection)
     with pytest.raises(RuntimeError):
         fractal_conn.check_connection()
