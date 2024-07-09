@@ -15,6 +15,7 @@ from fractal_server.app.routes.api.v2._aux_functions import (
 )
 from fractal_server.app.runner.filenames import SHUTDOWN_FILENAME
 from fractal_server.main import lifespan
+from tests.fixtures_slurm import SLURM_USER
 
 
 async def test_app_with_lifespan(
@@ -168,3 +169,42 @@ async def test_lifespan_shutdown_raise_error(
 
     debug(caplog.records)
     assert any(record.message == log_text for record in caplog.records)
+
+
+async def test_lifespan_slurm_ssh(
+    override_settings_factory,
+    slurmlogin_ip,
+    ssh_keys: dict[str, str],
+    tmp777_path,
+    testdata_path,
+    db,
+):
+
+    # monkeypatch.setattr(
+    #     "fractal_server.config.Settings.check_runner", lambda x: x
+    # )
+    override_settings_factory(
+        FRACTAL_RUNNER_BACKEND="slurm_ssh",
+        FRACTAL_SLURM_WORKER_PYTHON="/usr/bin/python3.9",
+        FRACTAL_SLURM_SSH_HOST=slurmlogin_ip,
+        FRACTAL_SLURM_SSH_USER=SLURM_USER,
+        FRACTAL_SLURM_SSH_PRIVATE_KEY_PATH=ssh_keys["private"],
+        FRACTAL_SLURM_SSH_WORKING_BASE_DIR=(
+            tmp777_path / "artifacts"
+        ).as_posix(),
+        FRACTAL_SLURM_CONFIG_FILE=testdata_path / "slurm_config.json",
+    )
+    app = FastAPI()
+    res = await db.execute(select(UserOAuth))
+    assert res.unique().all() == []
+
+    async with lifespan(app):
+        # verify first user creation
+        res = await db.execute(select(UserOAuth))
+        user = res.scalars().unique().all()
+        assert len(user) == 1
+        # verify shutdown
+        assert len(app.state.jobsV1) == 0
+        assert len(app.state.jobsV2) == 0
+        assert app.state.connection.is_connected
+        assert app.state.fractal_ssh.is_connected()
