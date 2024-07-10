@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.3.1 (unreleased)
+
+* Testing:
+    * Stop testing SQLite database for V1 in CI (\#1630).
+
 # 2.3.0
 
 This release includes two important updates:
