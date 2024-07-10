@@ -1,5 +1,10 @@
 **Note**: Numbers like (\#1234) point to closed Pull Requests on the fractal-server repository.
 
+# 2.3.1 (unreleased)
+
+* SSH features:
+    * Remove remote venv folder upon failed task collection in SSH mode (\#1634).
+
 # 2.3.0
 
 This release includes two important updates:
