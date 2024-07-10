@@ -43,29 +43,30 @@ def acquire_timeout(lock: Lock, timeout: int) -> Any:
 class FractalSSH(object):
     lock: Lock
     connection: Connection
-    timeout: int
+    default_timeout: int
 
-    def __init__(self, connection: Connection, timeout: Optional[int] = 200):
+    # FIXME SSH: maybe extend the actual_timeout logic to other methods
+
+    def __init__(self, connection: Connection, default_timeout: int = 250):
         self.lock = Lock()
         self.conn = connection
-        self.timeout = timeout
+        self.default_timeout = default_timeout
 
     @property
     def is_connected(self) -> bool:
         return self.conn.is_connected
 
-    def put(self, *args, timeout: int = 0, **kwargs) -> Result:
-        if timeout:
-            self.timeout = timeout
-        with acquire_timeout(self.lock, timeout=self.timeout):
+    def put(self, *args, timeout: Optional[int] = None, **kwargs) -> Result:
+        actual_timeout = timeout or self.default_timeout
+        with acquire_timeout(self.lock, timeout=actual_timeout):
             return self.conn.put(*args, **kwargs)
 
     def get(self, *args, **kwargs) -> Result:
-        with acquire_timeout(self.lock, timeout=self.timeout):
+        with acquire_timeout(self.lock, timeout=self.default_timeout):
             return self.conn.get(*args, **kwargs)
 
     def run(self, *args, **kwargs) -> Any:
-        with acquire_timeout(self.lock, timeout=self.timeout):
+        with acquire_timeout(self.lock, timeout=self.default_timeout):
             return self.conn.run(*args, **kwargs)
 
     def close(self):
