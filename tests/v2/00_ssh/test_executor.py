@@ -78,7 +78,7 @@ def test_versions(
     # -o "StrictHostKeyChecking no"
 
 
-class TestingFractalSSHSlurmExecutor(FractalSlurmSSHExecutor):
+class MockFractalSSHSlurmExecutor(FractalSlurmSSHExecutor):
     """
     When running from outside Fractal runner, task-specific subfolders
     must be created by hand.
@@ -126,7 +126,7 @@ def test_slurm_ssh_executor_submit(
         connect_kwargs={"key_filename": ssh_private_key},
     ) as connection:
         fractal_conn = FractalSSH(connection=connection)
-        with TestingFractalSSHSlurmExecutor(
+        with MockFractalSSHSlurmExecutor(
             workflow_dir_local=tmp_path / "job_dir",
             workflow_dir_remote=(tmp777_path / "remote_job_dir"),
             slurm_poll_interval=1,
@@ -157,7 +157,7 @@ def test_slurm_ssh_executor_map(
         connect_kwargs={"key_filename": ssh_private_key},
     ) as connection:
         fractal_conn = FractalSSH(connection=connection)
-        with TestingFractalSSHSlurmExecutor(
+        with MockFractalSSHSlurmExecutor(
             workflow_dir_local=tmp_path / "job_dir",
             workflow_dir_remote=(tmp777_path / "remote_job_dir"),
             slurm_poll_interval=1,
@@ -225,7 +225,7 @@ def test_slurm_ssh_executor_no_docker(
 
     # submit method
     label = f"{random_id}_0_submit"
-    with TestingFractalSSHSlurmExecutor(
+    with MockFractalSSHSlurmExecutor(
         workflow_dir_local=tmp_path / f"local_job_dir_{label}",
         workflow_dir_remote=root_dir_remote / f"remote_job_dir_{label}",
         slurm_poll_interval=1,
@@ -238,7 +238,7 @@ def test_slurm_ssh_executor_no_docker(
 
     # map method (few values)
     label = f"{random_id}_1_map_few"
-    with TestingFractalSSHSlurmExecutor(
+    with MockFractalSSHSlurmExecutor(
         workflow_dir_local=tmp_path / f"local_job_dir_{label}",
         workflow_dir_remote=root_dir_remote / f"remote_job_dir_{label}",
         slurm_poll_interval=1,
@@ -250,7 +250,7 @@ def test_slurm_ssh_executor_no_docker(
 
     # map method (few values)
     label = f"{random_id}_2_map_many"
-    with TestingFractalSSHSlurmExecutor(
+    with MockFractalSSHSlurmExecutor(
         workflow_dir_local=tmp_path / f"local_job_dir_{label}",
         workflow_dir_remote=root_dir_remote / f"remote_job_dir_{label}",
         slurm_poll_interval=1,
@@ -262,7 +262,7 @@ def test_slurm_ssh_executor_no_docker(
 
     # submit method (fail)
     label = f"{random_id}_3_submit_fail"
-    with TestingFractalSSHSlurmExecutor(
+    with MockFractalSSHSlurmExecutor(
         workflow_dir_local=tmp_path / f"local_job_dir_{label}",
         workflow_dir_remote=root_dir_remote / f"remote_job_dir_{label}",
         slurm_poll_interval=1,
@@ -274,7 +274,7 @@ def test_slurm_ssh_executor_no_docker(
 
     # map method (fail)
     label = f"{random_id}_4_map_fail"
-    with TestingFractalSSHSlurmExecutor(
+    with MockFractalSSHSlurmExecutor(
         workflow_dir_local=tmp_path / f"local_job_dir_{label}",
         workflow_dir_remote=root_dir_remote / f"remote_job_dir_{label}",
         slurm_poll_interval=1,
