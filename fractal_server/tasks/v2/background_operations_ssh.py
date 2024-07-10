@@ -19,6 +19,7 @@ from fractal_server.logger import get_logger
 from fractal_server.logger import set_logger
 from fractal_server.ssh._fabric import FractalSSH
 from fractal_server.ssh._fabric import put_over_ssh
+from fractal_server.ssh._fabric import remove_folder_over_ssh
 from fractal_server.ssh._fabric import run_command_over_ssh
 from fractal_server.syringe import Inject
 from fractal_server.tasks.v2.utils import get_python_interpreter_v2
@@ -307,6 +308,7 @@ def background_collect_pip_ssh(
                 logger.debug("END")
 
             except Exception as e:
+                # Delete corrupted package dir
                 _handle_failure(
                     state_id=state_id,
                     log_file_path=log_file_path,
@@ -314,4 +316,17 @@ def background_collect_pip_ssh(
                     exception=e,
                     db=db,
                 )
+                logger.info(f"Now delete remote folder {package_env_dir}")
+                try:
+                    remove_folder_over_ssh(
+                        remote_dir=package_env_dir,
+                        safe_root=settings.FRACTAL_SLURM_SSH_WORKING_BASE_DIR,
+                        fractal_ssh=fractal_ssh,
+                    )
+                    logger.info(f"Deleted remoted folder {package_env_dir}")
+                except Exception as e:
+                    logger.error(
+                        f"Deleting remote folder {package_env_dir} failed.\n"
+                        f"Original error:\n{str(e)}"
+                    )
                 return
