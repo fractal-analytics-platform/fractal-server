@@ -1,6 +1,6 @@
 FROM rancavil/slurm-master:19.05.5-1
 
-RUN apt-get update
+RUN sudo apt-get update
 
 # TODO (later): remove these lines, since it is not required that the slurm head has access to Python/fractal-server
 # Relink python3 (from 3.8 to 3.9)
@@ -15,7 +15,7 @@ RUN useradd --uid 2000 -m fractal -s /usr/bin/bash -d /home/fractal && echo "fra
 RUN useradd --uid 2001 -m test01 -s /usr/bin/bash -d /home/test01 && echo "test01:test01" | chpasswd
 
 # SSH
-RUN apt-get install -y openssh-server
+RUN sudo apt-get install -y openssh-server
 RUN mkdir /var/run/sshd
 
 # Use custom version of docker-entrypoint.sh, which also starts sshd

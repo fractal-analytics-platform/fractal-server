@@ -21,8 +21,7 @@ from typing import Any
 from typing import Optional
 from typing import Union
 
-from fabric import Connection
-
+from .....ssh._fabric import FractalSSH
 from ....models.v2 import DatasetV2
 from ....models.v2 import WorkflowV2
 from ...async_wrap import async_wrap
@@ -41,7 +40,7 @@ def _process_workflow(
     workflow_dir_remote: Path,
     first_task_index: int,
     last_task_index: int,
-    connection: Connection,
+    fractal_ssh: FractalSSH,
     worker_init: Optional[Union[str, list[str]]] = None,
 ) -> dict[str, Any]:
     """
@@ -62,7 +61,7 @@ def _process_workflow(
         worker_init = worker_init.split("\n")
 
     with FractalSlurmSSHExecutor(
-        connection=connection,
+        fractal_ssh=fractal_ssh,
         workflow_dir_local=workflow_dir_local,
         workflow_dir_remote=workflow_dir_remote,
         common_script_lines=worker_init,
@@ -91,7 +90,7 @@ async def process_workflow(
     last_task_index: Optional[int] = None,
     logger_name: str,
     # Not used
-    connection: Connection,
+    fractal_ssh: FractalSSH,
     user_cache_dir: Optional[str] = None,
     slurm_user: Optional[str] = None,
     slurm_account: Optional[str] = None,
@@ -121,6 +120,6 @@ async def process_workflow(
         first_task_index=first_task_index,
         last_task_index=last_task_index,
         worker_init=worker_init,
-        connection=connection,
+        fractal_ssh=fractal_ssh,
     )
     return new_dataset_attributes
