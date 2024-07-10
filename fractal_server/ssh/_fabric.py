@@ -264,10 +264,6 @@ def remove_folder_over_ssh(
             `safe_root` path, raise an error.
         fractal_ssh:
     """
-    error_msg = (
-        f"{folder=} argument is invalid or it is not "
-        f"relative to {safe_root=}."
-    )
     invalid_characters = {" ", "\n", ";", "$", "`"}
 
     if (
@@ -277,7 +273,10 @@ def remove_folder_over_ssh(
         or not Path(safe_root).is_absolute()
         or not Path(folder).resolve().is_relative_to(safe_root)
     ):
-        raise ValueError(error_msg)
+        raise ValueError(
+            f"{folder=} argument is invalid or it is not "
+            f"relative to {safe_root=}."
+        )
     else:
 
         cmd = f"rm -r {folder}"
